@@ -122,21 +122,30 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Fleet-wide setuptools PYSEC-2026-3447 bump (3-step chain, combined).** (1) Sweep every repo's
-      `uv.lock` for a setuptools pin `< 83.0.0` (`grep -A1 '^name = "setuptools"' */uv.lock`) and for each hit add a
-      `setuptools>=83.0.0` constraint (or equivalent) so the transitive resolve picks the fixed version, then `uv lock`
-      that repo. Known-affected as measured 2026-07-26: **instruments-service** (82.0.1) and
-      **market-tick-data-service** (82.0.1); e2e-testing is already at 83.0.0. (2) Re-run each bumped repo's
-      `bash scripts/quality-gates.sh` and confirm pip-audit is clean for PYSEC-2026-3447 with NO `--ignore-vuln` entry
-      for it. (3) Remove the TEMPORARY `--ignore-vuln PYSEC-2026-3447` from `e2e-testing/scripts/quality-gates.sh`'s
-      `PIP_AUDIT_EXTRA_ARGS` (line 26) **and** its explanatory comment (line 36) — the ignore has already outlived the
-      fix in the one repo that is fixed, which is exactly what the source doc's Acceptance forbids. **Do NOT add a
-      constraint to `workspace-constraints.toml` / `canonical-dependency-manifest.json`** — those two files are deferred
-      hotspots in this batch (see `## Deferred`, dep-manifest contention); use per-repo constraints only. **Done when**:
-      the sweep command returns no setuptools version below 83.0.0 in any repo, each touched repo's QG is green with
-      codex-compliance at 0 violations, and `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns
-      nothing. Repos: instruments-service, market-tick-data-service, e2e-testing. Source:
-      `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`.
+- [x] ✅ [SCRIPT] P2. **DONE (2026-07-28, slot-8) — steps (1)/(2) were already shipped by other slots before this
+      dispatch** (`instruments-service@fe27be91` "fix(deps): bump setuptools to 83.0.0 (PYSEC-2026-3447)",
+      `market-tick-data-service@0413e5cd` same message; verified via `grep -A1 '^name = "setuptools"' uv.lock` → both
+      83.0.0, and `git log -1 -- uv.lock` on each confirms the bump commit). e2e-testing was already at 83.0.0 as noted
+      in the source doc. Only step (3) remained: removed the now-stale `--ignore-vuln PYSEC-2026-3447` from
+      `e2e-testing/scripts/quality-gates.sh`'s `PIP_AUDIT_EXTRA_ARGS` (was line 26) and its explanatory comment (was
+      line 36-37) — `e2e-testing@4c324e8`. Verified: fleet-wide sweep across all 3 target repos shows setuptools
+      83.0.0/83.0.0/83.0.0 (no repo below 83.0.0); `bash scripts/quality-gates.sh` in e2e-testing is green
+      (`pip-audit clean`, 0 codex violations) with the ignore removed;
+      `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing. **Fleet-wide setuptools
+      PYSEC-2026-3447 bump (3-step chain, combined).** (1) Sweep every repo's `uv.lock` for a setuptools pin `< 83.0.0`
+      (`grep -A1 '^name = "setuptools"' */uv.lock`) and for each hit add a `setuptools>=83.0.0` constraint (or
+      equivalent) so the transitive resolve picks the fixed version, then `uv lock` that repo. Known-affected as
+      measured 2026-07-26: **instruments-service** (82.0.1) and **market-tick-data-service** (82.0.1); e2e-testing is
+      already at 83.0.0. (2) Re-run each bumped repo's `bash scripts/quality-gates.sh` and confirm pip-audit is clean
+      for PYSEC-2026-3447 with NO `--ignore-vuln` entry for it. (3) Remove the TEMPORARY `--ignore-vuln PYSEC-2026-3447`
+      from `e2e-testing/scripts/quality-gates.sh`'s `PIP_AUDIT_EXTRA_ARGS` (line 26) **and** its explanatory comment
+      (line 36) — the ignore has already outlived the fix in the one repo that is fixed, which is exactly what the
+      source doc's Acceptance forbids. **Do NOT add a constraint to `workspace-constraints.toml` /
+      `canonical-dependency-manifest.json`** — those two files are deferred hotspots in this batch (see `## Deferred`,
+      dep-manifest contention); use per-repo constraints only. **Done when**: the sweep command returns no setuptools
+      version below 83.0.0 in any repo, each touched repo's QG is green with codex-compliance at 0 violations, and
+      `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing. Repos: instruments-service,
+      market-tick-data-service, e2e-testing. Source: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`.
 
 - [x] [INFRA] P1. **Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template + roll it out fleet-wide — DONE
       (slot-7, 2026-07-26): 25/25 repos now carry the astral-installer fallback, all committed+pushed. 24 were already
