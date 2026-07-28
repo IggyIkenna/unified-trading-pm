@@ -12,7 +12,7 @@ summary: >-
   flagged as "~27.5% of sampled uppercase-keyed rows have no lowercase GCS twin yet". A blind delete would have
   permanently destroyed that slice. HELD per operator decision; the K1/K2 casing-revert migration (copy twin-less rows
   to lowercase) must land first.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -32,6 +32,7 @@ priority: P1
 source: "BLK-2cf85627 (slot 4, 2026-07-27) — operator answered Option B, confirming the finding and directing this doc."
 assigned_vm: planning
 resolved_by:
+  "market-tick-data-service@fa6fd4cd + @26201c44, deployment-service@8b93ae7, unified-trading-pm@4a1ebf203 (2026-07-28)"
 locked_by:
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -158,11 +159,17 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       2026-07-28 post-delete, not trusting the delete script's own self-report): `uppercase (revert candidates): 0`
       across the ENTIRE range — zero uppercase `instrument_type=ODDS/data_type=TRADES` objects remain anywhere. Corrects
       `batch7` todo 1's K1/K2 half.
-- [ ] [REVIEW] P3. **Audit for other plans/todos that cite `batch7` todo 1 or the pre-2026-07-23 K1/K2 delete evidence
-      as "already proof-gated"** and correct any that inherited the same stale assumption — this is the second recorded
-      instance of a K1/K2-direction mixup in this doc family (see
-      `issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`, resolved), so it is a
-      pattern worth a corpus check, not a one-off.
+- [x] [REVIEW] P3. ✅ **Corpus-wide audit complete (2026-07-28).** No hits citing `batch7` todo 1 or pre-2026-07-23
+      K1/K2 evidence as still-valid authority — the actual gap was different:
+      `sports_consolidated_closeout_2026_07_19.md` never had its own K1/K2 checkboxes flipped when the migration
+      completed, and 4 downstream docs inherited that staleness by gating on it. All 5 fixed same day
+      (`unified-trading-pm@4a1ebf203`): `sports_consolidated_closeout_2026_07_19.md` (Step 3 migration + candidate-list
+      re-verify + Track V delete all flipped, raw-keyed league_id delete unblocked, adjacent 6-venue stale-duplicate
+      finding preserved as its own open item), `sports_closeout_track_s2_foldin_2026_07_25.md` +
+      `issues/sports_trades_attempted_failed_2026_07_23.md` (both had a re-check gated on the delete "eventually"
+      executing — unblocked), and `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (addendum flagging a
+      genuine follow-up: whether `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` are covered by this closure or a separate population,
+      not yet re-checked).
 
 ## Progress Log
 
