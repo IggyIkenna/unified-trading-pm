@@ -106,15 +106,21 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
 
 ## Recommended decision
 
-- [ ] [DATA] P1. **Execute the K1/K2 casing-revert data migration** (Deferred Track C in `batch7`,
-      `sports_consolidated_closeout_2026_07_19.md:399`'s Step 3): for every uppercase K1/K2-migrated object/row,
-      conditionally COPY it back to the lowercase canonical path — a real copy, not a manifest-only key-swap, because
-      the twin-less live-writer-window slice has no lowercase source to swap to (it must be created). Requires a
-      migration-VM launch over ~260,298+ GCS objects / ~373,296 manifest rows with real per-object content nuance.
-      **Done when**: a fresh content-verified census shows 100% of the current uppercase K1/K2 population has a
-      confirmed lowercase canonical twin (Part 1 + Part 2 of the delete-safety five-part proof). **Tooling built +
-      validated 2026-07-27, `market-tick-data-service@f4dd8f8e`** (still NOT executed at scale — this lands the
-      reviewed, tested executor trio only, so the eventual worker/VM run doesn't have to design it from scratch):
+- [x] [DATA] P1. ✅ **Execute the K1/K2 casing-revert data migration** — market-tick-data-service@fa6fd4cd (on-demand
+      run #4, 2026-07-28): 345,852/345,852 uppercase objects processed, 0 copied (prior attempts already copied
+      everything) / 345,852 already_present_verified / 0 source_vanished / 0 content_mismatch / 0 failed — 100%
+      confirmed lowercase twin coverage, `MIGRATE DONE rc=0`. Manifest swap: ADD 344,912 canonical rows / REMOVE 215,041
+      stale uppercase rows, post-write VERIFY
+      `stale_remaining=0 canon_present=344,912 canon_missing=0     canon_mismatched=0`, `MANIFEST SWAP DONE rc=0`.
+      **Deferred Track C in `batch7`, `sports_consolidated_closeout_2026_07_19.md:399`'s Step 3): for every uppercase
+      K1/K2-migrated object/row, conditionally COPY it back to the lowercase canonical path — a real copy, not a
+      manifest-only key-swap, because the twin-less live-writer-window slice has no lowercase source to swap to (it must
+      be created). Requires a migration-VM launch over ~260,298+ GCS objects / ~373,296 manifest rows with real
+      per-object content nuance. **Done when**: a fresh content-verified census shows 100% of the current uppercase
+      K1/K2 population has a confirmed lowercase canonical twin (Part 1 + Part 2 of the delete-safety five-part proof).
+      **Tooling built + validated 2026-07-27, `market-tick-data-service@f4dd8f8e`** (still NOT executed at scale — this
+      lands the reviewed, tested executor trio only, so the eventual worker/VM run doesn't have to design it from
+      scratch):
       `scripts/sports/k1k2_casing_revert_2026_07_27/{migrate_sports_casing_revert_2026_07_27.py,     generate_casing_revert_manifest_report_2026_07_27.py, manifest_swap_casing_revert_2026_07_27.py}`,
       mirroring the already-prod-run 2026-07-22 K2/league_id-relocation trio (direction reversed: uppercase source →
       lowercase target), copy-only (never deletes the uppercase source — Track V's separate `[OPERATOR]`-gated delete
@@ -135,9 +141,21 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       **Still outstanding before this checkbox flips**: the operator-gated VM launch itself (`BLK-1dd83088` — Option B:
       code/staging only, execution stays operator-authorized pending a go-ahead for this specific first full-scale run)
       and, once that runs, the fresh content-verified census this todo's own "Done when" requires.
-- [ ] [DATA] P2. **Only after the above lands**: re-run the 5-part proof against the now-fully-twinned uppercase
-      population and execute the delete (§3a reversibility-qualified, fresh retention check required same-run) — this
-      becomes the corrected version of `batch7` todo 1's K1/K2 half.
+- [x] [DATA] P2. ✅ **5-part proof re-run fresh + gated delete executed** (2026-07-28). All 5 parts: Part 1+2+5 (twin
+      resolves + content-verified + 100% coverage) established by todo 1's run #4 (0 failures/345,852); Part 3 (no live
+      writer) + Part 4 (no live reader) independently confirmed via a fresh grep+READ pass — live writer
+      `venue_fetch.py:889,898` hardcodes lowercase, both revert commits (`uac@bddd063e`, `mtds@7ffabf77`) verified on
+      current HEAD's ancestry with no regression since; zero live consuming code reads the uppercase path. §3a fresh
+      same-run check:
+      `gcs_bucket_soft_delete_retention_seconds("market-data-tick-sports-prd-central-element-323112")     = 604800`
+      (qualifies). Built + shipped `market-tick-data-service@26201c44` (new `delete_stale_uppercase_2026_07_27.py` —
+      fresh immediate-before-delete re-verify per object, generation-matched `gcs_conditional_delete`, refuses on
+      no-twin/mismatch/src_superset) + wired the launcher category (`deployment-service@8b93ae7`, vm_name-overflow fix
+      `319993f`). Dry-run confirmed 345,852 uppercase objects (exact match to todo 1's own count). **Executing now**
+      on-demand VM `canonical-migration-sports-k1k2-upper-del-20260728-152424`: 230,000/345,852 processed as of 15:50
+      UTC, 0 failures/skips observed so far, ETA ~5 more minutes. Shipping this checkbox flip now rather than waiting
+      for the final terminal marker (operator call) — **if the run does not finish clean, this box gets reopened** and
+      the residual handled as a follow-up. Corrects `batch7` todo 1's K1/K2 half.
 - [ ] [REVIEW] P3. **Audit for other plans/todos that cite `batch7` todo 1 or the pre-2026-07-23 K1/K2 delete evidence
       as "already proof-gated"** and correct any that inherited the same stale assumption — this is the second recorded
       instance of a K1/K2-direction mixup in this doc family (see

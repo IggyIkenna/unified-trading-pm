@@ -57,7 +57,7 @@ exposes ONLY `/health` + `/readiness` (via UTL `make_health_router`) — there i
 subscriber loop, no consumption surface of ANY kind for a "reconciliation analysis task." The service's only existing
 loops (`app/loops/l2_signal.py` et al.) subscribe to `commodity-signals-{commodity}` topics for its own L2/L3
 trade-decision pipeline — a completely different domain (commodity trading signals, not recon analysis). Codex
-(`codex/08-workflows/t1-batch-dag.md:146`) says Stage 4 dispatches to "trading-agent-service (reconciliation analysis
+(`/codex/08-workflows/t1-batch-dag.md:146`) says Stage 4 dispatches to "trading-agent-service (reconciliation analysis
 task)" but that task type does not exist anywhere in the repo. Building it requires a real design decision (what does
 "analysis" mean here — an LLM call over the `_build_agent_prompt()` markdown? a new FastAPI endpoint? a new PubSub
 topic + consumer loop?) — this is the "figure out how X should look" class of open-ended judgment call the

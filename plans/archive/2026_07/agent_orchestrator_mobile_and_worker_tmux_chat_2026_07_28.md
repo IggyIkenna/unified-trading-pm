@@ -506,7 +506,7 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
   **One more adjacent gap fixed** (found while verifying, directly tied to Track 1's own security deliverable — distinct
   from the fleet-crisis annotation above, which was a pure observation, not a fix): `agent-orchestrator@ d088fc1` —
   updated `docs/AUTH_INVENTORY.md` (the repo's own canonical endpoint/auth-class inventory, explicitly cross-referenced
-  by `codex/04-architecture/agent-orchestrator-overview.md`) to add both new routes and document the new
+  by `/codex/04-architecture/agent-orchestrator-overview.md`) to add both new routes and document the new
   `operator (strict)` auth class (`auth.require_authenticated_user`/`STRICT_AUTHED_DEPS`) this plan introduced — it had
   silently gone un-updated by both prior phases despite being the exact document a future security reviewer would check
   first. Endpoint count corrected 41→43. Verified `quality-gates.sh` green before shipping (docs-only,
