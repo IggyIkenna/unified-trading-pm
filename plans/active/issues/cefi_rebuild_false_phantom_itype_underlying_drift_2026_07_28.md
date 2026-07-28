@@ -141,6 +141,15 @@ and a clean re-run must confirm before the migration proceeds.
       `test_wellformed_captured_no_object_still_phantom` (must still catch a TRUE phantom) alongside new tests for each
       drift case (must NOT phantom-demote when the object genuinely exists). (repo: market-tick-data-service) —
       market-tick-data-service@dcbed674
+- [x] ✅ [DATA] P0. Harden the shipped generalization (market-tick-data-service@dcbed674) to gate the
+      itype/underlying-drift shadow on non-blank `instrument_id`. The shipped version ignored `underlying`
+      unconditionally (`(day, venue, data_type, instrument_id) in covered_keys_no_itype_underlying` with no iid
+      check), which would cross-match a bundled-chain row (`instrument_id == ""`, e.g. DERIBIT
+      futures_chain/options_chain — `underlying` is its ONLY discriminator) against a DIFFERENT underlying's chain
+      cell captured on the same (date, venue, data_type), masking a true phantom — exactly the DERIBIT-chain-style
+      residual this rebuild's acceptance gate expects to still catch. Added regression test
+      `test_blank_iid_bundled_chain_not_shadow_suppressed_by_different_underlying`. (repo:
+      market-tick-data-service) — market-tick-data-service@<SHA>
 - [ ] [DATA] P1. After the fix lands, re-run the full-corpus `rebuild_cefi_manifest --dry-run` (2019-01-01..present) and
       confirm `phantom_to_failed` drops to a small DERIBIT-chain-style residual; update this issue doc + unblock
       `data_completion_cefi_2026_07_15.md`'s "NEXT SESSION — execute the migration" todo. (repo:
