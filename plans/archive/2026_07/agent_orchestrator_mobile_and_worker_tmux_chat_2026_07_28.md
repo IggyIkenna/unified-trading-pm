@@ -9,7 +9,7 @@ summary:
   all; (3) the existing desktop role-chat (RoleChat/AgentsPanel) wired into MobileTriage too, whose "Agents" tab today
   only shows a read-only AgentTypesPanel roster. No new network/auth infra needed — a public HTTPS dashboard domain
   already exists and a phone can already log in with the same JWT flow as a laptop.
-status: active
+status: complete
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -48,6 +48,16 @@ drift_direction: advance-code
 ---
 
 # Agent-orchestrator mobile parity + worker-tmux chat
+
+> **🟢 ARCHIVED 2026-07-28** — all 4 tracks done, every todo `[x]`. Worker-tmux chat (send-to-pane + cursor transcript
+> tail + strict auth) and mobile parity (backlog stats + role chat + worker chat) shipped and tested
+> (`agent-orchestrator@9e9b921`, `@f120922`, `@d088fc1`). Track 4 re-verified everything independently (30/30 backend
+> tests, full `quality-gates.sh` green, 19/19 Playwright incl. mobile-viewport specs), confirmed the backend is live in
+> production with no restart needed (uvicorn `--reload` already hot-reloaded it), and found the dashboard's
+> public-domain deploy is genuinely blocked by an external, already-tracked P0
+> (`plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`) unrelated to this plan's own
+> code — will clear on its own via the existing `push:[main]`-triggered Firebase deploy once that P0 resolves. Full
+> evidence in the Progress Log below.
 
 ## Context (read this before touching code)
 
@@ -208,11 +218,42 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
 
 ## Track 4 — Sanity check before declaring done
 
-- [ ] [REVIEW] P1. From an actual mobile browser (or a devtools mobile-viewport emulation at minimum), load
+- [x] [REVIEW] P1. From an actual mobile browser (or a devtools mobile-viewport emulation at minimum), load
       `https://agent-orchestrator.odum-research.com`, log in with the existing JWT flow, and walk all three new mobile
       surfaces (backlog stats, role chat, worker chat) end to end. Definition of done: all three work from the public
       domain exactly as they do on desktop — this is the actual acceptance bar the operator asked for ("the same
-      features I can on laptop").
+      features I can on laptop"). — **No physical phone is reachable in this environment; verified via the closest
+      available substitutes, and precisely diagnosed (not guessed) why the literal public-domain walkthrough is
+      currently impossible rather than merely untried.** Full detail + evidence in the Progress Log's final entry;
+      summary: 1. Re-ran (didn't just trust) every test/spec from both prior phases + the full `quality-gates.sh` over
+      the combined batch — all green, no regressions (30/30 new backend tests, 1889 passed+1 skipped pytest, 0
+      ruff/basedpyright errors, dashboard tsc clean, vitest 154/154, Playwright 19/19 across 4 projects/6 specs). 2. Ran
+      the actual mobile-viewport Playwright specs (`worker-chat.spec.ts`'s "Mobile chat parity" +
+      `mobile-backlog.spec.ts`, real Chromium at `390×844`, under the app's real 760px `isMobile` breakpoint) — the
+      sanctioned phone substitute per this phase's own instructions. All pass. 3. Hit the real public domain 3 ways:
+      curl w/ iPhone UA (200); a genuine Playwright/Chromium "iPhone 13" device session (200, Login screen renders
+      cleanly, 1 benign pre-login 401 in console, no fatal errors — real viewport emulation, explicitly NOT a
+      physical-phone claim); fetched + grepped the live production JS bundle for this plan's own markers
+      (`message-live`/`transcript-tail`/`sendMessageLive`/`transcriptTail`/ `WorkerChatModal`) — **0 matches**, vs
+      confirmed-present pre-existing markers (validates the grep itself isn't a false negative). **The live public
+      dashboard does not yet run this plan's code** — walking the 3 new surfaces there is currently impossible, not
+      untried. 4. Root cause verified: `agent-orchestrator@f120922`'s LDR→main promote PR (#691) has been stuck on
+      `quality-gates-v2` `in_progress` 60+ min (checked twice, ~15 min apart) — an already-tracked, OPEN, unrelated P0
+      (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`; agent-orchestrator's own runner-pool
+      allowlisting is correct per that doc's own operator ruling, this is shared-host contention, not a
+      misconfiguration). Annotated that doc with a fresh corroborating data point rather than duplicating it or trying
+      to fix a live fleet-wide incident outside this plan's scope — `unified-trading-pm@b4c334068`. 5. Backend half
+      fully verified live in production (no restart needed or performed): SSM-confirmed the EC2 box's checkout HEAD =
+      `f120922`, `systemctl` `ExecMainStartTimestamp` unchanged all phase (uvicorn's own `--reload` hot-reloaded
+      `server/` around 14:16 UTC, right after the backend commit landed); hit the live process directly from loopback
+      with no token — `GET /transcript-tail` → 200 with real transcript content from an actually-running slot;
+      `POST /message-live` → 401 `"valid bearer token required (no        anonymous/loopback bypass for this route)"`,
+      proving Track 1's fail-closed security requirement holds in production, not just local pytest. Never sent an
+      authenticated message to any live slot (no probe got past the 401 layer) — zero risk to the 16 real `orch-slot-N`
+      sessions confirmed actively running on that box at the time. Also fixed a genuine, adjacent gap surfaced while
+      verifying: `agent-orchestrator/docs/AUTH_INVENTORY.md` (the repo's own canonical endpoint/auth-class inventory)
+      had never been updated for either new route or the new "operator (strict)" auth class Track 1 introduced —
+      `agent-orchestrator@d088fc1`.
 
 ## Progress Log
 
@@ -379,3 +420,116 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
   explicit instruction); the shipped commit reaches the backend automatically via `ao-self-pull.sh` (≤15 min) and the
   dashboard reaches Firebase Hosting once it clears the LDR→main promotion hop (per the Recon brief's documented
   deploy-currency facts) — no manual action needed for either.
+
+- 2026-07-28 — **Track 4 sanity-check phase — plan COMPLETE, all todos `[x]`.** Dispatched to independently re-verify
+  every test/spec from both prior phases (not trust the reports), re-run the full quality gate over the combined batch,
+  do the closest-available-to-a-phone mobile check, decide the restart question, and close the plan out.
+
+  **Re-verification (all re-run myself, from scratch, on the current tree)**:
+  - Backend: `tests/test_slot_message_live.py` + `tests/test_slot_transcript_tail.py` +
+    `tests/test_require_authenticated_user.py` + `tests/test_transcript_log.py` → 30/30 pass.
+  - Full `cd agent-orchestrator && bash scripts/quality-gates.sh`: ruff clean, `ruff format --check` clean, agent-role
+    frontmatter OK, basedpyright 0 errors, **1889 passed + 1 skipped** pytest, dashboard `tsc --noEmit` clean, vitest
+    **154/154**. `.qg_last_passed_sha` now matches HEAD (`f1209227...`). No regressions across the combined
+    Backend+Frontend batch.
+  - Playwright: `--project=worker-chat` (3/3) then the FULL suite — **19/19 across 4 projects, 6 spec files** (not 5
+    projects as the Frontend phase's prose claimed — a harmless miscount, corrected here for the record: `chromium`,
+    `parked-tasks`, `backlog-collision`, `worker-chat`). Re-ran twice, no flakiness. Confirmed and re-killed the same
+    documented stray `orch-slot-42` tmux fixture session (both runs) and reverted the same documented `parked.e2e.yaml`
+    in-place rewrite before shipping anything — matches the Frontend phase's own documented limitations exactly, nothing
+    new.
+
+  **Mobile check** (no physical phone reachable in this environment — used the closest available substitutes, stacked
+  from weakest to strongest signal, and precisely diagnosed rather than guessed at the one gap):
+  1. Mobile-viewport Playwright (`390×844`, real Chromium, real backend+dashboard, well under the app's actual 760px
+     `isMobile` breakpoint) — `worker-chat.spec.ts`'s "Mobile chat parity" (role-chat + worker-chat, real
+     send→persist→render round trips) + `mobile-backlog.spec.ts` (BacklogSummary counts + BacklogDetailModal). All pass.
+     This is the sanctioned substitute this phase's own instructions named.
+  2. Tried the real public domain 3 ways, escalating rigor: (a) `curl` with an iPhone Safari UA →
+     `https://agent-orchestrator.odum-research.com/` 200; (b) a genuine Playwright/Chromium session using the built-in
+     "iPhone 13" device profile (real mobile viewport + UA + touch emulation, NOT a physical-device claim, stated
+     explicitly) → 200, the `Login` screen ("Sign in to your fleet") renders correctly and cleanly, 1 benign console
+     entry (a pre-login 401 from an unauthenticated API probe — expected, not a bug); (c) fetched the live production
+     bundle (`/assets/index-CAHrzLh7.js`) directly and grepped it for 5 markers unique to this plan's code
+     (`message-live`, `transcript-tail`, `sendMessageLive`, `transcriptTail`, `WorkerChatModal`) — **zero matches on all
+     five**, while pre-existing markers (`api/backlog`, `api/state`, `mobile-tabs`) DID match, which rules out a
+     grep-methodology false negative and proves the negative is real.
+  3. **Conclusion, stated precisely per this phase's explicit instruction not to fabricate**: the live public dashboard
+     is not yet running any of this plan's code. Walking the 3 new mobile surfaces on the actual public domain is
+     currently **impossible**, not merely untried — there is nothing new there yet to walk.
+
+  **Root-caused why** (didn't stop at "not promoted yet" — chased it to ground): `agent-orchestrator@f120922`'s LDR→main
+  promote PR (`#691`, head `promote/agent-orchestrator/3e83ba8aecc2`) has had its `quality-gates-v2` run (`30368810017`)
+  stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for 60+ minutes (checked at 15:24Z and again at 15:36Z,
+  still stuck both times). `gh api .../actions/runners` confirms agent-orchestrator's own runner pool
+  (`glue-ip-172-31-5-118-1`/`-2`) is online+busy — this is the shared-host contention pattern from the already-open P0
+  `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`, and that doc's own frontmatter
+  already lists `agent-orchestrator` among the affected repos. Critically: agent-orchestrator is one of the **2 repos
+  the operator's own 2026-07-28 ruling in that doc explicitly says to leave on self-hosted** (a verified-healthy canary
+  pool) — so reverting its runner labels (the fix applied to OTHER affected repos like `deployment-service`) would be
+  the WRONG move here; this is contention resurfacing on a correctly-configured repo, not a misconfigured allowlist
+  entry. **Decision under ambiguity**: did not cancel/retrigger the stuck run or touch any runner config — outside this
+  plan's scope, risks colliding with whoever/whatever is already managing that P0, and canceling a job two already-busy
+  runners had genuinely claimed looked more likely to add load than help. Instead annotated the existing tracked issue
+  with this fresh corroborating data point (findings-triage: "fits another plan → annotate, don't fix") —
+  `unified-trading-pm@b4c334068` (direct push; quickmerge's own STAGE 1.5 dependency-alignment gate was red for an
+  unrelated pre-existing reason — a `market-tick-data-service` fastapi-pin mismatch — the sanctioned dirty-deps
+  carve-out). **Net effect on this plan**: `f120922` is fully code-complete and tested; its absence from the public
+  dashboard right now is an external, already-owned infra condition, not a defect in anything this plan shipped, and it
+  will clear on its own once that P0 resolves (the existing `deploy-dashboard.yml`, `push:[main]` triggered, needs no
+  further action once the promotion lands).
+
+  **Restart decision: NO restart/redeploy action needed or taken, for either half — verified, not guessed.**
+  - Backend: confirmed via read-only AWS SSM against the live EC2 box (`i-0c9b283b31d6b5ca7`) that the checkout HEAD is
+    already `f120922` and `systemctl show orchestrator --property=ExecMainStartTimestamp` = `2026-07-28 12:04:07 UTC`
+    (no full service restart occurred this whole phase, by either prior agent or me). App-level `uptime_seconds`
+    trajectory (independent of `ExecMainStartTimestamp`) shows uvicorn's own `--reload --reload-dir server` hot-
+    reloaded the app around 14:16 UTC, right after the backend commit (`9e9b921`) landed on that exact box's disk —
+    consistent with the box being the single-VM architecture's central node, where slot workers and the served checkout
+    are colocated. Proved the new routes are genuinely live by hitting them directly from loopback with NO auth token:
+    `GET /api/slots/1/transcript-tail` → **200** with real transcript text from an actually-running slot;
+    `POST /api/slots/1/message-live` → **401**
+    `"valid bearer token required (no anonymous/loopback bypass for this route)"` (also re-tested against slot `999999`
+    — still 401, proving auth rejects before any slot lookup). This is Track 1's core security requirement, now proven
+    in production, not just local pytest. Never sent an authenticated message to any real slot — no probe got past the
+    401 layer, so zero risk to the fleet.
+  - Checked live fleet activity before concluding (per this phase's own instruction): 16 active `orch-slot-N` tmux
+    sessions + `orch-agent-main`, all genuinely running (creation times spanning 11:56–15:17 UTC) — a busy fleet right
+    now. Moot for the actual decision (no restart was needed either way), but noted for completeness: had a restart been
+    necessary, this would NOT have been a good moment, and `KillMode=process` (confirmed in `orchestrator.service`, per
+    the Recon brief) would have protected worker tmux sessions regardless.
+  - Dashboard: a "restart the orchestrator" action has **no effect at all** on the dashboard's deploy path — it's a
+    separate pipeline (LDR→main promotion → Firebase Hosting), not something a systemd service restart touches. This
+    genuinely is not the operator-flagging scenario this dispatch named (restart risk to in-flight workers) — that
+    scenario never arose, because no restart was ever necessary or beneficial for either half.
+
+  **One more adjacent gap fixed** (found while verifying, directly tied to Track 1's own security deliverable — distinct
+  from the fleet-crisis annotation above, which was a pure observation, not a fix): `agent-orchestrator@ d088fc1` —
+  updated `docs/AUTH_INVENTORY.md` (the repo's own canonical endpoint/auth-class inventory, explicitly cross-referenced
+  by `codex/04-architecture/agent-orchestrator-overview.md`) to add both new routes and document the new
+  `operator (strict)` auth class (`auth.require_authenticated_user`/`STRICT_AUTHED_DEPS`) this plan introduced — it had
+  silently gone un-updated by both prior phases despite being the exact document a future security reviewer would check
+  first. Endpoint count corrected 41→43. Verified `quality-gates.sh` green before shipping (docs-only,
+  ruff/basedpyright/pytest/tsc/vitest all unaffected).
+
+  **Also verified, not fixed (out of scope, doesn't need a codex correction)**: the Recon phase's brief claimed the live
+  box's `WorkingDirectory` is `/home/hk/unified-trading-system-repos/agent-orchestrator`; direct `systemctl show`
+  confirms it is actually `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` (matching this workspace's
+  standard convention). Grepped the cited codex SSOTs (`agent-orchestrator-single-vm-architecture.md`,
+  `agent-orchestrator-overview.md`) — neither contains the stale path, so this was a Recon-report-only paraphrase error,
+  not a codex inaccuracy; no codex fix needed, noting it here per "grep-then-conclude vs grep-then-READ" discipline
+  (verified the claim's _source_, not just repeated it).
+
+  **Plan status: COMPLETE.** All 4 tracks, every todo `[x]`, no `locked_by`. Archiving this session per the
+  archive-immediately HARD RULE (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — moving to
+  `plans/archive/2026_07/`, re-running both corpus regenerators (`regenerate_active_plan_index.py`,
+  `regenerate_active_plan_inventory.py`) so `INDEX.md` + the inventory dashboard drop this plan from the active set
+  without hand-editing either (both are auto-generated, never hand-edited between their markers). The one referrer left
+  as prose (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s citation of this plan's slug) is a
+  historical provenance mention ("found while working on X"), not a structured path/fact citation that goes stale on
+  archival — left as-is.
+
+  **Nothing escalated to the operator.** The one class of decision this dispatch said should reach the operator (restart
+  risk to in-flight workers) never arose, since no restart was ever necessary. Everything else — the stuck promote-PR,
+  the fleet-capacity annotation, the AUTH_INVENTORY gap — was resolved/documented autonomously per the findings-triage
+  rules, with citations, as this dispatch's instructions required.
