@@ -97,4 +97,24 @@ propagated**, not just stale cell content.
 - [ ] [ENGINEER] P2. **Rename `VenueAssetGroupV2`→`VenueCategoryV2` in the UI and resync `coverage.ts`** — the 5-step
       recommended fix above (rename + add `CROSS_CATEGORY`, re-run `sync-archetype-capability-to-ui.sh --write`, verify
       the UI's `quality-gates.sh`, grep for other drifted enums) has not been executed; running `--write` today would
-      still produce a `coverage.ts` that fails the UI's TypeScript strict build.
+      still produce a `coverage.ts` that fails the UI's TypeScript strict build. **PM-side half verified 2026-07-28,
+      NOT touched (split with a concurrent UI-side agent) — checkbox intentionally left unflipped, see Progress Log.**
+
+## Progress Log
+
+- **2026-07-28**: Verified the PM-side generator (`unified-trading-pm/scripts/propagation/sync_archetype_capability_to_ui.py`)
+  requires NO code change — it already unconditionally emits `import type { StrategyArchetype, VenueCategoryV2 } from
+  "./enums"` (line 38) and types `CoverageCell.assetGroup: VenueCategoryV2` (line 83), which is the CORRECT, current
+  UAC canonical name (confirmed live: `unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py:417`
+  `class VenueCategoryV2(StrEnum)` with 6 members incl. `CROSS_CATEGORY`, docstring "added 2026-04-25"). The generator
+  was never the defect — it was always correctly referencing UAC's real type name; the entire gap this doc describes is
+  the UI-side mirror (`enums.ts`) never being renamed to match. Did not run `--write` (would overwrite
+  `unified-trading-system-ui/lib/architecture-v2/coverage.ts`, which is a DIFFERENT agent's live, currently-uncommitted
+  WIP as of this check — `git status` in that repo shows `coverage.ts` and `enums.ts` both modified, and `enums.ts`
+  already carries a `VenueCategoryV2` type with all 6 members including `CROSS_CATEGORY`, i.e. that agent's rename is
+  already in flight). Per this session's explicit scope split (PM-side generator only, no UI-repo edits), leaving this
+  item's checkbox unflipped — the doc's single todo is UI-scoped (rename + resync + UI QG verification), none of which
+  a PM-only change can independently satisfy. Remaining work: the UI-side agent's in-flight rename/resync +
+  `unified-trading-system-ui`'s own `quality-gates.sh` (tsc strict + Vitest + the sync `--check` gate) passing, plus
+  recommended-fix step 5 (grep for any OTHER UAC `architecture_v2` enum renames similarly drifted from their UI
+  mirror) — not attempted here, out of this session's scope.

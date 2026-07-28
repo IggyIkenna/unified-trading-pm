@@ -127,10 +127,15 @@ loudly (non-zero exit, stderr visible) rather than silently proceeding into PR-c
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix `scripts/quickmerge.sh`'s final `git push -u origin "$BRANCH"` (currently line ~1667) to check
-      the push's exit code and fail loudly (non-zero exit + visible error) on rejection, instead of the current
-      `--quiet 2>/dev/null` silent-swallow. Strongly prefer adding one rebase-and-retry cycle (mirroring STAGE 0.4's
-      existing "Not-Behind Gate" pattern) since a single retry would have fixed 100% of the reproduction cases above.
-      **Done-when:** a deliberately-staged non-fast-forward push (push to a test branch, have another process land a
-      commit on it between quickmerge's pre-check and its final push, confirm quickmerge either recovers via retry or
-      exits non-zero with a visible error) no longer silently exits 0 with nothing pushed. (repo: unified-trading-pm)
+- [x] [SCRIPT] P1. ✅ **STALE-CONFIRMED-DONE (2026-07-28)** — already fixed by a concurrent session:
+      `unified-trading-pm@0e48ffe51` ("quickmerge Stage 5 hardening ... bounded retry on the final push") replaced the
+      bare `git push -u origin "$BRANCH" --quiet 2>/dev/null` with exactly the recommended shape (and more robust than
+      the doc's own inline snippet): a bounded retry loop (`_QM_PUSH_RETRIES`, default 5, `QUICKMERGE_PUSH_RETRIES`
+      override), exit code checked every attempt (`git push ... && { _qm_push_ok=1; break; }`), a
+      `git pull --rebase --autostash` between attempts (mirroring STAGE 0.4's Not-Behind Gate), a hard exit 1 with the
+      captured stderr (`$_qm_push_err`) if all retries are exhausted or the rebase hits a real conflict — no path
+      through this code can silently exit 0 without a real push landing. Re-read the live code at
+      `scripts/quickmerge.sh` lines ~1764-1779 to confirm this is still in place and unmodified from the fix's intent —
+      it is. Confirming + citing the existing fix; no new code needed for this item. (A separate, still-open sibling
+      doc — `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated
+      follow-on polish on the same code path; out of this item's scope, not touched here.)
