@@ -14,7 +14,7 @@ summary: >-
   complete cleanly (580s, `ALL QUALITY GATES PASSED`) — proving the code and the QG suite itself are fine; only the
   SHARED HOST's capacity to sustain a run is the variable. Total time lost to this retry loop: ~2 hours wall-clock
   across slot-12's session before escalating instead of continuing to retry blindly.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -27,6 +27,7 @@ related:
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
   ]
 created: 2026-07-27
+last_updated: 2026-07-28
 priority: P1
 parent_epic: infrastructure_master
 source: "slot-12, data_engineering, discovered while shipping prediction_satellite_ao_dispatch_batch1-003, 2026-07-27"
@@ -36,8 +37,13 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-pm@8a5693a4e + @fd06d1dee (2026-07-28)
 ---
+
+> **✅ RESOLVED 2026-07-28.** All 3 todos done: (1) the qg-host-governor runtime abort-monitor (self-scoped watchdog,
+> `unified-trading-pm@<slot-5 shipped SHA, see Recommended fix path>`); (2) the commit-before-QG ordering rule added to
+> `worker.md`/`RULES.md` (`unified-trading-pm@fd06d1dee`); (3) the SIGTERM/SIGINT/SIGHUP kill-marker trap across
+> `base-service.sh`/`base-library.sh`/`base-ui.sh` (`unified-trading-pm@8a5693a4e` + `@fd06d1dee`). Archived.
 
 # Shared-host RAM exhaustion silently kills background quality-gates.sh runs
 
@@ -124,11 +130,11 @@ defect; it is purely a function of host capacity at any given moment.
       existing reservation-ledger budget (70% of RAM) IS the global ceiling; it is now enforced continuously, not just
       at admission. Full repro-under-real-fleet-contention is left to the owning plan's soak process (this doc's fix is
       unit-tested + logically verified, not yet fleet-soaked).
-- [x] [DOC] P2. ✅ **DONE 2026-07-28** — added an explicit rule to `agents/worker.md`'s Pass-1/Pass-2 QG section
-      (right above the Pass-1 bullet): "Run Pass 1 AFTER committing (step a), never before" with the sentinel-SHA
-      rationale + a cite back to this doc. Cross-referenced from `agents/RULES.md` § 2 (an "Ordering note" added right
-      after the ship-loop code snippet, which already showed commit-then-QG in its example but didn't call the ordering
-      out as a rule) pointing back to worker.md. — `unified-trading-pm@fd06d1dee`.
+- [x] [DOC] P2. ✅ **DONE 2026-07-28** — added an explicit rule to `agents/worker.md`'s Pass-1/Pass-2 QG section (right
+      above the Pass-1 bullet): "Run Pass 1 AFTER committing (step a), never before" with the sentinel-SHA rationale + a
+      cite back to this doc. Cross-referenced from `agents/RULES.md` § 2 (an "Ordering note" added right after the
+      ship-loop code snippet, which already showed commit-then-QG in its example but didn't call the ordering out as a
+      rule) pointing back to worker.md. — `unified-trading-pm@fd06d1dee`.
 - [x] [INFRA] P2. ✅ **DONE 2026-07-28** — added a SIGTERM/SIGINT/SIGHUP signal trap to all three shared QG entrypoints
       (`base-service.sh`, `base-library.sh`, `base-ui.sh` — sourced directly from this PM checkout by every consuming
       repo, so this is a single-place fix, not a per-repo rollout) that writes a loud `killed.<pid>` marker (signal,
@@ -140,8 +146,8 @@ defect; it is purely a function of host capacity at any given moment.
       fires promptly when the signal reaches the whole process tree (the watchdog's own tree-walk, a process-group
       signal, `pkill`), deferred (not lost) when it reaches only the parent while a child stays alive. Verified with a
       manual repro (sent SIGTERM to both a test script and its foreground child, mirroring the watchdog's tree-walk
-      delivery pattern): marker written correctly with the right signal/pid/repo/timestamp fields before exit.
-      — `unified-trading-pm@8a5693a4e` (base-service.sh), `unified-trading-pm@fd06d1dee` (base-library.sh/base-ui.sh).
+      delivery pattern): marker written correctly with the right signal/pid/repo/timestamp fields before exit. —
+      `unified-trading-pm@8a5693a4e` (base-service.sh), `unified-trading-pm@fd06d1dee` (base-library.sh/base-ui.sh).
 
 ## Progress Log
 
