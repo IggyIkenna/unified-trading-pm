@@ -70,7 +70,7 @@ locked_since:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-16
+last_updated: 2026-07-28
 ---
 
 ## Regression check against same-session instruments-service@03f71c81a — CLEARED
@@ -241,14 +241,29 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket) so
       `CATALOGUE_SHRINK_BLOCKED`/similar structured events stop silently 403ing out of the event-log sink. Repo:
       deployment-service (IAM) — low priority, Cloud Logging already carries the same signal.
-- [ ] [DATA] P1. **cefi `CATALOGUE_SHRINK_BLOCKED` — added per RE-TRIAGE (2026-07-23) recommendation, still unresolved
-      as of that check.** `lifecycle-catalogue-regen-cefi` has hit `CATALOGUE_SHRINK_BLOCKED` on 07-16 and again on
-      07-23 (`new=428410 < current=429129`); today's drop-list is dominated by `dropped_delisted` expired-derivative
-      contract IDs (DERIBIT/OKX-FUTURES/BINANCE-DELIVERY/BINANCE-FUTURES/KRAKEN-FUTURES) — the same "aged out of the
-      window, no frozen tail" bug class already fixed for sports (`_merge_sports_ftp_with_frozen_tail`,
-      `instruments-service@24f84e86`) but never generalized to cefi. Generalize the frozen-tail merge fix to the cefi
-      `_merge_incremental` path and re-run `lifecycle-catalogue-regen-cefi` to confirm `CATALOGUE_PROMOTED`. Repo:
-      instruments-service.
+- [x] ✅ [DATA] P1. **cefi `CATALOGUE_SHRINK_BLOCKED` — added per RE-TRIAGE (2026-07-23) recommendation.** **RE-TRIAGE'S
+      OWN PREMISE WAS STALE/INCORRECT, corrected 2026-07-28** — see "2026-07-28 update" below: the frozen-tail merge is
+      NOT missing for cefi (it already runs generically via `_merge_incremental` on every incremental-mode run,
+      `build_instrument_catalogue.py:4834`); there was nothing to "generalize" and no code change was needed or shipped.
+      The real mechanism is cefi-only post-merge dedup passes correctly collapsing already-delisted duplicate rows.
+      Live-verified `CATALOGUE_PROMOTED` 2026-07-28 (429293 rows, `decision=ACCEPT`) satisfies this todo's literal
+      done-when. Repo: instruments-service (diagnosis only, no commit).
+- [ ] [OPERATOR] P3. **Decide whether to make the cefi monotonic guard dedup-aware, or leave the current
+      block-then-self-heal behavior as-is.** Per the 2026-07-28 update below, cefi's daily incremental job
+      intermittently trips `CATALOGUE_SHRINK_BLOCKED` (07-16, 07-23 through 07-27 observed) purely because the cefi-only
+      Phase D dedup passes (`_dedup_bybit_future_base_asset_parsing`, `_dedup_cefi_expiry_off_by_one`,
+      `_dedup_cefi_margin_type_mislabel`) collapse already-delisted duplicate rows below the guard's not-equally-deduped
+      previous-catalogue baseline — confirmed safe every time observed (`dropped_active: 0` on 07-23 and 07-27; every
+      dropped row was already closed in the prev catalogue, sample IDs match the dedups' documented ambiguous-wire-key
+      scope exactly). The guard self-heals whenever a day's net new listings outpace that day's dedup collapses
+      (happened 07-28: 429293 rows, `ACCEPT`) — same pattern already observed and accepted for defi (self-healed
+      2026-07-23, no code fix). This is a genuine operator-facing design/policy call, NOT a bounded worker todo: (a)
+      leave as-is (occasional day-level `CATALOGUE_SHRINK_BLOCKED` + self-heal is cosmetic noise, not data loss — the P3
+      IAM-403 fix above already gets these into the structured event log for visibility), or (b) change
+      `promote_catalogue`'s guard to compare against a dedup-normalized baseline (re-run the same Phase D dedups over
+      the CURRENT prod catalogue before counting it) so a purely-cosmetic dedup-driven shrink never blocks promotion — a
+      change to production monotonic-guard semantics that needs explicit operator sign-off before shipping, not a
+      worker's unilateral call. Repo: instruments-service.
 
 ## Progress Log
 
@@ -373,3 +388,64 @@ cefi/defi addendum below the title claim is a mixed picture, re-verified live an
   broken, not a new separate doc-worthy finding (`group_c_cloud_run_job_failures_triage_2026_07_16.md` already
   cross-references this exact addendum as living in this doc, so no fork needed) — recommend the pending [ ] P3 IAM todo
   be joined by a new cefi-specific todo generalizing the frozen-tail fix, next time this doc (or a successor) is worked.
+
+## 2026-07-28 update — cefi RE-TRIAGE premise was WRONG: no frozen-tail gap exists; real mechanism is Phase D dedup vs. the guard
+
+Dispatched against the P1 todo above ("generalize the frozen-tail merge fix to cefi"). Read
+`instruments-service/scripts/build_instrument_catalogue.py` at current HEAD (`3bff7ffd`) before writing any code, per
+the findings-triage "diagnose before fixing" discipline — the premise does not hold:
+
+**Finding 1 — cefi's daily incremental job already runs the generic frozen-tail merge; there was nothing to
+generalize.** `run_rollup`'s `mode == "incremental"` branch calls
+`df = _merge_incremental(prev_df, window_df, window_start=window_start, asset_group=asset_group)` (line 4834)
+UNCONDITIONALLY for every asset_group that reaches it, including cefi — this is the exact same engine
+`_merge_sports_ftp_with_frozen_tail` was built to REUSE for sports. Sports needed its own wrapper only because sports is
+architecturally exempt from this branch entirely (`mode="incremental" is a no-op for sports`, forced to `mode="full"`,
+and its FTP-grain builder did a from-scratch window rebuild with zero merge onto any prior state — `run_rollup` line
+4720). Cefi never had that exemption; its daily job (confirmed live: every `lifecycle-catalogue-regen-cefi` execution
+logs `'mode': 'incremental'`) has been going through `_merge_incremental` generically the whole time. The RE-TRIAGE
+section above misread the symptom (a shrink block) as evidence of the SAME missing-merge disease sports had, without
+first checking whether cefi's code path actually skips the merge — it does not.
+
+**Finding 2 — the real mechanism is `run_rollup`'s cefi-only Phase D dedup passes, which run AFTER the frozen-tail merge
+and can legitimately collapse the merged row count below the guard's baseline.** Lines 4873-4899: for
+`asset_group == "cefi"` only, three dedup functions run on the already-merged dataframe —
+`_dedup_bybit_future_base_asset_parsing`, `_dedup_cefi_expiry_off_by_one`, `_dedup_cefi_margin_type_mislabel` — each a
+narrow, live-verified (2026-07-22/07-23) collapse of TWO catalogue rows that represent the SAME real instrument under a
+historical id-parsing artifact (an off-by-one-day expiry parse, a base-asset parsing regression, or a stale margin_type
+mislabel — see each function's docstring for its own root-cause citation and exact match-count). `_merge_incremental`'s
+own docstring guarantees `len(merged) >= len(prev)` by construction (prev UNION window-new) — but these cefi-only dedup
+passes run in a SEPARATE step afterward and are not accounted for in that guarantee, so a day whose window happens to
+touch enough still-ambiguous historical pairs can push the final row count below the guard's `current` baseline even
+though zero real instruments were lost.
+
+**Finding 3 — live evidence confirms every observed shrink is this safe class, not data loss.** The drop-list diagnostic
+(`_shrink_drop_diagnostics`) reports `dropped_active` vs `dropped_delisted` — an ACTIVE row (no `available_to` set)
+being dropped would be real data loss; a `dropped_delisted` row was already closed in the previous catalogue before this
+run. Every drop-list observed for cefi reports `dropped_active: 0`:
+
+- 2026-07-23 (per the RE-TRIAGE section above, re-quoted): `dropped_delisted: 576, dropped_active: 0`.
+- 2026-07-27 (fresh `gcloud logging read` this session, both retries `20260727T010131Z` and `20260727T010328Z`,
+  byte-identical):
+  `'dropped': 829, 'added': 1317, 'dropped_active': 0, 'dropped_delisted': 848, 'dropped_by_venue': {'DERIBIT': 622, 'OKX-FUTURES': 146, 'BYBIT': 43, 'BITGET-FUTURES': 18, 'BINANCE-DELIVERY': 8, 'OKX-SWAP': 5, 'BINANCE-FUTURES': 4, 'KRAKEN-FUTURES': 2}`
+  — the venue breakdown (BITGET-FUTURES/OKX-SWAP/OKX-FUTURES margin-mislabel-shaped,
+  BINANCE-DELIVERY/BINANCE-FUTURES/KRAKEN-FUTURES numeric-YYMMDD-shaped, DERIBIT alphabetic-wire-shaped) and sample IDs
+  (`BINANCE-DELIVERY:FUTURE:BTC-USD@INV-20260627`, `BITGET-FUTURES:PERPETUAL:AAVE-USD@LIN`, …) match
+  `_dedup_cefi_expiry_off_by_one`'s and `_dedup_cefi_margin_type_mislabel`'s documented scopes exactly, not a
+  new/different failure shape.
+
+**Finding 4 — the guard is self-healing exactly as designed, same pattern already accepted for defi.**
+`gcloud run jobs executions list` shows cefi failed 07-24 through 07-27 and SUCCEEDED 07-28
+(`lifecycle-catalogue-regen-cefi-qmw72`, `succeededCount: 1`); live log:
+`Monotonic guard: new=429293 current=429129 decision=ACCEPT (monotonic_ok)` → `CATALOGUE_PROMOTED` at
+2026-07-28T01:03:41Z. Today's window's net new listings simply outpaced its dedup collapses — the exact "(b) trickle out
+over future days" self-heal this doc already documented for defi on 2026-07-23, now observed for cefi too. This
+satisfies the P1 todo's literal done-when ("re-run `lifecycle-catalogue-regen-cefi` to confirm `CATALOGUE_PROMOTED`")
+without any code change, because no code gap actually existed to fix.
+
+**Disposition:** flipped the P1 todo above to done citing this corrected diagnosis + the live 07-28 promotion. Did NOT
+write a "generalized frozen-tail merge" — it would have been a no-op change against a premise this session disproved,
+and touching the cefi monotonic-guard/dedup interaction for real (making the guard dedup-aware) is a production
+reference-data policy decision, not a diagnostic fact — filed as a new `[OPERATOR]` P3 todo above rather than decided
+unilaterally, consistent with this doc's own standing instruction ("operator should decide … before anyone runs
+`--allow-catalogue-shrink` on production reference data").
