@@ -247,37 +247,37 @@ and a clean re-run must confirm before the migration proceeds.
       gate) and re-diagnose the residual `phantom_to_failed` per-venue breakdown.
 
       **🟡 2026-07-28 (slot-12) — triple-dispatch found, do NOT launch another copy of this re-run.** Landed here via
-                      `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
-                      predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
-                      `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
-                      (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
-                      slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
-                      launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
-                      2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work.
+                          `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
+                          predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
+                          `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
+                          (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
+                          slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
+                          launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
+                          2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work.
 
-                  **✅ 2026-07-28 (slot-2) — RESULT: slot-2's run (started 10:49, run_id `20260728T104947Z-4180ee53`) completed
-                      first (elapsed 928.0s), superseding slot-15's in-flight copy for this todo — if slot-15's run is still live,
-                      it can be treated as redundant/discarded, no need to wait on it. Final summary:
-                      `total_shards=4,566,607 phantom_to_failed=55,201` (up from the pre-gate-fix 50,615 — EXPECTED, the
-                      non-blank-iid gate correctly un-suppresses some previously wrongly-suppressed DERIBIT bundled-chain rows).
-                      Per-venue `phantom_to_failed` breakdown (tallied from the full run log's
-                      `PHANTOM_CAPTURED_NO_OBJECT` lines):
+                      **✅ 2026-07-28 (slot-2) — RESULT: slot-2's run (started 10:49, run_id `20260728T104947Z-4180ee53`) completed
+                          first (elapsed 928.0s), superseding slot-15's in-flight copy for this todo — if slot-15's run is still live,
+                          it can be treated as redundant/discarded, no need to wait on it. Final summary:
+                          `total_shards=4,566,607 phantom_to_failed=55,201` (up from the pre-gate-fix 50,615 — EXPECTED, the
+                          non-blank-iid gate correctly un-suppresses some previously wrongly-suppressed DERIBIT bundled-chain rows).
+                          Per-venue `phantom_to_failed` breakdown (tallied from the full run log's
+                          `PHANTOM_CAPTURED_NO_OBJECT` lines):
 
-                      ```
-                      OKX-SWAP: 12,921   BINANCE-FUTURES: 9,435   COINBASE-FUTURES: 8,442   BYBIT: 7,081
-                      DERIBIT: 5,592     OKX-FUTURES: 4,456        BITGET-FUTURES: 3,198     BITFINEX-FUTURES: 2,610
-                      KRAKEN-FUTURES: 882  COINBASE-CDE: 388       HYPERLIQUID: 184          ASTER: 12
-                      ```
+                          ```
+                          OKX-SWAP: 12,921   BINANCE-FUTURES: 9,435   COINBASE-FUTURES: 8,442   BYBIT: 7,081
+                          DERIBIT: 5,592     OKX-FUTURES: 4,456        BITGET-FUTURES: 3,198     BITFINEX-FUTURES: 2,610
+                          KRAKEN-FUTURES: 882  COINBASE-CDE: 388       HYPERLIQUID: 184          ASTER: 12
+                          ```
 
-                      **VERDICT: the acceptance gate is STILL NOT met — the normalizer todo below is CONFIRMED still needed, NOT
-                      moot.** DERIBIT rose from 2,545→5,592 (correctly — the gate fix restored true phantoms the old bug was
-                      wrongly suppressing) but is still only 5,592/55,201 = **10.1%** of the residual, nowhere near dominant.
-                      Every instrument_id-format-drift venue's count is essentially UNCHANGED from the pre-gate-fix run
-                      (OKX-SWAP 12,921→12,921 identical; BINANCE-FUTURES 9,427→9,435; COINBASE-FUTURES 8,442→8,442 identical) —
-                      proof this is a genuinely DISTINCT root cause the `89112f89` gate fix does not touch. The main-agent's
-                      sequencing directive is fully validated: it was right to gate the normalizer on this re-run, and the
-                      re-run confirms the normalizer's original premise was correct all along. Proceeding to restore + finish
-                      the normalizer per the todo below. (repo: market-tick-data-service)
+                          **VERDICT: the acceptance gate is STILL NOT met — the normalizer todo below is CONFIRMED still needed, NOT
+                          moot.** DERIBIT rose from 2,545→5,592 (correctly — the gate fix restored true phantoms the old bug was
+                          wrongly suppressing) but is still only 5,592/55,201 = **10.1%** of the residual, nowhere near dominant.
+                          Every instrument_id-format-drift venue's count is essentially UNCHANGED from the pre-gate-fix run
+                          (OKX-SWAP 12,921→12,921 identical; BINANCE-FUTURES 9,427→9,435; COINBASE-FUTURES 8,442→8,442 identical) —
+                          proof this is a genuinely DISTINCT root cause the `89112f89` gate fix does not touch. The main-agent's
+                          sequencing directive is fully validated: it was right to gate the normalizer on this re-run, and the
+                          re-run confirms the normalizer's original premise was correct all along. Proceeding to restore + finish
+                          the normalizer per the todo below. (repo: market-tick-data-service)
 
 - [x] ✅ [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
@@ -335,3 +335,10 @@ and a clean re-run must confirm before the migration proceeds.
       **Background via a properly harness-tracked bg task** (Bash `run_in_background: true`, no manual `&`/`disown`/
       `setsid` — the orphan-process reaper kills manually-detached background processes at ~345s elapsed). (repo:
       market-tick-data-service)
+
+      **🟡 2026-07-28 12:30 (slot-2) — this 4th run is ALREADY IN PROGRESS, do not dispatch another copy** (per the
+              triple-dispatch lesson on the 3rd re-run above). Launched on market-tick-data-service@9c19c48b (BYBIT fix
+              included), same command as prior runs. If you land here and the run is no longer live (`ps aux | grep
+              rebuild_cefi_manifest`), check this todo's checkbox state first — slot-2 updates this doc with the result
+              the moment the run completes (~15-18min from launch based on the 3 prior runs' timing). Only re-launch if
+              BOTH the process is gone AND this todo is still unflipped after a reasonable wait.
