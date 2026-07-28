@@ -27,7 +27,11 @@
 set -euo pipefail
 
 RESTART_THRESHOLD="${GLUE_WATCHDOG_RESTART_THRESHOLD:-5}"
-STATE_DIR="${GLUE_WATCHDOG_STATE_DIR:-/var/lib/glue-runner-watchdog}"
+# /var/lib is root-owned; /opt/github-glue-runners itself is ALSO root:root (only specific
+# pre-created subdirs like .gcloud are ubuntu-owned) -- verified live, not assumed, after the
+# first attempt at each hit Permission denied. The unit runs User=ubuntu, so state has to live
+# under ubuntu's own home instead.
+STATE_DIR="${GLUE_WATCHDOG_STATE_DIR:-/home/ubuntu/.local/state/glue-runner-watchdog}"
 STATE_FILE="${STATE_DIR}/alerted-units"
 GH_REPO="IggyIkenna/unified-trading-pm"
 PM_ENV_FILE="/etc/github-glue-runner.env"

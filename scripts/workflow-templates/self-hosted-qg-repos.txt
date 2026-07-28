@@ -12,16 +12,24 @@
 # TRIMMED then PARTIALLY RESTORED 2026-07-28 (fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md, P0):
 # the Phase-7 fanout landed 19-24 repos on this list, each with only its own lone 1-runner pool, ALL colocated on
 # the same shared 16-vCPU/64GB EC2 instance (i-0c9b283b31d6b5ca7). That caused hours-long CI stalls fleet-wide
-# (9+ whack-a-mole per-repo reverts overnight). This file was briefly trimmed to just the two verified-adequate
-# pools (agent-orchestrator, unified-trading-pm) as the systemic fix. **Operator ruling (2026-07-28, live):
-# capacity has freed up materially since the incident — do not blanket-strip the fleet off self-hosted.** This
-# list is restored to match the repos that are ACTUALLY self-hosted right now: the two original pools, the 5
-# repos nobody had touched (their own CI never actually broke), and the 6 repos this session reverted-then-
-# restored per that ruling. The ~10 repos other agents genuinely reverted to ubuntu-latest overnight for a real,
-# observed hang (execution-service, batch-live-reconciliation-service, alerting-service, client-reporting-api,
-# e2e-testing, unified-trading-library, ml-service, deployment-api, market-data-processing-service,
-# deployment-service) are intentionally left OFF this list — that was settled, evidence-based work, not touched
-# here. Re-add any of those only once it separately gets a real capacity-planned pool.
+# (9+ whack-a-mole per-repo reverts overnight, root cause: the legacy token governor (qg-host-governor.sh) counts
+# concurrent heavy phases blindly (K=4) with no idea of actual RAM, so N cheap repos + 1 heavy one still
+# oversubscribed the host). This file was briefly trimmed to just the two verified-adequate pools
+# (agent-orchestrator, unified-trading-pm), then partially restored same-day per operator ruling ("capacity has
+# freed up, don't blanket-strip the fleet").
+#
+# FULLY RESTORED 2026-07-28 (same issue doc, proper fix): python-quality-gates-v2.yml now activates the RAM+CPU
+# dual-gate reservation-mode governor (QG_GOVERNOR_MODE=reservation, f9ffe7424) whenever a caller passes
+# self_hosted_runner_labels — admission is sized against each repo's MEASURED peak RSS
+# (scripts/dev/qg_resource_baseline.json) instead of a blind token count, so a repo that doesn't fit the live RAM
+# budget queues safely instead of crashing the host. Verified live (instruments-service run 30362525333:
+# QG_MEM_CAP computed as this repo's measured baseline x1.2, not the token-mode 10G default). The 10 repos below
+# were reverted overnight for exactly the blind-token oversubscription this fix addresses
+# (execution-service, batch-live-reconciliation-service, alerting-service, client-reporting-api, e2e-testing,
+# unified-trading-library, ml-service, deployment-api, market-data-processing-service, deployment-service) — all
+# 10 still have their self-hosted runner pool registered + online (verified via the GitHub API), so no new pool
+# setup is needed. Re-added now that admission is RAM-aware; if the host shows renewed contention, the governor's
+# own queueing (not a repo-by-repo revert) is the first thing to check — see the issue doc.
 agent-orchestrator
 unified-trading-pm
 strategy-service
@@ -35,3 +43,13 @@ greeks-service
 ibkr-gateway-infra
 instruments-service
 market-tick-data-service
+execution-service
+batch-live-reconciliation-service
+alerting-service
+client-reporting-api
+e2e-testing
+unified-trading-library
+ml-service
+deployment-api
+market-data-processing-service
+deployment-service
