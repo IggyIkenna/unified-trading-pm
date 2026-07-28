@@ -93,8 +93,15 @@ legitimate, deliberate, better-considered replacement — not a silent drop of t
       `CURVE-OPTIMISM:POOL:CRVUSD-CRV`), confirmed live and correct for both chain rows. There is no CURVE-specific gap
       distinct from the general pre-flight/dedup finding below (which affects CURVE and all 5 Balancer rows identically,
       not CURVE alone).
-- [ ] [DOC] P2. Update `/codex/02-data/defi-canonical-naming-ssot.md` with the two-id/dual-key POOL model (post-phase
-      codex audit that `defi_pool_id_chain_uniqueness_2026_07_18.md` named but was superseded before completing).
+- [x] ✅ [DOC] P2. **DONE 2026-07-28 (slot-13)** — Added "POOL identity is a two-id / dual-key model (Option A,
+      operator-ruled 2026-07-18)" section to `/codex/02-data/defi-canonical-naming-ssot.md`: documents `instrument_id`
+      (bare `pool_address.lower()`, machine/manifest join key) vs `canonical_instrument_id`/ `glued_pair_id`
+      (`VENUE-CHAIN:POOL:BASE-QUOTE[-FEE_BPS]`, symbolic/UI key), sourced from
+      `unified_api_contracts/canonical/crosscutting/defi.py`'s `DefiPoolIdentity`/`build_pool_identity`; notes the
+      separate internal-only `instruments-service/scripts/build_instrument_catalogue.py::_aggregate_key`
+      `pool::{chain}::{address}` lifecycle-merge key is unrelated to the two ids above; cross-links the still-open P2
+      pre-flight/dedup keying-gap todo in this same issue doc. `code_refs`/`related`/`last_reviewed` updated accordingly
+      — unified-trading-pm@(see commit below).
 
 ## Update (2026-07-26, slot-5/review — defi_satellite_ao_dispatch_batch1-024, end-to-end verification)
 
