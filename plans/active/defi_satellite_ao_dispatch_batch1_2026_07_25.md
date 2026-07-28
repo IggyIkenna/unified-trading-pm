@@ -374,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -540,13 +540,20 @@ drift_direction: advance-code
       Ship no registry/code change (report only, per spec) — unified-trading-pm@1c722f1b3. Repo: unified-trading-pm (doc
       only; instruments-service read-only, no code changed). Source:
       `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`.
-- [ ] [VERIFY] P1. Determine the root cause of the `swaps_ohlcv_4h` timeframe discrepancy — live manifest shows 51,985
-      real captured rows despite `4h` being absent from `unified-api-contracts`'s `_candle_contracts.py`
+- [x] ✅ [VERIFY] P1. Determine the root cause of the `swaps_ohlcv_4h` timeframe discrepancy — live manifest shows
+      51,985 real captured rows despite `4h` being absent from `unified-api-contracts`'s `_candle_contracts.py`
       module-docstring declared DeFi timeframe set. Confirm intentional (correct the stale docstring to include `4h`) or
       a policy-violating bug (identify the producing code path in MDPS's `DefiSwapAdapter`/`swap_adapter.py` and file a
       follow-up). Repos: unified-api-contracts, market-data-processing-service. **Done when**: root cause is determined
       and cited with evidence; if intentional, the docstring is corrected; if a bug, the producing path is identified
       and a follow-up issue filed. Source: `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`.
+      **Evidence (2026-07-28, slot 8)**: INTENTIONAL, not a bug — `unified-api-contracts/.../_candle_contracts.py:161`
+      already defines `_TIMEFRAMES_DEFI = ("15s", "1m", "5m", "15m", "1h", "4h", "1d")` (includes `4h`) and the
+      registration loop at `:437` uses it directly; only the module docstring at `:43` was stale (omitted `4h`).
+      Confirmed via `market-data-processing-service/market_data_processing_service/config.py:73-75`: "cefi"/"defi" are
+      deliberately OMITTED from `_TIMEFRAME_CEILING_BY_ASSET_GROUP` because their UAC constants already equal the full
+      7-timeframe default — i.e. MDPS intentionally uses the full ceiling (incl. `4h`) for defi, no scoping-down. Fixed
+      the docstring: `unified-api-contracts@b3f3d382`.
 - [ ] [SCRIPT] P1. Thread `mode=` into `assert_defi_catalog_fresh()` for the 9 remaining DeFi handlers still omitting it
       (`liquidations_handler.py`, `native_staking_handler.py`, `liquidation_events_handler.py`,
       `token_transfers_handler.py`, `bridge_events_handler.py`, `flash_loan_events_handler.py`,
