@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                                                                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                                                                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                                                                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                                                                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                                                                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                                                                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                                                                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                                                                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                                                                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                                                                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                                                                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -793,16 +793,16 @@ drift_direction: advance-code
       differently-ordered shard columns into canonical explains both the spurious `captured` rows and their near-uniform
       per-granularity counts. No live fix needed (bug already fixed + rows already reconciled). Full evidence in
       `issues/phantom_captures_defi_2026_06_28.md` Progress Log. Source: same doc.
-- [ ] [VERIFY] P1. Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered
-      venue×instrument_type combination) actually changes expected_unattempted materialisation / completeness_pct, or
-      whether that denominator is scoped independently — small, cheap, read-only check mirroring the equivalent
-      venue-axis check already run in `distinct_values_noncanonical_audit_2026_07_20.md` RESULT 4. Repo:
-      unified-api-contracts (read-only). **Done when**: a finding is written (appended to the issue doc's Progress Log)
-      stating definitively — via a read-only code trace and/or a scoped enumerator test — whether registering
-      `perp_daily_ctx` for the already-registered HYPERLIQUID/CeFi combinations would mint new expected_unattempted rows
-      or move completeness_pct (NOTE: GMX dropped from this combination list — REMOVED 2026-07-25, see
-      `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`). No code/schema/manifest changes made. Source:
-      `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`.
+- [x] ✅ [VERIFY] P1. **DONE 2026-07-28 (slot-6, data_engineering).** Confirmed via read-only code trace: adding
+      `perp_daily_ctx` to `DATA_TYPES_BY_ASSET_GROUP["defi"]` mints ZERO new `expected_unattempted` rows and moves NO
+      `completeness_pct` for the already-registered HYPERLIQUID/CeFi combinations — HYPERLIQUID/CeFi venues enumerate
+      under `DATA_TYPES_BY_ASSET_GROUP["cefi"]` (a separate dict key), not `["defi"]`
+      (`instruments-service/scripts/enumerate_expected_universe.py:4145,1157`,
+      `unified_api_contracts/registry/market_data_categories.py:360`). Mechanism note: the data_type axis is NOT
+      independently scoped in general (unlike the venue axis) — it IS a direct enumerator input gated by
+      `PROTOCOL_CAPABILITIES` (`market_data_categories.py:1443-1517`), so this specific inertness is due to
+      HYPERLIQUID's asset_group placement, not the mechanism itself. No code/schema/manifest changes made. Full finding:
+      `issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md` Progress Log (2026-07-28).
 - [ ] [DATA] P1. **Resolve the Kamino/Solend `lending_indices` `instrument_type` shape conflict — probe BOTH candidate
       paths.** `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` item 4 left this
       "inconclusive, not a clean bill": its own targeted shape (`instrument_type=solana_lending`, per
