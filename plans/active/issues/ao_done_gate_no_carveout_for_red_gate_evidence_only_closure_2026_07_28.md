@@ -26,7 +26,7 @@ tags: [agent-orchestrator, done-gate, plan-flip-verification, red-gate, data-cor
 related:
   [
     /plans/active/data_completion_cefi_2026_07_15.md,
-    /plans/active/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md,
+    /plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 created: 2026-07-28

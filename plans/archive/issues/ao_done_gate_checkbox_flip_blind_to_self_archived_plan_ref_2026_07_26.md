@@ -14,7 +14,7 @@ summary: >-
   archival-ritual task that legitimately flips its own todo's checkbox and archives the very file that checkbox lives
   in, in one commit, can NEVER satisfy this gate -- reproduced live on
   `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-003` (`unified-trading-pm@2641d8844`).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,9 +37,13 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: "agent-orchestrator@587c8db"
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Both todos closed:
+> `agent-orchestrator@587c8db` (server/verify.py Mode-2/Mode-1 fallback + regression tests); the P3 doc
+> follow-up resolved as now-moot.
 
 # /done checkbox-flip verification can't handle a self-archiving finalize task
 
