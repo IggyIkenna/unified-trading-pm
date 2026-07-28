@@ -1,0 +1,35 @@
+{
+  "service": "data_pipeline_e2e_check_features",
+  "run_date": "2026-07-26",
+  "legs": ["force"],
+  "started_at": "2026-07-28T13:29:14.223564+00:00",
+  "finished_at": "2026-07-28T13:33:07.750988+00:00",
+  "total": 1,
+  "passed": 0,
+  "failed": 1,
+  "ambiguous": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "shard_label": "PREDICTION:delta_one",
+      "leg": "force",
+      "status": "failed",
+      "reason": "vm_not_success:vm_exit_nonzero=1",
+      "vm_name": "features-e2e-prediction-20260728-132926-0f2a85",
+      "exit_status": 1,
+      "write_verified": false,
+      "parquet_count": 0,
+      "manifest_ok": false,
+      "manifest_status": "",
+      "skip_signal_found": false,
+      "skip_proof": "not_applicable",
+      "fingerprint_before": null,
+      "fingerprint_after": null,
+      "attempt_ts": "2026-07-28T13:29:25.616086+00:00",
+      "duration_sec": 220.846576,
+      "parquet_bucket": "features-pred-test-central-element-323112",
+      "manifest_bucket": "features-pred-test-central-element-323112",
+      "parquet_uri": ""
+    }
+  ]
+}
