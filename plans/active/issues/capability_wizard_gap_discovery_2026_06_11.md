@@ -299,12 +299,22 @@ reached only via a deliberate `READINESS_OVERRIDES` entry — none today), **55 
 `scripts/openapi/_capability_readiness.py` + `tests/unit/test_capability_readiness.py`. Additive metadata only — never
 flips an edge's `status`; capability-regression gate green.
 
-- [ ] [UI] P2. **Surface the per-edge `readiness` badge in the capability wizard** — `unified-trading-system-ui`. Read
-      `lib/registry/capability-manifest.json` `edges[].readiness` + the synced `capability-readiness-report.json`;
-      render a maturity chip per archetype/edge (backtest-only=grey, shadow-observed=amber, staging-proven=blue,
-      live-proven=green) next to the existing availability tick, with the cited evidence
-      (`live_cluster_registry:<name>`) in the tooltip. Thin follow-on to the exporter work above (Wave-2 #2). Needs
-      `[UI]` + `pw:L2 ✓` + a regression spec per the playwright gate before ticking.
+- [x] ✅ [UI] P2. **DONE 2026-07-28 (slot-4)** — **Surface the per-edge `readiness` badge in the capability wizard** —
+      `unified-trading-system-ui@2af6c97d`. `capability-readiness-report.json` was never actually synced into
+      `lib/registry/` (the sync step in `generate-unified-openapi.sh` already handled it, it just hadn't been re-run
+      since Wave-2 #2 shipped) — copied it in, added a typed accessor (`lib/registry/capability-readiness.ts`), a
+      `ReadinessBadge` chip component rendered next to the existing `GapChip` availability tick on archetype cards
+      (`components/wizard/OptionCard.tsx`), and wired the tier + cited evidence through `getAllArchetypesForFamily`
+      (`lib/wizard/graph.ts`) so nothing is invented client-side — backtest-only=grey, shadow-observed=amber,
+      staging-proven=blue, live-proven=green, tooltip cites `live_cluster_registry:<name>` (or the honest "no
+      operational evidence" default). New pw:L2 spec `tests/smoke/wizard-readiness-badge.spec.ts` proves both a
+      live-proven archetype (`ARBITRAGE_PRICE_DISPERSION`) and a backtest-only sibling in the SAME family
+      (`LIQUIDATION_CAPTURE`) render correctly on the same stage. **pw:L2 ✓**
+      (`npx playwright test --project=chromium     tests/smoke/wizard-readiness-badge.spec.ts` green). tsc/ESLint/Vitest
+      (3286 tests) + full `quality-gates.sh` all green. Also fixed one adjacent pre-existing stale count assertion found
+      while running the full smoke suite (venue count drifted 195→225 in `tests/smoke/wizard.spec.ts`); the remaining
+      ~65 unrelated pre-existing smoke failures seen in that run were NOT individually triaged — filed as
+      `plans/active/issues/wizard_smoke_suite_pre_existing_failures_2026_07_28.md`.
 
 <!-- GAP ENTRIES: two-sided audit (auto-appended by audit_prospectus_vs_codex.py) -->
 
