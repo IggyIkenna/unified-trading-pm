@@ -346,10 +346,12 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       market-tick-data-service — no headroom to ratchet DOWN right now), but the `--update-baseline` re-run still
       stamped the previously-missing `commit:` anchor (`fc82b35b`) for accurate future diff-based over-baseline
       reporting, matching the pattern already applied to market-tick-data-service/instruments-service/
-      ml-service/trading-agent-service. Config-only, no deployment-service code change. All 5 repos this doc ever
-      flagged (mtds/instruments/ml/trading-agent/deployment-service) now carry a `commit:` anchor; each unbanked
-      baseline used to leave headroom for a real regression to slip in unnoticed, which is exactly how
-      `agent-orchestrator` reached 26 — that gap is now closed fleet-wide for this check.
+      ml-service/trading-agent-service. Config-only, no deployment-service code change. This closes this todo's original
+      4-repo scope (deployment-service/instruments-service/ml-service/trading-agent-service, all now at/under baseline
+      with a `commit:` anchor); `agent-orchestrator` still lacks one — that is the SEPARATE, still-open P2 todo
+      immediately below (not this todo's scope; the two were split precisely because AO's gap is an anchor-stamping
+      task, not a count-ratchet). Each unbanked baseline used to leave headroom for a real regression to slip in
+      unnoticed, which is exactly how `agent-orchestrator` reached 26.
 
 - [ ] [SCRIPT] P2. **Stamp a `commit:` anchor into the `agent-orchestrator` baseline row** (and audit which other repos
       lack one). Root cause of the 2026-07-16 mis-report: AO's row is bare `count: 25` with no `commit:`, so an
