@@ -298,7 +298,16 @@ def extract_leg_structures() -> tuple[list[CapabilityNode], list[CapabilityEdge]
                     )
                 )
 
-    # Honest gap: archetypes with NO leg structure → one not_registered gap edge.
+    # Correct negative: archetypes with NO leg structure carry an explicit,
+    # cited ``not_registered_reason`` (Phase 6A: EVERY member of
+    # ``archetypes_without_leg_structures()`` is genuinely underivable — no
+    # engine AND no structural legs in the codex doc, e.g. a theoretical-only
+    # tracer or a pure meta-allocation overlay — never a "not authored yet"
+    # placeholder; the model validator enforces the citation). This is
+    # ``logical_dead_end`` (structurally impossible, correct and expected),
+    # NOT ``missing_registry`` (a fillable registry gap) — emitting the latter
+    # falsely surfaced these as "closest-to-unlock" roadmap items (confirmed:
+    # ARBITRAGE_MEV_SANDWICH — theoretical-only tracer, Bloxroute feed removed).
     for archetype in archetypes_without_leg_structures():
         arch_id = archetype.value
         add_node(CapabilityNodeKind.ARCHETYPE, arch_id, _titleize(arch_id))
@@ -307,12 +316,9 @@ def extract_leg_structures() -> tuple[list[CapabilityNode], list[CapabilityEdge]
                 from_node_id=arch_id,
                 to_node_id=arch_id,
                 relation=f"{REL_HAS_LEG}:legs",
-                status=CapabilityEdgeStatus.NOT_REGISTERED,
-                gap_type=CapabilityGapType.MISSING_REGISTRY,
-                reason=(
-                    f"{arch_id} has no leg structure in ARCHETYPE_LEG_STRUCTURES yet — "
-                    "structural per-leg restrictions not modelled (F22 leg-truth gap)"
-                ),
+                status=CapabilityEdgeStatus.NOT_AVAILABLE,
+                gap_type=CapabilityGapType.LOGICAL_DEAD_END,
+                reason=ARCHETYPE_LEG_STRUCTURES[archetype].not_registered_reason,
             )
         )
 
