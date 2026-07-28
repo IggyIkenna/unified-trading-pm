@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                                                      | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                                                      | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                                                      | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                                                      | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                                                      | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                                                  (specific `_migrated_*` marker objects, never the bucket), target
-                                                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                                                  Progress Log below.
+                                                                                      "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                                                      the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                                                      genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                                                      for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                                                      `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                                                      (specific `_migrated_*` marker objects, never the bucket), target
+                                                                                      `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                                                      returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                                                      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                                                      this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                                                      per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                                                      Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -669,3 +669,20 @@ is quick and doesn't block anything.
     (category-1, in progress) — per the prior checkpoint's own explicit permission ("unless split into its own follow-up
     todo"), NOT splitting yet — will flip once category-1's dry-run + apply are both verified, in the same session if
     the dry-run completes cleanly.
+
+- **2026-07-28 (later) — category-1 dry-run interrupted by a HOST-LEVEL crisis (session death), resumable, NOT a bug in
+  this todo's work.** The dry-run reached 8,500/23,588 markers ({'SAFE': 8050, 'FLAGGED_ROWCOUNT_SHORTFALL': 98,
+  'FLAGGED_NO_SIBLINGS_NO_BACKUP': 308, 'SAFE_NEEDS_ATTRIBUTION_COVERED': 44} — no unexplained FLAGGED categories,
+  matching the expected disposition shape) when this agent's ENTIRE SESSION died mid-task (not just the one background
+  process) — required a full resume. `cat /proc/loadavg` immediately after resume: **185.17 259.50 252.63** on this
+  16-core host (~16x oversubscribed), materially worse than the 57-75 already flagged earlier this session. Escalated
+  P2→P0 in `issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md` (this is now a fleet-wide
+  host-capacity concern, not specific to this todo). **No data/progress lost**: the script's own
+  `--resume-log /tmp/dex_pool_marker_purge.dry.resume.jsonl` survived on local disk with 8,903 entries (a few more than
+  the last printed checkpoint), and `git status` across every repo in this slot is clean — nothing uncommitted was at
+  risk. **Waiting for host load to decline meaningfully before resuming** (checked post-escalation: 1-min load dropping
+  185→124→104 while 5/15-min remain elevated from the recent peak — trending down but not yet safe to relaunch even a
+  lightweight process) rather than immediately retrying into the same crisis. Next step once load subsides: re-run the
+  SAME command with `--resume-log /tmp/dex_pool_marker_purge.dry.resume.jsonl` (the script's own resumable design skips
+  the 8,903 already-processed markers, per the same contract already verified working for todo 1's lst_rates purge and
+  the address-keyed leaf-purge VM run).
