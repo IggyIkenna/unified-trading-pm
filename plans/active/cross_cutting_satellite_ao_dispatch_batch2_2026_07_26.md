@@ -435,7 +435,7 @@ drift_direction: advance-code
       per-date-loop site is converted and every remaining site is explicitly documented as safe, with no site left
       unaudited, and the source checkbox is flipped.
 - [x] ✅ [DOC] P1. **Reconcile the `gcs_data_access_audit_log_cost` duplicate and add the missing historical-snapshot
-      banner.** — `unified-trading-pm@<pending>`. (a) was already done by a prior pass when this task dispatched:
+      banner.** — `unified-trading-pm@61407412c`. (a) was already done by a prior pass when this task dispatched:
       `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md` no longer exists (confirmed absent), and
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md`'s todo 3 already carries the "⚠️ CORRECTED
       2026-07-26" banner directing DELETE-not-archive (matches this todo's own instruction verbatim) — nothing left to
