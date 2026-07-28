@@ -85,6 +85,12 @@ locked_since:
 > existing (not re-listed in full) — that doc is the SSOT for its own sub-detail; this doc surfaces the genuinely
 > SEPARATE canonicalization work that effort does not already track.
 
+> **🟡 HISTORICAL SNAPSHOT as of 2026-07-10.** This doc is a discoverability index, not a live tracker — several of the
+> docs it points at have since split, been archived, or had their own status move on. It does not self-update; treat
+> every entry below as "what was true on 2026-07-10" and confirm current state against the cited source doc (its own
+> checkboxes/Progress Log are the SSOT) before acting on anything here. Added 2026-07-28 per
+> `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s Track 15 follow-up.
+
 # Instruments remaining-work audit (2026-07-10)
 
 ## Category definitions
