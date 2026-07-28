@@ -201,9 +201,10 @@ expanded directive.
 
 ### Confirmed bugs
 
-1. **[CRITICAL — live, data-correctness, not just empty-read/retry cost]
-   `execution-service/execution_service/data/defi_data_loader.py:131-140`** (`DeFiDataLoader._gcs_path`) builds the
-   PRE-MIGRATION legacy shape
+1. **[CRITICAL — live, data-correctness, not just empty-read/retry cost — FIXED 2026-07-28,
+   `execution-service@70f8bcdf988691263512b01b0efde69b68dd4b68`, see Todos below for the full fix + corrected
+   blast-radius writeup] `execution-service/execution_service/data/defi_data_loader.py:131-140`**
+   (`DeFiDataLoader._gcs_path`) builds the PRE-MIGRATION legacy shape
    (`raw_tick_data/by_date/day={D}/data_type={DT}/instrument_type={IT}/venue={V}/symbol={S}/{id}.parquet`) — the sibling
    `canonical_paths.py` module's own docstring documents this shape as broken since the reader-fallback window closed
    ~2026-06-15 (today is 2026-07-28). Live-verified: real DeFi objects nest `pipeline_mode=`/`asset_group=` between
@@ -420,18 +421,36 @@ rounds 4-5 land.
       THIRD dead row in the same family, `liquidity_features_1m`. Deletion tracked in a new P2 todo below rather than
       fixed-forward (nothing needs these). (repo: unified-trading-library)
 
-- [ ] [SCRIPT] P0. **Fix the CRITICAL live execution-service `defi_data_loader.py` bug** — found 2026-07-28 in the
-      round-2 DEFI audit (see "Confirmed bugs" item 1 above). `execution_service/data/defi_data_loader.py:131-140`'s
-      `_gcs_path()` builds the pre-migration legacy shape, broken since the 2026-06-15 reader-fallback-window closure;
-      live-wired into `venues/aave.py`/`morpho.py`/`etherfi.py`/`engine/handlers/flash_loan_handler.py`, silently
-      degrading to hardcoded default risk params/prices instead of real DeFi market data. The HIGHEST PRIORITY item in
-      this whole audit — the only finding where wrong data silently substitutes for real data rather than an empty-read
-      costing a retry. Fix: repoint `_gcs_path()` at `canonical_paths.py::build_candidate_raw_tick_paths` (the
-      confirmed-correct pattern already used by the OTHER, differently-pathed `DeFiDataLoader` in `data/loaders/defi.py`
-      — resolve the naming collision between the two classes at the same time, e.g. rename or consolidate). Verify
-      whether live/paper trading calls this on a hot path (not just backtest setup) before declaring the live/paper
-      blast radius closed. Add a regression test with a real captured shape (fail pre-fix, pass post-fix). (repo:
-      execution-service)
+- [x] [SCRIPT] P0. **Fix the CRITICAL live execution-service `defi_data_loader.py` bug** — DONE 2026-07-28,
+      `execution-service@70f8bcdf988691263512b01b0efde69b68dd4b68`. Rewrote `_gcs_path`/`_load_parquet_from_gcs` into
+      the canonical-first/legacy-fallback candidate-list pattern (mirroring `data/loaders/defi.py`), routed through
+      `canonical_paths.build_candidate_raw_tick_paths` + UCS instead of raw `gcsfs`. Found + fixed 3 MORE independent
+      bugs beyond the path shape while live-verifying each data category: (1) `lending_indices` queried aToken/debtToken
+      symbols instead of the real bare-reserve-symbol MTDS key; (2) `risk_params`/
+      `flash_loan_availability`/`utilization` call sites passed a slash-joined `"{venue}/{instrument}"` string into a
+      single param, mangling venue/symbol extraction; (3) flash-loan reads queried a `flash_loan_availability` data_type
+      MTDS has never written (real token is `flash_loan_events`) — AND `risk_params`/
+      `flash_loan_availability`/`rewards`/`utilization` were never even CALLED from `load_data_for_date` at all, so
+      their getters always returned hardcoded defaults regardless of the path bug. `risk_params`/ `flash_loan_events`
+      live-verified as genuinely absent from GCS as of 2026-07-28 (checked 6+ days) — wired best-effort per the task's
+      graceful-fallback guidance, not fabricated. **Blast-radius correction** (more precise than this todo's original
+      framing): `venues/aave.py`/`morpho.py`/`etherfi.py` — the classes actually named in this todo — have **zero
+      production callers anywhere in execution-service** (real live DeFi execution uses a _different_
+      `defi_execution.protocols.*` connector family that never touches this loader). The ONE genuinely live-wired
+      consumer is `engine/handlers/flash_loan_handler.py` (registered in the mode-agnostic instruction-routing table) —
+      its `get_flash_loan_availability()` call was silently falling back to a conservative 100k liquidity limit instead
+      of real on-chain data. New follow-up todo below covers the naming collision + confirming whether
+      aave.py/morpho.py/etherfi.py are dead code worth deleting. (repo: execution-service)
+
+- [ ] [SCRIPT] P2. **Confirm + act on execution-service's `venues/aave.py`/`morpho.py`/`etherfi.py` dead-code question,
+      and resolve the `DeFiDataLoader` naming collision** — found while shipping the P0 fix above: these 3
+      venue-connector classes (the ones the original CRITICAL-bug report assumed were live-wired) have zero production
+      callers anywhere in execution-service; real live DeFi execution goes through a different
+      `defi_execution.protocols.*` connector family that never instantiates them. If confirmed genuinely dead, delete
+      rather than maintain (workspace's "no shims" rule); if some other entry point does construct them, find it and
+      correct the blast-radius record. Separately, two classes are STILL both named `DeFiDataLoader`
+      (`data/defi_data_loader.py`, `data/loaders/defi.py`) — decide rename vs. consolidate. Needs a real operator/design
+      judgment call, not a guessable fix. (repo: execution-service)
 
 - [ ] [SCRIPT] P1. **Fix `market_tick_data_service/reader.py:367-373`'s DeFi chain/venue segment-order bug** —
       `CanonicalParquetReader._build_shard_bases` builds `asset_group=defi/chain={C}/venue={V}/...`, reversed vs. the

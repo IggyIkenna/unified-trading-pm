@@ -77,9 +77,69 @@ MTDS finding: `_perp_funding_kalshi_polymarket.py`'s "CeFi paths carry no pipeli
 prediction-shaped perp-funding writers — that open DESIGN todo lives in the parent doc, cross-reference it rather than
 re-deriving.
 
-## Audit round 4 (SPORTS-scoped)
+## Audit round 4 (SPORTS-scoped) — COMPLETE, 2 agents, both returned 2026-07-28
 
-_Not yet run — dispatch pending._
+Good news, similar to round 3 (TradFi): **no CRITICAL live-firing bug**. Execution-service is confirmed clean by absence
+(zero GCS/storage-client usage anywhere in `sports_execution/` — no sports equivalent of round 2's DeFi loader bug
+exists to fix). Findings are one real dormant landmine and 5 confirmed dead-and-wrong registry rows.
+
+### Confirmed bugs
+
+1. **[dormant, code-confirmed] MTDS's live-mode sports odds writer produces a structurally incompatible shape vs. the
+   batch writer.** Batch (`venue_fetch.py::_build_sports_shard_path`, live-verified) writes one shard per
+   `(bookmaker, league, fixture)`:
+   `raw_tick_data/by_date/day={D}/pipeline_mode={pm}/asset_group=sports/venue={BOOKMAKER}/league_id={L}/fixture_id={F}/instrument_type=odds/data_type=trades/ticks.parquet`
+   (25 real bookmaker venues verified live). The live writer (`live/websocket_runner.py::live_tick_blob_path`) instead
+   writes ONE file per `instrument_id`, no `league_id=`/`fixture_id=` partition — and the live connector
+   (`live/connectors/odds_api_ws.py`) sets `instrument_id` to one-per-SPORT (not per-fixture) while bundling every
+   bookmaker's odds as nested JSON inside a single tick payload. A real live capture would be structurally
+   invisible/unparseable to every batch-shaped downstream consumer (MDPS's sports adapters, `dependency_checker.py`'s
+   bookmaker-venue matching). **Not proven live-firing**: the connector's own docstring says `BLOCKED-CREDENTIALS`, and
+   zero `pipeline_mode=live_odds_api` objects exist anywhere in the sports bucket across 5 sampled dates. A landmine for
+   whenever live odds_api credentials land, not an active incident.
+2. **5 CONFIRMED WRONG-AND-DEAD `sports_*` PATH_REGISTRY rows** (`registry.py:268-302`) —
+   `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/`sports_tick_data`. Every one is BOTH
+   wrong-shaped (live-verified against the real writer's actual output) AND dead (zero callers anywhere outside their
+   own matching `SportsXDomainClient` in the already-known-dead `domain_client` layer — rounds 1/3 found this same layer
+   dead for CEFI/TradFi; this is the 5th-9th confirmed instance). `sports_tick_data` is the worst: its
+   `bucket_template="market-tick-data-{project_id}"` doesn't even exist as a bucket (reversed word order AND missing the
+   `-prd-` env tier — the real bucket is `market-data-tick-sports-prd-{project_id}`, same double-defect class as round
+   2/3's `calendar_features`/`instruments` bucket-template findings). Both instruments-service and features-service
+   independently bypass PATH_REGISTRY entirely for sports data with their own correct hand-rolled implementations —
+   these 5 rows look like a vestigial early design nothing ever wired up to.
+
+### Confirmed-safe / positive baseline
+
+- `market-tick-data-service`'s `sports_catalog_reader.py` (dual legacy/canonical probe),
+  `venue_fetch.py::_build_sports_shard_path` (batch writer), `dependency_checker.py`'s
+  `UPSTREAM_DEPS_BY_ASSET_GROUP["SPORTS"/"PREDICTION"]` day-only shallow prefixes — all live-verified correct.
+- MDPS's sports adapters (`bucket_assignment`/`odds_loss_guard`/`odds_movement`/`odds_snapshot`/`arbitrage`) do zero
+  path construction of their own — pure consumers of the already-audited-safe scanner output.
+- `features-service/features_service/sports/data/{gcs_paths,gcs_reader,gcs_mappings,writer}.py` — gold-standard,
+  correctly delegate to UAC `candidate_parquet_paths()`/registry SSOTs, live-verified against real GCS.
+- `strategy-service` has no sports GCS reader at all (Pub/Sub event-log subscriber pattern only) — safe by absence.
+- `execution-service`'s entire `sports_execution/` stack has **zero** GCS/storage-client usage anywhere — confirmed
+  clean by absence, no sports analog of round 2's execution-service CRITICAL bug exists.
+- instruments-service's sports writers bypass the 5 wrong registry rows entirely with their own correct hand-rolled
+  implementation (re-confirms round 1's already-documented duplication finding, not new).
+
+### Structural gaps already tracked generically — confirmed to ALSO apply to sports (no new todo needed)
+
+- `_candidate_pipeline_mode_values()`'s `Mode.REPLAY` omission (already tracked, DeFi-flagged originally) — confirmed
+  applies to sports too (every sports source has `Mode.REPLAY` registered in UAC; dormant, zero live replay objects
+  found).
+- MDPS `dependency_checker.py`'s `max_results=1000/2000` listing cap (already tracked, DeFi-flagged originally) —
+  sports' fan-out shape (25 bookmaker venues × 11+ leagues × multiple fixtures, in ONE day) makes this plausible here
+  too; not proven (a full recursive listing did not complete in-session).
+
+### Not fully verified
+
+- Whether the live odds_api connector is wired into any real deployment-service launcher (inferred dormant from zero
+  live GCS objects + the connector's own docstring, not a direct launcher trace).
+- ml-service's sports feature consumers (`training/app/core/{sports_feature_loader,cloud_feature_provider}.py`) —
+  outside this round's assigned repo list; flag as a follow-up if the audit ever extends to ml-service.
+- Pre-2020-06-06-floor `sports_reference` objects still present in GCS — an adjacency to the already-tracked disposition
+  item in `sports_consolidated_closeout_2026_07_19.md`, not a new finding of this audit.
 
 ## Audit round 5 (PREDICTION-scoped)
 
@@ -87,11 +147,23 @@ _Not yet run — dispatch pending._
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Round 4 (SPORTS-scoped) audit** — same methodology as rounds 1-3 (hand-rolled prefix hunt, live GCS
-      spot-check, registry-staleness check, batch/paper/live coverage), scoped to the SPORTS bucket family across
-      MDPS/MTDS/features-service/strategy-service/execution-service/instruments-service. Cross-reference against
-      `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` first — don't re-discover the already-fixed
-      `_check_existing_outputs` bug or the already-reclassified/backfilled manifest rows. (repo: all of the above)
+- [x] [SCRIPT] P1. **Round 4 (SPORTS-scoped) audit** — DONE 2026-07-28, findings documented above. No CRITICAL
+      live-firing bug; execution-service confirmed clean by absence. New follow-up todos logged below.
+
+- [ ] [SCRIPT] P2. **Fix MTDS's live-mode sports odds writer shape mismatch** —
+      `market_tick_data_service/live/websocket_runner.py::live_tick_blob_path` (non-CeFi branch) +
+      `live/connectors/odds_api_ws.py::_parse_fixture_response` need to write one shard per (bookmaker, league, fixture)
+      — matching the batch `venue_fetch.py::_build_sports_shard_path` shape — instead of one nested-JSON-bundled file
+      per sport. Currently dormant (connector is `BLOCKED-CREDENTIALS`) — fix before live odds_api credentials are
+      provisioned, not after a silent-corruption incident. (repo: market-tick-data-service)
+
+- [ ] [SCRIPT] P2. **Delete the 5 confirmed wrong-and-dead `sports_*` PATH_REGISTRY rows + their dead
+      `SportsXDomainClient` consumers** — `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/
+      `sports_tick_data` (`unified_trading_library/config_interface/paths/registry.py:268-302`) plus
+      `unified_trading_library/domain_client/sports/{features,fixtures,odds,mappings,tick_data}_client.py`. Zero callers
+      anywhere in the workspace outside their own definition/export files; `sports_tick_data`'s bucket doesn't even
+      exist. Fold into the parent doc's existing dead-code-cleanup todo rather than duplicating a new one — same class
+      of finding. (repo: unified-trading-library)
 
 - [ ] [SCRIPT] P1. **Round 5 (PREDICTION-scoped) audit** — same methodology, scoped to KALSHI/POLYMARKET's
       `pipeline_mode` conventions. Build from the already-confirmed `market-data-processing-service@df02dd0` data point
