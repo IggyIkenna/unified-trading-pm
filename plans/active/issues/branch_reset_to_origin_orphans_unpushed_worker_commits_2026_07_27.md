@@ -221,7 +221,16 @@ each other.
       cron that `reset --hard`s instead of `pull --ff-only` (which would only ever fast-forward, never drop ahead
       commits). Whatever it is, it must NOT hard-reset a branch that is ahead of origin — that discards committed work.
       Likely same disruption window as the related per-slot-cron-staleness issue (disk resize + 2 orchestrator restarts,
-      same day).
+      same day). **Corroboration 2026-07-28 (slot-12)**: this recurs beyond the 2026-07-27T16:55Z reap window — hit it
+      on `deployment-service` mid-`cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1 work, my session having
+      died and been respawned partway through (per the resumed-session boot message). Reflog showed
+      `HEAD@{1}: branch: Reset to origin/live-defi-rollout` sitting directly on top of my own unpushed
+      `chore(deps): lift fastapi/starlette caps...` commit, which vanished from `HEAD` (still recoverable via reflog at
+      the time, not checked how long it survives). Lower stakes than the prior cases — a 2-line dependency-bump commit,
+      redone in under a minute rather than needing a reflog cherry-pick — but it strengthens the "session
+      respawn/teardown path" candidate above: this fired specifically around a session-death-then-resume, not just the
+      mass-reap window, suggesting the trigger is closer to "any slot respawn finds an ahead-of-origin worktree" than a
+      one-off incident tied to the 2026-07-27 disk-resize disruption.
 
 ### Related symptom — corrupted `/done` evidence SHA in the recovery race window (review, 2026-07-27T17:21Z)
 
