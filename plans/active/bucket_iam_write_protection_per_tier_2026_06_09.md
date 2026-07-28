@@ -18,7 +18,8 @@ related:
     plans/active/cicd_contract_hardening_2026_06_01.md,
     plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     plans/archive/2026_07/bucket_env_split_rollout_2026_06.md,
-    plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md,
   ]
 created: 2026-06-09
 parent_epic: infrastructure_master
