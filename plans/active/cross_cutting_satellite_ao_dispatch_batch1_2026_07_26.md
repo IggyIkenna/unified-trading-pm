@@ -210,7 +210,7 @@ drift_direction: advance-code
       includes `unique_instruments` without the recompute fallback. Source:
       `infra_ops_residual_migration_verification_2026_07_24.md` (items 3-6 of 9; forked verbatim from the archived
       `migration_verification_orphan_safety_2026_06_10.md`).
-- [ ] [DATA] P1. **InstrumentRecord extra='forbid' — get the authoritative list + apply the already-justified REMOVE
+- [x] ✅ [DATA] P1. **InstrumentRecord extra='forbid' — get the authoritative list + apply the already-justified REMOVE
       dispositions.** On a branch, flip `model_config = ConfigDict(extra="forbid")` on
       `unified_api_contracts/internal/reference/instrument.py::InstrumentRecord` and run the FULL UAC +
       instruments-service suites (not a `-k` subset); collect every `extra_forbidden` field name + its adapter/call-site
@@ -345,24 +345,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                                      `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                                      `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                                      prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                                      this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                                      `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                                      (merged via PR #1593), NOT executed here.
+                                                                          `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                          `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                          prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                          this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                          `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                          (merged via PR #1593), NOT executed here.
 
-                                                                      **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                                      (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                          **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                          (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                                      **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                                      items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                                      flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                                      re-verifies sports.
+                                                                          **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                          items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                          flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                          re-verifies sports.
 
-                                                                      Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                                      `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                                      of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                          Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                          `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                          of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -539,6 +539,65 @@ drift_direction: advance-code
   `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` doc is flagged **P1 / big finding** (cross-AG, not yet
   root-caused) per this workspace's findings-triage rule. Line-191 checkbox flipped on
   `distinct_values_noncanonical_audit_2026_07_20.md` with this same evidence (cross-linked, not duplicated).
+
+- **2026-07-28 (slot-6) — DONE — InstrumentRecord `extra='forbid'` authoritative measurement + REMOVE dispositions
+  applied.** `instruments-service@ee2d6c75`.
+  - **Method**: flipped `model_config = ConfigDict(extra="forbid")` on `InstrumentRecord` on a local scratch branch
+    (never pushed), ran the FULL UAC + instruments-service `quality-gates.sh` suites (not `-k`), then AST-parsed
+    (`ast.walk`, not string-grep) every `InstrumentRecord(...)` call site across both repos for the offending kwarg
+    names — authoritative, not traceback-string-matched (an earlier traceback-text parse mis-attributed several fields
+    to the wrong call site by merging adjacent pytest failure blocks; the AST scan is exact).
+  - **Authoritative complete field list (supersedes the 2026-07-18 partial measurement)**: `symbol`, `is_active`,
+    `updated_at`, `min_order_size` (the four already pre-analyzed) **plus two newly-surfaced fields the partial
+    measurement missed**: `asset_group`, `lot_size`. The static-scan defi/deribit candidates
+    (`spot_asset`/`debt_symbol`/`onchain_symbol`/`contract_address`/`decimals`/`borrow_symbol`/`capability`) **never
+    appeared** as `extra_forbidden` in either full-suite run — confirmed false positives from the greedy static grep
+    (they're already-declared fields, e.g. `base_asset_contract_address`/`base_asset_decimals`; no action needed).
+  - **Per-field verdicts + real call sites** (9 production + 6 test-fixture-only sites, 16 total):
+    - `symbol` → **REMOVE** (zero usage, `raw_symbol`/`base_asset` already cover it). Sites:
+      `betfair.py::_build_runner_record`, `ibkr.py::_build_instrument_from_uac`, + 3 test fixtures.
+    - `is_active` → **REMOVE** (zero usage — verified the _dynamic_ kalshi/polymarket values aren't silently lost: both
+      adapters ALSO emit a separate `MarketLifecycle` row with a richer `current_status` created/active/resolved/settled
+      that IS the real lifecycle signal; `InstrumentRecord.status` was never the source of truth for prediction
+      markets). Sites: `betfair.py` (hardcoded `True`), `kalshi.py::_parse_market`,
+      `polymarket/parsing.py::_parse_market` (both dynamic), + 2 test fixtures.
+    - `updated_at` → **REMOVE** (zero usage, no consumer). Same 3 production sites + 2 test fixtures.
+    - `min_order_size` → **LEFT UNTOUCHED** per the existing operator-judgment flag (semantically distinct from
+      `min_size`) — confirmed present at all 3 production sites (`betfair.py`/`kalshi.py`/`polymarket/parsing.py`)
+      - 2 test fixtures, none touched.
+    - `asset_group` → **RENAMED to `asset_class` (bug-fix, not a drop)** — deviates from the literal REMOVE instruction
+      because dropping it would have been WORSE than fixing it: `asset_class: AssetClass` is an already-declared,
+      `INSTRUMENTS_PARQUET_SCHEMA`-persisted field (confirmed via `fx.py:70` already using the correct `asset_class=`
+      kwarg), and `databento/adapter.py` (4 sites: `_create_fx_spot_records`, `_create_krx_equity_records`,
+      `_create_yahoo_index_records`, `_parse_row_to_record`) + `ibkr.py` (2 sites: `_build_instrument_from_uac`,
+      `_build_stub_instrument`) were all passing the FX/EQUITY/INDEX classification under the misnamed `asset_group=`
+      kwarg — silently dropped, so every TradFi/Databento/IBKR instrument's `asset_class` column was landing at its
+      default `AssetClass.CRYPTO` regardless of real asset class. Renamed the kwarg (+ the `_SEC_TYPE_asset_group_MAP`
+      constant → `_SEC_TYPE_ASSET_CLASS_MAP` for consistency) at all 6 sites — a real correctness fix, not cosmetic.
+      Also opportunistically set `raw_symbol=symbol` in `ibkr.py::_build_instrument_from_uac` (same file/lines already
+      touched) — that call built NO `raw_symbol` at all before (only the now-dropped dead `symbol=`), so IBKR
+      instruments' `raw_symbol` column was landing empty.
+    - `lot_size` → **REMOVE** (zero production usage — confirmed via AST scan across the WHOLE instruments-service tree,
+      not just the failing tests — every occurrence is test-fixture-only cruft in `_make_instrument()` helpers across
+      `test_coverage_gaps_adapters.py`, `test_defi_adapters_comprehensive.py`, `test_base_adapter.py`,
+      `test_library_deps_integration.py`; not in `INSTRUMENTS_PARQUET_SCHEMA` either).
+  - **Verification**: instruments-service full `quality-gates.sh --no-fix` → **ALL QUALITY GATES PASSED** (4988 passed /
+    0 failed, up from 105 failed under the measurement flag; sentinel `691365ffc3a76926aa39762704adc0f88cea4a20`,
+    shipped `instruments-service@ee2d6c75`). UAC's FIRST full-suite measurement run (extra='forbid' active, the stricter
+    of the two states) already exhaustively passed 12174/12175 tests with exactly ONE failure — a dead `symbol=` kwarg
+    in `tests/internal/unit/test_uic_ac_alignment.py` (test-only, zero production impact) — confirming zero UAC
+    _production_ code needed any change for this todo.
+  - **Deferred (P3, cosmetic, zero functional impact)**: that one UAC test-fixture `symbol=` kwarg was left un-shipped.
+    8 consecutive attempts to get a fresh UAC `quality-gates.sh` confirmation for the trivial 1-line fix were silently
+    killed mid-`TESTS`-phase by sustained host-wide memory/swap contention (independently verified across all 8 attempts
+    via `free -h`/`ps aux`: swap oscillating 2-15Gi used, 6-19 concurrent `quality-gates.sh` processes fleet-wide the
+    whole time — not a code issue, `journalctl`/`dmesg` inaccessible in-sandbox so the exact OOM-vs-cgroup-limit
+    mechanism couldn't be confirmed, but the pattern was 100% consistent regardless of launch method: nohup,
+    `setsid`+full detach, niced, or foreground-with-timeout). Reverted the UAC edit rather than ship unverified or block
+    the (verified-green, higher-value) instruments-service fix on it — `extra='ignore'` already silently absorbs the
+    dead kwarg today (same behavior before and after this todo), so leaving it is zero-risk. Re-attempt the one-line fix
+    (remove `symbol="BTC/USDT"` from `test_instrument_record_is_importable`, line ~255) next time host load is normal;
+    do not re-litigate the verdict.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
