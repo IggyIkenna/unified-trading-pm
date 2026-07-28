@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 ---
 
 # Capability wizard — gap discovery tracker
@@ -333,12 +333,25 @@ _Auto-emitted 2026-06-11 by `scripts/openapi/emit_capability_gap_todos.py`._ _De
 with `needs_code_scan` gap_type and no_ _`agent_annotation` appear here. Once annotated, edge drops off on next emit
 run._
 
-- [ ] [AGENT] P2. **gap_registry:order_semantics** — Venue order semantics registry is honest-empty — per-adapter
+- [x] ✅ [AGENT] P2. **gap_registry:order_semantics** — Venue order semantics registry is honest-empty — per-adapter
       order-semantics honor matrix code-scan. Target repo: `execution-service`. Cold-start context:
       VENUE_ORDER_SEMANTICS backfill: scan each venue execution adapter for TIF (FOK/IOC/post-only), make/take,
       ref-pricing mode, multi-leg delta ownership; populate
       unified_api_contracts/internal/architecture_v2/order_semantics.py VENUE_ORDER_SEMANTICS. (auto-emitted by
-      emit_capability_gap_todos.py)
+      emit_capability_gap_todos.py) — **DUPLICATE of the already-resolved "Order semantics per venue adapter" item above
+      (Missing registries section) — no code change needed, re-verified 2026-07-28 (slot-4)**: read
+      `unified_api_contracts/internal/architecture_v2/order_semantics.py` at current `origin/live-defi-rollout` HEAD
+      (`698b5b6f`, 2026-07-28) directly — `VENUE_ORDER_SEMANTICS` carries 7 real per-venue entries
+      (hyperliquid/deribit/binance/bybit/okx CeFi perp, all `auth_wired=AVAILABLE` with live CCXT/REST adapter file:line
+      citations in `notes`; aave_v3/kamino DeFi lending, no CLOB/TIF applicable) — every field the todo asks for
+      (`honored_tif`, `make_take_modes`, `ref_pricing_modes`, `multi_leg_delta_owner`, `auth_wired`) is populated or
+      explicitly honest-empty (`multi_leg_delta_owner=None` on every entry — no venue has multi-leg ownership wired, an
+      honest gap not a missing one). Docstring already accurate (fixed by `2648f916`). Ran the two test files live:
+      `tests/unit/test_order_semantics_sim_backfill.py` (12 passed) + `test_capability_manifest.py -k order_semantics`
+      (3 passed) — 15/15 green. Provenance chain: `5e7d0685` (2026-06-13 backfill) → `2648f916` (docstring fix) →
+      `698b5b6f` (2026-07-28 binance/bybit/okx CCXT-vs-native correction) — all already on `live-defi-rollout`, no new
+      commit required. Closing per the doc's own "dedup-idempotent on re-run" rule — this checkbox is the
+      `agent_annotation` that drops the edge from the next `emit_capability_gap_todos.py` run.
 
 ### 2026-06-12 — Margin traceability audit (operator question: "can we trace where our margin sits?")
 
