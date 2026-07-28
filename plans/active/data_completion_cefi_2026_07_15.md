@@ -645,6 +645,46 @@ once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN (CF-8 and CF-2-paths pe
 finding-144-waived characteristics count against this specific acceptance bar or are out of scope for it — flagged for
 whoever picks this up next, not resolved here).
 
+### 2026-07-28 (slot-13, `data_engineering`) — E7 Verify todo (line 383): 3rd re-dispatch of this exact task today — re-ran live, still RED, identical root cause; flagging redispatch churn
+
+Dispatched task `data_completion_cefi-017` again (same task id as the slot-6 entry immediately above — this is the 3rd
+independent dispatch of this exact checkbox today, after slot-8's sibling audit and slot-6's identical run). Before
+re-running, cross-checked whether the blocking chain had moved: `data_completion_cefi_2026_07_15.md`'s "NEXT SESSION —
+execute the migration" P0 todo is still unchecked (retagged `[OPERATOR]`, not dispatched to workers), and the blocking
+issue doc `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own final open todo
+("re-run the full-corpus `--dry-run` a third time... unblock the migration todo") is also still unchecked — no real
+`_index` rebuild/migration has executed since slot-6's run. Re-ran the audit anyway for fresh live evidence (cheap,
+index-only `mode="changed"`, no GCS bulk walk) rather than rely on hours-old numbers, since the live corpus is growing
+incrementally in the background:
+
+Fresh result (9,263,361 rows, up from 9,195,191 a few hours earlier — organic growth, no rebuild involved):
+
+- **CF-1** RED: v9=9,029,152/9,263,361 (97.5%; unchanged dist shape: 108,367 null + 63,226 `v6` + 61,692 `v5` + 924 `v4`).
+- **CF-3** RED: populated=9,137,133/9,263,361 (98.6%; 126,228 blank — same absolute blank count as slot-6's run, all
+  organic growth landed correctly-stamped).
+- **CF-4** RED: source blank=2,206,826/9,263,361 (23.8%, down marginally from 24.0% — pure dilution from new correctly-
+  stamped captures, not any fix).
+- **CF-8** RED: non-null=1,306,726/9,263,361 (pre-existing finding-144-waived schema-evolution artifact, as before).
+- **Era-B** RED: 491,146 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from
+  490,470 — organic).
+- **CF-2-paths** RED, same characteristic as both prior entries.
+- **GREEN**: CF-2, CF-5, CF-6, CF-13, CF-3-partition, CF-9 — identical to slot-6's run.
+
+**Verdict: identical root cause, identical conclusion as both entries above — CF-1…CF-12 is NOT GREEN.** Did **not**
+flip this todo's checkbox or any `cefi_master_audit_instructions.md` CF-coverage rows, for the same reason stated twice
+already. No new issue doc filed — this is the 3rd corroboration, not a new finding.
+
+**Process note (why this entry exists beyond the numbers):** this exact backlog task has now been dispatched to 3
+different slots in the same day (slot-8 on the sibling audit todo, slot-6 and slot-13 on this exact todo) with zero
+possibility of a different outcome each time, because the checkbox's blocker is an external, not-yet-run migration
+gated on `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own last open todo. Re-verifying a RED
+audit against an unchanged blocker doesn't move the plan forward and costs a full worker dispatch each time. Filed a
+`/blocked` recommendation (this session) to gate/park `data_completion_cefi-017` in the backlog against that issue
+doc's confirming-rerun todo (or an equivalent condition) so it stops being handed to fresh workers until there's
+actually new signal to check. Whoever unblocks the chain should re-run this audit once more and flip both this
+checkbox and the `cefi_master_audit_instructions.md` CF-coverage rows only once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths
+all read GREEN.
+
 ### 2026-07-28 (slot-3, `data_engineering`) — E4 orphan-sweep todo (line ~307): built the missing `--drop-stale` tool, did NOT run it against prod
 
 Dispatched task `data_completion_cefi-015` = "E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk" — the todo's

@@ -56,6 +56,11 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-28** (slot-15) — root cause fixed in `rollout-pre-commit-configs.sh` (`cp` instead of `ln -s`,
+> propagation step moved before the early `continue`, explicit `-L` dangling-symlink check added); all 23 affected
+> repos' working-tree copies replaced and shipped (`system-integration-tests` last, `1df4043`). 23/23 shipped, no open
+> follow-ups.
+
 # .gitleaks.toml dangling symlink — fleet-wide regression
 
 ## What happened

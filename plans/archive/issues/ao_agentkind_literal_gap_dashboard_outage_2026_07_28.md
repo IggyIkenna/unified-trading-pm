@@ -51,6 +51,12 @@ resolved_by: slot-3 (interactive), agent-orchestrator@aeccec0, @ce206d0, @b182f8
 locked_by:
 ---
 
+> **🟢 RESOLVED 2026-07-28** — `agent-orchestrator@aeccec0`, `@ce206d0`, `@b182f82`: added the 4 missing `AgentKind`
+> Literal values, hardened `AgentView.agent_kind` to coerce any future-unrecognized value to `"custom"` instead of
+> raising, added a QG regression test cross-validating every known `agent_kind`-producing source against the Literal,
+> and fixed the unrelated main-session liveness gap found while re-verifying. Live-verified: `GET /api/agents` and
+> `?include_finished=true` both `200` (were `500`). No open follow-ups.
+
 # AO dashboard outage — AgentKind Literal gap + fail-soft hardening
 
 ## What I found

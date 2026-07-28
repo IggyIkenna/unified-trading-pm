@@ -871,7 +871,7 @@ source: >-
   `deployment-service@20ce4c9`: per-chunk `VM_NAME` suffix (bounds each chunk's shard to its own rows — verified live,
   `af-backfill-20260728-091755`'s chunk 3 shard is `per_vm/{vm}-c3.parquet`, 359 entries, not 280K+) + bounded 4-attempt
   chunk retry. Full root-cause history + the deferred library-fix re-evaluation (would not have helped — doesn't cut
-  peak memory): `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`. Relaunched
+  peak memory): `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`. Relaunched
   `af-backfill-20260728-091755` for the full range (skip-if-fresh fast-forwards chunks 1-12, real work starts at the
   gap, chunk 13+) — monitoring to completion.
 - **2026-07-28 — FIXTURES backfill VERIFIED COMPLETE**: `af-backfill-20260728-091755` finished all 25/25 chunks cleanly
@@ -890,7 +890,7 @@ source: >-
   downstream completion-bookkeeping record, not a data-write path; does not affect this backfill's correctness, flagged
   as a small separate follow-up if it recurs elsewhere. Full root-cause history (MVP-league-scope leak → OOM take-1
   insufficient chunking → OOM take-2 real per-chunk-shard fix, now verified complete):
-  `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
+  `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`.
 
 ## Reconciliation
 
