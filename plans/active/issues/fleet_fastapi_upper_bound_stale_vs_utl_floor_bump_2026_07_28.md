@@ -192,3 +192,15 @@ importable in this pass.)
   quickmerge's own Pass-1 gate. **Flagging for the pending `[OPERATOR]` direction call**: ml-service is now on direction
   A. If direction B (revert UTL) is chosen instead, `ml-service@8914d555` needs a matching mechanical revert — trivial,
   already scoped, not lost work either way.
+
+- **2026-07-28 (slot-2, `cicd` escalation `agt-2942ad`):** Independent corroboration via a different discovery path —
+  arrived at ml-service via an unrelated `ldr_qg_failure` (self-hosted-runner-capacity, see
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s 7th entry for the full writeup), not this doc.
+  ml-service's persistent self-hosted-runner venv had been masking this exact break; only once I reverted its runner to
+  a fresh `ubuntu-latest` did `uv sync --frozen`'s clean install expose the same `iter_route_contexts` ImportError
+  slot-3/slot-7/slot-8 already diagnosed here. Landed one turn after slot-7's `8914d555` fix — no new code shipped by me
+  on this issue, just confirmed the combined HEAD (`08a2514` + `8914d555`) is fully green in live CI (run `30328459417`,
+  both QG slices, `ubuntu-latest`). **New data point for the `[OPERATOR]` decision**: self-hosted runners with
+  long-lived cached venvs are an ADDITIONAL vector silently hiding this break fleet-wide, independent of which repos are
+  "confirmed affected" above — any repo still on `self_hosted_runner_labels` may already be broken by this and not know
+  it yet, on either canonical bound.

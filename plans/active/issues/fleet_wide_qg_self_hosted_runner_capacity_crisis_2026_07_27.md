@@ -291,3 +291,37 @@ escalate to a `cicd` worker.
   back to normal, no contention. Did not touch the shared allowlist file, any other repo, or the VM — same scope
   boundary as the prior five fixes. No open repo-blockers existed for this repo at the time (`GET /api/repo-blockers` →
   `{"open":[]}`).
+
+- 2026-07-28 (cicd agent, slot-2, escalation `agt-2942ad`, `ldr_qg_failure` on `ml-service`, no PR): **7th corroboration
+  - per-repo fix, plus an unrelated second issue it unmasked.** Detected at `ml-service`'s own Phase-7 rollout window
+    (`e6002499`, "feat(ci): Phase 7 + quality-gates-v2 self-host rollout for ml-service"); the flagged failing run
+    (`30310600633`) died in `QG slice (checks)` at the `Set up Python` step (9 min then failed) — same signature class
+    as the prior six (self-hosted-runner contention), confirmed via `gh api .../runners` showing the same shared
+    `glue-ip-172-31-5-118-1` single-runner registration. A same-config retry (`30311878707`) had already self-recovered
+    green by the time I picked this up — no open repo-blocker existed. Applied the same precedented fix regardless (the
+    underlying capacity issue is still open, so leaving the flip in place would just hang the next commit): reverted
+    `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via the same hand-edit pattern + `quickmerge --agent` —
+    `ml-service@08a2514`. **Verifying this fix surfaced a SECOND, unrelated, genuinely-live break**: the first post-fix
+    run (`30327865658`) confirmed `Set up Python` now succeeds on `ubuntu-latest`, but `QG slice (tests)` then failed
+    for real — `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` (raised inside
+    `opentelemetry-instrumentation-fastapi==0.63b0`, which needs a fastapi symbol only present >=0.137). Root cause:
+    `unified-trading-library@3b99d19d` had bumped its own fastapi/starlette floor to `>=0.137.0`/`>=1.3.1`,
+    contradicting `canonical-dependency-manifest.json` (still `<0.137.0`) — a genuine cross-repo SSOT contradiction,
+    already tracked P0 in `/plans/active/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (filed
+    by slot-3). The self-hosted runner's PERSISTENT cached venv had been masking this fleet-wide for ml-service
+    specifically — a completely fresh `ubuntu-latest` runner's `uv sync --frozen` was the first thing to actually
+    exercise the stale lock against UTL's new floor. While I was locally verifying my own lock-refresh fix for this, a
+    different `cicd` worker (slot-7, escalation `agt-db0abf`) independently hit the same wall on ml-service's promotion
+    PR and shipped the fuller fix first (`ml-service@8914d555`: `pyproject.toml` fastapi ceiling raised to match UTL's
+    floor + `uv lock` regenerated to fastapi 0.140.7, full `quality-gates.sh --no-fix` verified green locally, 2111
+    passed). My own narrower lock-only fix hit a real git conflict against their already-pushed commit during
+    quickmerge's autostash rebase (git's own conflict markers landed IN `uv.lock` — caught before commit, not shipped);
+    resolved by discarding my superseded diff and keeping theirs. Triggered a final fresh run (`30328459417`) at the
+    combined HEAD (my `08a2514` + their `8914d555`) to close the loop: **fully green** — `QG slice (tests)` 3m19s,
+    `QG slice (checks)` 1m49s, both confirmed on `labels: ["ubuntu-latest"]`, aggregate `quality-gates-v2` succeeded,
+    GH's own "QG Recovered" Slack step fired. **Worth flagging for whoever works the fastapi-SSOT doc's `[OPERATOR]`
+    todo**: this self-hosted → ubuntu-latest migration is itself an active _discovery mechanism_ for the UTL-floor drift
+    — every OTHER repo still in `scripts/workflow-templates/self-hosted-qg-repos.txt` with a persistent self-hosted venv
+    may be silently masking the same `iter_route_contexts` break until its own runner-capacity fix (or any other trigger
+    for a clean `.venv` rebuild) exposes it, same as happened here. Did not touch the shared allowlist file, any other
+    repo, or the VM — same scope boundary as the prior six fixes.
