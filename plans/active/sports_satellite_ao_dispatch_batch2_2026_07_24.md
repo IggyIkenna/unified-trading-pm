@@ -774,7 +774,22 @@ source: >-
       continued in-date fixture-fetch advance both count as live); once terminal, re-run
       `scripts/census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) per the issue doc's "Next
       action" before flipping this checkbox — also re-verify the `08:12Z`-`stop-time` suspect window from the prior VM
-      run was excluded/re-fetched (issue doc item 3), not trusted at face value.
+      run was excluded/re-fetched (issue doc item 3), not trusted at face value. — **Health-checked 2026-07-28T23:05Z
+      (slot 14, data_engineering)**: re-verified from scratch (`unified-trading-sa` account — `github-deploy` again
+      confirmed to lack `compute.instances.list`). VM `af-backfill-20260728-141821` status=RUNNING in
+      `asia-northeast1-c`; heartbeat blob fresh (`vm-heartbeat/af-backfill-20260728-141821.txt` ~55s-90s old across both
+      reads). 2-read progress-metric check over ~4.5min: `run.log` grew 128,447→129,526 lines (+1,079), `date=` marker
+      advanced `2023-04-30`→`2023-05-06` (+6 days) — genuine forward progress, notably faster pace than slot 9's 17:45Z
+      check (`2021-09-26`, ~1.5yr of dates covered in the intervening ~5h20m, consistent with the documented
+      "enrichment-only / already-captured dates need no API round-trip" fast-pace pattern seen elsewhere in this
+      campaign, not an anomaly). No error/traceback lines beyond the expected benign `CANONICAL_LEAGUE_ID_LOOKUP_MISS`
+      warnings (non-lossy raw-id passthrough, already documented as expected). No `DEPLOYMENT_COMPLETED`/`exit_code`
+      terminal marker (`grep -c` = 0). Not completable this turn (range runs 2019-01-01→2026-07-25, currently ~2023-05).
+      Released via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this
+      health-check; once terminal, re-run `scripts/census_fixture_events_schema_variants_2026_07_25.py` (full, no
+      `--limit`) per the issue doc's "Next action" before flipping this checkbox — also re-verify the `08:12Z`-stop-time
+      suspect window from the prior (2026-07-25) VM run was excluded/re-fetched (issue doc item 3), not trusted at face
+      value.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
