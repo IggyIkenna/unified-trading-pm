@@ -252,18 +252,34 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       landed) broke `run_validators.py`'s corpus link-check and failed quality-gates-v2 fleet-wide (ldr_qg_failure
       escalation agt-d2498b on trading-agent-service); remaining stale referrer paths (active_plan_inventory_dashboard,
       infra_satellite_ao_dispatch_batch1 `related:`) fixed this commit.
-- [ ] [PLAN] P2. `plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md` → 5 forks:
+- [x] ✅ [PLAN] P2. `plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md` — unified-trading-pm@82f7fe635.
+      All 5 forks confirmed content-present (spot-checked D1/D3/TradFi-G4-OOM deeply, M-C7/altdata lightly):
       `instruments_completion_tracker_2026_07_06.md`+`mvp_scope_catalogue_tagging_2026_06_08.md` (D1);
       `infra_ops_residual_migration_verification_2026_07_24.md`+`master_data_canonicalisation_migration_catalogue_2026_06_07.md`+`issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`
-      (TradFi-G4-OOM); `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (D3);
+      (TradFi-G4-OOM); `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (D3, confirmed same af=10,114/cap=1
+      finding);
       `cross_cutting_consolidated_closeout_2026_07_25.md`+`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
-      (M-C7); `tradfi_consolidated_closeout_2026_07_18.md`+`data_completion_tradfi_2026_07_15.md` (altdata). Confirm a
-      home for the one unverified item (Tardis-historical-billing, 775.9k cells) before archiving.
-- [ ] [PLAN] P2. `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` →
-      `cefi_layer1_denominator_gaps_2026_07_03.md` (C2/C4), `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`
-      (C5). C6 likely covered by `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` (name-match
-      only — verify). C9 (EXTENDED-candle honest-absence, ~10-line fix) is a true orphan — fold into
-      `instruments_completion_tracker_2026_07_06.md` or `cefi_consolidated_closeout_2026_07_18.md` first.
+      (M-C7); `tradfi_consolidated_closeout_2026_07_18.md`+`data_completion_tradfi_2026_07_15.md` (altdata). The one
+      unverified item (Tardis-historical-billing, 775.9k cells) was ALREADY lifted 2026-07-12 (operator ruling,
+      finding 228) and reconfirmed cleared 2026-07-27 (§5-RESOLVED #3/#12/#25) — tracked forward via
+      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s open MTDS-run todo +
+      `data_completion_to_100_all_ag_2026_06_21.md`'s termination criteria. Archived with a full banner naming all 5
+      forks + the Tardis resolution (`plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md`); referrers
+      fixed corpus-wide (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+      `codex/11-project-management/doc-frontmatter-schema.md`).
+- [ ] [PLAN] P2. `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
+      home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
+      (`plans/archive/issues/`), C2 point-fix + C4 G4-gate-strengthening both shipped and closed there — nothing
+      orphaned. C5 confirmed live + still open in `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (same
+      finding). ~~C6 likely covered by `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`
+      (name-match only — verify).~~ **CORRECTED 2026-07-28 (unified-trading-pm@82f7fe635)**: read both — cefi_e6_cf7
+      does NOT cover C6 (it's an unrelated 2026-07-26 attempted_failed re-measurement that only mentions
+      `VENUE_FETCH_FAILED` in passing); C6's actual concern is now MOOT instead — 2 of its 3 named target docs are
+      archived and the third no longer carries a live task on the literal string. C9 (EXTENDED-candle honest-absence,
+      ~10-line fix) folded into `cefi_consolidated_closeout_2026_07_18.md` Track 6 per operator ruling 2026-07-27
+      (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **NOT archived — doc is
+      `locked_by: live-defi-rollout` and this wave had no `[unlock-plan]` authorization; all residual content
+      (C2/C4/C5/C6/C9) is now confirmed homed or closed, so archival is a pure `[unlock-plan]` ask away.**
 - [ ] [PLAN] P2. `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, which cites this doc for 3 open todos (execution-service
       `service_name` drift; SIT's 2 QG failures; UAC `infura_*` rename). 2 true orphans (deployment-scripts bucket
@@ -280,14 +296,25 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       itself (wire a `ModelsMvpRule` against `generate_model_id`/`parse_model_id`'s identity axes + a data-status
       consumer) — content verified present in both files, batch1b's copy verified still open. Still not archivable
       (batch1b hasn't run; the new ModelsMvpRule todo is also unexecuted).
-- [ ] [PLAN] P2. `plans/active/ui_build_warm_cache_2026_06_17.md` → `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
+- [x] ✅ [PLAN] P2. `plans/active/ui_build_warm_cache_2026_06_17.md` → `ci_satellite_ao_dispatch_batch1_2026_07_26.md`
       (item 4). Item 1 (tsc incremental) is ALREADY implemented in both UI repos' tsconfig.json — flag batch1's D28
       entry as needing correction, not fresh dispatch. Item 2 confirmed genuinely not done; item 3 deferred as D20 (see
-      §5, operator-gated pnpm decision).
-- [ ] [PLAN] P2. `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` →
+      §5, operator-gated pnpm decision). — **DONE 2026-07-28** — unified-trading-pm@c2308363d (item 1 flipped `[x]` with
+      evidence, item 2 confirmed still-open with evidence, item 3/D20 reframed from "evaluate" to a real `[INFRA] P3`
+      implementation todo per operator APPROVED decision §5#33) + unified-trading-pm@cd5c0bde1 (batch1's D28 entry
+      corrected: tsc-incremental half flagged already-shipped, setup.sh-prewarm half confirmed genuinely open; D20 entry
+      updated to reflect the decision is made). Source doc NOT archived (item 2 + the new pnpm todo remain open, by
+      design).
+- [x] ✅ [PLAN] P2. `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` →
       `plans/epics/infrastructure_master.md` ("Folded-in scope 2026-07-15"). Sole remaining todo (remove 5 Phase-0
       banners, archive tracker) already folded there. **Requires operator `[unlock-plan]`**
-      (`locked_by: live-defi-rollout`) before archival — confirm with operator this specific doc before flipping.
+      (`locked_by: live-defi-rollout`) before archival — confirm with operator this specific doc before flipping. —
+      **DONE 2026-07-28** — operator `[unlock-plan]` grant confirmed (§5#34); archived to
+      `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` with a banner citing
+      `infrastructure_master.md` § "Folded-in scope 2026-07-15" as the live home for the remaining banner-removal half;
+      `infrastructure_master.md`'s own todo there updated to reflect the tracker-archival half is done, banner-removal
+      half still open. Every corpus referrer fixed (7 codex docs + `infra_satellite_ao_dispatch_batch1_2026_07_26.md` +
+      `infra_consolidated_closeout_2026_07_25.md`). unified-trading-pm@3d3b8266f + @aff24f097 (`[unlock-plan]`).
 - [ ] [PLAN] P2. `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), covers 3 bounded items (relocate 8
       `smoke_matrix.py` files; retire `compute_sfi_progressive_only.py`+launcher; script-homes sweep). ~~2
@@ -303,12 +330,14 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
 
 ## §4 — Partially done, rehome the remainder (10 docs)
 
-- [ ] [PLAN] P2. `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — Phases 1(1b,1c)/2/5 (11
-      todos) already migrated verbatim as Track 0 into `cefi_consolidated_closeout_2026_07_18.md` per operator ruling
-      2026-07-25 — flip those checkboxes here once Track 0 closes. Phase 3 (live CLOB depth), Phase 4 (arb wiring),
-      Codex SSOT-update, Phase 1d/1e/1f (IBKR equities, oil-perp research, dynamic-universe design, dividend re-run,
-      regime research) are self-flagged "SCOPE UNCLEAR" — see §5, need explicit operator naming before any further
-      migration. Do NOT archive the whole doc.
+- [ ] [PLAN] P2. `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md` — **STATUS CHECK 2026-07-28
+      (unified-trading-pm, no code shas — verification only)**: Track 0 in `cefi_consolidated_closeout_2026_07_18.md` is
+      STILL FULLY OPEN (0/11 todos done) — confirmed no checkboxes flipped there, so nothing to flip here either; just
+      reporting status per this wave's instructions. Also confirmed the §2-item-2 correction already recorded above: no
+      literal "SCOPE UNCLEAR" flag exists in the source doc (grep-verified) — Phase 3 (live CLOB depth), Phase 4 (arb
+      wiring), Codex SSOT-update are plain 1-line P2 todos, Phase 1d-1f are well-scoped live DESIGN/RESEARCH/SCRIPT
+      todos with clear repos. Do NOT archive the whole doc — genuine open work remains (Phase 3/4/1d-1f) regardless of
+      Track 0's status.
 - [ ] [PLAN] P2. `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` — lines 133/136/176, D3,
       D4 all done/superseded but unflipped (per_venue_margin_buffer_pct deleted; spot-venue axis shipped
       `catalog_staked_basis.py:44-84`; param audit done; D3's motivating Orca/DRIFT scenario deleted 2026-07-16; D4
@@ -316,22 +345,31 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110` — not lost, just note the pointer. D1
       (e2e tests bypass canonical config path) is the operator's own "DEFERRED-BY-DESIGN" — see §5. Do not archive given
       D1/D2 remain open.
-- [ ] [PLAN] P2. `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` — item 1
-      (rolling-archive/serial-capture tofu apply) done → `infra_capture_and_devops_leftovers_2026_07_06.md:161` (DONE
-      2026-07-07); item 7 (DeFi swaps_ohlcv chain-column reprocess) → `data_completion_defi_2026_07_15.md:217` (D2),
-      also cited in `defi_satellite_ao_dispatch_batch3_2026_07_26.md`. Flip both. Items 2-6,8 genuinely unresolved but
-      under the operator's explicit 2026-06-01 "let it be" banner — no new plan warranted, keep dormant (see §5 for the
-      Tardis-key/GCS-gap items specifically).
-- [ ] [PLAN] P2. `plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` — GATE-0 narrow
-      tracker fully shipped (9/9, confirmed by `cross_cutting_consolidated_closeout_2026_07_25.md` Track 1). 2
-      stale-unflipped traps: features delta_one reader (done, features-service@795e4f4), UI reference-data regen (done,
-      0 `hyperliquid_rest` hits across all 4 files) — flip both. M6, M7, T+1 reconciliation+live-TTL, M8's
-      cadence-column-wiring, and a confirmed-still-in-code `_merge_dataframes` dedup-key fix
-      (`unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py:1250-1261`) stay open here,
-      coordinated (not duplicated) via `cross_cutting_consolidated_closeout_2026_07_25.md` Track 1. 2 CICD todos
-      (L875/L900) are superseded/moot (staging dormant, destination plan archived) — close as superseded. 1 sports
-      test-hermeticity followup (L769) is an orphan — needs a home (`sports_consolidated_closeout_2026_07_19.md`
-      test-hygiene scope, or a standalone issue).
+- [x] ✅ [PLAN] P2. `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` —
+      unified-trading-pm@82f7fe635. Item 1 (rolling-archive/serial-capture tofu apply) confirmed done, flipped citing
+      `infra_capture_and_devops_leftovers_2026_07_06.md:161` (verified 2026-07-07, `deployment-service@3cd0b1d`). Item 7
+      (DeFi swaps_ohlcv chain-column reprocess) confirmed done, flipped citing
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:173` (2026-07-27, slot-2, live-manifest verified stale premise —
+      the D2 mirror in `data_completion_defi_2026_07_15.md:217` is itself still unflipped/stale, not this finding).
+      Items 2-6,8 left untouched under the operator's explicit 2026-06-01 "let it be" banner, per instructions. The
+      Tardis-key item (item among 2-6/8, in the `cefi_venue_backfill_coverage_remediation` section) annotated only (not
+      unparked) — Tardis billing is now CLEARED (operator ruling 2026-07-12 finding 228, reconfirmed 2026-07-27
+      §5-RESOLVED #3/#12/#25) but the item stays under the standing "let it be" banner. Doc not archived — items 2-6,8
+      remain real dormant-by-design open work.
+- [x] ✅ [PLAN] P2. `plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` —
+      unified-trading-pm@82f7fe635. GATE-0 narrow tracker confirmed fully shipped (9/9, "Success criteria" section all
+      `[x]`, cross_cutting_consolidated_closeout_2026_07_25.md Track 1 G0 entry agrees). Both stale-unflipped traps
+      confirmed + flipped: features delta_one reader (features-service@795e4f4, verified live via `git log`), UI
+      reference-data regen (re-verified 0 `hyperliquid_rest` hits across all 4 named files fresh). M6, M7, T+1
+      reconciliation+live-TTL, M8's cadence-column-wiring, and the `_merge_dataframes` dedup-key fix (confirmed still in
+      code at `_writer_io.py`, comment cites this doc back) left open, cross-referenced (not duplicated) both directions
+      with `cross_cutting_consolidated_closeout_2026_07_25.md` Track 1's G0 entry. Both CICD todos confirmed
+      superseded/moot and closed — `cicd_retire_staging_branch_2026_06_27.md` verified archived
+      (`plans/archive/2026_06/`), staging confirmed DORMANT under the current LDR→main-direct model. The sports
+      test-hermeticity orphan given a standalone home (no clean fit in `sports_consolidated_closeout_2026_07_19.md`'s
+      Track K, which is feature-content smoke assertions in a different repo/class of test):
+      `plans/active/issues/sports_process_ticks_emulator_dependent_unit_tests_2026_07_27.md`. Doc not archived — M6-M8
+      etc. remain real open work.
 - [ ] [PLAN] P2. `plans/active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md` — items 1.4/1.3b/1.7e
       extracted verbatim into `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (L113-125, own done-when
       criteria), still open there too — mark superseded-by-batch1 here to avoid duplicate dispatch. Item 1.5b (column
@@ -364,13 +402,19 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       "fold `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" is a true orphan —
       rehome into a July infra plan (batch2 once drafted, or `infra_consolidated_closeout_2026_07_25.md` Track 1) before
       archiving.
-- [ ] [PLAN] P3. `plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md` — core premise ("7 branches left
-      in place") now factually false: `git ls-remote` (2026-07-27) confirms 0 matching `tab/rootm/*` branches remain in
-      any of the 6 repos — add a correction banner. Disposition rehomed into
+- [x] ✅ [PLAN] P3. `plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md` — core premise ("7 branches
+      left in place") now factually false: `git ls-remote` (2026-07-27) confirms 0 matching `tab/rootm/*` branches
+      remain in any of the 6 repos — add a correction banner. Disposition rehomed into
       `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s open REVIEW P2 todo (per-commit-set check, unexecuted) +
       `issues/autonomous_session_operator_decisions_2026_07_25.md` #23 (unresolved A/B/C — see §5). Don't archive until
       `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` writes a dated verdict onto this doc, or the operator
-      rules on #23.
+      rules on #23. — **DONE (partial, correct-as-designed) 2026-07-28** — unified-trading-pm@c2308363d: independently
+      re-verified via fresh `git ls-remote --heads origin 'tab/rootm/*'` across all 6 repos (0 matches, confirms the
+      2026-07-27 finding); correction banner added recording #23 is ALREADY RESOLVED (option A, not an open A/B/C
+      question) and that batch1's presence-check todo already covers disposition. **NOT archived** — per the doc's own
+      instruction: `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` only lists the 7-row table as
+      still-to-verify (no dated verdict written yet), and the batch1 presence-check todo itself hasn't executed.
+      Correctly left open.
 
 ---
 
@@ -520,7 +564,11 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     deferred hygiene todos from the archived source).
 18. aws_codebuild_pr_approval_status_noise — **CONFIRMED ALREADY RESOLVED**: verified live via `gh pr view` — the "AWS
     CodeBuild" status check shows `SKIPPED` (not the red `FAILURE` the finding described) on unified-api-contracts#776
-    and deployment-service#571. Archive with this evidence, no fresh action.
+    and deployment-service#571. Archive with this evidence, no fresh action. — **DONE 2026-07-28** —
+    unified-trading-pm@cd5c0bde1: archived to
+    `plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md` with a banner citing the SKIPPED-status
+    verification; `status: resolved`; `ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s corresponding todo flipped `[x]`
+    with the same evidence; every corpus referrer path fixed.
 19. codex_violations — unlock **GRANTED**. `delta_proxy_repricer.py`: NOT dead code as assumed — its dependency
     `UnderlyingTracker` is tested/used elsewhere but the repricer class itself has zero tests/callers (built, never
     wired in). **File as real work to wire in**: keep the module, open a new todo to integrate it into the live
@@ -535,7 +583,18 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     script) to render a domain-grouped index from each plan's own `summary:`/`asset_group:` frontmatter (every plan
     already carries `summary:`) — fixes the drift at the root while keeping the narrative-context value the pure
     checkbox dashboard doesn't have. Add a CLAUDE.md doc-retrieval rule to read it before scanning `plans/active/` for a
-    domain.
+    domain. — **DONE 2026-07-28, REAL AUTOMATION BUILT (not just a todo)** — unified-trading-pm@cd5c0bde1: new
+    `scripts/plans/regenerate_active_plan_index.py` mirrors `regenerate_active_plan_inventory.py`'s pattern, reads every
+    `plans/active/*.md` plan's `asset_group:`/`summary:` frontmatter, regenerates a domain-grouped
+    `<!-- AUTO-INDEX-START/END -->` block in `plans/active/INDEX.md`, wired into `run_hygiene_sweep.sh`. Regenerated
+    live: 263 plans across all 10 declared domains, 0 uncategorized, confirmed idempotent. Both findings resolved;
+    `plan_reconciler_doc_hygiene_findings_2026_06_17.md` archived to `plans/archive/issues/`.
+    **`cursor-configs/CLAUDE.md` doc-retrieval note**: NOT added — checked, `cursor-configs/CLAUDE.md` measures 40,897
+    bytes against the QG-enforced 40 KiB (40,960-byte) hard cap, only 63 bytes of headroom, not enough for even a short
+    one-liner citation. Per the file's own HARD RULE ("Hit the cap → condense a rule + migrate detail to codex, never
+    raise the cap"), adding this needs a genuine condense-elsewhere pass first — real, separately-scoped work, not a
+    drive-by one-liner. Filing as a real follow-up rather than forcing it in: whoever next touches CLAUDE.md's "Doc
+    retrieval" section should add the INDEX.md pointer while condensing an equal amount elsewhere.
 24. instruments_service_plan_reconciliation C9 — fold into `cefi_consolidated_closeout_2026_07_18.md`.
 25. issue_docs_remediation_sweep 2 orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) — **file
     both** into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` as new todos.
@@ -550,8 +609,12 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}`, genuinely unique/stable over time by
     construction. The "BLOCKED-OPERATOR-DECISION" framing is stale — the real remaining work is wiring a `ModelsMvpRule`
     consumer against this existing scheme (an implementation task, not an open design decision).
-30. ui_build_warm_cache pnpm — **MIGRATE** to pnpm's global content-addressable store.
-31. utl_uac_reuse_consolidation — unlock **GRANTED**.
+30. ui_build_warm_cache pnpm — **MIGRATE** to pnpm's global content-addressable store. — **DONE 2026-07-28** —
+    unified-trading-pm@c2308363d: reframed the D20/item-3 bullet from "Evaluate... Decision item" to a real
+    `- [ ] [INFRA] P3` implementation todo (lockfile conversion + CI install steps + hardlink-store verification across
+    the 3 repos), explicit migration NOT implemented (per the task's own scope — framing/scoping only).
+31. utl_uac_reuse_consolidation — unlock **GRANTED**. — **DONE 2026-07-28** — unified-trading-pm@3d3b8266f + @aff24f097:
+    tracker archived using the grant, `[unlock-plan]` trailer present on both commits.
 32. instruments_foundation_completeness GATE 0/G1/G4 sign-off tensions — **CORRECTED**: already accepted-as-is per the
     operator's 2026-07-23 unlock ruling, not re-litigated. No fresh decision needed.
 33. capability_wizard_analysis F46 — stands, BLOCKED-CREDENTIALS (3 CeFi perp adapters need live API keys), external.
@@ -562,10 +625,18 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     **operator directive: the plan (agent) owns investigating + scoping these into canonical tasks in the right plans**
     — todo for whoever executes §3/§4: do that scoping work, don't re-park on a human owner.
 36. org_migration_to_odumresearch — **STAY on IggyIkenna Pro**. Close out: remove `status: paused`, drop the migration
-    scope.
+    scope. — **DONE 2026-07-28** — unified-trading-pm@cd5c0bde1 (`[unlock-plan]`): `status: paused` → `cancelled`,
+    banner recording the decision + reason added, all 27 open Phase 0-5 todos marked `🚫 WON'T-DO` (not deleted — kept
+    as a reference blueprint per the doc's own instruction), archived to
+    `plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md`. Also resolved the duplicate parked-decision
+    entry at `infra_plan_reconcile_parked_decisions_2026_07_26.md` §5 and dropped the org-migration clause from
+    `infra_consolidated_closeout_2026_07_25.md` Track 2's close-out criterion (was blocking that track's closure).
 37. orphan_rootm_branch — **CORRECTED**: already resolved via `autonomous_session_operator_decisions_2026_07_25.md` #23
     (Option A, resolved) — batch1's read-only presence-check todo already covers it. Add a correction banner; archive
-    once `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` writes its dated verdict.
+    once `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` writes its dated verdict. — **DONE (banner only, NOT
+    archived — correct per the doc's own gate) 2026-07-28** — unified-trading-pm@c2308363d: independently re-verified
+    fresh (0 branches, all 6 repos) + correction banner added; archival correctly deferred since
+    `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` has not yet written a dated verdict.
 38. macro_micro_econ_data_capture — heads up: the doc's "Massive re-adopted as Databento's secondary source" premise is
     now STALE (Massive/Polygon.io fully REMOVED 2026-07-19) — **confirmed redundant, operator agrees**, correction
     banner needed. Answered anyway: (a) altdata home = **shared cross-asset axis**, no new asset_group; (b) paid sources
@@ -641,3 +712,68 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   race as a `--no-verify`-eligible symptom explicitly (only "prek auto-restore symptoms" is named) — this session
   treated the observed stash/rollback churn as squarely in that category, but it's worth a codex note if this pattern
   recurs for other agents on this same wave.
+
+- 2026-07-28: Executed a separate 6-item batch from this same doc's §3/§4/§5-RESOLVED queue (utl_uac_reuse tracker
+  archival [item 1], ui_build_warm_cache verify+reframe [item 2], orphan_rootm banner correction [item 3],
+  plan_reconciler archival + real INDEX.md auto-index automation [item 4], aws_codebuild archival [item 5],
+  org_migration cancellation+archival [item 6]). All 6 shipped + independently verified against HEAD post-commit
+  (`git show HEAD:<path>` for every archived/moved file, not just trusting quickmerge's success message).
+  **Independently hit the EXACT same shared-working-tree corruption class the entries above document** — confirms it is
+  not a one-off: item 1 alone needed 4 quickmerge retries (a transient `.venv` numpy/pandas ABI break from a concurrent
+  `uv sync`, a transient `.coverage` SQLite combine failure from concurrent coverage writers, a `git index.lock`
+  collision during the prek prettier-autostage hook, and a stash-restore that silently reverted
+  `utl_uac_reuse_consolidation_remediation_2026_06_10.md` + `infrastructure_master.md` back to pre-edit content with no
+  error surfaced) before a clean commit landed — and even THAT commit (`3d3b8266f`) turned out to have picked up an
+  unrelated sibling agent's `plan_issue_epic_consolidation_2026_06_30.md` + 3 other files via shared-index
+  contamination, left as-is (content itself presumably correct, just commit-message-mislabeled; rewriting shipped
+  history was judged riskier than the mislabel). Items 4/5/6's referrer files
+  (`infra_consolidated_closeout_2026_07_25.md`, `infra_plan_reconcile_parked_decisions_2026_07_26.md`,
+  `ci_satellite_ao_dispatch_batch1_2026_07_26.md`) each got silently reverted at least once mid-session and had to be
+  redone from scratch before the final successful commit. This tracking doc itself hit a genuine
+  `AUTOSTASH_POP_CONFLICT` on the final status-update commit (a concurrent agent's `f1991313e` landed a flip to the same
+  file mid-flight) that left MANGLED conflict markers embedded in committed-looking content — recovered by pulling the
+  clean `origin/live-defi-rollout` copy fresh and re-applying only my own edits on top of it, rather than trying to
+  hand-parse the garbled markers. **Recovery method that worked throughout**: after every quickmerge attempt (success OR
+  failure), independently re-grep each target file for a known content marker from my own edit (not just
+  `git status`/exit code) before proceeding — caught several silent full-reverts and one embedded-conflict-marker
+  corruption this way that a naive "commit succeeded, move on" flow would have missed. SHAs: `3d3b8266f` + `aff24f097`
+  (item 1), `c2308363d` (items 2+3), `cd5c0bde1` (items 4+5+6, `[unlock-plan]`), this commit (§3/§4/§5-RESOLVED status
+  updates). Real-vs-todo honesty for item 4: the full INDEX.md automation was BUILT and is LIVE (not just a filed todo)
+  — `scripts/plans/regenerate_active_plan_index.py`, 263 plans / 10 domains / 0 uncategorized, wired into
+  `run_hygiene_sweep.sh`. The `cursor-configs/CLAUDE.md` doc-retrieval one-liner from item 4's instructions was NOT
+  added — the file measures 40,897/40,960 bytes against the QG-enforced hard cap (63 bytes of headroom), genuinely no
+  room without a separate condense-elsewhere pass; filed as a real follow-up under §5-RESOLVED item 23 rather than
+  forced in.
+- 2026-07-28 (§3/§4 "5 complex multi-target items" wave, unified-trading-pm@82f7fe635): **1 archived** —
+  `plan_issue_epic_consolidation_2026_06_30.md` (unlocked, all 5 forks confirmed content-present, Tardis-billing item
+  confirmed cleared, archived with a full banner + corpus-wide referrer fixes). **1 folded-scope-only, NOT archived** —
+  `instruments_service_plan_reconciliation_2026_06_29.md`: C2/C4 confirmed closed (their tracker doc itself now
+  archived-as-resolved), C5 confirmed live, C6 corrected (cefi_e6_cf7 does NOT cover it — the concern is moot instead),
+  C9 folded into `cefi_consolidated_closeout_2026_07_18.md` Track 6 — but this doc is `locked_by: live-defi-rollout`
+  with no `[unlock-plan]` granted this wave, so archival is STOPPED per the HARD RULE (same lock-gap class the prior §3
+  entry above flagged) — flagging again: needs operator `[unlock-plan]`. **1 verify-only, no edits** —
+  `cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`: Track 0 confirmed still fully open (0/11), no "SCOPE
+  UNCLEAR" flag exists (grep-confirmed), nothing to flip; doc untouched. **2 partial flips, both stay open** —
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (2 stale-unflipped traps flipped, 2 CICD todos
+  closed-as-superseded, 1 sports orphan rehomed to a new standalone issue doc, M6-M8/dedup-key left open +
+  cross-referenced) and `fleet_audit_triad_deferred_followups_2026_06_01.md` (items 1+7 flipped, Tardis item
+  annotated-not-unparked, items 2-6/8 untouched under the standing "let it be" banner). New file:
+  `plans/active/issues/sports_process_ticks_emulator_dependent_unit_tests_2026_07_27.md`. **Multi-agent note (2 distinct
+  corruption classes hit this run, both independently confirmed by a sibling agent's entry below for a different
+  item-batch)**: (1) the "add-then-commit index race" class the prior §3 entry named — a `quickmerge.sh` STAGE-5 stash
+  bundled my edits with foreign WIP from ~6-10 concurrently-running `quickmerge.sh`/`quality-gates.sh` processes, a
+  `.git/index.lock` collision left it stranded, and a different agent's unrelated commit (`3d3b8266f`) landed with a
+  handful of my files bundled in via shared-index contamination — 9 quickmerge attempts before a clean, content-verified
+  7-file commit (`82f7fe635`) landed, recovered by re-diffing every target file against known-good content after EVERY
+  attempt rather than trusting the exit code/success message. (2) A NEW class hit shipping this doc itself: a
+  `git pull --rebase --autostash` produced a genuine same-paragraph content conflict against another agent's concurrent
+  §3 edit, and the autostash-pop applied with the standard 7-char left/equals/right-angle-bracket Git conflict-marker
+  triad mangled mid-line into the prose (not caught by eye — only surfaced via the `plan-hygiene` pre-commit hook's
+  "Conflict marker(s) in staged plans" check) — recovered by `git checkout HEAD -- <file>` (safe here: the corruption
+  was entirely my own conflicted stash, no other agent's uncommitted work at risk) then redoing all 5 edits + this log
+  entry from scratch against the clean base. **Flag for the operator**: this wave's shared-working-tree contention (6-10
+  concurrent full QG/quickmerge runs, well past the documented "≤2 full QGs" cap) is silently corrupting BOTH scoped
+  `--files` quickmerge commits AND plain `git pull --rebase --autostash` cycles on a single shared doc — every agent
+  should re-verify shipped content post-hoc via a targeted grep of their own edit markers (never trust `exit 0` /
+  "Landed on..." alone), and specifically check for the Git conflict-marker triad (repeated left-angle / equals /
+  right-angle chars) after ANY rebase-autostash cycle on a heavily-contended shared doc like this one.
