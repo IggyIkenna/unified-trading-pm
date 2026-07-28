@@ -131,7 +131,19 @@ resolved_by:
           `bash scripts/quality-gates.sh` green (152s), sentinel `072ec9091f62d331a42c584a788c4756c8ef92ba`. —
           deployment-service@2b6ad53
 
-- [ ] [REVIEW] P1. Once the above lands, add one line to CLAUDE.md's "Launching VMs / infra?" domain-index pointing to
+- [x] ✅ [REVIEW] P1. Once the above lands, add one line to CLAUDE.md's "Launching VMs / infra?" domain-index pointing to
       `data-pipeline-alerts.md` as the SSOT for VM/monitoring-tool escalation design, so future agents building new
       monitoring wire into this taxonomy (auto-recover-before-page, file-issue-for-investigation-worthy classes) instead
       of inventing an ad hoc pattern.
+
+      **DONE.** Added a "**New monitoring/escalation design?**" pointer to `cursor-configs/CLAUDE.md`'s "Launching VMs /
+      infra?" domain-index bullet, citing `/codex/05-infrastructure/data-pipeline-alerts.md` as the SSOT (auto-recover-
+      before-page + file-issue taxonomy) and directing future agents to wire new monitors into this taxonomy rather than
+      inventing an ad hoc pattern. The file was 40,956 B — only 4 B under the 40 KiB (`40,960 B`) hard cap enforced by
+      `scripts/quality_gates/check_agent_rules_size_cap.py` — so the addition required condensing the same bullet's
+      existing prose (Tardis-cap sentence, preemption-recovery sentence, billing-waste sentence, launcher-naming clause)
+      by more than the new text's size, net **-140 B**, landing the file at **40,816 B** (144 B of headroom). Verified:
+      `.venv/bin/python scripts/quality_gates/check_agent_rules_size_cap.py` → `✅ all agent-rules files within hard cap`
+      (`cursor-configs/CLAUDE.md: 40,816 B / cap 40,960 B`). No rule content was dropped, only reworded tighter — every
+      fact (Tardis cap=1, ≤2/(vm-prefix,day) relaunch budget, SPOT-default, PROGRESS-checkpoint contract, etc.) is still
+      present. — unified-trading-pm (this commit)

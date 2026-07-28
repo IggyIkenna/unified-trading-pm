@@ -338,34 +338,32 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   full-corpus GCS walks / manifest-index rewrites / >few-hundred-object renames go on a VM in-region, always, not only
   when bandwidth is mentioned; does NOT apply to the human-planning or AO-orchestrator VMs (already cloud-hosted) →
   `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O rule. **That exemption is I/O-only** — an ad-hoc script
-  materializing a whole corpus in-memory on the shared planning-vm still needs bounding
+  over-materializing the corpus in-memory on the shared planning-vm still needs bounding
   (`scripts/dev/run-bounded-analysis.sh` mem-cap, or a dedicated VM) → same SSOT § heavy-compute-on-shared-host. **No
   fire-and-forget** (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED; verify T+10min); launchers in
   `deployment-service/scripts/vm/` (name MUST match a real `VM_PREFIX_TO_BUCKET` entry + `lifecycle_class` — **grep the
-  registry FIRST, never hand-roll a name**: unregistered = silently invisible in deployment-ui/cockpit/Slack until
-  someone goes looking, not a loud failure; prefer reusing/extending an existing `launch-*.sh` over a new one, e.g.
-  `launch-canonical-migration-vm.sh` for one-off migrations; zone `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` +
-  `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL VMs both clouds, consolidate, snapshot before any GCS
-  cutover); every compute unit is a classified DEPLOYMENT TARGET (`classify_deployment_target`). **Backfill VMs default
-  to SPOT (HARD RULE)**: every backfill/idempotent launcher provisions `--provisioning-model=SPOT` (~60-91% cheaper;
-  idempotent shards re-run on preemption) — `--on-demand` (env `ON_DEMAND=true`) is the only opt-out; **preemption
-  recovery MUST resume from measured PROGRESS, never replay `START_DATE` (HARD RULE)** — `RelaunchPreemptedVm` replays
-  the ORIGINAL params, which is right for skip-enabled runs but restarts any `--force`/`redo_all` run at day one FOREVER
-  (force disables the skip the resume relies on); now auto-resumed by the shipped PROGRESS-checkpoint contract (VM
-  writes `vm-logs/{vm}/PROGRESS.json`, monotonic-gated; non-monotonic/no-checkpoint force still PAGEs);
-  live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses live data); on-demand for backfill is a
-  bug. **Manually checking in on a SPOT VM that looks stalled/gone: verify `compute.instances.preempted` via
-  `gcloud compute operations list` BEFORE diagnosing a bug/hang** — one-off migration VMs aren't wired into the fleet
-  monitor, so this is on you, not automatic. **Tardis VMs: HARD cap 1 concurrent, both clouds** (lease does NOT lift it
-  — AMPLIFIES the storm; operator 2026-07-16, measured: N>1 mass 403s + false `attempted_failed` rows + coverage
-  regression, N=1 clean — full numbers in the SSOT) — count the running fleet BEFORE launching
-  (`tardis-concurrency-guard.sh`, wired into cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
-  `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE IP, never more VMs. Non-Tardis venues
-  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every running VM for preemption-without-auto- recovery
-  and for silent `attempted_failed` billing-waste** (a non-retriable error re-attempted forever costs real money every
-  wave) — run `/vm-preemption-billing-waste-audit`; every agent watching VMs should use it, not just when an incident is
-  already suspected. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap),
-  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
+  registry FIRST, never hand-roll a name**: unregistered = silently invisible in deployment-ui/cockpit/Slack, not a loud
+  failure; prefer extending an existing `launch-*.sh` (e.g. `launch-canonical-migration-vm.sh`) over a new one; zone
+  `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL
+  VMs both clouds, consolidate, snapshot before any GCS cutover; every compute unit is a classified DEPLOYMENT TARGET
+  via `classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
+  provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
+  `ON_DEMAND=true`) is the only opt-out; **preemption recovery MUST resume from measured PROGRESS, never replay
+  `START_DATE` (HARD RULE)** — `RelaunchPreemptedVm` replays ORIGINAL params, fine for skip-enabled runs but restarts
+  any `--force`/`redo_all` run at day one FOREVER; now auto-resumed via the PROGRESS-checkpoint contract
+  (`vm-logs/{vm}/PROGRESS.json`, monotonic-gated; non-monotonic/no-checkpoint force still PAGEs); live/forward/cron/
+  paper VMs + `--mode live` stay on-demand (preemption loses live data); on-demand for backfill is a bug. **Stalled/gone
+  SPOT VM: verify `compute.instances.preempted` via `gcloud compute operations list` before diagnosing a bug/hang** —
+  one-off migration VMs aren't fleet-monitored. **Tardis VMs: HARD cap 1 concurrent, both clouds** (lease does NOT lift
+  it — amplifies the storm; 2026-07-16 measured: N>1 → mass 403s/false `attempted_failed`/coverage regression, N=1
+  clean — numbers in SSOT) — count the fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into cefi/mtds
+  launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE IP, never
+  more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every VM for
+  preemption-without-recovery + silent `attempted_failed` billing-waste** (non-retriable errors re-attempt forever,
+  real money each wave) — run `/vm-preemption-billing-waste-audit` proactively, every agent watching VMs. **New
+  monitoring/escalation design?** SSOT `/codex/05-infrastructure/data-pipeline-alerts.md` (auto-recover-before-page +
+  file-issue taxonomy) — wire new monitors in, don't invent ad hoc. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md`
+  (§ Tardis cap), `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
   `…/vm-preemption-and-billing-waste-monitoring.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
