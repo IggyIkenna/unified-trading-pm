@@ -422,11 +422,22 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       Rehome pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer.py` confirm, and the Phase-3
       schema-provenance catch-all into batch2 once drafted. **Locked (`locked_by: live-defi-rollout`) — needs
       `[unlock-plan]`** before any archival (not yet archivable anyway — real remainder exists).
-- [ ] [PLAN] P2. `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` — 6/9 Pattern-B repos
-      already normalized to Pattern A (alerting-service, batch-live-reconciliation-service, fund-administration-service,
-      market-data-processing-service@bffb9df, ml-service, trading-agent-service) — 0 checkboxes flipped, flip them.
-      execution-service, greeks-service, strategy-service (also vendoring MTDS) still confirmed Pattern-B, gated on
-      "Owner: Ikenna" design call — see §5. Track remainder via `infra_consolidated_closeout_2026_07_25.md` Track 1.
+- [x] ✅ [PLAN] P2. **DONE 2026-07-28 — checkboxes flipped in the source doc, greeks/strategy normalized + shipped.**
+      `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
+      already-normalized repos (alerting-service, batch-live-reconciliation-service, fund-administration-service,
+      market-data-processing-service, ml-service, trading-agent-service) re-verified by reading each live
+      `Dockerfile`+`cloudbuild.yaml` in full (confirmed Pattern-A shaped, no code change needed) and their checkboxes
+      flipped with evidence. `greeks-service` (greeks-service@b82340ad) and `strategy-service`
+      (strategy-service@7be73520) normalized Dockerfile+cloudbuild.yaml (+ `buildspec.aws.yaml` for strategy) to Pattern
+      A this session, verified via a real local `docker build` + import/mock-run operability probe for both
+      (strategy-service's probe surfaced + fixed a genuine `WORKSPACE_ROOT`-heuristic regression from the install-path
+      change — see the source doc for the full trail), both `quality-gates.sh` green, both shipped. The
+      strategy-service/MTDS-vendoring "tier violation" BUG todo is DENIED/FALSE ALARM (already resolved 2026-06-10,
+      `pyproject.toml@d1f5a6a8` — strategy_service never imported market_tick_data_service; only the Dockerfile/
+      cloudbuild vendoring of the dead dependency lagged, now removed by this normalization). Only `execution-service`
+      remains Pattern-B — explicitly out of scope this session (different concurrent agent owns it, delta_proxy wire-in
+      task) — so the source doc is NOT archived yet (real remainder exists). Track via
+      `infra_consolidated_closeout_2026_07_25.md` Track 1.
 - [x] ✅ [PLAN] P2. **EXECUTED + ARCHIVED 2026-07-28** ([unlock-plan] granted). RULE-11 (item a) actually EXECUTED this
       session (not just migrated): `.github/workflows/plan-health-agent.yml` + its
       `scripts/self-hosted-runners/hosted-baseline/` template twin both dropped the `schedule:` trigger + the Haiku
@@ -547,8 +558,11 @@ needed.
 41. `issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — 4 numbered "Open questions for operator" unresolved
     (Glassnode-Pro/CoinGlass build-vs-buy; single FRED source-of-truth); altdata home + EIA credential ask
     BLOCKED-CREDENTIALS/OPERATOR-DECISION downstream.
-42. `issues/service_dockerfile_pattern_normalization_2026_06_17.md` — "Owner: Ikenna" design call on the 3 remaining
-    Pattern-B repos (execution-service, greeks-service, strategy-service) — also in §4.
+42. `issues/service_dockerfile_pattern_normalization_2026_06_17.md` — **RESOLVED 2026-07-28** (also in §4, item flipped
+    there): the "Owner: Ikenna" design call was superseded by the operator's agent-ownership ruling (§5-RESOLVED item
+    39); 2 of the 3 remaining Pattern-B repos (greeks-service, strategy-service) normalized + shipped this session. Only
+    `execution-service` remains Pattern-B, explicitly out of scope (owned by a different concurrent agent's delta_proxy
+    wire-in task) — not an operator-design-call anymore, just a scheduling/ownership gap.
 
 ---
 
@@ -733,7 +747,12 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
 39. service_dockerfile_pattern_normalization — **agent owns it** (no more Ikenna/Harsh human-owner split, per the
     general correction above) — proceed with Pattern-A fan-out to the 8 remaining Pattern-B repos + the
-    strategy-service/MTDS-vendoring tier-violation investigation.
+    strategy-service/MTDS-vendoring tier-violation investigation. **EXECUTED 2026-07-28**: 6/8 already normalized
+    (verified, no change needed); greeks-service (@b82340ad) + strategy-service (@7be73520) normalized + shipped this
+    session; execution-service left to its own concurrent owner. MTDS-vendoring tier-violation investigation:
+    DENIED/false alarm — resolved 2026-06-10 (`pyproject.toml@d1f5a6a8`) before this doc's own June-2026 vintage even
+    started; only the dead Dockerfile/cloudbuild vendoring lagged, removed by the normalization. Full evidence trail in
+    `issues/service_dockerfile_pattern_normalization_2026_06_17.md`'s own todos.
 
 ---
 
