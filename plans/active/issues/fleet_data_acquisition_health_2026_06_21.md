@@ -235,6 +235,18 @@ verified piecemeal); this is purely the version-surface gate. Repo: market-tick-
       `data_type="book_snapshot_5"` but `SOURCE_PRIORITY` keys it as `("cefi", "book_snapshot")`, so `book_snapshot_5`
       writes are source-EXEMPT (no validation enforced); register `("cefi", "book_snapshot_5")` or rename to one
       canonical spelling, and sweep other AGs for the same drift. Repo: unified-api-contracts.
-- [ ] [INFRA] P1. **Reconcile mtds version-surface drift blocking LDR→staging QG** — pyproject (`0.31.0`) vs origin/main
-      (`0.24.0`) vs workspace-manifest (`0.25.0`) vs `repositories.mtds.version` (`0.20.0`) VERSION_SPLIT trips the
-      version-alignment pre-gate; run `run-version-alignment.sh --fix` or let the semver-agent re-align.
+- [x] ✅ [INFRA] P1. **STALE — already self-resolved via normal semver-agent operation, 2026-07-28.** The specific
+      version numbers cited (pyproject `0.31.0`/origin-main `0.24.0`/workspace-manifest `0.25.0`/
+      `repositories.mtds.version` `0.20.0`) no longer exist — mtds has advanced through ~70+ version bumps since this
+      todo was written (2026-06-21). Live re-check via
+      `unified-trading-pm/scripts/cicd/assert_version_coherence.py --warn-only` (the actual VERSION_SPLIT gate, read via
+      `run-version-alignment.sh`'s own "[0.95/4] pyproject vs manifest version parity" step) shows mtds fully coherent:
+      `versions{}=0.99.0`, source `pyproject.version=0.99.0`, tag-ok — **zero VERSION_SPLIT** for mtds today. Confirmed
+      no live gate block: mtds's open LDR→main promote PR #774
+      (`market-tick-data-service@873c6c7362402de9a5f43eac501f3a3fdb95cd1c`) has `quality-gates-v2` actively
+      `in_progress` (not blocked/failed). The only residual version-related finding is a fleet-wide (23-repo, not
+      mtds-specific) `VESTIGIAL_SCALAR_DRIFT` — `repositories{}.version` (a display-only scalar, `0.83.0` for mtds)
+      lagging `versions{}` (`0.99.0`) — which `assert_version_coherence.py`'s own docstring documents as low-stakes
+      ("written only opportunistically ... read only as a display fallback ... NOT required"), distinct from the
+      `VERSION_SPLIT` class this todo was actually about, and already self-reported by the same read-only checker on
+      every future run (no separate tracking needed). No code change required.

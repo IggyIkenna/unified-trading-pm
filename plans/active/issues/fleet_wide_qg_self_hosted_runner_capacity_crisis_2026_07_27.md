@@ -197,23 +197,23 @@ escalate to a `cicd` worker.
       guidance elsewhere in this workspace. If the operator's "capacity freed up" read changes, re-open this VERIFY.
 
       **Re-open trigger fired, 2026-07-28 ~15:28 UTC** (found incidentally while verifying deploy-currency for
-          `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
-          fresh data point landing in scope): agent-orchestrator's own promote PR
-          (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
-          its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
-          **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
-          agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
-          runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
-          (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
-          escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
-          this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
-          happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
-          configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
-          job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
-          own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
-          Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
-          reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
-          documented there, not duplicated here beyond this evidence note.
+                  `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
+                  fresh data point landing in scope): agent-orchestrator's own promote PR
+                  (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
+                  its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
+                  **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
+                  agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
+                  runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
+                  (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
+                  escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
+                  this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
+                  happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
+                  configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
+                  job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
+                  own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
+                  Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
+                  reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
+                  documented there, not duplicated here beyond this evidence note.
 
 ## Evidence
 
@@ -552,13 +552,16 @@ escalate to a `cicd` worker.
         file (unified-trading-library `0a3f2036`, deployment-service `f27ada5` — both verified to include the
         `self_hosted_runner_labels` flip in their diff). Allowlist itself: `ccd574eda` (23 entries: the original 13 +
         these 10). **e2e-testing is the one exception — genuinely still open, see below**, not yet restored.
-  - [ ] [SCRIPT] P1. **e2e-testing self-hosted restore — blocked, not done.** The per-repo workflow file is regenerated
-        locally (`rollout-workflow-templates.sh --repo e2e-testing`) but not yet committed: its quickmerge pre-flight
-        blocks on path-dep `strategy-service` carrying a live, uncommitted foreign edit (the SAME concurrent Wave-2
-        session's `staging-lock-check.yml` + `plan-alignment-agent.yml` migration, mtime actively refreshing through
-        15:38 — a genuine live claim, not stale WIP, so left untouched rather than force-committed). Retry once
-        `strategy-service` clears (`git status --porcelain` on that repo goes empty); the regenerated file is sitting
-        ready in this session's working tree.
+  - [x] ✅ [SCRIPT] P1. **DONE 2026-07-28.** `e2e-testing` restored: `ae30579`. The blocker (path-deps
+        `strategy-service`/`execution-service` repeatedly re-dirtied by the SAME concurrent Wave-2 session's
+        `plan-alignment-agent.yml` migration) cleared in two steps — waited for each repo's REAL tracked change to land
+        on its own (both did, `400d3773` and `54de28fa2`), then removed the stray `.bak` litter each left behind
+        (`plan-alignment-agent.yml.bak` in each — confirmed disposable: single-line diff from the already-committed real
+        file, fully recoverable from git history; operator-authorized before deleting since the destructive-command
+        guardrail's `rm` pattern false-positives on ANY path containing `-repos`, e.g. `unified-trading-system-repos`,
+        regardless of actual flags — not a real recursive-delete risk here, just a regex matching a hyphenated directory
+        name). **All 10 of 10 repos now restored to self-hosted** with the RAM-aware reservation governor active; this
+        doc's fix path is complete.
   - [ ] [DATA] P2. After a few days under reservation mode, re-pull `i-0c9b283b31d6b5ca7` live state (`free -h`,
         `uptime`, `qg-host-governor.sh --status` with `QG_GOVERNOR_MODE=reservation`) to confirm the predicted
         queueing-not-crashing behavior actually held under a real fleet-promote burst, not just in the capacity math.

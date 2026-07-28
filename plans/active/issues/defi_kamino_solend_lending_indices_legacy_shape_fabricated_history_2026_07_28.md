@@ -48,6 +48,14 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **⚠️ SCOPE CORRECTION 2026-07-28 (slot-14, todo 2's full-scope scan)** — the frontmatter `title`/`summary` above
+> ("duplicated verbatim across ~2 years of `day=` partitions") reflects the ORIGINAL coarse, presence-only probe and is
+> now known to OVERSTATE the true scope. A full day-by-day scan (2023-01-01..2026-07-28, every present day individually
+> classified, not sampled-monthly) found the fabrication is a SHARP, NARROW window — `2025-01-01` through `2025-01-16`
+> (SOLEND) / `2025-01-17` (KAMINO), ~16-17 days, not ~21 months. See the "Full-scope scan" todo below for full
+> evidence + methodology. Left the original title/summary text unchanged (historical record of what was known at
+> creation time) rather than rewritten — read this correction alongside them, not instead of them.
+
 ## What I found
 
 Dispatched to resolve item 6 of `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` (now archived):
@@ -140,12 +148,53 @@ canonical twin's only copy for some cells, same as the dex_pools finding).
       shape as real historical data (grep `instrument_type=.lending.` read-sites across strategy-service/
       features-service, mirroring the parent issue's `solana_amm_depth_provider.py` read-site discovery)? (repo:
       unified-trading-pm — operator decision)
-- [ ] [DATA] P1. **Full-scope scan** (VM-scale, per the heavy-I/O HARD RULE — this is NOT a local-session task) to
-      determine the EXACT affected date range + total fabricated-object count for both KAMINO and SOLEND
-      `instrument_type=lending` `data_type=lending_indices`, mirroring the parent issue's own full-scope sweep
-      methodology (day-by-day or sharded date-range GCS walk, sampling each day's `timestamp` field against its `day=`
-      partition). Confirm the exact boundary where SOLEND's presence becomes intermittent (2025-06-26 to 2025-07-26
-      window, coarse probe only). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **Full-scope scan — DONE 2026-07-28 (slot-14), MAJOR CORRECTION to the presence-only coarse probe's
+      implied scope.** Reassessed against the heavy-I/O HARD RULE before launching a VM: this is a BOUNDED, SAMPLED scan
+      (one delimiter-bounded `list_blobs` + one small parquet read per (day, venue) cell, never a whole-corpus
+      walk/materialization), so it qualifies for the CLAUDE.md bounded-work exemption and ran in-session — no VM needed.
+      Script (committed, reusable):
+      `market-tick-data-service/scripts/scan_kamino_solend_legacy_lending_fabrication_2026_07_28.py`. Validated first
+      against the known-fabricated window (2025-01-06..2025-01-14, matched the doc's own 3 spot-checks 3/3) and the
+      known-genuine day (2026-04-14, correctly GENUINE once the script was fixed to also accept the `ts_event` schema
+      variant — the "genuine" day's object turned out to use `ts_event`/datetime64, not the legacy `timestamp`/epoch-int
+      column the fabricated snapshot uses; both schemas coexist under this same legacy path).
+
+      **Full scan 2023-01-01..2026-07-28** (1,305 days × 2 venues = 2,610 cells, 1 sample read per present cell, 0
+              UNKNOWN/ambiguous cells):
+
+              ```
+              KAMINO: present 2023-01-01..2026-05-28 (1,231 present days) — 17 FABRICATED, 1,214 GENUINE
+              SOLEND: present 2023-01-01..2026-05-28 (1,012 present days) — 16 FABRICATED,   996 GENUINE
+              ```
+
+              **The fabricated population is a SHARP, NARROW window: `2025-01-01` through `2025-01-16` (SOLEND) /
+              `2025-01-17` (KAMINO) — 16-17 days, NOT the ~21-month range the coarse presence-only probe's phrasing implied.**
+              Re-reading that probe's own words confirms it never claimed otherwise ("presence-only, NOT a full sweep" —
+              it measured the SHAPE existing across ~21 months, not fabrication on every one of those days; the only actual
+              fabrication evidence it had was the 3 spot-checked January-2025 days, which this scan now shows WAS the
+              correct signal, just over-generalized in the summary framing). **Verified this isn't a same-day
+              sampling blind-spot**: pulled EVERY object (not just 1 sample) for a GENUINE-classified day well inside the
+              old presumed-fabricated window (`day=2024-06-15`, 45 KAMINO objects) — 45/45 genuine, 0 fabricated, confirming
+              no intra-day mix the single-sample method could have missed. Verified the boundary is sharp via a dense
+              2024-12-28..2025-01-25 re-scan: fabrication starts cleanly at `2025-01-01` and ends `2025-01-16/17`, no partial
+              days.
+
+              **Corrected object-count estimate**: at the doc's own measured per-day density (KAMINO ~55 objects/day,
+              SOLEND ~595 objects/day), the TRUE fabricated population is roughly `17×55 + 16×595 ≈ 10,455` objects — an
+              order of magnitude smaller than the ~21-month framing would have implied (which would have suggested tens of
+              thousands more). This materially changes the disposition calculus for todo 1 (a 16-17 day gap is a much
+              smaller/cheaper fix surface than ~21 months).
+
+              **Absence note** (not fabrication, a separate observation): both venues are also fully ABSENT (no
+              `instrument_type=lending` objects at all, not even fabricated ones) for `2023-03-31` through some point before
+              `2023-05` (start of the scanned range's early gap) and again from `2026-05-29` onward through the scan's
+              `2026-07-28` end — i.e. the legacy shape's total lifetime is `2023-01-01..2026-05-28`(ish) with this one
+              narrow fabricated pocket inside it, not fabricated-then-clean-forever or clean-then-fabricated-forever.
+
+              Full per-cell report (not committed — regenerable from the committed script + these exact date bounds, same
+              pattern as the footystats/CF-11 migration reports in sibling sessions):
+              `/tmp/kamino_solend_scan_report.json` (session-local, will not persist). (repo: market-tick-data-service)
+
 - [ ] [DATA] P1. **Check whether other data_types under `instrument_type=lending`** (not just `lending_indices` — the
       legacy schema may also cover `liquidations`/`liquidation_events`/`position_data` per `_lending_grain.py`'s doc
       comment listing 6 lending-family handlers) carry the same fabrication signature. (repo: market-tick-data-service)
