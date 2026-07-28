@@ -37,6 +37,8 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md,
+    /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
+    /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/task_template.md,
   ]
@@ -306,22 +308,18 @@ drift_direction: advance-code
       report. (repo: market-tick-data-service, read-only scan). **Done when**: a written list of affected dates + a
       root-cause finding on the loop-skip is recorded; does NOT decide the T-18h-horizon/cap-widening question. Source:
       `sports_consolidated_closeout_2026_07_19.md:494-496`.
-- [ ] [CODE] P1. **Track H — implement the registry-aware honest-coverage denominator in
-      `compute_coverage_for_bucket()`** (deployment-api) — sports coverage % must reflect "captured / UAC registry
-      universe," not "captured / raw manifest." **REQUIRED FIRST STEP (live-probe, do not trust the source todo's
-      "largely executed" framing at face value)**: run a live manifest census confirming 0 sports manifest rows still
-      carry non-registry-form `league_id` strings; if any non-registry rows remain, STOP and report instead of shipping
-      the denominator change (a registry-membership test cannot be correct while non-registry rows exist). (repo:
-      deployment-api). **Done when**: the live-probe confirms 0 non-registry `league_id` rows AND the denominator code
-      change ships, verified against a real bucket. Source: `sports_consolidated_closeout_2026_07_19.md:536-541`. **RUN
-      2026-07-28 (slot-11)**: required first step executed — STOP condition fired, correctly did not ship. Live probe
-      against `market-data-tick-sports-prd-central-element-323112` found 55,160 genuine non-canonical `league_id` rows
-      (57,942 raw non-registry rows minus 2,782 blank/`NaN` sentinel, out of 516,196 total), concentrated in the
-      still-outstanding `batch_mdps_odds_horizon_bucket` (42,652) + `batch_footystats` (14,668) pipeline_modes — exactly
-      the two deferred shapes `issues/sports_league_id_namespace_migration_2026_07_20.md`'s own STATUS 2026-07-25 named
-      as not yet migrated. Full method + numbers in that doc's new "LIVE-PROBE 2026-07-28" section. Still blocked on
-      that migration's `odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap pass landing — re-run the
-      same probe once those ship, not before.
+- [x] ✅ [CODE] P1. **Track H — registry-aware honest-coverage denominator — scoping/dispatch-hygiene resolved by
+      EXTRACTION 2026-07-28 to `sports_track_h_denominator_gated_2026_07_28.md`** (machine-gated via
+      `depends_on`+`gate_on_depends: true` on `sports_track_h_denominator_prereqs_2026_07_28.md`). This checkbox marks
+      the EXTRACTION decision done, not the denominator code change itself (that remains open, tracked in the new gated
+      plan) — mirrors the sanctioned rollup-pointer pattern used elsewhere in this doc family (parent-todo-11 /
+      cefi-020) for restructure-style splits, which `check_todo_regression.sh` requires (a flip is conserved; a bare
+      checkbox removal is not). 4 consecutive same-day dispatches (slots 11, 7, 10, 15 on 2026-07-28) hit the identical
+      STOP condition (2 real blockers — `odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap —
+      unshipped); a priority-999 backlog park did not hard-block re-dispatch, so per operator direction (answering
+      `BLK-2f9e7680`) the actual denominator todo is split out into its own plan with a real machine dispatch gate,
+      rather than staying a bouncing checkbox here. See the extracted plan for current status. Source:
+      `sports_consolidated_closeout_2026_07_19.md:536-541`.
 - [ ] [CODE] P2. **Track H — implement RAISE-on-all-NaT for `AvailableAtStampingError`** (operator-ruled: fail loud at
       the shard that can't be stamped, not skip-with-record) at the CF-8 fix's own code path
       (`market-tick-data-service@af627b5b`). **Scoping note**: only the CODE change ships via this todo — the CF-8
@@ -474,6 +472,20 @@ unsupervised"; (f) items whose real content lives in another doc this extraction
 item). See the dispatching session's full report for the per-todo table.
 
 ## Progress Log
+
+### 2026-07-28 (slot-15) — Track H denominator todo EXTRACTED after 4th same-day bounce; machine-gated split shipped
+
+Dispatched to the Track H `[CODE]` denominator todo — the 4th consecutive same-day dispatch of the identical task (slots
+11, 7, 10, 15), each independently confirming the same 2 real blockers (`odds_horizon_bucket` MDPS reprocess +
+`batch_footystats` copy+swap, per `issues/sports_league_id_namespace_migration_2026_07_20.md`) remain unshipped. Filed
+`/blocked` (`BLK-2f9e7680`) renewing slot-10's park recommendation, since slot-10's own priority-999 park (registered
+the prior tick) had not stopped the redispatch. Operator answer: priority-only parking does not hard-block redispatch
+without a machine `depends_on`; directed a SPLIT into a gated plan. Shipped:
+`sports_track_h_denominator_prereqs_2026_07_28.md` (the 2 real blockers as dispatchable todos) +
+`sports_track_h_denominator_gated_2026_07_28.md` (the Track H todo, moved verbatim with full history,
+`depends_on: [sports_track_h_denominator_prereqs_2026_07_28]` + `gate_on_depends: true`) — the dispatcher now
+structurally cannot offer the Track H todo again until both real prerequisites are `done`. This plan's own Track H line
+above is replaced with a non-checkbox pointer so it no longer counts as an open todo here.
 
 ### 2026-07-27 (slot-14) — Track C: fresh K1/K2 census confirms the existing candidate list still holds
 

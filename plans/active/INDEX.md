@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 264 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 266 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -470,7 +470,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (42)
+### sports (44)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -620,6 +620,13 @@ by hand._
   — Gated closeout for sports_satellite_ao_dispatch_batch7_2026_07_27.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Mirrors the batch3-6-finalize pattern: reconcile each
   distinct source…
+- [`sports_track_h_denominator_gated_2026_07_28`](./sports_track_h_denominator_gated_2026_07_28.md) — Extracted,
+  verbatim, from `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track H denominator todo — 4 consecutive
+  same-day dispatches (slots 11, 7, 10, 15 on 2026-07-28) confirmed the same 2 real blockers (`odds_horizon_bucket`…
+- [`sports_track_h_denominator_prereqs_2026_07_28`](./sports_track_h_denominator_prereqs_2026_07_28.md) — The 2 real
+  remaining blockers (of an original 3) on `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track H
+  "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
+  dispatches…
 
 ### prediction (41)
 
