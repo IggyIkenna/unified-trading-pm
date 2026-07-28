@@ -116,14 +116,14 @@ investigation's snapshot (2026-07-23) predates.
 
 `error_reason` breakdown of the fresh slice:
 
-| error_reason                                                       | rows | root cause                                                           |
-| ------------------------------------------------------------------ | ---: | -------------------------------------------------------------------- |
-| `(429, None, 'null', None, {'Content-Type'...` (truncated)         | 1733 | HYPERLIQUID -- **NOT investigated this session, see Open Questions** |
-| `Resolver requires aiodns library`                                 |  280 | **ROOT-CAUSED + FIXED this session** (below)                         |
-| `UNCLASSIFIED:404 GET https`                                       |  122 | not investigated (small, plausible transient)                        |
-| `UNCLASSIFIED:UpstreamTimestampBiasError`                          |   50 | not investigated (existing writer clip path, `tardis_shared.py`)     |
-| `'KPEPE'`/`'KFLOKI'`/`'KBONK'`/`'KNEIRO'`/`'KLUNC'`/`'KSHIB'`/etc. |  ~90 | not investigated (looks like per-symbol delisting/rename edge cases) |
-| `UNCLASSIFIED:Resolver requires aiodns library`                    |   10 | same root cause as above, different code_token prefix                |
+| error_reason                                                       | rows | root cause                                                         |
+| ------------------------------------------------------------------ | ---: | ------------------------------------------------------------------ |
+| `(429, None, 'null', None, {'Content-Type'...` (truncated)         | 1733 | **ROOT-CAUSED + FIXED session 2** (agt-27e235, below)              |
+| `Resolver requires aiodns library`                                 |  280 | **ROOT-CAUSED + FIXED session 1** (agt-7a4d1d, below)              |
+| `UNCLASSIFIED:404 GET https`                                       |  122 | not investigated (small, plausible transient)                      |
+| `UNCLASSIFIED:UpstreamTimestampBiasError`                          |   50 | not investigated (existing writer clip path, `tardis_shared.py`)   |
+| `'KPEPE'`/`'KFLOKI'`/`'KBONK'`/`'KNEIRO'`/`'KLUNC'`/`'KSHIB'`/etc. |  ~90 | **ROOT-CAUSED + FIXED session 2** -- was a case bug, NOT delisting |
+| `UNCLASSIFIED:Resolver requires aiodns library`                    |   10 | same root cause as above, different code_token prefix              |
 
 ## Root cause (CONFIRMED, fixed) -- `Resolver requires aiodns library` (290 of 2,258 fresh rows, 12.8%)
 
@@ -191,21 +191,103 @@ that ran this 2026-07-28T09:03Z batch had a broken/missing `aiodns` install (dec
 `>=3.0.0,<5.0.0`) -- that would need identifying which VM/Cloud Run execution ran this batch and inspecting its actual
 installed packages, out of scope for this manifest-level investigation.
 
-## Open Questions (NOT investigated this session -- flagged, not claimed)
+## Root cause #2 (CONFIRMED, fixed) -- HYPERLIQUID `(429, None, 'null', ...)` raw-tuple leak (1,733 of 2,258 fresh rows, 76.8%)
 
-- **HYPERLIQUID `(429, None, 'null', None, {'Content-Type'...` (1,733 of 2,258 fresh rows, 76.8% -- the LARGER fresh
-  signature, not chased this session)**: truncated tuple-shaped `error_reason` (looks like a raw response/args tuple
-  string, not a classified label -- possibly the manifest column's max-length truncating a longer repr mid-dict). This
-  is `pipeline_mode=batch_hyperliquid`, a DIFFERENT code path from the Tardis clients fixed above (HYPERLIQUID data
-  under the cefi bucket does not go through `TardisBaseClient`). Did not identify which module constructs this exact
-  error string, did not confirm whether it represents a genuine rate-limit exhaustion (no further fix needed beyond what
-  already exists) or a leaked/unclassified raw-response repr (same "falls through `classify_venue_error()`" class as the
-  fix above, needing its own targeted trace). **Worth a dedicated follow-up** given it is the majority of the fresh
-  batch.
-- **404/`UpstreamTimestampBiasError`/per-symbol-delisting tails (~262 rows)**: not investigated -- small enough to be
-  ordinary transient/edge-case noise, not sized or attributed further.
+Second escalation dispatch (agt-27e235) for the SAME re-firing `DP_RUN_MOSTLY_EMPTY` alert (a duplicate/re-fire of the
+identical CRITICAL condition session 1 responded to, per the "static manifest-cell signal" behavior documented in
+`cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) -- picked up the two Open Questions session 1 (agt-7a4d1d)
+explicitly left unchased, rather than re-doing session 1's already-complete aiodns work.
+
+`data_type=derivative_ticker` for HYPERLIQUID is sourced from `hyperliquid_s3.py::fetch_asset_ctxs()` (S3
+`hyperliquid-archive/asset_ctxs`), which falls back to `_fetch_funding_via_rest()` (the `hyperliquid-python-sdk`'s
+`Info.funding_history()`, a synchronous `requests`-based call, NOT an `aiohttp`/Tardis code path) on any S3 read
+failure. The SDK's own `hyperliquid/utils/error.py`:
+
+```python
+class ClientError(Error):
+    def __init__(self, status_code, error_code, error_message, header, error_data=None):
+        self.status_code = status_code
+        ...  # never calls super().__init__(...) with a formatted message
+```
+
+`BaseException.__new__` still captures the raw constructor args as `self.args` regardless, so Python's default
+`Exception.__str__` renders the positional-args TUPLE verbatim. `_handle_exception` in the SDK's `api.py` raises
+`ClientError(429, None, response.text, None, response.headers)` on a 429 whose body is literally `"null"` -- so
+`str(exc) == "(429, None, 'null', None, {'Content-Type': ...})"`, EXACTLY matching (byte-for-byte, before the manifest's
+80-char truncation) the observed `error_reason`. This propagates uncaught out of `_fetch_funding_via_rest` (not
+`OSError`/`ValueError`/`RuntimeError`, so not caught by its existing except clause) through `fetch_asset_ctxs`, and
+`onchain_perp_batch_handler.py::_record_failed`'s `code_token = str(error).split(":", 1)[0].strip()[:80]` extracts the
+garbage pre-first-colon fragment (`"(429, None, 'null', None, {'Content-Type'"`) -- exactly the observed manifest text.
+Confirmed the correct manifest SEMANTICS were never wrong (this uncaught-exception path correctly lands as
+`attempted_failed`, never a false `empty_confirmed`) -- only the `error_reason` TEXT was unclassifiable garbage.
+
+**Confirmed this is NOT a dead end**: `unified-api-contracts` ALREADY has a `classify_venue_error` registry entry for
+`hyperliquid` + `"429"` (`unified_api_contracts/canonical/crosscutting/errors/onchain_perps.py`:
+`retry=True, action=ErrorAction.RETRY, desc="HTTP rate limit exceeded"`) that would fire correctly if `code_token` were
+the bare string `"429"` instead of the raw tuple fragment.
+
+**Fix**: `hyperliquid_s3.py::_fetch_funding_via_rest` now catches `(ClientError, ServerError)` from
+`hyperliquid.utils.error` and re-raises
+`RuntimeError(f"{status}: Hyperliquid REST API error fetching funding_history for {coin}")` -- `code_token` after the
+`:` split becomes the bare status code (`"429"`, `"500"`, etc.), matching the EXISTING registry entries for all 5
+already-declared hyperliquid HTTP codes (429/500/503/400/401), not just this one. Preserves the correct
+`attempted_failed` classification (the exception still propagates); only the text is now clean.
+
+## Root cause #3 (CONFIRMED, fixed) -- HYPERLIQUID K\*-symbol bare `KeyError` (~90 of 2,258 fresh rows, ~4%)
+
+The `'KPEPE'`/`'KBONK'`/`'KFLOKI'`/`'KNEIRO'`/`'KLUNC'`/`'KSHIB'` rows are Python's default `KeyError.__str__` (wraps
+the missing key in `repr()`) -- a bare, uncaught `KeyError`, same failure CLASS as root cause #2 (unclassified exception
+text reaching the manifest verbatim) but a DIFFERENT and more consequential mechanism: **these 6 symbols fail on EVERY
+attempted date** (observed `attempted_at` spanning 2023-05-12 through 2026-07-28 in this same investigation's broader
+manifest read), not just this fresh batch -- a permanent, 100%-reproducible capture gap, not a transient blip. The prior
+session's "looks like per-symbol delisting/rename edge cases" guess was WRONG; these are live, actively-traded
+HYPERLIQUID perpetuals.
+
+**Root cause**: HYPERLIQUID redenominates extremely-high-supply meme coins with a lowercase `"k"` prefix (kilo, e.g.
+`kPEPE` = 1000 PEPE per contract unit) -- confirmed live:
+`instruments-store-cefi-prd-central-element-323112/prod/ catalog.parquet` stores these 6 instrument_ids UPPERCASED
+(`HYPERLIQUID:PERPETUAL:KPEPE-USD@LIN`, verified via a direct catalogue read, not just inferred). The
+`hyperliquid-python-sdk`'s `Info` client does a case-SENSITIVE dict lookup (`hyperliquid/info.py:423`,
+`coin = self.name_to_coin[name]`, populated from HL's real `/info` universe at `Info. __init__`) -- passing
+catalogue-derived `"KPEPE"` raises `KeyError('KPEPE')` since only `"kPEPE"` (real mixed case) is a key. This is a
+FUNCTIONAL gap, not just a cosmetic one: these 6 symbols have never successfully fetched via this path, for any date,
+ever. (Did not trace WHERE in the catalogue-build pipeline -- instruments-service, a different repo -- the uppercasing
+first happens; out of scope for this MTDS-repo fix. The fix below is robust to that regardless of cause, since it
+resolves case at the point of actual use rather than requiring the upstream catalogue to be case-correct.)
+
+**Fix**: `_fetch_funding_via_rest` now resolves `coin` case-insensitively against the SDK's own freshly-populated
+`info.name_to_coin` (built from HL's real universe on every `Info(...)` construction, already happening -- no extra
+network cost) before calling `funding_history()` -- mirrors the case-insensitive match `_parse_asset_ctxs_csv` (same
+file) already does for the S3 CSV path. A coin still unresolvable even case-insensitively (genuinely unknown/delisted)
+now re-raises a clean `RuntimeError` (defense-in-depth) instead of leaking the bare `KeyError` repr.
+
+**Verification**: `market-tick-data-service` `.venv/bin/python` script directly querying
+`instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet` confirmed the 6 uppercased instrument_ids live;
+`hyperliquid/info.py` source inspection confirmed the case-sensitive `name_to_coin[name]` lookup at the exact line
+implicated. 5 new regression tests added (`TestFetchFundingViaRestErrorHandling` in `test_hyperliquid_s3_coverage.py`)
+covering case-insensitive resolution, already-correct-case passthrough, `ClientError`/`ServerError` reclassification,
+and the residual-KeyError defense-in-depth path.
+
+## Open Questions (NOT investigated -- flagged, not claimed)
+
+- **404/`UpstreamTimestampBiasError`/small tails (~262 rows, BINANCE-FUTURES/BYBIT/DERIBIT/ASTER)**: not investigated in
+  either session -- small enough to be ordinary transient/edge-case noise, not sized or attributed further. Worth a
+  follow-up only if pursued for completeness, not urgent given their small share of the fresh batch.
 - Did not verify which specific VM or Cloud Run execution produced the 2026-07-28T09:03:12Z batch, nor whether its
   venv's `aiodns` install was genuinely absent/broken vs. some other resolver-init failure sharing the same message.
+- Did not trace WHERE in the instruments-service catalogue-build pipeline the HYPERLIQUID k-prefixed coins get
+  uppercased (a different repo; the MTDS-side fix above is robust regardless of that cause, but the upstream bug -- if
+  it IS a bug and not an intentional catalogue-wide uppercase-everything convention -- still exists and could affect
+  other consumers of the same catalogue field).
+- **HYPOTHESIS, NOT VERIFIED**: the same uppercased `coin`/`symbol` also feeds `HyperliquidS3Downloader.fetch_l2_book`
+  (`book_snapshot_5`) and `fetch_trades` (`trades`) -- `fetch_l2_book` builds its S3 object key directly as
+  `f"market_data/{date}/{hour}/l2Book/{coin}.lz4"`, and S3 object keys are case-sensitive, so if HL's real archive keys
+  use the real mixed case (`l2Book/kPEPE.lz4`) the uppercased request (`l2Book/KPEPE.lz4`) would 404 on every hour for
+  these same 6 symbols -- a SILENT absence (routed through `_log_l2_book_all_absent`'s
+  honest-`EXPECTED_SOURCE_DELIVERY_ LAG`-vs-genuinely-empty branching, not a loud failure) rather than the loud
+  `attempted_failed` this doc's derivative_ ticker fix addresses. Different `data_type`, different symptom shape, NOT
+  covered by this session's fix (only `_fetch_funding_via_rest` was touched) -- flagged as a plausible follow-up, not
+  chased (out of this alert's `data_type=derivative_ticker` scope), not confirmed against the live manifest.
 
 ## Todos
 
@@ -217,13 +299,29 @@ installed packages, out of scope for this manifest-level investigation.
       coverage); regression tests updated (`TestAsyncResolverWiring` now asserts connection-pool kwargs reach
       `make_resilient_connector` instead of asserting a raw `AsyncResolver` instance) + 2 new `test_http_resolver.py`
       cases for the `**kwargs` passthrough. Shipped via quickmerge, landed on `live-defi-rollout`.
-- [ ] [DATA] P2. Trace the HYPERLIQUID `(429, None, 'null', None, {'Content-Type'...` fresh signature (1,733 rows, the
-      LARGER share of the 2026-07-28 fresh batch) to its actual construction site and root cause -- confirm whether it
-      is a genuine rate-limit exhaustion (no code fix needed, just a heavier backfill wave hitting HYPERLIQUID's limits)
-      or a leaked/unclassified raw-response repr needing the same `classify_venue_error()` fallthrough fix applied
-      above.
+- [x] ✅ [DATA] P2. **DONE 2026-07-28 (data_pipeline_failure escalation, agt-27e235) —
+      `market-tick-data-service@6c6fab03` (verified ancestor of `origin/live-defi-rollout`).** Traced the HYPERLIQUID
+      `(429, None, 'null', None,     {'Content-Type'...` fresh signature to `hyperliquid_s3.py::_fetch_funding_via_rest`
+      -- a LEAKED/UNCLASSIFIED raw-response repr (the SDK's `ClientError` never formats a message), not a
+      rate-limit-exhaustion dead end. See Root cause #2 above. `quality-gates.sh` green (7337 passed, 0 failed).
+- [x] ✅ [DATA] P2. **DONE 2026-07-28 (data_pipeline_failure escalation, agt-27e235) — same commit
+      `market-tick-data-service@6c6fab03`.** Traced the `'KPEPE'`/`'KBONK'`/etc. bare-`KeyError` signature (~90 fresh
+      rows, but a PERMANENT gap across every date ever attempted for these 6 symbols) to a case-sensitivity bug: the IS
+      catalogue stores HYPERLIQUID's k-prefixed meme coins uppercased, but the SDK's coin lookup is case-sensitive. See
+      Root cause #3 above. Corrects the prior session's "delisting/rename" guess.
 - [ ] [DATA] P3. If pursued: retry the 290 historical `Resolver requires aiodns library` rows (now fixed going forward,
       not retroactively) via a normal idempotent backfill re-attempt -- no code change needed, purely operational.
+- [ ] [DATA] P3. If pursued: retry the ~90 historical K\*-symbol rows (now fixed going forward via the case-insensitive
+      resolution, not retroactively) -- same "normal idempotent backfill re-attempt" shape as P3, not urgent.
+- [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
+      `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) -- not investigated in either session, left open per both
+      sessions' scope discipline (small share of the fresh batch, ordinary-transient-looking).
+- [ ] [DOCS] P3. `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` / `.md` stop at `DP-FETCH-008`, but this
+      alert's own context payload (both escalations) and
+      `deployment_service/data_pipeline_monitors/     attempted_failed_staleness.py`'s module docstring both name
+      `DP-FETCH-009` as the ATTEMPTED_FAILED-ratio variant of `DP_RUN_MOSTLY_EMPTY` (distinct from `DP-FETCH-007`'s
+      EMPTY_CONFIRMED-ratio detector, same event name, both emit `DP_RUN_MOSTLY_EMPTY`) -- a registry gap, append the
+      `DP-FETCH-009` row so the SSOT matches what's already shipped and referenced.
 
 ## Progress Log
 
@@ -231,3 +329,19 @@ installed packages, out of scope for this manifest-level investigation.
   `Resolver requires aiodns library` root cause (see above); code shipped, quality gates verified green. Flagged the
   HYPERLIQUID 429 signature and small tails as open questions for a follow-up, not chased further this session per the
   one-shot escalation scope.
+- **2026-07-28 (data_pipeline_failure escalation worker, escalation agt-27e235):** Same alert re-fired (static
+  manifest-cell signal, per `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`) and dispatched a second escalation
+  worker. Verified agt-7a4d1d's aiodns fix was already shipped (`market-tick-data-service@6a067cf1`, confirmed ancestor
+  of `origin/live-defi-rollout`) -- did not duplicate it. Picked up both Open Questions instead: root-caused and fixed
+  the HYPERLIQUID 429 raw-tuple leak (Root cause #2) and the K\*-symbol case-sensitivity `KeyError` (Root cause #3),
+  both in `market_tick_data_service/adapters/hyperliquid_s3.py::_fetch_funding_via_rest`. Verified live against the
+  actual instrument catalogue (confirmed the 6 uppercased instrument_ids) and the installed `hyperliquid-python-sdk`
+  source (confirmed the exact case-sensitive dict-lookup line + the exact un-formatted-exception constructors). Added 5
+  regression tests (`TestFetchFundingViaRestErrorHandling`). First `quality-gates.sh` run failed codex compliance
+  (`_fetch_funding_via_rest` hit `MAX_METHOD_LINES=50` at 70L after the additions) -- extracted
+  `_resolve_hyperliquid_coin_case` + `_reraise_hyperliquid_sdk_error` as module-level helpers (verified locally against
+  the exact AST line-counter QG uses before re-running). Second run green (304s, 7337 passed/0 failed). Shipped via
+  `quickmerge --agent --files` -- landed as `market-tick-data-service@6c6fab03` on `live-defi-rollout` (verified
+  `git merge-base --is-ancestor`). Also flagged (not fixed, out of `derivative_ticker` scope) a hypothesis that the same
+  uppercased-`coin` bug may silently affect `book_snapshot_5`'s `fetch_l2_book` S3-key construction for the same 6
+  symbols -- see Open Questions.

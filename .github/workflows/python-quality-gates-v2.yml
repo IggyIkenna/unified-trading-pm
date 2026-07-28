@@ -259,6 +259,18 @@ jobs:
       # Raise the ceiling generously; a no-op on ubuntu-latest runners where 40s never binds.
       SETUPTOOLS_SCM_SUBPROCESS_TIMEOUT: "180"
       VCS_VERSIONING_SUBPROCESS_TIMEOUT: "180"
+      # fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md: multiple repos' self-hosted
+      # runners share ONE physical box, and the legacy "token" governor (qg-host-governor.sh) only
+      # counts concurrent heavy phases, not their actual RAM — so N cheap repos + 1 heavy one (UTL
+      # peaks 5.5GB) could still oversubscribe the host and crash with pytest-timeout/INTERNALERROR.
+      # Reservation mode (built qg_host_adaptive_resource_governor_2026_07_14, shipped only to AO's
+      # own tmux sessions) does a RAM+CPU dual-gate admission check against the measured per-repo
+      # baseline (scripts/dev/qg_resource_baseline.json) plus a live host-pressure valve and a
+      # runtime watchdog — repos that don't fit queue safely instead of crashing. A no-op on
+      # ubuntu-latest (single-tenant runner, nothing to share) — activates ONLY when this caller
+      # passes self_hosted_runner_labels.
+      QG_GOVERNOR_MODE: ${{ inputs.self_hosted_runner_labels != '' && 'reservation' || 'token' }}
+      QG_GOVERNOR_REPO: ${{ github.event.repository.name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4

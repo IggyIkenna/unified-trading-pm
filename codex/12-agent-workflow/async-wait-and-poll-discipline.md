@@ -218,6 +218,22 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
      separate `run_in_background` pid-liveness watcher. Better: launch the long worker ITSELF with `run_in_background`
      (not `nohup &`) so its own exit is the tracked wake, and the watcher is only for a worker you cannot relaunch.
 
+5. **`run_in_background` alone does not make a long job immune to a session kill (codified 2026-07-28,
+   `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`).** A worker background-
+   monitored a multi-hour GCS enrichment backfill via harness-native `run_in_background` (the correct fix for the
+   `nohup`-detachment/`orphan_reap` trap above) but went **>25 minutes without a `/progress` heartbeat** while doing
+   local-only bash progress checks. The orchestrator's `WorkerLivenessWatchdog` read the slot as stale and triggered
+   `kill_session` — which (correctly, by design — see `_reap_pane_tree`/`tmux_spawn.py`) SIGTERMs the whole pane's
+   descendant process tree BEFORE the actual `tmux kill-session`, killing the in-flight backfill as collateral even
+   though it was properly parented and would have been immune to `orphan_reap`. Confirmed via
+   `journalctl | grep 'kill_session(orch-slot-<N>)'` at the death timestamp — a DIFFERENT log signature from
+   `orphan_reap sweep: ... KILLED`, so don't assume the earlier fix's root cause repeats; check which mechanism fired.
+   **Rule: heartbeat cadence (`/progress` every ≤8-10 min, per worker.md's Heartbeat HARD RULE) is the BINDING
+   constraint for ANY active long-running background task, independent of how well-parented the process itself is** —
+   `run_in_background` fixes the orphan-reap failure mode, it does NOT exempt you from the heartbeat rule while you
+   monitor it. If the work will run longer than one heartbeat window, plan the check-in cadence around the heartbeat
+   requirement, not around how often the underlying job's own progress changes.
+
 Composes with: Poll cadence + stall-intervention (above) — a flat metric and a silent watcher are the same smell;
 Background-task honesty (`CLAUDE.md`) — "no output yet" ≠ "finished" ≠ "still running", and "proxy reached its state" ≠
 "chain completed", until a verdict line says which from a real measurement.

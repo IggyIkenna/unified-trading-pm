@@ -134,6 +134,20 @@ directly to the Bash tool's `run_in_background: true`, no `nohup`/`&` wrapper) �
 this a zero-cost resume (no data lost, only compute time). Confirms the recommended-decision-1 fix (below) directly,
 independently, a day later — implementing it now rather than leaving it open a third time.
 
+**A DIFFERENT, second kill hit the same task 25 min after the `run_in_background` fix landed (2026-07-28, slot 7):**
+after switching to the correct pattern (long-running command passed directly to `run_in_background: true`, no `nohup`),
+the resumed backfill ran cleanly for ~25 minutes of local-only bash progress-checking with **no `/progress` heartbeat**
+sent in that window — the worker.md Heartbeat HARD RULE's ≤10-min cadence was violated. `WorkerLivenessWatchdog` read
+the slot as stale and triggered `kill_session(orch-slot-7)`, which SIGTERMs the pane's whole descendant tree BEFORE
+`tmux kill-session` (by design, `_reap_pane_tree` in `tmux_spawn.py`) — killing the properly-parented backfill as
+collateral, confirmed via `journalctl | grep 'kill_session(orch-slot-7)'` at the death timestamp, a DIFFERENT log
+signature from `orphan_reap sweep: ... KILLED`. **This means `run_in_background` fixes the orphan-reap failure mode but
+does NOT exempt a worker from the heartbeat rule while monitoring a long job** — heartbeat cadence is the binding
+constraint, independent of how well-parented the background process is. Documented as its own numbered item (5) in
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" (the durable SSOT for this class of
+lesson) rather than folded into this doc's own `nohup`-specific open work, since it is a genuinely separate mechanism.
+Recovery: resumed again (idempotent via `--report`) + immediately began sending `/progress` every ≤8 min.
+
 ## Open work
 
 - [x] ✅ [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or
@@ -142,3 +156,10 @@ independently, a day later — implementing it now rather than leaving it open a
 - [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
       worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md/worker.md
       fix is the primary mitigation and now shipped; this remains open only as a defense-in-depth nice-to-have.
+- [ ] [SCRIPT] P3. Cross-check `plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s own
+      evidence (its logged death timestamps) against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
+      same windows — some or all of its "RAM exhaustion" occurrences may actually be this doc's `nohup`/`orphan_reap`
+      bug (or the sibling `kill_session` heartbeat-staleness collateral-kill, see this doc's 2026-07-28 addendum above)
+      misdiagnosed, not genuine memory pressure. If confirmed, correct that doc's root-cause framing rather than leaving
+      two docs describing the same incidents under different causes. Repo: unified-trading-pm (investigation + doc
+      correction only, no code).

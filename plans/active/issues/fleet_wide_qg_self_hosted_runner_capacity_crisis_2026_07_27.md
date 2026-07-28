@@ -460,3 +460,58 @@ escalate to a `cicd` worker.
   question ((b)'s "real per-repo pool sizing") remains genuinely open if the box gets hot again — the operator's call
   was a live-conditions judgment, not a permanent capacity plan, and this doc should be the first place a future
   flare-up gets logged rather than starting a new whack-a-mole cycle.
+
+- 2026-07-28, same session, ~1h later: **the "flare-up" predicted above happened almost immediately** — operator asked
+  to bring ALL repos onto the box, "just managed properly," which prompted actually closing the open capacity-planning
+  gap instead of another whack-a-mole round. **Two live findings first, both confirmed with real evidence, not
+  assumed**: (1) **renewed contention right after the 6-repo restore**: `instruments-service` hit the identical
+  `pytest-timeout`→`INTERNALERROR`→`"Unexpectedly no active workers available"` crash at 12:20-12:28 UTC (same signature
+  as every prior corroboration), and `unified-api-contracts` (never touched, always self-hosted) sat 16 minutes with
+  `runner_name: ""` — queued, unassigned — before its own QG got cancelled at 11:33-11:49 UTC. A live SSM pull off
+  `i-0c9b283b31d6b5ca7` at 12:35 UTC showed `load average 22.36, 21.34, 23.02` on 16 vCPU, 4GB already swapped, only
+  2.4GB genuinely free, 34 `Runner.Listener` processes, **and ~13 concurrent `claude` agent-orchestrator slot-worker
+  sessions co-resident on the SAME box** (this box is not a dedicated CI runner host — it's the AO orchestrator VM
+  itself, self-hosted runners were installed alongside it). (2) **the box's RAM was halved TODAY, mid-incident, by a
+  DIFFERENT session**: CloudTrail shows `i-0c9b283b31d6b5ca7` went `m8i.4xlarge` (16 vCPU/64GB) → `c7i.4xlarge` (16
+  vCPU/**32GB**) via Stop→Modify→Start at 09:55-09:58 BST (08:55-08:58 UTC) under the shared `admin_od` AWS credential
+  every slot uses — not this session, not coordinated with this doc, presumably an unrelated cost-optimization pass that
+  didn't know a CI capacity incident was in progress. EBS remediation (IOPS 8000, throughput 500MB/s, size 700GB) is
+  confirmed still intact and NOT touched by that resize. **Root-caused why the existing governor didn't already prevent
+  this**: `unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh` has TWO modes. `token` (the live default)
+  caps concurrent heavy-phase COUNT (`K=floor(cores/4)=4` on this box) but is blind to size — 4 concurrent runs can be
+  4×unified-trading-library's measured 5.5GB peak and the box doesn't notice until it's already thrashing. `reservation`
+  mode (fully built — RAM+CPU dual-gate admission against `scripts/dev/qg_resource_baseline.json`'s real measured
+  per-repo peaks, a live host-pressure valve, and a runtime self-abort watchdog —
+  `qg_host_adaptive_resource_governor_2026_07_14.md`) was shipped ONLY to AO's own interactive/autonomous tmux sessions
+  (`bootstrap_vm.sh`) — the GHA self-hosted runner path never got it, so CI stayed on the size-blind legacy mode this
+  whole incident. **The codex ADR (`adr-qg-offload-self-hosted-runners-2026-06-02.md`) explicitly REJECTED a shared-pool
+  model like Phase-7's for exactly this reason**, sanctioning it only as a fallback on a 128-256GB box with per-runner
+  sizing — what shipped is that rejected model, on a box that just got smaller. **Operator decision (asked directly,
+  structured options)**: software-only — do not resize the box a second time today without more certainty; rely on
+  activating the governor's already-built reservation mode instead. **Fix shipped**:
+  `unified-trading-pm@<see quickmerge output>` — one additive change to the SHARED reusable workflow
+  (`(.github/workflows/python-quality-gates-v2.yml`, qg-slices job env block): `QG_GOVERNOR_MODE` set to `reservation`
+  only when the caller passes `self_hosted_runner_labels` (byte-identical no-op on `ubuntu-latest`), plus
+  `QG_GOVERNOR_REPO: ${{ github.event.repository.name }}` so the ledger keys off the correct baseline entry. Applies to
+  EVERY self-hosted repo at once (past and future), no per-repo edits. **Capacity math, so a future reader doesn't have
+  to re-derive it**: baseline coverage is 21/22 target repos measured (agent-orchestrator missing, defaults
+  conservatively to the 5500MB "unmeasured" ceiling); summed worst-case simultaneous demand across all of them is
+  ~35.9GB against a ~21.5GB budget (70% of the box's current 30GB) — i.e. NOT everyone can run at the exact same
+  instant, by design; the fix's guarantee is orderly queueing under a burst (e.g. the fleet promote-bot's synchronized
+  dispatch across ~22 repos every tick), never the OOM/timeout crash this doc is about. **Verification and the remaining
+  ~10-repo restore (to satisfy "ideally all repos") are the next todos**, not yet done as of this entry — see below.
+  - [ ] [VERIFY] P0. Confirm a live self-hosted QG run after the governor-activation fix logs
+        `[qg-governor] <repo> reserved <N>MB` (not the old `"all 4 tokens busy"` token-mode line) — proves
+        `QG_GOVERNOR_MODE=reservation` actually took effect end-to-end, not just merged.
+  - [ ] [SCRIPT] P1. Once verified, restore the remaining ~10 repos other agents settled on `ubuntu-latest` overnight
+        (execution-service, batch-live-reconciliation-service, alerting-service, client-reporting-api, e2e-testing,
+        unified-trading-library, ml-service, deployment-api, market-data-processing-service, deployment-service) to
+        self-hosted, same pattern as the 6 above, now that admission is RAM-aware rather than a blind count — this is
+        what "ideally all repos on the box, managed properly" actually requires to be safe.
+  - [ ] [DATA] P2. After a few days under reservation mode, re-pull `i-0c9b283b31d6b5ca7` live state (`free -h`,
+        `uptime`, `qg-host-governor.sh --status` with `QG_GOVERNOR_MODE=reservation`) to confirm the predicted
+        queueing-not-crashing behavior actually held under a real fleet-promote burst, not just in the capacity math.
+  - [ ] [OPERATOR] P2 (informational, not blocking). The box's RAM was halved by an untracked concurrent action today;
+        if that was NOT a deliberate, coordinated decision, someone should reconcile the current `c7i.4xlarge` sizing
+        against whatever prompted the resize — this doc's fix is designed to be safe at the CURRENT size, but the resize
+        itself was never explained or logged anywhere this session could find.
