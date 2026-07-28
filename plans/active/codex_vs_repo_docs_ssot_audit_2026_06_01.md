@@ -51,7 +51,7 @@ thinking: high
 
 > **🟢 GATE-1 RULED 2026-07-28 (operator gate-clearance pass) — hold LIFTED, flipped back `NA → planning`.** The
 > 2026-06-01 FIX-STALE-only hold is **LIFTED** for this plan: Option A of
-> `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` is the ruling — the
+> `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` is the ruling — the
 > deliberate 2026-07-27 `NA→planning` reclassification was the authorization signal, confirming it just removes the
 > standing contradiction rather than creating a new risk. Phases 3/4 (REDIRECT/DELETE/slim APPLY, ~20 repos) may now
 > proceed. **Unchanged safeguard**: this work stays `model_tier: opus-required` / `execution_model: opus-1m` per this
@@ -189,7 +189,7 @@ from scope).
       that requirement is unchanged, only the hold itself lifted. Full-completion mandate: apply REDIRECT/slim across
       every repo in the per-repo rollout list (Appendix A/B) in this pass, not a partial subset; the mechanical
       FIX-STALE archived-mirror sweep (line ~519) was already DONE under the old hold and does not need repeating. SSOT
-      for the ruling: `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
+      for the ruling: `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
       any `INDEX.md` / README doc-index links. **✅ Same gate-clearance as Phase 3 — DELETE-class apply is cleared to
       execute (2026-07-28 operator ruling, see the Phase-3 note + issue doc above).** Full-completion mandate applies

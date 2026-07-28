@@ -247,7 +247,7 @@ drift_direction: advance-code
     - **[DATA] P2.** Share path-template constants between the real fixtures writer and this checker
     - **[VERIFY] P2.** Confirm real backfill speedup against a real multi-month/full-year run
     - **[DATA] P2.** (duplicate-worded) manifest-slice-based replacement todo — verify not a literal dupe in-file
-  - [`plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`](/plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md)
+  - [`plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`](/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md)
     (1 open):
     - **[SCRIPT] P2.** Thread `date` through every T1 call site of `create_sports_reference_adapter()`
   - [`plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md`](/plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md)

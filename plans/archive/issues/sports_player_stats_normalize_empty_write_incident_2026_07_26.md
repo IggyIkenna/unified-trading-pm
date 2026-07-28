@@ -56,7 +56,7 @@ source:
 > `instruments-service@a22e371e` (pushed to `origin/live-defi-rollout` — confirmed while archiving this doc; an earlier
 > local-only commit, `e8f342a9`, was seen mid-archival and has since landed under this SHA). The two open follow-up
 > todos below are split into their own UNACKED issue,
-> `/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`, since this doc's parent batch plan
+> `/plans/archive/issues/sports_player_stats_empty_write_followups_2026_07_26.md`, since this doc's parent batch plan
 > (`sports_satellite_ao_dispatch_batch5_2026_07_26.md`) is already at its 1000-line hard cap.
 
 ## What happened
@@ -157,7 +157,7 @@ available; a 240-fixture pull is a modest, well-bounded cost), with four mandato
 Moved to their own UNACKED issue doc at archival time (this doc's own status is terminal/`resolved`, so per
 `/codex/11-project-management/issue-doc-lifecycle.md` it archives immediately — the two items below are still open and
 need to stay dispatchable from `plans/active/`, not stranded here):
-`/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`.
+`/plans/archive/issues/sports_player_stats_empty_write_followups_2026_07_26.md`.
 
 1. Consider enabling GCS object versioning (or a bucket-level soft-delete retention window) on the sports prd buckets
    (infra/operator decision).
