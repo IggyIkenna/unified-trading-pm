@@ -159,3 +159,32 @@ this shared host is the root cause) rather than treating this as N independent p
 processed, resumable) and `market-tick-data-service`/all other repos in this slot show a clean `git status` — nothing
 uncommitted was lost by the session death, confirming the CAS/resume-log-based idempotent design pattern this workspace
 already favors is doing its job even under this failure mode.
+
+## Update 2026-07-28 (later still, slot-14) — load partially receded (185-259 → 66-95) but STILL killed a 4/4-worker resume after only 130 markers; crisis is ongoing, not a one-off spike
+
+Waited for load to decline before retrying (per the P0 escalation's own recommendation), then resumed the SAME
+category-1 marker-purge dry-run (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from its 8,903-entry
+resume-log with workers reduced further (`--discover-workers 4 --verify-workers 4`, down from the already-reduced 8/8).
+Pre-launch check: load `69.30 85.48 139.79`, `free -h` showed 4.6Gi free / 19Gi available, swap 7.8Gi/15Gi (52%) —
+meaningfully better than the 185-259/87%-swap crisis point, so this was a considered retry, not a blind one.
+
+**Result: killed again.** Discovery completed cleanly (54.2s, 328,994 markers scanned, 23,588 in the
+CURVE/SUSHISWAP/TRADER_JOE_V2/VELODROME_V2 × dex_pool_state scope, 14,685 remaining to process) — discovery itself is
+apparently light enough to survive. But the verification phase died silently after only ~130 more markers (resume-log
+grew 8,903 → 9,033) with **no traceback, no error, no `SUMMARY` block** — the exact same clean-kill signature as every
+prior incident in this doc. Post-mortem host state: load `66.33 72.43 113.95`, **free memory only 1.7Gi** (worse than
+the 4.6Gi seen pre-launch — other slots' concurrent work consumed it in the interim), swap 8.5Gi/15Gi (57%).
+`ps --sort=-%mem` showed no single runaway process — the pressure is aggregate, from dozens of concurrent `claude`
+sessions + several other slots' `pytest -n 1/2` QG runs, consistent with the fleet exceeding CLAUDE.md's "≤2 full QGs at
+once" rule broadly, not narrowly.
+
+**New data point this adds**: even a 2x-more-conservative (4/4 vs 8/8) worker count, on a HOST STATE that looked
+meaningfully recovered at launch time, still died — confirming this is a genuinely fluctuating, ongoing fleet-wide
+resource crisis (available headroom can evaporate within the ~1-2 minutes between a pre-launch check and the process
+actually running), not a fixed threshold a worker can safely time around by checking load once before launching. The
+session itself survived this time (only the backgrounded process was reaped, not the whole `claude` process) — a smaller
+blast radius than the earlier full-session death, but the same root mechanism.
+
+**No data lost, still resumable**: resume-log now at 9,033/23,588 entries, all repos in this slot clean. Not retrying
+again immediately — will back off and re-check host state before the next attempt, per this doc's own async-wait
+guidance, rather than repeatedly relaunching into the same condition.
