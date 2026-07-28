@@ -61,6 +61,16 @@ ACK_TOKENS = (
 # Common secret-name patterns (operator has named the SM key needed)
 SECRET_NAME_RE = re.compile(r"\b[a-z][a-z0-9-]+-(api-key|api-secret|secret-key|private-key|passphrase|pem)\b")
 
+# The file-based ping system (PING_PATH_RE above) is RETIRED — `unified-trading-pm/agents/RULES.md`
+# § 6 tells workers to use the HTTP `/api/slots/<N>/blocked` endpoint instead, which mints a
+# `BLK-<hex>` id (e.g. `BLK-4b104acc`) rather than a ping-file path. Without a token recognizing this
+# id shape, every genuinely-escalated-and-answered `/blocked` question orphans by construction — the
+# checker has no way to see it was actually resolved (confirmed 2026-07-27,
+# credential_ask_orphan_checker_ping_format_stale_2026_07_27.md: two internal-IAM-permission
+# BLOCKED-CREDENTIALS lines, each already carrying its own actionable "Done when: run X" recipe,
+# still tripped the ratchet because neither cites a file-based ping).
+BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")
+
 BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
 
 # A line that enumerates MULTIPLE distinct BLOCKED-* status tokens is DEFINING the status
@@ -108,6 +118,8 @@ def _has_ask_evidence(lines: list[str], lineno: int) -> bool:
     end = min(len(lines), lineno + CONTEXT_LINES + 1)
     blob = "\n".join(lines[start:end])
     if PING_PATH_RE.search(blob):
+        return True
+    if BLK_ID_RE.search(blob):
         return True
     if SECRET_NAME_RE.search(blob):
         return True
