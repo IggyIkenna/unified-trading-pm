@@ -7,12 +7,14 @@ summary: >-
   verify not existence · nothing still WRITES it · nothing still READS it · the legacy-COPIED-not-MOVED invariant), the
   closed disposition vocabulary (yes-twin-confirmed / yes-after-verify / no-migrate-first / no-still-authoritative /
   unknown), the enumerated human-only hard stops an agent never crosses autonomously — INCLUDING the §3a
-  reversibility-qualified carve-out (2026-07-26) that lets an agent execute a prod object/prefix delete itself, no
-  operator step, once a fresh per-bucket GCS-Soft-Delete check clears a 7-day recovery window, plus the approve-executes
-  fallback (a FINAL operator answer authorizes the SAME worker session to execute immediately) for everything that
-  doesn't qualify — and the sanctioned mechanics (UTL gcs_* helpers, resolve_bucket_name, never subprocess
-  gcloud/gsutil, never an inline gs://). Absorbs the GCS DELETE SAFETY INVARIANT previously stranded in
-  pipeline-mode-partition.md.
+  reversibility-qualified carve-out (2026-07-26) that lets an agent execute a prod delete itself, no operator step, once
+  a fresh per-bucket GCS-Soft-Delete check clears a 7-day recovery window — extended 2026-07-28 (operator ruling) to
+  cover whole-bucket destroys (bucket-level soft delete restores the bucket resource itself, same mechanism) and
+  legacy-object-delete-after-copy / hard-stop #2 (once Part 5's twin-coverage proof independently passes); never extends
+  to a store with no undelete mechanism at all (e.g. Artifact Registry) — plus the approve-executes fallback (a FINAL
+  operator answer authorizes the SAME worker session to execute immediately) for everything that doesn't qualify — and
+  the sanctioned mechanics (UTL gcs_* helpers, resolve_bucket_name, never subprocess gcloud/gsutil, never an inline
+  gs://). Absorbs the GCS DELETE SAFETY INVARIANT previously stranded in pipeline-mode-partition.md.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -55,7 +57,7 @@ referenced_by:
     /codex/02-data/orphan-object-detection.md,
   ]
 owner:
-last_reviewed: 2026-07-27
+last_reviewed: 2026-07-28
 code_refs:
   [
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
@@ -186,13 +188,13 @@ COPY to canonical via the `migrate_*_v9_canonical` path first, then re-evaluate.
 Every candidate location carries exactly one of these five values. The set is closed — a tool that needs a sixth value
 has found a gap in this doc and must say so rather than invent one.
 
-| Disposition              | Meaning                                                                                                   | Proof state                                               | Who may act                     |
-| ------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------- |
-| `yes-twin-confirmed`     | Canonical twin exists AND content-verified equivalent; no live writer; no live reader.                    | All 5 parts PASS.                                         | Human executes; agent suggests. |
-| `yes-after-verify`       | Strong evidence of redundancy, but at least one part evidenced by sampling rather than exhaustively.      | All 5 parts pass, ≥1 by sample — name the sample in-line. | Human executes; agent suggests. |
-| `no-migrate-first`       | Twin absent, content diverges, or a live writer/reader remains. Migration or repoint precedes any delete. | ≥1 part FAILS.                                            | Nobody deletes. Fix first.      |
-| `no-still-authoritative` | The location is the current SSOT for its data, canonical shape or not. Not a delete candidate at all.     | Not applicable — deletion is wrong by definition.         | Nobody.                         |
-| `unknown`                | Default. A part could not be evaluated (twin unknown, content unreadable, consumer set unresolved).       | Insufficient evidence.                                    | Nobody. Investigate.            |
+| Disposition              | Meaning                                                                                                   | Proof state                                               | Who may act                                                                                                   |
+| ------------------------ | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `yes-twin-confirmed`     | Canonical twin exists AND content-verified equivalent; no live writer; no live reader.                    | All 5 parts PASS.                                         | Agent executes once §3a's fresh reversibility check clears (2026-07-28); else human executes, agent suggests. |
+| `yes-after-verify`       | Strong evidence of redundancy, but at least one part evidenced by sampling rather than exhaustively.      | All 5 parts pass, ≥1 by sample — name the sample in-line. | Agent executes once §3a's fresh reversibility check clears (2026-07-28); else human executes, agent suggests. |
+| `no-migrate-first`       | Twin absent, content diverges, or a live writer/reader remains. Migration or repoint precedes any delete. | ≥1 part FAILS.                                            | Nobody deletes. Fix first.                                                                                    |
+| `no-still-authoritative` | The location is the current SSOT for its data, canonical shape or not. Not a delete candidate at all.     | Not applicable — deletion is wrong by definition.         | Nobody.                                                                                                       |
+| `unknown`                | Default. A part could not be evaluated (twin unknown, content unreadable, consumer set unresolved).       | Insufficient evidence.                                    | Nobody. Investigate.                                                                                          |
 
 **`unknown` is the default value**, not a fallback. A location starts at `unknown` and is promoted only by evidence. A
 tool that emits anything above `unknown` without all five parts recorded is in violation of this doc.
@@ -210,10 +212,13 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
 
 1. **Any prod-bucket delete that is not reversibility-qualified (§3a).** Object, prefix or bucket, in any `-prd-` /
    production-serving bucket. There is no confidence level at which an agent deletes from an UNqualified prod bucket —
-   see §3a for the one narrow exception, added 2026-07-26, and note it never covers a whole-**bucket** destroy, which
-   stays a hard stop regardless of soft-delete config.
-2. **Any legacy-object delete after copy.** The entire v9-migration legacy estate is gated by Part 5 above; the copy
-   made the legacy object look redundant without proving it is.
+   see §3a for the reversibility exception (2026-07-26; extended 2026-07-28 to whole-bucket destroys and to hard-stop #2
+   below).
+2. **Any legacy-object delete after copy — Part 5's twin-coverage proof is still mandatory, never waived.** The entire
+   v9-migration legacy estate is gated by Part 5 above; the copy made the legacy object look redundant without proving
+   it is. Once Part 5 independently confirms 100% canonical-twin coverage (content-verified, not path-assumed), this
+   class is ALSO reversibility-qualifiable per §3a (2026-07-28 operator ruling) — the fresh soft-delete check clears the
+   human-EXECUTION requirement; it is never a substitute for Part 5's proof.
 3. **The tradfi `batch_massive` purge — ✅ EXECUTED 2026-07-20/21 (operator, human-only).** All objects under
    `gs://market-data-tick-tradfi-prd-{pid}/…/pipeline_mode=batch_massive` were purged: RUN_TS=20260720-193849,
    **1,701,422 objects → 0, 0 collateral** (operator Option C, subscription terminated, accepted permanent loss).
@@ -250,15 +255,21 @@ structured options (per `SUB_AGENT_MANDATORY_RULES.md` § escalation) — it doe
 
 ---
 
-## 3a. Reversibility-qualified prod deletes — the agent-autonomous path (2026-07-26, operator ruling)
+## 3a. Reversibility-qualified prod deletes — the agent-autonomous path (2026-07-26, operator ruling; extended 2026-07-28)
 
-Hard-stop #1 above is not absolute: an agent may execute a prod-bucket delete itself, no operator step at all, when BOTH
-hold:
+Hard-stops #1 and #2 above are not absolute: an agent may execute a prod delete itself, no operator step at all, when
+BOTH hold:
 
-1. **Object/prefix-scoped, via `gcs_delete_object`/`gcs_conditional_delete` (§5) — never a whole-bucket destroy.**
-   Deleting the bucket itself is never reversibility-qualified, regardless of soft-delete config; it stays hard-stop
-   #1's fallback path (below) always.
-2. **A FRESH, same-run check** — via the new helper `gcs_bucket_soft_delete_retention_seconds(bucket_name)`
+1. **Scope — object, prefix, legacy-copied-after-verify, OR whole-bucket.** An object/prefix delete via
+   `gcs_delete_object`/`gcs_conditional_delete` (§5) always qualifies. A **legacy-object-delete-after-copy** (hard-stop
+   #2) qualifies once Part 5 (§1) has independently confirmed 100% canonical-twin coverage — this section only clears
+   who executes, never Part 5's proof requirement. A **whole-bucket destroy** qualifies too (extended 2026-07-28,
+   operator ruling): GCS bucket-level soft delete makes a deleted BUCKET resource itself restorable within its retention
+   window — the same underlying mechanism and the same check as object-level soft delete — so there is no technical
+   basis left to treat it differently once verified. **Does not extend to any store with no equivalent undelete at all**
+   (e.g. Artifact Registry image versions have zero soft-delete/undelete mechanism — those stay hard-stop, entirely
+   outside this section, regardless of how the todo is phrased).
+2. **A FRESH, same-run check** — via the helper `gcs_bucket_soft_delete_retention_seconds(bucket_name)`
    (`unified_trading_library.cloud_interface`) — confirms the target bucket's GCS Soft Delete retention window is **≥
    604800 seconds (7 days)**. Fresh means queried in the same execution as the delete, never assumed from a prior
    session's claim, a plan's authoring-time note, or this doc's own baseline table below.
@@ -295,16 +306,17 @@ agent happened to have separately downloaded the shards minutes earlier. Had the
 force with soft delete enabled, the same mistake would have cost nothing — this is precisely the gap the reversibility
 carve-out closes, and precisely why "fresh, not assumed" is non-negotiable.
 
-**Non-qualifying fallback — "approve-executes."** When the bucket check fails (retention `< 604800`), or the operation
-is a whole-bucket destroy, the todo stays gated — but the mechanics changed too, closing the actual toil this was
-causing (an operator answering, then having to separately ask a different, locally-supervised session to run the
-already-approved command): the worker still runs the full five-part proof and stages the exact command, then opens a
-_structured_ BLOCKED question (per `SUB_AGENT_MANDATORY_RULES.md` § escalation — options A/B/C, the worker's
-recommendation marked, e.g. "A: approve — execute now [WORKER REC]"). A FINAL (non-partial) operator answer selecting
-that option is authorization for the **same worker session** — already resumed to `working` by the existing
-`answer_blocked_endpoint` (`agent-orchestrator/server/routes/backlog.py:691-706`, which enqueues the answer to the
-worker's own slot) — to run the staged command immediately, verify via a post-delete `gcs_describe_object(...) is None`,
-and mark the todo done citing both pre- and post-delete evidence. No second agent, no manual operator execution.
+**Non-qualifying fallback — "approve-executes."** When the bucket check fails (retention `< 604800`), or the target
+store has no soft-delete/undelete mechanism at all (Artifact Registry image versions, etc.), the todo stays gated — but
+the mechanics changed too, closing the actual toil this was causing (an operator answering, then having to separately
+ask a different, locally-supervised session to run the already-approved command): the worker still runs the full
+five-part proof and stages the exact command, then opens a _structured_ BLOCKED question (per
+`SUB_AGENT_MANDATORY_RULES.md` § escalation — options A/B/C, the worker's recommendation marked, e.g. "A: approve —
+execute now [WORKER REC]"). A FINAL (non-partial) operator answer selecting that option is authorization for the **same
+worker session** — already resumed to `working` by the existing `answer_blocked_endpoint`
+(`agent-orchestrator/server/routes/backlog.py:691-706`, which enqueues the answer to the worker's own slot) — to run the
+staged command immediately, verify via a post-delete `gcs_describe_object(...) is None`, and mark the todo done citing
+both pre- and post-delete evidence. No second agent, no manual operator execution.
 
 ---
 
