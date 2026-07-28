@@ -80,10 +80,19 @@ screens lost.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. **Decide: dropdown vs always-visible bar — keep one.** Both currently render `NAV_ITEMS_CANONICAL`;
-      keeping both was deliberate so the two interaction models could be compared side by side. Known trade-off: the bar
-      is in the Header so it survives every route; that was NOT true when it lived in the cockpit (it vanished on
-      exactly the entries that navigate away). Once chosen, delete the loser.
+- [ ] [UI] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — KEEP the always-visible top bar; DELETE the dropdown.** Reasoning
+      applied from the operator's standing general ruling: none of the 8 explicit theme bullets
+      (backfill/migration/cost/Databento/manifest-version/pause-unpause/auto-recovery/live-probing/adaptor-completion)
+      names UI taste directly, but "Opt for full completions, no shortcuts, full functionality" does apply here on its
+      own technical merits, not as a style preference — the two options are NOT functionally equivalent: the bar lives
+      in the page Header, so it is reachable on EVERY route, while the dropdown (in its earlier cockpit location)
+      demonstrably vanished on exactly the routes that navigate away from it — a real functional regression, not a taste
+      difference. Keeping the option with full functionality on every route over the one with a known route-dependent
+      gap is the "no shortcuts, full functionality" ruling applied concretely. Both currently render the same
+      `NAV_ITEMS_CANONICAL` list, so this is a pure deletion, not a rebuild — delete the dropdown component + its
+      now-redundant tests/mocks, keep the bar as the sole nav surface. `pw:L2 ✓` + cited regression spec covering the
+      removal (confirm no orphaned route becomes unreachable once the dropdown is gone — the orphan-route audit this
+      doc's own "Lessons" section flags as the real gate here).
 - [x] [DOCS] P3. **RESOLVED same day, 2026-07-17 (confirmed via code, workspace stale-gate audit 2026-07-28).** Original
       ask: decide whether to delete the 7 remaining duplicate standalone routes (`/deployments`,
       `/ops/live-deployments`, `/chaos`, `/safety-ops`, `/research/ml-experiments`, `/research/strategy-backtests`,
@@ -113,20 +122,30 @@ screens lost.
 
 ## Deferred work after 2026-07-17
 
-| Item                                     | State              | Why deferred / blocked on                                                                                |
-| ---------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------- |
-| Dropdown vs bar — keep one               | **Operator-owned** | A taste call. Both are shipped and equivalent in content; operator is comparing them live.               |
-| Delete the 7 duplicate standalone routes | **Operator-owned** | Operator wants to compare chromes first. Mechanical once decided.                                        |
-| Delete the 3 dead pages                  | **Not done**       | Blocked on nobody. Small + clear.                                                                        |
-| Real 404 instead of `*` → Overview       | **Not done**       | Blocked on nobody.                                                                                       |
-| Per-service shell → real routes          | **Not done**       | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled. |
-| Diagnose the 5 mock/page row mismatches  | **Not done**       | See `deployment_ui_l2_smoke_gate_red_2026_07_17.md` — **the recommended NEXT item** (see below).         |
-| `/ops/vms/:vmName` orphan route          | **Not done**       | Pre-existing, unchanged by this session; the orphan audit reports it every run.                          |
+| Item                                     | State                   | Why deferred / blocked on                                                                                                  |
+| ---------------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Dropdown vs bar — keep one               | ✅ **RULED 2026-07-28** | Keep the bar, delete the dropdown — functional edge (survives every route), not a taste call. See the retagged todo above. |
+| Delete the 7 duplicate standalone routes | **Operator-owned**      | Operator wants to compare chromes first. Mechanical once decided.                                                          |
+| Delete the 3 dead pages                  | **Not done**            | Blocked on nobody. Small + clear.                                                                                          |
+| Real 404 instead of `*` → Overview       | **Not done**            | Blocked on nobody.                                                                                                         |
+| Per-service shell → real routes          | **Not done**            | Blocked on nobody, but it is the biggest chunk; do it AFTER the dropdown/bar call so the nav is settled.                   |
+| Diagnose the 5 mock/page row mismatches  | **Not done**            | See `deployment_ui_l2_smoke_gate_red_2026_07_17.md` — **the recommended NEXT item** (see below).                           |
+| `/ops/vms/:vmName` orphan route          | **Not done**            | Pre-existing, unchanged by this session; the orphan audit reports it every run.                                            |
 
 **Recommended NEXT: diagnose the 5 mock/page row mismatches** (`deployment_ui_l2_smoke_gate_red_2026_07_17.md`). It is
 the only open item that might be a live product bug rather than cleanup — the mock defines rows `/deployments` never
 renders, and an agent fixed that exact shadowing class on the frontend mock the same day (deployment-ui@0c817d2). It
-also unblocks the `pw:L2 ✓` gate that every future UI tick depends on. Everything else here is cleanup or a taste call.
+also unblocks the `pw:L2 ✓` gate that every future UI tick depends on. Everything else here is cleanup or an already-
+ruled decision (see below).
+
+## Progress Log
+
+- **2026-07-28 (gated-decision retag sweep)** — Applied a ruling to the outstanding dropdown-vs-bar `[OPERATOR]`
+  decision: keep the always-visible top bar, delete the dropdown — the doc's own recorded trade-off (the bar survives
+  every route, the dropdown's earlier cockpit placement vanished on exactly the pages that navigate away) is a real
+  functionality difference, so the "full functionality, no shortcuts" ruling determines the answer rather than leaving
+  it as an open taste call. Retagged the todo from `[OPERATOR]` to `[UI]` with the ruling + reasoning written in, and
+  updated the "Deferred work" table row to match. Docs-only, no code changed.
 
 ## Lessons
 

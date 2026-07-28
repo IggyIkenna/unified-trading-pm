@@ -24,8 +24,8 @@ related:
   ]
 created: 2026-07-26
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: research
 source: sports_satellite_ao_dispatch_batch5_2026_07_26.md, escalation todo
@@ -86,11 +86,29 @@ pipeline actually writes real `instrument_type=odds` data for them.
 
 ## Todos
 
-- [ ] [OPERATOR] P3. Route this escalation to the odds_api raw-ingestion pipeline owner (or file against whatever
-      team/on-call owns that upstream fetch) for investigation — why did 2026-06-21..24 write only sport meta-snapshots,
-      on both `batch_odds_api` and `live_odds_api`, with zero real odds trades. Done when: the owner has either
-      root-caused + fixed the upstream gap (and the 4 dates can be re-backfilled) or confirmed it's a permanent, honest
-      upstream absence (no action possible).
+- [ ] [DATA] P3. **RULED 2026-07-28 — retagged from `[OPERATOR]`.** The operator's direct ruling on this exact question
+      (recorded 2026-07-28 against the parallel "who owns the ODDS_API raw-ingestion writer?" framing of this same todo,
+      surfaced via `sports_satellite_ao_dispatch_batch6_2026_07_26.md`): _"This isn't actually a real open question —
+      check the code and just re-run/dispatch it. Convert to a normal task, do not leave as an operator-facing
+      question."_ Routing this to a human "owner" is unnecessary; this is a normal, bounded engineering task.
+      Reconciling that with the 2026-07-27 investigation already on this doc (which found the direct internal-log
+      evidence expired — 2-day Cloud Logging retention, 33-36 days stale at investigation time — so no further internal
+      log-export chase is warranted) and applying the general full-backfill mandate ("full backfills... DO IT" for
+      anything not superseded, cost <$100 pre-approved, no partial completion): the concrete remaining task is to
+      **attempt a live re-fetch of the 4 dates (2026-06-21..24) via the odds_api adapter's normal historical/backfill
+      path**, independent of what happened in June — the vendor's historical endpoint may still serve real odds-trades
+      data for these dates today even though the internal capture logs are gone. Task for the next dispatch: (1) re-read
+      `odds_api_adapter.py`'s per-league fetch path for these 4 dates to confirm there is no adapter-side reason a
+      re-fetch would repeat the meta-only shape; (2) dispatch a scoped backfill/reprocess for exactly these 4 date ×
+      pipeline_mode combinations (`batch_odds_api` AND `live_odds_api`, both, per the "no partial completion" mandate);
+      (3) if real `instrument_type=odds` `data_type=trades` data is now returned, let it land — this closes the gap per
+      the "full backfills — DO IT" mandate; (4) if the vendor's historical endpoint also returns only sport
+      meta-snapshots for these exact dates, that is sufficient proof the anomaly is a genuine, permanent upstream
+      absence (not an internal bug) — mark this issue `resolved` at that point; a month-old, 4-day, already-investigated
+      gap has diminishing expected value past this one concrete check, so no further chasing (vendor incident-history
+      contact, longer-retention log export) is required either way. Done when: either the 4 dates are backfilled with
+      real odds trades, or a live re-fetch attempt is documented here confirming the vendor itself has no real data for
+      these dates — either outcome closes this issue.
 
 ## Investigation attempt 2026-07-27 (classification sweep, no root cause found — log retention expired)
 
@@ -106,8 +124,14 @@ quirk, not the cause of the meta-only-write anomaly. The actual container stdout
 would show the real per-league fetch path / `odds_api_adapter.py` error, if any) is **no longer retained** — only the
 `cloudaudit.googleapis.com%2Fsystem_event` audit-log entry survives; the project's `_Default` logging bucket retention
 is 2 days, and these dates are 33-36 days old at investigation time. **Conclusion: further root-cause from this
-session's tooling is infeasible — the direct evidence has already expired.** Leaving the `[OPERATOR]` tag in place is
-correct here not because of an authority/credential gate, but because the remaining path (if any) is either a
-longer-retention log export this session didn't find, or contacting Odds-API's vendor-side incident history directly —
-both need a human decision on how much effort to spend chasing a month-old, already-cold gap versus accepting it as
-permanent honest absence.
+session's tooling is infeasible — the direct evidence has already expired.** Leaving the `[OPERATOR]` tag in place was
+correct at the time this was written, before the ruling below.
+
+## Ruling 2026-07-28 (operator decisions pass — retagged, see Todos)
+
+The `[OPERATOR]` tag above is now resolved and the todo below has been retagged. Per the operator's direct answer on
+this exact question (given against a parallel framing of the same todo, see the Todos section) this was never a
+human-ownership-routing question — it converts to a normal, bounded engineering task: attempt a live re-fetch of the 4
+dates via the existing backfill path (the vendor's historical endpoint may still serve real data even though the
+internal logs are gone), and only mark this a genuine permanent absence once that concrete check comes back empty too.
+See the retagged `[DATA] P3` todo for the full task.

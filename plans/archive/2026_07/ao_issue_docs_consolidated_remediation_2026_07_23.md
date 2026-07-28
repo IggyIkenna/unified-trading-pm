@@ -123,7 +123,11 @@ this plan. They stay in their own issue docs until resolved interactively:
 
 - **`auto_park_no_flipper_rule_not_mechanism_enforced`** — "decide and build, or decline, mechanism-level enforcement".
 - **`regen_positional_task_ids_not_content_stable`** — content-derived task ids, deferred until a new incident forces
-  it.
+  it. **RULED 2026-07-28** (operator gated-decision closeout pass): the 2026-07-25 incident meets this trigger — see
+  `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`'s updated `[BACKEND] P2` todo for
+  the ruling + fully-scoped mandate. Archive convention (this doc's own 2026-07-27 Progress Log entry) means this
+  historical record is not otherwise retroactively edited — this one line is the exception, added only to prevent a
+  reader following this doc alone from citing a since-superseded deferral.
 
 ## Progress Log
 

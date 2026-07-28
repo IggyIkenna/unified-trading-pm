@@ -167,6 +167,12 @@ drift_direction: advance-code
 capital with live telemetry; the backtest grid runs to completion on real history. Hard-stops (operator-only): wallet
 keys, live-trading kill-switch arming, capital ramp beyond the locked schedule.
 
+**Reviewed 2026-07-28 (operator gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**: live wallet/custody
+approval (Copper/CEFFU) + kill-switch arming for real capital on OKX/Binance/Bybit are named in CLAUDE.md as a
+permanent, human-only hard-stop alongside force-push-main and 1.0.0 graduation — never delegated to an agent no matter
+how finished the surrounding code is (and the surrounding code IS finished here — P0 items above are shipped; only the
+live-capital gate itself is withheld). Not retagged, not unlocked.
+
 ## Deferred work — migrated to:
 
 **Not yet identified** — the "Volume as a first-class feature for the cs/ext ML models" `[RESEARCH] P2` item

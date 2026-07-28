@@ -35,7 +35,7 @@ related:
     ../../epics/orchestrator_master.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-28 # (was: 2026-07-17; RULED 2026-07-28 — do the content-hash rewrite now, see Progress Log)
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -159,32 +159,63 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
       audit history over correct auto-routing); todo below (content-derived ids) is the real fix if this proves
       insufficient. **Gate**: `test_sync_refuses_to_reset_a_done_row_on_id_reuse` (new) + 2 existing tests updated to
       the new contract; bug-injected (guard disabled → both dependent tests red; restored → green).
-- [ ] [BACKEND] P3. **Content-derived ids — the real fix, deliberately NOT scoped here.**
-      `ao_dispatch_hardening_2026_07_16` ruled the content-hash rewrite out (blast radius: `existing_ids` bookkeeping,
-      `slot_skips` keyed by task_id, dashboard/API id refs, `done_sha` history). That ruling stands. Re-open ONLY if the
-      two todos above prove insufficient — this todo exists so the decision is visible rather than forgotten.
-- [ ] [BACKEND] P2. **New gap found 2026-07-27 (via `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_
-      27.md`): a `dispatched` row has NO equivalent protection to the `done`-row sibling-reset guard, and the in-flight
-      worker is never notified.** This doc's existing analysis only covered `done` rows losing audit history; it did not
-      consider a `dispatched` row (an ACTIVELY-WORKING agent). `sync_backlog_to_db` (`server/bootstrap.py:354-374`)
-      silently resets ANY non-`done` row's `status`→`queued`/`dispatched_to`→`None`/etc on a `brief_hash` mismatch —
-      confirmed already covered by the EXISTING `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`,
-      which asserts the reset fires for `status="dispatched"` exactly like `status="queued"`. Unlike the operator-removed-
-      todo path (`_prune_stale`'s dispatched-orphan-cancel logic, which marks the row `cancelled` so the worker's next
-      `/heartbeat` sees `cancel_task` and stops per `worker.md`), this id-reuse reset path emits NO signal to the
-      in-flight worker at all — it keeps working under its own (originally correct) understanding of the task, and can
-      only discover the mismatch reactively at `/done` time when the stored `brief` no longer matches what it did. Live
-      incident: `cefi_satellite_ao_dispatch_batch1-012` (slot-5, 2026-07-27) — genuinely correct, shipped work
+- [ ] [BACKEND] P2. **RULED 2026-07-28 (operator gated-decision closeout pass, applying the standing theme: "opt for
+      full completions, no shortcuts, full functionality... if it's about canonicalisation rather than a hack, do it
+      properly") — DO THE CONTENT-HASH REWRITE NOW.** The prior deferral ("re-open only if the two todos above prove
+      insufficient") is treated as MET: the 2026-07-25 `sync_backlog_to_db: REFUSING to reset task id` incident and the
+      2026-07-27 finding below (a `dispatched` row has NO equivalent guard AT ALL, unlike the `done`-row case) are two
+      independent guard classes now proven insufficient, not merely theoretically incomplete. Positional ids are the
+      hack the existing guards patch around; content-derived ids are the actual canonical fix. **Retagged from a
+      parked/deferred decision to a normal, fully-scoped AO-dispatchable todo — full completion required, no partial
+      rollout.** The rewrite must cover the FULL blast radius `ao_dispatch_hardening_2026_07_16` originally flagged, not
+      a subset: `existing_ids`/`existing_briefs` bookkeeping in `regen_backlog_from_plan.py`, `slot_skips` keyed by
+      `task_id`, every dashboard/API id reference, and a migration path for already-`done` rows' ids so `done_sha` audit
+      history survives the scheme change (not a fresh-start-only rewrite that abandons existing history). **Gate**:
+      content-derived ids ship across that full surface; the sibling guard todos above (`brief_hash` sibling-reset
+      protection, NULL-hash tail handling) either become provably unnecessary or are explicitly kept as defense-in-depth
+      (decision recorded either way); and the 2026-07-27 `dispatched`-row gap immediately below is closed by this SAME
+      rewrite (removing the underlying position-shift cause fixes both bug classes at once) rather than patched
+      separately.
+- [ ] [BACKEND] P2. **New gap found 2026-07-27 (via
+      `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_     27.md`): a `dispatched` row has NO
+      equivalent protection to the `done`-row sibling-reset guard, and the in-flight worker is never notified.** This
+      doc's existing analysis only covered `done` rows losing audit history; it did not consider a `dispatched` row (an
+      ACTIVELY-WORKING agent). `sync_backlog_to_db` (`server/bootstrap.py:354-374`) silently resets ANY non-`done` row's
+      `status`→`queued`/`dispatched_to`→`None`/etc on a `brief_hash` mismatch — confirmed already covered by the
+      EXISTING `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`, which asserts the reset fires
+      for `status="dispatched"` exactly like `status="queued"`. Unlike the operator-removed- todo path (`_prune_stale`'s
+      dispatched-orphan-cancel logic, which marks the row `cancelled` so the worker's next `/heartbeat` sees
+      `cancel_task` and stops per `worker.md`), this id-reuse reset path emits NO signal to the in-flight worker at all
+      — it keeps working under its own (originally correct) understanding of the task, and can only discover the
+      mismatch reactively at `/done` time when the stored `brief` no longer matches what it did. Live incident:
+      `cefi_satellite_ao_dispatch_batch1-012` (slot-5, 2026-07-27) — genuinely correct, shipped work
       (market-tick-data-service@94b4aff5) permanently unable to pass `/done`'s cross-repo verification because the id's
       `brief` had been silently repointed to an adjacent todo mid-flight. Two independent fixes worth considering: (a)
-      extend the `done`-row guard's protection to `dispatched` rows too (refuse the silent reset while a worker holds
-      it — safer, but the guard already carries an accepted "blocks legitimate new-todo routing" cost, which would now
-      also apply here); or (b) on a `dispatched`-row brief-hash mismatch, set `cancel_task` (mirroring the existing
+      extend the `done`-row guard's protection to `dispatched` rows too (refuse the silent reset while a worker holds it
+      — safer, but the guard already carries an accepted "blocks legitimate new-todo routing" cost, which would now also
+      apply here); or (b) on a `dispatched`-row brief-hash mismatch, set `cancel_task` (mirroring the existing
       operator-removal signal) so the in-flight worker gets notified and can revert/stop cleanly instead of shipping
-      unmatchable work. Repo: agent-orchestrator.
+      unmatchable work. Repo: agent-orchestrator. **RULED 2026-07-28**: this is the second guard-class failure cited in
+      the content-hash rewrite ruling above — do not patch (a)/(b) as a standalone stopgap; the content-derived id
+      rewrite removes the underlying position-shift cause of this bug too, so close this todo as part of that same
+      rewrite's gate, not separately. If the rewrite's timeline slips and this incident recurs before it ships, (b) is
+      the safer interim patch (notifies the worker; (a) silently blocks legitimate routing same as its `done`-row
+      sibling) — but treat that as a stopgap, not a substitute for the full fix.
 
 ## Progress Log
 
+- **2026-07-28** — **RULED: do the content-hash rewrite now** (operator gated-decision closeout pass, general theme
+  applied — "opt for full completions, no shortcuts, full functionality... if it's about canonicalisation rather than a
+  hack, do it properly"). The 2026-06-25/26-era deferral ("wait until a new incident forces it") is treated as MET by
+  the 2026-07-25 `sync_backlog_to_db: REFUSING to reset task id` incident plus the 2026-07-27 `dispatched`-row gap
+  finding (no guard at all, a strictly worse gap than the already-guarded `done`-row case) — two independent guard
+  failures, not one theoretical concern. The P3 "deliberately NOT scoped here" todo is retagged P2 and rewritten as a
+  normal, fully-scoped AO-dispatchable todo (full blast-radius mandate: `existing_ids`/`existing_briefs`, `slot_skips`,
+  dashboard/API id refs, `done_sha` history migration — no partial rewrite). The 2026-07-27 dispatched-row gap todo is
+  folded into the same rewrite's gate rather than patched standalone. Mirrored to
+  `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
+  `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md`, both of which carried the same
+  BLOCKED-OPERATOR-DECISION framing. Plan-only change, no code shipped.
 - **2026-07-20** — NULL-`brief_hash` tail todo landed, decision (c) accept-permanently (`agent-orchestrator@aaa2db8`,
   via `ao_backlog_regen_integrity_2026_07_20.md` todo 3). Re-measured count is 38 (down from 56-58), confirming the
   bucket shrinks under normal operation. Growth alarm + docstring WHY + tests. See the fix-todo checkbox above.

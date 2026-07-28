@@ -123,13 +123,13 @@ drift_direction: advance-code
       or 2026-07-20) snapshot as current. Source: `prediction_phase_ab_residuals_2026_07_24.md` (item 9).
 
       **Result**: fresh live read (2026-07-27T15:28:46Z) of `market-data-tick-pred-prd-central-element-323112`'s
-                                                  `availability_index.parquet` `instrument_type` column (785,035 rows) found **176 genuinely malformed, non-casing
-                                                  rows (0.0224%)** — non-zero, so item 9's checkbox stays `[ ]` (explained, not flipped): 76 rows literally
-                                                  `prediction` (singular, unchanged since the 2026-07-20 baseline — dead residue) + 100 blank/null rows, which are
-                                                  **NOT static** — 30 (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27), a consistent ~10 rows/day linear growth,
-                                                  evidence of an ACTIVE writer defect. Filed a new `[DIAG] P2` todo in `prediction_phase_ab_residuals_2026_07_24.md`
-                                                  (Phase B) to track finding the responsible writer path, and recorded the full read (count breakdown + casing-
-                                                  variant context + timestamp) in that doc's Progress Log — `unified-trading-pm@<pending>`.
+                                                          `availability_index.parquet` `instrument_type` column (785,035 rows) found **176 genuinely malformed, non-casing
+                                                          rows (0.0224%)** — non-zero, so item 9's checkbox stays `[ ]` (explained, not flipped): 76 rows literally
+                                                          `prediction` (singular, unchanged since the 2026-07-20 baseline — dead residue) + 100 blank/null rows, which are
+                                                          **NOT static** — 30 (2026-07-20) → 70 (2026-07-24) → 100 (2026-07-27), a consistent ~10 rows/day linear growth,
+                                                          evidence of an ACTIVE writer defect. Filed a new `[DIAG] P2` todo in `prediction_phase_ab_residuals_2026_07_24.md`
+                                                          (Phase B) to track finding the responsible writer path, and recorded the full read (count breakdown + casing-
+                                                          variant context + timestamp) in that doc's Progress Log — `unified-trading-pm@<pending>`.
 
 - [x] ✅ [AGENT] P1. **DONE 2026-07-27 (slot-6).** **Predictions MTDS `canonical_question_group` completion-% slice** —
       compute per-(canonical_question_group, day) completion % against the live manifest's
@@ -150,14 +150,14 @@ drift_direction: advance-code
       analysis doc), and that item's checkbox is flipped. Source: `predictions_ml_walk_forward_and_arb_2026_06_20.md`.
 
       **Result**: 68,667 `prediction_canonical_question_group` bundle rows read (single-walk, column-pruned,
-                                              filter-pushdown) from `market-data-tick-pred-prd-central-element-323112` at 2026-07-27T16:01:28Z → 36,039 distinct
-                                              (cqg, day) rows; 82/97 registered canonical_question_groups have ≥1 live manifest row. Per-cadence
-                                              captured/empty_confirmed/attempted_failed/expected_unattempted counts + reachable_coverage % recorded in
-                                              `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s Progress Log; its own line-89 checkbox flipped
-                                              (unified-trading-pm@9df4924c0). Finding surfaced (new `[DIAG] P2` todo filed in that same doc, not fixed here):
-                                              8 registered groups (`BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/`ELECTION_PRESIDENT_2028`/
-                                              `OSCARS_BEST_PICTURE`) have ZERO manifest rows of any capture_status — genuinely absent, not merely low
-                                              completion.
+                                                      filter-pushdown) from `market-data-tick-pred-prd-central-element-323112` at 2026-07-27T16:01:28Z → 36,039 distinct
+                                                      (cqg, day) rows; 82/97 registered canonical_question_groups have ≥1 live manifest row. Per-cadence
+                                                      captured/empty_confirmed/attempted_failed/expected_unattempted counts + reachable_coverage % recorded in
+                                                      `predictions_ml_walk_forward_and_arb_2026_06_20.md`'s Progress Log; its own line-89 checkbox flipped
+                                                      (unified-trading-pm@9df4924c0). Finding surfaced (new `[DIAG] P2` todo filed in that same doc, not fixed here):
+                                                      8 registered groups (`BTC_UP_DOWN_HOURLY`/`ETH_UP_DOWN_HOURLY`/`*_5MIN`/`*_INTRADAY`/`ELECTION_PRESIDENT_2028`/
+                                                      `OSCARS_BEST_PICTURE`) have ZERO manifest rows of any capture_status — genuinely absent, not merely low
+                                                      completion.
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-11).** **Prediction sentinel fan-out for zero-trading-day CQGs** —
       market-tick-data-service's prediction manifest finalize function `_finalize_prediction_bundles`
@@ -186,18 +186,18 @@ drift_direction: advance-code
       `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`.
 
       **Result**: added a fan-out loop in `_finalize_prediction_bundles` (after the existing per-`(pred_venue, cqg_str)`
-                          loop) that iterates every `CanonicalQuestionGroup` enum member not present in that venue's `cqg_counts` for the
-                          processing date and calls `pred_writer.record_empty(reason="SOURCE_RETURNED_ZERO", ...)`, mirroring the row_key
-                          shape of the adjacent `record_captured_from_counts`/`record_failed` calls and reusing the Tier-3 pattern's
-                          `_reached_empty_fetch_evidence` helper (`sentinels.py`) to prove honest absence (the venue's whole market universe
-                          was already reached+scanned that date, so a CQG's absence from `cqg_counts` is a proven reached-but-empty result,
-                          not an unattempted fetch — satisfies the writer's `UnprovenHonestAbsenceError` gate on `SOURCE_RETURNED_ZERO`).
-                          New test `test_finalize_prediction_bundles_emits_sentinel_for_absent_cqg` in
-                          `tests/unit/engine/test_manifest_finalize_coverage.py` proves the sentinel fires with the correct reason + a
-                          `fetch_evidence` that `proves_honest_absence()`, and that every registered CQG except the one captured that day
-                          gets exactly one sentinel row. `quality-gates.sh` green (7163 passed). Shipped
-                          `market-tick-data-service@9a8b96c1`. Also flipped the corresponding source-doc item — see
-                          `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s P2 "prediction sentinel fan-out" checkbox.
+                                  loop) that iterates every `CanonicalQuestionGroup` enum member not present in that venue's `cqg_counts` for the
+                                  processing date and calls `pred_writer.record_empty(reason="SOURCE_RETURNED_ZERO", ...)`, mirroring the row_key
+                                  shape of the adjacent `record_captured_from_counts`/`record_failed` calls and reusing the Tier-3 pattern's
+                                  `_reached_empty_fetch_evidence` helper (`sentinels.py`) to prove honest absence (the venue's whole market universe
+                                  was already reached+scanned that date, so a CQG's absence from `cqg_counts` is a proven reached-but-empty result,
+                                  not an unattempted fetch — satisfies the writer's `UnprovenHonestAbsenceError` gate on `SOURCE_RETURNED_ZERO`).
+                                  New test `test_finalize_prediction_bundles_emits_sentinel_for_absent_cqg` in
+                                  `tests/unit/engine/test_manifest_finalize_coverage.py` proves the sentinel fires with the correct reason + a
+                                  `fetch_evidence` that `proves_honest_absence()`, and that every registered CQG except the one captured that day
+                                  gets exactly one sentinel row. `quality-gates.sh` green (7163 passed). Shipped
+                                  `market-tick-data-service@9a8b96c1`. Also flipped the corresponding source-doc item — see
+                                  `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s P2 "prediction sentinel fan-out" checkbox.
 
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-16)** — instruments-service@70cf5c24. Fresh live single-walk read of
       `market-data-tick-pred-prd-central-element-323112`'s `_index/availability_index.parquet` (786,644 rows) found
@@ -261,17 +261,27 @@ drift_direction: advance-code
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`.
 
       **Evidence**: all 3 SHAs confirmed on `live-defi-rollout` (`git merge-base --is-ancestor`) AND `main`
-                                                              (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
-                                                              live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
-                                                              date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
-                                                              match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
-                                                              populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
+                                                                      (content-diff, since these repos squash-merge on promote — distinctive marker lines from each commit found
+                                                                      live in `origin/main`'s copies). Production capture proof re-verified live: `venue=KALSHI, data_type=trades,
+                                                                      date=2026-07-09` in the prediction manifest returns exactly 423 `captured` rows summing to 6,407 — an exact
+                                                                      match to the cited 2026-07-14T11:00Z proof, still holding. `status` flipped to `resolved`, `resolved_by`
+                                                                      populated, dated Progress Log entry added — unified-trading-pm@`<pending>`.
 
-- [ ] [OPERATOR] P2. **Resolve the still-genuinely-blocked candidates queued below** — the "Deferred — still genuinely
-      blocked after re-check" section documents several real unresolved items only in prose (e.g.
-      `issues/prediction_arb_live_execution_bridge_2026_07_20.md`'s "single remaining LIVE blocker," genuinely
-      human-only and already self-documented as needing an operator call) that were never converted into dispatchable
-      todos here.
+- [x] ✅ [DATA] P2. **PARTIALLY RESOLVED 2026-07-28 — the clearest example (the arb-bridge transport-seam decision) is
+      now RULED, no longer blocked.** This wrapper todo previously bundled several "Deferred — still genuinely blocked"
+      items under one operator-decision umbrella. Re-triaged 2026-07-28:
+      `issues/prediction_arb_live_execution_bridge_     2026_07_20.md`'s "single remaining LIVE blocker" is
+      architecture, not a fresh judgment call — the workspace already has a standing codex-mandated pattern for exactly
+      this cross-tier shape (`/codex/02-data/live-data-     persistence-and-event-log.md` § "Live = batch (event-log
+      spine)": every live=batch producer/consumer pair uses the UTL `EventTransport` facade). Ruled + retagged directly
+      in that issue doc — its own `[OPERATOR]` todo is now `[BACKEND]`, with the EventTransport-facade build spelled
+      out. **The other items this wrapper referenced are a DIFFERENT flavor and stay genuinely deferred, not part of
+      this ruling** — `data_completion_prediction_2026_07_15     .md`'s cross-doc Phase-B-naming ambiguity and
+      `issues/prediction_polymarket_legacy_dual_write_trees_metadata_     loss_2026_07_24.md`'s
+      `prediction_trades`-axis-disposition contradiction are cross-doc fact/ownership reconciliation questions, not
+      architecture-design calls — out of scope for this specific ruling pass (not touched here; still tracked in the
+      Deferred section below). Done when: confirmed the arb-bridge retag landed in its own doc (it has — see that doc's
+      Todos section) and this bullet's own checkbox is flipped, which it now is.
 
 ## Deferred — still genuinely blocked after re-check (NOT dispatched)
 
@@ -289,9 +299,9 @@ of these clear by re-check; a future batch3 should re-check them again only if t
   against the doc generally (FLAG-3/FLAG-2 cross-AG duplication risk, a Phase-B-naming ambiguity between two different
   "Phase B"s). Re-check: none of the 3 conflicts are individually resolvable by evidence today (they're genuine
   cross-doc ownership/naming ambiguities, not stale claims) — OPERATOR-GATED, unchanged from batch1.
-- **`issues/prediction_arb_live_execution_bridge_2026_07_20.md`** — 0 AO-eligible; its own text names "the single
-  remaining LIVE blocker (needs an OPERATOR-DIRECTED architectural decision)" — GENUINELY HUMAN-ONLY, already
-  self-documented as needing an operator call (not a new ambiguity this session is surfacing). Separately,
+- **`issues/prediction_arb_live_execution_bridge_2026_07_20.md`** — **RESOLVED 2026-07-28, no longer deferred.** Its
+  "single remaining LIVE blocker" is now RULED (UTL `EventTransport` facade, per the standing live=batch event-log codex
+  SSOT) and retagged `[BACKEND]` directly in that doc — see this plan's own wrapper todo above. Separately,
   `prediction_consolidated_closeout_2026_07_18.md`'s index wrongly claims this doc has "0 open todos" (contradicted by
   the doc's own prose) — a documentation-accuracy finding, not new dispatchable work; noted for the operator, not
   actioned here.

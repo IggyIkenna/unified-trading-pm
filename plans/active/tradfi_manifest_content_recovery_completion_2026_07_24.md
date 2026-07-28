@@ -230,11 +230,12 @@ source: >-
       self-deleted, not preempted). `assert_tradfi_derivative_ids_canonical` over the live manifest's chain-bundle
       scope: `checked=961 canonical=961 violations=0`; direct GCS content read confirms genuine canonical ids (e.g.
       `CME:FUTURE:CRUDE-USD@LIN-20200619`).
-- [ ] [DECISION] P1. **ICE qualifier variants (`BRN_Z`/`BRN!`/`BRN_MD1`) = BLOCKED-OPERATOR-DECISION** — the
-      classifier + current writer emit `ICE:FUTURE:BRN_Z-USD@LIN-...` with banned chars (`_`,`!`);
-      `EXCHANGE_CODE_TO_NAME` only maps the bare root. Non-MVP (ICE not in MVP universe) so quarantine-with-tracking
-      unblocks the MVP metric. Options: **A: qualifier-normalize + map base root [REC]** / B: accept `_qualifier`, relax
-      gate for ICE / C: quarantine ICE, defer. Surface to operator when ICE cells are worked; does NOT block MVP.
+- [ ] [DATA] P2. **RULED 2026-07-28 — Option A (normalize qualifier + map to base root), was
+      BLOCKED-OPERATOR-DECISION.** Canonicalisation-not-a-hack rules out Option B (relax the naming gate) and Option C
+      (quarantine/defer); Option A was already the team's own `[REC]`. Build: normalize the qualifier (`_Z`/`!`/`_MD1`)
+      into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`. Non-MVP, no rush, no longer
+      operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row quarantine bucket canonicalize, 0
+      remaining.
 - [x] ✅ [DATA] P0. **Enumeration-driven migration (SINGLE SOURCE OF TRUTH — operator, 2026-07-18) — CASING sub-scope
       CLOSED 2026-07-25 to the literal-100% directive bar; semantic-mislabel-relabel + null/blank sub-scopes remain
       separately open, see the new P1 todo just below.** The migration MUST be driven by the FULL distinct set of
@@ -323,14 +324,13 @@ source: >-
       "before purged" text is stale). **Unrecoverable concentrated in `ICE`(853)/`CME`(368)/`CBOE`(107),
       `ohlcv_1m`(699)/`ohlcv_15m`(342)/ `trades`(178)/`tbbo`(108), spans 677/712 days — looks systemic, not isolated.**
       Handoff: not "genuinely tiny" — flag for BLOCKED-OPERATOR-DECISION in the next todo.
-- [ ] [DATA] P1. **Decide + execute the fix strategy per cell-class found above.** Likely NOT one uniform answer: cells
-      with intact raw ticks → delete the quarantined candle object + targeted MDPS `--force` backfill re-derivation
-      (clean, uses the already-correct writer, no per-object parquet surgery); cells with NO raw source → either accept
-      as permanent loss (operator-acceptable per the guidance above, if genuinely small) or escalate as
-      BLOCKED-OPERATOR-DECISION if the affected volume turns out to be large/systemic (e.g. if it turns out to be the
-      whole CME-options historical slice, not an isolated day). Do not delete anything from `_quarantine/` without first
-      confirming (a) it's genuinely unrecoverable and (b) the volume, so the loss is an informed operator decision, not
-      a default.
+- [ ] [DATA] P1. **RULED 2026-07-28 — do NOT write off the 1,328-cell (29.8%) unrecoverable population; check the live
+      vendor first.** Was BLOCKED-OPERATOR-DECISION (loss is systemic, 677/712 days, concentrated ICE/CME/CBOE) — but
+      per the theme + "external data is always available" + "Databento billing unblocked": the survey only proved
+      absence from OUR GCS, not from Databento's live API. Query Databento for the specific cells; full backfill
+      wherever it has the data (cost no object); only what's PROVEN unobtainable after that → permanent loss, citing the
+      fresh vendor query. Cells with intact raw ticks keep the original fix (delete quarantined + MDPS `--force`).
+      **Done when**: all 1,328 cells resolved to backfilled-or-vendor-confirmed-unobtainable, final loss count cited.
 - [ ] [DATA] P2. **Verify + close** `candle_feature_canonical_path_divergence_2026_07_20.md` todo 3 once the above lands
       (update that issue doc's todo 3 status referencing this plan's resolution, per the "plan references codex/issue
       docs, doesn't duplicate" rule — don't let the two documents drift on the same fact).

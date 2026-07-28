@@ -337,8 +337,9 @@ fixture-linked before MVP backfill.
     - +2 more (P2/P3, one DESCOPED-NOT-MVP) — see file for the rest
   - [`plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`](/plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md)
     - **[VERIFY] P2.** Post-fix: re-measure prediction attempted/captured trajectory on a sampled window
-    - **[INFRA] P1** [BLOCKED-OPERATOR-DECISION]. Launch the historical prediction re-backfill under the widened
-      catalogue
+    - **[INFRA] P1.** Launch the historical prediction re-backfill under the widened catalogue — **RULED 2026-07-28, GO
+      (sharded SPOT VMs, full 2025-03-14→today range, no partial-window shortcut)**, retagged away from
+      `[BLOCKED-OPERATOR-DECISION]`; see that doc's Todos section for the full mandate
   - [`plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`](/plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md)
     — status: open, 3 live-side follow-ups outstanding (prose, no `- [ ]` checkboxes): day=2026-06-28 stall triage, the
     e2e-testing host regression fix, the schema-drift GitHub issue-chain triage (#45→#590)

@@ -683,10 +683,15 @@ picture.
       a case mismatch between catalogue and fill-matching.
     - **[CODE] P3.** Delete the retired perp_funding DeFi-routing residue (stale HL/ASTER/LIGHTER entries) so a re-run
       can never re-stamp DeFi HL/ASTER perp_funding.
-    - **[INFRA] P3.** BLOCKED-OPERATOR-DECISION — reconcile 916 HL + 642 ASTER `defi/perp_funding` legacy rows
-      (redundant with cefi `derivative_ticker.funding_rate`); delete-vs-re-home decision needed.
-    - **[FIX] P3.** BLOCKED-OPERATOR-DECISION — extending the live-probe mechanism to cefi CEX venues contradicts a
-      deliberate RULE 11 invariant; needs an explicit operator ruling.
+    - **[INFRA] P3.** **Synced 2026-07-28 (was stale here) — Auto-resolved, retagged from BLOCKED-OPERATOR-DECISION**:
+      reconcile the 916 HL + 642 ASTER `defi/perp_funding` legacy rows (redundant with cefi
+      `derivative_ticker.funding_rate`) by DELETE (option a — the redundant/simpler default), reversibility-cleared per
+      finding T. Ready for AO dispatch, not yet executed — see the source issue doc for the full mandate (re-verify
+      soft-delete retention fresh in the same run before the actual delete).
+    - **[FIX] P3.** **Synced 2026-07-28 (was stale here) — RULED, retagged from BLOCKED-OPERATOR-DECISION**: RELAX RULE
+      11 to cover cefi CEX venues (operator's live-probing-scope theme: broaden, don't narrow) — add cefi CEX venues to
+      `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`, relax/rename the RULE-11 test, re-verify the ~35 mis-flagged shards flip to
+      captured. See the source issue doc for the full mandate.
   - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     — 0 open todos (recounted live 2026-07-26 by `/plan-reconcile defi`, was "1 open"): the
     default-to-yesterday-date-bridge item flipped `[x] ✅ … FIXED 2026-07-16` at `:271`. Archival candidate — see this

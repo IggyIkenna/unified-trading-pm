@@ -62,6 +62,15 @@ source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main
 > `[DATA]` and dispatchable as a normal monitored VM launch per `/codex/05-infrastructure/vm-launcher-runbook.md`'s
 > default-dispatchable posture for ordinary migration VM launches. Phase B (the actual delete) is unaffected and remains
 > `[OPERATOR]`/hard-stop #2.
+>
+> **Hard-stop review, 2026-07-28 (operator gated-decision closeout pass).** Phase B (the ~1.2M-object orphan-sweep
+> delete) and Phase F (the legacy-bucket delete, already executed 2026-07-14 per the finding above) were reviewed
+> together with the companion `cefi_track7_candle_namespace_residual_2026_07_25.md` delete (149 objects) and the
+> `docker_artifact_registry_cleanup_policy_2026_07_24.md` Artifact Registry flip. **Confirmed to remain permanent,
+> human-only hard-stops** — delete-safety-protocol hard-stop #2 (legacy-copied-not-moved) has no §3a reversibility
+> carve-out, and Artifact Registry has no soft-delete at all — neither qualifies for autonomous execution regardless of
+> how thoroughly the pre-checks are verified. **Not retagged, not unlocked**: Phase B and Phase F stay `[OPERATOR]`; a
+> human must still execute or explicitly sign off on each at dispatch time.
 
 ## Already-shipped tooling (credit, not a flip)
 

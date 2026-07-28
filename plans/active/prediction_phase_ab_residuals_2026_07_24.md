@@ -179,7 +179,16 @@ source: >-
       steps are checked with evidence in
       `/plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` itself (that
       doc's own todos remain the source of truth for step-by-step evidence); this bullet is satisfied once that doc
-      shows all 3 checked.
+      shows all 3 checked. **Trader-identity/PII fields sub-question RULED 2026-07-28** (the one piece of step 1 the
+      issue doc flagged as needing "a separate call"): a corpus-wide grep for
+      `proxy_wallet`/`pseudonym`/`profile_image`/`name` across execution-service, strategy-service, features-service,
+      ml-service, deployment-api, deployment-ui, and unified-trading-system-ui returns zero downstream consumers — the
+      only hits are inside market-tick-data-service's own Polymarket adapter, which already drops them at ingest
+      (confirmed live in `unified-api-contracts/unified_api_contracts/registry/_schema_spec_prediction.py`'s current
+      docstring). Applying the doc's own "confirm real downstream need first" recommendation as a bounded, checkable
+      task rather than an open privacy debate: no consumer exists today, so the trader-identity/PII fields are EXCLUDED
+      from the canonical `trades` schema permanently (matches the already-shipped default). No further design/privacy
+      decision is outstanding on this sub-item.
 
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 
@@ -193,15 +202,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                  **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                  `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                  2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                  either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                  launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                  operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                  availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                  see its own Progress Log.
+                                                                                                                                                                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                          see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -317,9 +326,22 @@ source: >-
       `fixture_date`) OR by parsing the human-readable canonical name, stamping `af_fixture_match_status`. Honest nulls
       where unresolved; the match-rate summary line logged per (league, day). (repos: market-tick-data-service,
       instruments-service)
-- [ ] [DECISION] P1. **Any prediction dimension value whose canonical form is AMBIGUOUS = BLOCKED-OPERATOR-DECISION** —
-      surface the A0-enumerated ambiguous set to the operator (options + a marked recommendation) rather than guessing;
-      does not block the unambiguous majority of the migration.
+- [ ] [DATA] P1. **RULED 2026-07-28 — apply the standing canonicalization precedent by default; escalate only a genuine
+      residual.** This was previously `[DECISION] P1 BLOCKED-OPERATOR-DECISION` pending a fresh enumeration of the A0
+      ambiguous set. Ruling (general theme — canonicalization work should be done properly, not left as an open-ended
+      standing gate): (1) enumerate the FULL A0-ambiguous set live (this is itself a bounded, checkable task — the
+      enumeration script already exists, `enumerate_prediction_dimensions.py`), listing each value's candidate canonical
+      readings; (2) resolve each one by applying the SAME precedent this exact migration already established for
+      prediction (operator, 2026-07-18: canonical = UPPERCASE enum, the catalogue is SSOT — see A0/A2 above) — i.e.
+      default to whichever candidate reading matches the catalogue's existing clean canonical form / the established
+      UPPERCASE-enum convention, and record the specific per-value mapping decisions made under this default with the
+      evidence cited; (3) do NOT block the unambiguous majority of the migration on this — unchanged from the original
+      framing. **Only if a specific value survives (2) still genuinely tied between two readings with no catalogue
+      precedent to break the tie — not merely "not obviously spelled one way" — escalate that SPECIFIC residual value**
+      (not the whole todo) as a narrow, options+recommendation operator question, mirroring the format already used
+      elsewhere in this corpus (see `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s per-item
+      BLOCKED-OPERATOR-DECISION bullets for the pattern). Done when: the full ambiguous set is enumerated with a
+      disposition (resolved-by-precedent or escalated-as-residual) recorded per value in this doc's Progress Log.
 - [ ] [DATA] P0. **Re-verify + close the `instrument_type` casing/canonicalisation gap to literal 100% (operator,
       2026-07-24) — the historical numbers in this doc DISAGREE and need reconciling, not just re-citing.** The tick-18
       `--apply` (line 229 above) measured `instrument_type` 11.80%→100% live on 2026-07-19; but the cross-AG D1 ruling

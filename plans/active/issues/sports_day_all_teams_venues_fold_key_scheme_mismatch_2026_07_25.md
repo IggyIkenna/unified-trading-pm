@@ -31,9 +31,9 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-25
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: sports_master
-execution_scope: local-only
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 source: >-
@@ -137,6 +137,12 @@ of the two `day=all` objects (Option A — was soft-delete=0/no recovery net at 
 TEAMS FLAT-layout design decision (Option B — net-new UAC layout vs fold into per-day-per-league). This doc stays `open`
 until the operator rules on either.
 
+**2026-07-28 update — item (2) is no longer operator-gated.** No specific operator answer was ever given for the TEAMS
+FLAT-layout question; applying the workspace's standing design-choice theme (full/proper canonicalisation over a hack)
+resolves it: add the net-new season-keyed layout (Option A of that sub-decision) rather than inventing fake day/league
+labels to force the fold into the existing layout. See the retagged `[DATA]` todo below for the full scope + reasoning.
+This doc stays `open` until that todo is actually shipped (a ruling is not the same as done work).
+
 ## Options
 
 - **A (recommended). Treat `day=all` as confirmed-dead legacy data and delete both objects** (following the standard GCS
@@ -187,34 +193,50 @@ the todo's own quoted dates.
       confirmed present, corresponding manifest rows (if any) cleared.
 
       **✅ DONE 2026-07-28.** Fresh re-check (own run, not the 2026-07-27 citation):
-                      `gcs_bucket_soft_delete_retention_seconds("instruments-store-sports-prd-central-element-323112")` → `604800`
-                      (still qualifies). Sequence executed via UTL `gcs_describe_object`/`gcs_copy_object`/`gcs_delete_object` (never
-                      subprocess `gcloud`/`gsutil`), following §3a exactly:
-                      1. Pre-state: both originals confirmed present — `entity=teams/teams.parquet` size=780370 crc32c=`m/g0gA==`,
-                         `entity=venues/venues.parquet` size=217049 crc32c=`WyZ5jg==` (matches this doc's Finding section byte counts).
-                      2. Backup-copied (server-side `gcs_copy_object`) to
-                         `gs://instruments-store-sports-prd-central-element-323112/sports_reference/_legacy_archive/by_date/day=all/entity={teams,venues}/{teams,venues}.parquet`.
-                      3. Verified backups via `gcs_describe_object`: both present, size+crc32c identical to the pre-delete originals.
-                      4. Deleted the 2 originals via `gcs_delete_object`.
-                      5. Post-delete verify: both originals `gcs_describe_object` → `None` (gone); both backups re-confirmed present
-                         + unchanged (size/crc32c match) in a later independent re-check.
-                      **Object counts**: before = 2 objects at the legacy `day=all` path (784,370 + 217,049 bytes); after = 0 at that
-                      path, 2 at the `_legacy_archive/` backup path.
-                      **Manifest rows**: single-index read of `_index/availability_index.parquet` (6,920,559 total rows) found exactly
-                      2 rows with the literal `date="all"` sentinel — one `data_type=TEAMS` (`source=api_football`,
-                      `written_at=2026-07-13T23:50:11Z`), one `data_type=VENUES` (`source=instruments_service`,
-                      `written_at=2026-07-13T16:24:30Z`), both `capture_status=captured`, `asset_group=sports` — an exact match to the
-                      2 deleted objects, confirming `_list_days()`'s `day=all` exclusion (Finding 3) does not apply retroactively to
-                      rows written before that exclusion existed. Cleared via the standard CAS-safe direct-rewrite pattern (mirrors
-                      `instruments-service/scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`): snapshot to
-                      `_index/snapshots/pre_day_all_teams_venues_manifest_clear_2026_07_28.parquet` first, over-specified predicate
-                      (`date=="all"` AND `data_type in {TEAMS,VENUES}` — matches only these 2 rows out of 6.9M), CAS retry loop against
-                      the live manifest consolidator. Post-write verify: re-read confirms 0 rows remain matching the predicate.
-                      The one-off scripts used (`delete_sports_day_all_teams_venues.py`,
-                      `check_sports_day_all_manifest_rows.py`, `clear_sports_day_all_manifest_rows.py`) were run from a scratchpad
-                      (never committed to a repo — this was a one-time GCS+manifest action, not a code change) per the task's shipping
-                      guidance.
+                              `gcs_bucket_soft_delete_retention_seconds("instruments-store-sports-prd-central-element-323112")` → `604800`
+                              (still qualifies). Sequence executed via UTL `gcs_describe_object`/`gcs_copy_object`/`gcs_delete_object` (never
+                              subprocess `gcloud`/`gsutil`), following §3a exactly:
+                              1. Pre-state: both originals confirmed present — `entity=teams/teams.parquet` size=780370 crc32c=`m/g0gA==`,
+                                 `entity=venues/venues.parquet` size=217049 crc32c=`WyZ5jg==` (matches this doc's Finding section byte counts).
+                              2. Backup-copied (server-side `gcs_copy_object`) to
+                                 `gs://instruments-store-sports-prd-central-element-323112/sports_reference/_legacy_archive/by_date/day=all/entity={teams,venues}/{teams,venues}.parquet`.
+                              3. Verified backups via `gcs_describe_object`: both present, size+crc32c identical to the pre-delete originals.
+                              4. Deleted the 2 originals via `gcs_delete_object`.
+                              5. Post-delete verify: both originals `gcs_describe_object` → `None` (gone); both backups re-confirmed present
+                                 + unchanged (size/crc32c match) in a later independent re-check.
+                              **Object counts**: before = 2 objects at the legacy `day=all` path (784,370 + 217,049 bytes); after = 0 at that
+                              path, 2 at the `_legacy_archive/` backup path.
+                              **Manifest rows**: single-index read of `_index/availability_index.parquet` (6,920,559 total rows) found exactly
+                              2 rows with the literal `date="all"` sentinel — one `data_type=TEAMS` (`source=api_football`,
+                              `written_at=2026-07-13T23:50:11Z`), one `data_type=VENUES` (`source=instruments_service`,
+                              `written_at=2026-07-13T16:24:30Z`), both `capture_status=captured`, `asset_group=sports` — an exact match to the
+                              2 deleted objects, confirming `_list_days()`'s `day=all` exclusion (Finding 3) does not apply retroactively to
+                              rows written before that exclusion existed. Cleared via the standard CAS-safe direct-rewrite pattern (mirrors
+                              `instruments-service/scripts/delete_cross_ag_phantom_rows_sports_manifest_2026_07_27.py`): snapshot to
+                              `_index/snapshots/pre_day_all_teams_venues_manifest_clear_2026_07_28.parquet` first, over-specified predicate
+                              (`date=="all"` AND `data_type in {TEAMS,VENUES}` — matches only these 2 rows out of 6.9M), CAS retry loop against
+                              the live manifest consolidator. Post-write verify: re-read confirms 0 rows remain matching the predicate.
+                              The one-off scripts used (`delete_sports_day_all_teams_venues.py`,
+                              `check_sports_day_all_manifest_rows.py`, `clear_sports_day_all_manifest_rows.py`) were run from a scratchpad
+                              (never committed to a repo — this was a one-time GCS+manifest action, not a code change) per the task's shipping
+                              guidance.
 
-- [ ] [OPERATOR] P2. **Rule on the TEAMS FLAT-layout design decision (Option B)** — add a net-new UAC FLAT layout for
-      TEAMS vs fold `day=all` teams rows into the per-day-per-league structure (see Finding 1); this doc stays open
-      until the operator rules on this, separate from the already-executed VENUES delete (Option A).
+- [ ] [DATA] P2. **RULED 2026-07-28 — Option A: add a net-new season-keyed UAC FLAT layout for TEAMS** (no specific
+      operator answer was given for this design-choice item; applying the workspace's standing theme instead: opt for
+      the full, proper canonicalisation over a hack, no shortcuts, no partial/MVP result). Reasoning: the day=all TEAMS
+      data (30,069 rows, 22,241 unique `(team_id, season)` pairs, seasons 2019-2025) is genuinely season-keyed, not
+      date-keyed — folding it into the existing per-day-per-league layout would mean inventing a fake `day=`/`league=`
+      label for rows that don't naturally have one, which is exactly the kind of cheap/invented-data shortcut the theme
+      rules against. A layout that matches the data's real shape is the correct fix, even though it is not the smaller
+      change. Scope (full-completion mandate — do not ship a partial layout or leave the fold half-done): (1) add a
+      season-keyed FLAT layout entry for TEAMS to
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/gcs_paths.py`'s `SPORTS_DATA_TYPE_LAYOUT`
+      (mirroring VENUES's existing FLAT entry, with a season-keyed path convention, e.g.
+      `sports_reference/teams/season={season}/teams.parquet` — confirm exact convention against existing FLAT precedent
+      before shipping); (2) build a one-time fold script that migrates the 30,069 rows (currently preserved, not lost,
+      at the `_legacy_archive/by_date/day=all/entity=teams/teams.parquet` backup path from the executed VENUES-parallel
+      delete above) into the new layout, snapshot-first + CAS-guarded, following the same delete-safety protocol already
+      used for VENUES; (3) verify the new layout's rows against the archived source (row count in == row count out, no
+      data loss); (4) update this doc's Finding 1 + Disposition sections to record the layout as shipped once done. Cost
+      is negligible (one manifest/GCS write pass, well under the pre-approved $100 threshold) — not a blocker. (repo:
+      unified-api-contracts, instruments-service)

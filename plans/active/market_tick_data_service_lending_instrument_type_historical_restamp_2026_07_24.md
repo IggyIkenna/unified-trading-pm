@@ -91,12 +91,18 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
       covering the classification + dry-run + apply paths.
 - [ ] [DATA] P1. Ship the script + tests via `quickmerge.sh --agent --files` (quality-gates.sh green first, per repo
       convention); verify the commit lands as an ancestor of `origin/live-defi-rollout`.
-- [ ] [OPERATOR] P1. Obtain operator authorization for a paused-writer apply window (mirrors the venue-as-chain
-      2026-07-22 pause/impersonation/resume recipe): identify + pause the relevant MTDS manifest-consolidator cron, run
-      `restamp_lending_instrument_type_2026_07_24.py --apply`, confirm the post-write verification output, then resume
-      the cron and confirm `state=ENABLED`. This is the human-only / operator-gated step — do not execute the pause or
-      the `--apply` write without explicit operator authorization, per this plan's inherited destructive-beyond-local
-      precedent.
+- [ ] [DATA] P1. **Retagged 2026-07-28 (was `[OPERATOR]` — no specific operator answer for this exact todo, but the
+      workspace's Governance rule already covers it): pause + apply + resume the MTDS manifest-consolidator cron
+      directly, no separate operator scheduling round-trip needed.** Per `CLAUDE.md`'s Governance section (2026-07-28
+      ruling): "maintenance-window restarts/pauses of shared infra no longer need operator scheduling while
+      pre-live-trading, brief downtime OK; real scheduled windows resume once live trading starts" — this is exactly
+      that shape (a brief, self-contained pause/apply/resume of one MTDS cron, mirroring the already-executed 2026-07-22
+      venue-as-chain precedent this todo cites). Full completion mandate — do not partially apply: (1) identify + pause
+      the relevant MTDS manifest-consolidator cron; (2) run `restamp_lending_instrument_type_2026_07_24.py --apply`
+      (after its own dry-run + pre-apply snapshot per the todos above); (3) confirm the post-write verification output
+      (rows-in == rows-out, 0 duplicate row_keys, only confirmed-lending rows flipped `liquidation`→`lending`); (4)
+      resume the cron and confirm `state=ENABLED`. Do the pause/apply/resume in one continuous session — do not leave
+      the cron paused between steps. (repo: market-tick-data-service)
 - [ ] [DATA] P2. Post-apply: confirm the distinct-values panel (`GET /distinct-values/defi`) no longer badges
       `liquidation` as a non-canonical/unexpected `instrument_type` value stamped by this writer path (re-pull the live
       nightly honest-coverage rollup and diff against the pre-apply baseline); cross-link the result back into

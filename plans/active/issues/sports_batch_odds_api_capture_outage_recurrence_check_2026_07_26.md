@@ -222,6 +222,10 @@ write a manifest row of any kind — not even `attempted_failed`).
 
 ## Recommended decision / next steps
 
+> **Item 1's backfill fork RULED 2026-07-28 (operator direct answer: "Yes, do it — scope + spend approved").** This
+> prose section is kept verbatim as the historical record the `## Todos` section was converted from; see that section's
+> item 1 for the current retagged `[DATA] P0` status and the full backfill mandate.
+
 1. **[OPERATOR] P0 — confirm deploy + decide on backfill.** Confirm the fix (`market-tick-data-service@410d7569`) has
    reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
    image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
@@ -246,16 +250,21 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [OPERATOR] P0 — confirm deploy + decide on backfill. Confirm the fix (`market-tick-data-service@410d7569`) has
-      reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
-      image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
-      `DATA_NOT_AVAILABLE` error stops appearing in fresh executions. Separately: decide whether the ~1-month gap
-      (2026-06-25…2026-07-25, all leagues) should be backfilled via the Odds-API historical endpoint (credits-cost /
-      priority tradeoff — an operator call, not a worker one). **Note (2026-07-28)**: the DEPLOY half is already
-      satisfied — see the dated correction banner above ("DEPLOY CONFIRMED (2026-07-26, directly verified, not
-      inferred)", image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
-      `DATA_NOT_AVAILABLE`) — only the backfill decision fork (and the reframed two-sub-question backfill scope from the
-      same banner) remains open for the operator.
+- [ ] [DATA] P0 — confirm deploy (DONE, see banner) + backfill RULED, launch it. Deploy confirmation: DEPLOY CONFIRMED
+      (2026-07-26, directly verified, not inferred) — see the dated correction banner above, image `f6ea001`/`410d756`
+      digests + a log-inspected post-deploy execution with zero `DATA_NOT_AVAILABLE`. **Backfill: RULED 2026-07-28 —
+      OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month sports odds gap backfill (scope + spend approved)."**
+      Retagged from `[OPERATOR]` to `[DATA]` (approved, execution-ready). Per the reframed two-sub-question scope from
+      the correction banner above, launch BOTH windows via the Odds-API historical endpoint, in full (no partial-window
+      shortcut — per the operator's general "do not allow anything to partially complete" + "full backfills... DO IT"
+      theme): 1. **The 2026-06-27…2026-07-15 total-gap window (~19 days, zero data)** — genuinely missing days; backfill
+      every league's odds via the historical endpoint for this exact range. 2. **The 2026-07-16…2026-07-25
+      granularity-loss window (~10 days, one late T+1 snapshot instead of the intended 8-point pre-match horizon grid:
+      T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at the correct historical T-minus offsets for each fixture
+      in this range to recover the lost odds-trajectory signal (CLV, drift, steam-move features), not just the single
+      already-captured daily snapshot. **Done when**: both windows show full historical coverage in the manifest
+      (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no GCS walk) at the intended
+      granularity, and this todo cites the launcher/dispatch evidence.
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should

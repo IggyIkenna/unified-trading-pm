@@ -115,11 +115,22 @@ locked_since:
 - [x] ✅ [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
       before/after counts here and to the coverage docs if the model description changes. — `unified-trading-pm` (this
       doc's Progress Log below). Verdict: **improvement CONFIRMED, no model-description change needed.**
-- [ ] [INFRA] P1 [BLOCKED-OPERATOR-DECISION]. Launch the historical prediction re-backfill under the widened catalogue —
-      cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch attempts
-      over 2025-03-14→2026-07-14, ≈9–11 days single-process wall-clock at the adapter's 20 req/s cap, ÷N for N sharded
-      VMs; expected NEW captured cells order 10^6); operator go/no-go — this launch decision is explicitly reserved by
-      the operator's 2026-07-14 dispatch (quantify, don't fire).
+- [ ] [INFRA] P1. **RULED 2026-07-28 — GO. Retagged away from `[BLOCKED-OPERATOR-DECISION]`.** Applying the operator's
+      general theme ("full backfills, full migrations... as long as an item isn't superseded by more recent work, DO
+      IT"; "cost under $100 is not a concern"; "do not allow anything to partially complete"): launch the historical
+      prediction re-backfill under the widened catalogue, **SHARDED ACROSS SEVERAL SPOT VMs** (the ~2-3-day option, not
+      the ~9-11-day single-process option) — cost estimate in `## Re-backfill cost quantification` below (≈16.1M
+      additional (conditionId × day) fetch attempts over 2025-03-14→2026-07-14; expected NEW captured cells order 10^6).
+      This is a real, quantified, closeable data-correctness gap (the historical corpus is resolution-day-scoped, not
+      active-window-scoped, per this issue's own Finding 2) and nothing since 2026-07-14 has superseded or replaced the
+      need for it. **Full-completion mandate for whoever dispatches this**: cover the ENTIRE 2025-03-14→today range in
+      one pass — do not stop at a bounded recent window and call it done; launch via a sanctioned VM launcher (grep
+      `deployment-service/scripts/vm/`'s `VM_PREFIX_TO_BUCKET` registry first, never hand-roll a name), default
+      `--provisioning-model=SPOT` per the backfill-VM HARD RULE, wire the PROGRESS-checkpoint contract so a preemption
+      resumes from measured progress rather than replaying `START_DATE`, and re-run this issue's own P2 VERIFY
+      methodology (`read_capture_status_counts`, manifest-only, no GCS walk) once the backfill completes to confirm the
+      captured-fraction improvement holds at full historical-corpus scale, not just the sampled live-window scale
+      already measured above.
 
 ## Progress log
 
@@ -281,7 +292,8 @@ locked_since:
   - **Quantification**: see `## Re-backfill cost quantification` below — measured by running BOTH filter predicates (the
     shipped code, not a model) over a real 1,801,017-market CLOB scan for 6 sampled days; ≈16.1M additional (cid × day)
     attempts for a full-history re-backfill, ≈9–11 days single-process at 20 req/s (÷N sharded), new captured cells
-    order 10^6. The launch itself is the new [INFRA] P1 BLOCKED-OPERATOR-DECISION todo.
+    order 10^6. The launch itself is the new [INFRA] P1 BLOCKED-OPERATOR-DECISION todo (historical — RULED 2026-07-28,
+    GO; see the `## Todos` section above for the current retagged `[INFRA]` status and full mandate).
 
 ## Catalogue-widening scope (contingent P1 — NOT implemented this pass)
 

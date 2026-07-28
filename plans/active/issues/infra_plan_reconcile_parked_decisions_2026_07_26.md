@@ -9,7 +9,9 @@ summary: >-
   lives), and one standing question that has blocked a whole close-out track for seven weeks. Each entry follows the
   SUB_AGENT_MANDATORY_RULES.md escalation format: both sides quoted with path:line, why they conflict, options A/B/C
   with the recommendation marked [WORKER REC]. Operator: answer inline under each entry; unanswered entries stay open.
-status: open
+  **All 6 items resolved 2026-07-28** (operator general theme applied per-item — see each item's "Status" line and the
+  "## Todos" section below).
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -27,7 +29,7 @@ related:
     /plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-28"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -42,6 +44,8 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  operator general-theme ruling 2026-07-28 (full-completion/no-partial-shortcuts bias), applied to all 4 parked
+  decisions
 source: >-
   `/plan-reconcile` run 2026-07-26, autonomous mode (operator away, unreachable), topic-scoped to the `infra` tranche
   per the skill's "Topic-scoped (sharded) runs" section.
@@ -78,7 +82,11 @@ document the manual `create-code-tarballs.sh` step as a HARD post-change require
 calls this "the minimum until (1) or (2) lands", i.e. explicitly not a durable fix; choosing it means accepting process
 discipline as the control. Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — **option A** (operator general theme applied 2026-07-28: full automatic recovery preferred over a
+manual/partial control). Ruled + written into
+`/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md`'s own todo (retagged
+`[OPERATOR]→[SCRIPT]` there, full reasoning + full-completion scope in that doc) — Option C kept as the standing interim
+safety net, not as the durable fix.
 
 ---
 
@@ -111,7 +119,16 @@ repo still carries 11 of them. C: Fold in the other direction — keep the aioht
 execution-service doc to a pointer (rejected by this worker: the actual work is 8 execution-service test files, so the
 execution-service doc is the natural home). Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — **option A** (operator general theme applied 2026-07-28: "do not allow anything to partially
+complete" — dual-tracking one piece of work across two docs is exactly that). Fold + close:
+`/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`'s residual todo should be rewritten as a
+pointer-only line ("superseded — scope owned by
+`execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`"), flipped `[x]`, `status: resolved`,
+`resolved_by: execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md` set, and archived once
+`[unlock-plan]` clears its `locked_by: live-defi-rollout` lock — that doc's own todo already fully owns dropping the 11
+`--ignore-vuln` entries, so nothing is lost by closing the sibling. **This item is out of this file's assigned scope to
+execute** (the two docs named are not in this session's assigned-file list) — recorded here as the ruling for whoever
+next touches either doc; not retagged/executed in this pass.
 
 ---
 
@@ -179,7 +196,16 @@ stashes are gone with their instances anyway. C: Leave as-is — the sweep is P3
 current fleet; a fresh `git stash list` census across live hosts should come first and decide whether the plan is worth
 re-scoping at all. Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — **option B** (operator general theme applied 2026-07-28: "full backfills/migrations... as long as
+an item isn't superseded by more recent work, DO IT" — the converse holds here too: this fan-out IS superseded, the
+per-epic-VM topology it targets was retired months ago per the current single-VM/role-based architecture, so forcing it
+through via a rewrite is not the "DO IT" case, it's dead-topology cleanup). Retire Phase 3 entirely: mark the 10 `vm-*`
+rows VOID ("the hosts they name no longer exist"), keep only the still-real laptop/VM sweeps, and likewise rewrite Phase
+4's `tab/<op>/<N>`-branch inherit-and-commit step to the current per-slot `live-defi-rollout` checkout model
+(liveness-gated per `/codex/05-infrastructure/per-tab-worktrees.md`), since that model is equally retired. **This item
+is out of this file's assigned scope to execute** (`stash_pile_workspace_cleanup_2026_06_03.md` is not in this session's
+assigned-file list) — recorded here as the ruling for whoever next touches that plan; not retagged/executed in this
+pass.
 
 ---
 
@@ -219,19 +245,20 @@ close-out criterion updated below (this commit) to drop the org-migration clause
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule on the durable fix for VM startup/helper scripts not auto-rolling to GCS (item 1)** — CI job
-      vs per-launcher freshness check vs manual-checklist-only;
-      `vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md` names all 3 options undecided.
-- [ ] [OPERATOR] P2. **Rule on folding the aiohttp CVE doc's last open todo into the execution-service holdout doc
-      (item 2)** — both are near-complete with exactly 1 open todo, provably the same work; needs a "where does the live
-      work live" decision before closing either.
-- [ ] [OPERATOR] P3. **Rule on re-targeting or retiring `stash_pile_workspace_cleanup`'s Phase-3 fan-out to retired
-      per-epic VMs (item 4)** — 10 of its 17 open todos dispatch to VM names that no longer exist under the current
-      single-VM/role-based topology, permanently pinning the plan at 1/18.
-- [ ] [OPERATOR] P1. **Rule whether the prek hard-gate satisfies "line 2" of the plan-quality four-line defense, or the
-      full hygiene sweep must be wired into `quality-gates.sh` (item 6)** —
-      `plan_quality_four_line_defense_architecture_2026_07_23.md`'s own todo asserts line 2 is live, but
-      `run_hygiene_sweep` is measurably not wired into `quality-gates.sh`.
+- [x] ✅ [SCRIPT] P1. **RULED 2026-07-28 — option A (item 1).** CI job auto-sync, per the general theme's "full
+      automatic recovery" preference — see item 1's "Status" line above and the fully-scoped implementation todo now in
+      `vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md` (retagged `[OPERATOR]→[SCRIPT]` there).
+- [x] ✅ [REVIEW] P2. **RULED 2026-07-28 — option A, fold + close (item 2).** See item 2's "Status" line above; the
+      execution of the fold itself belongs to whoever next touches
+      `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`/`execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`
+      (both out of this session's assigned-file scope) — the ruling is recorded, not left as an open operator question.
+- [x] ✅ [REVIEW] P3. **RULED 2026-07-28 — option B, retire (item 4).** See item 4's "Status" line above; the actual
+      plan edit belongs to whoever next touches `stash_pile_workspace_cleanup_2026_06_03.md` (out of this session's
+      assigned-file scope) — the ruling is recorded, not left as an open operator question.
+- [x] ✅ [REVIEW] P1. **RULED 2026-07-28 — option A, full sweep required (item 6).** See item 6's "Status" line above;
+      the actual `quality-gates.sh` wiring belongs to whoever next touches
+      `plan_quality_four_line_defense_architecture_2026_07_23.md` (out of this session's assigned-file scope) — the
+      ruling is recorded, not left as an open operator question.
 
 ## 6. Does the prek hard-gate satisfy "line 2", or must the full sweep be wired into `quality-gates.sh`? (P1)
 
@@ -258,4 +285,12 @@ close. Cheaper and already live, but it permanently gives up corpus-wide commit-
 full sweep in `--ci` (advisory) now and hard-fail only once its prerequisite (over-cap plans) is at zero, keeping the
 staged gate hard in the meantime. Other: operator can type a custom answer
 
-**Status**: open
+**Status**: resolved — **option A** (operator general theme applied 2026-07-28: "opt for full completions, no
+shortcuts... even if not MVP -- if it's about canonicalisation rather than a hack, do it properly"). Keep the original
+definition: wire the FULL `run_hygiene_sweep.sh --ci` into PM's `quality-gates.sh` for real, hard-blocking corpus-wide
+enforcement — the whole point of line 2 was catching corpus-wide drift a staged-files gate structurally cannot see;
+ratifying the narrower already-shipped prek check as "line 2" (option B) permanently gives that up, which is exactly the
+kind of settle-for-less-than-designed shortcut the theme rejects. **This item is out of this file's assigned scope to
+execute** (`plan_quality_four_line_defense_architecture_2026_07_23.md` and `scripts/quality-gates.sh` are not in this
+session's assigned-file list) — recorded here as the ruling for whoever next touches that doc; not retagged/executed in
+this pass.

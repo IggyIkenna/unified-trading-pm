@@ -8,9 +8,11 @@ summary: >-
   and verified live 2026-07-28 (`deployment-service@20ce4c9`, per-chunk `VM_NAME` suffix), so it is archiving per the
   terminal-status-archived rule. Two follow-ups from its own "What's NOT fixed" section were still genuinely open and
   would otherwise go dark once the parent moves to plans/archive/issues/ — this doc carries them forward so they stay in
-  the AO-dispatchable corpus. Todo 2 is downgraded `[CODE]→[OPERATOR]` per
-  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s own classifier finding: it touches fleet-wide
-  concurrency-critical code and needs explicit operator sign-off before an AO worker attempts it.
+  the AO-dispatchable corpus. Todo 2 was downgraded `[CODE]→[OPERATOR]` per
+  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s own classifier finding (it touches fleet-wide
+  concurrency-critical code); **RULED 2026-07-28 (operator general theme applied): leave parked, not pursued** — see
+  todo 2's own resolution text for the full reasoning. Retagged `[OPERATOR]→[REVIEW]` since this is now a closed
+  decision, not an open ask.
 status: open
 nature: process
 asset_group: [cross-cutting]
@@ -59,21 +61,18 @@ open" follow-ups carried forward so they don't go dark in the archive.
       against whether that launcher is ever invoked with a range wide enough to grow the shard past the ~155-165K-row
       OOM threshold in practice. **Done when**: every such launcher is either confirmed low-risk (bounded cumulative-
       shard growth for its realistic invocation range) or given the same per-chunk `VM_NAME` suffix.
-- [ ] [OPERATOR] P3. **Library-level fix for the `ManifestWriter` per-VM-shard flush cost — NO LONGER BLOCKING, still
-      worth doing eventually.** Caching the merged DataFrame + GCS-generation-check (the originally proposed fix) would
-      reduce REDUNDANT download+parse work across flushes, but would NOT reduce PEAK memory at the moment of
-      `merged.to_parquet()` — that allocation is proportional to the CURRENT shard size regardless of whether
-      `existing_df` came from a fresh download or a cache, so it would not actually have fixed the original incident.
-      The per-chunk `VM_NAME` suffix (the incident's real fix) addresses the acute case (any launcher that chunks into
-      fresh processes) by capping shard size directly. This item remains open only for the residual case of a genuinely
-      long-running SINGLE process with a constant `VM_NAME` that never restarts (e.g. a live/forward VM) — lower
-      urgency, no longer incident-driving. **Retagged `[CODE]→[OPERATOR]`**: this touches fleet-wide
-      concurrency-critical code (`ManifestWriter`'s `_per_vm_shard_lock` correctness guarantee,
-      `test_concurrent_writers_same_shard_lose_no_entries`) — needs explicit operator sign-off on the caching approach
-      before an AO worker attempts it, not a judgment call for a worker to make alone. If picked up: cache the merged
-      per-VM shard DataFrame + its GCS generation in the `ManifestWriter` instance across flushes, generation-checked
-      before trusting the cache (falls back to a full read on any mismatch — must preserve the existing
-      concurrent-writer correctness guarantee exactly). **Done when**: (a) both existing suites stay green
-      (`test_manifest_writer_per_vm.py`, `test_manifest_writer_per_vm_debounce.py`), AND (b) a NEW adversarial test
-      proves the generation-check detects a concurrent mutation and falls back to a full read-merge (not just that the
-      happy-path cache hit works). `quality-gates.sh` green on `unified-trading-library`.
+- [x] ✅ [REVIEW] P3. **RULED 2026-07-28 — leave PARKED, do not pursue now.** Applying the operator's general theme to
+      this item: the theme's affirmative "do it fully" pushes (full backfills/migrations, adaptor completion,
+      cost-not-a-concern, auto-recovery-over-manual, relaxed live-probing) are all about completing DEFINITE,
+      already-committed-to work or closing real gaps — none of them affirmatively call for taking on NEW risk to a
+      fleet-wide concurrency-correctness guarantee (`ManifestWriter`'s `_per_vm_shard_lock` invariant,
+      `test_concurrent_writers_same_shard_lose_no_entries`) for a performance optimization that, by this doc's own
+      analysis, is "no longer fixing anything broken" — the incident's real fix (per-chunk `VM_NAME` suffix) already
+      addresses the acute case. This is a pure risk-tolerance judgment on correctness-critical shared code with zero
+      current operational pain driving it, which is categorically different from every theme bullet (none of which is
+      "take on optional correctness risk with no live justification") — so the theme does not flip this to "do it now,"
+      and the doc's own recommendation (leave parked) stands. **Decision, not silence**: this is now a closed "not
+      pursuing at this time" call, not an open operator-gated question — revisit ONLY if the residual case (a genuinely
+      long-running single process with a constant `VM_NAME` that never restarts, e.g. a live/forward VM) starts causing
+      measured, real operational pain (e.g. observed flush-cost degradation on an actual live VM), at which point
+      re-open with that concrete evidence rather than resurrecting this as a standing backlog item.

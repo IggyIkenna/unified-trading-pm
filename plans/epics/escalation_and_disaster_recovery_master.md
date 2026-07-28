@@ -4,7 +4,7 @@ title: Escalation & Disaster Recovery Master (L4)
 summary:
   Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate
   every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
-status: paused
+status: active # (was: paused since 2026-06-26; un-paused 2026-07-28 — operator gated-decision closeout ruling, see banner)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,15 +22,22 @@ co_operators: [ikenna, harsh]
 codex_ssots:
   [/codex/04-architecture/autonomous-recovery-matrix.md, /codex/04-architecture/agent-orchestrator-overview.md]
 related_plans: []
-last_updated: 2026-07-12 # (was: 2026-06-25; corrected 2026-07-14 per verify-rerun-2 finding 61 — body banner (lines 29-32) + git log show the last substantive edit was 2026-07-12, not 2026-06-25)
+last_updated: 2026-07-28 # (was: 2026-07-12; un-paused 2026-07-28 per operator gated-decision closeout ruling — see banner + Progress Log)
 locked_by: NA
 locked_since: NA
 ---
 
-> **⏸️ PAUSED per operator decision 2026-06-26** (frontmatter `status: paused` — epic schema gained the `paused` value
-> 2026-07-12 per operator ruling) — deferred to next quarter together with W7/W8/W9 (message broker dependency) per
-> agent_operating_framework_master.md:62-66 re-scope. Todos remain valid but MUST NOT be dispatched until un-paused.
-> Synced per plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338).
+> **🟢 UN-PAUSED 2026-07-28** (operator gated-decision closeout pass; frontmatter `status: paused` → `active`).
+> **Ruling + reasoning**: the 2026-06-26 pause tied resumption to "next quarter together with W7/W8/W9 (message broker
+> dependency)" — but W9 (`role_registry_schema_and_broker_mvp`) was archived NOT-REQUIRED 2026-07-16, superseded by
+> `assigned_role` dispatch (confirmed in this epic's own 2026-07-23 Progress Log entry below: the reply-routing
+> requirement already works via the existing `POST /api/blocked/{id}/answer` path, no broker needed). The pause's own
+> stated blocking condition no longer exists; the 5 P1 todos are fully scoped, code-verified UNBUILT (2026-07-16), and
+> not superseded by any newer work. Applying the operator's standing gated-decision-closeout theme — "unpause whatever
+> needs unpausing to unblock a task" + "opt for full completions, no shortcuts, full functionality" — resumes this
+> workstream now and commits it to FULL completion of all 5 (now 6, see the new prerequisite todo below) P1 todos, no
+> partial/MVP shortcut. Was paused 2026-06-26 → 2026-07-28 (~32 days). Synced per
+> plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md (finding 338, superseded by this ruling).
 
 # Escalation & Disaster Recovery Master (L4)
 
@@ -85,11 +92,11 @@ auto-recovery matrix. This epic only routes to a human for the **`manual_unkill`
 
 ## Workstream registry (child plans)
 
-| WS  | Child plan                                                                                                  | Scope                                                                                                                                    | Depends                                                                                                                   | Priority | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| E1  | `escalation_pipeline_mvp_2026_06_25` → [ARCHIVED](../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md) | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps       | **none** (was: `agent_operating_framework_master` W9 broker — retired 2026-07-16, superseded by `assigned_role` dispatch) | P1       | **tracked-in-epic, paused** — child plan archived 2026-07-23 (operator) as duplicate tracking; its 5 UNBUILT todos now live in § "P1 — escalation pipeline MVP" below, the single home. Work is NOT descoped; un-pause the epic to resume. (was: paused; was: proposed — corrected 2026-07-12, doc-reconciliation autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling, cascading the epic's own 2026-06-26 pause banner above) |
-| E2  | _(future)_ slack-interactive-resolve                                                                        | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                                                                                                        | P2       | deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| E3  | _(future)_ dr-runbook-registry                                                                              | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                                                                                                        | P2       | deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| WS  | Child plan                                                                                                  | Scope                                                                                                                                    | Depends                                                                                                                   | Priority | Status                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | `escalation_pipeline_mvp_2026_06_25` → [ARCHIVED](../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md) | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps       | **none** (was: `agent_operating_framework_master` W9 broker — retired 2026-07-16, superseded by `assigned_role` dispatch) | P1       | **tracked-in-epic, ACTIVE** — child plan archived 2026-07-23 (operator) as duplicate tracking; its 5 UNBUILT todos (+1 new prerequisite) now live in § "P1 — escalation pipeline MVP" below, the single home. Work is NOT descoped; **RULED 2026-07-28: un-paused, resume now** (see banner). (was: paused 2026-06-26 → 2026-07-28; was: proposed — corrected 2026-07-12, doc-reconciliation autofix finding 50, `plan_reconciliation_operator_decisions_2026_07_11.md` §A2 "50 reclassified" blanket ruling, cascading the epic's own 2026-06-26 pause banner above) |
+| E2  | _(future)_ slack-interactive-resolve                                                                        | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                                                                                                        | P2       | deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| E3  | _(future)_ dr-runbook-registry                                                                              | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                                                                                                        | P2       | deferred                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ## Composition with other epics
 
@@ -126,7 +133,19 @@ success criteria) lives in the archived plan:
 Generalize the blocked loop into a role-agnostic, stateful, scoped-link escalation pipeline. **The broker (W9) is NOT a
 dependency** — corrected 2026-07-16: that plan was archived as NOT-REQUIRED (superseded by `assigned_role` dispatch),
 and the reply path already exists via `POST /api/blocked/{id}/answer`. All 5 todos code-verified UNBUILT 2026-07-16.
+**Epic UN-PAUSED 2026-07-28** (see banner) — all 6 todos below (5 original + 1 new prerequisite) are now real,
+fully-scoped, AO-dispatchable work.
 
+- [ ] [BACKEND] P0. **Prerequisite — resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision**
+      BEFORE any of the P1 todos below are coded. `/api/escalate` already exists as the GHA-to-orchestrator CI-wall
+      judgment dispatch; this epic's target pipeline (see "Target pipeline" above) proposes `/escalation/{id}` for the
+      human-facing scoped link — whoever writes the second without noticing the first will either collide or wire
+      operator escalations into the CI-judgment path. **RULED 2026-07-28** (operator gated-decision closeout pass): this
+      fix is correct regardless of the pause call and was already flagged as such — re-filed here per the archived
+      `plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md`'s own stated re-file condition ("once
+      the epic un-pauses"), which has now been met. **Gate**: one of the two routes is renamed (or namespaced, e.g.
+      `/api/escalations/{id}` vs the existing CI-wall `/api/escalate`), or a recorded decision explains why the
+      near-collision is acceptable — land this BEFORE the role-agnostic escalation record todo below. (E1)
 - [ ] [CODE] P1. Role-agnostic escalation record
       `{ role, domain, question, options[], recommendation, severity, state }` generalizing `BlockedRow` (additive;
       existing `/blocked` keeps working). (E1)
@@ -148,6 +167,11 @@ and the reply path already exists via `POST /api/blocked/{id}/answer`. All 5 tod
 
 ## Progress Log
 
+- 2026-07-28: **UN-PAUSED** (operator gated-decision closeout pass, applying the standing ruling theme — full reasoning
+  in the banner above). `status: paused` → `active`. Added the route-naming-collision fix as an explicit P0 prerequisite
+  todo, re-filing the item `plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` marked DEFERRED
+  2026-07-27 pending exactly this un-pause. All 6 todos in § "P1 — escalation pipeline MVP" (5 original + this
+  prerequisite) are now real, fully-scoped, AO-dispatchable work — no code shipped this pass, plan-only change.
 - 2026-07-23: **E1's child plan `escalation_pipeline_mvp_2026_06_25` ARCHIVED (operator instruction); this epic is now
   its single tracking home.** The archival was safe because this epic's "P1 — escalation pipeline MVP" section already
   carried 4 of the plan's 5 todos verbatim — the two docs were duplicate-tracking one workstream. The 5th (reply

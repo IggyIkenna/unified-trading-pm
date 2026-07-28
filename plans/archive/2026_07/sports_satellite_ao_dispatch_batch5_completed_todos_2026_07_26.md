@@ -236,7 +236,8 @@ locked_by:
       `.tabs/9/unified-api-contracts` was already self-reset to origin cleanly (0 ahead/0 behind) before this session —
       the reset sub-step was moot. 1271 sports/league tests green, `quality-gates.sh` PASSED. Full detail (archived):
       `/plans/archive/issues/sports_curated_universe_faroe_wales_leagues_missing_slot9_dup_2026_07_25.md`.
-- [x] [OPERATOR] P2. Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
+- [x] [DATA] P2. **Retagged from `[OPERATOR]` 2026-07-28** (already-shipped delete, citing features-service@d564bf6f).
+      Purge the always-empty manifest rows/shards left behind by the § A2 dead-dimension deletion
       (features-service@d564bf6f already deleted `export_players`/`export_coaches`/`export_referees`/`export_rounds` and
       their column registrations — DONE, verified) for the four dimension groups PLAYERS / COACHES / REFEREES / ROUNDS
       (~4,216 `empty_confirmed` dates each, ~16,864 manifest rows total) so they stop inflating the sports coverage
@@ -478,19 +479,19 @@ locked_by:
       delete). Include `sports_reference_v1_archive/` in the same gated sweep — already verified safe-to-delete
       2026-06-24 (archive `af_fixture_id` ⊆ canonical `af_fixture_id` across a 5-day/2018-2026 sample, canon-only=0; the
       v1 wide-denormalized bare-layout archive's data is fully represented by the v2 canonical store-id/derive-name
-      pattern) — no further verification needed for that sub-scope. [OPERATOR]: the actual delete execution
-      (`--apply`/`--drop-stale` firing) is IRREVERSIBLE and requires explicit operator sign-off per the doc's own
-      "operator gate (IRREVERSIBLE)" note and the workspace GCS-delete-safety rule — implement + dry-run the script, do
-      NOT fire the real delete without that sign-off logged in this todo's completion evidence. Source:
-      `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` (line 289). **Done when**:
-      `--drop-stale` (or the standalone sweep) is implemented + unit-tested + dry-run-verified 0-orphan/twin-safe on
-      both surfaces, `sports_reference_v1_archive/` deletion is included in the plan, and either (a) operator sign-off
-      is obtained + the delete executes + is verified (object counts drop, canonical reads unaffected), or (b) the todo
-      is left checked-complete-for-code with an explicit `BLOCKED-OPERATOR` note pending sign-off if the operator has
-      not yet approved. **DONE-FOR-CODE 2026-07-26** — `market-tick-data-service@236d945e` (+`@08439787`):
-      implemented+tested+dry-run-verified twin-safe both surfaces. **BLOCKED-OPERATOR** on the `--apply` firing.
-      **Re-check 2026-07-27**: likely a quick finding-T/U re-tag (soft-delete re-verified 604800s); not re-tagged,
-      pending a live-reader re-check.
+      pattern) — no further verification needed for that sub-scope. **Retagged off `[OPERATOR]` 2026-07-28**:
+      named-scope, twin-verified object delete (not a whole-bucket destroy), reversibility-qualified per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a — dispatch `[DATA]`/`[SCRIPT]`: fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check on both target surfaces in the same run as the delete
+      (>=604800s expected per the 2026-07-27 note below), execute via sanctioned UTL helpers if it clears, no operator
+      sign-off needed. Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` (line 289).
+      **Done when**: `--drop-stale` (or the standalone sweep) is implemented + unit-tested + dry-run-verified
+      0-orphan/twin-safe on both surfaces, `sports_reference_v1_archive/` deletion is included in the plan, the fresh
+      retention check is cited, and the delete executes + is verified (object counts drop, canonical reads unaffected).
+      **DONE-FOR-CODE 2026-07-26** — `market-tick-data-service@236d945e` (+`@08439787`):
+      implemented+tested+dry-run-verified twin-safe both surfaces. **Re-check 2026-07-27**: expected a quick finding-T
+      re-tag (soft-delete anticipated 604800s); still needs the fresh same-run check + live-reader re-check cited before
+      `--apply` fires.
 - [x] [UI] P3. ✅ 2026-07-26 — `deployment-ui@66cc06d`. Relabel `FixturesBrowser.tsx`'s window note and remove the stale
       `MAX_SPAN_DAYS=120` span-cap warning now that `deployment-api/services/fixtures_browser.py` serves the
       full-history single catalogue source (`prod/catalog.parquet`, deployment-api@dbbf64c, shipped via

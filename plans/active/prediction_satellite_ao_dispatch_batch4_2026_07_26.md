@@ -245,9 +245,12 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   reclassification needs the lifecycle bounds to exist first) and **`[OPERATOR]`** — a manual manifest `--apply` flips
   real captured→attempted_failed on a false positive (CLAUDE.md +
   `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`), so human review/execution is required; bundled into ONE
-  walk to avoid concurrent-write races on the same `_index`. Source:
-  `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (P2/P3 residual-manifest items, both "NICE-TO-HAVE", both
-  "ride the next prediction canonicalisation walk").
+  walk to avoid concurrent-write races on the same `_index`. **Reviewed 2026-07-28, confirmed remains a permanent
+  hard-stop — NOT retagged.** The fix itself is fully designed (nothing left to decide on the mechanics); workspace
+  policy simply reserves execution of a production manifest `--apply` write like this for a human forever, because a
+  false positive would silently mark good captured data as failed. Confirm you (or whoever you designate) will
+  personally review and run it once todo #1 lands. Source: `prediction_cross_venue_arb_and_coverage_2026_07_24.md`
+  (P2/P3 residual-manifest items, both "NICE-TO-HAVE", both "ride the next prediction canonicalisation walk").
 - **[SCRIPT] Re-enumerate the IS POLYMARKET universe for a recent past date → re-run the `book_snapshot_5` batch
   backfill → verify `row_count>0`.** A bounded, idempotent re-enumeration+backfill; it shares the POLYMARKET IS
   enumeration path with todo #1 so it should sequence AFTER #1 lands (else it re-enumerates against the old write path).
@@ -256,16 +259,37 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
   mechanism, no separate operator sign-off needed. Source: `prediction_live_clob_depth_capture_2026_07_24.md` (the
   "DEFERRED-CROSS-DEP" `book_snapshot_5` row-proof item).
 
-## Deferred — operator / design-gated (BLOCKED-OPERATOR-DECISION, not a bounded worker outcome)
+## RULED 2026-07-28 — arb-pairing wiring + politics/geo canonicalization (was: operator / design-gated)
 
-- **`prediction_cross_venue_arb_and_coverage_2026_07_24.md` [DESIGN] items** — the fixture-pairing residual
-  (registry-resolution + mapping-population + arb-layer WIRING across UAC/IS/features/strategy) and the per-instrument
-  same-game/same-settlement arb PAIRING within a shared cqg group. Both are tagged `[DESIGN]` by the source author: the
-  arb-pairing/wiring semantics are an undecided design call, not a bounded checkable outcome — resolve as a design
-  session first, then dispatch the resulting scoped step (dispatch-scope eligibility rule).
-- **`prediction_cross_venue_arb_and_coverage_2026_07_24.md` [UAC] Politics/geo cross-venue canonicalization audit** —
-  per-family arbability analysis (Kalshi Politics 2049-series vs Polymarket TRUMP/GEO groups). This is a judgment audit
-  (which families are genuinely arbable + how to canonicalize them), operator/design-gated, not a mechanical extraction.
+Both items below were previously deferred as `BLOCKED-OPERATOR-DECISION` in
+`prediction_cross_venue_arb_and_coverage_ 2026_07_24.md`. Applying the general theme (canonicalization work gets built
+FULLY, not left as a standing design gate; this workspace already has a proven precedent for exactly this class of
+cross-venue-matching problem — the soccer fixture-match resolver,
+`instruments-service/reference_data/adapters/prediction/fixture_match.py`, which pairs Polymarket/Kalshi markets to the
+same real-world event via `af_fixture_id` + team/league resolution through a shared alias index, closed-set
+honest-absence, no silent fallback):
+
+- **Fixture-pairing residual (registry-resolution + mapping-population + arb-layer WIRING across UAC/IS/features/
+  strategy)** — **RULED: build it, generalizing the already-proven soccer fixture-match resolver pattern.** This is not
+  a novel design call; it's applying an existing, shipped architecture (registry-resolution + per-instrument side-table
+  - closed-set honest-absence, the exact shape A4 above already used for soccer) to the cross-venue pairing problem.
+    Retagged `[BACKEND] P2` (was `[DESIGN]`) — build the FULL mechanism (no partial/heuristic-only pairing), wired
+    across UAC (schema) / instruments-service (resolver) / features-service (consumption) / strategy-service (arb
+    layer), per the theme's full-completion mandate (no shortcuts, no partial MVP). Source doc's own todo carries the
+    scoping detail; this ruling only removes the "needs a design session first" gate.
+- **Politics/geo cross-venue canonicalization audit (which families are genuinely arbable + how to name/group them)** —
+  **RULED: build the FULL structured enumeration now (bounded, checkable), narrowed to a residual operator ask only
+  where genuinely tied.** Determining whether two differently-labeled venue markets resolve to the SAME real-world event
+  is a semantic/domain judgment the general theme does not mechanically determine — but per this corpus's own
+  established pattern for exactly this shape (see `prediction_phase_ab_residuals_2026_07_24.md`'s "ambiguous canonical
+  dimension values" ruling, 2026-07-28), the correct scoping is: (1) enumerate every Kalshi Politics 2049-series vs
+  Polymarket TRUMP/GEO family pair with a proposed canonical grouping + recommendation per pair (a bounded, checkable
+  audit deliverable, not an open conversation); (2) apply the arbable/non-arbable call per pair using objective
+  structural signals already available (same underlying resolution date + same real-world referent, mirroring the soccer
+  fixture-matcher's `af_fixture_id`-equivalence test) wherever those signals disambiguate; (3) escalate ONLY the
+  specific pairs where structural signals don't disambiguate (not the whole audit) as a narrow options+recommendation
+  operator question. Retagged `[UAC] P2` (was `[UAC]`/design-gated) — the audit itself is now a normal AO-dispatchable
+  todo; only a genuinely-tied residual, if any, stays operator-gated.
 
 ## Deferred — cross-cutting (belongs to a different tranche, not prediction)
 
@@ -297,16 +321,26 @@ day before this batch's own audit, a same-day staleness gap); its now-unblocked 
 dispatched todo above instead of staying in this Deferred list. Every other gate re-checked the same day: none has
 demonstrably cleared. Not re-drafted here (would duplicate batch3's disposition):
 `predictions_other_bucket_and_ui_drilldown` (operator/infra-slot-availability-gated),
-`issues/prediction_arb_live_execution_bridge` (operator architectural transport-seam decision),
+`issues/prediction_arb_live_execution_bridge` (**RULED 2026-07-28 — no longer operator-gated, see this batch's own
+"RULED 2026-07-28" section above and the issue doc's retagged `[BACKEND]` todo**),
 `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue` (operator — historical re-backfill launch),
-`issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index` (operator sign-off — underlying library fix has
-shipped and proven stable on a sibling bucket, but sign-off for a third remediation attempt on this specific
-twice-reverted index is still outstanding), `sports_arb_decay_window_and_alpha_gate_design` /
-`sports_group_c_execution_backtest_harness` / `sports_predictions_live_mode_activation_readiness` /
-`sports_odds_feature_naming_canonicalization` (sports-master-owned / design-gated / time-gated),
-`predictions_ml_walk_forward_and_arb` (time-gated on sports_master Group E), `data_completion_prediction_2026_07_15`
-(human-only — 3× independently re-triaged to 0 AO-eligible). The 4 forked Phase children
-(`prediction_phase_ab_residuals` Phase-B fixture-attribute backfill, `prediction_phase_c_data_status_ui`,
+`issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index` (**RULED 2026-07-28 — authorize the third
+remediation attempt once the deploy is confirmed** (general theme: full backfills/migrations, DO IT when not a
+regression — the underlying `unified-trading-library@14301571` TOCTOU fix has already shipped and proven stable across 5
+consolidator cycles on a sibling bucket). Converts to a bounded, dispatchable sequence: (1) verify
+`unified-trading-library@14301571` is deployed to the `uts-prod-manifest-consolidator-instruments-sports` Cloud Run job
+specifically (image build timestamp / pinned library version vs. the commit's merge time); (2) if not yet deployed,
+deploy it; (3) once deployed, re-run `remediate_cross_ag_prediction_bleed_round3_2026_07_24.py` (already built,
+reusable, REMOVE-only) against `instruments-store-sports-prd`; (4) hold-verify across ≥2 real consolidator cycles (not
+just an immediate check) before closing — full completion, no partial verify. The actual checkbox for this sequence
+lives in the (archived) issue doc
+`plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_ instruments_index_2026_07_20.md`, out of scope for
+this file's edit pass — this note records the ruling so a follow-up pass can retag that doc's own todos 12-14
+accordingly), `sports_arb_decay_window_and_alpha_gate_design` / `sports_group_c_execution_backtest_harness` /
+`sports_predictions_live_mode_activation_readiness` / `sports_odds_feature_naming_canonicalization` (sports-master-owned
+/ design-gated / time-gated), `predictions_ml_walk_forward_and_arb` (time-gated on sports_master Group E),
+`data_completion_prediction_2026_07_15` (human-only — 3× independently re-triaged to 0 AO-eligible). The 4 forked Phase
+children (`prediction_phase_ab_residuals` Phase-B fixture-attribute backfill, `prediction_phase_c_data_status_ui`,
 `prediction_phase_d_formal_smoke_and_backfill`, `prediction_phase_e_football_arb_live`) are `assigned_vm: NA`
 human-track plans whose residuals are dominated by the un-started Phase-B canonicalisation migration (time-gated) —
 Phase B itself is a large multi-repo migration that warrants its own dedicated plan, not a batch todo.

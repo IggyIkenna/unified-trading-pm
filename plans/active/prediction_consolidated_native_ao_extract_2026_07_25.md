@@ -166,18 +166,25 @@ drift_direction: advance-code
   **Corrected 2026-07-25**: this item no longer "stays open in the parent doc" as a separate checkbox — the
   consolidated-closeout split pass merged it INTO `prediction_phase_ab_residuals_2026_07_24.md`'s reconciliation-cadence
   todo (same underlying action, one checkbox). Re-check that merged todo once Phase B lands.
-- **P1 POLYMARKET `prediction_trades` schema-extension migration** — STAYS HUMAN. The parent doc frames this as a
-  bounded "3-step sequence" (schema design → writer update + migration → register in the cutover inventories) against
-  the linked issue doc
-  (`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`), but step 1
-  (**Design the extended canonical `trades` schema**) is not actually bounded: the issue doc's own Q3 resolution states
-  the trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) "need a separate call —
-  privacy/PII-adjacent, confirm they're genuinely needed downstream before keeping them canonical" — an unresolved
-  architecture + privacy judgment call on the UAC canonical schema (a cross-repo SSOT), not a checkable fact a worker
-  can determine alone. Steps 2-3 (writer+migration, register) are gated on step 1 landing first (can't implement or
-  register an undesigned schema) and step 2 additionally involves a prod-GCS copy+verify+delete — this entire item needs
-  the operator's PII call before any of its 3 steps become AO-eligible, then a fresh conflict-check (step 2's delete
-  needs `[OPERATOR]` + delete-safety-protocol citation once dispatchable). Left untouched in the parent doc.
+- **P1 POLYMARKET `prediction_trades` schema-extension migration** — **RULED 2026-07-28, no longer STAYS HUMAN.** The
+  parent doc frames this as a bounded "3-step sequence" (schema design → writer update + migration → register in the
+  cutover inventories) against the linked issue doc
+  (`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`); step 1's
+  market-question sub-part (`title`/`slug`/`event_slug`/`outcome`/`outcome_index`) already shipped
+  (`unified-api-contracts@90ddcc01`, per `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` 4a). The one remaining
+  open piece was the trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) sub-question —
+  "need a separate call — privacy/PII-adjacent, confirm they're genuinely needed downstream before keeping them
+  canonical." **Ruling (2026-07-28, applying the doc's own "confirm real downstream need first" recommendation as a
+  bounded, checkable task rather than an open privacy-policy debate):** a corpus-wide grep for
+  `proxy_wallet`/`pseudonym`/`profile_image`/`name` (prediction-scoped) across `execution-service`, `strategy-service`,
+  `features-service`, `ml-service`, `deployment-api`, `deployment-ui`, `unified-trading-system-ui` returns **zero
+  downstream consumers** — the only hits are inside `market-tick-data-service`'s own Polymarket adapter (the writer that
+  already drops them, confirmed live in `_schema_spec_prediction.py`'s current docstring + `PREDICTION_TRADES_COLUMNS`).
+  No real consumer exists today. **Disposition: EXCLUDE the trader-identity/PII fields from the canonical `trades`
+  schema permanently** (matches the already-shipped 4a default of dropping them at ingest) — this is the lower-risk,
+  no-downstream-need branch the doc's own recommendation called for, not a guess. This closes the "needs a separate
+  operator call" note; no further design/privacy decision is outstanding on this item. If a genuine future consumer
+  emerges, re-open as a fresh, freshly-scoped schema-extension ask against that concrete need, not speculatively.
 
 ## Conflict-check against existing satellite batches (2026-07-25)
 

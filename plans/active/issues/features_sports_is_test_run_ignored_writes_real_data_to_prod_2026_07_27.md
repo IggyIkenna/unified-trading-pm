@@ -149,17 +149,26 @@ def get_output_bucket(self, asset_group: str) -> str:
       that no longer exists post-fix) plus `test_main_batch_prune.py` and `test_ml_readiness_check.py` (patched
       `resolve_bucket` in `ml_readiness_check`'s own module) to patch at the new `features_service.sports.config` call
       site instead. Full `quality-gates.sh` green.
-- [ ] [OPERATOR] P1. **RETAGGED 2026-07-27 (slot-10)** — was mistagged `[DATA]`, which made it AO-auto-dispatchable
-      despite the body text itself saying "that call belongs to the operator, not to this audit"; a worker cannot
-      determine this outcome alone (open-ended judgment call on real PROD content, not a checkable fact), so per
-      `task_template.md`'s AO-eligibility rule it needs the `[OPERATOR]` tag to route correctly. Surfaced as
-      BLK-features-sports-prod-objects (see this plan's dispatch history) rather than resolved unilaterally. Decide
-      whether to leave or delete the 2026-07-05 sports-features objects this run created in
-      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` (content is real/valid —
-      computed from real upstream reference data, not fabricated — but its provenance is an unintended test invocation,
-      not a tracked production backfill). Not auto-deleted here: unlike calendar's 0-row case, this content is real and
-      a normal production backfill for this day may legitimately want to compute the exact same rows anyway — deleting
-      it isn't obviously safer than leaving it, that call belongs to the operator, not to this audit.
+- [ ] [DATA] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given for this exact
+      question, so the standing design-choice theme governs: full backfills/migrations that would not be a regression
+      should be treated as done, and nothing should sit in a permanently ambiguous half-state). **Ruling: LEAVE the
+      2026-07-05 sports-features objects in production as-is** —
+      `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` stays, do NOT delete.
+      Reasoning: the content is genuinely correct (computed from real upstream reference data, not fabricated),
+      `metageneration: 1` confirms nothing existing was overwritten or lost, and — critically — a normal,
+      deliberately-tracked production backfill for this exact day would compute byte-identical rows from the same
+      inputs, so this content is not a regression relative to what a proper backfill would produce; it is only irregular
+      in HOW it was created, not in WHAT it contains. Deleting correct content only to have a future backfill recompute
+      the identical values adds no correctness value and wastes real compute. This does **not** set a precedent for
+      silently accepting incorrect test-invoked writes — it applies narrowly to this case because the content has been
+      independently verified correct against real inputs; the root-cause bug that let this happen (the `IS_TEST_RUN`
+      routing gap) is already fixed above, so this exact failure mode cannot recur. **Remaining concrete action (still
+      open, now unblocked — no operator judgment call left)**: add a one-line provenance note to the per-day
+      manifest/coverage record (or alongside the existing
+      `_index/per_vm/features-e2e-sports-20260727-085523-281e78.parquet` shard) recording that day=2026-07-05's sports
+      feature data was first materialized via this smoke-test run (VM `features-e2e-sports-20260727-085523-281e78`, see
+      `run.log` timestamps above) rather than a dedicated tracked backfill — an honesty/provenance annotation only, not
+      a data change; nothing else to do once that note lands.
 - [ ] [SCRIPT] P2. **features-service** — the remaining families the calendar issue's audit-todo named but this finding
       hasn't reached yet: `volatility`, `onchain`, `cross_instrument`, `multi_timeframe`, `commodity` — check each one's
       actual bucket-resolution call site (not just whether `is_test_run` is declared, the calendar finding's own

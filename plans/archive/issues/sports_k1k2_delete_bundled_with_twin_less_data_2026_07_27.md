@@ -54,6 +54,14 @@ locked_since:
 > `deployment-service@8b93ae7` (gated delete, 345,852 deleted / 0 failed), `unified-trading-pm@4a1ebf203` (corpus-wide
 > referrer reconciliation). See `resolved_by:` above and the Recommended-decision todos below for full evidence.
 > Archived per the standard 6-step ritual.
+>
+> **🔒 Reviewed 2026-07-28 (operator-gate decision-digest pass) — confirmed PERMANENT hard-stop for next recurrence, not
+> retagged.** This doc's core pattern (a first-at-scale irreversible bulk delete/migration against production data
+> always needs an explicit human go/no-go, even when the automated §3a reversibility proof holds) is
+> `hard-stop-permanent`, per the workspace's categorisation of wallet-key / live-custody / irreversible-delete decisions
+> — correctly gated forever, not unlocked by this review pass. No disposition change here; the delete already executed
+> under the operator's 2026-07-27/28 go-ahead above — this note only confirms the STANDING pattern for the next time
+> this class of decision recurs, per the operator's own framing in this doc's summary.
 
 ## What I found
 

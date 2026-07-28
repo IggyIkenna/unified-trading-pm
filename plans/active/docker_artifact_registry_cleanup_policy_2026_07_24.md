@@ -361,7 +361,10 @@ Policy shape) assumed it would need to enumerate.
       is inherently protected by `keep-5-recent`. No offenders found; no additional Keep rule needed. Todo 7 ([OPERATOR]
       sign-off) is next.
 - [ ] 7. [OPERATOR] P2. Present the dry-run report + the zero-intersection result to the operator for sign-off before
-      any real deletion. Done-when: operator approves in-thread.
+      any real deletion. Done-when: operator approves in-thread. **Reviewed 2026-07-28 (operator gate-cleanup pass) —
+      confirmed remains a PERMANENT hard-stop**: Artifact Registry has NO soft-delete/undelete mechanism at all, so
+      unlike a GCS bucket delete this is never eligible for the §3a reversibility carve-out no matter how green the
+      dry-run/zero-intersection evidence is. Not retagged.
 
 ### Phase D — Apply + verify (human-gated, irreversible)
 
@@ -373,7 +376,9 @@ Policy shape) assumed it would need to enumerate.
       have no equivalent soft-delete/undelete mechanism at all, which is exactly why this todo already states the
       correct AR-specific reason (irreversible, no undo) rather than the GCS reversibility question §3a addresses.
       Done-when: `gcloud artifacts repositories describe unified-trading-system --format="yaml(cleanupPolicies)"` shows
-      the live policy.
+      the live policy. **Reviewed 2026-07-28 (operator gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**,
+      same reasoning as todo 7: zero-soft-delete + irreversible legacy-object-delete-after-copy is never covered by the
+      reversibility carve-out. Not retagged.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
       actual GB/$ drop vs the dry-run projection AND that no `ImagePullBackOff` / failed-deploy / failed-scale incident
       fired in the window. Done-when: a re-audit CSV shows the reduction and the incident check is clean.

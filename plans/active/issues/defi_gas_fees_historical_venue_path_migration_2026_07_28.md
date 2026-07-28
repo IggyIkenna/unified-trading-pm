@@ -113,17 +113,44 @@ entire pre-2026-07-22 historical population for this data_type).
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Decide migrate-vs-leave for the pre-2026-07-22 `gas_fees` historical population currently under
-      `venue=<CHAINNAME>` (14 values: `ETHEREUM`/`OPTIMISM`/`BSC`/`POLYGON`/`BASE`/`ARBITRUM`/`AVALANCHE`/`LINEA`/
-      `FANTOM`/`CELO`/`MANTLE`/`AURORA`/`SOLANA`/`BITCOIN`):
-  - **Migrate**: copy each legacy-prefixed object to the equivalent `venue=ALCHEMY` path (chain granularity preserved
-    via the untouched `chain=` field/segment), re-verify against the manifest, then stage the legacy-prefix delete under
-    the standard 5-part delete-safety proof (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) — this is a
-    prod bucket delete, human-only regardless.
-  - **Leave**: keep the legacy `venue=<CHAINNAME>` objects in place permanently and instead teach every `gas_fees`
-    reader (and this data_type's manifest-status surface) that a complete history requires querying all 15 venue values,
-    not just `ALCHEMY` — documented as a standing exception, not silently absorbed.
-  - A first, cheap scoping step either path needs and neither has been done yet: measure the actual historical
-    `gas_fees` volume/date-range under the 14 legacy prefixes (a bounded, single-prefix manifest/GCS check per venue —
-    not a corpus-wide walk) so the decision is made against real scale, not a guess. Repo: market-tick-data-service (+
-    unified-trading-pm to record the decision back into this doc). Source: this doc.
+**RULED 2026-07-28 (operator general-theme ruling on remaining gated design-choice decisions, applied here): MIGRATE —
+copy the pre-2026-07-22 legacy-prefixed `gas_fees` history to the canonical `venue=ALCHEMY` path; do not leave a
+permanent 15-value split.** Reasoning applied from the operator's standing ruling: (a) "Full backfills, full migrations
+— as long as an item isn't superseded by more recent work, DO IT" — this migration is not superseded by anything more
+recent (the 2026-07-22 rename fix is the most recent relevant work, and it explicitly deferred this exact
+follow-through, not cancelled it). (b) "Opt for full completions, no shortcuts, full functionality... if it's about
+canonicalisation rather than a hack, do it properly" — this is squarely a canonicalisation question (one venue identity,
+`ALCHEMY`, vs. a permanent 14-way legacy-chain-name split that every future reader must remember to check); "leave +
+teach every reader to check 15 values" is exactly the cheap-shortcut alternative this ruling rejects, not the
+properly-canonicalised one. (c) Cost is not a blocker (<$100 tier) — a GCS copy across 14 chain prefixes for one
+data_type's historical volume is comfortably inside that budget even before scoping the exact byte count. Concrete
+full-completion mandate for whoever dispatches this next: (1) run the cheap scoping step first (bounded,
+single-prefix-per-venue manifest/GCS measurement, NOT a corpus-wide walk) to size the actual historical volume/date
+range under all 14 legacy prefixes; (2) copy every legacy-prefixed object to its equivalent `venue=ALCHEMY` path
+(`chain=` segment preserved unchanged, exactly as the 2026-07-22 fix left it), re-verifying each copy against the
+manifest before treating any prefix as migrated; (3) once ALL 14 prefixes are copied + manifest-verified — no partial
+subset — stage the legacy-prefix delete under the standard 5-part delete-safety proof
+(`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`); **this final delete step stays a prod-bucket delete and
+is human-only regardless of the migrate-vs-leave ruling above** — the ruling authorizes running the migration to
+completion, it does not itself authorize the destructive delete, which still needs its own delete-safety sign-off at
+that point in the sequence.
+
+## Todos
+
+- [ ] [DATA] P1. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Migrate the
+      pre-2026-07-22 `gas_fees` historical population (14 legacy `venue=<CHAINNAME>` values:
+      `ETHEREUM`/`OPTIMISM`/`BSC`/`POLYGON`/`BASE`/`ARBITRUM`/`AVALANCHE`/`LINEA`/`FANTOM`/`CELO`/`MANTLE`/`AURORA`/
+      `SOLANA`/`BITCOIN`) to the canonical `venue=ALCHEMY` path, full completion across all 14 prefixes, no partial
+      rollout. Steps: (a) bounded per-venue scoping measurement (volume/date-range, not a corpus walk); (b) copy +
+      manifest-verify each of the 14 prefixes; (c) once all 14 are verified migrated, stage — but do NOT execute — the
+      legacy-prefix delete under the standard 5-part delete-safety proof; the actual prod-bucket delete remains
+      `[OPERATOR]`/human-only regardless of this ruling. (repo: market-tick-data-service; record scoping numbers +
+      migration status back into this doc)
+
+## Progress Log
+
+- **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: migrate the 14 legacy
+  `gas_fees` venue prefixes to canonical `venue=ALCHEMY` (full completion, no permanent 15-value split), while keeping
+  the actual prod-bucket delete step human-only/`[OPERATOR]`-gated per the standard delete-safety protocol. Retagged the
+  decision todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete scope→copy→verify→(gated delete)
+  sequence written into the doc. Docs-only, no GCS action taken.

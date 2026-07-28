@@ -95,8 +95,28 @@ Two directions, both viable, not adjudicated by this doc:
 
 ## Recommended decision
 
-- [ ] [OPERATOR] P1. Decide (A) re-provision as two separate secrets, or (B) adapt `routing.py` to the bundled secret
-      shape. (repo: execution-service, + GCP Secret Manager if (A))
+> **RULED 2026-07-28** (operator general theme applied — no venue-specific answer was given). **Ruling: Option (A) —
+> re-provision `kalshi-api-key-id` + `kalshi-private-key-pem` as two separate Secret Manager secrets, split from the
+> already-live `kalshi-api-credentials` material.** Reasoning: the theme's "opt for full completions, no shortcuts... no
+> cheap implementations" applies directly — Option (A) keeps `routing.py` on the SAME convention every other venue in
+> the file uses (Betfair, Polymarket, Matchbook all use N separate plain-string secrets), while Option (B) is the
+> one-off divergent shortcut that only this venue would need, for no reason other than avoiding a provisioning step.
+> **This is NOT a wallet-key-class hard-stop in the same sense as generating brand-new trading credentials**: the real
+> key material already exists and is already live in `kalshi-api-credentials` — Option (A) only RESHAPES already-
+> provisioned data into two Secret Manager entries (read the existing bundled JSON's known fields, write them as two new
+> secrets), it does not create new signing material or touch the exchange side at all. Per
+> `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` (both cloud identities are IAM-self-service —
+> grant a missing role yourself, don't pause), an AO worker with (or that self-grants) Secret Manager read+create access
+> can execute this split directly; it does not need to sit gated on the operator unless the executing identity's own IAM
+> genuinely blocks it, in which case self-grant the missing role and proceed per that SSOT rather than parking this on
+> the operator. **This doc intentionally still does not reproduce the secret's field names/values** — whoever executes
+> this reads `kalshi-api-credentials` directly at execution time rather than trusting a copy pasted into a planning doc.
+
+- [ ] [SCRIPT] P1. **RULED — execute Option (A).** Read the existing `kalshi-api-credentials` secret's JSON fields,
+      create `kalshi-api-key-id` (plain-string) and `kalshi-private-key-pem` (plain-string) in GCP Secret Manager
+      (`central-element-323112`) from those field values, and verify both via `gcloud secrets versions access` resolve
+      non-empty. Leave `routing.py`/`sports_factory.py` unchanged (Option A requires no code change). (repo:
+      execution-service, + GCP Secret Manager)
 - [ ] [DATA] P1. Once the credential wiring is fixed, place a real Kalshi paper order through execution-service
       end-to-end (order submit → fill/ack → position update) against the elections-subdomain host and capture
       logs/commit evidence it works — this is the ORIGINAL verification

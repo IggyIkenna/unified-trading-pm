@@ -18,7 +18,7 @@ summary: >-
   copy-migration is not obviously the right fix -- it needs a design call on whether/how to fold the segment into
   prediction's TWO existing top-level path shapes without breaking the `canonical_question_group=`/`group=` partition
   keys those shapes already use for their own (valid) purposes.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -50,7 +50,7 @@ source:
     single-walk) -- live re-audit reconciled the dispatched scope against the actual current bucket state before
     launching any VM/migration",
   ]
-resolved_by:
+resolved_by: instrument_availability_hive_canonicalisation_2026_07_21.md
 locked_by:
 ---
 
@@ -132,8 +132,40 @@ re-opened as part of -012, which is done for the 3 AGs that actually needed it).
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Pick A/B/C above (or a variant) for the prediction instruments-store object-path scheme; if A or C,
-      scope the retrofit + reader-bridge as its own plan before any code starts. If B, update
-      `cf_manifest_audit_2026_06_01.py` (and the codex `KEY FINDING` table in
-      `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`) to document prediction's permanent CF-2/CF-3
-      exception rather than leaving it silently RED forever.
+> **RE-AUDITED 2026-07-28 — this issue's premise is STALE; the design decision below was already ruled AND shipped.**
+> Read-only investigation (`instruments-service` repo, `instruments_service/engine/orchestrator/writers.py`) found the
+> operator's 2026-07-21 HARD RULE in `/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md`
+> already answers this exact A/B/C question — and it answers it as **Option A: retrofit BOTH prediction shapes** (not B
+> or C), for ALL 4 non-sports asset_groups including prediction, not just cefi/defi/tradfi. That doc's todos 1-6 are
+> already `[x]` ✅ SHIPPED (`instruments-service@a9be6ce9`): `_instrument_availability_sink_for()` and
+> `_market_lifecycle_sink_for()` (`writers.py:156-207`) both now bake `pipeline_mode=`/`asset_group=prediction` into the
+> sink PREFIX (not the partition dict, avoiding the alphabetical-sort trap) ahead of the caller's `venue=`/`group=`
+> keys, for EVERY asset_group's writer, prediction included — the docstrings explicitly confirm this ("full canonical
+> hive... operator HARD RULE R2, 2026-07-21", "only the missing `pipeline_mode=`/`asset_group=` keys are inserted, in
+> canonical order, ahead of the caller's remaining `group=` partition key"). Reader-side bridges were shipped in the
+> same commit (todo 6). This resolves the exact open questions this issue's § 2 raised ("does anything read these paths
+> positionally" — yes, and it was already made layout-tolerant across the cutover; "does market_lifecycle stay exempt" —
+> no, it got the same fix).
+>
+> **What this issue's own CF audit (2026-07-26) actually caught**: not an undecided design question, but the EXPECTED,
+> already-labeled `migration_pending` gap between the (already-fixed) writer and the (not-yet-migrated) HISTORICAL
+> objects — the sibling doc's own todo 7b sized this precisely: prediction has 22,637 `instrument_availability` + 12,582
+> `market_lifecycle` = **35,219** legacy flat objects still needing copy-up to the full-hive tree. That doc's todos 7c
+> (copy+verify, `[DATA]`, not operator-gated — reversible/additive) and 7d (purge, gated on a same-run
+> `gcs_bucket_soft_delete_retention_seconds()` check per finding T, not a fresh operator ask) and 8 (register the
+> cutover date) are the ALREADY-TRACKED, AO-dispatchable remainder — per the general theme ("full
+> backfills/migrations... DO IT" + "no half-built... left lying around"), that migration should run to full completion
+> exactly as already scoped there, not be re-litigated here as a fresh design question.
+>
+> **Disposition**: this issue is SUPERSEDED by
+> `/plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` for its design-choice content. No
+> new `[OPERATOR]` decision is needed — retagging the todo below accordingly. This doc's `status`/archival is left to
+> the normal plan-completion-and-archival discipline in a follow-up pass (not executed in this session, since
+> `instrument_availability_hive_canonicalisation_2026_07_21.md` is outside this session's assigned-file list and
+> archival requires touching both docs' cross-references).
+
+- [x] ✅ [REVIEW] P2. **RESOLVED 2026-07-28 — superseded, not a live decision.** The A/B/C pick was already made (Option
+      A) and shipped `instruments-service@a9be6ce9` per `instrument_availability_hive_canonicalisation_2026_07_21.md`
+      (todos 1-6, all `[x]`). No retrofit/reader-bridge scoping remains to do here — that work is done. The only
+      genuinely remaining work (historical migration of prediction's 35,219 legacy flat objects) is already tracked as
+      that doc's todos 7c/7d/8; route any further dispatch there, not here.

@@ -116,7 +116,25 @@ rows) is real but small and not urgent.
 - [x] [DOCS] P3. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md, see that doc for
       execution]** Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50%
       (1.33M)" figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
-- [ ] [DATA] P3. Root-cause the 9,750 blank-`data_type` `captured` rows in market-tick-data-service (which writer path
-      stamps `capture_status=captured` without a `data_type`, spanning 2019-2026) and either backfill the correct
-      `data_type` per row or confirm honest-absence-safe disposition. No urgency — small population, does not affect any
-      known gate.
+- [ ] [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no longer
+      a cross-tranche BLOCKED-OPERATOR-DECISION conflict with
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
+      two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,736 rows) ALREADY
+      market-type-suffixed venues (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/HYPERLIQUID/DERIBIT/BINANCE-SPOT/
+      COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) — only `data_type` is blank, `venue` is unambiguous. The remaining **14 rows
+      (bare `OKX`×7 in this breakdown + bare `COINBASE`×7)** are the SAME 14-row population the cross-cutting doc names
+      at its `_index` COINBASE(7)+OKX(7) line, where `venue` itself is ambiguous (SPOT/FUTURES/SWAP). Applying the
+      operator's general theme (full completions/backfills where determinable, no shortcuts; never fabricate a value
+      when honest-absence/reclassify is the correct disposition) split the disposition instead of picking one: **(a)
+      9,736 rows — BACKFILL** the `data_type` per row: root-cause the writer path that stamps `capture_status=captured`
+      before `data_type` resolution, join each row back to its actual captured GCS object's `data_type=` path segment,
+      and correct the manifest field — this is mechanically determinable (venue is unambiguous) and gets a full
+      backfill, not a diagnose-only close, per the "no partial completion" mandate; cost is not a blocker (a
+      manifest-field correction, no new paid infra). **(b) 14 rows (bare `OKX`/`COINBASE`) — RECLASSIFY**, per
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`'s disposition: do NOT fabricate a guessed
+      venue-suffix/`data_type` for these — the real per-market data is already correctly captured under the suffixed
+      venues elsewhere, so the bare-venue row is a malformed/duplicate manifest artifact, not a genuine gap; guessing
+      here would violate the workspace's honest-absence/no-fabricated-placeholder rule. **Done when**: the 9,736-row
+      backfill lands with a re-measured manifest showing blank-`data_type` `captured` rows for those resolved-venue
+      populations at 0, the 14-row bare-venue subset is reclassified (marked malformed/superseded, not backfilled) per
+      the cross-cutting doc's own todo, and both source docs' checkboxes are flipped with the commit(s) cited.

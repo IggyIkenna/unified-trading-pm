@@ -81,12 +81,27 @@ protocols) shows well over 100 distinct pool addresses captured historically for
 
 ## Recommended decision
 
-An operator/architecture judgment call, not a mechanical fix: should the instruments-service DeFi pool catalogue be
-backfilled/expanded to include every historically-address-captured pool (a discovery pass over the existing
-address-keyed leaf corpus per venue/chain), so future catalogue-scoped backfills and Honest Coverage denominators
-reflect the true historical universe? Or is the catalogue's current "currently-active pool" scope intentional and the
-74% gap acceptable (i.e., the old, now-unattributed data for delisted/inactive/never-catalogued pools is treated as
-permanently out-of-scope going forward)?
+**RULED 2026-07-28 (operator general-theme ruling on remaining gated design-choice decisions, applied here): EXPAND the
+catalogue via a full historical-discovery backfill — do not accept the ~74% gap as permanent.** Reasoning applied from
+the operator's standing ruling: (a) "Full backfills, full migrations — as long as an item isn't superseded by more
+recent work, DO IT" — nothing here is superseded; the catalogue-scoped backfill this issue was found under is still
+active work, and expanding the catalogue's historical coverage is additive to it, not a regression. (b) "Opt for full
+completions, no shortcuts, full functionality... even if not MVP — if it's about canonicalisation rather than a hack, do
+it properly" — a catalogue that only tracks "currently-active" pools while permanently blind to ~74% of real historical
+trading activity is exactly the kind of narrow-shortcut scope this ruling rejects; the catalogue is reference-data
+canonicalisation (instruments-service's own SSOT role per
+`/codex/04-architecture/ instruments-service-as-ssot-for-mtds.md`), not a hack, so it should be done properly. (c) Cost
+is not a blocker (<$100 tier) and this is exactly the class of "adaptors/catalogue population should be FINISHED with
+respect to data unless literally proven unobtainable" — pool addresses are NOT unobtainable (they already sit captured,
+address-keyed, in GCS; the gap is catalogue POPULATION, not data availability), so the "remove if unobtainable" branch
+does not apply — finish it. Concrete full-completion mandate for whoever dispatches this next: run a
+historical-discovery pass over the existing address-keyed leaf corpus per venue/chain (reusing the same
+content-verification technique this doc's own purge tool uses — match symbol-named siblings' `pool_address` against
+address-keyed leaves) for ALL default DEX protocols (not just the 4 sampled here), backfill the instruments-service
+catalogue with every pool address that was ever genuinely captured (not just currently-active ones), and re-run Honest
+Coverage's `expected_unattempted` derivation once the catalogue reflects the true historical universe — no partial
+rollout (e.g. only the 4 protocols already measured) satisfies this ruling; every default DEX protocol needs the same
+treatment. No shortcuts, no MVP-only subset.
 
 ## Todos
 
@@ -95,6 +110,17 @@ permanently out-of-scope going forward)?
       batch-verification technique (list symbol-named siblings, compare pool_address coverage) against each protocol's
       own catalogue population. Done-when: a per-protocol SAFE/FLAGGED breakdown table, matching this doc's numbers for
       curve/sushiswap/velodrome_v2/trader_joe_v2. (repo: market-tick-data-service)
-- [ ] [OPERATOR] P2. Decide catalogue scope policy per the "Recommended decision" above — expand the catalogue via a
-      historical-discovery backfill, or formally accept the ~74% gap as permanent/ out-of-scope. Done-when: a documented
-      ruling in this issue doc, driving whichever follow-up plan the decision implies.
+- [ ] [DATA] P2. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Expand the
+      instruments-service DeFi pool catalogue via a full historical-discovery backfill covering every ever-captured pool
+      for EVERY default DEX protocol (not just the 4 sampled) — full completion, no partial rollout, no MVP-only subset,
+      cost pre-approved under the <$100 tier. Done-when: the catalogue's pool population per venue/chain matches (or a
+      documented, address-level reconciliation explains any residual gap against) the true historical address-keyed
+      capture corpus for every default protocol, and Honest Coverage's `expected_unattempted` denominator is re-derived
+      from the expanded catalogue. (repo: instruments-service, market-tick-data-service)
+
+## Progress Log
+
+- **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: expand the catalogue via a
+  full historical-discovery backfill (full completion, no partial/MVP-only rollout) rather than accept the ~74% gap as
+  permanent. Retagged the scope-policy todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete
+  full-completion mandate written into the doc. Docs-only, no code/catalogue change made.

@@ -65,19 +65,36 @@ drift_direction: advance-code
 > 1000-line hard cap — its Deferred items cannot be folded back into it, and the orphans below did not exist when its
 > Phase-1 snapshot was taken.
 
+> **2026-07-28 operator-decisions pass.** Of the 4 originally purely-operator/design-gated docs this batch classified
+> (see `summary:` above), 3 are now RULED and moved from the Deferred sections into `## Todos` as todos 10-12: the GCS
+> soft-delete retention decision, the xG-column build-vs-prune decision, and the odds_api-ownership-routing decision
+> (that last one's actual ruling + task lives in its own source issue doc, one of this same pass's assigned files — todo
+> 12 here is a pointer, not a duplicate). The 4th (`ml_service_sports_clv_training_pipeline_never_functional`) and the
+> two process-level Deferred bullets (todo-7 generalisation, tranche ownership) remain genuinely gated — see their
+> entries below for why. The naming-migration plan-reclassification question inside todo 8 (step 3) also stays
+> `[OPERATOR]`, reviewed and reaffirmed, not resolved by the general theme (see that todo's own note).
+
 ## Cross-todo file-collision check (done before finalizing, per the skill)
 
 Same-priority todos in one plan run concurrently by default, so same-priority todos must touch distinct files.
 
-| priority | todos      | files touched                                                                        | collision |
-| -------- | ---------- | ------------------------------------------------------------------------------------ | --------- |
-| P1       | 1, 2, 4, 7 | part2 / part3 / capture-outage doc + mtds / the 5 sports `*_finalize` plans          | none      |
-| P2       | 3, 8, 9    | `launch-features-vm.sh` + part3 / naming doc + its parent plan / `native_ao_extract` | none      |
-| P3       | 5, 6       | `instruments-service/scripts/` / `features_service/sports/`                          | none      |
+| priority | todos        | files touched                                                                                                                                     | collision                              |
+| -------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| P1       | 1, 2, 4, 7   | part2 / part3 / capture-outage doc + mtds / the 5 sports `*_finalize` plans                                                                       | none                                   |
+| P2       | 3, 8, 9, 10  | `launch-features-vm.sh` + part3 / naming doc + its parent plan / `native_ao_extract` / deployment-service terraform                               | none                                   |
+| P3       | 5, 6, 11, 12 | `instruments-service/scripts/` / `features_service/sports/` (todo 6) / `features_service/sports/` (todo 11, xG) / no file (todo 12, pointer only) | **todo 6 vs todo 11 — see note below** |
 
 **One deliberate ordering dependency, handled by priority rather than `sequential: true`** (which would needlessly
 serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) also edits. P1 drains before P2, so todo
 2 lands first. Todo 2's text is explicit that it must LEAVE the § Y checkbox open and annotate it as owned by todo 3.
+
+**Second potential collision, flagged 2026-07-28 when todos 10-12 were added by the operator-decisions pass**: todo 6
+(the `pd.NA`-idiom sweep) and todo 11 (the xG-columns build-or-prune ruling) both touch `features_service/sports/`, and
+todo 11's implementation work may land in the same `multisource_xg_calculator.py` todo 6's own text already cites as the
+one confirmed-fixed site. Both are P3 (concurrent by default). If both are picked up in the same window, whichever
+worker starts SECOND should `git pull --ff-only` immediately before editing and re-check for an overlapping in-flight
+diff on `multisource_xg_calculator.py` before touching it — not a `sequential: true` (that would needlessly serialise 4
+otherwise-independent P3 todos over one soft file-overlap risk).
 
 ## Todos
 
@@ -277,10 +294,16 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
       and 2 as resolved in this doc, and leave step 3 — whether the parent plan should stay `assigned_vm: NA` /
       LOCAL-only now that cross-repo migration code has landed against it piecemeal — as an explicit unchecked
       `[OPERATOR]` item, since re-designating a plan's execution track is the operator's call under CLAUDE.md's
-      plan-destination HARD RULE. If NOT confirmed, stop and record what you measured rather than flipping anything.
-      Repo: unified-trading-pm. **Done when**: the doc carries a `## Todos` section with steps 1-2 `[x]` (or an explicit
-      measured statement that `0ded2449` is not merged) and step 3 as an unchecked `[OPERATOR]` item, and the parent
-      plan's todo 4 matches whatever was actually measured.
+      plan-destination HARD RULE. **Reviewed 2026-07-28 (operator-decisions pass) — genuinely left `[OPERATOR]`, not
+      resolved by the general backfill/completion theme.** The theme's bullets (full backfills, cost tolerance,
+      unpause/pause, adapter completion, live-probing scope) are about DATA/PIPELINE execution calls; whether to flip a
+      plan's `assigned_vm` from `NA` to `planning` is a distinct WORKSPACE-GOVERNANCE decision that CLAUDE.md's
+      plan-authoring HARD RULE requires an explicit operator ask for regardless of subject matter ("Default is human
+      (`assigned_vm: NA`) unless the operator explicitly says otherwise") — the theme does not speak to it either way,
+      so it stays a real open question for step 3, not a stale gate. If NOT confirmed, stop and record what you measured
+      rather than flipping anything. Repo: unified-trading-pm. **Done when**: the doc carries a `## Todos` section with
+      steps 1-2 `[x]` (or an explicit measured statement that `0ded2449` is not merged) and step 3 as an unchecked
+      `[OPERATOR]` item, and the parent plan's todo 4 matches whatever was actually measured.
 
 - [ ] [DOC] P2. **Cross-link the rebuild-delta todo in `sports_consolidated_native_ao_extract_2026_07_25.md` to its real
       source issue doc.** Phase 3's conflict check found that
@@ -298,6 +321,48 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
       `sports_consolidated_native_ao_extract_2026_07_25.md`, the issue doc names its owner, and
       `bash scripts/plan-hygiene/check_reference_paths.py` reports no new violations. **Do not** execute the diff itself
       — it belongs to the existing todo, which is `status: draft` pending the same operator review as this plan.
+
+- [ ] [INFRA] P2. **RULED 2026-07-28 (2026-07-28 operator-decisions pass, applying the general theme: recurring cost
+      here is expected to be modest storage spend and "cost under $100 is not a concern" + prefer full protection over
+      an all-or-nothing risk) — retagged away from `[OPERATOR]`, moved out of Deferred.** Enable a **bucket-level
+      soft-delete retention window** (not full object versioning — this matches the reversibility mechanism already
+      standardized elsewhere in this workspace, e.g. the `gcs_bucket_soft_delete_retention_seconds()` ≥604800s/7-day bar
+      cited in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a; use **30 days**, comfortably above that
+      floor) on `instruments-store-sports-prd-central-element-323112` and its sibling prd sports buckets named in
+      `issues/sports_player_stats_empty_write_followups_2026_07_26.md`. That source doc is outside this batch's file
+      scope (not one of this session's assigned files) — its own `[OPERATOR] P2` tag/text still needs syncing to this
+      ruling the next time it is touched; this todo carries the actual ruling + terraform work so the fix isn't blocked
+      on that sync. Repo: deployment-service (terraform). **Done when**: every sports prd bucket named in that source
+      doc shows an active soft-delete retention policy of ≥30 days (verified via
+      `gcloud storage buckets describe --format='value(softDeletePolicy)'` or the terraform state), and the source doc's
+      own todo is updated to cite this ship once picked up.
+
+- [ ] [DATA] P3. **RULED 2026-07-28 (applying the operator's adapter/feature-completion theme: "All adaptors should be
+      FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
+      adaptor/feature should be FULLY REMOVED... No half-built, half-referenced adaptors left lying around either way,"
+      extended here to feature COLUMNS rather than adapters) — retagged away from `[OPERATOR/DESIGN]`, moved out of
+      Deferred.** `issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md`'s 5 unfilled xG column
+      groups (per-source passthroughs, disagreement/range, derived consensus, historical accuracy, league rank) default
+      to **BUILD, not prune** — the theme does not accept "uncertain model value" as grounds for removal, only a PROVEN
+      data-infeasibility does. For each of the 5 groups: (1) investigate whether the underlying inputs are actually
+      obtainable from already-captured per-source data (the doc's own framing suggests most are — e.g. per-source
+      passthroughs and disagreement ranges are pure derived computations over odds/xG data this pipeline already
+      captures, not a new data source); (2) if feasible, implement the group to FULL completion in
+      `MULTISOURCE_XG_COLUMNS` (no partial/placeholder columns); (3) only if a group is proven infeasible (the source
+      data genuinely does not exist anywhere reachable), fully remove it — from `MULTISOURCE_XG_COLUMNS`, any UAC schema
+      reference, the manifest, and docs, per the "no half-built, half-referenced" mandate — rather than leaving a schema
+      column nobody computes. That source doc is outside this batch's file scope; its own `[OPERATOR/DESIGN]` tag still
+      needs syncing to this ruling when next touched. Repo: features-service. **Done when**: each of the 5 groups
+      carries either a shipped, fully-computed implementation or a proven-infeasible removal (column purged from
+      schema/manifest/docs), with no group left half-built or merely diagnosed.
+
+- [ ] [DATA] P3. **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — ALREADY
+      RULED 2026-07-28, do not re-draft here.** Operator direct answer: _"This isn't actually a real open question —
+      check the code and just re-run/dispatch it. Convert to a normal task, do not leave as an operator-facing
+      question."_ That issue doc (one of this same operator-decisions pass's assigned files) has already been retagged
+      from `[OPERATOR]` to `[DATA] P3` with the full task (re-read the adapter, attempt a live re-fetch of the 4 dates
+      via the historical endpoint, close as backfilled-or-proven-permanent-absence either way) — execute that doc's own
+      Todos section item, not this pointer. Removed from Deferred here since it is no longer an open operator question.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
@@ -325,25 +390,6 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
   should be re-scoped if the operator prefers archive-as-history.
 
 ## Deferred — operator decision needed (BLOCKED-OPERATOR-DECISION, not batchable)
-
-- **`issues/sports_player_stats_empty_write_followups_2026_07_26.md` `[OPERATOR] P2`** — enable GCS object versioning or
-  a bucket-level soft-delete retention window on `instruments-store-sports-prd-central-element-323112` and its sibling
-  prd sports buckets. The doc states the ask plainly as needing _"an infra/operator decision on cost vs. blast-radius
-  reduction"_. A retention policy change on prod buckets is a recurring-spend commitment, not a worker-determinable
-  outcome. Once ruled, the terraform change is a clean bounded todo.
-
-- **`issues/sports_multisource_xg_21_of_28_columns_never_computed_2026_07_26.md` `[OPERATOR/DESIGN] P3`** — decide, per
-  the 5 unfilled xG column groups (per-source passthroughs, disagreement/range, derived consensus, historical accuracy,
-  league rank), which are still wanted vs should be pruned from `MULTISOURCE_XG_COLUMNS`. The doc explicitly stops at
-  diagnosis and says so: _"'how should `xg_implied_over_2_5` actually be computed' is a design/domain decision, not
-  something to improvise without validation"_. This is the textbook "figure out how X should look" pattern the
-  dispatch-scope rule excludes. Once each group is ruled keep-or-prune, each kept group becomes a normal scoped todo.
-
-- **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md` `[OPERATOR] P3`** — route the 4-consecutive-day
-  (2026-06-21..24) meta-only raw-ingestion gap to whoever owns the upstream `venue=ODDS_API` raw writer. The todo's
-  action IS the routing, and the destination is a human/ownership call. Note the downstream coupling for whoever rules:
-  `issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md`'s P2 shard4 retry stays time-gated on this
-  resolving upstream — retrying the reprocess cannot produce real bucketed odds for 4 dates that have no real raw odds.
 
 - **`issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md` `[CODE] P3`** — wire `--family` to
   actually scope SPORTS training, or drop the required-argument validation. Confirmed still true this audit

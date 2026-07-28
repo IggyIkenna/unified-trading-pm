@@ -21,7 +21,7 @@ tags: [agent-orchestrator, disaster-recovery, self-hosted-runners, ci-cd, planni
 related:
   [/plans/active/issues/ao_docs_reconciliation_2026_07_15.md, /codex/05-infrastructure/local-tmux-precompact-watcher.md]
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: 2026-07-28 # (was: 2026-07-24; RULED 2026-07-28 — do both, see Progress Log)
 priority: P2
 parent_epic: infrastructure_master
 source:
@@ -72,15 +72,38 @@ Two options, not mutually exclusive:
 
 ## Open todos
 
-- [ ] [OPERATOR] P2. Decide which of the two shapes above (or both), and whether this is worth doing now or deferring —
-      it has never actually been exercised (no VM has died and been relaunched in production), so this is hardening
-      ahead of an incident, not a fix for one that happened.
-- [ ] [SCRIPT] P2. Once ruled: implement the chosen fix (script wiring and/or runbook), and prove it — the gate should
-      be a real or simulated relaunch where a glue-routed workflow (e.g. `reconcile-release-tags`, the documented
-      canary) picks up a runner on the NEW box without manual intervention beyond what the runbook states.
+- [x] ✅ [OPERATOR] P2. ~~Decide which of the two shapes above (or both), and whether this is worth doing now or
+      deferring~~ — **RULED 2026-07-28** (operator gated-decision closeout pass). This decision is the standing theme's
+      own named example: "Things should recover FULLY if they die or restart (e.g. CI runners on the planning VM) -- if
+      a decision is about auto-recovery robustness, prefer building the full automatic recovery, not just a manual
+      runbook note." **Ruling: DO BOTH, full automation is the real bar, not a fallback.** (1) Immediate, cheap safety
+      net: document the manual reinstall step now in `codex/15-runbooks/`, alongside
+      `agent-orchestrator-failover-re-enable-checklist.md`, with `owner`/`cadence`/`verifier` set, so a human mid-
+      incident has a stated step even before automation ships. (2) The full-completion fix: wire an automatic
+      `setup-glue-runners.sh install` step into `launch-central-brain-aws.sh`'s bootstrap (after the AO backend comes
+      up), so a relaunch is complete DR with no manual follow-up required at all. Do this even though the incident has
+      never been exercised — the theme explicitly prioritizes full-recovery robustness over "hasn't happened yet"
+      deferral for exactly this class of gap. Retagged `[OPERATOR]` → the two execution todos below.
+- [ ] [DOCS] P2. **Ship the interim safety net**: write the manual glue-runner-reinstall step into a
+      `codex/15-runbooks/` doc (new or folded into `agent-orchestrator-failover-re-enable-checklist.md`) with
+      `owner`/`cadence`/`verifier` declared (missing = review-blocking per CLAUDE.md runbook convention). **Done when**:
+      the runbook doc exists, is discoverable from the failover checklist, and states the exact
+      `setup-glue-runners.sh install` command + expected post-install verification.
+- [ ] [SCRIPT] P2. **Ship the full-completion fix**: wire `setup-glue-runners.sh install` into
+      `launch-central-brain-aws.sh`'s bootstrap sequence (after `bootstrap_vm.sh --role planning` brings AO up), so a
+      from-scratch relaunch re-provisions both the AO backend AND the glue/glue-writer runner pool with no manual step
+      required. No shortcuts — cover both `glue` (JIT-ephemeral) and `glue-writer` (long-lived). **Gate**: a real or
+      simulated relaunch where a glue-routed workflow (e.g. `reconcile-release-tags`, the documented canary) picks up a
+      runner on the NEW box automatically, with no manual intervention beyond what the runbook above states as the
+      fallback path.
 
 ## Progress Log
 
+- **2026-07-28**: **RULED** (operator gated-decision closeout pass, general theme applied — full reasoning in the
+  updated todos above). Do both: ship the manual runbook step now, wire the automatic reinstall into
+  `launch-central-brain-aws.sh` as the real fix. Retagged `[OPERATOR]` → `[DOCS]` + `[SCRIPT]`, both now normal
+  fully-scoped AO-dispatchable todos. Mirrored to `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  "Deferred — operator decision needed" list. Plan-only change, no code shipped.
 - **2026-07-24**: Filed while ruling on the epic-VM code-artifact deletion — the operator's actual ask ("we just need
   failover protection... also register that vm for the github workflows") surfaced this gap, which is real and
   previously undocumented. Not resolved here; awaiting operator decision on shape.

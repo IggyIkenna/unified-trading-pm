@@ -245,18 +245,18 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
-              NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
-              `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
-              not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
-              `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
-              downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
-              logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
-              resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
-              defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
-              the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
-              primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
-              unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
-              decision this session didn't make.
+                      NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+                      `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+                      not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+                      `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+                      downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+                      logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+                      resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+                      defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+                      the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+                      primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+                      unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+                      decision this session didn't make.
 
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
@@ -312,13 +312,20 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   destroyed work — see `slot_double_reset_dataloss_race_2026_07_25.md`) while the operator-merge-gate bypass above is
   unresolved is exactly the compounding this skill's non-batchable taxonomy warns about. Re-check after the gate-aware
   sweep decision.
-- **Regen positional task-ids** —
-  `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` BACKEND P3 duplicates
-  `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, which
-  `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) records as a
-  parked decision "deferred until a new incident forces it". A new incident arguably HAS occurred (the 2026-07-25
-  `sync_backlog_to_db: REFUSING to reset task id` collisions), but whether that meets the deferral's own trigger is the
-  operator's call. **BLOCKED-OPERATOR-DECISION.**
+- **Regen positional task-ids** — **RULED 2026-07-28** (operator gated-decision closeout pass, general theme applied:
+  "opt for full completions, no shortcuts, full functionality... if it's about canonicalisation rather than a hack, do
+  it properly"). `orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md` BACKEND P3
+  duplicates `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`, which
+  `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) recorded as a
+  parked decision "deferred until a new incident forces it". **Ruling: the 2026-07-25 incident
+  (`sync_backlog_to_db: REFUSING to reset task id` collisions) DOES meet the deferral's own trigger** — reinforced by a
+  second, independent guard-gap found 2026-07-27 (a `dispatched` row has NO equivalent protection at all, confirmed in
+  the issue doc's own 4th todo). Two guard classes now proven insufficient is stronger than the single-incident bar the
+  deferral was waiting on. **Retagged BLOCKED-OPERATOR-DECISION → normal execution work** — do the content-hash rewrite
+  now, full scope (not a partial patch): see
+  `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`'s updated `[BACKEND] P3` todo for
+  the fully-scoped mandate. Do NOT draft a competing batch todo here — dispatch that issue doc's todo directly once
+  picked up.
 - **`slack-read-channel.py` env-var token fallback** —
   `/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` SCRIPT P3. Its stated blocker has
   CLEARED (measured 2026-07-26: `check_no_empty_string_fallback.py --scope unified-trading-pm` reports
@@ -345,8 +352,15 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   second is explicitly blocked on it.
 - `/plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md` — a three-way fork whose option
   (c) is "explicitly rule this is not worth building".
-- `/plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md` — `[OPERATOR]` shape
-  decision gating the `[SCRIPT]` implementation.
+- ~~`/plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md` — `[OPERATOR]` shape
+  decision gating the `[SCRIPT]` implementation.~~ **RULED 2026-07-28** (operator gated-decision closeout pass — this
+  decision is the standing theme's own named example: "Things should recover FULLY if they die or restart (e.g. CI
+  runners on the planning VM) -- if a decision is about auto-recovery robustness, prefer building the full automatic
+  recovery, not just a manual runbook note"). Ruling: DO BOTH — ship the manual runbook step now as an immediate safety
+  net, and wire the automatic `setup-glue-runners.sh install` step into `launch-central-brain-aws.sh` as the real,
+  full-completion fix (not a fallback). See the issue doc's updated todos for the fully-scoped mandate. No longer a
+  design fork — retagged out of `[OPERATOR]`; not batched into THIS batch (file-scope), pick up as a normal execution
+  todo from the issue doc directly.
 - `/plans/active/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md` — a section explicitly titled
   "Candidate fixes (not yet decided)", two legs of which are codex/CLAUDE.md edits (never autonomous).
 - `/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md` — "Explicitly NOT actioned"
@@ -412,3 +426,11 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #22 (option B: flip batch, hold finalize —
   `gate_on_depends: true` on the finalize sibling already reconciles once this batch's todos land, nothing to reconcile
   yet).
+- **2026-07-28** — Operator gated-decision closeout pass: both design-choice items this plan flagged as
+  `BLOCKED-OPERATOR-DECISION`/an operator-decision fork were RULED. (1) Regen positional task-ids — the 2026-07-25
+  incident meets the deferral's own "new incident" trigger; do the content-hash rewrite now, full scope (see the updated
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md`). (2) CI-runner re-registration on planning-VM relaunch —
+  do both: ship the manual runbook step now, wire the automatic reinstall into `launch-central-brain-aws.sh` as the real
+  fix (see the updated `central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md`). Neither is executed from
+  this plan directly (out of this batch's file scope) — both are now normal execution work at their source docs, ready
+  for the next AO dispatch. Plan-only change, no code shipped.

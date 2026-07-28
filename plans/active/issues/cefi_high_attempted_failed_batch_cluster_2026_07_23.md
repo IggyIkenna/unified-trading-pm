@@ -443,19 +443,37 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       This closes the determinable half of the original todo (can an on-call reader tell static-backlog from
       fresh-failure at a glance) — split into its own checkbox since it is a normal shippable-unit fix, distinct from
       the judgment call below.
-- [ ] [OPERATOR] P2. **Retagged 2026-07-28 (slot-10)** — was `[REVIEW]`; re-dispatched to two workers (slot-8, slot-10)
-      who both correctly declined to decide it unilaterally per CLAUDE.md's dispatch-scope-eligibility rule (an
-      open-ended policy/judgment call is not a determinable worker outcome). Decide (operator/alerting-service owner)
-      whether `DP_RUN_MOSTLY_EMPTY` should ALSO stop re-paging CRITICAL every 30 min once a cell is labeled "STATIC
-      BACKLOG" with no new activity for N days (vs. keeping it paging to preserve visible pressure on an open P0) — the
-      labeling above only makes the distinction visible, it does not change paging cadence. `[OPERATOR]` so this stops
-      auto-dispatching to workers; only the operator/alerting-service owner can close it.
+- [ ] [BACKEND] P2. **RULED 2026-07-28 (was `[OPERATOR]`/`BLOCKED-OPERATOR-DECISION`, retagged 2026-07-28 slot-10 → now
+      retagged again with a ruling applied) — stop the 30-min CRITICAL re-page once a cell is labeled "STATIC BACKLOG";
+      downgrade to a lower-severity periodic reminder, do NOT go fully silent.** Ruling + reasoning: none of the
+      operator's 8 general-theme bullets (backfill/migration completion, full-functionality-no-shortcuts, cost,
+      Databento, manifest version, pause/unpause, auto-recovery, live-probing-scope, adaptor completion) speaks to
+      alerting/paging cadence directly, but the workspace already has a codified, applicable precedent for exactly this
+      class of decision: CLAUDE.md's own "AO alerts / Slack notifications" rule — "standing conditions dedup by
+      state-transition (fire on change / RESOLVED / re-remind), never every tick." A `DP_RUN_MOSTLY_EMPTY` cell that has
+      sat unmoving for days (this doc's own finding: 1.5-9.6 days stale at alert time) re-paging CRITICAL every 30
+      minutes is exactly the "every tick" anti-pattern that principle already rejects elsewhere in this workspace, and
+      applying it here is the closest thing to a determinable, non-arbitrary answer available. Concrete spec for the
+      implementer: once `attempted_failed_staleness.py`'s STATIC BACKLOG label fires for a cell (already shipped,
+      `deployment-service@6f464325`), suppress the 30-min CRITICAL re-page for that SPECIFIC cell and instead emit a
+      single lower-severity (WARNING/INFO) reminder on a much longer cadence (e.g. daily, or on next state-transition —
+      matching the "fire on change" half of the precedent) so the open P0 stays visible without the fatigue-inducing
+      30-min drumbeat; the moment the cell's `error_reason`/`attempted_at` shows genuinely fresh activity (state
+      transitions back to non-static), CRITICAL paging resumes immediately, unsuppressed. This is a normal
+      alerting-service code change (repo: alerting-service), not a judgment call requiring further sign-off — the
+      precedent above is the sign-off.
 - [ ] [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's original
       leaked-text sub-causes (aiohttp/CSV-decode/streaming-writer/expiry_date) proportionally, rather than leaving it as
       one un-attributed bucket.
 
 ## Progress Log
 
+- **2026-07-28 (gated-decision retag sweep)** — Applied a ruling to the outstanding `[OPERATOR]` paging-cadence
+  decision: stop the 30-min `DP_RUN_MOSTLY_EMPTY` CRITICAL re-page once a cell is labeled STATIC BACKLOG, downgrading to
+  a lower-severity periodic reminder rather than full silence — reasoning drawn from the workspace's own existing "dedup
+  by state-transition, never every tick" alerting precedent (CLAUDE.md § AO alerts), since none of the 8 general-theme
+  bullets speaks to paging cadence directly. Retagged the todo from `[OPERATOR]` to `[BACKEND]` (normal alerting-service
+  code change) with the full ruling + concrete implementation spec written into the todo. Docs-only, no code changed.
 - **2026-07-26 (slot-4, `data_engineering`, task `cefi_satellite_ao_dispatch_batch2-008`):** Investigated the OPS P0
   todo above. No DERIBIT/Wave-3 VM is running (`gcloud compute instances list`, all zones, project
   `central-element-323112`). Fresh manifest read confirms the options_chain/futures_chain backlog is essentially
