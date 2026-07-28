@@ -293,9 +293,87 @@ expanded directive.
   pipeline_mode sources × multi-venue) — whether this is ever hit in practice is unverified (a full recursive
   day-listing did not complete in-session; abandoned per single-walk/heavy-I/O discipline).
 
+## Audit round 3 (TRADFI-scoped) — COMPLETE, 2 agents, both returned 2026-07-28
+
+Better news than round 2: **no CRITICAL live-firing bug found**. TradFi's core write/read paths (`raw_tick_data`,
+`processed_candles`, the live-mode WS write path, execution-service's actually-live `data/loader.py::UCSDataLoader`) are
+all independently re-verified correct. Findings below are dormant landmines, dead code, and one genuine
+architecture-hygiene gap.
+
+### Confirmed bugs (code-level, none proven live-firing)
+
+1. **`unified-trading-library/unified_trading_library/pipeline_mode_resolver.py`** has no venue-override entry for
+   `FRED`/`ECB`/`OFR`/`IBKR`/`OpenBB`, and UAC's `SOURCE_PRIORITY` has no `"yield_curve"`/`"ohlcv_1d"` entries either —
+   so `derive_pipeline_mode_for_row()` for these venues silently falls through to the generic
+   `_ASSET_GROUP_FALLBACKS["tradfi"] = BATCH_DATABENTO`, mis-stamping `pipeline_mode=batch_databento` on data Databento
+   never touched. Live-verified: **zero FRED/ECB/OFR/IBKR/OpenBB objects exist anywhere** on the sampled date — either
+   never run in prod, or ran on an unsampled date. Code-confirmed landmine, not a proven incident.
+2. **`execution-service/execution_service/data/loader.py:127-128`** (`UCSDataLoader._resolve_trades_category`) maps
+   TradFi `instrument_type=="INDEX"` → `"indices"` (plural); the real canonical token is `index` (singular,
+   live-verified). `canonical_paths.py`'s legacy-category map has neither, so the canonical UAC probe is skipped
+   entirely — legacy-path-only, same broken-shape-since-2026-06-15 class as round 2's execution-service CRITICAL
+   finding. **Not proven live-firing**: INDEX has no `trades` data_type at all (only OHLCV candles), so `load_trades()`
+   likely never gets called for it. A SECOND, differently-wrong INDEX mapping exists in the same repo
+   (`loader_base.py::_infer_tradfi_category()` maps INDEX → `"futures_chain"`, no INDEX branch) — two independently
+   wrong fallbacks for the same case, unclear which (if either) ever fires.
+3. **`unified-trading-library/unified_trading_library/domain_client/clients/features.py`**'s
+   `FeaturesCalendarDomainClient` calls the env-less `build_bucket("calendar_features", ...)` — `registry.py`'s
+   `calendar_features` row is missing the `-prd-` tier every sibling FOLD-A row got (confirmed 404). Dead code (same
+   unused `domain_client` layer as round 1's `MarketTickDomainClient`), so not live-firing.
+
+### `corporate_actions` PATH_REGISTRY row — CONFIRMED ORPHANED (both agents independently corroborated)
+
+4. Zero code references anywhere outside the registry file itself, zero live GCS objects
+   (`instruments-store-tradfi-prd-.../corporate_actions/` doesn't exist) — same class as round 1/2's confirmed-dead
+   rows. WORSE than just dead: the REAL, separately-wired corporate-actions producer
+   (`features-service/.../calendar/cli/handlers/corporate_actions_handler.py`) doesn't use this registry row at all — it
+   hand-rolls its own `calendar/corporate_actions/`+`calendar/earnings_results/` shape (contradicting the registry's
+   single-shard `extra_files` design) via a correctly-resolved bucket. That real handler's own output has never actually
+   landed in prod either (`features-calendar-prd-.../` contains only `_index/`) — flagging as a fact (launch status
+   unclear), not a verdict. `instruments-service/.../ibkr.py::get_corporate_actions()` (a third, unrelated
+   corporate-actions fetch method) is also confirmed dead, zero callers.
+
+### Confirmed dead/duplicate code
+
+5. `features-service/features_service/volatility/io/loader.py::VolatilityLoader.build_path()` — hand-rolled legacy
+   shape, zero callers (the live volatility reader is the different
+   `volatility/core/data_loader.py::VolatilityDataLoader`, confirmed-safe, canonical-first).
+6. `execution-service/execution_service/data/loaders/__init__.py`'s `UCSDataLoader` (composing the broken round-2
+   `DeFiDataLoader`) is a THIRD same-named class, never imported by production — the live one is the different
+   `execution_service.data.loader.UCSDataLoader`. Extends round 2's naming-collision finding.
+7. `FeaturesCalendarDomainClient`/`FeaturesOnchainDomainClient`/`FeaturesDeltaOneDomainClient`/
+   `FeaturesVolatilityDomainClient` (all in `domain_client/clients/features.py`) — confirmed unused anywhere, same dead
+   layer as round 1.
+
+### Confirmed-safe / positive baseline (the majority of TradFi's surface)
+
+- `raw_tick_data`/`processed_candles` registry templates + the live-mode WS writer independently re-verified correct for
+  TradFi.
+- `execution-service/execution_service/data/loader.py::UCSDataLoader.load_trades()` — the PRIMARY, widely-imported live
+  trades reader (validator, backtest engine, book/trades builders) — correctly delegates through
+  `canonical_paths.build_candidate_raw_tick_paths`, asset-group-parameterized so TradFi already got the same fix
+  CEFI/DEFI needed.
+- MTDS `symbol_rules.py`/`tradfi_shared.py` partition-path builders, `reader.py`,
+  `check_tradfi_manifest_disk_consistency.py` — all correct, GCS-verified (including the v6 futures-chain tail shape).
+- `features-service/.../calendar/adapters/mtds_fred_reader.py` — correctly uses the singular `index` token (contrast
+  with execution-service's finding 2).
+- `volatility_features`/`delta_one_features` registry rows have the `-prd-` tier correctly hardcoded (unlike
+  `calendar_features`).
+- strategy-service has **no TradFi-specific canonical GCS reader at all yet** — confirmed-safe by absence, nothing to
+  fix.
+- MDPS's `_KNOWN_BATCH_SOURCES_BY_AG[TRADFI]` correctly excludes Barchart (fully retired from the live pipeline_mode
+  vocabulary, only stale in comments/one-off migration scripts).
+
+### Architecture-hygiene gap (not a bug — feeds the existing P1 centralization-design todo, no new todo needed)
+
+TradFi has **3 independent, currently-correct, mutually-agreeing partition-path implementations**
+(`unified-api-contracts::build_tradfi_partition_path`, MTDS `symbol_rules.py`, MTDS `tradfi_shared.py`) — the worst
+duplication ratio found across all 3 rounds so far, byte-identity only enforced by one dedicated test. A textbook case
+for the centralization design this whole audit is ultimately building toward.
+
 ## What's NOT done yet (the operator's expanded scope)
 
-Round 1 (CEFI) and round 2 (DEFI) are complete. **TRADFI, SPORTS, PREDICTION have not been audited for this bug class
+Rounds 1 (CEFI), 2 (DEFI), and 3 (TRADFI) are complete. **SPORTS, PREDICTION have not been audited for this bug class
 yet** — each asset group has its own bucket family, its own pipeline_mode vocabulary, and potentially its own
 hand-rolled path-construction sites. The operator explicitly wants:
 
@@ -384,14 +462,43 @@ hand-rolled path-construction sites. The operator explicitly wants:
       zero real production callers, so this is a landmine for whenever it IS wired up). Add regression tests for both
       (fail pre-fix, pass post-fix). (repo: features-service)
 
-- [ ] [SCRIPT] P2. **Delete the 3 confirmed-dead PATH_REGISTRY rows + their dead consumer classes** —
-      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`
-      (`unified_trading_library/config_interface/paths/registry.py:303-323`) plus their only consumers
+- [ ] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** —
+      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
+      (`unified_trading_library/config_interface/paths/registry.py:303-323`, `:65-73`) plus their only consumers
       (`unified_trading_library/domain_client/clients/liquidity.py`'s `L2BookCheckpointClient`/
-      `LiquidationClustersClient`/`LiquidityFeaturesClient`, never instantiated outside their own file). Also fold in
-      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s dead
-      `build_path()`/`DataSinkAdapter`/`DataSourceAdapter` classes (test-only, stale shape). (repo:
-      unified-trading-library, features-service)
+      `LiquidationClustersClient`/`LiquidityFeaturesClient`; the whole `domain_client/clients/features.py` family —
+      `FeaturesCalendarDomainClient`/`FeaturesOnchainDomainClient`/`FeaturesDeltaOneDomainClient`/
+      `FeaturesVolatilityDomainClient` — never instantiated outside their own file).
+      `instruments-service/.../ibkr.py::get_corporate_actions()` is a separate, also-dead corporate-actions fetch method
+      (zero callers). Also fold in
+      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s and
+      `volatility/io/loader.py::VolatilityLoader`'s dead `build_path()` methods (test-only, stale shape), and
+      `execution-service/execution_service/data/loaders/__init__.py`'s never-imported `UCSDataLoader` (a third
+      same-named class — see the P0 fix's naming-collision note). (repo: unified-trading-library, features-service,
+      instruments-service, execution-service)
+
+- [ ] [SCRIPT] P2. **Fix the FRED/ECB/OFR `pipeline_mode` provenance-fallback mis-stamp** —
+      `unified_trading_library/pipeline_mode_resolver.py` has no venue-override for `FRED`/`ECB`/`OFR`/`IBKR`/`OpenBB`,
+      and UAC `SOURCE_PRIORITY` has no `yield_curve`/`ohlcv_1d` entries, so resolution silently falls through to
+      `_ASSET_GROUP_FALLBACKS["tradfi"]=BATCH_DATABENTO` — mis-stamping real FRED/ECB/OFR data as Databento-sourced.
+      Code-confirmed, not proven live-firing (zero real objects found for these venues on the sampled date — may never
+      have run in prod). Add the missing venue-overrides/source-priority entries. (repo: unified-trading-library,
+      unified-api-contracts)
+
+- [ ] [SCRIPT] P2. **Fix execution-service's TradFi INDEX category mapping (2 independently-wrong mappings)** —
+      `execution_service/data/loader.py:127-128`'s `_resolve_trades_category` maps `INDEX`→`"indices"` (plural; real
+      canonical token is singular `index`), and the separate `loader_base.py::_infer_tradfi_category()` maps
+      `INDEX`→`"futures_chain"` (no INDEX branch at all) — two different wrong fallbacks for the same case in the same
+      repo. Not proven live-firing (INDEX has no `trades` data_type, only OHLCV candles). Fix both to the
+      confirmed-correct singular `index` token; trace which (if either) path is actually reachable before declaring
+      done. (repo: execution-service)
+
+- [ ] [SCRIPT] P2. **Fix `calendar_features` PATH_REGISTRY row's missing `-prd-` env tier** —
+      `unified_trading_library/config_interface/paths/registry.py`'s `calendar_features` bucket_template
+      (`features-calendar-{project_id}`) is missing the env tier every sibling FOLD-A row got in the 2026-07-18 fold
+      migration (confirmed 404 vs. the real `features-calendar-prd-{project_id}` bucket). Currently dead (the only
+      consumer, `FeaturesCalendarDomainClient`, is unused) — low urgency but a 1-line fix while in the file for the
+      dead-code-cleanup todo above. (repo: unified-trading-library)
 
 - [ ] [SCRIPT] P2. **Investigate the `onchain_features`/`lst_seasonal_rewards` `pipeline_mode`-collision structural
       gap** — neither PATH_REGISTRY template has a `pipeline_mode=` segment, unlike every other DeFi-relevant template.
@@ -454,9 +561,11 @@ hand-rolled path-construction sites. The operator explicitly wants:
       bugs incl. 1 CRITICAL-live, 4 confirmed dead/duplicate sites, 4 structural gaps flagged). New follow-up todos
       logged for every finding.
 
-- [ ] [SCRIPT] P1. **Extend the audit to TRADFI** — same methodology, scoped to the TradFi bucket family
-      (`/codex/02-data/tradfi-databento-sourcing-ssot.md` for the sourcing/pipeline_mode conventions). (repo: all of the
-      above)
+- [x] [SCRIPT] P1. **Round 3 (TRADFI-scoped) 2-agent audit** — DONE 2026-07-28, findings documented above. No CRITICAL
+      live-firing bug (unlike round 2) — 3 dormant/unverified code-level bugs, 1 confirmed-orphaned registry row
+      (corroborated by both agents), several dead-code sites, and TradFi's worst-in-audit
+      3-way-duplicated-but-currently-correct partition-path implementation (architecture-hygiene evidence for the
+      centralization design todo). New follow-up todos logged for every finding.
 
 - [ ] [SCRIPT] P1. **Extend the audit to SPORTS** — same methodology. Sports is where today's ORIGINAL P2/P3 work
       happened (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`) — cross-reference against that doc's findings so
