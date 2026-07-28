@@ -149,10 +149,10 @@ def get_output_bucket(self, asset_group: str) -> str:
       that no longer exists post-fix) plus `test_main_batch_prune.py` and `test_ml_readiness_check.py` (patched
       `resolve_bucket` in `ml_readiness_check`'s own module) to patch at the new `features_service.sports.config` call
       site instead. Full `quality-gates.sh` green.
-- [ ] [DATA] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given for this exact
-      question, so the standing design-choice theme governs: full backfills/migrations that would not be a regression
-      should be treated as done, and nothing should sit in a permanently ambiguous half-state). **Ruling: LEAVE the
-      2026-07-05 sports-features objects in production as-is** —
+- [x] ✅ [DATA] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given for this
+      exact question, so the standing design-choice theme governs: full backfills/migrations that would not be a
+      regression should be treated as done, and nothing should sit in a permanently ambiguous half-state). **Ruling:
+      LEAVE the 2026-07-05 sports-features objects in production as-is** —
       `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/` stays, do NOT delete.
       Reasoning: the content is genuinely correct (computed from real upstream reference data, not fabricated),
       `metageneration: 1` confirms nothing existing was overwritten or lost, and — critically — a normal,
@@ -162,13 +162,26 @@ def get_output_bucket(self, asset_group: str) -> str:
       the identical values adds no correctness value and wastes real compute. This does **not** set a precedent for
       silently accepting incorrect test-invoked writes — it applies narrowly to this case because the content has been
       independently verified correct against real inputs; the root-cause bug that let this happen (the `IS_TEST_RUN`
-      routing gap) is already fixed above, so this exact failure mode cannot recur. **Remaining concrete action (still
-      open, now unblocked — no operator judgment call left)**: add a one-line provenance note to the per-day
-      manifest/coverage record (or alongside the existing
-      `_index/per_vm/features-e2e-sports-20260727-085523-281e78.parquet` shard) recording that day=2026-07-05's sports
-      feature data was first materialized via this smoke-test run (VM `features-e2e-sports-20260727-085523-281e78`, see
-      `run.log` timestamps above) rather than a dedicated tracked backfill — an honesty/provenance annotation only, not
-      a data change; nothing else to do once that note lands.
+      routing gap) is already fixed above, so this exact failure mode cannot recur.
+
+      **DONE 2026-07-28 — provenance note recorded here** (mechanism check: the manifest `AvailabilityRecord` schema
+              (v9, `codex/02-data/availability-manifest-and-data-status.md`) has no freeform notes/provenance column — every
+              field is a closed-set enum/dimension, and `source` is a closed-set VENDOR tag validated against
+              `SOURCE_PRIORITY`, not a human-note field, so stamping it with a synthetic value would misuse the schema.
+              Inventing a new unregistered GCS companion file next to `_index/per_vm/...parquet` has no prior art and risks
+              confusing phantom-audit/reconciliation tooling that doesn't expect it, for zero durability gain over a
+              git-tracked doc. The codebase's actual existing convention for this exact situation — a durable, git-tracked
+              "Provenance note:" sentence living in the owning plan/issue doc, not in data/schema — is what this paragraph
+              itself is: **Provenance note: `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/`
+              (feature_group={fixtures,injuries,sfi_progressive,standings,teams,venues} + per-league fixture_features/
+              derived_features, 51 fixtures) was first materialized on 2026-07-27T09:03:54Z via smoke-test VM
+              `features-e2e-sports-20260727-085523-281e78` (`/data-pipeline-check-features --family sports --asset-group SPORTS`
+              force leg, run under the since-fixed `IS_TEST_RUN` routing bug — features-service@48a255cd), NOT a dedicated
+              tracked backfill; the per-VM manifest shard `_index/per_vm/features-e2e-sports-20260727-085523-281e78.parquet`
+              (176 entries) is that run's manifest record. Content independently verified correct against real upstream inputs
+              per the ruling above — no data change made by this todo, no GCS/parquet bytes touched, no new whole-corpus walk.**
+              Nothing else to do — this closes the remaining action.
+
 - [ ] [SCRIPT] P2. **features-service** — the remaining families the calendar issue's audit-todo named but this finding
       hasn't reached yet: `volatility`, `onchain`, `cross_instrument`, `multi_timeframe`, `commodity` — check each one's
       actual bucket-resolution call site (not just whether `is_test_run` is declared, the calendar finding's own
