@@ -302,31 +302,31 @@ drift_direction: advance-code
       unit tests, and `factory_address_by_chain` is populated for the 9 listed protocols on `_ProtocolCapability` — this
       is schema-only (no probe implementations, no `--use-defi-oracle` wiring), matching exactly the design doc's own P0
       rollout step.
-- [ ] [AUDIT] P1. **Reconcile GATE 0's 10 Phase-0 cross-cutting checklist items against what cefi/tradfi child plans
-      already shipped, then flip only what's genuinely done.** Phase-1 orphan evidence confirmed all 10 items in
-      `instruments_foundation_phase0_cross_cutting_2026_07_24.md` §"Phase 0 — cross-cutting foundations" still read
-      `- [ ]` and GATE 0 is recorded NOT signed off — but a cross-check against
-      `instruments_cefi_g1_g5_gate_execution_2026_07_24.md`'s Progress Log shows several of the SAME cross-cutting
-      mechanisms already shipped per-AG (UAC layered-coverage SSOT `compute_layered_coverage`/`LayeredCoverage` @UAC
-      755c40515; `instruments-service/scripts/measure_honest_coverage.py` exists in-repo; cefi canonical-form audit
-      done; cefi deployment-observability verified BUILT) — the cross-cutting doc's own checkboxes are simply stale, not
-      necessarily the underlying work. For EACH of the 10 items (observability wiring, Honest-Coverage v2 layered SSOT,
-      cumulative-drawdown metric, expected-universe oracle design, consolidation reconcile, drilldown-correctness guard,
-      verification discipline, silent-cap audit, depth-aware re-fetch, cost/entitlement reason class) and the 2
-      folded-in checkboxes (IS daily definition producer rebuild; prediction/sports granularity-aware catalogue
-      producer): grep+read the cefi (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`), tradfi
-      (`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`), and defi (`defi_consolidated_closeout_2026_07_18.md` /
-      DONE-exemplar canonical-form migration) plans plus the live code (UAC `honest_coverage.py`,
-      `instruments-service/scripts/measure_honest_coverage.py`, `deployment_api`/`deployment_service` observability
-      registries) to determine the item's TRUE current state. Flip a checkbox to `[x]` ONLY with a
-      commit-sha/prod-verification citation; leave genuinely-unbuilt items (e.g. the reused-cross-AG generalization to
-      sports/prediction, the expected-universe oracle Tier-B truth) open. Do NOT re-implement anything already shipped
-      elsewhere — this is reconciliation, not a rebuild. Explicitly do NOT touch the G1.1-G1.4 cefi
-      catalogue-correctness items (those are owned + mostly DONE in the cefi child plan already). Source:
-      `instruments_foundation_phase0_cross_cutting_2026_07_24.md`. Done when: every one of the 10 GATE-0 checkboxes +
-      the 2 folded-in checkboxes carries an accurate state with an evidence citation (shipped-elsewhere sha, or
-      confirmed still-open), and the GATE-0 banner line is updated to reflect the reconciled true state (still correctly
-      "not signed off" if any item remains genuinely open).
+- [x] ✅ [AUDIT] P1. **DONE 2026-07-28 — `unified-trading-pm@<see plan-flip commit>`.** Grep+read the cefi/tradfi child
+      plans' Progress Logs plus live code (UAC `_honest_coverage_logic.py`/`_honest_coverage_empty_reasons.py`/
+      `coverage_exclusions.py`, `instruments-service/scripts/measure_honest_coverage.py` +
+      `*_cumulative_drawdown_guard_*.py`, deployment-api/deployment-ui) for each of the 10 GATE-0 items + the 2
+      folded-in checkboxes, and appended a dated evidence citation to every one directly in
+      `instruments_foundation_phase0_cross_cutting_2026_07_24.md`. **Verdict: GATE 0 correctly stays NOT SIGNED OFF —
+      none of the 10 items nor the 2 folded-in checkboxes flip to `[x]`; every one is genuinely still open.** Real
+      partial progress exists and is now cited per-item instead of a flat unstarted-looking `- [ ]`: layered-coverage v2
+      SSOT (`UAC@755c40515` `LayeredCoverage`/`compute_layered_coverage`) + `measure_honest_coverage.py`
+      (`schema_version: 2` confirmed live) are shipped, missing only UI/deployment-api surfacing (0 grep hits for
+      `layer1_completeness_pct`/`denominator_complete` in deployment-api/deployment-ui); cumulative-drawdown guards
+      exist for cefi+defi only (`cefi_cumulative_drawdown_guard_2026_06_27.py` +
+      `defi_cumulative_drawdown_guard_2026_06_25.py`, 0 hits for tradfi/sports/prediction); the cost/entitlement
+      reason-class _mechanism_ (`EmptyConfirmedReason.EXPECTED_UPSTREAM_OUT_OF_BOUNDS` + evidence-gated
+      `COVERAGE_EXCLUSIONS` registry) is shipped but the registry is empty (`= ()`) — no case, including the named
+      TradFi ~241k Databento-window cost-boundary, is actually registered yet; observability infra
+      (`classify_deployment_target`/`cloud_run_job_registry`) exists and is cited as cefi-G2 evidence but not
+      fleet-wide-verified per this item's own DoD; the IS daily producer is live+verified for cefi+defi only (tradfi's
+      own child-plan Progress Log states plainly "tradfi/sports/prediction have NO prod daily producer"). Expected-
+      universe oracle design, consolidation reconcile, drilldown-correctness guard (ε=0 reconciliation guard), KEY-
+      OVERLAP verification discipline, silent-cap per-source audit (beyond the one already-cited `mtds@08b45468` Graph
+      cursor fix), depth-aware re-fetch (`expected_depth`, 0 grep hits), and the prediction/sports granularity-aware
+      catalogue producer are unbuilt with no evidence found anywhere in the corpus or live code. Explicitly did NOT
+      touch the G1.1-G1.4 cefi catalogue-correctness items (owned by the cefi child plan) and did NOT re-implement any
+      of the 12 items — reconciliation only, per this todo's own scope.
 - [ ] [DATA] P2. **Close 5 small bounded residuals from
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`** (Source:
       plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md). (1) Recover the true POLYMARKET
@@ -366,24 +366,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                                                  (merged via PR #1593), NOT executed here.
+                                                                                              `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                                              `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                                              prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                                              this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                                              `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                                              (merged via PR #1593), NOT executed here.
 
-                                                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                                              **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                                              (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                                                  re-verifies sports.
+                                                                                              **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                                              items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                                              flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                                              re-verifies sports.
 
-                                                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                                              Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                                              `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                                              of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the

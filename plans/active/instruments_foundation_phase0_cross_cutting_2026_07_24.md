@@ -33,7 +33,7 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-28"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -78,7 +78,19 @@ children.
       `ServiceBootstrap` + `log_event` + 60s `PIPELINE_HEARTBEAT` + ≥1 progress/hr, error→`#data-pipeline-alerts`,
       terminal `exit_code` + log-mtime persisted, **appears in `/deployments` BATCH tab with click-through to logs**.
       DoD: a launched job is click-through-able in the cockpit; SSH not required. SSOT:
-      `/codex/05-infrastructure/deployment-observability.md`.
+      `/codex/05-infrastructure/deployment-observability.md`. **Reconciled 2026-07-28 — STILL OPEN (infra exists,
+      fleet-wide verification not evidenced).** Live-grepped `deployment-service`/`deployment-api`: the classification
+      infra IS built — `classify_deployment_target`, `cloud_run_job_registry.CLOUD_RUN_JOBS`, `VM_PREFIX_TO_BUCKET`,
+      `dp-exit-code-monitor`/`dp-heartbeat-watcher`, `/api/deployments/inventory` all exist and are referenced as live
+      evidence in cefi's own GATE G2 sign-off (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md` line ~305: "Cockpit
+      click-through — classify_deployment_target + cloud_run_job_registry.CLOUD_RUN_JOBS
+      (lifecycle-catalogue-regen-cefi/manifest-consolidator-cefi/expected-universe-v2-cefi BATCH registered); alert
+      coverage complete"). But that is cefi-scoped evidence only; this item's own DoD is fleet-wide ("every
+      instruments/MTDS backfill VM + roll-up job"), and the cefi child plan's own 2026-06-25 audit explicitly flagged
+      "Phase-0 observability item = VERIFY the cefi launchers actually emit ServiceBootstrap/log_event/heartbeat/
+      persist-exit_code + click-through in the cockpit (not assumed)" as still open at that time — no later evidence in
+      the cefi/tradfi/defi child plans closes that verification gap, and none of the 3 remaining AGs (tradfi/sports/
+      prediction) have any cited observability-verification pass at all. Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Layered coverage via the SSOT (Honest-Coverage v2 — two-layer, NOT a v1 single-layer script)** —
       **[v2 ALIGN 2026-06-30, A12/A13/C12]** this MUST be the Honest-Coverage **v2** model per
       `/codex/02-data/honest-coverage-model.md` (the SSOT, written `@unified-trading-pm@842ddb93e`), produced by
@@ -92,45 +104,98 @@ children.
       `honest_coverage_v2_instrument_denominator` Phase 1, blocked on registry-consolidation Ph 1-2). Surface BOTH
       layers per-AG/per-venue in manifest → `/data-status` → deployment-API → deployment-UI. **No ad-hoc coverage
       scripts** that diverge from the v2 SSOT. DoD: UI shows the two-layer v2 number (Layer-2 gated on Layer-1); a
-      synthetic gap drags the right layer down; output is `coverage.json` v2.
+      synthetic gap drags the right layer down; output is `coverage.json` v2. **Reconciled 2026-07-28 — STILL OPEN
+      (SSOT + producer script shipped; UI/API surfacing NOT wired).** Live-verified: `LayeredCoverage` +
+      `compute_layered_coverage()` exist in `unified-api-contracts/.../canonical/crosscutting/_honest_coverage_logic.py`
+      (shipped `UAC@755c40515`, cited as GATE-G5 evidence in the cefi child plan);
+      `instruments-service/scripts/measure_honest_coverage.py` exists in-repo and its emitted payload confirms
+      `"schema_version": 2`. So the v2 SSOT + the measurement-script half of this item ARE shipped. But grepping
+      `deployment-api` + `deployment-ui` for
+      `layer1_completeness_pct`/`instrument_gates_download`/`denominator_complete` returns **zero hits** — the "Surface
+      BOTH layers per-AG/per-venue in manifest → /data-status → deployment-API → deployment-UI" half of the DoD is NOT
+      built, so the UI still cannot show the two-layer v2 number. Leaving `[ ]` open (partial).
 - [ ] [SCRIPT] P0. **Cumulative-drawdown health metric (§1.2)** — per venue, the cumulative-instruments-ever-seen
       series; any negative day-over-day delta = a hard defect (flag + block). Active-count drops must net to a typed
       reason (cefi/tradfi delisting; DeFi delisting OR `NOT_ENOUGH_TVL`). DoD: drawdown count per venue surfaced; target
-      zero.
+      zero. **Reconciled 2026-07-28 — STILL OPEN (2 of 5 AGs have a per-AG script; not generalised, not write-time
+      wired).** `instruments-service/scripts/` carries `defi_cumulative_drawdown_guard_2026_06_25.py` and
+      `cefi_cumulative_drawdown_guard_2026_06_27.py` (the latter "generalising the defi one" per its own plan text); the
+      cefi one is PROD-RUN VERIFIED to surface the canonical BINANCE-FUTURES 678→47 thin-day drop (cefi child plan
+      G1.2). But no tradfi/sports/prediction equivalent exists (0 grep hits), the two existing scripts are separate
+      per-AG copies rather than one cross-cutting metric, and cefi's own G1.2 status is `[~]` PARTIAL — the thin-day
+      verdict is not yet wired into the capture-time write path (a partial venue day still risks writing as `captured`
+      rather than routing to `attempted_failed` at write time). Leaving `[ ]` open.
 - [ ] [DESIGN] P1. **Expected-universe ORACLE design (§2.1)** — the `depth_coverage` denominator: (a) per-instrument
       true genesis from **venue truth** (not circular first-seen); (b) **time-varying futures expiry/listing rules** per
       venue, versioned by effective-date, in UAC. Ship **Tier-A proxy** first (labelled), **Tier-B truth** is the
       completion bar. DoD: design doc + the UAC rule-registry shape; sourcing decision for venue-truth genesis.
+      **Reconciled 2026-07-28 — STILL OPEN, unbuilt.** No design doc found under `codex/02-data/` or in any child plan
+      naming an expected-universe/depth oracle design; the cefi child plan's own 2026-06-25 build-sequence explicitly
+      lists "IS expected-universe DAY seeding (venue-day) + depth-expected" as a still-to-build step, not a completed
+      one. Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Consolidation reconcile (§2.2)** — incremental for steady-state + **scoped `--force`/reconcile**
       after any backfill + periodic, reconciling **actual shards vs the materialised expected-universe** to _discover_
       unexpected-missing shards (→ 0% in day_coverage + re-fetch queue). Never a blind whole-corpus `--force` (clip the
       window; purge discipline vs the 32Gi OOM). DoD: a deleted/absent expected shard is surfaced as a gap, not silently
-      merged-around.
+      merged-around. **Reconciled 2026-07-28 — STILL OPEN, unbuilt.** No `--force`/reconcile-vs-expected-universe script
+      or mechanism found in `instruments-service/scripts/`; the cefi child plan's own build-sequence lists
+      "consolidation reconcile-vs-expected" as item (5) of an as-yet-undriven sequence, not shipped. Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Drilldown-correctness guard (§2.3)** — (1) UI renders the SSOT value, never recomputes; (2)
       **reconciliation guard**: independent raw-GCS recompute == manifest/SSOT/UI (ε=0), wired as a QG step + watchdog →
       `#data-pipeline-alerts` on drift; (3) manifest-freshness watchdog + per-cell click→GCS traceability. DoD: a seeded
-      manifest/raw divergence trips the guard; cockpit number is proven == ground-truth.
+      manifest/raw divergence trips the guard; cockpit number is proven == ground-truth. **Reconciled 2026-07-28 — STILL
+      OPEN, unbuilt.** No ε=0 reconciliation-guard QG step or watchdog found; the cefi child plan's own canonical- form
+      audit (2026-06-25) explicitly lists "the §2.3 ε=0 reconciliation guard wiring" among the still-remaining
+      canonical-form work, and a separate cefi finding (G1.3 follow-up) notes the guard "must treat split↔glued as
+      equivalent" for on-chain-perp venues **until** it is aligned — i.e. describes a future state, not a live guard.
+      Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Verification discipline — captured↔expected KEY-OVERLAP, not raw count (§6.1/§6.3)** — the G5/
       backfill success signal is `expected_unattempted` DROPS / the captured∩expected per-(instrument,day) overlap
       CLIMBS, proven by grepping actual captured key-tuples against the expected set — NEVER `captured++` (captures can
       land as net-new cells keyed differently than the EU seeds — the 2026-06-24 DeFi stall). "Done" = the **metric
       moved in prod**, cross-checked vs the run.log terminal `exit_code` — never "job exited 0 / tests green" (the
       exit-0-but-empty blind spot). DoD: an overlap-vs-expected check is the wired completion verdict, not VM-gone/pass.
+      **Reconciled 2026-07-28 — STILL OPEN, unbuilt as a formal wired check.** No script/gate implementing a
+      captured∩expected per-(instrument,day) key-overlap verdict was found. In practice, the cefi/tradfi child plans'
+      own gate sign-offs already lean on measured-artifact evidence in spirit (e.g. cefi G2's day-axis gap-count +
+      `empty_confirmed`-row-count citations, tradfi's `verify_instrument_manifest_coverage.py` re-runs) rather than
+      VM-exit-code-only claims, but that is ad-hoc per-gate discipline, not the KEY-OVERLAP mechanism this item
+      specifies. Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Silent-cap source audit + FetchEvidence enforcement (§6.2/§6.5)** — for EVERY source, find + page
       PAST the truncating cap (Graph `skip`≤5000 → timestamp-cursor [done mtds@08b45468]; top-N daily snapshot →
       explicit instrument filter; REST page limit; vendor free-tier window). A cap that truncates the universe is a
       G1/G2 capture-correctness defect; its missing rows are **never** recorded `NOT_ENOUGH_TVL`/`SOURCE_RETURNED_ZERO`
       — the keystone `FetchEvidence`/`UnprovenHonestAbsenceError` gate enforced at every empty-write. DoD: per-source
-      cap audited + paged-past; keystone gate green fleet-wide.
+      cap audited + paged-past; keystone gate green fleet-wide. **Reconciled 2026-07-28 — STILL OPEN (keystone gate
+      shipped; per-source cap audit NOT exhaustive).** `FetchEvidence`/`UnprovenHonestAbsenceError` DO exist live in
+      `unified-api-contracts/.../canonical/crosscutting/honest_coverage.py` as the general honest-absence write-path
+      contract — the "keystone gate" half of the DoD is real infra, in production use. But "for EVERY source, find +
+      page PAST the truncating cap" is a full per-source audit that is NOT evidenced as done: the only cited instance is
+      the one already named in this item's own text (Graph `skip`≤5000 → timestamp-cursor, `mtds@08b45468`, shipped
+      2026-06-24) — no evidence of a systematic sweep across every source's REST page limit / top-N snapshot / free-tier
+      window. Leaving `[ ]` open.
 - [ ] [SCRIPT] P0. **Depth-aware re-fetch trigger (§7.5) — NOT blanket `--force`, NOT just unexpected-missing** —
       re-fetch ONLY `{missing/EU, attempted_failed, captured-but-instrument_count < expected_depth}` (the
       shallow-capture a plain skip-if-exists misses); needs the §2.1 depth oracle for `expected_depth`; the §2.2
       reconcile-vs-expected pass _discovers_ the set. DoD: a synthetic shallow `captured` cell is re-queued, a good full
-      cell skipped, no blind whole-corpus `--force`.
+      cell skipped, no blind whole-corpus `--force`. **Reconciled 2026-07-28 — STILL OPEN, unbuilt.** Zero grep hits for
+      `expected_depth` across `instruments-service`, `market-tick-data-service`, or `unified-api-contracts` — this item
+      is correctly blocked on the still-unbuilt §2.1 depth oracle (item 4 above) and the still-unbuilt §2.2 reconcile
+      pass (item 5 above), matching its own stated dependency. Leaving `[ ]` open.
 - [ ] [DESIGN] P1. **Cost/entitlement-boundary reason class (§6.4)** — cells deliberately unfetched for cost (TradFi
       beyond-free Databento window, ~241k clipped) are a typed `KNOWN_SOURCE_GAP`/cost-boundary EXPECTED state in the
       §2.1 oracle — not `attempted_failed`, not silent absence — so coverage shows "available-but-intentionally-
-      unfetched". DoD: reason class exists + the denominator accounts for it.
+      unfetched". DoD: reason class exists + the denominator accounts for it. **Reconciled 2026-07-28 — STILL OPEN
+      (mechanism shipped; the named TradFi case not yet classified through it).** Live-verified UAC ships a
+      registry-derived, evidence-gated cost/upstream-boundary reason —
+      `EmptyConfirmedReason.EXPECTED_UPSTREAM_OUT_OF_BOUNDS`, sourced from
+      `canonical.coverage_exclusions.COVERAGE_EXCLUSIONS` (each entry requires a typed `ExclusionReason` +
+      `evidence_uri` + re-runnable `evidence_probe`, per an "Operator proposal 2026-07-17" — this is a materially
+      DIFFERENT, more rigorous mechanism than the `KNOWN_SOURCE_GAP` this item's own text names, and appears to be its
+      actual successor/implementation). However `COVERAGE_EXCLUSIONS: Final[...] = ()` is currently **empty** — no
+      cost-boundary interval (including the TradFi ~241k beyond-free-Databento-window case this item names) has actually
+      been registered, so "the denominator accounts for it" is not yet true for the concrete case. Leaving `[ ]` open
+      (mechanism exists, application pending).
 - [ ] [DATA] P0. **Canonical-form single-SoT GCS migration (IS + MTDS, every AG) — NO two sources of truth (operator
       2026-06-24).** Any GCS data in a non-canonical **schema** (`schema_version` < v9 / drifted fields), **path**
       (missing `pipeline_mode={mode}_{source}/`/`asset_group=` keys, legacy sibling trees, glued `PROTOCOL-CHAIN`), or
@@ -156,6 +221,17 @@ the freeze-gap backfill VMs launched under the narrower operator 2026-06-26 near
 larger G2-G4 backfills below reconciled as SIGNED OFF 2026-07-06 — i.e. downstream gates crossed while this prerequisite
 gate was never recorded satisfied. Flagging the sequencing gap for an operator ruling rather than asserting a GATE 0
 sign-off that isn't evidenced.)**
+
+**Reconciliation pass 2026-07-28** (`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` AUDIT todo): re-checked
+every one of the 10 items above plus the 2 folded-in checkboxes below against the cefi/tradfi child plans' Progress Logs
+and live code (grep-verified file/symbol existence, not assumed). **Verdict unchanged — GATE 0 correctly stays NOT
+SIGNED OFF, and all 10 items correctly stay `- [ ]`.** But "stale checkbox, work already done elsewhere" is NOT what's
+happening here: real, substantial per-AG progress exists (cefi's own layered-coverage SSOT, cumulative-drawdown guards,
+and cost/entitlement reason-class _mechanism_ have genuinely shipped), it just doesn't clear any single item's full DoD
+— each remaining item is missing either (a) fleet-wide/cross-AG breadth (built for cefi+defi only, not
+tradfi/sports/prediction), (b) UI/API surfacing on top of an already-shipped backend SSOT, or (c) is simply unbuilt. See
+each item's own "**Reconciled 2026-07-28**" annotation above for the specific evidence and citation. No item was
+re-implemented here — this is reconciliation only, per this todo's own scope.
 
 ---
 
@@ -269,7 +345,13 @@ sign-off that isn't evidenced.)**
       (`--operation instruments --mode batch --asset-group …`), per-VM shard env, post-2026-06-10 cloud-providers.yaml.
       Until this lands the dailies only "succeed" at the scheduler layer. Repo: deployment-service +
       instruments-service. assigned_vm: vm-cross-cutting. (MIGRATED FROM:
-      `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.)
+      `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) **Reconciled 2026-07-28 — STILL OPEN (2 of 5 AGs
+      done).** The cefi child plan's Progress Log confirms: cefi's `uts-prod-instruments-service-cefi-t1-recon` producer
+      was de-hardcoded + verified (24 venues, day=2026-06-26), and defi's `uts-prod-instruments-service-t1-recon`→DEFI
+      producer was created + verified (53 venues, same day) — 2 of the 5 AGs have a genuinely working prod daily
+      producer. But the tradfi child plan's own Progress Log (Checkpoint 12:40 section) states plainly: "tradfi/sports/
+      prediction have NO prod daily producer" — 3 of 5 AGs remain uncovered, matching this item's own unchecked state.
+      Leaving `[ ]` open (partial: cefi+defi done, tradfi/sports/prediction not).
 - [x] [INFRA] P1. ✅ **Wire the lifecycle roll-up to trigger on every IS instruments update (per-AG).** TF authored
       (deployment@98bee4b, `lifecycle_catalogue_scheduler.tf`); REMAINING = `terraform apply` + T+10min per-AG execution
       verify. (MIGRATED FROM: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`.) — deployment-service@c1d2e3e6
@@ -285,7 +367,10 @@ sign-off that isn't evidenced.)**
 - [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi/tradfi/defi catalogues APPLIED 2026-06-05; G1
       shape-aware enumerator DONE (is@6ea46565). REMAINING = granularity-aware producer for **prediction** (per-cqg
       grain) + **sports** (per-league vs per-fixture), and per-AG `_enumerate_v2_*` verify emits `expected_unattempted`
-      against the real universe. Per-AG slices ride the sibling AG masters. (MIGRATED FROM: same.)
+      against the real universe. Per-AG slices ride the sibling AG masters. (MIGRATED FROM: same.) **Reconciled
+      2026-07-28 — STILL OPEN, unbuilt.** No evidence in the cefi/tradfi/defi child plans or a live-code grep of a
+      granularity-aware catalogue producer for prediction (per-`canonical_question_group`) or sports (per-league vs
+      per-fixture) — this item's own "REMAINING" framing is still accurate. Leaving `[ ]` open.
 
 ---
 
