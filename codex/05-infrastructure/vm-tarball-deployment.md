@@ -186,7 +186,7 @@ Every VM spawned via `launch-*.sh` in `deployment-service/scripts/vm/` obeys the
     2026-05-28 MDPS 7-day backfill on `e2-standard-8` — the `_cleanup_after_day` hook existed but was only wired into
     the early-exit branch; day 1 completed, day 2 OOM'd at the date-boundary because the day-1 candle/sampling caches
     were still pinned. 25 GB per-day floor measured empirically. Plan:
-    [`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+    [`plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
     § "Finding A" + § "Finding C".
 
     **Granularity note (composes with `cli-convention.md` § "Instrument Identity and CLI Granularity")**: the atomic
