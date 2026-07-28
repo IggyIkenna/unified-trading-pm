@@ -124,7 +124,7 @@ def _enumerate_buckets(
 def _check_gcp_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
     """Bulk-check GCS buckets using the Python client (one list call, then lookup)."""
     try:
-        from google.cloud import storage as gcs  # type: ignore[import-untyped]
+        import google.cloud.storage as gcs  # type: ignore[import-untyped]  # noqa: TID251, RUF100 — bulk list_buckets has no UTL StorageClient equivalent (mirrors _check_aws_buckets_bulk below)
 
         client = gcs.Client(project=_DEFAULT_GCP_PROJECT_ID)
         existing: set[str] = {
