@@ -289,6 +289,23 @@ suspect (re-fetch, don't trust its `empty_confirmed` cells at face value in the 
 VM reaches a genuine terminal state under the fixed code should the "Next action" census script re-run and this checkbox
 flip.
 
+**Update 2026-07-28 — operator decision received: relaunch now.** Rather than trying to precisely reconstruct the exact
+suspect date-boundary (the run.log shows the `date=` pointer stuck at `2020-03-22` for the whole 08:12-08:34Z quota
+window, but the exact first/last corrupted row isn't cheaply provable from the log alone), relaunched with `--force`
+(redo_all=True) so every one of the 16,765 recovery-listed fixtures is freshly re-attempted end-to-end under the fixed
+code — correctness over efficiency per the workspace's data-pipeline-correctness rule, and the API-Football account is
+now confirmed on the expanded "mega plan" quota so the extra redundant work is affordable. Tarballs refreshed first
+(`instruments-service@5a6deafd`, `unified-api-contracts@f3ae871c` — both confirmed "tarball fresh" by the launcher's own
+freshness check at launch time, not just claimed). **New finding**: the original `2019-01-01` start date is now REJECTED
+by a 2020-06-06 sports-data-floor guard in the launcher (`codex/02-data/sports-2020-06-data-floor.md`) that either
+wasn't wired in yet on 2026-07-25 or was never exercised by this specific campaign — corrected the launch to start
+`2020-06-06` (pre-floor 2019 dates are fabrication-by-construction and were already wiped from GCS/manifest elsewhere,
+so recovery-listed fixture_ids before the floor, if any, are expected to no-op harmlessly). Launched
+`af-backfill-20260728-141821`
+(`--force --entity FIXTURE_EVENTS --recovery-fixture-ids gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids.parquet 2020-06-06 2026-07-25`)
+— monitoring to completion. Once terminal, re-run the census script per "Next action" above before flipping the parent
+todo's checkbox.
+
 **Update 2026-07-25 (later same session) — VM stop confirmed; quota concern resolved differently than expected; relaunch
 still PENDING an operator decision.** (1) The gcloud auth-expiry blocker above is now root-caused + fixed — see
 `issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (a shared-runner WIF credential poisoning the
