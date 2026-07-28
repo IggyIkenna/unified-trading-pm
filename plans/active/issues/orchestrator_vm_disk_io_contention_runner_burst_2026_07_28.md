@@ -127,6 +127,23 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       already named** — the EBS iops/throughput bump suggested in the Phase-7 doc (a live, non-disruptive `gp3`
       modify-volume op) is worth trying before further headcount reductions on the runner side, since CPU/RAM are not
       what's constrained here.
+
+      **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
+              CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+              1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+              consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+              — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+              bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+              newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+              lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+              consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+              looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+              (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+              iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+              fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+              urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+              to poll an already-recovered metric.
+
 - [ ] [REVIEW] P3. The AO dashboard's Host Resources panel reporting only `us+sy+ni` (no iowait) means an operator
       glancing at "CPU 41%" during an episode like this would not see the real problem. Consider whether the panel
       should surface iowait or load-average alongside CPU% specifically because self-hosted CI runners on this box make
