@@ -338,13 +338,14 @@ drift_direction: advance-code
       flagging that the `t1_batch_scheduler.tf:124-128`/`:131-135` line-citations for the "features-onchain T+1 recon"
       consumer resolve to unrelated jobs — no such job exists in the file today, so the deadline itself is currently
       unverifiable against a real consumer.
-- [ ] [PM] P1. File a new tracked issue doc for the gas-fees historical `venue=<CHAINNAME>` path-migration question: the
-      2026-07-22 rename (`market-tick-data-service@522185a6`, `_GAS_FEE_VENUE="ALCHEMY"`) fixed paths only forward —
-      pre-existing historical `gas_fees` objects still sit under `venue=<CHAINNAME>` and won't retroactively move. Flag
-      migrate-vs-leave as operator-gated — do not decide/execute here. Repo: unified-trading-pm. **Done when**: a new
-      `plans/active/issues/defi_gas_fees_historical_venue_path_migration_<date>.md` exists documenting the pre-rename
-      objects + rename commit, tagged `[OPERATOR]`/human-gated. Source:
-      `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
+- [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-7).** Filed
+      `plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md` — verified the rename commit
+      (`market-tick-data-service@522185a6`, 2026-07-22 18:07:42+01:00) via `git show`, confirmed all 4 pre-fix `venue=`
+      call sites (`"SOLANA"` x2, `"BITCOIN"`, `chain_name` for EVM) now write `_GAS_FEE_VENUE` ("ALCHEMY") with `chain=`
+      untouched, and enumerated the 14 distinct legacy `venue=<CHAINNAME>` values the unmigrated historical population
+      spans (12 EVM chains via `CHAIN_ID_TO_NAME` + `SOLANA` + `BITCOIN`). Filed with `assigned_vm: NA` /
+      `execution_scope: local-only` and a single `[OPERATOR] P1` migrate-vs-leave todo — do not decide/execute here, per
+      the task brief. Repo: unified-trading-pm. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
 - [ ] [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability gap:
       `bridge_events_handler.py` has no `--start-date`/`--end-date` CLI support (confirmed via grep, zero matches), so
       the daily cron can't be reused for a historical backfill to genesis (ACROSS 2021-11-11, STARGATE 2022-03-17)

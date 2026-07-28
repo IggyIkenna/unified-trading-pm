@@ -245,3 +245,28 @@ escalate to a `cicd` worker.
   (not self-hosted), and it completed **green in ~2m total** (`checks` 1m40s, `tests` 1m56s) — back to normal, no
   contention. Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior
   three fixes. No open repo-blockers existed for this repo at the time.
+
+- 2026-07-28 (cicd agent, slot-8, escalation `agt-71f135`, `ldr_qg_failure` on `e2e-testing`, no PR): **5th
+  corroboration + per-repo fix**, same pattern, detected by `ldr-ci-monitor` at commit `12846a43` (the repo's own "Phase
+  7 + quality-gates-v2 self-host rollout for e2e-testing" commit). The escalating run `30306809955` failed on the
+  classic signature (`git status` subprocess `TimeoutExpired` (40s) mid-build of the `unified-api-contracts` editable
+  dep). A later retry (`30314443597`, after the reusable workflow's independent
+  `SETUPTOOLS_SCM_SUBPROCESS_TIMEOUT`/`VCS_VERSIONING_SUBPROCESS_TIMEOUT=180` mitigation had already landed) got past
+  the timeout but still queued **712s** on `[qg-governor] all 4 tokens busy` before failing on an unrelated genuine STEP
+  5.105 GCS-CLI-baseline break that a separate commit (`420e834`) fixed independently — confirms the runner-capacity
+  symptom and a real code issue can coexist in the same window without one masking the other. This repo's own runner
+  pool showed only 1 registered runner (`glue-ip-172-31-5-118-1`), and a subsequent `workflow_dispatch` run
+  (`30317519815`) sat `pending` 16+min with zero jobs materialized while that sole runner was busy elsewhere — canceled
+  to free it. Applied the same precedented fix: reverted `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via
+  the same hand-edit pattern + `quickmerge --agent` — `e2e-testing@a881a43`. (Mid-fix, this worker's own session was
+  reaped by the WorkerLivenessWatchdog for going heartbeat-silent >15min while babysitting the quickmerge subprocess via
+  repeated `ScheduleWakeup` calls instead of the AO `/api/slots/N/progress` endpoint — worth flagging as a recurring
+  trap for any one-shot agent backgrounding a long-running shell command: `ScheduleWakeup` paces the _skill loop_, it
+  does not itself satisfy the liveness watchdog. The backend's dead-session recovery correctly preserved the
+  committed-but-unpushed fix on `origin/wip-preserve/orchestrator-slot-8-5e97b9e` rather than losing it; recovered by
+  cherry-picking the real fix commit — skipping an unrelated auto-committed cache-artifact commit stacked on top — back
+  onto a fresh `live-defi-rollout` and re-shipping with a self-heartbeating wrapper script.) Verified live: triggered a
+  fresh run (`30326015026`) post-fix, confirmed via `gh api .../jobs` every job ran on `labels: ["ubuntu-latest"]` (not
+  self-hosted), and it completed **green in ~3m02s** (`checks` 1m54s, `tests` 2m24s) — back to normal, no contention;
+  GH's own "QG Recovered" Slack step fired automatically. Did not touch the shared allowlist file, any other repo, or
+  the VM — same scope boundary as the prior four fixes. No open repo-blockers existed for this repo at the time.

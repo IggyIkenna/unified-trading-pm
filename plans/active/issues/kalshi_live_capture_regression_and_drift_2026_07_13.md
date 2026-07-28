@@ -47,12 +47,11 @@ drift_direction: advance-code
 depends_on: []
 ---
 
-> **🔴 OPERATOR-NOTIFY — CONFIRMED GENUINE STALL (2026-07-27).** Live Kalshi/Polymarket prediction tick capture has been
-> down for ~29 days (last real day `2026-06-28`) with **no producer VM or Cloud Run service currently running anywhere
-> in the fleet** — not a read/path artifact (batch data flows fine in the same bucket/window throughout).
-> Data-pipeline-correctness HARD RULE: this is a big finding needing a remediation decision/follow-up (relaunch the live
-> producer), not something to leave un-actioned. See the dated 2026-07-27 Progress Log entry at the bottom for full
-> evidence.
+> **🟢 RELAUNCHED — STALL RESOLVED (2026-07-27/28).** Live Kalshi/Polymarket prediction tick capture was confirmed
+> genuinely down for ~29 days (last real day `2026-06-28`, no producer VM or Cloud Run service running anywhere in the
+> fleet) and has been relaunched: 4 fresh `prediction-live-{venue}-{data_type}-*` VMs are running and the consolidated
+> manifest confirms captured `live_kalshi`/`live_polymarket_clob` rows through `day=2026-07-27`. See the dated
+> 2026-07-27 Progress Log entry for the original diagnosis and the 2026-07-28 entry for the relaunch evidence.
 
 ## What I found
 
@@ -212,3 +211,26 @@ per this todo.
   whoever picks up the remediation follow-up (not this todo's scope).
 - **Remediation is explicitly out of scope for this todo** (read-only diagnosis only) — relaunching either live producer
   is a follow-up todo for whoever owns the live-capture remediation, informed by this verdict.
+
+## 2026-07-28T03:40Z — RELAUNCHED, stall broken (slot-11, `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 4)
+
+**Universe pre-flight**: confirmed the live-runner's `resolve_bucket_name(kind="instruments-store-prediction")` call
+resolves to the correct env-short `instruments-store-pred-prd-central-element-323112` (not the stale legacy bucket
+flagged above as "considered and excluded" — re-verified fresh, not just excluded as the prior-stall cause). The
+universe data itself was fresh as of the `day=2026-07-27` IS daily-enum run for BOTH venues — the cqg-first
+`canonical_question_group=<G>/day=<D>/venue=<V>/instruments.parquet` layout is a dead/legacy write path (frozen at
+`day=2026-07-22`); the live writer now uses the full-hive
+`day=<D>/pipeline_mode=<PM>/asset_group=prediction/ venue=<V>/canonical_question_group=<G>/instruments.parquet` shape
+(2026-07-21 IS migration), which the live-runner's blob filter already handles (it pattern-matches venue/day/filename
+segments regardless of full path shape) — a documentation-staleness false alarm, not a functional gap.
+
+**Launch**: relaunched via the per-shard `launch-prediction-live.sh` (4 independent VMs, one per venue×data_type shard):
+`prediction-live-kalshi-trades-20260727-223731`, `prediction-live-kalshi-book-snapshot-5-20260727-223753`,
+`prediction-live-polymarket-trades-20260727-234622`, `prediction-live-polymarket-book-snapshot-5-20260727-234650`. All 4
+STARTED within T+60s.
+
+**Verified alive ~5h post-launch (2026-07-28T03:40Z)**: all 4 VMs show live `PIPELINE_HEARTBEAT`/`ManifestWriter` log
+activity matching current wall-clock time (per-VM manifest shard entry counts climbing every ~10s). Manifest-confirmed
+capture (bounded predicate-pushdown read of `_index/availability_index.parquet`, not a corpus walk): `live_kalshi` max
+captured date = `2026-07-27` (62,342 captured rows), `live_polymarket_clob` max captured date = `2026-07-27` (393,819
+captured rows). The ~29-day stall is broken; live capture resumed same-day as launch.

@@ -124,12 +124,18 @@ be confirmed against a live Cloud Scheduler resource.
 
 ## Recommended decision
 
-- [ ] [INFRA] P1. Resolve the `t1_batch_scheduler.tf:124-128`/`:131-135` cross-reference: confirm whether a
+- [x] ✅ [INFRA] P1. Resolve the `t1_batch_scheduler.tf:124-128`/`:131-135` cross-reference: confirm whether a
       "features-onchain T+1 recon" Cloud Scheduler job currently exists anywhere in `deployment-service/terraform/gcp/`
       (git-blame/history search if it's genuinely gone from `t1_batch_scheduler.tf`) — if it exists under a new
       name/location, correct both header citations (`defi_collection_scheduler.tf:29`,
       `lst_seasonal_rewards_scheduler.tf:37`) to point at it; if it no longer exists, remove or rewrite both headers'
-      deadline framing so they don't cite a phantom consumer. Repo: deployment-service. Source: this doc.
+      deadline framing so they don't cite a phantom consumer. Repo: deployment-service. Source: this doc. —
+      deployment-service@2db1797. Confirmed via git-blame (`deployment-service@b13f79b`) + a corpus-wide grep across
+      `terraform/gcp/` (zero features-onchain/T+1-recon matches) that the job was deliberately DELETED 2026-07-13 per
+      explicit operator ruling (`plans/archive/issues/features_onchain_image_pipeline_gap_2026_07_13.md`) and never
+      replaced. Rewrote both header comments (`defi_collection_scheduler.tf:28-33`,
+      `lst_seasonal_rewards_scheduler.tf:20-39`) to state the real situation instead of citing a phantom consumer —
+      `terraform fmt -check` clean, full `quality-gates.sh` green.
 - [ ] [INFRA] P2. Once the real (or confirmed-absent) consumer deadline is established, either (a) re-stagger
       `collect-solana-defi` (02:05→earlier start or a shorter timeout budget) and `collect-bridge-events` (currently
       worst-case 02:35 UTC) so their worst-case finish lands at or before the confirmed deadline, or (b) if no live T+1

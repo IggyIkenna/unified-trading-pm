@@ -215,8 +215,8 @@ parked conflicts).
       (`unified-trading-pm@<see commit>`). **Remediation is explicitly out of this todo's scope** (read-only diagnosis
       only) — tracked as the new follow-up todo directly below.
 
-- [ ] [SCRIPT] P1. **Relaunch the live Kalshi + Polymarket prediction tick producer(s) — confirmed down ~29 days.** The
-      todo above confirmed a GENUINE stall (not an artifact): no VM matching either live-producer launcher's naming
+- [x] ✅ [SCRIPT] P1. **Relaunch the live Kalshi + Polymarket prediction tick producer(s) — confirmed down ~29 days.**
+      The todo above confirmed a GENUINE stall (not an artifact): no VM matching either live-producer launcher's naming
       convention (`mtds-live-prediction-consolidated-*` from
       `deployment-service/scripts/vm/launch-mtds-live-prediction-consolidated.sh`, or `prediction-live-{venue}-*` from
       `launch-prediction-live.sh`) exists anywhere in the current fleet, and no Cloud Run service covers it either.
@@ -232,7 +232,33 @@ parked conflicts).
       the async-wait discipline. Repos: deployment-service (launch), market-tick-data-service (verify capture). **Done
       when**: both live producers are confirmed STARTED and writing real ticks (T+10min GCS check), OR — if launch
       surfaces a genuine blocker (credential/config/universe issue) — that blocker is filed as its own
-      `[OPERATOR]`-tagged follow-up with the specific failure evidence, not silently left unlaunched.
+      `[OPERATOR]`-tagged follow-up with the specific failure evidence, not silently left unlaunched. **DONE
+      2026-07-27/28 (slot-11)** — unified-trading-pm@(this commit). **Universe pre-flight**: confirmed
+      `resolve_bucket_name(kind="instruments-store-prediction")` → live-runner code path resolves to the correct
+      env-short `instruments-store-pred-prd-central-element-323112` (not the stale legacy bucket) — the module-level
+      `BUCKET_TEMPLATES_BY_ASSET_GROUP_KIND` landmine noted in `unified-api-contracts/canonical/gcs_paths.py` does NOT
+      apply to this call site. Confirmed the universe itself was FRESH as of the day-2026-07-27 IS enum run (the
+      `canonical_question_group=<G>/day=<D>/venue=<V>/instruments.parquet` cqg-first layout this todo's citation
+      referenced is now a DEAD/legacy write path frozen at `day=2026-07-22` — the live writer moved to the full-hive
+      `day=<D>/pipeline_mode=<PM>/asset_group=prediction/venue=<V>/canonical_question_group=<G>/instruments.parquet`
+      shape per the 2026-07-21 "operator R2" migration in `instruments-service/engine/orchestrator/writers.py`; the
+      live-runner's `_filter_prediction_is_blobs` matches either shape since it only pattern-matches a `/venue=/`
+      segment + `day=` segment + `instruments.parquet` suffix, so this is a documentation/citation staleness, not a
+      functional universe gap). **Launch**: relaunched via the per-shard `launch-prediction-live.sh` (not the
+      consolidated launcher — 4 independent VMs, one per venue×data_type shard):
+      `prediction-live-kalshi-trades-     20260727-223731`, `prediction-live-kalshi-book-snapshot-5-20260727-223753`,
+      `prediction-live-polymarket-trades-     20260727-234622`,
+      `prediction-live-polymarket-book-snapshot-5-20260727-234650` — all 4 STARTED well within T+60s and RUNNING.
+      **T+10min+ verify (re-confirmed ~5h post-launch at 2026-07-28T03:40Z)**: all 4 VMs show live
+      `PIPELINE_HEARTBEAT`/`ManifestWriter` log activity matching current wall-clock time (manifest shard entry counts
+      climbing every ~10s, e.g. kalshi-trades 22357+ entries, polymarket-trades 196293+ entries) — genuinely alive, not
+      a stale/hung process. **Manifest-confirmed capture** (bounded predicate-pushdown read of
+      `_index/availability_index.parquet`, filtered `pipeline_mode LIKE '%live%' AND capture_status='captured'`, not a
+      corpus walk): `live_kalshi` max captured date = 2026-07-27 (62,342 captured rows), `live_polymarket_clob` max
+      captured date = 2026-07-27 (393,819 captured rows) — the stall is broken; live capture resumed same-day as launch.
+      Repos: deployment-service (launch, no code change — existing launcher used as-is), market-tick-data-service
+      (verify capture, read-only). No genuine blocker surfaced — universe was fresh, launch succeeded cleanly on the
+      first attempt.
 
 ## Deferred — parked conflicts (BLOCKED-OPERATOR-DECISION; NOT guessed at, NOT silently drafted)
 
@@ -350,3 +376,14 @@ measurements and todo 2 executes an already-ruled decision (338).
   POLYMARKET classifier-path asymmetry) — both venue classifiers are confirmed non-Optional at current HEAD, and both
   measured 0.0000% `ClassifierConfidenceLow` in the live manifest. Todos 2 and 3 remain open (todo 2 sequencing note vs
   batch4 todo 3 still applies; todo 3 is an unrelated live-capture-stall diagnosis, independently dispatchable).
+- 2026-07-28T03:40Z (slot-11 worker, `data_engineering`): todo 4 shipped — relaunched the 4-shard live Kalshi +
+  Polymarket producer fleet (`launch-prediction-live.sh`, on-demand, SPOT-cap exempt) after a pre-flight universe
+  freshness check. Found and resolved a false alarm along the way: the cqg-first
+  `canonical_question_group=<G>/ day=<D>/venue=<V>/instruments.parquet` layout this todo's own citation pointed at is a
+  DEAD write path frozen at `day=2026-07-22` — the actual live writer moved to a full-hive
+  `day=<D>/pipeline_mode=<PM>/asset_group=prediction/ venue=<V>/canonical_question_group=<G>/` shape in the 2026-07-21
+  IS migration, which the live-runner's blob filter already handles transparently (it pattern-matches on
+  venue/day/filename segments, not full path shape). All 4 VMs STARTED within T+60s and, re-checked ~5h later, are still
+  alive with real-time manifest growth; the consolidated manifest confirms `live_kalshi`/`live_polymarket_clob` captured
+  rows through `day=2026-07-27` — the 29-day stall is broken. Full evidence in todo 4's inline note above. Todo 2
+  remains open (IS catalogue cqg-grain wiring, sequenced behind batch4 todo 3).

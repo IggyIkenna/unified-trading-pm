@@ -124,13 +124,11 @@ between the two git calls.
       having recently touched the same shared clone. This does not by itself explain the missing preserve ref (a stale
       origin ref can only ever make the ahead-count LARGER, never cause a false-negative skip), but it closes a real,
       independent correctness gap.
-- [ ] [SCRIPT] P1. **NEW (2026-07-28)** — pinned to the canonical doc's todo list, not duplicated here: root-cause why
-      `refs/wip-preserve/cascade-unified-trading-library-*` does not exist for the discarded `61efd2e5`/`dbb93c3a`
-      commits despite the preserve guard being live in HEAD 5 days before the 2026-07-27 incident. Needs either a live
-      reproduction (script a concurrent commit + cascade race against a scratch clone and confirm the preserve ref
-      appears) or forensic access to whichever agent session's PM clone actually executed the discarding
-      `cascade_dep_branch` call (was it genuinely on a version ≥`06dc7632`?). See
-      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`.
+- [x] [SCRIPT] P1. ✅ **DONE 2026-07-28 (slot 10)** — root-caused via live reproduction, see the canonical doc's todo 7
+      (`/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`): the preserve-guard's ahead-check
+      and its `checkout -B` are non-atomic, and a concurrent commit landing in that gap is silently discarded without
+      ever triggering the preserve ref — reproduced exactly (matching reflog signature + missing preserve ref) against a
+      scratch clone. Not a stale-PM-clone issue; the guard itself has an inherent TOCTOU race.
 - [ ] [VERIFY] P2. Once the above is root-caused, stress-test by scripting a tight commit loop against a scratch repo
       while a concurrent `cascade_dep_branch` sweeps it, confirming the preserve ref reliably appears across many
       iterations (this bug is probabilistic/timing-dependent — a single clean run does not prove the fix). See the

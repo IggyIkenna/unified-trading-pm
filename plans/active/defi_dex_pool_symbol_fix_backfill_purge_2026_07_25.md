@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                  (specific `_migrated_*` marker objects, never the bucket), target
-                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                  Progress Log below.
+                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                          (specific `_migrated_*` marker objects, never the bucket), target
+                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                          Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -316,3 +316,59 @@ is quick and doesn't block anything.
   - **Confirmed-recoverable range for the next todo (backfill)**: curve (ETHEREUM, AVALANCHE only -- NOT OPTIMISM),
     sushiswap (ARBITRUM), trader_joe_v2 (AVALANCHE) -- full historical range, live-verified as far back as 2022-01-15.
     velodrome_v2 (OPTIMISM) -- recoverable from ~2023-06/07 forward only.
+
+- **2026-07-28 -- todo 4 backfill IN PROGRESS (checkpoint, not yet closed): 2 scoped SPOT VMs launched with the fixed
+  query/parser.**
+  - **Pre-existing conflict found + resolved without touching the other plan's VM**: at launch time, a STANDING VM
+    `mtds-dex-pools-backfill` (owned by `mvp_backfill_defi_onchain_v10_2026_06_27.md`, relaunched 2026-07-25, walking
+    2020-01-19->2026-06-25 across the FULL default 16-protocol list) was already RUNNING with PRE-FIX code (launched
+    before the 2026-07-27 query/parser fix), actively re-writing more unattributed address-keyed leaves for these same 4
+    protocols every day. Verified via code read that this is safe to run alongside (not touch, not stop): each write is
+    a distinct timestamped file (never an overwrite), manifest writes are per-VM-sharded (no cross-VM conflict), and the
+    already-planned todo-5 purge cleans up ANY residual address-keyed leaves regardless of which VM/timestamp wrote
+    them. Proceeded in parallel with a DISTINCT `--shard-index` (0 and 1, vs the standing VM's 250) to avoid TheGraph
+    key-pool collision.
+  - **Launch 1** `mtds-dex-pools-symbolfix-batch1`:
+    `--protocols curve,sushiswap,trader_joe_v2 --start 2020-01-20 --end 2026-07-27 --shard-index 0 --fleet-vms 2 --force`
+    (force needed only to bypass the VM-name-prefix collision check against the unrelated standing VM above). SPOT, zone
+    `asia-northeast1-c`. Tarballs freshly republished + SHA-pinned before launch: MTDS `fa4c731bdbda` (includes the
+    63199601 query/parser fix + the 0f40a69f live-test script), UAC `d7fe3499d687`, UTL `5f48d47fb7cc`,
+    deployment-service `9652d703e104`.
+  - **Launch 2** `mtds-dex-pools-symbolfix-batch2`:
+    `--protocols velodrome_v2 --start 2023-06-01 --end 2026-07-27 --shard-index 1 --fleet-vms 2 --force` -- start date
+    chosen from todo 3's live-verified launch window (real data begins ~2023-07-01; 2023-06-01 gives a small inclusive
+    margin rather than fabricating a 2022 start).
+  - **batch2 (velodrome_v2) COMPLETE, verified correct**: `DEPLOYMENT_COMPLETED exit_code=0` at 2026-07-28T02:10:30Z, no
+    preemption (`gcloud compute operations list` shows only `insert`/`delete`, both DONE), 1153 total results across the
+    full 2023-06-01..2026-07-27 range. **Manifest spot-check**:
+    `raw_tick_data/by_date/day=2026-07-27/pipeline_mode=batch_onchain_subgraph/asset_group=defi/venue=VELODROME_V2/chain=OPTIMISM/instrument_type=pool/data_type=dex_pool_state/VELODROME_V2-OPTIMISM:POOL:ETHFI-WETH-30.0.parquet`
+    -- properly symbol-named leaf, columns confirmed populated (`symbol=ETHFI-WETH-30.0`, `token_a=WETH`,
+    `token_b=ETHFI`, `fee_rate_bps=3000`), not just `pool_id`/`pool_address`.
+  - **Investigation + false-alarm correction (lesson for future spot-checks)**: an initial spot-check of
+    `trader_joe_v2/AVALANCHE` on a day with confirmed real captures (2021-12-15, 492 records logged) found ONLY
+    address-keyed filenames (`0x00979bd1....parquet`) and no `token_a`/`token_b` columns -- looked like the fix wasn't
+    working. Root cause: **that address-keyed leaf was created 2026-07-26T08:20:41Z -- before this VM launched
+    (2026-07-27T23:18Z) and before the fix itself shipped (2026-07-27)**. It was a PRE-EXISTING orphan from the standing
+    `mtds-dex-pools-backfill` VM (or an earlier historical run), not this VM's output. Checking the SAME day/venue/chain
+    path for symbol-shaped filenames found 470 properly-attributed leaves (e.g.
+    `TRADER_JOE_V2-AVALANCHE:POOL:105-AVAX-USDC.e-3000.parquet`, confirmed created 2026-07-28T00:51:19Z -- squarely
+    inside this VM's run window) alongside 711 old address-keyed orphans. **Takeaway: when spot-checking a backfill that
+    runs alongside pre-existing data, always check blob CREATION TIMESTAMP (`gcloud storage ls -l`), not just
+    presence/absence of a properly-named leaf** -- coexisting old+new files at the same path is the EXPECTED shape here
+    (todo 5's purge is what removes the old ones), not a sign the new run is broken.
+  - **batch1 (curve/sushiswap/trader_joe_v2) STILL RUNNING as of this checkpoint** (2026-07-28, mid-run) -- healthy, no
+    crash-loop, no preemption, manifest entries climbing steadily (~600k+ per-VM shard entries and counting). Confirmed
+    curve/OPTIMISM (explicitly excluded from the confirmed-recoverable range) correctly resolves to honest
+    `record_zero_rows` on every attempt (`"subgraph not found: no allocations"` GraphQL error ->
+    `_execute_subgraph_query` returns `None` -> empty df -> zero-rows, never `attempted_failed`) -- no special-case
+    exclusion code was needed for this dead subgraph.
+  - **What remains before todo 4 can be checked done**: batch1 finishing its full 2020-01-20..2026-07-27 walk (ETA
+    several more hours from this checkpoint), then a manifest spot-check for curve/ETHEREUM + curve/AVALANCHE +
+    sushiswap/ARBITRUM mirroring the velodrome_v2/trader_joe_v2 verification above (timestamp-checked against this VM's
+    run window). Todo 5 (purge) is explicitly gated on this todo landing + being spot-checked first, per its own text --
+    do not start it early.
+  - **Incidental finding, filed separately (not blocking)**: batch2's shutdown hit an untracked `IAM_PERMISSION_DENIED`
+    on `pubsub.topics.publish` for the `run-ledger` topic (post-completion observability telemetry only -- does not
+    affect data correctness or this todo's done-when). Filed as
+    `issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md` since it is generic VM-launcher shutdown code,
+    not specific to this plan.

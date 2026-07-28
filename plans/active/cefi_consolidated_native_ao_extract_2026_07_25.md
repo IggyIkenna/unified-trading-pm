@@ -81,7 +81,7 @@ items explicitly "FENCED" to another named agent/live process).
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Resolve the `*_ccxt.py`/`*_native.py` parallel-file question for BINANCE/BYBIT/OKX.** Audit
+- [x] ✅ [REVIEW] P2. **Resolve the `*_ccxt.py`/`*_native.py` parallel-file question for BINANCE/BYBIT/OKX.** Audit
       `instruments-service/.../adapters/cefi/tardis/`, MTDS's `.../adapters/cefi/`, and every cefi venue file in
       `execution-service/.../trade_execution/adapters/` for dead code, stale fallback paths, and duplicate logic: is
       each `*_ccxt.py`/`*_native.py` pair genuinely both live-routed by design, or is one file in the pair dead code
@@ -90,7 +90,9 @@ items explicitly "FENCED" to another named agent/live process).
       prod-data delete, so no `[OPERATOR]` gate applies. Repos: instruments-service, market-tick-data-service,
       execution-service. **Done when**: a written per-venue verdict (both-live-with-reason, or
       one-dead-then-deleted-no-shim) for binance/bybit/okx is recorded in this plan's Progress Log or a new issue doc;
-      any deletion ships with `quality-gates.sh` green. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 5).
+      any deletion ships with `quality-gates.sh` green. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 5). ✅
+      — verdict + deletion recorded in this plan's Progress Log below: `execution-service@6c9645a5` (+ QG baseline fix
+      `unified-trading-pm@f9523e16f`).
 - [ ] [DATA] P3. **Sweep for any non-Tardis cefi VM class with multi-hour+ single-VM runtime that is not already
       cross-machine-sharded** (Tardis-consuming VMs are EXEMPT — hard concurrency cap of 1, see
       `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap). Repo: deployment-service (read-only fleet audit).
@@ -328,6 +330,55 @@ Also stale on the same evidence basis (found during this triage, not originally 
   target mechanism cited (ambiguous whether this means the already-shipped launcher-registry cull
   `deployment-service@9b13679`, a different manifest-side quarantine, or something else) — needs human disambiguation,
   not a fresh independent AO guess at which registry.
+
+## Progress Log
+
+### 2026-07-28 — Todo 1 (`*_ccxt.py`/`*_native.py` parallel-file audit, BINANCE/BYBIT/OKX)
+
+**Scope check — IS/MTDS**: Neither `instruments-service/instruments_service/reference_data/adapters/cefi/` (generic
+`ccxt_adapter.py` + a shared `tardis/` package, no per-venue files) nor
+`market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/` (generic `ccxt_adapter.py` +
+`tardis_*` shared modules) has a `*_ccxt.py`/`*_native.py` per-venue pair for binance/bybit/okx at all — both services
+share one adapter path across every cefi venue. MTDS does have per-venue files elsewhere
+(`market_interface/adapters/{binance,bybit,okx}.py`, `live/connectors/{binance,bybit,okx}_*_ws.py`), but those are a
+spot/futures/book/ticker connector split (legitimate, non-duplicate), not a ccxt-vs-native duplicate-implementation
+pair. **Verdict: the parallel-pair question is scoped entirely to execution-service** — the only repo where it exists.
+
+**execution-service verdict — one-dead-then-deleted-no-shim, for all three venues:**
+
+- `binance_ccxt.py` / `bybit_ccxt.py` / `okx_ccxt.py` — **LIVE**. Imported by `factory.py` and
+  `trade_execution/__init__.py`; `CCXT_VENUES = {binance, bybit, okx, ...}` routes `get_order_adapter()` to these via
+  `_create_ccxt_adapter[_extended]`. This is the sole reachable execution path for these 3 venues today.
+- `binance_native.py` (`BinanceCeFiAdapter`) / `bybit_native.py` (`BybitCeFiAdapter`) / `okx_native.py`
+  (`OKXCeFiAdapter`) — **DEAD, deleted**. Corpus-wide grep confirmed zero production references (only their own file +
+  unit tests). Not in `CCXT_VENUES`, `DIRECT_REST_VENUES`, `TRADFI_VENUES`, `get_supported_venues()`, or any
+  `__init__.py` export — no code path can ever construct one. No feature flag gates a future activation. Contrast with
+  the genuinely-kept `KrakenCeFiAdapter` (also BLOCKED-CREDENTIALS) which IS wired into
+  `DIRECT_REST_VENUES`/`_create_direct_rest_adapter` — reachable once credentials land, just credential-gated at
+  runtime; the binance/bybit/okx natives have no such wiring even in principle. Git history: all 3 were built in the
+  same commit as `bitfinex_native.py`/`bitget_native.py` (`582f1e93d`, "Phase 2.B+2.E native REST adapters for
+  Binance/Bybit/OKX/Bitfinex/Bitget"); a later PM doc
+  (`issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` §"Aster") states bitfinex/bitget were "built
+  natively because CCXT support was inadequate for those two at the time" — implying binance/bybit/okx (where CCXT
+  support is excellent) never needed the native path and CCXT was kept as the real implementation instead. Their
+  `BLOCKED-CREDENTIALS` docstrings cite `ikenna_orchestrator/pings/slot_6.md`, a file in the now-RETIRED file-based ping
+  system (CLAUDE.md § "Orchestrator HTTP surface") — confirming the stated "activation path" was itself stale.
+  **Deleted**: `binance_native.py`, `bybit_native.py`, `okx_native.py` + their dedicated test files
+  (`tests/unit/cefi_execution/test_{binance,bybit,okx}_native_adapter.py`) + the `TestBybitNativeContract`/
+  `TestOKXNativeContract` classes in `tests/unit/test_native_adapter_contracts.py` (Bitfinex/Bitget/Kraken classes kept
+  — those adapters remain, out of scope). Shipped `execution-service@6c9645a5`, `quality-gates.sh` green (170s full run)
+  incl. the STEP 5.83 adapter-contract-call regression ratchet (regenerating that check's baseline required a
+  corpus-wide re-scan that also picked up unrelated drift from concurrent slots' work elsewhere in the workspace —
+  applied only the 3 relevant line-removals by hand instead of the full regenerate, shipped as
+  `unified-trading-pm@f9523e16f`).
+
+**Adjacent finding, NOT fixed here (out of scope — binance/bybit/okx only)**: `bitfinex_native.py`/`bitget_native.py`
+share the exact same unreachability characteristic (not in any `CCXT_VENUES`/`DIRECT_REST_VENUES`/`TRADFI_VENUES` set,
+not in `get_supported_venues()`, zero production references) but have NO `_ccxt.py` counterpart at all, so deleting them
+would remove the only implementation for those 2 venues entirely — a materially different, higher-risk decision (are
+bitfinex/bitget still wanted as execution venues? has CCXT support improved since May 2026?) that needs its own scoped
+judgment call, not a reflexive deletion under this todo. Filed as
+`issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`.
 
 ## Reconciliation
 

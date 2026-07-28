@@ -181,8 +181,24 @@ generators don't walk it) · `needs_code_scan` (answer only derivable by reading
       (`tests/unit/test_capability_manifest.py::test_venue_order_semantics_backfilled` +
       `tests/unit/test_order_semantics_sim_backfill.py`) already assert the backfilled population — no new test needed.
       No design work remaining.
-- [ ] [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
-      strategies permit agent-driven instructions over features, which models are allowed).
+- [x] ✅ [SPEC] P2. **Trading-agent/LLM capability**: no declaration linking trading-agent-service to archetypes (which
+      strategies permit agent-driven instructions over features, which models are allowed). — **ALREADY FIXED (checkbox
+      was stale), same 2026-07-27/28 pattern as the four sibling items above**: `TRADING_AGENT_CAPABILITIES`
+      (`unified_api_contracts/internal/architecture_v2/trading_agent_capability.py`) was already backfilled in the same
+      `unified-api-contracts@5e7d0685` (2026-06-13) commit that backfilled order-semantics/sim-assumptions/fees/
+      fund-structures (commit message literally lists "...+ trading-agent registries"). Verified 2026-07-28: 3 real
+      code-sourced entries (`CARRY_STAKED_BASIS`, `ARBITRAGE_PRICE_DISPERSION`, `VOL_TRADING_OPTIONS`), each citing
+      trading-agent-service `core/allocation_directive_loop.py`/`config.py:156` source lines, each honestly
+      `enabled=False` (service is a no-op stub) — every field the todo asks for (archetype↔agent link,
+      `allowed_decision_models`, `parameter_guidance_scope`) is populated or explicitly honest-empty, matching the
+      Order-semantics/Fees/Sim-assumptions/Fund-structures resolution pattern exactly. Only the module's own docstring
+      was stale (claimed "intentionally empty"/`missing_registry` gap despite the real backfilled data below it) — fixed
+      in `unified-api-contracts@89adf316`. Pre-existing passing test
+      `tests/unit/test_capability_manifest.py::test_trading_agent_capabilities_backfilled` (asserts
+      `len(TRADING_AGENT_CAPABILITIES) == 3`) already asserts the backfilled population — no new test needed. Companion
+      doc-drift also fixed: `capability-wizard-question-bank.md`'s Stage C "Decision engine" row flipped
+      `partial / gap`→`partial` (`unified-trading-pm@587afb751`); `capability-wizard.md`'s status table already
+      correctly cited `5e7d0685` for agent-capability (no fix needed there). No design work remaining.
 
 ### Open questions — `needs_code_scan` candidates (agent-orchestrator once Phase 5 wiring exists)
 
