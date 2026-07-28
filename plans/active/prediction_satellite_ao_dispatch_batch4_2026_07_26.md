@@ -160,30 +160,69 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
       `canonical_question_group` catalogue rows (count cited), with the run's evidence recorded in the source doc's
       Progress Log.
 
-- [ ] [CODE] P1. **Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
-      population, now that the doc's Q3 operator-decision gate has cleared.** Operator ruling 2026-07-25
-      (`unified-trading-pm@7dfcfe0ee`,
-      `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the
-      canonical `data_type=trades` schema (currently 5 columns) rather than drop the legacy metadata or permanently fork
-      a separate canonical shape. (1) unified-api-contracts: add `title`/`slug`/`event_slug`/`outcome`/ `outcome_index`
-      as first-class canonical `trades` fields — the operator-directed minimum set (market-question + resolution
-      metadata with no surviving copy elsewhere). Do NOT add the trader-identity fields (`proxy_wallet`/
-      `name`/`pseudonym`/`bio`/`profile_image`) — those are explicitly flagged PII-adjacent in the operator ruling and
-      need a SEPARATE operator call on whether they're genuinely needed downstream; leave them out of this pass. (2)
-      market-tick-data-service: update the Polymarket CLOB writer to emit the extended schema going forward. (3) Migrate
-      the 2,477 `data_type=prediction_trades` manifest rows + shape-#4's 158+ objects into the canonical
-      `data_type=trades` path/shape under the extended schema — copy+verify+delete per the standard delete-safety
-      protocol (content-verify before any delete, no data loss). (4) Register the extended schema + migration in
-      `canonical-cutover-register.md` + `non-canonical-path-inventory.md`. Repo: unified-api-contracts,
-      market-tick-data-service, unified-trading-pm. Source:
-      `prediction_polymarket_legacy_dual_write_trees_metadata_     loss_2026_07_24.md` todos 4-6 — batch3 deferred this
-      doc as operator-gated on Q3; the `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` re-check
-      (2026-07-26) confirmed Q3 cleared the SAME day batch3 was drafted (the ruling landed 2026-07-25, one day before
-      batch3's 2026-07-26 audit — a same-day staleness gap, not a new decision made during this re-check). **Done
-      when**: UAC's `trades` schema carries the 5 new fields (PII fields explicitly excluded, with the exclusion
-      recorded as a still-open separate decision); the writer emits them; the 2,477+158 legacy rows are migrated with a
-      verified 0-loss content-check; the cutover/non-canonical inventories are updated; `quality-gates.sh` is green
-      across all three repos.
+- **[CODE] P1. Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
+  population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b open; see below). Operator ruling 2026-07-25
+  (`unified-trading-pm@7dfcfe0ee`,
+  `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the canonical
+  `data_type=trades` schema rather than drop the legacy metadata or permanently fork a separate canonical shape. Source:
+  `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` todos 4-6 — batch3 deferred this doc as
+  operator-gated on Q3; the `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` re-check (2026-07-26)
+  confirmed Q3 cleared the SAME day batch3 was drafted.
+
+  - [x] ✅ [CODE] P1. **4a — schema + writer (DONE 2026-07-28, slot-12).** (1) unified-api-contracts: added
+        `title`/`slug`/`event_slug` as first-class canonical `trades` `ColumnSpec` entries in
+        `registry/_schema_spec_prediction.py` (`outcome`/`outcome_index` were already present). Trader-identity fields
+        (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) explicitly EXCLUDED — PII-adjacent, still needs a
+        SEPARATE operator call. Regression test `test_prediction_trades_carries_market_question_metadata` added to
+        `tests/unit/test_schema_spec_completeness.py`. Shipped `unified-api-contracts@90ddcc01`, QG green. (2)
+        market-tick-data-service: `PolymarketAdapter._POLYMARKET_USER_META_COLS` no longer drops `title`/`slug`/
+        `eventSlug` (PII fields stay dropped); `_annotate_cid_dataframe` renames `eventSlug`→`event_slug` and
+        `outcomeIndex`→`outcome_index` (canonical snake_case) before the existing numeric-coercion step. New test file
+        `tests/unit/test_polymarket_adapter_metadata_fields.py` (3 tests: metadata survives, PII still dropped,
+        outcome_index still numeric-coerced). Shipped `market-tick-data-service@84154e1a`, QG green (7241 passed).
+        **This is the WRITER-ROOT fix that `scripts/canonicalize_prediction_manifest_2026_07_18.py`'s OPERATOR-REVIEW
+        CHECKLIST item 0 was gated on** — that script's manifest-only canonicalization can now proceed per its own
+        checklist (still operator-held for items 1-6, unrelated to this todo).
+  - [ ] [DATA] P1. **4b — migrate the legacy raw-tick objects (OPEN — genuinely multi-session, NOT completable in one
+        worker turn; scope discovered 2026-07-28, slot-12).** Migrate shapes #3/#3b (`data_type=     prediction_trades`
+        bundle-per-underlying) and shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) into the canonical
+        `data_type=trades` path under the now-extended schema — copy+verify+delete per the delete-safety protocol
+        (content-verify before any delete, no data loss). **Scope findings (read before starting):** (a) Shapes #3/#3b
+        are MANIFEST-KNOWN, not a new walk: a single `_index/availability_index.parquet` read (predicate-pushdown
+        `data_type=prediction_trades`) returns exactly 2,477 rows, 100% `capture_status=captured`, 348 distinct dates,
+        14 distinct `underlying` values (`BTC/ETH/OTHER/SPX/DJIA/NDX/GOLD/SILVER/CRUDE_OIL/DOGE/     XRP/BNB/HYPE/SOL` —
+        wider than the single-day sample's BTC/ETH/OTHER), `chain=POLYGON`, `instrument_type=prediction_market`, blank
+        `instrument_id`. Each row is a per-(date,underlying) bundle; the physical GCS object count is up to 2× this
+        (shapes #3 and #3b are two DIFFERENT paths that may consolidate to one manifest row) — verify via
+        `gcs_describe_object` per the delete-safety Part-1 proof, don't assume. (b) Shape #4's corpus-wide extent is
+        GENUINELY UNKNOWN — the issue doc explicitly flags this ("its true corpus-wide extent is UNKNOWN without a
+        Tier-2 SPOT-VM single walk"); the "158+" figure is a ONE-DAY (`day=2025-04-11`) sample only (confirmed by a live
+        listing: exactly 158 objects under
+        `raw_tick_data/by_date/day=2025-04-11/pipeline_mode=batch_polymarket_clob/asset_group=prediction/     data_source=POLYMARKET_CLOB/`),
+        not a corpus total. Enumerating every day shape #4 exists on IS a new whole-corpus walk (review-blocking per
+        CLAUDE.md single-walk discipline) — it must run as the ONE sanctioned Tier-2 SPOT VM single walk per
+        `/codex/02-data/reconciliation-census-and-compute-tiers.md`, never in an interactive worker session. (c) Per-row
+        content requires a MERGE, not a plain copy: canonical shape #1 objects already exist for the same (day, cid)
+        cells (content-verified byte-identical trades) — the migration is "read legacy row, join to the matching
+        canonical row (by `transaction_hash`+`timestamp` — condition_id alone is not unique per row), merge in
+        `title`/`slug`/`event_slug`, rewrite the canonical object, content-verify 0-loss, THEN delete the legacy object"
+        — a genuine read-transform-write per cell, not a server-side `gcs_copy_object`. **Why not done in this
+        session**: the combination of (b)'s VM-gated enumeration requirement and (c)'s per-cell merge complexity across
+        ~348+ dates makes this a multi-session migration (issue doc's own estimate: 3.6 ai-days), not a same-turn
+        extension of 4a. Attempting a rushed prod merge+delete here would risk exactly the kind of data-correctness
+        mistake the delete-safety protocol's five-part proof exists to prevent. **Next steps for whoever picks this
+        up**: (i) build the manifest-driven migration script for shapes #3/#3b (scope known, ~2,477 rows/348 dates)
+        first — this alone is session-doable; (ii) file/dispatch the Tier-2 SPOT VM enumeration for shape #4's
+        corpus-wide extent separately (per `/codex/02-data/reconciliation-census-and-compute-tiers.md`); (iii) 4c below
+        (docs) can register the WRITER cutover now but must be revisited once the raw-object migration actually
+        executes. Repo: market-tick-data-service, unified-trading-pm. **Done when**: 3/3b's ~2,477 rows + 4's full
+        corpus-wide object set are migrated with a verified 0-loss content-check per delete-safety Part 2, legacy
+        objects deleted only after verification.
+  - [ ] [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
+        `non-canonical-path-inventory.md`.** 4a's writer-root fix (title/slug/event_slug now flow to new canonical
+        writes) is registerable now; the raw-object migration disposition (4b) must be added/updated once 4b actually
+        executes — don't mark the `prediction_trades`/shape-#4 rows `yes-twin-confirmed` until they are. Repo:
+        unified-trading-pm.
 
 ## Deferred — gated on a sibling todo landing (NOT dispatched speculatively)
 

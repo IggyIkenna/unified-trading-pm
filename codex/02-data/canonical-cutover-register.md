@@ -437,6 +437,30 @@ is NOT owned by this reconciliation-skill plan.
 
 ---
 
+## §6e — Axis: prediction `trades` schema — POLYMARKET market-question metadata (title/slug/event_slug)
+
+**Target ruled 2026-07-25** (operator,
+`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3): extend the
+canonical `data_type=trades` schema to carry `title`/`slug`/`event_slug` (market-question metadata with no surviving
+copy elsewhere once the legacy dual-write trees are retired) instead of dropping it or permanently forking a separate
+canonical shape. Trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) are explicitly
+EXCLUDED from this cutover — still a separate, unresolved operator call.
+
+**Writer-root fix EXECUTED 2026-07-28** (slot-12): `unified-api-contracts@90ddcc01` (added `title`/`slug`/`event_slug`
+`ColumnSpec` entries to `_schema_spec_prediction.py`; `outcome`/`outcome_index` were already present) +
+`market-tick-data-service@84154e1a` (`PolymarketAdapter` no longer drops `title`/`slug`/`eventSlug` at ingest;
+`eventSlug`→`event_slug`/`outcomeIndex`→`outcome_index` renamed to canonical snake_case). **Effective-from 2026-07-28
+for NEW writes only** — the historical legacy raw-tick objects (shapes #3/#3b `data_type=prediction_trades`, 2,477
+manifest rows/348 dates, and shape #4's 10-segment tree, corpus-wide extent unknown) are NOT yet migrated; see
+`plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and `non-canonical-path-inventory.md`'s
+prediction `prediction_trades` row for the still-open disposition.
+
+| asset_group | effective-from (new writes) | historical backfill state                                                           |
+| ----------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| prediction  | 2026-07-28                  | NOT migrated — shapes #3/#3b/#4 still legacy-only; see plan todo 4b (multi-session) |
+
+---
+
 ## §7 — Summary table
 
 | asset_group | require_pipeline_mode                 | instrument_type PATH | instrument_type COLUMN                                                                | chain tail                                              | defi leaf                    | sports data_type case  |
