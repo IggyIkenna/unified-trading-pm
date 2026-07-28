@@ -93,11 +93,12 @@ time) — **never** a bare `pkill -f <script-basename>` or any pattern that does
 
 ## Todos
 
-- [ ] [DOCS] P1. Add a one-line HARD-RULE addendum to `unified-trading-pm/agents/RULES.md` § "Multi-agent safety" (or a
-      new short subsection) stating: process kills during a worker session must target an exact PID/PGID the worker
+- [x] ✅ [DOCS] P1. Add a one-line HARD-RULE addendum to `unified-trading-pm/agents/RULES.md` § "Multi-agent safety" (or
+      a new short subsection) stating: process kills during a worker session must target an exact PID/PGID the worker
       itself launched and recorded (e.g. `$!` at background-start time) — never a bare `pkill -f <script-basename>` /
       `pkill -f quality-gates.sh` / similar, since every slot invokes shared scripts with identical argv and such a
-      pattern is host-wide, not slot-scoped. Cite this incident doc.
+      pattern is host-wide, not slot-scoped. Cite this incident doc. — unified-trading-pm@`agents/RULES.md` (new bullet
+      under § 1 "Your worktree", the section closest to CLAUDE.md's "Multi-agent safety").
 - [ ] [SCRIPT] P2. Consider whether `scripts/quality-gates.sh` (or its base library) should tag its own process title /
       write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
       a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional

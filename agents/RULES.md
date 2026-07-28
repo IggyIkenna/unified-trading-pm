@@ -45,6 +45,12 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
 - **Don't touch dirty files in other workspace areas.** Two operators + many parallel slots work in parallel — untracked
   files / mid-edit dirty state in another agent's tree IS in-flight work. Leave it alone. (Full foreign-WIP /
   shared-worktree recovery recipes are in CLAUDE.md § "Multi-agent safety".)
+- **Process kills — exact PID only, never a name-based pattern (HARD RULE, incident 2026-07-28).** To kill a background
+  process YOU started this session (e.g. a stale `quality-gates.sh` run), kill only the exact PID/PGID you captured at
+  launch time (`$!`, or the child PID) — **never** `pkill -f <script-basename>` / `pkill -f "quality-gates.sh --no-fix"`
+  / any pattern lacking a slot-specific discriminator (full absolute cwd, or PID/PGID). Every slot invokes shared
+  scripts with identical argv, so a name-based pattern is host-wide, not slot-scoped, and will kill a DIFFERENT slot's
+  live QG run — confirmed incident: `plans/active/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
 
 ---
 
