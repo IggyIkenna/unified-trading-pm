@@ -611,7 +611,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                      |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
-| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | OPEN                                             | UAC registry                                                                                                                  |
+| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                  | UAC registry                                                                                                                  |
 | Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
 | Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
 | Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
@@ -649,8 +649,24 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       mismatch. `venue_collateral.py` is the single SSOT; no duplicate registry remains. Verified 2026-07-27 by reading
       execution-service/execution_service/services/lst_collateral_resolver.py — module docstring records the same
       resolution.
-- [ ] [SCRIPT] P2. **F42 — register the 6 adapter-backed venues** (FX + BITFINEX/BITGET/KRAKEN spot+futures) in
-      `VENUE_CATEGORY_MAP` + `ENDPOINT_REGISTRY`. Target: unified-api-contracts.
+- [x] ✅ [SCRIPT] P2. **F42 — register the 6 adapter-backed venues** (FX + BITFINEX/BITGET/KRAKEN spot+futures) in
+      `VENUE_CATEGORY_MAP` + `ENDPOINT_REGISTRY`. Target: unified-api-contracts. — DONE
+      **unified-api-contracts@f3440731** (2026-07-28). Re-verified against current code first: `VENUE_CATEGORY_MAP`
+      already carried all 6 venues (shipped since the finding was filed) and `bitget` already had `ENDPOINT_REGISTRY`
+      entries — those two sub-claims were stale. Real remaining gaps fixed: (1) `FX` was in `VENUE_CATEGORY_MAP` but
+      missing from `INSTRUMENT_TYPES_BY_VENUE` — added `{"CURRENCY"}` (matches the `TRADFI_CASH_TYPE_VALUES`
+      cash-instrument convention). (2) `ENDPOINT_REGISTRY` had zero entries for `bitfinex`/`kraken`/`fx` — added
+      bitfinex (ticker GET `PENDING`, no cassette exists; order POST `AUTH_BLOCKED`, `place_order` verified
+      `NotImplementedError`), `kraken` spot + `kraken_futures` (kept as distinct venue keys matching their separate
+      `external/kraken` vs `external/kraken_futures` schema modules/domains; ticker entries `RECORDED` against the real
+      non-stub cassettes already committed at `external/kraken/mocks/ticker.yaml` +
+      `external/kraken_futures/mocks/tickers.yaml`; order POST `AUTH_BLOCKED` — `KrakenCeFiAdapter.place_order` is a
+      real implementation per its own module comment, not a credentials-blocked scaffold), and `fx` (TWS-gateway entry
+      mirroring the existing `ibkr` broker entry — `FXAdapter` routes OTC forex via IBKR IDEALPRO `secType=CASH`, no
+      dedicated FX REST vendor). Endpoint paths/schema classes/auth verified directly against `execution-service`'s
+      `bitfinex_native.py`/`kraken_rest_adapter.py`/`fx_adapter.py` adapters and UAC's
+      `external/{bitfinex,kraken,kraken_futures}/schemas.py`. `quality-gates.sh` green (292s local + 260s
+      quickmerge-verified).
 - [x] [SCRIPT] P2. **F43 — add NASDAQ/NYSE to a leg's `eligible_venue_ids`** (TradFi equities adapters exist, no leg
       references them). Target: unified-api-contracts. ✅ SHIPPED unified-api-contracts@61ba5239
       (`feat(registry): wire archetype-leg eligibility for FX/BITFINEX/NASDAQ/N…`, verified reachable on
