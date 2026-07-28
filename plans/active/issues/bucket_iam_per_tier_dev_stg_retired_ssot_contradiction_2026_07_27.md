@@ -145,12 +145,32 @@ that is mid-execution against a **live production GCP project**. Two consequence
       the archived plan (was pointing at the stale pre-archive `plans/active/...` path — corrected to
       `/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md`) and added this issue doc
       (`/plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md`) to the same list —
-      `unified-trading-pm@<SHA>`. Did not un-archive the source plan. `check_reference_paths.py` confirms no new
+      `unified-trading-pm@c9eed9822`. Did not un-archive the source plan. `check_reference_paths.py` confirms no new
       format/existence violations introduced by this edit (verified against a stash/pop diff — an unrelated +4
       existence-count drift on `live-defi-rollout` HEAD predates this change).
-- [ ] [SCOPE] P2. **NEW 2026-07-27.** The original P1.2 text's "all SAs + CI/CD + developer identities → objectViewer
-      broadly" was only partially addressed — the 5 per-tier SAs got objectViewer, but no CI/CD or developer identity is
-      terraform-managed anywhere in this repo today (grepped: only task-specific SAs like `t1_batch`, `catalogue_regen`
-      exist, no generic "CI/CD SA" or "developer SA" resource), so that half of the original ask has no concrete
-      terraform target yet. Scope this properly (does a CI/CD SA need to be created? are "developer identities" human
-      GCP IAM users, handled outside terraform entirely?) before assuming it's done.
+- [x] ✅ [SCOPE] P2. **RESOLVED 2026-07-28** — Scoped both halves of "all SAs + CI/CD + developer identities →
+      objectViewer broadly." (1) **CI/CD SA**: no new SA needs creating — the real CI/CD identity
+      (`github-actions-deploy@central-element-323112.iam.gserviceaccount.com`) already exists and is live (it's the
+      credential P1.2b's `tofu apply` ran under); exhaustive grep of `deployment-service/terraform/gcp/*.tf` for
+      `google_service_account` confirms it is NOT terraform-managed anywhere in this repo (every declared SA —
+      `unified_trading`, `t1_batch`, `catalogue_regen`, `is_daily_enum`, `defi_removal_probe`,
+      `expected_universe_v2_enum`, `instrument_catalogue_regen`, `lifecycle_catalogue_regen`, `secret_rotator`, the 5
+      per-tier SAs — is task-specific; none is `github-actions-deploy`). If broad CI read-access to the tier buckets is
+      ever wanted, the correct terraform shape is a literal-email `google_storage_bucket_iam_member` /
+      `google_project_iam_member` referencing `github-actions-deploy`'s existing address — never a new
+      `google_service_account` resource, which would create a conflicting duplicate of a real, already-provisioned
+      identity. (2) **Developer identities**: confirmed to be human GCP IAM users, handled entirely outside terraform by
+      design — grepped `deployment-service/terraform/gcp/*.tf` for `"user:` IAM-member bindings: zero hits anywhere in
+      the file set (consistent with this session's own use of personal ADC, e.g. `ikenna@odum-research.com`, for
+      out-of-terraform GCP operations). **Conclusion**: neither half has a missing terraform target to build — the
+      original P1.2 ask's "CI/CD + developer identities" clause described access that either already exists (CI/CD SA,
+      external to this repo) or is intentionally out-of-terraform (developer/human accounts). No code change required to
+      close this todo; see the new optional follow-up below for the one genuine, narrowly-scoped remaining option.
+- [ ] [TERRAFORM] P3. **NEW 2026-07-28 (optional, not blocking).** If the operator wants CI to read the 5 tier-scoped
+      buckets (matching bucket-isolation-model.md §8's "CI/CD SA read-only on prod"), add a literal-email
+      `google_storage_bucket_iam_member` (`objectViewer`, scoped to Group A's `-test-`/`-prd-` bucket families) for
+      `github-actions-deploy@central-element-323112.iam.gserviceaccount.com` in
+      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` — do NOT declare a `google_service_account` resource
+      for it (it already exists; a new resource would either error on import-collision or create a stray duplicate
+      identity). No current consumer is blocked on this — CI's `tofu apply`/`plan` steps use project-level IAM-policy
+      permissions (P1.2b's gap), not bucket object access.

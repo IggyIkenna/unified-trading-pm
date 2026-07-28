@@ -163,19 +163,47 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       `FeaturesMvpRule`+`StrategiesMvpRule` (`features_service` registry / 2 archetypes) land WITH their data-status
       consumer — dispatched verbatim into `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft); P2b
       `ModelsMvpRule` is now a scoped implementation task tracked in the new todo immediately below, not operator-gated.
-- [ ] [IMPLEMENT] P2. **P2b — wire `ModelsMvpRule` against the existing `generate_model_id`/`parse_model_id` scheme.**
-      Add a `ModelsMvpRule` to UAC's `mvp_scope.py` (replacing the `models` `FeaturesModelsMvpStub` placeholder),
-      deriving MVP membership from the `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}` identity axes
-      already produced by `generate_model_id`/`parse_model_id` (`ml-service/ml_service/training/ml/config_schema.py`) —
-      the rule matches on those same identity components (asset_group, asset, target_type, model_type, timeframe),
-      mirroring the grain pattern `FeaturesMvpRule`/`StrategiesMvpRule` already use. Wire it into a data-status coverage
-      consumer for ml-service model output (extend the `scope=mvp|could_exist|all` pattern from `deployment-api@3390c98`
-      to models coverage, same mechanism as the features/strategy consumer). Add unit coverage (MVP-scoped `model_id`
-      included, non-MVP excluded, stub-untouched behavior removed for `models` specifically). Repos:
-      unified-api-contracts, deployment-api, ml-service. Source: this doc's P2b (models MVP taxonomy), corrected
-      2026-07-27 (see the todo above). Done when: `ModelsMvpRule` lands in UAC with a data-status consumer reading it +
-      passing tests, and a real-data run confirms `mvp ≤ could_exist ≤ all` monotonicity holds for model coverage the
-      same way it already does for instruments (`deployment-api@3390c98` parity test pattern).
+- [x] ✅ [IMPLEMENT] P2. **P2b — wire `ModelsMvpRule` against the existing `generate_model_id`/`parse_model_id`
+      scheme.** — **DONE 2026-07-28 — unified-api-contracts@0fb9821b**: `ModelsMvpRule` added (its own leaf module
+      `_mvp_scope_models.py` — keeps `_mvp_scope_rules.py` under the 900-line QG file-size cap), replacing the `models`
+      `FeaturesModelsMvpStub` placeholder in `MVP_SCOPE`. Derives MVP membership from the
+      `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}` identity axes already produced by
+      `generate_model_id`/`parse_model_id` (`ml-service/ml_service/training/ml/config_schema.py`) — new `is_model_mvp()`
+      predicate matches on those same decomposed identity components (asset_group, asset, target_type, model_type,
+      timeframe). **Correction to this todo's original text**: `FeaturesMvpRule`/`StrategiesMvpRule` (P2a,
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`) had NOT actually landed yet when this todo was picked
+      up (`mvp_scope.py` still only had `FeaturesModelsMvpStub` for both `features`/`strategy`) — so `ModelsMvpRule` was
+      built mirroring the pattern of the EXISTING per-asset_group rules (`CeFiMvpRule`/ `TradFiMvpRule`/…) instead, plus
+      UAC's own "T4 service depends on UAC, never the reverse" tier rule (UAC cannot import `parse_model_id` from
+      ml-service — callers parse a raw `model_id` locally and pass the decomposed components in, mirroring how
+      `is_mvp()` takes plain args rather than an `InstrumentCatalogEntry`). Ships with a **conservative EMPTY default**
+      (every axis frozenset empty — `is_model_mvp` returns `False` for every model_id today): there is no existing
+      ml-service model-OUTPUT tracking/manifest surface to derive an objective default from (unlike DeFi's v13
+      "everything we currently produce" derivation), and concrete membership is a genuine Phase-3 operator-policy call,
+      not part of this identity-axis wiring. 19 new/updated unit tests: conservative- default proof, per-axis
+      positive/negative matching (asset_group/target_type/model_type/assets/timeframes incl. the unbound-timeframe
+      convention), a `generate_model_id`/`parse_model_id`-shaped round-trip, and a rule-mechanism
+      `mvp ≤ could_exist ≤ all` monotonicity proof (rule-narrowing can only shrink the MVP subset of a fixed candidate
+      universe, never grow it — mirrors `deployment-api@3390c98`'s `test_route_venue_year_coverage_scope.py` pattern).
+      `MVP_SCOPE_CONFIG_VERSION` 20→21. **The data-status coverage CONSUMER is NOT part of this todo** — split into the
+      new P2b-2 todo below (genuine design gap, not guessed at under time pressure).
+- [ ] [IMPLEMENT] P2. **P2b-2 — models data-status coverage consumer (split from P2b, 2026-07-28).** Extend the
+      `scope=mvp|could_exist|all` pattern from `deployment-api@3390c98` to ml-service model output, reading the new
+      `is_model_mvp()` predicate (`unified-api-contracts@0fb9821b`). **Blocked on a real design decision, not a wiring
+      task**: there is no existing ml-service model-OUTPUT tracking/manifest surface to build a coverage endpoint
+      against today (checked 2026-07-28: `manifest_gap_handler.py`/`manifest_inference_guard.py` read the market-data
+      `availability_index` manifest to gate TRAINING on input-data quality — they do NOT track which model_ids have
+      actually been trained/deployed). Before this can be wired, someone needs to decide: (a) what "could exist" even
+      means for models (every theoretical identity-axis combination is combinatorially unbounded unless scoped by a
+      concrete training-grid config), and (b) where trained-model identities get recorded (a new GCS
+      manifest/UTL-`ManifestWriter`-style surface? a training-run registry table? reuse of
+      `ml-service/ml_service/     training/app/core/config_loader.py`'s `TrainingGridConfig` definitions as the "all"
+      universe?). Resolve as a LOCAL/interactive design session first (per
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — an open
+      design call is not an AO-dispatchable todo), THEN dispatch the properly- scoped implementation against that
+      decision. Repos: deployment-api, ml-service, unified-api-contracts (if the design needs a new UAC-level
+      manifest/tracking type). Source: P2b's original consumer-wiring half, descoped 2026-07-28 per this task's own
+      "report as a separate follow-up rather than guessing" instruction.
 - [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
       hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already
