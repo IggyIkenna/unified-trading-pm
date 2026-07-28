@@ -46,6 +46,7 @@ execution_scope: orchestrator-agent
 priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
+depends_on: []
 ---
 
 # Sports G1 NOISE population mismatch + `delete_noncanonical_sports_leagues_2026_06_25.py` scope bug
