@@ -198,4 +198,72 @@ contract, remediation stays open pending that design decision; this Update is th
 Recommend the operator/main decide between: (i) fold this into the existing fix-chain's step 2 ("re-derive the index
 from producer-honest shards") but retarget it explicitly at the ROOT manifest instead of the dead nested one, or (ii)
 treat it as new scope requiring its own plan given it's now a full historical backfill-registration job, not a
-consolidator fix. </content>
+consolidator fix.
+
+## Update 2026-07-28 (slot-13, `data_engineering`) — `instrument_count=14,630,914` root cause TRACED: NOT a live-code bug, no fix applicable
+
+Per this doc's line 69-70 parenthetical ("a separate count-provenance bug, not chased here") and the corresponding
+[[defi_satellite_ao_dispatch_batch1]] todo ("Diagnose (and fix ONLY if a clear code bug) the implausible identical
+`instrument_count=14,630,914`"). Traced the count-aggregation/derivation code path end-to-end (features-service,
+unified-trading-library — read-only; no MTDS involvement, the plan's repo list undercounted features-service as the
+actual site). **Verdict: no live broadcast/join bug exists to fix.** The shared value is a fully-explained, deterministic
+byproduct of two already-diagnosed defects compounding on a dead artifact — documenting as legitimate/non-actionable per
+this todo's own done-when clause, not shipping a fix (there is nothing live left to fix).
+
+**This corroborates, via independent code-level tracing, the live-bucket verification already recorded in the sibling
+issue doc** `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md` § "VERIFIED 2026-07-28 (slot-7)"
+(lines 197-266) — that section did the authoritative GCS/parquet-level proof (byte-exact md5 comparison across groups,
+`num_rows` metadata summation across 118 day-partitions); this Update independently re-derives the same mechanism
+purely from reading the current code, and the two agree exactly.
+
+**Where `instrument_count` is set (current, live code) — correctly per-`(date, feature_group)`-scoped, not shared:**
+
+- `features-service/features_service/onchain/engine/orchestrator_manifest.py:89-96` (`_write_feature_group_manifest`)
+  calls `ManifestWriter.add(row_count=self._last_record_count, feature_group=feature_group, ...)` →
+  `unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py:358-361` maps `row_count` straight
+  to `AvailabilityRecord.instrument_count`. This is the only onchain manifest-write path (no separate
+  onchain-specific writer).
+- `self._last_record_count` is reset to `0` at the top of `process_feature_group()` **before** dispatch
+  (`orchestrator.py:177`), reset again inside the shared per-day loop helper `_process_daily_feature_group()`
+  (`orchestrator_daily_loop.py:202`), accumulated only for that one call (`orchestrator_daily_loop.py:144`), and
+  written back immediately after that group's own dispatch completes. `process_feature_group()` is awaited serially
+  per feature_group (no concurrent mutation of `self`) — **this rules out a live cross-group state-leak.**
+- UTL's dedup keys are also correctly group-scoped: `_BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS` includes
+  `feature_group` (`manifest_consolidator.py:523-537`, added `7a72049a` 2026-05-26); `_merge_dataframes()`
+  (`unified_trading_library/manifest_writer/_writer_io.py:1220-1269`) dedups on the same keys. No `ffill`/cross-row
+  merge path exists anywhere in `manifest_consolidator.py`/`_writer_io.py`/`_read_index.py` that could leak one
+  group's count into another's.
+
+**Why the shared value exists anyway — two compounding, already-diagnosed causes, not a new bug:**
+
+1. **The already-fixed calculator column-projection bug** (`features-service@907e17b4`, shipped 2026-07-20, this doc's
+   §"Blocker 2" / the sibling issue doc's §1). The 5 feature-less calculators
+   (`_calculate_rewards_features`/`_calculate_risk_params_features`/`_calculate_flash_loan_features`/
+   `_calculate_health_factor_features`/`_calculate_liquidation_features`, `orchestrator_calculators.py:293-405`) all
+   consume the SAME `load_rate_indices()` source that `lending_rates` also consumes
+   (`orchestrator.py:560-643` dispatch, `data_loader.py:459` loader), and defensively project down to base columns
+   only (`timestamp`, `instrument_id`) because none of their real feature columns (`reward_rate`/`ltv`/
+   `liquidation_threshold`/`flash_loan_liquidity`/health-factor fields) exist in the raw AAVE rate-indices frame —
+   a **row-for-row, row-count-preserving** projection, not a row-reducing one. Result: all 6 groups have identical
+   row cardinality, day for day, corpus-wide (5 by dropping columns not rows; `lending_rates` keeps its real columns
+   and also drops no rows).
+2. **The frozen orphaned legacy-seed manifest artifact** (this doc's own 2026-07-28 slot-12 Update above,
+   `_LEGACY_SEED_PATH = "_index/per_vm/_legacy_seed.parquet"`, `manifest_consolidator.py:177,1493-1529`) — a
+   permanently-frozen, never-pruned bootstrap-seed shard, confirmed dead migration debris with no live consolidator
+   owner. Its `instrument_count=14630914` is a **whole-corpus cumulative SUM**, not a per-day count: summing
+   `flash_loan_availability`'s real per-day row count (parquet `num_rows` metadata) across all 118 real day-partitions
+   on disk (`day=2026-01-25`..`day=2026-07-26`) gives exactly 14,630,914 — an exact match. It was stamped onto one
+   synthetic `date=2026-01-25` row per group at some past (undated, script not found) bootstrap/seed time.
+
+Because cause (1) makes all six groups' daily row counts identical, their independently-computed 118-day sums are
+**mathematically bound** to land on the same total — hence one shared value across exactly the 6 groups that route
+through `_process_daily_feature_group()` with real GCS objects, and no others. This is not a copy-paste/shared-variable
+bug in whatever process produced the seed; it is signal (b) surfacing the same already-fixed §"Blocker 2" defect from
+the manifest-count side rather than the row-content side.
+
+**Disposition: no fix shipped, none applicable.** The live orchestrator/UTL code is correctly per-group scoped today;
+the producer bug that gives the six groups identical row cardinality is already fixed (`907e17b4`); the artifact
+carrying the stale shared count is dead, orphaned, unconsulted data, not a currently-running code path. Remediation
+stays exactly the fix chain this doc already names above (delete the orphaned `onchain/_index/` tree + backfill honest
+root-manifest registration) — nothing new to add to it from this diagnosis. No `[OPERATOR]`-gated action taken (this
+Update is diagnosis-only, per the sourcing todo's own scope).

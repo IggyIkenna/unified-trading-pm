@@ -768,14 +768,18 @@ drift_direction: advance-code
       two measure different things. Needs an operator design decision (delete orphan + historical backfill-
       registration), so remediation stays open per this todo's contract. Full evidence:
       `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` (Update 2026-07-28, slot-12).
-- [ ] [DATA] P1. Diagnose (and fix ONLY if a clear code bug) the implausible identical `instrument_count=14,630,914`
-      reported across 5 different onchain feature_groups (health_factor, rewards, liquidation_events, risk_params,
-      flash_loan_availability) plus lending_rates in the onchain availability_index — a per-group count shouldn't be
-      identical across unrelated groups. Trace the count-aggregation/derivation code path and either fix the
-      broadcast/join bug or document why the shared count is legitimate. Repos: unified-trading-library,
-      market-tick-data-service. **Done when**: a written root cause is added to the issue doc as a dated Update, with
-      either a shipped + verified fix (re-derived index shows distinct plausible counts) or a documented reason the
-      shared count is legitimate. Source: `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-13).** Diagnose (and fix ONLY if a clear code bug) the implausible
+      identical `instrument_count=14,630,914` reported across 5 different onchain feature_groups (health_factor,
+      rewards, liquidation_events, risk_params, flash_loan_availability) plus lending_rates in the onchain
+      availability_index — a per-group count shouldn't be identical across unrelated groups. Trace the
+      count-aggregation/derivation code path and either fix the broadcast/join bug or document why the shared count is
+      legitimate. Repos: unified-trading-library, market-tick-data-service. **Done when**: a written root cause is
+      added to the issue doc as a dated Update, with either a shipped + verified fix (re-derived index shows distinct
+      plausible counts) or a documented reason the shared count is legitimate. Source:
+      `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`. — **No live code bug**: producer path
+      is correctly per-`(date, feature_group)`-scoped; shared value is a dead legacy-seed artifact (118-day
+      row-count SUM), identical across these 6 groups only because the already-fixed `907e17b4` column-projection bug
+      gave them identical daily row cardinality — see dated Update in the source issue doc for full citations.
 - [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-12).** GCS-verified (bounded, prefix-scoped, no whole-corpus walk):
       features-onchain `lst_yields` is exactly 15 day-partitions (2026-04-03..2026-04-19, 2-day internal gap); MTDS raw
       `lst_rates` spans years both sides per EVM token (LIDO 2021-08-17..2026-07-27, ETHERFI ≥2024-01-01..2026-07-27,
