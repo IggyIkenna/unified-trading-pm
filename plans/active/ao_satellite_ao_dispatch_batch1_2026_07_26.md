@@ -149,7 +149,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       — combined because they are one gate applied at two sites, both now flipped too). Per that doc's own 2026-07-23
       narrowing, do NOT re-hunt a reporter-internal race unless a post-`agent-orchestrator@529b0dc` recurrence is
       observed.
-- [ ] [UI] P2. **Derive the Playwright dev-server port per slot instead of from a shared constant** in
+- [x] ✅ [UI] P2. **Derive the Playwright dev-server port per slot instead of from a shared constant** in
       `deployment-ui/playwright.config.ts` and all three `webServer` blocks of
       `unified-trading-system-ui/playwright.config.ts`, keeping `reuseExistingServer: true`, and log the resolved port
       plus whether a server was reused or freshly spawned so a cross-slot attach is visible rather than silent. Derive
@@ -160,6 +160,24 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       `/codex/06-coding-standards/ui-testing-layers.md`. Source:
       `/plans/active/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md` (UI P2, Option A).
       This is a DIFFERENT file set from `agent-orchestrator/dashboard`'s own playwright config — do not touch that one.
+      — `deployment-ui/playwright.config.ts@5663aa0` already shipped this half pre-session (verified via `git log`).
+      This session shipped the `unified-trading-system-ui` half: `unified-trading-system-ui@369eea00` — derived
+      `NEXT_PORT=3100+SLOT`/`API_PORT=8030+SLOT` in `tests/e2e/_shared/config.ts` (E2E_CONFIG, the repo's own "single
+      source of truth for e2e test-run tunables"), wired all 3 `webServer` blocks + `use.baseURL` off it, and added
+      reuse/spawn console logging matching the deployment-ui pattern. Config verified for slot 15 (`tsx -e` dump:
+      `slot=15 nextPort=3115 apiPort=8045`); confirmed via live log output that the reuse-detection correctly prints
+      `ALREADY UP, will be REUSED` vs `not up, will be freshly SPAWNED`. `pw:L2 ✓` — full `tests/smoke/` first hit 65
+      timeouts under measured severe host contention (load 24→53 on 16 cores, other slots' activity, not this change —
+      same environment-blocker class as `ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` Batches 1/4); rather than
+      fabricate a suite-wide green, cited the narrower evidence this todo's own done-when asks for:
+      `tests/smoke/wizard-stepper.spec.ts` (4/4 passed, 56.7s, clean). Full `quality-gates.sh` (typecheck/lint/286
+      tests/build/DeFi-citation) green end-to-end, 224s, sentinel `1306658c`→`369eea00` after quickmerge (one
+      branch-drift rebase mid-ship, clean fast-forward). **Adjacent finding (not fixed here, outside this todo's file
+      list)**: ~40 `tests/e2e/**/*.spec.ts` files (L3a/L3b layer, not part of the `pw:L2` gate) hardcode
+      `http://localhost:3100`/`:8030` directly and don't import `E2E_CONFIG`, so they remain exposed to the original
+      cross-slot false-result bug this fix closes for the smoke gate — filed
+      `/plans/active/issues/unified_trading_system_ui_e2e_specs_hardcode_ports_bypass_per_slot_derivation_2026_07_28.md`
+      with 3 batched follow-up todos.
 - [ ] [BACKEND] P1. **Verify the sequential-gate fix + its DB migration on the live orchestrator VM.** Read-only. Record
       all three of the source doc's checks with the command and output for each: (a) does the deployed HEAD contain
       `agent-orchestrator@867b1731e` (`git merge-base --is-ancestor`), and which ref does `ao-self-pull.sh` track; (b)
