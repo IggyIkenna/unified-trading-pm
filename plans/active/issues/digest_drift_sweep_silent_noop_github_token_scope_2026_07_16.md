@@ -52,7 +52,7 @@ related:
   [
     /plans/archive/2026_06/build_operability_smoke_all_repos_2026_06_19.md,
     /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
-    /plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
+    /plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-16
@@ -100,7 +100,7 @@ depends_on: []
 > hardening change.
 >
 > **Independent corroboration that the token fix landed and changed behaviour**: the sibling doc
-> [/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
+> [/plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
 > records the same commit; and
 > [/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md](/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md)
 > § F4 now observes `"Dispatched 16 / Already fresh 0"` — the sweep is reaching Dockerfiles, which the pre-fix
