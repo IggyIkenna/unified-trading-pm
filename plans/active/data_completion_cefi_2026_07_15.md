@@ -286,6 +286,12 @@ MTDS consolidation ruling.)**
       readout. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
       ruling.)**
 
+      **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
+          (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+          when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+          completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+          No checkbox flip — criteria still unmet pending that re-run's result.
+
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
       from redispatching an already-superseded, non-actionable item to a `data_engineering` worker. **SUPERSEDED-BY

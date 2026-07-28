@@ -213,14 +213,18 @@ list?) before executing autonomously — flagging for operator awareness rather 
 
 ## Todos (for whoever picks this up next — NOT dispatched automatically)
 
-- [ ] [VERIFY] P2. Confirm whether adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered
-      venue×instrument_type combination) actually changes `expected_unattempted` materialisation / `completeness_pct`,
-      or whether that denominator is scoped independently. Small, cheap, read-only check — answers whether the
-      safe-alternative's step 1 needs operator sign-off or is genuinely inert.
-- [ ] [CODE] P2. (Gated on the verify above.) If inert: register `perp_daily_ctx` as its own canonical data_type +
-      SchemaContract (mirror `DEFI_PERPETUAL_PERP_FUNDING`); add manifest writes to both ad-hoc writers, unchanged
-      schema; backfill manifest rows for the existing historical shard tuples. Repos: unified-api-contracts,
-      market-tick-data-service, features-service, unified-trading-pm (manifest backfill script).
+- [x] ✅ [VERIFY] P2. **DONE 2026-07-28 (slot-6, data_engineering).** Confirmed whether adding a data_type to
+      `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered venue×instrument_type combination) actually changes
+      `expected_unattempted` materialisation / `completeness_pct`, or whether that denominator is scoped independently.
+      See Progress Log entry above: NOT inert in general (the axis is a direct enumerator input, unlike the venue axis)
+      but IS inert specifically for HYPERLIQUID/CeFi combos, since they enumerate under
+      `DATA_TYPES_BY_ASSET_GROUP["cefi"]`, a separate dict key.
+- [ ] [CODE] P2. (Gated on the verify above.) Register `perp_daily_ctx` under `DATA_TYPES_BY_ASSET_GROUP["defi"]` ONLY
+      (confirmed inert for HYPERLIQUID/CeFi combos, no operator sign-off needed for THIS specific registration — see
+      Progress Log) as its own canonical data_type + SchemaContract (mirror `DEFI_PERPETUAL_PERP_FUNDING`); add manifest
+      writes to both ad-hoc writers, unchanged schema; backfill manifest rows for the existing historical shard tuples.
+      Repos: unified-api-contracts, market-tick-data-service, features-service, unified-trading-pm (manifest backfill
+      script).
 - [ ] [OPERATOR-DECISION] P3. Whether/when to execute the ALREADY-GATED `[DESIGN] P1` todo in
       `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` (demote `perp_funding` to a derived
       view) — and, if so, whether `perp_daily_ctx`/mark-price should be folded into that same decision. This issue doc
@@ -231,3 +235,63 @@ list?) before executing autonomously — flagging for operator awareness rather 
 
 This is a stop-and-document outcome per this task's explicit safety override, not a completed migration. See "Verdict"
 above.
+
+## Progress Log
+
+### 2026-07-28 — data_engineering (slot-6): data_type-axis denominator trace
+
+Answers this doc's own P2 verify todo + `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s mirrored todo.
+
+**Question**: does adding a data_type to `DATA_TYPES_BY_ASSET_GROUP["defi"]` (for an already-registered HYPERLIQUID/CeFi
+venue×instrument_type combination) change `expected_unattempted` materialisation / `completeness_pct`, or is that
+denominator scoped independently — mirroring RESULT 4's venue-axis finding in
+`distinct_values_noncanonical_audit_2026_07_20.md`?
+
+**Verdict — for the specific HYPERLIQUID/CeFi combos named in the source todo: NO, it does not change anything.** But
+the axis is NOT scoped independently in general — the mechanism is real and would fire for genuine defi-asset-group
+protocols. Read-only code trace, no code/schema/manifest changes made.
+
+**Mechanism (unlike the venue axis, which routes indirectly through the catalogue, the data_type axis is consumed
+DIRECTLY by the enumerator):**
+
+- `instruments-service/scripts/enumerate_expected_universe.py:4145` —
+  `data_types_list = [str(dt) for dt in DATA_TYPES_BY_ASSET_GROUP.get(asset_group, [])]` (the
+  `"defi"`/`"cefi"`/`"prediction"` fallback branch), fed into `enumerate_v2(...)` (:4160) →
+  `_row_data_types(asset_group, instr, data_types)` (defi path at :1482).
+- Inside `_row_data_types` (:649-698):
+  `valid = valid_data_types_for_venue_instrument_type(asset_group, instr.venue, instr.instrument_type)` (:681);
+  `known_ag_dts = frozenset(DATA_TYPES_BY_ASSET_GROUP.get(asset_group.lower(), []))` (:696);
+  `row_dts = [dt for dt in data_types if dt in valid or dt not in known_ag_dts]` (:698). So once a data_type is
+  registered (→ "known"), it survives the filter only if `valid` includes it.
+- For `asset_group == "defi"`, `valid` comes from `valid_data_types_for_venue_instrument_type`
+  (`unified_api_contracts/registry/market_data_categories.py:1443-1517`), which narrows to the specific protocol's
+  `PROTOCOL_CAPABILITIES[protocol].data_types` (:1487-1503), keyed off `venue.split("-", 1)[0]` — a registry entirely
+  independent of `DATA_TYPES_BY_ASSET_GROUP`.
+- **Conclusion on the general mechanism**: registering a new data_type in `DATA_TYPES_BY_ASSET_GROUP["defi"]` DOES
+  expand the denominator / move `completeness_pct` for any real defi-asset-group protocol×instrument_type pair whose
+  `PROTOCOL_CAPABILITIES` entry also lists that data_type — this axis is NOT independently scoped the way the venue axis
+  effectively is; it is a direct enumerator input gated only by the protocol-capability allowlist.
+
+**Why the HYPERLIQUID/CeFi combos specifically are unaffected**: `HYPERLIQUID` is registered in
+`VENUES_BY_ASSET_GROUP["cefi"]` (`market_data_categories.py:360`, "On-chain CLOBs reclassified from DEFI" section), NOT
+in `VENUES_BY_ASSET_GROUP["defi"]`. Its catalogue rows are therefore enumerated via the **CEFI** pass
+(`_row_data_types("cefi", instr, data_types)` at `enumerate_expected_universe.py:1157`), whose candidate `data_types`
+list is sourced from `DATA_TYPES_BY_ASSET_GROUP["cefi"]` — a completely separate dict key from `["defi"]`. Different
+asset_group ⇒ different `data_types_list` ⇒ different `known_ag_dts` ⇒ different `valid` branch. So editing
+`DATA_TYPES_BY_ASSET_GROUP["defi"]` alone touches zero HYPERLIQUID/CeFi shard tuples — it mints no new
+`expected_unattempted` rows and moves no completeness_pct for them, full stop. (Note: a
+`PROTOCOL_CAPABILITIES["hyperliquid"]` entry does exist, `capability_declarations/_defi.py:715-721`,
+`data_types=["perp_funding", "oracle_prices"]` — but it is unreachable for enumeration purposes since HYPERLIQUID is
+never iterated under the `"defi"` asset_group.)
+
+**Implication for this doc's own gated P2 todo (below, "register `perp_daily_ctx` as its own canonical data_type")**:
+the safe-alternative's step 1 is genuinely inert / operator-sign-off-free **only if `perp_daily_ctx` is registered
+solely under `DATA_TYPES_BY_ASSET_GROUP["defi"]`** (as the todo literally asks) — because none of the affected
+combinations (HYPERLIQUID, CeFi venues) enumerate under that key. It would NOT be inert if the registration instead
+targeted `DATA_TYPES_BY_ASSET_GROUP["cefi"]` (the dict HYPERLIQUID/CeFi venues actually enumerate under) — that edit
+would expand the cefi denominator for any cefi venue×instrument_type whose `valid_data_types_for_venue_instrument_type`
+branch (cefi's own gating, not traced further here — out of this todo's scope) admits `perp_daily_ctx`, and would need
+the same operator-gating precedent as RESULT 4's venue-axis finding.
+
+Full trace performed by a dispatched read-only Explore sub-agent (Sonnet); no files edited in
+instruments-service/unified-api-contracts/market-tick-data-service/features-service/strategy-service.
