@@ -50,6 +50,9 @@ depends_on: []
 
 # CeFi margin model misclassifies healthy positions as WARNING (hyphenated instrument-id parsing bug)
 
+> **🟢 RESOLVED 2026-07-27** — fixed via `unified-trading-library@3b13b69e`, `unified-trading-library@71970a2f` (see
+> `resolved_by` above). Archived.
+
 ## What I found
 
 `_CefiMarginModelBase.compute()`
