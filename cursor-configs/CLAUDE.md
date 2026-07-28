@@ -154,13 +154,17 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   backgrounded task done before its real exit; rely on the tracked-task auto-re-invoke (don't poll harness tasks); poll
   only external work on a **progress metric** (flat = STALL → diagnose); don't over-watch / no-sawtooth / don't poll
   what you can direct-check; **backfill/migration progress = count of TARGET artifacts created (entity-scoped,
-  `time_created` not `updated`), NEVER activity** — a 3.5h run logged + heartbeated healthily while writing ZERO
-  `entity=fixtures`, and an entity-agnostic shard check passed it because OTHER entities were writing; monitors read
-  terminal `exit_code` + manifest counts + log-mtime + a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no
-  self-match); `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background`
-  heartbeat watchdog (≤30-min) in the SAME turn. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
+  `time_created` not `updated`), NEVER activity** — an entity-agnostic check can pass for hours while the target entity
+  writes ZERO rows, masked by OTHER entities writing (real incident, detail in the SSOT); monitors read terminal
+  `exit_code` + manifest counts + log-mtime + a TERMINAL **measured** verdict (liveness `kill -0 <PID>`, no self-match);
+  `ScheduleWakeup` / a dispatched sub-agent are NOT reliable wakes — arm your OWN `run_in_background` heartbeat watchdog
+  (≤30-min) in the SAME turn. SSOT: `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`,
   plans, memory).
+- **Pre-task plan/issue conflict check (HARD RULE)** — before starting ANY task, grep `plans/active/`+`.../issues/`
+  first: plans go stale/superseded BETWEEN daily `/plan-reconcile` sweeps, so no-flag ≠ current; 0 hits ≠ clear
+  (grep-then-READ) — a hit means confirm `status`/`supersedes` before building. SSOT:
+  `/codex/12-agent-workflow/pre-task-plan-conflict-check.md`.
 
 ## Doc retrieval — retrieve less but right (L0→L4, grep-native)
 
@@ -353,18 +357,17 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption loses live data); on-demand for backfill is a
   bug. **Manually checking in on a SPOT VM that looks stalled/gone: verify `compute.instances.preempted` via
   `gcloud compute operations list` BEFORE diagnosing a bug/hang** — one-off migration VMs aren't wired into the fleet
-  monitor, so this is on you, not automatic. **Tardis VMs: HARD cap **1** concurrent, both clouds — the lease does NOT
-  lift it, it AMPLIFIES the storm** (operator 2026-07-16; the earlier cap-3 was measured on skip-scans, not real
-  fetching): count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into the cefi/mtds
-  launchers). N>1 in the real gap measured ~94% 403s + **37,212 FALSE `attempted_failed` rows** (manifest corruption,
-  not just waste) + coverage going BACKWARD; N=1 measured ZERO 403s. Scale on the ONE IP — `SINGLE_VM_QUEUE=1`
-  bundling + `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` (defaults 16/4 leave the box ~93%
-  idle) — NEVER more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) are exempt. **Regularly check every
-  running VM for preemption-without-auto- recovery and for silent `attempted_failed` billing-waste** (a non-retriable
-  error re-attempted forever costs real money every wave) — run `/vm-preemption-billing-waste-audit`; every agent
-  watching VMs should use it, not just when an incident is already suspected. SSOTs:
-  `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
-  `…/vm-tarball-deployment.md`, `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`.
+  monitor, so this is on you, not automatic. **Tardis VMs: HARD cap 1 concurrent, both clouds** (lease does NOT lift it
+  — AMPLIFIES the storm; operator 2026-07-16, measured: N>1 mass 403s + false `attempted_failed` rows + coverage
+  regression, N=1 clean — full numbers in the SSOT) — count the running fleet BEFORE launching
+  (`tardis-concurrency-guard.sh`, wired into cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
+  `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE IP, never more VMs. Non-Tardis venues
+  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every running VM for preemption-without-auto- recovery
+  and for silent `attempted_failed` billing-waste** (a non-retriable error re-attempted forever costs real money every
+  wave) — run `/vm-preemption-billing-waste-audit`; every agent watching VMs should use it, not just when an incident is
+  already suspected. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap),
+  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
+  `…/vm-preemption-and-billing-waste-monitoring.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
   reference (**Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** — operator ruling: Databento =
@@ -394,9 +397,8 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   resolved · git RECOVERED · escalation resolved-if-it-paged; webhook-only correlation via opened-at ts, no threading).
   SSOT: `/codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
-  fail-open); cooldowns track a condition's MEASURED cadence, not its declared cron (GH throttles `schedule:` to ≈80-90%
-  delivery, corrected 2026-07-21 per `github_actions_ci_cost_reduction_2026_07_15.md`'s dated re-measurement — hourly
-  crons landed 9/10, `*/30` landed 16/20; was: ≈37%, an earlier and apparently stale estimate). SSOT:
+  fail-open); cooldowns track a condition's MEASURED delivery cadence, not its declared cron (GH throttles `schedule:`
+  well below the declared rate — measured rates + dates in the SSOT, re-measure before trusting an old %). SSOT:
   `/codex/04-architecture/ci-alerting.md`.
 - **Runbooks**: declare `owner`/`cadence`/`verifier`/`last_executed` (missing = review-blocking). **Cross-plan
   banners**: launching a VM / in-flight refactor → add `> **🟢/🟡 …**` to every affected plan.

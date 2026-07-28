@@ -117,10 +117,28 @@ Recovery in this session: verified the force-leg's real GCS write + manifest row
 `_index/per_vm/instr-backfill-cefi-pchk-0727085259-f-hyperliquid.parquet`) rather than trusting the killed process's own
 (never-written) report, then re-ran the skip leg using the correct pattern (no `nohup`) and it completed normally.
 
+**Independent re-occurrence (2026-07-28, slot 7):** hit the identical pattern fresh, mid-backfill on
+`prediction_satellite_ao_dispatch_batch4-010` (resuming
+`market-tick-data-service/scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply` across 348 dates).
+Backgrounded with `nohup .venv/bin/python ... > run.log 2>&1 &` in a plain (non-`run_in_background`) Bash call; the
+process (PID 4006112) ran healthily for 23+ dates then vanished with no traceback, no exit code, no TOTALS line —
+confirmed via `journalctl -k --since "2026-07-28 12:10:00"`: `orphan_reap sweep: slot 7 pid 4006112 age=346s KILLED`.
+This is very likely the SAME root cause previously mis-attributed to "shared-host RAM exhaustion" in
+`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` and in this exact task's own prior session (slot-16's
+earlier 55/348-date run, which the plan doc's Progress Log describes as "WORKER SESSION DIED mid-run (background process
+reaped, exit 144/SIGTERM — not a script bug)" — that framing was right that it wasn't a script bug, but the actual
+mechanism is `orphan_reap`, not RAM pressure; worth a cross-check against
+`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s own evidence for whether some or all of ITS occurrences
+are actually this same bug misdiagnosed). Recovery: relaunched via the correct pattern (the long-running command passed
+directly to the Bash tool's `run_in_background: true`, no `nohup`/`&` wrapper) — the script's own idempotency check made
+this a zero-cost resume (no data lost, only compute time). Confirms the recommended-decision-1 fix (below) directly,
+independently, a day later — implementing it now rather than leaving it open a third time.
+
 ## Open work
 
-- [ ] [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or `worker.md`'s
-      async-wait section (recommended decision 1 above).
+- [x] ✅ [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or
+      `worker.md`'s async-wait section (recommended decision 1 above). — unified-trading-pm (worker.md, added right
+      after the Heartbeat section's PROGRESS guidance, 2026-07-28).
 - [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
-      worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md fix is the
-      primary mitigation.
+      worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md/worker.md
+      fix is the primary mitigation and now shipped; this remains open only as a defense-in-depth nice-to-have.
