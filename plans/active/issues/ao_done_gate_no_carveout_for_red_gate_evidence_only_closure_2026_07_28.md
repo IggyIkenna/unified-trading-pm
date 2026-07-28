@@ -100,7 +100,7 @@ data-correctness todo looks like while the gate is red.
 
 ## Why it matters
 
-This is not a one-off: the data-pipeline-correctness HARD RULE (`codex/02-data/data-pipeline-correctness-hard-rule.md`)
+This is not a one-off: the data-pipeline-correctness HARD RULE (`/codex/02-data/data-pipeline-correctness-hard-rule.md`)
 explicitly says a RED data audit FREEZES layer-N+1 work and gates checkbox-flipping until green -- so RED-gated todos
 recur by design across every asset-group's consolidated-closeout plan, not just this cefi one. Any worker that hits this
 gate has no self-service resolution: it cannot flip (forbidden by the data-correctness rule), cannot CANCEL (the work is

@@ -134,3 +134,33 @@ question.
       candle-production window (≥2026-07-25) to get a genuine benchmark measurement — day=2026-07-19 (used this session)
       falls inside the confirmed ~6-month production gap and would still fail on data-availability even with the naming
       bug fixed.
+
+## 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — SECOND unfixed instance of the same bug class found + fixed
+
+Attempted the P3 re-run above now that real candle data resumed
+(`gs://market-data-tick-pred-prd-.../processed_candles/ by_date/day=2026-07-25/` and `day=2026-07-26/` both confirmed
+present via `gcloud storage ls`):
+`--day 2026-07-26 --asset-group PREDICTION --family delta_one --legs force --require-captured --auto-day`. The VM
+(`features-e2e-prediction-20260728-132926-0f2a85`) launched clean, and this time the DEPENDENCY check itself passed
+(`✅ Dependencies verified for 2026-07-25/PREDICTION` — confirming the P2 fix above works) — but the run still failed
+(`exit_code=1`), this time inside `_run_lookback_validation`'s **pre-flight lookback validation**, with the identical
+error class: `Kind 'market-data' on cloud 'gcp' has no entry for asset_group='prediction'`. Root cause: a SECOND,
+independent call site — `LookbackValidator.validate_lookback_candles` in the same `dependency_checker.py` (line ~484) —
+called `resolve_bucket_name(kind="market-data", asset_group=...)` directly instead of through the `_resolve_mdps_bucket`
+helper the P2 fix introduced. The helper was added and used by `_resolve_gcs_path`/`_mdps_manifest_capture_status` (the
+dependency-checker call sites) but `LookbackValidator` — a sibling class in the same file, called later in the same
+request — was never migrated to it. Confirmed via direct `run.log` read
+(`gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-prediction-20260728-132926-0f2a85/run.log`).
+
+- [x] [SCRIPT] P2. ✅ Fixed `LookbackValidator.validate_lookback_candles` to call
+      `DependencyChecker._resolve_mdps_bucket(asset_group.lower())` instead of the raw
+      `resolve_bucket_name(kind="market-data", asset_group=...)` — `features-service@89e3ad3b`. Added a regression test
+      (`test_validate_prediction_resolves_via_dedicated_flat_kind` in
+      `tests/delta_one/unit/test_lookback_validation.py`) asserting the resolver is called with
+      `kind="market-data-tick-prediction"` (no `asset_group=`) for PREDICTION, mirroring the existing
+      `TestResolveMdpsBucketPredictionAbbreviation` coverage on the dependency-checker side.
+- [ ] [DATA] P3. Once this second fix ships, re-run `PREDICTION:delta_one` (day≥2026-07-25) again — the lookback
+      validator itself still needs enough CONTIGUOUS captured days upstream of the target date to satisfy
+      `moving_averages`' 200-candle requirement (production only resumed 2026-07-25/26, so an early re-run may still
+      fail on genuine insufficient-lookback-window rather than a code bug — that would be a real, honest finding, not
+      another instance of this bug).

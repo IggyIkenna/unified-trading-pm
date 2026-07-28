@@ -96,3 +96,63 @@ Created per operator answer to `BLK-2f9e7680` (4th consecutive same-day re-dispa
 `sports_consolidated_native_ao_extract_2026_07_25.md`'s Track H denominator todo, all 4 hitting the identical STOP
 condition). A priority-999 backlog park does not hard-block re-dispatch without a machine `depends_on` — see
 `sports_track_h_denominator_gated_2026_07_28.md` for the companion gated plan this unblocks.
+
+### 2026-07-28 (slot-14) — todo 2 (`batch_footystats` copy+swap) EXECUTED + VERIFIED
+
+**Population correction vs the todo's own citation**: the `batch_footystats` population needing league_id
+canonicalisation is NOT the `venue=ODDS_API` mis-stamped population
+`issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` tracks (that population's manifest
+rows are confirmed gone — zero today, only orphaned GCS bytes remain, human-gated delete only). It is a SEPARATE, live,
+currently-registered population at `venue=FOOTYSTATS`/`source=footystats` — live manifest census 2026-07-28 confirmed
+42,476 total rows, 14,668 with a non-registry `league_id`, matching the parent issue doc's own 2026-07-28 LIVE-PROBE
+figures exactly. GCS path shape:
+`.../venue=FOOTYSTATS/instrument_type=<IT>/data_type=<DT>/league=<RAW>/ ticks_migrated_<TS>.parquet` — note the
+partition key is `league=`, not `league_id=` (a second anomaly beyond the raw value itself), plus one undated "bare"
+duplicate object per day (no `league=` segment, row count == sum of that day's per-league files — a documented
+duplicate, left untouched, matching the archived 2026-07-16 doc's finding).
+
+**Executor built** (mirrors `migrate_sports_league_id_casing_2026_07_21.py`, reuses its verified 55-entry
+`sportkey_canon_final.json` map — same odds_api vendor vocabulary): `market-tick-data-service` (uncommitted this turn,
+pending — see below) `scripts/sports/league_id_relocation/migrate_sports_footystats_league_id_2026_07_28.py`. Per-row
+classification via `sport_key` (not raw name) uniformly handles already-canonical raws (pure `league=`→`league_id=`
+key-rename), the 6 collision raws, and the `SOCCER_*`/`soccer_*` machine-key raws — no special-casing needed. Validated
+first against 3 sample days spanning the full 2020-06-06..2026-04-14 range (`--validate`, TEST bucket): 8/8 PASS, 0
+quarantine.
+
+**Full-corpus `--apply-prod --confirm-prod-write`**: 1,815 days / 15,155 in-scope objects, sharded across 10 parallel
+workers. Hit a recurring external-kill incident (all 10 workers vanished cleanly, zero tracebacks, twice under raw
+`nohup`/`setsid` shell-backgrounding — filed `issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md`,
+P2); mitigated with a self-restarting supervisor loop, then switched to harness-tracked `run_in_background` tasks which
+proved stable to completion. Final result: **15,980 canonical targets, 15,980/15,980 verify=PASS, 0 quarantine, 0 FAIL**
+(merged from all 10 shard reports).
+
+**Manifest swap** (`scripts/sports/league_id_relocation/manifest_swap_footystats_2026_07_28.py`, mirrors
+`manifest_swap_2026_07_22.py`'s scoped REMOVE(exact stale tuples)+ADD pattern — NOT the blunt
+`_clean_stale_league_entries` the todo cites, which strips every non-empty-`league_id` row for the WHOLE service and
+would have also nuked the already-canonical `batch_odds_api` rows). Took 3 passes to reach 0 residual, each one a
+genuine pre-existing data-shape landmine, not a design flaw in the swap logic:
+
+1. First PLAN pass matched only 1,098/15,155 stale tuples — root cause: the live manifest stores an empty
+   `instrument_type` as Python `None`, not the empty string the GCS path segment (`instrument_type=/`) implies. Fixed
+   with `.fillna("")` before comparison.
+2. Second PLAN pass (post-fix) still left 1,098 residual `SOCCER_*` rows — root cause: some raw objects register in the
+   manifest with a DIFFERENT case than their own GCS path segment (path `league=soccer_epl`, manifest
+   `league_id=SOCCER_EPL`). Fixed with a case-insensitive compare on both sides of the tuple match.
+3. Final residual: 2 rows (`CHAMPIONSHIP`/day=2026-04-14, `row_count=1.0` each, `instrument_type=None`/
+   `data_type=ODDS`|`odds`) — tiny stale placeholder fragments from a shape variant the general fix didn't cover (this
+   one day's real 1,552-row content was already correctly consolidated under `ENG_CHAMPIONSHIP`). Removed via a scoped,
+   snapshotted, exact-match one-off CAS write (not committed — not a durable script, a single surgical fix).
+
+**VERIFIED — done-when met**: fresh live manifest census
+(`read_availability_index(columns=["league_id", "pipeline_mode","venue","source","date","capture_status"])`,
+`pipeline_mode=batch_footystats`) shows **0 rows with a genuine non-registry `league_id` string** — 2,440 residual
+`None`/blank-sentinel rows remain, matching the parent issue doc's own established distinction ("a separate
+honest-absence question, not this migration's canonicalisation gap" — same class the 2026-07-28 LIVE-PROBE excluded from
+its 55,160/57,942 figure).
+
+**Code ship status**: BLOCKED on a pre-existing, unrelated `market-tick-data-service` QG red (STEP 5.101
+empty-string-fallback ratchet, 91 sites > baseline 89, both flagged sites in `scripts/verify_lst_collateral_support.py`
+— confirmed via `git status --porcelain` showing only my 2 new untracked files, zero relation). Declared `RB-166e706f`
+(repo-blocker, condition `repo-market-tick-data-service-qg-green`) rather than fixing the unrelated baseline myself;
+will commit+push+flip this checkbox the moment the repo clears. The PROD data-correctness work above is already complete
+and verified independent of the code-ship — this is a shipping-mechanics gap only, not a data-correctness one.

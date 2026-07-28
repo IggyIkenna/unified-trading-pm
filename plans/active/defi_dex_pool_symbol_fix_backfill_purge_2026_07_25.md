@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                                          (specific `_migrated_*` marker objects, never the bucket), target
-                                                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                                          Progress Log below.
+                                                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                                              (specific `_migrated_*` marker objects, never the bucket), target
+                                                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                                              Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -545,4 +545,98 @@ is quick and doesn't block anything.
     4's checkbox + `/done`; (4) if somehow stalled/gone without clean completion, do NOT blindly relaunch under the SAME
     `VM_NAME` again without first checking its OWN per-VM shard size -- if it's again approaching ~1M rows, use yet
     another fresh name rather than repeating the same mitigation indefinitely, and reference the issue doc for the real
-    fix.
+    fix. **[STALE -- superseded, see the 2026-07-28 entries below: batch1c completed cleanly and todo 4 is DONE.]**
+
+- **2026-07-28 -- todo 5 (purge) IN PROGRESS (checkpoint before a context compact, not yet closed): script built, real
+  bug found+fixed, catalogue-undercoverage finding filed, real --apply run currently RUNNING with confirmed progress.**
+  - **Category-1 purge (redundant `_migrated_*` markers) NOT yet run for this cluster** -- todo 5's own text covers BOTH
+    the old markers AND the still-current unattributed address-keyed leaves; only the second category has been tackled
+    so far (see below).
+    `delete_migrated_defi_markers_2026_07_23.py --venues CURVE,SUSHISWAP,VELODROME_V2,TRADER_JOE_V2 --data-types dex_pool_state`
+    (safe to run for the FULL venue including CURVE/OPTIMISM -- it only removes redundant bundle-backup copies via the
+    existing sibling/needs_attribution content-verification, never the actual per-instrument leaves) is still
+    outstanding -- next session should `--dry-run` first, review, then `--apply` per the same reversibility citation as
+    todo 1.
+  - **New script shipped**: `market-tick-data-service@249dc019`
+    (`scripts/one_offs/purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.py` + 21 unit tests, full QG green).
+    Per-shard-directory content verification: an address-keyed leaf is SAFE to delete only if a symbol-named sibling in
+    the SAME (day, venue, chain) directory has a matching `pool_address` column value. Scope deliberately excludes
+    CURVE/OPTIMISM (deindexed subgraph, confirmed via todo 3, no replacement ever possible -- purging its old data would
+    be permanent loss). Manually cross-verified the SAFE/FLAGGED logic against real GCS content before trusting it (a
+    known-SAFE address's replacement sibling located and confirmed by direct read).
+  - **VM launcher wired**: `deployment-service@32f1361` added the `defi-dex-pool-leaf-purge` category to
+    `launch-canonical-migration-vm.sh` (reuses the existing `canonical-migration-defi-` registry prefix, no new
+    registration needed).
+  - **Dry-run executed + verified** (`canonical-migration-defi-dex-pool-leaf-purge-20260728-130051`, full
+    2020-01-01..2026-07-28 range, all 4 tarballs fresh-verified before launch): completed cleanly, `rc=0`, self-deleted.
+    Result: **190,955 leaves SAFE** (content-verified superseded) / **541,890 leaves FLAGGED_NO_MATCHING_REPLACEMENT**
+    (no replacement -- correctly retained). One false-alarm stall investigated mid-run (GCS-uploaded log copy lagged
+    ~3-5 min behind the VM's own local log under a dense content window; SSH-verified the process was genuinely alive
+    via growing CPU time -- not a real stall).
+  - **MAJOR FINDING: the plan's own todo 5 done-when ("zero unattributed leaves remain") is UNSAFE to pursue
+    literally.** 541,890 of the historically-captured address-keyed leaves (~74%) have NO catalogue-covered symbol-named
+    replacement and never will under the current instruments-service catalogue population -- e.g. sushiswap/ARBITRUM's
+    catalogue lists only 4 pools vs 100+ distinct historically-captured addresses. Purging those would be permanent,
+    uncompensated data loss, violating the exact delete-safety principle this whole plan is built on. Filed
+    `issues/defi_dex_pools_catalogue_undercoverage_vs_historical_capture_2026_07_28.md` (`unified-trading-pm@2f50f916`)
+    documenting the full finding + 2 follow-up todos (quantify the gap for the other 12 default protocols; an
+    `[OPERATOR]` decision on catalogue-expansion policy). **Todo 5 is being completed against the SAFETY-CORRECT
+    done-when instead**: purge the 190,955 content-verified-superseded leaves; the 541,890 no-replacement leaves are
+    correctly, permanently retained (a deliberately bounded purge, not a partial/incomplete one).
+  - **REAL BUG found + fixed before any live deletes happened**: the launcher's `_defi_dex_pool_leaf_purge_cmd()`
+    originally used the SAME `RESUME_SEED_GS` path regardless of dry vs full mode. The first `--apply` launch
+    (`canonical-migration-defi-dex-pool-leaf-purge-20260728-132858`) pulled down the COMPLETED dry-run's resume-log
+    (which records every shard as "processed" with `action=would_delete`, never `deleted`) and silently no-op'd the
+    entire run -- 0 shards processed, 0 deletes, `rc=0`. **Confirmed safe**: this was a no-op, not a destructive bug --
+    nothing was deleted that shouldn't have been, but nothing was deleted at all either. Root-caused via direct log read
+    (`resume log: ... (12005 shard(s) already processed)`, `0 to process this run`). Fixed
+    (`deployment-service@d629197`): the resume filename/seed path now includes the mode (`.dry.resume.jsonl` vs
+    `.apply.resume.jsonl`), so dry and full runs use disjoint state. Full QG green, shipped.
+  - **MONITORING LESSON (2nd bug this session, on the monitoring side not the VM)**: after launching the real `--apply`
+    run, `gcloud compute instances describe` calls started failing with a PERMISSION error (not "not found") under the
+    `github-deploy` service account (the ambient `gcloud config` identity had drifted to it mid-session, away from
+    `unified-trading-sa`) -- a background watchdog script's `|| STATUS="GONE_OR_ERROR"` fallback misread that permission
+    failure as "the VM is gone," triggering a false "VM completed/preempted" conclusion. **The VM was never gone -- it
+    was running the whole time.** Caught by re-running `gcloud compute operations list` (which showed only an `insert`
+    op for this VM, no `delete`) and then re-`describe`ing after
+    `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` -- confirmed `RUNNING`
+    with real progress in the log. **Lesson for any future VM watchdog on this workspace**: a
+    `describe`/`operations list` PERMISSION_DENIED is not evidence of VM state at all (unlike a clean "was not found",
+    which IS real evidence of deletion) -- verify the active `gcloud config get-value account` is `unified-trading-sa`
+    (or another identity with `compute.admin`) before trusting ANY negative/error VM-status read, especially one feeding
+    an automated "VM_GONE" conclusion.
+  - **Real `--apply` run CONFIRMED RUNNING with real progress** (after the resume-path fix, both `deployment-service`
+    - `market-tick-data-service` tarballs republished + fresh-verified):
+      `canonical-migration-defi-dex-pool-leaf-purge-20260728-134427`, started 2026-07-28T13:44:27Z (actual task start
+      13:47:15Z after boot). Fresh retention check passed (`retention_seconds=604800`). Confirmed via direct log read
+      (under the correct `unified-trading-sa` identity) processing normally: ~3000/12005 shards in 27s, matching the
+      dry-run's own pace closely, `SAFE`/`FLAGGED` counts tracking the dry-run's proportions. **STATUS AS OF THIS
+      CHECKPOINT (pre-context-compact): RUNNING, healthy, real progress confirmed -- NOT yet complete.** If this session
+      compacts before completion, the next session MUST:
+    1. **First**: `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` (per the
+       monitoring lesson above) before any VM status check.
+    2. Check
+       `gcloud compute instances describe canonical-migration-defi-dex-pool-leaf-purge-20260728-134427 --zone=asia-northeast1-c --project=central-element-323112`
+       for RUNNING/gone. SPOT VM -- if genuinely gone, verify via
+       `gcloud compute operations list --zones=asia-northeast1-c --project=central-element-323112 --filter="targetLink~canonical-migration-defi-dex-pool-leaf-purge-20260728-134427"`
+       for a real `delete` op (preemption or self-delete) before concluding anything.
+    3. If gone with a clean `DEPLOYMENT_COMPLETED exit_code=0` in
+       `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-defi-dex-pool-leaf-purge-20260728-134427/run.log`,
+       check the `=== SUMMARY ===` block: expect `SAFE: 190955` matching the dry-run exactly (same scope, same
+       verification logic) and `deleted` action counts matching. If the counts differ, investigate before trusting it.
+    4. Spot-check a handful of the SAFE leaves' paths (from the resume-log, copied back to
+       `gs://deployment-scripts-central-element-323112/canonical-migration-defi-dex-pool-leaf-purge/resume-seed/purge_superseded_dex_pool_address_keyed_leaves_2026_07_28.apply.resume.jsonl`)
+       via `gcloud storage ls` to confirm they are actually GONE from GCS (not just marked `deleted` in the log without
+       the real GCS call succeeding).
+    5. If preempted/stalled: relaunch via
+       `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh --env prod defi-dex-pool-leaf-purge 2020-01-01 2026-07-28 full`
+       (republish tarballs first if stale) -- the fixed launcher's resume-log is RESUMABLE (per-shard, skips
+       already-processed), so a relaunch naturally continues; no measured-progress start-date computation needed (unlike
+       todo 4's backfill).
+    6. Once the apply run confirms `SAFE: 190955` deleted matching the dry-run, flip todo 5's checkbox with evidence,
+       then run category-1's marker purge (see top bullet) before todo 5 is FULLY closed, unless split into its own
+       follow-up todo.
+  - **Not yet done**: category-1 marker purge (see top bullet); confirming the `--apply` run's own completion + verified
+    delete counts; flipping todo 5's checkbox; the finalize plan
+    (`defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`) remains correctly gated (depends_on + machine
+    gate) until ALL 5 todos are done, including this one.

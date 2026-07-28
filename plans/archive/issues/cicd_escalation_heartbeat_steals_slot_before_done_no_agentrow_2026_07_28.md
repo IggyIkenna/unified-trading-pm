@@ -18,7 +18,7 @@ summary: >-
   cicd.md's own STEP 3 documents — 400d: `"one_shot_complete on slot 3 but no active agent owns its session
   'orch-slot-3' — a Class-A worker must /done with a task_id."`. `GET /api/agents` confirms zero active/stale AgentRow
   rows for `agt-5c9281` or `tmux_session=orch-slot-3` at all — only the singleton `main` row is present.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -47,7 +47,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: agent-orchestrator@babba14
 drift_direction: advance-code
 ---
 
@@ -114,13 +114,11 @@ boot contract verbatim is exposed, not just a dev/manual edge case.
       slot-clobbering bug is real and confirmed but not sufficient by itself — a separate, still-open mechanism explains
       the AgentRow going missing by `/done` time (out of this task's scope; todo below still needs the fix for the
       confirmed clobbering bug). — agent-orchestrator@d59f1af.
-- [ ] [BACKEND] P2. Fix once confirmed — two candidate shapes, pick per what the trace above shows: (a) escalation.py's
-      `claim_slot_for_typed_agent` should also set `slot.current_task` to a non-None sentinel (e.g. the escalation_id)
-      so `heartbeat_slot()`'s `current_task is not None` check correctly treats the slot as occupied and never reaches
-      `pick_next_task`; or (b) `heartbeat_slot()` should check for a live `lifecycle in ("one_shot","scheduled")`
-      `AgentRow` on this `tmux_session` (mirroring `boot_slot()`'s own typed-role gate,
-      `_plan_health.PLAN_HEALTH_FAMILY_ROLES` check at `slots_worker.py:313`) BEFORE falling through to idle-dispatch,
-      regardless of `current_task`. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-28.** Shipped option (b): extracted `boot_slot()`'s existing typed-role liveness
+      check (with its session-reused staleness self-heal) into a shared `_typed_occupant_liveness` helper and run it in
+      `heartbeat_slot()` before the idle-dispatch fallthrough, mirroring `boot_slot()`'s own gate — so a freshly
+      `claim_slot_for_typed_agent`'d slot's mandated STEP-0 heartbeat no longer falls through to `pick_next_task` and
+      steals the slot into normal Class-A dispatch shape. — agent-orchestrator@babba14.
 - [x] ✅ [BACKEND] P3. **DONE 2026-07-28 (same session that filed this doc).** `capability_wizard_gap_discovery-013` was
       confirmed still `status: dispatched, dispatched_to: 3` in the live backlog (never touched — this session's real
       work was the plan_health wall, not this task) — released via

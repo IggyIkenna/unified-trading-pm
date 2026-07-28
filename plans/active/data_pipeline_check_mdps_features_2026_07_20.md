@@ -889,6 +889,31 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       compute. Full "project full-history time + SPOT cost + parallelization headroom" needs at least one real number
       per family, not just calendar+sports.
 
+### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
+
+Picked up the `PREDICTION:delta_one` re-test now that MDPS candle production genuinely resumed (`day=2026-07-25/26`
+confirmed present in the real bucket via `gcloud storage ls`, fleet checked clean first — zero `features-*` VMs
+running). Ran
+`scripts/pipeline_e2e_check.py --day 2026-07-26 --asset-group PREDICTION --family delta_one --legs force --require-captured --auto-day`:
+the dependency check now PASSES (confirms the earlier P2 fix, `features-service@bba7de58`), but the VM still failed
+(`exit_code=1`) — a SECOND, unfixed instance of the exact same bucket-token bug class, this time in
+`LookbackValidator.validate_lookback_candles` (a sibling call site in the same `dependency_checker.py`, never migrated
+to the `_resolve_mdps_bucket` helper the first fix introduced). Root-caused via direct `run.log` read, fixed +
+regression-tested + shipped: `features-service@89e3ad3b`. Full writeup + fix todo in
+`issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md` (2026-07-28 section).
+
+**Still open**: a genuine benchmark number for `PREDICTION:delta_one` — production only resumed 2026-07-25/26 (2
+contiguous days), and `moving_averages` (one of delta_one's 4 sub-families) needs a 200-candle lookback, so a re-run may
+still hit a real (not-a-bug) insufficient-lookback-window failure until more contiguous history accumulates. CEFI (data
+exists, 3-4 day contiguous windows available, fleet currently clear of duplicate VMs) and DEFI (sparse/non-contiguous
+recent coverage: 07-18, 07-22, 07-25 through 07-27) were investigated for data availability but not attempted this
+session — CEFI remains the operator-gated 8-VM billing-waste situation from
+`issues/ features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
+go-ahead.
+
+- [ ] [DATA] P2. Re-run `PREDICTION:delta_one` (day≥2026-07-25) now that `features-service@89e3ad3b` is shipped, to get
+      either a genuine benchmark number or an honestly-diagnosed insufficient-lookback-window result.
+
 ### 2026-07-27 (slot-3, continued) — todo 10: full round across 7 families complete; 1 real code bug found + filed
 
 Extended the benchmark sweep to `TRADFI:volatility`, `PREDICTION:delta_one`, and `TRADFI:commodity` — all 3 failed on

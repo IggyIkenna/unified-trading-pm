@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 260 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 261 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -1097,7 +1097,7 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (11)
+### meta (12)
 
 - [`agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28`](./agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md)
   — Operator (Ikenna) wants three things — (1) real two-way chat with a plan-dispatch slot worker's tmux session, since
@@ -1110,6 +1110,10 @@ by hand._
 - [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
   "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
   DP_RUN_MOSTLY_EMPTY across sports/cefi/defi/tradfi and DP_VM_EXIT_NONZERO for features-sports VMs — and asked (a) why…
+- [`deepseek_claude_blended_provider_routing_2026_07_28`](./deepseek_claude_blended_provider_routing_2026_07_28.md) —
+  Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
+  routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
+  policy…
 - [`deployment_durable_operational_data_bigquery_2026_07_21`](./deployment_durable_operational_data_bigquery_2026_07_21.md)
   — Persist FOUR operational signals that are currently ephemeral, all into one BigQuery dataset via the existing UTL
   event spine, so they survive for long-run analysis. (1) VM resource stats — the 30s/1min CPU/RAM/disk samples the
