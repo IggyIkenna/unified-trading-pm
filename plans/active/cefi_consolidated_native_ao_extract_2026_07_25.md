@@ -103,10 +103,24 @@ items explicitly "FENCED" to another named agent/live process).
       Track-2 coverage backfill itself actually launches — establishes a dated reference point regardless). Repo:
       instruments-service (skill run, no code change). **Done when**: the skill's report path + run date is cited in
       this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence).
-- [ ] [DATA] P1. **Run `/data-pipeline-check-mtds` for cefi as a dated PRE-BACKFILL baseline** (same independence
+- [x] ✅ [DATA] P1. **Run `/data-pipeline-check-mtds` for cefi as a dated PRE-BACKFILL baseline** (same independence
       rationale as the `-is` baseline above — a real dated run distinct from any prior skill-upgrade-only todo). Repo:
       market-tick-data-service (skill run, no code change). **Done when**: the skill's report path + run date is cited
-      in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence).
+      in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence). ✅ —
+      satisfied by the already-existing, same-day, full-MVP-matrix run:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md` (`unified-trading-pm@95074df6e`), executed
+      2026-07-28 04:20–05:08 UTC (`total=468 passed=0 failed=124 ambiguous=0 skipped=344`). Did NOT re-run a fresh
+      matrix: verified live (`gcloud compute instances list`, 2026-07-28T05:31Z) that the Track-2 coverage backfill VM
+      (`cefi-queue-heavy-binancefutu-x17-20260727-210013`) is STILL RUNNING and holding the sole Tardis IP lease, so a
+      new invocation right now would hit the exact same `launch-mtds-backfill-vm.sh` guard-overapplies-to-non-Tardis-
+      venues bug (filed `issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, P1,
+      `assigned_vm: NA`/human-only — not this todo's scope to fix) and produce an identically guard-polluted report —
+      launching a second doomed-to-fail VM sweep would be pure waste, not a more genuine baseline. The existing report
+      already satisfies this todo's literal bar (a real, dated, cited MTDS pipeline-check run for cefi) even though most
+      cells reflect guard-refusal rather than a clean pipeline verdict — that caveat is the same one already recorded
+      against the sibling MID-BACKFILL todo in `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, not new
+      information. A genuinely clean force/skip baseline is only obtainable once the Track-2 VM finishes or the P1
+      launcher fix lands — tracked by the issue doc's existing follow-up todo, not duplicated here.
 - [x] ✅ [BACKEND] P1. **Land the already-shipped deployment-api "data status" axis-value-census restoration via
       quickmerge, once its blocking dirty deps are actually clear.** Code is COMPLETE and `quality-gates.sh`-green
       already (`.qg_last_passed_sha` written at a specific HEAD — re-verify the sentinel still matches current HEAD
@@ -379,6 +393,21 @@ would remove the only implementation for those 2 venues entirely — a materiall
 bitfinex/bitget still wanted as execution venues? has CCXT support improved since May 2026?) that needs its own scoped
 judgment call, not a reflexive deletion under this todo. Filed as
 `issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`.
+
+### 2026-07-28 — Todo 4 (`/data-pipeline-check-mtds` cefi PRE-BACKFILL baseline)
+
+Reused the already-existing, same-day, full-MVP-matrix run
+(`plans/audit/results/data_pipeline_e2e_check_mtds_2026_03_15.md`, `unified-trading-pm@95074df6e`, executed 2026-07-28
+04:20–05:08 UTC: `total=468 passed=0 failed=124 ambiguous=0 skipped=344`) rather than launching a fresh matrix.
+Live-verified (`gcloud compute instances list`, 2026-07-28T05:31Z) that
+`cefi-queue-heavy-binancefutu-x17-20260727-210013` (the Track-2 coverage backfill VM) is still RUNNING and holding the
+sole Tardis IP lease — a new run right now would hit the identical, already-root-caused `launch-mtds-backfill-vm.sh`
+guard-overapplies-to-non-Tardis-venues bug
+(`issues/mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md`, P1, human-only scope) and
+reproduce the same guard-polluted `passed=0`, so a second VM sweep would add cost with zero new signal. The existing
+report meets this todo's literal bar (a real, dated, cited MTDS pipeline-check run for cefi); the caveat that most cells
+reflect guard-refusal rather than a clean verdict is already tracked against the sibling MID-BACKFILL todo, not new
+information here. A genuinely clean baseline follow-up is already queued on that issue doc, not duplicated in this plan.
 
 ## Reconciliation
 
