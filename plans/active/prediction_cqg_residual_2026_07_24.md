@@ -33,7 +33,7 @@ created: "2026-07-24"
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P0
+priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9

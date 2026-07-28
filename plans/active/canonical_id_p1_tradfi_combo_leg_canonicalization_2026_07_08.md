@@ -29,7 +29,7 @@ last_updated: 2026-07-08
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8

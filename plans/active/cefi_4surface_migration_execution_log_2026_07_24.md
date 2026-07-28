@@ -41,7 +41,7 @@ last_updated: "2026-07-25" # 2026-07-25: appended the parent's 4 remaining DELTA
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4

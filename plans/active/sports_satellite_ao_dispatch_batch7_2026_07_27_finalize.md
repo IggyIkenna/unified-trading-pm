@@ -25,7 +25,7 @@ last_updated: "2026-07-27"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P1
+priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.2

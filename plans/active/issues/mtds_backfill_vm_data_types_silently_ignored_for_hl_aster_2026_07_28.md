@@ -78,12 +78,14 @@ silently hit the same trap.
 
 ## Recommended decision
 
-- [ ] [DOC] P2. Add `launch-cefi-hl-aster-historical-backfill.sh` to `vm-launcher-runbook.md` § 2 "MTDS Backfill VMs" as
-      its own entry (When/Required/Duration/Failures, mirroring the existing entries), and add a cross-reference note
+- [x] ✅ [DOC] P2. Add `launch-cefi-hl-aster-historical-backfill.sh` to `vm-launcher-runbook.md` § 2 "MTDS Backfill VMs"
+      as its own entry (When/Required/Duration/Failures, mirroring the existing entries), and add a cross-reference note
       under `launch-mtds-backfill-vm.sh`'s entry: "for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET with
       `--data-types` scoping, use `launch-cefi-hl-aster-historical-backfill.sh` instead — the generic launcher's
       `--operation download` path does not honor per-data-type filtering for these venues (see this doc)." Repo:
-      unified-trading-pm. Done when: both doc changes are present and the doc's own line-cap check passes.
+      unified-trading-pm. Done when: both doc changes are present and the doc's own line-cap check passes. —
+      unified-trading-pm@bd1d97a8b; `vm-launcher-runbook.md` (codex/) is out of `check_line_caps.sh`'s scope
+      (plans/active + plans/epics only), so no line-cap gate applies to it.
 - [ ] [BACKEND] P2. Harden `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s `VM_TASK=mtds-backfill` branch:
       when `VM_ASSET_GROUP` resolves to a CeFi on-chain-perp venue (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/ EXTENDED-STARKNET
       — reuse whatever registry `OnchainPerpBatchHandler` already uses to recognize these) AND `VM_DATA_TYPES` is set,

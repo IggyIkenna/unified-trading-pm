@@ -28,7 +28,7 @@ last_updated: "2026-07-24"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P1
+priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9
