@@ -130,36 +130,81 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
       explicitly True) + `tests/test_slot_message_live.py::test_message_live_route_is_wired_to_strict_auth_dependency`
       (introspects the actual FastAPI route object to confirm `/message-live` carries `auth.require_authenticated_user`
       — not just that the helper function works in isolation).
-- [ ] [UI] P1. Add a compose box + live-updating transcript view for a single slot — either extend `LogViewerModal` or
+- [x] [UI] P1. Add a compose box + live-updating transcript view for a single slot — either extend `LogViewerModal` or
       add a sibling component — wired to the two Track-1 endpoints above. Definition of done: opening a slot's detail
       view on desktop shows an input box; submitting text sends via the new send-to-pane route; the visible transcript
-      updates with the worker's next output without a manual page refresh.
-- [ ] [UI] P2. Playwright regression spec covering: open a slot's chat view, send a message, assert the transcript shows
+      updates with the worker's next output without a manual page refresh. — agent-orchestrator@f120922 — shipped a new
+      sibling `WorkerChatModal` component (`dashboard/src/App.tsx`) — not an `LogViewerModal` extension, since that
+      component is also used read-only for `scope="agent"` targets. Reachable via a new "Chat" button in `SlotTable`'s
+      detail-card (desktop) and a new `Icon.Chat` icon button in `SlotCards`' row-actions (both desktop Cards view and
+      mobile Fleet tab, closing Track 3's worker-chat todo too). Polls `GET /transcript-tail` every 3s via a byte-offset
+      cursor (accumulates `lines` client-side, unlike `LogViewerModal`'s full-rerender-per-poll), sends via
+      `POST /message-live` (new `api.sendMessageLive`/ `api.transcriptTail` in `dashboard/src/api.ts`), gates the
+      compose box on `slot.tmux_alive`. Proven by `dashboard/tests/e2e/worker-chat.spec.ts`'s desktop test (below).
+- [x] [UI] P2. Playwright regression spec covering: open a slot's chat view, send a message, assert the transcript shows
       new content after the worker's next output. Cite the spec file in the done-claim per
-      `/codex/06-coding-standards/ui-testing-layers.md`'s playwright gate.
+      `/codex/06-coding-standards/ui-testing-layers.md`'s playwright gate. — agent-orchestrator@f120922 — shipped
+      `dashboard/tests/e2e/worker-chat.spec.ts` (`Worker-tmux chat (desktop)` describe block), against a NEW dedicated
+      e2e backend+dashboard pair (`run-e2e-backend-chat.sh`, port 8793/5201, its own playwright project) that uniquely
+      among this repo's e2e fixtures spawns a REAL, tiny tmux session (`fixtures/fake_worker_pane.sh`) standing in for a
+      live Claude worker — every assertion is proven against genuine
+      `tmux_spawn.submit_to_pane`/`transcript_log.render_transcript_since` behavior end to end, not a mock (manually
+      sanity-checked the raw mechanism first: `submit_to_pane` against the fixture pane returns `True` in ~2s and the
+      pane's `read -r` loop genuinely appends a new transcript JSONL line). `pw:L2 ✓` — re-run with
+      `cd dashboard && node_modules/.bin/playwright test --project=worker-chat` (needs `npm ci` +
+      `playwright install chromium` once per checkout).
 
 ## Track 2 — Mobile parity: backlog/done/queued stats
 
-- [ ] [UI] P1. Wire `BacklogSummary` + `KpiRow` into `MobileTriage` (either a new tab or folded into the existing
+- [x] [UI] P1. Wire `BacklogSummary` + `KpiRow` into `MobileTriage` (either a new tab or folded into the existing
       "Fleet" tab) sourced from the same `GET /api/state` `backlog_summary` desktop already uses — no new backend work.
       Definition of done: loading the dashboard at a <760px viewport shows the same queued/dispatched/done/cancelled
-      counts a desktop user sees.
-- [ ] [UI] P2. Wire `BacklogDetailModal` (the sortable/filterable full task table) into the mobile view, reachable from
+      counts a desktop user sees. — agent-orchestrator@f120922 — rendered UNCONDITIONALLY above the mobile-tabs bar (not
+      gated behind a tab click, so it's visible regardless of which tab is active — closer parity with desktop's own
+      always-visible top-row than hiding it behind a click); `KpiRow` mirrors `DesktopLayout`'s own `fleet.length > 0`
+      gate exactly (true parity, not a new mobile-only rule — a KPI row of slot-status counts is meaningless with zero
+      fleet slots). Proven by `dashboard/tests/e2e/mobile-backlog.spec.ts`'s first test (counts) +
+      `worker-chat.spec.ts`'s mobile Fleet-tab test (the `fleet.length>0` KpiRow-render case, since its fixture
+      guarantees ≥1 slot).
+- [x] [UI] P2. Wire `BacklogDetailModal` (the sortable/filterable full task table) into the mobile view, reachable from
       the new mobile backlog-stats surface. Definition of done: a mobile viewport can open the same detail table desktop
       users reach via the "Detail" button, with the same filter/sort behavior (list layout instead of a wide table is
-      fine — content parity is the bar, not identical visual layout).
+      fine — content parity is the bar, not identical visual layout). — agent-orchestrator@f120922 —
+      `BacklogDetailModal` was ALREADY hoisted globally in `Dashboard` (not per-layout), so this was pure
+      prop-threading: `MobileTriage` now receives `onOpenBacklog`/`onReloadBacklog`/`reloadingBacklog` and passes them
+      to its new `BacklogSummary`'s `onOpenDetail`/`onReloadYaml`. Proven by
+      `dashboard/tests/e2e/mobile-backlog.spec.ts`'s second test (opens the modal, switches to "all", asserts all 3
+      fixture rows + the sortable columns render).
 
 ## Track 3 — Mobile parity: chat
 
-- [ ] [UI] P1. Replace or extend `MobileTriage`'s "Agents" tab so it renders the real `AgentsPanel`/`RoleChat`
+- [x] [UI] P1. Replace or extend `MobileTriage`'s "Agents" tab so it renders the real `AgentsPanel`/`RoleChat`
       (main/review/plan_reconciler) instead of the read-only `AgentTypesPanel`. Definition of done: sending a message to
       a role from a <760px viewport reaches `POST /api/agents/by-role/{role}/message` and the reply renders in the
-      mobile chat UI, matching desktop behavior.
-- [ ] [UI] P1. Surface Track 1's worker-tmux chat in the mobile view (a per-slot chat screen reachable from the mobile
+      mobile chat UI, matching desktop behavior. — agent-orchestrator@f120922 — chose EXTEND (per the todo's own
+      either/or): the mobile "Agents" tab now renders `AgentsPanel` (chat) STACKED ABOVE `AgentTypesPanel` (roster, kept
+      unchanged) — matching `DesktopLayout`'s own main-col ordering exactly, full parity rather than a stripped-down
+      mobile variant. Required threading ~14 new props through `MobileTriageProps`/`MobileTriage`
+      (activeRole/setActiveRole/agentHistory/historyLoading/showArchived/setShowArchived/onSendToRole/onPromoteAgent/
+      onArchiveAgent/onRestoreAgent/onRequestDeleteAgent/onRequestEditAgent/onShowAgentLog/onSpawnAgent) — the same set
+      `DesktopLayout` already receives, now shared. Added `data-testid` hooks to `RoleChat`/`AgentsPanel`
+      (role-chat-input/-send/-history, agents-tab-`<role>`) — safe additive attributes, zero behavior change, needed for
+      a robust mobile Playwright spec (no prior role-chat spec existed to reuse). Proven by `worker-chat.spec.ts`'s
+      "role-chat is reachable and functional from the mobile Agents tab" test — a REAL send→persist→refetch→render round
+      trip against a genuine backend, not a mock.
+- [x] [UI] P1. Surface Track 1's worker-tmux chat in the mobile view (a per-slot chat screen reachable from the mobile
       "Fleet"/"Triage" tab). Definition of done: from a phone, opening a slot shows the same compose-box +
-      live-transcript UI Track 1 shipped for desktop.
-- [ ] [UI] P2. Playwright mobile-viewport regression specs for both of the above (role-chat and worker-chat reachable
-      and functional at the `isMobile` breakpoint). Cite per `/codex/06-coding-standards/ui-testing-layers.md`.
+      live-transcript UI Track 1 shipped for desktop. — agent-orchestrator@f120922 — the SAME `WorkerChatModal` Track 1
+      shipped, reachable via the new `Icon.Chat` button already added to `SlotCards`' row-actions (used by BOTH
+      desktop's Cards layout and mobile's Fleet tab) — no separate mobile-only component. Proven by
+      `worker-chat.spec.ts`'s "worker-tmux chat is reachable and functional from the mobile Fleet tab" test (same
+      send+transcript-tail proof as the desktop test, opened from the mobile entry point).
+- [x] [UI] P2. Playwright mobile-viewport regression specs for both of the above (role-chat and worker-chat reachable
+      and functional at the `isMobile` breakpoint). Cite per `/codex/06-coding-standards/ui-testing-layers.md`. —
+      agent-orchestrator@f120922 — both live in `dashboard/tests/e2e/worker-chat.spec.ts`'s `Mobile chat parity`
+      describe block (`test.use({ viewport: { width: 390, height: 844 } })` — well under the dashboard's real `isMobile`
+      threshold of `window.innerWidth < 760`, confirmed against `App.tsx`'s actual breakpoint rather than guessed).
+      `pw:L2 ✓` — re-run with `cd dashboard && node_modules/.bin/playwright test --project=worker-chat`.
 
 ## Track 4 — Sanity check before declaring done
 
@@ -230,3 +275,107 @@ Research done 2026-07-28 (two parallel investigation agents) established the cur
   orchestrator process was NOT restarted (per explicit instruction for this phase); the shipped commit reaches it
   automatically via the existing `ao-self-pull.sh` cron (≤15 min, or instant for these `server/**.py` changes via the
   uvicorn `--reload` watch) with no action needed.
+
+- 2026-07-28 — **All remaining `[UI]` todos across Tracks 1-3 shipped: `agent-orchestrator@f120922`.** Dispatched
+  autonomously (`/autonomous`) to implement + ship the Track 1 worker-chat compose-box UI, both Track 2 mobile
+  backlog-parity todos, and all three Track 3 mobile-chat-parity todos, each with a passing Playwright regression spec
+  before flipping its checkbox (per this dispatch's explicit instruction — no checkbox flipped on code-review confidence
+  alone).
+
+  **What shipped** (all in `agent-orchestrator@f120922`, one quickmerge commit — the changes are tightly
+  cross-referential across files, so batching the gate + shipping as one unit was the right call over an artificial
+  per-track split):
+  - **`WorkerChatModal`** (new component, `dashboard/src/App.tsx`) — a compose box + accumulating live-transcript view
+    for a single slot, polling `GET /transcript-tail` every 3s via a client-held byte-offset cursor (`useRef`, to avoid
+    a stale-closure bug against the interval) and sending via `POST /message-live`
+    (`api.sendMessageLive`/`api.transcriptTail`, new in `dashboard/src/api.ts`). A sibling to `LogViewerModal`, not an
+    extension of it — that component is also used read-only for `scope="agent"` targets (incl. the scheduled-job-run log
+    stub) and has a fundamentally different read model (full re-render every poll vs. an accumulating tail). Gates the
+    compose box on `slot.tmux_alive` (already on `SlotView`, no new backend call needed to know liveness up front).
+    Reachable via a new "Chat" button in `SlotTable`'s desktop detail-card and a new `Icon.Chat` icon button (new SVG
+    icon, `components.tsx`) in `SlotCards`' row-actions — the latter is shared by both desktop's Cards layout and
+    mobile's Fleet tab, so it closes Track 3's own "surface worker-chat on mobile" todo with zero extra code.
+  - **Mobile `BacklogSummary` + `KpiRow` + `BacklogDetailModal`** (`MobileTriage` in `App.tsx`) — rendered
+    unconditionally above the `mobile-tabs` bar (not gated behind a tab click); `KpiRow` mirrors `DesktopLayout`'s own
+    `fleet.length > 0` gate exactly. `BacklogDetailModal` needed no new rendering (already hoisted globally in
+    `Dashboard`) — just `onOpenBacklog`/`onReloadBacklog`/`reloadingBacklog` prop-threading.
+  - **Mobile `AgentsPanel`/`RoleChat`** (`MobileTriage`'s "Agents" tab) — chose EXTEND over REPLACE (the todo's own
+    either/or): renders the real chat panel stacked ABOVE the existing `AgentTypesPanel` roster (unchanged), matching
+    `DesktopLayout`'s own main-col ordering — full parity, not a stripped-down mobile variant. Required threading the
+    same ~14 agent-chat props `DesktopLayout` already received. Added `data-testid` hooks to `RoleChat`/`AgentsPanel`
+    (safe, additive, zero behavior change) since no prior role-chat Playwright spec existed to reuse selectors from.
+
+  **Decision under ambiguity #1 — no existing Playwright coverage for Track 2's two todos in the plan's own breakdown.**
+  The plan enumerates an explicit `[REVIEW]`/Playwright todo only under Track 1 and Track 3, not Track 2 — but this
+  dispatch's own instructions state "every UI change needs a passing regression spec before you flip its checkbox,"
+  which overrides the plan's per-track enumeration. Resolved by adding equivalent coverage
+  (`dashboard/tests/e2e/mobile-backlog.spec.ts`, 2 tests) reusing the EXISTING default e2e backend/fixture
+  (`backlog.e2e.yaml`, already used by `backlog-detail.spec.ts`) rather than spinning up a new backend pair, since Track
+  2 needs no new fixture data.
+
+  **Decision under ambiguity #2 — role="main" is unsafe for the mobile role-chat fixture.** Seeding a fixture `AgentRow`
+  with `role="main"` (the obvious first choice, matching the operator's own "main" role naming) gets reaped by
+  `reap_orphan_agents`' main-singleton logic within one `AgentKeeper` tick (near-immediate at backend startup) unless it
+  owns the live, hardcoded `orch-agent-main` tmux session — found live running this exact suite (first attempt: "No
+  agents connected" on the mobile Agents tab because the seeded row was already archived with
+  `exit_reason=dead-main-session` before the test even ran). Read `server/state_store/agents.py`'s
+  `reap_orphan_agents`/`_sessionless_singleton_duplicates` in full to confirm root cause, then switched the fixture to
+  `role="plan_reconciler"` with explicit `agent_kind="plan_reconciler"` + `lifecycle="persistent"` — a SOLE
+  singleton-kind record (no same-kind sibling) is never touched by `_sessionless_singleton_duplicates`, and the explicit
+  kind/lifecycle avoid depending on `role_registry.py`'s current defaults for a test fixture's stability. Documented in
+  `seed_e2e_chat_state.py`'s own docstring so a future reader doesn't reintroduce the same trap.
+
+  **Decision under ambiguity #3 — the worker-chat Playwright spec's "assert the worker's next output appears" proof
+  needed a real tmux mechanism, not a mock.** Backend unit tests already proved `submit_to_pane`/
+  `render_transcript_since` correctness in isolation; a genuinely faithful e2e spec needed the REAL end-to-end path.
+  Built a dedicated e2e fixture (`run-e2e-backend-chat.sh`, port 8793/5201 — mirrors the existing parked/collision
+  dedicated-pair pattern) that spawns an actual tmux session running `fixtures/fake_worker_pane.sh` — a tiny script that
+  reads each line `tmux_spawn.submit_to_pane` types into the pane and appends one transcript-shaped JSONL "assistant"
+  event, faithfully exercising the real send→pane→transcript→tail round trip. Manually sanity-checked the raw mechanism
+  directly against `tmux_spawn.submit_to_pane` before writing the Playwright spec (confirmed: returns `True` in ~2s, the
+  pane's `read -r` loop genuinely appends the new line) to de-risk debugging inside Playwright itself. Discovered along
+  the way that `seed_worker_slots_from_tabs` auto-registers a REAL slot (from this host's own `.tabs/1`) into every e2e
+  backend's DB at startup — this made an unscoped `getByTitle("Live chat with this worker")` locator ambiguous (2
+  matching buttons) in the mobile Fleet-tab test; fixed by scoping every slot-specific Playwright locator to the
+  fixture's own `#42` (`.slot-id`/`.slot-card` with `hasText`), never an unscoped title/text match, so the spec is
+  robust regardless of what else `.tabs/` happens to seed on the host running it.
+
+  **Decision under ambiguity #4 — the chat e2e backend's tmux-session cleanup trap isn't 100% reliable, and that's an
+  accepted limitation, not a blocker.** `run-e2e-backend-chat.sh` (unlike every sibling e2e script, which `exec`s
+  uvicorn directly) backgrounds uvicorn + `wait`s so a bash trap can reap the fixture's real tmux session on
+  exit/interrupt — verified this trap DOES fire correctly when a signal reaches the script's own PID directly (manual
+  `kill -TERM` test). However, across repeated real Playwright runs the session was still occasionally left behind after
+  a normal end-of-suite teardown (Playwright's process-tree teardown likely signals the whole spawned tree at once,
+  racing the trap's own external `tmux kill-session` call against the script's own death) — not a correctness bug (the
+  idempotent `tmux kill-session ... || true` at the TOP of the script, re-verified across 4+ repeated runs, always
+  produces a clean slate for the NEXT run, mirroring every sibling script's stale-DB cleanup pattern), just an imperfect
+  best-effort bonus. Documented plainly in the script's own header rather than sinking more time into a
+  guaranteed-reliable trap for a temporary, delete-on-redesign test fixture. Manually killed the stray session +
+  confirmed a clean `tmux list-sessions` before finishing this phase.
+
+  **Side-effect discovered, not fixed (pre-existing, outside this plan's scope)**: running `parked-tasks.spec.ts`
+  (pre-existing, unrelated to this phase) rewrites `dashboard/tests/e2e/fixtures/parked.e2e.yaml` in place (loses its
+  `prerequisites` list, flips `priority_override`) — `collision.e2e.yaml` already has a documented `.tmp-collision/`
+  writable-copy workaround for this exact class of problem (its own header comment: "the remint endpoint under test
+  rewrites it in place; the copy keeps the checked-in fixture clean"), but `parked.e2e.yaml` never got the same
+  treatment. Reverted the unintended working-tree change (`git checkout --`) before every commit in this phase rather
+  than fixing the underlying gap (touching `run-e2e-backend-parked.sh` is outside this plan's named scope) — flagging
+  here per the findings-triage rule rather than silently leaving it for the next person to rediscover. Not filed as a
+  separate `issues/` doc: low severity, test-infra-only, trivially recoverable by anyone who next runs `git status`.
+
+  **Tests**: `dashboard/tests/e2e/worker-chat.spec.ts` (3 tests: desktop send+transcript-tail proof, mobile role-chat,
+  mobile worker-chat) + `dashboard/tests/e2e/mobile-backlog.spec.ts` (2 tests: BacklogSummary counts,
+  BacklogDetailModal). All 19 e2e tests across all 5 Playwright projects pass together (confirmed twice, no flakiness
+  observed); vitest 154/154 + tsc clean (both fully re-checked, no regressions); full `bash scripts/quality-gates.sh`
+  (backend + dashboard) green. Re-run:
+  `cd agent-orchestrator/dashboard && npm ci && node_modules/.bin/playwright install chromium && node_modules/.bin/playwright test`
+  (full suite) or `--project=worker-chat` / spec-file-scoped for just the new coverage. `npm ci` is needed because this
+  checkout's `dashboard/node_modules` had only the vitest-side deps installed, not `@playwright/test` — a pre-existing
+  environment gap unrelated to this phase's code, fixed the same way the Backend phase fixed its own unrelated
+  `.venv`/`uv.lock` drift.
+
+  **Not done this phase**: Track 4's `[REVIEW]` manual mobile-browser walkthrough — explicitly out of this phase's
+  dispatched scope (Tracks 1-3 UI only). The live orchestrator process was NOT restarted or redeployed (per this phase's
+  explicit instruction); the shipped commit reaches the backend automatically via `ao-self-pull.sh` (≤15 min) and the
+  dashboard reaches Firebase Hosting once it clears the LDR→main promotion hop (per the Recon brief's documented
+  deploy-currency facts) — no manual action needed for either.

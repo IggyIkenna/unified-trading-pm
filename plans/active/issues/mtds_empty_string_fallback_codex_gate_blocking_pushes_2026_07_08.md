@@ -354,3 +354,16 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
   trading-agent-service) — out of scope for this task, left for the standing P3 todo. Did not attempt Todo 2 (full
   `quality-gates.sh` exit-0 + `.qg_last_passed_sha` restoration) — that is a separate, broader deliverable than the
   DECISION this task was scoped to.
+
+- **2026-07-28 (slot-14) — drifted back over baseline AGAIN, exact same pattern, ~1 day after the 07-27 bank.** Hit this
+  shipping `sports_track_h_denominator_prereqs_2026_07_28.md` todo 2 (footystats league_id migration — real,
+  already-executed+verified PROD data-correctness work, same shape as every prior entry in this doc). Live count 91 >
+  baseline 89 (both flagged sites `scripts/verify_lst_collateral_support.py:89,167` — same file as 2026-07-08's original
+  finding). Declared a repo-blocker (`RB-166e706f`); the orchestrator's watcher reported it resolved (`watcher_green`)
+  ~70min later, but a fresh full `quality-gates.sh --no-fix` re-run (both repos confirmed at `origin/live-defi-rollout`
+  HEAD, zero pending commits either side) reproduced the IDENTICAL failure — the `watcher_green` signal was
+  premature/wrong (checking a different/stale condition than the live baseline-vs-count comparison). Re-declared
+  (`RB-eb458809`). Not attempting a fix here — same reasoning as every prior entry (out-of-scope file, real work already
+  shipped independent of this gate, mechanical baseline-ratchet drift not a regression from my change). Flagging the
+  `watcher_green` false-positive as a possible gap in the repo-health watcher's own check logic for whoever owns that
+  mechanism — worth a look if this recurs.
