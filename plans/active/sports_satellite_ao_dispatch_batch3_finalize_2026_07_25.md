@@ -49,7 +49,9 @@ drift_direction: advance-code
 
 > **Machine-gated on `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 12 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (conflict-gated re-check) needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
+> todo 2 (source-doc archival) needs todo 1's reconciliation done first (a doc can only be archived once its status is
+> genuinely flipped to `resolved`), todo 3 (conflict-gated re-check) needs todo 1's reconciliation too, and todo 4
+> (archival of this batch's own plan) must run last.
 
 ## Todos
 
@@ -66,6 +68,19 @@ drift_direction: advance-code
       it genuinely reaches 0 open todos (checkbox AND prose-form — do not trust checkbox count alone). **Done when**:
       all 8 source docs' corresponding checkboxes/sections are flipped with verified evidence, and any doc that
       genuinely reaches 0 open todos is flipped to `status: resolved`.
+- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
+      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
+      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
+      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
+      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
+      auto-archived 11 docs nobody's plan owned. For every one of the 8 source docs todo 1 flips to `resolved` with 0
+      open todos: re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
+      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
+      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
+      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
+      plan drives to a terminal status remains under `plans/active/`,
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
+      to the archived path. Source: `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Resolve the conflict-gated Deferred section from batch3's own doc**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For each of
       the 6 conflict-gated docs (`data_completion_sports_2026_07_24.md` 2 items,
@@ -85,7 +100,7 @@ drift_direction: advance-code
       todo/plan created because the conflict cleared, or (b) an explicit re-verified confirmation the conflict is still
       open; and a recommendation is recorded for whether the 2 large/risky docs need their own batch4 pass.
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
+      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
       should have already resolved all 6 — verify none remain) → add the archive banner → run the codex-alignment check
       (does `sports-features-bucket-path-ssot.md` under `codex/02-data/`, created by this batch's own todo 5, need any
       further cross-referencing) → grep the corpus for every referrer of

@@ -55,9 +55,10 @@ drift_direction: advance-code
 
 > **Machine-gated on `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** (`depends_on` + `gate_on_depends: true`) —
 > the dispatcher will not queue any todo below until all 37 tasks in that plan are `done` (corrected 2026-07-25
-> plan-reconcile, was 36). `sequential: true` because todo 2 (deferred-gate follow-ups) needs todo 1's reconciliation
-> done first (to know which source docs still have real open work vs. are now fully closed), and todo 3 (archival) must
-> run last.
+> plan-reconcile, was 36). `sequential: true` because todo 2 (source-doc archival) needs todo 1's reconciliation done
+> first (a doc can only be archived once its status is genuinely flipped to `resolved`), todo 3 (deferred-gate
+> follow-ups) needs todo 1's reconciliation too (to know which source docs still have real open work vs. are now fully
+> closed), and todo 4 (archival of this batch's own plan) must run last.
 
 ## Todos
 
@@ -85,6 +86,19 @@ drift_direction: advance-code
       as numbered prose lists, a confirmed false-hygiene-flip trap this session already hit once). **Done when**: all 15
       source docs' corresponding checkboxes are flipped with verified evidence, and any doc that genuinely reaches 0
       open todos (checkbox + prose) is flipped to `status: resolved` with `resolved_by` citing the batch-2 commit(s).
+- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
+      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
+      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
+      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
+      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
+      auto-archived 11 docs nobody's plan owned. For every one of the 15 source docs todo 1 flips to `resolved` with 0
+      open todos: re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
+      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
+      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
+      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
+      plan drives to a terminal status remains under `plans/active/`,
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
+      to the archived path. Source: `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Resolve the 4 deferred-gate follow-ups from batch 2's own "Deferred" section.** For each: (1) the
       FSS↔ml-service↔strategy-service parity test (gated on 5 sibling naming-migration todos in batch 2 landing) — if
       all 5 shipped (per todo 1 above), add it as a new `- [ ]` todo in a follow-up plan (or this doc, if small enough —
@@ -99,7 +113,7 @@ drift_direction: advance-code
       and dispatched because its gate cleared, or (b) an explicit, re-verified confirmation that its gate is still open
       (not just inherited from the original extraction — re-checked as of this todo's execution).
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch2_2026_07_24.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 2 above should have
+      CLAUDE.md's plan-archival rule): migrate any DEFERRED items to a tracked todo elsewhere (todo 3 above should have
       already cleared all 4 — verify none remain) → add the archive banner → run the codex-alignment check (do any codex
       docs need a status update now that these 37 items shipped — e.g. the WEATHER layout fix, the odds-feature naming
       migration) → update CLAUDE.md/codex if any new durable contract resulted → grep the corpus for every referrer of
