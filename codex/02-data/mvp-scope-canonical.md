@@ -122,6 +122,23 @@ expected-absent AND skipped by the IS producers (no attempt → no `attempted_fa
   the big-5, so `get_expected_leagues_for_source("understat")` (which drives the IS understat orchestrator's expected
   denominator + skip) already skips the 89.
 
+**Per-fixture ENRICHMENT entity scope (`SPORTS_ENTITY_LEAGUE_COVERAGE`)** — the 96-league MVP set above bounds
+FIXTURES-level per-entity enrichment fan-out for SOME api_football entities, not all. SSOT:
+`unified_api_contracts.canonical.domain.sports.provider_league_ids.SPORTS_ENTITY_LEAGUE_COVERAGE` (consulted via
+`get_entity_league_coverage(entity)`, `None` = all 383 curated-universe leagues, a `frozenset` = restricted to it):
+
+| Entity                             | Scope                    | Why                                                                                                                        |
+| ---------------------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `FIXTURES`, `TEAMS`, `STANDINGS`   | all 383 leagues (`None`) | core reference data, expected on every fixture date regardless of prediction scope                                         |
+| `INJURIES`                         | all 383 leagues (`None`) | need to know if players are injured across the full universe, not just MVP (2026-07-13 fix)                                |
+| `FIXTURE_STATS`, `FIXTURE_LINEUPS` | all 383 leagues (`None`) | game results + lineups needed across the full curated universe — operator ruling 2026-07-28, moved off the MVP-only bucket |
+| `FIXTURE_EVENTS`, `PLAYER_STATS`   | 96-league MVP frozenset  | per-event/per-player granularity — pure API-Football quota cost with no consumer outside MVP/prediction scope              |
+
+The gap-emission denominator (`emit_empty_gaps_for_entity` in `instruments-service/.../sports_reference_core.py`) is
+entity-scope-aware to match: an MVP-restricted entity's "expected" set is intersected with its coverage frozenset, so a
+non-MVP league is excluded from the denominator entirely (not flagged as any kind of gap) rather than showing as a
+permanent, un-resolvable coverage hole.
+
 ### Prediction
 
 | Axis          | MVP                                                                                                                                                                                                                                      |
