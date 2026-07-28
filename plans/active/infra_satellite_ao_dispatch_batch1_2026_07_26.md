@@ -241,36 +241,56 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       green; `DataStatusTab.tsx` untouched per the scope guard. Repo: deployment-ui. Source:
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`.
 
-- [ ] [BACKEND] P2. **Wire `PROGRESS.json` checkpoint emission into the no-checkpoint launcher families** (the source
-      doc's own P3 `canonical-migration-defi-pi-range`/`-per-instrument` item says explicitly "fold into the P2
-      `PROGRESS.json` rollout above rather than treating as a separate design", so all three are ONE todo here). Add
-      `record_vm_progress`/`PROGRESS.json` emission to the shared chunk-loop path
-      (`deployment-service/scripts/vm/lib/_tradfi-ohlcv-launcher-lib.sh` → `mtds_chunk_loop.sh`) so
-      `relaunch_backfill_vm.py`'s existing monotonic-checkpoint resume logic actually engages instead of falling through
-      to a blind `START_DATE` replay, and to `launch-canonical-migration-vm.sh`'s `RESUME_MODE=full` path (which today
-      persists only its cumulative per-VM manifest shard and takes `RESUME_START_DATE` as a fixed launch param). Covers
-      the families the 2026-07-25 audit traced as no-checkpoint: `tradfi-bf-*`, `mtds-backfill-tradfi-pipelinecheck`,
-      `mtds-dex-swaps-backfill`, `cefi-aster`, `cefi-hyperliquid`, `cefi-queue-heavy-binancefutu-x17`, `af-backfill`,
-      `canonical-migration-defi-rebuild`, `canonical-migration-defi-pi-range`,
-      `canonical-migration-defi-per-instrument`. **Read the source doc's ⚠️→✅ adversarial-verification banner first**:
-      the "CONFIRMED double-fetch" framing for `tradfi-bf-cme-ohlcv-1m-btc-2020` / `-eth-2022` was RETRACTED by a 3/3
-      independent refuter panel (the predecessor VMs never captured real rows — `total_records=0 complete=False`), so
-      this is defence-in-depth against a real architectural gap, NOT a fix for a confirmed billing loss; do not
-      re-escalate it as confirmed waste. `canonical-migration-defi-relabel` and `instr-backfill-defi-targeted` are the
-      working positive examples to copy (`{"last_completed_date":…,"monotonic":true,…}`). **Scope guard**: do NOT edit
-      `deployment-service/scripts/vm/lib/launcher_common.sh` — a sibling todo in this batch owns it; if a shared helper
-      is genuinely required, add it inside `_tradfi-ohlcv-launcher-lib.sh` instead and note the duplication. **VERIFY BY
-      SIMULATION, NOT BY LAUNCHING A VM** — this is deliberate, and it is why this todo carries no `[OPERATOR]` tag:
-      prove the checkpoint write + the resume read with a local bash simulation of the exact loop body (a child process
-      that self-`kill -9`s mid-run, then a second invocation reading the file back), exactly as the already-shipped
-      precedent for this same file did (`deployment-service@3d99865`, cefi batch 2: "verified via a local bash
-      simulation of the exact loop body with a child process that self-`kill -9`s mid-run ... real VM reproduction not
-      needed to prove the shell logic"). Shell-level checkpoint logic is fully provable without spend, so do NOT
-      provision a VM for this; if you believe a real launch is genuinely required, STOP and escalate rather than
-      launching one. **Done when**: each named launcher emits a monotonic `PROGRESS.json`, the write + resume path is
-      proven by the simulation above with the transcript cited, and `/codex/05-infrastructure/spot-vms-for-backfill.md`
-      records which launchers are now conformant. Repos: deployment-service, market-tick-data-service. Source:
+- [x] ✅ [BACKEND] P2. **Wire `PROGRESS.json` checkpoint emission into the no-checkpoint launcher families** —
+      `deployment-service@e191d58`. Root cause confirmed: the generic MTDS `--operation download` path aggregates via
+      `PartitionedGroupWriter` → `record_captured_from_counts`
+      (`market_tick_data_service/engine/orchestrator/manifest_finalize.py`), which never calls
+      `unified_trading_library.manifest_writer._vm_progress.record_vm_progress` (only the sibling per-row
+      `record_captured` does) — so the generic UTL hook silently never fires for these families, contrary to the
+      original todo's assumption that a shared-lib edit alone would suffice. Fixed at the shell chunk-loop layer instead
+      (the tee-wrapper's marker grep is agnostic to which layer emits it): added
+      `[[VM_PROGRESS]] last_completed_date=<date> monotonic=true` emission, gated on a per-run `HAD_FAILURE` flag (a
+      LATER chunk's success must never paper over an EARLIER chunk's failure/kill — a bug caught during this todo's own
+      simulation and fixed before shipping), to `mtds_chunk_loop.sh` and `cefi_hl_aster_loop.sh`
+      (`deployment-service/scripts/vm/setup-data-pipeline-vm.sh`) and to the `defi-per-instrument` per-year loop
+      (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`, full-mode only). Covers `tradfi-bf-*`,
+      `mtds-backfill-tradfi-pipelinecheck`, `cefi-queue-heavy-binancefutu-x17` (all VM_TASK=mtds-backfill),
+      `cefi-aster`/`cefi-hyperliquid` (VM_TASK=cefi-hl-aster-backfill), and `canonical-migration-defi-per-instrument`.
+      **Verified by local bash simulation** (not a VM launch, per the todo's own instruction): a 6-day/2-day-chunk run
+      with a child that self-`kill -9`s mid-chunk, confirming (a) the marker only emits on success, (b) a later
+      successful chunk after an earlier failure emits NO marker (gap-safety proof), (c) the tee-wrapper-style regex
+      extraction + `PROGRESS.json` write + a second-invocation JSON read-back all resolve to the last
+      GENUINELY-completed date, never skipping the killed chunk. `defi-pi-range`/`defi-rebuild` (single-invocation, no
+      shell chunk boundary to hang a marker on) and `mtds-dex-swaps-backfill`/`af-backfill` (route through the generic
+      single-shot `elif [ -n "$VM_TASK" ]` fallback, also no chunk loop) remain genuinely unconformant — restructuring
+      either into a chunked loop is a materially different, higher-blast-radius change (the generic fallback is shared
+      by every VM_TASK with no dedicated branch) and is out of scope for this todo; tracked as the two follow-up todos
+      immediately below. `/codex/05-infrastructure/spot-vms-for-backfill.md` records the full per-family conformance
+      table. Repos: deployment-service. Source:
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`.
+
+- [ ] [BACKEND] P3. **Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap** — these two
+      `launch-canonical-migration-vm.sh` categories are single Python-module invocations with no shell chunk boundary
+      (unlike `defi-per-instrument`'s per-year loop, fixed above), so a SPOT preemption mid-run still replays
+      `RESUME_START_DATE` verbatim with no partial-progress resume. Lower severity than the chunked families (one VM per
+      quarter/whole-range, not day-granular, so the replay cost is smaller) but still a real gap. Options to evaluate:
+      (a) wrap the single invocation in an artificial N-way date-sub-chunk loop mirroring `defi-per-instrument`'s
+      pattern, or (b) thread a periodic marker into `migrate_defi_batch_to_per_instrument`/`rebuild_defi_manifest`
+      themselves (Python-side, mirrors `migrate_candle_canonical_2026_07.py`'s existing
+      `MIGRATION_PROGRESS-shard{N}.json` precedent). VERIFY BY SIMULATION per the same discipline as the parent todo —
+      no VM launch required. Repo: deployment-service, or market-tick-data-service if (b). Source: this todo
+      (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
+
+- [ ] [BACKEND] P3. **Close the `mtds-dex-swaps-backfill`/`af-backfill` PROGRESS.json gap.** Both route through the
+      GENERIC single-shot `elif [ -n "$VM_TASK" ]` fallback in `setup-data-pipeline-vm.sh` (ONE `_launch_with_tee` call
+      over the whole `--start-date`/`--end-date` range — no shell chunk loop exists there at all today, and it is shared
+      by every `VM_TASK` value with no dedicated dispatch branch, so restructuring it has a wide blast radius). Evaluate
+      scoping a NEW chunk loop specifically for these two `VM_TASK`s (`defi-backfill`,
+      `sports-backfill`/`instruments-backfill` when reached via `launch-api-football-backfill-vm.sh`) rather than
+      touching the shared fallback for every caller, or a minimal end-of-run-only marker (fires once, keyed off
+      `VM_END_DATE`, only on a successful whole-range run — weaker than per-chunk but closes the "replays from genesis"
+      case for a run that fully completed before a later preemption on relaunch). VERIFY BY SIMULATION, no VM launch.
+      Repo: deployment-service. Source: this todo (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`).
 
 - [ ] [BACKEND] P3. **Close the two fleet-monitor blind spots on checkpoint reading and preemption alert severity
       (combined — both live in the actuator/monitor pair and would race if split).** (a) Verify whether
