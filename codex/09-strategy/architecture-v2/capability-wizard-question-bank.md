@@ -72,7 +72,7 @@ configured strategies). Same manifest, four query styles.
 | Hold policy / urgency?                                                                                                        | `HoldPolicy`, `Urgency` enums                                                       | registry      |
 | Staking method (for LST archetypes — e.g. stake → LST → post to CeFi → short perp)?                                           | `StakingMethod` enum + carry/staked-basis archetypes                                | registry      |
 | Market exposure: neutral / directional? Target Sharpe / max DD / capacity? (becomes the plan-format B3 KPI declaration)       | questionnaire prefs + `performance_metrics.py` over backtests                       | registry      |
-| Decision engine: ML (which models), rules, or trading-agent LLM over features (which models permitted, what parameter scope)? | ml-service model registry (walk-forward); **agent capability declarations**         | partial / gap |
+| Decision engine: ML (which models), rules, or trading-agent LLM over features (which models permitted, what parameter scope)? | ml-service model registry (walk-forward); **agent capability declarations** (`TRADING_AGENT_CAPABILITIES`) | partial       |
 
 ## Stage D — Universe
 
