@@ -148,6 +148,34 @@ coverage. A "some other disposition" (delete/ignore) reading of the operator dec
 historical DeFi tick data; fold (re-derive the canonical path from each object's own `instrument_key`/`data_type`
 columns) is the only disposition that doesn't lose data, for at least the 8 non-ETHENA venues.
 
+## 2026-07-28 update — true corpus-wide scale measured (5,332 objects, bounded scoped scan)
+
+Per `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DATA] P1` scale todo. Method: a BOUNDED, scoped listing per
+known composite venue —
+`gcloud storage ls "gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=*/asset_group=defi/venue={V}/**"`
+for each of the 9 already-enumerated venue names (AAVEV3-ETHEREUM, CURVE-ETHEREUM, ETHENA-ETHEREUM, ETHERFI-ETHEREUM,
+LIDO-ETHEREUM, MORPHO-ETHEREUM, UNISWAPV2-ETHEREUM, UNISWAPV3-ETHEREUM, UNISWAPV4-ETHEREUM), run in parallel
+(~70s/venue, all 9 completed in one batch). This is a **prefix-scoped listing bounded to the 9 known venue names**, NOT
+a fresh whole-corpus GCS walk — single-walk discipline preserved (the walk is pruned to exactly the 9 composite `venue=`
+directories already identified, never touching the canonical `venue=` tree).
+
+**Total: 5,332 objects** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631, ETHERFI-ETHEREUM=631,
+LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628, UNISWAPV4-ETHEREUM=359.
+
+**Corrects the "full 2020-2026 defi date range" framing in this doc's original scoping**: every venue's object dates
+cluster tightly in **2024-05-02 through 2026-01-24** (UNISWAPV4 narrower still, 2025-01-30 onward) — roughly 20 months,
+not the full ~6.5-year corpus history. This is consistent with (and now fully explains) the earlier finding that all
+objects share a single `Creation time=2026-05-12` GCS timestamp and `ticks_migrated_<batch-ts>`/`ticks.parquet`
+filenames from one one-time migration batch: that batch evidently only ever covered this ~20-month source window, so the
+legacy population's true bound is ~20 months × 9 venues, not 6.5 years × 9 venues. Days-with-an-object per venue run
+557–632 out of the ~630-day window (not every calendar day has an object for every venue — gaps exist, not investigated
+further here as out of this todo's scope).
+
+**Scale prerequisite for the `[OPERATOR]` fold-vs-migrate decision below is now satisfied**: 5,332 objects, combined
+with the 2026-07-28 distribution finding above (38/43 sampled objects carry substantial multi-row data, up to ~54k
+rows/day for UNISWAPV3), means fold would recover real, non-trivial historical DeFi tick data currently invisible to the
+manifest — both prerequisite facts (scale + distribution) are now in hand for that decision.
+
 ## Todos
 
 - [x] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
@@ -167,12 +195,13 @@ columns) is the only disposition that doesn't lose data, for at least the 8 non-
       parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
       scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix
       (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision. **Citation
-      corrected 2026-07-27, re-checked 2026-07-28**: the two prerequisite todos above are checked `[x]` here only
-      because they were DELEGATED to `defi_satellite_ao_dispatch_batch1_2026_07_25.md`. As of 2026-07-28: the
-      **distribution** prerequisite (the `[DIAG]` todo) IS now genuinely done — see "2026-07-28 update" above (5/43
-      sampled objects single-row, 38/43 substantial multi-row data across 8 of the 9 venues). The **scale** prerequisite
-      (the `[DATA]` todo, true corpus-wide count of how many objects/dates carry this shape) is STILL open `[ ]` in the
-      satellite plan as of this update — decide only once that scale figure also lands, do not treat the distribution
-      finding alone as sufficient (it answers "how bad per-object" but not "how many objects total").
+      corrected 2026-07-27, re-checked 2026-07-28, BOTH PREREQUISITES NOW DONE 2026-07-28**: the two prerequisite todos
+      above are checked `[x]` here only because they were DELEGATED to
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`. As of 2026-07-28 both are genuinely satisfied: the
+      **distribution** fact (see "2026-07-28 update" above) — 5/43 sampled objects single-row, 38/43 substantial
+      multi-row data across 8 of the 9 venues — AND the **scale** fact (see "2026-07-28 update — true corpus-wide scale
+      measured" above) — **5,332 objects total across the 9 venues, clustered in a ~20-month window
+      (2024-05-02..2026-01-24), not the full 2020-2026 corpus**. This decision is now unblocked and ready for operator
+      judgment.
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.
