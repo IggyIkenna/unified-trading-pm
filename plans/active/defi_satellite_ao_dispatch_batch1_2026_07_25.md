@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -758,21 +758,14 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: a live probe either confirms deep cursor-walking reaches a real
       historical date (record how far back) or confirms it structurally cannot, recorded in the doc's Progress Log.
       Source: `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — DONE: confirmed cannot.
-- [ ] [DATA] P1. Diagnose (and ship a fix ONLY if a clear, undisputed one-line correction — otherwise document + stop)
-      why the onchain `availability_index` manifest consolidator is a measured no-op: 13 index rows frozen at
-      `date=2026-01-25` while GCS objects exist through 2026-05-22, a fresh scan measures `shards_scanned=1/rows_in=0`
-      against 723 live onchain objects. Trace the onchain index-update/consolidator code path (repos:
-      unified-trading-library, market-tick-data-service — grep-then-read, do not guess) and produce a written root
-      cause. As part of the SAME investigation, explicitly reconcile against `defi_consolidated_closeout_2026_07_18.md`
-      Track 8's 2026-07-22 correction claiming the manifest consolidator is "ENABLED, running every 1 minute,
-      unaffected" — state whether this is the same consolidator process, and if so reconcile the apparent contradiction
-      (or state it genuinely conflicts) — do NOT silently pick a side. Do NOT hand-edit `availability_index.parquet`
-      directly. **Done when**: a dated Update section is added to the issue doc with the root cause + evidence (or
-      "inconclusive, here is what was ruled out") and the Track 8 reconciliation explicitly stated; IF the root cause is
-      a trivial undisputed fix, it may additionally be shipped + verified (re-scan shows `shards_scanned>1`/`rows_in>0`,
-      index reflects dates beyond 2026-01-25); otherwise remediation stays open pending a human design decision and the
-      todo completes on the documented diagnosis. Source:
-      `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`.
+- [x] ✅ [DATA] P1. Diagnose why the onchain `availability_index` manifest consolidator is a measured no-op — **DONE
+      2026-07-28 (slot-12), diagnosis-only (no trivial fix exists).** Root cause: NOT a broken consolidator — the 13
+      frozen rows live at a dead, orphaned `onchain/_index/` tree left behind by `bucket_fold_features_2026_07_17`'s
+      2026-07-18 migration (no consolidator can ever target a sub-prefix). The bucket's real ROOT manifest is alive +
+      current; Track 8's "ENABLED, running every 1 minute" is confirmed true and does not contradict this finding — the
+      two measure different things. Needs an operator design decision (delete orphan + historical backfill-
+      registration), so remediation stays open per this todo's contract. Full evidence:
+      `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` (Update 2026-07-28, slot-12).
 - [ ] [DATA] P1. Diagnose (and fix ONLY if a clear code bug) the implausible identical `instrument_count=14,630,914`
       reported across 5 different onchain feature_groups (health_factor, rewards, liquidation_events, risk_params,
       flash_loan_availability) plus lending_rates in the onchain availability_index — a per-group count shouldn't be
