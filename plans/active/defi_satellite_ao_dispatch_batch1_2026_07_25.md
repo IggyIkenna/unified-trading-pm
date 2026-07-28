@@ -155,12 +155,25 @@ drift_direction: advance-code
       expired-order-exclusion case. `quality-gates.sh` green (7092 tests). Hit and resolved a repo-blocker (RB-ef115f4a,
       `pipelinemode_missing_batch_defillama_member_2026_07_26.md`, now archived) from an unrelated concurrent commit
       before shipping.
-- [ ] [CODE] P1. Implement Orca Whirlpool tick-array binary decode in
+- [x] ✅ [CODE] P1. Implement Orca Whirlpool tick-array binary decode in
       `market_tick_data_service/cli/handlers/orca_whirlpool_state_handler.py` — decode the 3 nearest tick arrays around
       the already-extracted `tick_current_index` (~150-200 LOC), captured per-snapshot alongside the existing pool-state
       row, so downstream consumers can compute fill slippage at arbitrary sizes. Repo: market-tick-data-service. **Done
       when**: per-snapshot tick-array state is captured and persisted alongside pool state; new unit tests cover the
-      decode; `quality-gates.sh` green. Source: `data_completion_defi_2026_07_15.md`.
+      decode; `quality-gates.sh` green. Source: `data_completion_defi_2026_07_15.md`. —
+      market-tick-data-service@f771e841. The 3 TickArray accounts nearest `tick_current_index` (previous/current/next)
+      are located via Program Derived Address (PDA — seeds `"tick_array"` + pool pubkey + `start_tick_index` string
+      against the Whirlpool program, same scheme the Orca SDK uses), fetched concurrently via the existing
+      `solana_get_account_info_at_slot` primitive (no new RPC primitive needed), decoded, and persisted as a
+      `tick_array_state` JSON column on the existing `dex_pool_state` row (`write_defi_rows` already passes extra
+      columns through — no new UAC schema/data_type needed). This service has no `solders`/`solana-py` dependency, so
+      PDA derivation (base58 codec + Ed25519 curve-membership check) is a small pure-Python reimplementation local to
+      the handler, rather than adding a new crypto dependency for one handler. An uninitialized tick array (no liquidity
+      ever placed there) is honest absence — an empty `ticks` list, never fabricated. 13 new unit tests cover: tick
+      decode (incl. negative `liquidity_net` two's-complement, uninitialized-slot skipping, short-buffer rejection), the
+      nearest-3 start-index math (incl. negative-tick floor division), base58 round trip, the Ed25519 on-curve check
+      (verified against the curve-independent identity-point (0,1) invariant), PDA determinism/off-curve invariant, and
+      the new `tick_array_state` column end-to-end. `quality-gates.sh` green (7269 tests, full run).
 - [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-10) — both sub-items already resolved by prior commits predating this plan;
       no code change needed.** (a) The DeFi expected-universe seeder's blank-`chain` bug for glued `PROTOCOL-CHAIN`
       venues (incl. the oracle-prices/perp-funding sub-buckets — `CHAINLINK-ETHEREUM`, `AAVE-ETHEREUM`,
@@ -361,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+              "2026-07-28 update — true corpus-wide scale measured" section. Source:
+              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
