@@ -15,7 +15,7 @@ summary: >-
   structurally cannot, from this data source, regardless of when it is run. Separately (already tracked, not duplicated
   here): strategy-service's reader is still keyed to the pre-2026-07-21-rename name `aave_rate_impact`, not the writer's
   `rate_impact`, so even a real (non-zero) value would not reach the P&L engine yet.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, features]
@@ -46,9 +46,13 @@ source:
     silent_wrong_answer_bucket_resolution_class_2026_07_20.md — the backfill ran and wrote real rows, but every feature
     column read back as exactly zero, which itself is the silent-wrong-answer class the parent doc exists to catch",
   ]
-resolved_by:
+resolved_by: features-service@b0845d83, strategy-service@59dd0638
 locked_by:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — both durable-close conditions shipped (`features-service@b0845d83`,
+> `strategy-service@59dd0638`), both SHAs re-verified as ancestors of `origin/live-defi-rollout`. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # aave_rate_impact — real rows, deterministic zeros
 
@@ -144,7 +148,18 @@ downstream consumer mistakes the presence of the row for the presence of signal.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off DefiLlama Yields + re-point strategy-service's reader** —
-      decide whether to switch `fetch_data()` to MTDS `lending_indices` (real `total_borrow_usd`) or another source,
+- [x] ✅ [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off DefiLlama Yields + re-point strategy-service's reader**
+      — decide whether to switch `fetch_data()` to MTDS `lending_indices` (real `total_borrow_usd`) or another source,
       then re-point the reader from `aave_rate_impact` to the writer's `rate_impact` name once real values exist; every
-      output column is a deterministic zero today.
+      output column is a deterministic zero today. — **DONE, re-verified 2026-07-28** (via
+      `plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[BACKEND] P1`). Both of the Recommendation
+      section's durable-close conditions shipped: (1) `AaveRateImpactCalculator.fetch_data()` migrated off the
+      structurally-zero DefiLlama Yields borrow field onto MTDS `lending_indices` — `features-service@b0845d83`
+      ("fix(onchain): migrate AaveRateImpactCalculator off structurally-zero DefiLlama borrow field"); (2)
+      `strategy_service/pnl/engine/orchestrator.py` re-pointed to the writer's real `feature_group="rate_impact"` —
+      `strategy-service@59dd0638` ("fix(pnl): re-point rate-impact reader to writer's actual
+      feature_group=rate_impact"). Both SHAs re-verified this pass as real commits and confirmed ancestors of
+      `origin/live-defi-rollout` in their own repos (`git merge-base --is-ancestor`, both PASS); a fresh full read of
+      this doc's body found no prose residual beyond these two Recommendation items. Source:
+      `plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 2. This doc is a candidate for the
+      standard archival ritual (not run here — flagging only, per the batching session's scope).

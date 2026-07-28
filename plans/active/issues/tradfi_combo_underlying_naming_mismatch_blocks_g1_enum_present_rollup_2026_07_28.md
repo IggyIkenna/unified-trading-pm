@@ -132,6 +132,47 @@ candidate directions to evaluate:
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Decide the TradFi COMBO underlying-naming reconciliation approach (writer-side normalization vs.
+- [x] [OPERATOR] P2. **Decide the TradFi COMBO underlying-naming reconciliation approach (writer-side normalization vs.
       enumerator-side lookup table)** — resolve which of the two candidate directions to build before this is
-      AO-dispatchable; also file the follow-up 1.3M-row legacy `COMBO`-uppercase reconciliation once decided.
+      AO-dispatchable; also file the follow-up 1.3M-row legacy `COMBO`-uppercase reconciliation once decided. — **DONE
+      2026-07-28** — dispatched as BOTH directions in parallel (not either/or): direction 2 (enumerator-side
+      reverse-lookup) this task, direction 1 (MTDS write-path normalization) a separate parallel task. Direction 2
+      SHIPPED — see "Resolution" below. The 1.3M-row `COMBO`-uppercase residual filed separately per the note below.
+
+## Resolution (2026-07-28, direction 2 — enumerator-side UAC reverse-lookup)
+
+Shipped `unified_api_contracts.resolve_tradfi_underlying_to_root(underlying: str) -> str | None`
+(`unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py`) — reverses the union of
+`DATABENTO_VALID_PARENT_SYMBOLS` + `EXCHANGE_CODE_TO_NAME` + `UNDERLYING_NORMALIZATION` (punctuation-normalised so
+`"HEATING-OIL"`/`"HEATINGOIL"`/`"HEATING_OIL"` all resolve to `"HO"`), with a >=2-token progressive right-trim for a
+location/basis suffix (`"NAT-GAS-HH"` → `"NAT-GAS"` → `"NG"`) restricted to hyphenated multi-word names so it does NOT
+mis-resolve a genuine 2-leg spread (`"WTI-BZ"` correctly returns `None`). 12 new unit tests
+(`tests/unit/test_tradfi_underlying_recognition.py::TestResolveTradfiUnderlyingToRoot`).
+
+Wired into `instruments-service`'s `_derive_underlying()` (now accepts an optional `raw_underlying` param — an
+ALREADY-POPULATED spelled-out value tries the reverse-lookup before falling back unchanged) and
+`_rollup_present_bundle_grain()`'s call site (now passes every bundle-LEAF row's raw `underlying` column through
+`_derive_underlying`, not just blank ones). 8 new/updated unit tests incl. an end-to-end
+`test_build_present_set_reconciles_already_populated_spelled_out_underlying` proof (`"COMBO"`/`underlying="HEATING-OIL"`
+→ rolls up to `("combo", "", "HO", ...)`).
+
+**Real production quantification (scan-only, `--apply-write` NOT passed, full 2018-01-01..2026-07-28 history,
+`--max-writes-per-run 5000000` to clear the 1M default halt-safety)**: `expected_unattempted` **503,588 → 503,588,
+byte-identical breakdown — 0 change** (same as the pre-existing grain-symmetry-only baseline this issue recorded). The
+reconciliation mechanism is proven CORRECT at the unit level (above), but has **zero measured production impact**
+because `combo` bundle candidates never reach the present-set comparison at all — traced to a THIRD, independent bug
+(the catalog-seed-side composite-instrument-id mis-parse this issue already flagged in point 2 above feeds a garbage
+`base_ccy` into the tradfi MVP-universe gate, silently excluding every combo candidate BEFORE any row is ever seeded —
+confirmed live: `is_mvp("tradfi","CME","OPTION",base_ccy="CME:COMBO:ESU4")` → `False` vs.
+`is_mvp("tradfi","CME","OPTION",base_ccy="ES")` → `True`). Filed as its own issue (P1, since it's a genuine
+data-correctness denominator gap on the MVP-scoped ES/S&P-500 combo complex):
+`plans/active/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md`.
+
+The 1.3M-row `COMBO`-uppercase manifest-index casing residual (real census: 1,314,705 uppercase vs. 23,428 lowercase,
+mixed `capture_status`) was investigated but judged bigger than a bounded add-on (mixed capture_status population + no
+ready-made script targets the manifest-INDEX column, only the GCS-object-PATH casing class) — filed as
+`plans/active/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` (P3, not a correctness blocker —
+both casings already read correctly via case-insensitive normalisation).
+
+Evidence: `instruments-service@<SHIPPED-SHA>`, `unified-api-contracts@<SHIPPED-SHA>` (see the dispatching task's final
+report for exact SHAs).

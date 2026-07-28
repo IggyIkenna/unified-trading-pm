@@ -21,7 +21,7 @@ tags: [defi, scheduling, crash-loop, venue-mislabel, terraform, in-flight]
 related:
   [
     /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md,
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
   ]
 created: "2026-07-22"
 parent_epic: infrastructure_master

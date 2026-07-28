@@ -84,7 +84,7 @@ drift_direction: advance-code
       umbrella key as the exchange product (`venue_constants.py:180` `SPORTS_EXCHANGE_VENUES`; `betfair_ws.py`'s own
       docstring calls it "umbrella exchange venue used by execution + reference"; `bookmaker_registry.py` categorizes it
       `EXCHANGE`). The 33 rows are dead legacy writes from a since-fixed structural bug
-      (`plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md:252,260`, fixed `mtds@accd8aa4`
+      (`plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md:252,260`, fixed `mtds@accd8aa4`
       2026-07-20, regression test asserts bare BETFAIR is out of scope going forward) — not an ongoing pattern. -
       **`ODDS_API` (33 rows) → FIXED_ODDS.** The Odds API exclusively aggregates fixed-price sportsbook quotes (never
       exchange/peer-to-peer prices — Betfair Exchange has its own dedicated channel), and existing test fixtures already

@@ -131,7 +131,7 @@ drift_direction: advance-code
     - 2. **[DATA] P0.** Make a run whose every write failed EXIT NON-ZERO (fix the "N success/0 failed" summary to count
       written, not processed).
     - 3. **[DATA] P1.** Sweep the OTHER candle data_types for the same class of contract drift before the backfill.
-  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
+  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
     (status: active — all 16 open todos are P0/P1, none to cap)
     - 1. **[DATA] P0.** Rebuild code tarballs for the 4 already-shipped repos (canonical-shape writer/reader changes
          live on VM images).

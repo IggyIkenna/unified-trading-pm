@@ -31,7 +31,7 @@ stage: [meta]
 repos: [unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [tooling, ci-blind-spot, stale-checkout, workspace-root, archetype, codex-parity, false-failure]
-related: [/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md]
+related: [/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md]
 created: 2026-07-22
 parent_epic: infrastructure_master
 assigned_vm: NA

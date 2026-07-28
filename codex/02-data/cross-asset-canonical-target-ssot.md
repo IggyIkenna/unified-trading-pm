@@ -438,9 +438,9 @@ POOL key = 3-segment fee-in-symbol · defi two-id model kept (Option A, no mass 
 A_TOKEN/DEBT_TOKEN **[⛔ RULED 2026-07-20, operator ruling D2 — ~~was "HOLDINGS ONLY; market/event keying
 PARKED/UNRULED"~~; the operator ruled the FULL retire (all lending data_types, not holdings-only). It is the TARGET, NOT
 yet implemented — gated on the MTDS lending-writer fix
-(`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`) → migrate → re-sync atom; see the §5 banner.
-Market/event flat `LENDING` is `migration_pending`, not a finding.]** · instrument_type **COLUMN UPPERCASE / path
-segment lowercase / id middle segment UPPER** **[⛔ corrected 2026-07-20, operator ruling D1 — ~~was "lowercase in
+(`plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`) → migrate → re-sync atom; see the §5
+banner. Market/event flat `LENDING` is `migration_pending`, not a finding.]** · instrument_type **COLUMN UPPERCASE /
+path segment lowercase / id middle segment UPPER** **[⛔ corrected 2026-07-20, operator ruling D1 — ~~was "lowercase in
 path/column / UPPER in id"~~; see the §7 ruling banner]** · culled-venue purge dead-only + snapshot-first
 
 - keep LIGHTER/EXTENDED/KALSHI-PERP/POLYMARKET-PERP/BINANCE-DELIVERY · combos = leg-aware signed-weight · restore the

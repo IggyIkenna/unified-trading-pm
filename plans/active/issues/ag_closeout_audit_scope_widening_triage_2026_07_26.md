@@ -22,7 +22,7 @@ related:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/PLAN_FORMAT.md,
   ]
 created: "2026-07-26"
@@ -156,7 +156,7 @@ citing file):
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                |
 | `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                | ao            | AO slot-dispatcher stale-role bug                                   |
 | `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md`         | ci            | doc-index determinism test, same flake class                        |
-| `issues/uac_service_emission_policy_duplicate_module_2026_07_27.md`                             | cross-cutting | UAC duplicate-module bug, shared schema layer                       |
+| `/plans/archive/issues/uac_service_emission_policy_duplicate_module_2026_07_27.md`              | cross-cutting | UAC duplicate-module bug, shared schema layer                       |
 | `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`                | ao            | AO worker interactive-session teardown behavior                     |
 
 No doc in either list was genuinely out-of-scope of the 9-tranche partition — every one landed in `ao`/`ci`/`infra`/

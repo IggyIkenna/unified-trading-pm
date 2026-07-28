@@ -18,7 +18,7 @@ tags: [ci, cicd, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
     /plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/06-coding-standards/quality-gates.md,
   ]

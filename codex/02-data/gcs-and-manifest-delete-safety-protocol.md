@@ -343,9 +343,9 @@ difference is repaired in place, not deleted.
 `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split, ~16.7M rows)" is the
 correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers into
 `attempted_failed`/zero-data. Order: fix writers → migrate → re-sync atom, gated on
-`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Consequence for delete safety (unchanged)**:
-flat `LENDING` on market/event data_types is `migration_pending` — never a finding, never a delete trigger — until the
-migration lands.
+`plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Consequence for delete safety
+(unchanged)**: flat `LENDING` on market/event data_types is `migration_pending` — never a finding, never a delete
+trigger — until the migration lands.
 
 ---
 

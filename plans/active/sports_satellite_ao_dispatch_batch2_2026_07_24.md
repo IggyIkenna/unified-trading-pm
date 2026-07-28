@@ -44,7 +44,7 @@ tags: [sports, ao-dispatch, satellite-docs, batch-2, plan-hygiene]
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,

@@ -115,8 +115,8 @@ Raydium pools** (XMR/USDC ~$47M, BNB/USDC ~$18M). Path-shape similarity is not e
 
 **CORRECTION 2026-07-20 (operator D2):** Decision **D** is now **RULED** — defi market/event flat `LENDING` keying is a
 **FULL retire**. It is `migration_pending` (the retire is gated on
-`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`), **NOT an open question**. The skill does **NOT**
-REFUSE it and does **NOT** flag it — do **not** flag `lending` on `lending_indices`, `liquidation_events`,
+`plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`), **NOT an open question**. The skill does
+**NOT** REFUSE it and does **NOT** flag it — do **not** flag `lending` on `lending_indices`, `liquidation_events`,
 `flash_loan_events`, or `position_data`. Only `holdings` uses the `A_TOKEN` / `DEBT_TOKEN` split. Re-reporting this is a
 suppressed accepted exception. _(Superseded: previously logged here as "Decision D is unruled" / "PARKED — pending
 decision D".)_

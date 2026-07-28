@@ -163,11 +163,11 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
 - **[CODE] P1. Extend the canonical `trades` schema for POLYMARKET metadata + migrate the legacy `prediction_trades`
   population** — ROLLUP (split 2026-07-28, slot-12, into 4a DONE + 4b open; see below). Operator ruling 2026-07-25
   (`unified-trading-pm@7dfcfe0ee`,
-  `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the canonical
-  `data_type=trades` schema rather than drop the legacy metadata or permanently fork a separate canonical shape. Source:
-  `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` todos 4-6 — batch3 deferred this doc as
-  operator-gated on Q3; the `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` re-check (2026-07-26)
-  confirmed Q3 cleared the SAME day batch3 was drafted.
+  `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`): extend the
+  canonical `data_type=trades` schema rather than drop the legacy metadata or permanently fork a separate canonical
+  shape. Source: `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` todos 4-6 — batch3 deferred
+  this doc as operator-gated on Q3; the `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` re-check
+  (2026-07-26) confirmed Q3 cleared the SAME day batch3 was drafted.
 
   - [x] ✅ [CODE] P1. **4a — schema + writer (DONE 2026-07-28, slot-12).** (1) unified-api-contracts: added
         `title`/`slug`/`event_slug` as first-class canonical `trades` `ColumnSpec` entries in

@@ -13,7 +13,7 @@ summary: >-
   `service_emission_policy.__file__` resolving to the package's `__init__.py`), so this is NOT currently causing wrong
   behavior — but it is a real "two SSOT copies, one stale" hygiene violation, and the flat module being 34KB (clearly
   not a stub) suggests an in-progress, never-finished package-extraction migration rather than a deliberate design.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [data]
@@ -33,8 +33,11 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: "unified-api-contracts@cb9e97dfd"
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # UAC service_emission_policy: duplicate flat-module + package
 
@@ -64,9 +67,11 @@ imports from it directly by a different path, or if the package is ever removed 
 
 ## Recommended fix path
 
-- [ ] [CLEANUP] P3. **Delete the orphaned flat `unified_api_contracts/canonical/crosscutting/service_emission_policy.py`
+- [x] [CLEANUP] P3. **Delete the orphaned flat `unified_api_contracts/canonical/crosscutting/service_emission_policy.py`
       module once confirmed dead**, after a corpus-wide grep confirms no import resolves specifically to the flat-file
       shape in a way the package wouldn't also satisfy (Python's normal package-over-module resolution should already
       guarantee this, but confirm no `importlib`/`sys.path` trick bypasses it anywhere). Repo: unified-api-contracts.
       **Done when**: the flat module is deleted, `quality-gates.sh` green, and no import errors surface anywhere in the
-      fleet's CI.
+      fleet's CI. — **DONE 2026-07-28**: corpus-wide grep across all 22 sibling repos confirmed no
+      `importlib.util.spec_from_file_location`/sys.path bypass targets the flat file; deleted (565 lines). Shipped
+      unified-api-contracts@cb9e97dfd, `quality-gates.sh` green.

@@ -23,7 +23,7 @@ related:
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
     /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
-    /plans/active/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"

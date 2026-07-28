@@ -9,7 +9,7 @@ summary: >-
   350) to a DIFFERENT whitespace-run width on 3 separate invocations this session, growing rather than converging.
   Whitespace-only, inside a non-rendered comment, but it generates unrelated diff noise and periodically trips
   quickmerge's M1 drift-check on any future commit touching this file.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -24,6 +24,9 @@ related:
 created: "2026-07-27"
 source: sports_closeout_track_x_hygiene_2026_07_25.md todo 1 (shipping side-effect)
 resolved_by:
+  unified-trading-pm doc fix, 2026-07-28 -- collapsed the offending HTML comment body onto one physical line in
+  plans/active/sports_consolidated_closeout_2026_07_19.md, verified idempotent (2 consecutive `prettier --write` runs,
+  zero diff)
 locked_by:
 parent_epic: sports_master
 assigned_vm: NA
@@ -33,6 +36,9 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-28** — fixed in `unified-trading-pm` (doc-only, this repo); verified idempotent. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 ## What I found
 
@@ -69,9 +75,18 @@ touching this file's Track K section.
 
 ## Todos
 
-- [ ] [DOC] P3. Normalize the whitespace-run formatting of the
+- [x] ✅ [DOC] P3. Normalize the whitespace-run formatting of the
       `<!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23):     ... -->` HTML comment block in
       `plans/active/sports_consolidated_closeout_2026_07_19.md` (~line 350, inside Track K) so `npx prettier --write`
       converges to a stable, idempotent format instead of growing the whitespace run on each pass. (repo:
       unified-trading-pm, doc edit only.) **Done when**: 2 consecutive `prettier --write` runs on the file produce zero
-      diff.
+      diff. **DONE 2026-07-28.** Root cause confirmed by direct repro: prettier (`proseWrap: always`) re-indents each
+      hard-line-broken continuation line INSIDE a multi-line HTML comment by a few more spaces on every pass — a small
+      fixed-indent normalization alone (6 spaces, matching the surrounding list continuation) did NOT stop the growth
+      (verified: still drifted +4 spaces/pass). The actual fix was collapsing the whole comment BODY onto one physical
+      line (no internal hard breaks) so there is no continuation-line indent for prettier to keep re-computing — proven
+      on an isolated scratch repro first, then applied to the real file. **Verified against the "Done when" criterion**:
+      ran `npx prettier --write` twice in a row on `sports_consolidated_closeout_2026_07_19.md` — the first run made one
+      more (benign) adjustment (rewrapped the trailing " (FOLDED IN from ..." prose after the comment's `-->` onto its
+      own line), the second run produced zero diff. Content preserved verbatim (`git diff` shows only whitespace/line-
+      wrap changes, confirmed via `diff`). Prettier available locally via `npx prettier@3.9.4`.

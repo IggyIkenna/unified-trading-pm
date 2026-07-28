@@ -120,7 +120,7 @@ drift_direction: advance-code
       (read-only search), instruments-service (`prod/catalog.parquet`, read-only). **Done when**: (a) a named
       commit/script is identified for each of the 3 path shapes plus a live-vs-historical verdict, AND (b) a yes/no
       title/slug-recoverability verdict with evidence (the specific row(s) checked) — both recorded in
-      `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress Log in
+      `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress Log in
       the same commit. Source: `prediction_phase_ab_residuals_2026_07_24.md`. — `unified-trading-pm@<pending-sha>`.
       **(a)** all three shapes are HISTORICAL, none written by any live code path today: #3/#3b are the Polymarket
       adapter's pre-2026-04-19 drifted output (fixed forward by `da270f9b`/`ca246a9b`, zero live `"prediction_trades"`

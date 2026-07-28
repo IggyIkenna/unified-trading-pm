@@ -42,7 +42,7 @@ related_plans:
   - ../active/data_pipeline_reconciliation_skill_2026_07_20.md
   - ../active/defi_migration_audit_log_2026_07_24.md
   - ../active/defi_venue_lst_rates_residual_2026_07_24.md
-  - ../active/distinct_values_noncanonical_audit_2026_07_20.md
+  - /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md
   - ../active/infra_ops_residual_migration_verification_2026_07_24.md
   - ../active/is_catalogue_g1_root_audit_log_2026_07_24.md
   - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
@@ -197,10 +197,11 @@ residual — forked from migration_verification_orphan_safety_2026_06_10
 
 ## P1 — important; post-current-gate
 
-### [`distinct_values_noncanonical_audit_2026_07_20`](../active/distinct_values_noncanonical_audit_2026_07_20.md)
+### [`distinct_values_noncanonical_audit_2026_07_20`](/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md)
 
-**status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Distinct-Values non-canonical audit — all
-asset_groups × all axes
+**status**: ✅ ARCHIVED 2026-07-28 (was: active) · **estimate**: 2.4 cal AI-days (class: infra) · **title**:
+Distinct-Values non-canonical audit — all asset_groups × all axes — verified zero open todos; forked-out follow-on work
+tracked in other still-active docs (see the archived plan's "Deferred work" section).
 
 ### [`mtds_available_at_cross_asset_backfill_2026_07_13`](../active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
 

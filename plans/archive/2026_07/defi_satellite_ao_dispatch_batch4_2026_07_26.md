@@ -11,7 +11,7 @@ summary: >-
   batch3, already dispositioned by it, or non-batchable. Also records three findings batch3 does not carry — a
   duplicate-resolution lesson on the glued-instrument-id doc, an under-report correction, and the residual orphan count
   (21) after batch3 is counted as covering.
-status: active
+status: complete # (was: active) 2026-07-28 archival sweep: verified zero open todos
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -50,6 +50,10 @@ sequential: false
 drift_direction: advance-code
 ---
 
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — both todos verified `[x]`; see "Deferred work — migrated to:" below
+> (already present in this doc) for disposition of the findings that did not become new todos. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
 # DeFi satellite AO batch 4 — the 2-item delta
 
 > **`status: draft` — NOT dispatched.** Per the `/ag-closeout-audit` skill's autonomous-mode rule and CLAUDE.md's "Plan
@@ -64,7 +68,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DOC] P3. **Flip the provably-completed `[~] [INFRA] P3` D2 item in
+- [x] ✅ [DOC] P3. **DONE 2026-07-28.** Flip the provably-completed `[~] [INFRA] P3` D2 item in
       `/plans/active/issues/defi_code_codex_drift_2026_05_27.md` to `[x]`.** The item reads "delete legacy `lst_rates/`,
       `lending_indices/`, `dex_pools/` prefixes in `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated
       buckets confirmed authoritative" and carries an in-item deferral: "`lending_indices/` + `dex_pools/`: deferred
@@ -83,10 +87,14 @@ drift_direction: advance-code
       parked operator question (codex-SSOT edit, blast-radius-gated); this todo must not pre-empt it. Repo:
       unified-trading-pm. Source: `/plans/active/issues/defi_code_codex_drift_2026_05_27.md` (D2). **Done when**: D2
       reads `- [x]` with a dated one-line completion note citing at least two of the four sources above by path, all
-      re-verified this pass; no codex file is in the diff; the change ships as a `docs(plans):` commit.
-- [ ] [DOC] P3. **Archive `/plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md` —
-      it reached zero remaining work hours after it was filed.** Filed 2026-07-26 with zero checkboxes and a prose
-      "Recommendation" section whose two stated durable-close conditions were both then shipped by
+      re-verified this pass; no codex file is in the diff; the change ships as a `docs(plans):` commit. — **Done-when
+      met**: all four citations re-verified live this pass (banner text + both archived docs' `status: resolved` + the
+      CLAUDE.md line); D2 flipped `[x]` in `defi_code_codex_drift_2026_05_27.md` with a dated completion note citing all
+      four; no codex file touched; `unified-trading-pm` docs-only commit.
+- [x] ✅ [DOC] P3. **DONE 2026-07-28 (verified, not fully re-ritualized).** Archive
+      `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md` — it reached zero
+      remaining work hours after it was filed.** Filed 2026-07-26 with zero checkboxes and a prose "Recommendation"
+      section whose two stated durable-close conditions were both then shipped by
       `/plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s `[BACKEND] P1`: (1) migrate
       `AaveRateImpactCalculator.fetch_data()` off the structurally-zero DefiLlama Yields borrow field onto MTDS
       `lending_indices` (`features-service@b0845d83`), and (2) re-point `strategy_service/pnl/engine/orchestrator.py` to
@@ -97,10 +105,19 @@ drift_direction: advance-code
       referrer of `aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26` and repoint each to
       `/plans/archive/issues/` (batch2's own shipped `[BACKEND] P1` cites it as `Source:` and will need repointing).
       Repo: unified-trading-pm. Source:
-      `/plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. **Done when**: both
+      `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. **Done when**: both
       SHAs are verified on `origin/live-defi-rollout`, the doc is at `plans/archive/issues/` with `status: resolved` and
       a populated `resolved_by:`, and every corpus referrer resolves to the archived path (or the todo is closed with a
-      written reason it was NOT archived).
+      written reason it was NOT archived). — **Partially met, by explicit instruction of the session that dispatched
+      this cleanup pass**: both SHAs re-verified as real commits + confirmed ancestors of `origin/live-defi-rollout`
+      (`git merge-base --is-ancestor`, both PASS); a fresh full read of the issue doc found no prose residual beyond the
+      two Recommendation items. The doc's own `status:` flipped to `resolved` + `resolved_by:` populated with both SHAs,
+      and its sole todo flipped `[x]` with the same evidence. **NOT done**: the file was NOT moved to
+      `plans/archive/issues/` and corpus referrers (incl. batch2's own `[BACKEND] P1` `Source:` citation) were NOT
+      repointed — this pass was scoped to verify-and-flip only, flagging the doc as a fresh archival candidate for a
+      separate centralized archival pass (avoids collision with other concurrent sessions editing shared index
+      files/referrer corpora). Full 6-step ritual (incl. step 6's corpus-wide referrer repoint) is still open work if
+      picked up by that pass.
 
 ## Deferred — dropped by the conflict check against batch3 (cite, do not re-draft)
 
@@ -135,7 +152,7 @@ anything new.
 
 Two additions this run makes to those lists, not present in either:
 
-- **`/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`** — operator-
+- **`/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`** — operator-
   gated. Its one open todo is a `[DESIGN] P1` "demote `perp_funding` from a captured raw type to a DERIVED interval
   view", self-tagged `[OPERATOR-DECISION]`, already queued as entry 4 in
   `/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`, and explicitly excluded by batch1 as never

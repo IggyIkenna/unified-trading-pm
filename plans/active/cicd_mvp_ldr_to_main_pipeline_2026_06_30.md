@@ -504,10 +504,17 @@ Phase 1:
 
 ## Todos
 
-- [ ] [DOCS] P2. **Evidence-update items 20a/20b/20c in `june_2026_vintage_audit_findings_2026_07_27.md`** — per the
+- [x] ✅ [DOCS] P2. **Evidence-update items 20a/20b/20c in `june_2026_vintage_audit_findings_2026_07_27.md`** — per the
       2026-07-28 Progress Log entry, these were named in this plan's dispatch as needing an evidence update but were
       left untouched (that file had live, actively-changing concurrent-agent WIP throughout the session); pick this up
-      once that file is quiet.
+      once that file is quiet. **DONE (2026-07-28, follow-up pass)** — checked the target file was quiet first
+      (`git     status --porcelain` clean, last commit `9f12b267d` at 14:05:29+01:00, 3+ hours before this check, no
+      live concurrent-agent WIP) before touching it, per this todo's own instruction. Found items 20a/20b/20c already
+      carry full evidence citations at `june_2026_vintage_audit_findings_2026_07_27.md:658-670` ("20a/20b/20c ALL DONE
+      2026-07-28"), landed by a different concurrent session in the interim — verified the citations are accurate
+      against this plan's own "Operator decisions / notes" section (cron-reliability heartbeat @`6c09f4e86` +
+      `unified-trading-pm@ac866246b` checkbox flips, provenance re-arm-leak fix + WS-I re-homing both @`105cebfde`). No
+      further edit needed there; only this checkbox required flipping.
 
 ## Progress Log
 

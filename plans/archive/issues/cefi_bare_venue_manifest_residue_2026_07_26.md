@@ -21,7 +21,7 @@ tags: [cefi, manifest, venue, canonicalisation, delete-safety, data-correctness,
 related:
   [
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
   ]
 created: 2026-07-26
 priority: P3

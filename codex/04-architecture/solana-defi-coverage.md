@@ -86,7 +86,7 @@ was the sole entry; historical record:
 > NXDOMAIN, `dex.zeta.markets/api` returns HTML not JSON, verified 2026-07-15) and DeFiLlama TVL is
 > ~$0 (Mango V4 Perps
 > $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
-> `unified-trading-pm/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
+> `unified-trading-pm/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
 > for the full evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an
 > actual MTDS capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
 >

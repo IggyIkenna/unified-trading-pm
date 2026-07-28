@@ -27,7 +27,7 @@ tags: [qg-warn, adapter-contract-regression, stale-baseline, drift]
 related:
   [
     plans/active/issues/mtds_adapter_contract_regression_stale_baseline_2026_07_13.md,
-    plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
   ]
 created: 2026-07-15
 parent_epic: defi_master

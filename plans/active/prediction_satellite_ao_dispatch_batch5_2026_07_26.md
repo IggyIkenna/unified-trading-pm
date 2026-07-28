@@ -34,7 +34,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/active/issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md,
+    /plans/archive/issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -101,7 +101,7 @@ That shape breaks tag discovery in BOTH directions: a single-line `rg '^asset_gr
 this doc (the value is on the continuation line), while a naive whole-block tokenizer reads the quoted `[cross-cutting]`
 as a LIVE second tag and excludes the doc as a peer-AG cross-cutting candidate. Either way the doc falls out of the
 candidate set — the exact invisible-orphan failure class the Orthogonality HARD CHECK exists to prevent, reintroduced by
-the fix itself. Filed as `/plans/active/issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md`; the
+the fix itself. Filed as `/plans/archive/issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md`; the
 skill-side remediation is tracked there, not here (it is process/tooling work, not prediction data work).
 
 **And its blocking gate has already cleared.** Both cqg_residual todos hang off "operator decision 338" (todo 2 says

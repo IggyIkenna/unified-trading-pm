@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [tradfi, honest-coverage, canonicalisation, venues, chains, instrument_types, distinct-values, manifest]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]

@@ -579,21 +579,21 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   a strong signal, not a final ruling — this plan's own earlier tranches already demonstrated agents self-correcting on
   resume; this is the same discipline applied to MY synthesis of their output). Reclassified `NA→planning`
   (`unified-trading-pm@<pending>`, execution_scope corrected where stale):
-  `issues/defi_lending_protocol_capabilities_instrument_types_stale_atoken_debttoken_2026_07_27.md` (1 todo, bounded
-  code+verify), `issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md` (2 todos, mirrors an
-  already-shipped sibling pattern), `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`
-  (todo 1 is a bounded audit with a stated done-when; todo 2 retagged `[CODE]→[OPERATOR]` — its own text says "too risky
-  to rush," touches fleet-wide concurrency-critical code, needs explicit sign-off before an AO worker attempts it). Kept
-  NA despite the classifier's `ao_eligible: true`:
-  `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (the doc's OWN `execution_scope: human`
-  field already says so — "find + fix a writer-side bug" is open-ended diagnostic work, not a bounded outcome);
-  `issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (AO/orchestrator-infrastructure
-  dispatch-mechanism content — this plan's own Phase 2 already established that class stays human-reviewed even when a
-  fix "looks mechanical," since a wrong fix risks corrupting the backlog the audit itself depends on);
-  `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (touches `scripts/quickmerge.sh` itself —
-  every repo's ship path — carries `locked_by: live-defi-rollout`, contains a genuine "revisit whether X should happen"
-  design question sequenced after an unstarted audit step, and its remaining work is still numbered prose, never
-  converted to checkboxes — three independent reasons to keep this one human).
+  `/plans/archive/issues/defi_lending_protocol_capabilities_instrument_types_stale_atoken_debttoken_2026_07_27.md` (1
+  todo, bounded code+verify), `issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md` (2 todos,
+  mirrors an already-shipped sibling pattern),
+  `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md` (todo 1 is a bounded audit with a
+  stated done-when; todo 2 retagged `[CODE]→[OPERATOR]` — its own text says "too risky to rush," touches fleet-wide
+  concurrency-critical code, needs explicit sign-off before an AO worker attempts it). Kept NA despite the classifier's
+  `ao_eligible: true`: `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (the doc's OWN
+  `execution_scope: human` field already says so — "find + fix a writer-side bug" is open-ended diagnostic work, not a
+  bounded outcome); `issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md`
+  (AO/orchestrator-infrastructure dispatch-mechanism content — this plan's own Phase 2 already established that class
+  stays human-reviewed even when a fix "looks mechanical," since a wrong fix risks corrupting the backlog the audit
+  itself depends on); `issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md` (touches
+  `scripts/quickmerge.sh` itself — every repo's ship path — carries `locked_by: live-defi-rollout`, contains a genuine
+  "revisit whether X should happen" design question sequenced after an unstarted audit step, and its remaining work is
+  still numbered prose, never converted to checkboxes — three independent reasons to keep this one human).
 
   **5 archivable_now candidates found, not archived this pass** (own follow-up todo above) — genuinely resolved/moot per
   the classifying agent's read, but archival is its own 6-step-ritual action deserving independent re-verification

@@ -363,7 +363,15 @@ destructive todos on the 2026-06-27 reversal:
 
 …but the third was missed and was **still open** at audit time (`:143`) — **CANCELLED 2026-07-15**,
 unified-trading-pm@f70a2caf0 (the quoted block below is the now-struck original, preserved for the record; it had
-drifted to `:133-135` by the time it was cancelled):
+drifted to `:133-135` by the time it was cancelled).
+
+> **⚠️ Historical quote, not a live todo in THIS doc.** The raw `- [ ]` checkbox syntax below is deliberately preserved
+> byte-for-byte as it read in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` **before** the
+> 2026-07-15 cancellation (per the "`[DOCS] P1`" todo just below, which struck it there with a
+> `CANCELLED-BY-OPERATOR-REVERSAL` marker + a `(was: …)` tail, same as its two already-`[x]` siblings above). It is
+> quoted here only to document what the landmine looked like at audit time — it does not represent open work in this
+> document, and every real todo in this doc is already `[x]`. Confirmed 2026-07-28 (re-verified against the doc's own
+> full checkbox inventory).
 
 ```
 - [ ] [DOCS] P3. Codex: state odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS) in

@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [ci, cicd, ao-dispatch, close-out, batch-1, satellite-docs, quickmerge, github-actions, cloud-build]
 related:
   [
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/08-workflows/ci-cd-flow.md,

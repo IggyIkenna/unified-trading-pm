@@ -74,7 +74,7 @@ on `A_TOKEN`/`DEBT_TOKEN` — the operator-ruled SSOT; market/event lending data
 the interim `LENDING`/`SOLANA_LENDING` instrument_type. **⛔ corrected 2026-07-20, operator ruling D2 — ~~"PARKED per
 `issues/canonical_closeout_open_questions_2026_07_18.md` § D — NOT 'LENDING retired'"~~.** The full retire (all lending
 data_types) IS now the RULED TARGET, but is NOT yet implemented — it is `migration_pending`, gated on the MTDS
-lending-writer fix (`../../plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`); the interim
+lending-writer fix (`../../plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`); the interim
 `LENDING`/`SOLANA_LENDING` keying holds until the migration lands.)
 
 ### TradFi

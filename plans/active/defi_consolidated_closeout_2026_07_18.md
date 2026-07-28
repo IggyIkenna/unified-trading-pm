@@ -55,7 +55,7 @@ related:
   [
     /plans/archive/defi_consolidated_closeout_history_2026_07_25.md,
     /plans/active/defi_strategy_pnl_axis_index_2026_07_24.md,
-    /plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_finalize_2026_07_25.md,
@@ -86,7 +86,7 @@ related:
     issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
     issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     issues/lst_exchange_rate_data_availability_2026_07_21.md,
     issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
@@ -163,7 +163,7 @@ source:
 > | [`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)                             | The **per-instrument re-architecture (R1-R8)** + **Track 1 residual canon walk** — the single largest, most gating body of work (⛔ gates Half-B historical canonicalisation).         |
 > | [`defi_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md) (archived, `status: complete`) | The 2026-07-18 canonical-target **contradiction-resolution audit** (75 findings, verbatim) + the full **chronological Progress Log** (2026-07-18 → 2026-07-23, ~2090 lines, verbatim). |
 > | [`defi_track5_coverage_mvp_backfill_2026_07_24.md`](/plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md)                                           | **Track 5 (COVERAGE)** — backfill to MVP-100%, incl. the MVP-universe gap-audit + the mvp-defi backlog unpark flipper note; C-GREEN gated on Track 1 → Track 3.                        |
-> | [`defi_consolidated_closeout_aggregated_sources_2026_07_24.md`](/plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md)                   | The **discoverability index** of every other defi-relevant plan/issue with its open-todo digest — read this to find a doc not directly linked from this plan.                          |
+> | [`defi_consolidated_closeout_aggregated_sources_2026_07_24.md`](/plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md)          | The **discoverability index** of every other defi-relevant plan/issue with its open-todo digest — read this to find a doc not directly linked from this plan.                          |
 > | [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md) (`status: complete`)                   | **Track 6 (RENDER) + Track 7 (CULL)**, plus (2nd pass, 2026-07-25) every closed item from Tracks 2/3/4/8 + Open-follow-ups + the full 2026-07-24→2026-07-25 session Progress Log tail. |
 >
 > **Open-todo counts per child (2026-07-24, so a fresh session doesn't have to open each one to see what's live)**:
@@ -742,9 +742,9 @@ file, not here.
   report extracted 2026-07-25 (2nd pass) to
   [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
-> Moved verbatim to `/plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` (2026-07-24 line-cap
-> trim, 2nd pass — the umbrella:true exemption was removed same-day). Read that doc for the full discoverability index
-> of every other defi-relevant plan/issue with its open-todo digest.
+> Moved verbatim to `/plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` (2026-07-24
+> line-cap trim, 2nd pass — the umbrella:true exemption was removed same-day). Read that doc for the full
+> discoverability index of every other defi-relevant plan/issue with its open-todo digest.
 
 **Missing digest entry (gate-audit §12, 2026-07-24)**: `defi_track01_per_instrument_and_canon_id_2026_07_24.md` is
 referenced by "tracked under X below" prose in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` but never

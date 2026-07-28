@@ -14,7 +14,7 @@ summary: >-
   P1) was invisible to BOTH same-day prediction audits (batch3's 17-doc set and batch4's 26-doc set) despite having been
   correctly retagged the day before, and was found only by a frontmatter-block-aware parse that strips comments before
   tokenising.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -44,11 +44,20 @@ source:
     asset_group-tagged.",
   ]
 resolved_by:
+  unified-trading-pm cursor-configs/skills/ag-closeout-audit/SKILL.md Phase 0.3 amended 2026-07-28 (frontmatter-block-
+  aware, comment-stripping parse requirement added, per this doc's own sole todo). Scope note (not silently claimed
+  done): only next-step (1) of the 4 suggested next-steps is actioned; (2) Progress-Log retag convention, (3) the
+  corpus-wide divergence guard script, and (4) re-running discovery for the other 8 tranches remain unactioned,
+  documented in this doc's own "Suggested next steps" section as future follow-on work, not tracked as separate todos.
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — SKILL.md Phase 0.3 amended per this doc's sole todo; 3 of 4 suggested next-steps remain
+> unactioned follow-on work (documented, not silently dropped — see "Suggested next steps" below). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # ag-closeout-audit: the orthogonality-retag comment style is a discovery blindspot
 
@@ -122,11 +131,16 @@ way: the audit reports a clean orphan count and a plausible-looking doc total, s
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Amend `/cursor-configs/skills/ag-closeout-audit/SKILL.md` Phase 0.3** to require a
-      frontmatter-block-aware parse that strips YAML comments before tokenising (a single-line
-      `rg '^asset_group:.*<ag>'` is not sufficient) — none of the 4 suggested next steps (SKILL.md amendment,
-      Progress-Log retag convention, corpus-wide divergence guard script, re-run of the other 8 tranches) have been
-      actioned yet.
+- [x] ✅ [SCRIPT] P1. **Amend `/cursor-configs/skills/ag-closeout-audit/SKILL.md` Phase 0.3 — DONE 2026-07-28.** Added
+      the exact prescribed requirement to Phase 0.3's AG-primary doc inventory step: discovery MUST be a
+      frontmatter-block-aware parse that strips YAML comments before tokenising, with an explicit statement that a
+      single-line `rg '^asset_group:.*<ag>'` is NOT sufficient, plus the failure-mode explanation (multi-line
+      `asset_group:` blocks defeat single-line grep; an un-comment-stripped block-aware tokenizer reads a quoted old
+      retag value as a live second tag) and the same caveat extended to the membership greps quoted inside the closeout
+      docs themselves. **Scope note**: only next-step (1) of the 4 suggested is actioned here (the SKILL.md wording
+      itself, per this task's own remit); (2) Progress-Log retag convention, (3) the corpus-wide divergence guard
+      script, and (4) re-running discovery for the other 8 tranches remain separate, unactioned follow-ups — not
+      silently claimed done.
 
 ## Provenance
 

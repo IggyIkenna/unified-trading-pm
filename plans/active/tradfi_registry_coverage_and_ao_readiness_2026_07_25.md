@@ -191,8 +191,8 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
 - [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical** —
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`
       (`deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide
-      in `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for `asset_group=tradfi`
-      against the current nightly rollup + manifest and confirm every distinct
+      in `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for
+      `asset_group=tradfi` against the current nightly rollup + manifest and confirm every distinct
       `instrument_type`/`data_type`/`chain`/`source`/`pipeline_mode`/`venue` value is canonical (0 non-canonical, or
       only explicitly-accepted exceptions per the cutover register) — the exact dupes the 2026-07-18 audit found
       (`FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale `barchart`) must be 0 or explained. Definition-of-done: a

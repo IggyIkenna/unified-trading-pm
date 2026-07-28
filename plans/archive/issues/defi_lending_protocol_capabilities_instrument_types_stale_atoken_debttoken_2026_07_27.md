@@ -20,7 +20,7 @@ summary: >-
   `A_TOKEN`/`DEBT_TOKEN` pair as their instrument_key/instrument_type — the capability-declaration registry was never
   updated in lock-step, so the market_data_categories validity matrix (built FROM PROTOCOL_CAPABILITIES for defi) has no
   entry for what these adapters actually emit.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, meta]
@@ -43,13 +43,16 @@ execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 drift_direction: advance-code
-resolved_by:
+resolved_by: "unified-api-contracts@cb9e97dfd"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # PROTOCOL_CAPABILITIES lending declarations never updated for the A_TOKEN/DEBT_TOKEN retrofit
 
@@ -118,10 +121,13 @@ through).
 
 ## Todos
 
-- [ ] [DATA] P2. Update `instrument_types=_LENDING` to the real `[A_TOKEN, DEBT_TOKEN]` pair for aave_v3, spark,
+- [x] [DATA] P2. Update `instrument_types=_LENDING` to the real `[A_TOKEN, DEBT_TOKEN]` pair for aave_v3, spark,
       compound_v3, morpho, venus, benqi, and solend in
       `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py`. Check every other
       consumer of these entries' `instrument_types` field before changing (not just the enumerator). **Done when**: a
       fresh `enumerate_expected_universe.py --asset-group defi` dry-run over a window covering instruments on all 7
       protocols logs ZERO "unmapped instrument_type=... A_TOKEN/DEBT_TOKEN" warnings; `quality-gates.sh` green. (repo:
-      unified-api-contracts)
+      unified-api-contracts) — **DONE 2026-07-28**: added `_LENDING_ATOKEN_DEBTTOKEN` shorthand, updated all 7
+      protocols; verified radiant/euler_v2/fluid/marginfi (same `_LENDING` pattern, not part of this retrofit) left
+      untouched, and no other `PROTOCOL_CAPABILITIES[...].instrument_types` consumer hardcodes an expectation on the old
+      value. Shipped unified-api-contracts@cb9e97dfd, `quality-gates.sh` green.

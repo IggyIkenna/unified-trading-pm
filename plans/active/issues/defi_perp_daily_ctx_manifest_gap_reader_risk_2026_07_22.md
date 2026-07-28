@@ -37,8 +37,8 @@ tags:
   ]
 related:
   [
-    plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
-    plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
     plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md,
     plans/active/issues/downstream_funding_staking_canonical_reader_audit_2026_07_21.md,
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
@@ -144,7 +144,7 @@ Proposed fix: migrate both onto the `derivative_ticker` data_type/schema (`DEFI_
 
 6. **The 2026-07-15 operator ruling on `derivative_ticker` is about the MTDS CAPTURE layer, and explicitly does NOT yet
    authorize retiring `perp_funding`/`perp_daily_ctx` as the read/strategy-facing shape.**
-   `plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` established
+   `plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` established
    `derivative_ticker` as the canonical RAW-funding capture home for ALL perp venues going forward (MTDS wiring, GMX
    dual-write, etc) — this is a genuinely-shipped, separate change. But that SAME doc carries an explicitly gated,
    still-open `[DESIGN] P1` todo: _"Decide: demote `perp_funding` from a captured raw type to a DERIVED interval view...

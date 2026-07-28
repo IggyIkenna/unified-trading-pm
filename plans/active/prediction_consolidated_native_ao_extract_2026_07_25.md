@@ -29,7 +29,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
-    /plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
+    /plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25" # same-day correction (consolidated-closeout split pass): all 5 todos' Done-when/Source lines corrected to point at their new homes in phase_ab_residuals/phase_d (the parent's "Queued audits + reviews" section they originally cited no longer carries real checkboxes); related: extended to add phase_ab_residuals
@@ -169,7 +169,7 @@ drift_direction: advance-code
 - **P1 POLYMARKET `prediction_trades` schema-extension migration** — STAYS HUMAN. The parent doc frames this as a
   bounded "3-step sequence" (schema design → writer update + migration → register in the cutover inventories) against
   the linked issue doc
-  (`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`), but step 1
+  (`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`), but step 1
   (**Design the extended canonical `trades` schema**) is not actually bounded: the issue doc's own Q3 resolution states
   the trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) "need a separate call —
   privacy/PII-adjacent, confirm they're genuinely needed downstream before keeping them canonical" — an unresolved

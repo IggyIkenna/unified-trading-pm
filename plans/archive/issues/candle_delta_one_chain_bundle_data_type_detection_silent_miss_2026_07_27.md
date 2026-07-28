@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [candle-canonical, delta_one, data-loader, silent-miss, chain-bundle, data-correctness]
 related:
   [
-    /plans/active/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: 2026-07-27

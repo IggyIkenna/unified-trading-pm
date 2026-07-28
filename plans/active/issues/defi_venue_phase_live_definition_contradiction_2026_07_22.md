@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [defi, ssot-contradiction, phase, coverage, honest-coverage, data-correctness]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
   ]
 created: "2026-07-22"

@@ -20,7 +20,7 @@ tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reducti
 related:
   [
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
-    /plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md,
+    /plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md,
   ]
@@ -57,7 +57,7 @@ drift_direction: advance-code
 > follow-up work (operator decisions still open, verification pending the calendar) lives in
 > `plans/active/github_actions_operator_gated_followups_2026_07_17.md`; the same-day staging-machinery-shutdown audit (a
 > distinct topic, discovered adjacent to this work) lives in
-> `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md`.
+> `plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md`.
 
 ---
 

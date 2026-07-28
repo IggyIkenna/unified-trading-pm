@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [defi, cefi, perp-funding, derivative-ticker, data-correctness, parity, hyperliquid]
 related:
   [
-    plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
     plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: 2026-07-28

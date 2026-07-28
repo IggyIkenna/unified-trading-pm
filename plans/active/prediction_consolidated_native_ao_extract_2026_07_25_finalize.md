@@ -86,8 +86,8 @@ drift_direction: advance-code
       **corrected 2026-07-25**: relocated (folded into the existing A2 dual-write-trees todo) in
       `prediction_phase_ab_residuals_2026_07_24.md`'s Phase B section, no longer in the parent's "Queued audits +
       reviews". Re-check whether the operator has ruled on the trader-identity/PII field question specifically (search
-      `plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress log and
-      any `autonomous_session_operator_decisions_*.md` doc for a dated ruling) — note the MACRO question (extend vs.
+      `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`'s Progress log
+      and any `autonomous_session_operator_decisions_*.md` doc for a dated ruling) — note the MACRO question (extend vs.
       drop vs. fork) was already ruled 2026-07-25 (per that phase_ab todo's own text), but the specific PII field list
       is a narrower, still-open sub-question per this extract's own Deferred analysis below; if the field-list question
       is now ruled too, the schema-design step becomes bounded — draft a new AO-eligible todo against the ruling's

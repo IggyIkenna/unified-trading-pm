@@ -169,7 +169,7 @@ source: >-
       catalogue metadata recoverability, Q2 still-being-written?, **Q3 retro-register vs migrate/purge — RULED
       2026-07-25 (operator): extend the canonical `trades` schema to preserve the trader-identity + market-question +
       outcome-label content, then migrate — not drop the metadata, not leave it permanently forked**):
-      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`. (repos:
+      `/plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`. (repos:
       market-tick-data-service, unified-api-contracts, instruments-service) **Schema-extension migration (relocated
       2026-07-25 from the parent's "Queued audits + reviews" section, folded into this todo rather than opened as a new
       checkbox — same issue doc, same underlying finding):** per the Q3 ruling above, a 3-step sequence tracked in full
@@ -177,7 +177,7 @@ source: >-
       related ~158+-object non-canonical deep-tree shape both need a home), (2) implement the writer update + migrate
       the existing rows, (3) register the new shape in the cutover/non-canonical-path inventories. **Done when**: all 3
       steps are checked with evidence in
-      `/plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` itself (that
+      `/plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` itself (that
       doc's own todos remain the source of truth for step-by-step evidence); this bullet is satisfied once that doc
       shows all 3 checked.
 
@@ -193,15 +193,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                      **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                      `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                      2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                      either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                      launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                      operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                      availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                      see its own Progress Log.
+                                                                                                                                                                  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                  **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                  `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                  2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                  either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                  launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                  operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                  availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                  see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 

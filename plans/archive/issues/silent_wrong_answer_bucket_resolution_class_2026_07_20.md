@@ -31,8 +31,8 @@ related:
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
     /plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
-    /plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md,
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -166,7 +166,7 @@ Deleting the fallback is the fix; the rest is what makes it stay fixed.
   of exactly this doc's own silent-wrong-answer class (non-empty/non-NaN but numerically meaningless). Filed, not fixed
   here (the fix is a data-source migration, not a backfill — MTDS `lending_indices` already carries real borrow-side
   fields per the un-executed Step-4 tail of `/plans/archive/issues/aave_irm_slope_capture_dropped_2026_05_12.md`):
-  `/plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. Separately (already
+  `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. Separately (already
   tracked there, not re-litigated here): the writer name (`rate_impact`, post-2026-07-21 UAC rename) still doesn't match
   strategy-service's reader (`aave_rate_impact`) per
   `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`, so projected-APY
@@ -178,8 +178,8 @@ Deleting the fallback is the fix; the rest is what makes it stay fixed.
 unflipped).** Re-read against the current UAC registry: 16 of these 23 names (BETMGM, BETONLINEAG, BETRIVERS, BETSSON,
 BETVICTOR, BETWAY, BOVADA, CASUMO, CORAL, LIVESCOREBET, MATCHBOOK, PADDYPOWER, SKYBET, UNIBET, VIRGINBET, WILLIAMHILL)
 are 16 of the 20 ODDS_API fan-out bookmakers the operator explicitly ruled OUT of canonical registration two days after
-this doc was written — `plans/active/distinct_values_noncanonical_audit_2026_07_20.md` § "Operator decisions — RULED
-2026-07-22": _"do NOT add them, in fact remove them everywhere so they don't come up in audit"_ — SHIPPED at
+this doc was written — `plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` § "Operator decisions —
+RULED 2026-07-22": _"do NOT add them, in fact remove them everywhere so they don't come up in audit"_ — SHIPPED at
 `unified-api-contracts@9908520b` / `deployment-api@5295c76` as `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` (a
 deliberate NON-canonical accepted-exception set, never merged into `VENUES_BY_ASSET_GROUP`). Adding them to the
 canonical registry now — the literal ask here — would directly revert that shipped, dated operator decision. The

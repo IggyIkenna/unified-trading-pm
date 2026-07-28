@@ -375,8 +375,9 @@ thorough alert coverage** — do that audit first, then write the plan.
 > signals — VM resource stats + a run-ledger (fixes the live-confirmed 30-day archive TTL) + idle/orphan-spend trend —
 > all in one BigQuery dataset. **No live interactive timeline chart** (operator: nice-to-have, dropped); analysis =
 > download + local DuckDB. **Git-health snapshot history DROPPED** (not necessary). Executable plan:
-> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](deployment_durable_operational_data_bigquery_2026_07_21.md)
-> (kept `draft`). Section below stays as the pre-decision record + the three write-path options considered.
+> [`/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md`](/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md)
+> (archived 2026-07-28, zero open todos). Section below stays as the pre-decision record + the three write-path options
+> considered.
 
 ### Operator ask (2026-07-17, near-verbatim)
 

@@ -30,7 +30,7 @@ scope: [engineer]
 tags: [sports, odds, partition-mismatch, streaming-writer, data-correctness, mdps]
 related:
   [
-    /plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md,
+    /plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md,
     /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
   ]
 created: 2026-07-27

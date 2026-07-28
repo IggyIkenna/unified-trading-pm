@@ -225,7 +225,7 @@ column casing as a finding, MUST NOT propose a casing migration, and the two DRA
 _(Defi flat `LENDING` — **⛔ corrected 2026-07-20, operator ruling D2.** ~~"parked and NOT a casing question"~~. The
 full retire (A_TOKEN/DEBT_TOKEN split, all lending data_types — not holdings-only) is now **RULED and is the TARGET**,
 but is **NOT yet implemented** — gated on the MTDS lending-writer fix
-[`../../plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`](../../plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md)
+[`../../plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`](../../plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md)
 → migrate ~16.7M rows → re-sync the shard atom. Until the migration completes, market/event flat `LENDING` is
 `migration_pending` — a reconciliation pass neither flags it as a fresh finding nor treats it as unruled. See
 `cross-asset-canonical-target-ssot.md` §5 banner.)_
@@ -450,7 +450,7 @@ is NOT owned by this reconciliation-skill plan.
 ## §6e — Axis: prediction `trades` schema — POLYMARKET market-question metadata (title/slug/event_slug)
 
 **Target ruled 2026-07-25** (operator,
-`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3): extend the
+`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3): extend the
 canonical `data_type=trades` schema to carry `title`/`slug`/`event_slug` (market-question metadata with no surviving
 copy elsewhere once the legacy dual-write trees are retired) instead of dropping it or permanently forking a separate
 canonical shape. Trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) are explicitly

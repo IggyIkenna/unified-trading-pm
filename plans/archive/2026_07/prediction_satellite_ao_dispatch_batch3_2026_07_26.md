@@ -163,14 +163,14 @@ drift_direction: advance-code
   remaining uncovered item is the `[ ] [INFRA] P1 [BLOCKED-OPERATOR-DECISION]` todo (source doc lines 117-121): "Launch
   the historical prediction re-backfill under the widened catalogue." Confirmed by direct read: this is not merely
   tagged BLOCKED-OPERATOR-DECISION as a label of convenience — the doc's own Progress Log states explicitly...
-- **`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`**: Confirmed Phase-1
-  finding: the doc's uncovered remainder is the 3-step sequence in todos 4-6 (design the extended canonical `trades`
-  schema → update the MTDS Polymarket writer + migrate the 2,477 `prediction_trades` rows + shape-#4's 158+ objects →
-  register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator... **GATE CLEARED
-  2026-07-26** (`prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 2's re-check): the Q3 ruling
-  landed 2026-07-25 (`unified-trading-pm@7dfcfe0ee`) — extend the canonical `trades` schema, migrate without loss — one
-  day BEFORE this batch3 doc's own 2026-07-26 audit, so this was a same-day staleness gap, not a decision made during
-  the re-check. The now-unblocked migration work is extracted as a new dispatched todo in
+- **`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`**: Confirmed
+  Phase-1 finding: the doc's uncovered remainder is the 3-step sequence in todos 4-6 (design the extended canonical
+  `trades` schema → update the MTDS Polymarket writer + migrate the 2,477 `prediction_trades` rows + shape-#4's 158+
+  objects → register in the cutover/non-canonical inventories), all still `- [ ]` open despite the Q3 operator... **GATE
+  CLEARED 2026-07-26** (`prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` todo 2's re-check): the Q3
+  ruling landed 2026-07-25 (`unified-trading-pm@7dfcfe0ee`) — extend the canonical `trades` schema, migrate without loss
+  — one day BEFORE this batch3 doc's own 2026-07-26 audit, so this was a same-day staleness gap, not a decision made
+  during the re-check. The now-unblocked migration work is extracted as a new dispatched todo in
   `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (still `status: draft`) instead of staying deferred here.
 - **`plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md`**: Confirmed via full read: the doc has
   exactly 2 remaining uncovered open items (item 3, the sentinel fan-out, is fully implemented+cited by

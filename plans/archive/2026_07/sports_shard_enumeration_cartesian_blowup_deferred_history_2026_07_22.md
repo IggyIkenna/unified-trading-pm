@@ -30,9 +30,9 @@ locked_by:
 
 # Extracted history: Deferred work after 2026-07-22
 
-> Extracted verbatim from `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — see that doc's
-> RE-TRIAGE (2026-07-23) section and its 2026-07-26 Part 2/Part 3 progress entries for the current, authoritative state.
-> This file is the historical derivation record only.
+> Extracted verbatim from `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — see that
+> doc's RE-TRIAGE (2026-07-23) section and its 2026-07-26 Part 2/Part 3 progress entries for the current, authoritative
+> state. This file is the historical derivation record only.
 
 ## Deferred work after 2026-07-22 (superseded table below — see the 2026-07-22-later-same-day correction banner)
 

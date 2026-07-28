@@ -8,7 +8,9 @@ summary: >-
   markers -- see task_template.md finding H -- so this stays structurally un-ingestable by AO's regen_backlog parser
   even though this doc itself is LOCAL/not dispatched). Read this alongside the parent for full context on what's open
   across the sports asset group; the parent's own native Tracks (F/C/S/E/O/H/V/K/D/X/S2) are NOT duplicated here.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: this doc's own single [DOC] P3 todo (verify the digest is
+  # accurate) is done; verified zero open todos of its own
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -48,6 +50,10 @@ source: >-
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — this doc's own scope (a verified-accurate discoverability digest) is
+> complete; it does not represent the sports asset group being done. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # Sports consolidated close-out — aggregated source docs (discoverability index)
 
@@ -360,7 +366,7 @@ drift_direction: advance-code
     — 0 open todos.
   - [`plans/active/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md`](/plans/archive/issues/sports_source_mdps_instruments_service_not_leakage_2026_07_16.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`](/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md)
+  - [`plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`](/plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md)
     — 0 open todos.
   - [`plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md`](/plans/active/issues/dp_catalog_not_running_sports_prediction_2026_07_15.md)
     — `status: resolved`, 2 residual (cross-AG with prediction, also referenced in
@@ -388,7 +394,7 @@ drift_direction: advance-code
   `/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,
   `/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`,
   `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`,
-  `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md`,
+  `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md`,
   `/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
   `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,
   `/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md` (ARCHIVED 2026-07-27),
@@ -406,10 +412,13 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos** (by
-      design, non-checkbox digest bullets — e.g. 73 open, 18 P0 / 40 P1 / 14 P2 / 1 P3, in
+- [x] ✅ [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos**
+      (by design, non-checkbox digest bullets — e.g. 73 open, 18 P0 / 40 P1 / 14 P2 / 1 P3, in
       `issues/sports_features_layer_findings_sweep_2026_07_18.md`); do not treat this doc's own checkbox-free format as
-      evidence the sports asset group is done.
+      evidence the sports asset group is done. **Verified accurate 2026-07-28** — re-read the doc in full: the caveat
+      correctly describes the doc's own non-checkbox digest bullets, and the cited 73-open figure for
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` matches that section's own text. No correction needed;
+      checkbox flipped to record the verification.
 
 ## Deferred work — migrated to:
 

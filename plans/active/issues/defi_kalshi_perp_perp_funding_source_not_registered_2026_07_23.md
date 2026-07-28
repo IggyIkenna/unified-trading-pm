@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, kalshi-perp, source-priority, manifest, registry-gap]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-23

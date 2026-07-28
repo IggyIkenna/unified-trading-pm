@@ -9,7 +9,7 @@ summary:
   the per-interval canonical view (annualized_rate is fine) but the Drift-only funding_rate_24h/7d/30d window aggregates
   are a schema divergence to remove; and a cross-data_type funding parity check (perp_funding vs derivative_ticker
   settlements) must run once the DRIFT backfill grind completes.
-status: open
+status: resolved
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -27,6 +27,12 @@ priority: P1
 source: [operator ruling 2026-07-15 (main session), funding dual-capture investigation same session]
 assigned_vm: NA
 resolved_by:
+  unified-api-contracts@2170b388, market-tick-data-service@5f659c12 (derivative_ticker wired for all perps);
+  market-tick-data-service@5f659c12 (Drift-only window aggregates removed); instruments-service@9f7ffb27,
+  unified-api-contracts@70e7a697 (MANGO/ZETA/FLASH-SOLANA vertical deleted). DESIGN gate (demote perp_funding) closed
+  2026-07-28 as KEEP BOTH -- parity check ran, FAILED (HYPERLIQUID 60.7% match, below the 90% threshold); genuine
+  divergence filed separately as issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md (new
+  issue doc, not part of this archival pass).
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -34,6 +40,10 @@ depends_on: []
 last_updated: 2026-07-15
 locked_since:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — all todos shipped; the DESIGN gate closed as KEEP BOTH (parity failed for the one
+> comparable venue); the genuine divergence found is filed as its own new issue doc (see `resolved_by` above). Archived
+> per `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 > 🟡 **PARTIAL SUPERSEDE — DRIFT leg only (2026-07-16, operator ruling, verbatim):** "kill drift entirely from our whole
 > system it's pointless — Jupiter is the main one let's just use that. kill all other solana perp dex's. uac, code,
@@ -161,13 +171,13 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       divergence-removal + reader-tolerance disposition; new §4a derivative_ticker entry),
       `data-lineage-MTDS-features-ml.md` (new Layer-1 defi-axis derivative_ticker row + bypass-types table row).
 
-- [ ] [DESIGN] P1 [GATE NO LONGER SATISFIABLE AS WRITTEN — see note]. **Decide: demote `perp_funding` from a captured
-      raw type to a DERIVED interval view.** Note (2026-07-25 reconciliation): this todo was originally gated on "todo
-      4's parity results", but todo 4 (the cross-source funding-parity `[VERIFY]` item, above) closed `[x]` as **MOOT
-      2026-07-16** with no parity check ever run — it explicitly states parity for the surviving venues "is not gated
-      and can be re-scoped as a fresh todo if still wanted." No parity data exists or is queued, so this gate can never
-      resolve as literally written. Before executing this DESIGN decision, either (a) file the re-scoped cross-source
-      parity todo (HYPERLIQUID/ASTER/…; GMX removed 2026-07-25, see
+- [x] ✅ [DESIGN] P1. **CLOSED 2026-07-28 — "keep both", per the todo's own pre-stated gate.** **Decide: demote
+      `perp_funding` from a captured raw type to a DERIVED interval view.** Note (2026-07-25 reconciliation): this todo
+      was originally gated on "todo 4's parity results", but todo 4 (the cross-source funding-parity `[VERIFY]` item,
+      above) closed `[x]` as **MOOT 2026-07-16** with no parity check ever run — it explicitly states parity for the
+      surviving venues "is not gated and can be re-scoped as a fresh todo if still wanted." No parity data exists or is
+      queued, so this gate can never resolve as literally written. Before executing this DESIGN decision, either (a)
+      file the re-scoped cross-source parity todo (HYPERLIQUID/ASTER/…; GMX removed 2026-07-25, see
       `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` — drop it from the venue set) that todo 4's MOOT
       note anticipates and gate on ITS results, or (b) route straight to an operator decision on whether parity evidence
       is still required before demoting `perp_funding`. Rationale (operator discussion 2026-07-15): with
@@ -185,7 +195,21 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
       stay, they don't vanish); (c) stop capturing perp_funding raw once (a)+(b) land. If parity FAILS, this todo closes
       as "keep both — parity report explains why". Repos: market-tick-data-service, features-service,
       unified-api-contracts. **Gated on the new re-scoped parity todo directly below (resolved
-      `autonomous_session_operator_decisions_2026_07_25.md` entry #4, option A) — do not execute until it reports.**
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #4, option A) — do not execute until it reports.** —
+      **DISPOSITION (2026-07-28): KEEP BOTH.** The gate reported per this todo's own condition — the re-scoped parity
+      todo below ran (2026-07-28 Progress Log entry, via `defi_satellite_ao_dispatch_batch1_2026_07_25.md`) and **parity
+      FAILED**: HYPERLIQUID (the only surviving venue with any comparable history) matched only 60.7% of sampled rows
+      within the 2e-05 tolerance, well below the 90% genuine-divergence threshold. Root cause:
+      `derivative_ticker.funding_rate` is the S3 `asset_ctxs` archive's per-minute LIVE snapshot value, while
+      `perp_funding.funding_rate` is the REALIZED hourly-settlement value from the dedicated endpoint — related but not
+      proven identical, contradicting the 2026-07-08 retirement's "byte-identical" premise.
+      ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC have zero historical `perp_funding` captures, so no comparison is possible
+      for them either way. No code change: `perp_funding` and `derivative_ticker` both stay as separate captured raw
+      types — the "derivable everywhere, dual-capture is pure redundancy" premise this todo was built on does not hold
+      for the one venue where it was actually testable. Full parity report + root-cause: this doc's own 2026-07-28
+      Progress Log entry; genuine divergence formally filed as
+      `issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` (P1, `[OPERATOR]`+`[DESIGN]`
+      closure todos) rather than resolved inline, per this todo's own instruction.
 - [x] [VERIFY] P2. **Re-scoped cross-source funding-parity check** (replaces the original todo-4 parity check, which
       closed MOOT 2026-07-16 with no data collected). Surviving venue set per the 2026-07-25 removals: HYPERLIQUID,
       ASTER only (GMX removed 2026-07-25 — `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; DRIFT/PACIFICA

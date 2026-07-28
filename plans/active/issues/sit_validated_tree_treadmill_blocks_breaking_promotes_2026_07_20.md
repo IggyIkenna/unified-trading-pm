@@ -120,8 +120,9 @@ decide "already promoted".
       NOT the treadmill fix. **SHIPPED (verified 2026-07-25, plan-reconcile)**: `unified-trading-pm@a7b5cc27c` (verified
       ancestor of `origin/live-defi-rollout` via `git merge-base --is-ancestor`) commented out
       `staging-backmerge-to-ldr.yml`'s hourly `schedule: "10 * * * *"` fleet-wide (24 repos), keeping `push:[staging]` +
-      `workflow_dispatch` self-resume — via `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (a
-      separate, unrelated plan; no cross-reference existed between the two docs until now).
+      `workflow_dispatch` self-resume — via
+      `plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md` (a separate, unrelated plan; no
+      cross-reference existed between the two docs until now).
 - [ ] [DEVOPS] P3. Add a regression test / monitor that fires when a repo has been SIT-BLOCKED for N consecutive ticks —
       the treadmill is currently only visible as a promotion-lag alert, which reads as slowness rather than a stuck
       gate.

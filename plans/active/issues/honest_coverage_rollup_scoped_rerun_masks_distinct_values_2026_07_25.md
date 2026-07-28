@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [honest-coverage, distinct-values, data-correctness, false-negative, rollup, race-condition]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/reconciliation-census-and-compute-tiers.md,
   ]

@@ -10,7 +10,9 @@ summary: >-
   the GCS rewrite / manifest re-key / IS re-seed the flip required.** Also surfaced a live data-correctness bug (todo
   16): `evm_defi_handler.py` and `lending_indices_handler.py` redundantly double-capture Aave/Compound/Morpho
   `lending_indices` into the same shard, and the former silently drops the supply rate.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: verified zero open `- [ ]` todos (all 18 checked; 8/10/11/14
+  # closed WON'T-DO per the session-3 operator decision, not silently dropped)
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -57,6 +59,18 @@ source:
   operator ruling D2, 2026-07-20 — "complete the FULL LENDING retire"; scoped by
   data_pipeline_reconciliation_skill_2026_07_20.md todo 23
 ---
+
+## Deferred work — migrated to:
+
+**Todos 8/10/11/14 (the physical LENDING→A_TOKEN/DEBT_TOKEN retire) are WON'T-DO, permanently** (session-3, 2026-07-26
+operator decision) — superseded by the read-side resolver (todo 15, shipped `unified-api-contracts@1d01a911`). The
+complete per-data_type target-mapping DESIGN (todo 7, refined for the migration wave) remains handed to
+`/plans/active/defi_consolidated_closeout_2026_07_18.md` step 2 as its starting point (todo 18 closed this plan's own
+reference into that migration plan) — not lost, tracked in that still-active plan.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — all 18 todos verified `[x]`; the WON'T-DO closures and the
+> handed-off design are recorded in "Deferred work" above, not silently dropped. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # DeFi lending writer fix — resolver-based close-out (physical retire WON'T-DO)
 
@@ -266,18 +280,27 @@ This plan is **green** — and only then may step 2 (the ~16.7M-row migration) b
       `liquidityRate` and designate ONE of the two as authoritative writer-of-record. File as a data-correctness finding
       per `/codex/02-data/data-pipeline-correctness-hard-rule.md` regardless of which fix is chosen — this is a live
       bug, not a design question.
-- [ ] 17. [DOCS] P0. **[session-3] Update the naming SSOT.** `/codex/02-data/defi-canonical-naming-ssot.md`
-      instrument_type row: replace "RULED 2026-07-20 D2... FULL retire... migration_pending" with the resolved decision
-      — flat `LENDING`/`SOLANA_LENDING` is now PERMANENT for market/event lending data; canonical A_TOKEN/DEBT_TOKEN
-      rate lookup is via todo 15's resolver (name it explicitly), not by re-keying raw data. State plainly this reverses
-      D2's migration mandate and why (avoids a third reversal of the same operation; achieves the same downstream
-      capability with no GCS rewrite / no manifest re-key / no IS re-seed). Also close the
-      `"Same logic for `lending_indices`"` cross-reference in the `dex_pool_state` section and any other doc carrying
-      the old "interim, migration_pending" framing (todo 13's docs need the same pass).
-- [ ] 18. [PM] P0. **[session-3] Close the migration reference in `defi_consolidated_closeout_2026_07_18.md`.** That
-      plan's `:426` "Retire legacy `LENDING` → A_TOKEN/DEBT_TOKEN" todo and its `:429` BLOCKED banner (set by this
-      plan's own todo 1) currently point at a migration that is no longer going to happen. Close/remove that todo with a
-      note pointing to this plan's session-3 decision + the updated codex doc. Do not touch any other todo in that plan.
+- [x] ✅ 17. [DOCS] P0. **[session-3] Update the naming SSOT — DONE, `unified-trading-pm@80a61678d`** (per this doc's
+      own Session-3 FINAL REPORT table above). Verified 2026-07-28 by re-reading the live doc: the instrument_type row
+      states the "⛔ D2 (2026-07-20) SUPERSEDED — session-3 (2026-07-26, operator present): the physical
+      A_TOKEN/DEBT_TOKEN retire of market/event lending data_types is WON'T-DO, permanently" resolution, names
+      `unified_api_contracts.internal.domain.defi.resolve_lending_underlying` explicitly, and states the "PERMANENT (not
+      interim)" framing; the `dex_pool_state` section's "Same logic for `lending_indices`" cross-reference is likewise
+      already updated ("market/event lending keying is `LENDING`/`SOLANA_LENDING` **permanently** ... see the
+      instrument_type row above for the `resolve_lending_underlying` resolver that replaces it"). **Residual found, not
+      actioned in this pass**: `market-tick-data-service`'s own `docs/GCS_PATHS.md`, `docs/DEFI_DOWNLOAD_STRATEGY.md`,
+      `docs/DATA_TYPE_DECISIONS.md` (the "todo 13's docs" this item also names) still carry the stale
+      "interim"/`migration_pending` framing as of 2026-07-28 (grep-confirmed) — that repo's own docs are out of this
+      documentation-only pass's scope (a different repo's commit/ship pipeline); flagging here rather than silently
+      leaving it undiscoverable.
+- [x] ✅ 18. [PM] P0. **[session-3] Close the migration reference in `defi_consolidated_closeout_2026_07_18.md` — DONE,
+      `unified-trading-pm@80a61678d`** (per this doc's own Session-3 FINAL REPORT table above). Verified 2026-07-28 by
+      re-reading the live target doc: the "Retire legacy `LENDING`" operator-decision bullet is struck through and
+      annotated "**SUPERSEDED (session-3, 2026-07-26)** — WON'T-DO; flat `LENDING`/`SOLANA_LENDING` is now permanent ...
+      See `defi_lending_writer_retire_prerequisite_2026_07_20.md` session-3 entry +
+      `/codex/02-data/     defi-canonical-naming-ssot.md`", and the corresponding Track-level todo is flipped `[x] ⛔
+      WON'T-DO (session-3, 2026-07-26, operator present) — closed, not deferred." No other todo in that plan touched,
+      per this item's own instruction.
 
 ---
 

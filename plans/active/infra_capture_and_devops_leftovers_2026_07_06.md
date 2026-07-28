@@ -203,7 +203,7 @@ source:
       Secret Manager) [ack-pending]. Build the adapter scaffold anyway. Gate: adapter scaffold ready;
       BLOCKED-CREDENTIALS. **RE-CONFIRMED STILL BLOCKED, checked 2026-07-25 (slot 9, finalize task)**: no Secret Manager
       entry or key-grant evidence found; the ask is still open and most recently restated 2026-07-24 in
-      `plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` and
+      `plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` and
       `plans/active/data_completion_defi_2026_07_15.md`. Genuinely still credential-gated.
 - [ ] [DATA] P2. **BLOCKED-CREDENTIALS — Live ODDS quota + cheap second source.** The live ODDS quota decision + a cheap
       second source [ack-pending]. Gate: quota decision documented; scaffold for the second source. **RE-CONFIRMED STILL

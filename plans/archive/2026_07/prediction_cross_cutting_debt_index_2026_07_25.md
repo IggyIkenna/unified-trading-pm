@@ -10,7 +10,9 @@ summary: >-
   cross-AG (defi/cefi/tradfi/sports-scoped debt, or shared infra/tooling debt) rather than prediction-owned dispatch
   surface — every bullet uses the bold non-checkbox digest convention (never real `- [ ]` checkboxes), same as it did in
   the parent, since this doc does not own the actual work for any of them.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: this doc's own single [DOC] P3 todo (verify the digest is
+  # accurate) is done; verified zero open todos of its own
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -44,6 +46,18 @@ source: >-
   parent back under its line-cap target, since none of its content is prediction-owned work).
 ---
 
+## Deferred work — migrated to:
+
+**N/A — this doc is a pure discoverability index, not a work-owning plan.** Its own single todo (verify the digest stays
+accurate) is done. The real open work it catalogs lives in the ~20 cited cross-AG sibling docs (including
+`BLOCKED-OPERATOR-DECISION` P1 items, and a documented history of 3 stale digest counts corrected 2026-07-26) —
+archiving this index does not close any of that work; see `/plans/active/prediction_consolidated_closeout_2026_07_18.md`
+for the live picture.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — this doc's own scope (a verified-accurate discoverability digest) is
+> complete; it does not represent the prediction cross-cutting debt being cleared. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
 # Prediction closeout — cross-cutting / issue-doc coverage index
 
 > **Forked from `prediction_consolidated_closeout_2026_07_18.md` (2026-07-25, consolidated-closeout split pass).** This
@@ -69,7 +83,7 @@ source: >-
   - **[DATA] P1.** Resolve the non-canonical TYPE-token question before retrofitting todo 1
   - **[DATA] P1.** Fix the real "no VENUE:TYPE: wrap at all" gap in both Prediction adapters — Kalshi
   - +6 more (3×P2, 3×P3) — see file for the rest
-- [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
+- [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
   (16 open total — all P0/P1, listed in full)
   - **[DATA] P0.** Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
   - **[DATA] P0.** VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs)
@@ -268,7 +282,10 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P3. **This index's digest claims have been found stale before (3 of ~20 on the 2026-07-26 re-measure) — it
-      is not "0 open work"** — it catalogs real open todos across ~20 sibling docs (including
+- [x] ✅ [DOC] P3. **This index's digest claims have been found stale before (3 of ~20 on the 2026-07-26 re-measure) —
+      it is not "0 open work"** — it catalogs real open todos across ~20 sibling docs (including
       `BLOCKED-OPERATOR-DECISION` P1 items), so its own checkbox-free format must not be read as evidence the prediction
-      cross-cutting debt is cleared; re-verify each digest count before relying on it.
+      cross-cutting debt is cleared; re-verify each digest count before relying on it. **Verified accurate 2026-07-28**
+      — re-read the doc in full: the caveat correctly describes both the doc's own non-checkbox digest format and its
+      documented history of stale counts (the 2026-07-26 `/plan-reconcile` correction of 3 entries, recorded in the
+      Progress Log above). No further correction needed; checkbox flipped to record the verification.
