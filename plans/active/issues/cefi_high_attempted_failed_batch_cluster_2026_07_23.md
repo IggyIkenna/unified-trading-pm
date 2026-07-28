@@ -436,13 +436,20 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       failures. Retrying them is a normal backfill re-attempt (idempotent, no code change needed) — not filed as a
       separate todo here since it is the same "historical poisoned rows never retried" class already named in this doc's
       own § "Is this one root cause or several?" item 1, not a new gap.
-- [ ] [REVIEW] P2. Decide (operator/alerting-service owner) whether `DP_RUN_MOSTLY_EMPTY` should distinguish "static,
-      already-tracked backlog" from "fresh failure" to avoid indefinite 30-min CRITICAL re-paging on a known issue.
-      **2026-07-28 (slot-8) partial progress — see Progress Log below**: implemented the non-judgment-call half
-      (labeling) in `deployment-service`; code is QG-green + committed locally (`cf895170`) but NOT yet shipped (blocked
-      on an unrelated cross-repo dependency conflict, `RB-18e1c305`). The actual PAGING-SUPPRESSION policy question this
-      todo asks is still open and still needs the operator/alerting-service owner — not resolved by this partial fix.
-      Leaving unchecked until the code ships AND (if desired) the suppression question is answered.
+- [x] ✅ [DATA] P2. **Labeling half DONE + SHIPPED 2026-07-28 (slot-8) — `deployment-service@6f464325`** (rebased from
+      the earlier local `cf895170` once `RB-18e1c305`'s cross-repo fastapi-cap conflict cleared; verified
+      `git merge-base --is-ancestor 6f464325 origin/live-defi-rollout` = true). Surfaces `max_attempted_at`/`stale_days`
+      per `attempted_failed` cell and labels the `DP_RUN_MOSTLY_EMPTY` alert body/details "STATIC BACKLOG" vs "Fresh".
+      This closes the determinable half of the original todo (can an on-call reader tell static-backlog from
+      fresh-failure at a glance) — split into its own checkbox since it is a normal shippable-unit fix, distinct from
+      the judgment call below.
+- [ ] [OPERATOR] P2. **Retagged 2026-07-28 (slot-10)** — was `[REVIEW]`; re-dispatched to two workers (slot-8, slot-10)
+      who both correctly declined to decide it unilaterally per CLAUDE.md's dispatch-scope-eligibility rule (an
+      open-ended policy/judgment call is not a determinable worker outcome). Decide (operator/alerting-service owner)
+      whether `DP_RUN_MOSTLY_EMPTY` should ALSO stop re-paging CRITICAL every 30 min once a cell is labeled "STATIC
+      BACKLOG" with no new activity for N days (vs. keeping it paging to preserve visible pressure on an open P0) — the
+      labeling above only makes the distinction visible, it does not change paging cadence. `[OPERATOR]` so this stops
+      auto-dispatching to workers; only the operator/alerting-service owner can close it.
 - [ ] [DATA] P3. If pursued, a targeted historical run.log pull to attribute the `VENUE_FETCH_FAILED` bucket's original
       leaked-text sub-causes (aiohttp/CSV-decode/streaming-writer/expiry_date) proportionally, rather than leaving it as
       one un-attributed bucket.
@@ -484,3 +491,12 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   `deployment-service` so the fleet backend tracks the wait; will resume shipping once that clears. This todo stays
   `- [ ]` (not done) — done_definition requires shipped code, which is blocked, and the underlying paging-suppression
   question is separately still open for the operator.
+- **2026-07-28 (slot-10, `review`, task `cefi_high_attempted_failed_batch_cluster-003`):** Re-dispatched the same task
+  id slot-8 worked. Verified the labeling code slot-8 left blocked (local `cf895170`) has since shipped as
+  `deployment-service@6f464325` (`git merge-base --is-ancestor 6f464325 origin/live-defi-rollout` = true; repo-blocker
+  `RB-18e1c305` is resolved, `GET /api/repo-blockers` returns `open: []`) — no code change needed from this session.
+  Split the todo: flipped the labeling half `[x]` with the shipped SHA as evidence, and retagged the remaining
+  paging-suppression policy question `[OPERATOR]` (was `[REVIEW]`) so it stops auto-redispatching to workers who have no
+  standing to decide it — this is the second worker in a row (slot-8, then this session) to correctly decline the
+  unilateral call per CLAUDE.md's dispatch-scope-eligibility rule. No GCS/manifest write, no VM launch, no code shipped
+  this session (PM plan-doc edit only).
