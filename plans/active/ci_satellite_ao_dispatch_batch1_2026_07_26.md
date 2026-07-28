@@ -225,14 +225,23 @@ concurrent workers do not collide on this file.
       repo after the first failure. Verified via a local harness (fake manifest + 3 fake repos, one made to fail):
       failure path now exits 1 with a full PASS/FAIL/SKIPPED matrix (dependent correctly marked SKIPPED); all-pass path
       exits 0. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` § F4.
-- [ ] [INFRA] P2. **The `sit_retry_cap` escalation can never succeed.** `sit-debounce-trigger.yml` dispatches
-      `wall_type: "sit_retry_cap"`, which is not in `escalate-to-orchestrator.yml`'s accepted set, so the one
-      auto-escalation for repeated SIT failure hard-errors every time. Fix it so the dispatch can actually be accepted
-      (add the wall type to the accepted set, or emit an accepted one) and prove it end-to-end with a
-      `workflow_dispatch`. **Explicitly OUT of scope**: the design question "should a red SIT escalate to a background
-      worker rather than Issue + Slack only" (`## Deferred` D32-adjacent), and the F4 vacuous-cron disabling for this
-      same workflow (`## Deferred` D6) — do not touch this workflow's `schedule:` block. **Done when**: a dispatched
-      `sit_retry_cap` is accepted by the resolver, evidenced by a real run. Source:
+- [x] ✅ [INFRA] P2. **The `sit_retry_cap` escalation can never succeed.** — unified-trading-pm@2e5a42479 +
+      agent-orchestrator@dbdccb6. `escalation.WALL_TYPES` + the GHA case-statement already accepted `sit_retry_cap`
+      (fixed 2026-07-27 by `agent-orchestrator@63f5cbd`), but a live `workflow_dispatch` proof exposed TWO further gaps
+      the earlier fix missed: (1) `escalate-to-orchestrator.yml`'s `workflow_dispatch` input was `type: choice` with a
+      stale `options:` list that never included `stuck_promotion_pr`/`ldr_main_qg_failure`/`sit_retry_cap` — dispatch
+      itself 422'd with "not in the list of allowed values" (unified-trading-pm@2e5a42479 fixes the choice list + both
+      wall_type descriptions). (2) After that, the live POST to `/api/escalate` STILL 422'd —
+      `server/models/escalation.py`'s `EscalateRequest.wall_type` is a THIRD, separately-hardcoded `Literal` that was
+      ALSO missing both new wall types (agent-orchestrator@dbdccb6 fixes it + adds a regression test cross-checking
+      `EscalateRequest`'s Literal args against `escalation.WALL_TYPES` so the two sets can't drift apart silently
+      again). **Evidenced by a real run**: after deploying `dbdccb6` to the live orchestrator VM (`git pull --ff-only`,
+      verified non-destructive — untracked runtime files in `data/config/` were unrelated and untouched), re-dispatched
+      `escalate-to-orchestrator.yml` via `workflow_dispatch` —
+      https://github.com/IggyIkenna/unified-trading-pm/actions/runs/30342653568 — `POST /api/escalate` returned
+      `HTTP 200 {"ok":true,"escalation_id":"agt-d37ed9","status":"queued","wall_type":"sit_retry_cap","prompt_template":"cicd"}`.
+      `status:"queued"` (no free slot at dispatch time) means the proof landed with zero synthetic worker spawned.
+      Local: `pytest tests/test_escalation.py` 79/79 passed incl. the new cross-check test. Source:
       `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2).
 - [ ] [INFRA] P2. **Guard the latent self-dispatch repeat.** `.github/workflows/agent-runner.yml:91` and
       `.github/workflows/sit-gate.yml:357` still self-dispatch via `${{ github.repository }}`. They are correct ONLY
