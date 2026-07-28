@@ -1771,6 +1771,14 @@ Cure-B's in-place resolve.
 
 ### WS-I — deps hygiene / CVE
 
+> **Re-homed 2026-07-28 (operator decision 2026-07-27):** the service-to-service-auth migration sub-thread of WS-I (the
+> `verify_service_token`→UTL-factory item + its codex-doc follow-up below) is re-homed to
+> `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` — still wanted, unlike the rest of this archived
+> plan's ~51 other open todos which stay deferred/archived here. Live-state re-verification found execution-service's
+> migration was already fully shipped; only deployment-api remains intentionally un-migrated per the standing ruling
+> below. This archived doc's checkboxes are UNCHANGED (left as the historical record); the new plan is the live tracker
+> going forward.
+
 - [x] [DEPS] P2. Fleet pip-lock hygiene — bump the vulnerable `pip` floor in 18 repos (ignore-covered but floors not
       applied → regen locks). (release_machinery ▸ contract_hardening #4) ✅ 18/18 repos: pip>=26.1.2 added to
       pyproject.toml dev deps + uv lock regened (pip 26.0.1→26.1.2). Repos: alerting-service@5f4781a,

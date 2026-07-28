@@ -29,7 +29,8 @@ implementation is the UTL factory** `create_s2s_auth_dependency(service_name)` i
 `unified_trading_library/cloud_interface/s2s_auth.py` — every enrolled service imports it instead of maintaining its own
 copy. A per-service hand-rolled `verify_service_token` in `{service}/auth_s2s.py` is the **retiring anti-pattern** (see
 "Canonical receiver — the UTL factory" below): 17 service modules already consume the factory; the last local copies are
-being collapsed onto it (tracked in `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I).
+being collapsed onto it (tracked in `plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md`, re-homed
+2026-07-28 from the archived WS-I).
 
 ---
 
@@ -134,14 +135,16 @@ deployment-service, features-service ×8, mdps, ml-service ×2, trading-agent-se
 strategy-service's own `position` / `pnl` / `risk`). The remaining hand-rolled local copies are the retiring
 anti-pattern:
 
-| Service           | Status                                      | Notes                                                                          |
-| ----------------- | ------------------------------------------- | ------------------------------------------------------------------------------ |
-| strategy-service  | ✅ on factory (`risk`/`pnl`/`position`)     | migrated 2026-06-24                                                            |
-| execution-service | ⏳ local `auth_s2s.py` — migrate to factory | near-factory; needs a test rewrite + drops the latent `Request \| None` form   |
-| deployment-api    | ⏳ local `auth.py` — operator-decision      | a genuinely different auth contract (401 / `DISABLE_AUTH` / `APIKeyHeader` DI) |
+| Service           | Status                                       | Notes                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| strategy-service  | ✅ on factory (`risk`/`pnl`/`position`)      | migrated 2026-06-24                                                                                                                                                                                                                                                                                                                                                      |
+| execution-service | ✅ on factory (`create_s2s_auth_dependency`) | migrated `execution-service@7454c81a` — source (`auth_s2s.py` 125L→5L) + the `test_auth_s2s_and_timeline_builder.py` rewrite (mock-mode-bypass coverage added) both shipped; drops the latent `Request \| None` form (verified live 2026-07-28 — this row was stale, the archived WS-I plan's own checkbox already recorded the ship but this table hadn't been updated) |
+| deployment-api    | ⏳ local `auth.py` — operator-decision       | a genuinely different auth contract (401 / `DISABLE_AUTH` / `APIKeyHeader` DI); HELD at the 2026-06-24 "LEAVE AS-IS" ruling, re-affirmed (not re-litigated) 2026-07-28                                                                                                                                                                                                   |
 
-Migration tracker: `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I (contract_hardening #3). Phase 1
-target for all enrolled services remains GCP SA OAuth.
+Migration tracker: `plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` (re-homed 2026-07-28 from the
+archived `cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I, contract_hardening #3 — the archived plan's other ~51 open
+todos stay deferred/archived, per operator decision 2026-07-27). Only deployment-api remains un-migrated, gated on the
+2026-06-24 operator ruling above. Phase 1 target for all enrolled services remains GCP SA OAuth.
 
 ---
 
@@ -306,5 +309,5 @@ bash scripts/quality-gates.sh --quick
 - `unified-trading-pm/codex/07-security/secret-naming-convention.md` — naming patterns
 - `strategy-service/strategy_service/{risk,pnl,position}/auth_s2s.py` — canonical ≈5-line factory binding (migrated
   2026-06-24)
-- `plans/active/cicd_consolidated_remaining_2026_06_24.md` ▸ WS-I — the execution-service / deployment-api migration
-  tracker
+- `plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` — the WS-I service-to-service-auth migration
+  (execution-service done; deployment-api held at the 2026-06-24 operator ruling) tracker

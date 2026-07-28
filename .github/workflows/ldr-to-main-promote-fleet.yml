@@ -388,6 +388,66 @@ jobs:
           RESULT_DIR="$(mktemp -d)"; LOG_DIR="$(mktemp -d)"
           MAXJOBS=6  # tighter than ldr-to-staging (8) — main is more sensitive
 
+          # ── Provenance gate (D1): only quickmerge-provenanced content ────────────────────
+          # Shared helper — called from BOTH the PR-creation path AND every re-arm path inside
+          # process_repo below. Closes the 2026-06-30 "re-arm leak" finding (see the plan's
+          # Operator decisions section): the strict-quickmerge provenance check used to run
+          # ONLY at PR creation, so a later tick could find an already-open PR "clean" by
+          # mergeable_state and (re-)arm auto-merge WITHOUT re-checking provenance — exactly how
+          # UAC PR #544 self-resolved 2026-06-30, landing non-quickmerge commits on main behind
+          # the provenance gate's back. Operator decision 2026-07-27/28: close the leak by
+          # re-running this check immediately before EVERY arm/re-arm action, not just creation.
+          # Reads the process-global $REPO (set by process_repo before calling this) plus the
+          # job-level env $OWNER/$GH_TOKEN/$GITHUB_WORKSPACE. Returns 0 (clean — OK to arm) or 1
+          # (blocked — comment already posted on $1, caller must NOT arm).
+          provenance_check_ok() {
+            _PR_ID="$1"
+            _PROV_TMP="$(mktemp -d)"
+            if git -C "$_PROV_TMP" init -q && git -C "$_PROV_TMP" fetch -q --no-tags \
+                 "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
+                 "+refs/heads/main:refs/remotes/origin/main" \
+                 "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
+              _PROV_RANGE="$( python3 "$GITHUB_WORKSPACE/scripts/cicd/promote_provenance_range.py" \
+                --repo "$REPO" --owner "$OWNER" --base-branch main --cwd "$_PROV_TMP" \
+                --fetch-remote "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" )" \
+                || _PROV_RANGE=""
+              [ -n "$_PROV_RANGE" ] || _PROV_RANGE="origin/main..origin/live-defi-rollout"
+              _PROV_OUT="$( cd "$_PROV_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/check_strict_quickmerge.py" \
+                --range "$_PROV_RANGE" --block 2>&1 )" && _PROV_RC=0 || _PROV_RC=$?
+              if [ "${_PROV_RC:-0}" -ne 0 ] && printf '%s' "$_PROV_OUT" | grep -q 'bypassed quickmerge'; then
+                echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT (re-)arming auto-merge"
+                printf '%s\n' "$_PROV_OUT" | sed 's/^/    /'
+                # The HTML marker is a STABLE, machine-readable signal — promotion_lag_monitor.py
+                # greps for it so a provenance-blocked repo is reported as "BLOCKED: non-quickmerge
+                # code (re-ship via quickmerge)" instead of an anonymous "PROMOTION LAG > 60m".
+                # Without it the block is invisible: it lives only in this comment + a workflow log
+                # line, so mtds sat deliberately blocked ~23h looking exactly like a stuck pipeline,
+                # and the wrong conclusion ("the bot forgot to arm auto-merge") was acted on
+                # 2026-07-16 — the gate was manually overridden and 33 bypassed commits reached main.
+                # KEEP THIS MARKER IN SYNC with _PROVENANCE_MARKER in promotion_lag_monitor.py.
+                # Body assembled via printf so every line stays INDENTED inside this `run: |`
+                # block — a col-0 continuation dedents out of the block and makes the whole
+                # workflow unparseable, which GitHub answers by SILENTLY unscheduling it.
+                _PROV_BODY="$(printf '%s\n' \
+                  '<!-- promote:provenance-blocked -->' \
+                  '⛔ **Provenance gate (LDR→main fleet bot)** — this promote carries code that bypassed quickmerge (no `Quickmerge:` trailer, not a carve-out). Auto-merge NOT (re-)armed. Re-ship via `quickmerge --agent --files '"'"'<paths>'"'"'` or revert on `live-defi-rollout`.' \
+                  '' \
+                  '**Do NOT hand-arm auto-merge to "unblock" this** — that promotes the bypassed code AND moves the provenance baseline past it, so the violation is laundered and never flagged again (happened 2026-07-16).')"
+                gh pr comment "$_PR_ID" --repo "$OWNER/$REPO" --body "$_PROV_BODY" 2>/dev/null || true
+                rm -rf "$_PROV_TMP"
+                return 1
+              elif [ "${_PROV_RC:-0}" -ne 0 ]; then
+                echo "  WARN: provenance checker errored (rc=$_PROV_RC) — failing OPEN. Output: $_PROV_OUT"
+              else
+                echo "  ✅ provenance: promote-range is quickmerge-clean (or carve-outs only)"
+              fi
+            else
+              echo "  WARN: provenance fetch failed for $REPO — failing OPEN (arming anyway)"
+            fi
+            rm -rf "$_PROV_TMP"
+            return 0
+          }
+
           process_repo() {
             REPO="$1"
             _done() { printf '%s\n' "$1" > "$RESULT_DIR/$REPO"; }
@@ -888,48 +948,11 @@ jobs:
               echo "  PR: $PR_URL"
 
               # ── Provenance gate (D1): only quickmerge-provenanced content ──────────────
-              PROV_TMP="$(mktemp -d)"
-              if git -C "$PROV_TMP" init -q && git -C "$PROV_TMP" fetch -q --no-tags \
-                   "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
-                   "+refs/heads/main:refs/remotes/origin/main" \
-                   "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
-                PROV_RANGE="$( python3 "$GITHUB_WORKSPACE/scripts/cicd/promote_provenance_range.py" \
-                  --repo "$REPO" --owner "$OWNER" --base-branch main --cwd "$PROV_TMP" \
-                  --fetch-remote "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" )" \
-                  || PROV_RANGE=""
-                [ -n "$PROV_RANGE" ] || PROV_RANGE="origin/main..origin/live-defi-rollout"
-                PROV_OUT="$( cd "$PROV_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/check_strict_quickmerge.py" \
-                  --range "$PROV_RANGE" --block 2>&1 )" && PROV_RC=0 || PROV_RC=$?
-                if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
-                  echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
-                  printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
-                  # The HTML marker is a STABLE, machine-readable signal — promotion_lag_monitor.py
-                  # greps for it so a provenance-blocked repo is reported as "BLOCKED: non-quickmerge
-                  # code (re-ship via quickmerge)" instead of an anonymous "PROMOTION LAG > 60m".
-                  # Without it the block is invisible: it lives only in this comment + a workflow log
-                  # line, so mtds sat deliberately blocked ~23h looking exactly like a stuck pipeline,
-                  # and the wrong conclusion ("the bot forgot to arm auto-merge") was acted on
-                  # 2026-07-16 — the gate was manually overridden and 33 bypassed commits reached main.
-                  # KEEP THIS MARKER IN SYNC with _PROVENANCE_MARKER in promotion_lag_monitor.py.
-                  # Body assembled via printf so every line stays INDENTED inside this `run: |`
-                  # block — a col-0 continuation dedents out of the block and makes the whole
-                  # workflow unparseable, which GitHub answers by SILENTLY unscheduling it.
-                  PROV_BODY="$(printf '%s\n' \
-                    '<!-- promote:provenance-blocked -->' \
-                    '⛔ **Provenance gate (LDR→main fleet bot)** — this promote carries code that bypassed quickmerge (no `Quickmerge:` trailer, not a carve-out). Auto-merge NOT armed. Re-ship via `quickmerge --agent --files '"'"'<paths>'"'"'` or revert on `live-defi-rollout`.' \
-                    '' \
-                    '**Do NOT hand-arm auto-merge to "unblock" this** — that promotes the bypassed code AND moves the provenance baseline past it, so the violation is laundered and never flagged again (happened 2026-07-16).')"
-                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "$PROV_BODY" 2>/dev/null || true
-                  rm -rf "$PROV_TMP"; _done BLOCKED; return 0
-                elif [ "${PROV_RC:-0}" -ne 0 ]; then
-                  echo "  WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. Output: $PROV_OUT"
-                else
-                  echo "  ✅ provenance: promote-range is quickmerge-clean (or carve-outs only)"
-                fi
-              else
-                echo "  WARN: provenance fetch failed for $REPO — failing OPEN (arming anyway)"
+              # (shared provenance_check_ok() helper, defined above process_repo — also gates
+              # every re-arm path below, closing the 2026-06-30 re-arm-leak finding.)
+              if ! provenance_check_ok "$PR_URL"; then
+                _done BLOCKED; return 0
               fi
-              rm -rf "$PROV_TMP"
 
               # Arm auto-merge (SQUASH only — LDR carries merge commits from the backmerge-sink design, so
               # rebase-merge is structurally impossible). Use the PAT: the App token cannot enable auto-merge
@@ -981,15 +1004,21 @@ jobs:
                     echo "    force-dispatched quality-gates-v2 on the frozen head $PROMOTE_HEAD — RECOVERING (not yet merged; a later tick re-checks)"
                     _done BLOCKED; return 0
                   fi
-                  # Fallback: close+reopen
+                  # Fallback: close+reopen. Re-check provenance BEFORE the re-arm (2026-06-30
+                  # re-arm-leak fix) — a close+reopen cycle is itself a re-arm, and LDR may have
+                  # moved (picked up non-quickmerge content) since this PR's frozen head was cut.
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
-                    gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                      && GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
+                    gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null || true
+                    if provenance_check_ok "$PR_NUM"; then
+                      GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                            --subject "chore(promote): LDR → main (Option-B direct)" \
                            --body "LDR→main fleet bot — squash (close+reopen re-arm)." \
                            --repo "$OWNER/$REPO" 2>/dev/null || true
-                    _done PROMOTED; return 0
+                      _done PROMOTED; return 0
+                    else
+                      _done BLOCKED; return 0
+                    fi
                   else
                     echo "  WARN: close failed — leaving PR #$PR_NUM blocked"
                     _done BLOCKED; return 0
@@ -1000,6 +1029,14 @@ jobs:
                 fi
               else
                 # CLEAN or other state — (re)arm auto-merge idempotently (SQUASH via PAT; see arm note above).
+                # Re-check provenance BEFORE the re-arm (2026-06-30 re-arm-leak fix, closed
+                # 2026-07-28): this is the exact path UAC PR #544 self-resolved through on
+                # 2026-06-30 — a later tick found the PR "clean" by mergeable_state and re-armed
+                # without re-validating provenance, landing non-quickmerge commits on main.
+                echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — checking provenance before (re)arming"
+                if ! provenance_check_ok "$PR_NUM"; then
+                  _done BLOCKED; return 0
+                fi
                 echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge (delete-branch)"
                 if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                      --subject "chore(promote): LDR → main (Option-B direct)" \
