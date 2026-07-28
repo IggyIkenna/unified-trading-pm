@@ -1,0 +1,17 @@
+# glue-runner-crash-loop-watchdog.service — oneshot; pages #ci-failures the moment a
+# self-hosted glue-runner unit starts crash-looping, rather than waiting for a routine sweep.
+#
+# Epic: infrastructure_master (glue-runner GCP_PROJECT fleet outage, 2026-07-28)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Driven by glue-runner-crash-loop-watchdog.timer. Host-wide, not tied to any single runner
+# pool — see glue-runner-crash-loop-watchdog.sh for the full rationale.
+[Unit]
+Description=Page #ci-failures when a self-hosted glue-runner unit crash-loops
+
+[Service]
+Type=oneshot
+User=ubuntu
+ExecStart=/usr/local/sbin/glue-runner-crash-loop-watchdog.sh
+# A failed watchdog tick must be visible in `systemctl status`, not silently retried forever.
+Restart=no

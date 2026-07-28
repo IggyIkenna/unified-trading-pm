@@ -26,7 +26,14 @@ on:
   # addressed as a corollary: recovery now runs within seconds of a QG failure on a
   # promotion PR, not on the next cron tick).
   repository_dispatch:
-    types: [ci-failure-alert]
+    # glue-runner-health: dispatched directly by a systemd timer ON i-0c9b283b31d6b5ca7 itself
+    # (scripts/self-hosted-runners/glue-runner-crash-loop-watchdog.sh), NOT by any GHA workflow —
+    # this is the one alert path that must keep working even if every self-hosted runner on that
+    # box is itself crash-looping (found 2026-07-28: the GCP_PROJECT outage ran silently for ~3.5h
+    # before a routine sweep caught it). Handled by the separate glue-runner-alert job below, NOT
+    # the watch/notify pair (those scan GHA-visible CI state; a dead runner can't self-report
+    # there — this event carries the VM's OWN systemctl observation instead).
+    types: [ci-failure-alert, glue-runner-health]
   workflow_dispatch:
 
 permissions:
@@ -34,6 +41,7 @@ permissions:
 
 jobs:
   watch:
+    if: github.event_name != 'repository_dispatch' || github.event.action == 'ci-failure-alert'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -123,4 +131,25 @@ jobs:
       # Was missing (incident 2026-07-25): degrades the carrier's dedup + GCS alert-ledger write
       # fail-open (Slack post itself was unaffected) — see branch-health.yml for the full incident
       # note; this is the same fleet-wide omission.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # Relays the orchestrator VM's own self-hosted-runner crash-loop watchdog straight to Slack.
+  # Deliberately independent of the watch/notify pair above: that pair scans GHA-visible state
+  # (workflow runs, PRs) via ci_failure_watcher.py, which is exactly what CANNOT see "a runner
+  # process itself is dead" — the runner has to be alive to report anything through GHA. This
+  # job instead just relays whatever the VM-side watchdog already determined (systemctl state +
+  # restart count), so it stays reachable precisely when the fleet's own self-hosted runners are
+  # the thing that's broken. runs-on: ubuntu-latest is load-bearing here, not incidental.
+  glue-runner-alert:
+    if: github.event_name == 'repository_dispatch' && github.event.action == 'glue-runner-health'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ github.event.client_payload.message }}
+      severity: ${{ github.event.client_payload.severity }}
+      dedup_key: ${{ github.event.client_payload.dedup_key }}
+      cooldown_min: ${{ github.event.client_payload.cooldown_min }}
+      recovery: ${{ github.event.client_payload.recovery == true }}
+      workflow_name: glue-runner-crash-loop-watchdog
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
