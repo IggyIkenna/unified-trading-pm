@@ -16,7 +16,7 @@ summary: >-
   writes happen incrementally before the eventual OOM) — 37,053 manifest rows across all 5 gap dates with plausible
   capture_status distributions — but expected_unattempted remains high (22-45% per day, worst on 06-30 at 45%), i.e.
   genuinely INCOMPLETE coverage, not a cosmetic exit-code mismatch.
-status: open
+status: resolved # (was: open) RESOLVED 2026-07-28 — all 3 Open work items done (durable fix, backfill verify, infra revert).
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -40,10 +40,17 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: instruments-service@5134a5f0, is-daily-enum-sports-b2sq8 (backfill execution), tofu apply (infra revert)
 ---
 
 # is-daily-enum-sports historical backfill OOMs at the Cloud Run memory ceiling regardless of window size
+
+> **🟢 RESOLVED 2026-07-28** — all 3 `## 6. Open work` items done: (1) durable chunked-scan/slim-read fix shipped
+> `instruments-service@5134a5f0`; (2) backfill verified via execution `is-daily-enum-sports-b2sq8` (`succeededCount=1`,
+> all 5 gap dates re-verified against the corrected per-`data_type` baseline); (3) Cloud Run Job resources reverted to
+> Terraform's declared `cpu=4/memory=8Gi` default via `tofu apply` (was drifted to `cpu=8, memory=32Gi` from this doc's
+> own debugging attempts). This closes the genuine remainder that
+> `/plans/active/is_daily_enum_capture_heal_2026_07_07.md`'s last todo pointed here.
 
 ## 1. What was attempted
 
@@ -153,13 +160,21 @@ historical-backfill path cannot complete AT ALL today, at any Cloud Run-supporte
       match reality for any comparable day in this dataset — superseded by the corrected per-data_type baseline
       comparison in the Progress Log below, against which this backfill's 5 dates match or beat the real healthy
       baseline on every data_type checked.
-- [ ] [INFRA] P3. Revert `is-daily-enum-sports` Cloud Run Job's persisted resources (currently `cpu: 8, memory: 32Gi`,
-      left over from this doc's 3 failed 32Gi/8cpu debugging attempts in §1) back to the Terraform-declared default
-      (`cpu: 4, memory: 8Gi` per `deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf`) via `tofu apply`
-      (not a manual `gcloud run jobs update` — that would just trade one flavor of IaC drift for another). The routine
-      daily 3-day-trailing cron only ever needed 8Gi/4cpu (verified green 07-19..07-26 at that tier before this
-      debugging session bumped it); leaving it at 32Gi/8cpu means every future daily run pays for unused headroom
-      indefinitely. (repo: deployment-service)
+- [x] ✅ [INFRA] P3. Revert `is-daily-enum-sports` Cloud Run Job's persisted resources (currently
+      `cpu: 8, memory: 32Gi`, left over from this doc's 3 failed 32Gi/8cpu debugging attempts in §1) back to the
+      Terraform-declared default (`cpu: 4, memory: 8Gi` per
+      `deployment-service/terraform/gcp/daily_is_enumeration_scheduler.tf`) via `tofu apply` (not a manual
+      `gcloud run jobs update` — that would just trade one flavor of IaC drift for another). The routine daily
+      3-day-trailing cron only ever needed 8Gi/4cpu (verified green 07-19..07-26 at that tier before this debugging
+      session bumped it); leaving it at 32Gi/8cpu means every future daily run pays for unused headroom indefinitely.
+      (repo: deployment-service) — **DONE 2026-07-28 (slot-5)**: confirmed live drift via
+      `gcloud run jobs describe is-daily-enum-sports --region=asia-northeast1` (`cpu=8;memory=32Gi`); ran
+      `ENV=prod ./tofu.sh plan -target='module.is_daily_enum_job["sports"]'` which showed EXACTLY this one drift (cpu
+      8→4, memory 32Gi→8Gi, nothing else — no unrelated in-flight changes swept up), then
+      `ENV=prod ./tofu.sh apply -target='module.is_daily_enum_job["sports"]'`
+      (`Apply complete! Resources: 0 added, 1     changed, 0 destroyed`). Re-verified post-apply:
+      `gcloud run jobs describe` now reads `cpu=4;memory=8Gi`, matching Terraform's declared default exactly. No code
+      change needed (the .tf file already declared the correct default — this was pure infra drift, not a config bug).
 
 ## Progress Log
 
