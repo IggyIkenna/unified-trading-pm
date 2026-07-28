@@ -180,13 +180,70 @@ def _check_dep_floors(repositories: dict[str, object], versions: dict[str, objec
     return violations
 
 
+_VERDICT_PRIORITY: tuple[str, ...] = (
+    "VERSION_SPLIT",
+    "DEP_FLOOR_UNSATISFIABLE",
+    "VESTIGIAL_SCALAR_DRIFT",
+    "OK",
+)
+"""Worst-of ordering for a repo carrying more than one violation class (build_repo_verdicts)."""
+
+
+def build_repo_verdicts(
+    repos: list[str],
+    splits: list[str],
+    scalar_drift: list[str],
+    floor_violations: list[str],
+) -> dict[str, dict[str, object]]:
+    """Per-repo verdict view of the same three violation classes the human report prints — the
+    shape the Firestore verdict-store writer (verdict_store.py) + the deployment-ui panel consume.
+
+    A repo carrying more than one violation class reports the WORST one as ``verdict`` (priority
+    order: VERSION_SPLIT > DEP_FLOOR_UNSATISFIABLE > VESTIGIAL_SCALAR_DRIFT > OK) with every
+    applicable line aggregated into ``reasons`` so the panel can show the full "why", not just the
+    worst class. ``scalar_drift``/``floor_violations`` lines are attributed back to a repo by their
+    well-defined prefix (``"{name}: "`` / ``"{name} -> "`` — repo slugs never contain either
+    separator, so this is unambiguous).
+    """
+    reasons_by_repo: dict[str, list[str]] = {r: [] for r in repos}
+    classes_by_repo: dict[str, set[str]] = {r: set() for r in repos}
+
+    for r in splits:
+        classes_by_repo.setdefault(r, set()).add("VERSION_SPLIT")
+        reasons_by_repo.setdefault(r, []).append(f"{r}: version split (source pyproject.version != manifest SSOT)")
+
+    for line in scalar_drift:
+        name = line.split(":", 1)[0]
+        classes_by_repo.setdefault(name, set()).add("VESTIGIAL_SCALAR_DRIFT")
+        reasons_by_repo.setdefault(name, []).append(line)
+
+    for line in floor_violations:
+        name = line.split(" -> ", 1)[0]
+        classes_by_repo.setdefault(name, set()).add("DEP_FLOOR_UNSATISFIABLE")
+        reasons_by_repo.setdefault(name, []).append(line)
+
+    out: dict[str, dict[str, object]] = {}
+    for r in sorted(set(repos) | set(classes_by_repo)):
+        classes = classes_by_repo.get(r, set())
+        verdict = next((c for c in _VERDICT_PRIORITY if c in classes), "OK")
+        out[r] = {"verdict": verdict, "reasons": reasons_by_repo.get(r, [])}
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tags", action="store_true", help="also require a matching published vX tag")
     ap.add_argument("--warn-only", action="store_true", help="report only; always exit 0")
+    ap.add_argument(
+        "--json",
+        action="store_true",
+        help="emit ONLY a machine-readable {repo: {verdict, reasons}} JSON blob to stdout "
+        "(the shape a scheduled workflow forwards to verdict_store.py) instead of the human table",
+    )
     args = ap.parse_args()
     want_tags = cast(bool, args.tags)
     warn_only = cast(bool, args.warn_only)
+    want_json = cast(bool, args.json)
 
     m = _manifest()
     versions = cast("dict[str, object]", m.get("versions") or {})
@@ -195,7 +252,8 @@ def main() -> int:
     repos = sorted(r for r in versions if not r.startswith("_"))
 
     splits: list[str] = []
-    print(f"{'repo':38} {'versions':10} {'staging':10} {'source':10} {'tag?':5}")
+    if not want_json:
+        print(f"{'repo':38} {'versions':10} {'staging':10} {'source':10} {'tag?':5}")
     for r in repos:
         v = str(versions.get(r, "-"))
         s = str(staging.get(r, "-")) if r in staging else "-"
@@ -231,10 +289,16 @@ def main() -> int:
         flag = "  <-- SPLIT" if bad else ""
         if bad:
             splits.append(r)
-        print(f"{r:38} {v:10} {s:10} {src:10} {tagcol:5}{flag}")
+        if not want_json:
+            print(f"{r:38} {v:10} {s:10} {src:10} {tagcol:5}{flag}")
 
     scalar_drift = _check_vestigial_scalars(repositories, versions)
     floor_violations = _check_dep_floors(repositories, versions)
+
+    if want_json:
+        verdicts = build_repo_verdicts(repos, splits, scalar_drift, floor_violations)
+        print(json.dumps({"repos": verdicts}, sort_keys=True))
+        return 0 if warn_only or not (splits or scalar_drift or floor_violations) else 1
 
     print()
     if splits:
