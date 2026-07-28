@@ -229,3 +229,19 @@ escalate to a `cicd` worker.
   self-hosted), and it completed **green in 2m33s total** (`QG slice (tests)` 1m40s) — back to normal, no contention.
   Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior two fixes. No
   open repo-blockers existed for this repo at the time.
+
+- 2026-07-28 (cicd agent, slot-3, escalation `agt-5b9083`, `ldr_qg_failure` on `client-reporting-api`, no PR): **4th
+  corroboration + per-repo fix**, same pattern, detected by `ldr-ci-monitor` at commit `ab32fba4` (the repo's own "Phase
+  7 + quality-gates-v2 self-host rollout for client-reporting-api" commit). Failing run `30306795757` ran **2h54m8s**:
+  `QG slice (checks)`'s "Run quality gates (leg checks)" step sat `in_progress` from 22:33:34 to 23:29:06 (55m32s)
+  before being marked `cancelled` — not a genuine assertion failure. Two further `workflow_dispatch` retries had already
+  auto-queued behind it on the sole shared runner before I picked up the escalation: `30310512581` (its
+  `QG slice (tests)` alone took 25m3s; `checks` was still `in_progress` when I checked) and `30317512237` (still
+  `pending`, never got a runner). Confirmed NOT a code regression: a clean local `quality-gates.sh` run at HEAD
+  (`0881465`) passed in 69s. Canceled both stuck/queued retries to free the sole runner, then applied the same
+  precedented fix: reverted `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via the same hand-edit pattern +
+  `quickmerge --agent` — `client-reporting-api@4a4ba6e`. Verified live: triggered a fresh run (`30319083342`) post-fix,
+  confirmed via `gh api .../jobs` both `QG slice (checks)` and `QG slice (tests)` ran on `labels: ["ubuntu-latest"]`
+  (not self-hosted), and it completed **green in ~2m total** (`checks` 1m40s, `tests` 1m56s) — back to normal, no
+  contention. Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior
+  three fixes. No open repo-blockers existed for this repo at the time.
