@@ -8,9 +8,12 @@ name: branch-health
 #   2. promotion-lag-monitor.yml (LDR↔staging↔main lag alerts)
 #      → absorbed as the lag-monitor job below; promotion-lag-monitor.yml deleted.
 #   3. AR lag metric (Task 4 — published-vs-required Artifact Registry lag, G9a).
+#   4. Stale-deployed-image monitor (cloud_build_router_concurrency_drops_dispatch_2026_07_27.md
+#      todo -002) — catches a cloud-build-router dispatch silently cancelled/dropped by comparing
+#      each ldr_main repo's main HEAD commit timestamp against its `:latest` image's AR push time.
 #
 # SSOT: codex/08-workflows/ci-cd-flow.md § "Branch health monitor"
-# Gate: drift dispatch fires; lag alert fires; AR lag surfaces.
+# Gate: drift dispatch fires; lag alert fires; AR lag surfaces; stale-image lag surfaces.
 
 on:
   schedule:
@@ -23,6 +26,9 @@ on:
       ldr_main_threshold_min:
         description: "LDR→main lag threshold in minutes, all repos (default 120)"
         default: "120"
+      stale_image_threshold_min:
+        description: "Stale-deployed-image threshold in minutes (stale-image-lag job, default 90)"
+        default: "90"
 
 permissions:
   contents: read
@@ -291,6 +297,79 @@ jobs:
       cooldown_min: 60
       # Own concurrency lane (see lag-notify) so this never cancels a pending promotion-lag notify.
       concurrency_suffix: ar-lag
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
+      # what's named here, so every one of this repo's notify-slack.yml callers that used this
+      # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
+      # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
+      # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # ── JOB 4: Stale-deployed-image monitor ──────────────────────────────────────────────
+  # cloud_build_router_concurrency_drops_dispatch_2026_07_27.md todo -002: a cloud-build-router
+  # dispatch can be silently CANCELLED under merge-pileup load (root cause fixed in that same
+  # issue doc — a shared change-freeze-check.yml concurrency group). A cancelled GHA run is
+  # invisible unless someone is watching that specific repo's Actions tab, so a dropped dispatch
+  # can leave a repo's deployed image silently stale forever with every other CI signal green.
+  # This is the "did the build I expect to have happened, actually happen" check for the LAST
+  # mile of the promote→build→deploy chain. Fail-open design (mirrors ar-lag above): GCP/gh
+  # auth errors or an unresolvable image path never manufacture a false page.
+  stale-image-lag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      lag: ${{ steps.scan.outputs.lag }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Authenticate to GCP (AR query — best-effort)
+        id: gcp_auth_stale_image
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      - name: Install gcloud SDK (best-effort)
+        if: steps.gcp_auth_stale_image.outcome == 'success'
+        continue-on-error: true
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Scan for stale deployed images
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          THRESH: ${{ github.event.inputs.stale_image_threshold_min || '90' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/stale_deployed_image_monitor.py \
+            --threshold-min "$THRESH" --project-id "${GCP_PROJECT_ID:-central-element-323112}" --slack)
+          RC=$?
+          echo "$REPORT"
+          if [ "$RC" -eq 1 ]; then LAG=true; else LAG=false; fi
+          {
+            echo "lag=$LAG"
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  stale-image-lag-notify:
+    needs: stale-image-lag
+    if: needs.stale-image-lag.outputs.lag == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.stale-image-lag.outputs.report }}
+      severity: WARNING
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: stale-deployed-image
+      cooldown_min: 60
+      # Own concurrency lane (see lag-notify / ar-lag-notify) so this never cancels a pending
+      # sibling notify in the same run.
+      concurrency_suffix: stale-image
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
       # Was missing fleet-wide (incident 2026-07-25): an explicit `secrets:` block only forwards
