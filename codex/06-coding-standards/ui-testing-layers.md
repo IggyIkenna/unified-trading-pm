@@ -361,6 +361,23 @@ for (const route of ROUTES) {
 **Coverage gate:** Every route in `app/**` MUST appear in `lib/registry/route-manifest.ts`. CI fails if a new route is
 added without a manifest entry.
 
+**Forcing a specific theme, and verifying raw Canvas 2D actually painted (established 2026-07-28,
+`unified-trading-system-ui@145bf5dd`):** `tsc`/`eslint` cannot catch a CSS custom property that resolves to nothing (a
+typo'd `--var` name silently no-ops a fill/stroke call, it doesn't fail the build) — only a real browser render proves
+the token resolved. Two small techniques close that gap:
+
+- **Theme forcing**: with `next-themes`' `attribute="class"` config (`app/layout.tsx`), set
+  `localStorage.setItem("theme", "light" | "dark")` via `page.addInitScript` BEFORE `page.goto` — the inline
+  theme-bootstrap script `next-themes` injects reads `localStorage` before hydration, so this reliably forces the theme
+  without racing React. Loop a `describe` block over `["light", "dark"]` to run every assertion under both.
+- **Canvas pixel verification**: a component using raw Canvas 2D (`ctx.fillStyle = resolvedVar`, common for
+  `lightweight-charts` series-config and hand-rolled `<canvas>` visualisations) can mount cleanly with zero console
+  errors even if the resolved colour silently failed to paint. Add a `data-testid` to the `<canvas>` element, then
+  `page.getByTestId(id).evaluate((el: HTMLCanvasElement) => { ...ctx.getImageData(...).data... })` and assert at least
+  one sampled pixel has a non-zero alpha channel. See
+  `unified-trading-system-ui/tests/smoke/marketing-platform-misc-colour-migration.smoke.spec.ts` for a worked example
+  (`canvasHasPaintedPixels` helper).
+
 ---
 
 ## Layer 3a — Playbook Specs

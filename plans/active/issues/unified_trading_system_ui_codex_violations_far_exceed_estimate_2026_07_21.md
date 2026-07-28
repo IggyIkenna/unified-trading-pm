@@ -27,7 +27,7 @@ tags: [quality-gates, ui, codex-compliance, scope-estimate-miss, any-type, conso
 related:
   [
     plans/active/issues/ui_codex_gate_blind_to_app_router_layout_2026_07_21.md,
-    plans/active/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md,
+    /plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-21"
@@ -200,9 +200,12 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       Playwright coverage for most of them is not a same-session, same-todo fix).
 
 - [ ] [UI] P2. **2026-07-25 note: mostly done elsewhere, don't duplicate.** The sibling issue doc
-      `/plans/active/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` picked up from this same 501-hit
-      baseline (`unified-trading-system-ui@2bb398c1c`) and drove it down via 5 shipped batches to a final combined count
-      of **96** (its own line ~253: "final combined colour count 171→96"). Before starting this todo, re-run the
+      (archived 2026-07-28, resolved unified-trading-system-ui@145bf5dd, now at
+      `/plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`) picked up from this same 501-hit
+      baseline (`unified-trading-system-ui@2bb398c1c`) and drove it down via 5 shipped batches + a retroactive
+      Playwright-evidence follow-up to a final combined count of **96** — this number is durably tracked live in
+      `unified-trading-system-ui/codex_ui_violation_baseline.json` (the machine-checked ratchet `quality-gates.sh` reads
+      every run), not just the now-archived doc's prose. Before starting this todo, re-run the
       breakdown below and diff against that doc's batches — most of the top offenders named here (`_home-client.tsx`,
       `components/trading/sports/*.tsx`, `components/shared/status-badge.tsx`) are already covered there. The genuinely
       residual scope (not touched by the sibling doc's batches, per its own file list) is at minimum `lib/taxonomy.ts`

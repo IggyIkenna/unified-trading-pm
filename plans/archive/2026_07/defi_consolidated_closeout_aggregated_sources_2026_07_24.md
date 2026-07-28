@@ -736,7 +736,7 @@ picture.
       Prediction's inert matrix row) — not touched this pass, `defi_venues.py` was live-being-edited concurrently.
     - **[DESIGN] P2.** 31 DeFi (venue, data_type) pairs declare a genesis start-date with zero real captured rows (100%
       `empty_confirmed`) — needs an operator/data-owner decision per (protocol, data_type).
-  - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
+  - [`plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — 0 open todos (closed/archived/record-only).

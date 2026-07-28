@@ -679,7 +679,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
+  - [`plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — **CORRECTED 2026-07-27** (was falsely cited "0 open todos" — F4-F7 are prose findings, not checkboxes, so a naive

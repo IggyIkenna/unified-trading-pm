@@ -258,7 +258,7 @@ for the live picture.
   while this content lived in the same file as that subsection)
 - [`plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](/plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md)
   — 0 open todos (closed/archived/record-only; archived 2026-07-26)
-- [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
+- [`plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/archive/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
   — 0 open todos (closed/archived/record-only)
 
 ## Progress Log
