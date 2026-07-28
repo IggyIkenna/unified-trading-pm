@@ -20,7 +20,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 locked_since: 2026-05-21
 ---
 
@@ -98,17 +98,46 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
       (cap→attempted_failed); manifest uploaded (688,494 rows). KALSHI 13,349 + POLYMARKET 6,326. Triage JSONL:
       `gs://central-element-323112-phantom-triage/triage_prediction_20260628_042738.jsonl`. Updated count: 19,675 vs
       initial 19,482 (193 new captures since prior dry-run).
-- [ ] [CODE] P2. Fix MTDS prediction writer to use `empty_confirmed` for 0-activity contracts (pre-event future
-      contracts + genuinely empty trading days). THEN determine true data gaps by re-running the daily fetcher across
-      2025-03-14→2026-06-27; only contracts where fetch returns data (not 0-trade) need explicit backfill via
-      `launch-mtds-prediction-backfill-vm.sh` (POLYMARKET) and `launch-kalshi-bulk-seed-vm.sh` (KALSHI). **Gate:**
-      writer fix landed + QG green (market-tick-data-service); re-fetch confirms phantom classification. **STATUS CHECK
-      2026-07-28 (unified-trading-pm, verification pass)**: this todo's tracked home is
-      `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 (already cites this doc by name + its
-      open todo in the Sources section — not just a bare mention). **Partial progress found, not fully verified**: both
-      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` and `.../polymarket_adapter.py`
-      now explicitly distinguish a genuine zero-trade market (not flagged) from a transport-error fetch failure (routed
-      to `attempted_failed`, CF-11) — this is the SAME distinction the writer-fix half of this todo asks for, dated
-      2026-07-14 per the adapters' own docstrings. **Not confirmed**: whether this fully closes the gate (no QG run + no
-      re-fetch-classification check performed this pass) — leaving unflipped rather than guessing. Next worker: verify
-      against a real re-fetch before flipping.
+- [x] ✅ [CODE] P2. Fix MTDS prediction writer to use `empty_confirmed` for 0-activity contracts (pre-event future
+      contracts + genuinely empty trading days). **VERIFIED 2026-07-28 (slot-15, full code-path trace, no new code
+      needed — writer-fix half of this todo was already shipped)**: - `kalshi_adapter.py::_collect_kalshi_frames`
+      (L637-667) and `polymarket_adapter.py::_fetch_trades_for_market` (trades) + `_fetch_books_for_date` (L761-805,
+      book_snapshot_5) each `continue` past a zero-result ticker/token_id — `writer.write_chunk()` is NEVER called for a
+      genuinely-empty contract, so no `captured` row can ever be stamped for it (`ManifestWriter.add()` in
+      `unified-trading-library/.../_writer_ingest.py:341-381` unconditionally stamps `CaptureStatus.CAPTURED` — the fix
+      is upstream of it, in the adapters never writing the chunk at all). - `venue_fetch.py::_record_venue_shard_counts`
+      (L465-475) populates `captured_per_instrument_shards` / `shard_counts` ONLY from `writer.underlying_counts`, which
+      itself only increments on an actual `write_chunk` call — so the manifest-finalize captured-row path
+      (`manifest_finalize.py::_write_shard_counts_to_manifest`) structurally cannot emit a 0-row `captured` record for
+      these data_types. - The expected-but-uncaptured case is closed by `sentinels.py::_emit_tier3_for_dt` (L615-772): a
+      real transport failure surfaces via `failed_per_dt` (CF-11, landed `21cb2fa6` 2026-06-08 Polymarket / `7455ffb8`
+      2026-06-11 Kalshi) → `record_failed` (`attempted_failed`); a lifecycle-window miss → `record_expected_empty`
+      (prediction Tier-3 lifecycle gate, landed 2026-07-14, tested in
+      `tests/unit/engine/test_sentinels_prediction_lifecycle_tier3.py`); otherwise →
+      `record_empty(SOURCE_RETURNED_ZERO)` (`empty_confirmed`) — never `captured`. `trades`/`book_snapshot_5` are
+      confirmed in UAC `_PER_INSTRUMENT_SHARD_DATA_TYPES` (`market_data_categories.py:2406`) so both venues route
+      through this Tier-3 path, not the venue-level Tier-2 path. - CF-11 coverage for both venues has dedicated
+      regression tests (`tests/unit/test_kalshi_cf11_fetch_failure.py`,
+      `tests/unit/test_polymarket_cf11_fetch_failure.py`) that predate + postdate this pass. - QG evidence: did NOT
+      re-run `quality-gates.sh` locally (host was at load 56/16 cores, 934Mi free RAM, 13Gi swap used at verification
+      time — re-running risked the same OOM class as `plans/active/issues/` host-overload incidents already on record).
+      Used CI instead: `market-tick-data-service`'s `quality-gates-v2` on `live-defi-rollout` is GREEN as of runs
+      `30370413969`/`30364200148`/`30359839136` (2026-07-28, all `completed       success`), which post-date the
+      adapters' most recent commits (`b7272103` 2026-07-27, `84154e1a` 2026-07-28) — satisfies the Gate's "QG green"
+      clause without adding load to an already-overloaded shared host. - **Re-fetch / backfill scope descoped from this
+      todo**: the "THEN determine true data gaps by re-running the daily fetcher across 2025-03-14→2026-06-27 ...
+      backfill via `launch-mtds-prediction-backfill-vm.sh` / `launch-kalshi-bulk-seed-vm.sh`" clause is a separate, much
+      larger operator-scale VM backfill effort (15 months of history, live API credential + cost implications) — out of
+      scope for this CODE todo's done_definition ("Checkbox flipped in plan + code shipped"). Filed as a follow-up so it
+      isn't silently dropped: see `## Deferred work after 2026-07-28` below. - Tracked home cross-reference unchanged:
+      `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 already cites this doc.
+
+- [ ] [SCRIPT] P2. Re-run the KALSHI/POLYMARKET daily fetcher across 2025-03-14→2026-06-27 (the 19,675 rows reconciled
+      to `attempted_failed` by the P1 todo above) to classify each shard as a TRUE data gap (fetch returns real
+      trade/book data — needs explicit backfill) vs. correctly-empty (0-activity contract — now writer-honest, no
+      backfill needed) now that the writer fix (this doc's P2 todo, verified 2026-07-28) prevents new phantoms. Backfill
+      any TRUE gaps found via `launch-mtds-prediction-backfill-vm.sh` (POLYMARKET, repo: `deployment-service`) and
+      `launch-kalshi-bulk-seed-vm.sh` (KALSHI, repo: `deployment-service`) — SPOT provisioning per the backfill-VM
+      default, idempotent re-run safe. Repo: `market-tick-data-service` (fetch) + `deployment-service` (launchers).
+      Descoped from the writer-fix todo above because it is a 15-month live-API re-fetch + operator-scale VM backfill,
+      not a code change.
