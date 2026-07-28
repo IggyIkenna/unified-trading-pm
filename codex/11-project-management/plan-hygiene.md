@@ -32,11 +32,10 @@ code_refs:
   [
     scripts/plan-hygiene/run_hygiene_sweep.sh,
     scripts/plan-hygiene/fix_frontmatter.py,
-    scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh,
-    scripts/plan-hygiene/build_health_digest.sh,
     scripts/docs/docspec.py,
-    .github/workflows/plan_health-agent.yml,
-    deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf,
+    .github/workflows/plan-health-agent.yml,
+    agent-orchestrator/agents/plan-reconciler.md,
+    agent-orchestrator/scripts/install-plan-reconciler-timer.sh,
   ]
 type: project-management
 cadence: daily (cron) + on-demand
@@ -127,35 +126,40 @@ python3 scripts/plan-hygiene/fix_frontmatter.py             # apply fixes
 
 ---
 
-## Cron (planning VM)
+## Daily deep reconciler (central orchestrator VM) — supersedes the daily Cloud Run sweep + GHA Haiku job
 
-`run_hygiene_sweep.sh --ci` runs daily at `0 5 * * *` UTC via the `uts-prod-plan-hygiene-sweep` Cloud Run job. On hard
-failure it posts a Slack alert to `#agent-orchestrator-alerts` (webhook secret `AGENT_ORCHESTRATOR_SLACK_WEBHOOK`);
-details stay in the Cloud Run job logs.
+**RULE-11 RETIREMENT (executed 2026-07-28)**: the daily `uts-prod-plan-hygiene-sweep` Cloud Run job/scheduler AND the
+GHA `plan-health-agent.yml` daily Haiku contradiction/doc-drift job are **RETIRED** — both are superseded by a single
+daily deep `plan-reconciler` agent (opus, effort max, thinking on) on a systemd timer on the central orchestrator VM
+(`vm-0` / `i-0c9b283b31d6b5ca7`, `OnCalendar=*-*-* 01:00:00 UTC`). Unlike the retired jobs (report-only / Slack-only),
+the reconciler **DETECTS and FIXES**: it runs the full deterministic hygiene sweep (STEP 1, subsumes the old Cloud Run
+job's job), grace-protects any plan whose newest git change is <12h old (STEP 2), does a deep cross-plan/codex/code-state
+check with grep-then-read verification (STEP 3), files judgment-only items rather than guessing (STEP 4), and commits a
+single `docs(plans): daily reconciliation` unit + conditional FF-push (STEP 5). Design-supersession decision: operator
+(Harsh + Ikenna), 2026-06-12 — see `plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
+Retirement approved: `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21, executed once the reconciler
+cleared its ≥3-green-runs proof gate.
 
-> The pre-2026-07-04 delivery (append a `## [hygiene-cron]` block to the `_agent_pings.md` orchestrator inboxes +
-> auto-commit) is RETIRED, together with the every-4h orphan-ping audit cron (`uts-prod-orphan-ping-audit` job +
-> scheduler + terraform, all deleted). The ping-ledger channel is dead — agent comms go through the agent-orchestrator
-> HTTP server.
+- **Agent**: `agent-orchestrator/agents/plan-reconciler.md`. **Installer**: idempotent systemd timer via
+  `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`.
+- **Liveness canary**: `plan_reconciler_liveness_canary.py` pages if the timer goes inactive or no successful run lands
+  in >26h — this is what makes the retirement of the two Slack-report-only jobs safe (silence is caught, not assumed
+  healthy).
+- **Hard limits** (verbatim from the agent runbook): 12h grace / no deletions / no locked-plan archival / no codex
+  rewrites / flips only with verified evidence.
+- Both retired jobs' code is deleted (not just disabled): the Cloud Run job + Cloud Scheduler + their terraform
+  (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`, deleted) + entrypoint script
+  (`scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`, deleted in both PM and deployment-service) are gone; the
+  GHA workflow's `schedule:`-triggered `plan-health` + `notify` jobs are removed from `.github/workflows/plan-health-agent.yml`
+  and its template twin `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` — only the
+  `pull_request`-triggered `plan-health-gate` hard gate (deterministic, $0, no LLM) remains in that file.
 
-Terraform SSOT: `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`. Entrypoint:
-`scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`.
+## Plan Health Agent (GHA — `.github/workflows/plan-health-agent.yml`) — PR-only hard gate, daily job RETIRED
 
-## Plan Health Agent (GHA — `.github/workflows/plan_health-agent.yml`, daily 02:00 UTC)
-
-Report-only daily audit. The deterministic `build_health_digest.sh` runs the full hygiene sweep (including
-`check_claude_subagent_parity.sh`) and hands a compact digest + plan skeletons to a cheap Haiku agent. The agent does
-the **two things a script cannot**:
-
-1. **Cross-plan contradiction** — pairs of plans assigning contradictory status / architecture to the same scope.
-2. **Doc-drift (CLAUDE.md / SUB_AGENT vs live plans)** — a governance-doc rule CLAIM that is contradicted or superseded
-   by an active plan/epic (e.g. CLAUDE.md framing `source=` as TradFi-only while the active plan declares it
-   crosscutting). This is the **semantic** counterpart to the deterministic topic-parity check: parity catches a topic
-   that never reached SUB*AGENT; doc-drift catches a topic whose \_content* has gone stale vs the plans. CLAUDE.md is
-   injected into the agent prompt (`WORKSPACE_RULES_CLAUDE`); SUB_AGENT arrives as the `MANDATORY_RULES` block.
-
-Output JSON: `{"contradictions": [...], "doc_drift": [{"doc","claim","contradicted_by","description"}]}` → GHA run
-summary + Slack one-liner (`contradictions: N | doc-drift: M`).
+The workflow now carries exactly one job: `plan-health-gate`, triggered only on the PM→main promotion PR (PM is
+staging-less → LDR→main direct; this is PM's fast deterministic "pseudo-staging" check, `run_hygiene_sweep.sh --ci`,
+$0/no LLM). The daily/dispatch Haiku contradiction+doc-drift job (`plan-health`) and its Slack `notify` companion are
+**gone** — see the retirement section above for the successor.
 
 ---
 

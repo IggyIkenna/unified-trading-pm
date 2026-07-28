@@ -46,7 +46,7 @@ related:
     /plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
-    /plans/active/issues/uv_pin_fleet_drift_2026_06_22.md,
+    /plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
     /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
     /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
@@ -58,7 +58,7 @@ related:
     /plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md,
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
-    /plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
+    /plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
     /plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md,
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
@@ -170,7 +170,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       every repo `revision = 3 → N`, exactly the churn the pin exists to prevent). **Done when**: `scripts/setup.sh` in
       PM and in all 25 repo copies contains the astral branch, every copy is committed + pushed, and a deliberate
       wrong-version smoke (temporarily place a non-0.10.8 uv on PATH, run `scripts/setup.sh`, confirm it realigns and
-      exits 0) passes. Repos: unified-trading-pm + all 25. Source: `issues/uv_pin_fleet_drift_2026_06_22.md`.
+      exits 0) passes. Repos: unified-trading-pm + all 25. Source: `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`.
 
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — already shipped same-day via the carve-out; verified, not re-landed.**
       Land the two written-but-unshipped workspace boot-script hardenings (the blocker they were held on has cleared).
@@ -188,7 +188,7 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       Code/Cursor report "no folders containing Git repositories". **Do NOT edit `scripts/setup.sh` here** — the todo
       above owns that file. **Done when**: both scripts carry the changes, `bash -n` + `shellcheck -S error` are clean
       on both, and a fresh `.code-workspace` render is verified to be a regular file whose folder paths resolve inside
-      the workspace root. Repo: unified-trading-pm. Source: `issues/uv_pin_fleet_drift_2026_06_22.md`. Full verification
+      the workspace root. Repo: unified-trading-pm. Source: `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`. Full verification
       evidence in the Progress Log below — no new commit needed (the fix already shipped `unified-trading-pm@703b1e912`,
       2026-06-22, via carve-out #3, same day the issue doc's "BLOCKED from landing" section was written — that section
       went stale the moment the carve-out push landed and was never updated).
@@ -459,8 +459,29 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       (wave-launcher, lifecycle_catalogue bucket-IAM) — could not classify those, filed as its own `[OPERATOR]`
       IAM-grant follow-up. 3 new todos filed in the source doc (2× `[OPERATOR]`, 1× `[INFRA]`).
 
-- [ ] [OPERATOR] P2. **RULE-11 prove-then-retire the two superseded plan-hygiene runtimes — the "≥3 green runs" gate has
-      cleared.** The daily deep reconciler that replaced them is live: `agent-orchestrator`'s `plan-reconciler.timer`
+- [x] ✅ [OPERATOR] P2. **DONE 2026-07-28 — RULE-11 prove-then-retire the two superseded plan-hygiene runtimes
+      EXECUTED**, under an explicit operator autonomous-mode grant (this specific execution named: "archive 9
+      previously-locked docs..., including RULE-11 execution") on top of the standing approval below. (a) SHIPPED:
+      `.github/workflows/plan-health-agent.yml` + its `scripts/self-hosted-runners/hosted-baseline/` template twin
+      both dropped the `schedule:` trigger + the entire Haiku `plan-health`/`notify` job pair — only the
+      `pull_request`-triggered `plan-health-gate` hard gate remains (verified YAML-valid, both files byte-identical
+      post-edit). (b) SHIPPED: live-deleted `uts-prod-plan-hygiene-sweep-cron` (Cloud Scheduler) then
+      `uts-prod-plan-hygiene-sweep` (Cloud Run Job) via `gcloud scheduler jobs delete` / `gcloud run jobs delete`
+      (both `--project=central-element-323112 --region/location=asia-northeast1`); confirmed gone via
+      `gcloud run jobs describe`/`gcloud scheduler jobs describe` (`NOT_FOUND`) and `gcloud run jobs list` (absent —
+      the two `hygiene` hits remaining are unrelated `uts-prod-dp-manifest-hygiene-{changed,full}` data-pipeline jobs).
+      Removed `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` + both repos' copies of
+      `cron_hygiene_sweep_entrypoint.sh` (`git rm`); replaced the 2 corresponding `import {}` blocks in
+      `deployment-service/terraform/gcp/_imports_reconcile.tf` with removal comments (matching this file's own
+      documented convention for a config-removed import target); removed the stale `cloud_run_job_registry.py` entry
+      so it stops rendering as a dangling job in deployment-ui/cockpit. (c) SHIPPED: both
+      `/codex/11-project-management/plan-hygiene.md` and `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the
+      timer-on-central model (removed stale `code_refs`, corrected the cron schedule table, added the "Daily deep
+      reconciler" retirement record + corrected the now-inverted reaper/reconciler ordering note); also fixed 2
+      corpus referrers describing the retired job as live (`codex/04-architecture/agent-orchestrator-alerting.md`,
+      `codex/11-project-management/active-plan-inventory-tracker.md`) and appended a retirement note to
+      `plans/epics/plan_hygiene_master.md`'s original implementation record. **Original approval on record
+      (2026-07-27)**: The daily deep reconciler that replaced them is live: `agent-orchestrator`'s `plan-reconciler.timer`
       (`OnCalendar=*-*-* 01:00:00 UTC`) hits `POST /api/plan-health/dispatch`, is watched by
       `plan_reconciler_liveness_canary.py` which PAGES if the timer goes inactive or no successful run lands in >26h,
       and `/docs-reconcile` rides the same cadence via `docs-reconciler.timer` (both verified live 2026-07-24 in
@@ -480,13 +501,24 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       write the literal skip-ci marker** in any commit message or body here. **Done when**: (a) is shipped with the PR
       gate intact, (b) is confirmed deleted by the operator with `gcloud run jobs list` showing the job gone, and (c)
       both docs describe only the live model. Repos: unified-trading-pm, deployment-service. Source:
-      `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. **Operator approval now on record
+      `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. **Operator approval now on record
       (2026-07-27)**: `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21 — "RULE-11 — APPROVED (drop
-      `schedule:`/Haiku, delete the Cloud Run hygiene-sweep job)." Re-verified this session: `env_prefix=uts-prod`
-      resolves the job to `uts-prod-plan-hygiene-sweep` in GCP project `central-element-323112`; the terraform +
-      entrypoint files above both still exist at the named paths. The `[OPERATOR]` tag stays (per this todo's own
-      "operator confirms before the delete" — the explicit approval already given doesn't substitute for the delete-time
-      confirmation), but the wait is now purely "someone executes it," not "someone decides."
+      `schedule:`/Haiku, delete the Cloud Run hygiene-sweep job)." (Historical context only — as of 2026-07-28 the job,
+      scheduler, terraform, and entrypoint files named above are all deleted; see the DONE entry at the top of this
+      todo for the actual execution record.)
+
+- [ ] [CI] P2. **Fold the `run_hygiene_sweep.sh --precommit`/`--staged` sweep into PM `quality-gates-v2` as a
+      content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA
+      job.** RULE-11 prove-then-retire: prove the prek + v2-step combo catches the same hard failures on PM before
+      deleting the job (don't open a gap). This is DISTINCT from the RULE-11 item above (which retires the daily
+      Haiku/schedule-triggered contradiction-detection job + the Cloud Run hygiene-sweep job) — this one retires the
+      separate `pull_request`-triggered `plan-health-gate` job in `.github/workflows/plan-health-agent.yml` (the item
+      above explicitly KEEPS that job; this todo is what eventually lets it go, once its server-side successor step
+      is proven). **Correction 2026-07-28**: a prior migration pass's banner in the source doc claimed this todo was
+      "filed as a new todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to RULE-11" — it was NOT
+      actually present (verified via grep, zero hits for the fold/content-sentinel language); this is the real fix,
+      landing the todo the banner already claimed existed. Repo: unified-trading-pm. Source:
+      `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
 
 - [ ] [BACKEND] P2. **Serve the generated L0 doc-graph from the AO dashboard for central human visibility.**
       `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained, gitignored, per-host:
@@ -717,11 +749,11 @@ Recorded so they are not lost, and because two of them mean a source doc's check
   Measured 2026-07-26: `grep -n 'BASEDPYRIGHT_MAX_ERRORS' scripts/quality-gates.sh` returns only three DO-NOT-re-add
   comment lines (31/33/37); the ceiling itself was REMOVED by `pm@22b2f89d7` when basedpyright went warn-only for PM
   `scripts/`. The annotate-the-4-files half is still live; the ratchet half is void.
-- **`issues/uv_pin_fleet_drift_2026_06_22.md` carries two provably-stale open todos**: the `[INFRA] P2`
+- **`/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md` carries two provably-stale open todos**: the `[INFRA] P2`
   "human-planning-vm per-repo setup: 19/23 OK, 6 failures" item is contradicted by the same doc's own later UPDATE ("all
   6 previously-failing repos set up OK (0 failed)"), and the `[CICD] P1` "PR #498 v2 still RED on
   `QG slice (typecheck)`" residual-blocker item dates to 2026-06-27 and predates months of PM shipping.
-- **`issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`'s `[TEST] P1` "prove via a LOCAL orchestrator
+- **`/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`'s `[TEST] P1` "prove via a LOCAL orchestrator
   dispatch" is superseded** — it gates installing the plan-reconciler timer on central, and the timer has been installed
   and firing daily since ~2026-07-23 (verified in `issues/plan_quality_four_line_defense_architecture_2026_07_23.md`).
 - **`codex_vs_repo_docs_ssot_audit_2026_06_01.md`'s parenthetical "CLAUDE.md's system-map 'URDI phantom' note is also

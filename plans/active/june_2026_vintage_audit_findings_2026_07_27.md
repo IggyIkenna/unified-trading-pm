@@ -63,6 +63,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `defi_consolidated_closeout_2026_07_18.md` Open follow-ups; F5 rehomed into
       `cefi_consolidated_closeout_2026_07_18.md` Track 6. Source doc annotated REHOMED, still
       `locked_by: live-defi-rollout` — archival needs an explicit `[unlock-plan]` grant (not yet asked, not done here).
+      **ARCHIVED 2026-07-28** ([unlock-plan] granted, all-9 unlock decision) — re-verified all 3 rehomes present as
+      real `- [ ]` todos before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [DATA] P1. **Fix stale "Plan 3 never authored" claim** — unified-trading-pm (this commit). **CORRECTED SCOPE on
       execution**: the false claim lived only in the 2 downstream docs
       (`cross_cutting_consolidated_closeout_2026_07_25.md` Track 10,
@@ -205,7 +207,13 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `[unlock-plan]` grant in this session — per the HARD RULE (`PLAN_FORMAT.md`: "Agents MUST NOT archive locked plans
       even if all todos are done... only a human with `[unlock-plan]`") this is a STOP-and-report, not an archive.
       Flagging for the operator: this doc is ready for a quick `[unlock-plan]` + archive pass whenever convenient.
-- [ ] [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` →
+      **DISCREPANCY FOUND 2026-07-28** (unlock WAS granted this session, but NOT archived anyway): re-reading the doc
+      fresh surfaced a genuine NEW open item the "all 5 items [x]" framing above missed — a `[TRADFI] P3` follow-up
+      ("Fix the pyarrow per-symbol-writer fan-out identified by the 2026-07-27 memray repro") was added alongside the
+      P2 memray flip and is still `- [ ]`, explicitly framed as real (if non-blocking) deferred work, matching the
+      precedent of the still-open, still-active analogous doc `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
+      Leaving this doc open rather than force-archiving over genuine remaining scope.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` →
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (~L270-286), covers items (2) DP_VM_GONE_NO_CAPTURE
       debounce + (3) InstrumentsHandler str/int bug. Item (1) (operator-gated prod-manifest `--apply`) has no other home
       — see §5, needs an operator-decision-ledger home first. **STATUS UPDATE 2026-07-28
@@ -215,16 +223,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`; the source doc's own checkbox annotated with the
       approval + pointer, left unflipped (approval ≠ execution). All 3 items now have a home. **NOT archived**: doc
       carries `locked_by: live-defi-rollout` (line 31), no `[unlock-plan]` grant this session — STOP-and-report per the
-      same HARD RULE as above.
-- [ ] [PLAN] P2. `plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` →
+      same HARD RULE as above. **ARCHIVED 2026-07-28** ([unlock-plan] granted) — re-verified all 3 items present before
+      moving; `git mv` to `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (L69-81), verbatim, cites Source + "Done when." Not
       yet executed either place. **STATUS UPDATE 2026-07-28 (unified-trading-pm, verification-only, no file edit)**:
       confirmed verbatim + accurate at batch1b L69-81 (the ONLY remaining open checkbox in the source doc — the
-      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place. **NOT
-      archived**: doc carries `locked_by: live-defi-rollout` + `locked_since: 2026-06-23` (lines 31-32), no
-      `[unlock-plan]` grant this session — otherwise this doc is exactly the "verified present → archive the source
-      anyway" case this entry calls for, and is ready to archive the moment it's unlocked.
-- [ ] [PLAN] P2. `plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` →
+      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place.
+      **ARCHIVED 2026-07-28** ([unlock-plan] granted) — re-verified before moving; `git mv` to `plans/archive/issues/`.
+- [x] ✅ [PLAN] P2. `plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` →
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (L248-269). Sole remaining item (Cloud Logging
       ingestion gap) merged with a duplicate finding in `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. 2
       other items already done in code (`alerting-service/alerting_service/api/main.py:77-88`;
@@ -237,16 +244,22 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) — these weren't in this entry's original
       2-item scope but were real open prose-form work the strict archival bar requires closing first (trap (b) in the
       vintage-audit skill). The sole remaining checkbox (Cloud Logging ingestion gap) confirmed already migrated
-      verbatim into batch2. All items now resolved-in-place or migrated. **NOT archived**: doc carries
-      `locked_by: live-defi-rollout` (line 27), no `[unlock-plan]` grant this session — STOP-and-report; this doc is
-      otherwise fully closeable.
+      verbatim into batch2. All items now resolved-in-place or migrated. **ARCHIVED 2026-07-28** ([unlock-plan]
+      granted) — re-verified 0 remaining `- [ ]` checkboxes (the Cloud Logging gap was itself resolved in-place
+      `alerting-service@62b850c` by the time of archival, even better than "migrated"); `git mv` to
+      `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. **PARTIAL — content-verified + 2 stale boxes flipped, NOT archived (locked, no `[unlock-plan]`
       grant)** — unified-trading-pm@cff8d611b. `plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`. setup.sh fleet rollout + boot-script hardening already "DONE
       2026-07-26" there (instruments-service@40240042, unified-trading-pm@703b1e912); residue (0.10.8 constant
       centralization, uv-version drift-guard) cross-referenced to batch1 Deferred items 2/3 (real content, confirmed).
       Harsh's-laptop/epic-VM item NOT covered by batch1 (verified 0 grep hits) — epic-VM half moot now (durable fix
-      shipped), laptop half stays a small open manual step.
+      shipped), laptop half stays a small open manual step. **ARCHIVED 2026-07-28** ([unlock-plan] granted) — the
+      laptop-item resolved-by-ruling this session (operator 2026-07-27: no more Ikenna/Harsh human-owner splits;
+      residual generic-drift risk subsumed by the open drift-guard todo); also found + flipped 2 more stale duplicate
+      checkboxes on re-verification (`scripts/setup.sh` astral-uv fallback, already shipped earlier in-doc; CICD
+      `main-backmerge-to-ldr` durable drift-tick fix, confirmed live in `branch-health.yml`). `git mv` to
+      `plans/archive/issues/`.
 - [x] [PLAN] P2. `plans/active/l0_doc_index_generator_2026_06_24.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (~L476-498). 2 remaining Deferred items (AO-dashboard L0-graph
       route; on-demand stale-check wrapper) cited Source verbatim, still open there. — ✅ archived with banner
@@ -269,7 +282,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       forks + the Tardis resolution (`plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md`); referrers
       fixed corpus-wide (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
       `/codex/11-project-management/doc-frontmatter-schema.md`).
-- [ ] [PLAN] P2. `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
+- [x] ✅ [PLAN] P2. `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
       home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
       (`plans/archive/issues/`), C2 point-fix + C4 G4-gate-strengthening both shipped and closed there — nothing
       orphaned. C5 confirmed live + still open in `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (same
@@ -279,15 +292,21 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `VENUE_FETCH_FAILED` in passing); C6's actual concern is now MOOT instead — 2 of its 3 named target docs are
       archived and the third no longer carries a live task on the literal string. C9 (EXTENDED-candle honest-absence,
       ~10-line fix) folded into `cefi_consolidated_closeout_2026_07_18.md` Track 6 per operator ruling 2026-07-27
-      (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **NOT archived — doc is
-      `locked_by: live-defi-rollout` and this wave had no `[unlock-plan]` authorization; all residual content
-      (C2/C4/C5/C6/C9) is now confirmed homed or closed, so archival is a pure `[unlock-plan]` ask away.**
+      (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **ARCHIVED 2026-07-28** ([unlock-plan]
+      granted) — re-verified C9 present verbatim in `cefi_consolidated_closeout_2026_07_18.md` Track 6 (citing back to
+      this doc) before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. **PARTIAL — orphans rehomed, NOT archived (locked, no grant + genuine non-infra remainder)** —
       unified-trading-pm@cff8d611b. `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, which cites this doc for 3 open todos (execution-service
       `service_name` drift; SIT's 2 QG failures; UAC `infura_*` rename), confirmed present with real content. Both true
       orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) filed as new todos into that same plan
-      per operator decision (§5#28).
+      per operator decision (§5#28). **RE-VERIFIED 2026-07-28 (unlock WAS granted this session, still NOT archived
+      anyway)**: even with the 2 orphans confirmed rehomed, the doc's OWN per-source-doc archive criterion is not met —
+      it still carries substantial genuinely-open, non-infra work outside the infra-tranche migration's scope (UAC
+      DeFi venue-registry `BLOCKED-DISCIPLINE` items pending live smoke-tests, alerting-service `NEEDS-LIVE`
+      ML-baseline item, 2 operator-gated `tofu apply` infra items, the `## BLOCKED clusters` section). Correctly left
+      open — this doc's own "Archive-readiness verdict" section (written 2026-07-27) already reached this exact
+      conclusion; confirmed still true.
 - [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
@@ -408,18 +427,21 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       market-data-processing-service@bffb9df, ml-service, trading-agent-service) — 0 checkboxes flipped, flip them.
       execution-service, greeks-service, strategy-service (also vendoring MTDS) still confirmed Pattern-B, gated on
       "Owner: Ikenna" design call — see §5. Track remainder via `infra_consolidated_closeout_2026_07_25.md` Track 1.
-- [x] ✅ [PLAN] P2. **PARTIAL — both items homed, NOT archived (locked, no grant)** — unified-trading-pm@cff8d611b. Item
-      (a) RULE-11 flipped citing the migration into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
-      ([OPERATOR]-tagged, open); approval on record (§5#21) but execution (edit `plan-health-agent.yml` + template twin,
-      delete the live Cloud Run job + scheduler, edit deployment-service terraform) NOT done this session — cross-repo
-      live-prod-delete out of this task's file scope, files located for the next pass. Item (b) (fold `--precommit` into
-      quality-gates-v2) filed as a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to
-      RULE-11. `plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — 9/11 done. Item (a)
-      RULE-11 (drop `schedule:`/Haiku, delete Cloud Run hygiene-sweep job) confirmed still needed and already migrated
-      verbatim into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ([OPERATOR]-tagged, open) — flip here. Item (b)
-      "fold `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" is a true orphan —
-      rehome into a July infra plan (batch2 once drafted, or `infra_consolidated_closeout_2026_07_25.md` Track 1) before
-      archiving.
+- [x] ✅ [PLAN] P2. **EXECUTED + ARCHIVED 2026-07-28** ([unlock-plan] granted). RULE-11 (item a) actually EXECUTED this
+      session (not just migrated): `.github/workflows/plan-health-agent.yml` + its
+      `scripts/self-hosted-runners/hosted-baseline/` template twin both dropped the `schedule:` trigger + the Haiku
+      `plan-health`/`notify` job pair, keeping only the `pull_request`-triggered `plan-health-gate` hard gate; the live
+      Cloud Run Job `uts-prod-plan-hygiene-sweep` + Cloud Scheduler `uts-prod-plan-hygiene-sweep-cron` were deleted via
+      `gcloud run/scheduler jobs delete` (verified `NOT_FOUND` + absent from `gcloud run jobs list`);
+      `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` + both repos' copies of
+      `cron_hygiene_sweep_entrypoint.sh` deleted (`git rm`); the 2 terraform `import {}` blocks in
+      `deployment-service/terraform/gcp/_imports_reconcile.tf` replaced with removal comments (matching that file's own
+      convention); the stale `cloud_run_job_registry.py` entry removed; `/codex/11-project-management/plan-hygiene.md`
+      + `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the timer-on-central model. Item (b) — "fold
+      `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" — a **prior migration
+      pass's claim that this was already filed in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` was FALSE**
+      (verified via grep, zero hits); landed for real this session as a genuine todo next to RULE-11 in that plan.
+      `git mv` source doc to `plans/archive/issues/`.
 - [x] ✅ [PLAN] P3. `plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md` — core premise ("7 branches
       left in place") now factually false: `git ls-remote` (2026-07-27) confirms 0 matching `tab/rootm/*` branches
       remain in any of the 6 repos — add a correction banner. Disposition rehomed into

@@ -717,7 +717,7 @@ drift_direction: none
       `empty_confirmed`) — needs an operator/data-owner decision per (protocol, data_type).
   - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
+  - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](/plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md)
     (3 open)

@@ -544,7 +544,7 @@ file, not here.
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
       market-tick-data-service, execution-service)
-- [ ] [CONFIG] P2. **F4 (rehomed from `issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0
+- [ ] [CONFIG] P2. **F4 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0
       open todos" there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph.**
       `mtds-dex-pools-backfill` VM: `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph;
       the gateway subgraph ID returns "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive
@@ -552,7 +552,7 @@ file, not here.
       indexer-allocated Curve subgraph ID (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`,
       Alchemy) for historical block-level state — or accept honest-absence for Curve pools until a source is wired.
       (repo: market-tick-data-service)
-- [ ] [DATA] P3. **F6 (rehomed from `issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same correction) —
+- [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same correction) —
       DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.** `mtds-lending-indices-20260628`
       VM: instruments-store-defi parquet missing for `{aave_v3,compound_v3}`/`<chain>`/`<date>` combos → falls back to
       subgraph discovery, yields little (aave OPTIMISM/LINEA, compound mostly empty). Confirm whether this is an

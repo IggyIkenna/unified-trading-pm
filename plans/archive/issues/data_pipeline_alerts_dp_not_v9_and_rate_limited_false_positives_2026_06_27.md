@@ -4,7 +4,7 @@ title:
   DP_NOT_V9 + DP_SOURCE_RATE_LIMITED data-pipeline alerts are false-positives (string-vs-int compare + over-broad
   rate-limit regex + consolidation-lag captured count)
 summary: "Five alerts fired this morning. **None of them are real data loss.** Two distinct alerting bugs:"
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,13 +27,19 @@ source:
     "Slack #data-pipeline-alerts 2026-06-27 09:02 (DP_NOT_V9 cefi / defi / tradfi)",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). All 3 open items verified migrated: Finding-1 operator-gated
+> schema_version cleanup + Finding-3 DP_VM_GONE_NO_CAPTURE debounce + Secondary str/int bug are all real dispatchable
+> `- [ ]` todos in [`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md)
+> (re-verified 2026-07-28 before archival). Findings 1 (code fix) and 2 (classifier fix) already SHIPPED
+> (`e2e-testing@21ce846`, `deployment-service@d36f281`).
 
 ## TL;DR
 

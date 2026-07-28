@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [live-trading, observability, mtds, mdps, self-healing, infrastructure]
 related:
   [
-    plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
+    plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md,
     plans/active/issues/fleet_data_acquisition_health_2026_06_21.md,
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]

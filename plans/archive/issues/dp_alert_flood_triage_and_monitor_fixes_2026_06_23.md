@@ -4,7 +4,7 @@ title: DP
 summary:
   "`alerts.log` is **5 alert classes** (de-duping grep artifacts). Live GCS/Cloud-Run direct-checks (ADC, 2026-06-23
   ~20:50Z) classify each as a **monitor-signal false-positive** vs a **REAL outage th..."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,7 +27,7 @@ source:
     aggregated AG-agent prompts (deadman crash / tradfi fleet-monitor false-positives / alert-lifecycle gaps),
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 locked_since: 2026-06-23
 execution_scope: orchestrator-agent
@@ -35,6 +35,13 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). Sole remaining open checkbox (`deployment-service:latest`
+> terraform-default-vs-runtime-pin item) verified verbatim + accurate in
+> [`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`](/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md)
+> (L69-81, re-verified 2026-07-28). Every other item shipped (see body for commit SHAs: deployment-service@9b32ea5,
+> @6b76244, @b1fbc92, @7b070fb, @a19bbda, @2763578, @04942d5, market-tick-data-service@afd5296, @2410e712,
+> instruments-service@b84cc4f).
 
 ## What I found
 

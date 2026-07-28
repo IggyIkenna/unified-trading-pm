@@ -387,7 +387,7 @@ drift_direction: advance-code
   `/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`,
   `/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`,
   `/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`,
-  `/plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`,
+  `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`,
   `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md`,
   `/plans/active/canonical_id_builder_retrofit_checklist_2026_07_08.md`,
   `/plans/active/data_pipeline_check_mdps_features_2026_07_20.md`,

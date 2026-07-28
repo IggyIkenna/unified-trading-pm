@@ -2,7 +2,7 @@
 doc_type: issue
 title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradiction RESOLUTION
 summary: "Plan-health today is split across two mechanisms in `.github/workflows/plan-health-agent.yml`:"
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -20,13 +20,19 @@ source:
     scripts/plan-hygiene/run_hygiene_sweep.sh,
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted, RULE-11 executed)
 locked_by: live-defi-rollout
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 ---
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). All 11 todos done. RULE-11 (item a) EXECUTED for real this
+> session: GHA `plan-health-agent.yml` + template twin dropped the daily Haiku job, live Cloud Run job + Cloud
+> Scheduler deleted, terraform + registry cleaned, both `plan-hygiene.md` codex docs rewritten to the timer-on-central
+> model. Item (b) also landed for real (correcting a false 2026-07-27 citation) in
+> [`infra_satellite_ao_dispatch_batch1_2026_07_26.md`](/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md).
 
 ## What I found
 
@@ -93,16 +99,15 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       at 0%, depressing PM coverage ~7pts (the 69%-floor era); floor restored to the original 70 (actual 76.4%). Was:
       Add explicit-file-list support to `check_todo_format.sh` + `check_runbook_fields.py`, then add both to the
       `--precommit` gate. repo: unified-trading-pm.
-- [ ] [CI] P2. Fold the same `--precommit` (or a `--staged`) sweep into PM `quality-gates-v2` as a
-      content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone `plan-health-gate` GHA job —
-      **RULE-11 prove-then-retire**: prove the prek + v2-step combo catches the same hard failures on PM before deleting
-      the job (don't open a gap). repo: unified-trading-pm. **REHOMED 2026-07-27** — true orphan (per
-      `june_2026_vintage_audit_findings_2026_07_27.md` §4), filed as a new todo directly into
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its `## Deferred`), placed next to
-      the RULE-11 (a) todo below since both are the two halves of the same `plan-health-gate` CI-architecture
-      rationalization — chosen over `infra_consolidated_closeout_2026_07_25.md` Track 1 because that track is scoped to
-      repo/script governance + dependency/CVE management, not CI-gate architecture. Not executed yet — tracked there
-      going forward; not duplicating here.
+- [x] ✅ [CI] P2. **REHOMED — verified landed 2026-07-28.** Fold the same `--precommit` (or a `--staged`) sweep into PM
+      `quality-gates-v2` as a content-sentinel-gated step (server backstop on PM PRs), THEN retire the standalone
+      `plan-health-gate` GHA job — **RULE-11 prove-then-retire**: prove the prek + v2-step combo catches the same hard
+      failures on PM before deleting the job (don't open a gap). repo: unified-trading-pm. **Correction 2026-07-28**: a
+      2026-07-27 migration pass's banner (superseded, see this doc's own Archive-readiness verdict below) claimed this
+      was already "filed as a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`" — that claim
+      was FALSE (the todo was not actually present there, verified via grep on 2026-07-28). Landed for real this
+      session as a genuine `- [ ]` todo in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` immediately after the
+      RULE-11 item, citing this source doc. Not duplicating here going forward.
 - [x] ✅ [SCRIPT] P1. **24h agentic contradiction RESOLUTION** — DONE 2026-06-10 (`plan-health-agent.yml` STEP 4). Added
       STEP 4 to the daily `plan-health-agent.yml` job: a non-empty `contradictions[]` / `doc_drift[]` result now
       DISPATCHES one `escalate-to-orchestrator.yml` run per finding with `wall_type=plan_health` → the built
@@ -145,26 +150,19 @@ Plan-health today is split across two mechanisms in `.github/workflows/plan-heal
       plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md (the plan-reconciler timer has been installed and
       firing daily on central since ~2026-07-23) (see that doc for execution).
 
-- [x] ✅ [CI] P2. **MIGRATED 2026-07-27 — tracked + [OPERATOR]-tagged in
-      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`** (verified: the prerequisite this item gates on — ≥3 green
-      reconciler runs on central — is satisfied, per that todo's own citation). **Operator decision 2026-07-27**
-      (`june_2026_vintage_audit_findings_2026_07_27.md` §5#21/§5-RESOLVED #21): RULE-11 is APPROVED to execute. **Not
-      yet executed** — this migration pass located the exact files to save the next pass's investigation time but did
-      NOT touch them (out of this specific migration task's file scope): (a) `.github/workflows/plan-health-agent.yml`
-      (has the `schedule: cron "0 2 * * *"` trigger + the `plan-health` job with the Haiku contradiction-detection
-      steps; the `pull_request`-triggered `plan-health-gate` job is a separate job in the same file and must stay) + its
-      template twin `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` (needs the same edit, then
-      `rollout-workflow-templates.sh`); (b) the live Cloud Run Job is `uts-prod-plan-hygiene-sweep` (from
-      `${local.env_prefix}-plan-hygiene-sweep` in `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`,
-      `env_prefix=uts-prod`, GCP project `central-element-323112`) + its Cloud Scheduler
-      `uts-prod-plan-hygiene-sweep-cron` + `deployment-service/scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`;
-      (c) update CLAUDE.md § "Plan Hygiene" + `/codex/11-project-management/plan-hygiene.md` after (a)+(b) land. Was:
-      **RULE-11 prove-then-retire** (after ≥3 green reconciler runs on central): (a) drop the `schedule:` trigger +
-      Haiku steps from `plan-health-agent.yml` (KEEP the `pull_request` `plan-health-gate` job + the
-      escalate-on-gate-failure path); (b) delete the Cloud Run job `uts-prod-plan-hygiene-sweep` + its scheduler + TF
-      (`deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf`) + `cron_hygiene_sweep_entrypoint.sh`; (c) update
-      CLAUDE.md § "Plan Hygiene" + `/codex/11-project-management/plan-hygiene.md` to the timer-on-central model. repos:
-      unified-trading-pm + deployment-service.
+- [x] ✅ [CI] P2. **EXECUTED 2026-07-28** — RULE-11 prove-then-retire fully shipped (previously only migrated +
+      `[OPERATOR]`-tagged in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` 2026-07-27; that todo's own DONE entry
+      now carries the full execution record — read it for the complete evidence list). Summary: (a)
+      `.github/workflows/plan-health-agent.yml` + its template twin
+      `scripts/self-hosted-runners/hosted-baseline/plan-health-agent.yml` both dropped the `schedule:` trigger + the
+      Haiku `plan-health`/`notify` job pair, keeping only the `pull_request`-triggered `plan-health-gate` hard gate;
+      (b) the live Cloud Run Job `uts-prod-plan-hygiene-sweep` + its Cloud Scheduler `uts-prod-plan-hygiene-sweep-cron`
+      were deleted live (`gcloud run/scheduler jobs delete`, verified `NOT_FOUND` + absent from `gcloud run jobs
+      list`), `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` + both repos' copies of
+      `cron_hygiene_sweep_entrypoint.sh` deleted, the 2 terraform `import {}` blocks + the `cloud_run_job_registry.py`
+      entry removed; (c) `/codex/11-project-management/plan-hygiene.md` + `/codex/12-agent-workflow/plan-hygiene.md`
+      rewritten to the timer-on-central model. Operator approval: `june_2026_vintage_audit_findings_2026_07_27.md`
+      §5-RESOLVED #21. repos: unified-trading-pm + deployment-service.
 - [x] ✅ [SCRIPT] P2. **`run_hygiene_sweep.sh --no-regen` (or a `--check` mode)** — STEP 1's `--ci` sweep regenerates
       the active-plan inventory into `master_to_live_defi` as a SIDE-EFFECT, dirtying a grace-window plan during the
       reconciler's READ-ONLY input gather (surfaced live 2026-06-16). The boot prompt currently discards it
@@ -226,3 +224,9 @@ archived**: this doc carries `locked_by: live-defi-rollout` and no `[unlock-plan
 `utl_uac_reuse_consolidation_remediation_2026_06_10.md`) — archiving a locked doc without an explicit grant is a
 STOP-and-report condition. With both remaining items now homed, this doc is otherwise ready to archive the moment an
 `[unlock-plan]` is granted.
+
+**UPDATE 2026-07-28**: `[unlock-plan]` granted (operator, all-9-docs unlock decision). RULE-11 (item a) EXECUTED for
+real this session (see the `[CI] P2` entry above — GHA workflows edited, live Cloud Run job + scheduler deleted,
+terraform + registry cleaned, both codex docs rewritten). Item (b) also landed for real, correcting a false citation
+from the 2026-07-27 pass (the todo it claimed was filed in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` was NOT
+actually there — verified via grep, now genuinely added next to RULE-11). 11/11 todos done. Archiving now.

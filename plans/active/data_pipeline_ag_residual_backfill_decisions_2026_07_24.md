@@ -107,7 +107,7 @@ items:
       derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
       already-v9 rows. Written index = 100% v9 / 6.81M rows, captures UNCHANGED (734102), GATE-passed, snapshot kept).
       **(was: unqualified "100% v9" — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 180: a 2026-06-27
-      audit — `active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`, after
+      audit — `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`, after
       fixing an unrelated string-vs-int display bug that had been masking the true count — found a genuine ~98,476-row
       (~4%) tradfi non-v9 residual (legacy `'4'` + empty `''` + instrument-key-contaminated `schema_version` values)
       still present 5 days after this "100% v9" claim. That audit's operator-decision item to clean the residual was

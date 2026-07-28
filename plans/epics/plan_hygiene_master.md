@@ -99,11 +99,15 @@ removes the manual cost and catches regressions before they compound.
       a real failure. It self-recovered and has run green daily 2026-06-20→2026-07-11 (verified via
       `gcloud run jobs executions list`, asia-northeast1): current monitoring IS operational, but the
       failure-notification path remains unverified. Retirement in favour of the central-VM reconciler is tracked in
-      `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. Synced per
+      `plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. Synced per
       `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` (finding 227).
 - [x] ✅ [SCRIPT] P2. Added as `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` (adjacent to
       `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`. Reuses
-      `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b)
+      `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b) **RETIRED 2026-07-28** (RULE-11
+      prove-then-retire, operator approval `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21): the
+      Cloud Run job + Cloud Scheduler deleted live, `hygiene_sweep_scheduler.tf` + both repos' copies of
+      `cron_hygiene_sweep_entrypoint.sh` deleted, superseded by the daily deep `plan-reconciler` agent (01:00 UTC,
+      central orchestrator VM). Full record: `/codex/11-project-management/plan-hygiene.md` § "Daily deep reconciler".
 
 ## Phase 4 — Codex alignment audit (agent work)
 

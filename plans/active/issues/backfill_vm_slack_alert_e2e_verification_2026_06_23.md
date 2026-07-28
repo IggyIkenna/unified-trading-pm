@@ -202,7 +202,7 @@ for these messages to close the verification loop.
       alerting-service — NOT flippable as of 2026-07-27**: deployment-api Cloud Run JOBS side is confirmed fixed (see
       Gap 1 evidence above — real WARNING-level logs now visible for `uts-prod-dp-heartbeat-watcher`). But the
       alerting-service `dp-alerting-subscriber` Cloud Run SERVICE side is confirmed STILL BROKEN as of the most recent
-      check: `/plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (line ~195-205) documents the running
+      check: `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (line ~195-205) documents the running
       subscriber (rev 00008-csc) surfacing ZERO app logs in Cloud Logging — not even the unconditional startup line —
       despite the identical image flooding those logs to stdout locally. This is tracked as a live, dispatched,
       UNCHECKED `[ ]` todo in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` ("Diagnose the

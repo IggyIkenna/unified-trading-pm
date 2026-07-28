@@ -7,7 +7,7 @@ summary:
   task-item CONTRADICTIONS, so they can be aligned in a later pass. This pass is read-only: it finds and classifies, it
   does NOT edit the subject plans. Section A = the SSOT assertion ledger (the yardstick). Section B = triage of all 67
   plans. Section C = deep-read findings. Section D = synthesis + proposed resolutions."
-status: open
+status: resolved
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,7 +27,7 @@ parent_epic: instruments_master
 priority: P1
 source: [operator request 2026-06-29]
 assigned_vm: NA
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 last_updated: 2026-07-28 # bumped 2026-07-28 (C6/C9 dispositions closed — vintage-audit rehome pass; was 2026-07-14, unchanged despite substantive 2026-07-12 body corrections e.g. A19 §158; finding 129)
 execution_scope: local-only
@@ -37,6 +37,13 @@ locked_since: 2026-05-21
 ---
 
 # Instruments-Service Plan Reconciliation (2026-06-29)
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). C1-C9 review log (Section G) fully dispositioned: C1/C3/C4/C8 ✅
+> resolved-and-executed; C2 ✅ executed via now-archived `cefi_layer1_denominator_gaps_2026_07_03.md`; C5 genuinely
+> tracked live in `deribit_options_chain_af_g4_blocker_2026_07_03.md`; C6 correctly moot; C7 non-contradiction
+> (informational); C9 rehomed + verified present verbatim in
+> [`cefi_consolidated_closeout_2026_07_18.md`](/plans/active/cefi_consolidated_closeout_2026_07_18.md) Track 6.
+> Re-verified 2026-07-28 before archival.
 
 > **Read-only FIND pass.** Goal: surface every open-plan task item that CONTRADICTS the truth set, classify it, and
 > propose a resolution — **without editing the subject plans**. Operator decides per-contradiction (or per-cluster) what

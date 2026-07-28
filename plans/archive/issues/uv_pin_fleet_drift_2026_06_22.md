@@ -6,7 +6,7 @@ title:
 summary:
   The canonical workspace **uv pin is `0.10.8`** (set by `uv_lockfile_determinism_2026_06_02.md`, archived ✅; committed
   `uv.lock` files are `revision = 3`, the serialization 0.10.8 produces). But the...
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,13 +33,22 @@ source:
     "scripts/quality-gates-base/base-service.sh:297 + base-library.sh:167",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: 2026-07-28 (plan-vintage-audit archival, [unlock-plan] granted)
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 ---
+
+> **✅ ARCHIVED 2026-07-28** ([unlock-plan] granted). All items resolved: 2 remaining P3 residue items (0.10.8
+> constant centralization, uv-version drift-guard) tracked with real content in
+> [`infra_satellite_ao_dispatch_batch1_2026_07_26.md`](/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md)
+> Deferred items 2-3; the Harsh's-laptop residue item resolved-by-ruling (operator 2026-07-27: no more Ikenna/Harsh
+> human-owner splits) — epic-VM half moot (durable `setup.sh` fix ships fleet-wide), generic per-machine drift risk
+> subsumed by the open drift-guard todo. 2 additional stale duplicate checkboxes found + flipped on re-verification
+> (the `scripts/setup.sh` astral-uv fallback item, already shipped earlier in this doc; the CICD `main-backmerge-to-ldr`
+> durable drift-tick fix, confirmed live in `branch-health.yml`'s hourly `drift-tick` job).
 
 ## What I found
 
@@ -147,8 +156,19 @@ the churn the pin prevents). Align the fleet TO the pin.
       `base-library.sh` items ... and the uv drift-guard"), ruled 2026-07-26 to batch into ONE `sequential: true` unit
       with 3 sibling `base-service.sh`/`base-library.sh` edits in the next infra batch (operator ruling,
       `autonomous_session_operator_decisions_2026_07_25.md` #36 option A). Stays open here until that batch lands.
-- [ ] [INFRA] P2. Realign uv → 0.10.8 on Harsh's laptop (run the astral one-liner above) + on every epic VM at next
-      relaunch (until the durable P1+P2 setup.sh fix lands, a relaunched VM re-drifts). **RE-VERIFIED 2026-07-27**: this
+- [x] ✅ [INFRA] P2. **RESOLVED 2026-07-28 (operator ruling supersedes the framing).** Epic-VM half: MOOT — the durable
+      `setup.sh` fix (the item above) has shipped fleet-wide, so any epic VM that relaunches from here on self-realigns
+      to 0.10.8 automatically; the original "until the durable fix lands, a relaunched VM re-drifts" caveat no longer
+      applies. Harsh's-laptop half: **the named entity itself is retired** — operator ruling 2026-07-27 ("no more
+      Ikenna/Harsh human-owner splits, this is agent work now") means there is no longer a distinct "Harsh's laptop" to
+      track as a separately-owned residue item; any remaining individual box with stale uv is now generic environmental
+      drift, which is exactly what the still-open drift-guard todo above (line 143, tracked in
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` Deferred item 2) exists to catch fleet-wide once shipped — no
+      separate manual step is being tracked under a retired-organization-model name. Closing this item as
+      superseded-by-ruling rather than leaving a stale per-person residue line; the underlying generic-drift risk stays
+      covered by the P3 drift-guard item.
+
+      _(Original framing, preserved for context)_: this
       item is **NOT** covered anywhere in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (grepped the full doc for
       "harsh"/"laptop"/"epic VM" — zero hits), contrary to what a prior migration note assumed. Partial mootness: the
       **epic-VM half is now MOOT** — the durable `setup.sh` fix (the item above) has shipped fleet-wide, so any epic VM
@@ -229,7 +249,11 @@ Validated locally on slot-3 (`bash -n` + `shellcheck -S error` clean + sed-rewri
       2026-06-22 — commit stat title: "setup-workspace-config-symlink.sh: emit a regular root-relative
       .code-workspace"), confirmed `git merge-base --is-ancestor` of current `origin/live-defi-rollout`. Plan-flip lag,
       not outstanding work — no code change needed. Repo: unified-trading-pm.
-- [ ] [INFRA] P2. `scripts/setup.sh` astral-uv fallback (the per-repo fix above) — couples to the fleet rollout.
+- [x] ✅ [INFRA] P2. **STALE — already done, closing citing the earlier flip.** This is a duplicate checkbox for the
+      SAME work already verified DONE above (the "Durable fix" section's two `[x]` items: the PM template fix
+      `unified-trading-pm@4ce056d7d`/`@713dc3d4b` + the fleet-wide rollout confirmed 25/25 repos + PM committed+pushed
+      via `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s matching todo). No separate action needed — plan-flip lag
+      only.
 
 ### PM version-promotion divergence — the blocker (operator/machinery)
 
@@ -271,9 +295,13 @@ assert **58**:
       engine" gap. Once v2 is green, PR #498 auto-merges and drains the boot-scripts + all stuck LDR content to main. —
       RESOLVED engine-backed, see UPDATE below: strategy-service@f5f00109 / unified-api-contracts@61ac3ad2 /
       unified-trading-pm@235774d59 (all verified ancestors).
-- [ ] [CICD] P2. Durable fix for the chronic version-split: make `main-backmerge-to-ldr` actually sync the `[skip ci]`
-      manifest/version bumps down to LDR (today it "runs green" but leaves the split), so the local-only
-      version-alignment gate stops perpetually blocking PM commits.
+- [x] ✅ [CICD] P2. **DONE — verified live 2026-07-28.** The durable drift-tick fix shipped 2026-06-27:
+      `main-backmerge-to-ldr.yml`'s own `schedule:` trigger was removed in favor of a dedicated `drift-tick` job in
+      `branch-health.yml` (`schedule: cron: "0 * * * *"`, hourly) that dispatches `main-backmerge-to-ldr.yml` via
+      `gh workflow run` — exactly the "safety-net for `[skip ci]` commits to main that suppress the push trigger"
+      this todo asked for (confirmed live in `.github/workflows/branch-health.yml` lines 16-53 and
+      `.github/workflows/main-backmerge-to-ldr.yml` line 37's removal comment; SSOT
+      `/codex/08-workflows/ci-cd-flow.md` § "Drift-tick"). Plan-flip lag, not outstanding work.
 
 ### UPDATE — archetype tests-slice FIXED (operator chose engine-backed); residual blocker = a separate typecheck cascade
 

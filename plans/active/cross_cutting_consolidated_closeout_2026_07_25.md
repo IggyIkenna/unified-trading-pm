@@ -279,7 +279,7 @@ independent of the credential gate.
 
 ## Track 7 — Instruments-service / MTDS SSOT reconciliation + foundation overlap · P1
 
-**Sources**: `issues/instruments_service_plan_reconciliation_2026_06_29.md` +
+**Sources**: `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` +
 `issues/mtds_plan_reconciliation_2026_ 06_29.md` (explicit companion pair, same date/method — nearly all
 C1-C9/M-C1-M-C10 verdicts resolved; real remainders: instruments-side C5 Deribit-"G1-complete"-false-claim [🔄 with
 Ikenna] + C6/C7/C9 minor [⏸ awaiting Ikenna]; MTDS-side M-C7 warm-GCS-parts live-persistence sink [designed, not built,
@@ -374,7 +374,7 @@ architecture asks shipped+proven; the backfill-over-full-ranges ask absorbed via
 `mvp_backfill_cefi_tick_v10_2026_06_27.md` → `cefi_completion_program_2026_07_15.md`; ongoing HL/ASTER batch-gap work
 continues in `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`),
 `/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (ARCHIVED 2026-07-27, all 5/5
-done), `issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync
+done), `/plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync
 item + 1 tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
 
 **Excluded (mistag, fixed 2026-07-25)**: `issues/features_service_defi_data_loading_blockers_2026_05_29.md` — its own
@@ -609,9 +609,9 @@ re-checked before dispatch (do not surface pre-migration data through the UI, pe
 ## Track 21 — Data-pipeline alert/monitoring bugs · P1
 
 **Sources**:
-[issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md](/plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md)
+[/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md](/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md)
 (DP_NOT_V9/rate-limit alert false-positives tied to the manifest schema v9 migration + consolidation lag) ·
-[issues/dp_event_pubsub_delivery_gap_2026_06_22.md](/plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md)
+[/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md](/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md)
 (DP_* events have no PubSub→subscriber→router path to `#data-pipeline-alerts`) ·
 [issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md](/plans/active/issues/honest_coverage_nightly_cron_undersized_and_launcher_ssot_drift_2026_07_16.md)
 (nightly cron VM undersized + launcher SSOT drift across 4 conflicting launcher artifacts → partial `coverage.json`) ·
@@ -698,7 +698,7 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   live prod state" — **false**: `gcloud run jobs describe` returns `cpu=2;memory=4Gi` for `uts-prod-dp-daily-digest` and
   `uts-prod-dp-reprobe-empty`, and the tracked `.tf` still reads 4Gi at :91-92/:148-149/:267-268, so those 4 monitoring
   jobs remain OOM-killable (the image-default half DID land, :57); (2) the same doc's `--reclassify-apply` scheduling
-  item and `issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item were both
+  item and `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item were both
   still marked 🟡 BLOCKED-ON-DIRTY-DEP from 2026-06-22/23 but have in fact LANDED (`.tf:281`;
   `config.run_subscriber_in_api` + the `api/main.py` lifespan in-tree), as has that doc's prose-only "codify
   `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions + subscriber IAM in terraform" item
