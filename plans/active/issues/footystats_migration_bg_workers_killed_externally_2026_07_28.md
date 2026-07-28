@@ -102,3 +102,35 @@ inconsistent state.
       (whichever owns shared-host background-process guidance) — so the next agent doesn't have to rediscover that raw
       `nohup`/`setsid` shell-backgrounding is NOT reliably durable across whatever is reaping processes on this host,
       but the harness's own tracked background-task mechanism is. (repo: unified-trading-pm)
+
+## Update 2026-07-28 (later, slot-14) — CORRECTION: harness `run_in_background` is NOT immune either; strong new
+
+## evidence points to host resource exhaustion, not a targeted pkill
+
+Retracting the earlier claim ("the harness's own tracked background-task mechanism... proved stable to completion") — it
+only looked stable because the footystats migration happened to finish before hitting the same fate. A SEPARATE, single
+(non-parallel) `bash scripts/quality-gates.sh --no-fix` run, launched via the SAME `run_in_background: true` mechanism,
+was killed TWICE in a row (`status: "killed"` per the tool's own task-notification, not a normal exit): first at 99%
+through the pytest suite (~10+ min in), second within seconds of starting (right after the `pytest_benchmark` warning,
+before any test output at all) — i.e. killed at wildly different elapsed times/points in the SAME script, which rules
+out a fixed-timeout or a pattern matching a specific line/phase of execution.
+
+**Checked host load at the moment of the second kill**: `cat /proc/loadavg` → **62.39 73.43 75.66** (1/5/15-min
+averages) on a 16-core host — 4-5x oversubscribed. `free -h` → swap **13Gi/15Gi used (87%)**, only 2.1Gi RAM free. This
+is a MUCH stronger, more direct signal than anything available at the original finding time (no dmesg/journalctl access,
+so no direct OOM-killer log confirmation, but severe swap exhaustion + massively oversubscribed load average at the
+exact moment of a "Terminated"-with-no-error process death is the textbook signature of an OOM-killer (or similar
+resource-pressure reaper) picking the largest/most-recently-active process, not a targeted `pkill -f <pattern>` (which
+would kill by NAME MATCH regardless of memory pressure, and wouldn't correlate with load/swap state). This is consistent
+with — and a stronger data point for — the "session/cgroup boundary reaping" hypothesis already flagged in the P2 auditd
+todo above, refined to specifically point at **memory/load-pressure-triggered reaping**, not a name-pattern `pkill`.
+
+**Practical implication for future work on this host**: neither raw shell-backgrounding NOR the harness's
+`run_in_background` mechanism is safe from this — the CLAUDE.md "Shared-host ≤2 full QGs at once" rule exists precisely
+to prevent this class of contention, and the observed 62-75 load average with dozens of concurrent slots active (matches
+this session's earlier finding of "many `github-glue-slot-refresh-*` timers" + the fleet's own scale) suggests that rule
+is not holding fleet-wide right now. Retried the QG run a 3rd time after this finding — did not wait for load to subside
+first (no cheap way to monitor host-wide load from an agent session without polling, which the async-wait discipline
+discourages for a condition outside this task's own control). If this recurs further, the fix is almost certainly
+fleet-level (enforcing/automating the ≤2-full-QGs-at-once rule, or moving heavy QG runs to dedicated capacity) rather
+than anything a single worker can do differently.
