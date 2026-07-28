@@ -248,8 +248,12 @@ MTDS consolidation ruling.)**
       v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
       column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
       **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
-      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission. **(MIGRATED FROM:
-      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission. **RE-RUN 2026-07-28 (slot-8,
+      live, `mode=changed`, no `--apply`) — STILL RED, criteria NOT met**: v9=97.4% (not 100%), source blank=24.0% (not
+      0%), pipeline_mode blank=1.4% (not 0%) — expected, since the underlying walk this todo is post- has not executed
+      yet (still blocked on the false-phantom fix, see the 2026-07-28 slot-12 entry above). Do not flip until a re-run
+      reads GREEN on CF-1/CF-3/CF-4. See the 2026-07-28 (slot-8) Progress Log entry for the full per-CF readout.
+      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of legacy
