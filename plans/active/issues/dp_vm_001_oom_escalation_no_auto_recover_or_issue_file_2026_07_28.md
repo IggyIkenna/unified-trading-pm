@@ -53,34 +53,56 @@ resolved_by:
       (no code change; investigation only)
 
       **ANSWER: it is WIRED and live, NOT aspirational — for the OOM subcase.** Evidence chain (all read at
-          `deployment-service` HEAD 2026-07-28, plus a live test run):
-          1. The finding is constructed with `tier=EscalationTier.AUTO_RECOVER if oom else EscalationTier.PAGE_OPERATOR`
-             for `registry_id="DP-VM-001"` / `event=DP_VM_EXIT_NONZERO`
-             (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py:332-339`, `oom` = `exit_code==137`).
-          2. `escalation.py`'s `_DP_RECOVERY_ACTIONS` dict (`escalation.py:498-505`) DOES map
-             `_EVENT_VM_EXIT_NONZERO` (`"DP_VM_EXIT_NONZERO"`) → `_recover_backfill_vm`.
-          3. `_recover_backfill_vm` (`escalation.py:305-367`) calls `RelaunchBackfillVm.relaunch()`
-             (`scripts/recovery/relaunch_backfill_vm.py:144-238`), which gates on `exit_code == 137`, applies the
-             `_MAX_RELAUNCHES_PER_DAY = 2` per-(vm-prefix, day) budget (falling to `status=PAGE` once exhausted), and — via
-             `escalation._escalated_machine_type` consuming the `launch_budget_registry.MEMORY_TIER_LADDER` — passes a
-             bigger `MACHINE_TYPE` env so the relaunch actually resizes up rather than re-OOMing on the same machine.
-          4. Confirmed LIVE, not just read: `tests/unit/test_data_pipeline_monitors.py::test_oom_relaunch_passes_bigger_machine_env`
-             passes today (`.venv/bin/python -m pytest tests/unit/test_data_pipeline_monitors.py -k test_oom_relaunch_passes_bigger_machine_env` →
-             `1 passed`), exercising `escalation._recover_backfill_vm` end-to-end and asserting the escalated machine type.
-          5. **The non-OOM subcase of DP-VM-001 genuinely IS plain `page`** (`exit_code_fleet_monitor.py:335` — non-OOM →
-             `PAGE_OPERATOR` directly, no actuator attempted) — a non-OOM crash has no deterministic auto-fix, so this half
-             of the doc's claim is correct.
-          6. **The doc is what's wrong, not the code.** `codex/05-infrastructure/data-pipeline-alerts.md:137`'s DP-VM-001
-             escalation column reads plain `page` with no auto-recover/file-issue callout, which is accurate ONLY for the
-             non-OOM subcase — it fails to disclose that the OOM subcase (the common case in practice, and the one the
-             same doc's own actuator table at line 209 describes) auto-recovers first. This resolves the "If already
-             wired" branch of todo 2 below: fix the doc, don't touch the code.
+              `deployment-service` HEAD 2026-07-28, plus a live test run):
+              1. The finding is constructed with `tier=EscalationTier.AUTO_RECOVER if oom else EscalationTier.PAGE_OPERATOR`
+                 for `registry_id="DP-VM-001"` / `event=DP_VM_EXIT_NONZERO`
+                 (`deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py:332-339`, `oom` = `exit_code==137`).
+              2. `escalation.py`'s `_DP_RECOVERY_ACTIONS` dict (`escalation.py:498-505`) DOES map
+                 `_EVENT_VM_EXIT_NONZERO` (`"DP_VM_EXIT_NONZERO"`) → `_recover_backfill_vm`.
+              3. `_recover_backfill_vm` (`escalation.py:305-367`) calls `RelaunchBackfillVm.relaunch()`
+                 (`scripts/recovery/relaunch_backfill_vm.py:144-238`), which gates on `exit_code == 137`, applies the
+                 `_MAX_RELAUNCHES_PER_DAY = 2` per-(vm-prefix, day) budget (falling to `status=PAGE` once exhausted), and — via
+                 `escalation._escalated_machine_type` consuming the `launch_budget_registry.MEMORY_TIER_LADDER` — passes a
+                 bigger `MACHINE_TYPE` env so the relaunch actually resizes up rather than re-OOMing on the same machine.
+              4. Confirmed LIVE, not just read: `tests/unit/test_data_pipeline_monitors.py::test_oom_relaunch_passes_bigger_machine_env`
+                 passes today (`.venv/bin/python -m pytest tests/unit/test_data_pipeline_monitors.py -k test_oom_relaunch_passes_bigger_machine_env` →
+                 `1 passed`), exercising `escalation._recover_backfill_vm` end-to-end and asserting the escalated machine type.
+              5. **The non-OOM subcase of DP-VM-001 genuinely IS plain `page`** (`exit_code_fleet_monitor.py:335` — non-OOM →
+                 `PAGE_OPERATOR` directly, no actuator attempted) — a non-OOM crash has no deterministic auto-fix, so this half
+                 of the doc's claim is correct.
+              6. **The doc is what's wrong, not the code.** `codex/05-infrastructure/data-pipeline-alerts.md:137`'s DP-VM-001
+                 escalation column reads plain `page` with no auto-recover/file-issue callout, which is accurate ONLY for the
+                 non-OOM subcase — it fails to disclose that the OOM subcase (the common case in practice, and the one the
+                 same doc's own actuator table at line 209 describes) auto-recovers first. This resolves the "If already
+                 wired" branch of todo 2 below: fix the doc, don't touch the code.
 
-- [ ] [BACKEND] P0. If unwired: wire DP-VM-001 to auto-recover FIRST (resize-up relaunch via `relaunch_backfill_vm.py`,
-      respecting the existing ≤2/(vm-prefix, day) cap) before paging, matching the pattern already used for DP-VM-003/
-      DP-VM-008. If already wired: fix `codex/05-infrastructure/data-pipeline-alerts.md`'s DP-VM-001 escalation column
-      (currently reads plain "page") to accurately reflect the real behavior — this doc is the operational SSOT other
-      agents read to know what already exists, and it is currently wrong either way this resolves.
+- [x] ✅ [BACKEND] P0. If unwired: wire DP-VM-001 to auto-recover FIRST (resize-up relaunch via
+      `relaunch_backfill_vm.py`, respecting the existing ≤2/(vm-prefix, day) cap) before paging, matching the pattern
+      already used for DP-VM-003/ DP-VM-008. If already wired: fix `codex/05-infrastructure/data-pipeline-alerts.md`'s
+      DP-VM-001 escalation column (currently reads plain "page") to accurately reflect the real behavior — this doc is
+      the operational SSOT other agents read to know what already exists, and it is currently wrong either way this
+      resolves.
+
+      **RESOLVED — already wired (per todo 1's evidence), so this fixed the doc, not the code.** Confirmed
+          independently (re-read the same code paths at current HEAD, not just trusted todo 1's claim): OOM subcase
+          (`exit_code==137`) → `EscalationTier.AUTO_RECOVER` → `_recover_backfill_vm` → `RelaunchBackfillVm.relaunch()`
+          (resize-up, ≤2/(vm-prefix, day) cap) — `exit_code_fleet_monitor.py:335` + `escalation.py:498-505,304-367`.
+          Non-OOM subcase → `EscalationTier.PAGE_OPERATOR` directly (no actuator attempted) —
+          `exit_code_fleet_monitor.py:335` — this half of the original doc text was already correct. Fixed
+          `codex/05-infrastructure/data-pipeline-alerts.md:137`'s DP-VM-001 Escalation cell from plain `page` to
+          `OOM: auto-recover (resize-up relaunch) then file issue · non-OOM: page` — matches the sibling-row style
+          (DP-VM-003/DP-VM-008's "auto-recover (...) then file issue"). The "then file issue" half is accurate for BOTH
+          OOM outcomes: `escalation.py:846-862` files a quiet `_oom_investigate_finding` follow-up issue on a
+          *successful* resize-up relaunch (operator ask 2026-07-27 — a recurring OOM is worth a human look even once
+          self-healed), and falls through to `EscalationTier.FILE_ISSUE` (`escalation.py:818-841`) on a failed/
+          budget-exhausted relaunch. Did not touch `data-pipeline-alerts.registry.yaml` or UAC
+          `alerting/rules.py`'s `DataPipelineEscalation` enum (`PAGE_OPERATOR` there too) — that's a structurally
+          different, closed 3-value enum used for static severity/channel routing (not the per-finding dynamic dispatch
+          this doc describes) with no test enforcing byte-parity against this prose column
+          (`unified-api-contracts/tests/unit/test_data_pipeline_alert_rules.py` only checks well-formedness/severity, not
+          escalation-text match) — out of scope for this todo, not a regression it introduces. —
+          unified-trading-pm (this commit)
+
 - [ ] [BACKEND] P0. Ensure DP-VM-001/OOM ALWAYS files a `plans/active/issues/<slug>_<date>.md` for deeper investigation
       regardless of whether the auto-recover/resize-up succeeds — an OOM recurring on a resized machine is itself a
       signal worth a human eventually looking at the root cause (a genuine memory leak vs. a workload that outgrew its
