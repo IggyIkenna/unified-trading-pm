@@ -230,3 +230,40 @@ importable in this pass.)
   long-lived cached venvs are an ADDITIONAL vector silently hiding this break fleet-wide, independent of which repos are
   "confirmed affected" above — any repo still on `self_hosted_runner_labels` may already be broken by this and not know
   it yet, on either canonical bound.
+
+- **2026-07-28 (slot-4, `data_pipeline_failure` escalation `agt-2c3afe`, DP-WATCHER-002):** A THIRD vector for the same
+  break, distinct from the two already named above (direct `pyproject.toml` conflict; long-lived self-hosted-runner
+  venv) — **a materialized root-clone `.venv` used directly by a HOST cron (not a CI runner, not a repo checkout).**
+  `tradfi-wave-launcher` (the autonomous tradfi OHLCV backfill driver, `deployment-service/scripts/wave_launcher.py`)
+  runs as a `0 */3 * * *` host cron on THIS orchestrator VM against
+  `/home/ubuntu/unified-trading-system-repos/deployment-service/.venv` (the plain root clone, not a `.tabs/N` slot) —
+  every tick since 2026-07-28 03:02 UTC crashed at import
+  (`ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'`, 4 consecutive failed ticks logged to
+  `/home/ubuntu/wave_launcher_cron.log`), which starved the `vm-census/wave-launcher-last-run.json` sentinel past its
+  360-min budget and paged `DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002). Root cause confirmed identical to this doc's:
+  `deployment-service`'s `pyproject.toml`/`uv.lock` already declare/pin `fastapi>=0.137.0,<1.0.0` / `fastapi==0.140.7`
+  (direction-A's own `74681a22d`-family fix already landed on `live-defi-rollout`), but this ROOT CLONE's
+  already-materialized `.venv` had never been resynced and was still sitting on `fastapi==0.136.3` from before the bump
+  — exactly the "plain `uv lock` doesn't refresh an already-materialized `.venv`" gap slot-12's entry above already
+  named for `agent-orchestrator`/`deployment-service`, just hit on a THIRD kind of consumer (a bare host cron against a
+  root clone) that neither CI nor a slot worktree covers. **Fix applied (no code diff — the fix was already shipped;
+  this was a stale-local-environment repair)**: `cd deployment-service && uv sync --frozen` on this host resynced
+  `fastapi` 0.136.3→0.140.7 (+ the editable unified-trading-library/unified-api-contracts/deployment-api sibling
+  packages to their current HEAD versions); verified via a live `import unified_trading_library` + a live (non-dry-run)
+  wave-launcher tick that completed cleanly and refreshed the sentinel. **Separate, second drift found + fixed in the
+  same investigation**: the equity launchers (`launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh`) resolve the ticker universe
+  from UAC via the shared `.venv-workspace` (also a root-level materialized venv, per `setup-workspace-venv.sh`'s
+  per-repo `--reinstall` editable-install model — NOT a single lockfile-resolved environment), which had
+  `pydantic==2.12.5` installed against a stale `pydantic-core==2.41.5`
+  (`SystemError: The installed pydantic-core version ... is incompatible with the current pydantic version, which requires 2.46.4`)
+  — same failure CLASS (root-level materialized venv drifted behind a dependency floor bump) but a different
+  package/venv, not something this doc's fastapi/starlette scope covers. Fixed via
+  `uv pip install --python .venv-workspace/bin/python -U pydantic-core==2.46.4` (uv resolved a matching
+  `pydantic==2.13.4`); confirmed NASDAQ dispatch succeeds post-fix. **New data point for whoever eventually hardens this
+  class**: TWO independent root-level materialized venvs on this one host (`deployment-service/.venv` + the shared
+  `.venv-workspace`) both silently drifted stale behind already-shipped dependency floor bumps, invisible to both
+  `check-dependency-alignment.py` (which only checks `pyproject.toml` declarations, not what's actually materialized on
+  disk) and to CI (which always resolves fresh). Any other host-cron or long-lived process pinned to a root-clone
+  `.venv` rather than a `.tabs/N` slot or a fresh CI resolve is an equally-blind additional vector — worth folding into
+  whatever periodic drift-detection this doc's resolution eventually produces. No code shipped for this entry (pure
+  environment repair); `deployment-service`/UTL/UAC source on `live-defi-rollout` needed no changes.
