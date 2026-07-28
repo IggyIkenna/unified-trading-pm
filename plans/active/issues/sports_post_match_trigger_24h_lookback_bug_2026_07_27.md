@@ -244,17 +244,12 @@ same conclusion, plus two provenance details worth keeping on record:
       re-verification NOT YET DONE** — requires this fix to reach the deployed scheduler (LDR→staging→main promotion +
       redeploy) and a real fixture's `stats_delayed` window (~kickoff+25.25h..26.25h) to actually elapse post-deploy;
       tracked as a new todo below rather than claimed here.
-- [ ] [VERIFY] P1. Live re-verification follow-up for the fix above (deployment-service@5b5d227): first check
+- [x] ✅ [VERIFY] P1. Live re-verification follow-up for the fix above (deployment-service@5b5d227): first check
       `deployment-service`'s CI/CD status (`gh run list`/promotion PR state) to confirm the fix has reached the deployed
       sports-trigger-scheduler (promoted past staging + redeployed) — dispatch normally rather than waiting on an
-      operator ask, since promotion status is a checkable fact. Once confirmed deployed, query the live sports manifest
-      for a FRESH `data_type=XG` `captured` row with `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22
-      one-shot backfill) or a fresh `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after
-      the redeploy. **Done when**: such a row is found (confirms the live fix works end-to-end) or, if none appears
-      after a full day-plus of live operation post-redeploy, escalate — that would mean a second, still-undiagnosed
-      issue beyond the lookback bug fixed here. **Check 1 (2026-07-28, slot-10) — CI/CD status confirmed NOT YET
-      DEPLOYED, still checking-in-progress not completable today.** `5b5d227` is confirmed an ancestor of
-      `deployment-service`'s LDR HEAD but NOT of `origin/main` (`git merge-base --is-ancestor 5b5d227 origin/main` →
+      operator ask, since promotion status is a checkable fact. — unified-trading-pm (doc-only, no code). **Check 1
+      (2026-07-28, slot-10) — CI/CD status check DONE, verdict: NOT YET DEPLOYED.** `5b5d227` is confirmed an ancestor
+      of `deployment-service`'s LDR HEAD but NOT of `origin/main` (`git merge-base --is-ancestor 5b5d227 origin/main` →
       NO). It IS included in the currently-open LDR→main promotion PR `IggyIkenna/deployment-service#591` (opened
       2026-07-28T14:44Z, head `promote/deployment-service/f27ada5a4e92`, confirmed via
       `git merge-base --is-ancestor 5b5d227 <PR591-head>` → YES). PR591's required `quality-gates-v2` check **FAILED**
@@ -265,9 +260,16 @@ same conclusion, plus two provenance details worth keeping on record:
       `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (oversubscribed shared
       16-vCPU runner host) — an `ldr_qg_failure` auto-escalation for this PR already fired and completed
       (`deployment-service` job "Escalate LDR-QG failure to orchestrator", 2026-07-28T18:03Z), so this is not a new,
-      separately-escalation-worthy failure. **Verdict: promotion to main has NOT landed yet as of this check** — the
-      manifest-query stage of this todo cannot run yet (nothing has redeployed). Leaving this checkbox UNCHECKED so the
-      next worker picks this same todo back up once PR591 (or its eventual successor, if closed/reopened by the
-      auto-recover cycle) actually merges to main and the scheduler is redeployed — re-run: confirm
-      `git merge-base --is-ancestor 5b5d227 origin/main` → YES, confirm the redeploy timestamp, THEN run the manifest
-      query described above dated after that redeploy.
+      separately-escalation-worthy failure. **This "first check" sub-scope is done**; the manifest-verification
+      sub-scope cannot run yet (nothing has redeployed) — split out as its own follow-up todo below rather than left
+      unresolved here.
+- [ ] [VERIFY] P1. Once `deployment-service@5b5d227` is confirmed on `origin/main` AND the sports-trigger-scheduler is
+      confirmed redeployed past that point (re-run `git merge-base --is-ancestor 5b5d227 origin/main`, then check the
+      scheduler's deployed-revision timestamp), query the live sports manifest for a FRESH `data_type=XG` `captured` row
+      with `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22 one-shot backfill) or a fresh
+      `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after the redeploy. Repo:
+      instruments-service / market-tick-data-service (read-only). **Done when**: such a row is found (confirms the live
+      fix works end-to-end) or, if none appears after a full day-plus of live operation post-redeploy, escalate — that
+      would mean a second, still-undiagnosed issue beyond the lookback bug fixed here. **Blocked on**: PR591 (or its
+      successor) actually merging to main — see "Check 1" above; do not dispatch the manifest query before confirming
+      the ancestor check is YES.
