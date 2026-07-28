@@ -575,11 +575,14 @@ going forward. Still open, tracked as a todo below.
       (currently has none) to `_write_cefi_perp_funding_rows`. Note: KALSHI_PERP/POLYMARKET_PERP are UAC-classified
       `asset_group=cefi`, not `prediction`, despite the filename. (repo: market-tick-data-service)
 
-- [ ] [DESIGN] P1. **Resolve the MDPS live-mode async-persistence partition-key question** — does UTL's
-      `get_data_sink().write(..., partition={...})` actually require `pipeline_mode=`/`instrument_type=` to land
-      canonically, or does the sink derive them some other way? This is the ONE live/paper-path data point found so far
-      and it's unresolved — the operator explicitly called out live/paper as in-scope, so this needs an answer, not just
-      a flag. (repo: unified-trading-library, market-data-processing-service)
+- [x] [DESIGN] P1. **Resolve the MDPS live-mode async-persistence partition-key question** — RESOLVED 2026-07-28 by
+      round 2's DEFI audit (see "Confirmed dead/duplicate code" item 6 above, missed flipping this todo at the time —
+      caught during the round-5 wrap-up). Answer: the question is moot — `get_data_sink().write(..., partition={...})`'s
+      `pipeline_mode=`/`instrument_type=`-less partition dict never lands canonically (confirmed broken: no canonical
+      prefix, `date=` not `day=`, random UUID filename), but it's DEAD CODE with zero production callers. MDPS's real
+      live-mode candle writes go through the SAME `CandleWriteMixin._write_candles()` batch uses (safe,
+      already-verified-correct). Tracked for deletion in the dead-code-cleanup todo below. (repo:
+      unified-trading-library, market-data-processing-service)
 
 - [ ] [SCRIPT] P2. **Delete or fix the 6 confirmed dead/duplicate path-construction sites** listed above
       (`OrchestrationSchedulingMixin._check_existing_outputs`, `get_raw_tick_path()`, `GCSDataSource`,
