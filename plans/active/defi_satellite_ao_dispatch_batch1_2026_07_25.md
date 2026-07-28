@@ -746,12 +746,12 @@ drift_direction: advance-code
       via the WS connector. Repo: market-tick-data-service. **Done when**: both runs are observed on real infra with the
       expected 0-past-row / real-current-row outcome, recorded in the doc's Progress Log. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — DONE 2026-07-28 (Progress Log).
-- [ ] [DIAG] P1. Re-verify the LIGHTER-ZKSYNC Tardis exchange-slug + numeric market_id fix
+- [x] ✅ [DIAG] P1. Re-verify the LIGHTER-ZKSYNC Tardis exchange-slug + numeric market_id fix
       (`market-tick-data-service@0c4000a02`) against a real, free-tier-compatible first-of-month historical date to
       confirm real `trades`/`book_snapshot_5`/`derivative_ticker` rows still return. Repo: market-tick-data-service.
       **Done when**: a live Tardis probe on a first-of-month date for LIGHTER-ZKSYNC returns real, correctly-shaped rows
       for all 3 data types using current code, recorded in the doc's Progress Log. Source:
-      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — RE-VERIFIED 2026-07-28, see Progress Log.
 - [ ] [DIAG] P1. Investigate (live API probe) whether EXTENDED-STARKNET's `/info/markets/{symbol}/trades` endpoint's
       descending cursor can actually walk back to historical (non-today) dates — the endpoint takes no
       `startTime`/`endTime` param and 0 trades rows of any capture_status exist at any date. Repo:
@@ -828,6 +828,7 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-07-28 (slot-12)** — Re-verified LIGHTER-ZKSYNC Tardis fix (`market-tick-data-service@0c4000a02`) live via `_route_lighter`, date=2026-07-01: `trades` 88,494/218,300/591,860 rows (market_ids 0/1/2), `book_snapshot_5` 1,459,257 rows, `derivative_ticker` 238,121 rows (BTC) — all real, no code change needed. Finding filed: `issues/lighter_tardis_writerless_route_hang_2026_07_28.md` (P3).
 - **2026-07-26 (slot-7)** — Diagnosed the `uts-prod-data-status-rollup` todo. **Resource-type correction**: it's a Cloud
   Run SERVICE (`uts-prod-data-status-rollup-svc`) fronted by Cloud Scheduler (`uts-prod-data-status-rollup-cron`,
   `*/20 * * * *`), not a Cloud Run JOB — `gcloud run jobs executions list` (the todo's own suggested command) returns
