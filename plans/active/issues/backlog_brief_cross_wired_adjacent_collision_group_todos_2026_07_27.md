@@ -125,14 +125,22 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
       `cancel_task`) is a runtime-dispatch-safety change deserving its own scoped review, not a same-commit addendum to
       this root-cause todo. Tests: `agent-orchestrator/tests/test_regen_backlog_from_plan.py` (2 new, both green); full
       `quality-gates.sh` pending. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P2. **Add an escape hatch to `/done`'s cross-repo verification for this exact failure mode** — when
-      neither `_diff_flips_checkbox` nor `_brief_is_currently_checked` can match (a real backlog-brief bug, not a
-      missing flip), the worker currently has NO path to complete other than a human manually reconciling the DB row.
-      Consider: (a) a `/done` field letting a worker cite the ACTUAL checkbox line text it flipped (verified against the
-      plan_ref file directly, independent of the stored `brief`) as an alternate proof, gated so it still requires a
-      genuine `- [ ]`→`- [x]` diff to exist somewhere in the file (not a free-form claim); or (b) a
-      `/api/backlog/<id>/reconcile-brief` admin endpoint for main/operator to correct a provably-wrong stored brief
-      in-place once evidence like this doc is filed. Repo: agent-orchestrator.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-28 (slot-14) — agent-orchestrator@09cda29.** **Shipped option (b): a
+      `POST /api/backlog/{task_id}/reconcile-brief` admin endpoint** (`server/routes/backlog.py`) for main/operator to
+      correct a provably-wrong stored `brief` in place, once evidence like this doc is filed. Refuses (400) unless
+      `new_brief` matches, verbatim, a currently-existing `- [ ]` OR `- [x]` line in the task's resolved `plan_ref` file
+      on this host's PM checkout — never a free-form claim (two new helpers in `server/verify.py`:
+      `_brief_is_currently_unchecked` sibling of the existing `_brief_is_currently_checked`, both tried in turn so the
+      correction is accepted whether the true todo is still open or already shipped-under-the-correct-text, the exact
+      scenario `cefi_satellite_ao_dispatch_batch1-012` — todo 3 below — hit). Updates BOTH surfaces in one transaction:
+      `backlog.yaml`'s `brief` (the only place the literal text lives — `TaskRow` has no `brief` column) AND
+      `TaskRow.brief_hash`, so the next `sync_backlog_to_db` tick sees the hash already matching and does NOT trip the
+      sibling-reset guard (`server/bootstrap.py`) — never touches `status`/`done_sha`, so it's safe to call while a task
+      is still `dispatched` to a live worker. New request model `ReconcileBriefRequest` (`server/models/worker_api.py`).
+      Tests: `agent-orchestrator/tests/test_backlog_reconcile_brief.py` (8 new, covering both matched-state branches,
+      the 400 unverified-claim refusal, both 404s, the `plans/active/issues/` stale-plan_ref fallback, activity-event
+      logging, and dispatched-row safety); full `quality-gates.sh` green (1821 passed, basedpyright/ruff/dashboard
+      clean). Repo: agent-orchestrator.
 - [ ] [OPERATOR] P1. **Manually resolve `cefi_satellite_ao_dispatch_batch1-012`'s dispatched-but-undone state** — the
       work is genuinely complete and verified (market-tick-data-service@94b4aff5, unified-trading-pm@dadf5db6e). Filed
       as `/blocked` question `BLK-35875b16` with the same evidence; this todo exists so the fix is tracked even if the
