@@ -219,12 +219,39 @@ drift_direction: advance-code
       `create_sports_reference_adapter` stub lambdas didn't accept the new kwargs. Full `quality-gates.sh` green (4978
       tests passed). `sports_t0_t1_dependency_gate_never_wired_2026_07_15`. Source:
       `sports_consolidated_closeout_2026_07_19.md:450-453`.
-- [ ] [DIAG] P1. **Track O — root-cause the 112,277 `attempted_failed` rows confined to exactly BETFAIR/MATCHBOOK/
-      PINNACLE (all 6 years) — DIAGNOSIS ONLY, do NOT relabel.** Likely `_SNAPSHOT_VENUES` CLV completeness, not primary
-      capture — confirm or deny. The relabel action itself stays explicitly out of this todo's scope (per the parent
-      doc's own "Operator decisions needed" section, flagging a premature relabel as irreversible-adjacent). (repo:
-      market-tick-data-service, read-only). **Done when**: a written root-cause finding confirms or denies the
-      `_SNAPSHOT_VENUES` CLV-completeness hypothesis, citing the actual mechanism. Source:
+- [x] [DIAG] P1. ✅ **HYPOTHESIS DENIED — root-caused, DIAGNOSIS ONLY, not relabeled.** `_SNAPSHOT_VENUES`
+      (`unified-api-contracts/unified_api_contracts/internal/schemas/_sports_prediction_contracts.py:240`, frozenset
+      `{BETFAIR, MATCHBOOK, ODDS_API, PINNACLE_AS_LINE}`) is **inert dead code** — zero runtime consumers anywhere in
+      the monorepo (confirmed via repo-wide grep); it's `SchemaContract` column metadata for an optional
+      `traded_volume`/`max_bet` field on a data_type (`sports_odds_snapshot`) that the 112,277-row population (all under
+      `data_type=trades`) doesn't even belong to. It also doesn't membership-match (4 keys incl. `ODDS_API`, and
+      `PINNACLE_AS_LINE` ≠ `PINNACLE` — that exact string never appears in any writer/manifest code). No secondary/CLV
+      snapshot capture pass exists for these 3 venues; `TIER_1_OFFSETS` in `odds_api_adapter.py` applies identically to
+      every bookmaker. **Real mechanism — two stacked, already-fixed bugs**: (1) pre-2026-07-20,
+      `_expected_sports_bookmakers()` (`market-tick-data-service/.../orchestrator/venue_fetch.py`) derived its sentinel
+      fan-out scope from UAC venue _categories_ (5 keys: BETFAIR/MATCHBOOK/ODDS_API/ONEXBET/PINNACLE) instead of the
+      real 23-key `bookmakers=` request list — for each, `_emit_sports_v2_sentinels` (`sentinels.py:286-346`) branches
+      on `is_bookmaker_league_covered()`; only bare BETFAIR (via base-key folding onto its real suffixed siblings
+      `BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`BETFAIR_SB_UK`), MATCHBOOK, and PINNACLE ever pass that check and route to
+      `record_zero_rows(was_expected=True)` → `record_failed()` → `capture_status=attempted_failed`; ODDS_API/ONEXBET
+      never pass for any league and route to `record_empty()` → `empty_confirmed` instead — mechanically explaining why
+      the failure is confined to exactly these 3 of the 5 scope keys, spanning all 6 years (fan-out re-emits over the
+      full un-date-gated fixture catalog every run). Fixed: `mtds@accd8aa4` (2026-07-20), scope now derives from
+      `expected_odds_api_venue_keys()`; regression-locked by `tests/unit/test_sports_sentinel_scope.py`. (2) The
+      `source="api_football"` label on these rows was a SEPARATE bug: `SOURCE_PRIORITY[("sports","TRADES")]` was missing
+      from `_source_priority_data.py`, so `derive_pipeline_mode_for_row()` fell through to the
+      `_ASSET_GROUP_FALLBACKS["sports"]=BATCH_API_FOOTBALL` default and mislabeled every sports-trades sentinel row —
+      not evidence of a real api_football fetch attempt. Fixed: `uac@44623d25` (added the missing
+      `("sports","TRADES"): ["odds_api"]` entry, confirmed present in `_source_priority_data.py:77`); the polluted rows
+      (1,266,874 total, 58,016 `attempted_failed`) were already wiped from the live manifest via `mtds@e9d9dec0`.
+      **Net**: the 112,277 figure is a historical pre-fix (2026-07-20) snapshot; both root-cause code defects are
+      already merged, not a genuine ongoing per-venue capture failure. Surviving historical rows stay un-relabeled per
+      this todo's explicit scope — remediation (if any) is the already-gated, not-yet-exercised Part 3 of
+      `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`. Code citations verified live (not just sub-agent report
+      — `_SNAPSHOT_VENUES` single-definition + zero-consumer, `_expected_sports_bookmakers`/
+      `expected_odds_api_venue_keys` wiring, and the `("sports","TRADES")` SOURCE_PRIORITY entry all directly grepped
+      and read in this session). Done when: a written root-cause finding confirms or denies the `_SNAPSHOT_VENUES`
+      CLV-completeness hypothesis, citing the actual mechanism — satisfied (denied). Source:
       `sports_consolidated_closeout_2026_07_19.md:490-491`.
 - [ ] [DIAG] P1. **Track O — locate the emitter of the 139,620 `venue=ODDS_API, source=api_football, empty_confirmed`
       rows** (confirmed not `_emit_sports_v1/v2_sentinels`). **Scoping note**: the source todo frames this as "before
