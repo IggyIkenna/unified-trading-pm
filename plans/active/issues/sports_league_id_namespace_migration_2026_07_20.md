@@ -725,3 +725,37 @@ sitting under the legacy sports `odds` instrument_type into `exchange_odds`/ `fi
 venue→class mapping (PINNACLE → FIXED_ODDS). Not re-running the fork's migration tool against a live GCS walk to catch
 these — that would violate single-walk discipline for a 2-object find; they'll be swept up naturally once this doc's own
 manifest-registration fix lands and re-enumeration includes them.
+
+## LIVE-PROBE 2026-07-28 (slot-11) — CONFIRMS non-registry rows still remain; blocks Track H's denominator todo
+
+`sports_consolidated_native_ao_extract_2026_07_25.md`'s Track H todo ("implement the registry-aware honest-coverage
+denominator in `compute_coverage_for_bucket()`") requires, as its own stated first step, a live manifest census
+confirming 0 sports manifest rows still carry a non-registry-form `league_id` before shipping the denominator change —
+explicitly added because the source todo's "largely executed" framing couldn't be trusted at face value. Ran that probe
+today rather than shipping on the strength of this doc's 2026-07-25 status note.
+
+**Method**: single bounded, column-pruned read of the consolidated `market-data-tick-sports-prd-central-element-323112`
+availability index (`read_availability_index(bucket, columns=["league_id", "pipeline_mode"])` — the same reader every
+other data-status endpoint uses, no fresh GCS walk), `league_id` values compared against the full UAC `LEAGUE_REGISTRY`
+key set (390 entries, `unified_api_contracts.canonical.domain.sports.league_data`).
+
+**Result — NOT zero, denominator change did NOT ship**:
+
+- Total manifest rows: 516,196.
+- Non-registry `league_id` rows: 57,942, of which 2,782 are a blank/`NaN`-coerced `"None"` sentinel (a separate
+  honest-absence question, not this migration's canonicalisation gap) — so **55,160 rows are genuine non-canonical
+  `league_id` strings**, confirming this doc's own 2026-07-25 status note ("still genuinely outstanding:
+  `odds_horizon_ bucket` + `batch_footystats`") is still accurate 3 days later, live.
+- By `pipeline_mode` (matches the doc's own named deferred shapes): `batch_mdps_odds_horizon_bucket` 42,652 ·
+  `batch_footystats` 14,668 · `batch_instruments_service` 606 · `batch_odds_api` 16.
+- Top raw values (unchanged cast of characters from the original 2026-07-20 measurement): `PRIMERA_DIVISION` 8,794 ·
+  `CHAMPIONSHIP` 7,222 · `FIRST_DIVISION_A` 7,119 · `PREMIER_LEAGUE` 7,107 · `2._BUNDESLIGA` 6,114 · `SUPER_LEAGUE`
+  5,645 · `SUPERLIGA` 5,536 · `PREMIERSHIP` 4,329 · `A-LEAGUE` 924, plus a long tail of the 28 unmapped
+  `SOCCER_*`/lower- case `soccer_*` keys from the "MERGED TRACKING 2026-07-27" section above (each present in BOTH
+  casings — the parse-bug residue that section's venue-vocabulary-cleanup todo already tracks separately).
+
+**Disposition**: Track H's denominator todo correctly did NOT ship — its own STOP condition fired exactly as designed.
+No code changed. This section exists so a future dispatch, once the `odds_horizon_bucket` MDPS reprocess +
+`batch_ footystats` copy+swap pass + coverage-registry refresh land (this doc's own "Still genuinely outstanding" list,
+STATUS 2026-07-25 above), can re-run the same probe rather than re-deriving the method, and can cite this dated
+measurement as evidence the denominator change was correctly withheld on 2026-07-28.
