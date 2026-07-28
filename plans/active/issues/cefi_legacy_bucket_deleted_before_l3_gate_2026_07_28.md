@@ -217,9 +217,9 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
       `gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/` (e.g. a fuller
       raw-object copy under a different prefix, or a BigQuery external table) before concluding the 2026-05-16 to
       2026-05-24 window is unrecoverable. (repo: unified-trading-pm — investigation, cite findings back here)
-- [ ] [DATA] P1. Run a PROPER normalization-aware comparison (reusing the CF-11 covered-keys logic once
-      `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s bug is fixed) between the pre-migration
-      snapshot's manifest index
+- [ ] [DATA] P1. Run a PROPER normalization-aware comparison (reusing the CF-11 covered-keys logic — the bug is now
+      FIXED, see `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`) between the
+      pre-migration snapshot's manifest index
       (`gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/raw-tick-2026-05-16/_index/availability_index.parquet`)
       and the current `-prd` manifest index — a naive `(date, venue, data_type)` tuple diff attempted here is
       INCONCLUSIVE (52,499 raw mismatches, 39,651 residual after excluding known naming-drift causes; see "Attempted

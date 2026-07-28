@@ -95,6 +95,7 @@ epic._
 | [`cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26`](./cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md)                                                   | master           | infra     | 1/17       | 6%           | 2.6      | —        |
 | [`ci_satellite_ao_dispatch_batch1_2026_07_26`](./ci_satellite_ao_dispatch_batch1_2026_07_26.md)                                                                           | master           | infra     | 14/30      | 47%          | 2.6      | —        |
 | [`prediction_cross_venue_arb_and_coverage_2026_07_24`](./prediction_cross_venue_arb_and_coverage_2026_07_24.md)                                                           | master           | brand-new | 20/29      | 69%          | 2.5      | —        |
+| [`agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28`](./agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md)                                             | master           | infra     | 0/11       | 0%           | 2.4      | —        |
 | [`cefi_4surface_migration_execution_log_2026_07_24`](./cefi_4surface_migration_execution_log_2026_07_24.md)                                                               | master           | infra     | 0/8        | 0%           | 2.4      | —        |
 | [`data_source_provenance_enforcement_2026_07_24`](./data_source_provenance_enforcement_2026_07_24.md)                                                                     | master           | infra     | 0/19       | 0%           | 2.4      | —        |
 | [`legacy_bucket_dual_write_decommission_2026_07_24`](./legacy_bucket_dual_write_decommission_2026_07_24.md)                                                               | master           | infra     | 0/14       | 0%           | 2.4      | —        |
@@ -322,7 +323,7 @@ epic._
 | [`sports_derived_features_postfloor_residue_purge_2026_07_27`](./sports_derived_features_postfloor_residue_purge_2026_07_27.md)                                           | master           | infra     | 2/2        | 100%         | 0.0      | —        |
 | [`sports_satellite_ao_dispatch_batch4_2026_07_25`](./sports_satellite_ao_dispatch_batch4_2026_07_25.md)                                                                   | master           | infra     | 3/3        | 100%         | 0.0      | —        |
 | [`tradfi_satellite_ao_dispatch_batch2_2026_07_25`](./tradfi_satellite_ao_dispatch_batch2_2026_07_25.md)                                                                   | master           | infra     | 11/11      | 100%         | 0.0      | —        |
-| **TOTAL** (266 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **48% done** | **409**  | —        |
+| **TOTAL** (267 plans)                                                                                                                                                     | 0 orphans, 0 TBD | —         | —          | **48% done** | **412**  | —        |
 
 <!-- AUTO-INVENTORY-END -->
 
