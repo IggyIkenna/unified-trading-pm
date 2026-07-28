@@ -244,8 +244,18 @@ corpus:
 - Whether `unified_api_contracts.canonical_path_templates`/`is_valid_shard_key` already has a defined `ShardKey` shape
   for candles (vs raw-tick) was not confirmed — check before hand-rolling a new shard-key dataclass.
 
+**RESOLVED 2026-07-27** — both open items closed during todo 1's implementation, per the parent tooling-gap doc's
+Progress Log: the live 3-object-per-AG spot-check found the segment order is actually UNIFORM across all 5 asset_groups
+(`day/pipeline_mode/timeframe/data_type/instrument_type/venue`), not per-AG-divergent as assumed above; no existing UAC
+`ShardKey` shape covers candles, so a new `CandleShardKey` NamedTuple was hand-rolled as expected.
+
 ## Todos
 
-- [ ] [DATA] P1. **Build the MDPS candle-layer orphan sweep (todo 1 of the parent tooling-gap doc)** — this doc is a
-      pre-implementation research brief only; the actual sweep tool has not been built, and its own "Open items before
-      implementation starts" (per-AG path segment order spot-check, ShardKey shape confirmation) remain unresolved.
+- [x] ✅ [DATA] P1. **Build the MDPS candle-layer orphan sweep (todo 1 of the parent tooling-gap doc)** —
+      market-data-processing-service@d921823 (built @01744b7, bucket-bug-fixed + 31 unit tests @d921823) +
+      deployment-service@d75e8f3 (+ff8eebe vm_name fix). Validated against real prod data (200/200 sports objects clean)
+      and run to full-corpus completion via 4 Tier-2 SPOT VMs (cefi/defi/tradfi/prediction). This doc's own open items
+      (path-segment-order spot-check, ShardKey shape confirmation) resolved as noted above. Full detail + evidence:
+      parent doc's todo 1 (`mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md`, already `[x]` ✅, CLOSED
+      2026-07-27 per main's ruling `BLK-c8936baa`). This checkbox was previously left unflipped even though the
+      referenced work completed and closed in the parent doc — a plan/doc-corpus drift, now reconciled.
