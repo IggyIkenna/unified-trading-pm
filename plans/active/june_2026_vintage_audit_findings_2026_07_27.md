@@ -245,10 +245,13 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       2026-07-26" there (instruments-service@40240042, unified-trading-pm@703b1e912); residue (0.10.8 constant
       centralization, uv-version drift-guard, Harsh's-laptop/epic-VM realignment) parked as batch1's own items 2-3. Flip
       several done-but-unchecked boxes in the source doc first.
-- [ ] [PLAN] P2. `plans/active/l0_doc_index_generator_2026_06_24.md` →
+- [x] [PLAN] P2. `plans/active/l0_doc_index_generator_2026_06_24.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (~L476-498). 2 remaining Deferred items (AO-dashboard L0-graph
-      route; on-demand stale-check wrapper) cited Source verbatim, still open there. Archive now with a banner (no
-      lock).
+      route; on-demand stale-check wrapper) cited Source verbatim, still open there. — ✅ archived with banner
+      unified-trading-pm@cff8d611b/@103ce6a64; a stale referrer claiming this was already done (before the move actually
+      landed) broke `run_validators.py`'s corpus link-check and failed quality-gates-v2 fleet-wide (ldr_qg_failure
+      escalation agt-d2498b on trading-agent-service); remaining stale referrer paths (active_plan_inventory_dashboard,
+      infra_satellite_ao_dispatch_batch1 `related:`) fixed this commit.
 - [ ] [PLAN] P2. `plans/active/issues/plan_issue_epic_consolidation_2026_06_30.md` → 5 forks:
       `instruments_completion_tracker_2026_07_06.md`+`mvp_scope_catalogue_tagging_2026_06_08.md` (D1);
       `infra_ops_residual_migration_verification_2026_07_24.md`+`master_data_canonicalisation_migration_catalogue_2026_06_07.md`+`issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`
