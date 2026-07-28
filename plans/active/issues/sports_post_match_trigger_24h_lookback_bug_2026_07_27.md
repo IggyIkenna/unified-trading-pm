@@ -252,4 +252,22 @@ same conclusion, plus two provenance details worth keeping on record:
       one-shot backfill) or a fresh `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after
       the redeploy. **Done when**: such a row is found (confirms the live fix works end-to-end) or, if none appears
       after a full day-plus of live operation post-redeploy, escalate — that would mean a second, still-undiagnosed
-      issue beyond the lookback bug fixed here.
+      issue beyond the lookback bug fixed here. **Check 1 (2026-07-28, slot-10) — CI/CD status confirmed NOT YET
+      DEPLOYED, still checking-in-progress not completable today.** `5b5d227` is confirmed an ancestor of
+      `deployment-service`'s LDR HEAD but NOT of `origin/main` (`git merge-base --is-ancestor 5b5d227 origin/main` →
+      NO). It IS included in the currently-open LDR→main promotion PR `IggyIkenna/deployment-service#591` (opened
+      2026-07-28T14:44Z, head `promote/deployment-service/f27ada5a4e92`, confirmed via
+      `git merge-base --is-ancestor 5b5d227 <PR591-head>` → YES). PR591's required `quality-gates-v2` check **FAILED**
+      (run `30369898092`, `QG slice (checks)` job, completed 2026-07-28T15:37Z): every individual gate (lint, typecheck,
+      the sports-touched-file checks, etc.) PASSED — the failure is a pure wall-clock budget breach
+      (`Resource drift: wall 1438s > 2× baseline 106.0s`; hard cap is 300s), NOT a regression in the sports fix itself.
+      This matches the known, already-tracked, mostly-remediated fleet-wide self-hosted-runner capacity issue in
+      `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (oversubscribed shared
+      16-vCPU runner host) — an `ldr_qg_failure` auto-escalation for this PR already fired and completed
+      (`deployment-service` job "Escalate LDR-QG failure to orchestrator", 2026-07-28T18:03Z), so this is not a new,
+      separately-escalation-worthy failure. **Verdict: promotion to main has NOT landed yet as of this check** — the
+      manifest-query stage of this todo cannot run yet (nothing has redeployed). Leaving this checkbox UNCHECKED so the
+      next worker picks this same todo back up once PR591 (or its eventual successor, if closed/reopened by the
+      auto-recover cycle) actually merges to main and the scheduler is redeployed — re-run: confirm
+      `git merge-base --is-ancestor 5b5d227 origin/main` → YES, confirm the redeploy timestamp, THEN run the manifest
+      query described above dated after that redeploy.
