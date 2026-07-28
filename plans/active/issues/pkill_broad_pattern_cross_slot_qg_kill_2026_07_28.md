@@ -91,6 +91,51 @@ be done by exact PID/PGID the worker itself launched and recorded (capture `$!` 
 time) — **never** a bare `pkill -f <script-basename>` or any pattern that does not include a slot-specific discriminator
 (full absolute cwd path, or a PID/PGID). This is a small, mechanical addition to existing agent-behavior guidance.
 
+## Recurrence #2 — 2026-07-28 (slot-5)
+
+Same-day, same mechanism, despite the RULES.md addendum above already being live and having READ it at boot. While
+working `data_completion_cefi-037` (market-tick-data-service CF-11 instrument_id-normalizer fix), I ran:
+
+```bash
+pkill -f "quality-gates.sh"
+```
+
+**Dual root cause — this occurrence is not just the broad kill, it is TWO stacked violations:**
+
+1. **The kill I was trying to clean up should never have existed.** I launched my own QG run via
+   `nohup bash scripts/quality-gates.sh > /tmp/qg_mtds_run.log 2>&1 & ... disown` **inside** a `Bash` tool call that
+   ALSO set `run_in_background: true` — i.e. I manually detached a process the harness was already going to track for
+   me. This directly contradicts the harness-tracking guidance in
+   `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own todo 3 ("background it
+   via a properly harness-tracked bg task ... NO manual `&`/`disown`/`setsid`") — a rule I had read minutes earlier in
+   the SAME session, for the SAME repo, for a PREDECESSOR of the SAME task chain.
+2. **The cleanup for my own mistake was the exact banned pattern this issue doc exists to ban.** Having manually
+   detached the process, I no longer had a clean harness handle to stop it by exact PID, so I reached for
+   `pkill -f "quality-gates.sh"` instead of extracting and killing the recorded `$!` PID directly.
+
+**Confirmed blast radius:** immediately before the `pkill`, two OTHER `bash scripts/quality-gates.sh` (+ pytest child)
+process groups were alive on the host: PID 2115729 (child 2116429, `market-tick-data-service` test suite, accumulating
+CPU) and PID 2151140 (child 2151792, same repo, cwd confirmed = slot 2's worktree). Immediately after the `pkill` + 1s:
+PID 2115729/2116429 were **confirmed dead** (`/proc/<pid>` gone); PID 2151140/2151792 were confirmed **alive** (cwd =
+`.tabs/2/market-tick-data-service`) and a slot-8 run (PID 2258212+, cwd = `.tabs/8/market-tick-data-service`) was also
+alive and unaffected. So: **one confirmed victim (2115729/2116429), slot unknown** — same slot-attribution gap as
+recurrence #1 (cwd was not captured before the process died; by the time `/proc/<pid>/cwd` was checked the PID was
+already gone). Per the same reasoning as recurrence #1, no blind per-slot ping was sent (guessing wrong creates its own
+confusion) — this note plus the dashboard-visible fleet state is the disclosure.
+
+**Why the existing mitigation did not prevent this**: the RULES.md addendum from recurrence #1's todo (exact-PID-only,
+never a name-based pattern) is pure prose — I had read it at boot (`RULES.md` is a mandatory STEP 1 read for every
+worker) and still reached for `pkill -f` under a "stop this stray background thing quickly" impulse. Prose-only guidance
+has now failed to prevent the identical mistake twice in one day, across two different slots. This is the same
+conclusion recurrence #1 already flagged as a risk ("nothing... warns against this specific footgun" — it now does warn,
+and that still wasn't sufficient) — enforcement needs to move from documentation to a mechanical guard. See the new P1
+todo below.
+
+Self-reported via `/blocked` (BLK-d12e49f6); main agent's ruling (2026-07-28): file this as a follow-up on THIS doc (not
+a new doc), capture the dual root cause + blast radius above, and add the enforcement-guard todo below. Same
+no-further-escalation reasoning as recurrence #1 applies (QG is idempotent, no data/merge-safety loss — only wasted
+compute on the victim slot, which must re-run to green before it can ship regardless).
+
 ## Todos
 
 - [x] ✅ [DOCS] P1. Add a one-line HARD-RULE addendum to `unified-trading-pm/agents/RULES.md` § "Multi-agent safety" (or
@@ -103,3 +148,12 @@ time) — **never** a bare `pkill -f <script-basename>` or any pattern that does
       write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
       a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional
       hardening, not required if the RULES.md addendum alone is judged sufficient.
+- [ ] [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient — build
+      a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a `pkill`/`pgrep`
+      wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up
+      `slot-identity-lib.sh`) that intercepts a bare `pkill -f <pattern>` / `pkill <name>` invocation lacking a
+      slot-specific discriminator (no PID/PGID numeric argument, and the pattern doesn't contain the invoking slot's own
+      absolute `.tabs/<N>/` cwd substring) and REFUSES with a one-line error pointing at this issue doc + the
+      exact-PID-only rule, instead of silently executing host-wide. Must not break legitimate exact-PID (`kill <pid>`)
+      or cwd-scoped (`pkill -f ".tabs/5/.*quality-gates"`) usage — only the bare name-only pattern is blocked. (repo:
+      unified-trading-pm, `scripts/hooks/` alongside `slot-identity-lib.sh`)
