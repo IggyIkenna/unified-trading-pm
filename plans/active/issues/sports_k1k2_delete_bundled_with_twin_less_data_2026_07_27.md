@@ -167,9 +167,10 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       re-verify + Track V delete all flipped, raw-keyed league_id delete unblocked, adjacent 6-venue stale-duplicate
       finding preserved as its own open item), `sports_closeout_track_s2_foldin_2026_07_25.md` +
       `issues/sports_trades_attempted_failed_2026_07_23.md` (both had a re-check gated on the delete "eventually"
-      executing — unblocked), and `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (addendum flagging a
-      genuine follow-up: whether `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` are covered by this closure or a separate population,
-      not yet re-checked).
+      executing — unblocked), and `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (addendum flagging then
+      resolving a follow-up: `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` uppercase — direct manifest query found exactly 4 rows
+      total, all `empty_confirmed`/`row_count=0`, single date 2026-04-14, zero real GCS data behind them — an inert
+      residual, not a K1/K2-style live duplication, no action needed).
 
 ## Progress Log
 

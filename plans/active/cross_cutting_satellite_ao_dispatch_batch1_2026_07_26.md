@@ -545,11 +545,13 @@ drift_direction: advance-code
   **2026-07-28 addendum**: the table's two `sports` rows citing `sports_consolidated_closeout_2026_07_19.md` line 406
   (`ODDS` instrument_type; `ODDS, ODDS_MOVEMENT, ODDS_SNAPSHOT, TRADES` data_types) had their owning todo flipped done
   the same day — the K1/K2 `ODDS`/`TRADES` uppercase population is migrated + deleted + independently verified absent
-  from GCS. Left as historical record (not rewritten) rather than edited in place, but flagging: a fresh census re-run
-  would confirm whether `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` are fully covered by that same closure or are a genuinely
-  separate, still-open population outside K1/K2's scope (this K1/K2 effort only ever touched
-  `instrument_type=ODDS/data_type=TRADES`, never the `_MOVEMENT`/`_SNAPSHOT` data_types) — not yet re-run, a real
-  follow-up, not assumed clean.
+  from GCS. Left as historical record (not rewritten) rather than edited in place. **Follow-up RESOLVED same day**: a
+  direct manifest query for `data_type` in `{ODDS_MOVEMENT, ODDS_SNAPSHOT}` found exactly 4 rows total (2 + 2), ALL
+  `capture_status=empty_confirmed` with `row_count=0/NaN` and blank `venue`/`league_id`/`instrument_type`, all dated a
+  single 2026-04-14 — inert honest-absence bookkeeping markers, **zero real GCS objects behind them, nothing to migrate
+  or delete**. Not a K1/K2-style live duplication (13,811/13,835 real `odds_movement`/`odds_snapshot` rows are correctly
+  lowercase already) — a trivial, zero-impact residual, not urgent. No action taken; noted here so the next reader
+  doesn't re-open this as a live risk.
 
 - **2026-07-28 (slot-6) — DONE — InstrumentRecord `extra='forbid'` authoritative measurement + REMOVE dispositions
   applied.** `instruments-service@ee2d6c75`.
