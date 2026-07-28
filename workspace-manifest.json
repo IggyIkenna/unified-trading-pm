@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "large_file_count": 1,
         "qg_red_reason": "qg",
@@ -1520,7 +1520,7 @@
         "qg_red_reason": "pytest",
         "coverage_pct": null
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
     }
   },
