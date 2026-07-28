@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -548,8 +548,8 @@ drift_direction: advance-code
       deliberately OMITTED from `_TIMEFRAME_CEILING_BY_ASSET_GROUP` because their UAC constants already equal the full
       7-timeframe default — i.e. MDPS intentionally uses the full ceiling (incl. `4h`) for defi, no scoping-down. Fixed
       the docstring: `unified-api-contracts@b3f3d382`.
-- [ ] [SCRIPT] P1. Thread `mode=` into `assert_defi_catalog_fresh()` for the 9 remaining DeFi handlers still omitting it
-      (`liquidations_handler.py`, `native_staking_handler.py`, `liquidation_events_handler.py`,
+- [x] ✅ [SCRIPT] P1. Thread `mode=` into `assert_defi_catalog_fresh()` for the 9 remaining DeFi handlers still omitting
+      it (`liquidations_handler.py`, `native_staking_handler.py`, `liquidation_events_handler.py`,
       `token_transfers_handler.py`, `bridge_events_handler.py`, `flash_loan_events_handler.py`,
       `aggregator_route_handler.py`, `solana_defi_handler.py`, `lending_indices_handler.py`) — mirror the exact pattern
       already shipped for `dex_pools_handler.py`/`risk_params_handler.py`/`lst_rates_handler.py`
@@ -558,7 +558,12 @@ drift_direction: advance-code
       `mode=` kwarg received across default/`--run-tag batch`/`--run-tag live`. Repo: market-tick-data-service. **Done
       when**: all 9 handlers explicitly thread `mode=`, one new regression test per handler passes verifying the
       received kwarg across all 3 run-tag states, `bash scripts/quality-gates.sh --no-fix` is green. Source:
-      `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`.
+      `issues/defi_upstream_instruments_catalog_stale_2026_07_15.md`. Shipped — `market-tick-data-service@c38e1b3f`
+      (slot-8, 2026-07-28 06:52 UTC): all 9 handlers thread `mode=`, one regression test class per handler added,
+      `quality-gates-v2` green on the push (run 30336409358). Verified 2026-07-28 by slot-10 (dispatched the same todo
+      as `defi_satellite_ao_dispatch_batch1-030`, found the code already shipped — the code commit landed but the
+      plan-flip half was missed) — grepped all 9 call sites confirm `mode=` present, confirmed 9 new/extended test files
+      in the commit diff, confirmed CI green.
 - [x] ✅ [CHORE] P1. Fix the stale EULER_V2-ARBITRUM phase-dict comment in
       `unified-api-contracts/unified_api_contracts/registry/defi_venues.py` (~line 508: claims "no UAC subgraph_id
       registered" — factually wrong since real Goldsky `SUBGRAPH_IDS` were registered and verified GREEN since
