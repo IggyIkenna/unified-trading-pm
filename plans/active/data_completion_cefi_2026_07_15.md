@@ -580,3 +580,43 @@ sweep, the E5 rebuild) has **not executed yet** and remains blocked on the false
 checkbox — doing so on a RED audit would be fabricated progress. No new issue doc filed (these findings corroborate, not
 introduce, the already-open blocker). Whoever unblocks the walk should re-run this exact audit command afterward; if
 CF-1/CF-3/CF-4 all read GREEN and Era-B reads 0, that todo can then honestly flip.
+
+### 2026-07-28 (slot-6, `data_engineering`) — E7 Verify todo (line 359): re-ran the audit live — still RED, checkbox correctly NOT flipped
+
+Dispatched task `data_completion_cefi-017` = "E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` →
+CF-1…CF-12 GREEN on data-state; flip CF-coverage rows in `cefi_master_audit_instructions.md`". Ran
+`unified_trading_library.cf_manifest_audit.audit()` (the same reusable tool as the prior entry) directly in Python,
+read-only, `mode="changed"` (index-only, no GCS bulk walk — single-walk discipline preserved), against
+`market-data-tick-cefi-prd-central-element-323112` only (this todo's named target; `instruments-store-cefi-prd` was
+already confirmed GREEN on the relevant CFs in the entry immediately above and was not re-walked).
+
+Fresh live result (9,195,191 rows, up from 9,177,562 a few hours earlier — corpus still growing):
+
+- **CF-1** schema_version RED: v9=8,960,982/9,195,191 (97.5%; dist also carries 108,367 null + 63,226 `v6` + 924 `v5`).
+- **CF-3** pipeline_mode-populated RED: 9,068,963/9,195,191 (98.6%; 126,228 blank).
+- **CF-4** source RED: blank=2,206,880/9,195,191 (24.0%).
+- **CF-8** available_at RED: non-null=1,230,144/9,195,191 (pre-existing schema-evolution artifact per the finding-144
+  waiver already cited above, not a fresh defect).
+- **Era-B** RED: 490,470 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from
+  490,332).
+- **CF-2-paths** RED: no `asset_group=`/`category=` hive segment on the object path scheme (path uses
+  `pipeline_mode=`/`timeframe=`/`data_type=` segments only, no bucket-level asset_group/category prefix segment) — same
+  characteristic as the prior entries' path-scheme finding, not previously called out per-CF in this doc but not a new
+  defect either.
+- **GREEN**: CF-2 (asset_group column present, no `category` column), CF-5 (typed reasons), CF-6 (4-state), CF-13
+  (source-aware pipeline_mode, 100% of populated rows), CF-3-partition (pipeline_mode= path segment present), CF-9 (env
+  bucket naming).
+- **SKIP**: CF-10 (phantom — honest SKIP under `mode=changed`, needs `--mode full`), CF-14 (catalogue not materialised —
+  G1 pending).
+
+**Verdict: identical root cause, identical conclusion as the entry immediately above — CF-1…CF-12 is NOT GREEN on
+`market-data-tick-cefi-prd-…`.** Did **not** flip this todo's checkbox, and did **not** flip any CF-coverage rows in
+`cefi_master_audit_instructions.md` (its own "Canonical-form coverage (CF-1…CF-12)" section, lines 140-154) — both
+actions are explicitly conditioned on GREEN by this todo's own text, and flipping on a RED result would be fabricated
+progress. No new issue doc filed: this corroborates, not introduces, the already-open
+`cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md` blocker that the entry above already names. This todo
+stays open pending that blocker's resolution + the E4 gap-fill/orphan sweep + E5 rebuild; whoever unblocks those should
+re-run this exact audit and flip both this checkbox and the `cefi_master_audit_instructions.md` CF-coverage rows only
+once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN (CF-8 and CF-2-paths pending a decision on whether the
+finding-144-waived characteristics count against this specific acceptance bar or are out of scope for it — flagged for
+whoever picks this up next, not resolved here).
