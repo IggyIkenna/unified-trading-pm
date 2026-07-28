@@ -248,7 +248,18 @@ drift_direction: advance-code
       401 and add `attempted_failed` noise, so the fix is doubly gated (root-cause first, then the [OPERATOR]-credential
       restore, then the actual gap-fill). (repo: instruments-service, market-tick-data-service). **Done when**: the new
       issue doc's root-cause + backfill todos land AND a fresh census shows odds_api at 0 missing days too (the other 5
-      sources' portion of this done-when is already satisfied).
+      sources' portion of this done-when is already satisfied). **UPDATE 2026-07-28 (slot 14) — BLOCKED-CREDENTIALS,
+      root-cause avenue now closed too.** Picked up the issue doc's root-cause todo (the 6 undocumented multi-week
+      gaps): checked GCP Cloud Logging bucket retention (`_Default`=2 days, `_Required`=400 days but audit-log-only),
+      the `vm-logs/` GCS archive (earliest entry 2026-07-14, postdates even the most recent of the 6 windows), and Cloud
+      Scheduler job wiring — all three are categorically insufficient for every one of the 6 windows, so the root-cause
+      todo is now closed as UNABLE TO ROOT-CAUSE (exhausted, not deferred; see the issue doc's Progress Log).
+      Re-verified the odds-api key live: still `error_code=DEACTIVATED_KEY`, unchanged. This item is now genuinely fully
+      investigated end-to-end — the ONLY remaining action is the `[OPERATOR]`-gated credential restore in
+      `sports_odds_api_key_deactivated_2026_07_26.md`, then the backfill. Re-tagging `BLOCKED-CREDENTIALS` (in addition
+      to the existing `BLOCKED-PREREQUISITES`) so `regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` actually
+      excludes this checkbox from re-dispatch (it does not match on `BLOCKED-PREREQUISITES` alone) instead of burning
+      another worker cycle re-deriving the same closed investigation.
 - [ ] [DATA] P2. BLOCKED-PREREQUISITES — **Sports P2c — features history backfill to ML-ready, blocked on the P2a and
       P2b todos above landing first.** Extend the features-service sports feature matrix from the golden window
       (2025-09-01..11-30) to 2015→present once P2a/P2b land. (repo: features-service). **Done when**: P2a/P2b are both

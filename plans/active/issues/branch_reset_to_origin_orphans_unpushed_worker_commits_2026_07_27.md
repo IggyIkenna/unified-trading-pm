@@ -139,6 +139,19 @@ commit; it resets the branch to origin and drops it:
 
 ### Fourth wave — the ROOT-CAUSE FIX itself is now orphan-at-risk on dead slot-5 (main agt-4d8de7, 2026-07-28T00:33Z)
 
+> **🛑 SUPERSEDED 2026-07-28T01:1x (main agt-4d8de7): this wave's PREMISE IS WRONG — do NOT recover slot-5
+> `3becc9ede`/`28ee61192`.** slot-7 landed an audit on origin (`unified-trading-pm@408a92200`, status=resolved) that
+> CLEARS `scripts/dev/slot-cron-ff-pull.sh` — the SECOND independent confirmation. Its only ref-mutating paths are
+> `git merge --ff-only` (fails, never resets) + a patch-id-verified adopt-rebase; it is NOT the branch-reset mechanism,
+> so commit `3becc9ede`/`28ee61192` (`fix(ci): harden slot-cron-ff-pull.sh`) targets a MISDIAGNOSED cause and must NOT
+> be landed. The REAL mechanism for the `branch: Reset to origin/live-defi-rollout` signature is `quickmerge.sh`
+> `cascade_dep_branch()` (`git checkout -B`), already root-caused + partially fixed in
+> `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`; independent
+> fetch-bug fix `8ca436599`). slot-5 has since reset to origin and dropped the commit — a benign instance of that
+> tracked cascade reset. Backstops renamed `SUPERSEDED_by_408a92200_*`. **Live risk to chase there, NOT here:** why the
+> preserve-guard did not fire for the 07-27 `unified-trading-library` discards (`61efd2e5`/`dbb93c3a`, now unreachable)
+> — owned by the cascade_dep_branch canonical doc.
+
 The runtime/operator had already dispatched a task to fix this very bug — **`slot_cron_ff_pull_toctou_reset_race-001`**
 (the TOCTOU reset race in the ff-pull cron is the confirmed mechanism). slot-5 took it and COMPLETED the fix:
 
@@ -158,12 +171,16 @@ The runtime/operator had already dispatched a task to fix this very bug — **`s
     the stale `3becc9ede` sha. Data point: the TOCTOU reset race is INTERMITTENT (it rebased cleanly here,
     reset-orphaned the PM docs earlier) — consistent with a check-then-act window that only sometimes loses the race.
 
-- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **PRIORITY ORDER: (1) slot-5 `3becc9ede`** (the
-      root-cause ff-pull TOCTOU fix — land this FIRST to stop new orphaning), then **(2) slot-13 `d1c1ad8a`**
-      (features-service). Do NOT recover slot-11 `ffc02a8c` while slot-11 is alive (reclassified LIVE-owned blocked-WIP
-      above). For each: cherry-pick from `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
+- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **REVISED PRIORITY ORDER 2026-07-28 (slot-5 DROPPED
+      — see SUPERSEDED banner above; its fix targeted a misdiagnosed cause):** (1) slot-13 `d1c1ad8a`
+      (features-service), (2) slot-9 `unified-api-contracts` `724bd9be` (`fix(registry)` VENUE_ORDER_SEMANTICS CCXT
+      live-routed), (3) slot-12 `agent-orchestrator` `559452e` (`feat` `/api/backlog/{id}/reconcile-brief` route +
+      240-line test, +417). Do NOT recover slot-5 `3becc9ede`/`28ee61192` (superseded by audit `408a92200`). Do NOT
+      recover slot-11 `ffc02a8c` while slot-11 is alive (reclassified LIVE-owned blocked-WIP above). For each:
+      cherry-pick from `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
       `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). All clean + complete
-      (review-verified where noted). Code MUST go through quickmerge (QG + provenance trailer).
+      (review-verified where noted). Code MUST go through quickmerge (QG + provenance trailer). Backstops for slot-9/12
+      saved this session (`slot9_724bd9be_*.patch`, `slot12_559452e_*.patch`).
 
 > **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
 > so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan

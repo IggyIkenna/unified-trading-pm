@@ -128,20 +128,64 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
 
 ## Recommended decision / next steps
 
-- [ ] [DATA] P1. Root-cause the 6 undocumented multi-week odds_api gaps above (2020-08-24..10-10, 2022-03-06..04-18,
-      2023-07-01..10-06, 2024-11-19..12-31, 2025-03-11..04-11, 2026-02-22..03-28) — check whichever of GCP Cloud Logging
-      retention / `vm-logs/` archives / Cloud Scheduler job history still covers each window; classify each as
-      scheduler-dormancy (same class as the already-fixed 2026-06/07 bug), vendor-side outage, or a genuine capture bug.
-      Recent ranges (2025, 2026) are far more likely to have retrievable logs than 2020-2022. (repo:
-      market-tick-data-service, deployment-service)
-- [ ] [DATA] P1. BLOCKED-PREREQUISITES on `sports_odds_api_key_deactivated_2026_07_26.md` landing first (key restoration
-      is [OPERATOR]-gated there). Once the key is restored, backfill all 635 missing days via
+- [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot 14) — UNABLE TO ROOT-CAUSE any of the 6 windows; all 3 candidate evidence
+      sources are exhausted/non-existent, not merely thin.** Checked all three sources this todo named: 1. **GCP Cloud
+      Logging retention**: `gcloud logging buckets list --project=central-element-323112` shows exactly two buckets —
+      `_Default` (application/scheduler logs, the ones that would show odds_api fetch attempts) retains **2 days**, and
+      `_Required` (400-day retention) holds ONLY Admin Activity/System Event/Policy Denied/Access Transparency audit
+      logs per its sink filter (`gcloud logging sinks list`) — never the venue-fetch application logs that would show a
+      scheduler-dormancy or vendor-outage signature. So even the most recent of the 6 windows (2026-02-22..03-28, ~4-5
+      months before this check) is already past the 2-day `_Default` retention and has no substitute in `_Required`. 2.
+      **`vm-logs/` archive** (`gs://deployment-scripts-central-element-323112/vm-logs/`): listed all 3,177 entries
+      sorted lexicographically — the EARLIEST entry is `af-backfill-20260714-111307/` (2026-07-14). This archive
+      mechanism did not exist yet for ANY of the 6 windows, including the most recent (2026-02-22..03-28, which ended
+      ~3.5 months before the archive's own start date). 3. **Cloud Scheduler job history**: confirmed the sports odds
+      venue is dispatched via `uts-prod-sports-scheduler-cron` (`*/5 * * * *`) → Cloud Run job
+      `uts-prod-sports-scheduler`, not a dedicated odds-api-only job; Cloud Scheduler execution history is itself backed
+      by Cloud Logging (same `_Default` 2-day retention above), so it adds no independent evidence beyond point 1.
+      **Verdict**: none of the 6 gaps (2020-08-24..10-10, 2022-03-06..04-18, 2023-07-01..10-06, 2024-11-19..12-31,
+      2025-03-11..04-11, 2026-02-22..03-28) can be classified as scheduler-dormancy vs. vendor-outage vs. capture-bug
+      from any infra source available in this project — the retention windows are categorically too short (2 days vs.
+      gaps up to 5+ years old), not a matter of digging harder. This closes the root-cause avenue as exhausted, not
+      deferred; re-opening it would require either a change to log-retention policy going forward (so FUTURE gaps are
+      diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
+      credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
+      deployment-service, read-only investigation, no code changed)
+- [ ] [DATA] P1. BLOCKED-CREDENTIALS — the-odds-api.com key is `DEACTIVATED_KEY` (re-verified live 2026-07-28: still
+      deactivated, see `sports_odds_api_key_deactivated_2026_07_26.md`, key restoration is [OPERATOR]-gated there). Once
+      the key is restored, backfill all 635 missing days via
       `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>` per
       contiguous range (idempotent/manifest-skip by default, no `--force` needed — will not re-fetch the 1,608
       already-present days). (repo: deployment-service)
-- [ ] [VERIFY] P2. Once the backfill above lands, re-run this same census (single manifest read, filter
-      `source == "odds_api"`, `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days,
-      then close this doc.
+- [ ] [VERIFY] P2. BLOCKED-CREDENTIALS — depends on the P1 backfill above, which is itself credential-gated (same
+      blocker). Once the backfill lands, re-run this same census (single manifest read, filter `source == "odds_api"`,
+      `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days, then close this doc.
+
+## Progress Log
+
+- 2026-07-28 (slot 14): Picked up the root-cause todo. Checked all three candidate evidence sources named in the todo
+  (GCP Cloud Logging bucket retention, `vm-logs/` GCS archive, Cloud Scheduler job wiring) and found every one
+  categorically insufficient for all 6 windows, including the most recent — `_Default` Cloud Logging retention is 2
+  days, `_Required` (400-day) holds only audit-class logs, and the `vm-logs/` archive's earliest entry is 2026-07-14,
+  after even the most recent gap window ended. Closed the root-cause todo as UNABLE TO ROOT-CAUSE (exhausted, not
+  deferred) rather than leaving it open for a future slot to re-discover the same retention limits. Re-verified the
+  odds-api key live (still `error_code=DEACTIVATED_KEY`) — unchanged from prior checks; the backfill todo below stays
+  credential-gated independent of this finding.
+- 2026-07-28 (slot 10): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` (the P1 backfill todo below) — the
+  6th+ redispatch of this investigation chain across 2 days. Re-verified the odds-api key live once more (pulled fresh
+  via `gcloud secrets versions access latest --secret=odds-api-key --project=central-element-323112`, curled
+  `the-odds-api.com/v4/sports` directly): still `error_code=DEACTIVATED_KEY`, unchanged. Root-caused WHY this doc kept
+  re-dispatching despite the P1 checkbox already carrying an on-line `BLOCKED-PREREQUISITES` marker: that token is not
+  in `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` alternation
+  (`CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION` — no `PREREQUISITES`), so it
+  re-derives as dispatchable regardless of line placement — a DIFFERENT bug from the already-fixed continuation-line
+  issue (`blocked_marker_continuation_line_not_scanned_2026_07_26.md`). Retagged both open checkboxes above (P1
+  backfill + P2 verify) with the correct, recognized `BLOCKED-CREDENTIALS` token — the real blocker genuinely is the
+  operator-gated odds-api key. Filed the general corpus-wide finding (15 files use the unrecognized token, not just this
+  doc) as `issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` rather than mass-editing
+  every file — several other occurrences are legitimately same-corpus todo dependencies needing
+  `sequential`/`depends_on`, not a text-marker fix, so that needs real per-case triage. Not running the backfill (still
+  BLOCKED-CREDENTIALS); skipping this task.
 
 ## Codex SSOTs
 

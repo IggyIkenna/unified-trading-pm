@@ -211,7 +211,7 @@ drift_direction: advance-code
       `data_status_page_ux_and_canonicalisation_2026_07_16.md`'s Progress Log. Source:
       `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 324-329).
 
-- [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for `asset_group=tradfi` and confirm 0
+- [x] [REVIEW] P1. ✅ **Run the already-shipped distinct-values/axis-value census for `asset_group=tradfi` and confirm 0
       non-canonical values (or only explicitly-accepted cutover-register exceptions).** Source native todo (lines
       330-341), unmodified — call deployment-api's `GET /distinct-values/tradfi` and `GET /axis-value-census` against
       the current nightly rollup + manifest; confirm every distinct `instrument_type`/`data_type`/`chain`/`source`/
@@ -219,7 +219,15 @@ drift_direction: advance-code
       (date + endpoint response) appended to `distinct_values_noncanonical_audit_2026_07_20.md`'s live-evidence tables,
       confirming the exact dupes the 2026-07-18 audit found (`FUTURE`/`future`/`FUTURES`, `EQUITY`/`equity`, stale
       `barchart`) are 0 or explicitly explained per the doc's own accepted-exceptions register. Source:
-      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 330-341).
+      `tradfi_consolidated_closeout_2026_07_18.md` (native, lines 330-341). **DONE 2026-07-28** — both endpoints called
+      live (in-process, no reimplementation); see `distinct_values_noncanonical_audit_2026_07_20.md`'s "2026-07-28 —
+      tradfi live-evidence run" entry for the full tables. Verdict: the 3 named dupes are NOT zero but ARE explained
+      (case-drift owned by the in-flight `master_data_canonicalisation_migration_catalogue_2026_06_07.md` tradfi casing
+      track; `BARCHART` matches the standing operator quarantine ruling, unchanged 9,119 rows) — this satisfies the
+      todo's "or explicitly explained" acceptable outcome. One new P2 finding filed on that doc (not here): the
+      rollup-backed `/distinct-values` endpoint under-reports the case-drift, plus 2 new small wrong-axis clusters
+      (`ESM0`/`ESM0_MIGRATED_*` as tradfi chains, `YAHOO_FINANCE` as an unregistered venue) — read-only scope, not fixed
+      inline.
 
 - [ ] [BACKEND] P2. **Re-verify 3 named denominator/catalogue-completeness findings against live tradfi state.** Source
       native todo (lines 342-346), unmodified: (1) 875 tradfi atoms with narrowed historical objects + 153 duplicate KRX

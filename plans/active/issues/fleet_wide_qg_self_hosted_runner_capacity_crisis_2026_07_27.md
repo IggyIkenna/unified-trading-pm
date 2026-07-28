@@ -209,3 +209,39 @@ escalate to a `cicd` worker.
   independently named in `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`'s P2 todo
   (its SIT `cross-repo-invariants` dispatch blew a 90s poll budget same window) — one shared root cause (oversubscribed
   `i-0c9b283b31d6b5ca7`) manifesting across multiple symptoms for this repo.
+
+- 2026-07-28 (cicd agent, slot-2, escalation `agt-b195a8`, `ldr_qg_failure` on `alerting-service`, no PR): **3rd
+  corroboration + per-repo fix**, same pattern. This repo is one of the two named directly in
+  `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`'s live diagnosis ("long-running
+  pytest processes for `alerting-service` and `fund-administration-service` (~2h wall-clock)"). Failing run
+  `30306788671` (at `d6dfb30f`, the repo's own Phase-7 rollout commit) ran **2h44m27s** before failing —
+  `QG slice (tests)` sat on step "Run quality gates (leg tests)" for 64+ min with no completion recorded, consistent
+  with the job being killed mid-hang rather than failing on its merits. A same-config auto-retry (`30310510143`) then
+  queued/ran for **2h22m47s** and actually went GREEN (self-recovered once shared-VM iowait eased from the documented
+  66-93% peak down to ~24% by the time I checked — confirmed live on `i-172-31-5-118` itself: `uptime`/`top` showed load
+  avg ~21, iowait 24.3%, plus the actual `alerting-service` `quality-gates.sh` PID visible mid-run in the process
+  table). Since the wall had already self-resolved by the time I started, I canceled the redundant still-queued 3rd
+  retry (`30317509169`) to free the sole shared runner, then applied the same precedented fix regardless (the underlying
+  capacity issue is still open per this doc's own P2/VERIFY findings, so leaving the flip in place would just hang the
+  next commit): reverted `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via the same hand-edit pattern +
+  `quickmerge --agent` — `alerting-service@0fc5cab` (local `quality-gates.sh` passed in 57s). Verified live: triggered a
+  fresh run (`30318470827`) post-fix, confirmed via `gh api .../jobs/<id>` it ran on `labels: ["ubuntu-latest"]` (not
+  self-hosted), and it completed **green in 2m33s total** (`QG slice (tests)` 1m40s) — back to normal, no contention.
+  Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior two fixes. No
+  open repo-blockers existed for this repo at the time.
+
+- 2026-07-28 (cicd agent, slot-3, escalation `agt-5b9083`, `ldr_qg_failure` on `client-reporting-api`, no PR): **4th
+  corroboration + per-repo fix**, same pattern, detected by `ldr-ci-monitor` at commit `ab32fba4` (the repo's own "Phase
+  7 + quality-gates-v2 self-host rollout for client-reporting-api" commit). Failing run `30306795757` ran **2h54m8s**:
+  `QG slice (checks)`'s "Run quality gates (leg checks)" step sat `in_progress` from 22:33:34 to 23:29:06 (55m32s)
+  before being marked `cancelled` — not a genuine assertion failure. Two further `workflow_dispatch` retries had already
+  auto-queued behind it on the sole shared runner before I picked up the escalation: `30310512581` (its
+  `QG slice (tests)` alone took 25m3s; `checks` was still `in_progress` when I checked) and `30317512237` (still
+  `pending`, never got a runner). Confirmed NOT a code regression: a clean local `quality-gates.sh` run at HEAD
+  (`0881465`) passed in 69s. Canceled both stuck/queued retries to free the sole runner, then applied the same
+  precedented fix: reverted `self_hosted_runner_labels` to empty (→ `ubuntu-latest`) via the same hand-edit pattern +
+  `quickmerge --agent` — `client-reporting-api@4a4ba6e`. Verified live: triggered a fresh run (`30319083342`) post-fix,
+  confirmed via `gh api .../jobs` both `QG slice (checks)` and `QG slice (tests)` ran on `labels: ["ubuntu-latest"]`
+  (not self-hosted), and it completed **green in ~2m total** (`checks` 1m40s, `tests` 1m56s) — back to normal, no
+  contention. Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior
+  three fixes. No open repo-blockers existed for this repo at the time.

@@ -29,7 +29,7 @@ related:
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
   ]
 created: 2026-07-22
-last_updated: 2026-07-22
+last_updated: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -138,6 +138,40 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       `features-service`/`instruments-service` not losing work is consistent with them not being on an ancestor path any
       concurrent `--dep-branch` cascade walked through that session, not necessarily a different cron/automation
       footprint.
+- [x] 6. [INFRA] P1. **RECURRED 2026-07-28 (found by slot-1, audited by slot-7).** Same exact mechanism, same repo
+      (`unified-trading-library`), 5 days after the preserve-fix (`06dc7632`) landed: `61efd2e5` (23:04:17) and
+      `dbb93c3a` (23:10:30) both discarded (`branch: Reset to origin/live-defi-rollout` reflog, matching signature
+      exactly). Slot-1 filed a duplicate doc (`slot_cron_ff_pull_toctou_reset_race_2026_07_27.md`) that initially
+      misattributed this to `slot-cron-ff-pull.sh` — slot-7's audit re-confirmed that script is innocent (2nd
+      independent confirmation) and traced the incident back here; that doc is now `resolved_by` this one. **Critical
+      new finding: the preserve mechanism did NOT protect this incident** — no `refs/wip-preserve/cascade-*` ref exists
+      in the affected clone (`.tabs/1/unified-trading-library`) for either discarded sha, and both commit objects are
+      now fully unreachable (`git cat-file -e` fails on both — checked 2026-07-28, ~5 days post-incident). This means
+      todo 2's fix is NOT suffient on its own to prevent recurrence of actual data loss (only preserve-not-prevent by
+      design, and here even the preserve step apparently didn't fire) — see new todo 7. Also found + fixed an
+      independent bug in the same function while re-reading it: `cascade_dep_branch` fetched `origin main` (not
+      `origin $branch_name`) before both the preserve-check and the checkout — a stale holdover predating
+      `live-defi-rollout` as the fleet integration branch. Fixed: `unified-trading-pm@8ca436599` (now fetches
+      `$branch_name` too). This does not by itself explain the missing preserve ref (a stale origin ref can only ever
+      inflate the ahead-count, never cause a false-negative skip) but closes a real, independent correctness gap in how
+      fresh `origin/$branch_name` is at both check sites.
+- [ ] 7. [INFRA] P1. **NEW (2026-07-28).** Root-cause why the preserve-before-reset guard (todo 2) did not leave a
+      `refs/wip-preserve/*` ref for either `61efd2e5` or `dbb93c3a` despite being live in HEAD 5 days before this
+      recurrence. Candidates to rule in/out: (a) the executing agent session's own `unified-trading-pm` clone was itself
+      stale (hadn't pulled `06dc7632` yet) at the moment it ran the discarding `cascade_dep_branch` call — this
+      workspace has multiple documented incidents of clones stranding hundreds of commits behind; (b) something later
+      cleaned up `refs/wip-preserve/*` refs (no documented retention/cleanup policy exists for them — check for any
+      `git gc`/prune/manual-cleanup process that might sweep custom refs); (c) a different, not-yet-identified code path
+      bypassed the guard. If (a), consider whether `cascade_dep_branch` should self-verify its own script version (e.g.
+      assert the running quickmerge.sh is not stale relative to origin) before running anything destructive. If (b), add
+      explicit `gc.pruneExpire never` + document a retention policy for `refs/wip-preserve/*`, mirroring the
+      `gc.pruneExpire never` protection `slot-cron-ff-pull.sh` already applies to its reference-clone objects.
+- [ ] 8. [INFRA] P2. Given todo 7 shows preserve-only is not proven reliable, consider a stronger prevention (not just
+      recovery) fix for `cascade_dep_branch`: e.g. skip the `checkout -B` entirely (log + leave the ancestor clone
+      alone) when local has commits ahead of origin, rather than resetting-then-preserving — the cascade's whole purpose
+      is to align an ancestor's branch name for a _different_ repo's dependency check; forcibly moving a SHARED clone's
+      branch ref out from under a concurrent agent's in-flight commit is arguably never the right default behavior,
+      preserve-net or not.
 
 ## Related QG-infra findings this session (worktree isolation vs the QG harness)
 
