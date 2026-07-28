@@ -457,10 +457,36 @@ context; recommended owner strategy-service PBM):
 _Auto-emitted by `scripts/openapi/generate_capability_unlock_report.py --emit-todos`._ _The N blocked edges closest to
 available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. Dedup-idempotent on re-run._
 
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_MEV_SANDWICH --has_leg:legs--> ARBITRAGE_MEV_SANDWICH** (distance 1, status
+- [x] ✅ [SCRIPT] P2. **unlock ARBITRAGE_MEV_SANDWICH --has_leg:legs--> ARBITRAGE_MEV_SANDWICH** (distance 1, status
       not_registered) — missing: needs-leg-spec. Why blocked: ARBITRAGE_MEV_SANDWICH has no leg structure in
       ARCHETYPE_LEG_STRUCTURES yet — structural per-leg restrictions not modelled (F22 leg-truth gap). (auto-emitted by
-      generate_capability_unlock_report.py)
+      generate_capability_unlock_report.py) — **FALSE-POSITIVE ROADMAP ITEM, FIXED AT THE ROOT (not a real leg-spec to
+      write)**: `archetype_leg_spec_seeds.py` already documents ARBITRAGE_MEV_SANDWICH's leg structure as
+      `not_registered=True` with a cited, permanent reason (theoretical-only tracer —
+      `strategy-service mev/sandwich_theoretical.py`'s `SandwichTheoreticalProfit`, NOT a `BaseArchetypeEngineV2`,
+      intentionally absent from `ARCHETYPE_ENGINE_REGISTRY` pending mempool data; Bloxroute feed removed) — a genuine
+      `logical_dead_end` per this doc's own gap taxonomy, not a `missing_registry` gap. The real defect was in the
+      TWO exporters that turn a `not_registered` leg structure into a manifest edge: both
+      `_capability_extract.py::extract_leg_structures()` (the `has_leg:legs` self-edge) and `_capability_gaps.py`'s
+      `uses_algo` edge emission (same `compat.not_registered` condition, sourced 1:1 from the same leg structure) always
+      stamped `status=not_registered` + `gap_type=missing_registry` — the "schematically possible, just not filled in
+      yet" pairing — even though every current member of `archetypes_without_leg_structures()` (ARBITRAGE_MEV_SANDWICH +
+      the 4 `PORTFOLIO_*` meta-allocation overlays) is, by the seeds module's own Phase 6A contract, genuinely
+      underivable, not a pending-fill placeholder. This mis-tagging is exactly why `generate_capability_unlock_report.py`
+      auto-emitted this as a "closest-to-unlock" roadmap item (`unlock_distance=1`) instead of routing it to the
+      impossible/correct-negative set. Fixed: both edge emissions now use `status=not_available` +
+      `gap_type=logical_dead_end`, citing the leg structure's own `not_registered_reason` verbatim instead of the
+      generic "not modelled yet" text — unified-trading-pm@<SHA>. Regenerated
+      `unified-api-contracts/openapi/capability-manifest.json` + `capability-unlock-report.json/.md` (prettier-formatted)
+      — verified live: the `has_leg:legs` self-edge + all 16 `uses_algo` edges for ARBITRAGE_MEV_SANDWICH (and the
+      sibling edges for the 4 `PORTFOLIO_*` archetypes) now read `logical_dead_end`/`not_available` and are 0/0 in the
+      roadmap, 17/17 in the impossible set; overall manifest `missing_registry` gap count dropped from its prior
+      leg-structure-inflated count to 0 (the 4 remaining `not_registered` edges are unrelated, pre-existing
+      `missing_extraction`/`needs_code_scan` service-import gaps, untouched by this fix). No `--emit-todos` re-run
+      needed — the edge no longer qualifies as a roadmap candidate, so it will not re-emit. Existing capability-suite
+      unit tests (`test_capability_unlock.py`, `test_capability_readiness.py`, `test_capability_verdict_matrix.py`,
+      `test_capability_changelog_regression.py`) pass unchanged (they operate on hand-built fixtures, not the live
+      manifest). `quality-gates.sh` green.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cboe** (distance 1, status partial) —
       missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:
