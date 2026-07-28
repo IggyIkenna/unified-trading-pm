@@ -28,7 +28,7 @@ priority: P0
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-07-12
+last_updated: 2026-07-28
 locked_by: live-defi-rollout
 locked_since: 2026-06-30
 supersedes:
@@ -217,10 +217,27 @@ Phase 1:
       `bash scripts/cicd/toggle-aws-image-builds.sh on|off|status` (flips the vars fleet-wide + creates/deletes the
       CodeBuild webhooks in one command). RE-ENABLE (Ikenna, whenever wanted): provision `AWS_BUILD_ROLE_ARN` per the
       ping, then `toggle-aws-image-builds.sh on`.
-- [ ] [CICD] P0. **Cron reliability — LEFT AS-IS per operator (2026-06-30).** GHA `schedule` fires ~1/1.5–2h
-      (best-effort, drops ticks). Ikenna to decide when faster draining is needed. Options: (A) self-hosted VM heartbeat
-      dispatching the promoter every 15 min via `gh workflow run` [recommended — deterministic]; (B) event-driven
-      dispatch from quickmerge when content lands on a repo's LDR. The fleet still drains, just on a 30–90 min cadence.
+- [x] [CICD] P0. ✅ **Cron reliability — Option A IMPLEMENTED (operator decision 2026-07-27/28).** GHA `schedule` fires
+      unreliably under load (best-effort, drops ticks — measured anywhere from ~37% to ~80-90% delivery depending on
+      fleet churn, per `/codex/08-workflows/ci-cd-flow.md`'s 2026-07-21 correction), stretching the intended 15-min
+      promoter cadence to 30–90 min. Built the self-hosted VM heartbeat (Option A — deterministic `gh workflow run`
+      dispatch, not reliant on GHA's own scheduler): `scripts/orchestrator/ldr-to-main-promote-     heartbeat.sh` +
+      matching `.service`/`.timer` + `install_ldr_to_main_promote_heartbeat.sh` (mirrors the existing
+      `reap-stale-blockers` systemd-timer pattern already live on this VM). Dispatches BOTH promoter workflows
+      (`ldr-to-main-promote-fleet.yml` fleet-wide + PM's own `ldr-to-main-promote.yml`) every 15 min via
+      `gh workflow run <wf> --ref live-defi-rollout`, additive to (not replacing) each workflow's own `schedule:`
+      trigger. **Shipped**: `unified-trading-pm@6c09f4e86` (quickmerge). **VM-side install + live verification**
+      (orchestrator VM, id `planning`, `i-0c9b283b31d6b5ca7`, via the documented SSM-only path
+      `scripts/self-hosted-runners/ssm-run.sh` — no inbound SSH): extracted the 4 files from the already-landed
+      `origin/live-defi-rollout` commit via `git show` (never touched the checkout's OTHER live dirty WIP — an
+      orchestrator worker had unrelated uncommitted plan-doc edits mid-flight, ff-pull correctly refused, so the files
+      were materialized directly from the git object store instead), installed via
+      `install_ldr_to_main_promote_heartbeat.sh`, confirmed `systemctl status` active/enabled, and manually fired the
+      service (`systemctl start`) to prove it end-to-end BEFORE waiting for its first scheduled tick: both
+      `gh workflow run` dispatches succeeded, producing REAL GitHub Actions runs (`ldr-to-main-promote-fleet.yml` run
+      `30342345004`, `ldr-to-main-promote.yml` run `30342346846`, both `event=workflow_dispatch`,
+      `headBranch=live-defi-rollout` — confirmed via `gh run list --json`). Timer is `enabled` + `active (waiting)`,
+      next-fire computed correctly (`*:0/15`).
 - [x] [CICD] P0. ✅ **Now-tracked here (added 2026-07-14, findings 107/201):** `scripts/quickmerge.sh` silently no-ops
       on a new-file-only ship — `quickmerge --agent --files '<newfile>'` where every `--files` path is untracked prints
       "No differences from main — nothing to merge" and exits 0 without staging/committing anything, because the no-diff
@@ -449,19 +466,36 @@ Phase 1:
 - **UAC provenance** + the flaky-QG **Cause A** are the two NON-bug blockers (a real violation + a real flake); they are
   in Phase 2 / owner-handled, not "remove the gate." UAC RESOLVED 2026-06-30 — PR #544 merged (v2+SIT-gated), the
   provenance marker advanced, UAC is content-identical on main.
-- **Provenance-gate leak (finding, 2026-06-30) — for Ikenna.** The strict-quickmerge provenance gate runs ONLY on
-  promote PR _creation_, not on _re-arm_ of an existing clean PR. A later promoter tick found UAC #544 clean and
-  re-armed it past the provenance check → it merged on v2 despite the non-QM commits (that's how UAC self-resolved). So
-  the quickmerge-provenance gate is NOT airtight — v2+SIT-validated content that bypassed quickmerge can still reach
-  main via the re-arm path. For the MVP this is arguably acceptable (content isn't permanently stuck on a provenance
-  technicality; it flows once SIT+v2 are green — the MVP's bar). DECISION for Ikenna: accept (MVP-aligned) or close the
-  re-arm leak (re-run the provenance check before re-arming an existing PR).
-- **Archival caveat (2026-06-30).** `cicd_consolidated_remaining` (archived) was a MULTI-workstream SSOT with ~51 open
-  todos beyond the promote pipeline (WS-I service-to-service-auth migration, D13 version-out-of-source, misc P2/P3
-  hygiene). Per the operator "everything else out of scope for now" directive these are DEFERRED, living in the archived
-  plan as their record; a few codex docs (`/codex/07-security/service-to-service-auth.md`, `ci-cd-flow.md` body) still
-  cite it. If any non-pipeline workstream (esp. WS-I service-auth) is still wanted, it needs re-homing into an active
-  plan; otherwise the archived plan is the deferred spec.
+- **Provenance-gate leak (finding, 2026-06-30) — ✅ CLOSED (operator decision 2026-07-27/28: close the leak, not
+  accept-as-is).** The strict-quickmerge provenance gate ran ONLY on promote PR _creation_, not on _re-arm_ of an
+  existing clean PR — a later promoter tick found UAC #544 clean and re-armed it past the provenance check → it merged
+  on v2 despite the non-QM commits (that's how UAC self-resolved). **Fix**: factored the provenance check into a shared
+  `provenance_check_ok()` helper in `ldr-to-main-promote-fleet.yml`, called from all 3 arm/re-arm sites in
+  `process_repo()` — (1) PR creation (unchanged behavior, now via the shared helper), (2) the close+reopen stale-check
+  re-arm fallback, (3) the CLEAN-state (re)arm branch (the EXACT path UAC #544 slipped through). A blocked repo now gets
+  a PR comment + stays un-armed at every re-arm tick, not just at creation. **Regression test** (extracts the REAL
+  function from the workflow file, runs it against synthesized git fixtures with `git`/`gh` network calls redirected to
+  local stubs — never touches the real GitHub API):
+  `scripts/quality-gates-base/tests/ test-ldr-promote-provenance-rearm-gate.sh`, 8/8 passing, including a structural
+  assertion that all 3 call sites exist (so a future edit that adds a new re-arm path without gating it fails the test).
+  Validated: YAML parses (`yaml.safe_load`), embedded bash syntax OK (`bash -n` on the extracted `run:` block),
+  `actionlint` clean (exit 0). **Shipped**: `unified-trading-pm@105cebfde` (quickmerge, landed LDR →
+  origin/live-defi-rollout).
+- **Archival caveat (2026-06-30) — WS-I re-homed (operator decision 2026-07-27).** `cicd_consolidated_remaining`
+  (archived) was a MULTI-workstream SSOT with ~51 open todos beyond the promote pipeline (WS-I service-to-service-auth
+  migration, D13 version-out-of-source, misc P2/P3 hygiene). Per the operator's original "everything else out of scope
+  for now" directive these stayed DEFERRED in the archived plan as their record. **WS-I specifically is still wanted**
+  (the other ~50 stay deferred/archived, unchanged) — re-homed into a fresh focused plan:
+  `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA` — LOCAL track; no interactive
+  operator confirmation was available at authoring time, so the plan defaults to the stated CLAUDE.md default and notes
+  this explicitly, and it's also the substantively correct choice since the one open item is a standing human judgment
+  call, not bounded AO work). **Live-state verification found execution-service's leg of WS-I was ALREADY fully
+  shipped** (`execution-service@7454c81a` — source + test rewrite both landed; the archived plan's own checkbox had
+  recorded this but two downstream docs still described it as pending) — only deployment-api remains un-migrated, held
+  at the standing 2026-06-24 "LEAVE AS-IS" operator ruling (re-affirmed, not re-litigated). Fixed the stale
+  `/codex/07-security/service-to-service-auth.md` (Enrolled Services table + 3 cross-references, all repointed off the
+  archived plan onto the new one) in the same pass. **Shipped**: `unified-trading-pm@105cebfde` (same commit as the
+  provenance-leak fix above, quickmerge, landed LDR → origin/live-defi-rollout).
 
 ## Codex SSOTs
 
@@ -470,6 +504,27 @@ Phase 1:
 
 ## Progress Log
 
+- 2026-07-28 (all 3 operator decisions from 2026-07-27/28 implemented): (1) **Cron reliability** — Option A self-hosted
+  VM heartbeat shipped (`unified-trading-pm@6c09f4e86`) + installed live on the orchestrator VM (id `planning`,
+  `i-0c9b283b31d6b5ca7`, via SSM) + verified with a real manual fire producing two genuine `gh workflow run` GitHub
+  Actions runs (`30342345004`, `30342346846`). (2) **Provenance re-arm leak** — closed via a shared
+  `provenance_check_ok()` helper gating all 3 arm/re-arm sites in `ldr-to-main-promote-fleet.yml`, with a new hermetic
+  regression test (8/8 passing), `unified-trading-pm@105cebfde`. (3) **WS-I re-homing** — re-homed into
+  `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md`; live-state verification found
+  execution-service's migration already shipped (only the codex doc was stale, now fixed), deployment-api stays held at
+  its 2026-06-24 operator ruling. Same commit, `unified-trading-pm@105cebfde`. See the "Operator decisions / notes"
+  section above for full per-decision detail + evidence. **Shared-tree hazard encountered while shipping**: the Task-2/3
+  quickmerge failed twice on completely unrelated concurrent-agent churn in this same working tree (a TID251 ratchet
+  violation in another agent's mid-flight edit to `scripts/migration/verify_env_tiered_buckets_provisioned.py`, then a
+  transient `unified_api_contracts` import failure from another agent's concurrent dependency operation) before
+  succeeding on the third retry — also fixed a genuinely blocking (corpus-wide-gating) broken-YAML-frontmatter bug in an
+  unrelated foreign doc (`plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`, an unquoted
+  colon-space in its `summary:` field) that was failing `check_frontmatter_schema` for every slot's ship, not just this
+  one. **Deferred (not this session)**: `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` items 20a/20b/20c
+  were named in the dispatch as needing an evidence update, but that file had live, actively-changing concurrent-agent
+  WIP throughout this session (a separate "9 resumed autonomous agents" sweep) — left untouched per the multi-agent
+  safety liveness-gate rather than risk colliding with in-flight work; a follow-up session should pick this up once that
+  file is quiet.
 - 2026-07-26 (adjacent finding — ldr-ci-monitor never escalated to the orchestrator): Real operator question after a
   genuine (unrelated) LDR-red incident on `unified-trading-pm` itself ("why didn't this escalate to AO?") surfaced a
   real gap: `escalate-to-orchestrator.yml` has existed since the conflict-resolution pivot and explicitly supports
