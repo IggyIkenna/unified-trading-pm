@@ -780,3 +780,26 @@ doc's own "Still genuinely outstanding" list (STATUS 2026-07-25) names as the ga
 No code changed here either. Narrowing this to the exact 2 remaining blockers (rather than 3) is the only new
 information — a future dispatch can skip re-verifying the coverage-registry piece and go straight to checking whether
 the MDPS reprocess + footystats copy+swap have landed before re-running the full manifest census.
+
+## RE-DISPATCH CHECK 2026-07-28 (slot-10, same day, 3rd dispatch) — both remaining blockers still unshipped
+
+Track H's denominator todo dispatched a THIRD time the same day. Same shortcut as slot-7 (checked shipped-status of the
+2 remaining blockers rather than re-running the full manifest census):
+
+- **`odds_horizon_bucket` MDPS reprocess (Step 7)** — `market-data-processing-service` git log for
+  `reprocess_sports_odds.py` most recent commit is `6f7422e` (2026-07-27T18:15, a venue-stamp fix on
+  `odds_horizon_bucket` fine manifest rows — unrelated to re-running the script against this migration's canonical
+  `league_id` shape). No commit does the actual Step-7 re-run. **Still outstanding.**
+- **`batch_footystats` copy+swap** — grepped `market-tick-data-service` for any apply/swap script for this shape beyond
+  the known read-only `census_footystats_orphan_content_2026_07_25.py`; none exists (the
+  `manifest_swap_venue_restamp_ 2026_07_27.py` / `migrate_sports_league_id_casing_2026_07_21.py` scripts found in the
+  repo are different migrations — venue casing and the raw `batch_odds_api` shape respectively, not this shape). **Still
+  outstanding.**
+
+**Net: unchanged — both blockers remain open, STOP condition still holds.** Flagging the dispatch pattern itself (not
+just the blocker): this is the 3rd consecutive same-day worker dispatch to hit this identical, already-well-documented
+STOP condition, each one correctly declining to ship but re-spending a full task cycle on the same negative-result
+check. Filed a `/blocked` recommending the backlog task be PARKED (`unified-trading-pm/agents/RULES.md` § "Park a task")
+until the 2 real prerequisite items above land — they are tracked here, not as todos in the dispatching plan
+(`sports_consolidated_native_ao_extract_2026_07_25.md`), so nothing currently causes the denominator todo to stop being
+offered to the queue once these are the only real blockers.

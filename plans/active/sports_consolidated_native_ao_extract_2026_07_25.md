@@ -746,3 +746,26 @@ shipped `unified-trading-pm@1bcebee36`.
 rows for the footystats ODDS_API mislabel" is satisfied for the raw-tick shape (the shape this todo's tooling covers)
 and for UNKNOWN/FOOTBALL; the derived-candle shape for LADBROKES_UK/SPORT888 remains open, tracked in the new follow-up
 issue doc's own todos — not silently claimed done.
+
+### 2026-07-28 (slot-10) — Track H denominator todo: 3rd same-day dispatch, STOP condition still holds
+
+Re-dispatched a third time the same day (after slot-11's original live-probe and slot-7's re-dispatch check, both in
+`issues/sports_league_id_namespace_migration_2026_07_20.md` § "LIVE-PROBE 2026-07-28" / § "RE-DISPATCH CHECK
+2026-07-28"). Rather than re-running the full manifest census a third time (nothing suggests the manifest state moved in
+the last few hours), checked whether either of the 2 still-outstanding blockers shipped since slot-7's check:
+
+- **`odds_horizon_bucket` MDPS reprocess (Step 7)** — `market-data-processing-service` git log for
+  `reprocess_sports_odds.py` shows its most recent commit is `6f7422e` (2026-07-27T18:15, venue-stamp fix, unrelated to
+  the league_id canonicalisation Step-7 re-run) — still no commit re-running it against the migration's canonical
+  `league_id` shape at scale. **Still outstanding.**
+- **`batch_footystats` copy+swap** — grepped `market-tick-data-service` for any footystats swap/apply script beyond the
+  known read-only census (`census_footystats_orphan_content_2026_07_25.py`); found none (the SPORT888/FOOTYSTATS venue
+  restamp tooling referenced elsewhere in this doc's own Track C todo is a DIFFERENT migration — venue casing, not
+  league_id). **Still outstanding.**
+
+**Net: same 2 of 3 blockers remain open — the STOP condition still holds, no code shipped.** This is the 3rd consecutive
+same-day dispatch of this exact todo hitting the identical, already-documented blocker. Flagging via `/blocked` to
+recommend the backlog task be PARKED (per `agents/RULES.md` § "Park a task") until the 2 real prerequisite items
+(`odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap, both tracked in the league_id-migration issue doc,
+neither is a todo in THIS plan) land, rather than continuing to burn a fresh worker-dispatch on the same unproductive
+re-check every cycle.
