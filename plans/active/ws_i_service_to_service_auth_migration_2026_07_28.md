@@ -102,7 +102,7 @@ keeping the deployment-api decision visibly on record in case it's ever revisite
       `execution-service@7454c81a` evidence (source + test-rewrite). Also repointed 3 references (top-of-doc "being
       collapsed onto it", the "Migration tracker" line, the bottom Cross-references entry) off the archived
       `cicd_consolidated_remaining_2026_06_24.md` onto this plan's path. Done-when:
-      `grep -n     "cicd_consolidated_remaining" codex/07-security/service-to-service-auth.md` returns zero hits. —
+      `grep -n     "cicd_consolidated_remaining" /codex/07-security/service-to-service-auth.md` returns zero hits. —
       evidence: `unified-trading-pm` (this session's commit, see plan Progress Log below for the SHA once shipped).
 - [ ] 2. [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — deployment-api's local `auth.py` → UTL factory migration. HELD at
       the 2026-06-24 operator ruling (LEAVE AS-IS: `deployment_api/auth.py`'s contract is genuinely different from the

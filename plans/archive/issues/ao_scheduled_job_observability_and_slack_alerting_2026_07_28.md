@@ -49,6 +49,9 @@ locked_by:
 
 # Scheduled-job (plan-reconciler / docs-reconciler / ag-closeout-auditor / na-eligibility-auditor) observability + Slack alerting
 
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 ## What I found — root cause per job, from today's actual runs
 
 Checked via AWS SSM (read-only) into the planning VM (`i-0c9b283b31d6b5ca7`): `systemctl status <job>.service` +

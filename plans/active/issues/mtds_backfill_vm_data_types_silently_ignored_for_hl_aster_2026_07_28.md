@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [vm-launcher, hyperliquid, aster, data-types, runbook-gap, efficiency]
 related: [defi_satellite_ao_dispatch_batch1_2026_07_25]
 created: 2026-07-28
-assigned_vm: NA
+assigned_vm: planning
 parent_epic: infrastructure_master
 priority: P2
 source: defi_satellite_ao_dispatch_batch1_2026_07_25

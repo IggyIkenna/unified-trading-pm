@@ -19,7 +19,7 @@ scope: [admin]
 tags: [consolidation, plan-hygiene, issue-triage, archival, ordering-map, ssot-audit]
 related:
   [
-    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     /plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
     /plans/PLAN_FORMAT.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
