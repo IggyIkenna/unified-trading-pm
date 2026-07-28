@@ -356,3 +356,9 @@ caller for an early-return-on-empty guard to separate genuinely-reachable sites 
 **Not yet done**: the 12 CURRENT glued objects need one more targeted rebuild pass (single-day, `2026-07-22`, cheap —
 not a new whole-corpus walk) once this fix ships, to reclassify them via the now-fixed N5 path. Re-verify 0 glued ids
 (excluding the 9 known ORCA rows, which are a separate owner's in-flight fix) after that.
+
+## Todos
+
+- [ ] [DATA] P2. **Run the single-day (2026-07-22) targeted rebuild pass for the 12 remaining glued liquidations
+      objects** — reclassify via the now-fixed N5 path, then re-verify 0 glued ids in the fresh index (excluding the 9
+      separately-owned ORCA `dex_pool_state` rows).

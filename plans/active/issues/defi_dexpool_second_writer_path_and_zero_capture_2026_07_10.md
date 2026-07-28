@@ -96,3 +96,10 @@ to see whether either item has settled enough for a batch2 candidate.
 
 **Net effect**: no `defi_satellite_ao_dispatch_batch2` item drafted from this doc. Re-check again at the next batch
 cycle only if item 1's resolver/scope question gets independently investigated elsewhere first.
+
+## Todos
+
+- [ ] [BACKEND] P2. **Scope + build the `batch_onchain_subgraph` second-writer-path historical migration** — Item 1
+      (bare `0x<address>.parquet` files with no symbol/venue/chain columns) is still genuinely too-large/risky and
+      unchanged since 2026-07-10; needs a pool-address→symbol/venue/chain resolver before a VM-eligible historical
+      migration can be scoped. No `defi_satellite_ao_dispatch_batch2` item has been drafted from this doc.

@@ -186,3 +186,11 @@ each atomic to the executor). That decision is the operator's; the cross-repo in
   `strategy_global_pytest_hook_skips_backtest_suite_2026_07_20.md` (now `status: resolved`). **This matters for the arb
   proof specifically**: it means the green gate now genuinely covers the benchmark-fill path the 3-venue paper proof
   depends on, instead of merely appearing to.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide + build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor`** — no
+      live tick runtime currently routes an emitted `AtomicInstruction` to the executor (`AtomicLegExecutor` and
+      `V2InstructionRouter` are both unwired in production); needs an operator-directed architectural decision on the
+      cross-repo transport (tier rules forbid strategy-service importing execution-service directly, so the UTL
+      `EventTransport` event-log seam is the architecturally-indicated option).

@@ -122,3 +122,11 @@ HARD RULE this needs an interactive/operator-directed session, not autonomous AO
 3. Given real migration work keeps landing against a `LOCAL`-track plan piecemeal, consider whether this plan should be
    re-flagged / re-confirmed with the operator as still LOCAL-only, or whether de-facto AO/interactive execution has
    already overtaken that designation and the plan's frontmatter should be updated to match reality.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Reconcile `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s checkbox drift** — flip
+      its todo 2 `[x]` (already shipped as `features-service@daa373bd`), decide whether to commit the uncommitted todo-4
+      rename diff sitting in slot 3's `features-service` worktree (verify UAC's `OddsFeaturesMixin` field set matches
+      first), and re-confirm whether this plan's `assigned_vm: NA` / LOCAL-only designation still matches how it's
+      actually being executed.

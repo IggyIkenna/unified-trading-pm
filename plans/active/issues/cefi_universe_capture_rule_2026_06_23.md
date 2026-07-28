@@ -94,6 +94,10 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       (always-mvp by pre-existing Deribit PERPETUAL branch). Full live-data 24h-vol/OI spot-check to dynamically pick
       more-liquid margin side is a TODO (requires live Tardis API calls per contract; scaffolded with a comment in
       mvp_scope.py § "live-liquidity hook TODO").
+- [ ] [MTDS] P2. **Implement the live-data 24h-vol/OI spot-check for margin-side selection** — the dynamic per-contract
+      liquidity pick is still only a scaffolded comment hook (`mvp_scope.py` § "live-liquidity hook TODO"); today's
+      margin-side default is deterministic (BINANCE-DELIVERY via base-membership, Deribit inverse always-mvp), not the
+      live spot-check the todo above originally called for.
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 

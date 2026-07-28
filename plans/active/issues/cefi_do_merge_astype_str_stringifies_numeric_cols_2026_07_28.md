@@ -67,6 +67,12 @@ disagrees in dtype, so a real data problem surfaces instead of being papered ove
 - `assigned_vm: NA` — tracked, NOT auto-dispatched. Operator can flip to `planning` + `active` to dispatch as a
   data_engineering cleanup, ideally bundled with any future re-use of this migration.
 
+## Todos
+
+- [ ] [DATA] P3. **Narrow `do_merge()`'s dtype-coercion to key columns only** — the suggested fix (whitelist the join/id
+      key columns, up-cast numeric columns instead of stringifying, or fail loud on non-key disagreement) has not been
+      applied; only bites on a future re-use of this migration script against a different venue group.
+
 ## Progress Log
 
 - 2026-07-28: Filed by main from REVIEW-craft finding (msg 2500). Acked to reviewer; endorsed non-blocking, tracked NA

@@ -162,3 +162,10 @@ noted here only so the two aren't conflated.
 - Live checks: `gcloud storage ls --long gs://<bucket>/_index/availability_index.parquet` across instruments-store-\*,
   gas-fees, lending-indices, oracle-prices (project `central-element-323112`); capture_status distribution of the
   downloaded instruments-cefi index.
+
+## Todos
+
+- [ ] [DATA] P2. **Make the phantom audit's bucket list dynamic** — enumerate every consolidated-manifest bucket (or
+      widen `_BUCKET_KIND_MAP` to the full kind×AG matrix) instead of the hardcoded 5-entry map, so the other 42
+      un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case) get phantom-checked too
+      (see "Suggested fix" above).

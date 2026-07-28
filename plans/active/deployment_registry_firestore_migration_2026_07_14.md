@@ -112,6 +112,12 @@ heartbeat
 | **P4** | [p4 — DynamoDB (AWS-ready)](../archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md)           | infra            | Sonnet / high      | **complete (archived)**                                                                                                                                                                      | activated by P1 (∥ P2/P3)                   |
 | **P5** | [p5 — verify at scale + codex](deployment_registry_firestore_p5_verify_2026_07_14.md)                             | review           | Sonnet / high      | **draft** — blocked on P3; scope now narrower than originally written (P4's DynamoDB half of the codex-sync mandate is already done via P4's own archival codex-sync)                        | activated by P3 or P4 (last to finish)      |
 
+## Todos
+
+- [ ] [OPERATOR] P0. **Un-block P3 cutover** — P3 (GCS decommission) is self-halted on a real data-loss guard (prod
+      Firestore `deployments` measured EMPTY 2026-07-17); the GCS blob delete stays blocked pending an explicit operator
+      GO/NO-GO, and P5 (verify + codex-sync) stays `draft` behind it.
+
 ## Migration invariants (hold across every phase)
 
 - Never a flag-day — dual-write outlives the last reader; every reader cutover is Firestore-first with a LOUD GCS

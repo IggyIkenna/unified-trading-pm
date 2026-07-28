@@ -160,3 +160,10 @@ and `fund-administration-service` all failing to deploy within the same ~3-minut
 once (a scheduled/fleet-wide redeploy sweep landing on a shared stale pin), or could be unrelated. Not investigated —
 flagging the timestamp cluster so it isn't lost; `gcp_cloud_run_revisions` /
 `/api/artifacts/deploys?days=30&change=fail` is the fastest way to re-pull it.
+
+## Todos
+
+- [ ] [ENGINEER] P1. **Confirm whether the auth-fixed digest-drift-sweep is actually preventing recurring drift** — read
+      the sweep's run history/dispatch log for `deployment-api` around 07-18→21, check whether `BASE_IMAGE_DIGEST` bumps
+      are visible to its regex vs. a Cloud Build substitution it can't see, and re-check whether `deployment-api` (or
+      others) has drifted a third time; per the 2026-07-23 Addendum this remains unresolved.

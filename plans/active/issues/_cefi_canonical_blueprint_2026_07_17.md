@@ -645,3 +645,9 @@ open #14); SPOT_PAIR on ambiguous venues (resolved by 3-tuple, FIX 0/D1).
 
 **Do not proceed to any `--apply` until open questions #1–#5 (the blockers) are confirmed closed and the Phase -1
 catalogue verify gate is green.**
+
+## 6. Todos
+
+- [ ] [OPERATOR] P0. **Confirm open questions #1-#5 (the blockers) closed + Phase -1 catalogue verify gate green before
+      any `--apply`** — this blueprint's execution has not started; every Phase 0/1 code fix and Phase 1 migration
+      script above is still unshipped pending that sign-off.

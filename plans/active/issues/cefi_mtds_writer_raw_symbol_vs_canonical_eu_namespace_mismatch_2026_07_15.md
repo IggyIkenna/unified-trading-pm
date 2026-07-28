@@ -463,6 +463,11 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       pull-in (a peer slot's `tardis_concurrency_lease.py` fix landed mid-session); the file-size ratchet forced a trim
       of the inline comment to stay under the 900-line cap for `venue_fetch.py` (908→898 lines).
 
+- [ ] [OPERATOR] P0. **Action the two operator-gated `--apply` runs** — todo (2)'s relabel script (3,133,117 candidates,
+      82.7% resolvable) and the P0 re-materialization todo's purge script (49,720 stale eu rows) are both dry-run-
+      verified but still awaiting explicit operator sign-off before running for real; per the final 2026-07-15 Progress
+      Log entry, this doc's `status: open` stays until both land.
+
 ## Progress Log
 
 - **2026-07-15 (backend_engineer, slot-11)**: Todo (1)'s landed fix (`market-tick-data-service@56679e78`) was a **silent

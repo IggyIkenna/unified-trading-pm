@@ -185,6 +185,10 @@ Three candidate directions — genuinely a design decision, not something a sing
       `ml-service --operation pipeline --asset-group SPORTS --family pregame_clv_family --target-types clv     --target-type clv --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`
       (Bug 1 workaround: pass both `--target-types` and `--target-type`) to produce and promote the actual 3 new model
       artifacts.
+- [ ] [ML] P2. **Run the literal 3-variant CLV model retrain** — produce and promote the actual new trained artifacts
+      (`ml-service --operation pipeline --asset-group SPORTS --family pregame_clv_family --target-types clv     --target-type clv --timeframes fixture --start-date 2026-04-01 --end-date 2026-04-17`);
+      the underlying target-generation fix is real-data-verified but the retrain itself has not been run (per the
+      Deferred-work table below).
 
 ## Progress Log (append-only)
 

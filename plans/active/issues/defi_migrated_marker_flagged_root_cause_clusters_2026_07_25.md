@@ -175,3 +175,10 @@ update — the query-fix, live-test, re-backfill, and both `[OPERATOR]` purges (
 unshipped. Per this plan's own gated finalize doc
 (`plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`), this issue's overall status should be
 re-checked once that plan completes.
+
+## Todos
+
+- [ ] [DATA] P1. **Ship `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos** — the TRADER_JOE_V2/
+      VELODROME_V2/CURVE `dex_pool_state` cluster and the lst_rates MAKER/ETHENA half remain unresolved (query-fix,
+      live-test, re-backfill, and both `[OPERATOR]` purges all unshipped as of 2026-07-26); re-check this doc's overall
+      status once that sibling plan completes.

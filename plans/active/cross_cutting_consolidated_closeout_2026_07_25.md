@@ -667,6 +667,13 @@ own child plan:
 other 23 data-pipeline Tracks, too large to drain in one closeout pass. See that doc for the Sources + close-out
 criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this Track's audit flagged.
 
+## Todos
+
+- [ ] [DOC] P1. **Track open items are not tracked as checkbox work in this digest** — e.g. Track 1's G5 ("no AG has
+      started backfill-to-100%", gated but not tracked as executable work anywhere in this corpus) and Track 14's
+      CF-manifest-audit job (`uts-prod-cf-manifest-audit` Cloud Run Job, failing daily since 2026-07-04, fully open and
+      unresolved).
+
 ## Codex SSOTs (read before touching a track)
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `…/pipeline-mode-partition.md`,

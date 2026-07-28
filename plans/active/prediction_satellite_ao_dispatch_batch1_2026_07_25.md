@@ -170,6 +170,11 @@ drift_direction: advance-code
       row samples, execution history) in `prediction_phase_ab_residuals_2026_07_24.md`'s Progress Log. Read-only: no
       code changed, no GCS writes. Source: `prediction_phase_ab_residuals_2026_07_24.md`.
 
+- [ ] [OPERATOR] P2. **Resolve the conflict-gated candidates queued below** — the "Deferred — conflict-gated or
+      excluded" section documents AO-eligible candidates across 12 of the 13 orphaned prediction docs (plus item 9 of
+      `prediction_phase_ab_residuals_2026_07_24.md`) that were never converted into dispatchable todos, per the
+      operator's 2026-07-25 instruction to queue rather than silently resolve or drop them.
+
 ## Deferred — conflict-gated or excluded (NOT dispatched; queued for operator review)
 
 **Excluded from `prediction_phase_ab_residuals_2026_07_24.md` itself**: item 9 of that doc's 9 AO-eligible candidates

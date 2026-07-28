@@ -78,3 +78,9 @@ Cross-cutting (touches the LIVE cefi/sports/tradfi manifest path) → validate c
 (highmem unblocks it). Owner: a UTL/manifest slot. parent epic: manifest_master (corrected 2026-07-12 per operator
 ruling, finding 134 — frontmatter was right; charter match: manifest machinery → manifest_master; was written as
 "mtds_mdps_master" — that was the error, not the frontmatter).
+
+## Todos
+
+- [ ] [INFRA] P2. **Implement a durable fix for the un-evicted `_CANONICAL_CACHE`** — per "Recommended decision" Option
+      A (cap the cache to the current bucket, evict on bucket-change) or Option B (stream/iteratively reduce the per-VM
+      fan-in merge); only Option C (config mitigation) has shipped so far.

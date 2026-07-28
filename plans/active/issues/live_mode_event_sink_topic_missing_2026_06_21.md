@@ -87,3 +87,9 @@ Pick ONE canonical convention and align both sides:
 Interim: `market-tick-data-service-events` created via gcloud (unmanaged by terraform until the convention is decided).
 If Option B is chosen, add it (and the other `{service}-events`) to `pubsub_topic_names`; if Option A, delete it after
 the UTL fix lands.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Pick the canonical lifecycle-event topic convention** — Option A (fix UTL `_sink_factory.py` to
+      publish to the existing shared `service-lifecycle-events` topic) vs Option B (add every service's own
+      `{service_name}-events` topic to terraform) is still undecided; no progress logged since filing.

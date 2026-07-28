@@ -803,3 +803,11 @@ check. Filed a `/blocked` recommending the backlog task be PARKED (`unified-trad
 until the 2 real prerequisite items above land — they are tracked here, not as todos in the dispatching plan
 (`sports_consolidated_native_ao_extract_2026_07_25.md`), so nothing currently causes the denominator todo to stop being
 offered to the queue once these are the only real blockers.
+
+## Todos
+
+- [ ] [DATA] P1. **Ship Track H's registry-aware honest-coverage denominator once its 2 remaining blockers land** — the
+      `odds_horizon_bucket` MDPS reprocess (Step 7 re-run of `reprocess_sports_odds.py` against this migration's
+      canonical `league_id` shape) and the `batch_footystats` copy+swap apply script (neither exists yet) are the only
+      two prerequisites left; the STOP condition holds until both ship (re-verified 2026-07-28, slot-10 — see
+      "RE-DISPATCH CHECK" sections above).

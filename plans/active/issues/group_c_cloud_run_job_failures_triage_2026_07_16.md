@@ -310,6 +310,13 @@ Two independent judgment calls neither this triage nor a single ≤30min fix sho
   LIVE's "default to today" (works for most t1-recon jobs, which want T-1/today), or is explicit-date-required actually
   intentional for some batch consumers (in which case the fix is per-job Terraform args, not a UTL change)?
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule on the cefi/defi lifecycle-catalogue duplicate-merge-key policy** — Decision A above
+      (legitimate corrective dedup via `--allow-catalogue-shrink` vs a proper `_merge_incremental` duplicate-key-aware
+      rewrite) is still unresolved; the `dp-manifest-hygiene-changed`/`lifecycle-catalogue-full-{defi,tradfi}` failures
+      noted under "Not deep-dived this session" also remain uninvestigated.
+
 ## Evidence log
 
 - `gcloud run jobs list --region=asia-northeast1 --project=central-element-323112` (115 jobs) filtered to Group-C

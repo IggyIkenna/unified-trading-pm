@@ -97,3 +97,10 @@ resolved via a split-table design.
 Read-only investigation only — no GCS objects modified, no code changed. This needs its own scoped plan when picked up
 (estimate class: likely `infra` given the backfill/reshape nature, similar to other legacy-shape migrations in this
 workspace).
+
+## Todos
+
+- [ ] [DATA] P2. **Backfill/re-shape BYBIT `futures_chain` historical writes to the correct `underlying=` hive form** —
+      confirm the exact affected date range, then reshape the flat glued-symbol files (2026-01→2026-07-09 window) and
+      the legacy flat-sibling era (2023-06/2025-01) to canonical `underlying=` hive paths; not started, no GCS objects
+      modified yet.

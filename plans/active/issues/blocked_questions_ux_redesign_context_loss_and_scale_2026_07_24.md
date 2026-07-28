@@ -100,3 +100,9 @@ exists" section together before scoping the workstream.
 - **2026-07-24**: Filed verbatim from operator context, prompted by clarifying `/api/escalation/{id}`'s scope. Grounded
   the "jump to session" idea against `transcript_log.py` (retrieval already works) and `BlockedRow`'s schema (the
   missing link is `claude_session_id` capture at creation time). Deliberately deferred per operator instruction.
+
+## Todos
+
+- [ ] [DESIGN] P2. **Scope the blocked-question UX redesign** — capture `claude_session_id` on `BlockedRow` at creation
+      time, wire a transcript-jump affordance into the resolution UI, and address cross-question dedup/similarity;
+      explicitly deferred by the operator 2026-07-24, not yet scoped or actioned.

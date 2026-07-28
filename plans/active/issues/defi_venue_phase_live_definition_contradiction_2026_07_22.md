@@ -392,3 +392,9 @@ are now fixed and manually-verified live, per above). The doc's overall `status`
 reasons only: (1) the 90-day backfill for the 6 shipped venues has not yet run (see above), and (2) the doc's own core
 question — whether `phase=="pipeline"` venues count toward the `defi` `completeness_pct` denominator — remains an
 unresolved operator decision.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide whether `phase=="pipeline"` venues count toward the `defi` `completeness_pct` denominator,
+      and run the 90-day backfill for the 6 shipped venues** — doc stays open pending the operator ruling on the
+      denominator question and the not-yet-run 90-day backfill for ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER.

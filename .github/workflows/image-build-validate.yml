@@ -55,7 +55,7 @@ jobs:
   # ── GCP Cloud Build ──────────────────────────────────────────────────────
   build-gcp:
     name: "GCP Cloud Build — ${{ inputs.repo }}"
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, glue]
     outputs:
       build_id: ${{ steps.trigger.outputs.build_id }}
       build_exit_code: ${{ steps.trigger.outputs.build_exit_code }}
@@ -179,7 +179,7 @@ jobs:
     # webhook); also needs AWS_BUILD_ROLE_ARN provisioned (assigned: Ikenna —
     # plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md Phase 2).
     if: ${{ vars.AWS_BUILDS_ENABLED == 'true' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, glue]
     outputs:
       build_id: ${{ steps.trigger.outputs.build_id }}
       build_exit_code: ${{ steps.trigger.outputs.build_exit_code }}
@@ -273,7 +273,7 @@ jobs:
     # `!cancelled()` (not the default success()) because build-aws is SKIPPED whenever the
     # AWS_BUILDS_ENABLED switch is off — a skipped need would otherwise skip this gate too.
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, glue]
     outputs:
       both_passed: ${{ steps.check.outputs.both_passed }}
     steps:

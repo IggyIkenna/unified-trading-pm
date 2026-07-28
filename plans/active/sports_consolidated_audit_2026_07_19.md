@@ -286,6 +286,13 @@ ask.
 
 ---
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Resolve §U's in-window league-registry gap** — 489 (league,season) pairs / 10,869 blank-round
+      rows sit in leagues absent from the UAC registry; extend the registry or stop capturing them, and root-cause
+      §2.3's cross-AG manifest bleed + §2.5's `attempted_failed` triplet, before "sports backfilled 100%" can be
+      asserted.
+
 ## Verification notes (adversarial cross-checks during synthesis)
 
 - Agent F reported the live split entity at `sports_reference_v2/` "nearly empty" — **refuted by direct measurement**:

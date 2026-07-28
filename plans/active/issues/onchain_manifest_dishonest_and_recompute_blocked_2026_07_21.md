@@ -267,3 +267,12 @@ carrying the stale shared count is dead, orphaned, unconsulted data, not a curre
 stays exactly the fix chain this doc already names above (delete the orphaned `onchain/_index/` tree + backfill honest
 root-manifest registration) — nothing new to add to it from this diagnosis. No `[OPERATOR]`-gated action taken (this
 Update is diagnosis-only, per the sourcing todo's own scope).
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Close the fix chain: delete the orphaned `onchain/_index/` tree + backfill honest root-manifest
+      registration** — (a) delete the dead migration-debris `onchain/_index/availability_index.parquet` tree (prod GCS
+      delete, needs the standard delete-safety check) and (b) decide how to bulk-register the historical
+      `onchain/by_date/` corpus (724 objects, Jan 25–Jul 26) into the LIVE root manifest via
+      `record_captured`/`record_empty`/`record_failed` rows per (date, feature_group); remediation stays open pending
+      this design decision (2026-07-28 slot-12/slot-13 Updates above).

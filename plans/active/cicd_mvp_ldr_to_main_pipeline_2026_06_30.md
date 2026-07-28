@@ -502,6 +502,13 @@ Phase 1:
 - `/codex/08-workflows/ci-cd-flow.md` (the pipeline SSOT — update to the MVP at Phase 3).
 - `/codex/06-coding-standards/integration-testing-layers.md` (SIT's role).
 
+## Todos
+
+- [ ] [DOCS] P2. **Evidence-update items 20a/20b/20c in `june_2026_vintage_audit_findings_2026_07_27.md`** — per the
+      2026-07-28 Progress Log entry, these were named in this plan's dispatch as needing an evidence update but were
+      left untouched (that file had live, actively-changing concurrent-agent WIP throughout the session); pick this up
+      once that file is quiet.
+
 ## Progress Log
 
 - 2026-07-28 (all 3 operator decisions from 2026-07-27/28 implemented): (1) **Cron reliability** — Option A self-hosted

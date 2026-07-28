@@ -151,6 +151,14 @@ to keep QG builds incremental) ·
 **Close-out criterion**: UI build cache warm across QG runs; the pytest env-race root-caused + fixed; the OpenAPI regen
 unblocked on a CI runner.
 
+## Todos
+
+- [ ] [DOC] P2. **This tranche has no native dispatch vehicle of its own — 30 of 34 tranche docs are orphaned** — per
+      the 2026-07-26 `/ag-closeout-audit ci` entry below, this doc carries zero `- [ ]` todos (a reachability digest
+      only) and 12 of the 30 orphans express ALL their remaining work as numbered prose with zero checkboxes; do not
+      treat this doc's own checkbox-free format as evidence the CI/CD tranche's remaining work is tracked or done — see
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (status: draft) for the extracted subset.
+
 ## Codex SSOTs (read before touching a track)
 
 `/codex/08-workflows/ci-cd-flow.md`, `/codex/06-coding-standards/quality-gates.md`.

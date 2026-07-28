@@ -107,3 +107,10 @@ PM-doc-push queue, still open, only if 1+2 don't suffice)** remain unimplemented
 fix (skip the full multi-minute regate entirely when the only tree delta since the last green gate is remote doc/plan
 commits that don't touch this slot's own staged files) — deliberately deferred rather than rushed, per this doc's own
 instruction not to dispatch a change to `quickmerge.sh` blind.
+
+## Todos
+
+- [ ] [INFRA] P2. **Implement fix 1 (content-hash QG green-tree fast-path)**, and fix 3 (serialized PM-doc-push queue)
+      only if 1+2 prove insufficient — both remain unimplemented; fix 1 is "the biggest win" (skip the full
+      `quality-gates.sh` re-run on a lost sentinel race when the staged content is unchanged since the last green gate),
+      deliberately deferred pending careful review since `quickmerge.sh` is high-blast-radius shared ship infra.

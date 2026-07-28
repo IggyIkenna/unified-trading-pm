@@ -107,3 +107,9 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 - injected reverted-T1.1 literal (`instruments-store-sports-{project_id}` / `market-data-tick-sports-{project_id}`) →
   `FAIL — 2 non-baselined`.
 - canonical `-prd-` form (`instruments-store-sports-prd-{project_id}`) → not flagged.
+
+## Todos
+
+- [ ] [INFRA] P2. **Pay down the 15 baselined legacy bucket-name TEMPLATE literals** (features-onchain/calendar/
+      store/sports + instruments-store-tradfi) — route each through `resolve_bucket_name(...)` and remove its baseline
+      entry as that asset group reaches its own legacy-bucket decommission; none has been paid down yet.

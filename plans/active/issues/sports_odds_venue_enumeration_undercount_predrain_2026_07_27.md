@@ -174,6 +174,15 @@ manifest specifically for these 3 venues, per this same doc's precedent for the 
 3. If they're out of scope (different asset_group / already migrated / legitimately excluded), record why in this doc's
    `resolved_by` and close.
 
+## Todos
+
+- [ ] [OPERATOR] P0. **Reconcile the ~19 unmapped odds venues before legacy retirement** — determine whether the ~19
+      extra venues (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS,
+      UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU)
+      are in-scope and need a venue→class mapping, or are legitimately out of scope, before
+      `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s legacy `odds` contract retirement proceeds (see
+      "Suggested next step" above).
+
 ## Secondary, smaller finding (not this doc's main subject)
 
 The `read_availability_index(..., filters=[("instrument_type","=","odds")])` pushdown-filtered read returned an

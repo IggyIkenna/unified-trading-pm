@@ -217,6 +217,22 @@ close-out criterion updated below (this commit) to drop the org-migration clause
 
 ---
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule on the durable fix for VM startup/helper scripts not auto-rolling to GCS (item 1)** — CI job
+      vs per-launcher freshness check vs manual-checklist-only;
+      `vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md` names all 3 options undecided.
+- [ ] [OPERATOR] P2. **Rule on folding the aiohttp CVE doc's last open todo into the execution-service holdout doc
+      (item 2)** — both are near-complete with exactly 1 open todo, provably the same work; needs a "where does the live
+      work live" decision before closing either.
+- [ ] [OPERATOR] P3. **Rule on re-targeting or retiring `stash_pile_workspace_cleanup`'s Phase-3 fan-out to retired
+      per-epic VMs (item 4)** — 10 of its 17 open todos dispatch to VM names that no longer exist under the current
+      single-VM/role-based topology, permanently pinning the plan at 1/18.
+- [ ] [OPERATOR] P1. **Rule whether the prek hard-gate satisfies "line 2" of the plan-quality four-line defense, or the
+      full hygiene sweep must be wired into `quality-gates.sh` (item 6)** —
+      `plan_quality_four_line_defense_architecture_2026_07_23.md`'s own todo asserts line 2 is live, but
+      `run_hygiene_sweep` is measurably not wired into `quality-gates.sh`.
+
 ## 6. Does the prek hard-gate satisfy "line 2", or must the full sweep be wired into `quality-gates.sh`? (P1)
 
 This is the authority half of a contradiction this pass auto-corrected the factual half of.

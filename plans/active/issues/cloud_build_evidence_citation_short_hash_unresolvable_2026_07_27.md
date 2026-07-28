@@ -74,3 +74,10 @@ one bad checkbox.
 
 Captured + flagged to the operator as an evidence-integrity escalation. **Not yet fixed.** Needs (1) confirmation of the
 gate's actual resolve-vs-match behavior and (2) an operator decision on the citation-format contract + any back-fill.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule on the Cloud Build evidence-citation format** — confirm whether
+      `check_evidence_backed_completion.py` actually resolves `cloudbuild=<id>` via `gcloud builds describe` or only
+      pattern-matches the field's presence, then decide the accepted citation format (reject a bare short hash) and
+      whether existing short-hash citations need back-filling (see "Open questions for the owner / operator" above).

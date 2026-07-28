@@ -120,6 +120,12 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       shipped and archived 2026-07-15, and its own Progress Log says "Handoff: P2 + P4 both flipped `status: active`" —
       confirming P1→P2→P3→P4 all progressed. This checklist item's checkbox just never caught up.
 
+- [ ] [BACKEND] P1. **Root-cause + fix why the reaper isn't actually draining `active/` toward the live-VM count** — per
+      the 2026-07-24 [REVIEW] finding, a 30-entry random sample of already-self-classified-`stale` entries remained
+      unreaped; Cloud Run logs show the reaper tick's `run_in_executor` call repeatedly interrupted by `CancelledError`
+      during container shutdown, and root cause is not yet diagnosed. Filed with full detail in
+      `issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`.
+
 ## Folded-in scope 2026-07-17 (registry-fork discovery — the REAL dual-write blocker)
 
 - [x] ✅ [BACKEND] P0. **Re-land the `deployments_registry` relocation so the VM write path reaches the dual-write

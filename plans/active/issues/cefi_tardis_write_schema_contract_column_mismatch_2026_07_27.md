@@ -160,6 +160,10 @@ the CeFi contract from being a one-off exception downstream readers have to spec
       — `price`/`amount` now parse `float64` — then through `finalise_rows_and_path(..., validate=True)` end-to-end:
       **zero violations**, `ts_event` dtype `datetime64[ns, UTC]` landing entirely inside `day=2026-06-29` (min
       `00:00:05.021`, max `23:59:55.921`), `size`/`price` both `float64`.
+- [ ] [SERVICE] P3. **Fix `_apply_time_filter`'s wrong epoch unit** (`tardis_csv_transport.py:354`, `unit="ns"` should
+      be `unit="us"`) — confirmed WRONG (silently produces a 1970-01-21 timestamp, no error), currently
+      dormant/unreachable in production (no live caller passes `start_time`/`end_time` to Tardis today); worth a cleanup
+      pass before any future caller starts exercising it.
 
 ## 7. Codex SSOTs
 

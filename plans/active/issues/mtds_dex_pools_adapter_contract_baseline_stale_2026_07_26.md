@@ -80,6 +80,13 @@ this doc did not fully verify it) — per the baseline tooling's own guidance ("
 after legit refactor that intentionally changes counts — never to mask a regression"). A single combined
 `--regenerate-baseline` run covers both once both are independently confirmed safe.
 
+## Todos
+
+- [ ] [SCRIPT] P3. **Regenerate `adapter_contract_baseline.yaml`** — run `--regenerate-baseline` for
+      `dex_pools_handler.py` + `_dex_pools_subgraph.py` (confirmed-safe code motion, verified in this doc) and
+      separately for `_defi_manifest.py` + `_defi_catalog_freshness.py` (needs its own confirmation pass by whoever owns
+      that refactor); not yet actioned — still WARN-only in `quality-gates.sh`.
+
 ## Progress log
 
 - 2026-07-26: Filed while shipping `defi_satellite_ao_dispatch_batch2-012` (MTDS DeFi perf bundle). Discovered as a QG

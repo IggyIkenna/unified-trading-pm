@@ -103,6 +103,12 @@ about the alert that reports the residue.
    lack trailers and appear in the same scan; confirm they are carve-out-exempt in `check_strict_quickmerge.py` so
    future triage does not chase them as offenders.
 
+## Todos
+
+- [ ] [DEVOPS] P2. **Ship the "Fix direction" items** — none of the 3 fixes above (reclassify the branch-health alert as
+      `PROVENANCE-BLOCKED` instead of `PROMOTION LAG`, clear the 2 current blocks at source, confirm the `_backmerge`
+      merge-commit carve-out exemption) has been implemented yet.
+
 ## Provenance
 
 Found while shipping `bucket_estate_consolidation_to_sub100_2026_07_13`'s asset-group parity sweep (operator shared the

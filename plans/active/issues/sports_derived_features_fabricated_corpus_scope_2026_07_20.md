@@ -115,3 +115,9 @@ weak feature, it is an actively wrong one, and it is currently present in 100% o
 until the corpus is clean.
 
 Evidence: `scratchpad/corpus_walk.sh`, `scratchpad/fab_rate.py`, `scratchpad/check_2019_fab.py` (2026-07-20).
+
+## Todos
+
+- [ ] [DATA] P0. **Remediate the corpus-wide §Z fabrication** — extend the re-run to 2017+2018 (never in scope), purge
+      (not just overwrite) every `derived_features` parquet still carrying a pre-fix creation timestamp, and re-verify
+      by census, not sampling (see "Required remediation" above).

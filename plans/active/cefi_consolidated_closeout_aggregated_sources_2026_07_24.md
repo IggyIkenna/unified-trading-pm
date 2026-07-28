@@ -754,3 +754,10 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
   signal research / paper-trading POC, overwhelmingly Binance-perp/CeFi content.
 - [`vol_dvol_backtestable_engines_2026_07_13.md`](/plans/active/vol_dvol_backtestable_engines_2026_07_13.md) —
   DVOL-backtestable VOL_CARRY + VOL_ARB_RV_IV engines, exclusively Deribit DVOL-index CeFi vol trading.
+
+## Todos
+
+- [ ] [DOC] P2. **Keep this discoverability index synced as sibling docs close out** — this doc's own "Aggregated source
+      docs" section catalogs dozens of genuinely open cefi todos as bold non-checkbox markers by design (e.g. Script 2
+      P0 embedded-slash wire-stem fix, catalogue-dedup P0, DERIBIT combo P1 partition-move); none of that open work is
+      tracked as a checkbox in this index itself.

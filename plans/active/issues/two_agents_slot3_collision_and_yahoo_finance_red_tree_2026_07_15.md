@@ -142,3 +142,10 @@ commit's diff and re-inserted it as uncommitted content (not staged, not committ
 **Sharper recommendation**: any agent that reverts an accidental foreign-hunk sweep MUST verify the OTHER agent's own
 untracked/uncommitted files still typecheck against the reverted tree before considering the incident closed — a revert
 is not complete until the counterpart's files build again, not just until your own commit looks clean.
+
+## Todos
+
+- [ ] [INFRA] P2. **Hunk-scope `quickmerge.sh --files` staging** — switch `--files` from a whole-file `git add` to
+      hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
+      file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
+      ("outside this plan's scope and risks its own regressions under contention").

@@ -104,3 +104,9 @@ retrying a `/done` call that cannot structurally succeed — the actual archival
 (`unified-trading-pm@f8f9dc25b`, verified live: both docs at `plans/archive/2026_07/`, checkbox `[x]`, all 8 corpus
 referrers fixed). No further action needed on the PM side; this doc tracks the agent-orchestrator-side gate fix as its
 own independently-scoped follow-up.
+
+## Todos
+
+- [ ] [ENGINEER] P2. **Fix M3's `check_plan_flip` to handle archival-rename-bundled checkbox flips** — either resolve
+      the rename via `git log --follow --diff-filter=R` and diff the new path, or fall back to diffing the corresponding
+      added path (matched by basename) when the old-path diff is a pure deletion. Repo: agent-orchestrator.

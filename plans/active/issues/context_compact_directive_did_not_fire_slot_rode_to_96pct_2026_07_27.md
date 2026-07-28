@@ -70,3 +70,9 @@ climbed unguided.
 Captured only; **not yet diagnosed**. Needs an owner on the agent-orchestrator side to reproduce from `/progress`
 history for slot 11 and confirm which of the candidate causes applies. Low-risk (client auto-compact is the safety net)
 but a real throughput/robustness gap.
+
+## Todos
+
+- [ ] [ENGINEER] P2. **Diagnose why the `compact_now` directive never fired for slot 11** — reproduce from `/progress`
+      history and confirm which candidate cause (threshold-eval gap, dedup guard, or high-value parsing bug) applies in
+      agent-orchestrator's `context_lifecycle.py`; captured only, not yet diagnosed.

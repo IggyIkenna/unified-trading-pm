@@ -506,3 +506,11 @@ sequential venue-scoped applies → verify each → resume cron → verify ENABL
 verifier (2 consecutive clean passes, confirming colon_wire's actual status along the way) → run
 `verify_cefi_canonical_4surface_2026_07_20.py` for the final done-state re-proof → archive this plan + its parent
 (line-cap already clear).
+
+## Todos
+
+- [ ] [DATA] P1. **Resume the paused migration: apply the 2,962-object safe residual + final re-proof + archive** —
+      pause cron → verify PAUSED → 4 sequential venue-scoped `cefi-late-renames` applies (EXTENDED-STARKNET/
+      LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES) → resume cron → verify ENABLED → loop-until-dry full-range verifier (2
+      consecutive clean passes, confirming colon_wire) → `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof →
+      archive this plan + its parent. Session paused 2026-07-25 on operator request (host contention); not yet resumed.

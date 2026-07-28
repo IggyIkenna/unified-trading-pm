@@ -102,6 +102,12 @@ depends_on: []
   until then it is carved out of that todo's initial delivery (see that plan's Progress Log / evidence for the
   carve-out).
 
+## Todos
+
+- [ ] [DATA] P0. **Root-cause ASTER's manifest registration gap** — why `record_captured`/`record_failed` writes for the
+      raw-trade adapter aren't landing despite real parquet on GCS (see "Recommended decision" above); this blocks
+      `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg.
+
 ## Not yet checked (deliberately out of scope for this discovery pass)
 
 - Whether the SAME registration gap affects other CeFi venues beyond the 4 on-chain-perp ones this session was scoped to

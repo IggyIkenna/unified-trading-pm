@@ -96,3 +96,9 @@ Finer-than-year date-range sharding added to the launcher (`deployment-service@0
 cap), so the per-day waste is parallelized across many VMs. The 2026-07-20 HL trades full-universe backfill ran as 21
 shards (2025-05-25→2026-07-20) in ~20min instead of ~3.5h. This does not remove the per-day waste — it hides it behind
 parallelism (fleet still does ~565 catalogue reloads total). The proper fix above removes it.
+
+## Todos
+
+- [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process, or a cross-process `CeFiCatalogReader`
+      cache)** — the interim per-year sharding mitigation only hides the per-day catalogue-reload waste behind
+      parallelism; neither of the two proper-fix options above has been implemented.

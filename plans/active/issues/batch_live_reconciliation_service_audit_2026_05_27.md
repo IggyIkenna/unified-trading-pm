@@ -575,3 +575,11 @@ defect, just confirming the coupling is daily, not real-time.
 8. **Refresh `separation-of-concerns.md` PBMS rows.** Replace standalone-PBMS references with strategy-service/position;
    mark the merge (2026-05-20). Also flag the stale `workspace-manifest.json` PBMS stanza (lines 1120/1159) +
    `unified-trading-api/pbm_performance.py` endpoint base for the respective owners. _Doc fix._
+
+## 10. Todos
+
+- [ ] [BACKEND] P1. **Close BLRS's still-open gaps (G1/G3/G10)** — as of 2026-07-27: G1 resolution API is still
+      mock-backed (in-memory store, 3 hardcoded breaks, not reading Stage-5 summaries); G3 stage4 agent dispatch is
+      markdown-only; G10 UI→resolution-API wiring is unverified. All three are rehomed as todos in
+      `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`, but this audit doc's own ledger (✅/❓
+      narrative markers, no real checkboxes) never reflected them as open work.

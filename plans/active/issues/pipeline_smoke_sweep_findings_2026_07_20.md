@@ -94,3 +94,10 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
   determine capture state, so every cell filters out. A watcher is armed to run it automatically once the fleet lands
   AND the manifest is fresh again.
 - **sports** is ~4 weeks stale — worth understanding why before treating any sports smoke result as a pipeline verdict.
+
+## Todos
+
+- [ ] [DATA] P1. **Unblock the 3 still-open smoke gaps** — prediction cannot be smoked until its bucket resolution is
+      fixed (dedicated `pred` flat kind, not a per-asset_group `market-data` entry); DeFi smoke stays blocked while
+      `canonical-migration-defi-rebuild` runs (consolidated manifest goes stale, a watcher is armed but has not yet
+      fired); sports is ~4 weeks stale and the cause is unconfirmed.

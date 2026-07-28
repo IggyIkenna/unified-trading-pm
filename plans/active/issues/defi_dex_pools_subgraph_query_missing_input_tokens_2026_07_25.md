@@ -127,3 +127,10 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 - `defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md` -- the marker-cleanup dry-run issue this was
   discovered investigating.
 - `plans/active/defi_consolidated_closeout_2026_07_18.md` -- parent plan.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide + fix the `messari_basic` subgraph query missing `inputTokens { symbol }`** --
+      curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve tier-2 symbol resolution; needs an operator call on
+      whether to fix the query (add `inputTokens`, switch to `_parse_messari_dex`) before DeFi live capture resumes, or
+      deprioritize.

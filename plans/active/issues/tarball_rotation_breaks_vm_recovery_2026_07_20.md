@@ -174,3 +174,9 @@ The cron is live and fires daily at 02:00 UTC with `--keep 5` and no dry-run. Ev
 orphan manifests. Any SPOT preemption or relaunch of a pinned fleet during this window fails silently and self-deletes.
 **Interim mitigation available without any code change: raise `--keep` substantially or suspend `tarball_cleanup_cron`**
 until the fix lands — storage cost is negligible against a silently bricked fleet recovery.
+
+## Todos
+
+- [ ] [OPERATOR] P0. **Decide the tarball pin-source fix (Option A/B/C)** — the fix is not shipped; choose between an
+      additive UTL change (A), a launcher-written durable pin registry (B), or both (C) before the retention sweep can
+      safely protect in-use pins.

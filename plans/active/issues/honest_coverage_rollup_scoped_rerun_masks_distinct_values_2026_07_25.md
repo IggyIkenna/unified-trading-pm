@@ -111,3 +111,9 @@ Two independent remediations exist and the choice between them is a judgment cal
 Both are real code changes to a currently-shipped, actively-relied-on endpoint; picking one, plus deciding whether
 `source_date` needs to become per-axis in the response contract (a client-facing shape change), needs an operator/owner
 call -- not guessed past here.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide reader-side vs writer-side guard (Option A/B) for the scoped-rerun rollup overwrite** —
+      neither remediation has been implemented; a scoped `--asset-group` re-run still silently masks other asset_groups'
+      distinct-values as false-clean 0/0.

@@ -189,6 +189,13 @@ missing from Sources entirely).
 
 **Close-out criterion**: all three docs' residual items closed or explicitly re-deferred with a named owner.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Resolve the worker-liveness/watchdog kick+escalation direction contradiction** — six docs claim
+      this mechanism and two of them prescribe OPPOSITE directions; the 2026-07-26 `/ag-closeout-audit ao` run escalated
+      this as the largest single blocker and separately found 32 of this tranche's 35 Sources orphaned (no covering
+      plan) with only a `status: draft` satellite batch1 (+ finalize) drafted against 10 of them.
+
 ## Codex SSOTs (read before touching a track)
 
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`,

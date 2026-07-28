@@ -319,3 +319,10 @@ repo — instruments-service, not one of quickmerge's own cascade targets, but g
 sibling-slot push — auto-fast-forward mid-session via the 5-min slot cron, see the sibling finding
 `sports_t6_8_oneoff_retirement_residual_2026_07_25.md`). Not chased further (matches this doc's "do not duplicate
 investigation" guidance) — retrying with real spacing (not back-to-back) per this doc's established remedy.
+
+## Todos
+
+- [ ] [SCRIPT] P2. **Root-cause the `DEPLOYMENT_ENV` monkeypatch leak recurring under quickmerge's re-gate** — 14+
+      confirmed occurrences, mechanism still not identified (the cascade-step theory — quickmerge's STAGE 0 re-pulling
+      ancestor repos before re-running the suite — is the leading candidate); `PYTEST_WORKERS=1` is a stopgap, not a
+      fix, and the practical impact (quickmerge blocked) recurred worse than the original "resolved" status claimed.

@@ -234,3 +234,9 @@ activity matching current wall-clock time (per-VM manifest shard entry counts cl
 capture (bounded predicate-pushdown read of `_index/availability_index.parquet`, not a corpus walk): `live_kalshi` max
 captured date = `2026-07-27` (62,342 captured rows), `live_polymarket_clob` max captured date = `2026-07-27` (393,819
 captured rows). The ~29-day stall is broken; live capture resumed same-day as launch.
+
+## Todos
+
+- [ ] [DATA] P2. **Verify the Kalshi execution-service paper-order flow end-to-end** — still genuinely open: only the
+      elections-subdomain URL swap shipped; no test/log/commit confirms the paper-order flow was ever actually verified
+      end-to-end.

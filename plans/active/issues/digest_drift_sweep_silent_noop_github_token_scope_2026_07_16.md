@@ -299,3 +299,9 @@ assertion — otherwise we keep a third detector nobody reads.
    401/403 = fail loudly; assert `dispatched + fresh > 0`) **and** the dispatch POST (:160-176, same token defect).
 3. Add a dispatch cap.
 4. Run once, watched, off-hours, expecting 15 dispatches. Then let the cron take over.
+
+## Todos
+
+- [ ] [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
+      2026-06-28** — recommendation 1 above remains the sole unresolved item; recommendations 2b/2c/3 already shipped
+      2026-07-26.

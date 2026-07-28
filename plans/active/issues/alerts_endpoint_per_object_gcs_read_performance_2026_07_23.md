@@ -130,6 +130,12 @@ Two independent directions, not mutually exclusive:
 Per `plans/active/task_template.md`'s plan-destination rule, whichever direction (or both) the operator picks should
 become its own plan — this issue doc is the durable record of the finding and the options, not itself a plan.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Pick a fix direction for the per-object GCS read pattern** — reader-side concurrent/batched fetch
+      vs writer-side batching into one JSONL-per-day object (see "Recommended next steps" above); the root cause is
+      still unfixed and `_MAX_DAYS=30` would still reproduce the original OOM if a user requests it.
+
 ## Codex SSOTs
 
 - `/codex/04-architecture/ci-alerting.md` — the unified alerts ledger contract, diagnostic-surface principle, per-source

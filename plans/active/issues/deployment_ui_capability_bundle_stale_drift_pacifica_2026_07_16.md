@@ -282,3 +282,11 @@ prospectus-generator/committed-copy resync.
   - Net across both instances: zero remaining `venue:drift`/`collateral:drift`/`"drift"`-venue references anywhere
     checked this pass. The fourth instance (`openapi/prospectus/*.md`, 57 files) remains explicitly open — same
     generator-drift blast-radius risk, unowned, per this doc's existing note above.
+
+## Todos
+
+- [ ] [ENGINEER] P2. **Resync the fourth instance (`unified-api-contracts/openapi/prospectus/*.md`, 57 files)** — the
+      prospectus generator (`unified-trading-pm/scripts/openapi/generate_strategy_prospectus.py`) has drifted from the
+      committed files on multiple unrelated axes (venue-category classification, execution-algorithm lists, formatting,
+      `generated_from_commit` baseline, 2 missing archetypes), so a blind regen isn't safe yet — still carries DRIFT
+      residue and remains unowned (see "Fourth instance found, NOT applied" above).

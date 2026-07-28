@@ -785,3 +785,10 @@ drift_direction: none
     ml-service live-inference `manifest_inference_guard.py:46`. — see file for the remaining 13 P1-P3 items across
     unified-trading-library/features-service/instruments-service/strategy-service/deployment-service/e2e-testing, plus a
     proposed new QG gate to prevent regressions.
+
+## Todos
+
+- [ ] [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos** (by
+      design, non-checkbox digest bullets — e.g. 25 open in `data_completion_defi_2026_07_15.md`, 16 open P0/P1 in
+      `candle_canonical_path_migration_execution_2026_07_24.md`); do not treat this doc's own checkbox-free format as
+      evidence the defi asset group is done.

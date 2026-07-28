@@ -165,3 +165,10 @@ consumers are native Pub/Sub subscriptions (config, not code)** — a **BigQuery
 Storage subscription** (warm 5-min GCS), and the **GCS archive is TWO tiers** — warm 5-min (BQ-queryable, ~7d) + a
 **daily compaction job that rolls the warm 5-min files into cold long-term parquet** (no in-memory buffering, no
 per-tick files). This issue doc is the problem-record; the plan is the executable SSOT.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Build the durable warm-tier (Pub/Sub → Cloud-Storage subscription → GCS parts → daily cron
+      aggregate)** — currently `BLOCKED-CREDENTIALS` / awaiting build greenlight; without it `paper(W)==batch-rerun(W)`
+      is not yet provable for live data. Executable SSOT:
+      `plans/active/live_data_persistence_central_event_log_2026_06_25.md`.

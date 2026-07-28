@@ -264,3 +264,10 @@ byte-exact-matched) is conclusively established regardless of which script produ
 **Disposition**: both signals are real and now asserted as fact. No fix applied (investigation-only per this todo's
 scope) — the fix path is already the one this doc's ruling #3 names (fix-consolidator → re-derive-index →
 build-MTDS-collectors → recompute), not a new one.
+
+## Todos
+
+- [ ] [DATA] P0. **Fix onchain features consolidator → re-derive-index → build-MTDS-collectors → recompute** — the
+      mark→recompute fix for the 6 false-`captured` rows and 5 feature-less shard families (ruling #3) is BLOCKED on the
+      frozen onchain manifest/consolidator (stalled since 2026-07-18); full chain tracked in
+      `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`, not yet executed.

@@ -101,6 +101,12 @@ The same audit pass (2026-07-23) found `e2e-testing/scripts/defi/funding_ensembl
 happens to match current prod state today but will silently drift if `VENUE_COLLATERAL_MATRIX` ever changes. Lower
 severity (exploratory script, not a gated test) — noted here for visibility, not filed separately.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Rewrite or retire `test_collateral_validation.py`** — pick approach A/B/C from the Recommendation
+      section above (rewrite against the v2 mechanism, delete, or make the e2e-testing QG lint block on a dead import);
+      none has been actioned yet.
+
 ## Evidence / files read (2026-07-23 audit)
 
 - `e2e-testing/scripts/defi/test_collateral_validation.py` (542 lines, all 9 scenarios)

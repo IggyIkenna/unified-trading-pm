@@ -310,3 +310,11 @@ already-shipped, already-tested correctness fix that predates this issue doc's P
 genuinely remaining work is unchanged: the ~4,310 historical rows written before 2026-07-25 still carry
 blank/bare/bundle-leaked manifest ids and need a one-time manifest-only backfill (not a GCS content rewrite) — that
 stays its own scoped, `[OPERATOR]`-adjacent follow-up, not attempted here.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Confirm/rule out the Databento billing-guard gap, and scope the FX manifest-id backfill** — per
+      the "Deferred work after 2026-07-26" table, confirming/ruling out an actual Databento billing-guard gap for the
+      pre-fix window is "Not done" (needs Databento request-log access, not just code reading); separately, the
+      ~4,310-row historical FX `SPOT_PAIR` manifest `instrument_id` backfill stays out of scope and needs its own scoped
+      design/apply plan.

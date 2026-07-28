@@ -156,3 +156,9 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - This doc stays `status: open` (not `resolved`) — the CODE-level infra (map + resolver + wiring + tests) is done and
   shipped, but the actual 199,397-row residual is NOT reduced by this fix (0 rows resolve today, by honest design) —
   closing this doc as resolved would misrepresent that as "fixed."
+
+## Todos
+
+- [ ] [DATA] P2. **Land factory-address capture (Option A or B) + register the missing UAC SushiSwap-Arbitrum venues** —
+      the resolver built in this doc resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows today because no factory-address
+      data is captured anywhere and UAC has no `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` registry entries.

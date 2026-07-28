@@ -404,6 +404,13 @@ drift_direction: advance-code
 - **Folded-in, excluded from the digest above (all `superseded_by: sports_consolidated_closeout_2026_07_19.md`, live
   content absorbed into Track C/S2 — see the callout at the top of this section for the full list of 5)**.
 
+## Todos
+
+- [ ] [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos** (by
+      design, non-checkbox digest bullets — e.g. 73 open, 18 P0 / 40 P1 / 14 P2 / 1 P3, in
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md`); do not treat this doc's own checkbox-free format as
+      evidence the sports asset group is done.
+
 ## Deferred work — migrated to:
 
 **The `DEFERRED — register XG_SHOTS in SPORTS_DATA_TYPE_META` line** (formerly § API-Football / source-adapter
