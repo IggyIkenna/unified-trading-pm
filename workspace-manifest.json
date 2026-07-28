@@ -144,7 +144,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 0,
         "coverage_pct": null,
@@ -204,7 +204,7 @@
       ],
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 0,
@@ -270,7 +270,7 @@
         "cefi",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 4,
@@ -453,7 +453,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 21,
         "coverage_pct": null,
@@ -1100,7 +1100,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "coverage_pct": null,
@@ -1163,7 +1163,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 0,
         "coverage_pct": null,
@@ -1351,7 +1351,7 @@
         "large_file_count": 0,
         "coverage_pct": 80.61
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
@@ -1479,7 +1479,7 @@
         "warn_file_count": 0,
         "large_file_count": 0
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "tests"
     },
     "agent-orchestrator": {
@@ -1520,7 +1520,7 @@
         "large_file_count": 11,
         "qg_red_reason": "qg"
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
     }
   },
