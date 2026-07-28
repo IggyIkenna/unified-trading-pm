@@ -103,4 +103,4 @@ silently hit the same trap.
       Verified via a real `--test-run` smoke launch (`mtds-backfill-cefi-pipelinecheck-1`, HYPERLIQUID/trades/
       2025-05-25): run.log shows
       `OnchainPerpBatch complete for 2025-05-25: 768164 rows across venues=['HYPERLIQUID']     data_types=['trades']` —
-      trades-only, no book_snapshot_5/derivative_ticker over-fetch, exit_code=0. — deployment-service@e6ddf27
+      trades-only, no book_snapshot_5/derivative_ticker over-fetch, exit_code=0. — deployment-service@5f598d9
