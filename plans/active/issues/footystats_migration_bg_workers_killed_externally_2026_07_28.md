@@ -257,3 +257,22 @@ make a long-running local process on this host bulletproof against a genuine cap
 **Next step**: NOT retrying into a 100%-swap host immediately. Waiting for swap/load to show real recovery before the
 next resume attempt (same recipe: harness `run_in_background`, no `nohup`, `--resume-log` pointed at the same
 14,538-entry checkpoint).
+
+## Update 2026-07-28 (later still, slot-14) — checked ~20 min later expecting recovery; instead WORSE — new peak, host-wide crisis is not self-resolving
+
+Re-checked host state before considering a resume attempt, expecting some recovery after a ~20-minute wait. Instead:
+`cat /proc/loadavg` → **180.00 305.13 324.96** — a NEW peak, higher than the previous worst reading in this doc (185.17
+259.50 252.63). `free -h` → RAM 26Gi/30Gi used, only **669Mi free** / 4.3Gi available; swap **15Gi/15Gi used (100%, only
+23Mi free)** — swap has now been at or near full exhaustion across two consecutive checks roughly 20 minutes apart, not
+a transient spike that self-clears. Resume-log unchanged at 14,538 (no attempt made this check — correctly held off per
+the prior update's own guidance).
+
+**This is not resolving on its own.** Two independent severe readings 20 minutes apart, one of them a new all-time peak
+for this doc, strongly suggests a sustained fleet-wide condition (many concurrent slots' heavy work, consistent with the
+earlier-corroborated "31 concurrent full QGs vs. a 4-QG cap" finding from an unrelated slot) rather than a transient
+burst that will clear itself shortly. Continuing to hold off on any new local background launch on this host. Given this
+has now degraded to a NEW worst-recorded state while multiple workers (this one included) are deliberately backing off
+and waiting, the mitigation available to a single worker (waiting) does not appear to be converging — this may need
+operator-level intervention (identifying/throttling whatever is driving the fleet-wide over-concurrency, e.g. enforcing
+the existing "≤2 full QGs at once" rule, or reducing total active slot count) rather than more individual workers
+independently waiting it out.
