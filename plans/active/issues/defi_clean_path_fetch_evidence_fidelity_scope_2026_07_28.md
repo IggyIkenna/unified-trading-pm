@@ -101,24 +101,43 @@ Neither is acceptable, so this doc exists to make the true scope visible and dis
 ## Recommended decision
 
 Split into two tracks, both P2 (matches the source doc's own "Nicety" framing — the DANGER class is genuinely closed for
-the shared-helper-based sites; only `governance_adapter.py` needs the C1 fix at higher priority):
+the shared-helper-based sites; only `governance_adapter.py` needs the C1 fix at higher priority). Left `assigned_vm: NA`
+at this doc's own frontmatter level (this is a scoping/triage document, not a pre-vetted dispatch-ready backlog — item 2
+below is explicitly gated on a human design call) — a future triage pass should spin item 1 off into its own
+`assigned_vm: planning` dispatch todo once picked up, since it alone is genuinely bounded.
 
-1. **P1 — fix the `governance_adapter.py` swallowed-exception bug** (the one real correctness gap found here): raise on
-   a genuine HTTP/network error from `_fetch_subgraph_proposals`/`_fetch_snapshot_proposals` instead of returning `[]`,
-   so the per-protocol caller's existing `record_failed` path (not the clean-empty path) catches it — mirrors the C1 fix
-   pattern already applied elsewhere per `clean_fetch_evidence()`'s own docstring citation. This alone does NOT require
-   threading real HTTP status through anything; it is a bounded, single-file, testable fix.
-2. **P2 — thread real HTTP status per fetch-mechanism family**, split into several small, genuinely bounded todos (one
-   per shared fetch-helper family, not per handler) so each stays worker-determinable-alone:
-   - subgraph-HTTP family (widen `_run_subgraph_http`/`async_post_to_subgraph`-style helpers to return
-     `(payload, http_status)`, thread through their direct callers — bounded by which handlers actually share a helper,
-     verified per-family before dispatch, not assumed).
-   - Aave/Alchemy RPC family — needs a design decision first (does the Alchemy client expose a per-call status at all?
-     if not, this family may not be closeable the same way — resolve as its own DIAG todo before a CODE todo).
-   - Chainlink/Pyth on-chain family — likely the same "no HTTP status concept" question as Aave.
-   - `governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's status" design question
-     as a LOCAL/human decision first (per CLAUDE.md's dispatch-scope-eligibility rule — this is a judgment call, not a
-     checkable fact), THEN dispatch the scoped CODE todo against that decision.
+- [ ] [CODE] P1. **Fix the `governance_adapter.py` swallowed-exception bug** (the one real correctness gap found here,
+      market-tick-data-service): raise on a genuine HTTP/network error from `_fetch_subgraph_proposals`/
+      `_fetch_snapshot_proposals` (both currently `except (aiohttp.ClientError, OSError, ValueError): return []`)
+      instead of returning `[]`, so the per-protocol caller's existing `record_failed` path (not the clean-empty path)
+      catches it — mirrors the C1 fix pattern already applied elsewhere per `clean_fetch_evidence()`'s own docstring
+      citation. This alone does NOT require threading real HTTP status through anything; it is a bounded, single-file,
+      testable fix. **Done when**: a test proves a simulated 5xx/network error on either fetch path reaches
+      `record_failed`, not a silent empty-list `SOURCE_RETURNED_ZERO`; existing "genuinely zero proposals this window"
+      behavior is unchanged.
+- [ ] [DIAG] P2. **Aave/Alchemy RPC family — determine whether a per-call HTTP status is even obtainable** from the
+      Alchemy RPC batch client `_aave_oracle_collection.py` uses. If not, this family cannot be closed the same way as
+      the HTTP-subgraph family — report that and propose the alternative (RPC-level error code? nothing to thread?)
+      rather than guessing. Read-only research, no code change. (market-tick-data-service)
+- [ ] [DIAG] P2. **Chainlink/Pyth on-chain family — same "is there an HTTP-status-equivalent" question** as the Aave
+      item above, for `oracle_prices_handler.py`'s Chainlink + Pyth legs. Read-only research, no code change.
+      (market-tick-data-service)
+- [ ] [CODE] P2. **Subgraph-HTTP family — thread real status through the direct `async_post_to_subgraph` callers**
+      (verified 2 real callers today: `dex_swaps_handler.py`, `liquidations_handler.py` — RE-VERIFY this count at
+      dispatch time, don't trust it stale) by widening `async_post_to_subgraph`'s return to `(payload, http_status)` and
+      updating both callers. **Scoping note**: as of this doc's writing, NEITHER of those 2 callers actually calls
+      `record_zero_rows`/`record_empty` on their clean-empty path (confirmed by grep) — so this todo's real value is
+      establishing the pattern for OTHER subgraph-HTTP helpers (`_run_subgraph_http` in `evm_defi_collectors.py`,
+      `governance_adapter.py`'s inline `session.post`, etc.), each of which needs its OWN per-file widen (not a shared
+      helper) — re-scope this todo to the actual highest-value single file once picked up, don't attempt all of them in
+      one dispatch. (market-tick-data-service)
+- [ ] [LOCAL] P2. **`governance_proposals_handler.py`'s dual-source merge — resolve the "report which source's status"
+      design question** (subgraph + Snapshot are two independent fetches per call; there is no single scalar "the" HTTP
+      status once both are queried and merged) as a human/local decision FIRST (per
+      `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — this is a
+      judgment call, not a checkable fact), THEN file the scoped CODE todo against that decision. Options to weigh:
+      report per-source (2 fields), report the worse of the two, or track both up through `_write_or_empty` and let the
+      caller decide. Do not dispatch a CODE todo for this handler before the decision lands.
 
 ## Codex SSOTs
 
