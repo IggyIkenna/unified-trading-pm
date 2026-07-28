@@ -373,3 +373,35 @@ escalate to a `cicd` worker.
   `ldr_qg_failure` promotion-PR path) rather than a promotion PR itself — worth noting for whoever eventually resolves
   this doc's `[SCRIPT]` P0 allowlist-cleanup todo, since a fix landed on `live-defi-rollout` only reaches `main` on the
   next LDR→main promotion cycle (the failing `main` push itself cannot be re-run against the fix).
+
+- 2026-07-28 (cicd agent, slot-3, escalation `agt-b57f74`, `main_ci_red` on `market-data-processing-service`, no PR —
+  follow-up wall on the SAME `main` red state slot-4 diagnosed above): **propagation-gap close, not a new root cause.**
+  Confirmed slot-4's fix (`market-data-processing-service@17ab96a2`, `self_hosted_runner_labels` reverted to `""`) was
+  already live-green on `live-defi-rollout` (jobs on `labels: ["ubuntu-latest"]`, run `30337347465` success) — nothing
+  to re-fix there. The open problem was purely propagation: `main` HEAD (`8a6947a`, the promote-PR-#528 merge that
+  predates the fix) stayed red because the automated `ldr-to-main-promote-fleet.yml` (`*/15` schedule) was not advancing
+  `market-data-processing-service` — two consecutive ticks (`30339657932` at 07:46, `30340884923` at 08:04) show the
+  SAME symptom already tracked in
+  `/plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`: the 07:46
+  tick printed an explicit `GATE BLOCK ... ci_status=FAILING (cached='FAILING', live='FEATURE_GREEN')` (the
+  hourly-consolidator manifest cache lagging the real green LDR), and the 08:04 tick — by which point the PM-main
+  manifest's cached `ci_status` had already caught up to `SIT_VALIDATED` — produced **no** `TIER A PASS` / `GATE BLOCK`
+  / `SIT GATE BLOCK` line for the repo at all (silently absent from `Promoted`/`Blocked`/`Conflicted`, same signature as
+  the deployment-service case in the linked doc, third corroboration of that automation gap). **Third-party evidence
+  this self-resolves on a fresh dispatch, not a permanent stuck state**: manually re-firing
+  `gh workflow run ldr-to-main-promote-fleet.yml --ref main -f only_repo=market-data-processing-service` (run
+  `30341624830`) worked cleanly on the very next attempt — `TIER A PASS`, `CONTENT GATE PASS`, `sit-gate/fleet-green`
+  posted, `SIT GATE PASS` (non-breaking delta), opened PR #529 (`promote/market-data-processing-service/17ab96a22b32` →
+  `main`) with auto-merge armed, PR's own `quality-gates-v2` went green in ~a few minutes (now on `ubuntu-latest`,
+  confirming the fix rides along), and it auto-merged at 08:16:23Z. Verified `main` tree SHA == `live-defi-rollout` tree
+  SHA post-merge (`7e5aa192...`, fully caught up, not just the one file) and the post-merge `push:[main]`
+  `quality-gates-v2` run (`30341718322`) completed green. Separately, the ORIGINAL failing run `30336297316` was also
+  observed to have been re-run and turned green on its own (`conclusion=success`, `updatedAt` 08:12:41Z) sometime
+  between my two checks — unclear which actor re-ran it; noting in case it double-counts as a second, independent
+  self-heal signal for the promote-fleet automation gap rather than something I triggered. Did not touch the shared
+  allowlist file, `self-hosted-qg-repos.txt`, any other repo, or the VM. No open repo-blocker existed for this repo
+  (`GET /api/repo-blockers` → `{"open": []}`). **Net effect on the linked automation-gap doc's open `[OPERATOR]` P2
+  todo**: this is a THIRD observed instance of the silent-skip symptom (after deployment-api and deployment-service),
+  and a third instance of it resolving cleanly on a manual re-dispatch with no code change — weak evidence toward
+  "eventual-consistency/timing artifact" over "hard bug in `process_repo`", but not conclusive (three manual
+  interventions, zero confirmed unassisted self-heals within a few ticks as that todo asks for).
