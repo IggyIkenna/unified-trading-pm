@@ -44,6 +44,7 @@ source:
   plan covers this; only tangential hit was
   `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07-21.md` (unrelated pre-existing
   deployment-ui mobile-NAV smoke failures, not this feature).
+drift_direction: advance-code
 ---
 
 # Agent-orchestrator mobile parity + worker-tmux chat
