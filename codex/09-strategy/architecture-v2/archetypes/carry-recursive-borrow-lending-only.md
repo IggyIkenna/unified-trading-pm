@@ -57,9 +57,9 @@ topology_requirements:
 
 > **Status:** Design-shipped 2026-05-12 (UAC enum + ARCHETYPE_CONFIG_SEED + per-chain ReserveParams). Implementation
 > gated on Phase 4 Solidity + Phase 5 Python orchestrator per
-> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 > (Phases 1-9); Phase 12 backtest per
-> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](../../../../plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](../../../../plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
 > (Phase 10+).
 
 ## What it does

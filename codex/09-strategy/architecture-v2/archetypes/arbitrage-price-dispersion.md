@@ -346,6 +346,6 @@ Bridge slots (2026-05-20, from `archetype_slot_resolver.py STRATEGY_TYPE_TO_SLOT
 - MEV protection for DeFi arb: [../cross-cutting/mev-protection.md](../cross-cutting/mev-protection.md)
 - **Venue-matrix / canonicalisation plan** (Stream B: funding-rate-dispersion multi-venue + Stream D: target_leverage /
   vol-cap config schema):
-  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
+  [`plans/active/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md`](../../../../plans/archive/2026_05/defi_archetypes_canonicalisation_and_venue_matrix_2026_05_07.md)
 - **Finalisation plan** (APD execution orchestrator Phase A; archived 2026-05-09):
   [`plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md`](../../../../plans/archive/arbitrage_price_dispersion_finalisation_2026_05_09.md)

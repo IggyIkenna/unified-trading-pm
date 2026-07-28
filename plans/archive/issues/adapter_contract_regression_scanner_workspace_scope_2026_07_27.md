@@ -30,7 +30,7 @@ tags: [quality-gates, contract-regression, ci-cd, workspace-scope, false-positiv
 related:
   [
     /plans/archive/issues/mtds_phoenix_orderbook_handler_contract_call_regression_2026_07_27.md,
-    /plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
+    /plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md,
     /plans/archive/issues/mtds_adapter_contract_regression_stale_baseline_2026_07_13.md,
   ]
 created: 2026-07-27

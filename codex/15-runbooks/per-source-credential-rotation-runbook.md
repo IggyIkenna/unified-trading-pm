@@ -40,7 +40,7 @@ last_executed: per-source rotation log appended in body; cross-ref /codex/15-run
 # Per-source credential rotation runbook — sports, prediction, DeFi data
 
 > **Created 2026-05-15** per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 5.A.2. Full cross-class rotation cadence is at
 > [`/codex/15-runbooks/credential-rotation-runbook.md`](credential-rotation-runbook.md).
 >

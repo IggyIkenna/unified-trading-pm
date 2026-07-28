@@ -394,8 +394,8 @@ QG gate between every phase boundary (next phase cannot start until prior phase 
 ## References
 
 - Parent plan that surfaced this as a follow-up Phase 3 sub-slice:
-  `unified-trading-pm/plans/active/data_status_multi_axis_shard_propagation_2026_05_06.plan.md`
-- Writer-side companion: `unified-trading-pm/plans/active/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`
+  `unified-trading-pm/plans/archive/data_status_multi_axis_shard_propagation_2026_05_06.plan.md`
+- Writer-side companion: `unified-trading-pm/plans/archive/shard_granularity_ssot_propagation_2026_05_06.HANDOVER.md`
 - CLI axes SSOT: `unified-trading-pm/codex/06-coding-standards/cli-convention.md` (`--operation` / `--mode` /
   `--asset-group`)
 - Operator-UX prerequisite: `unified-trading-pm/plans/active/master_to_live_defi_2026_05_23.plan.md` (group G item 23:

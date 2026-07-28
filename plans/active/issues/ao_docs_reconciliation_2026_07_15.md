@@ -23,7 +23,7 @@ related:
     /plans/epics/orchestrator_master.md,
     /plans/epics/agent_operating_framework_master.md,
     /plans/archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
-    /plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
+    /plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
   ]
 created: 2026-07-15
 last_updated: 2026-07-16

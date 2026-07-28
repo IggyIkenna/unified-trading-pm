@@ -220,7 +220,7 @@ sandwich loss).
   process per `circuit_breaker.py:50-59` + Phase 4 placeholder for non-carry / non-arb breaker additions).
 - Risk plan § Phase 1.E + 1.F: `risk_simulations_limits_alerting_2026_05_10.md` (new AlertCode additions + recovery
   wiring).
-- DeFi master plan MEV section: `unified-trading-pm/plans/active/defi_master.md` line 1018 (MEV-leakage as
+- DeFi master plan MEV section: `unified-trading-pm/plans/epics/defi_master.md` line 1018 (MEV-leakage as
   audit-followup).
 - This plan body (parent scope): `simulation_scenarios_topology_price_shocks_2026_05_09.md` lines 51-103 (compressed
   scope frame — 6 critical-path scenarios; line 73 lists `defi_gas_surge_50x` as the cousin scenario covering gas PRICE,

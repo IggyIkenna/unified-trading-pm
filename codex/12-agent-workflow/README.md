@@ -8,7 +8,7 @@ Agent operating procedures for the Unified Trading System. Authoritative agent r
 (synced from `unified-trading-pm/cursor-rules/`).
 
 **For agent rules:** `.cursor/rules/*.mdc` **For active task list:**
-`unified-trading-pm/plans/cursor-plans/consolidated_remaining_work.plan.md` **For task templates:**
+`unified-trading-pm/plans/archive/consolidated_remaining_work.plan.md` **For task templates:**
 `unified-trading-pm/plans/tasks/`
 
 ---

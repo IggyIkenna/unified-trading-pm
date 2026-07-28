@@ -785,14 +785,14 @@ YOUR JOB IS THE WORKSPACE'S MOST CRITICAL PATH for the 2026-05-15 Phase 1 freeze
 Theme: manifest_schema_final_gate Phase 1 — UAC v8 schema columns (`service_emission_state`, `pipeline_mode`, `feature_family`) + ServiceEmissionPolicy `next_state(...)` resolver + EXPECTED_KNOWN_SOURCE_GAP enum value (operator approved 2026-05-11).
 
 BEFORE doing anything else, read in order:
-  1. unified-trading-pm/plans/active/work_split_2026_05_11_ikenna.md § "Slot 6 spawn prompt" — this section.
+  1. unified-trading-pm/plans/archive/work_split_2026_05_11_ikenna.md § "Slot 6 spawn prompt" — this section.
   2. unified-trading-pm/cursor-configs/CLAUDE.md — workspace coding standards (especially "Availability manifest v5 (honest-coverage)" + the new "Bucket-name SSOT operator decision (b+)" key rule).
   3. unified-trading-pm/codex/05-infrastructure/per-tab-worktrees.md.
   4. unified-trading-pm/codex/05-infrastructure/plan-aware-merge-resolution.md.
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md.
-  6. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md — your plan-of-record (Phase 1.A + 1.B + 1.C are your scope).
-  7. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella; Phase 2.1 depends on you.
-  8. unified-trading-pm/plans/active/issues/wave3x_track_d_findings_2026_05_11.md § TL;DR point 2 — EXPECTED_KNOWN_SOURCE_GAP enum context (VIX 15m gap + sports KNOWN_COVERAGE_GAPS use cases).
+  6. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md — your plan-of-record (Phase 1.A + 1.B + 1.C are your scope).
+  7. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md — sequencing umbrella; Phase 2.1 depends on you.
+  8. unified-trading-pm/plans/archive/issues/wave3x_track_d_findings_2026_05_11.md § TL;DR point 2 — EXPECTED_KNOWN_SOURCE_GAP enum context (VIX 15m gap + sports KNOWN_COVERAGE_GAPS use cases).
 
 Your agent-tag: ikenna-v8-schema-tab.
 

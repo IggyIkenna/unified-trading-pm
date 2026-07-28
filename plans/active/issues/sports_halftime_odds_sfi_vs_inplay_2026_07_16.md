@@ -121,8 +121,8 @@ source:
 > `scripts/plan-hygiene/check_line_caps.sh`). The original read-only investigation narrative (SFI column inventory, the
 > 746,928 in-play rows anatomy, the T-0/HT horizon analysis, the features-consumption audit, the OR-5b(c) B-REFINED
 > verdict, cross-checks, loose ends) plus every shipped-fix Progress Log entry moved verbatim to
-> `/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md` +
-> `/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` (2 chunks — the history itself
+> `/plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md` +
+> `/plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` (2 chunks — the history itself
 > was over the active-tier 1000L cap as one file). This parent keeps the frontmatter, a one-paragraph answer, the 5 open
 > todos, and the RE-TRIAGE section (per the `plan_line_cap_remediation_2026_07_23.md` § FINAL RESOLUTION
 > extract-to-archive-bound-history-child pattern).
@@ -138,10 +138,10 @@ dies with the bucket is the _per-bookmaker_ half-time dispersion (~3.1% of the 7
 HT-RESULT market (first-half 1X2) is in NEITHER source and must be re-fetched from SFI regardless.** Recommendation
 (OR-5b(c) → B-REFINED) and every spun-off P0/CODE fix from this investigation shipped and is independently re-verified
 in the RE-TRIAGE section below. Full original investigation, evidence, and shipped-fix Progress Log:
-`/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md` (investigation + lookahead-leak
+`/plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part1_2026_07_25.md` (investigation + lookahead-leak
 
 - SFI `h1_*` + closing-line-leak legs) and
-  `/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` (T-0 recompute + collapse
+  `/plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` (T-0 recompute + collapse
   recompute + ODDS_FEATURES recompute + fixture-identity-collapse + phantom-block/pivot legs).
 
 ---
@@ -226,7 +226,7 @@ already-fixed-but-unflipped** — every one is genuinely still open.
      blocker this todo names is unchanged.
   5. **(line 1028, [ML] P2)** Retrain the CLV models after the `ODDS_FEATURES` recompute — still open. The stated
      prerequisite (the recompute) IS now done (see "ODDS_FEATURES recompute EXECUTED" in the history doc part 2 —
-     `/plans/active/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` — 1,524/1,861 dates purged,
+     `/plans/archive/issues/sports_halftime_odds_sfi_vs_inplay_history_part2_2026_07_25.md` — 1,524/1,861 dates purged,
      2026-07-17), but no retrain followed it: `ml-service` git log since 2026-07-17 has no CLV/retrain commit, and the 3
      quarantined artifacts (`ml-service@c0603cb`) remain the only reference models. The prerequisite clearing does not
      by itself close this todo — retraining is a separate, not-yet-run action.

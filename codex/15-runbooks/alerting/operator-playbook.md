@@ -67,7 +67,7 @@ runbook per AlertCode.
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`alert-code-taxonomy`](./alert-code-taxonomy.md),
   [`threshold-tuning`](./threshold-tuning.md), [DART playbook](../dart/).
 - **Code:** alerting-service (TBD), DART manual-trade-gate UI.

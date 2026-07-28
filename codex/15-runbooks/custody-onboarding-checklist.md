@@ -55,7 +55,7 @@ last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
 # Custody onboarding operator-action checklist
 
 > **Created 2026-05-12** by slot 4 (`ikenna-keys-wallets-tab`) per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 1 — operator-action checklist for the May-23 cutover + June-1 client-credential integration. Pairs with
 > [`/codex/04-architecture/custody-providers.md`](/codex/04-architecture/custody-providers.md) (architectural SSOT) +
 > [`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
@@ -448,7 +448,7 @@ Per Plan Phase 8.D.
   — service-side credential injection convention.
 - [`/codex/04-architecture/kill-switch-circuit-breaker.md`](/codex/04-architecture/kill-switch-circuit-breaker.md) —
   kill-switch arm/disarm lifecycle.
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; this doc operationalizes Phases 3.A + 3.B + 3.C + 4.A.
 - [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
   — `WalletProvisioningConfig` + `SigningSurface` + `WalletKind` + `SpendingCaps` SSOT.

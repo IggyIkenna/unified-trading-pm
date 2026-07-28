@@ -198,4 +198,4 @@ circuit-config tuning, venue health-monitoring improvements, backup-venue routin
 - **Circuit-breaker config:**
   `unified-api-contracts/unified_api_contracts/internal/reference/circuit_breaker_config.py`.
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

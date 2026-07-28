@@ -52,7 +52,7 @@ last_executed: see per-class rotation log appended in body
 # Credential rotation runbook — per-class cadence + execution-owner
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.D + Phase 5.A.2. Codifies rotation cadence per credential class + the execution-owner per Runbook
 > Execution-Owner SSOT HARD RULE.
 

@@ -57,7 +57,7 @@ related:
     /plans/active/issues/sports_legacy_duplicate_triage_2026_07_22.md,
     /plans/active/issues/sports_index_recency_masked_captured_atoms_2026_07_13.md,
     /plans/active/issues/sports_odds_stale_fixture_reinjection_2026_07_14.md,
-    /plans/active/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,
+    /plans/archive/issues/sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md,
     /plans/active/issues/canonical_player_stats_fixture_events_quality_2026_07_16.md,
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,

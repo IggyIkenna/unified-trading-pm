@@ -302,8 +302,8 @@ todos:
   - { id: codex-docs, content: "- [x] [AGENT] P2. Codex: Document identity model, strategy registry, SCE rules, MM
         reference price model\n\n1. `/codex/04-architecture/identity-model.md` — client_id, account_id,
         strategy_id\n   relationships. TradingAccount composite key. Credential routing.\n\n2.
-        `/codex/09-strategy/strategy-registry.md` — StrategyRegistry SSOT in UAC,\n   families, archetypes, OpenAPI sync
-        pipeline.\n\n3. `/codex/09-strategy/execution-modes.md` — SCE vs HUF rules:\n   - DeFi/Sports/Prediction → HUF
+        `/codex/09-strategy/_archived_pre_v2/strategy-registry.md` — StrategyRegistry SSOT in UAC,\n   families, archetypes, OpenAPI sync
+        pipeline.\n\n3. `/codex/09-strategy/_archived_pre_v2/execution-modes.md` — SCE vs HUF rules:\n   - DeFi/Sports/Prediction → HUF
         always\n   - CeFi/TradFi → HUF default, SCE only for ML TP/SL\n   - Market making → HUF (reference price
         model)\n\n4. `/codex/09-strategy/market-making-reference-price.md` — reference price model:\n   - Strategy emits
         reference_price\n   - Execution quotes around it\n   - Options: delta-premium from pricing engine → strategy →

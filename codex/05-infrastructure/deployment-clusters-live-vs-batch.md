@@ -335,5 +335,5 @@ cluster state regardless of which mechanism deployed the cluster or which type t
 - **Runtime tiers + deployment**:
   [`05-infrastructure/runtime-tiers-and-deployment.md`](./runtime-tiers-and-deployment.md)
 - **Active plans**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md),
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md),
   [`plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)

@@ -59,7 +59,7 @@ exposes a per-asset-group set of columns that does not always reach those leaves
 ## Cross-references
 
 - **Plan(s) implementing this:** [`infrastructure_master`](../../plans/epics/infrastructure_master.md),
-  [`data_status_drilldown_shard_atom_alignment`](../../plans/active/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
+  [`data_status_drilldown_shard_atom_alignment`](../../plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md).
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`cross-asset-canonical-target-ssot`](./cross-asset-canonical-target-ssot.md) (the shard-atom grain matrix this doc's
   "shard-key matrix" referred to; the CLAUDE.md "Shard-granularity SSOT" section it was originally slated to be lifted

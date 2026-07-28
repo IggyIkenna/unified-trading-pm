@@ -3,9 +3,9 @@
 **Read order for the next agent:**
 
 1. This file (the immediate handoff state)
-2. `unified-trading-pm/plans/active/dart_ux_cockpit_executing_agent_prompt_2026_04_29.md` (the broader 9-phase brief,
+2. `unified-trading-pm/plans/ai/dart_ux_cockpit_executing_agent_prompt_2026_04_29.md` (the broader 9-phase brief,
    with the 5 per-phase test gates and 23 agent guardrails)
-3. `unified-trading-pm/plans/active/dart_ux_cockpit_refactor_2026_04_29.plan.md` (the canonical plan-of-record — read §0
+3. `unified-trading-pm/plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md` (the canonical plan-of-record — read §0
    → §26 in full)
 4. `unified-trading-system-ui/docs/reference/INDEX.md` (the new ideal-world archetype docs; read selectively per phase)
 
@@ -59,7 +59,7 @@ Per the 5 per-phase gates in the executing-agent prompt:
 6. **MCP Playwright Tier-0 demo walkthrough** — drive the 13-step canonical flow per the executing-agent prompt; capture
    screenshots under `unified-trading-system-ui/.playwright-evidence/phase-1a/`.
 7. **Tick the Phase 1 checkbox** in the plan-of-record
-   (`unified-trading-pm/plans/active/dart_ux_cockpit_refactor_2026_04_29.plan.md`); commit + push.
+   (`unified-trading-pm/plans/archive/dart_ux_cockpit_refactor_2026_04_29.plan.md`); commit + push.
 
 ---
 
@@ -292,7 +292,7 @@ npx playwright test dart-tile-split.spec.ts instrument-type-view-gating.spec.ts 
 ## MCP Playwright Tier-0 walkthrough (the closing gate)
 
 After the migration + deletions land, run the canonical Tier-0 demo flow per
-`unified-trading-pm/plans/active/dart_ux_cockpit_executing_agent_prompt_2026_04_29.md` "MCP Playwright Tier-0 demo
+`unified-trading-pm/plans/ai/dart_ux_cockpit_executing_agent_prompt_2026_04_29.md` "MCP Playwright Tier-0 demo
 verification" section. Save evidence under `unified-trading-system-ui/.playwright-evidence/phase-1a/` (gitignored).
 
 Demo personas to test:

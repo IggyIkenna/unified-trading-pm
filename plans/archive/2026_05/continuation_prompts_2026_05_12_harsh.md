@@ -73,9 +73,9 @@ DAY-1 PREAMBLE (~15-30 min — DO THIS FIRST AFTER STATUS LINE):
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 2
-  3. unified-trading-pm/plans/active/defi_catalogue_chain_primitives_2026_05_10.md Phases 2-4
-  4. unified-trading-pm/plans/active/continuation_prompts_2026_05_12.md § Ikenna slot 2 (cross-side handshake spec)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 2
+  3. unified-trading-pm/plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md Phases 2-4
+  4. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_12.md § Ikenna slot 2 (cross-side handshake spec)
 
 Agent-tag: harsh-defi-catalogue-impl-tab.
 
@@ -118,11 +118,11 @@ gets a fresh theme (code_freeze Phase 1 service-level closures). Status-line fir
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 3
-  3. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md Phase 1 service tail
-  4. unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md slice (c)
-  5. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md Phase 4 (writer wire-in)
-  6. unified-trading-pm/plans/active/continuation_prompts_2026_05_12.md § Ikenna slot 3 (cross-side audit spec)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 3
+  3. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md Phase 1 service tail
+  4. unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md slice (c)
+  5. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md Phase 4 (writer wire-in)
+  6. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_12.md § Ikenna slot 3 (cross-side audit spec)
 
 Agent-tag: harsh-codefreeze-impl-tab.
 
@@ -191,9 +191,9 @@ fan-out PM@`pm@96077adf`+ deployment-service@`13ef741a`/`a2037d2`/`68ad99f`/`e60
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 4
-  3. unified-trading-pm/plans/active/defi_simulation_realism_2026_05_10.md Phases 4-6
-  4. unified-trading-pm/plans/active/continuation_prompts_2026_05_12.md § Ikenna slot 6 (cross-side family matrix spec)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 4
+  3. unified-trading-pm/plans/archive/defi_simulation_realism_2026_05_10.md Phases 4-6
+  4. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_12.md § Ikenna slot 6 (cross-side family matrix spec)
 
 Agent-tag: harsh-defi-sim-impl-tab.
 
@@ -232,10 +232,10 @@ slot 5 gets a fresh theme (risk + DR implementation). Status-line first to ack.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 5
-  3. unified-trading-pm/plans/active/risk_simulations_limits_alerting_2026_05_10.md
-  4. unified-trading-pm/plans/active/disaster_recovery_circuit_breakers_2026_05_10.md
-  5. unified-trading-pm/plans/active/continuation_prompts_2026_05_12.md § Ikenna slot 7 (cross-side scenario spec)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 5
+  3. unified-trading-pm/plans/archive/risk_simulations_limits_alerting_2026_05_10.md
+  4. unified-trading-pm/plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md
+  5. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_12.md § Ikenna slot 7 (cross-side scenario spec)
 
 Agent-tag: harsh-risk-dr-impl-tab.
 
@@ -271,10 +271,10 @@ residual disposition (defer to post-cutover OR pick up alongside today's theme).
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 6
-  3. unified-trading-pm/plans/active/cross_cutting_may_23_deliverables_2026_05_08.md deliverable #4 (DART manual surfaces)
-  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md Phase 3 (consumer sweep)
-  5. unified-trading-pm/plans/active/continuation_prompts_2026_05_12.md § Ikenna slot 8 (cross-side surface design spec)
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 6
+  3. unified-trading-pm/plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md deliverable #4 (DART manual surfaces)
+  4. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md Phase 3 (consumer sweep)
+  5. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_12.md § Ikenna slot 8 (cross-side surface design spec)
 
 Agent-tag: harsh-cross-cutting-impl-tab.
 
@@ -314,7 +314,7 @@ PM@`d3b7e8d7`). Status-line first to ack.
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 7
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 7
   3. unified-trading-pm/plans/active/mock_data_pipeline_benchmarking_2026_05_10.md
 
 Agent-tag: harsh-mock-data-benchmarking-tab.
@@ -350,9 +350,9 @@ spins up fresh on cross-asset catalogue audit theme. Status-line: STATUS-2026-05
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/work_split_2026_05_12_harsh.md § Today's slot assignments → row 8
-  3. unified-trading-pm/plans/active/cross_asset_group_catalogue_audit_2026_05_10.md
-  4. unified-trading-pm/plans/active/codex_vs_citadel_infrastructure_audit_2026_05_10.md
+  2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_12_harsh.md § Today's slot assignments → row 8
+  3. unified-trading-pm/plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md
+  4. unified-trading-pm/plans/archive/2026_05/codex_vs_citadel_infrastructure_audit_2026_05_10.md
 
 Agent-tag: harsh-catalogue-audit-tab.
 

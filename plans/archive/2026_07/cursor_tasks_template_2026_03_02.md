@@ -39,7 +39,7 @@ SUB-AGENT ROLE (Execute work):
 - Report back with structured results
 
 CONTEXT (Sub-agents must read):
-- .cursor/plans/tasks/TEMPLATE.md (safeguards)
+- .cursor/codex/14-customer-journeys/experience/TEMPLATE.md (safeguards)
 - .cursor/plans/contexts/CODING_STANDARDS.md (standards)
 - [Any other context files needed]
 - instruments-service/docs/CANONICAL_PATTERNS.md (reference)

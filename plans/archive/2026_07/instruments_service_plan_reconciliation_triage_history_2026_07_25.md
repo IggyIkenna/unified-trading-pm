@@ -13,7 +13,7 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [admin]
 tags: [reconciliation, ssot-audit, plan-hygiene, instruments-service, honest-coverage, venue-registry, history-extract]
-related: [/plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md]
+related: [/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md]
 created: 2026-07-25
 parent_epic: instruments_master
 priority: P3

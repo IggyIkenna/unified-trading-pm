@@ -16,7 +16,7 @@ scope: [admin]
 tags: [reconciliation, ssot-audit, plan-hygiene, mtds, market-data, pipeline-mode, honest-coverage, shard-isolation]
 related:
   [
-    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     ../honest_coverage_v2_instrument_denominator_2026_06_28.md,
     ../honest_coverage_v2_opus_checkpoints_2026_06_28.md,
     /codex/02-data/pipeline-mode-partition.md,

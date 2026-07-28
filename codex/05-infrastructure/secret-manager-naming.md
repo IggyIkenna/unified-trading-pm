@@ -55,7 +55,7 @@ code_refs:
 # Secret Manager naming convention — SSOT
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.C. Codifies the workspace naming pattern for every secret in GCP Secret Manager + AWS Secrets Manager.
 >
 > **Merged 2026-07-23** (doc-reconciliation, operator-approved) with the former

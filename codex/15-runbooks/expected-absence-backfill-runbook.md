@@ -151,7 +151,7 @@ After each VM shutdown:
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
+  [`writegate_honest_coverage_endtoend`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md) § Phase
   3.D.4 (enumerator) + § Phase 3.D.1/3.D.2 (reconciler).
 - **Related codex SSOTs:** [`honest-absence-downstream-handling`](./../02-data/honest-absence-downstream-handling.md),
   [`availability-manifest-and-data-status`](./../02-data/availability-manifest-and-data-status.md) §

@@ -272,7 +272,7 @@ Phase 1 (T0: UIC schemas) ──► Phase 2 (T1: UMI + UCI) ──► Phase 3a (
 - [ ] [AGENT] P0. Update `unified-trading-codex/00-SSOT-INDEX.md`: Add entry pointing to
       `04-architecture/fixed-grid-config.md` as SSOT for backtest config structure.
 
-- [ ] [AGENT] P1. Write UI plan doc: `unified-trading-pm/plans/active/backtest_config_ui_2026_03_21.plan.md` (plan doc
+- [ ] [AGENT] P1. Write UI plan doc: `unified-trading-pm/plans/archive/backtest_config_ui_2026_03_21.plan.md` (plan doc
       only — NO UI code changes). UX concept:
   - Three tabs: Machine Learning | Strategy | Execution
   - Each tab has two sections: Fixed Parameters (dropdowns) and Grid Parameters (range sliders)

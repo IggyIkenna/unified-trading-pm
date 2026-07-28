@@ -177,4 +177,4 @@ on-chain liquidity audit per LST.
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Threshold tuning:** [`threshold-tuning.md`](./threshold-tuning.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

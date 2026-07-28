@@ -478,8 +478,8 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       `/codex/11-project-management/plan-hygiene.md` and `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the
       timer-on-central model (removed stale `code_refs`, corrected the cron schedule table, added the "Daily deep
       reconciler" retirement record + corrected the now-inverted reaper/reconciler ordering note); also fixed 2
-      corpus referrers describing the retired job as live (`codex/04-architecture/agent-orchestrator-alerting.md`,
-      `codex/11-project-management/active-plan-inventory-tracker.md`) and appended a retirement note to
+      corpus referrers describing the retired job as live (`/codex/04-architecture/agent-orchestrator-alerting.md`,
+      `/codex/11-project-management/active-plan-inventory-tracker.md`) and appended a retirement note to
       `plans/epics/plan_hygiene_master.md`'s original implementation record. **Original approval on record
       (2026-07-27)**: The daily deep reconciler that replaced them is live: `agent-orchestrator`'s `plan-reconciler.timer`
       (`OnCalendar=*-*-* 01:00:00 UTC`) hits `POST /api/plan-health/dispatch`, is watched by

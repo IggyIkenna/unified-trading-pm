@@ -21,7 +21,7 @@ related:
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
-    /plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
     /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06

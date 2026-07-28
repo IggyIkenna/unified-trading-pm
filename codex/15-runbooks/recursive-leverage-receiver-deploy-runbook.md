@@ -196,6 +196,6 @@ UAC registry SHA:  unified-api-contracts@468df51
 ## Plan reference
 
 - Phase 4 of
-  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+  [`defi_recursive_borrow_archetypes_2026_05_10.md`](../../plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 - Companion: [`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md)
   (passthrough sibling contract)

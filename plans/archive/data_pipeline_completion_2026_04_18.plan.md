@@ -87,7 +87,7 @@ ultimate test: once static for a period, we are done.
 ## Canonical reference documents
 
 - Audit matrix: this plan's Phase 0 (captured 2026-04-18)
-- Canonicalisation plan: `unified-trading-pm/plans/active/data_canonicalisation_mvp_2026_04_17.plan.md` (67 todos,
+- Canonicalisation plan: `unified-trading-pm/plans/archive/data_canonicalisation_mvp_2026_04_17.plan.md` (67 todos,
   phases 0-2 + partial 3 done as of 2026-04-18)
 - Availability manifest v4 spec: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
 - T+1 scheduler terraform: `deployment-service/terraform/gcp/t1_batch_scheduler.tf` (commit `56492ad`, not applied for

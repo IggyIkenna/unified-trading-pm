@@ -381,7 +381,7 @@ progress + STOPPED/FAILED at exit; events stream to
 - **Cluster validation + 4-pillar write-gate**:
   [`06-coding-standards/validation-and-errors.md`](/codex/06-coding-standards/validation-and-errors.md)
 - **Active plan**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 - **`classify_venue_error()` unclassified-default retry_safe convention + QG lint (STEP 5.104) — plan + parent
   incident**:
   [`plans/active/mtds_retry_safe_default_audit_2026_07_14.md`](../../plans/active/mtds_retry_safe_default_audit_2026_07_14.md),

@@ -59,7 +59,7 @@ strategy → execution) must work in live mode for the three target venues.
 - [ ] **Kill switches + circuit breakers** wired per archetype: position-limit breach, P&L drawdown threshold,
       signal-staleness, model-drift detection. **`KILL_SWITCH_ML_MODEL_FAILURE` taxonomy shipped 2026-05-08 at
       UAC@6c4784f**, `kill_switch_scope=ARCHETYPE` semantics documented in
-      `/codex/14-playbooks/alerting/alert-code-taxonomy.md`. Service wiring still pending (alerting plan Phase 2
+      `/codex/15-runbooks/alerting/alert-code-taxonomy.md`. Service wiring still pending (alerting plan Phase 2
       kill-switch publisher hook + execution-service halt-pump consumer).
 - [ ] **DART manual override**: operator can pause / override / replicate any ML-driven trade as a manual trade.
       DEFERRED — lives in `strategy_and_dart_master_2026_05_07.md` Phase 2.2; out of scope for the alerting taxonomy

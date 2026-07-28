@@ -42,10 +42,10 @@ code_refs:
 
 > **STATUS** — entry-point doc for the live (websocket-streaming) pipeline activated for the 2026-05-23 DeFi cutover.
 > Full design + phased work plan in
-> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md).
+> [`plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md).
 > Dependent prerequisites:
 > [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md) +
-> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
+> [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plans, the plans win — flag conflicts to the user.
 
 ## TL;DR
@@ -332,7 +332,7 @@ every emitted event distinguishes scenario-fire from real-fire so alerting-servi
 recording the event.
 
 All layers except `ORDER` are post-cutover scope per
-[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/active/simulation_scenarios_post_cutover_2026_06_01.md).
+[`simulation_scenarios_post_cutover_2026_06_01.md`](../../plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md).
 For the full authoring guide, mutation types, and outcome-assertion categories, see
 [`/codex/04-architecture/scenario-injection-architecture.md`](/codex/04-architecture/scenario-injection-architecture.md).
 
@@ -348,10 +348,10 @@ For the full authoring guide, mutation types, and outcome-assertion categories, 
 ## Cross-references
 
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Pre-req plan: [`features_repo_consolidation_2026_05_08`](../../plans/active/features_repo_consolidation_2026_05_08.md)
 - Pre-req plan:
-  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
+  [`gcs_migration_bundle_pipeline_mode_2026_05_08`](../../plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md)
 - Sibling docs: [`replay-subsystem.md`](./replay-subsystem.md),
   [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md),
   [`/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md`](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)

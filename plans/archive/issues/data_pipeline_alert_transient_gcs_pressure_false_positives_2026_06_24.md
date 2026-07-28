@@ -13,7 +13,7 @@ scope: [engineer, admin]
 tags: [monitoring, observability, slack, data-pipeline, self-healing, backfill]
 related:
   [
-    /plans/active/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
+    /plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
     /plans/archive/issues/deadman_monitor_log_event_crash_2026_06_23.md,
   ]
 created: 2026-06-24

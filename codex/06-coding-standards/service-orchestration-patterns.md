@@ -747,7 +747,7 @@ Audit checklist for `_cleanup_after_<shard>()` implementations:
 
 The first four are in the service's control. The last two (Polars arenas, profiler buffers) need engine-/framework-level
 discipline; see the architecture audit
-[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md).
+[`plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`](../../plans/archive/2026_06/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md).
 
 ### Granularity
 
@@ -774,7 +774,7 @@ the hook does (writing a final manifest snapshot, flushing a metrics buffer) hap
 - **2026-05-28** — MDPS 7-day backfill on `e2-standard-8` (32 GB). The `_cleanup_after_day` hook existed but was only
   wired into the early-exit branch. Day 1 completed cleanly (28/28 outputs). Day 2 OOM'd at the date-boundary because
   the day-1 candle/sampling caches were still pinned. Empirical RSS at end of day 1: 25.1 GB (after a `del orchestrator
-  - gc.collect()` at the process_handler boundary, which only reclaimed 87 MB). Plan: [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+  - gc.collect()` at the process_handler boundary, which only reclaimed 87 MB). Plan: [`mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
     § "Finding A".
 
 ### Composes with

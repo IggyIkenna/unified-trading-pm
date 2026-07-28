@@ -42,7 +42,7 @@ code_refs:
 # Per-archetype wallet isolation (N × M multi-wallet model)
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.E. Codifies the N archetypes × M chains = N×M wallet topology introduced by Phase 4.A.
 
 ---
@@ -204,5 +204,5 @@ origin wallets, so rate-limit budget is N× a single-wallet baseline.
 - [`hsm-wallet-signing.md`](hsm-wallet-signing.md) — HSM tier discipline.
 - [`unified-api-contracts/config/cutover_wallet_provisioning_mainnet_template.json`](../../unified-api-contracts/config/cutover_wallet_provisioning_mainnet_template.json)
   — 10 HOT + 5 GAS template for May-23.
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   Phase 4.A — multi-wallet plan source.

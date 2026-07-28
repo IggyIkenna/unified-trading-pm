@@ -24,7 +24,7 @@ related:
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
     /plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
-    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md,
   ]
@@ -478,7 +478,7 @@ repos register as Cloud Run JOBS, not here.)
 `uts-shared-deployment-api` OOM-crash-looped repeatedly the week of 2026-07-13 (20 kills in 75 min on a 4GiB container).
 Full incident record, cache-island inventory (B1–B18), and the joint operator walkthrough that decided the fixes below
 live in
-[`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`](/plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
+[`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md`](/plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
 — this section is the durable architecture summary, not a duplicate of that narrative.
 
 **Root cause, in one line**: every in-process cache is per-gunicorn-worker (×4 by default), several were unbounded with

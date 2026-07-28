@@ -186,7 +186,7 @@ banners.
 You are Tab 1 — codex SSOT batch (NEW + UPDATE codex docs) for the batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 1
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 1
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab1 + § 4
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
   4. The 6 codex docs cited in this plan's frontmatter (related_codex)
@@ -280,7 +280,7 @@ BatchExecutionMode enum extraction · J1 helper signature lock · L7 sweep verif
 You are Tab 2 — UAC + UTL agent for the batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 2
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 2
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab2 + § 3 + § 7
   3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
@@ -354,7 +354,7 @@ coverage. **Estimated**: ~6 hrs. **Cross-plan**: 4 🔴 BLOCK banners (until wor
 You are Tab 3 — QG STEPs L2/L3/L7 for the batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 3
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 3
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab3
   3. unified-trading-pm/scripts/quality-gates-base/base-service.sh STEP 5.64 (template)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
@@ -414,7 +414,7 @@ DONE when: 4 STEPs (L1+L5+L2+L3) enabled + workspace CI green for 2h continuous 
 You are Tab 4 main — features-service ModeHandler lift for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 4
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 4
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab4 + § 7
   3. features-service (volatility family)/features_volatility_service/cli/handlers/base_handler.py (reference impl)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
@@ -476,9 +476,9 @@ migration of ~10-50M parquets · consumer sweep · workspace QG sweep. **Estimat
 You are Tab 5 — pipeline_mode VM fleet migration for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 5
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 5
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab5 + § 6 risk #2 + § 7
-  3. unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md (full plan body)
+  3. unified-trading-pm/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md (full plan body)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab5-pipeline-mode-vm.
@@ -576,7 +576,7 @@ BE-AWARE. **Depends-on**: Tab 2 UAC `RECON_GREEN_THRESHOLDS` shipped + Tab 5 man
 You are Tab 6 — F21 reconciler ship for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 6
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 6
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab6 + § 6 risk #3 + § 6 risk #12
   3. unified-trading-pm/codex/04-architecture/batch-live-architecture.md § 6 (strategy alpha vs execution alpha)
   4. unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/benchmark-fills.md
@@ -640,7 +640,7 @@ IN-FLIGHT · `master_to_live_defi` BE-AWARE G23 · `live_pipeline_mtds_mdps_feat
 You are Tab 7 main — UI ExecutionModeContext rollout for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 7
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 7
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab7 + § 7 collision matrix
   3. unified-trading-system-ui/lib/execution-mode-context.tsx (canonical provider)
   4. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
@@ -729,10 +729,10 @@ land.
 You are Tab 8 — carry_staked_basis end-to-end run + 7-day soak for batch_live_symmetry_2026_05_10 plan.
 
 BEFORE doing anything, read in order:
-  1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 8
+  1. unified-trading-pm/plans/archive/2026_05/batch_live_symmetry_2026_05_10.md § Tab 8
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
   3. unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md § Group F items 17-22
-  4. unified-trading-pm/plans/active/defi_master.md
+  4. unified-trading-pm/plans/epics/defi_master.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab8-carry-staked-basis.

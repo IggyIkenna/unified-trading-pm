@@ -290,7 +290,7 @@ rename GitHub repo + AR packages + Cloud Build triggers.
 
 ## Key Files
 
-- `unified-trading-pm/plans/active/phase2_library_tier_hardening.plan.md` — full task list
+- `unified-trading-pm/plans/archive/phase2_library_tier_hardening.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `unified-trading-/codex/05-infrastructure/unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` — tier rules
 - `unified-trading-/codex/04-architecture/TIER-ARCHITECTURE.md` — full tier architecture

@@ -16,7 +16,7 @@ rules.
 - Workspace root: `/Users/ikennaigboaka/Code/unified-trading-system-repos/`
 - Primary target repo: `strategy-service` (sub-dir, independent git repo)
 - Branch on every sub-repo: `live-defi-rollout` (already checked out; NEVER switch)
-- Parent plan SSOT: `unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` § Phase
+- Parent plan SSOT: `unified-trading-pm/plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md` § Phase
   12 — full scope is pre-written there; do NOT re-debate, just execute.
 
 ## What's already shipped (DO NOT rebuild)
@@ -203,7 +203,7 @@ git push origin live-defi-rollout
 ### 6. Plan checkbox flip + memory
 
 Flip all Phase 12 checkboxes in
-`unified-trading-pm/plans/active/signal_leasing_broadcast_architecture_2026_04_20.plan.md` from `- [ ]` to `- [x]`.
+`unified-trading-pm/plans/archive/signal_leasing_broadcast_architecture_2026_04_20.plan.md` from `- [ ]` to `- [x]`.
 Commit + push PM with `--no-verify`.
 
 Write project memory at

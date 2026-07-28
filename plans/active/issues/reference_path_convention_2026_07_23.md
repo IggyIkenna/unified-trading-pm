@@ -114,7 +114,7 @@ depends_on: []
       `gcs_bucket_estate_cleanup_2026_07_10.md` (archive) →
       `gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`), bringing `existence_count` to 1256 (< baseline 1257,
       gate green). **Left unfixed**: `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s
-      `related:` still points at `/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
+      `related:` still points at `/plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md`
       (now archived) — that file is itself 1216L, over the 1000L hard cap (RULE-11), so staging it for even a 1-line
       reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
       when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap

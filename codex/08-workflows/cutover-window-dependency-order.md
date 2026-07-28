@@ -221,11 +221,11 @@ their plan bodies.
 - **MVP universe** (Tier A vs Tier B scope):
   [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md)
 - **Compute optimization parallel track**:
-  [`plans/active/compute_optimization_mock_data_2026_05_13.md`](../../plans/active/compute_optimization_mock_data_2026_05_13.md)
+  [`plans/active/compute_optimization_mock_data_2026_05_13.md`](../../plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md)
 - **Manifest freeze gate**:
-  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 - **Code-freeze cutover sequencing**:
-  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 - **DeFi archetype owner**: [`plans/active/defi_master.md`](/plans/epics/defi_master.md) Fork 1
 - **ML training**: [`plans/epics/features_and_ml_master.md`](../../plans/epics/features_and_ml_master.md)
 - **Master umbrella**:

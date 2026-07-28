@@ -13,7 +13,7 @@ resolution: >
   launched on this basis).
 source:
   - "slot-9 Day-4 item 4: MTDS handler readiness audit for DeFi backtests"
-  - "companion to /plans/active/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md"
+  - "companion to /plans/archive/issues/b_015_smoke_vms_phantom_manifest_silent_skip_2026_05_15.md"
 severity: "P1 (systemic: affects all DeFi backfill VMs; P0 instance already confirmed in lst_rates)"
 locked_by: live-defi-rollout
 locked_since: 2026-05-15

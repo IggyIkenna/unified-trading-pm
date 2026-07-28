@@ -201,7 +201,7 @@ the verifier the `make_health_router` GET `/healthz` endpoint reports and the de
 
 - Epic: [`cefi_ml_may_23_2026.epic.md`](../../../plans/archive/cefi_ml_may_23_2026.epic.md)
 - Plan:
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 - Sibling: [`ml-alerting-rules.md`](../../15-runbooks/alerting/ml-alerting-rules.md)
 - Foundation: [`../../04-architecture/batch-live-architecture.md`](../../04-architecture/batch-live-architecture.md)
   (single SSOT),

@@ -37,7 +37,7 @@ related:
     /codex/05-infrastructure/gcs-object-operations.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    ../../plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
   ]
 created: 2026-07-20
 authoritative_for:

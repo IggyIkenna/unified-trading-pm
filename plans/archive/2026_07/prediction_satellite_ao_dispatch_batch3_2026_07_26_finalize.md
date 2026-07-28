@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-3, satellite-docs, archival]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,

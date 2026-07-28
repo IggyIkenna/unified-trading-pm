@@ -30,7 +30,7 @@ related:
   [
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
-    /plans/active/issues/api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md,
+    /plans/archive/issues/api_football_enrichment_stale_ns_fixture_status_and_gate_reader_inconsistency_2026_07_19.md,
   ]
 created: 2026-07-25
 priority: P2

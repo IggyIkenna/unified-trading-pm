@@ -41,7 +41,7 @@ This means:
 ## Your Mission
 
 Execute **Phase 1 — Foundation & Prep** as specified in:
-`unified-trading-pm/plans/active/phase1_foundation_prep.plan.md`
+`unified-trading-pm/plans/archive/phase1_foundation_prep.plan.md`
 
 Read that file completely before starting any work. Phase 2 cannot start until all DONE criteria below are met.
 
@@ -218,7 +218,7 @@ All items independent — run in parallel:
 
 ## Key Files
 
-- `unified-trading-pm/plans/active/phase1_foundation_prep.plan.md` — full task list
+- `unified-trading-pm/plans/archive/phase1_foundation_prep.plan.md` — full task list
 - `unified-trading-pm/workspace-manifest.json` — repo registry
 - `unified-trading-pm/scripts/quickmerge.sh` — quickmerge SSOT
 - `unified-trading-pm/scripts/setup.sh` — setup.sh SSOT (idempotent dev environment bootstrap; supports `--isolated` for

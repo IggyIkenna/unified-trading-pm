@@ -200,11 +200,11 @@ operator approval (banned per spec).
 
 ## Composes with
 
-- `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` — writegate slice (b)+(c) emission
+- `unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` — writegate slice (b)+(c) emission
   policy SSOT.
-- `unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md` — Phase 2 manifest schema work that
+- `unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md` — Phase 2 manifest schema work that
   benefits from clean `pipeline_mode` stamping.
-- `unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` (if extant) — Phase 1B established
+- `unified-trading-pm/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md` (if extant) — Phase 1B established
   the `pipeline_mode` axis; Phase 4 finalises it.
 - `unified-trading-pm/plans/active/predictions_master_2026_05_07.md` — prediction handlers' `pipeline_mode` (Polymarket
   CLOB vs Gamma API).

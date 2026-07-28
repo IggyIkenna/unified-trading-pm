@@ -43,7 +43,7 @@ tags:
   ]
 related:
   [
-    /plans/active/sports_master_closeout_progress_log_2026_07_24.md,
+    /plans/archive/2026_07/sports_master_closeout_progress_log_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_audit_2026_07_19.md,
     issues/sports_league_id_namespace_migration_2026_07_20.md,
@@ -93,7 +93,7 @@ drift_direction: advance-code
 > before acting on the `/autonomous` prompt below, or you will work from this doc's shorter checklist alone and miss the
 > closeout's open work. The `/autonomous` prompt for the new session lives at the end. **Note (2026-07-24 plan-hygiene
 > split):** in-body references below to "the Progress Log below" / "second/third/fourth/fifth/sixth wave Progress Log"
-> now point to the companion doc `/plans/active/sports_master_closeout_progress_log_2026_07_24.md` (extracted verbatim
+> now point to the companion doc `/plans/archive/2026_07/sports_master_closeout_progress_log_2026_07_24.md` (extracted verbatim
 > for line-cap compliance — see the "## Progress Log" pointer near the end of this file).
 
 ## THE 2020-06 DATA FLOOR (operator ruling 2026-07-21 — authoritative)
@@ -620,7 +620,7 @@ sports_pipeline_to_100pct_golden_window_first Phase-1); `sports_p2_history_apifo
 
 Complete the sports data close-out to canonical + honest + ML-ready, driving every item below to DONE on a
 self-paced loop. READ BOTH docs FIRST, in this order: (1) this entry-point index,
-`unified-trading-pm/plans/active/sports_master_closeout_2026_07_21.md`, for the consolidated cross-cutting sequence
+`unified-trading-pm/plans/archive/2026_07/sports_master_closeout_2026_07_21.md`, for the consolidated cross-cutting sequence
 below; (2) `unified-trading-pm/plans/active/sports_consolidated_closeout_2026_07_19.md` — the live, detailed execution
 surface with the full open todo list (96+ items as of 2026-07-24) that this index does NOT duplicate or replace. A
 session that only reads this file will miss most of the open work. Apply the workspace HARD RULES (measure artifacts
@@ -717,6 +717,6 @@ The full historical Progress Log (six autonomous-session waves, 2026-07-21 throu
 floor enforcement, league_id relocation copy, manifest-swap tooling, K1 live-writer casing flip, K2 historical casing
 migration, phantom-row prune) has been extracted verbatim to a companion doc for line-cap compliance (plan-hygiene
 remediation 2026-07-24, `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 26):
-**`/plans/active/sports_master_closeout_progress_log_2026_07_24.md`**. See that document for the full session-by-session
+**`/plans/archive/2026_07/sports_master_closeout_progress_log_2026_07_24.md`**. See that document for the full session-by-session
 evidence, forced-tradeoff decisions, and deferred-work tables. Nothing was dropped — this is a pure relocation, not a
 summary.

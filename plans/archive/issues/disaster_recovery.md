@@ -61,7 +61,7 @@ priority: P2
 >
 > - [`/codex/04-architecture/incident-gateway-state-machine.md`](/codex/04-architecture/incident-gateway-state-machine.md)
 > - [`/codex/04-architecture/recovery-defence-in-depth-layers.md`](/codex/04-architecture/recovery-defence-in-depth-layers.md)
-> - [`/codex/05-infrastructure/physical-pager-layer.md`](/codex/05-infrastructure/physical-pager-layer.md)
+> - [`/codex/15-runbooks/physical-pager-layer.md`](/codex/15-runbooks/physical-pager-layer.md)
 > - [`/codex/15-runbooks/alerting/audit-acknowledgement-flow.md`](/codex/15-runbooks/alerting/audit-acknowledgement-flow.md)
 >
 > **Audit instructions extended** (2026-05-23):

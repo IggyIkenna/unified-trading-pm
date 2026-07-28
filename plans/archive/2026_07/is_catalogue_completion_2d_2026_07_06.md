@@ -19,7 +19,7 @@ tags: [instruments, catalogue, could-exist, backfill, b0, b1, b2, mvp-universe, 
 related:
   [
     /plans/active/instruments_completion_tracker_2026_07_06.md,
-    /plans/active/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
+    /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,

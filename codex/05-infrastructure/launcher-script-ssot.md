@@ -405,7 +405,7 @@ Reference: Sweep 3 of `codex_doc_currency_and_consolidation_post_cutover_2026_05
 ## Expected universe v2 launcher (2026-05-15, deployment-service@7313a39)
 
 Added in Phase 2 of
-[`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):
+[`expected_universe_v2_design_2026_05_08.md`](../../plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md):
 
 | Launcher                            | VM prefix               | Purpose                                             |
 | ----------------------------------- | ----------------------- | --------------------------------------------------- |
@@ -600,5 +600,5 @@ do NOT need a `VM_PREFIX_TO_BUCKET` entry or watchdog registration. They live un
   SSOT.
 - [`plans/ai/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md) —
   preview → auto-launch successor.
-- [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) —
+- [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md) —
   bigger AWS S3 / ECR / EC2-launcher work.

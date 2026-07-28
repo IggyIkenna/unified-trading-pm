@@ -86,7 +86,7 @@ sequencing that change so we never have a moment where canonical manifest drifts
   `instruments-service/scripts/migrate_local_sfi_to_canonical.py`). For v7→v8: explicit-or-fail removal of the four
   `None`-default kwargs from `record_*` (`pipeline_mode` / `service_emission_state` / `last_emission_decision_at` /
   `expected_window_completeness_fraction`), driven by
-  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+  [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
   Phase 4.DEFAULT-REMOVAL.
 - Drain `_index/per_vm/*.parquet` per-VM shard files into canonical `_index/availability_index.parquet` FIRST; assert
   empty after (`gsutil ls _index/per_vm/` returns no objects). Multi-worker per-VM shard isolation contract is in
@@ -118,7 +118,7 @@ Once verification holds for 30 calendar days AND the `READER_FELL_BACK_TO_LEGACY
 consecutive days, the v7-shape fallback in `read_availability_index()` is deleted (workspace rule "manifest migration
 NOT fallback" — also see [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The
 deletion is the final phase of
-[`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+[`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 Phase 7.
 
 ## Rollback procedure
@@ -157,7 +157,7 @@ Rollback window: pre-migration snapshot retained in GCS object-versioning for 7 
 ## Open questions
 
 - Typical freeze-window duration is plan-specific; precedent: v3→v5 was ~2 hours; v7→v8 estimate documented in
-  [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 4.
+  [`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md) Phase 4.
 - Shadow-consolidator parallel run: implement as future-work if v7→v8 verification fails on first attempt; not in scope
   for the v7→v8 cutover itself.
 - Rollback window: GCS object-versioning is canonical (7 days); full backup-bucket copy is NOT required.

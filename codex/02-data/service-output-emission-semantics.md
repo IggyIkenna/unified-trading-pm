@@ -47,7 +47,7 @@ related_codex:
 > publish_with_manifest_lookup wrapper + ohlcv_1h POC); slice (c) Phase 6.1-6.9 covers the remaining 8 services
 > (multi-week rollout). v8 manifest schema columns for `service_emission_state` + `last_emission_decision_at` +
 > `expected_window_completeness_fraction` are owned by
-> [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 1 —
+> [`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md) Phase 1 —
 > **shipped 2026-05-11 at UAC@`174f401`** + rename @ UAC@`76f950a`
 > (`unified_api_contracts.canonical.crosscutting.manifest_schema` declares `MANIFEST_SCHEMA_VERSION_V8 = 8` +
 > `V8_NEW_COLUMNS` + `V8_COLUMN_DEFAULTS` + `READER_FALLBACK_WINDOW_DAYS`;
@@ -188,7 +188,7 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 
 > **Reader-fallback retirement gate** (per codex audit D-4 2026-05-12): the `READER_FALLBACK_WINDOW_DAYS = 30` fallback
 > chain is deleted at the Phase 7 walk owned by
-> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 > Phase 7. Operator gating: deletion is permitted only when the `READER_FELL_BACK_TO_LEGACY_PATH` event-count threshold
 > reaches **zero across the workspace for 7 consecutive days** (per
 > [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The QG step enforcing

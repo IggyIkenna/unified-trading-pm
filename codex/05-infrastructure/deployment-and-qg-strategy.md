@@ -275,10 +275,10 @@ is test coverage on the function (Phase 8 target = 100% on validation + orchestr
 - **Runtime tiers + deployment** (existing):
   [`/codex/05-infrastructure/runtime-tiers-and-deployment.md`](runtime-tiers-and-deployment.md)
 - **Promote workflow May-23 CLI plan**:
-  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../plans/active/promote_workflow_may23_cli_path_2026_05_10.md)
+  [`plans/active/promote_workflow_may23_cli_path_2026_05_10.md`](../../plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md)
   — wires in the env-locking enforcement + 99%-repo identification
 - **Promote workflow post-cutover UI plan**:
-  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
+  [`plans/active/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`](../../plans/archive/2026_05/promote_workflow_post_cutover_ui_pipeline_2026_05_10.md)
   — full UI pipeline build
 - **Governance HARD RULE automation + QG ratchet** (pulled-forward to May-23):
   [`plans/active/governance_qg_automation_gaps_post_cutover_2026_05_12.md`](../../plans/archive/governance_qg_automation_gaps_post_cutover_2026_05_12.md)

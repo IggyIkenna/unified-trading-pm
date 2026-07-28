@@ -39,8 +39,8 @@ CONTEXT: slot 2's writegate slice (b) primary scope ✅ DONE. Re-tasked 2026-05-
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/ikenna_orchestrator/_agent_pings.md § [main → slot 2]
-  3. unified-trading-pm/plans/active/work_split_2026_05_11_ikenna.md § Slot 2 — RE-TASK BRIEF #2
-  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md:266-285 (Phase 2.A/B/C/D — your scope)
+  3. unified-trading-pm/plans/archive/work_split_2026_05_11_ikenna.md § Slot 2 — RE-TASK BRIEF #2
+  4. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md:266-285 (Phase 2.A/B/C/D — your scope)
 
 Agent-tag: ikenna-v8-manifestwriter-tab.
 
@@ -76,9 +76,9 @@ CONTEXT: slot 5's primary re-task (DeFi 1.E + hard_schema Phase 1) ✅ DONE. Ope
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/ikenna_orchestrator/_agent_pings.md § [main → slot 5] RE-TASK EXPANSION
-  3. unified-trading-pm/plans/active/work_split_2026_05_11_ikenna.md § Slot 5 RE-TASK → "RE-TASK EXPANSION 2026-05-11 PM"
-  4. unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md:3162 (Phase 6.5 — Tier 1 item 2)
-  5. unified-trading-pm/plans/active/expected_universe_v2_design_2026_05_08.md (Tier 1 item 3)
+  3. unified-trading-pm/plans/archive/work_split_2026_05_11_ikenna.md § Slot 5 RE-TASK → "RE-TASK EXPANSION 2026-05-11 PM"
+  4. unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md:3162 (Phase 6.5 — Tier 1 item 2)
+  5. unified-trading-pm/plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md (Tier 1 item 3)
 
 Agent-tag: ikenna-multi-track-tab.
 
@@ -113,7 +113,7 @@ CONTEXT: slot 7's primary scope (alerting + risk + DR Rounds 1-4) ✅ DONE. Oper
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/ikenna_orchestrator/_agent_pings.md § [main → slot 7] absorb brief
-  3. unified-trading-pm/plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md § "Deferred work after 2026-05-11 Harsh slot 5 session" + Phases 3, 5, 6, 15
+  3. unified-trading-pm/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md § "Deferred work after 2026-05-11 Harsh slot 5 session" + Phases 3, 5, 6, 15
   4. unified-trading-pm/codex/05-infrastructure/live-pipeline-architecture.md (design contract)
 
 Agent-tag: ikenna-livepipeline-absorb-tab.
@@ -143,7 +143,7 @@ CONTEXT: slot 8's primary scope (P0-2 MDPS surgery + writegate Phase 6.2) ✅ DO
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/ikenna_orchestrator/_agent_pings.md § [main → slot 8] absorb brief
-  3. unified-trading-pm/plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md Phase 0f + 0h (body ~line 202 + ~line 223)
+  3. unified-trading-pm/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md Phase 0f + 0h (body ~line 202 + ~line 223)
   4. unified-trading-pm/cursor-configs/CLAUDE.md "Bucket-name SSOT operator decision (b+)" section
 
 Agent-tag: ikenna-bucket-prereq-tab.
@@ -178,7 +178,7 @@ CONTEXT: bucket-SSOT (b+) session 4 in flight. **Phase 0f + 0h ABSORBED by Ikenn
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
   2. unified-trading-pm/plans/active/_agent_pings.md § ikenna-main → harsh-main (Phase 0f + 0h absorption)
-  3. unified-trading-pm/plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md "Deferred work" scoreboard + remaining `- [ ]` items
+  3. unified-trading-pm/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md "Deferred work" scoreboard + remaining `- [ ]` items
 
 Agent-tag: harsh-bucket-final-push.
 
@@ -207,7 +207,7 @@ CONTEXT: features_service_qg_cleanup session 4 in flight. Session 3 shipped 28 c
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/features_service_qg_cleanup_2026_05_11.md § Phase 1.2 carry-forward + Phase 1.2e + Phase 1.5
+  2. unified-trading-pm/plans/archive/2026_05/features_service_qg_cleanup_2026_05_11.md § Phase 1.2 carry-forward + Phase 1.2e + Phase 1.5
 
 Agent-tag: harsh-features-qg-final-push.
 
@@ -238,7 +238,7 @@ CONTEXT: workspace QG green sweep + codex audit pass + freeze-gate items 8 + 9 i
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md freeze-gate items 8 + 9
+  2. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md freeze-gate items 8 + 9
   3. unified-trading-pm/plans/archive/issues/codex_audit_2026_05_11.md remaining open items
   4. unified-trading-pm/plans/archive/issues/qg_sweep_2026_05_11.md remaining open items
 
@@ -268,10 +268,10 @@ CONTEXT: slot 3 currently running defi_master Priority #5 lending-indices LINEA/
 
 READ (in order):
   1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md (lean 10KB)
-  2. unified-trading-pm/plans/active/continuation_prompts_2026_05_11_pm.md § Slot 3
-  3. unified-trading-pm/plans/active/issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md (Phase 0.4 scope — reconciler script)
-  4. unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md:286-301 (Phase 3 — if assisting slot 8)
-  5. unified-trading-pm/plans/active/manifest_cross_asset_rescan_design_2026_05_08.md (rescan design spec — if assisting slot 8 on Phase 3.D)
+  2. unified-trading-pm/plans/archive/2026_05/continuation_prompts_2026_05_11_pm.md § Slot 3
+  3. unified-trading-pm/plans/archive/issues/mdps_canonical_writer_off_by_one_tf_2026_05_11.md (Phase 0.4 scope — reconciler script)
+  4. unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md:286-301 (Phase 3 — if assisting slot 8)
+  5. unified-trading-pm/plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md (rescan design spec — if assisting slot 8 on Phase 3.D)
 
 Agent-tag: ikenna-reconciler-tab.
 

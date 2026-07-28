@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [data-status, deployment-api, cell-grid, oom, performance, precompute]
 related:
   [
-    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18

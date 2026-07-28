@@ -330,10 +330,10 @@ source of truth.
 ## References
 
 - Master plan:
-  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+  [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
   § Phase 2.6
 - Bucket-name SSOT:
-  [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+  [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 - Yaml SSOT:
   [`deployment-service/configs/cloud-providers.yaml`](../../../deployment-service/configs/cloud-providers.yaml)
 - QG STEP 5.69 (inline-URI ratchet): `scripts/quality-gates-base/base-service.sh:1578-1623`

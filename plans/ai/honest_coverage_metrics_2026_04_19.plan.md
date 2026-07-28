@@ -373,5 +373,5 @@ retrofit them later once honest-coverage is universal, but attempt-vs-capture me
 
 - UTL ManifestWriter: `unified-trading-library/unified_trading_library/manifest_writer.py`
 - Availability manifest v4 codex: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
-- Coverage ratchet policy: `unified-trading-pm/plans/active/coverage_ratchet_policy_2026_04_19.plan.md`
+- Coverage ratchet policy: `unified-trading-pm/plans/archive/coverage_ratchet_policy_2026_04_19.plan.md`
 - Shard-level failure isolation: `unified-trading-pm/codex/04-architecture/shard-level-failure-isolation.md`

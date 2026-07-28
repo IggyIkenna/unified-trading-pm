@@ -13,9 +13,9 @@ related: []
 created: 2026-05-08
 author: cefi-available-at-stamping-tab
 source:
-- {unified-trading-pm/plans/active/work_split_2026_05_08_ikenna.md (§ "Spawn prompts — fresh fan-out: 'instruments-service + MTDS", Tab F2 entry)'}
+- {unified-trading-pm/plans/archive/work_split_2026_05_08_ikenna.md (§ "Spawn prompts — fresh fan-out: 'instruments-service + MTDS", Tab F2 entry)'}
 - unified-trading-pm/plans/epics/cefi_master_2026_05_07.md (§ "`available_at` adapter stamping (coordinated)" lines 380-396 + new § "Open questions" Q1)
-- unified-trading-pm/plans/active/available_at_lookahead_bias_completion_2026_05_08.md (Phase 1 P0 "CeFi adapter stamping" todo)
+- unified-trading-pm/plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md (Phase 1 P0 "CeFi adapter stamping" todo)
 - market-tick-data-service/market_tick_data_service/adapters/ (only 2 files, NOT 10 venue-shaped)
 - market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/ (5 source-shaped, NOT 10 venue-shaped)
 - unified-trading-library/unified_trading_library/availability_stamping.py (5 sports-shaped helpers; no `stamp_available_at_cefi_tick`)

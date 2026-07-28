@@ -16,7 +16,7 @@ stage: [data, meta]
 repos: [instruments-service, unified-api-contracts, market-tick-data-service, deployment-service]
 scope: [engineer]
 tags: [honest-coverage, denominator-audit, layer-1, data-correctness, cefi, deribit-combo, okx, history-extract]
-related: [/plans/active/issues/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md]
+related: [/plans/archive/2026_07/cefi_deribit_combo_and_okx_bare_venue_gaps_2026_07_12.md]
 created: 2026-07-25
 parent_epic: infrastructure_master
 priority: P3

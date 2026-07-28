@@ -68,7 +68,7 @@ Both follow CLAUDE.md "commit + push per shippable unit" + "plan-checkbox flip i
 - [x] [DESIGN] P0. Author UAC `AlertCode` taxonomy (StrEnum + threshold dataclass + severity-vs-alert-code separation).
       Plan: [`alerting_service_live_rules_2026_05_07`](alerting_service_live_rules_2026_05_07.md) Phase 1. Repo: UAC.
       Why nuanced: closed-set philosophy decisions; sets workspace-wide alert vocabulary for years; codex SSOTs at
-      [`/codex/14-playbooks/alerting/alert-code-taxonomy.md`](/codex/14-playbooks/alerting/alert-code-taxonomy.md)
+      [`/codex/15-runbooks/alerting/alert-code-taxonomy.md`](/codex/15-runbooks/alerting/alert-code-taxonomy.md)
       expect this StrEnum to land here. **DONE 2026-05-07 (Agent 1)** — UAC@`d00326d` shipped + alerting plan Phase 1
       checkbox flips per PM@`7624ab21`. Phase 2-9 of alerting plan (KillSwitchBus rule wiring + consumer wiring)
       pending.

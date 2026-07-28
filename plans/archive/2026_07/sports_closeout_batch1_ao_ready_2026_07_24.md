@@ -195,7 +195,7 @@ todos concurrently.
                                                                                                                           (8-min wait, all 31 rows still `attempted_failed` via `ManifestWriter.lookup()` + a direct raw-index read); (2)
                                                                                                                           slot 5 closed the underlying TOCTOU race in `unified-trading-library@14301571` so future direct-writer
                                                                                                                           corrections don't need a cron-pause dance (full evidence + root-cause trace in
-                                                                                                                          `/plans/active/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md` and
+                                                                                                                          `/plans/archive/issues/sports_odds_manifest_consolidator_captured_outranks_resurrection_2026_07_24.md` and
                                                                                                                           `/plans/archive/issues/sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`, both
                                                                                                                           now resolved). Condition `sports-odds-consolidator-resurrection-fixed` satisfied.
 
@@ -517,7 +517,7 @@ todos concurrently.
                                                           Unicode replacement char + control chars, still allows legitimate diacritics like "México"). Remaining:
                                                           locate the actual GCS bucket/path for the frozen scaffolding (not quickly locatable via grep — plain-English
                                                           "markets"/"outcomes"/"settlements" matches too many unrelated prediction/DeFi call sites) and purge it
-                                                          (snapshot first). Tracked: `/plans/active/issues/sports_closeout_batch1_task018_partial_progress_2026_07_24.md`.
+                                                          (snapshot first). Tracked: `/plans/archive/issues/sports_closeout_batch1_task018_partial_progress_2026_07_24.md`.
 
 - [x] ✅ [DOC] P3. Document the pre-2019 (2013-2018) api-football exclusion as an intentional, operator-decided scope
       boundary (already ruled — no fresh spend) in the audit's gap table, so the remaining-blanks arithmetic reads clean

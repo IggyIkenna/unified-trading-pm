@@ -50,7 +50,7 @@ related:
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/gcs-object-operations.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
+    ../../plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -152,7 +152,7 @@ after R5.
 >
 > **Standing rule this incident establishes:** an absence result is evidence ONLY once you confirm you probed the
 > vocabulary the WRITER actually emits. Full detail:
-> [`defi_dex_pools_delete_order_stale_2026_07_20.md`](../../plans/active/issues/defi_dex_pools_delete_order_stale_2026_07_20.md):102-117.
+> [`defi_dex_pools_delete_order_stale_2026_07_20.md`](../../plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md):102-117.
 
 `execution-service` also still READS the legacy shape at runtime.
 

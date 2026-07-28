@@ -47,7 +47,7 @@ code_refs:
 > **STATUS** — Documents the `pipeline_mode` manifest column + the source-aware `{mode}_{source}[_{transport}]` model
 > (G0 standardisation 2026-06-05; operator R4 transport rule 2026-06-07). On-disk partition is IN PROGRESS as a named
 > rider per AG L3 walk (see § "On-disk partition" below). Implementation plan:
-> [`plans/active/pipeline_mode_implementation_2026_05_28.md`](../../plans/active/pipeline_mode_implementation_2026_05_28.md);
+> [`plans/active/pipeline_mode_implementation_2026_05_28.md`](../../plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md);
 > source-aware model SSOT:
 > [`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`](../../plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md).
 

@@ -112,7 +112,7 @@ cassette not yet recorded. `BLACKLISTED_NO_ACCESS` = no key.
 | `yahoo_finance` | `yahoo_finance/mocks/splits_tsla.yaml`           | `VALIDATED`                                                    |
 
 **15 endpoints `PENDING_CASSETTE_AWAITING_AUTH`** — keys confirmed, cassettes not recorded. See
-`unified-trading-pm/plans/ai/VCR_CREDENTIAL_RECORDING_PLAN.md` for the recording checklist.
+`unified-trading-pm/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md` for the recording checklist.
 
 ---
 

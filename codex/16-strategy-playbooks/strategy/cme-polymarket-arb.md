@@ -37,7 +37,7 @@ code_refs:
 > Phase 4 instruments-service@7a3db05 · Phase 5 strategy-service@2c59f2ce.
 
 **Plan SSOT**:
-[`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
+[`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md).
 
 **Source RFC**:
 [`plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`](../../../plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md)

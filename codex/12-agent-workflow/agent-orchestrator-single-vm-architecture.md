@@ -134,7 +134,7 @@ These never come from `backlog.yaml`. They are triggered by the keeper, by exter
 and most are one-shot or scheduled.
 
 > **✅ Completion-contract LANDED 2026-07-21 (`agent-orchestrator@0d510e9`; operator decision →
-> [`ao_uniform_agent_liveness_contract`](../../plans/active/ao_uniform_agent_liveness_contract_2026_07_20.md)).** The
+> [`ao_uniform_agent_liveness_contract`](../../plans/archive/2026_07/ao_uniform_agent_liveness_contract_2026_07_20.md)).** The
 > prior model — _one-offs never `/done`; cleanup is the pruner/reaper's job on session death_ — was proven broken
 > 2026-07-21: **a finished one-off does not die.** Saying "EXIT" in a role doc only ends the Claude _turn_; the tmux
 > session lingers at an idle `❯` prompt, `WorkerLivenessKicker` re-nudges it, `has_session()` stays True, and every
