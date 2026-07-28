@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 263 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 262 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -1048,7 +1048,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (17)
+### infrastructure (16)
 
 - [`active_plan_inventory_dashboard_2026_07_24`](./active_plan_inventory_dashboard_2026_07_24.md) — Workspace-wide
   auto-regenerated inventory of every plans/active/*.md plan's checkbox progress, calibrated AI-days remaining, and
@@ -1096,9 +1096,6 @@ by hand._
 - [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](./na_docs_validity_and_ao_eligibility_audit_2026_07_26.md) —
   Scoped 2026-07-26 per operator directive, for a FUTURE session (not this one). The 2026-07-25/26 `/ag-closeout-audit`
   9-tranche run + this session's mass-flip only ever acted on ORPHANED docs (no active plan covering them) — it never…
-- [`org_migration_to_odumresearch_2026_06_07`](./org_migration_to_odumresearch_2026_06_07.md) **[paused]** — Fleet-wide
-  migration of all repos from IggyIkenna GitHub org to OdumResearch — including GCP/AWS trust configuration, Cloud Build
-  triggers, Workload Identity Federation, and deploy pipelines.
 - [`repo_scripts_governance_audit_2026_06_18`](./repo_scripts_governance_audit_2026_06_18.md) — Govern the scripts/
   directories across repos — add ruff-lint pass, audit for deprecation/deletion, and define the strict-quickmerge carve
   scope for D16.

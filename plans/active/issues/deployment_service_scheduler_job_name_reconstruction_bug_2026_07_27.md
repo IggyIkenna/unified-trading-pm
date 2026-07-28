@@ -33,7 +33,7 @@ scope: [engineer]
 tags: [cloud-scheduler, manifest-consolidator, alerting, dp-cron-did-not-fire, naming-bug, cross-repo]
 related:
   [
-    plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
+    plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
   ]
 created: 2026-07-27

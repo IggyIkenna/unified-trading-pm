@@ -367,7 +367,7 @@ context; recommended owner strategy-service PBM):
       green (sentinel=27c2ecd7, amended to 3c14639d by quickmerge's trailer). **Found + filed, not fixed here** (out of
       this todo's scope): the CeFi margin model's asset-symbol parsing mis-scores real (hyphenated) instrument ids via a
       bad fallback, misclassifying healthy positions as WARNING —
-      `/plans/active/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md`.
+      `/plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md`.
 - [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
       (venue_balance_tracker.py is sports-only). strategy-service. **LOGIC FREEZE — engine-runtime, deferred to PBM
       dispatch** (the API surface exists; the real CeFi balance tracker is engine work).
