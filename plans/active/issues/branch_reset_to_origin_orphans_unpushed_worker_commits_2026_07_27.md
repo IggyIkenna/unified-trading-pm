@@ -150,6 +150,13 @@ The runtime/operator had already dispatched a task to fix this very bug — **`s
   `.orch-orphan-commits-recovery/slot5_3becc9ede_pm-scripts-ff-pull-hardening.patch`. **This is the highest-priority
   recovery of the set: landing it stops the bleeding.** CODE → main cannot quickmerge unilaterally; escalated with
   elevated priority.
+  - **UPDATE 00:41Z:** slot-5 respawned and its ff-pull cron did the CORRECT thing this cycle — a
+    `pull --rebase --autostash` cleanly REBASED the commit onto new origin tip `7f0c400ec`, so the fix now lives at
+    **`28ee61192`** (identical +39/-6 content; `3becc9ede` is its pre-rebase sha, NOT orphaned — rebase preserved it).
+    Slot-5 is now flapping (`tmux_alive=true`, `worker_alive=false`). Recovery TARGET is the current ahead HEAD of
+    `.tabs/5/unified-trading-pm` (`28ee61192` as of now) or the saved backstop patch (content-identical) — do NOT chase
+    the stale `3becc9ede` sha. Data point: the TOCTOU reset race is INTERMITTENT (it rebased cleanly here,
+    reset-orphaned the PM docs earlier) — consistent with a check-then-act window that only sometimes loses the race.
 
 - [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **PRIORITY ORDER: (1) slot-5 `3becc9ede`** (the
       root-cause ff-pull TOCTOU fix — land this FIRST to stop new orphaning), then **(2) slot-13 `d1c1ad8a`**
