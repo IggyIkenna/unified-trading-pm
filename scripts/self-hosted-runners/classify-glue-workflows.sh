@@ -37,7 +37,13 @@ REUSABLE_CROSSREPO="image-build-validate.yml"
 #   - cloud-build-failure-watcher: the ONLY detector for out-of-band Cloud Build failures.
 #   - ldr-ci-monitor:              per-repo "is LDR green?" signal.
 #   - branch-health:               promotion-lag / drift / AR-lag monitor.
-KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml"
+#   - glue-pool-starvation-monitor: the dead-man-switch FOR the glue pool itself (own header:
+#     "MUST run on a GitHub-hosted runner, never `glue` itself... a dead-man-switch that ran on
+#     the pool it watches would go dark exactly when it is needed") — found missing from this
+#     list 2026-07-28 despite its own docstring's identical, incident-backed reasoning to the
+#     other five; the schedule/workflow_dispatch-only trigger shape made it fall through to a
+#     bare MOVE verdict, contradicting the file's own header.
+KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml glue-pool-starvation-monitor.yml"
 
 # HOSTED DEPENDENCIES (KEEP-D): a shared reusable on a KEEP workflow's CRITICAL path. A reusable's runs-on is
 # independent of its caller, so a self-hosted reusable would break its HOSTED caller during a VM outage even though the
