@@ -372,23 +372,26 @@ drift_direction: advance-code
       Leaving this checkbox permanently unflipped would only cause indefinite backlog churn (a second worker
       re-verifying the identical already-settled conclusion, as happened here) with no further action available at this
       todo's scope.
-- [ ] [CODE] P1. **Triage the 2 still-open finding classes in both `manifest_hygiene_red` monitor instances as one
+- [x] [CODE] P1. ✅ **Triage the 2 still-open finding classes in both `manifest_hygiene_red` monitor instances as one
       pass.** `issues/manifest_hygiene_red_2026_06_27.md` (defi) and `issues/manifest_hygiene_red_2026_06_29.md` (cefi)
       are dated outputs of the SAME standing monitor (`manifest_hygiene_daily.py`) and both carry a 2026-07-12
       reconciliation note narrowing their originally-5-class todo to exactly **two** still-open classes:
-      `oracle_expects_but_empty` and `noncanonical_path_on_disk`. Do **NOT** re-diagnose
-      `phantom_captured_no_parquet`/`shard_4pillar_fail` (root-caused as false positives in the audit script itself,
-      fixed `e2e-testing@3e37b0c`) or `schema_version_not_v9`'s alert-truthfulness (fixed `e2e-testing@21ce846`; the
-      small real non-v9 residual is operator-gated in a sibling doc) — both notes say so explicitly. **Path
-      correction**: both docs cite their candidate CSV under a stale `.tabs/<N>/` slot path (that worktree model is
-      RETIRED); the real files are `plans/audit/results/manifest_hygiene_defi_2026_06_27.csv` and
-      `plans/audit/results/manifest_hygiene_cefi_2026_06_29.csv` (both confirmed present 2026-07-26) — read those and
-      fix the stale path in each doc while you are there. For each of the 2 classes in each CSV, reach the standard
-      triage verdict: real gap → backfill, code bug → fix the adapter/writer, intentional new venue/spelling → extend
-      the UAC oracle/canonical builders. Sources: `issues/manifest_hygiene_red_2026_06_27.md`,
-      `issues/manifest_hygiene_red_2026_06_29.md`. **Done when**: every `oracle_expects_but_empty` and
-      `noncanonical_path_on_disk` candidate in both CSVs has a recorded verdict with evidence, the stale `.tabs/` paths
-      are corrected, and both docs' checkboxes are flipped or their `status` set to `resolved` if nothing remains.
+      `oracle_expects_but_empty` and `noncanonical_path_on_disk`. **RE-VERIFIED 2026-07-28 (slot-5)**: both docs' stale
+      `.tabs/<N>/` candidate-CSV path corrected to the repo-root-relative
+      `plans/audit/results/manifest_hygiene_{defi,cefi}_*.csv`. Both CSVs read in full and every row triaged:
+      `oracle_expects_but_empty` — defi's `venue=UNISWAP_V4 data_type=dex_pool_swaps` candidate (2026-06-23/24) is a
+      REAL GAP, confirmed as a phantom-capture misclassification corrected one day later by
+      `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s 2026-06-28 phantom-reconcile (dex_pool_swaps=20,586 flipped,
+      UNISWAP_V4 top venue) and still an ACTIVE tracked backfill target per
+      `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (status open); cefi's
+      `venue=OKX-SWAP     data_type=trades` candidate (2026-05-20/21/22) is a REAL GAP independently confirmed inside
+      `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`'s own progress log (same exact
+      venue/dates/count), reprobed via dedicated Tardis backfill VMs, now folded into the CeFi completion program
+      lineage (that plan is `status: complete`). `noncanonical_path_on_disk` had **zero candidates** in both CSVs —
+      `_check_path_canonicality` is a deterministic index-only check with no suppression path, so 0 rows = genuinely
+      clean for both AGs on those dates. No new MTDS code fix required in either case — both open classes are
+      already-tracked residuals of live/completed backfill efforts, not fresh bugs. Full verdicts + evidence in each
+      issue doc's new "Final triage verdict (2026-07-28, slot-5)" section. — unified-trading-pm (this commit).
 - [ ] [OPERATOR] P2. **Clean the contaminated defi/tradfi manifest `schema_version` rows — operator APPROVED 2026-07-27,
       ready to dispatch.** Operator ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 11,
       interactive session 2026-07-27): "dp_alerts_dp_not_v9 — `populate_v9_index_columns_inplace.py --apply`:

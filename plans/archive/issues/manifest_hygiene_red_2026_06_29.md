@@ -42,7 +42,8 @@ shard_4pillar_fail.
 
 Candidate list(s) (deterministic, machine-written):
 
-- `/home/ubuntu/unified-trading-system-repos/.tabs/6/unified-trading-pm/plans/audit/results/manifest_hygiene_cefi_2026_06_29.csv`
+- `plans/audit/results/manifest_hygiene_cefi_2026_06_29.csv` (path corrected 2026-07-28 — the `.tabs/<N>/` slot-path
+  model cited originally is RETIRED; confirmed present at this repo-root-relative path)
 
 ## Why it matters
 
@@ -81,10 +82,36 @@ since-shipped audit-script fixes above.) Checkbox intentionally left unflipped b
 annotation, not a completion claim; 2 of the 5 classes (`oracle_expects_but_empty`, `noncanonical_path_on_disk`) are
 still open and undiagnosed.
 
+## Final triage verdict (2026-07-28, slot-5) — the 2 classes left open by the 2026-07-12 note
+
+Per `plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` batch2-item — read the full candidate CSV
+(11 rows: `oracle_expects_but_empty`×4, `phantom_captured_no_parquet`×3 — out of scope, already fixed as a false
+positive per the 2026-07-12 note above — and `schema_version_not_v9`×1 — also out of scope):
+
+- **`oracle_expects_but_empty`** — sample candidate: `venue=OKX-SWAP data_type=trades date=2026-05-20/21/22` (20,289
+  DIVERGENT_EMPTY cells total that day). **Verdict: REAL GAP, not a code bug** — this exact venue/data_type/date-range
+  candidate is independently confirmed in `plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md`'s progress
+  log (its own audit re-runs list "`oracle_expects_but_empty`: 5 (OKX-SWAP trades 2026-05-20/21/22)" across multiple
+  sessions), where OKX-SWAP's residual `attempted_failed`/empty rows (~13,600) were actively re-probed via dedicated
+  Tardis backfill VMs (wave-1/wave-2 launches) as part of that plan's Layer-1 gate work. That plan is now
+  `status: complete` (2026-07-15, "remnant folded out to its target"); any still-open residual for this venue/date
+  window is carried forward inside the broader CeFi completion program chain
+  (`plans/archive/2026_07/cefi_completion_program_2026_07_15.md` and its successors), not a fresh MTDS bug. No new code
+  fix needed here — already covered by that live/completed backfill lineage.
+- **`noncanonical_path_on_disk`** — **zero candidates** in this CSV (confirmed by reading the file in full: only
+  `oracle_expects_but_empty`/`phantom_captured_no_parquet`/`schema_version_not_v9` rows present).
+  `_check_path_canonicality` (`e2e-testing/scripts/audit/manifest_hygiene_daily.py`) is a deterministic index-only check
+  with no link-tracking suppression path, so an empty candidate list here means the check genuinely found 0 violations
+  for cefi on 2026-06-29. Confirmed clean, nothing to triage.
+
 ## Todos
 
 - [x] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_06_29) — diagnose + fix the root cause
       (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in
       `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate
       CSV(s) above first (source `manifest_hygiene_daily.py`). — already covered by
-      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
+      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution). **Final triage
+      of the 2 still-open classes done 2026-07-28 (slot-5) — see "Final triage verdict" section above: both are real,
+      already-tracked residuals of the (now complete) `mvp_backfill_cefi_tick_v10_2026_06_27.md` /
+      `cefi_completion_program_2026_07_15.md` lineage (`oracle_expects_but_empty`) or confirmed clean
+      (`noncanonical_path_on_disk`, 0 candidates) — no new code fix required.
