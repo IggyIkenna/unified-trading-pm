@@ -479,7 +479,17 @@ cmd_install() {
   umask 077
   if [ -n "${GH_TOKEN_SECRET:-}" ]; then
     printf 'GH_TOKEN_SECRET=%s\n' "${GH_TOKEN_SECRET}" > "${ENV_FILE}"
-    if [ -n "${GCP_PROJECT:-}" ]; then printf 'GCP_PROJECT=%s\n' "${GCP_PROJECT}" >> "${ENV_FILE}"; fi
+    # ALWAYS write GCP_PROJECT (same central-element-323112 fallback as the install-time self-test
+    # at line ~464 and the template default at line ~511) -- never conditional on the operator having
+    # passed it explicitly. Found 2026-07-28: the install-time verification call already applies this
+    # fallback and so always passes, but the runtime env file previously did NOT get GCP_PROJECT
+    # unless explicitly set, silently falling back to the isolated per-pool .gcloud config's own
+    # bootstrapped default project -- which `gcloud auth login --cred-file=...` does not reliably set.
+    # Result: every pool installed via the documented `GH_TOKEN_SECRET=GH_PAT ./setup-glue-runners.sh
+    # install` (no GCP_PROJECT) passed its own install-time check yet crash-looped at runtime with
+    # "Failed to find attribute [project]" on every GH_PAT fetch -- a ~3.5h fleet-wide outage across
+    # 23 repos before this was found and fixed live via SSM, then fixed here for future installs.
+    printf 'GCP_PROJECT=%s\n' "${GCP_PROJECT:-central-element-323112}" >> "${ENV_FILE}"
   else
     printf 'GH_TOKEN=%s\n' "${GH_PAT}" > "${ENV_FILE}"
   fi
