@@ -365,12 +365,12 @@ architecture (L0–L4)".
   regression, N=1 clean — full numbers in the SSOT) — count the running fleet BEFORE launching
   (`tardis-concurrency-guard.sh`, wired into cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
   `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE IP, never more VMs. Non-Tardis venues
-  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every running VM for preemption-without-auto- recovery
-  and for silent `attempted_failed` billing-waste** (a non-retriable error re-attempted forever costs real money every
-  wave) — run `/vm-preemption-billing-waste-audit`; every agent watching VMs should use it, not just when an incident is
-  already suspected. SSOTs: `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap),
-  `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
-  `…/vm-preemption-and-billing-waste-monitoring.md`.
+  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every VM for preemption-without-recovery + silent
+  `attempted_failed` billing-waste** (non-retriable errors retried forever cost real money) — run
+  `/vm-preemption-billing-waste-audit` proactively, not just when suspected. SSOTs:
+  `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
+  `…/vm-tarball-deployment.md`, `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`,
+  `…/data-pipeline-alerts.md` (VM/monitoring escalation taxonomy: auto-recover-before-page + file-issue).
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
   IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Massive
   formerly-Polygon.io, removed as tradfi source 2026-07-19) — do NOT reference, SSOT
