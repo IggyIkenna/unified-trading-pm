@@ -374,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -436,16 +436,28 @@ drift_direction: advance-code
       vault_share_price venues; (c) every call site in the file passes a non-blank explicit `source=` kwarg;
       `quality-gates.sh` green; shipped via quickmerge scoped to this file. Source:
       `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`.
-- [ ] [SCRIPT] P1. Write + run a read-only cross-source funding-parity check for every surviving DeFi perp venue
-      declared for BOTH `perp_funding` and `derivative_ticker` in UAC's capability registry (excluding
-      DRIFT-SOLANA/PACIFICA-SOLANA per the 2026-07-16 partial-supersede ruling; also exclude GMX — REMOVED 2026-07-25,
-      see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` — it is no longer a registered venue). Per
-      (venue, market, funding interval) compare `perp_funding.funding_rate` against the matching `derivative_ticker`
-      settlement row within a documented tolerance; emit an honest report (match %, divergence distribution, worst
-      offenders). File any genuine divergence via standard findings-triage — do not resolve inline. No prod writes.
-      Repo: market-tick-data-service (new lifecycle-marked script under `scripts/one_offs/`). **Done when**: the script
-      exists with a lifecycle marker, runs clean read-only against prod GCS/manifest for every named venue, and a
-      match%/divergence report is appended to the source issue doc's Progress log. Source:
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-6, data_engineering).** Write + run a read-only cross-source
+      funding-parity check for every surviving DeFi perp venue declared for BOTH `perp_funding` and `derivative_ticker`
+      in UAC's capability registry (excluding DRIFT-SOLANA/PACIFICA-SOLANA per the 2026-07-16 partial-supersede ruling;
+      also exclude GMX — REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md` — it is
+      no longer a registered venue). Per (venue, market, funding interval) compare `perp_funding.funding_rate` against
+      the matching `derivative_ticker` settlement row within a documented tolerance; emit an honest report (match %,
+      divergence distribution, worst offenders). File any genuine divergence via standard findings-triage — do not
+      resolve inline. No prod writes. Repo: market-tick-data-service (new lifecycle-marked script under
+      `scripts/one_offs/`). — market-tick-data-service@4220f6eb. **Registry-declared-both set is empty** (perp_funding
+      retired 2026-07-08 for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC in favor of derivative_ticker's embedded field;
+      DRIFT/PACIFICA/GMX removed) — confirmed live via the actual `VENUE_DATA_TYPE_CAPABILITIES` registry, not assumed.
+      Ran the historical-manifest comparison instead (what the DESIGN P1 todo below actually needs): of the 4 venues
+      currently declaring `derivative_ticker` (HYPERLIQUID/ASTER/EXTENDED-STARKNET/LIGHTER-ZKSYNC), only HYPERLIQUID has
+      ANY historical `perp_funding` capture (209 dates, 2023-05..2026-06; the other 3 have zero, ever). Compared 2,640
+      rows across 10 sampled days spanning HYPERLIQUID's 169-day overlap window: **match_pct=60.7%** at a 2e-5
+      tolerance, p90 divergence 5.55e-5, worst-case 1.2e-3 — a genuine, non-trivial divergence, not float noise. Root
+      cause: `derivative_ticker.funding_rate` is a per-minute LIVE snapshot (S3 asset_ctxs `funding` column);
+      `perp_funding.funding_rate` is the REALIZED hourly-settlement value (dedicated `/fundingRates` endpoint) — related
+      but not proven identical, contradicting the 2026-07-08 retirement's "byte-identical" justification. Filed as
+      `issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` (P1, not resolved inline) with
+      `[OPERATOR]`/`[DESIGN]` follow-up todos; full match%/divergence report appended to the source issue doc's Progress
+      log. `quality-gates.sh` green. Source:
       `issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review) — real findings, not the expected Balancer-mismatch.** Audited
       all 6 known DeFi cross-chain pool-address collisions end-to-end. **Stage 1 (catalogue): PASS for all 6** — no

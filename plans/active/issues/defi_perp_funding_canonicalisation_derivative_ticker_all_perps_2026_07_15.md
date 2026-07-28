@@ -229,6 +229,59 @@ KALSHI-PERP/POLYMARKET-PERP are out of scope (documented above, not silently dro
 
 ## Progress log
 
+- 2026-07-28 (slot-6, data_engineering) — **Cross-source funding-parity check run (the re-scoped todo 4's todo, executed
+  via `defi_satellite_ao_dispatch_batch1_2026_07_25.md`). Genuine divergence found — filed as its own issue doc, not
+  resolved inline.** Script:
+  `market-tick-data-service/scripts/one_offs/defi_perp_funding_derivative_ticker_parity_check_2026_07_28.py` (read-only,
+  lifecycle-marked, no prod writes). Full report:
+
+  ```
+  # DeFi perp funding-parity check (perp_funding vs derivative_ticker) — READ-ONLY
+
+  ## Step 1 — literal registry check ('declared for BOTH' per UAC's capability registry)
+  venues currently declared for BOTH perp_funding and derivative_ticker: 0
+  perp_funding was RETIRED 2026-07-08 for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC (embedded in derivative_ticker's
+  funding_rate field instead); DRIFT-SOLANA/PACIFICA-SOLANA/GMX-* are no longer registered venues at all — confirmed
+  live (all 4 excluded-venue sanity checks read False, as expected). The literal registry-declared-both check is an
+  empty set by construction, so this instead runs the historical-manifest comparison the DESIGN P1 todo actually needs.
+
+  ## Step 2 — historical manifest comparison, candidate venues: HYPERLIQUID, ASTER, EXTENDED-STARKNET, LIGHTER-ZKSYNC
+  (every venue currently declaring derivative_ticker; all 4 registered VENUES_BY_ASSET_GROUP["cefi"] per the
+  on-chain-CLOB-reclassification note, despite genuine DeFi on-chain settlement)
+
+  HYPERLIQUID: perp_funding captured dates=209 (2023-05-12..2026-06-09, defi bucket)  derivative_ticker captured
+  dates=357 (2023-05-20..2026-07-17, cefi bucket)  overlap=169 days
+  ASTER: perp_funding captured dates=0  derivative_ticker captured dates=948  -> NO PARITY CHECK POSSIBLE
+  EXTENDED-STARKNET: perp_funding captured dates=0  derivative_ticker captured dates=7  -> NO PARITY CHECK POSSIBLE
+  LIGHTER-ZKSYNC: perp_funding captured dates=0  derivative_ticker captured dates=0  -> NO PARITY CHECK POSSIBLE
+
+  Sampled 10 days evenly across HYPERLIQUID's 169-day overlap (2023-05-12..2025-01-25), 8 coins/day, matched each
+  perp_funding hourly-settlement row against the nearest derivative_ticker row within ±3 minutes (funding intervals
+  are >=1h, so this window cannot cross an hour boundary).
+
+  ## SUMMARY
+  tolerance (abs funding_rate diff) = 2e-05
+    HYPERLIQUID: rows_compared=2640 match_pct=60.7% abs_diff(min=0.00e+00, p50=1.47e-05, p90=5.55e-05, max=1.20e-03)
+      worst offenders: BANANA (2023-09-20, diffs up to 1.20e-03), CRV (2023-05-31, 7.64e-04), BCH (2023-07-07, 7.31e-04)
+    ASTER / EXTENDED-STARKNET / LIGHTER-ZKSYNC: 0 perp_funding rows in manifest — no comparison possible
+
+  FLAG: HYPERLIQUID's match_pct (60.7%) fell below the 90% genuine-divergence threshold — this is a real signal, not a
+  comparison artifact.
+  ```
+
+  **Root cause identified** (`hyperliquid_s3.py::_parse_asset_ctxs_csv`): `derivative_ticker.funding_rate` is the S3
+  `asset_ctxs` archive's per-minute LIVE `funding` snapshot; `perp_funding.funding_rate` is the REALIZED
+  hourly-settlement value from the dedicated `/fundingRates` endpoint. Related but not proven identical — the 2026-07-08
+  retirement's "byte-identical" justification does not hold up against this measured comparison. **This contradicts todo
+  4's MOOT closure premise and directly affects the still-open `[DESIGN] P1` demote-todo above** (parity FAILS for the
+  one venue with comparable data, so that todo should close as "keep both", not proceed to demote). Filed as
+  `issues/defi_hyperliquid_perp_funding_derivative_ticker_divergence_2026_07_28.md` (P1, `[OPERATOR]` decision +
+  `[DESIGN]` closure todos) rather than resolved inline, per this todo's own instruction. ASTER/EXTENDED-STARKNET/
+  LIGHTER-ZKSYNC have zero historical perp_funding captures ever — nothing to compare for them; the surviving-venue-set
+  framing in this doc's earlier "Re-scoped cross-source funding-parity check" todo (HYPERLIQUID+ASTER only) undersold
+  the candidate set slightly (EXTENDED-STARKNET/LIGHTER-ZKSYNC also qualify as "declares derivative_ticker" candidates)
+  but the practical result is unaffected since neither has any perp_funding history either.
+
 - 2026-07-15 (coordinator, autonomous close-out) — **CI-verified fleet-green; one real ordering defect found + fixed.**
   The consumer-first ship order I dispatched (instruments-service BEFORE unified-api-contracts) INVERTED the cross-repo
   invariant `UAC VENUE_TO_ADAPTER_KEY ⊆ IS factory._ADAPTERS`: is@9f7ffb27 removed the adapter classes at 17:48 while
