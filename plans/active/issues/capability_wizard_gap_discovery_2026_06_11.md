@@ -391,9 +391,22 @@ context; recommended owner strategy-service PBM):
       this todo's scope): the CeFi margin model's asset-symbol parsing mis-scores real (hyphenated) instrument ids via a
       bad fallback, misclassifying healthy positions as WARNING —
       `/plans/archive/issues/cefi_margin_model_hyphenated_instrument_id_misclassification_2026_07_27.md`.
-- [ ] [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
+- [x] ✅ [IMPLEMENT] P2. margin_health API is a Phase-1 stub returning []; no CeFi per-venue margin balance tracker
       (venue_balance_tracker.py is sports-only). strategy-service. **LOGIC FREEZE — engine-runtime, deferred to PBM
-      dispatch** (the API surface exists; the real CeFi balance tracker is engine work).
+      dispatch** (the API surface exists; the real CeFi balance tracker is engine work). — **STALE, already resolved
+      2026-07-28 (slot-12, no new code needed)**: re-verified against current `origin/live-defi-rollout`
+      (`strategy-service@3c14639d`) — `strategy_service/position/api/margin_health.py` is NOT a stub (its own docstring:
+      "the live compute here is the SSOT for current margin, not a stub"); `get_margin_health` /
+      `compute_live_cefi_snapshots` build real `MarginHealthSnapshot[]` per CeFi perp venue via
+      `CefiVenueBalanceReader.build_portfolio` + `get_margin_model(...).compute(...)`, haircut-adjusted collateral (F28
+      SSOT), shard-isolated per venue. `venue_balance_tracker.py` is NOT sports-only — alongside the sports
+      `VenueBalanceTracker`, it carries a full CeFi per-venue margin section (`CEFI_PERP_VENUES`,
+      `CEFI_PERP_MARGIN_MODELS`, `cefi_margin_model_for_venue`, `CefiVenueBalanceReader`,
+      `emit_live_cefi_margin_events`). This was built by the sibling P1 item above (`b9b26433` 2026-06-15 margin
+      cluster + `3c14639d` 2026-07-27 emission wiring) — the freeze note here predates that work and was never updated.
+      Ran the live test suite: `test_cefi_margin_traceability.py` + `test_emit_live_cefi_margin_events.py` +
+      `test_venue_balance_tracker.py` — 37/37 passed. No code change required; closing per re-verification, not a new
+      implementation.
 - [ ] [IMPLEMENT] P2. Runtime consumer for the UAC collateral registry: haircut-adjusted posted-collateral value feeding
       MarginHealthSnapshot.collateral_usd (also resolves the F28 dual-SSOT risk). UTL/strategy-service. **LOGIC FREEZE —
       engine-runtime consumer; the UAC COLLATERAL_REGISTRY it would read is now backfilled (2026-06-12), so this is
