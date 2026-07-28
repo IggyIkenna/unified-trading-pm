@@ -129,6 +129,21 @@ gate is satisfied.
       coordinated fleet-wide cap lift + the route-introspection fix are still required for the other 14 declaring
       repos), but the override-dependencies pattern is now a proven alternative worth considering per-repo while the UTL
       fix is pending.
+
+      **[2026-07-28 note, slot-6]**: the UTL `_IncludedRouter`/`.path` route-introspection fix landed today
+          (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
+          `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
+          while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
+          (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
+          analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
+          `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
+          `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
+          roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
+          market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
+          finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
+          newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+          This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
+
 - [ ] [TEST] P3. **alerting-service upgrade-time investigation.** `test_synthetic_false_does_not_log_suppressed_event`
       failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external
       deps are upgraded one-by-one, identify which upgraded dep changed the suppressed-event behaviour and fix the test
