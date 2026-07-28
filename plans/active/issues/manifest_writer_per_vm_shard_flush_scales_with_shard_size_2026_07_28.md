@@ -22,12 +22,14 @@ priority: P2
 assigned_vm: NA
 resolved_by:
 locked_by:
-author: slot-10 (backend_engineer)
 source:
   [
     "found while working todo 4 of defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md (the
     curve/sushiswap/velodrome_v2/trader_joe_v2 dex_pool_state re-backfill)",
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # ManifestWriter per-VM shard flush cost scales with existing shard size
