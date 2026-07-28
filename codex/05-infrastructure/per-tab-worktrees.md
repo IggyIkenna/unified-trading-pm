@@ -497,6 +497,17 @@ landed first), aligning is a **content merge, not a pointer overwrite**:
    (fold the weaker subset into the stronger superset — don't keep redundant duplicates). Incident 2026-06-03: a slot
    independently added a "never pipe a backgrounded command through `tail`/`head`" rule that a richer "Background-task
    honesty" rule subsumed → merged into one.
+
+   **Incident 2026-07-27 (genuine, non-fast-forward conflict on a large shared plan doc)**: two conflict blocks in the
+   same file — one a pure-whitespace artifact (an unrelated HTML-comment padding diff) too large for reliable Edit-tool
+   string matching, resolved by direct line-index read/write; one genuine content conflict where a concurrent session
+   had independently retagged an adjacent `[OPERATOR]`→`[DOC]` item while this session flipped a neighboring todo done —
+   resolved by keeping BOTH edits (never picking one side and discarding the other), verified via
+   `assert lines[idx].startswith(...)` checks against the exact expected line ranges before writing back. When a plan
+   doc's conflict is whitespace-heavy or spans a huge diff, plain-Python line-index surgery is a legitimate recovery
+   tool alongside the Edit tool — the goal (both sides' legitimate intent survives) matters more than which mechanism
+   gets there.
+
 3. **VERIFY content survival before pushing** — grep your key additions AND the incoming ones in each rebased file. A
    wording / em-dash mismatch can read as "lost" when it survived; a genuine drop MUST be caught here, not after the
    push.

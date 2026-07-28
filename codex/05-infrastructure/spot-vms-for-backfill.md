@@ -134,6 +134,16 @@ deliberately (`sports_p0_spot_vm_launchers`, shipped) — its idempotent re-poll
 named carve-out, not a general licence for pollers; any OTHER forward/cron/poll launcher still defaults on-demand per
 the classification above unless it earns its own named exception here.
 
+**The inverse case — a one-off migration/verify script whose per-object work is itself expensive is a poor SPOT fit,
+even with chunk-checkpointing (2026-07-27 K1/K2 casing-revert migration).** The checkpoint contract above resumes the
+`--force`/`redo_all` date FRONTIER cheaply, but a script that content-re-verifies every object it touches (download +
+byte-compare, not a cheap manifest-presence check) pays that expensive verification cost again on every object it has to
+re-walk after a preemption — the checkpoint tells it where to resume, but resuming is not itself cheap. Wall-clock
+progress does not accumulate across repeated preemptions the way it does for a pure backfill's presence-skip. When a
+migration/verify launcher's inner-loop cost per unit is dominated by content I/O rather than a manifest check, weigh
+`--on-demand` over the default SPOT even though it is a one-off — the 60-91% saving assumes cheap resume, which does not
+hold here.
+
 ## Manual check-in on a SPOT VM: verify preemption BEFORE diagnosing anything else (HARD RULE, codified 2026-07-23)
 
 The automated `exit_code_fleet_monitor` → `RelaunchPreemptedVm` path below only covers the standard fleet launchers.

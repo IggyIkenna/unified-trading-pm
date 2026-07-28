@@ -291,6 +291,16 @@ Every time service code is committed to `live-defi-rollout`:
 VMs launched **before** step 2 still run the stale code. Check the tarball timestamp
 (`gsutil ls -l gs://.../code/<repo>-code.tar.gz`) against your commit time before firing a smoke.
 
+**Wall-clock timestamp checks are not sufficient by themselves (2026-07-27 incident)**: `create-code-tarballs.sh`'s own
+console output can report "done" before the upload it started is actually visible/complete, and a timestamp compare is
+easy to eyeball wrong under time pressure — a migration VM was launched ~35 minutes before the real upload finished,
+silently ran stale pre-fix code, and reproduced a bug already fixed on `HEAD`. The robust check is **content-based, not
+time-based**: every tarball has a sibling `<repo>-code.manifest.json` carrying the exact deployed `commit_sha`
+(`gcs cat gs://.../code/<repo>-code.manifest.json | jq -r .commit_sha`); confirm your fix commit is an ancestor of it —
+`git merge-base --is-ancestor <fix-sha> <manifest-commit-sha>` — **freshly, immediately before every launch**, not once
+earlier in the session. Do this for every fix-and-relaunch cycle, especially when the fix landed minutes before the
+relaunch.
+
 ---
 
 ## Singleton-locked launchers (2026-04-20; extended 2026-05-12)
