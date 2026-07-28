@@ -149,6 +149,40 @@ of something already gone. This needs reconciling in that plan BEFORE either pha
 than editing that plan directly (main has designated slot-4 as sole owner/consolidator of this plan to avoid a same-file
 collision; this issue doc is the citable evidence for slot-4/main to fold in).
 
+## Attempted read-only migration-before-delete verification — INCONCLUSIVE, do not trust either number
+
+Main asked whether the legacy-only cells were migrated to canonical `-prd` before the 2026-07-14 delete. Attempted a
+read-only check using the pre-migration snapshot's manifest index (no corpus walk — two single-file parquet reads):
+
+- `gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/raw-tick-2026-05-16/_index/availability_index.parquet`
+  (2,632,931 rows, 1,300,463 `captured`, dated 2026-05-16)
+- `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (current, 9,212,011 rows,
+  3,436,611 `captured`, through day=2026-07-27)
+
+A naive `(date, venue, data_type)` cell-coverage diff (legacy `captured` cells not present in `-prd` `captured` cells)
+returns **52,499 legacy-only cells** — an order of magnitude above the previously-cited 838 (2026-06-01) or 5,233
+figures. Even after excluding the two obvious naming-drift causes visible in the raw venue/data_type vocabularies
+(legacy carries bare pre-split venue names `OKX`/`COINBASE`/`BYBIT` that `-prd` has since split into
+`OKX-{SPOT,FUTURES,SWAP}`/`COINBASE-{SPOT,FUTURES,CDE}`/`BYBIT-SPOT`; legacy carries `options_chain`/`futures_chain`
+data_types that don't exist at all in `-prd`'s vocabulary — the already-tracked Era-B legacy-chain-form issue), a
+**residual 39,651 cells** remain mismatched, spread across every major venue (KRAKEN-FUTURES 4,680, DERIBIT 4,395,
+BITFINEX-FUTURES 4,017, ... down to LIGHTER-ZKSYNC 18) and every date from 2019-03-31 through 2026-05-07 — including
+venue/data_type combinations that exist verbatim in both vocabularies (e.g. `KRAKEN-FUTURES`/`trades`), which rules out
+simple naming drift as the sole explanation.
+
+**This does NOT mean 39,651+ cells of real data are missing/lost.** This plan's OWN prior finding
+(`cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`) proves that a naive exact-tuple manifest comparison
+for this exact corpus produces false-mismatch rates in the tens-of-percent range (490,639/5.68M, ~8.6%) purely from
+schema/normalization drift the naive compare doesn't account for (case, synonym, column-vs-path disagreement) — my quick
+ad-hoc script almost certainly has the same class of blind spot (e.g. it does not account for any
+`instrument_type`/`underlying` normalization, and treats `date` as a bare string). **I am NOT reporting a gap count
+here** — neither "0" nor "39,651" nor "52,499" is trustworthy from this read-only pass. A reliable answer needs the
+actual audit tooling's covered-keys normalization logic (the same one `rebuild_cefi_manifest.py`/CF-11 uses), run
+properly, not a spreadsheet-style tuple diff. **Recording this as an OPEN verification item**: before anyone concludes
+the legacy-only gap was (or wasn't) migrated before the 2026-07-14 delete, re-run a normalization-aware comparison
+(ideally reusing the CF-11 covered-keys code path once its false-phantom bug is fixed) against this same pre-migration
+snapshot file, since it's the only surviving copy of legacy's manifest state.
+
 ## Recommended decision
 
 1. **[OPERATOR] Confirm intent.** Was the 2026-07-14 `market-data-tick-cefi-central-element-323112` deletion a
@@ -183,3 +217,11 @@ collision; this issue doc is the citable evidence for slot-4/main to fold in).
       `gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/` (e.g. a fuller
       raw-object copy under a different prefix, or a BigQuery external table) before concluding the 2026-05-16 to
       2026-05-24 window is unrecoverable. (repo: unified-trading-pm — investigation, cite findings back here)
+- [ ] [DATA] P1. Run a PROPER normalization-aware comparison (reusing the CF-11 covered-keys logic once
+      `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s bug is fixed) between the pre-migration
+      snapshot's manifest index
+      (`gs://central-element-323112-pre-migration-snapshot/market-data-tick-cefi-central-element-323112/raw-tick-2026-05-16/_index/availability_index.parquet`)
+      and the current `-prd` manifest index — a naive `(date, venue, data_type)` tuple diff attempted here is
+      INCONCLUSIVE (52,499 raw mismatches, 39,651 residual after excluding known naming-drift causes; see "Attempted
+      read-only migration-before-delete verification" above) and must not be treated as a real gap count either way.
+      (repo: market-tick-data-service)
