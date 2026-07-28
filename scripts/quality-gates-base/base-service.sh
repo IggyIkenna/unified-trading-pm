@@ -788,20 +788,16 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
             exit 1
         fi
     fi
-    log_ok "Tests PASSED"
 
-    # PM integration test — verifies repo integrates with PM scripts (quality-gates, setup, manifest)
-    PM_INT_TEST="${REPO_ROOT}/unified-trading-pm/tests/integration/test_pm_scripts_integration.py"
-    if [ -f "$PM_INT_TEST" ] && [ -d "${REPO_ROOT}/unified-trading-pm" ]; then
-        if ! PROJECT_ROOT="$PROJECT_ROOT" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
-            log_fail "PM integration test failed — repo must integrate with PM scripts"
-            exit 1
-        fi
-        log_ok "PM integration test PASSED"
-    fi
-
-
-    # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed
+    # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed.
+    # MUST run IMMEDIATELY after the tee write above (same statement block, no intervening
+    # commands) — this used to run after the unrelated PM-integration pytest invocation below,
+    # which left a multi-second gap during which "$_pytest_log" was observed to vanish out from
+    # under the grep on a shared self-hosted CI runner, producing a false "ZERO TESTS RAN" gate
+    # failure on a run that had genuinely just printed "17954 passed" moments earlier (features-
+    # service quality-gates-v2, 2026-07-28). Closing the gap to near-zero removes the exposure
+    # window without weakening the guard itself. SSOT:
+    # plans/active/issues/qg_zero_test_guard_pytest_log_race_2026_07_28.md.
     _TESTS_RAN=$(grep -oE '[0-9]+ passed' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
     _SKIPPED=$(grep -oE '[0-9]+ skipped' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
     rm -f "$_pytest_log"
@@ -813,6 +809,17 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     if [ "${_TESTS_RAN:-0}" -gt 0 ] && [ "${_SKIPPED:-0}" -gt 0 ]; then
         _SKIP_RATE=$(( _SKIPPED * 100 / (_TESTS_RAN + _SKIPPED) ))
         [ "$_SKIP_RATE" -ge 90 ] && { log_warn "High skip rate: ${_SKIP_RATE}% of tests skipped (${_SKIPPED} skipped, ${_TESTS_RAN} ran)"; }
+    fi
+    log_ok "Tests PASSED"
+
+    # PM integration test — verifies repo integrates with PM scripts (quality-gates, setup, manifest)
+    PM_INT_TEST="${REPO_ROOT}/unified-trading-pm/tests/integration/test_pm_scripts_integration.py"
+    if [ -f "$PM_INT_TEST" ] && [ -d "${REPO_ROOT}/unified-trading-pm" ]; then
+        if ! PROJECT_ROOT="$PROJECT_ROOT" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
+            log_fail "PM integration test failed — repo must integrate with PM scripts"
+            exit 1
+        fi
+        log_ok "PM integration test PASSED"
     fi
 
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
