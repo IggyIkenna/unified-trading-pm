@@ -11,7 +11,7 @@ summary: >-
   health check between steps 2 and 3. A sibling script in the same directory, `canary-deploy.sh`, does this correctly
   (canary traffic split, poll `/health` for `MONITOR_DURATION`, auto-rollback to the prior revision on failure, only
   deletes the failed revision) — proving the safe pattern already exists in this repo, just isn't used by these two.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -25,7 +25,7 @@ parent_epic: infrastructure_master
 source:
   ["operator question 2026-07-26: does CI/CD auto-rebuild+redeploy, and does cleanup ever leave zero rollback target"]
 assigned_vm: planning
-resolved_by:
+resolved_by: deployment-service@5690ad3
 locked_by:
 locked_since:
 supersedes:
@@ -77,12 +77,38 @@ request would, under these scripts, already have zero prior revisions left to sh
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. Either (a) call `canary-deploy.sh`'s pattern from `deploy-ui.sh` and `deploy-agent-orchestrator.sh`
+- [x] [SCRIPT] P2. Either (a) call `canary-deploy.sh`'s pattern from `deploy-ui.sh` and `deploy-agent-orchestrator.sh`
       instead of the current unconditional switch, or (b) at minimum keep the previous N (e.g. 2-3) revisions instead of
       deleting down to 1, and add a health-check gate before the traffic switch. First confirm live-wiring status (grep
       CI/CD configs + operator confirmation of whether either script is invoked anywhere, scheduled or manual) before
       prioritizing — if genuinely dead/superseded code, this may be a deletion candidate instead of a fix candidate.
-      (repo: deployment-service)
+      (repo: deployment-service) — ✅ deployment-service@5690ad3
+
+## Resolution (2026-07-28)
+
+**Live-wiring status, corrected**: the original grep for the literal string `deploy-ui.sh` in CI/CD configs found
+nothing, but `unified-trading-system-ui/.github/workflows/deploy-uat-on-merge.yml` calls it indirectly through the
+`scripts/deploy-cloud-run.sh` wrapper on every push to `live-defi-rollout` — it auto-deploys UAT
+(`odum-portal-staging`). So `deploy-ui.sh` is NOT operator-invoked-manually-only; it runs on every LDR push. This raises
+(not lowers) the priority of the fix relative to the issue's original risk assessment. `deploy-agent-orchestrator.sh` is
+confirmed historical/not-live (`codex/05-infrastructure/agent-orchestrator-deploy.md`: "Not running today" — superseded
+2026-05-20 by the EC2 systemd deploy) but is kept in-repo for cloud-agnostic optionality, so it isn't a deletion
+candidate either — fixed it too since the safety gap would otherwise resurface if it's ever re-activated.
+
+**Fix shipped — option (a) plus a bounded form of (b)**: `deploy-ui.sh` and `deploy-agent-orchestrator.sh` now delegate
+the deploy→traffic-shift→cleanup sequence to `canary-deploy.sh` instead of duplicating the unsafe
+deploy+update-traffic+delete-all sequence. `canary-deploy.sh` gained two additions to host both callers:
+
+- a `--` passthrough so callers can forward extra `gcloud run deploy` flags (`--port`, `--memory`, `--set-env-vars`,
+  `--update-secrets`, etc.) that differ per service
+- `--keep-revisions N` (default 3) so a successful promote still bounds revision retention instead of accumulating
+  forever now that the old delete-all-but-latest loop is gone — folds in the spirit of option (b) alongside (a).
+
+Verified: `bash -n` + `shellcheck` clean on all three scripts; `--dry-run` smoke-tested the new `--` passthrough and
+`--keep-revisions` retention-window arithmetic; full `deployment-service` `quality-gates.sh` green (113s, 2904 tests
+passed).
+
+Evidence: deployment-service@5690ad3
 
 ## Codex SSOTs
 
