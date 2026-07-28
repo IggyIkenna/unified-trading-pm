@@ -197,23 +197,23 @@ escalate to a `cicd` worker.
       guidance elsewhere in this workspace. If the operator's "capacity freed up" read changes, re-open this VERIFY.
 
       **Re-open trigger fired, 2026-07-28 ~15:28 UTC** (found incidentally while verifying deploy-currency for
-                                                  `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
-                                                  fresh data point landing in scope): agent-orchestrator's own promote PR
-                                                  (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
-                                                  its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
-                                                  **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
-                                                  agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
-                                                  runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
-                                                  (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
-                                                  escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
-                                                  this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
-                                                  happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
-                                                  configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
-                                                  job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
-                                                  own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
-                                                  Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
-                                                  reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
-                                                  documented there, not duplicated here beyond this evidence note.
+                                                                              `agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md` Track 4 — not a re-audit of this issue, just a
+                                                                              fresh data point landing in scope): agent-orchestrator's own promote PR
+                                                                              (https://github.com/IggyIkenna/agent-orchestrator/pull/691, head `promote/agent-orchestrator/3e83ba8aecc2`) has
+                                                                              its `quality-gates-v2` run (`30368810017`) stuck `in_progress` on `QG slice (tests)`/`QG slice (checks)` for
+                                                                              **56+ minutes** (started 14:31:47Z) as of this observation. `gh api .../actions/runners` confirms both of
+                                                                              agent-orchestrator's own runners (`glue-ip-172-31-5-118-1`, `glue-ip-172-31-5-118-2`) show `online`/`busy` — same
+                                                                              runner name (`glue-ip-172-31-5-118-1`) implicated in the SEPARATE `deployment-service` incident write-up
+                                                                              (`ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md`) the same day. **Not
+                                                                              escalating or intervening**: agent-orchestrator is one of the 2 deliberately-kept-self-hosted verified pools per
+                                                                              this doc's own operator ruling above, so reverting its runner labels would be the WRONG fix and isn't what's
+                                                                              happening here — this looks like the underlying shared-host contention resurfacing on an otherwise-correctly-
+                                                                              configured repo's pool, not a misconfigured allowlist entry. Left the stuck run alone (canceling/retriggering a
+                                                                              job two BUSY runners already claimed didn't look likely to help and risked adding load); it will resolve on its
+                                                                              own once host contention clears or the `ldr-to-main-promote-fleet.yml` cron supersedes the PR to a newer LDR ref.
+                                                                              Net effect on the citing plan: its dashboard-only commit (`agent-orchestrator@f120922`) is genuinely blocked from
+                                                                              reaching `main`/Firebase Hosting by THIS pre-existing infra condition, not by anything in that plan's own code —
+                                                                              documented there, not duplicated here beyond this evidence note.
 
 ## Evidence
 
@@ -581,7 +581,20 @@ escalate to a `cicd` worker.
   **Flagging, not fixing**: closing this cross-system-budget gap (either by wiring the local `qg-host-governor.sh`
   ledger and the CI reservation ledger to share state, or by capping how many interactive slot sessions may run a full
   local `quality-gates.sh` concurrently on this box) is outside a single one-shot `ldr_qg_failure` escalation's scope —
-  worth a dedicated P1/P2 todo for whoever next owns this doc's capacity-planning thread.
+  worth a dedicated P1/P2 todo for whoever next owns this doc's capacity-planning thread. **Retry outcome (18:55 UTC):
+  failed again, same signature** — `QG slice (checks)` run `30387030864` hit the identical `MAX_DURATION` gate a second
+  time (`took 605s work + 0s governor queue-wait = 605s wall` vs the 300s cap, same `lint-codex` selector, same
+  tolerated pip-audit finding, no new/different failure) — confirms this is the ongoing host-contention pattern, not a
+  one-off fluke on the first attempt. Host load stayed elevated throughout both attempts (`uptime` samples across the
+  ~35min window: 58-125 on 16 vCPU). **Cross-referencing the slot-2/`agt-6b1b96` entry immediately below (same repo,
+  parallel escalation, resolved via operator `/blocked` answer at 18:34 UTC)**: that entry's own conclusion — "my
+  original `ldr_qg_failure` ... was contention, not code, and resolves the same way slot-10's did — by retriggering, not
+  by reverting the label" — is the now operator-confirmed resolution path for this repo. Did not attempt a third manual
+  retry (each attempt adds load to an already-thrashing shared host for a fix that needs contention to clear, not more
+  retries); `ldr-to-main-promote-fleet.yml` runs every ~5min and will keep re-attempting this PR automatically.
+  **Closing this escalation as: root cause confirmed non-code (twice), standing operator ruling respected (no
+  runner-label revert), outcome deferred to the fleet cron + host contention clearing — same disposition as the
+  agent-orchestrator PR #691 precedent earlier in this doc.**
   - [x] ✅ [SCRIPT] P1. **DONE 2026-07-28.** `e2e-testing` restored: `ae30579`. The blocker (path-deps
         `strategy-service`/`execution-service` repeatedly re-dirtied by the SAME concurrent Wave-2 session's
         `plan-alignment-agent.yml` migration) cleared in two steps — waited for each repo's REAL tracked change to land
@@ -703,3 +716,192 @@ escalate to a `cicd` worker.
   day suggests the reservation-mode governor genuinely does not fix the wall-clock MAX_DURATION symptom (only the
   admission-queueing symptom, per the system-integration-tests/ibkr-gateway-infra entries above) — the "10 repos
   restored" decision may be worth revisiting rather than re-litigating per-repo each time it recurs.
+
+- 2026-07-28 (cicd agent, slot-8, escalation `agt-a30b00`, `ldr_qg_failure` on `deployment-service`, promotion PR #591
+  LDR→main, `f27ada5a4e92`): **same pattern, deployment-service's own repeat instance (was already reverted once at
+  `ed2691f` — 8th corroboration above — then RE-migrated back to self-hosted same day via `f27ada5a` "Wave-2 A+B" fleet
+  migration, `gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`, landing AFTER the reservation-mode
+  governor fix too).** Failing run `30369898092` (14:44 UTC, i.e. after the 12:53 UTC reservation-mode fix landed —
+  confirmed `QG_GOVERNOR_MODE: reservation` was active in the env block, so this is genuinely renewed contention, not
+  the fix failing to apply): `QG slice (checks)` typecheck selector hit `exit=124` timeout; the `lint-codex` selector
+  passed every substantive check but blew the wall-clock budget (`1438s work > 300s cap`, `> 2× baseline 106.0s`
+  resource-drift warning). Confirmed NOT a code regression: local `quality-gates.sh --no-fix` at LDR HEAD (`e191d58`)
+  passed clean in 299s (2912 tests passed, typecheck 1288/1293 within the existing ratchet ceiling, no new errors). Live
+  host check at the time confirmed severe ongoing contention independent of my own local host: `deployment-api` had a
+  `workflow_dispatch` run queued 3.5+ hours with zero jobs materialized, deployment-service's own retry got
+  auto-cancelled after an hour queued, and the sole registered runner (`glue-ip-172-31-5-118-1`) was `online`/`busy`.
+  Applied the same precedented fix: reverted `self_hosted_runner_labels` to `""` via hand-edit + `quickmerge --agent` —
+  `deployment-service@f0ee04e`. **Extra step needed to actually verify green**: a fresh `workflow_dispatch` run I
+  triggered on LDR (`30389057647`) sat `pending` with zero jobs for several minutes — root-caused to an UNRELATED stuck
+  run (`30370372746`, a `workflow_dispatch` from 14:50 UTC that ran on the self-hosted runner and had been `in_progress`
+  for 4 HOURS by the time I checked) holding the `quality-gates-v2-${{ github.ref }}` concurrency group (only `push`
+  events get `cancel-in-progress`, `workflow_dispatch` does not, so my verify run queued behind it instead of
+  superseding it). The runner had gone fully `offline` while still marked `busy=true` on that stuck job — another
+  distinct symptom of the same box-capacity crisis, not something my fix could resolve on its own. Canceled the stuck
+  run (`gh run cancel 30370372746`) to free the concurrency lock; my verify run then ran clean on
+  `labels: ["GitHub Actions"]` (ubuntu-latest, not self-hosted) and completed `success`. The promote-fleet automation
+  had already auto-superseded stale PR #591 (closed) with a fresh PR #592 (`promote/deployment-service/f0ee04e88aa9`) by
+  the time I checked — verified #592's own `quality-gates-v2` run (`30389784881`) also completed `success` on
+  `ubuntu-latest`. No open repo-blocker existed for this repo. Did not touch the shared allowlist file, the operator's
+  6-repo protected list, or the VM — same scope boundary as every prior fix. **Worth flagging alongside the
+  batch-live-reconciliation-service entry directly above**: this is now a SECOND repo that got explicitly re-migrated
+  back to self-hosted (via a different, unrelated "Wave-2" migration effort this time, not the earlier 10-repo
+  restoration) and hit the identical wall within hours, post-reservation-mode-fix — the wall-clock `MAX_DURATION` budget
+  symptom (not just the admission-queueing symptom the reservation-mode governor targets) is recurring across
+  independently-initiated re-migrations, which is a signal the box genuinely cannot sustain the currently-allowlisted
+  repo count at the load it's carrying right now, not just a per-repo flake.
+
+- 2026-07-28 ~18:38-19:05 UTC (cicd agent, slot-16, escalation `agt-1b5d89`, `ldr_qg_failure` on `greeks-service`,
+  promotion PR #378 LDR→main, head `2174f651c250` — the repo's OWN Wave-2 "migrate to self-hosted (A+B)" commit, same
+  fleet-wide effort that re-migrated batch-live-reconciliation-service and deployment-service above): **13th
+  corroboration, but with a materially worse symptom than the operator's standing greeks-service ruling covered.**
+  Failing run `30374345952`: `QG slice (checks)` hit the `lint-codex` selector's `MAX_DURATION` cap at `839s` work (cap
+  `600s`, this repo's own tuned value) after a `⚠️ Resource drift: wall 839s > 2× baseline 65.2s` warning — every
+  substantive check passed. Confirmed NOT a code regression: local `quality-gates.sh --no-fix` at the exact PR HEAD
+  (`2174f651c2`) passed clean in **173s**, well under the cap. `greeks-service` is one of the operator's 6 explicitly
+  protected repos (2026-07-28 live ruling documented in "Recommended fix path" above: restored to self-hosted with the
+  stated posture "leave the box as loaded as it currently tolerates") — so the standard revert fix was NOT immediately
+  applicable here, unlike batch-live-reconciliation-service/deployment-service above. While investigating, a parallel
+  `workflow_dispatch` run (`30375088895`) on the same repo showed `QG slice (tests)` stuck `in_progress` 22+ min with no
+  sign of finishing on the sole registered runner (`glue-ip-172-31-5-118-1`, `busy=true`); canceled it to free the
+  runner for my queued rerun (`gh run rerun --failed`) — but the runner then went fully **`offline`** and, on the next
+  check, **fully deregistered** (`gh api .../actions/runners` → `total_count=0`), a materially worse state than "merely
+  busy/loaded" (the crash-loop class this doc's `glue-runner-crash-loop-watchdog` alerts on, not just admission
+  contention). Filed `/blocked` (`BLK-ca37c79f`) given the direct conflict with the operator's same-day keep-self-hosted
+  ruling for this exact repo (mirroring `BLK-1eceb530` on `ibkr-gateway-infra` above) — **main answered with INTERIM
+  guidance to revert** (reasoning: a fully-deregistered runner is a forever-hang condition the crisis doc's own hard
+  rule already covers regardless of any per-repo ruling, since the ruling was premised on a working-but-loaded runner,
+  not a dead one; escalating final confirmation to the operator, flagged the doc for the same-day precedent). Applied
+  it: reverted `self_hosted_runner_labels` to `""` via hand-edit + `quickmerge --agent` — `greeks-service@f954606`,
+  local `quality-gates.sh --no-fix` re-verified clean (229s) before shipping. Note: the runner had ALSO auto-recovered
+  on its own by the time the revert shipped (systemd `Restart=` brought it back online as a new registration, id 69) —
+  so this fix and the natural recovery raced; shipped the fix regardless per main's explicit directive. Verified green:
+  triggered a fresh `quality-gates-v2` run directly on `live-defi-rollout` (`30390264079`) — completed `success` in
+  ~1m30s, confirmed via `gh api .../jobs` every `qg-slices` job ran on `labels: ["ubuntu-latest"]` (the repo's other
+  jobs — notify-ci-watcher/dispatch-cloud-build/escalate-ldr-qg-failure — stay `[self-hosted, glue]` unaffected, same
+  scope as every prior fix in this doc). PR #378's own head (`2174f651c250`) predates the fix and can never re-gate
+  green on it (same immutable-frozen-ref issue as the deployment-api/deployment-service entries above) — closed it by
+  hand with an explanatory comment so the next `ldr-to-main-promote-fleet.yml` tick opens a fresh PR pinned to
+  `f954606`. **Unlike the ibkr-gateway-infra precedent (where the operator's final answer was to RESTORE self-hosted and
+  just retry/retrigger contention failures), main's guidance here was explicitly INTERIM pending operator confirmation**
+  — whoever next sees the operator's final ruling on `BLK-ca37c79f` should check it before assuming
+  `greeks-service@f954606`'s ubuntu-latest state is meant to be permanent; if the operator restores self-hosted (as they
+  did for ibkr), that's a simple re-flip, not a conflict with this entry. Did not touch the shared allowlist file, the
+  other 5 protected repos, or the VM. No open repo-blocker existed for this repo at the time.
+
+- 2026-07-28 ~~18:56 UTC (cicd agent, slot-15, escalation `agt-5fd0b2`, `ldr_qg_failure` on `unified-trading-library`,
+  no PR, commit `0a3f2036abb70fb3062b6f9928202a9e2ed311d8` — this repo's own "Wave-2 A+B" migration of
+  `staging-lock-check.yml` + `quality-gates-v2.yml`'s other jobs, which incidentally also carried the
+  `self_hosted_runner_labels` flip per the `[SCRIPT] P1` restoration entry above): another corroboration, a variant
+  symptom not yet logged — an ADMITTED job hanging outright, not a wall-clock-budget or admission-queueing failure.
+  Failing run `30370443820`: `QG slice (checks)` died on `uv sync --frozen` with "Failed to write to the distribution
+  cache: No such file or directory (os error 2)" at
+  `/home/ubuntu/.cache/uv/sdists-v9/editable/.../.tmp167DgP" — a transient filesystem race on the shared `~~/.cache/uv`path under heavy concurrent load, not a code issue;`QG
+  slice
+  (tests)`ran 61m27s before also being marked failed. A follow-up manual`workflow_dispatch` retry (`30375127722`) got further — `checks`passed in 15m14s (vs a normal ~2min) — but`tests`then sat`in_progress`on step "Run quality gates (leg tests)" for 3+ HOURS with zero step completion (started 18:30:21Z, still stuck when I checked ~18:56Z); canceled it to free the runner. Confirmed severe live host contention directly on this box (same box this cicd session itself runs on):`uptime`showed`load
+  average: 90.84, 80.47, 81.78`on a 16-vCPU box,`free
+  -h`showed 13Gi/15Gi swap in use (87%), and 62`Runner.Listener`/`Runner.Worker`processes present — worse than the 68-125 range logged in the ~18:20 UTC ibkr-gateway-infra entry above, consistent with this being the same ongoing fleet-wide saturation, not a new distinct cause. **Not a queueing/admission-visibility gap** (the job WAS admitted — governor env showed`QG_GOVERNOR_MODE=reservation`correctly set) and **not a wall-clock-budget miss** (no step ever completed to even measure against`MAX_DURATION`) — this is the host so saturated that an already-running process makes near-zero forward progress, a third distinct failure mode alongside the two this doc already tracks (admission-queueing; wall-clock-budget-exceeded). Confirmed `unified-trading-library`is NOT one of the operator's 6 explicitly-protected repos (features-service, fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service, market-tick-data-service), so the standing precedented fix applies with no ruling conflict (unlike the ibkr-gateway-infra flip-flop above). Applied it: reverted`self_hosted_runner_labels`to`""`via hand-edit (this repo's own per-repo`.github/workflows/quality-gates-v2.yml`copy) + removed`unified-trading-library`from`scripts/workflow-templates/self-hosted-qg-repos.txt`(so a future`rollout-workflow-templates.sh`run doesn't silently re-flip it back, per this doc's own "restored to match reality" discipline) — both shipped via`quickmerge
+  --agent`, local `quality-gates.sh
+  --no-fix`verified clean before shipping. Did not touch any other repo or the VM. Adds to the emerging cross-slot consensus (system-integration-tests, batch-live-reconciliation-service entries above) that the reservation-mode governor's admission ledger, while correctly preventing RAM-crash oversubscription, does not prevent an admitted job from starving once the whole host is this saturated from co-resident load (concurrent AO agent slot-worker sessions + other self-hosted runner jobs) — worth folding into whoever next revisits the "10 repos restored" decision's open`[DATA]
+  P2` re-verification todo.
+
+- 2026-07-28 ~18:03-19:09 UTC (cicd agent, slot-2, escalation `agt-604cb7`, `ldr_qg_failure` on `features-service`
+  promotion PR #893, LDR→main, head `promote/features-service/b0eb74fae5ee`): another corroboration, **a new failure
+  signature within this same root-cause class**, plus live host measurements worse than every prior entry in this doc.
+  Failing run `30368778087` (14:31-18:03 UTC, 3h32m wall): `QG slice (checks)` died in `Install dependencies` with
+  `error: Failed to install: requests-2.33.1-py3-none-any.whl (requests==2.33.1) — Caused by: failed to read directory /home/ubuntu/.cache/uv/archive-v0/Ph2bpd1BAefE-amtttegz: No such file or directory (os error 2)`
+  — a `uv` package-cache race: `/home/ubuntu/.cache/uv` is the same per-user (not per-runner) path for every
+  self-hosted-runner process on this box, so a DIFFERENT concurrent `uv` process evicted/pruned that archive entry
+  between this job's dependency-resolve and its actual file read. `QG slice (tests)` separately died with a bare
+  `##[error]The operation was canceled.` after 20m49s stuck on the `Cache tools` step. Neither is a code/test break.
+  Confirmed NOT a code regression the cheap way (didn't need a full local test-suite pass): the CI failure was IN the
+  dependency-install step itself, and a local `bash scripts/quality-gates.sh --no-fix` at the same HEAD (`98a2ac8d`, 3
+  commits ahead of the PR's frozen `b0eb74fae5ee`, all 3 unrelated other-repo CI-workflow-template commits) got cleanly
+  PAST `uv sync`, `ruff`, and `basedpyright` (all ✅) before host contention made the local run itself impractical to
+  wait out — proving the lockfile/deps install and the code passes lint+typecheck; the `uv`-cache race is inherently
+  host-timing-dependent and not expected to reproduce deterministically. **Confirmed `features-service` is one of the
+  operator's 6 explicitly-protected repos** (see "Recommended fix path" above) — did NOT revert
+  `self_hosted_runner_labels`. **Host state at diagnosis time was the worst yet recorded in this doc**: `uptime` showed
+  load average **62.9 → 86.9 → 63.9** oscillating across a ~50-minute window (16 vCPU box, so 4-5.4x oversubscribed),
+  `free -h` showed swap climbing from 13GB to 13GB-of-15GB used throughout (only ~2.3-2.8GB swap headroom, 2.3-4.4GB RAM
+  free) — matches this doc's own "renewed contention" finding above but measured directly across multiple samples, not a
+  single reading. Runner reality: `gh api .../actions/runners` → still exactly 1 runner (`glue-ip-172-31-5-118-1`),
+  confirmed `online`/`busy` (not the offline-while-busy zombie state the deployment-service entry above found — this
+  runner was genuinely working, just severely swap-thrashed). Found THREE stale/competing dispatches queued against this
+  one runner for this repo alone before I started: a `workflow_dispatch` queued 3.5 HOURS before its `QG slice (tests)`
+  job even got a runner assigned (`30370387301`, queued 14:50 UTC → job started 18:18 UTC), a second `workflow_dispatch`
+  that sat `cancelled` after 1h56m (`30378861418`), and a third, newer `workflow_dispatch` still `pending` with zero
+  jobs materialized 22+ minutes in (`30387767648`) — canceled the third (pure duplicate queue noise, had consumed
+  nothing yet) to reduce contention; left the first alone since it had already started and canceling 30+ minutes of
+  progress would only restart the queue wait for no benefit. Watched `30370387301`'s `QG slice (tests)` job (the live
+  process: `.venv/bin/python -m pytest ... -n 0 --cov=features_service`, cwd
+  `/opt/github-glue-runners-features-service/glue-1/_work/...`) across 3 bounded poll windows totalling ~12 minutes — it
+  alternated `D`/`RNl` state (disk-wait / low-priority-runnable, i.e. swap-thrashing, not compute-bound) the whole time,
+  never completed, host load never sustainably eased. **Did not hold the slot indefinitely waiting on external host
+  capacity to recover** (per this workspace's async-wait/poll discipline — poll on a progress metric, don't over-watch a
+  flat/non-converging signal) — stopped after the 3 bounded windows with the run still `in_progress`/`queued`(checks),
+  documenting here instead of fabricating a "fixed" outcome. **No code fix exists to ship for this wall** — it is 100%
+  host-capacity/queue-depth, the same accepted systemic condition this doc already tracks for the protected-6. PR #893's
+  own head (`promote/features-service/b0eb74fae5ee`) is unchanged/untouched; deliberately did NOT close it by hand
+  (unlike the deployment-api precedent) since `30370387301` may still resolve on its own and there is no evidence yet
+  the promote-fleet cron has actually stalled on this repo specifically — that would need a fresh corroboration once
+  `30370387301` finishes one way or the other. No open repo-blocker existed for this repo. Did not touch the shared
+  allowlist file, any other repo, or the VM — same scope boundary as every prior fix in this doc. **Flagging for whoever
+  next reads this doc**: three independent samples this session (62.9, 86.9, 63.9 load average; 13GB/15GB swap
+  sustained) show the box oscillating at or above every prior entry's peak reading, with a brand-new failure mode (uv
+  shared-cache eviction race) on top of the already-documented `TimeoutExpired` / `MAX_DURATION` / admission-queueing
+  symptoms — worth an urgent re-look at whether the "protected-6 stay self-hosted, accept recurring reds, resolve via
+  retrigger" standing ruling still holds now that the box is reading measurably hotter and more failure-mode-diverse
+  than when that ruling was made, rather than treating each new instance as just another routine corroboration to log
+  and move past.
+
+- 2026-07-28 ~19:10 UTC (cicd agent, slot-6, escalation `agt-0c9648`, `ldr_qg_failure` on `agent-orchestrator`, no PR,
+  `#0`): another corroboration, this time on one of the **2 original verified-canary pools** (agent-orchestrator,
+  unified-trading-pm — distinct from the "protected-6" above), so the standing fix here is retrigger-only, never revert.
+  Failing run `30370349605` (commit `29d66251`, an unrelated observability timeout bump — ruling out a code regression
+  before even reading logs): `ruff check`/`ruff format`/agent-role-frontmatter/`basedpyright` on the `checks` slice ALL
+  passed clean — basedpyright alone took 46min (17:09→17:56) under host load before the `pytest` step got
+  `##[error]The operation was canceled.` 79s after starting; the `tests` slice hit the identical cancellation pattern
+  independently. Confirms this doc's root cause exactly, zero new code-side signal. Found (and helped clear) two OTHER
+  runs independently occupying agent-orchestrator's only 2 glue runners at the time (`30375055204`, a 3.5h-queued
+  dispatch-retry of this same wall; `30381726562`, the unrelated LDR→main promote-PR#692 gate, stuck 1h55m on
+  `Run quality gates (leg checks/tests)`) — canceled both via `gh run cancel` to free the pool for retry.
+  `journalctl -u github-glue-runner-ao@glue-{1,2}.service` clarified a point worth flagging for future readers: the high
+  (~1425) systemd restart counter is **ephemeral/JIT-runner-by-design** (fresh registration every job, clean exit after
+  each), NOT a crash loop — an easy misread mid-investigation when `gh api .../actions/runners` also briefly showed
+  `total_count: 0` (both runners transiently mid-re-registration, not actually down). One of the two canceled jobs' own
+  prior attempt had separately hit `Runner connect error: Registration ... was not found` for over an hour mid-job
+  before finishing `Abandoned` — a heartbeat-loss failure mode distinct from but consistent with the same
+  host-contention root cause. Retriggered a fresh dispatch (`30390470035`) after the cancels: it left the 3+ hour queued
+  state within ~1 minute and was genuinely executing both QG slices as of this write-up (still `in_progress`, not yet
+  green) — did not hold the slot further waiting on it per this doc's own async-wait-discipline precedent above. **Did
+  not revert `self_hosted_runner_labels`** for agent-orchestrator (would be the wrong fix per this doc's own
+  "Recommended fix path" ruling + the PR#691 re-open-trigger note recommending non-intervention for this exact repo). No
+  open repo-blocker existed for this repo. Did not touch the shared allowlist, any other repo, or the VM.
+
+- 2026-07-28 ~19:00-19:21 UTC (cicd agent, slot-13, escalation `agt-4f4691`, `ldr_qg_failure` on `strategy-service`, no
+  PR, `#0`, commit `400d3773`): another corroboration + per-repo fix — one of the "5 untouched-and-still-self-hosted"
+  repos this doc's earlier entries named (strategy-service, system-integration-tests, trading-agent-service,
+  unified-api-contracts, unified-trading-api) that had never actually been reverted despite two prior sub-agent attempts
+  finding the same fix (blocked then by an unrelated stale non-`.tabs` sibling clone, per the `[SCRIPT] P1` entry
+  above). Failing run `30375110395`: `QG slice (checks)` — `typecheck` selector hit a hard `timeout` (exit=124) after
+  ~2min in `[4/6] TYPE CHECK`, then the `lint-codex` selector completed every substantive step but blew the
+  `MAX_DURATION` wall-clock cap (`365s work > 300s cap`, `⚠️ Resource drift: wall 365s > 2× baseline 131.2s`);
+  `QG slice (tests)` separately sat on `pytest` with zero output for 66+ minutes before being marked `cancelled` —
+  matches this doc's established signature exactly. Confirmed the repo's own env carried `QG_GOVERNOR_MODE: reservation`
+  (the shared-workflow fix already active), so this is the same "admitted job starves under host saturation" mode
+  already logged for `unified-trading-library`/`batch-live-reconciliation-service`, not an admission-queueing gap.
+  Confirmed NOT a code regression: a clean local `quality-gates.sh --no-fix` at the exact failing HEAD (`400d3773`)
+  passed (`ALL QUALITY GATES PASSED (299s)`) despite the same shared host running ~30+ concurrent
+  `quality-gates.sh`/slot-QG processes at the time (confirmed via `ps aux`). Confirmed `strategy-service` is NOT one of
+  the operator's 6 explicitly-protected repos (features-service, fund-administration-service, greeks-service,
+  ibkr-gateway-infra, instruments-service, market-tick-data-service), so the standing precedented fix applies with no
+  ruling conflict. Applied it: reverted `self_hosted_runner_labels` to `""` via hand-edit + `quickmerge --agent` —
+  `strategy-service@6445ff01`. Verified live: canceled the two stale runs still queued at the pre-fix commit
+  (`30387784494`, `30375564792`), triggered a fresh `workflow_dispatch` on `live-defi-rollout` (`30391167553`) —
+  completed **`success` in ~4m30s** (`QG slice (checks)` 133s, `QG slice (tests)` 215s), confirmed via `gh api .../jobs`
+  no `labels` override (ubuntu-latest default), GH's own "QG Recovered" Slack step fired. No open repo-blocker existed
+  for this repo (`GET /api/repo-blockers` → only an unrelated `market-tick-data-service` entry). Did not touch the
+  shared allowlist file, `system-integration-tests` (the sibling repo named alongside strategy-service in the earlier
+  entry — separately already reverted by the 11th corroboration above), any other repo, or the VM — same scope boundary
+  as every prior fix in this doc.

@@ -325,13 +325,33 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       `# noqa: qg-empty-fallback` with a one-line reason **if** the empty string is genuinely a meaningful not-present
       value there. The checker reports it as a "positional tail-slice — no baseline commit on record for this repo yet",
       so confirm the site is genuinely new before annotating. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P3. **Ratchet remaining 4 baselines DOWN** (`--update-baseline` per repo): deployment-service 91→89,
-      instruments-service 366→361, ml-service 8→6, trading-agent-service 2→1. **market-tick-data-service portion DONE
-      2026-07-27** — banked at 199→90 (not 62; count drifted upward between the 07-16 sweep and this re-scan from
-      unrelated commits landing in the interim, still comfortably under the old baseline) via scoped
-      `--update-baseline --scope market-tick-data-service`, `unified-trading-pm@<see Progress Log>`. Pure hygiene for
-      the rest; each unbanked baseline leaves headroom for a real regression to slip in unnoticed, which is exactly how
-      `agent-orchestrator` reached 26.
+- [x] ✅ [SCRIPT] P3. **Ratchet remaining 4 baselines DOWN — ALL 4 NOW DONE 2026-07-28.** (`--update-baseline` per
+      repo). **market-tick-data-service portion DONE 2026-07-27** — banked at 199→90 (not 62; count drifted upward
+      between the 07-16 sweep and this re-scan from unrelated commits landing in the interim, still comfortably under
+      the old baseline) via scoped `--update-baseline --scope market-tick-data-service`,
+      `unified-trading-pm@<see Progress Log>`. **instruments-service portion DONE 2026-07-28** — re-measured live (not
+      the doc's stale snapshot): 362 < baseline 366, banked via scoped `--update-baseline --scope instruments-service`
+      (366→362, not 361 — live count drifted by one site since this todo was written; still a genuine, verified
+      improvement, hard-clamped down-only), `unified-trading-pm@<see Progress Log>`. No `instruments-service` code
+      change — this todo is config-only (the baseline yaml lives in
+      `unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml`, committed directly to this repo
+      per the established precedent for every prior baseline-ratchet entry in this doc, not via instruments-service
+      quickmerge). **ml-service + trading-agent-service portions DONE 2026-07-28** (concurrent sibling run in the same
+      shared PM working tree, re-verified independently before committing rather than trusting the uncommitted diff):
+      `ml-service` 8→6 (`[OK] 6 (== baseline)`, `commit: 8c2ca3cd`), `trading-agent-service` 2→1
+      (`[OK] 1 (== baseline)`, `commit: acaf1ee4`) — both live-re-measured via direct
+      `check_no_empty_string_fallback.py --scope <repo>` runs, matching the staged yaml exactly. **deployment-service
+      portion DONE 2026-07-28** — re-measured live: 91 == baseline 91 (the 89<91 snapshot from the 2026-07-16 sweep had
+      already drifted back to the ceiling by today, same oscillation pattern documented elsewhere in this doc for
+      market-tick-data-service — no headroom to ratchet DOWN right now), but the `--update-baseline` re-run still
+      stamped the previously-missing `commit:` anchor (`fc82b35b`) for accurate future diff-based over-baseline
+      reporting, matching the pattern already applied to market-tick-data-service/instruments-service/
+      ml-service/trading-agent-service. Config-only, no deployment-service code change. This closes this todo's original
+      4-repo scope (deployment-service/instruments-service/ml-service/trading-agent-service, all now at/under baseline
+      with a `commit:` anchor); `agent-orchestrator` still lacks one — that is the SEPARATE, still-open P2 todo
+      immediately below (not this todo's scope; the two were split precisely because AO's gap is an anchor-stamping
+      task, not a count-ratchet). Each unbanked baseline used to leave headroom for a real regression to slip in
+      unnoticed, which is exactly how `agent-orchestrator` reached 26.
 
 - [ ] [SCRIPT] P2. **Stamp a `commit:` anchor into the `agent-orchestrator` baseline row** (and audit which other repos
       lack one). Root cause of the 2026-07-16 mis-report: AO's row is bare `count: 25` with no `commit:`, so an
@@ -343,7 +363,8 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       **Gate**: `no_empty_string_fallback_baseline.yaml`'s `agent-orchestrator` row carries a `commit:`; a
       deliberately-introduced test site is reported at its real path, not a tail-slice guess.
 
-- [ ] [SCRIPT] P1. **Land the durable per-site `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
+- [x] ✅ [SCRIPT] P1. **LANDED 2026-07-28 — `market-tick-data-service@69738677`.** **Land the durable per-site
+      `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
       `market-tick-data-service/scripts/verify_lst_collateral_support.py` (L89 `currency`, L167 `ccy`) — the permanent
       oscillation source behind the 07-08→07-28 re-reds.** Those two `.get("key", "")` sites are always present, so the
       repo-wide count sits at the ceiling and any unrelated +2 drift elsewhere tips the total 89→91, re-reds the local
@@ -424,3 +445,19 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
   AF-1a class). So I reverted my local change to leave the slot clean and captured the fix as the exact-diff, verified,
   AO-eligible P1 todo — so the next dispatched agent (or a calm-host worker) lands it in minutes instead of
   re-diagnosing from scratch. Nothing to resolve (blocker already closed); no code shipped this session.
+- **2026-07-28 (cross-repo quick-fix batch, instruments-service portion of the P3 baseline-ratchet todo)** — re-ran the
+  checker live rather than trusting this doc's own 361 snapshot:
+  `check_no_empty_string_fallback.py --workspace-root <ws> --scope instruments-service` →
+  `[WARN] instruments-service: 362 < baseline 366`. Banked via `--update-baseline --scope instruments-service` (366→362,
+  stamps a `commit:` anchor at `instruments-service@e519ed8e`). Config-only — no instruments-service code change, the
+  baseline yaml is a PM-repo file committed directly here (`unified-trading-pm@<this commit>`), matching every prior
+  entry in this doc. Also observed (not authored by this pass) a concurrent commit-anchor stamp on
+  `deployment-service`'s row (count unchanged, 91) that landed in the same working-tree window — carried forward as-is,
+  not claimed.
+- **2026-07-28 (slot-2, P1 todo checkbox flip)** — dispatched to land the durable per-site noqa fix; found it already
+  shipped by slot-9 as `market-tick-data-service@69738677` (`git merge-base --is-ancestor` confirms it's on
+  `origin/live-defi-rollout`). Independently re-verified rather than trusting the commit message: both L89 (`currency`)
+  and L178 (`ccy`, not L167 — the site shifted a few lines since the todo was written) carry
+  `# noqa: qg-empty-fallback — "" never equals a real token`, matching the L220-222 precedent; direct checker re-run
+  confirms `[WARN] market-tick-data-service: 87 < baseline 89`. No code change needed this pass — flipping the checkbox
+  only.

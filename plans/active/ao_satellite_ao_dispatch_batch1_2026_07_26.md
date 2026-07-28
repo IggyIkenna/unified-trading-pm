@@ -239,10 +239,25 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       `DELETE /api/backlog/{task_id}` legitimately removes a done row on operator request and must still succeed — so
       record rather than raise. **Done when**: a test proves a direct SQL delete of a done row leaves a queryable trace,
       a second proves the sanctioned operator-delete endpoint still succeeds and is traced not blocked, and
-      `quality-gates.sh` is green. Source: `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md`
-      (BACKEND P3). Note for the worker:
+      `quality-gates.sh` is green. Source: `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md`
+      (BACKEND P3, resolved 2026-07-28 — see note below). Note for the worker:
       `/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` is an explicitly-parked decision
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
+
+      **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
+              NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+              `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+              not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+              `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+              downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+              logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+              resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+              defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+              the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+              primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+              unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+              decision this session didn't make.
+
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
       entry #25 (option C — do both; A already done, this is the B follow-on). The hand-maintained Sources list lost
@@ -359,7 +374,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 - `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
   `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` per-slot WIP recovery items
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
-- `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md` — **stale tag here**: its watch-log-check todo
+- `/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md` — **stale tag here**: its watch-log-check todo
   is already `[SCRIPT]` P1 in the source doc, downgraded from `[OPERATOR]` on 2026-07-27 ("Category B, read-only: this
   is a log-tail check via the same read-only AWS SSM path… not a human-only action"); it is a normal AO-dispatchable
   read-only SSM poll (`/check-agent-orchestrator` / `check-ao-backlog-status.sh`), no operator gate. Its `[BACKEND]` P2

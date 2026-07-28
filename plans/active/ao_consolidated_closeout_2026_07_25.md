@@ -80,8 +80,9 @@ todos of its own**. The plans that actually work these docs' open items:
 ## Track 1 — Dispatch/backlog scheduling bugs · P0/P1
 
 **Sources**:
-[issues/ao_backlog_done_row_disappearance_2026_07_25.md](/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md)
-(backlog `state.db` rows silently vanishing, prune bug) ·
+[issues/ao_backlog_done_row_disappearance_2026_07_25.md](/plans/archive/issues/ao_backlog_done_row_disappearance_2026_07_25.md)
+(backlog `state.db` rows silently vanishing — RESOLVED 2026-07-28,
+`agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef`) ·
 [issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md](/plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md)
 (`PlanRegenLoop.prune_stale` wiped the entire live backlog on a transient zero-scan tick) ·
 [issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md](/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md)

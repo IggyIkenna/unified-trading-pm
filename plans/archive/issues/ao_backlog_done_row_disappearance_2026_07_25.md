@@ -13,20 +13,20 @@ summary: >-
   text states the intended design outright: "done orphans are audit history" (meant to persist forever). No activity-log
   event, journal line, or known endpoint call explains the disappearance. Root cause NOT yet found -- a live watch
   process has been armed on the orchestrator VM to try to catch a recurrence in the act.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, data-integrity, state-db, backlog, sqlite, audit-history, unexplained, recurring-risk]
+tags: [agent-orchestrator, data-integrity, state-db, backlog, sqlite, audit-history, resolved]
 related:
   [
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]
 created: 2026-07-25
-last_updated: 2026-07-25
+last_updated: 2026-07-28
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -43,7 +43,7 @@ source: >-
   historical S3 DR-backup snapshot, direct SQL queries (after installing sqlite3 on the VM), the deployed service's
   systemd journal, and the /api/activity log, cross-referenced against both the local and the actually DEPLOYED copy of
   the relevant code.
-resolved_by:
+resolved_by: agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef
 locked_by:
 locked_since:
 ---
@@ -130,53 +130,107 @@ than unexplained. **Lesson for future checkbox-only completions**: if DB-level `
 task, also call whatever "mark done" mechanism exists for it (e.g. the parked-task `mark-done` endpoint for
 `[OPERATOR]`-tagged tasks), not just the plan-file edit.
 
-## What is NOT yet known
+## Root cause CONFIRMED + FIXED (2026-07-28)
 
-- The actual code path or process responsible for removing `done` rows. Every known application-level DELETE site has
-  been read (locally and on the deployed VM) and none fits.
-- Whether this is a single past incident or an ongoing, recurring condition.
-- Whether any OTHER shared session/slot on this same VM ran a direct, out-of-band SQL operation against `state.db`
-  (plausible given this is a heavily multi-agent-shared host, but unproven either way).
+Two independent methods converged on the same mechanism:
 
-## Live watch armed (in progress as of this doc)
+1. **Forensic re-run of this doc's own method, widened to 2026-07-25 → 2026-07-28** (the live-watch process described
+   below had silently died — see "Live watch — retired" — so this was done by pulling every `snapshots/planning/*.json`
+   state export from S3 for the whole window and diffing every consecutive pair, exactly as points 1-9 above did for a
+   single evening). Found **706 anomalies across the 4 days — 599 full-vanish, 107 regression — covering 686 distinct
+   task_ids**, i.e. this was a continuously recurring condition, not a one-off, and far larger in scope than first
+   noticed. 90% of the regressions **preserved `done_sha`/`done_at`** after the status flip — a field-signature that
+   rules out the one known reset path (which clears those fields) and instead matches
+   `server/state_store/tasks.py::release_task_to_queue()`, which touches only `status`/`dispatched_to`/`queued_at` and
+   never `done_sha`/`done_at`.
+2. **A fresh code audit of every caller of `release_task_to_queue`** (not just the previously-cleared
+   `regen_backlog_from_plan.py::_prune_stale`) found it had **no guard against being called on an already-terminal
+   task**. Several callers derive the `task_id` from a SLOT's `current_task`/`dispatched_to` pointer rather than
+   re-checking the task's own current status: `server.py::_recover_slot_after_failed_rotation` (only checks
+   `slot.status != "paused"`), `worker_liveness_watchdog.py`'s prereq-blocked release (only checks
+   `held_task is not None`), `state_store/slots.py::claim_slot_for_typed_agent`'s teardown loop (queries
+   `TaskRow.dispatched_to == slot_id` with **no status filter at all**), and the `/reassign` + `/skip-current-task`
+   endpoints (both use `slot.current_task` directly). If any of these pointers is stale — e.g. a worker's own `/done`
+   call already completed the task, but a concurrent slot-teardown/watchdog/reassign path still holds the old
+   `current_task` reference — calling `release_task_to_queue` unconditionally flips the genuinely-done task back to
+   `queued` (the **regression**, `done_sha`/`done_at` untouched, exactly matching finding 1). Once `queued` with
+   `dispatched_to=NULL`, the row now satisfies `_prune_stale`'s own correctly-scoped DELETE filter on the very next
+   regen tick (**the vanish** — a legitimate-looking two-step "reset-then-prune" that never touches the one known
+   DELETE's own guard, which is why the original investigation's DELETE-site audit correctly cleared it and still missed
+   the real mechanism).
 
-A detached background process is running on the orchestrator VM (`i-0c9b283b31d6b5ca7`, launched via `setsid nohup`,
-survives independent of any one SSM session), currently on **v2** (`agent-orchestrator@a90d3fc`), polling `/api/backlog`
-every **60s** (tightened from an initial 180s ahead of a large incoming task batch). v2 tracks the FULL task record per
-poll (not just id→status) and immediately logs full before/after JSON for either of two patterns, each triggering
-capture of the last 10 minutes of the `orchestrator` systemd journal + a full process list into the same log:
+**The fix**: a guard added directly inside `release_task_to_queue()` (not just the individual call sites, so every
+current AND future caller is covered) refuses — logs a warning, makes no change, returns `None` — when the row is
+already `done`/`cancelled`. The one legitimate caller that means to undo a terminal status on purpose
+(`/api/backlog/{id}/reopen`) opts in explicitly via a new `allow_terminal=True` kwarg. `/reassign` and
+`/skip-current-task` now surface a `409` instead of silently proceeding as if a live task had been reassigned/skipped.
+Shipped: `agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef` (`server/state_store/tasks.py`,
+`server/routes/slots_ops.py`, `server/routes/backlog.py`, `server/server.py`, `server/worker_liveness_watchdog.py`) + 17
+new/covering tests (`tests/test_release_task_to_queue_guard.py`) — full local suite green (1902 passed), full
+`quality-gates.sh` green, landed on `live-defi-rollout` via quickmerge. **Confirmed live in production**: the
+orchestrator VM (`i-0c9b283b31d6b5ca7`) tracks `live-defi-rollout` directly, pulled + `--reload`-restarted onto this
+exact commit within ~2 minutes of the push (journal: reload fired 18:46:05Z picking up
+`slots_ops.py`/`backlog.py`/`worker_liveness_watchdog.py`/`state_store`/etc.; service confirmed `active` and serving
+traffic normally afterward).
 
-1. **Full vanish** — a `done` task_id disappears from the response entirely (the original pattern, points 1-8 above).
-2. **Regression** — a `done` task_id is still present but its status is no longer `'done'` (point 9 above; v1 could not
-   capture the specific task_id or content for this pattern, only the aggregate count change).
+**A secondary, minority candidate was checked and ruled out, not just assumed clear**: `server/bootstrap.py`'s
+sibling-id-reuse reset (`sync_backlog_to_db`, guarded at line ~431 by `status=='done' and done_sha is not None`) could
+theoretically produce the ~10% of regressions where `done_sha` WAS cleared, if its guard were ever bypassed (e.g. a
+`done` row somehow lacking `done_sha`). Traced `mark_done()` back to the very first commit — it has always set
+`done_sha` unconditionally alongside `status='done'`, so this path is structurally closed in current code; deploy parity
+was spot-checked directly on the live VM (`grep` confirms the exact guard line present at the same line number in the
+deployed checkout, which is running this session's own HEAD). Not the dominant mechanism, and not currently exploitable
+— noted here rather than silently dropped.
 
-- Script: `agent-orchestrator/scripts/done_row_disappearance_watch.py` (this issue's investigation tool).
-- Live log: `/home/ubuntu/done_row_disappearance_watch.log` on the orchestrator VM.
-- State file: `/home/ubuntu/done_row_disappearance_watch_state.json` (v2 format: full per-task-id records, not just id
-  lists — v2 auto-detects and discards a stale v1-format state file rather than crashing on it).
-- Confirmed running: v2 baseline poll logged at 2026-07-25T22:36:25Z after cleanly migrating past the v1 state file.
+**A related, independently-confirmed bug was found and fixed in the same pass**: the SQLite DR backup (the actual
+restorable artifact, distinct from the lighter `state.json` snapshot) had not landed in **4+ days** in prod
+(`SnapshotRecencyCanary` correctly detected + paged this — its breach sentinel was `true` — but nothing had yet
+explained _why_ the backup itself had stopped). Root cause: `gcs_sync.SnapshotLoop`'s 6h cadence was tracked by a plain
+in-process `tick` int, reset to 0 on every process restart — and this service restarts on every `--reload` code-change
+pickup, observed in prod restarting every **15-70 minutes**, far short of accumulating the 12 ticks (6h) needed before
+resetting again. The backup could structurally never fire under that restart cadence. Fixed by tracking elapsed
+wall-clock time since the last successful backup instead, persisted to a sentinel file under `data/state/` (survives
+restarts the same way `state.db` itself does) — shipped in the same commit, covered by
+`tests/test_sqlite_backup_wallclock_cadence.py`.
+
+## Live watch — retired (2026-07-28)
+
+The v2 watch process described below was found **dead** at the start of this session (`pgrep` found nothing, its log
+file was 0 bytes) — it was launched via a bare `setsid nohup` with no systemd unit, and silently died (most likely a
+VM/service restart) without ever catching a recurrence. Its intended purpose — catch a live recurrence to identify the
+cause — is superseded: the cause is now identified and fixed at the source (above), and the forensic **snapshot-diff
+method is strictly more powerful anyway** (it needs no continuously-running process at all; the `state.json` trail
+already lands independently every ~30min regardless, and can be diffed retroactively on demand whenever a concern arises
+— which is exactly how the 2026-07-28 root-cause finding above was actually produced). Keeping a bare unmanaged
+background process as the primary mitigation was itself an instance of the same restart-fragility class this whole
+investigation was about. **`scripts/done_row_disappearance_watch.py` has been deleted** per its own `Delete-when` marker
+(issue resolved) — `git log -- scripts/done_row_disappearance_watch.py` in `agent-orchestrator` has its full history if
+anyone wants the code again.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **Check the watch log periodically** (SSM into the VM,
-      `cat /home/ubuntu/done_row_disappearance_watch.log`) for an `!!! ANOMALY` line. If one fires, the captured
-      journalctl + process-list block immediately following it is the best chance at identifying the actual cause — read
-      it before the trail goes cold (the journal itself eventually rotates). **Downgraded from [OPERATOR] 2026-07-27** —
-      Category B, read-only: this is a log-tail check via the same read-only AWS SSM path the workspace already uses for
-      orchestrator state (`/check-agent-orchestrator` skill, `check-ao-backlog-status.sh`), not a human-only action — an
-      agent (or an armed `run_in_background` watchdog per the async-wait-and-poll-discipline SSOT) can poll this on a
-      schedule and escalate only if the anomaly marker actually fires.
-- [ ] [BACKEND] P2. Once (if) a recurrence is caught: root-cause the actual code path or process and fix it. Until then,
-      do not guess at a fix for an unconfirmed mechanism.
-- [ ] [BACKEND] P3. Consider adding a lightweight SQLite trigger
-      (`CREATE TRIGGER ... BEFORE DELETE ON tasks WHEN     OLD.status='done' ...`) that raises/logs loudly on any
-      attempt to delete a done row, regardless of call site — defense in depth so this class of event is caught
-      immediately in the future rather than requiring a post-hoc forensic investigation like this one.
-- [ ] [BACKEND] P3. Audit whether the DR-backup/snapshot cadence (currently ~15-30min, per
-      `snapshots/planning/2026-07-25/`) is frequent enough to reliably bracket a future occurrence to a narrow enough
-      window — if not, consider tightening it specifically while this issue is open.
+- [x] [SCRIPT] P1. Check the watch log for an `!!! ANOMALY` line. — Found the process dead (not running) rather than
+      catching a live anomaly; superseded by re-running the forensic snapshot-diff method directly against the existing
+      S3 `state.json` trail instead, which is what actually produced the root-cause finding above. Evidence: SSM check
+      on 2026-07-28, `pgrep -af done_row_disappearance_watch` empty, log file 0 bytes.
+- [x] [BACKEND] P2. Root-cause the actual code path/process and fix it. — Done, see "Root cause CONFIRMED + FIXED"
+      above. Evidence: `agent-orchestrator@b926a9262c4ef592f1bfe644b0c0e03cac3335ef`, confirmed live on the deployed VM.
+- [x] [BACKEND] P3. Defense-in-depth guard against illegal done-row mutation. — Implemented as an application-level
+      guard inside `release_task_to_queue()` (refuses + logs, returns `None`) rather than a raw SQLite `BEFORE DELETE`
+      trigger — this covers BOTH the vanish (via the reset-then-prune two-step) and the regression (the direct status
+      flip) in one place, at the exact point the illegal transition would occur, with full context in the log line
+      (task_id + refused status), which a bare SQL trigger error could not provide as usefully. Evidence: same commit;
+      `tests/test_release_task_to_queue_guard.py` (7 tests) prove the guard fires for `done`/`cancelled`, does not break
+      the legitimate `dispatched`→`queued` case, and that `/reassign`+`/skip-current-task` 409 honestly instead of
+      silently succeeding.
+- [x] [BACKEND] P3. Audit the DR-backup/snapshot cadence. — Audited and found genuinely broken (4+ day gap, root-caused
+      above as the tick-counter/restart interaction) rather than merely "not frequent enough" — fixed via a wall-clock
+      persisted sentinel in the same commit. Evidence: `tests/test_sqlite_backup_wallclock_cadence.py` (9 tests);
+      confirmed via S3 listing that the last SQLite backup pre-fix was `2026-07-24T19:30:45Z`.
 
 ## Codex SSOTs
 
-- None directly own this (it's a gap in the orchestrator's own operational data integrity, not a documented pipeline
-  correctness domain) — if a root cause is found, the fix should get a proper SSOT reference added here.
+- None required an update — this is a bugfix in existing application code (an unguarded state-transition function), not
+  a new architectural pattern or contract. `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
+  `/codex/04-architecture/agent-orchestrator-alerting.md` (cited above) already correctly describe the
+  regen/prune/alerting architecture this fix operates within; nothing about that architecture changed.

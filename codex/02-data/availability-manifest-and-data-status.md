@@ -339,6 +339,15 @@ tick bucket `market-data-tick-sports-prd-427895769566` is empty (KeyCount=0). No
 Migration script `market_tick_data_service/scripts/migrate_sports_hive_key.py` (mtds@da09d72c) shipped as a guard/future
 tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_partition_rekey_2026_05_23.plan.md`.
 
+**Aggregation trap for any script that lists GCS objects directly instead of reading the manifest (K1/K2 casing-revert
+migration, 2026-07-27)**: because `fixture_id` is row-level and not a shard axis, one logical manifest key
+`(day, venue, league_id, data_type)` can be backed by MULTIPLE physical GCS objects (fixture_id-scoped siblings written
+under the same shard key). A report/migration script that walks GCS objects and emits one row per PHYSICAL OBJECT —
+instead of aggregating by the shard-atom KEY first — will produce several disagreeing `target_rows` for what is actually
+one manifest entry, and any downstream compare/swap correctly refuses on the mismatch. Any script working against raw
+object listings for this asset_group must group-by-shard-key and sum/reconcile across constituents BEFORE comparing to
+the manifest, never treat "one object" and "one manifest row" as the same thing.
+
 **`available_at` stamping per source** (writegate plan Phase 1B `AVAILABILITY_AT_SEMANTICS` registry):
 
 | `(asset_group, data_type)`                                                                         | Semantic                                          | Notes                                                                                                                                                                          |

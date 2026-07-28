@@ -140,9 +140,21 @@ design's counts are 2026-07-13).
       after — the orchestrator's `block_destructive_commands.py` hook blocks `gcloud storage rm` for autonomous workers;
       the tiny non-parquet JSON marker remains under that clearly-named `_verify_redeploy_2026_07_26/` prefix (harmless
       to readers; flagging for optional operator cleanup, not filing a separate issue doc for it).
-- [ ] [INFRA] P2. **IAM + lifecycle** — join each `features-{ag}-prd` to
-      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B (signal unblocked per fold); `-test-` twins
-      get the test-tier policy. STANDARD→COLDLINE@60d whole-bucket in the derived-from-yaml terraform.
+- [x] ✅ [INFRA] P2. **IAM + lifecycle — deployment-service/terraform half DONE 2026-07-28 —
+      `deployment-service@76a2459`.** Joined each `features-{ag}-prd` to
+      [[bucket_iam_write_protection_per_tier_2026_06_09]] Phase-2 Group-B: added a `group_b_bucket_prefixes` local
+      (`features-cefi-`/`features-tradfi-`/`features-defi-`/`features-pred-`/`features-sports-` — excludes
+      `features-calendar-` (Group A, already covered) and `features-commodity` (flat/non-env-split, not part of this
+      fold)) + `uts_prd_objectadmin_group_b`/`uts_test_objectadmin_group_b` in
+      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`, mirroring the existing Group A resources exactly.
+      **Declared, not applied** — matches Group A's own current un-applied state (parent plan P1.2b is its own separate,
+      credential-blocked item). Verified: `tofu fmt`/`tofu validate` clean, targeted `tofu plan` = 2 adds/0/0, full
+      untargeted plan confirms no other regression (all pre-existing IAM-member resources, Group A included, are
+      likewise still un-applied). **Lifecycle half already satisfied, zero new terraform** — `canonical_buckets.tf`'s
+      derived-from-yaml `for_each` already applies STANDARD→COLDLINE@60d to all 10
+      `features-{cefi,defi,tradfi,pred,sports}-{prd,test}` buckets (`tofu state list` confirms all 10 already
+      TF-tracked; targeted `tofu plan` on 6 of them → "No changes"). unified-trading-library half of this cross-repo
+      backlog item (if any) handled by a separate concurrent dispatch, not touched here.
 - [ ] [CODE] P3. **Alias sunset** — after the fallback window closes + retired feature kinds are grep-clean, hard-remove
       the `_KIND_ALIASES` entries + retired yaml keys; `terraform plan` green. (May defer to the closeout plan.)
 

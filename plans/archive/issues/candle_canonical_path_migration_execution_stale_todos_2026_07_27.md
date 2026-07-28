@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, ssot-drift, mdps, candle-canonical, migration, cross-plan]
 related:
   [
-    /plans/active/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: 2026-07-27
@@ -36,12 +36,12 @@ depends_on: []
 source:
   ["surfaced 2026-07-27 while closing candle_canonical_path_migration_execution-002 (todo 2), slot-4 live verification"]
 resolved_by:
-  All 17 of /plans/active/candle_canonical_path_migration_execution_2026_07_24.md's own top-level todos independently
-  closed 2026-07-27 by 6 different slots (mdps@800f3b5, mdps@caa995c among the real code fixes); no re-launch of the
-  ~40-VM SPOT fleet this doc warned against occurred. This doc's own recommendation is to archive that sibling plan
-  outright too (not trimmed) -- NOT actioned in this pass (that plan was not in this archival batch's file list; left
-  untouched, flagged for a follow-up archival pass). Its two genuinely-still-open residuals (TRADFI ~7.1M quarantined
-  objects, CEFI 149-object retry-idempotency gap) remain correctly tracked on the SIBLING doc
+  All 17 of /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md's own top-level todos
+  independently closed 2026-07-27 by 6 different slots (mdps@800f3b5, mdps@caa995c among the real code fixes); no
+  re-launch of the ~40-VM SPOT fleet this doc warned against occurred. This doc's own recommendation is to archive that
+  sibling plan outright too (not trimmed) -- NOT actioned in this pass (that plan was not in this archival batch's file
+  list; left untouched, flagged for a follow-up archival pass). Its two genuinely-still-open residuals (TRADFI ~7.1M
+  quarantined objects, CEFI 149-object retry-idempotency gap) remain correctly tracked on the SIBLING doc
   issues/candle_feature_canonical_path_divergence_2026_07_20.md (todos 3/19), not duplicated or dropped.
 locked_by:
 locked_since:
@@ -49,8 +49,8 @@ locked_since:
 
 > **🟢 RESOLVED 2026-07-28** — all 17 todos on the flagged sibling plan independently confirmed `[x]`; no unsafe VM
 > re-launch occurred. Note: this doc's own recommendation to archive
-> `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` outright was NOT actioned here (out of this
-> archival pass's file list) — flagged for a follow-up pass. Archived per
+> `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` outright was NOT actioned in THIS
+> doc's archival pass (out of that pass's file list) — it has since been archived separately. Archived per
 > `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # candle_canonical_path_migration_execution_2026_07_24.md carries stale, already-completed todos

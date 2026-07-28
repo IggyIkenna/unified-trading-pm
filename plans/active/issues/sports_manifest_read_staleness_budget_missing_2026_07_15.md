@@ -98,10 +98,13 @@ uniformity — either is defensible; 1800s is the tighter, still-safe choice.
       already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (fixed via
       `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 8, unified-trading-library@fd87daa1; see that doc for
       execution).
-- [ ] [DATA] P1. Mirror the same `"sports": 1800` into `_AG_STALENESS_BUDGET_SEC` in
+- [x] [DATA] P1. Mirror the same `"sports": 1800` into `_AG_STALENESS_BUDGET_SEC` in
       `deployment-api/deployment_api/routes/health_consolidator.py` (repo: deployment-api) so the cockpit
       consolidator-health view stops false-flagging sports as DOWN. Keep the two dicts in sync (they are duplicated by
-      design — deployment-api depends on UTL, not vice versa).
+      design — deployment-api depends on UTL, not vice versa). — deployment-api@1562558 (added `"sports": 1800` to
+      `_AG_STALENESS_BUDGET_SEC`, docstring note on the ~11-min cadence, and updated/added
+      `test_route_health_overview.py` assertions for `_budget_for`/`_entry_budget` sports coverage; `quality-gates.sh`
+      green).
 - [ ] [DATA] P2. Grep the fleet for scripts that hardcode `MANIFEST_CONSOLIDATED_STALENESS_SEC` for the sports bucket as
       a workaround (e.g. `instruments-service/scripts/backfill/api_football_cf11_guaranteed_type_closer_2026_07_15.py`)
       and drop the per-script env once the per-AG override lands (repo: instruments-service).

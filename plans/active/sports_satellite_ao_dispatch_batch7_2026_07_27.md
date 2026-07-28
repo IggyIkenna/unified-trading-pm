@@ -101,8 +101,8 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       not uniformly redundant (a ~5-day live-writer window, 2026-07-22 K1 ship through 2026-07-27 revert, produced
       twin-less uppercase-only objects — the same slice `batch7`'s own Deferred section already flagged as "~27.5% of
       sampled uppercase-keyed rows have no lowercase GCS twin yet"). A blind delete would have destroyed that slice
-      permanently. Filed: `issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` (new todos: run the
-      K1/K2 casing-revert migration first, then re-attempt the delete). Source:
+      permanently. Filed: `/plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md` (new
+      todos: run the K1/K2 casing-revert migration first, then re-attempt the delete). Source:
       `sports_consolidated_closeout_2026_07_19.md` Track V (K1/K2 + api_football DELETE todo).
 
 - [x] ✅ [DATA] P0. **Execute the operator-ruled (decision 14, 2026-07-23) pre-floor wipe: snapshot-then-delete 83,541

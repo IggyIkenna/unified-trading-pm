@@ -214,7 +214,23 @@ removal + casing normalization remain before backfill-resume.
 
 ## Todos
 
-- [ ] [DATA] P1. **Strip Massive routing + fix manifest-rebuild casing normalization** — the two remaining items before
-      tradfi backfills can resume: (2) remove `massive` from `SOURCE_PRIORITY`/routing (non-destructive prep; the
+- [x] ✅ [DATA] P1. **Strip Massive routing + fix manifest-rebuild casing normalization** — the two remaining items
+      before tradfi backfills can resume: (2) remove `massive` from `SOURCE_PRIORITY`/routing (non-destructive prep; the
       1.47M-object purge itself stays operator-gated), and (3) fix the `EQUITY`/`equity` casing inconsistency in the
-      manifest-rebuild pass (physical paths are already lowercase).
+      manifest-rebuild pass (physical paths are already lowercase). — **Verified 2026-07-28 (slot 9, data_engineering),
+      both already shipped by prior sessions, no code change needed this turn:** (2) confirmed via live grep of
+      `unified_api_contracts/canonical/crosscutting/_source_priority_data.py` —
+      `SOURCE_PRIORITY["tradfi",     "trades"/"tbbo"]` is `["databento"]` only,
+      `SOURCE_MODE_CAPABILITY`/`EMISSION_LATENCY_MS_BY_SOURCE` carry zero active `"massive"` entries (comment-only
+      historical notes), `_umi_massive.py` deleted, `main.py`'s `massive-futures-backfill` operation removed —
+      `unified-api-contracts` routing strip is complete (the 1.47M-object GCS purge itself correctly stays
+      `[OPERATOR]`-gated per this doc's own hard-stops, untouched). (3) resolved more broadly than this todo's original
+      scope via the separate `tradfi_casing_100pct_redrift_2026_07_27.md` campaign — `rebuild_tradfi_manifest.py`'s two
+      manifest-emission call sites (`_emit_bundled_shard_row`'s `row_key["instrument_type"]` and `scan_and_rebuild`'s
+      `target.add(instrument_type=...)`) now both route through the shared
+      `unified_trading_library.canonical.canonicalize_manifest_instrument_type` seam
+      (`market-tick-data-service@4122df13`, re-exporting `unified-trading-library@688e49bc`), replacing the old
+      raw-hive-token stamp this todo flagged. Confirmed live via source read (no new code needed): both call sites
+      present and wired. Residual 82,311 pre-fix lowercase manifest rows are a separate, already-tracked repair todo
+      (that doc's todo `-007`, re-tagged off `[OPERATOR]` 2026-07-28, gated on a fresh soft-delete-retention check) —
+      out of this todo's own done-when, not re-duplicated here.

@@ -22,6 +22,7 @@ related:
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
 last_updated: "2026-07-28"

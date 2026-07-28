@@ -147,4 +147,4 @@ partition-level ones.
 
 ## Reference plan
 
-[`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md).
+[`plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md).

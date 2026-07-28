@@ -21,6 +21,7 @@ related:
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-24"
 parent_epic: manifest_master

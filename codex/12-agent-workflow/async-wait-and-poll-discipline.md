@@ -90,6 +90,15 @@ whole window before anyone looks.
    external/untracked state** (GitHub Actions runs, remote VM jobs, deploys, another repo's PR) — and there, apply rules
    1–3.
 
+   **4a. The harness's reported exit code is the LAST pipeline stage's, not necessarily your command of interest's
+   (2026-07-27 K1/K2 migration).** A backgrounded command piped through `grep`/`tail`, or wrapped in a compound block
+   ending in an always-succeeding step (`... ; echo done`), reports the exit status of that final stage — a real command
+   failure upstream can still surface as "exit code 0." Several completion notifications this session read `exit code 0`
+   on runs whose actual work had failed partway. For any consequential verdict (a migration/delete run's real success,
+   not a routine check), verify the ACTUAL terminal marker directly from the durable log/output file content
+   (`grep -c 'DONE\|rc=0'`, the script's own printed summary) — never trust the harness's exit-code summary alone when
+   the backgrounded command was piped or compound.
+
 5. **Monitors watch the RIGHT signal with a generous fallback timeout** — the correct log path / API field + an explicit
    done/terminated condition, plus a max-iteration cap so the monitor never exits inconclusively and forces a
    re-investigation. Exit the loop EARLY on the key transition (so you act promptly) rather than always running the full

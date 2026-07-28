@@ -215,3 +215,12 @@ DIFFERENT process weight classes hitting DIFFERENT kill mechanisms. For a LIGHTW
 own tracked `run_in_background` — it appears meaningfully more durable for this weight class specifically. Still
 monitoring whether this run completes cleanly before treating this as fully confirmed rather than a promising single
 data point.
+
+**Confirmed sustained (not just a promising start)**: as of ~25 minutes wall-clock, the harness-tracked run is still
+alive and healthy — resume-log climbing steadily (9,080 → 9,899, i.e. 819/5,000 processed this batch), disposition
+counts sane (`SAFE_NEEDS_ATTRIBUTION_COVERED=4, SAFE=462, FLAGGED_NO_SIBLINGS_NO_BACKUP=34` at the 500-mark, no
+unexplained categories), host load still elevated (`77-83`) throughout with zero further kills. Per-item throughput is
+slow (~1.5s/marker, ~2h projected for this 5,000-item batch) — a contention-driven slowdown, not a stall (CPU time on
+the process climbs steadily, `ps` shows healthy RSS ~150MB, not swapping). Letting it run to completion rather than
+interrupting a working approach; will relaunch subsequent batches (~9,500 markers remain after this one) the same way
+(direct `run_in_background`, no `nohup`) once this one lands.

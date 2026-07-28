@@ -45,6 +45,7 @@ related:
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-14
 parent_epic: observability_master
