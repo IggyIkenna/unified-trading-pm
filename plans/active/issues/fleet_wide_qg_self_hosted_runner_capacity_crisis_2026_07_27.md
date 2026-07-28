@@ -500,18 +500,39 @@ escalate to a `cicd` worker.
   instant, by design; the fix's guarantee is orderly queueing under a burst (e.g. the fleet promote-bot's synchronized
   dispatch across ~22 repos every tick), never the OOM/timeout crash this doc is about. **Verification and the remaining
   ~10-repo restore (to satisfy "ideally all repos") are the next todos**, not yet done as of this entry — see below.
-  - [ ] [VERIFY] P0. Confirm a live self-hosted QG run after the governor-activation fix logs
-        `[qg-governor] <repo> reserved <N>MB` (not the old `"all 4 tokens busy"` token-mode line) — proves
-        `QG_GOVERNOR_MODE=reservation` actually took effect end-to-end, not just merged.
-  - [ ] [SCRIPT] P1. Once verified, restore the remaining ~10 repos other agents settled on `ubuntu-latest` overnight
-        (execution-service, batch-live-reconciliation-service, alerting-service, client-reporting-api, e2e-testing,
-        unified-trading-library, ml-service, deployment-api, market-data-processing-service, deployment-service) to
-        self-hosted, same pattern as the 6 above, now that admission is RAM-aware rather than a blind count — this is
-        what "ideally all repos on the box, managed properly" actually requires to be safe.
+  - [x] ✅ [VERIFY] P0. **DONE 2026-07-28** (different session, responding to an operator Slack-history question).
+        Independently re-verified live: `instruments-service` run `30362525333` job log shows
+        `⚠️ QG_MEM_CAP=4388M set but systemd-run unavailable on this host` — `4388M` is a real, repo-specific value
+        derived from `_qg_repo_mem_cap()`'s measured-baseline lookup, not the old hardcoded `10G` token-mode default,
+        confirming `QG_GOVERNOR_MODE=reservation` genuinely took effect end-to-end for this repo's live CI run (the
+        allowlist file's own header comment already asserted this; independently re-confirmed rather than trusted).
+        **Residual gap found, not previously documented**: the `systemd-run unavailable on this host` warning means the
+        per-process `MemoryMax` cgroup HARD CAP (the `MEM_WRAP` backstop in `base-service.sh`, meant to SIGKILL/exit-137
+        a genuinely runaway process) never actually activates on these glue-runners — `systemd-run     --user --scope`
+        requires a systemd user session, which a `User=ubuntu` SYSTEM unit (per `github-glue-runner@.service`) doesn't
+        have. This is architecturally SEPARATE from the reservation-mode ADMISSION fix: the flock-protected ledger
+        (`_qg_ledger_*` in `qg-host-governor.sh`) that decides whether a new QG run may start concurrently (summing live
+        reservations against the host's real budget) works correctly regardless of whether the cgroup backstop is wired
+        up — proven by the correctly-sized `QG_MEM_CAP` above. What's still missing is the LAST-RESORT case: a process
+        that blows past its own measured-baseline reservation (not just "too many normal-sized repos at once", which the
+        ledger already handles) has no hard kill-switch on this runner class. Not urgent (the whole incident was
+        oversubscription from correctly-sized-but-too-many processes, which the ledger fix already addresses), but worth
+        a follow-up if a genuine single-process runaway ever recurs.
+  - [x] ✅ [SCRIPT] P1. **DONE 2026-07-28.** `scripts/workflow-templates/self-hosted-qg-repos.txt` (re-read live) shows
+        all 22 target repos present (agent-orchestrator + unified-trading-pm + the 20 caller repos), confirming the
+        remaining ~10 repos were already restored to self-hosted alongside the reservation-mode fix — the file's own
+        header comment documents this as done in the same change, and the current file content matches.
   - [ ] [DATA] P2. After a few days under reservation mode, re-pull `i-0c9b283b31d6b5ca7` live state (`free -h`,
         `uptime`, `qg-host-governor.sh --status` with `QG_GOVERNOR_MODE=reservation`) to confirm the predicted
         queueing-not-crashing behavior actually held under a real fleet-promote burst, not just in the capacity math.
-  - [ ] [OPERATOR] P2 (informational, not blocking). The box's RAM was halved by an untracked concurrent action today;
-        if that was NOT a deliberate, coordinated decision, someone should reconcile the current `c7i.4xlarge` sizing
-        against whatever prompted the resize — this doc's fix is designed to be safe at the CURRENT size, but the resize
-        itself was never explained or logged anywhere this session could find.
+  - [x] ✅ [OPERATOR] P2. **RECONCILED 2026-07-28.** The "untracked concurrent action" that halved the box's RAM
+        (`m8i.4xlarge`→`c7i.4xlarge`, 64GB→32GB, 08:55-08:58 UTC) was a deliberate, operator-authorized cost
+        optimization pass in a DIFFERENT session — same vCPU count preserved (16), driven by real CloudWatch data
+        showing the box running at only ~13% RAM utilization pre-resize, executed via the canonical
+        `clean-restart-vm.sh` after a 3-way adversarial pre-flight check. That session did NOT know a CI capacity
+        incident was already live on the same box at resize time — coincidental timing, not a coordinated decision, and
+        it did make the live incident measurably worse for a window (this doc's own "box got smaller mid-incident"
+        finding). No further reconciliation needed: the resize was legitimate and already fully verified
+        (orchestrator.service healthy, AutoSpawn confirmed respawning, 21 runner services reconnected); the capacity fix
+        above (reservation-mode governor) is what actually makes the CURRENT 32GB size safe for the full 22-repo
+        self-hosted fleet, not a further resize.
