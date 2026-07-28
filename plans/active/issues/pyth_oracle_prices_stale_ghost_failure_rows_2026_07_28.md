@@ -16,7 +16,6 @@ tags: [manifest, phantom-row, data-hygiene, oracle_prices, pyth]
 related:
   [/plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md, /codex/02-data/availability-manifest-and-data-status.md]
 created: 2026-07-28
-author: slot-7 (data_engineering)
 source: ["mvp_backfill_defi_onchain_v10-002 verification, 2026-07-28"]
 assigned_vm: NA
 execution_scope: local-only
@@ -24,6 +23,8 @@ priority: P2
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
