@@ -139,11 +139,15 @@ that is mid-execution against a **live production GCP project**. Two consequence
       install step with long paths — see P1.1's own note above) and confirms
       `Plan: 8 to add, 2 to change, 0 to     destroy` before applying (re-run `tofu plan` fresh first — the docs above
       are not a substitute for a live re-check).
-- [ ] [DOCS] P2. Cross-reference `bucket_iam_write_protection_per_tier_2026_06_09.md` and the (now-archived)
-      `bucket_estate_consolidation_to_sub100_2026_07_13.md` in each other's `related:` frontmatter so this class of
-      drift (two plans quietly deciding contradictory things about the same tier model, a month apart, never
-      cross-checked) is easier to catch next time — add to `related:` on both plan docs (the source plan is archived, so
-      only add on this side + this issue doc; do not un-archive it just to edit frontmatter).
+- [x] ✅ [DOCS] P2. **DONE 2026-07-28** — Cross-referenced `bucket_iam_write_protection_per_tier_2026_06_09.md` and the
+      (now-archived) `bucket_estate_consolidation_to_sub100_2026_07_13.md`: this issue doc's own `related:` already
+      carried both (added 2026-07-27); fixed `bucket_iam_write_protection_per_tier_2026_06_09.md`'s `related:` entry for
+      the archived plan (was pointing at the stale pre-archive `plans/active/...` path — corrected to
+      `/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md`) and added this issue doc
+      (`/plans/active/issues/bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md`) to the same list —
+      `unified-trading-pm@<SHA>`. Did not un-archive the source plan. `check_reference_paths.py` confirms no new
+      format/existence violations introduced by this edit (verified against a stash/pop diff — an unrelated +4
+      existence-count drift on `live-defi-rollout` HEAD predates this change).
 - [ ] [SCOPE] P2. **NEW 2026-07-27.** The original P1.2 text's "all SAs + CI/CD + developer identities → objectViewer
       broadly" was only partially addressed — the 5 per-tier SAs got objectViewer, but no CI/CD or developer identity is
       terraform-managed anywhere in this repo today (grepped: only task-specific SAs like `t1_batch`, `catalogue_regen`

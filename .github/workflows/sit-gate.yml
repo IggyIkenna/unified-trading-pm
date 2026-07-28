@@ -354,7 +354,11 @@ jobs:
         run: |
           set +e
           CTX="SIT harness lint issues (cascade was NOT blocked — this is a background fix-task): ${{ steps.lint.outputs.issues }} Investigate system-integration-tests harness config. Do NOT interrupt the in-flight SIT run. Playbook: codex/08-workflows/ci-cd-flow.md"
-          gh api "repos/${{ github.repository }}/dispatches" \
+          # MUST target unified-trading-pm, NOT ${{ github.repository }}: the escalate-to-orchestrator.yml
+          # LISTENER lives ONLY in unified-trading-pm. This file is correct today only because sit-gate.yml
+          # exists solely in PM — rolling it into another repo would make this dispatch a silent self-no-op
+          # there, same fleet-wide bug main-backmerge-to-ldr.yml's fix already closed.
+          gh api "repos/${{ github.repository_owner }}/unified-trading-pm/dispatches" \
             -f event_type=escalate-to-orchestrator \
             -f "client_payload[repo]=system-integration-tests" \
             -f 'client_payload[pr_number]=0' \

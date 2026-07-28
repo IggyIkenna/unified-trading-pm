@@ -1,0 +1,59 @@
+name: version-coherence-check
+
+# Periodic Firestore verdict-store writer for the deployment-ui version-coherence panel.
+#
+# Runs assert_version_coherence.py --warn-only --json (the fleet-wide VERSION_SPLIT /
+# VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE check already wired warn-only into PM's OWN
+# quality-gates.sh post-gate) and CAS-writes ONE Firestore doc per repo via verdict_store.py
+# (collection `version_coherence_verdicts`) — the standing, centrally-scheduled companion that lets
+# deployment-api/deployment-ui READ the verdict instead of reimplementing the version-surface
+# semantics inline (the do-NOT-reimplement trap: CLAUDE.md § "Manifest version-surface semantics" —
+# VESTIGIAL_SCALAR_DRIFT is harmless-when-stale, dep-floors are intentional range pins, not a bug to
+# "fix" by syncing).
+#
+# SSOT: plans/active/monitoring_control_plane_master_2026_06_10.md (version-coherence panel),
+# operator decision 2026-07-27 ("no CI/CD billing wall anymore — build the real Firestore
+# verdict-store generalisation, not the faithful-port workaround").
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+# No concurrency group — mirrors ci-status-update.yml's WS-A Phase-3 rationale: the Firestore write
+# is a per-repo-document CAS transaction (verdict_store.set_verdict), so overlapping runs never
+# corrupt state (Layer 1 partitioning + the checked_at ordering guard rejects a stale write outright)
+# — there is nothing here that needs serializing, and a concurrency group would only risk the same
+# cross-repo cancellation class fixed in change-freeze-check.yml (2026-07-27).
+
+jobs:
+  check-and-write:
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout PM repo (full — workspace-manifest.json + scripts/cicd)
+        uses: actions/checkout@v5
+
+      - name: Authenticate to GCP (Firestore verdict-store write)
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Run version-coherence check + write verdicts to Firestore
+        env:
+          # assert_version_coherence.py falls back to `gh api repos/{owner}/{repo}/contents/...`
+          # for any repo not present as a sibling worktree on this runner (the standing case in
+          # CI — only PM itself is checked out) — needs cross-repo Contents-API read, hence the
+          # full-fleet PAT (same token digest-drift-sweep.yml / update-repo-version.yml use), not
+          # the ambient repo-scoped GITHUB_TOKEN.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          python3 -c "import google.cloud.firestore" 2>/dev/null \
+            || python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          python3 scripts/cicd/write_version_coherence_verdicts.py

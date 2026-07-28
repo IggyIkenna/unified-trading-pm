@@ -250,14 +250,35 @@ concurrent workers do not collide on this file.
       This closes the gap the `status:"queued"` proof above left open (zero synthetic worker spawned at that time) — the
       chain emit → validate → queue → **dispatch → worker execute → complete** is now proven end-to-end, not just
       accept/queue.
-- [ ] [INFRA] P2. **Guard the latent self-dispatch repeat.** `.github/workflows/agent-runner.yml:91` and
-      `.github/workflows/sit-gate.yml:357` still self-dispatch via `${{ github.repository }}`. They are correct ONLY
-      because both files exist solely in PM; rolling either into another repo reproduces the fleet-wide escalation bug
-      verbatim (the `staging-backmerge-to-ldr` case had a 0% real-escalation success rate in all 24 repos). Either
-      hardcode the PM target (`repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches`, matching the shipped fix
-      pattern) or add a rollout guard. **Done when**: neither file's dispatch target depends on the ambient repository,
-      or a guard blocks such a file from being rolled out, with the choice justified inline. Source:
+- [x] ✅ [INFRA] P2. **DONE 2026-07-28 (slot-11, infra)** — Guard the latent self-dispatch repeat.
+      `.github/workflows/agent-runner.yml:91` and `.github/workflows/sit-gate.yml:357` self-dispatched via
+      `${{ github.repository }}`, correct only because both files exist solely in PM. Hardcoded the PM target in both —
+      `repos/${{ github.repository_owner }}/unified-trading-pm/dispatches`, the GHA-expression-syntax equivalent of the
+      already-shipped `repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches` bash pattern in
+      `main-backmerge-to-ldr.yml` — with an inline comment on each site explaining why (agent-runner.yml is additionally
+      a `workflow_call` reusable workflow invoked via a local `uses: ./.github/workflows/agent-runner.yml`, so a copy
+      rolled into another repo would previously have silently self-dispatched there). Verified both edits are clean YAML
+      (`python3 -c "import yaml; yaml.safe_load(...)"`) and prettier-clean. Full PM `quality-gates.sh` green, shipped
+      via `quickmerge --agent --files` — `unified-trading-pm@cb5e944f0`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3).
+- [ ] [INFRA] P3. **`check_dispatch_listeners.py`'s dispatch-URL regex cannot resolve inline GHA `${{ }}` expressions,
+      silently excluding those dispatch sites from the scan.** Found 2026-07-28 while verifying the todo above's fix
+      wouldn't regress the checker delivered by this plan's earlier todo. `_DISPATCH_URL_RE`
+      (`repos/([^/\s"']+)/([^/\s"']+)/dispatches`) requires no whitespace inside a captured segment, but a
+      `${{ github.xxx }}` expression written inline in a `run:` block (as opposed to first assigned to a shell `env:`
+      var, e.g. `OWNER: ${{ github.repository_owner }}`) contains spaces — so the regex fails to match the line at all,
+      and the dispatch site never enters `scan_dispatch_sites()`'s results. Confirmed both the pre-fix
+      `repos/${{ github.repository }}/dispatches` line and the post-fix
+      `repos/${{ github.repository_owner }}/unified-trading-pm/dispatches` line in `agent-runner.yml`/`sit-gate.yml` are
+      equally invisible to the scan (not a regression from this todo's fix — this blind spot pre-dates it and likely
+      affects other inline-`${{ }}`-shaped dispatch sites fleet-wide, undercounting the shrinking-ratchet baseline).
+      **Done when**: the regex/extraction handles an inline `${{ github.repository }}`/`${{ github.repository_owner }}`
+      segment (either by resolving the GHA context expression the same way `_OWNER_ALIASES` resolves shell vars, or by
+      stripping `${{ ... }}` whitespace before matching), a regression test proves both `agent-runner.yml` shapes are
+      now scanned, and the baseline is re-measured (expected to rise, since previously-invisible sites become visible —
+      a one-time step up in the ratchet, not a new orphan). Source: this plan's own todo 2
+      (`check_dispatch_listeners.py`, delivered `unified-trading-pm@613f79960`) +
+      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3, discovered while closing it).
 - [ ] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
       sites so a permanently-empty input renders as unknown/not-applicable, never as a pass — starting with the two the
       doc names first: `_repo_ci_manifest.py:285-289`'s `deployed_versions.get(repo)` shape mismatch (the writer at

@@ -63,8 +63,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `defi_consolidated_closeout_2026_07_18.md` Open follow-ups; F5 rehomed into
       `cefi_consolidated_closeout_2026_07_18.md` Track 6. Source doc annotated REHOMED, still
       `locked_by: live-defi-rollout` — archival needs an explicit `[unlock-plan]` grant (not yet asked, not done here).
-      **ARCHIVED 2026-07-28** ([unlock-plan] granted, all-9 unlock decision) — re-verified all 3 rehomes present as
-      real `- [ ]` todos before moving; `git mv` to `plans/archive/issues/`.
+      **ARCHIVED 2026-07-28** ([unlock-plan] granted, all-9 unlock decision) — re-verified all 3 rehomes present as real
+      `- [ ]` todos before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [DATA] P1. **Fix stale "Plan 3 never authored" claim** — unified-trading-pm (this commit). **CORRECTED SCOPE on
       execution**: the false claim lived only in the 2 downstream docs
       (`cross_cutting_consolidated_closeout_2026_07_25.md` Track 10,
@@ -209,12 +209,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       Flagging for the operator: this doc is ready for a quick `[unlock-plan]` + archive pass whenever convenient.
       **DISCREPANCY FOUND 2026-07-28** (unlock WAS granted this session, but NOT archived anyway): re-reading the doc
       fresh surfaced a genuine NEW open item the "all 5 items [x]" framing above missed — a `[TRADFI] P3` follow-up
-      ("Fix the pyarrow per-symbol-writer fan-out identified by the 2026-07-27 memray repro") was added alongside the
-      P2 memray flip and is still `- [ ]`, explicitly framed as real (if non-blocking) deferred work, matching the
+      ("Fix the pyarrow per-symbol-writer fan-out identified by the 2026-07-27 memray repro") was added alongside the P2
+      memray flip and is still `- [ ]`, explicitly framed as real (if non-blocking) deferred work, matching the
       precedent of the still-open, still-active analogous doc `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`.
       Leaving this doc open rather than force-archiving over genuine remaining scope.
-- [x] ✅ [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` →
-      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (~L270-286), covers items (2) DP_VM_GONE_NO_CAPTURE
+- [x] ✅ [PLAN] P2. `plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`
+      → `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (~L270-286), covers items (2) DP_VM_GONE_NO_CAPTURE
       debounce + (3) InstrumentsHandler str/int bug. Item (1) (operator-gated prod-manifest `--apply`) has no other home
       — see §5, needs an operator-decision-ledger home first. **STATUS UPDATE 2026-07-28
       (unified-trading-pm@ba37c6020)**: items (2)/(3) verified present + accurate in batch2. Item (1) now has a real
@@ -229,8 +229,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (L69-81), verbatim, cites Source + "Done when." Not
       yet executed either place. **STATUS UPDATE 2026-07-28 (unified-trading-pm, verification-only, no file edit)**:
       confirmed verbatim + accurate at batch1b L69-81 (the ONLY remaining open checkbox in the source doc — the
-      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place.
-      **ARCHIVED 2026-07-28** ([unlock-plan] granted) — re-verified before moving; `git mv` to `plans/archive/issues/`.
+      `deployment-service:latest` terraform-default-vs-runtime-pin item). Not yet executed either place. **ARCHIVED
+      2026-07-28** ([unlock-plan] granted) — re-verified before moving; `git mv` to `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. `plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` →
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (L248-269). Sole remaining item (Cloud Logging
       ingestion gap) merged with a duplicate finding in `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. 2
@@ -244,8 +244,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`) — these weren't in this entry's original
       2-item scope but were real open prose-form work the strict archival bar requires closing first (trap (b) in the
       vintage-audit skill). The sole remaining checkbox (Cloud Logging ingestion gap) confirmed already migrated
-      verbatim into batch2. All items now resolved-in-place or migrated. **ARCHIVED 2026-07-28** ([unlock-plan]
-      granted) — re-verified 0 remaining `- [ ]` checkboxes (the Cloud Logging gap was itself resolved in-place
+      verbatim into batch2. All items now resolved-in-place or migrated. **ARCHIVED 2026-07-28** ([unlock-plan] granted)
+      — re-verified 0 remaining `- [ ]` checkboxes (the Cloud Logging gap was itself resolved in-place
       `alerting-service@62b850c` by the time of archival, even better than "migrated"); `git mv` to
       `plans/archive/issues/`.
 - [x] ✅ [PLAN] P2. **PARTIAL — content-verified + 2 stale boxes flipped, NOT archived (locked, no `[unlock-plan]`
@@ -282,8 +282,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       forks + the Tardis resolution (`plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md`); referrers
       fixed corpus-wide (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
       `/codex/11-project-management/doc-frontmatter-schema.md`).
-- [x] ✅ [PLAN] P2. `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
-      home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
+- [x] ✅ [PLAN] P2. `plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed:
+      their home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
       (`plans/archive/issues/`), C2 point-fix + C4 G4-gate-strengthening both shipped and closed there — nothing
       orphaned. C5 confirmed live + still open in `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (same
       finding). ~~C6 likely covered by `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`
@@ -302,11 +302,11 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) filed as new todos into that same plan
       per operator decision (§5#28). **RE-VERIFIED 2026-07-28 (unlock WAS granted this session, still NOT archived
       anyway)**: even with the 2 orphans confirmed rehomed, the doc's OWN per-source-doc archive criterion is not met —
-      it still carries substantial genuinely-open, non-infra work outside the infra-tranche migration's scope (UAC
-      DeFi venue-registry `BLOCKED-DISCIPLINE` items pending live smoke-tests, alerting-service `NEEDS-LIVE`
-      ML-baseline item, 2 operator-gated `tofu apply` infra items, the `## BLOCKED clusters` section). Correctly left
-      open — this doc's own "Archive-readiness verdict" section (written 2026-07-27) already reached this exact
-      conclusion; confirmed still true.
+      it still carries substantial genuinely-open, non-infra work outside the infra-tranche migration's scope (UAC DeFi
+      venue-registry `BLOCKED-DISCIPLINE` items pending live smoke-tests, alerting-service `NEEDS-LIVE` ML-baseline
+      item, 2 operator-gated `tofu apply` infra items, the `## BLOCKED clusters` section). Correctly left open — this
+      doc's own "Archive-readiness verdict" section (written 2026-07-27) already reached this exact conclusion;
+      confirmed still true.
 - [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
@@ -422,11 +422,22 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       Rehome pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer.py` confirm, and the Phase-3
       schema-provenance catch-all into batch2 once drafted. **Locked (`locked_by: live-defi-rollout`) — needs
       `[unlock-plan]`** before any archival (not yet archivable anyway — real remainder exists).
-- [ ] [PLAN] P2. `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` — 6/9 Pattern-B repos
-      already normalized to Pattern A (alerting-service, batch-live-reconciliation-service, fund-administration-service,
-      market-data-processing-service@bffb9df, ml-service, trading-agent-service) — 0 checkboxes flipped, flip them.
-      execution-service, greeks-service, strategy-service (also vendoring MTDS) still confirmed Pattern-B, gated on
-      "Owner: Ikenna" design call — see §5. Track remainder via `infra_consolidated_closeout_2026_07_25.md` Track 1.
+- [x] ✅ [PLAN] P2. **DONE 2026-07-28 — checkboxes flipped in the source doc, greeks/strategy normalized + shipped.**
+      `plans/active/issues/service_dockerfile_pattern_normalization_2026_06_17.md` fully updated: the 6
+      already-normalized repos (alerting-service, batch-live-reconciliation-service, fund-administration-service,
+      market-data-processing-service, ml-service, trading-agent-service) re-verified by reading each live
+      `Dockerfile`+`cloudbuild.yaml` in full (confirmed Pattern-A shaped, no code change needed) and their checkboxes
+      flipped with evidence. `greeks-service` (greeks-service@b82340ad) and `strategy-service`
+      (strategy-service@7be73520) normalized Dockerfile+cloudbuild.yaml (+ `buildspec.aws.yaml` for strategy) to Pattern
+      A this session, verified via a real local `docker build` + import/mock-run operability probe for both
+      (strategy-service's probe surfaced + fixed a genuine `WORKSPACE_ROOT`-heuristic regression from the install-path
+      change — see the source doc for the full trail), both `quality-gates.sh` green, both shipped. The
+      strategy-service/MTDS-vendoring "tier violation" BUG todo is DENIED/FALSE ALARM (already resolved 2026-06-10,
+      `pyproject.toml@d1f5a6a8` — strategy_service never imported market_tick_data_service; only the Dockerfile/
+      cloudbuild vendoring of the dead dependency lagged, now removed by this normalization). Only `execution-service`
+      remains Pattern-B — explicitly out of scope this session (different concurrent agent owns it, delta_proxy wire-in
+      task) — so the source doc is NOT archived yet (real remainder exists). Track via
+      `infra_consolidated_closeout_2026_07_25.md` Track 1.
 - [x] ✅ [PLAN] P2. **EXECUTED + ARCHIVED 2026-07-28** ([unlock-plan] granted). RULE-11 (item a) actually EXECUTED this
       session (not just migrated): `.github/workflows/plan-health-agent.yml` + its
       `scripts/self-hosted-runners/hosted-baseline/` template twin both dropped the `schedule:` trigger + the Haiku
@@ -436,12 +447,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` + both repos' copies of
       `cron_hygiene_sweep_entrypoint.sh` deleted (`git rm`); the 2 terraform `import {}` blocks in
       `deployment-service/terraform/gcp/_imports_reconcile.tf` replaced with removal comments (matching that file's own
-      convention); the stale `cloud_run_job_registry.py` entry removed; `/codex/11-project-management/plan-hygiene.md`
-      + `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the timer-on-central model. Item (b) — "fold
-      `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" — a **prior migration
-      pass's claim that this was already filed in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` was FALSE**
-      (verified via grep, zero hits); landed for real this session as a genuine todo next to RULE-11 in that plan.
-      `git mv` source doc to `plans/archive/issues/`.
+      convention); the stale `cloud_run_job_registry.py` entry removed; `/codex/11-project-management/plan-hygiene.md` +
+      `/codex/12-agent-workflow/plan-hygiene.md` rewritten to the timer-on-central model. Item (b) — "fold `--precommit`
+      sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" — a **prior migration pass's claim that
+      this was already filed in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` was FALSE** (verified via grep, zero
+      hits); landed for real this session as a genuine todo next to RULE-11 in that plan. `git mv` source doc to
+      `plans/archive/issues/`.
 - [x] ✅ [PLAN] P3. `plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md` — core premise ("7 branches
       left in place") now factually false: `git ls-remote` (2026-07-27) confirms 0 matching `tab/rootm/*` branches
       remain in any of the 6 repos — add a correction banner. Disposition rehomed into
@@ -547,8 +558,11 @@ needed.
 41. `issues/macro_micro_econ_data_capture_audit_2026_06_05.md` — 4 numbered "Open questions for operator" unresolved
     (Glassnode-Pro/CoinGlass build-vs-buy; single FRED source-of-truth); altdata home + EIA credential ask
     BLOCKED-CREDENTIALS/OPERATOR-DECISION downstream.
-42. `issues/service_dockerfile_pattern_normalization_2026_06_17.md` — "Owner: Ikenna" design call on the 3 remaining
-    Pattern-B repos (execution-service, greeks-service, strategy-service) — also in §4.
+42. `issues/service_dockerfile_pattern_normalization_2026_06_17.md` — **RESOLVED 2026-07-28** (also in §4, item flipped
+    there): the "Owner: Ikenna" design call was superseded by the operator's agent-ownership ruling (§5-RESOLVED item
+    39); 2 of the 3 remaining Pattern-B repos (greeks-service, strategy-service) normalized + shipped this session. Only
+    `execution-service` remains Pattern-B, explicitly out of scope (owned by a different concurrent agent's delta_proxy
+    wire-in task) — not an operator-design-call anymore, just a scheduling/ownership gap.
 
 ---
 
@@ -706,10 +720,39 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     canonical tradfi shard writer) vs features-service's (158L, independently re-fetches from live FRED API instead of
     reading MTDS's captured output) — **consolidate into MTDS, taking the best of both adapters** (not a pure delete —
     fold in whatever features-service's version does better, e.g. its Secret-Manager config pattern, before removing the
-    duplicate fetch path); (d) first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
+    duplicate fetch path) — **DONE 2026-07-28** — `market-tick-data-service@b45c83c3`, `features-service@21e39fe0`:
+    features-service's Secret-Manager pattern turned out functionally equivalent to MTDS's (both go through
+    `get_secret_client()`) — the ONE genuine gap folded in was **automatic retry-with-backoff on transient errors**,
+    which features-service got "for free" via UTL's `handle_api_errors()` decorator but MTDS's adapter previously lacked
+    (single-shot fetch, raised immediately on 429/500/timeout). Folded in as a bounded whitelist retry (429/500 per the
+    UAC `classify_venue_error("fred", ...)` SSOT, plus connection-timeout) mirroring the established
+    `databento_retry.py` pattern in the same MTDS adapters package — not a blind copy of UTL's swallow-on-failure
+    decorator, which would have violated shard-level failure isolation. Added the 4 series features-service's
+    `economic_results_calculator` needed that MTDS's `KEY_SERIES` didn't yet cover (PAYEMS, GDP, ICSA, PCEPI). Repointed
+    both features-service consumers (`YieldCurveCalculator`, `economic_results_calculator`) at a new
+    `features_service/calendar/adapters/mtds_fred_reader.py` canonical-path reader (mirrors the DeFi
+    `mtds_canonical_reader.py` precedent) that reads MTDS's captured `raw_tick_data` parquets instead of hitting FRED's
+    API a second time; deleted `calendar/adapters/fred_adapter.py` + its unit test + its live-API integration test, no
+    shims. Both `YieldCurveCalculator` ("yield_curve") and `economic_results_calculator`'s CLI handler
+    (`--operation economic_results`) were found to be ORPHANED — neither is currently wired into
+    `CalendarBatchModeHandler`'s `CALENDAR_FEATURE_GROUPS = ["time_features", "economic_events"]` nor into
+    `ServiceBootstrap`'s registered `operations` — so the lower-latency/on-demand objection raised in the original audit
+    doesn't apply today (nothing calls either path in production); left the wiring gap as-is since re-wiring them is out
+    of scope for a dedup task. `EconomicCalendarLoader` (a THIRD, separate FRED consumer — the `/release/dates` schedule
+    endpoint, wired into the ACTIVE `economic_events` batch path) still independently live-fetches FRED and was
+    deliberately left untouched: it queries release SCHEDULE dates, a data shape MTDS's adapter has never captured (only
+    `series/observations` VALUES), so there was nothing to consolidate it against;
+    `CalendarFeaturesConfig. fred_api_key`/`fred_secret_name` stay in `features-service/calendar/config.py` because that
+    loader still needs them. Both repos' `quality-gates.sh` green (full suite, ship mode) before each quickmerge. (d)
+    first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
 39. service_dockerfile_pattern_normalization — **agent owns it** (no more Ikenna/Harsh human-owner split, per the
     general correction above) — proceed with Pattern-A fan-out to the 8 remaining Pattern-B repos + the
-    strategy-service/MTDS-vendoring tier-violation investigation.
+    strategy-service/MTDS-vendoring tier-violation investigation. **EXECUTED 2026-07-28**: 6/8 already normalized
+    (verified, no change needed); greeks-service (@b82340ad) + strategy-service (@7be73520) normalized + shipped this
+    session; execution-service left to its own concurrent owner. MTDS-vendoring tier-violation investigation:
+    DENIED/false alarm — resolved 2026-06-10 (`pyproject.toml@d1f5a6a8`) before this doc's own June-2026 vintage even
+    started; only the dead Dockerfile/cloudbuild vendoring lagged, removed by the normalization. Full evidence trail in
+    `issues/service_dockerfile_pattern_normalization_2026_06_17.md`'s own todos.
 
 ---
 

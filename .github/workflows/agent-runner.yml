@@ -88,7 +88,12 @@ jobs:
           PR_NUMBER: ${{ inputs.pr_number }}
         run: |
           set -uo pipefail
-          gh api "repos/${{ github.repository }}/dispatches" \
+          # MUST target unified-trading-pm, NOT ${{ github.repository }}: the escalate-to-orchestrator.yml
+          # LISTENER lives ONLY in unified-trading-pm. This is a `workflow_call` reusable workflow (callable
+          # via a local `uses: ./.github/workflows/agent-runner.yml` from any repo that copies this file) —
+          # `github.repository` resolves to whichever repo INVOKES it, so a copy rolled into another repo
+          # would silently dispatch to itself, same fleet-wide bug as main-backmerge-to-ldr.yml's fix.
+          gh api "repos/${{ github.repository_owner }}/unified-trading-pm/dispatches" \
             -f event_type=escalate-to-orchestrator \
             -f "client_payload[repo]=${{ inputs.repo_name }}" \
             -f "client_payload[pr_number]=${{ inputs.pr_number }}" \

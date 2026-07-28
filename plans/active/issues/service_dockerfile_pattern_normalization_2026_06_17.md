@@ -39,7 +39,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 ---
 
 # Service Dockerfiles inconsistent — normalize Pattern B → Pattern A
@@ -103,13 +103,80 @@ Open questions for the owner:
 
 ## Follow-up todos
 
-- [ ] [DESIGN] P2. Decide + own the Pattern-A normalization (this doc). Owner: Ikenna.
-- [ ] [INFRA] P2. Canary-normalize `alerting-service` Dockerfile + cloudbuild to Pattern A; confirm green GCP build +
-      ~3GB image. **Repo:** alerting-service.
-- [ ] [INFRA] P2. Fan out the normalization to the remaining 8 Pattern-B services. **Repos:** execution, greeks,
-      strategy, batch-live-reconciliation, fund-administration, market-data-processing, ml, trading-agent.
-- [ ] [BUG] P3. Investigate `strategy-service` vendoring `market-tick-data-service/` — confirm it's not a
-      service↔service import (tier violation). **Repo:** strategy-service.
+- [x] ✅ [DESIGN] P2. Decide + own the Pattern-A normalization (this doc). **DONE 2026-07-28** — operator ruling
+      2026-07-27 (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 39): no more Ikenna/Harsh
+      human-owner split, this is agent work. Agent owns it; decision = normalize to Pattern A exactly as this doc's own
+      "Recommended decision" already specified (no design change needed, just execution).
+- [x] ✅ [INFRA] P2. Canary-normalize `alerting-service` Dockerfile + cloudbuild to Pattern A; confirm green GCP build +
+      ~3GB image. **DONE (pre-existing, verified 2026-07-28)** — alerting-service was ALREADY normalized to Pattern A by
+      an earlier session (no separate canary commit found in this session; the repo's live `Dockerfile` +
+      `cloudbuild.yaml` were read in full and confirmed Pattern-A shaped: `FROM base@digest` + `COPY . .` +
+      `uv pip install --system --no-sources -e .`, zero `stage-siblings` step, zero vendored sibling `COPY`, zero
+      `uv sync --frozen`/`file:///` absolute-path lock references). **Repo:** alerting-service.
+- [x] ✅ [INFRA] P2. Fan out the normalization to the remaining 8 Pattern-B services. **6/8 already done pre-session,
+      verified 2026-07-28; 2/8 (greeks, strategy) normalized + shipped this session; execution-service explicitly OUT OF
+      SCOPE (being handled by a different concurrent agent, delta_proxy wire-in task — do not re-touch).** Verification
+      method for all 8: read the live `Dockerfile` + `cloudbuild.yaml`/`cloudbuild.yml` in full and confirm (a) no
+      `stage-siblings` cloudbuild step, (b) no `COPY unified-api-contracts/` / `COPY unified-trading-library/` / any
+      other sibling-repo `COPY` into the build context, (c) no `uv sync --frozen` against local path sources / no
+      `file:///` absolute lock-path references, (d) install is `uv pip install --system --no-deps|--no-sources -e .`
+      relying on the base image for UTL+UAC. - **Already normalized, confirmed (no code change needed):**
+      `alerting-service` (see canary todo above), `batch-live-reconciliation-service`, `fund-administration-service`,
+      `market-data-processing-service`, `ml-service`, `trading-agent-service` — all 6 read in full, all 6 structurally
+      Pattern-A per criteria (a)-(d) above. All 6 also show recent (2026-07-28, same-day)
+      `chore(deps): refresh base-image digest pin` commits from the fleet's own digest-drift-sweep automation,
+      confirming they are live/current, not stale reads. - **Normalized + shipped this session:** `greeks-service`
+      (Dockerfile + cloudbuild.yaml, greeks-service@b82340ad) and `strategy-service` (Dockerfile + cloudbuild.yaml +
+      buildspec.aws.yaml, strategy-service@7be73520) — both confirmed still Pattern-B at session start (`stage-siblings`
+      step + `COPY unified-api-contracts/`/`COPY unified-trading-library/` +
+      `uv sync --frozen --no-dev --no-install-project` against local path sources; strategy-service additionally
+      vendored `market-tick-data-service/`, see the BUG todo below). Rewrote both Dockerfiles to the Pattern-A shape
+      (`COPY . .` + `uv pip install --system       --no-sources -e .`, no sibling `COPY`s), removed the `stage-siblings`
+      cloudbuild step from both `cloudbuild.yaml`s, and removed the dead `market-tick-data-service` clone from
+      strategy-service's `buildspec.aws.yaml` pre_build. **Verification (real, not just structural read):** ran a
+      genuine local
+      `DOCKER_BUILDKIT=1 docker build --platform linux/amd64 --build-arg PROJECT_ID=central-element-323112` for both —
+      both built clean (greeks-service 5.58GB, strategy-service 3.81GB — the latter down from the Pattern-B ~5.5-7GB
+      class the parent validation doc measured, confirming the image-bloat fix). Ran the `import <pkg>` smoke + the
+      credential-free mock-mode run check mirroring each repo's own cloudbuild operability-probe
+      (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`) — both passed on the SECOND pass. **Found + fixed a real regression
+      on the first pass**: strategy-service's mock pipeline crashed
+      `PermissionError: [Errno 13] Permission denied: '/.local-dev-cache'` —
+      `unified_trading_library.dev_paths       .get_workspace_root()` falls back to a `parents[2]`-from-`__file__`
+      heuristic when `WORKSPACE_ROOT` is unset, which is install-layout-dependent: under the OLD Pattern-B venv install
+      (`uv sync` into `/app/strategy-service/.venv/...`) it happened to resolve to a path still under `/app` (owned by
+      `appuser`, writable); under the NEW Pattern-A `--system` install (UTL lives at `/app/unified_trading_library/`,
+      baked into the base image) the same heuristic resolves to `/` (root, not owned by `appuser`) — confirmed this was
+      genuinely masked-not-absent by checking recent real GCP Cloud Build history for strategy-service
+      (`gcloud builds list`: repeated SUCCESS through 2026-07-28T05:26Z on the still-live Pattern-B Dockerfile,
+      including its REQUIRED operability-probe step that exercises this exact mock-pipeline path). Fixed by pinning
+      `ENV WORKSPACE_ROOT=/app/strategy-service` explicitly in the Dockerfile (decouples from the fragile heuristic
+      entirely) — confirmed no other Pattern-A repo already sets this (none do; a latent cross-fleet gap that happens to
+      only bite strategy-service today because it's the only cloudbuild operability-probe that actually invokes the full
+      mock pipeline via `-m strategy_service` rather than a `--help` short-circuit; greeks-service has zero
+      `WORKSPACE_ROOT`/`get_workspace_root` references in its own source, confirmed unaffected). Both `quality-gates.sh`
+      green (greeks-service 74s, strategy-service 172s incl. 5629 tests passed) before shipping. - **Explicitly out of
+      scope:** `execution-service` — a different concurrent agent owns it (delta_proxy wire-in task); not touched this
+      session.
+- [x] ✅ [BUG] P3. Investigate `strategy-service` vendoring `market-tick-data-service/` — confirm it's not a
+      service↔service import (tier violation). **DENIED / FALSE ALARM — already resolved before this doc was even filed,
+      confirmed 2026-07-28.** Three independent checks, all consistent: (1) `strategy_service/` source has ZERO
+      `import market_tick_data_service` / `from market_tick_data_service` anywhere (grep across `.py` files in source +
+      tests) — the only hit workspace-wide is a docstring comment in
+      `strategy_service/engine/core/canonical_aave_borrow_index_provider.py` referencing the file path as documentation,
+      not an import. (2) `pyproject.toml` `dependencies = [...]` has no `market-tick-data-service` entry, and `uv.lock`
+      has no `market-tick-data-service` package entry at all. (3) `git log -p pyproject.toml` shows the actual
+      dependency WAS removed on **2026-06-10** (commit `d1f5a6a8`, "refactor(deps): drop market-tick-data-service
+      service-dep from strategy-service" — commit message: "strategy_service source never imports
+      market_tick_data_service (verified 0 imports). The sole coupling was
+      tests/position/integration/test_split_libraries.py::test_market_interface_import[...]"), which is BEFORE this
+      issue doc was filed (2026-06-17). So at the time this doc's own investigation was written, the tier-violation
+      concern was already moot — only the Dockerfile/cloudbuild's vendoring of the `market-tick-data-service/` SOURCE (a
+      `COPY` + `stage-siblings` clone that was then immediately `rm -rf`'d post-`uv sync`, since `uv.lock` no longer
+      referenced it) survived as vestigial dead weight, never cleaned up until this session's Pattern-A normalization
+      removed it. **No separate issue doc filed** (per the findings-triage rule, only a CONFIRMED cross-repo bug gets
+      its own doc; this is a confirmed non-issue with the fix already landed as a side effect of the normalization
+      commit above) — verdict + evidence trail recorded here instead.
 
 ## Composes with
 
