@@ -319,7 +319,8 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
 - [x] [DIAG] P1. ✅ Root-caused + backfilled — `batch1_ao_ready` todo 5. Two stacked bugs (unrun Phase-0.6 backfill + a
       deleted legacy-bucket launcher) fixed; 2020-01-01→2026-07-24 re-run shipped (16,661 rows, was 1).
       `features-service@89a2ac9d`, `deployment-service@826ca68`, `instruments-service@47c1ffb3` (verified via
-      `git log`). Spun off `issues/manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md` (open, real gap).
+      `git log`). Spun off `/plans/archive/issues/manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md`
+      (resolved + archived 2026-07-28, `unified-trading-library@0db19a72`).
 - [x] [DIAG] P2. ✅ Wired from standings relegation-zone classification — `batch1_ao_ready` todo 12.
       `features-service@34b53186` (verified via `git log`).
 - [x] [DIAG] P2. ✅ **HONEST-ABSENCE, BY DESIGN** — `batch1_ao_ready` todo 13. This line's own "likely-related lead" was
