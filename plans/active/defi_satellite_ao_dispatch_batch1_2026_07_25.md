@@ -327,12 +327,17 @@ drift_direction: advance-code
       `plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md` line 266 ("File the
       mev_events >100-payload/day pagination gap") from "Not filed" to point at the new doc. Repo: unified-trading-pm.
       Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P1. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
+- [x] ✅ [PM] P1. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
       risk: `defi_collection_scheduler.tf`'s header requires the stagger finish by 02:25 UTC for `features-onchain` T+1
       freshness, but `solana-defi` alone (02:05 start, 1500s timeout) can already finish ~02:30 — appears
       pre-existing-violated. Name `t1_batch_scheduler.tf:124-128` as the owner to flag. Repo: unified-trading-pm. **Done
       when**: a new `plans/active/issues/defi_t1_freshness_deadline_stagger_<date>.md` exists citing both files and the
-      deadline math. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
+      deadline math. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. — unified-trading-pm@2c4c1355f.
+      Filed `issues/defi_t1_freshness_deadline_stagger_2026_07_28.md` recomputing worst-case finish for every 02:xx
+      collect-* job (solana-defi 02:30, bridge-events 02:35, lst-seasonal-rewards 03:05 — all confirmed violations) and
+      flagging that the `t1_batch_scheduler.tf:124-128`/`:131-135` line-citations for the "features-onchain T+1 recon"
+      consumer resolve to unrelated jobs — no such job exists in the file today, so the deadline itself is currently
+      unverifiable against a real consumer.
 - [ ] [PM] P1. File a new tracked issue doc for the gas-fees historical `venue=<CHAINNAME>` path-migration question: the
       2026-07-22 rename (`market-tick-data-service@522185a6`, `_GAS_FEE_VENUE="ALCHEMY"`) fixed paths only forward —
       pre-existing historical `gas_fees` objects still sit under `venue=<CHAINNAME>` and won't retroactively move. Flag
