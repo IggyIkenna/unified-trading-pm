@@ -1520,7 +1520,7 @@
         "large_file_count": 13,
         "qg_red_reason": "basedpyright"
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "server"
     }
   },
