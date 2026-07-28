@@ -79,8 +79,8 @@
     "market-tick-data-service": "0.98.0",
     "system-integration-tests": "0.15.0",
     "unified-api-contracts": "0.77.0",
-    "unified-trading-library": "0.62.0",
-    "unified-trading-pm": "1.2.640",
+    "unified-trading-library": "0.63.0",
+    "unified-trading-pm": "1.2.641",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -1009,7 +1009,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 10,
@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "pytest",
         "warn_file_count": 23,
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -2185,13 +2185,13 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.62.0",
-      "published_at": "2026-07-27T21:19:18Z",
+      "version": "0.62.1.dev1+g27301e647",
+      "published_at": "2026-07-28T04:33:47Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.77.1.dev5+g0bad3b5b4",
-      "published_at": "2026-07-27T21:17:11Z",
+      "version": "0.77.1.dev6+g711d6054f",
+      "published_at": "2026-07-28T04:40:17Z",
       "registry": "artifact-registry"
     }
   }
