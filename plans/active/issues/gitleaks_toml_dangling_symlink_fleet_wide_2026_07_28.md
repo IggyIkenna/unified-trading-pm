@@ -43,7 +43,11 @@ related: []
 created: 2026-07-28
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm: NA
+assigned_vm: planning
+estimate_class: infra
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.8
+assigned_role: infra-engineer
 resolved_by:
 locked_by:
 source: autonomous-agent-fleet-sweep
