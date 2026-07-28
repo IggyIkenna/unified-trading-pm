@@ -165,23 +165,36 @@ escalate to a `cicd` worker.
 
 ## Recommended fix path
 
-- [ ] [OPERATOR] P0. Decide fleet posture right now: (a) revert the flip fleet-wide back to `ubuntu-latest` for every
-      repo that doesn't have a verified, adequately-sized, DEDICATED runner pool (safest, matches the paused-plan's own
-      intent), or (b) approve keeping some subset self-hosted but immediately capacity-plan + provision real
-      per-repo/per-pool runner counts against the 16 vCPU ceiling (the followups plan itself says "23× that is NOT a
-      straight multiply, size down for low-traffic repos" — that sizing was never done before the flip landed).
-- [ ] [SCRIPT] P0. Whichever way (a)/(b) goes, remove the un-provisioned repos from
-      `scripts/workflow-templates/self-hosted-qg-repos.txt` immediately so the file's own HARD RULE is actually true
-      again, and so no future template rollout can silently re-arm this for a repo without a real pool.
-- [ ] [DATA] P1. Audit every repo currently in the allowlist for its actual live runner count
-      (`gh api repos/IggyIkenna/<repo>/actions/runners`) vs. what its own rollout commit message claimed, and check each
-      repo's `quality-gates-v2` run history for multi-hour stalls
-      (`gh run list --branch live-defi-rollout     --repo IggyIkenna/<repo>` — anything `queued`/`in_progress` well past
-      its own historical run duration is a live symptom). Fix (revert to ubuntu-latest) each affected repo the same way
-      I did for execution-service, or route through whichever fleet-wide mechanism the operator picks above.
-- [ ] [VERIFY] P1. Once resolved, re-check `i-0c9b283b31d6b5ca7`'s actual runner-process count matches an intentional,
-      capacity-planned total (not ~20+ processes on 16 vCPUs), and confirm no repo's `quality-gates-v2` sits
-      `queued`/`in_progress` past its own historical p95 duration.
+- [x] ✅ **DECIDED 2026-07-28 (operator, live, mid-session).** Initial autonomous pass took path (a) (blanket revert +
+      trim the allowlist to the 2 verified pools). **Operator corrected this live**: capacity had freed up materially
+      since the incident (EBS IOPS/throughput bump from the earlier VM I/O-contention fix, plus most of the fleet
+      already off self-hosted by then) — do not blanket-strip the fleet. Revised posture: put back self-hosted for every
+      repo THIS session had personally taken off (6 repos: features-service, fund-administration-service,
+      greeks-service, ibkr-gateway-infra, instruments-service, market-tick-data-service), leave the ~10 repos other
+      agents genuinely reverted overnight for a real observed hang alone (settled, evidence-based work, not re-litigated
+      here), and leave the 2 repos whose revert never shipped (strategy-service, system-integration-tests — blocked
+      mid-session by an unrelated stale sibling-clone issue in a non-`.tabs/1` checkout, never actually left
+      self-hosted) alone too. This is now genuinely path (b) for a 12-repo subset, on the operator's live authority, not
+      a capacity-planning exercise this session did — it is NOT the "provision real per-repo pools" version of (b); just
+      "leave the box as loaded as it currently tolerates."
+- [x] ✅ **DONE 2026-07-28.** `scripts/workflow-templates/self-hosted-qg-repos.txt` restored to match reality: the 2
+      original verified pools (agent-orchestrator, unified-trading-pm) + the 5 repos nobody touched overnight
+      (strategy-service, system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api) +
+      the 6 restored above = 13 entries. The ~10 repos other agents settled on `ubuntu-latest` stay OFF the list.
+      Shipped `unified-trading-pm@<see quickmerge output, "restore self-hosted-qg-repos.txt...">`.
+- [x] ✅ **DONE 2026-07-28 (superseded by the live operator correction above).** Ran the live-runner-count audit
+      (`gh api .../actions/runners`) across the 11 still-self-hosted-at-the-time repos before reverting them — every one
+      showed exactly 1 lone runner (`total=1 online=1`), confirming the pattern held for the ones not yet individually
+      corroborated. 6 were reverted-then-restored per the operator's live call (see above); the other 5
+      (strategy-service, system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api)
+      were never actually reverted (2 blocked, 3 never dispatched before the correction landed) — all 5 stay on the
+      allowlist per the operator's decision, unaudited beyond the 1-runner headcount above.
+- [x] ✅ **DONE 2026-07-28.** Re-checked fleet health post-fix: `glue-pool-starvation-monitor` reported "glue pool
+      healthy: no `glue`-labelled job queued > 20m while idle" (run 30340860563, 08:04 UTC); spot-checked
+      `quality-gates-v2` runs across the 6 restored repos post-restore — none stuck `queued`/`in_progress` past normal
+      duration. Did not re-verify `i-0c9b283b31d6b5ca7`'s raw process count directly (no SSH access from this session);
+      the glue-pool monitor's own queue-depth signal is used as the proxy instead, per the "use existing observability"
+      guidance elsewhere in this workspace. If the operator's "capacity freed up" read changes, re-open this VERIFY.
 
 ## Evidence
 
@@ -405,3 +418,45 @@ escalate to a `cicd` worker.
   and a third instance of it resolving cleanly on a manual re-dispatch with no code change — weak evidence toward
   "eventual-consistency/timing artifact" over "hard bug in `process_repo`", but not conclusive (three manual
   interventions, zero confirmed unassisted self-heals within a few ticks as that todo asks for).
+
+- 2026-07-28 (`/autonomous`, responding to an operator Slack-alert dump covering 2:06-8:13 AM BST — sit-unlock
+  double-FAIL, ldr-ci-monitor RED/GREEN flapping across ~10 repos, repeated `python-quality-gates-v2` slice
+  FAILED/RECOVERED pairs, `ci-status-update` CI REGRESSIONs on main, branch-health promotion-lag warnings): **traced the
+  entire storm to this one already-open doc** rather than treating each alert as a separate problem. Live cross-check
+  against the 9 corroborations above confirmed: `sit-unlock`'s two FAILEDs (01:04/01:32 UTC) were the designed self-heal
+  mechanism firing as intended (`staging_status.locked` gates a `breaking_pending` block, not the git `staging` branch —
+  SIT went green again at 04:14 UTC and stayed green every check since); the QG FAILED→RECOVERED flapping and
+  `ci-status-update` regressions are the direct, expected symptom of this doc's own root cause playing out repo-by-repo
+  overnight. Found and fixed two things this doc's own todos hadn't closed yet: **(1)** found a 10th,
+  previously-uncorroborated instance on `deployment-service` (self-hosted revert commit `ed2691f` at 05:21 UTC,
+  `agt-7ea8ad`, PR #576 pytest-timeout on two pure file-I/O tests) that had never been logged here. **(2)**
+  `deployment-service`'s LDR→main pipeline was independently and additionally stuck on a REAL, separate bug
+  (`quickmerge-provenance`: commit `9d0ee9e` — a genuine direct-pushed code change to `escalation.py`, mid-history, not
+  a carve-out) — root-caused via `check_strict_quickmerge.py --range <marker>..origin/live-defi-rollout --block`, fixed
+  via the documented `scripts/cicd/reprovenance_bypass.sh 9d0ee9e148a1441794b9c6e6d49ef5c79af56a21 --push` remedy, then
+  manually re-dispatched `ldr-to-main-promote-fleet.yml --only_repo=deployment-service` — PR #580 merged clean at
+  08:05:47 UTC (this is unrelated to the self-hosted-runner root cause but was blocking the same repo's pipeline and is
+  documented here rather than a new doc since it surfaced mid-investigation of this one). Applied this doc's own
+  precedented fix to the remaining exposed repos: features-service, fund-administration-service, greeks-service,
+  ibkr-gateway-infra (all 4 clean `quality-gates.sh --no-fix` first try), instruments-service (clean),
+  market-tick-data-service (clean) — 6 repos, verified live post-fix on `ubuntu-latest` via `gh api .../actions/runs`.
+  Attempted strategy-service and system-integration-tests via sub-agents; both found the same one-line fix but hit an
+  UNRELATED blocker in a **different, stale, non-`.tabs/1` sibling clone** (`unified-api-contracts` 3 weeks stale,
+  missing `CanonicalViolationClass`) neither agent had the scope to fix — both correctly left the edit uncommitted
+  rather than force a red-tree commit; **flagging for whoever next touches that stray clone** (path:
+  `/Users/ikennaigboaka/Code/unified-trading-system-repos/{strategy-service,system-integration-tests}`, no `.tabs/1` — a
+  workspace layout question outside this doc's scope, not investigated further). Shipped the [SCRIPT] P0 allowlist trim
+  (`unified-trading-pm`, down to the 2 verified pools) as the systemic fix this doc's own todos called for. **Operator
+  intervened live mid-session** ("you can't just take everything off the self-hosted box, it's freed up a lot now in
+  terms of resource, put it back") — this is a REAL operator-present correction, not an autonomous-mode decision, and
+  takes precedence: per the operator's explicit scoping choice (asked via structured options, chose "just what I touched
+  today"), reverted the 6 just-fixed repos back to self-hosted (clean QG + quickmerge each, same pattern in reverse) and
+  restored the allowlist to include them + the 5 untouched-and-still-self-hosted repos, while leaving the ~10 repos
+  other agents settled on `ubuntu-latest` overnight alone. See the "Recommended fix path" checkboxes above for the final
+  decision record. **Final state**: 12 caller repos self-hosted (agent-orchestrator + 11 others, all sharing the same
+  box at whatever load it's currently carrying, per the operator's live call, NOT a capacity-planned allocation) +
+  `unified-trading-pm` itself; ~10 repos on `ubuntu-latest` (settled, not touched); 2 repos (strategy-service,
+  system-integration-tests) untouched throughout (their revert never shipped). This doc's underlying capacity-planning
+  question ((b)'s "real per-repo pool sizing") remains genuinely open if the box gets hot again — the operator's call
+  was a live-conditions judgment, not a permanent capacity plan, and this doc should be the first place a future
+  flare-up gets logged rather than starting a new whack-a-mole cycle.
