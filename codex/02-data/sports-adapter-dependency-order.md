@@ -3,9 +3,10 @@ doc_type: codex-ssot
 title: Sports Adapter Dependency Order — SSOT
 summary:
   api-football is T0 (canonical fixtures_schedule/fixtures_outcomes/leagues/teams) for every sports date; T1 enrichment
-  adapters (footystats/understat/transfermarkt/SFI/open-meteo/betfair) are INTENDED to read its GCS parquet via a
-  factory-preflight DependencyError gate — that gate does not fire in production (date kwarg never passed by any real
-  caller).
+  adapters read its GCS parquet via a factory-preflight DependencyError gate. As of instruments-service@3c424e61
+  (2026-07-28) the gate is WIRED and fires in production for the 4 implemented, dependent T1 adapters
+  (footystats/understat/transfermarkt/soccer_football_info); open_meteo/betfair remain outside this factory path (see §1
+  caveat 2).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -31,17 +32,20 @@ referenced_by:
     /codex/15-runbooks/smoke-testing-playbook.md,
   ]
 owner:
-last_reviewed: 2026-07-23
+last_reviewed: 2026-07-28
 code_refs:
 ---
 
 # Sports Adapter Dependency Order — SSOT
 
-> **Note (2026-07-19, body rewritten 2026-07-23).** This doc previously described the pre-split bare `entity=fixtures`
-> shape and treated the T0/T1 pre-flight gate as an active safety net. Both are now fixed in place in §1/§3/§4.1/§5
-> below — this banner is a pointer, not a restatement. Background:
-> `plans/active/issues/ sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`,
-> `plans/active/sports_consolidated_closeout_2026_07_19.md` (ENTITY-SPLIT / Track E).
+> **Note (2026-07-19, body rewritten 2026-07-23, gate-live update 2026-07-28).** This doc previously described the
+> pre-split bare `entity=fixtures` shape and treated the T0/T1 pre-flight gate as an active safety net; the 2026-07-23
+> rewrite corrected both to "intended but not enforced." **As of `instruments-service@3c424e61` (2026-07-28) the
+> pre-flight gate IS wired and fires in production** for the 4 implemented dependent T1 adapters
+> (footystats/understat/transfermarkt/soccer_football_info) — `date=`/`bucket=` are now threaded through every real call
+> site, verified by `tests/unit/test_sports_t0_t1_gate_real_callers.py`. §1/§3/§4.1/§5 below are updated accordingly.
+> Background: `/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md` (RESOLVED, archived),
+> `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` (Track E, where the fix landed).
 
 **Purpose**: canonical reference for the run-order of sports reference-data adapters inside instruments-service. Written
 2026-04-20 as part of Phase 3 of the `institutional_smoke_matrix_2026_04_20` plan after the SPORTS smoke incident
@@ -82,20 +86,30 @@ side by side, both under a `pipeline_mode=batch_api_football/` hive segment:
 Bare `entity=fixtures/` (no `pipeline_mode=` segment, no split) is **FROZEN** — nothing has landed there since
 2026-05-23. Any adapter, script, or doc still reading or writing bare `entity=fixtures/` is targeting a dead path.
 
-**Caveat 2 — the pre-flight dependency gate in §4-§5 does NOT fire in production.** `check_api_football_dependency()`
-only runs when the factory call site passes `date=`, and every real T1 call site (`footystats.py`, `transfermarkt.py`,
-`understat.py`, `sfi.py`, plus `open_meteo`/`betfair`) constructs its adapter via
-`create_sports_reference_adapter(venue)` — no `date=` kwarg — so the gate never executes. This is confirmed by live
-data: Understat has captured rows for 2014-2017 dates where api-football has zero fixtures, which the gate would have
-blocked had it fired. Treat the rest of this doc (including this section's own dependency graph) as the **intended
-contract**, not a description of an active safety net. Fixing the gate is scoped as Track E of
-`plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for real") and tracked in
-`plans/active/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`.
+**Caveat 2 — the pre-flight dependency gate in §4-§5 NOW fires in production, for the 4 implemented dependent T1
+adapters (as of `instruments-service@3c424e61`, 2026-07-28).** `check_api_football_dependency()` runs when the factory
+call site passes `date=`; every real T1 call site (`footystats.py` x3, `transfermarkt.py`, `understat.py`, `sfi.py`) — 5
+call sites across the 4 implemented adapters — now constructs its adapter via
+`create_sports_reference_adapter(venue, date=date, bucket=bucket)`, placed AFTER each function's own skip/guard checks
+so the gate fires only when a fetch is actually about to be attempted (this is why it does NOT retroactively break
+Understat's pre-2018 captures — those dates are already cached/complete and never reach the gate on a re-run). Verified
+by `tests/unit/test_sports_t0_t1_gate_real_callers.py` (4 tests proving a real ordering violation raises
+`DependencyError` from the actual orchestrator functions, not just the factory in isolation). Treat the rest of this doc
+(including this section's own dependency graph) as **live production behaviour for footystats/understat/
+transfermarkt/soccer_football_info**, not merely intended.
 
-### Dependency graph (intended — see caveats above)
+`open_meteo` and `betfair` remain OUTSIDE this factory path and are NOT gated: `open_meteo` is fetched via a separate
+function (`weather.py::_fetch_weather_data`) that never calls `create_sports_reference_adapter`; `betfair` has no
+adapter implementation in this repo at all (present only as a placeholder key in `_API_FOOTBALL_DEPENDENT_VENUES`, per
+`sports_dependency.py`). Both were already out of scope for the fix (grep confirms neither had a real call site to
+thread `date=` through) — this is pre-existing, unchanged by the fix, not a regression. Fixed via Track E of
+`plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` ("Wire the T0/T1 dependency gate for real"); source
+issue archived at `/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`.
+
+### Dependency graph (gate-enforced for footystats/understat/transfermarkt/soccer_football_info — see caveats above)
 
 ```
-                T0 (INTENDED to run FIRST for each date — not enforced, see caveat 2 above)
+                T0 (must run FIRST for each date — gate-enforced for the 4 implemented T1 adapters, see caveat 2 above)
                       ┌────────────────────┐
                       │   api-football     │
                       │ (canonical fixtures│
@@ -116,8 +130,9 @@ contract**, not a description of an active safety net. Fixing the gate is scoped
           ┌──────┬──────┬────────┼────────┬──────┬──────┐
           │      │      │        │        │      │      │
           ▼      ▼      ▼        ▼        ▼      ▼      ▼
-        T1 (any order, parallel-safe — INTENDED to run only AFTER T0 lands for the
-            date; nothing in production actually enforces this ordering, see caveat 2)
+        T1 (any order, parallel-safe — MUST run only AFTER T0 lands for the date;
+            gate-enforced for footystats/understat/transfermarkt/soccer_football_info,
+            NOT enforced for open_meteo/betfair — see caveat 2)
         ┌──────┐ ┌──────────┐ ┌────────┐ ┌─────────────┐ ┌──────┐ ┌──────┐
         │footy-│ │understat │ │trans-  │ │soccer_foot- │ │open_ │ │bet-  │
         │stats │ │(xG)      │ │fermarkt│ │ball_info    │ │meteo │ │fair  │
@@ -127,9 +142,9 @@ contract**, not a description of an active safety net. Fixing the gate is scoped
         └──────┘ └──────────┘ └────────┘ └─────────────┘ └──────┘ └──────┘
 ```
 
-### Why each T1 adapter is intended to depend on api-football
+### Why each T1 adapter depends on api-football
 
-Each enrichment adapter is INTENDED to read
+Each enrichment adapter is intended (and, for the 4 implemented adapters, gate-enforced) to read
 `sports_reference/by_date/day={date}/pipeline_mode=batch_api_football/entity=fixtures_schedule/...` (the split schedule
 entity — `entity=fixtures_outcomes/` too, wherever it needs scores/status) at the start of its fetch to resolve one or
 more of:
@@ -154,9 +169,9 @@ more of:
 - It does NOT mean the adapters import api-football as Python code. The dependency is on the GCS parquet artefacts, not
   on the adapter class.
 - It does NOT apply to **per-venue shard-level failures inside the shard loop**. That is governed by
-  `/codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** — and, per
-  caveat 2 above, that gate does not actually run in production, so there is currently no enforcement point BEFORE the
-  shard loop starts either. §4-§5 spell this out in detail.
+  `/codex/04-architecture/shard-level-failure-isolation.md`. This doc governs only the **pre-flight gate** — which, per
+  caveat 2 above, now runs in production BEFORE the shard loop starts for footystats/understat/transfermarkt/
+  soccer_football_info (not for open_meteo/betfair). §4-§5 spell this out in detail.
 
 ---
 
@@ -197,18 +212,19 @@ Each adapter writes to one or more `entity=` partitions under
 `pipeline_mode=` segment; T1 adapters write their own entities alongside it). Cross-reference:
 `/codex/02-data/per-asset-group-bucket-layouts.md` § "instruments-service writes — SPORTS".
 
-**The "Reads (dep)" column is the INTENDED join dependency, not an enforced one** — §1 (caveat 2) and §4-§5 explain why
-the factory pre-flight that is supposed to guarantee it never actually fires in production.
+**The "Reads (dep)" column is gate-enforced for footystats/understat/transfermarkt/soccer_football_info** (§1 caveat 2,
+§4-§5) as of `instruments-service@3c424e61`; for **open_meteo/betfair it remains intended-only, not gate-enforced** —
+neither has a real call site through the gated factory path (§1 caveat 2).
 
-| Adapter                       | Writes entity partitions                                                                                                                                                                                                                  | Reads (dep) — intended, not gate-enforced       |
-| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| **api_football (T0)**         | `entity=fixtures_schedule` `entity=fixtures_outcomes` `entity=leagues` `entity=teams` `entity=standings` `entity=injuries` `entity=lineups` `entity=fixture_stats` — bare `entity=fixtures` is FROZEN since 2026-05-23, never write there | — (root of the tree)                            |
-| **footystats (T1)**           | `entity=footystats_matches` `entity=footystats_odds` `entity=footystats_predictions`                                                                                                                                                      | `entity=fixtures_schedule/`                     |
-| **understat (T1)**            | `entity=understat_xg`                                                                                                                                                                                                                     | `entity=fixtures_schedule/`                     |
-| **transfermarkt (T1)**        | `entity=transfermarkt_leagues` `entity=transfermarkt_teams`                                                                                                                                                                               | `entity=teams/teams.parquet` (api-football)     |
-| **soccer_football_info (T1)** | `entity=sfi_leagues` `entity=sfi_standings` `entity=progressive_stats`                                                                                                                                                                    | `entity=leagues/leagues.parquet` (api-football) |
-| **open_meteo (T1)**           | `entity=weather`                                                                                                                                                                                                                          | `entity=fixtures_schedule/` (venue_id column)   |
-| **betfair (T1)**              | `entity=betfair_odds`                                                                                                                                                                                                                     | `entity=fixtures_schedule/`                     |
+| Adapter                       | Writes entity partitions                                                                                                                                                                                                                  | Reads (dep)                                                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **api_football (T0)**         | `entity=fixtures_schedule` `entity=fixtures_outcomes` `entity=leagues` `entity=teams` `entity=standings` `entity=injuries` `entity=lineups` `entity=fixture_stats` — bare `entity=fixtures` is FROZEN since 2026-05-23, never write there | — (root of the tree)                                                                                                     |
+| **footystats (T1)**           | `entity=footystats_matches` `entity=footystats_odds` `entity=footystats_predictions`                                                                                                                                                      | `entity=fixtures_schedule/` — **gate-enforced**                                                                          |
+| **understat (T1)**            | `entity=understat_xg`                                                                                                                                                                                                                     | `entity=fixtures_schedule/` — **gate-enforced**                                                                          |
+| **transfermarkt (T1)**        | `entity=transfermarkt_leagues` `entity=transfermarkt_teams`                                                                                                                                                                               | `entity=teams/teams.parquet` (api-football) — **gate-enforced**                                                          |
+| **soccer_football_info (T1)** | `entity=sfi_leagues` `entity=sfi_standings` `entity=progressive_stats`                                                                                                                                                                    | `entity=leagues/leagues.parquet` (api-football) — **gate-enforced**                                                      |
+| **open_meteo (T1)**           | `entity=weather`                                                                                                                                                                                                                          | `entity=fixtures_schedule/` (venue_id column) — intended only, no gated call site (`weather.py` doesn't use the factory) |
+| **betfair (T1)**              | `entity=betfair_odds`                                                                                                                                                                                                                     | `entity=fixtures_schedule/` — intended only, no adapter implementation exists yet                                        |
 
 **Test-mode variants** write to the same entity paths inside the `-test-` suffixed bucket
 (`instruments-store-sports-prd-{project_id}-test`). Whichever bucket `IS_TEST_RUN` resolves to is where the (rarely
@@ -220,25 +236,31 @@ invoked) pre-flight probe would read from too — it does not duplicate data bet
 
 ### 4.1 api-football entirely missing for date `D`
 
-**In production, neither branch below fires the way it was designed to** — see §1 caveat 2. Downstream T1 adapters:
+**As of `instruments-service@3c424e61` (2026-07-28), the first branch below is what actually happens in production for
+footystats/understat/transfermarkt/soccer_football_info.** For open_meteo/betfair the second branch still applies (§1
+caveat 2 — neither has a gated call site).
 
-- **If called via `create_sports_reference_adapter(venue, date=D, ...)`**: factory raises
+- **`create_sports_reference_adapter(venue, date=D, bucket=bucket)`** (the real call shape for the 4 implemented T1
+  adapters, placed after each function's own skip/guard checks): factory raises
   `unified_trading_library.DependencyError` with the actionable remediation message below. The adapter is never
-  instantiated. **This is the branch every real T1 call site would need to hit for the gate to do anything — none of
-  them do.**
-- **If called via `create_sports_reference_adapter(venue)` without `date`**: no pre-flight fires. This is NOT a rare
-  "legacy callers" fallback path as originally documented — grep across `footystats.py`, `transfermarkt.py`,
-  `understat.py`, `sfi.py`, `open_meteo`, and `betfair` shows this is the ONLY path every real production call site
-  uses. The adapter is always instantiated, whether or not api-football has landed for the date, and there is no other
-  pre-flight stage upstream that gates it either.
+  instantiated. **This is now the live production path** for footystats/understat/transfermarkt/soccer_football_info —
+  verified by `tests/unit/test_sports_t0_t1_gate_real_callers.py`.
+- **`create_sports_reference_adapter(venue)` without `date`**: no pre-flight fires. This remains the ONLY path for
+  open_meteo (fetched via a separate `weather.py` function that never calls the factory) and betfair (no adapter
+  implementation exists).
 
-Net effect: when api-football is missing for date `D`, T1 adapters run anyway today and silently produce zero rows — the
-exact silent-failure mode this module's own docstring says the gate was built to replace. Fixing this is Track E of
-`plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for real").
+Net effect: for footystats/understat/transfermarkt/soccer_football_info, api-football missing for date `D` now fails
+loud with an actionable message BEFORE the shard loop starts — the silent-zero-rows failure mode this module's own
+docstring describes is closed for these 4 adapters. For open_meteo/betfair it remains open (pre-existing, unchanged by
+this fix — see §1 caveat 2 for why). Fixed via Track E of
+`plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` ("Wire the T0/T1 dependency gate for real").
 
-The error message format the gate _would_ emit if a caller ever passed `date=` (see `_build_remediation_message`) — note
-it still names the FROZEN bare `entity=fixtures` path, a separate staleness in the message template itself, tracked in
-the same Track E item:
+The error message format the gate emits when it fires (see `_build_remediation_message`) — it still names the FROZEN
+bare `entity=fixtures` path rather than the live split `entity=fixtures_schedule`, a cosmetic staleness in the message
+template (the underlying PROBE already checks the split paths correctly, so this does not cause a false
+`DependencyError` — only a stale-looking path in the message an operator sees when the dependency genuinely IS missing).
+Tracked as its own P3 follow-up in `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` (Track E
+follow-up):
 
 ```text
 api-football reference data missing for date 2026-04-14 in
@@ -289,31 +311,35 @@ with `IS_TEST_RUN=true` first to populate the test bucket. Codified in smoke-mat
 
 ---
 
-## 5. Implementation — fail-loud boundary (as designed; NOT what runs in production)
+## 5. Implementation — fail-loud boundary (live in production for footystats/understat/transfermarkt/soccer_football_info)
 
 The dependency gate is implemented as a pre-flight check at the **factory entry point**, not inside the per-venue shard
-loop. As designed, this would be the ONE place in the sports pipeline where raising `DependencyError` is correct
-behaviour. **As deployed, it is a known-broken safety net, not a working one** — `check_api_football_dependency()` only
-executes when the factory call site passes `date=`, and grep across every real T1 call site confirms none of them do (§1
-caveat 2, §4.1). Read the two bullets below as the intended design, then apply the caveat that follows.
+loop — the ONE place in the sports pipeline where raising `DependencyError` is correct behaviour. **As of
+`instruments-service@3c424e61` (2026-07-28), this is a working safety net for the 4 implemented dependent T1 adapters**
+— `check_api_football_dependency()` now executes on every real call site for footystats/understat/
+transfermarkt/soccer_football_info (§1 caveat 2, §4.1). It remains NOT wired for open_meteo (separate non-gated fetch
+path) and betfair (no adapter implementation). Read the two bullets below as the live behaviour for the 4 gated
+adapters.
 
 - Shard-level isolation (`/codex/04-architecture/shard-level-failure-isolation.md`): inside the shard loop, all errors
   are caught per-shard and logged as `VENUE_PROCESSING_FAILED` events. No `raise`. This part IS live in production and
-  unaffected by the gate's dead-code status — it keeps a bad shard from killing the whole day's run.
-- **Pre-flight** (this doc, as designed): BEFORE the shard loop starts, if api-football is missing for the whole date,
-  fail loud — because every T1 shard would otherwise fail silently, corrupting the manifest's `capture_status`
-  semantics. A single loud `DependencyError` is cheaper to diagnose than N silent `empty_confirmed` rows that are
-  actually "dep was missing". **In production this never triggers**: no `date=` reaches the factory, so T1 shards run
-  against a missing dependency and produce exactly the silent-failure outcome this bullet describes as prevented.
+  is unaffected by (independent of) the pre-flight gate's own status — it keeps a bad shard from killing the whole day's
+  run.
+- **Pre-flight** (this doc): BEFORE the shard loop starts, if api-football is missing for the whole date, fail loud —
+  because every T1 shard would otherwise fail silently, corrupting the manifest's `capture_status` semantics. A single
+  loud `DependencyError` is cheaper to diagnose than N silent `empty_confirmed` rows that are actually "dep was
+  missing". **This now triggers in production** for footystats/understat/transfermarkt/soccer_football_info, closing
+  exactly the silent-failure gap this bullet describes.
 
 The gate's storage-probe fallback — if the probe itself fails (transport error, auth failure), raise `DependencyError`
-rather than leak the underlying exception — is still correct behaviour on the rare occasions the gate IS invoked with a
-`date` (unit tests, ad hoc scripts). It has no bearing on the production call path, where the gate is never invoked at
-all.
+rather than leak the underlying exception — is correct behaviour whenever the gate is invoked with a `date` (now the
+normal production call shape for the 4 gated adapters, as well as unit tests / ad hoc scripts). It has no bearing on
+open_meteo/betfair, which never reach this factory path at all.
 
-**Do not cite this section as evidence the sports pipeline is protected against a missing api-football day — it is
-not**, until Track E of `plans/active/sports_consolidated_closeout_2026_07_19.md` ("Wire the T0/T1 dependency gate for
-real") lands.
+**This section now IS evidence the sports pipeline is protected against a missing api-football day, for
+footystats/understat/transfermarkt/soccer_football_info** — verified by
+`tests/unit/test_sports_t0_t1_gate_real_callers.py`. It is NOT evidence of protection for open_meteo/betfair (§1
+caveat 2) — no fix is currently scoped for those two, since neither has a real gated call site to begin with.
 
 ---
 

@@ -546,10 +546,15 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `rescan_sports_fixtures_canonical.py:328,452`, `enumerate_expected_universe.py:1902`,
       `migrate_sports_per_league.py`, `reconcile_sports_blank_empty_reason_2026_06_24.py`) to `fixtures_schedule`
       (+`fixtures_outcomes` where scores are needed).
-- [ ] [CODE] P1. **Wire the T0/T1 dependency gate for real: make every real caller of the pre-flight pass `date=`.**
-      Currently the pre-flight only fires `if date is not None` and no caller passes it, so the fail-loud boundary is
-      unreachable (`sports_t0_t1_dependency_gate_never_wired_2026_07_15`). **Done when**: a T0-before-T1 ordering
-      violation actually raises in a test (not just "the code path exists but is never hit").
+- [x] [CODE] P1. ✅ **DONE — already shipped as this plan's own Track E entry, this todo was a stale duplicate never
+      flipped.** `instruments-service@3c424e61` threaded `date=`/`bucket=` through every real T1 call site; a
+      T0-before-T1 ordering violation now raises in `tests/unit/test_sports_t0_t1_gate_real_callers.py` (4 tests against
+      the real orchestrator functions). Full evidence + Progress Log at
+      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md:209-222` (Track E). Source issue archived:
+      `/plans/archive/issues/sports_t0_t1_dependency_gate_never_wired_2026_07_15.md`. ~~Wire the T0/T1 dependency gate
+      for real: make every real caller of the pre-flight pass `date=`. Currently the pre-flight only fires
+      `if date is     not None` and no caller passes it, so the fail-loud boundary is unreachable. **Done when**: a
+      T0-before-T1 ordering violation actually raises in a test (not just "the code path exists but is never hit").~~
 
 ## Track O — ODDS-LEAK: post-kickoff contamination + the B2 dead-zone · P1
 
