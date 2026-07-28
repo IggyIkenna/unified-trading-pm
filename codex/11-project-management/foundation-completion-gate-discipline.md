@@ -4,7 +4,10 @@ title: Foundation-Completion-Gate Discipline
 summary:
   The 9-layer sequencing rule (orchestration→reference→availability-oracle→manifest→market-data→features→
   strategy/execution→live-adapters→perf) — no plan ships layer N+1 items before layer N is GREEN-audited +
-  manifest-divergence 0 for the affected asset_groups; referenced from CLAUDE.md Citadel standard item 8.
+  manifest-divergence 0 for the affected asset_groups; referenced from CLAUDE.md Citadel standard item 8. 2026-07-28
+  refinement adds the granular per-AG sub-sequence inside layers 1/4/5 (code → canonical migration → catalogue/
+  consolidator verified → smoke-test skills GREEN → backfill to 100% → live+T+1) plus the downstream ML/strategy/
+  batch/paper/live ordering.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -153,3 +156,38 @@ Phases -2 → 2 are layers 1-3 (QG-green foundation → bucket SSOT canonicalisa
 relaunches + live adapter cutover) is layer-4 and is hard-blocked by the Phase 2 gate. Any plan proposing Phase 3 work
 while Phase 2 items are still open is a direct violation of this rule. Agents should read that epic before scheduling
 any migration-adjacent work.
+
+## 2026-07-28 refinement — the granular per-AG sub-sequence inside layers 1/4/5
+
+Operator ruling (Ikenna, 2026-07-28) resolves layers 1 (reference/IS) and 4 (market data/MTDS) — and, once repeated,
+layer 5 (features/MDPS) — into an explicit sub-sequence. This does NOT renumber the layer table above; it's the
+within-layer resolution the table left implicit. Per asset_group, in order:
+
+1. **Code changes** for that AG's adapters/handlers ship first.
+2. **Canonical migrations run + non-canonical paths are removed** from the manifest and GCS objects are migrated (no
+   non-canonical residue left behind "for later").
+3. **Instrument catalogue rollups + manifest consolidators are verified WORKING** — not just deployed; prove they
+   actually produce correct rollups/consolidated state.
+4. **Smoke-test skills run GREEN for that AG** — `/data-pipeline-check-is` + `/data-pipeline-check-mtds` prove every
+   shard's adapter actually works, not just that the code compiles.
+5. **Backfill to 100% completion** — zero `attempted_failed` rows, zero FALSE `empty_confirmed` (a genuine absence is
+   fine; a lazily-stamped one is not).
+6. **Live data pipeline + T+1 backfill wired for batch.**
+
+Asset groups run this 1→6 sequence IN PARALLEL with each other (unchanged from the existing "parallel-up across
+asset_groups within a layer is encouraged" rule above) — the sequencing is within one AG's layer-1/4 work, not across
+AGs.
+
+**The one explicit concurrency exception**: MDPS + features-service work MAY start CONCURRENTLY with an AG's layer-4
+sub-sequence, using whatever SAMPLE data is already filled, for development/testing purposes only — this does NOT let
+MDPS/features reach their OWN GREEN/100% state early; that still requires the AG's MTDS layer to hit step 6 first. Once
+an AG's MTDS is fully 100% (step 6), MDPS and features each run the SAME steps 2→6 (canonical migration →
+catalogue/consolidator verified → smoke-test [`/data-pipeline-check-mdps`, `/data-pipeline-check-features`] → backfill
+to 100% → live+T+1) until THEY independently reach 100% for that AG.
+
+**Downstream of layer 5 completion, per the operator's named product path**: machine learning work is scoped first to
+**cefi and sports** (their prediction/ML layers); strategy-service work for the **defi-basis and staked-basis**
+archetypes (including equity-perps/tokenized-stocks and NASDAQ-spot exposure) plus **cefi ML strategy** comes next; then
+**batch execution** on tick data where available; then **live execution in paper-trader mode**; **real (live-money)
+execution is the final stage** — consistent with this doc's existing layer-6/7/8 ordering and CLAUDE.md's hard-stop on
+version graduation.

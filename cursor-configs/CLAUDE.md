@@ -254,17 +254,18 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   `/codex/02-data/data-pipeline-correctness-hard-rule.md`, `…/external-data-always-available-rule.md`.
 - **Findings triage**: in your file → fix in same commit; adjacent → fix in YOUR plan; outside-plan small+clear → ≤30
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
-  `plans/active/issues/<slug>_<date>.md`; **big finding** (data-correctness / May-23 critical path / cross-repo / SSOT
-  contradiction) → NOTIFY OPERATOR + issue doc. "Pre-existing" is NOT a triage criterion. SSOT:
-  `codex/11-project-management/`.
+  `plans/active/issues/<slug>_<date>.md` — issue resolves to folded-in-plan/AO-scope/operator-gated, never passive.
+  **big finding** (data-correctness / May-23 critical path / cross-repo / SSOT contradiction) → NOTIFY OPERATOR + issue
+  doc. "Pre-existing" is NOT a triage criterion. **Priority**: CI/audit > tier (cross-cutting>cefi>defi>sports>tradfi +
+  carve-out) > pipeline stage. SSOT: `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md`.
 - **Version graduation**: `feat!` on 0.x = MINOR; NEVER bump manually (semver-agent); graduate via
   `request-major-bump.yml`. **No summary docs** (`*_SUMMARY.md` etc.) — finish with text. **Prettier**
   `.md/.json/.yaml/.ts*` before commit. **Delete deprecated code** (no shims). **Never**
   `git reset --hard`/`clean -fd`/`restore` uncommitted work. **Runtime verification** — never "done" without running the
   code; a `- [x]` Cloud Build / deploy / promote-green claim MUST cite `Evidence: cloudbuild=<id>` that resolves SUCCESS
-  via `gcloud builds describe` (QG `check_evidence_backed_completion.py` fails on a cited non-SUCCESS build — "run it,
-  don't read it"; SSOT `plans/PLAN_FORMAT.md` § 8b). **Citadel planning standards** (pre-audit / phased DAG / no tech
-  debt / SSOT in UAC / foundation-gate / issue-doc-lifecycle) → `codex/11-project-management/`.
+  via `gcloud builds describe` (QG `check_evidence_backed_completion.py` fails on a non-SUCCESS build; SSOT
+  `plans/PLAN_FORMAT.md` § 8b). **Citadel planning standards** (pre-audit / phased DAG / no tech debt / SSOT in UAC /
+  foundation-gate / issue-doc-lifecycle) → `codex/11-project-management/`.
 
 ---
 
