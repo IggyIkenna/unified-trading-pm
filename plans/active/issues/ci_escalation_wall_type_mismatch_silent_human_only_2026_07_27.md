@@ -74,9 +74,20 @@ looking like a gap.
       lockstep, `unified-trading-pm@b3b4183a5`. Both route to the generic `cicd` prompt template, confirmed via
       `escalation._prompt_template_for()`. Regression test added asserting both wall_types validate and route correctly
       (not just a lint-level string match).
-- [ ] [BACKEND] P3. **Audit for a THIRD class of this bug**: grep every `.github/workflows/*.yml` across the fleet for
-      `wall_type:` literals, diff against `escalation.py`'s `WALL_TYPES` set, and confirm no other dispatcher emits an
-      unrecognized value. If found, fold into the same fix above rather than filing a new doc.
+- [x] ✅ [BACKEND] P3. **DONE 2026-07-28.** Ran the fleet-wide grep+diff across all 25 repos' `.github/workflows/*.yml`
+      for `wall_type:` literals against `escalation.py`'s `WALL_TYPES` set. Found exactly one THIRD unrecognized
+      value: `unified-trading-pm/.github/workflows/sit-gate.yml:365` emits `wall_type: "harness_lint"` (the
+      harness-lint background fix-task dispatch — missing `full-workspace-sit.yml` / 3 consecutive SIT-harness
+      failures), the same silent-degrade shape as this doc's original `ldr_main_qg_failure`/`sit_retry_cap` finding.
+      Folded into the same fix per this todo's own instruction (no new doc filed): added `harness_lint` to
+      `agent-orchestrator/server/escalation.py`'s `WALL_TYPES` (+ the separately-hardcoded
+      `server/models/escalation.py::EscalateRequest.wall_type` Literal, per the precedent
+      `test_escalate_request_wall_type_matches_escalation_wall_types` guards against drifting again) —
+      `agent-orchestrator@78d4b59` — and `unified-trading-pm/.github/workflows/escalate-to-orchestrator.yml`'s
+      case-statement validation + error message — `unified-trading-pm@2e5f052a4`. Regression test added:
+      `tests/test_escalation.py::test_harness_lint_is_a_valid_wall_type`. Every OTHER `wall_type:` literal found in
+      the fleet-wide grep (`merge_conflict`, `ldr_qg_failure`, `plan_health`, `sit_failure`, `ldr_main_qg_failure`,
+      `sit_retry_cap`) was already a member of `WALL_TYPES` — no fourth class exists.
 
 ## Codex SSOTs
 
