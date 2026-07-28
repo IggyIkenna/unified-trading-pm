@@ -129,10 +129,17 @@ and fix those as part of the plan too — otherwise I just want the best, most r
       half (it has no host-metrics sampler, so honestly no resource-sample half). 27/27 daemon unit tests pass (6 new:
       publish-on-tick, publish-on-complete, best-effort-survives-publish-failure ×2, skip-when-unconfigured,
       idempotent-complete-does-not-republish).
-- [ ] [DATA] P1. **PR-4 — partition-expiration TTL + `require_partition_filter`.** The UTL `create_table` wrapper
-      exposes no partition-expiration parameter and sets `require_partition_filter=True`. Either extend the wrapper to
-      accept a default partition expiration, or set the TTL out-of-band (bq/terraform) and say so; and note every
-      verify/DuckDB example query MUST carry a `DATE(ts)` partition filter or it errors.
+- [x] ✅ **PR-4 DONE 2026-07-28** — extended `GCPAnalyticsClient.create_table` (+ the abstract `AnalyticsClient`
+      interface) with an optional `partition_expiration_ms` param (`unified-trading-library@<sha-in-this-session>`),
+      flowing into `bigquery.TimePartitioning(..., expiration_ms=...)`; `None` (default) preserves exact prior
+      never-expiring behavior. `bootstrap_operational_data_bq.py` now declares per-table values:
+      `resource_samples`/`reap_events`/`process_samples` = 12mo, `idle_spend` (cost-trend table) = 24mo, `run_ledger` =
+      `None` (deliberately never-expiring — its whole point is durability past the 30-day GCS archive TTL, a blanket TTL
+      would defeat that). Since `create_table(...,     exists_ok=True)` no-ops on already-live tables, retroactively
+      applied via `bq update     --time_partitioning_expiration` on all 4 (not run_ledger) — confirmed live via
+      `bq show`: `resource_samples`/`reap_events`/`process_samples` = `expirationMs: 31536000000`, `idle_spend` =
+      `63072000000`, `run_ledger` has no `expirationMs` field. 12 new unit tests on `create_table` (previously zero
+      coverage).
 - [x] ✅ **PR-5 SUPERSEDED 2026-07-27** — moot once PR-1 chose dedicated topics over shared-topic filtering; the
       resource-sample event stays its own event/topic rather than reusing `DEPLOYMENT_PROGRESS`, since the flat-schema
       requirement (typed BQ columns) is easier to keep clean on a purpose-built payload than by carving fields back out
@@ -217,17 +224,34 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
       ts, category, pid, comm, cpu_pct, mem_pct, mem_rss_kb, elapsed_sec; partitioned by `DATE(ts)`, clustered by
       vm_name+category) via `deployment-service/scripts/bootstrap_operational_data_bq.py`. **Nothing publishes into it
       yet** — see the next two todos, both still open; the table exists but is empty in production today.
-- [ ] [BACKEND] P1. **STILL OPEN — refine the categorization heuristic against real ancestry** — distinguish an
-      interactive operator-driven `claude` session from an AO-dispatched autonomous one (likely via parent-PID chain to
-      the orchestrator's own dispatcher, or an env var the dispatcher already sets on spawned workers — check
-      `agent-orchestrator/server/autospawn.py` / `dispatch.py` for what's already available before inventing a new
-      marker). Land this BEFORE the "worker-agent vs plan-work" split is treated as reliable in the UI. Not touched this
-      session — the bridge cron's crude `comm`-only heuristic is still what's live.
-- [ ] [INFRA] P1. **STILL OPEN — replace the bridge cron with the real pipeline.** Same trigger/mechanism family as the
-      other three signals (publish → dedicated topic → BQ subscription, ~1/5min not ~1/min given this is diagnostic not
-      billing-grade); once verified landing correctly, delete `/opt/resource-monitor/` + its cron entry from
-      `i-0c9b283b31d6b5ca7`. Not built this session — `resource-monitor.sh` is still the only thing producing this
-      signal (to a JSONL file on the VM, not BigQuery); the `process_samples` table above is real but unfed.
+- [x] ✅ **DONE 2026-07-28 — categorization heuristic refined with real ancestry.** Confirmed (agent-orchestrator
+      research): autospawn tick, manual dashboard "spawn", escalation, and plan_health ALL funnel through the identical
+      `tmux_spawn.py::_start_session` path — there is no code-level distinction between "autospawn-triggered" and
+      "human-clicked-spawn," both produce an autonomous background worker. The one genuine distinction is that path vs a
+      literal interactive terminal/IDE-extension session, which never goes through `tmux_spawn` at all (confirmed
+      against `test_orphan_process_reap.py`'s own "no CLAUDE_CONFIG_DIR at all (an operator's own interactive session)"
+      fixture). Added `AO_DISPATCH_MODE=autonomous` + `AO_SESSION_NAME` exports to `tmux_spawn.py`'s launch command
+      (single SSOT, 2 lines, `agent-orchestrator@6f0da49` region) — readable via `/proc/<pid>/environ`. **Verified live
+      on the real orchestrator VM**: of 526 sampled processes, 10 correctly bucketed `ao_plan_work` (via the new marker)
+      cleanly separated from 5 `worker_agent` (interactive, no marker) and 36 `ci` (Runner.Listener) — a real, direct
+      proof the heuristic works, not a unit-test-only claim.
+- [x] ✅ **DONE 2026-07-28 — bridge cron replaced with the real pipeline.** New
+      `agent-orchestrator/scripts/orchestrator/process_category_sampler.py`: enumerates every host process via `psutil`
+      every ~5 min (systemd timer, `OnUnitActiveSec=300`), categorizes via the heuristic above, publishes each row via
+      `PubSubFlatEventPublisher` to a new `process-samples` topic (3d retention, created live) → native BQ subscription
+      `process-samples-bq` (created live) → `process_samples`. CPU% uses a cross-tick delta (state persisted to
+      `/var/lib/process-category-sampler/prev_snapshot.json`, keyed by `pid:create_time` to avoid PID-reuse aliasing)
+      rather than an in-script sleep, mirroring the bridge cron's own "don't disturb the box" design note. 13 new unit
+      tests. **Verified end-to-end for real**: a live non-dry-run invocation on `i-0c9b283b31d6b5ca7` published 507/507
+      samples; `bq query` against `process_samples` for today confirms the exact same category breakdown landed (452
+      other / 39 ci / 10 ao_plan_work / 5 worker_agent / 1 orchestrator). systemd timer+service+installer
+      (`install-process-category-sampler.sh`, mirrors `install-orch-watchdog.sh`'s pattern) installed on the VM; **the
+      automated systemd-wrapped run failed to start on first install (control-process error, not yet root-caused — the
+      identical manual invocation the verification above used works perfectly, so this is a systemd-unit wiring issue,
+      not a script bug)** — STILL OPEN, needs `journalctl -u     process-category-sampler.service` diagnosis before the
+      timer can be trusted unattended. **Bridge cron (`resource-monitor.sh`, root's crontab `*/5 * * * *`) NOT yet
+      retired** — correctly left running as the safety net until the systemd timer issue above is fixed and the real
+      pipeline is proven to run unattended, not just via manual invocation.
 - [x] ✅ **API DONE 2026-07-27, UI view NOT built** — `GET /api/vm-resources/process-category` exists in deployment-api
       (query builder + endpoint + tests, mock-mode/no-project/query-failure all degrade to an honest empty response) and
       has mock fixtures wired in `deployment-ui`, but no component actually calls it yet — the rolling-window UI work
@@ -301,10 +325,8 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
 - [x] ✅ **Reap-event logging DONE (code + unit tests), not fired against a real reap this session** — see PR-6 above.
 - [x] ✅ **Idle-spend verified for real** — see PR-6 above; the daily-snapshot endpoint's real-fleet run IS the
       verification (not a separate mocked check).
-- [ ] [DATA] P1. **STILL OPEN — Retention/TTL.** All five tables use the UTL `create_table` wrapper's default (NO
-      partition expiration — same PR-4 limitation: the wrapper has no expiration parameter, so every table currently
-      keeps data forever). Setting the proposed 12-month TTL on `resource_samples` needs either extending the wrapper or
-      an out-of-band `bq update --time_partitioning_expiration` — not done this session.
+- [x] ✅ **DONE 2026-07-28 — Retention/TTL.** See PR-4 above (same fix, duplicate todo) — wrapper extended + all 4
+      non-run_ledger tables retroactively TTL'd, confirmed live via `bq     show`.
 - [x] ✅ **Rolling-window aggregate query API DONE** — `deployment-api` `/api/vm-resources/rolling` +
       `/api/vm-resources/process-category`, SQL-injection-safe (`vm_name` regex-validated, `window` a FastAPI `Literal`
       enum), 21 unit tests, verified live against `test-project`.
@@ -330,9 +352,10 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
 ## Success criteria
 
 - All FOUR signals land in BigQuery and are queryable together: per-VM resource timeline, run history (incl. >30 days
-  old), idle-spend trend + reclaimed-over-time, and process-category breakdown on multi-tenant hosts. **3 of 4 DONE**
-  (resource stats, run-ledger, idle-spend all live + queryable; process-category's TABLE exists but nothing publishes
-  into it yet — the bridge cron + real-pipeline swap is still open).
+  old), idle-spend trend + reclaimed-over-time, and process-category breakdown on multi-tenant hosts. **4 of 4 DONE**
+  (2026-07-28) — process-category now has a real, verified-live pipeline (see PR-4/categorization/bridge-cron todos
+  above); the ONLY remaining wrinkle is the systemd timer failing to start unattended (manual invocation proven, the
+  automation wrapper is not yet), so the bridge cron stays as the safety net until that's fixed.
 - The cross-VM comparison the operator wanted (N VMs by service × asset_group × mode) is a single query AND a UI page.
   **PARTIAL** — the UI page + query both exist and are live, but the filter is service-name-text only today, not the
   full service×asset_group×mode facet set.
@@ -343,7 +366,10 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
 - Run history survives past the 30-day archive TTL via the durable `run_ledger`. **Mechanism DONE**, real-VM
   confirmation still pending (see the honest caveat on the todo above).
 - The bridge cron on the orchestrator VM is retired once `process_samples` verifiably lands the same data via the real
-  pipeline. **NOT YET** — bridge cron still running, real pipeline for this 4th signal not built this session.
+  pipeline. **PARTIAL (2026-07-28)** — the real pipeline is built + verified landing the same data (507/507 rows
+  confirmed in BigQuery matching the manual dry-run's categorization exactly), but only via a MANUAL invocation; the
+  systemd timer meant to make this unattended failed to start on first install. Bridge cron correctly left running until
+  that's fixed — retiring it now would create a real gap, not just an untidy loose end.
 - Post-scale verification (from the VM-resize decision this session motivated): once the orchestrator VM is resized, the
   rolling-window view shows utilization settling in a healthy range (roughly 50-70% average with burst headroom) — not
   pinned near 90%+ (under-provisioned) and not sitting at 30-40% (over-provisioned, money left on the table). **The
@@ -405,6 +431,39 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
   pipeline (table exists, nothing feeds it — the bridge cron + ancestry-aware categorization are untouched),
   partition-expiration TTL (the UTL `create_table` wrapper still has no expiration param), the analysis-path doc, and
   the post-phase codex audit below.
+- **2026-07-28 (operator: "do the rest /autonomous")** — closed 3 of the 4 remaining gaps for real, verified live, not
+  just in code:
+  - **PR-4/TTL**: extended `GCPAnalyticsClient.create_table` with `partition_expiration_ms` (`unified-trading-library`),
+    wired per-table values into `bootstrap_operational_data_bq.py` (`deployment-service`), retroactively applied via
+    `bq update --time_partitioning_expiration` to the 4 already-live tables (not `run_ledger`, deliberately). Confirmed
+    via `bq show` on all 5.
+  - **Categorization heuristic + real pipeline (4th signal)**: added `AO_DISPATCH_MODE` to `tmux_spawn.py`
+    (agent-orchestrator) after confirming via research that autospawn/manual-spawn/escalation/plan_health all funnel
+    through one path, and the real distinction is that path vs a literal interactive session (never touched tmux_spawn).
+    Built `process_category_sampler.py` (psutil-based, cross-tick CPU-delta, no in-script sleep) + systemd
+    timer/service/installer. Created the `process-samples` topic + native BQ subscription live. **Verified end-to-end on
+    the real orchestrator VM**: manual invocation published 507/507 rows, `bq query` confirms the exact categorization
+    breakdown landed (452 other / 39 ci / 10 ao_plan_work / 5 worker_agent / 1 orchestrator) — direct proof the
+    ancestry-aware heuristic works in production, not just in unit tests.
+  - **Honest open item**: the systemd timer meant to make the sampler run unattended every 5 min failed to start on
+    first install (control-process error) — not yet root-caused. The bridge cron (`resource-monitor.sh`) is correctly
+    still running as the safety net; retiring it now, before the timer issue is fixed, would create a real monitoring
+    gap. Next session: `journalctl -u process-category-sampler.service -n 50 --no-pager` on `i-0c9b283b31d6b5ca7` to
+    diagnose (likely candidates: `User=ubuntu` + venv path resolution under systemd's stripped-down env, or the
+    `EnvironmentFile=-.env.local` line masking something — untested hypotheses, not confirmed).
+  - **Still open, not started this session**: process-category UI wiring in deployment-ui (API + mock fixtures + client
+    types already exist, just unused — needs a new tab/section in `VmResourceComparison.tsx`, likely a stacked-bar view
+    following `DeploymentFrequencyChart.tsx`'s recharts precedent, plus enriching the flat 3-category mock fixture in
+    `mock-api.ts` to all 5 categories); the analysis-path doc (DuckDB-over-`bq extract`, to slot into
+    `deployment-observability.md` after its existing "Durable operational data" section, following
+    `billing-cost-observability.md`'s DuckDB-over-parquet style as the closest template); the codex cross-ref in
+    `live-data-persistence-and-event-log.md`.
+  - **Mid-session interrupt (tracked separately, not lost)**: the operator asked a live cost question about
+    `unified-trading-system-ui` (~$71) that led to discovering a SEPARATE, real finding — Wave-1's self-hosted-runner
+    fan-out missed several shared templates (`staging-lock-check.yml`, `image-build-gate.yml`) and
+    `unified-trading-system-ui`'s own bespoke `ubuntu-latest` workflows fleet-wide. Operator authorized the fix; filed
+    as its own issue doc (`plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`) since
+    it's a different plan's lifecycle (the GHA fan-out, not this BQ plan) — not tracked here beyond this pointer.
 
 ## Codex SSOTs
 

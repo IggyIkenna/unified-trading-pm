@@ -385,7 +385,7 @@ drift_direction: none
       `PROTOCOL_PAUSE_WINDOWS` — superseded by the enumerator's priority ordering, may no longer be decision-relevant.
   - [`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`](/plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`](/plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md)
+  - [`plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`](/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md)
     (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos" entry only accounted for
     the relabel-forward verification tracked under
     [`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)

@@ -42,7 +42,8 @@ shard_4pillar_fail.
 
 Candidate list(s) (deterministic, machine-written):
 
-- `/home/ubuntu/unified-trading-system-repos/.tabs/11/unified-trading-pm/plans/audit/results/manifest_hygiene_defi_2026_06_27.csv`
+- `plans/audit/results/manifest_hygiene_defi_2026_06_27.csv` (path corrected 2026-07-28 — the `.tabs/<N>/` slot-path
+  model cited originally is RETIRED; confirmed present at this repo-root-relative path)
 
 ## Why it matters
 
@@ -81,10 +82,37 @@ diagnosis "in `market-tick-data-service`" for all 5 finding-classes; two of them
 same-day/since-shipped fixes above.) Checkbox intentionally left unflipped below — this is a scope-narrowing annotation,
 not a completion claim; `oracle_expects_but_empty` and `noncanonical_path_on_disk` are still open and undiagnosed.
 
+## Final triage verdict (2026-07-28, slot-5) — the 2 classes left open by the 2026-07-12 note
+
+Per `plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` batch2-item — read the full candidate CSV (8
+rows: `oracle_expects_but_empty`×4, `schema_version_not_v9`×1 — out of scope, already fixed elsewhere per the 2026-07-12
+note above — and `shard_4pillar_fail`×1 — also out of scope, false-positive already fixed):
+
+- **`oracle_expects_but_empty`** — sample candidate:
+  `venue=UNISWAP_V4 data_type=dex_pool_swaps date=2026-06-23/2026-06-24` (15,697 DIVERGENT_EMPTY cells total that day).
+  **Verdict: REAL GAP, not a code bug** — the very next day's phantom reconcile
+  (`mvp_backfill_defi_onchain_v10_2026_06_27.md`, 2026-06-28T21:35Z entry) flipped 219,632 phantom `empty_confirmed`
+  rows to `attempted_failed`, including **dex_pool_swaps=20,586** with `UNISWAP_V4=69,573` as the top venue by volume —
+  i.e. this exact cell was a phantom-capture misclassification that got corrected one day after this CSV was generated.
+  The underlying `dex_pool_swaps` gap for UNISWAP_V4 remains an ACTIVE, tracked backfill target: see
+  `plans/active/issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (status: open, 2026-07-24) which
+  documents UNISWAP_V4 dex_pool_swaps as "PARTIAL, expected pre-2025 absence" with a currently-running fleet (relaunched
+  2026-07-23), and the still-`status: active` `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`. No fresh MTDS
+  code fix needed here — already covered by those two live efforts.
+- **`noncanonical_path_on_disk`** — **zero candidates** in this CSV (confirmed by reading the file in full: only
+  `oracle_expects_but_empty`/`schema_version_not_v9`/`shard_4pillar_fail` rows present). `_check_path_canonicality`
+  (`e2e-testing/scripts/audit/manifest_hygiene_daily.py`) is a deterministic index-only check with no link-tracking
+  suppression path, so an empty candidate list here means the check genuinely found 0 violations for defi on 2026-06-27.
+  Confirmed clean, nothing to triage.
+
 ## Todos
 
 - [x] [CODE] P1. Manifest hygiene RED — 1 AG(s) with findings (2026_06_27) — diagnose + fix the root cause
       (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in
       `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate
       CSV(s) above first (source `manifest_hygiene_daily.py`). — already covered by
-      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
+      plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution). **Final triage
+      of the 2 still-open classes done 2026-07-28 (slot-5) — see "Final triage verdict" section above: both are real,
+      already-tracked residuals of the live `mvp_backfill_defi_onchain_v10_2026_06_27.md` /
+      `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` effort (`oracle_expects_but_empty`) or confirmed clean
+      (`noncanonical_path_on_disk`, 0 candidates) — no new code fix required.

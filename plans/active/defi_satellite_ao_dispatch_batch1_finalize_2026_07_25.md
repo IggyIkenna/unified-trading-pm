@@ -54,9 +54,9 @@ drift_direction: advance-code
 
 - [ ] [REVIEW] P1. **Reconcile all 29 distinct source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the
       original list below was missing the 29th doc,
-      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` — the source of todo 54, appended
-      after operator-decision entry #3 resolved; batch1's own frontmatter summary already independently states the
-      correct "29 of those docs" figure, confirming 28 was the stale count). For each of
+      `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` — the source of
+      todo 54, appended after operator-decision entry #3 resolved; batch1's own frontmatter summary already
+      independently states the correct "29 of those docs" figure, confirming 28 was the stale count). For each of
       `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 54 now-done todos: flip the corresponding checkbox/section in
       its named source doc (each todo's text ends with "Source: `<doc>.md`" — 3 of the 53 original todos cite 2-3 source
       docs at once since they combine same-file candidates from multiple docs; flip the checkbox/section in EVERY cited
@@ -65,7 +65,7 @@ drift_direction: advance-code
       `write_defi_rows()` bare-symbol-filename-leaf defect) once todo 36 ships — that consolidated-plan checkbox tracks
       the identical defect via the same source issue doc and is NOT itself one of the 29 source docs below, so it would
       otherwise stay stale after this reconciliation. The 29 source docs:
-      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` (1 todo — todo 54),
+      `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` (1 todo — todo 54),
       `defi_dedicated_bucket_shared_migration_2026_07_13.md` (5 todos), `data_completion_defi_2026_07_15.md` (3 todos, 1
       shared with the enumerate_expected_universe.py combine), `defi_strategy_pnl_axis_index_2026_07_24.md` (shared,
       lst_rates_handler.py combine), `lst_rate_honest_coverage_2026_07_21.md` (shared, lst_rates_handler.py combine),
@@ -113,12 +113,12 @@ drift_direction: advance-code
 - [ ] [DIAG] P1. **Re-verify the Solana lending_indices path-shape operator ruling has been answered.** Check entry 3
       (Kamino/Solend `instrument_type` shape: `solana_lending` vs `solana_amm_pool`) in
       `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`. If the operator has ruled: extract
-      `issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s deferred candidate into a new
-      tracked `defi_satellite_ao_dispatch_batch2` item scoped per the ruling (probe the operator-confirmed
-      `instrument_type` shape, or both if the ruling says both are live). If still unanswered, leave it queued and do
-      NOT spin a fresh todo — re-check at the next batch cycle. **Done when**: a definitive answered-vs-still-queued
-      verdict is recorded here with the entry-3 status cited, and either a scoped batch2 candidate is created (if
-      answered) or the item is confirmed still queued (if not).
+      `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s deferred
+      candidate into a new tracked `defi_satellite_ao_dispatch_batch2` item scoped per the ruling (probe the
+      operator-confirmed `instrument_type` shape, or both if the ruling says both are live). If still unanswered, leave
+      it queued and do NOT spin a fresh todo — re-check at the next batch cycle. **Done when**: a definitive
+      answered-vs-still-queued verdict is recorded here with the entry-3 status cited, and either a scoped batch2
+      candidate is created (if answered) or the item is confirmed still queued (if not).
 - [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
       above should have already resolved the too-large-doc and operator-ruling exclusions — verify none remain

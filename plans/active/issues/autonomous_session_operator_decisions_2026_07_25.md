@@ -82,8 +82,8 @@ appended to the issue doc.
 
 ## 3. Kamino/Solend `lending_indices` `instrument_type` shape — writer code vs live GCS probe disagree (2026-07-25, defi)
 
-`issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s follow-up todo ("does the
-dex_pools-class fake-history-snapshot bug also affect Kamino/Solend Solana lending_indices in the `-prd-` bucket")
+`/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s follow-up todo ("does
+the dex_pools-class fake-history-snapshot bug also affect Kamino/Solend Solana lending_indices in the `-prd-` bucket")
 asserts the CORRECT real path shape to probe is `instrument_type=solana_lending`, citing
 `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py::resolve_lending_instrument_type()`
 as ground truth (Kamino/Solend resolve to `InstrumentType.SOLANA_LENDING`). But
@@ -106,8 +106,8 @@ Other: operator can type a custom answer
 **Operator answer (2026-07-25)**: A — widen scope to probe both paths before concluding.
 
 **Status**: resolved — widened as item 6 in
-`issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` and dispatched as a Todos-section item
-in `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (moved out of that plan's Deferred section).
+`/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` and dispatched as a
+Todos-section item in `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (moved out of that plan's Deferred section).
 
 ---
 
