@@ -1,0 +1,162 @@
+---
+doc_type: issue
+title:
+  "`BLOCKED-PREREQUISITES` is not a recognized `_NON_DISPATCHABLE_RE` token — ~15 plan/issue files use it as if it were"
+summary: >-
+  Found while working `sports_odds_api_scattered_multiyear_gaps-002`: that task (derived from the P1 checkbox in
+  `issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`) had been re-dispatched to at least 6 separate slots
+  over 2 days (slot-4, slot-6, slot-10, slot-6 again, slot-14, slot-7), each re-verifying the same still-dead odds-api
+  credential and skipping. The checkbox's own line already carried a `BLOCKED-PREREQUISITES` marker on its own physical
+  line (not a continuation-text placement bug — that class was already fixed in
+  `blocked_marker_continuation_line_not_scanned_2026_07_26.md`, agent-orchestrator@e856b56). The actual cause is
+  different: `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` only recognizes
+  `BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` — `PREREQUISITES` is not
+  in that alternation, so a `BLOCKED-PREREQUISITES` todo re-derives as dispatchable on every regen tick regardless of
+  line placement. A corpus grep (`grep -rl "BLOCKED-PREREQ" plans/active/`) found 15 files using this token (one is a
+  generated `.json`, so 14 markdown docs), several with multiple occurrences.
+status: open
+nature: notes
+asset_group: [meta]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [dispatch, backlog-regen, blocked-marker, worker-lifecycle, fleet-wide]
+related:
+  [
+    /plans/active/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
+    /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
+    /plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md,
+    /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+  ]
+created: 2026-07-28
+last_updated: 2026-07-28
+parent_epic: agent_operating_framework_master
+priority: P2
+source: [sports_odds_api_scattered_multiyear_gaps-002]
+assigned_vm: planning
+resolved_by:
+locked_by:
+execution_scope: orchestrator-agent
+estimate_class: research
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 1.2
+assigned_role: backend_engineer
+drift_direction: advance-code
+locked_since:
+depends_on: []
+supersedes:
+superseded_by:
+---
+
+# `BLOCKED-PREREQUISITES` — not a recognized non-dispatchable token
+
+## What I found
+
+`sports_odds_api_scattered_multiyear_gaps-002` (task id) was dispatched to me (slot 10) — same task the issue doc's own
+Progress Log shows was ALREADY worked and skipped by slot-7 earlier the same day (2026-07-28), and by slots 4/6/10/6/14
+across the prior 2 days for closely related checkboxes in this same investigation chain. Every dispatch re-verified the
+odds-api key live (still `error_code=DEACTIVATED_KEY`) and correctly declined to act — but the marker meant to stop
+re-dispatch, `BLOCKED-PREREQUISITES`, was already sitting on the checkbox's own physical line
+(`issues/ sports_odds_api_scattered_multiyear_gaps_2026_07_27.md:154`), so this is NOT the continuation-line bug
+(`blocked_marker_continuation_line_not_scanned_2026_07_26.md`, already fixed at agent-orchestrator@e856b56).
+
+Read `_NON_DISPATCHABLE_RE` directly (`server/regen_backlog_from_plan.py:975-980`):
+
+```python
+_NON_DISPATCHABLE_RE = re.compile(
+    r"BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)\b"
+    ...
+)
+```
+
+`PREREQUISITES` is not one of the alternatives. A `BLOCKED-PREREQUISITES` checkbox — no matter where the text sits —
+never matches this regex, so `_parse_open_todos` keeps re-deriving it as an open, dispatchable todo on every regen tick.
+
+**Blast radius**: `grep -rl "BLOCKED-PREREQ" plans/active/` finds 15 files (14 markdown + 1 generated `.json` mirror):
+
+- `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (8 unchecked checkboxes carry the string)
+- `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (4)
+- `plans/active/infra_ops_residual_migration_verification_2026_07_24.md` (9)
+- `plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md` (2)
+- `plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md` (3)
+- `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` (2 — **fixed in this same session**, see
+  below)
+- `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` (1)
+- `plans/active/issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` (1)
+- Several more with 0 counts in the narrower `- [ ].*BLOCKED-PREREQ` grep (string appears in prose/Progress Log/already-
+  checked items, not a live open checkbox) — `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`,
+  `sports_satellite_ao_dispatch_batch4_2026_07_25.md`, `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`,
+  `issues/autonomous_session_operator_decisions_2026_07_25.md`,
+  `issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`,
+  `issues/instruments_remaining_work_audit_2026_07_10.md`, `issues/tradfi_docs_reconciliation_findings_2026_07_21.md` —
+  these need re-checking after the counting fix below (my quick count only matched todos where `BLOCKED-PREREQ` sits on
+  the SAME line as `- [ ]`; several likely have it on the line immediately after, same pattern as the fixed doc).
+
+**Important nuance — this is NOT simply "add PREREQUISITES to the regex."** Unlike `BLOCKED-CREDENTIALS`/`-OPERATOR`/
+`-UPSTREAM-OUTAGE` (genuine external-only blocks that only an operator/vendor can lift), many `BLOCKED-PREREQUISITES`
+occurrences describe a same-plan or cross-plan dependency on ANOTHER AO-dispatchable todo (e.g.
+`sports_closeout_track_s2_foldin_2026_07_25.md:263`, "P2c — blocked on the P2a and P2b todos above landing first"). Per
+`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and the workspace CLAUDE.md's plan-authoring
+rules, **that kind of same-corpus prerequisite has its own dedicated mechanism** (`sequential: true` /
+`depends_on`+`gate_on_depends` at the plan level, or `prereqs.completed_tasks`/`prereqs.prerequisites` at the task
+level) — RULES.md § 5 is explicit that the dispatcher is supposed to handle these automatically once wired, and that a
+worker should never need a permanently-excluding text marker for an ordinary "wait for task N" dependency. Blindly
+adding `PREREQUISITES` to `_NON_DISPATCHABLE_RE` would make those todos NEVER auto-clear even after their real
+prerequisite lands (the marker text would need a human/worker to manually strip it), which is a worse failure mode than
+today's re-dispatch churn for the genuinely-external-blocked subset (like the odds-api case).
+
+**What I already fixed this session** (in `issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, my directly
+assigned task's own doc): re-tagged both open checkboxes there with the CORRECT, already-recognized
+`BLOCKED-CREDENTIALS` token (the real underlying blocker in that specific doc genuinely is the operator-gated odds-api
+key, not a same-corpus todo dependency) — same pattern slot-14 already used one file over in the parent closeout plan.
+That one instance is resolved; the other ~13 need per-case triage, not a mechanical find-replace, per the nuance above.
+
+## Why it matters
+
+Same churn class as the already-fixed continuation-line bug: every regen tick re-offers these todos to a fresh worker,
+who has to re-read the whole finding, re-verify a fact that hasn't changed (a still-dead credential, in the observed
+case), and skip — burning slot-cycles that could go to real work. The observed case alone consumed at least 6 separate
+dispatches across 2 days for what is fundamentally one unchanging fact (the vendor key is deactivated). At 15 files,
+several with multiple occurrences, this is a real fleet-wide inefficiency, not a one-off.
+
+## Recommended decision
+
+A `backend_engineer`-craft worker (agent-orchestrator repo, Python) should NOT simply extend `_NON_DISPATCHABLE_RE`'s
+alternation with `PREREQUISITES` (see the nuance above — this would create false-permanent exclusions for legitimate
+same-corpus dependencies). Instead:
+
+1. Per occurrence, determine whether the underlying block is (a) a genuine external/operator-only gate mis-labeled with
+   the wrong token — fix: retag with the correct existing token (`BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/
+   `-UPSTREAM-OUTAGE`/etc.), same fix already applied to `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` in
+   this session; or (b) a genuine same-corpus todo dependency — fix: convert to the plan's proper
+   `sequential`/`depends_on`+ `gate_on_depends` frontmatter (or task-level `prereqs`) per the plan-authoring HARD RULE,
+   and drop the free-text `BLOCKED-PREREQUISITES` marker since the structured mechanism now gates it correctly.
+2. Do NOT mass-edit all ~14 remaining files in one sweep — triage each (many may already be done/superseded, same caveat
+   the continuation-line issue doc's precedent found: 9/10 spot-checked were genuinely-open-and-correct, only 1 was a
+   real defect). File any confirmed-still-open fixes as their own per-plan todos rather than editing 14 plans in one
+   uncoordinated pass.
+3. Re-run the corpus grep after each fix batch to confirm shrinkage (mirrors the verification discipline in the sibling
+   continuation-line issue doc).
+
+- [ ] [DATA] P2. Audit the remaining ~13 `BLOCKED-PREREQ` occurrences listed above (excluding
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`, already fixed). For each: confirm still-open (not
+      already done/superseded), classify as external-block-mislabeled vs. same-corpus-dependency per the nuance above,
+      and apply the matching fix (retag OR convert to `sequential`/`depends_on`). Cite a per-file disposition table in
+      this doc's Progress Log. (repo: unified-trading-pm)
+- [ ] [VERIFY] P3. After the audit above lands, re-run `grep -rl "BLOCKED-PREREQ" plans/active/` and confirm every
+      remaining hit is either (a) inside an already-`[x]` checked item, (b) prose/Progress-Log narrative (not a live
+      open checkbox), or (c) legitimately still using the string alongside a NOW-also-present recognized token — i.e.
+      zero open checkboxes rely on `BLOCKED-PREREQUISITES` alone to suppress dispatch.
+
+## Progress Log
+
+- 2026-07-28 (slot 10): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` — the 6th+ time this investigation
+  chain has been re-dispatched. Re-verified the odds-api key live (still `DEACTIVATED_KEY`, unchanged). Root-caused WHY
+  this specific doc kept churning despite an on-line `BLOCKED-PREREQUISITES` marker: the token itself isn't in
+  `_NON_DISPATCHABLE_RE`'s alternation (verified by reading `server/regen_backlog_from_plan.py:975-980` directly — not
+  the same bug as the already-fixed continuation-line issue). Fixed the immediate instance (retagged both open
+  checkboxes in `issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md` with the correct, recognized
+  `BLOCKED-CREDENTIALS` token). Confirmed the general pattern via a fleet-wide grep (15 files). Not mass-editing the
+  other ~13 — several are legitimately same-corpus todo dependencies where the structurally-correct fix is
+  `sequential`/`depends_on`, not a text marker at all; that needs real per-case judgment, filed here as its own
+  properly-scoped audit rather than done blind in this session.

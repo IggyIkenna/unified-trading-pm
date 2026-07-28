@@ -151,14 +151,15 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [DATA] P1. BLOCKED-PREREQUISITES on `sports_odds_api_key_deactivated_2026_07_26.md` landing first (key restoration
-      is [OPERATOR]-gated there). Once the key is restored, backfill all 635 missing days via
+- [ ] [DATA] P1. BLOCKED-CREDENTIALS — the-odds-api.com key is `DEACTIVATED_KEY` (re-verified live 2026-07-28: still
+      deactivated, see `sports_odds_api_key_deactivated_2026_07_26.md`, key restoration is [OPERATOR]-gated there). Once
+      the key is restored, backfill all 635 missing days via
       `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>` per
       contiguous range (idempotent/manifest-skip by default, no `--force` needed — will not re-fetch the 1,608
       already-present days). (repo: deployment-service)
-- [ ] [VERIFY] P2. Once the backfill above lands, re-run this same census (single manifest read, filter
-      `source == "odds_api"`, `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days,
-      then close this doc.
+- [ ] [VERIFY] P2. BLOCKED-CREDENTIALS — depends on the P1 backfill above, which is itself credential-gated (same
+      blocker). Once the backfill lands, re-run this same census (single manifest read, filter `source == "odds_api"`,
+      `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days, then close this doc.
 
 ## Progress Log
 
@@ -170,6 +171,21 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   deferred) rather than leaving it open for a future slot to re-discover the same retention limits. Re-verified the
   odds-api key live (still `error_code=DEACTIVATED_KEY`) — unchanged from prior checks; the backfill todo below stays
   credential-gated independent of this finding.
+- 2026-07-28 (slot 10): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` (the P1 backfill todo below) — the
+  6th+ redispatch of this investigation chain across 2 days. Re-verified the odds-api key live once more (pulled fresh
+  via `gcloud secrets versions access latest --secret=odds-api-key --project=central-element-323112`, curled
+  `the-odds-api.com/v4/sports` directly): still `error_code=DEACTIVATED_KEY`, unchanged. Root-caused WHY this doc kept
+  re-dispatching despite the P1 checkbox already carrying an on-line `BLOCKED-PREREQUISITES` marker: that token is not
+  in `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` alternation
+  (`CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION` — no `PREREQUISITES`), so it
+  re-derives as dispatchable regardless of line placement — a DIFFERENT bug from the already-fixed continuation-line
+  issue (`blocked_marker_continuation_line_not_scanned_2026_07_26.md`). Retagged both open checkboxes above (P1
+  backfill + P2 verify) with the correct, recognized `BLOCKED-CREDENTIALS` token — the real blocker genuinely is the
+  operator-gated odds-api key. Filed the general corpus-wide finding (15 files use the unrecognized token, not just this
+  doc) as `issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` rather than mass-editing
+  every file — several other occurrences are legitimately same-corpus todo dependencies needing
+  `sequential`/`depends_on`, not a text-marker fix, so that needs real per-case triage. Not running the backfill (still
+  BLOCKED-CREDENTIALS); skipping this task.
 
 ## Codex SSOTs
 
