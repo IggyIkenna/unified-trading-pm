@@ -22,7 +22,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, quickmerge, workspace-manifest, staging, versions, dependency-gate]
 related:
-  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
   - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md
 created: 2026-07-23
@@ -198,9 +198,10 @@ true in one mode:
 3. **Retire `staging_versions` as a gate input** and keep it as a pure historical record. Cleanest long-term, but it
    also feeds `semver-agent.yml:262` and `assert_version_coherence.py:193` (warn-only), so it needs those checked first.
 
-Option 1 pairs naturally with the staging-machinery shutdown in `github_actions_ci_cost_reduction_2026_07_15.md` §
-"Phase 6" — if `reconcile-staging-versions.yml`'s hourly cron is stopped, this key is provably frozen and the gate
-should stop trusting it.
+Option 1 pairs naturally with the staging-machinery shutdown in
+`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` § "Phase 6" — if
+`reconcile-staging-versions.yml`'s hourly cron is stopped, this key is provably frozen and the gate should stop trusting
+it.
 
 ## Resolution checklist
 

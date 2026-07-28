@@ -15,7 +15,7 @@ summary: >-
   number (`t1_batch_scheduler.tf:124-128` / `:131-135`, "features-onchain T+1 recon") does not exist at those lines, or
   anywhere, in the current file — the citation is stale and the claimed 02:30 UTC consumer deadline cannot currently be
   verified against a real Cloud Scheduler job.
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -46,7 +46,13 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "deployment-service@2db1797 (P1: stale t1_batch_scheduler.tf cross-ref resolved, consumer confirmed deleted
+  2026-07-13), @eeb831c (P2: solana-defi/bridge-events RESOLUTION block), @b7ab790 (P2: lst-seasonal-rewards RESOLUTION
+  block) — all 3 todos DONE, terraform fmt clean, quality-gates.sh green"
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

@@ -32,7 +32,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/non-canonical-path-inventory.md,
@@ -181,17 +181,17 @@ consume these paths must be updated in lockstep with the writer.
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-                      |---|---|---|
-                      | cefi | 53,419 | 0 |
-                      | defi | 177,346 | 0 |
-                      | tradfi | 50,700 | 0 |
-                      | sports | 148,691 | 0 |
-                      | prediction | 22,637 | 12,582 |
-                      | **TOTAL** | **452,793** | **12,582** |
+                              |---|---|---|
+                              | cefi | 53,419 | 0 |
+                              | defi | 177,346 | 0 |
+                              | tradfi | 50,700 | 0 |
+                              | sports | 148,691 | 0 |
+                              | prediction | 22,637 | 12,582 |
+                              | **TOTAL** | **452,793** | **12,582** |
 
-                      **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-                      this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-                      in-session action. Sizing now available to scope todo 7c.
+                              **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+                              this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+                              in-session action. Sizing now available to scope todo 7c.
 
 - [ ] 7c. [OPERATOR] P2. **EXECUTE the historical migration** (copy the 465,375 flat objects UP into full hive, verify,
       then human-only purge of the flat tree) — VM-only, never in-session, per the data-pipeline-correctness HARD RULE

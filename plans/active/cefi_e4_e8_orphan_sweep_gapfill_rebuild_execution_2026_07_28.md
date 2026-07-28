@@ -19,7 +19,7 @@ related:
   [
     /plans/active/data_completion_cefi_2026_07_15.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
-    /plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
+    /plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
@@ -125,15 +125,20 @@ step.
       `MACHINE_TYPE=e2-standard-16` or shard the date range across multiple VMs). Done when: a fresh legacy-only-cells
       count reads 0 (was 5,233).~~ (original scope, kept for history — source bucket is gone, cannot execute verbatim)
 
-## Phase D — E5: manifest `_index` rebuild — BLOCKED on the false-phantom fix
+## Phase D — E5: manifest `_index` rebuild — UNBLOCKED 2026-07-28 (slot-2), ready to dispatch
 
-- [ ] [DATA] P0. **Depends on** `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`
-      landing (in-flight, per main 2026-07-28) — a clean `rebuild_cefi_manifest.py --dry-run` over the full corpus must
-      show `phantom_to_failed` collapsed to a small DERIBIT-chain-style residual (was 490,639 / ~8.6% of the prior
-      index, a confirmed false-phantom bug, NOT real orphans) before this phase runs `--apply`. Once unblocked: run
-      `rebuild_cefi_manifest.py --apply` full range on a VM (now CF-11-canonical + false-phantom-safe, `mtds#fa2b02c7` +
-      the fix). **Done when**: the rebuild completes and a fresh `cf_manifest_audit` shows `phantom_to_failed` at the
-      expected small residual, not the 8.6% figure.
+- [ ] [DATA] P0. **Depends on** `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`
+      landing — **✅ RESOLVED 2026-07-28 (slot-2), dependency SATISFIED.** 4 full-corpus dry-run iterations, 4
+      confirmed + shipped fixes (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b):
+      `phantom_to_failed` 490,639 (8.6%) → **17,255 (0.3%)**, DERIBIT now the single largest venue (5,592, 32.4% — the
+      originally-anticipated true-phantom class); every other significant contributor individually diagnosed
+      (OKX-FUTURES = confirmed-ambiguous unfixable legacy ids, BYBIT residual = delisted-token true-phantoms, rest =
+      long tail). Full evidence in the issue doc's final todo. **This phase's `--apply` execution is now dispatchable**
+      — run `rebuild_cefi_manifest.py --apply` full range on a VM (now CF-11-canonical + false-phantom-safe,
+      `mtds#fa2b02c7` + all 4 fixes above). **Done when**: the rebuild completes and a fresh `cf_manifest_audit` shows
+      `phantom_to_failed` at the expected small residual, not the 8.6% figure. (NOT executed by slot-2 — this is a
+      separate, VM-scale, real-production-write scoped todo outside the normalizer task that resolved the dependency
+      above; dispatch this todo on its own.)
 
 ## Phase E — E7: verify
 

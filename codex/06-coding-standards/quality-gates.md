@@ -387,7 +387,7 @@ gate — it can NEVER false-green or block a PR; worst case is "no speedup". Thi
 re-runs (v2 fires on push AND PR to main+staging). The local `.qg_content_sentinel` / `.qg_last_passed_sha` quickmerge
 fast-path is UNAFFECTED (CI never reads them; sliced runs are partial → never write them). SSOT:
 `plans/archive/2026_06/cicd_v2_latency_reduction_2026_06_10.md` +
-`plans/active/github_actions_ci_cost_reduction_2026_07_15.md` A2.
+`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` A2.
 
 ---
 

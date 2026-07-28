@@ -6,7 +6,7 @@ summary:
   forever reporting status=working with task=null — boot_slot's task-less-one-off branch never clears it, and
   _done_one_off's one_shot_complete rejects because no AgentRow exists to archive; only a normal task dispatch clears
   spawn_base_role, which cannot happen while the slot is misrouted into the one-off branch.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -22,10 +22,15 @@ priority: P2
 estimate_class: refactor
 source: slot-2 boot investigation, discovered live 2026-07-25
 resolved_by:
+  "agent-orchestrator@1e74784 (P1/P2 self-heal + regression tests), @8ff20db (P3 clear-spawn-role escape hatch),
+  @41840c1 (addendum: session-reuse self-heal) — all todos + the addendum todo shipped with regression tests"
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

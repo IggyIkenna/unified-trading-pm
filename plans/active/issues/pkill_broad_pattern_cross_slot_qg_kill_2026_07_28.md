@@ -106,7 +106,7 @@ pkill -f "quality-gates.sh"
    `nohup bash scripts/quality-gates.sh > /tmp/qg_mtds_run.log 2>&1 & ... disown` **inside** a `Bash` tool call that
    ALSO set `run_in_background: true` — i.e. I manually detached a process the harness was already going to track for
    me. This directly contradicts the harness-tracking guidance in
-   `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own todo 3 ("background it
+   `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own todo 3 ("background it
    via a properly harness-tracked bg task ... NO manual `&`/`disown`/`setsid`") — a rule I had read minutes earlier in
    the SAME session, for the SAME repo, for a PREDECESSOR of the SAME task chain.
 2. **The cleanup for my own mistake was the exact banned pattern this issue doc exists to ban.** Having manually

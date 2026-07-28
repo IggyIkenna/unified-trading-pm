@@ -5,19 +5,20 @@ title: >-
   values on 480 chain-bundle rows, and 31,207 canonical-shaped instrument_ids are orphaned from the IS catalogue
 summary: >-
   Filed while flipping the enumeration-audit terminal checkpoint todo in
-  `cefi_migration_cutover_and_track8_completion_2026_07_25.md`, post Script-1 corpus-wide `--apply` completion
-  (2026-07-27). The census's dominant finding (instrument_id 99.49% canonical, residual = the already-ruled bare-wire
-  class) cleanly satisfies that todo's done-when. Two smaller findings surfaced by the SAME run do NOT have an existing
-  ruling and are tracked here rather than silently waved through: (1) 480 manifest rows carry `instrument_type` values
-  of `futures_chain`/`options_chain` (277+30 rows) plus lowercase `future`/`spot`/`spot_pair`/blank (60+100+12+1) — the
-  lowercase-casing subset is already covered by the D1/D2 2026-07-20 ruling (compare case-insensitively, do not flag),
-  but `futures_chain`/`options_chain` are NOT case variants of any canonical value — they look like `data_type` values
-  leaking into the `instrument_type` column, plausibly a deliberate TradFi-style chain-bundle-shard convention (mtds git
-  history shows `_is_bundled_chain_shard` handling exactly this shape for CME/ICE), not yet confirmed as intentional
-  here. (2) 31,207 canonical-SHAPED instrument_ids captured in the manifest are NOT members of the instruments-service
-  catalogue (429,129-row `prod/catalog.parquet`) — dominated by `DERIBIT:OPTION:*` (29,264 of 31,207) — meaning either
-  the catalogue is missing legitimate historical DERIBIT options, or these are captures under an id-form the catalogue's
-  builder never produced. Both are read-only findings from a manifest-index audit (no GCS corpus walk, no writes).
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`, post Script-1 corpus-wide
+  `--apply` completion (2026-07-27). The census's dominant finding (instrument_id 99.49% canonical, residual = the
+  already-ruled bare-wire class) cleanly satisfies that todo's done-when. Two smaller findings surfaced by the SAME run
+  do NOT have an existing ruling and are tracked here rather than silently waved through: (1) 480 manifest rows carry
+  `instrument_type` values of `futures_chain`/`options_chain` (277+30 rows) plus lowercase
+  `future`/`spot`/`spot_pair`/blank (60+100+12+1) — the lowercase-casing subset is already covered by the D1/D2
+  2026-07-20 ruling (compare case-insensitively, do not flag), but `futures_chain`/`options_chain` are NOT case variants
+  of any canonical value — they look like `data_type` values leaking into the `instrument_type` column, plausibly a
+  deliberate TradFi-style chain-bundle-shard convention (mtds git history shows `_is_bundled_chain_shard` handling
+  exactly this shape for CME/ICE), not yet confirmed as intentional here. (2) 31,207 canonical-SHAPED instrument_ids
+  captured in the manifest are NOT members of the instruments-service catalogue (429,129-row `prod/catalog.parquet`) —
+  dominated by `DERIBIT:OPTION:*` (29,264 of 31,207) — meaning either the catalogue is missing legitimate historical
+  DERIBIT options, or these are captures under an id-form the catalogue's builder never produced. Both are read-only
+  findings from a manifest-index audit (no GCS corpus walk, no writes).
 status: open
 nature: issue
 asset_group: [cefi]
@@ -27,7 +28,7 @@ scope: [engineer]
 tags: [cefi, enumeration-audit, instrument-type, catalogue-orphan, chain-bundle, post-cutover]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
   ]
@@ -39,8 +40,9 @@ assigned_role: data_engineering
 source: >-
   Surfaced by re-running `market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`
   (read-only, manifest-index read against `gs://market-data-tick-cefi-prd-central-element-323112`, 8,880,557 rows) as
-  the enumeration-audit terminal checkpoint for `cefi_migration_cutover_and_track8_completion_2026_07_25.md`, right
-  after Script 1's corpus-wide `--apply` campaign finished (all shards `EXIT_STATUS=0`).
+  the enumeration-audit terminal checkpoint for
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`, right after Script 1's
+  corpus-wide `--apply` campaign finished (all shards `EXIT_STATUS=0`).
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: none
@@ -207,34 +209,34 @@ adjacent axis the same script happens to also report). **Both findings investiga
       both live, not inferred):
 
       **Class A — incomplete marker-format migration on the MANIFEST/writer side (BYBIT FUTURE, COINBASE-FUTURES
-          PERPETUAL, and to a lesser extent BITGET-FUTURES PERPETUAL).** The catalogue is fully `@LIN`/`@INV` marker-format
-          for these exact (venue, instrument_type) combos (BYBIT FUTURE 640/640, verified) — ruling out "stale catalogue"
-          entirely. The MANIFEST, however, is a genuine MIX: BYBIT FUTURE only 248/516 distinct ids (48%) are
-          marker-format, the rest are bare-wire symbols (`ADAUSDT`, `BTC`) or a raw-date dated-future convention
-          (`BYBIT:FUTURE:BTC-01DEC23`) that never went through ANY marker migration — despite BYBIT being explicitly
-          in-scope for `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, that migration evidently didn't cover this
-          raw-date symbol shape. COINBASE-FUTURES PERPETUAL: 361/584 (62%) marker-format, rest bare `-PERP`-suffixed
-          symbols (`1000BONK-PERP`) — COINBASE-FUTURES was never in scope for ANY marker migration (outside the
-          2026-07-09 script's 6-venue list), so this is an un-started migration, not an incomplete one. BITGET-FUTURES
-          PERPETUAL: 580/627 (92.5%) marker-format, smaller but same-class gap, also never in scope for a migration.
-          **This class is a genuine, real, unresolved defect** — these ids will keep orphaning until a proper
-          backup-first marker migration (matching the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`
-          pattern) covers BYBIT's raw-date shape plus COINBASE-FUTURES/BITGET-FUTURES from scratch.
+                  PERPETUAL, and to a lesser extent BITGET-FUTURES PERPETUAL).** The catalogue is fully `@LIN`/`@INV` marker-format
+                  for these exact (venue, instrument_type) combos (BYBIT FUTURE 640/640, verified) — ruling out "stale catalogue"
+                  entirely. The MANIFEST, however, is a genuine MIX: BYBIT FUTURE only 248/516 distinct ids (48%) are
+                  marker-format, the rest are bare-wire symbols (`ADAUSDT`, `BTC`) or a raw-date dated-future convention
+                  (`BYBIT:FUTURE:BTC-01DEC23`) that never went through ANY marker migration — despite BYBIT being explicitly
+                  in-scope for `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, that migration evidently didn't cover this
+                  raw-date symbol shape. COINBASE-FUTURES PERPETUAL: 361/584 (62%) marker-format, rest bare `-PERP`-suffixed
+                  symbols (`1000BONK-PERP`) — COINBASE-FUTURES was never in scope for ANY marker migration (outside the
+                  2026-07-09 script's 6-venue list), so this is an un-started migration, not an incomplete one. BITGET-FUTURES
+                  PERPETUAL: 580/627 (92.5%) marker-format, smaller but same-class gap, also never in scope for a migration.
+                  **This class is a genuine, real, unresolved defect** — these ids will keep orphaning until a proper
+                  backup-first marker migration (matching the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`
+                  pattern) covers BYBIT's raw-date shape plus COINBASE-FUTURES/BITGET-FUTURES from scratch.
 
-          **Class B — catalogue-completeness gap, format already fully converged both sides (KRAKEN-FUTURES PERPETUAL,
-          HYPERLIQUID PERPETUAL).** Catalogue: KRAKEN-FUTURES PERPETUAL 501/501 marker-format (100%). Manifest:
-          562/568 distinct ids (99%) marker-format. Both sides are essentially fully converged on FORMAT, yet the
-          manifest still has ~60 more distinct ids than the catalogue carries for this combo (HYPERLIQUID PERPETUAL:
-          345/346 manifest marker-format, catalogue not independently re-checked but the near-100% manifest convergence
-          rules out a format explanation). This is NOT a marker-format problem — it's a genuine catalogue-completeness
-          gap: real, captured, correctly-formatted instruments that were never added to the reference-data catalogue
-          builder's coverage for these 2 venues (same class as the DERIBIT OPTION 93.8% finding's alternate hypothesis
-          (a), just confirmed here rather than superseded by the id-form explanation).
+                  **Class B — catalogue-completeness gap, format already fully converged both sides (KRAKEN-FUTURES PERPETUAL,
+                  HYPERLIQUID PERPETUAL).** Catalogue: KRAKEN-FUTURES PERPETUAL 501/501 marker-format (100%). Manifest:
+                  562/568 distinct ids (99%) marker-format. Both sides are essentially fully converged on FORMAT, yet the
+                  manifest still has ~60 more distinct ids than the catalogue carries for this combo (HYPERLIQUID PERPETUAL:
+                  345/346 manifest marker-format, catalogue not independently re-checked but the near-100% manifest convergence
+                  rules out a format explanation). This is NOT a marker-format problem — it's a genuine catalogue-completeness
+                  gap: real, captured, correctly-formatted instruments that were never added to the reference-data catalogue
+                  builder's coverage for these 2 venues (same class as the DERIBIT OPTION 93.8% finding's alternate hypothesis
+                  (a), just confirmed here rather than superseded by the id-form explanation).
 
-          **Not fixed in this pass** — tracing (this todo's actual scope) is complete; the fix is separate, properly
-          scoped follow-up work (2 new todos below), not a quick inline change, matching how the original 2026-07-09/07-10
-          migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
-          Repos: instruments-service, market-tick-data-service.
+                  **Not fixed in this pass** — tracing (this todo's actual scope) is complete; the fix is separate, properly
+                  scoped follow-up work (2 new todos below), not a quick inline change, matching how the original 2026-07-09/07-10
+                  migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
+                  Repos: instruments-service, market-tick-data-service.
 
 - [ ] [DATA] P2. Write + backup-first apply a marker-format migration covering: BYBIT's raw-date dated-future symbol
       shape (`BYBIT:FUTURE:<SYM>-<DDMMMYY>` with no `@INV`/`@LIN` marker — the 2026-07-09 migration's regex evidently

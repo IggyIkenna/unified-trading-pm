@@ -10,7 +10,7 @@ summary: >-
   `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (staging-branch machinery shutdown, ACTIVE, 1
   partially-done todo). Kept only so existing cross-references (`related:`, `parent_epic`, old commit messages) still
   resolve to something — read the matching child instead of this file.
-status: active
+status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified thin SPLIT index carrying no todos of its own, all substantive content already extracted to child docs
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -42,7 +42,19 @@ source:
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — this doc's substantive content was already migrated verbatim to three child docs on 2026-07-24 (see its own
+SPLIT banner below): `plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md` (complete),
+`plans/active/github_actions_operator_gated_followups_2026_07_17.md` (active), and
+`plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (active). This doc itself carries no todos and no
+unique remaining work.
+
 # GitHub Actions CI/CD cost reduction
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled.** Verified at archival: this doc has been a thin SPLIT
+> index since 2026-07-24 with zero content of its own (every section already extracted verbatim into the three child
+> docs named below); nothing further to track here.
 
 > **🗄️ SPLIT 2026-07-24 — this doc is now a thin index, not a live record.** Per the 2026-07-23 plan line-cap
 > remediation triage (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`, row 13), every section this file

@@ -111,12 +111,12 @@ source doc is untouched (beyond one stale-checkbox citation fix, done directly, 
       rows across the same window (402-423/day, unaffected), ruling out a routing-consolidation explanation. This is
       consistent with — not a new instance of — the already-tracked OKX-FUTURES dated-futures-mislabeled-PERPETUAL
       cleanup (`plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md:458-461`, fix tracked in
-      `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3): OKX-FUTURES's canonical declared type is
-      `future`-only (`cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`'s venue table), so the
-      historical PERPETUAL rows were themselves the mislabel, and their disappearance from 2026-07-08 reads as that
-      mislabel resolving, not a capture gap opening. Confirmed all 4 NULL-`instrument_type` rows found across the 5
-      venues are honest `capture_status=expected_unattempted` placeholders (`row_count=0`), unrelated to the
-      blank-collapse bug pattern.
+      `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3): OKX-FUTURES's canonical
+      declared type is `future`-only (`cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`'s venue
+      table), so the historical PERPETUAL rows were themselves the mislabel, and their disappearance from 2026-07-08
+      reads as that mislabel resolving, not a capture gap opening. Confirmed all 4 NULL-`instrument_type` rows found
+      across the 5 venues are honest `capture_status=expected_unattempted` placeholders (`row_count=0`), unrelated to
+      the blank-collapse bug pattern.
 - [x] ✅ [DATA] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
       entries** (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` —
       `_build_instrument_type_breakdown` ~405-409, `_build_underlying_breakdown` ~508-512; mirror

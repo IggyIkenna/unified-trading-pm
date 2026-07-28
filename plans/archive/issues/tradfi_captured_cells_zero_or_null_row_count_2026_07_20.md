@@ -96,7 +96,7 @@ resolved:
    `row_count`-based query silently under-counts captured data by up to the 70% measured here. Treat any ETA or coverage
    % already computed off `row_count` as invalid until re-derived.
 2. **A `row_count=0` on a NON-captured row is correct and honest, not a bug.** Sibling issue
-   `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` records 140 `attempted_failed` /
+   `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` records 140 `attempted_failed` /
    `SCHEMA_VALIDATION_FAILED` cells at `row_count=0` — that is the honest-absence contract working as designed. The
    defect in THIS doc is specifically `row_count` 0-or-null on rows whose `capture_status` is **`captured`**, which is a
    contradiction in terms. Do not conflate the two when triaging.

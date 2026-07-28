@@ -127,7 +127,7 @@ drift_direction: advance-code
     - 1. **[DATA] P1.** Decide the CEFI `future` candle policy — standalone contract vs chain-bundle-only routing.
     - 2. **[DATA] P2.** Corpus-wide scan: which CEFI venues/instrument_types besides DERIBIT hit this.
     - 3. **[SCRIPT] P2.** Once ruled, register the contract (or fix routing) + add a regression test.
-  - [`plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](/plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
+  - [`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
     - 2. **[DATA] P0.** Make a run whose every write failed EXIT NON-ZERO (fix the "N success/0 failed" summary to count
       written, not processed).
     - 3. **[DATA] P1.** Sweep the OTHER candle data_types for the same class of contract drift before the backfill.
@@ -302,7 +302,7 @@ drift_direction: advance-code
          (checkpoint/resume).
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](/plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md)
+  - [`/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`](/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md)
     - 6. **[DATA] P1.** PROVE the fixed delta_one + volatility writers green on one real day, then migrate historical
       objects UP into the `by_date/day=` tree.
     - 7. **[DATA] P1.** Re-sync the availability manifest + data-status render for the migrated features cells.
@@ -325,7 +325,7 @@ drift_direction: advance-code
          smoke-matrix doc.
     - 8. **[SCRIPT] P3.** S3-b — sports dual entrypoint needs operator/design adjudication (fold behind family flag OR
          bless submodule).
-  - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
+  - [`/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
     - 3. **[DATA] P1.** Assess blast radius on EXISTING candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list.
   - [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
@@ -415,7 +415,7 @@ drift_direction: advance-code
     - **[HUMAN] P2.** Decide on OKX/Hyperliquid's scope-separation design, if wanted at all.
     - **[HUMAN] P3.** Decide whether to build the Aster execution adapter and/or provision Upbit/Kraken/Bitfinex/Bitget
       credentials.
-  - [`plans/active/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`](/plans/active/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md)
+  - [`/plans/archive/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`](/plans/archive/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md)
     - **[SCRIPT] P1.** Verify every venue in `rotate-exchange-keys/main.py`'s key-pattern list against live GCP Secret
       Manager.
     - **[SCRIPT] P1.** Confirm whether `rotate-exchange-keys` is actually invoked on a schedule/trigger.
@@ -701,7 +701,7 @@ drift_direction: advance-code
   Representative id = `ASTER:PERPETUAL:BTC-USDT@LIN`; **NOT hardcoded USDT** — the earlier `ASTER=USDT` note was the
   majority, not the rule. Fix the stale docs (`shard-granularity-cefi.md:106` = USDC, `DEFI_DOWNLOAD_STRATEGY.md:164`).
 - **DERIBIT always-quote** — confirmed the gating P0 (already Track-1 / the DERIBIT quote-fix item, see
-  `cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
 - **Venue purge (operator ruling, refined 2026-07-18)** — remove the CULLED/defunct venues ENTIRELY from UAC + manifest
   - GCS data + MVP catalogue + docs, **snapshot-first** (irreversible): BITSTAMP-SPOT / HUOBI-SPOT/-FUTURES /
     GEMINI-SPOT / PHEMEX-SPOT (defunct), and the Solana-perp cull

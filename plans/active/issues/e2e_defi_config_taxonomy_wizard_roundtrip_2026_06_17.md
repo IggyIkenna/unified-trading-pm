@@ -92,18 +92,26 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
       CANNOT reproduce the exact tuned e2e config. DECISION NEEDED: should these tuning params be (a) first-class wizard
       form fields, (b) named config presets, or (c) intentionally engine-internal defaults? Repos:
       unified-trading-system-ui (wizard) + strategy-service (config schema)."
-- [ ] [REGISTRY] P2. **D3 — `backtest_solana_basis.py` models a drift-perp / Orca(Raydium) SOL-DEX-spot basis, but the
-      Solana-DEX spot leg has NO cell.** `CARRY_BASIS_PERP` matrix/wizard spot venues are CEX/`uniswap_v3` only —
+- [x] ✅ [REGISTRY] P2. **D3 — MOOT, motivating scenario deleted 2026-07-28 (unified-trading-pm, verification pass) —
+      was**: `backtest_solana_basis.py` models a drift-perp / Orca(Raydium) SOL-DEX-spot basis, but the Solana-DEX spot
+      leg has NO cell. `CARRY_BASIS_PERP` matrix/wizard spot venues are CEX/`uniswap_v3` only —
       `orca`/`raydium`/`whirlpool` absent from the cells AND the wizard `leg:CARRY_BASIS_PERP:spot`. The backtest only
       _registers_ `venue="drift"` (a real cell); the Orca pool is a `--orca-pool` data-loader arg + a label in the
       `instance_id` string. So a wizard user could NOT build the drift-perp/orca-spot SOL basis strategy the backtest
-      models. FIX: add the Solana-DEX spot venues (orca/raydium) to `CARRY_BASIS_PERP` leg-spec + verdict-matrix +
-      wizard, OR document that Solana-DEX-spot basis is data-only / not a deployable cell. Repo: unified-api-contracts.
+      models. **Confirmed gone**: `e2e-testing/scripts/defi/backtest_solana_basis.py` no longer exists — deleted
+      2026-07-16 (`e2e-testing@5a44e3b4`/`76a1071` "finish Solana-perp-DEX cull... re-point SOL staked-basis to
+      Hyperliquid"), one day before this doc's own creation. There is no longer a tested strategy shape that models a
+      Solana-DEX-spot basis, so the "wizard can't build what the backtest models" gap has nothing left to be a gap
+      about. No fix needed; not re-opening the Orca/Raydium cell-registration question absent a live motivating case.
 - [ ] [SCRIPT] P3. **D4 — `recursive_borrow_paper_smoke.py` is a non-instantiating stub** (`INFRA_GAP`/
       `NotImplementedError`, BLOCKED-CREDENTIALS) — references cell
       `CARRY_RECURSIVE_BORROW_LENDING_ONLY@aave_v3-ethereum-wsteth-weth-emode` but never builds an engine + never
       asserts that specific aave e-mode cell against the matrix. When the credentials/infra land, make it a real
-      round-trip smoke through the canonical path. Repo: e2e-testing.
+      round-trip smoke through the canonical path. Repo: e2e-testing. **Cross-reference (2026-07-28, not re-scoping
+      here)**: `CARRY_RECURSIVE_BORROW_LENDING_ONLY`'s orchestrator-stub is already exhaustively investigated and scoped
+      (not built) in `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — the
+      credentials/infra gap this D4 is waiting on is the SAME `RecursiveLoopOrchestrator` wire-in gap documented there.
+      Stays open here as the e2e-smoke half of that same underlying gap.
 
 ## Why it matters
 
@@ -160,14 +168,21 @@ materially incomplete against that bar, for ALL archetypes, not just these.
       stables, reduce hedge/trade size by a margin-call buffer) driven by
       `venue_accepts_collateral`/`get_collateral_haircut`; allow `stake_fraction < 1.0`. Repo: strategy-service (+ UTL
       margin)."
-- [ ] [SCRIPT] P3. **Dead `per_venue_margin_buffer_pct: 0.20`** in
-      `strategy-service/.../configs/arbitrage_price_dispersion.yaml` has ZERO Python wiring — wire it into the P1
-      buffer-sizing or delete it. Repo: strategy-service.
-- [ ] [REGISTRY] P2. **Spot-leg venue is hardcoded per-LST for staked-basis (ETH-LST→UNISWAP_V3, SOL-LST→JUPITER,
-      `catalog_staked_basis.py:30-35`) — no Binance-spot / orca / raydium alternative**, though the engine accepts a
-      `spot_venue` param. Operator wants spot venue selectable (Binance vs DEX, liquidity-driven). Make spot_venue a
-      first-class selectable axis for staked-basis (it already is for APD via `venue_universe`). Repos:
-      unified-api-contracts (leg-spec/manifest) + strategy-service (catalog).
+- [x] ✅ [SCRIPT] P3. **DELETED 2026-07-28 (unified-trading-pm, verification pass)** — was: dead
+      `per_venue_margin_buffer_pct: 0.20` in `strategy-service/.../configs/arbitrage_price_dispersion.yaml` had ZERO
+      Python wiring. Confirmed via fresh grep across all of strategy-service: 0 hits for `per_venue_margin_buffer_pct`
+      anywhere (config key no longer exists) — the "delete it" branch of this todo was taken, not the "wire it in"
+      branch. Nothing left to do.
+- [x] ✅ [REGISTRY] P2. **SHIPPED — spot_venue is now a first-class selectable axis, verified live 2026-07-28
+      (unified-trading-pm, verification pass)** — was: spot-leg venue hardcoded per-LST for staked-basis
+      (ETH-LST→UNISWAP_V3, SOL-LST→JUPITER), no Binance-spot / orca / raydium alternative. **Confirmed shipped**:
+      `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py:44-84` now defines
+      `_STAKED_BASIS_ETH_SPOT_VENUES` (uniswapv3/curve/binance) and `_STAKED_BASIS_SOL_SPOT_VENUES`
+      (jupiter/orca/raydium/binance) — one slot per (LST × spot_venue), matching APD's `venue_universe` pattern exactly
+      as asked; the module's own header comment cites this doc's D3 as the originating operator directive (2026-06-17).
+      Dedicated regression test exists:
+      `strategy-service/tests/unit/engine/strategies/v2/test_carry_staked_basis_spot_venue_axis.py`. Nothing left to
+      build.
 - [x] ✅ [SCRIPT] P1. (RE-VERIFIED 2026-07-27, slot-4 — was `- [ ]`, stale: the FIX this todo asks for already shipped
       the same day it was filed, via the sibling initiative
       `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`, but that plan's own checkbox flip never
@@ -203,10 +218,15 @@ materially incomplete against that bar, for ALL archetypes, not just these.
       unresolved strategy-design decision — exhaustively scoped, not built, in
       `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660` — parameterizing it in
       the wizard today would be cosmetic since the engine can't act on it regardless.
-- [ ] [SCRIPT] P2. **Audit production params vs e2e/testing params for functional alignment** (operator ask) — the e2e
-      catalog sets the 7 structural params but leaves the 5 behavioural ones to engine defaults; confirm the engine
-      defaults == the values the production/paper runs intend (functionally, not by name). Repo: e2e-testing +
-      strategy-service.
+- [x] ✅ [SCRIPT] P2. **AUDIT DONE — resolved+archived 2026-07-26, confirmed 2026-07-28 (unified-trading-pm,
+      verification pass)** — was: audit production params vs e2e/testing params for functional alignment; the e2e
+      catalog sets the 7 structural params but leaves the 5 behavioural ones to engine defaults. **Confirmed done**:
+      `plans/archive/issues/e2e_defi_hedge_deadline_ms_diverges_from_production_default_2026_07_26.md` is exactly this
+      audit — all 5 behavioural params (`entry_bps`/`exit_bps`/`min_health_factor`/`hedge_deadline_ms`/
+      `peg_drift_threshold_bps`) compared against production defaults across all 5 e2e files; 4 of 5 matched, the one
+      mismatch (`hedge_deadline_ms`: e2e `2000` vs production `5000`) was operator-ruled unintentional drift and fixed
+      (`e2e-testing@49a129c`, all 5 call sites bumped to `5000`, QG green). `status: resolved`, archived. Nothing left
+      to do.
 
 ### Food-chain parameterization completeness (wizard touches ~8 of ~16 config layers)
 
@@ -215,3 +235,15 @@ custody/signing, wallet, ML model (pick only). NOT set (defaults/code/placeholde
 collateral token/posting mode, start_token, exec-algo PARAMS, the full risk-threshold ladder
 (WARNING→AUTO_REDUCE→AUTO_CLOSE_ALL), data-source routing, margin buffer. The collateral posting-mode + margin-buffer
 sizing — the operator's core question — is **not a parameter anywhere**; it is engine-derived accept/reject.
+
+## Progress Log
+
+- 2026-07-28 (unified-trading-pm, `june_2026_vintage_audit_findings_2026_07_27.md` §4 execution, verification pass): 5
+  stale-but-actually-done items flipped this pass, all independently re-verified against live code/archived docs rather
+  than trusted from the tracking plan's own summary: dead `per_venue_margin_buffer_pct` confirmed deleted (0 grep hits);
+  spot_venue axis confirmed shipped (`catalog_staked_basis.py:44-84` + dedicated test); the production-vs-e2e param
+  audit confirmed done+archived (`hedge_deadline_ms` mismatch fixed, `e2e-testing@49a129c`); D3 confirmed moot
+  (`backtest_solana_basis.py` deleted 2026-07-16, one day before this doc's creation); D4 given a cross-reference to its
+  already-scoped-not-built home (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660`), left open. Doc
+  stays `status: open` — D1 (DEFERRED-BY-DESIGN, no timeline), D2 (operator product-decision, tracked forward in
+  `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110`), and D4 remain genuine open work.

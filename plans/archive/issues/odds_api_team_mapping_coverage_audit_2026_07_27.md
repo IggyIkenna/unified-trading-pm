@@ -11,7 +11,7 @@ summary: >-
   gap (`Burgos CF`). The remaining 72 names are genuinely unmappable today (no alias dict entry, or resolved id absent
   from team_mapping_v2) and are left dropping at ml-service merge time, per the plan's own accepted behavior — not
   fabricated.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -33,10 +33,16 @@ source:
   sports_satellite_ao_dispatch_batch3_2026_07_25.md, "Audit instruments-service's odds_api_team_mapping.parquet
   coverage" todo
 resolved_by:
+  "instruments-service/scripts/odds_api_team_mapping_coverage_audit_2026_07_27.py --apply; mapping table 658->717 rows,
+  verified 0 nulls / 0 duplicate keys post-apply; doc's own text: 'No operator decision needed to close this doc' —
+  residual 72 unmappable names are the plan's own accepted behavior, not a gap"
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # odds_api_team_mapping.parquet coverage audit
 

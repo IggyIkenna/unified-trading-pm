@@ -16,7 +16,7 @@ summary: >-
   write nothing, and look green to every exit-code-based monitor. This directly blocks the candle backfill for
   derivative_ticker (a CeFi/DeFi MVP data_type carrying funding_rate) and invalidates any ETA that assumes the path
   works.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi]
 stage: [data]
@@ -45,12 +45,18 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "mdps@beea161 + d4052e20b (adapter + nullability fix), mdps@0b513c0 (exit-code observability fix), proof-sweep
+  2026-07-27 (slot-10), utl@69ff7fee + mdps@8890508 (manifest-read fix) — all 5 todos DONE, 140/140 objects captured
+  end-to-end"
 source: >-
   first real-VM run of /data-pipeline-check-mdps, 2026-07-20. VM mdps-backfill-cefi-pipelinecheck-20260720-130757-a63425
   (and its skip twin -pcskip-20260720-131345-a63425). Writes were test-bucket-routed; PROD was verified untouched.
 ---
 
 # P0 — MDPS `derivative_ticker` candle derivation is 100% broken, and reports success
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 > Found by the new `/data-pipeline-check-mdps` skill on its first real run. The skill's `failed` verdict was CORRECT
 > where the VM's own exit code said success — which is precisely the class of bug an exit-code-trusting monitor misses.

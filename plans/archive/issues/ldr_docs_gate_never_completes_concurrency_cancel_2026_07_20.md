@@ -136,7 +136,7 @@ After the template change + rollout, confirm the gate actually completes:
 `success`/`failure` verdicts, not all `cancelled`. Then stage a known-broken frontmatter doc, push, and confirm the gate
 (push or cron) goes RED and alerts.
 
-## Resolution (2026-07-22, via `github_actions_ci_cost_reduction_2026_07_15.md`)
+## Resolution (2026-07-22, via `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`)
 
 Two fix attempts were needed. First, `cancel-in-progress: false` (queue instead of cancel) — necessary but not
 sufficient. The actual root cause: `runs-on: [self-hosted, Linux, X64, glue]` requires 4 labels, but

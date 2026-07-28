@@ -32,7 +32,8 @@ superseded_by:
 depends_on:
 source:
   Discovered 2026-07-26 while verifying the cefi reader-bridge Cloud Run job deploy (see
-  cefi_satellite_ao_dispatch_batch2_2026_07_26.md / cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md)
+  cefi_satellite_ao_dispatch_batch2_2026_07_26.md /
+  /plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md)
 resolved_by:
 ---
 

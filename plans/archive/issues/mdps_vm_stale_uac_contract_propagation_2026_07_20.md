@@ -26,7 +26,7 @@ tags: [data-correctness, p0, deployment, tarball, wheel-cache, schema, contract-
 related:
   [
     ../data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20
@@ -71,8 +71,8 @@ source: >-
 > boot assert passed) and STILL failed the same schema validation — because the `nullable_ohlcv` fix was applied to the
 > AGGREGATED contract key (`deriv_ohlcv_{tf}`) while the writer queries the enforcer with the SOURCE key
 > (`derivative_ticker`). That is a SEPARATE bug (an enforcer key mismatch), tracked in
-> `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5. The narrative below is preserved as the
-> historical filing; read todo 4 for the reconciled outcome.
+> `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5. The narrative below is
+> preserved as the historical filing; read todo 4 for the reconciled outcome.
 
 > **The GOOD news first:** the derivative_ticker candle fix (`mdps@beea161`) is CORRECT. On the re-verify VM the error
 > changed from the pre-fix `column 'funding_rate_mean' missing` (old adapter) to
@@ -155,6 +155,7 @@ blocks the derivative_ticker candle backfill (the fix is correct but cannot take
     assertion did NOT fire (correct editable UAC installed), so **THIS propagation P0 is CONFIRMED FIXED** — the correct
     UAC now reaches the VM. The force leg still wrote 0 objects, but for a SEPARATE reason (an enforcer key mismatch:
     `nullable_ohlcv` is on the aggregated `deriv_ohlcv_{tf}` key while the writer queries the source `derivative_ticker`
-    key) tracked in `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5 + workflow w6kkdobay — NOT a
-    propagation problem. Close this issue once the sibling key-mismatch fix lands and a re-run writes objects.
+    key) tracked in `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 5 +
+    workflow w6kkdobay — NOT a propagation problem. Close this issue once the sibling key-mismatch fix lands and a
+    re-run writes objects.
 </content>

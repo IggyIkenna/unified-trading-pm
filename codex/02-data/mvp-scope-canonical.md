@@ -4,7 +4,7 @@ title: Canonical MVP Scope — the SSOT for "what MVP means" per asset_group × 
 summary: >-
   Canonical MVP-scope SSOT — the strict rules-derived subset of the could-exist universe per (asset_group, venue,
   instrument_type, data_type): CeFi perp-gate + options_chain-only + Coinbase trades-only, TradFi CME ohlcv_1m-only +
-  OPTION narrowed to the ES/S&P-500 complex only, DeFi tag-all, Sports 94-league football, Prediction Polymarket+Kalshi
+  OPTION narrowed to the ES/S&P-500 complex only, DeFi tag-all, Sports 96-league football, Prediction Polymarket+Kalshi
   arb-overlap; code SSOT MVP_SCOPE at config version 14.
 status: current
 nature: ssot
@@ -27,7 +27,7 @@ referenced_by:
     /codex/09-strategy/mvp-universe-per-asset-group.md,
   ]
 owner:
-last_reviewed: 2026-07-14
+last_reviewed: 2026-07-28
 code_refs: [unified-api-contracts/unified_api_contracts/canonical/crosscutting/mvp_scope.py]
 codified: 2026-06-27
 ---
@@ -106,7 +106,7 @@ lending-writer fix (`../../plans/active/defi_lending_writer_retire_prerequisite_
 
 | Axis       | MVP                                                                                                                                                                                                                                                                                                 |
 | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Leagues    | the **94-league FOOTBALL universe** — EVERY `LEAGUE_REGISTRY` league with `sport == "FOOTBALL"` (33 Prediction + 22 Features + 39 Reference). The 7 non-football leagues (NFL/NBA/MLB/NHL/ATP/WTA/EUROLEAGUE) are EXCLUDED. Derived, not a literal (the prior EPL+LA_LIGA 2-league drift is fixed). |
+| Leagues    | the **96-league FOOTBALL universe** — EVERY `LEAGUE_REGISTRY` league with `sport == "FOOTBALL"` (33 Prediction + 24 Features + 39 Reference). The 7 non-football leagues (NFL/NBA/MLB/NHL/ATP/WTA/EUROLEAGUE) are EXCLUDED. Derived, not a literal (the prior EPL+LA_LIGA 2-league drift is fixed). |
 | data_types | odds / ODDS / odds_snapshot / markets / outcomes / settlements (MTDS odds market-data)                                                                                                                                                                                                              |
 | Sources    | 6 reference sources (api_football / footystats / understat / transfermarkt / soccer_football_info / open_meteo) + odds_api                                                                                                                                                                          |
 

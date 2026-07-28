@@ -91,9 +91,10 @@ QG did not confirm green for either repo before this session had to checkpoint o
   — a stale auto-generated inventory-table row pointing at a plan that shows 14/14 (100%) done, most likely just
   archived by a concurrent slot with the dashboard not yet regenerated. Confirmed pre-existing and unrelated to this
   diff (the touched file is in a different repo entirely). Did NOT attempt to fix it myself:
-  `active_plan_inventory_dashboard_2026_07_24.md` is an auto-generated file that many slots touch concurrently (observed
-  several other slots' plan-flip commits landing during this session) — editing it blind under compaction time-pressure
-  risked colliding with in-flight work from another slot, which the multi-agent-safety rules explicitly warn against.
+  `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` is an auto-generated file that many slots touch
+  concurrently (observed several other slots' plan-flip commits landing during this session) — editing it blind under
+  compaction time-pressure risked colliding with in-flight work from another slot, which the multi-agent-safety rules
+  explicitly warn against.
 
 ## Recommended decision / next steps
 

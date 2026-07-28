@@ -14,7 +14,7 @@ summary: >-
   process on the box can attach AdministratorAccess to itself). This is reachable via plain EC2 IMDS by ANY process on
   the host, not gated by which GCP credential a given job chooses to use -- so it is the REAL ambient blast radius for
   every self-hosted CI job already running there today, not a hypothetical future risk.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -24,6 +24,9 @@ created: 2026-07-27
 assigned_vm: NA
 parent_epic: deployment_and_user_management_master
 resolved_by:
+  "operator ruling 2026-07-27: 'ACCEPTED AS KNOWN RISK, do not remediate; do not re-raise this as an open remediation
+  item' — the exposure is real and known, deliberately not fixed (these permissions are load-bearing for other
+  legitimate operations); the § Recommendation is kept as reference only, not an active todo"
 locked_by:
 source: [operator question "whats the tradeoff for quality gates v2" -- verifying blast radius before answering]
 related:
@@ -39,6 +42,9 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # Orchestrator/glue-runner VM's AWS IAM role is account-wide over-privileged AND self-escalating
 

@@ -225,7 +225,7 @@ source: >-
   - 6. **[SCRIPT] P3.** S3-a — delete MDPS one-offs past `Delete-when` after verifying each condition
   - 7. **[SCRIPT] P3.** S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations
   - 8. **[SCRIPT] P3.** S3-b — sports dual entrypoint (`python -m features_service.sports`)
-- [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
+- [`/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
   - 3. **[DATA] P1.** Assess blast radius on EXISTING candle data: any past MDPS run with `max_workers>1`
 - [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
   - 7. **[CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read (row-group batches)

@@ -705,7 +705,7 @@ and the working tree matches origin exactly with zero drift).
 
 **Incidental fix, unblocked shipping fleet-wide**: while shipping, `run_validators.py`'s plans/active/\*.md link checker
 (which every repo's `quickmerge.sh` re-gate runs regardless of target repo) was failing on a stale link in
-`master_to_live_defi_2026_05_23.md` → a `github_actions_ci_cost_reduction_2026_07_15.md` deleted by an unrelated,
-in-flight 3-way plan split that missed updating this one referrer — blocking every repo's quickmerge, not just this one.
-Fixed via the sanctioned path (re-ran `scripts/plans/regenerate_active_plan_inventory.py`, the auto-generated section's
-own owner script, rather than hand-editing the table) — `unified-trading-pm@1e13d425a`.
+`master_to_live_defi_2026_05_23.md` → a `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` deleted
+by an unrelated, in-flight 3-way plan split that missed updating this one referrer — blocking every repo's quickmerge,
+not just this one. Fixed via the sanctioned path (re-ran `scripts/plans/regenerate_active_plan_inventory.py`, the
+auto-generated section's own owner script, rather than hand-editing the table) — `unified-trading-pm@1e13d425a`.

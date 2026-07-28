@@ -560,10 +560,11 @@ drift_direction: advance-code
   footprint and read pattern) is bounded and worker-determinable and would have been drafted, but extracting a single
   prerequisite from a 7-todo design chain into a different plan risks the worker treating the design gate as cleared;
   better handled by the operator flipping this plan's own todo 1 or splitting it deliberately.
-- **`deployment_redesign_cherrypicks_2026_07_20.md`** (3 open `[BACKEND]` deployment-api items: `reason_category`/
-  `reason_summary` on the drilldown tree, mock-mode `/coverage-summary` all-zeros, a flat `(primary × date)`
-  `capture_status` matrix endpoint). All three are genuinely bounded and conflict-clear — held back only for line-cap
-  headroom in this batch; they are the strongest candidates for a batch 3 with no further investigation needed.
+- **`/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md`** (3 open `[BACKEND]` deployment-api items:
+  `reason_category`/ `reason_summary` on the drilldown tree, mock-mode `/coverage-summary` all-zeros, a flat
+  `(primary × date)` `capture_status` matrix endpoint). All three are genuinely bounded and conflict-clear — held back
+  only for line-cap headroom in this batch; they are the strongest candidates for a batch 3 with no further
+  investigation needed.
 - **`bucket_fold_ml_2026_07_17.md`** (6 open) and
   **`issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md`** (2 open) — both already named in
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md`'s todo 3 as genuinely infra-scoped docs to retag

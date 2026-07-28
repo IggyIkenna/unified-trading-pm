@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [e2e, playwright, testing-infra, login, regression-risk]
 related:
   [
-    plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
+    /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
     tests/e2e/user-management.spec.ts,
   ]
 created: "2026-07-22"
@@ -33,8 +33,8 @@ depends_on: []
 # What I found
 
 While implementing the `AdminStrategyAssignment` admin CRUD page (issue doc
-`dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`, item wired 2026-07-22), I wrote a new
-lifecycle Playwright spec (`tests/e2e/admin-strategy-assignments.spec.ts`) modeled on the established
+`/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`, item wired 2026-07-22),
+I wrote a new lifecycle Playwright spec (`tests/e2e/admin-strategy-assignments.spec.ts`) modeled on the established
 `tests/e2e/user-management.spec.ts` pattern:
 
 ```ts
@@ -100,8 +100,8 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
       (repo: unified-trading-system-ui)
 - [ ] [UI] P3. Re-run `tests/e2e/admin-strategy-assignments.spec.ts` (written 2026-07-22 for the
       `AdminStrategyAssignment` admin CRUD feature) once the login helper is fixed, and record the `pw:L2 ✓` evidence
-      retroactively on `dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s item. (repo:
-      unified-trading-system-ui)
+      retroactively on `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s
+      item. (repo: unified-trading-system-ui)
 
 ## Codex SSOTs
 

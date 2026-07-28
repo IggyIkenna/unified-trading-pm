@@ -11,7 +11,7 @@ summary: >-
   research agents classified all 99 open items across the archived plan's 12 phases; this doc bundles the 21 that came
   back GENUINELY_ORPHANED (real, still-relevant work, no current owner) into one tracked doc per findings-triage rules,
   rather than 21 separate issue docs.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,9 +31,18 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [batch4_strategy_ui_archived_plan_residuals-006]
 resolved_by:
+  "unified-api-contracts@e5dc6e7f + unified-trading-pm@7ee0fbb87 (item A: manifest regen),
+  unified-api-contracts@08cc94fa + unified-trading-system-ui@bf38c435 (item B: admin assignment model + UI wiring),
+  asset_class rename split into its own dedicated plan (asset_class_to_asset_group_rename_2026_07_21.md),
+  unified-trading-system-ui@0582398d (item D: formatters) + @7967177b (item E: persona hydration) — all 6 todos DONE;
+  the one identified pw:L2 gap was properly split into e2e_login_persona_handoff_helper_stale_2026_07_22.md rather than
+  silently claimed"
 locked_by:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # What I found
 

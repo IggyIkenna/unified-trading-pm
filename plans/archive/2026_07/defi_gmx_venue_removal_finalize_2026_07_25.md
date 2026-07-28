@@ -110,8 +110,8 @@ drift_direction: advance-code
       requiring a CLAUDE.md change. Grepped the corpus for every referrer of `defi_gmx_venue_removal_2026_07_25` (34
       files across `plans/active/`, `plans/active/issues/`, `plans/archive/`, and `codex/`) and repointed every
       path-formatted/prose `.md` citation to `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`; the
-      auto-regenerated `active_plan_inventory_dashboard_2026_07_24.md` table row needs no manual edit (self-corrects on
-      next `regenerate_active_plan_inventory.py` run once the plan leaves `plans/active/`); bare-slug machine fields
-      (`depends_on`/`related` without `.md`) intentionally left untouched per the cross-reference-path convention. Both
-      `defi_gmx_venue_removal_2026_07_25.md` and this finalize plan moved to `plans/archive/2026_07/` in the same
-      commit.
+      auto-regenerated `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` table row needs no manual
+      edit (self-corrects on next `regenerate_active_plan_inventory.py` run once the plan leaves `plans/active/`);
+      bare-slug machine fields (`depends_on`/`related` without `.md`) intentionally left untouched per the
+      cross-reference-path convention. Both `defi_gmx_venue_removal_2026_07_25.md` and this finalize plan moved to
+      `plans/archive/2026_07/` in the same commit.

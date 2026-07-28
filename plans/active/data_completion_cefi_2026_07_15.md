@@ -220,7 +220,7 @@ MTDS consolidation ruling.)**
       it's falsely reclassified `PHANTOM_CAPTURED_NO_OBJECT`. Same bug class as the already-fixed `spot`→`spot_pair`
       synonym (2026-06-11) and the slash-symbol stem fix (2026-06-04), but NOT covered by either. Full evidence + root
       cause + recommended fix + follow-up todos:
-      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. **This BLOCKS the "NEXT
+      `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. **This BLOCKS the "NEXT
       SESSION — execute the migration" P0 todo immediately below** — see its updated note. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
@@ -235,15 +235,23 @@ MTDS consolidation ruling.)**
       dry-run validates perf) — **🔴 BLOCKED 2026-07-28 (slot-12): the dry-run did NOT validate cleanly** —
       `phantom_to_failed=490,639` (~8.6% of the prior index) is a confirmed false-phantom bug (itype/underlying column
       drift), not real orphans; see
-      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. Running this todo's
+      `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. Running this todo's
       `--apply` migration as-is would `record_failed` ~490K genuinely-present rows for real — do NOT run until that
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
-      Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-      then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-      then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-      legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-      chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+
+      **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
+              (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+              `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+              other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+              evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+              dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+              (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+              Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+              then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+              then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+              legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+              chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+              2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -261,7 +269,7 @@ MTDS consolidation ruling.)**
       `tests/unit/test_rebuild_cefi_manifest_cf11.py`, both green, full `quality-gates.sh` green (7265 passed / 17
       skipped). This confirms the rebuild-walk CODE is ready for when the actual migration runs (still gated on the
       separate, blocked "NEXT SESSION — execute the migration" P0 todo above — the false-phantom bug at
-      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`); no code change was needed
+      `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`); no code change was needed
       for this rider itself. `market-tick-data-service@cf8a6817`. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
@@ -270,7 +278,7 @@ MTDS consolidation ruling.)**
       2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. **🔴 BLOCKED 2026-07-28 (slot-8, confirmed by main) — real predecessor is
-      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`, not this todo's own
+      `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`, not this todo's own
       action.** Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
       v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
       column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
@@ -287,10 +295,10 @@ MTDS consolidation ruling.)**
       ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-          (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-          when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-          completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-          No checkbox flip — criteria still unmet pending that re-run's result.
+                  (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                  when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                  completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                  No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
@@ -600,7 +608,7 @@ buckets, no `--apply`:
 This is not a new problem — it reconfirms, with fresh live numbers, the already-tracked fact (2026-07-27/28 entries
 above) that the actual walk this checkbox is "post-" (the C0(b)/(d) source+pipeline_mode riders, the E4 gap-fill/orphan
 sweep, the E5 rebuild) has **not executed yet** and remains blocked on the false-phantom itype/underlying-drift bug
-(`plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`). Did **not** flip this todo's
+(`plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`). Did **not** flip this todo's
 checkbox — doing so on a RED audit would be fabricated progress. No new issue doc filed (these findings corroborate, not
 introduce, the already-open blocker). Whoever unblocks the walk should re-run this exact audit command afterward; if
 CF-1/CF-3/CF-4 all read GREEN and Era-B reads 0, that todo can then honestly flip.
@@ -651,7 +659,7 @@ Dispatched task `data_completion_cefi-017` again (same task id as the slot-6 ent
 independent dispatch of this exact checkbox today, after slot-8's sibling audit and slot-6's identical run). Before
 re-running, cross-checked whether the blocking chain had moved: `data_completion_cefi_2026_07_15.md`'s "NEXT SESSION —
 execute the migration" P0 todo is still unchecked (retagged `[OPERATOR]`, not dispatched to workers), and the blocking
-issue doc `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own final open todo
+issue doc `plans/archive/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own final open todo
 ("re-run the full-corpus `--dry-run` a third time... unblock the migration todo") is also still unchecked — no real
 `_index` rebuild/migration has executed since slot-6's run. Re-ran the audit anyway for fresh live evidence (cheap,
 index-only `mode="changed"`, no GCS bulk walk) rather than rely on hours-old numbers, since the live corpus is growing
@@ -659,14 +667,15 @@ incrementally in the background:
 
 Fresh result (9,263,361 rows, up from 9,195,191 a few hours earlier — organic growth, no rebuild involved):
 
-- **CF-1** RED: v9=9,029,152/9,263,361 (97.5%; unchanged dist shape: 108,367 null + 63,226 `v6` + 61,692 `v5` + 924 `v4`).
+- **CF-1** RED: v9=9,029,152/9,263,361 (97.5%; unchanged dist shape: 108,367 null + 63,226 `v6` + 61,692 `v5` + 924
+  `v4`).
 - **CF-3** RED: populated=9,137,133/9,263,361 (98.6%; 126,228 blank — same absolute blank count as slot-6's run, all
   organic growth landed correctly-stamped).
 - **CF-4** RED: source blank=2,206,826/9,263,361 (23.8%, down marginally from 24.0% — pure dilution from new correctly-
   stamped captures, not any fix).
 - **CF-8** RED: non-null=1,306,726/9,263,361 (pre-existing finding-144-waived schema-evolution artifact, as before).
-- **Era-B** RED: 491,146 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from
-  490,470 — organic).
+- **Era-B** RED: 491,146 rows still carry legacy-form `data_type=options_chain/futures_chain` (up slightly from 490,470
+  — organic).
 - **CF-2-paths** RED, same characteristic as both prior entries.
 - **GREEN**: CF-2, CF-5, CF-6, CF-13, CF-3-partition, CF-9 — identical to slot-6's run.
 
@@ -676,14 +685,13 @@ already. No new issue doc filed — this is the 3rd corroboration, not a new fin
 
 **Process note (why this entry exists beyond the numbers):** this exact backlog task has now been dispatched to 3
 different slots in the same day (slot-8 on the sibling audit todo, slot-6 and slot-13 on this exact todo) with zero
-possibility of a different outcome each time, because the checkbox's blocker is an external, not-yet-run migration
-gated on `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own last open todo. Re-verifying a RED
-audit against an unchanged blocker doesn't move the plan forward and costs a full worker dispatch each time. Filed a
-`/blocked` recommendation (this session) to gate/park `data_completion_cefi-017` in the backlog against that issue
-doc's confirming-rerun todo (or an equivalent condition) so it stops being handed to fresh workers until there's
-actually new signal to check. Whoever unblocks the chain should re-run this audit once more and flip both this
-checkbox and the `cefi_master_audit_instructions.md` CF-coverage rows only once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths
-all read GREEN.
+possibility of a different outcome each time, because the checkbox's blocker is an external, not-yet-run migration gated
+on `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`'s own last open todo. Re-verifying a RED audit
+against an unchanged blocker doesn't move the plan forward and costs a full worker dispatch each time. Filed a
+`/blocked` recommendation (this session) to gate/park `data_completion_cefi-017` in the backlog against that issue doc's
+confirming-rerun todo (or an equivalent condition) so it stops being handed to fresh workers until there's actually new
+signal to check. Whoever unblocks the chain should re-run this audit once more and flip both this checkbox and the
+`cefi_master_audit_instructions.md` CF-coverage rows only once CF-1/CF-3/CF-4/CF-8/Era-B/CF-2-paths all read GREEN.
 
 ### 2026-07-28 (slot-3, `data_engineering`) — E4 orphan-sweep todo (line ~307): built the missing `--drop-stale` tool, did NOT run it against prod
 

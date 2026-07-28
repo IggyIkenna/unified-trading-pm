@@ -12,7 +12,7 @@ summary: >-
   sanctioned single-walk, entity-scoped by `time_created` (never an in-session whole-corpus walk), producing a manifest
   of every fabricated pre-`2026-07-19` object; (2) an `[OPERATOR]`-gated purge against that census manifest, carrying
   the delete-safety five-part proof, executed by a human only.
-status: active
+status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified both todos checked with concrete evidence (2400/2400 days scanned, total_delete=0)
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -50,7 +50,17 @@ sequential: true
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — plan verified fully complete at archival, zero open todos, no prose-only remaining work found.
+
 # Sports POST-FLOOR derived_features fabricated-residue: census + reversibility-verified purge
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled.** Verified at archival: both todos checked. Todo 1's
+> exhaustive Tier-2 census scanned 2400/2400 in-scope days (`features-service@a90256f5`, VM
+> `sports-derived-features-census-20260727-175711`) and found `total_delete=0` — every in-scope `derived_features`
+> object already post-dates the 2026-07-19 regen cutoff. Todo 2 (the gated purge) resolved as a no-op on that same
+> evidence — nothing remained to delete.
 
 > **`sequential: true`** — todo 2 (the purge) is genuinely gated on todo 1's census manifest existing; this is a real
 > dependency chain, not reflexive serialization. Both todos touch different scopes (a VM-launch read-only script and a

@@ -10,7 +10,7 @@ summary: >-
   already exists), retags the ~220-doc affected population, and updates every schema-definition site. The
   epic/consolidated-plan/batch scaffolding for ao/ci/infra already exists (`ao_consolidated_closeout_2026_07_25.md` etc)
   -- this is a tag-correctness fix, not new infrastructure.
-status: active
+status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified Phases 1-3 all checked with cited evidence, Progress Log ends "No action needed"
 nature: design
 asset_group: [meta]
 stage: [meta]
@@ -45,7 +45,16 @@ assigned_role: infra
 drift_direction: advance-docs
 ---
 
+## Deferred work — migrated to:
+
+**None** — plan verified fully complete at archival, zero open todos, no prose-only remaining work found.
+
 # Give ao/ci/infra real asset_group enum values
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled.** Verified at archival: Phases 1-3 all shipped and
+> checked (schema enum expansion `unified-trading-pm@a97bc7bed`, corpus-wide retag of 119 docs across 5 commits,
+> cross-cutting false-positive rate 92.5% -> 3% -> 0%, `check_ag_closeout_linkage.py` 0 orphans); the Progress Log's
+> final entry concludes "No action needed."
 
 > **Why LOCAL, not AO-dispatched**: "should ao/ci/infra become real asset_group values" is a taxonomy judgment call, not
 > a worker-executable todo (operator confirmed 2026-07-27: "definitely to be done locally to avoid getting to that

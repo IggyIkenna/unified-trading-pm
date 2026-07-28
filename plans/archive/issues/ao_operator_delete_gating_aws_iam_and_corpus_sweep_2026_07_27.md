@@ -92,41 +92,41 @@ assigned_role: infra
       (account `427895769566`).
 
       **Exact runnable commands** (run with an AWS identity OTHER than `uts-orchestrator-epic-role` — your own
-                                                          root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
-                                                          exact problem this todo exists to fix):
+                                                                  root/admin CLI profile, or the AWS Console; running this from a session that assumes the role itself is the
+                                                                  exact problem this todo exists to fix):
 
-                                                          ```bash
-                                                          ROLE=uts-orchestrator-epic-role
-                                                          ACCOUNT=427895769566
+                                                                  ```bash
+                                                                  ROLE=uts-orchestrator-epic-role
+                                                                  ACCOUNT=427895769566
 
-                                                          # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
-                                                          #    not blanket AdministratorAccess)
-                                                          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
-                                                          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
-                                                          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
-                                                          aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
+                                                                  # 1. Core service access — mirrors the GCP-side grant (storage/database/container-compute admin,
+                                                                  #    not blanket AdministratorAccess)
+                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess
+                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonRDSFullAccess
+                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+                                                                  aws iam attach-role-policy --role-name $ROLE --policy-arn arn:aws:iam::aws:policy/AmazonECS_FullAccess
 
-                                                          # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
-                                                          #    itself, so the next gap doesn't need another human round-trip.
-                                                          aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
-                                                            "Version": "2012-10-17",
-                                                            "Statement": [{
-                                                              "Effect": "Allow",
-                                                              "Action": [
-                                                                "iam:GetRolePolicy",
-                                                                "iam:ListRolePolicies",
-                                                                "iam:ListAttachedRolePolicies",
-                                                                "iam:PutRolePolicy",
-                                                                "iam:AttachRolePolicy",
-                                                                "iam:DetachRolePolicy"
-                                                              ],
-                                                              "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
-                                                            }]
-                                                          }'
-                                                          ```
+                                                                  # 2. Optional but recommended: let this role manage its OWN permissions going forward, scoped only to
+                                                                  #    itself, so the next gap doesn't need another human round-trip.
+                                                                  aws iam put-role-policy --role-name $ROLE --policy-name self-manage-own-policies --policy-document '{
+                                                                    "Version": "2012-10-17",
+                                                                    "Statement": [{
+                                                                      "Effect": "Allow",
+                                                                      "Action": [
+                                                                        "iam:GetRolePolicy",
+                                                                        "iam:ListRolePolicies",
+                                                                        "iam:ListAttachedRolePolicies",
+                                                                        "iam:PutRolePolicy",
+                                                                        "iam:AttachRolePolicy",
+                                                                        "iam:DetachRolePolicy"
+                                                                      ],
+                                                                      "Resource": "arn:aws:iam::'"$ACCOUNT"':role/'"$ROLE"'"
+                                                                    }]
+                                                                  }'
+                                                                  ```
 
-                                                          After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
-                                                          flip this todo with evidence — do not self-flip without a fresh verification run.
+                                                                  After running, ping any session on the orchestrator/human-planning VM to re-verify the 4 `Done when` checks and
+                                                                  flip this todo with evidence — do not self-flip without a fresh verification run.
 
 - [x] [DIAG] P1. ✅ **Verified 2026-07-27** — all 14 files done, commits confirmed on `origin/live-defi-rollout` via
       `git merge-base --is-ancestor` (`cc438a02c`, `1be59b97b`, `1e7f5389a`, `c6ef8cb1f`, `f5232f3e5`) + spot-checked
@@ -212,7 +212,8 @@ assigned_role: infra
     business decision (this doc's own text calls the cost delta small, and a Cloud Run memory limit is a one-line
     reversible config either way); decided directly (keep 16Gi until the sibling todo confirms steady-state health
     across multiple scheduled runs, then auto-revert) instead of leaving it as a standing operator question.
-  - **1 was ALSO fixed this pass**: `sports_derived_features_postfloor_residue_purge_2026_07_27.md` todo 2 — same
+  - **1 was ALSO fixed this pass**:
+    `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` todo 2 — same
     reversibility-verified downgrade (its own background section shows an EARLIER version of this exact todo already
     asserted "GCS soft-delete gives a 7-day window" and was corrected to `[OPERATOR]` specifically because that claim
     was unverified and §3a didn't exist yet; now verified for real).

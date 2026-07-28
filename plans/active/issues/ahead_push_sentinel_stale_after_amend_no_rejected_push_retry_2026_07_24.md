@@ -26,7 +26,7 @@ tags: [agent-orchestrator, worker-liveness, git, quickmerge, post-hoc-audit]
 related:
   [
     /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
-    /plans/active/active_plan_inventory_dashboard_2026_07_24.md,
+    /plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md,
   ]
 created: 2026-07-24
 last_updated: 2026-07-24

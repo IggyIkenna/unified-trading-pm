@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, quality-gates, sentinel, test-isolation, environment, gate-bypass]
 related:
   - /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md
-  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
   - /plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md
 created: 2026-07-23
 priority: P1

@@ -743,7 +743,7 @@ fleet/logs directly).**
 4. **Catalogue MVP promote** (+409) — rebuild+promote served `catalog.parquet` (still old mvp=70,930); verify
    data-status/deployment-api.
 5. **Apply doc fixes**: 35 verified contradictions (tracked in
-   `plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` + `.json`) + reconciliation's 4 stale codex
+   `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` + `.json`) + reconciliation's 4 stale codex
    docs (`non-canonical-path-inventory.md` row 10 / `reconciliation-finding-taxonomy.md` AE-4 /
    `gcs-and-manifest-delete-safety-protocol.md` §3.3 / `tradfi-databento-sourcing-ssot.md` — all still say Massive purge
    PENDING; it EXECUTED) + register patch (rows 10/11/22/24 count updates + new
@@ -776,10 +776,10 @@ fleet/logs directly).**
   `/codex/11-project-management/doc-frontmatter-schema.md`). **Read the actual hook output before assuming drift** —
   `git commit` prints both under one non-zero exit and a `grep -c 'drift'` on the log false-matched on unrelated text.
 - **My own operator-facing "migration complete / ~99.65% canonical" claim was overstated** (verified + corrected this
-  session, see reconciliation report + `tradfi_docs_reconciliation_findings_2026_07_21.md`): catalogue + GCS paths +
-  forward-writes were genuinely canonical, but I conflated that with the HISTORICAL manifest/parquet-content id-form,
-  which measured 30.8% (0% pre-2023). Lesson: "paths migrated" and "content migrated" are different surfaces — say which
-  one, every time.
+  session, see reconciliation report + `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`):
+  catalogue + GCS paths + forward-writes were genuinely canonical, but I conflated that with the HISTORICAL
+  manifest/parquet-content id-form, which measured 30.8% (0% pre-2023). Lesson: "paths migrated" and "content migrated"
+  are different surfaces — say which one, every time.
 
 ---
 

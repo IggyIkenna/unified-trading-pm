@@ -6,7 +6,7 @@ summary: >-
   across UAC + 7 downstream consumer repos + the UI, in one coordinated atomic landing per repo (no backward-compat
   shims allowed). The ledger-scoped LedgerAssetClass (spot_token/perp/lst/…, a different taxonomy, already disambiguated
   in code) is explicitly OUT OF SCOPE and must never be touched by this rename. Supersedes todo C in
-  dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md.
+  /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md.
 status: active
 nature: process
 asset_group: [cross-cutting]
@@ -27,7 +27,7 @@ tags: [asset-class-rename, cross-repo, schema, terminology, plan-discipline]
 related:
   [
     plans/archive/issues/asset_class_to_asset_group_rename_scope_underestimated_2026_07_21.md,
-    plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
+    /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
   ]
 created: "2026-07-21"
 last_updated: "2026-07-21"
@@ -121,9 +121,10 @@ shape alone" rule applies equally to a scope-safety claim).
       `codex/` for prose references to "AssetClass" describing the domain concept and update to "AssetGroup"; leave any
       doc correctly describing `LedgerAssetClass` untouched. Gated on todos 2-4 landing (the terminology should match
       shipped code, not precede it). (repo: unified-trading-pm)
-- [ ] [PLANNING] P2. **Supersede todo C** in `dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`
-      with a pointer to this plan (mark it non-dispatchable / point here) so the original P3 mechanical-sweep framing
-      never gets picked up and executed under the old, underscoped understanding. (repo: unified-trading-pm)
+- [ ] [PLANNING] P2. **Supersede todo C** in
+      `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md` with a pointer to
+      this plan (mark it non-dispatchable / point here) so the original P3 mechanical-sweep framing never gets picked up
+      and executed under the old, underscoped understanding. (repo: unified-trading-pm)
 
 ## Codex SSOTs
 

@@ -10,7 +10,7 @@
 # WHY THIS EXISTS: cursor-configs/settings.json is meant to hold ONLY team policy (permissions,
 # mcpServers, hooks) — see codex/05-infrastructure/claude-code-settings-symlink.md. In practice a
 # stray `/model` or `/effort` switch (or an old symlinked ~/.claude/settings.json — the exact bug
-# in plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md) can leave
+# in /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md) can leave
 # personal keys sitting in the team file, where they don't belong and can silently drift onto
 # other slots/machines that inherit it. This script is the one-shot self-heal for any machine that
 # hits the same pattern:

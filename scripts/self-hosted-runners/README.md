@@ -9,7 +9,7 @@ last_executed: NEVER (files created 2026-07-15, redesigned two-pool 2026-07-16; 
 
 Moves unified-trading-pm's IO-bound CI **glue** off GitHub-hosted runners ($0.006/min, billed) onto the always-on
 orchestrator VM (self-hosted runner minutes are **free** from GitHub's side). This is **B1** of
-[`../../plans/active/github_actions_ci_cost_reduction_2026_07_15.md`](../../plans/active/github_actions_ci_cost_reduction_2026_07_15.md)
+[`../../plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`](../../plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md)
 — read that plan's **▶ START HERE** before deploying. **All glue workflows live in this repo**, so runners register to
 `unified-trading-pm` only (a personal account has no org-level runners — repo-scoped is correct, and it's exactly why
 cross-repo reusables must stay hosted).

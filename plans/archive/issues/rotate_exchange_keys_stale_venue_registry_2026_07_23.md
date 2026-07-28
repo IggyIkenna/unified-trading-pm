@@ -7,7 +7,7 @@ summary:
   deribit-api-key, okx-api-key, hyperliquid-api-key, etc.) don't match any real GCP secret, so key rotation likely
   silently no-ops for those venues. Found as a byproduct of the 2026-07-23 secret-naming migration; needs its own
   dedicated per-venue verification pass, not a drive-by fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure, cefi]
 stage: [meta]
@@ -23,10 +23,16 @@ priority: P1
 estimate_class: infra
 source: discovered while normalizing Betfair/Polymarket secret naming per operator request
 resolved_by:
+  "deployment-service@6eed099 (venue-list fix, 2026-07-26) + 2026-07-27 full live GCP verification (34/34 entries
+  live-queried, 0 unverified) + invocation-path confirmed DEAD/UNWIRED (enable_secret_rotation=false in terraform, zero
+  production impact) — see Progress Log"
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # rotate-exchange-keys registry lists stale venue secret names
 

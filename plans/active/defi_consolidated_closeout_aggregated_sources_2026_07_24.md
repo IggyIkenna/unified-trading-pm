@@ -612,7 +612,7 @@ drift_direction: none
       never re-copied on a subsequent run; source data was never at risk.
   - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](/plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
+  - [`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
     (2 open)
     - **2. [DATA] P0.** Make a run whose every write failed EXIT NON-ZERO (fix the "N success / 0 failed" summary to
       count written, not processed).
@@ -633,7 +633,7 @@ drift_direction: none
       smoke-matrix doc.
     - **8. [SCRIPT] P3.** S3-b — sports dual entrypoint needs an operator/design adjudication; do NOT silently delete
       (breaks live sports backfills).
-  - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
+  - [`/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
     (1 open)
     - **3. [DATA] P1.** Assess blast radius on existing candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list may carry wrong leading-bin seeds.
@@ -719,7 +719,7 @@ drift_direction: none
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](/plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md)
+  - [`/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`](/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md)
     (3 open)
     - **6. [DATA] P1.** PROVE the fixed delta_one + volatility writers green on one real day, then migrate historical
       objects up into the `by_date/day=` tree.

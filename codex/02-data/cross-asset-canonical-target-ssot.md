@@ -476,7 +476,7 @@ writer(s) + data migration ship — see `canonical-cutover-register.md` §6a–�
   `delta_one/day=` (no `by_date/` level, `feature_writer.py:132-136`) and the volatility writer's **bucket-root bypass**
   (`get_data_sink` with no `prefix=`, `volatility/core/feature_writer.py:152-155`) are therefore **NON-CANONICAL**.
   onchain/sports primary writers already carry `by_date/`. Fix + migration:
-  [`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md).
+  [`../../plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md).
 
 - **R2 — HARD RULE: every data-at-rest bucket uses the FULL canonical hive grammar.** Every data-at-rest tree MUST use
   the full canonical key set **including `pipeline_mode=` and `asset_group=`, in the canonical ORDER** (§8) — never a

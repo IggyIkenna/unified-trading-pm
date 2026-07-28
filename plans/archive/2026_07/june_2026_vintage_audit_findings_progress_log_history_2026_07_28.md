@@ -59,8 +59,9 @@ drift_direction: none
   already-closed work. **Multi-agent note**: this session's working tree carried a large amount of concurrent,
   uncommitted work (including staged content) from other agents executing the other 5 §2 items + unrelated plan edits —
   restored all of it to unstaged before committing (never touched/reverted the underlying content) per the mandatory
-  pre-commit hygiene rule; the `active_plan_inventory_dashboard_2026_07_24.md`/`INDEX.md` regeneration was deferred for
-  the same reason (a regen right now would have captured that concurrent work's not-yet-committed state too).
+  pre-commit hygiene rule; the `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`/`INDEX.md`
+  regeneration was deferred for the same reason (a regen right now would have captured that concurrent work's
+  not-yet-committed state too).
 - 2026-07-28 (§3 execution, 4 of 15 items — `tradfi_backfill_oom_remediation_2026_06_24`,
   `data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27`,
   `dp_alert_flood_triage_and_monitor_fixes_2026_06_23`, `dp_event_pubsub_delivery_gap_2026_06_22`): verified all 4

@@ -187,15 +187,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       fuller plan-archival ritual (2 plan docs: `sports_legacy_bucket_cutover_2026_07_16.md`,
       `github_actions_cost_reduction_options_analysis_2026_07_15.md` -> `plans/archive/2026_07/`, referrers repointed).
       **2 of the original 37 candidates were NOT archived on re-verification** (the mandated "don't trust blind" re-read
-      caught real problems): `github_actions_ci_cost_reduction_2026_07_15.md`'s own text explicitly says it's "kept only
-      so existing cross-references still resolve" — a deliberate permanent redirect stub, not an archival candidate
-      (overrides both this session's and the PRIOR session's `/ag-closeout-audit` classification of it);
-      `ao_worker_session_continuity_and_resume_threshold_2026_07_27.md` was found already independently archived by a
-      real concurrent AO worker before I got to it — confirms independent convergence on the same verdict. A
-      concurrent-agent lint violation (`check_na_corpus_ratchet.py`, part of a live in-flight `na-eligibility-audit`
-      skill build, since shipped `unified-trading-pm@f355c0b2a`) blocked the tree-wide QG scan; fixed 2 mechanical
-      issues (line-length, import-at-top) without touching that agent's logic or staging its file. The archival also
-      broke 26 structured referrer links across 8 consolidated-closeout/sources hub docs
+      caught real problems): `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`'s own text
+      explicitly says it's "kept only so existing cross-references still resolve" — a deliberate permanent redirect
+      stub, not an archival candidate (overrides both this session's and the PRIOR session's `/ag-closeout-audit`
+      classification of it); `ao_worker_session_continuity_and_resume_threshold_2026_07_27.md` was found already
+      independently archived by a real concurrent AO worker before I got to it — confirms independent convergence on the
+      same verdict. A concurrent-agent lint violation (`check_na_corpus_ratchet.py`, part of a live in-flight
+      `na-eligibility-audit` skill build, since shipped `unified-trading-pm@f355c0b2a`) blocked the tree-wide QG scan;
+      fixed 2 mechanical issues (line-length, import-at-top) without touching that agent's logic or staging its file.
+      The archival also broke 26 structured referrer links across 8 consolidated-closeout/sources hub docs
       (`run_validators.py --scope     all` catches this; `check_reference_paths.py` did not — different validators,
       different scope) — all repointed to the new archive paths in the same commit. **Real defect found + fixed
       post-land**: `bec54efeb` landed with the delete-side of all 35 renames silently dropped (repeated stash-restore

@@ -347,11 +347,11 @@ drift_direction: advance-code
       pre-existing-violated. Name `t1_batch_scheduler.tf:124-128` as the owner to flag. Repo: unified-trading-pm. **Done
       when**: a new `plans/active/issues/defi_t1_freshness_deadline_stagger_<date>.md` exists citing both files and the
       deadline math. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. — unified-trading-pm@2c4c1355f.
-      Filed `issues/defi_t1_freshness_deadline_stagger_2026_07_28.md` recomputing worst-case finish for every 02:xx
-      collect-* job (solana-defi 02:30, bridge-events 02:35, lst-seasonal-rewards 03:05 — all confirmed violations) and
-      flagging that the `t1_batch_scheduler.tf:124-128`/`:131-135` line-citations for the "features-onchain T+1 recon"
-      consumer resolve to unrelated jobs — no such job exists in the file today, so the deadline itself is currently
-      unverifiable against a real consumer.
+      Filed `/plans/archive/issues/defi_t1_freshness_deadline_stagger_2026_07_28.md` recomputing worst-case finish for
+      every 02:xx collect-* job (solana-defi 02:30, bridge-events 02:35, lst-seasonal-rewards 03:05 — all confirmed
+      violations) and flagging that the `t1_batch_scheduler.tf:124-128`/`:131-135` line-citations for the
+      "features-onchain T+1 recon" consumer resolve to unrelated jobs — no such job exists in the file today, so the
+      deadline itself is currently unverifiable against a real consumer.
 - [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-7).** Filed
       `plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md` — verified the rename commit
       (`market-tick-data-service@522185a6`, 2026-07-22 18:07:42+01:00) via `git show`, confirmed all 4 pre-fix `venue=`
@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                                                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                                                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                                                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                                                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                                                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                                                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                                                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                                                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                                                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                                                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                                                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/

@@ -12,10 +12,10 @@ summary: >-
   corrupted double-suffixed target. A fix was written + verified with 9 passing unit tests in-session, but the
   dispatched task got cancelled mid-work before shipping, so BOTH the fix and the finding were reverted/lost from disk
   -- this doc preserves them. A DIFFERENT sub-agent closed the sibling todo
-  (cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2, the PERP-rename Track-8 item) the SAME day using a
-  different tool ("Script 2/3" + a 9-shard dry-run), and its evidence never mentions this bare-decomposed shape or these
-  specific ASTER objects -- it is UNCONFIRMED whether that closure's tooling covers this shape at all, since it appears
-  to be a different code path than the one this doc's fix targets.
+  (/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2, the PERP-rename Track-8
+  item) the SAME day using a different tool ("Script 2/3" + a 9-shard dry-run), and its evidence never mentions this
+  bare-decomposed shape or these specific ASTER objects -- it is UNCONFIRMED whether that closure's tooling covers this
+  shape at all, since it appears to be a different code path than the one this doc's fix targets.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [cefi, perp-perpetual, migration, bug, aster, hyperliquid, canonicalisation]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
   ]
 created: 2026-07-27
@@ -121,14 +121,15 @@ If `--apply` is ever run against the CURRENT (unfixed) script, all 1,496 ASTER o
 `...@LIN@LIN` id — silently wrong data going forward (any reader keying on canonical instrument_id would miss these, or
 a strict-format assertion downstream could start failing on these specific ids).
 
-**Open question, not resolved this session**: `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s todo 2 (the
-PERP-on-disk-rename Track-8 item) was independently closed the same day by a different sub-agent, citing "a fresh
-9-shard `--dry-run` re-verification (full corpus)... confirms 0 further planned changes on every shard" — but that
-entry's evidence never mentions this script by name, the `0G-USDT`-style objects, or a 1,496 count; it appears to
-describe a DIFFERENT tool ("Script 2/3", a sharded corpus-wide resolver keyed on the `:PERP:`-prefixed manifest shape)
-rather than THIS script (`migrate_onchain_perp_perpetual_canonical_2026_07_08.py`, which handles bare NO-prefix
-filenames specifically). It is UNCONFIRMED whether that closure's tooling actually covers this bare shape — do not
-assume it does just because the sibling todo reads `[x]`.
+**Open question, not resolved this session**:
+`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s todo 2 (the PERP-on-disk-rename
+Track-8 item) was independently closed the same day by a different sub-agent, citing "a fresh 9-shard `--dry-run`
+re-verification (full corpus)... confirms 0 further planned changes on every shard" — but that entry's evidence never
+mentions this script by name, the `0G-USDT`-style objects, or a 1,496 count; it appears to describe a DIFFERENT tool
+("Script 2/3", a sharded corpus-wide resolver keyed on the `:PERP:`-prefixed manifest shape) rather than THIS script
+(`migrate_onchain_perp_perpetual_canonical_2026_07_08.py`, which handles bare NO-prefix filenames specifically). It is
+UNCONFIRMED whether that closure's tooling actually covers this bare shape — do not assume it does just because the
+sibling todo reads `[x]`.
 
 ## Recommended decision
 
@@ -153,15 +154,15 @@ assume it does just because the sibling todo reads `[x]`.
       `instrument_ids_transformed_from_venue_perp_shape` and 0 `_from_bare_legacy_shape` — confirms independently that
       the manifest side has 0 in-scope `:PERP:`/bare-legacy-shaped rows, i.e. this bug is purely a GCS-object-filename
       issue as the original finding stated. **Cross-check resolved**: the sibling
-      `cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 2 ("Script 2/3") closure operates on a DIFFERENT
-      code path — a manifest-row-driven `resolve_canonical` rename for rows already in the `:PERP:` shape — not this
-      script's bare/no-venue-prefix filename handling; since this run's manifest phase independently found 0 in-scope
-      `:PERP:`-shaped rows, there is no overlap and Script 2/3's closure does NOT cover these 1,496 GCS objects. This
-      todo is NOT moot — todo 3's `--apply` is still needed. Process note: the background dry-run process (read-only, no
-      mutations) was terminated via SIGTERM (exit 143) ~20 min after its last useful log line under severe host-wide
-      swap pressure (9-13GB swap in use, unrelated to this script) once cleanup of its large in-memory DataFrames was
-      the only remaining work — both GCS and manifest result stats were already fully logged before termination, so no
-      evidence was lost.
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 2 ("Script 2/3") closure
+      operates on a DIFFERENT code path — a manifest-row-driven `resolve_canonical` rename for rows already in the
+      `:PERP:` shape — not this script's bare/no-venue-prefix filename handling; since this run's manifest phase
+      independently found 0 in-scope `:PERP:`-shaped rows, there is no overlap and Script 2/3's closure does NOT cover
+      these 1,496 GCS objects. This todo is NOT moot — todo 3's `--apply` is still needed. Process note: the background
+      dry-run process (read-only, no mutations) was terminated via SIGTERM (exit 143) ~20 min after its last useful log
+      line under severe host-wide swap pressure (9-13GB swap in use, unrelated to this script) once cleanup of its large
+      in-memory DataFrames was the only remaining work — both GCS and manifest result stats were already fully logged
+      before termination, so no evidence was lost.
 - [ ] [SCRIPT] P2. Once confirmed fixed + no double-suffix + cross-checked against the sibling closure, execute
       `--apply --stamp <stamp>` for the 1,496 real renames (small, bounded scale — a direct execution, not a VM launch)
       with the standard idempotent copy→verify→delete safety this script already implements.

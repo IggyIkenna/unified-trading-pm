@@ -211,23 +211,24 @@ defect; it is purely a function of host capacity at any given moment.
 
 - 2026-07-27 (slot-10, `data_engineering`): **6th independent corroboration**, features-service again, a DIFFERENT
   trivial change (one new untracked one-off script, zero edits to any existing module —
-  `features_by_date_root_canonicalisation_2026_07_21.md` todo 7). `bash scripts/quality-gates.sh --no-fix` (already the
-  lower-footprint variant) ran cleanly to **66% through the pytest suite** (deep into `tests/sports/unit/calculators/`)
-  before an `INTERNALERROR` fired: `pytest_timeout.py:327 threading.Timer(...)` → `threading.Thread.__init__` →
-  `mainloop: caught unexpected SystemExit!` — a NEW (4th distinct) failure shape: the crash happens creating a plain
-  `threading.Timer` object (not a subprocess, not a pandas internal), consistent with the host being unable to spawn a
-  new OS thread at all at that moment (thread/resource-table exhaustion), not a memory-triggered kill mid-computation
-  like the earlier signatures. Host state at the moment of the kill: `uptime` load average **18.65 / 19.28 / 23.39**;
-  `free -h` **2.2Gi free / 12Gi used / 4.1Gi swap used out of 30Gi**; `ps aux` confirmed **at least 3 concurrent full
-  `quality-gates.sh` runs** on this host at that instant (this one, plus a live PM `quickmerge`-driven `--no-fix` run on
-  slot-2, plus a plain `quality-gates.sh` on slot-13) — directly violating this workspace's own
-  `Shared-host ≤2 full QGs at once` cap, and consistent with every prior corroboration in this doc: genuine external
-  contention, not a defect in the change under test. Did not retry blind (per this doc's own established precedent) —
-  the underlying data fix for todo 7 was independently verified correct on REAL production GCS + the live availability
-  manifest (31/31 rows confirmed captured, durable across 2 consolidator cycles) before this QG attempt was even
-  started, so the fix's correctness does not depend on this gate; the one-off script itself was deleted rather than held
-  pending a contended re-run (it already achieved its one-shot effect — nothing left for it to do). Flagging here rather
-  than re-opening a stash/park cycle since there was no code change left to preserve.
+  `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 7).
+  `bash scripts/quality-gates.sh --no-fix` (already the lower-footprint variant) ran cleanly to **66% through the pytest
+  suite** (deep into `tests/sports/unit/calculators/`) before an `INTERNALERROR` fired:
+  `pytest_timeout.py:327 threading.Timer(...)` → `threading.Thread.__init__` → `mainloop: caught unexpected SystemExit!`
+  — a NEW (4th distinct) failure shape: the crash happens creating a plain `threading.Timer` object (not a subprocess,
+  not a pandas internal), consistent with the host being unable to spawn a new OS thread at all at that moment
+  (thread/resource-table exhaustion), not a memory-triggered kill mid-computation like the earlier signatures. Host
+  state at the moment of the kill: `uptime` load average **18.65 / 19.28 / 23.39**; `free -h` **2.2Gi free / 12Gi used /
+  4.1Gi swap used out of 30Gi**; `ps aux` confirmed **at least 3 concurrent full `quality-gates.sh` runs** on this host
+  at that instant (this one, plus a live PM `quickmerge`-driven `--no-fix` run on slot-2, plus a plain
+  `quality-gates.sh` on slot-13) — directly violating this workspace's own `Shared-host ≤2 full QGs at once` cap, and
+  consistent with every prior corroboration in this doc: genuine external contention, not a defect in the change under
+  test. Did not retry blind (per this doc's own established precedent) — the underlying data fix for todo 7 was
+  independently verified correct on REAL production GCS + the live availability manifest (31/31 rows confirmed captured,
+  durable across 2 consolidator cycles) before this QG attempt was even started, so the fix's correctness does not
+  depend on this gate; the one-off script itself was deleted rather than held pending a contended re-run (it already
+  achieved its one-shot effect — nothing left for it to do). Flagging here rather than re-opening a stash/park cycle
+  since there was no code change left to preserve.
 
 - 2026-07-27 (slot-5, `infra`): Investigated + closed the P1 todo. Confirmed the admission-only gap by reading
   `_qg_admit_check`/`_qg_governor_acquire_reservation` directly — it is exactly the already-open P0 in

@@ -30,7 +30,7 @@ related:
     /codex/02-data/chart-candle-delivery-flow.md,
     /codex/02-data/bar-boundary-candle-edge-convention.md,
     ../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
-    ../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    ../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]
 created: 2026-07-21
 authoritative_for:
@@ -135,7 +135,7 @@ is (`/codex/02-data/sports-2020-06-data-floor.md`), not silently upsampled.
   writer + the caller-side skip/prior-day-read + the manifest all funnel through it (path==path==manifest).
 - **S2 — parquet content** — the MDPS candle contract (`lookup_mdps_contract(mdps_data_type_key)`), never the raw-tick
   contract. OHLC nullability is PER-TYPE (deriv + empty-window rows legitimately nullable — resolved P0,
-  [`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
+  [`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
   Columns (`timestamp` UTC, `venue`/`symbol`/`instrument_id`, `open`/`high`/`low`/`close`/`volume`, `trade_count`/…,
   `delay_*_ms`): [`chart-candle-delivery-flow.md`](chart-candle-delivery-flow.md) §6. A closed OHLCV candle is
   timestamped by the bar-edge convention in

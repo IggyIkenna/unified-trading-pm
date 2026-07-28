@@ -13,7 +13,7 @@ summary: >-
   `BLOCKED-(CREDENTIALS|OPERATOR|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` marker exists only in text below the
   checkbox, not on the checkbox's own line — every one of those is a live re-dispatch risk, not just the sports case
   that surfaced it.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -33,6 +33,9 @@ priority: P2
 source: [sports_satellite_ao_dispatch_batch5-014]
 assigned_vm: planning
 resolved_by:
+  "agent-orchestrator@e856b56 (parser fix + regression test); corpus re-verified 2026-07-26 — 30/30 flagged todos
+  correctly excluded from the dispatchable backlog, 1 false-exclusion defect found + fixed in
+  tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md — both todos DONE"
 locked_by:
 execution_scope: orchestrator-agent
 estimate_class: refactor
@@ -45,6 +48,9 @@ depends_on: []
 supersedes:
 superseded_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # BLOCKED-\* marker not scanned outside the checkbox's own line
 
@@ -139,24 +145,24 @@ read instead of hand-auditing every plan.
       1 fixed below), prediction 2, cefi 1, meta 1.
 
       Content spot-check (10/30, one per AG + extra tradfi/sports coverage): 9 are genuinely still-open, correctly
-          gated on a real, CURRENT blocker (`BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE`) — no cleanup
-          needed, working as intended. **1 genuine defect found and fixed**: `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`
-          lines 144-155 (two `[AGENT] P2` VIX-wiring todos) quoted a **historical, since-RESOLVED** status verbatim —
-          `(was: "... Status: **BLOCKED-OPERATOR-DECISION**.")` — inside prose explaining that the block was later lifted.
-          The literal token match still fires on that quoted text even though the decision was made 2026-06-23 and the todo
-          is real, unblocked, actionable work — a false-EXCLUSION side effect of the marker regex being purely textual
-          (can't distinguish a live block from a quoted historical one). Reworded the quote to drop the literal
-          `BLOCKED-<TOKEN>` shape while preserving the meaning (`unified-trading-pm` commit, this same batch); verified via
-          direct `_parse_open_todos()` re-run that both VIX todos are now dispatchable. One more example of the SAME
-          false-exclusion class was found (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md:211`, a `[REVIEW] P1` todo
-          that quotes several OTHER todos' historical `BLOCKED-*` states while describing its own — genuinely still-open,
-          real remaining work: it re-scoped 2 of 3 target P0 items already but the dangling issue-doc reference + the
-          `related:` leading-slash convention fix are still outstanding per its own "Done when") — left untouched since it's
-          already tracked by its own todo in its own plan; not duplicating that tracking here.
+                  gated on a real, CURRENT blocker (`BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE`) — no cleanup
+                  needed, working as intended. **1 genuine defect found and fixed**: `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`
+                  lines 144-155 (two `[AGENT] P2` VIX-wiring todos) quoted a **historical, since-RESOLVED** status verbatim —
+                  `(was: "... Status: **BLOCKED-OPERATOR-DECISION**.")` — inside prose explaining that the block was later lifted.
+                  The literal token match still fires on that quoted text even though the decision was made 2026-06-23 and the todo
+                  is real, unblocked, actionable work — a false-EXCLUSION side effect of the marker regex being purely textual
+                  (can't distinguish a live block from a quoted historical one). Reworded the quote to drop the literal
+                  `BLOCKED-<TOKEN>` shape while preserving the meaning (`unified-trading-pm` commit, this same batch); verified via
+                  direct `_parse_open_todos()` re-run that both VIX todos are now dispatchable. One more example of the SAME
+                  false-exclusion class was found (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md:211`, a `[REVIEW] P1` todo
+                  that quotes several OTHER todos' historical `BLOCKED-*` states while describing its own — genuinely still-open,
+                  real remaining work: it re-scoped 2 of 3 target P0 items already but the dangling issue-doc reference + the
+                  `related:` leading-slash convention fix are still outstanding per its own "Done when") — left untouched since it's
+                  already tracked by its own todo in its own plan; not duplicating that tracking here.
 
-          **Conclusion**: no further per-AG cleanup doc needed — the 29 untouched flagged items are genuinely open and
-          correctly excluded (working as designed); the 1 real defect found is fixed; the parser fix (`e856b56`) is
-          confirmed correct across the full live corpus.
+                  **Conclusion**: no further per-AG cleanup doc needed — the 29 untouched flagged items are genuinely open and
+                  correctly excluded (working as designed); the 1 real defect found is fixed; the parser fix (`e856b56`) is
+                  confirmed correct across the full live corpus.
 
 ## Progress Log
 

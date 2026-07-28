@@ -16,13 +16,13 @@ summary: >-
   from tracking fleet-wide). (2) Separately, PM's own live `.gitignore` has substantial PM-specific accumulated fixes
   NOT reflected in the checked-in `scripts/templates/.gitignore.central` (QG-sentinel patterns with rationale comments,
   `!plans/audit/results/*.csv` audit-artifact exemptions, the `cursor-configs/settings.json` re-tracking fix from
-  `claude_code_settings_symlink_chain_broken_2026_07_23.md`, the `harsh_orchestrator/backlog.yaml` defensive ignore,
-  etc.) — the full-rewrite sync would have silently REGRESSED all of these already-shipped, documented fixes had I
-  committed it. Caught before any commit/push; reverted every repo's accidental `.gitignore`/`.cursorignore` change and
-  every accidentally-untracked file (re-`git add`'d by exact name, content unchanged, confirmed via zero-diff) via a
-  full 24-repo `git status` sweep. Shipped only the narrow, intended fix by hand (2274aa963): the 4 gitlink removals + a
-  single new `.claude/worktrees/` stanza added directly to both PM's `.gitignore` and the central template (NOT via the
-  sync script).
+  `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`, the `harsh_orchestrator/backlog.yaml`
+  defensive ignore, etc.) — the full-rewrite sync would have silently REGRESSED all of these already-shipped, documented
+  fixes had I committed it. Caught before any commit/push; reverted every repo's accidental `.gitignore`/`.cursorignore`
+  change and every accidentally-untracked file (re-`git add`'d by exact name, content unchanged, confirmed via
+  zero-diff) via a full 24-repo `git status` sweep. Shipped only the narrow, intended fix by hand (2274aa963): the 4
+  gitlink removals + a single new `.claude/worktrees/` stanza added directly to both PM's `.gitignore` and the central
+  template (NOT via the sync script).
 status: open
 nature: issue
 asset_group: [infrastructure]
@@ -81,9 +81,9 @@ H), the `!plans/audit/results/*.csv` and `!plans/audit/results/*.parquet` mega-a
 `!scripts/self-hosted-runners/hosted-baseline/MANIFEST.tsv` provenance exemption, `plan_health_digest.md`/
 `plan_skeleton.md` orchestrator-generated ignores, `harsh_orchestrator/backlog.yaml`, and — most notably — the
 `cursor-configs/settings.json RE-TRACKED 2026-07-23` fix with its full incident-history comment (see
-`claude_code_settings_symlink_chain_broken_2026_07_23.md`). None of this exists in the checked-in central template.
-Running the sync for real today would silently un-fix all of it in PM specifically, on top of whatever each of the 24
-sibling repos has independently accumulated that I did not audit (I only diffed PM's).
+`/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`). None of this exists in the checked-in
+central template. Running the sync for real today would silently un-fix all of it in PM specifically, on top of whatever
+each of the 24 sibling repos has independently accumulated that I did not audit (I only diffed PM's).
 
 ## What I did (fully contained, nothing shipped)
 

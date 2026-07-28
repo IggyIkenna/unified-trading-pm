@@ -4,9 +4,9 @@ title: >-
   cefi Script-1 canonical-migration campaign: 10/42 GCE VMs silently hung (GCE reported RUNNING, actual workload stalled
   1-2.5h+) — caught only by a manual staleness sweep, not any automatic system
 summary: >-
-  Found live during /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md's Script-1 corpus-wide
-  content-backfill campaign (42-VM fan-out), 2026-07-27. 10 of the 42 VMs were reported RUNNING by GCE but their actual
-  migration workload had stalled 1-2.5+ hours with zero heartbeat/progress — caught only via a manual
+  Found live during /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md's Script-1
+  corpus-wide content-backfill campaign (42-VM fan-out), 2026-07-27. 10 of the 42 VMs were reported RUNNING by GCE but
+  their actual migration workload had stalled 1-2.5+ hours with zero heartbeat/progress — caught only via a manual
   staleness-vs-wallclock sweep by the operator/agent during interactive `/autonomous` monitoring, not by any automatic
   system. Direct code-read this session confirms THREE independent, already-shipped mechanisms that should have caught
   this each have a gap that let it through: (1) deployment-api's composite health classifier DOES compute a real
@@ -39,7 +39,7 @@ tags:
   ]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
@@ -58,9 +58,9 @@ assigned_role: infrastructure
 source:
   "Found live during interactive `/autonomous` session monitoring of the cefi Script-1
   (migrate_cefi_content_instrument_id_catalogue_2026_07_17.py) corpus-wide --apply campaign under
-  /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md, 2026-07-27 — 10/42 VMs found hung only via a
-  manual staleness-vs-wallclock sweep of the fleet. All code-path claims in this doc were independently re-verified this
-  session by direct file read (not trusted from any prior summary)."
+  /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md, 2026-07-27 — 10/42 VMs found hung
+  only via a manual staleness-vs-wallclock sweep of the fleet. All code-path claims in this doc were independently
+  re-verified this session by direct file read (not trusted from any prior summary)."
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: none
@@ -80,9 +80,9 @@ resolved_by:
 ## What I found
 
 During the cefi Script-1 42-VM content-backfill migration fan-out
-(`/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`), 10 of the 42 GCE VMs were reported
-`RUNNING` by GCE's own instance status the entire time, but their actual migration workload had stalled 1-2.5+ hours
-with no heartbeat/progress advancing. This was caught only by a manual staleness-vs-wallclock sweep run by the
+(`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`), 10 of the 42 GCE VMs were
+reported `RUNNING` by GCE's own instance status the entire time, but their actual migration workload had stalled 1-2.5+
+hours with no heartbeat/progress advancing. This was caught only by a manual staleness-vs-wallclock sweep run by the
 operator/agent during interactive `/autonomous` monitoring — comparing each VM's last-observed progress timestamp
 against wall-clock time by hand. No automatic system (dashboard alert, Slack page, fleet auto-kill) flagged any of the
 10 stuck VMs on its own.
@@ -327,11 +327,11 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       genuinely-healthy run emitting real progress markers interleaved with the tool's own wedged-worker WARNING is
       never false-killed. Full `quality-gates.sh` green (2874 passed, 5 skipped). **This fix alone does not close the
       incident actually observed** — the campaign's own Progress Log
-      (`/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) records serial-console evidence
-      consistent with a whole-VM OS-level memory-pressure freeze (heartbeat itself went silent), a failure class no
-      in-VM watchdog can reliably catch since it runs inside the same distressed VM; todos 1+2 (paging on the `"hung"`
-      state, and the `_is_backfill_vm()` naming fix already shipped) are the actual external defense for that specific
-      incident class, not this todo.
+      (`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) records serial-console
+      evidence consistent with a whole-VM OS-level memory-pressure freeze (heartbeat itself went silent), a failure
+      class no in-VM watchdog can reliably catch since it runs inside the same distressed VM; todos 1+2 (paging on the
+      `"hung"` state, and the `_is_backfill_vm()` naming fix already shipped) are the actual external defense for that
+      specific incident class, not this todo.
 - [x] [HUMAN] P3. **Audit other one-off launcher scripts under `deployment-service/scripts/vm/` for the same three-gap
       pattern** (paging-set exclusion is fleet-wide so N/A per-launcher, but the stall-watchdog non-invocation and
       backfill-naming-regex miss are per-launcher-name issues) — not just `launch-canonical-migration-vm.sh`. Done when:
@@ -432,7 +432,7 @@ grep -n 'def _is_backfill_vm\|canonical' \
 
 10/42-hung and the 1-2.5h+ stall durations were observed operationally during this session's manual fleet sweep during
 the Script-1 campaign — there is no separate artifact/log file cited for that count beyond the campaign's own Progress
-Log entries in `/plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`.
+Log entries in `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`.
 
 ## Resolution (2026-07-27, reconciliation pass)
 

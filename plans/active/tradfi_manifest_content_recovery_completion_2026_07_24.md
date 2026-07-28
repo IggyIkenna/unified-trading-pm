@@ -294,9 +294,10 @@ source: >-
       DELETEs = BLOCKED-OPERATOR-DECISION** (hard-stop).
 - [x] ✅ [PM] P1. **Reconcile the stale fork** `data_completion_tradfi_2026_07_15.md` against `tradfi_v9_stage1_finish`
       (flip done todos, re-scope open ones, delete its duplicate paragraph) so the backlog is honest. DONE 2026-07-21
-      (docs-reconciliation pass, `tradfi_docs_reconciliation_findings_2026_07_21.md`): C0/C-source/C-pipeline_mode
-      RIDER/post-walk read/orphan-sweep/E4/E5/E7 flipped to `[x]` with evidence citing `tradfi_v9_stage1_finish`; the
-      Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked obsolete.
+      (docs-reconciliation pass, `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`):
+      C0/C-source/C-pipeline_mode RIDER/post-walk read/orphan-sweep/E4/E5/E7 flipped to `[x]` with evidence citing
+      `tradfi_v9_stage1_finish`; the Massive-dependent gate-b/coverage-gap/dual-source paragraphs re-scoped or marked
+      obsolete.
 
 ### B.5 — Candle namespace quarantine backlog (`processed_candles/`, SEPARATE from Surfaces A-D above — different
 

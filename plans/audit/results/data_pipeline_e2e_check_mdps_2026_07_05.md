@@ -94,9 +94,9 @@ _(none — every checked cell was canonically shaped)_
 ## ADDENDUM 2026-07-27 (slot-10) — todo 3 candle-schema-drift proof-sweep (other data_types)
 
 Scoped `--legs force --require-captured --auto-day` per representative `(asset_group, venue, data_type)` cell, per
-`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3 ("sweep the OTHER candle data_types for the same
-class of contract drift"). `futures_chain` has **zero enumerated cells** under `--mvp-only` — it is not a live MDPS MVP
-data_type today, so it is out of scope (not silently skipped — confirmed via `--dry-enumerate`).
+`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3 ("sweep the OTHER candle
+data_types for the same class of contract drift"). `futures_chain` has **zero enumerated cells** under `--mvp-only` — it
+is not a live MDPS MVP data_type today, so it is out of scope (not silently skipped — confirmed via `--dry-enumerate`).
 
 | Shard                                                           | Leg   | Status                 | Result                                                                            |
 | --------------------------------------------------------------- | ----- | ---------------------- | --------------------------------------------------------------------------------- |

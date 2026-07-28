@@ -17,7 +17,7 @@ related:
   [
     /plans/archive/issues/backlog_regen_id_reuse_stale_status_2026_07_15.md,
     /plans/archive/2026_07/ao_backlog_regen_integrity_2026_07_20.md,
-    /plans/active/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
+    /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
   ]
 created: 2026-07-26
 last_updated: 2026-07-26
@@ -33,11 +33,12 @@ drift_direction: advance-code
 sequential: true
 depends_on: []
 source:
-  Live-reproduced 2026-07-26 while editing slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md's own OPERATOR todo
-  — the edit's new content landed on a reused task_id (`-004`) that the sibling-reset-guard correctly refused to reset
-  (it was a real, already-done, unrelated fix with done_sha=41840c1), so the new todo silently read as done and would
-  never dispatch. The 2026-07-20 plan's own closing note flagged this exact residual as "worth watching for in practice"
-  — this plan is that watch.
+  Live-reproduced 2026-07-26 while editing
+  /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md's own OPERATOR todo — the edit's new
+  content landed on a reused task_id (`-004`) that the sibling-reset-guard correctly refused to reset (it was a real,
+  already-done, unrelated fix with done_sha=41840c1), so the new todo silently read as done and would never dispatch.
+  The 2026-07-20 plan's own closing note flagged this exact residual as "worth watching for in practice" — this plan is
+  that watch.
 locked_by:
 locked_since:
 supersedes:

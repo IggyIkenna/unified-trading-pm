@@ -51,7 +51,7 @@ tags:
 related:
   [
     /plans/archive/2026_06/build_operability_smoke_all_repos_2026_06_19.md,
-    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
     /plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

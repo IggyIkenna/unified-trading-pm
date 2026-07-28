@@ -23,7 +23,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/archive/issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md,
-    /plans/active/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md,
+    /plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md,
   ]
 created: 2026-07-25
 assigned_vm: NA
@@ -114,10 +114,10 @@ it had, one day earlier.
   `75f226e8` exists in `market-tick-data-service` history and its commit body matches this doc's exact "purpose-built
   read-split-merge, `merge_migrated_odds_into_canonical_2026_07_17.py`" description (1,815 days probed, 199 genuine-gain
   days merged, 1,336 pure-duplicate days, 280 add-keys-but-zero-derive days deferred).
-- `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` independently re-verified the
-  post-merge state via a full exhaustive re-census (2,139-day calendar superset, 0 missing days): the manifest carries
-  **zero** rows for `pipeline_mode=batch_footystats AND source(case-insens)=ODDS_API` — the mis-stamped population is
-  gone from the manifest; only orphaned GCS bytes remain (human-gated PROD delete, tracked there).
+- `/plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` independently
+  re-verified the post-merge state via a full exhaustive re-census (2,139-day calendar superset, 0 missing days): the
+  manifest carries **zero** rows for `pipeline_mode=batch_footystats AND source(case-insens)=ODDS_API` — the mis-stamped
+  population is gone from the manifest; only orphaned GCS bytes remain (human-gated PROD delete, tracked there).
 - **Re-verified fresh here** (not just re-citing): (a) `75f226e8` confirmed present in `market-tick-data-service` git
   history via `git log`/`git show`, touching exactly the merge path described. (b) Re-ran the manifest census directly
   (`read_availability_index` on `market-data-tick-sports-prd-...`, live, 2026-07-26): 42,476 rows carry
@@ -128,7 +128,8 @@ This doc's 3 open todos are therefore moot: todo 1+2 (reconstruct days-file, run
 (`75f226e8`); todo 3 (correct batch2's todo text) is unnecessary because batch2's own "CORRECTED 2026-07-25" addendum
 already supersedes its original wording in place — editing it again would just be a duplicate touch on a file another
 slot already fixed. The sole remaining work is the human-gated orphan-object PROD delete tracked in
-`issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` — not script-extension work.
+`/plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md` — not
+script-extension work.
 
 ## Todos
 

@@ -14,7 +14,7 @@ summary: >-
   attempted_failed. It is invisible on a homogeneous run (a single-venue single-day smoke shows nothing) which is
   exactly why it has survived. This BLOCKS the primary backfill speed lever - raising in-process worker concurrency - so
   it must be fixed before any fleet-wide MDPS backfill runs with max_workers>1.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -43,10 +43,16 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "market-data-processing-service@b3376b8 (frozen SeedContext threaded per-call + regression test proving
+  failing-on-old/passing-on-new + opt-in date-concurrency lever); blast-radius assessment (2026-07-27, slot-8) found
+  zero real backfill runs predate the fix — all 4 todos DONE"
 source: >-
   found 2026-07-20 while profiling the MDPS candle path for a backfill ETA; both halves verified by direct read of the
   cited files.
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # P0 — shared-instance seed context + a thread pool = silent wrong prices
 

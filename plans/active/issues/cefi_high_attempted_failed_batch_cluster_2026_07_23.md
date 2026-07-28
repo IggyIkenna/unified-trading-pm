@@ -378,10 +378,10 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       concept into one consolidated resume-backfill todo — and that forked plan is `status: draft` with
       `depends_on: [cefi_migration_cutover_and_track8_completion_2026_07_25]` + `gate_on_depends: true`, explicitly
       because "launching before the Track-1 drain re-enables would fight the consolidator." Checked the gating plan
-      (`cefi_migration_cutover_and_track8_completion_2026_07_25.md`): also `status: draft`, all 5 of its own todos
-      unchecked, **no Progress Log section at all** — Track 1 has not started. So launching DERIBIT Wave-3 (or any
-      Track-2 backfill) right now would violate the plan authors' own explicit sequencing gate, not just be premature.
-      **Correct action: do not launch.** This is now tracked as a machine-gated dependency
+      (`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`): also `status: draft`, all 5
+      of its own todos unchecked, **no Progress Log section at all** — Track 1 has not started. So launching DERIBIT
+      Wave-3 (or any Track-2 backfill) right now would violate the plan authors' own explicit sequencing gate, not just
+      be premature. **Correct action: do not launch.** This is now tracked as a machine-gated dependency
       (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`'s first todo, "Resume the cefi Tardis COVERAGE
       backfill") that will dispatch automatically once Track 1 completes — no separate DERIBIT-specific launch is needed
       or correct to force now.

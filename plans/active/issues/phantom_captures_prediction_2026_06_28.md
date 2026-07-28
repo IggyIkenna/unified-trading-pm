@@ -102,4 +102,13 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
       contracts + genuinely empty trading days). THEN determine true data gaps by re-running the daily fetcher across
       2025-03-14→2026-06-27; only contracts where fetch returns data (not 0-trade) need explicit backfill via
       `launch-mtds-prediction-backfill-vm.sh` (POLYMARKET) and `launch-kalshi-bulk-seed-vm.sh` (KALSHI). **Gate:**
-      writer fix landed + QG green (market-tick-data-service); re-fetch confirms phantom classification.
+      writer fix landed + QG green (market-tick-data-service); re-fetch confirms phantom classification. **STATUS CHECK
+      2026-07-28 (unified-trading-pm, verification pass)**: this todo's tracked home is
+      `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 (already cites this doc by name + its
+      open todo in the Sources section — not just a bare mention). **Partial progress found, not fully verified**: both
+      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` and `.../polymarket_adapter.py`
+      now explicitly distinguish a genuine zero-trade market (not flagged) from a transport-error fetch failure (routed
+      to `attempted_failed`, CF-11) — this is the SAME distinction the writer-fix half of this todo asks for, dated
+      2026-07-14 per the adapters' own docstrings. **Not confirmed**: whether this fully closes the gate (no QG run + no
+      re-fetch-classification check performed this pass) — leaving unflipped rather than guessing. Next worker: verify
+      against a real re-fetch before flipping.

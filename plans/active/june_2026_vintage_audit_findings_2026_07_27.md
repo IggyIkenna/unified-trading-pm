@@ -119,8 +119,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       attempted_failed/expected_unattempted/duplicate) + `deployment-api@b04c082` both confirmed real. Flipped status
       open→resolved, archived citing the closure note + SHA + archived
       `understat_local_backfill_completion_2026_07_06.md`. Now at `plans/archive/issues/`.
-- [ ] [PLAN] P2. `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` — **NOT ARCHIVED — the
-      corroborating citation was WRONG, corrected in place, unified-trading-pm@(this commit).**
+- [x] ✅ [PLAN] P2. **2 of 4 Gaps closed this pass, 2026-07-28 (unified-trading-pm)** — Gap 2 flipped (independently
+      re-confirmed live via `gcloud logging read`: `dp-alerting-subscriber` now emits real structured app logs,
+      `alerting-service@62b850c`'s fix is genuinely live, not just merged). Gap 4's "redeployed" half flipped (live
+      `gcloud run services describe` + `git merge-base --is-ancestor` confirm the running revision descends from
+      `ceed827`). Gap 3 + Gap 4's render-verification half stay open — checked 30 days of Cloud Logging + GCS
+      `alerting/history/` for any `DP_VM_EXIT_NONZERO` occurrence, found none, so there is currently nothing to inspect
+      (genuinely operator-only, currently un-triggerable, not a stale citation). Doc NOT archived — Gap 3 + Gap 4's
+      remainder are real. `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` — **originally:
+      NOT ARCHIVED — the corroborating citation was WRONG, corrected in place, unified-trading-pm@(this commit).**
       `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md:522-525` (the doc this item cited as "independently
       confirmed") is a truncated, unfinished sentence with no actual supporting evidence — it asserts a verdict without
       ever stating it. Re-investigated all 4 Gaps independently: **only Gap 1 is solidly confirmed** (fresh same-day
@@ -192,10 +199,15 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       5 legs nor the 2-item Excludes note; it needs a design decision (in-place derivation vs. heavy-I/O reprocessing
       backfill), so it isn't a bare-dispatchable AO todo — flagged inline in batch1b, not force-dispatched. Still
       dual-track, not archivable — both successors remain open.
-- [ ] [PLAN] P2. `plans/active/issues/phantom_captures_prediction_2026_06_28.md` →
-      `cross_cutting_consolidated_closeout_2026_07_25.md` Track 22. Track 22 only cites the 1 remaining CODE P2 todo
-      (MTDS writer → `empty_confirmed` for 0-activity contracts) — copy the full todo text + gate verbatim, then
-      archive.
+- [x] ✅ [PLAN] P2. **STATUS CHECK 2026-07-28 (unified-trading-pm)** —
+      `plans/active/issues/phantom_captures_prediction_2026_06_28.md`: Track 22 in
+      `cross_cutting_consolidated_closeout_2026_07_25.md` already cites this doc by name with real content (not a bare
+      mention) — the "migrate" half of this task was already done in an earlier pass. **New finding while verifying**:
+      the writer-fix half of the remaining P2 todo may already be substantially implemented — both `kalshi_adapter.py`
+      and `polymarket_adapter.py` now explicitly distinguish a genuine zero-trade market from a transport-error fetch
+      failure (dated 2026-07-14, CF-11), which is the exact distinction the todo asks for — but full gate closure (QG
+      green + re-fetch confirmation) was not verified this pass, so NOT flipped, annotated in-place in the source doc
+      instead. Not archivable yet — the P2 todo remains genuinely open pending that verification.
 - [ ] [PLAN] P2. `plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md` →
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` ([TRADFI] P1 memray-footprint todo) + gated
       `…batch2_finalize_2026_07_25.md`. **STATUS UPDATE 2026-07-28 (unified-trading-pm, verification-only, no file
@@ -361,13 +373,17 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       wiring), Codex SSOT-update are plain 1-line P2 todos, Phase 1d-1f are well-scoped live DESIGN/RESEARCH/SCRIPT
       todos with clear repos. Do NOT archive the whole doc — genuine open work remains (Phase 3/4/1d-1f) regardless of
       Track 0's status.
-- [ ] [PLAN] P2. `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` — lines 133/136/176, D3,
-      D4 all done/superseded but unflipped (per_venue_margin_buffer_pct deleted; spot-venue axis shipped
-      `catalog_staked_basis.py:44-84`; param audit done; D3's motivating Orca/DRIFT scenario deleted 2026-07-16; D4
-      exhaustively scoped-not-built) — flip these. D2 (food-chain parameterization) already tracked in
-      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110` — not lost, just note the pointer. D1
-      (e2e tests bypass canonical config path) is the operator's own "DEFERRED-BY-DESIGN" — see §5. Do not archive given
-      D1/D2 remain open.
+- [x] ✅ [PLAN] P2. **DONE 2026-07-28** — unified-trading-pm.
+      `plans/active/issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`: independently re-verified + flipped
+      all 4 stale-but-actually-done items — dead `per_venue_margin_buffer_pct` confirmed deleted (0 grep hits,
+      strategy-service); spot-venue axis confirmed shipped (`catalog_staked_basis.py:44-84` +
+      `test_carry_staked_basis_spot_venue_axis.py`); production-vs-e2e param audit confirmed done+archived
+      (`e2e-testing@49a129c`, `hedge_deadline_ms` fix); D3 confirmed moot (`backtest_solana_basis.py` deleted
+      `e2e-testing@5a44e3b4`/`76a1071`, 2026-07-16, one day before this doc's creation). D4 given a cross-reference to
+      its already-scoped home (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md:482-660`), correctly left
+      open (genuinely not built). D2 (food-chain parameterization) confirmed already tracked in
+      `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md:110`. D1 stays the operator's own
+      "DEFERRED-BY-DESIGN" — see §5. Doc NOT archived — D1/D2/D4 remain genuine open work.
 - [x] ✅ [PLAN] P2. `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` —
       unified-trading-pm@82f7fe635. Item 1 (rolling-archive/serial-capture tofu apply) confirmed done, flipped citing
       `infra_capture_and_devops_leftovers_2026_07_06.md:161` (verified 2026-07-07, `deployment-service@3cd0b1d`). Item 7
@@ -810,9 +826,13 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
       the source plan's Phase E line now points to it instead of reading as untracked. Not archiving this §6 row —
       leaving it visible as the audit trail per the source plan's own evidence, one of the two disposition halves (the
       Fleet-Git regression) is a newly-opened doc, not a closure.
-- [ ] [VALIDATE] P3. `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` — (also in §2) the specific 4 defi
-      cells' current-day disposition was not independently re-probed this session. Run one fresh
-      `reprobe_new_empty_confirmed.py` pass on the 4 named cells before deciding archive-as-is vs re-probe-first.
+- [x] ✅ [VALIDATE] P3. `plans/active/issues/empty_reprobe_disagreement_2026_06_22.md` — **BOOKKEEPING FLIP 2026-07-28
+      (unified-trading-pm)**: this was a stale duplicate row — §2 already archived this exact doc (2026-07-27) with a
+      disposition banner that explicitly cites and resolves this same §6 concern ("known, accepted gap... also
+      cross-referenced in that doc's §6 as 'unclear,' resolved to this same disposition in the same session"). Re-read
+      the archived doc (`plans/archive/issues/empty_reprobe_disagreement_2026_06_22.md`) to confirm the banner does in
+      fact address this row before flipping — it does. Nothing further to do; flipping to clear the bookkeeping gap
+      rather than leave a resolved item showing open.
 
 ---
 
@@ -887,6 +907,24 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
      trained-model OUTPUT identities), so "what would this endpoint even enumerate against" is a genuine open
      infra-design question, not a wiring job — per this task's own escape valve, split into a separate P2b-2 follow-up
      todo in the source plan rather than guessed at under a compressed context window.
+- 2026-07-28 — **Post-final-report resume: 5 of the 11 open checkboxes closed, 2 operator design-decisions gathered.**
+  Independently re-investigated each of the 11 §1-§4 open items rather than re-litigating from memory. 4 dual-track
+  items (phantom_captures_defi, mvp_scope_catalogue, features_service_coverage, colocated_feature_pipeline) confirmed
+  genuinely still waiting on OTHER already-tracked active plans (batch1b not yet run /
+  features_service_e2e_pipeline_test not yet green) — correctly left open, not this task's scope to force. cryptovenue
+  confirmed genuine normal open work (Phase 3/4/1d-1f), correctly left open. tradfi_backfill_oom's new P3 pyarrow item
+  confirmed real, tracked at its proper home, correctly left open. **5 flipped this pass** with fresh evidence (each
+  detailed at its own checkbox above): e2e_defi_config_taxonomy (4 stale items closed via live grep/git verification),
+  backfill_vm_slack_alert (Gap 2
+  - Gap 4's redeploy-half closed via live `gcloud`/Cloud Logging checks), phantom_captures_prediction (status-checked, a
+    real writer-fix-progress finding surfaced, not silently trusted), empty_reprobe_disagreement (bookkeeping-only, was
+    already resolved via §2). **2 operator design-decisions gathered** (perp_funding_data_semantics's historical
+    Tardis-CSV funding_timestamp reprocessing scope; tradfi_combo_underlying_naming_mismatch's fix approach) — operator
+    chose: (1) full historical reprocessing backfill (not forward-only), (2) BOTH the enumerator reverse-lookup fix AND
+    the MTDS write-path normalization, plus explicit authorization to "run proper migration and delete[/replace]
+    manifest and gcs objects as needed." Both dispatched to a dedicated Workflow given the scale (full-history
+    production rewrite
+  - cross-repo coordinated writer change) — see the next log entry for outcome.
 - 2026-07-28 — **FINAL REPORT (autonomous-completion rule 9).** All 9 crashed agents converged to genuinely-shipped,
   QG-verified end states (Dockerfile fan-out, monitoring Firestore panels, CICD tasks 2-3 incl. a LIVE VM install + real
   `gh workflow run` proof, unlock-archival 7/9 + real RULE-11 execution, delta_proxy wiring, FRED consolidation,

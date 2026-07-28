@@ -8,7 +8,7 @@ summary: >-
   Needs-Attention triage panel [UI], (B) dark-theme-default fix [UI], (C) reason_summary/reason_category on drilldown
   tree nodes [API], (D) mock-mode /coverage-summary + drilldown fixes [API], (E) a flat primary×date capture_status
   matrix endpoint [API]. Everything else on the branch is already shipped equal-or-better in prod.
-status: active
+status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified all five A-E cherry-picks [x] with shipped-commit + test evidence, Progress Log confirms this plan is complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -37,7 +37,16 @@ source:
   all A–E")
 ---
 
+## Deferred work — migrated to:
+
+**None** — plan verified fully complete at archival, zero open todos, no prose-only remaining work found.
+
 # Deployment data-status redesign cherry-picks (A–E)
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled.** Verified at archival: all five A-E cherry-picks
+> shipped and checked (C `deployment-api@c503d35`, D `deployment-api@349946a`, E `deployment-api@b8f7507`, B
+> `deployment-ui@2c4e950`, A `deployment-ui@615bddf`), each with cited tests; todo E's own note states "All five A-E
+> cherry-picks are now flipped; this plan is complete."
 
 > **Context.** Two subagents compared Harsh's `feat/data-status-redesign` (deployment-ui 31 commits / deployment-api 8
 > commits, `ComsicTrader <harshkantariya.work@gmail.com>`, late May) against current `origin/live-defi-rollout`.

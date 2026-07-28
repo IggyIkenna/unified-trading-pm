@@ -217,9 +217,9 @@ someone else, or the manifest shape may have shifted.
   **Which script "ran"**: neither corrective script's `--apply` has a commit/log trail, and independently the cefi-wide
   canonicalization cutover (`complete_cefi_manifest_canonical_dedup_2026_07_17.py`, the thing that WOULD rewrite
   `instrument_type` casing/values at scale) is confirmed NOT yet applied -- its own plan
-  (`cefi_migration_cutover_and_track8_completion_2026_07_25.md`) is `status: draft` with its `--apply` todo still
-  unchecked. Ran both BYBIT-SPOT scripts in dry-run (read-only, no writes) against the live manifest for direct
-  confirmation:
+  (`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`) is `status: draft` with its
+  `--apply` todo still unchecked. Ran both BYBIT-SPOT scripts in dry-run (read-only, no writes) against the live
+  manifest for direct confirmation:
   - `relabel_bybit_spot_perpetual_itype_2026_07_07.py` (no args): "rows to relabel: 0" then its own STOP-ON-SURPRISE
     fires ("226319 BYBIT-SPOT rows already carry instrument_type=SPOT_PAIR") -- i.e. the target end-state this script
     exists to produce is ALREADY true.

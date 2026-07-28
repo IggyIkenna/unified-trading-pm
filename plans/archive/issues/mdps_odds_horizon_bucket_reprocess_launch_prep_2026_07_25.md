@@ -173,4 +173,4 @@ this VM-launch task's scope.
       (`sports_satellite_ao_dispatch_batch2_2026_07_24.md`), this population turned out to be mis-stamped
       `batch_odds_api` data already merged to canonical on 2026-07-17 (`market-tick-data-service@75f226e8`) — no
       copy+swap work remains. What's left is a human-gated orphan-object PURGE (5-part delete-safety proof, staged not
-      executed): `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`.
+      executed): `/plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`.

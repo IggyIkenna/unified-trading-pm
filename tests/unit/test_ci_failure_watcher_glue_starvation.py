@@ -7,7 +7,7 @@ gh/network calls are mocked.
 WHY THIS EXISTS: once PM's glue workflows run on the self-hosted pools, a dead VM is SILENT —
 GitHub keeps accepting dispatches, the jobs sit `queued`, and every other detector here watches for
 FAILURES. A queued job is not a failure until GitHub kills it at 24h, by which point the ci_status
-transitions are lost. SSOT: plans/active/github_actions_ci_cost_reduction_2026_07_15.md.
+transitions are lost. SSOT: /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md.
 """
 
 from __future__ import annotations

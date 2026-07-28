@@ -11,7 +11,7 @@ summary: >-
   channel + operator-ruling; the plan's own doc paths are wrong). NONE can be closed by an in-slot backend worker with
   the runtime-verification evidence the workspace HARD RULES require. Filed by slot-10 on dispatch of batch2-010; the P0
   checkbox was NOT flipped.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -51,9 +51,16 @@ superseded_by:
 depends_on:
 source: cefi_satellite_ao_dispatch_batch2-010 dispatch to slot-10 (2026-07-26) — findings-closure escalation
 resolved_by:
+  "operator ruling BLK-dca02ac2 (routing decided, Option A) + sub-item 2 resolved via automated digest-refresh
+  (features-service@586a5cea/@8661a7af) + sub-item 4 3-of-4 SSOT fixes (unified-trading-pm@8e435b425) + sub-item 1 Track
+  A/B deploys (features-service/execution-service/MTDS verified; MDPS blocker filed separately) + sub-item 3 re-verified
+  stale premise (no migration needed, live data already clean) — all 4 todos DONE"
 ---
 
 # cefi_satellite_ao_dispatch_batch2-010 — mis-scoped, multi-gated bundle
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

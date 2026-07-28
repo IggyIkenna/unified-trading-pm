@@ -35,7 +35,13 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
 PLANS_DIR = PM_ROOT / "plans" / "active"
 EPICS_DIR = PM_ROOT / "plans" / "epics"
-MASTER_FILE = PLANS_DIR / "active_plan_inventory_dashboard_2026_07_24.md"
+# MASTER_FILE itself was archived 2026-07-28 (plan-hygiene sweep: verified auto-regenerated
+# inventory table, no Todos section, no unfinished work of its own) -- it keeps being
+# auto-regenerated in place at its new archived path so this twice-daily Cloud-Scheduler job
+# doesn't break; the script only ever rewrites content between the AUTO-INVENTORY markers, so
+# the doc's own frontmatter/ARCHIVED-banner/Deferred-work section (all outside those markers)
+# are untouched by this script.
+MASTER_FILE = PM_ROOT / "plans" / "archive" / "2026_07" / "active_plan_inventory_dashboard_2026_07_24.md"
 # The inventory TABLE lives in MASTER_FILE (above), but the ~175-sub-plan cross-reference
 # corpus that "master"-attribution substring-matches against stayed behind in the archived
 # cutover doc when the table was extracted out 2026-07-24 (plan_line_cap_remediation_2026_07_23.md

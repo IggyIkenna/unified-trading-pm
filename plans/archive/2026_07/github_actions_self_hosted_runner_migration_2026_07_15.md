@@ -3,13 +3,13 @@ doc_type: plan
 title: GitHub Actions self-hosted runner migration — COMPLETE (37/37 movers zero-billed, STEP 2c conversion shipped)
 summary: >-
   Archived execution record of the self-hosted-runner migration, split out of
-  github_actions_ci_cost_reduction_2026_07_15.md per the 2026-07-23 plan line-cap remediation triage. Moved 37/37
-  flippable GitHub Actions glue/switchboard workflows off GitHub-hosted runners onto the orchestrator VM ([self-hosted,
-  glue] / [self-hosted, glue-writer]), converted persist-cicd-event to a composite action (STEP 2c, ~$117/mo), and
-  shipped Phase 2 (A1 docs-only fast-path, A2 content-gate dedup, A5 quality-gates-v2 fan-out collapse) + Phase 3 (cron
-  cadence). All 30 todos here are DONE (0 open) — archived immediately, no further action expected. Open follow-up work
-  forked to github_actions_operator_gated_followups_2026_07_17.md; the same-day staging-machinery-shutdown audit forked
-  to github_actions_staging_machinery_shutdown_2026_07_24.md.
+  /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the 2026-07-23 plan line-cap remediation
+  triage. Moved 37/37 flippable GitHub Actions glue/switchboard workflows off GitHub-hosted runners onto the
+  orchestrator VM ([self-hosted, glue] / [self-hosted, glue-writer]), converted persist-cicd-event to a composite action
+  (STEP 2c, ~$117/mo), and shipped Phase 2 (A1 docs-only fast-path, A2 content-gate dedup, A5 quality-gates-v2 fan-out
+  collapse) + Phase 3 (cron cadence). All 30 todos here are DONE (0 open) — archived immediately, no further action
+  expected. Open follow-up work forked to github_actions_operator_gated_followups_2026_07_17.md; the same-day
+  staging-machinery-shutdown audit forked to github_actions_staging_machinery_shutdown_2026_07_24.md.
 status: complete
 nature: process
 asset_group: [cross-cutting]
@@ -40,21 +40,21 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  - "Split from plans/active/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation triage
-    (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 1 of 3): the fully-completed
-    self-hosted-runner-migration extraction (0 open todos, archives immediately)."
+  - "Split from /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation
+    triage (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 1 of 3): the
+    fully-completed self-hosted-runner-migration extraction (0 open todos, archives immediately)."
 drift_direction: advance-code
 ---
 
 # GitHub Actions self-hosted runner migration — COMPLETE (archived)
 
 > **🗄️ ARCHIVED 2026-07-24 — this doc is a historical execution record, not a live plan.** Split out of
-> `github_actions_ci_cost_reduction_2026_07_15.md` (line-cap remediation, 2026-07-23 triage) because every todo below is
-> DONE — 30/30, 0 open. It documents the self-hosted-runner migration exactly as it shipped: 37/37 flippable movers on
-> the glue pool (35 `[self-hosted, glue]` + 1 `[self-hosted, Linux, X64, glue-writer]`), `persist-cicd-event` converted
-> to a composite action (STEP 2c), and Phase 2/3 (A1/A2/A5 + cron cadence) all measured and shipped. Content below is
-> moved **verbatim** from the parent plan — nothing summarized or rewritten. Live follow-up work (operator decisions
-> still open, verification pending the calendar) lives in
+> `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` (line-cap remediation, 2026-07-23 triage)
+> because every todo below is DONE — 30/30, 0 open. It documents the self-hosted-runner migration exactly as it shipped:
+> 37/37 flippable movers on the glue pool (35 `[self-hosted, glue]` + 1 `[self-hosted, Linux, X64, glue-writer]`),
+> `persist-cicd-event` converted to a composite action (STEP 2c), and Phase 2/3 (A1/A2/A5 + cron cadence) all measured
+> and shipped. Content below is moved **verbatim** from the parent plan — nothing summarized or rewritten. Live
+> follow-up work (operator decisions still open, verification pending the calendar) lives in
 > `plans/active/github_actions_operator_gated_followups_2026_07_17.md`; the same-day staging-machinery-shutdown audit (a
 > distinct topic, discovered adjacent to this work) lives in
 > `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md`.

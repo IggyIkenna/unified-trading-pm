@@ -47,7 +47,7 @@ tags:
   ]
 related:
   [
-    /plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
     /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/archive/issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md,
     /codex/08-workflows/ci-cd-flow.md,

@@ -4,8 +4,9 @@ title:
   DERIBIT dated-option trades mis-classified into instrument_type=perpetual/data_type=trades — monolithic 1.7-6.3GB
   files OOM Script 1's canonical-migration workers
 summary: >-
-  Found live during the cefi_migration_cutover_and_track8_completion_2026_07_25.md Script-1 corpus-wide parquet-content
-  migration (--apply, 42-VM fan-out). Every OOM (`rc=137`) hit so far correlates with the SAME signature — a single
+  Found live during the /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md Script-1
+  corpus-wide parquet-content migration (--apply, 42-VM fan-out). Every OOM (`rc=137`) hit so far correlates with the
+  SAME signature — a single
   `venue=DERIBIT/instrument_type=perpetual/data_type=trades/<BASE>_<QUOTE>-<DATE>-<STRIKE>-<C|P>.parquet` object (a
   DATED-OPTION wire symbol, wrongly living in the `perpetual/` partition) at 1.7-6.3GB, vs. <1-2MB for any correctly-
   classified single-instrument file in the same partition. The size implies many distinct dated-option instruments'
@@ -25,7 +26,7 @@ scope: [engineer]
 tags: [deribit, misclassification, data-correctness, oom, canonical-migration, script-1, options]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md,
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
   ]
@@ -36,8 +37,8 @@ estimate_class: research
 assigned_role: data_engineering
 source:
   "Found live during the Script-1 (migrate_cefi_content_instrument_id_catalogue_2026_07_17.py) corpus-wide --apply
-  campaign, 2026-07-27 — see cefi_migration_cutover_and_track8_completion_2026_07_25.md's Progress Log,
-  2026-07-27T06:55Z and 07:05Z entries, for the full incident trail this doc summarizes."
+  campaign, 2026-07-27 — see /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md's
+  Progress Log, 2026-07-27T06:55Z and 07:05Z entries, for the full incident trail this doc summarizes."
 assigned_vm: NA
 execution_scope: human
 drift_direction: none
@@ -55,10 +56,11 @@ resolved_by:
 ## What I found
 
 While running Script 1 (`migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`, the parquet-content
-canonicalization pass for `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s todo 3) as a 42-VM `--apply`
-fan-out over the full cefi corpus, 6 of the 42 shard VMs were killed with `rc=137` (SIGKILL/OOM) on `e2-standard-16`
-(64GB RAM) machines. Reducing `--workers` from 24 to 10 did NOT fix it (one retry died even faster: 4,000/168,624 files
-@ 391s vs. the original attempt's 7,800/168,622 @ ~2,020s) — ruling out worker-concurrency as the cause.
+canonicalization pass for `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s todo 3)
+as a 42-VM `--apply` fan-out over the full cefi corpus, 6 of the 42 shard VMs were killed with `rc=137` (SIGKILL/OOM) on
+`e2-standard-16` (64GB RAM) machines. Reducing `--workers` from 24 to 10 did NOT fix it (one retry died even faster:
+4,000/168,624 files @ 391s vs. the original attempt's 7,800/168,622 @ ~2,020s) — ruling out worker-concurrency as the
+cause.
 
 Sampling the largest objects in each OOM'd shard's date range found the exact same signature every time: one giant file
 at
@@ -76,9 +78,9 @@ Confirmed across 5 independent day samples spanning most of the corpus's history
 | 2025-12-01 | `XRP_USDC-5DEC25-2D2-C.parquet`     | 6.30 GB | `cs10-2` (2025-11-23..12-20)      |
 | 2025-12-25 | `XRP_USDC-30JAN26-2D3-P.parquet`    | 2.45 GB | `cs10-3` (2025-12-21..2026-01-16) |
 
-(Shard ranges are from `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s Script-1 fan-out plan — every
-sampled range that hit `rc=137` had one of these files; no range that stayed healthy was checked for a similar file, so
-this is not yet an exhaustive corpus census — see "What's NOT done" below.)
+(Shard ranges are from `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s Script-1
+fan-out plan — every sampled range that hit `rc=137` had one of these files; no range that stayed healthy was checked
+for a similar file, so this is not yet an exhaustive corpus census — see "What's NOT done" below.)
 
 ## Why this OOMs Script 1's workers (impact, not root cause)
 
@@ -134,8 +136,8 @@ remain exactly as they were before Script 1 ran, for every shard where the exclu
    the parent migration.
 4. **Re-run Script 1 for DERIBIT specifically**, once (1)-(3) land, so DERIBIT's `instrument_id` content column is
    canonicalized like every other venue — tracked as a standing follow-up in
-   `cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s Progress Log alongside the HYPERLIQUID/ASTER
-   follow-up.
+   `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`'s Progress Log alongside the
+   HYPERLIQUID/ASTER follow-up.
 
 ## Evidence / how to reproduce
 

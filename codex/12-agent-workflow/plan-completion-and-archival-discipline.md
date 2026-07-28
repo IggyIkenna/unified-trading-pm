@@ -58,7 +58,12 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
 5. **Update every referrer's path corpus-wide** — grep the whole corpus for the old doc's path and fix each hit (added
    2026-07-23: the prior four steps never actually named this explicitly, so a plan could archive cleanly by its own 4
    steps while every OTHER doc that linked to it silently broke — not a regression to fix, a gap that was simply missing
-   from the ritual until then).
+   from the ritual until then). **If a referrer cites a specific fact or number from the doc being archived (not just
+   its path), confirm that fact already lives in a codex SSOT before the archive lands — migrate it there if it doesn't.
+   Never just repoint the citation at the archived plan itself**, which quietly turns a plan into the fact's only home
+   (near-miss 2026-07-28: a CLAUDE.md bullet citing specific cron-delivery measurements almost got repointed at an
+   archived plan instead of confirming the numbers were already recorded in `/codex/04-architecture/ci-alerting.md`,
+   where they were).
 6. Clear the lock (if one existed) and confirm the move — the doc should now live under `plans/archive/<YYYY_MM>/`, not
    `plans/active/`.
 

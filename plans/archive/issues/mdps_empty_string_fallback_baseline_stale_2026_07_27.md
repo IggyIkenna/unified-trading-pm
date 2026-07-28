@@ -12,7 +12,7 @@ summary: >-
   reconcile_1440_nan_placeholders.py, seed_mock_data.py) -- the new script itself introduces zero new violations. This
   blocks EVERY future commit to the repo (a repo-wide hard gate, not scoped to changed files) until resolved -- not a
   one-off, not caused by this session.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -37,10 +37,16 @@ assigned_role: data_engineering
 drift_direction: advance-code
 source: "slot-13, 2026-07-27, discovered shipping candle_orphan_sweep.py via quickmerge"
 resolved_by:
+  "market-data-processing-service@01744b73a (todo 1: 15 sites triaged, fixed/noqa'd) + baseline re-stamped with commit:
+  43d8f7d7d30de3430202bf91568cdb61e3a652fc (todo 2) + candle_orphan_sweep.py shipped in the same commit (todo 3) — all 3
+  todos DONE"
 locked_by:
 locked_since:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # market-data-processing-service empty-string-fallback baseline is stale — blocks all commits
 
