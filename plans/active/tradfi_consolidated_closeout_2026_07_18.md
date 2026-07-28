@@ -733,7 +733,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[SCRIPT] P2.** Implement the chosen direction (wire a real caller, or remove the dead path cleanly)
     - **[SCRIPT] P2.** Ship via quickmerge, quality-gates green in both market-tick-data-service and
       unified-api-contracts
-  - [`plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
+  - [`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
+    (RESOLVED, archived — 5/5 todos done)
     - **[DATA] P1.** Re-measure and break down the 182,407 by (venue, data_type, year)
     - **[BACKEND] P1.** Teach the sentinel/enumerator path the discovery floor
     - **[DATA] P1.** Run the corrective reclassification over the existing 182,407 cells, writer-side

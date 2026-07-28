@@ -49,6 +49,10 @@ locked_since:
 
 # delta_one DataLoader silent-misses TradFi FUTURE/OPTION chain-bundle candles
 
+> **🟢 RESOLVED 2026-07-27.** Both todos done — `features-service@d16ed8aa` (root-cause fix + regression tests, live
+> re-run confirmed non-empty rows) and `unified-trading-api@10c78f68b` (sibling `batch_candles.py` reader, same bug
+> class fixed + regression-tested, re-verified 2026-07-28). See `resolved_by` above.
+
 ## What I found
 
 Running the "both-axes reader load-test" required by `candle_canonical_path_migration_execution_2026_07_24.md` todo 15

@@ -117,7 +117,7 @@ execution-service doc is the natural home). Other: operator can type a custom an
 
 ## 3. Deprecate `plans/active/INDEX.md`, or build it a regenerator? (P3)
 
-`/plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`'s Finding 2 has been open since 2026-06-17
+`/plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md`'s Finding 2 has been open since 2026-06-17
 with its own text saying "**Operator call**". This pass re-measured every number in it (all three were stale; corrected
 in place) and the finding got **stronger**, not weaker:
 
@@ -186,7 +186,7 @@ re-scoping at all. Other: operator can type a custom answer
 
 This is the single item blocking half of this tranche's Track 2 close-out criterion
 (`/plans/active/infra_consolidated_closeout_2026_07_25.md:106-108`: "org migration fully verified fleet-wide (no stale
-`IggyIkenna` refs)"). `/plans/active/org_migration_to_odumresearch_2026_06_07.md` is `status: paused` with **0 of 27
+`IggyIkenna` refs)"). `/plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md` is `status: paused` with **0 of 27
 todos done** and no Progress Log entry since 2026-06-07 — seven weeks.
 
 Its own banner (`:45-53`) already asked and never got an answer: "**⚠️ 2026-06-07 MAJOR UPDATE — the rulesets

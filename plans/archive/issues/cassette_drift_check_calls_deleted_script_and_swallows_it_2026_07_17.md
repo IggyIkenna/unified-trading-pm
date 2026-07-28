@@ -82,7 +82,7 @@ depends_on: []
 > (a) closing the 52 false `[Cassette Drift]` issues in `unified-api-contracts`, and (b) the detector's cassette→model
 > matching being a filename-stem lottery. This doc's own "Negative test that must pass after the fix" is also not
 > evidenced. Per this corpus's convention (see the 2026-07-12 annotation in
-> [/plans/active/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/active/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)),
+> [/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)),
 > _"closing/resolving is an operator-scope call, not a mechanical doc-sync"_.
 
 ## Defect 1 — it calls a file that does not exist, and hides it

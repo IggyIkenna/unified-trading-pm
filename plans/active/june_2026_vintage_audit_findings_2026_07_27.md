@@ -267,8 +267,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s open MTDS-run todo +
       `data_completion_to_100_all_ag_2026_06_21.md`'s termination criteria. Archived with a full banner naming all 5
       forks + the Tardis resolution (`plans/archive/issues/plan_issue_epic_consolidation_2026_06_30.md`); referrers
-      fixed corpus-wide (`master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
-      `codex/11-project-management/doc-frontmatter-schema.md`).
+      fixed corpus-wide (`/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+      `/codex/11-project-management/doc-frontmatter-schema.md`).
 - [ ] [PLAN] P2. `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` — C2/C4 confirmed: their
       home `cefi_layer1_denominator_gaps_2026_07_03.md` is itself now `status: resolved` + archived
       (`plans/archive/issues/`), C2 point-fix + C4 G4-gate-strengthening both shipped and closed there — nothing

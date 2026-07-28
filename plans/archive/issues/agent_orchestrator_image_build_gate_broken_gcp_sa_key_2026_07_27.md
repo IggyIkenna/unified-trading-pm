@@ -61,7 +61,7 @@ tags:
 related:
   [
     /codex/07-security/gha-wif-migration.md,
-    /plans/active/org_migration_to_odumresearch_2026_06_07.md,
+    /plans/archive/2026_07/org_migration_to_odumresearch_2026_06_07.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-27
