@@ -39,8 +39,8 @@ todos:
         each service runs independently on its own schedule so recon data is ready when the orchestrator runs
 
         ", status: done }
-  - { id: codex-t1-dag-doc, content: "Write unified-trading-/codex/05-operations/t1-batch-dag.md — canonical T+1
-        pipeline DAG doc; register in SSOT-INDEX.md; no conflicts with existing docs
+  - { id: codex-t1-dag-doc, content: "Write unified-trading-/codex/08-workflows/t1-batch-dag.md — canonical T+1 pipeline
+        DAG doc; register in SSOT-INDEX.md; no conflicts with existing docs
 
         ", status: done }
   - { id: extend-trading-analytics-ui, content: "Add Reconciliation tab to trading-analytics-ui: ReconRunsPage,
@@ -460,7 +460,7 @@ Add Cloud Run Job + Cloud Scheduler resources for each T+1 batch service (see sc
 - `workspace-manifest.json` — add 2 new repos
 - `plans/active/` — move this plan here as `batch_live_recon_2026_03_10.md`
 
-### New: `unified-trading-/codex/05-operations/t1-batch-dag.md`
+### New: `unified-trading-/codex/08-workflows/t1-batch-dag.md`
 
 Canonical T+1 pipeline DAG doc. Sections:
 

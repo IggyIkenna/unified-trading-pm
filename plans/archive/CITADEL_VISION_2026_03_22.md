@@ -1157,9 +1157,10 @@ CeFi/TradFi/DeFi/Sports. We MUST expand to **50+ strategies** using representati
 ### Expansion Approach (Config, Not Code — CRITICAL DISTINCTION)
 
 The system is designed so that strategies are **config, not code**. The `EventDrivenStrategyEngine` in strategy-service
-is parameterised by subscription config (see `/codex/09-strategy/cross-cutting/config-architecture.md`). Each strategy
-is a config entry defining: archetype, asset_group, instruments[], trigger subscriptions, risk_limits. Expanding to 50+
-strategies means adding config entries and seeding matching data — **NOT adding new strategy engine code paths**.
+is parameterised by subscription config (see
+`/codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md`). Each strategy is a config entry defining:
+archetype, asset_group, instruments[], trigger subscriptions, risk_limits. Expanding to 50+ strategies means adding
+config entries and seeding matching data — **NOT adding new strategy engine code paths**.
 
 This is NOT 10x the strategy-service work. It is expanding the config registry + seed data.
 
@@ -1433,7 +1434,7 @@ because the fix location differs:
 | **Type 2: UI Visualization Missing** | Service has it, UI doesn't show it     | UI components + API hooks. If API doesn't proxy, add MockDomainService simulation |
 | **Type 3: Not Mockable**             | Service has it, mock can't simulate it | Add mock simulation in MockDomainService using seeded data                        |
 
-**Full gap analysis:** `.cursor/plans/GAP_CLASSIFICATION_2026_03_22.md`
+**Full gap analysis:** `.cursor/plans/archive/GAP_CLASSIFICATION_2026_03_22.md`
 
 ### Key Findings (2026-03-22 Service Audit)
 

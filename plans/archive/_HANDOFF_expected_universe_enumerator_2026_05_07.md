@@ -94,19 +94,19 @@ see deferred items below.
       update per the CLAUDE.md "VM Naming Convention" rule:
 
       ```bash
-                                                                                                                                  gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet
-                                                                                                                                  bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh
-                                                                                                                                  ```
+                                                                                                                                      gcloud compute instances delete vm-zombie-watchdog-* --zone=asia-northeast1-c --quiet
+                                                                                                                                      bash deployment-service/scripts/vm/launch-vm-zombie-watchdog.sh
+                                                                                                                                      ```
 
 - [ ] **Refresh tarballs** with the new script + launcher:
 
       ```bash
-                                                                                                                                  bash deployment-service/scripts/vm/create-code-tarballs.sh --all
-                                                                                                                                  ```
+                                                                                                                                      bash deployment-service/scripts/vm/create-code-tarballs.sh --all
+                                                                                                                                      ```
 
-                                                                                                                                  This re-tars instruments-service (with the new `enumerate_expected_universe.py`) + deployment-service (with
-                                                                                                                                  the new launcher). **Required before any VM launch** — without this, VMs boot with stale code and the new
-                                                                                                                                  script is missing.
+                                                                                                                                      This re-tars instruments-service (with the new `enumerate_expected_universe.py`) + deployment-service (with
+                                                                                                                                      the new launcher). **Required before any VM launch** — without this, VMs boot with stale code and the new
+                                                                                                                                      script is missing.
 
 - [ ] **Commit + push** these three changes (launcher + watchdog dict + any tarball script edits) per the workspace Half
       1 / Half 2 rule. Plan-flip checkbox in this handoff doc inline.
@@ -289,5 +289,6 @@ universes) requires the deferred catalog + canonical_question_group SSOT work na
   `gs://deployment-scripts-central-element-323112/vm/setup-data-pipeline-vm.sh`
 - **Codex denominator-divergence section**: `unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md`
   § "Rollup-vs-drilldown denominator divergence (codified 2026-05-07)" — operator-facing explanation
-- **Writegate Phase 3.D.4 todos**: `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` §
-  "Phase 3.D.4 — Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)"
+- **Writegate Phase 3.D.4 todos**:
+  `unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` § "Phase 3.D.4 —
+  Expected-universe enumerator v2 (NEW 2026-05-07 — operator directive)"

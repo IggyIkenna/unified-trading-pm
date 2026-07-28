@@ -15,7 +15,7 @@ Copy this entire prompt to start a new Claude Code session.
 
 ## Task
 
-Execute the plan at `unified-trading-pm/plans/active/ml_pipeline_ui_integration_2026_04_16.plan.md`. This connects the
+Execute the plan at `unified-trading-pm/plans/archive/ml_pipeline_ui_integration_2026_04_16.plan.md`. This connects the
 ML training pipeline (which is proven working) to the UI through API endpoints, with tier-aligned mock/real mode
 switching.
 

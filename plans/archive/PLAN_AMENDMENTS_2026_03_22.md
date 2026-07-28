@@ -56,8 +56,8 @@ The codex documents 13 code-complete strategies + 4 documented-only (market maki
 - **DeFi**: basis-trade, staked-basis, recursive-staked-basis, AAVE-lending, AMM-LP
 - **Sports**: arbitrage, value-betting, ML-sports, market-making
 
-**Key insight from /codex/09-strategy/cross-cutting/config-architecture.md:** Strategies are config, not code. The
-`EventDrivenStrategyEngine` is parameterised by subscription config. Expanding to 50+ strategies means:
+**Key insight from /codex/09-strategy/\_archived_pre_v2/cross-cutting/config-architecture.md:** Strategies are config,
+not code. The `EventDrivenStrategyEngine` is parameterised by subscription config. Expanding to 50+ strategies means:
 
 1. Adding config entries (YAML/JSON) for new archetype x asset-class combinations
 2. Seeding those configs into MockStateStore

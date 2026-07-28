@@ -38,14 +38,15 @@ todos:
     }
   - { id: a6-p1-strategies-alignment, content: "- [x] [AGENT] P0. Expand seed strategies from 18 to 50+ using the
         config-driven approach. Strategies are CONFIG, not code — the EventDrivenStrategyEngine in strategy-service is
-        parameterised by subscription config (see /codex/09-strategy/cross-cutting/config-architecture.md). No new
-        engine code paths needed.\n  Step 1: Keep the existing 18 strategies from `lib/trading-data.ts` with SAME IDs,
-        names, asset classes (for Dashboard visual parity during migration).\n  Step 2: Add 32+ new strategies by
-        combining codex archetypes x UAC asset classes:\n  - 13 code-complete archetypes: momentum, mean-reversion,
-        ML-directional, options-ML, basis-trade, staked-basis, recursive-basis, AAVE-lending, AMM-LP, arbitrage,
-        value-betting, ML-sports, market-making\n  - 5 asset classes from UAC representative_sample.py: CeFi, TradFi,
-        DeFi, Sports, Prediction\n  - Naming convention: `{ASSET}_{ARCHETYPE}_{MODE}_{TIMEFRAME}` e.g.
-        `CEFI_MOMENTUM_LIVE_1H`\n  Each strategy\
+        parameterised by subscription config (see
+        /codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md). No new engine code paths
+        needed.\n  Step 1: Keep the existing 18 strategies from `lib/trading-data.ts` with SAME IDs, names, asset
+        classes (for Dashboard visual parity during migration).\n  Step 2: Add 32+ new strategies by combining codex
+        archetypes x UAC asset classes:\n  - 13 code-complete archetypes: momentum, mean-reversion, ML-directional,
+        options-ML, basis-trade, staked-basis, recursive-basis, AAVE-lending, AMM-LP, arbitrage, value-betting,
+        ML-sports, market-making\n  - 5 asset classes from UAC representative_sample.py: CeFi, TradFi, DeFi, Sports,
+        Prediction\n  - Naming convention: `{ASSET}_{ARCHETYPE}_{MODE}_{TIMEFRAME}` e.g. `CEFI_MOMENTUM_LIVE_1H`\n  Each
+        strategy\
         \ config includes: id, name, archetype, asset_group, instruments[] (referencing UAC registry symbols),
         execution_mode (live/paper), timeframe, risk_limits, org_id, inception_date.\n  Instruments in each strategy
         MUST reference symbols that exist in UAC representative_sample.py — no invented instruments.\n  Store in
@@ -390,7 +391,7 @@ isProject: false
 
 ## CRITICAL: Read Before Any Work
 
-1. Read `unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md` — system-wide vision
+1. Read `unified-trading-pm/plans/archive/CITADEL_VISION_2026_03_22.md` — system-wide vision
 2. Read `unified-trading-system-ui/UI_STRUCTURE_MANIFEST.json` — see exact per-page API hooks and what data each page
    expects
 3. Read `unified-trading-system-ui/lib/trading-data.ts` (770L) — the client-side data you're replacing. Seed data MUST

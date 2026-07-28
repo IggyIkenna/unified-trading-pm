@@ -150,7 +150,7 @@ overrides for new coins.
 - `unified-trading-pm/codex/09-strategy/architecture-v2/archetypes/` — add 6 new archetype docs (LP_CONCENTRATED,
   LP_POOL, LP_VAULT, MEV_LIQUIDATION_BUNDLE, MEV_JIT_LIQUIDITY, MEV_BACKRUN), update ARBITRAGE_MEV_SANDWICH with
   "theoretical-only" caveat, update ARBITRAGE_PRICE_DISPERSION to document leverage-net-spread mode.
-- `unified-trading-pm/codex/09-strategy/cross-cutting/leverage-and-volatility.md` — new SSOT for the
+- `unified-trading-pm/codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md` — new SSOT for the
   `max_underlying_move → max_safe_leverage` derivation, registry seed/override workflow, controller integration.
 - `unified-trading-pm/codex/14-playbooks/defi/lp-strategies.md` — playbook for LP archetype family.
 - `unified-trading-pm/codex/14-playbooks/defi/mev-strategies.md` — playbook for MEV archetype family + mempool-data
@@ -239,7 +239,7 @@ Phase 7 — Codex docs (PARALLEL with Phase 6)
    ├─ 7.5 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_jit_liquidity.md
    ├─ 7.6 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_backrun.md
    ├─ 7.7 /codex/09-strategy/architecture-v2/archetypes/arbitrage_mev_sandwich.md (theoretical caveat)
-   ├─ 7.8 /codex/09-strategy/cross-cutting/leverage-and-volatility.md (new SSOT)
+   ├─ 7.8 /codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md (new SSOT)
    ├─ 7.9 /codex/14-playbooks/defi/lp-strategies.md (family playbook)
    ├─ 7.10 /codex/14-playbooks/defi/mev-strategies.md (family playbook + mempool deferral)
    └─ 7.11 GATE — codex-sync agent green; rules-alignment agent green
@@ -553,9 +553,9 @@ def clamp_to_venue_capabilities(venue, instrument, target_leverage):
         explicit deferral pointer to mempool_feed_integration plan; theoretical profit upper-bound formula. status: todo
 
 - id: p7-8-leverage-vol-ssot content: |
-  - [ ] [AGENT] P2. /codex/09-strategy/cross-cutting/leverage-and-volatility.md — new SSOT covering MaxUnderlyingMove
-        primitive, derive_max_safe_leverage formula, registry seed/override workflow, controller clamp integration,
-        LEVERAGE_CAP_TRIPPED + LEVERAGE_BREACH events. status: todo
+  - [ ] [AGENT] P2. /codex/09-strategy/architecture-v2/cross-cutting/leverage-and-volatility.md — new SSOT covering
+        MaxUnderlyingMove primitive, derive_max_safe_leverage formula, registry seed/override workflow, controller clamp
+        integration, LEVERAGE_CAP_TRIPPED + LEVERAGE_BREACH events. status: todo
 
 - id: p7-9-lp-playbook content: |
   - [ ] [AGENT] P2. /codex/14-playbooks/defi/lp-strategies.md — LP family playbook covering archetype selection,

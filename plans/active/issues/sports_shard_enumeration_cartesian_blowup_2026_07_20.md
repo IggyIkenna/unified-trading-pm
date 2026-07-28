@@ -34,7 +34,7 @@ stage: [meta]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer, admin]
 tags: [sports, shard-enumeration, expected-universe, honest-coverage, data-completeness, manifest, cartesian-blowup]
-related: [/plans/active/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md]
+related: [/plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md]
 created: 2026-07-20
 parent_epic: infrastructure_master
 assigned_vm: planning

@@ -2,28 +2,49 @@
 doc_type: audit-result
 title: Codex violation census — 2026-06-10 (Phase 0 of codex_violations_ratchet_to_five_2026_06_10)
 summary:
-  Phase-0 remediation matrix for the codex-violations ratchet-to-≤5 plan —
-  per-repo codex violation counts vs budget from QG_SLICE=lint-codex across every
-  service/library/PM repo, converting each opaque budget number into concrete
-  failing check-classes + representative file/line offenders; 5 repos over the
-  ≤5 ceiling (deployment-api 24, execution-service 22, MTDS 15, strategy 10, MDPS
-  7) plus hidden file-size debt (registry.py 18k L, orchestrator.py 8k L).
+  Phase-0 remediation matrix for the codex-violations ratchet-to-≤5 plan — per-repo codex violation counts vs budget
+  from QG_SLICE=lint-codex across every service/library/PM repo, converting each opaque budget number into concrete
+  failing check-classes + representative file/line offenders; 5 repos over the ≤5 ceiling (deployment-api 24,
+  execution-service 22, MTDS 15, strategy 10, MDPS 7) plus hidden file-size debt (registry.py 18k L, orchestrator.py 8k
+  L).
 status: partial
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra, instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service, system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    agent-orchestrator,
+    alerting-service,
+    batch-live-reconciliation-service,
+    client-reporting-api,
+    deployment-api,
+    deployment-service,
+    execution-service,
+    features-service,
+    fund-administration-service,
+    greeks-service,
+    ibkr-gateway-infra,
+    instruments-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    ml-service,
+    strategy-service,
+    system-integration-tests,
+    trading-agent-service,
+    unified-api-contracts,
+    unified-trading-api,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [audit, quality-gates, ssot-audit, refactor, verification, uac]
-related:
-  [../../active/codex_violations_ratchet_to_five_2026_06_10.md]
+related: [../../active/codex_violations_ratchet_to_five_2026_06_10.md]
 created: 2026-06-10
 audited_scope:
-  per-repo codex quality-gate violation counts vs budget across every
-  service/library/PM repo (via QG_SLICE=lint-codex --no-fix), with failing
-  check-classes + representative offenders. NOT covered — UI repos and e2e-testing
-  (slot env/tooling gaps, not a codex count).
-date: '2026-06-10'
+  per-repo codex quality-gate violation counts vs budget across every service/library/PM repo (via QG_SLICE=lint-codex
+  --no-fix), with failing check-classes + representative offenders. NOT covered — UI repos and e2e-testing (slot
+  env/tooling gaps, not a codex count).
+date: "2026-06-10"
 auditor: claude + operator
 parent_epic: infrastructure_master
 severity: P1
@@ -153,7 +174,7 @@ No failing check-classes.
   - `deployment_api/services/shard_detail.py:      backward-compat fallback for old GCS parquets written before 2026-05-23.`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `deployment_api/models/recursive_borrow.py:class CellCoverage(BaseModel):`
   - `deployment_api/models/recursive_borrow.py:class CoverageSummary(BaseModel):`
   - `deployment_api/models/recursive_borrow.py:class RecursiveBorrowCoverageResponse(BaseModel):`
@@ -244,7 +265,7 @@ No failing check-classes.
   - `execution_service/engine/backtest/passive_aggressive_hybrid.py:# Default config for backward compatibility with tests that import constants`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `execution_service/models/rate_impact.py:class HistoricalPoolState(BaseModel):`
   - `execution_service/models/rate_impact.py:class RateImpactRequest(BaseModel):`
   - `execution_service/trade_execution/order_types.py:class StopLimitOrder(BaseModel):`
@@ -415,7 +436,7 @@ No failing check-classes.
   - `./strategy_service/preflight.py:140:PreflightRunner.run(): 70L`
 - ❌ Pydantic BaseModel subclasses found in service source — domain data contracts must live in UIC
   domain/<service-name>/
-- ❌ See: unified-trading-pm/plans/active/SCHEMA_CONTRACTS_AUDIT.md Section 3b
+- ❌ See: unified-trading-pm/plans/archive/SCHEMA_CONTRACTS_AUDIT.md Section 3b
   - `strategy_service/api/restriction_profile_router.py:class RestrictionProfileResponse(BaseModel):`
   - `strategy_service/api/registry_router.py:class MlModelEntry(BaseModel):`
   - `strategy_service/api/registry_router.py:class ArchetypeEntry(BaseModel):`

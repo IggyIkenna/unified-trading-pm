@@ -13,16 +13,17 @@
 
 Three categories of real-world incident shape this scenario. (1) **Ethereum mainnet 2023-Q3 / 2023-Q4 sandwich-bot
 domination** — post-Merge, sandwich + back-running bots routinely captured 5-30 bps from un-protected swaps on Uniswap
-V3; aggregate MEV extracted from public-mempool swaps tracked by `eigenphi.io` peaked at ~$5M / week during memecoin
+V3; aggregate MEV extracted from public-mempool swaps tracked by `eigenphi.io` peaked at
+~$5M / week during memecoin
 frenzies. (2) **Flashbots Protect emergence (2022-Q4 onwards)** — `rpc.flashbots.net` became the default sandwich
-mitigation for any swap ≥ $10k notional, but adoption is partial; transactions submitted via public
-`eth_sendRawTransaction` remain sandwich-vulnerable. (3) **Arbitrum 2024-Q1 sequencer outage** (2024-01-15, ~78 min) +
-the broader pattern of L2-sequencer queue backlogs during high-volume mint events — txs sit pending in sequencer queue
-while the chain liveness probe still returns OK, so a chain-RPC-outage scenario would NOT catch this failure mode. (4)
-**Continuous baseline**: Etherscan publishes `mean_inclusion_block_count` per hour; baseline ranges 1-2 blocks (12-24s)
-on mainnet, spiking to 10-30 blocks (~120-360s) during NFT mints / airdrop claims / liquidation cascades. This scenario
-captures the upper envelope of that distribution as the worst-case operational stress test for the May-23 archetypes'
-tx-submission paths.
+mitigation for any swap ≥ $10k
+notional, but adoption is partial; transactions submitted via public `eth_sendRawTransaction` remain
+sandwich-vulnerable. (3) **Arbitrum 2024-Q1 sequencer outage** (2024-01-15, ~78 min) + the broader pattern of
+L2-sequencer queue backlogs during high-volume mint events — txs sit pending in sequencer queue while the chain liveness
+probe still returns OK, so a chain-RPC-outage scenario would NOT catch this failure mode. (4) **Continuous baseline**:
+Etherscan publishes `mean_inclusion_block_count` per hour; baseline ranges 1-2 blocks (12-24s) on mainnet, spiking to
+10-30 blocks (~120-360s) during NFT mints / airdrop claims / liquidation cascades. This scenario captures the upper
+envelope of that distribution as the worst-case operational stress test for the May-23 archetypes' tx-submission paths.
 
 ### Trigger condition (synthetic injection)
 
@@ -77,8 +78,9 @@ failed for these specific txs (worst-case: private-mempool path unreachable, fal
   `CANCEL_LOST_RACE` fires from execution-service `OrderRecoveryEngine`. Aggregate `cancel_lost_rate_bps` over the
   rolling 5min window crosses 8000 bps (80%) during the synthetic congestion.
 - MEV-sandwich-loss feature spike (sandwich variant only): completed Uniswap swap fills emit a `realised_slippage_bps`
-  per fill; the rolling distribution shifts from baseline (~5 bps p50, ~15 bps p99) to scenario distribution
-  (~`loss_target_bps` p50 = 50 bps p50, ~100 bps p99). Emitter is execution-service `SwapHandler` post-fill measurement.
+  per fill; the rolling distribution shifts from baseline (~5 bps p50, ~~15 bps p99) to scenario distribution
+  (~~`loss_target_bps` p50 = 50 bps p50, ~100 bps p99). Emitter is execution-service `SwapHandler` post-fill
+  measurement.
 - `MEV_DETECTED` event (sandwich variant only): per `codex/04-architecture/mev-protection.md:376-389` (sandwich pattern
   detection — "tx pair with same `tx_recipient` flanking ours within ±2 blocks + opposite direction"), the mempool
   watcher emits a typed `MEV_DETECTED` event per detected sandwich; the breaker state machine consumes this event per
@@ -220,7 +222,7 @@ sandwich loss).
   process per `circuit_breaker.py:50-59` + Phase 4 placeholder for non-carry / non-arb breaker additions).
 - Risk plan § Phase 1.E + 1.F: `risk_simulations_limits_alerting_2026_05_10.md` (new AlertCode additions + recovery
   wiring).
-- DeFi master plan MEV section: `unified-trading-pm/plans/active/defi_master.md` line 1018 (MEV-leakage as
+- DeFi master plan MEV section: `unified-trading-pm/plans/epics/defi_master.md` line 1018 (MEV-leakage as
   audit-followup).
 - This plan body (parent scope): `simulation_scenarios_topology_price_shocks_2026_05_09.md` lines 51-103 (compressed
   scope frame — 6 critical-path scenarios; line 73 lists `defi_gas_surge_50x` as the cousin scenario covering gas PRICE,

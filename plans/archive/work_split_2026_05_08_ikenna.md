@@ -648,8 +648,8 @@ Tab 5 (single owner of alerting); hands off live-pipeline cross-cloud verificati
 
 - CLAUDE.md sections: "Force-Sync Warning (CRITICAL)", "Workspace Configs (Canonical in PM)", "Workflow Templates"
 - [`plans/active/aws_migration_defi_first_2026_05_07.md`](aws_migration_defi_first_2026_05_07.md) full body
-- [`/codex/05-infrastructure/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md) (existing
-  — read for the migration framework)
+- [`/codex/04-architecture/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md) (existing —
+  read for the migration framework)
 - [`/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md`](/codex/05-infrastructure/aws-migration-cost-snapshot-2026-05-07.md)
   (per-resource cost snapshot extracted from the archived analysis; operator credit + steady-state cost decision)
 

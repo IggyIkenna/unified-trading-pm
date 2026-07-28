@@ -10,7 +10,7 @@ repos: [deployment-service, strategy-service, unified-api-contracts, unified-tra
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-05-07'
+created: "2026-05-07"
 ---
 
 ## Deferred work — migrated to:
@@ -34,7 +34,7 @@ You are the next agent. The prior session (this one) shipped A2 + A3 part 1 of t
 | `543a0bb`                  | features-cross-instrument-service | A3 part 2 (follow-ups) — formatter delegates to UAC `build_instrument_id` (the canonical SSOT); per-venue prediction tables removed. `_load_catalog_rows_for_paired_dispatch` reads from UAC. Test assertions updated to canonical UAC IDs (`CME:FUTURE:MBT-20260619`, `DERIBIT:FUTURE:BTC-20260626`, `NASDAQ:ETF:IBIT`, `CBOE:INDEX:SPX`, `ICE:COMMODITY:CL`).                                                                                                                                                                                                                               |
 | **A1** features-onchain VM | `7f1b2a1` (prior) verified        | A1 SHIPPED — `features-onchain-defi-backfill-20260507-105936` ran 2026-04-03→04-09 with FORCE=1 SKIP_DEPENDENCY_CHECK=1; STARTED → 154 events → STOPPED clean. Sample parquet `lending_rates/features.parquet` for day=2026-04-09 has all 5 canonical columns populated: `protocol=AAVE_V3 chain=ARBITRUM asset=USDC supply_apy=0.0162 borrow_apy=0.0283 instrument_id=AAVE_V3-ARBITRUM:LENDING:USDC`. 61,618 rows × 15 cols.                                                                                                                                                                 |
 | **A5** Deribit light VMs   | (no commit — operational)         | A5 SHIPPED — `cefi-deribit-{2025,2026}-light-20260507-110045` both ran cleanly: DERIBIT-2025 740 events STOPPED, DERIBIT-2026 219 events STOPPED. Intra-Deribit + CME-DERIBIT cross-venue spec data captured.                                                                                                                                                                                                                                                                                                                                                                                 |
-| `666dc2d`                  | strategy-service                  | A4 SHIPPED — tracer Layer 2 schema-drift shim deleted: `_TOKEN_TO_PROTOCOL_ASSET` (16-token table, replaced by UAC `LST_TOKEN_TO_PROTOCOL_ASSET`), `_tokens_for_protocol_asset`, `_parse_lending_instrument_id`, `aave_supply_apy → supply_apy → lending_apy` fallback chain in supply/borrow APY resolvers. `_filter_lending_by_id` rewritten to use canonical `protocol`/`chain`/`asset` columns directly (no more regex parsing of `instrument_id`). KEPT `_normalise_protocol_name` (catalog ↔ parquet vocab translation). Net -61 LOC.                                                  |
+| `666dc2d`                  | strategy-service                  | A4 SHIPPED — tracer Layer 2 schema-drift shim deleted: `_TOKEN_TO_PROTOCOL_ASSET` (16-token table, replaced by UAC `LST_TOKEN_TO_PROTOCOL_ASSET`), `_tokens_for_protocol_asset`, `_parse_lending_instrument_id`, `aave_supply_apy → supply_apy → lending_apy` fallback chain in supply/borrow APY resolvers. `_filter_lending_by_id` rewritten to use canonical `protocol`/`chain`/`asset` columns directly (no more regex parsing of `instrument_id`). KEPT `_normalise_protocol_name` (catalog ↔ parquet vocab translation). Net -61 LOC.                                                   |
 | `4354276c`                 | unified-trading-library           | B4 part 1 SHIPPED — `assert_no_lookahead_for_feature_group(feature_group, inputs_df, target_ts)` UTL helper that consumes UAC `FEATURE_REQUIRED_INPUTS` SSOT (29 feature_groups). Computes max_horizon across all declared inputs, raises `LookaheadBiasError` if any input row's `available_at > target_ts - horizon`. Skips silently for unregistered feature_groups, empty df, or missing `available_at` col. 9 unit tests covering clean-pass / violation-raise / unregistered-skip / empty / naive-tz / label / multi-violation. Exposed via `unified_trading_library` top-level facade. |
 
 Total: 77 new tests, all pass. 9 commits pushed to `live-defi-rollout` across 4 repos. 3 production VMs verified
@@ -43,8 +43,8 @@ via git blame).
 
 ## What's still on the original 4-phase handoff
 
-The full original handoff is at `unified-trading-pm/plans/ai/defi_data_to_strategy_4phase_handoff_2026_05_07.md`. Open
-work in dependency order:
+The full original handoff is at `unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07.md`.
+Open work in dependency order:
 
 ### Phase A — Data foundations (continued)
 
@@ -141,9 +141,9 @@ D1, D2, D3, D4 — see original handoff.
 
 ### DEX perp onboarding handover items (separate plan)
 
-`unified-trading-pm/plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` items A through F (forward-poll
-handlers, Pacifica collateral matrix, EXTENDED-STARKNET historical, Lighter symbol scale-up, per-trade gap doc,
-backfill-VM final state) — none touched this session.
+`unified-trading-pm/plans/archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md` items A through F
+(forward-poll handlers, Pacifica collateral matrix, EXTENDED-STARKNET historical, Lighter symbol scale-up, per-trade gap
+doc, backfill-VM final state) — none touched this session.
 
 ## Files shipped this session
 
@@ -172,9 +172,9 @@ features-cross-instrument-service/
 
 ## Reference paths
 
-- Original 4-phase handoff: `unified-trading-pm/plans/ai/defi_data_to_strategy_4phase_handoff_2026_05_07.md`
+- Original 4-phase handoff: `unified-trading-pm/plans/archive/defi_data_to_strategy_4phase_handoff_2026_05_07.md`
 - Phase 9 archived plan: `unified-trading-pm/plans/archive/carry_tracer_phase_9_catalog_paired_dispersion_2026_05_06.md`
-- DEX perp handover: `unified-trading-pm/plans/active/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`
+- DEX perp handover: `unified-trading-pm/plans/archive/2026_05/dex_perp_onboarding_handover_2026_05_07.HANDOVER.md`
 - Resolver:
   `features-cross-instrument-service/features_cross_instrument_service/app/calculators/futures_roll_resolver.py`
 - Builder: `features-cross-instrument-service/features_cross_instrument_service/app/calculators/catalog_pair_builder.py`

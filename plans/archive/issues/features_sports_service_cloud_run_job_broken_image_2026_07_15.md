@@ -36,7 +36,7 @@ stage: [data, meta]
 repos: [deployment-service, features-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [gcs, buckets, features-sports, cloud-run, broken-image, data-correctness, live-consumer, production-outage]
-related: [/plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md]
+related: [/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md]
 created: "2026-07-15"
 parent_epic: infrastructure_master
 priority: P1

@@ -205,7 +205,8 @@ _(empty as of 2026-05-07 baseline draft — first entries land when an actual ov
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`writegate_honest_coverage_endtoend`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 5.
+  [`writegate_honest_coverage_endtoend`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
+  Phase 5.
 - **Related codex SSOTs:** [`availability-manifest-and-data-status`](./availability-manifest-and-data-status.md),
   [`honest-absence-downstream-handling`](./honest-absence-downstream-handling.md),
   [`expected-absence-backfill-runbook`](./../15-runbooks/expected-absence-backfill-runbook.md).

@@ -103,7 +103,7 @@ All 11 existing docs current; 8 of them created 2026-05-12 per slot 4 DART work:
 - `/codex/05-infrastructure/hsm-wallet-signing.md` (2026-05-12) — SigningSurface tier ladder
 - `/codex/05-infrastructure/per-archetype-wallet-isolation.md` (2026-05-12) — N×M wallet topology
 - `/codex/05-infrastructure/secret-manager-naming.md` (2026-05-12) — SSOT naming convention
-- `/codex/05-infrastructure/custody-onboarding-checklist.md` (2026-05-12) — operator-runnable checklist
+- `/codex/15-runbooks/custody-onboarding-checklist.md` (2026-05-12) — operator-runnable checklist
 - `/codex/04-architecture/interface-credential-convention.md` — 4-part pattern documented
 - `/codex/04-architecture/capital-efficiency-patterns.md` — pre-Phase 1.F + Phase 8.D cross-link pending
 - `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (2026-05-10) — Hard Rule #4 + schema

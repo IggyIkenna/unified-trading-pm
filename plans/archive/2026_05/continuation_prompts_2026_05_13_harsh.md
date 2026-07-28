@@ -6,7 +6,15 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, e2e-testing, execution-service, features-service, instruments-service, market-data-processing-service]
+repos:
+  [
+    alerting-service,
+    e2e-testing,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-data-processing-service,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
@@ -39,7 +47,7 @@ READ in order (full reads — do not skim):
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 2"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 2"
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 2"
 5. unified-trading-pm/plans/active/expected_unattempted_propagation_chain_2026_05_12.md (FULL READ — >50KB; the
    plan body is your spec, do not act from summary)
 6. unified-trading-pm/ikenna_orchestrator/pings/slot_4.md (Ikenna slot 4 session-close handover from yesterday)
@@ -84,8 +92,8 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 3"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 3"
-5. unified-trading-pm/plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md (FULL READ — Q5+Q7 sections;
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 3"
+5. unified-trading-pm/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md (FULL READ — Q5+Q7 sections;
    Phase 0c provisioning)
 6. unified-trading-pm/ikenna_orchestrator/pings/slot_8.md § "manual-audit bucket provisioning handoff" (Ikenna
    slot 8 → slot 4 handoff yesterday; you absorb that work)
@@ -124,8 +132,8 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 4"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 4"
-5. unified-trading-pm/plans/active/defi_simulation_realism_2026_05_10.md (FULL READ — Phase 1A/2A/3 design from
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 4"
+5. unified-trading-pm/plans/archive/defi_simulation_realism_2026_05_10.md (FULL READ — Phase 1A/2A/3 design from
    Ikenna PM@3b76a5ef + d66b0f9f; your scope = Phases 4-6 + 5B/5C/6B/6C)
 6. unified-trading-pm/codex/04-architecture/amm-slippage-simulation.md (full design spec from Ikenna)
 
@@ -163,8 +171,8 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 5"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 5"
-5. unified-trading-pm/plans/active/issues/codex_audit_position_balance_2026_05_12.md § PB-1, PB-2, PB-3
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 5"
+5. unified-trading-pm/plans/archive/issues/codex_audit_position_balance_2026_05_12.md § PB-1, PB-2, PB-3
 6. unified-trading-pm/cursor-configs/CLAUDE.md § "Observability" — "Audit records: append-only, immutable, in
    GCS audit/{client_id}/{date}/{event_type}/"
 
@@ -204,8 +212,8 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 6"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 6"
-5. unified-trading-pm/plans/active/manifest_cross_asset_rescan_design_2026_05_08.md
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 6"
+5. unified-trading-pm/plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md
 6. unified-trading-pm/codex/02-data/availability-manifest-and-data-status.md § "Phantom audit"
 7. instruments-service/scripts/reconcile_phantom_manifest_rows_all.py (current Databento gaps in drift-axes)
 
@@ -247,9 +255,9 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 7"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 7"
-5. unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md Phase 1.E
-6. unified-trading-pm/plans/active/disaster_recovery_circuit_breakers_2026_05_10.md Phase 1.A + Phase 4
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 7"
+5. unified-trading-pm/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md Phase 1.E
+6. unified-trading-pm/plans/archive/disaster_recovery_circuit_breakers_2026_05_10.md Phase 1.A + Phase 4
 7. unified-trading-pm/plans/active/mock_data_pipeline_benchmarking_2026_05_10.md Phase 3.C + 3.D
 8. unified-trading-pm/plans/active/_agent_pings.md [2026-05-12 19:35 UTC slot 7 → harsh-main] — original 12-gap surface
 
@@ -289,8 +297,8 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 8"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 8"
-5. unified-trading-pm/plans/active/cross_asset_group_catalogue_audit_2026_05_10.md (Phase 1C — re-opens with new
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 8"
+5. unified-trading-pm/plans/archive/cross_asset_group_catalogue_audit_2026_05_10.md (Phase 1C — re-opens with new
    shape; lines 206-208 + status table 537/567)
 6. unified-trading-pm/plans/active/_agent_pings.md [2026-05-13 06:00 UTC GMX/DRIFT direction CORRECTION] — operator
    guidance verbatim
@@ -345,10 +353,10 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 9"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 9"
-5. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "freeze-gate item 5"
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 9"
+5. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "freeze-gate item 5"
    (LookaheadBias)
-6. unified-trading-pm/plans/active/promote_workflow_may23_cli_path_2026_05_10.md (strategy-paper VM smoke)
+6. unified-trading-pm/plans/archive/2026_05/promote_workflow_may23_cli_path_2026_05_10.md (strategy-paper VM smoke)
 7. unified-trading-library/unified_trading_library/legacy_reason_classifier.py (current classifier — extend with
    sports + prediction asset-group rules)
 
@@ -397,10 +405,10 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "▶ NEW SHIFT 2026-05-13" + § "Slot 10"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 10"
-5. unified-trading-pm/plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "freeze-gate item 3"
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 10"
+5. unified-trading-pm/plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md § "freeze-gate item 3"
    (Phase 4.FEATURES — last sub-item needed for 9/9 closure)
-6. unified-trading-pm/plans/active/dex_perp_and_venue_data_expansion_2026_05_12.md Phase 2 + 3
+6. unified-trading-pm/plans/archive/2026_05/dex_perp_and_venue_data_expansion_2026_05_12.md Phase 2 + 3
 7. market-data-processing-service/tests/unit/test_canonical_writer_ohlcv_1h_policy.py (15 failing tests)
 8. unified-trading-pm/plans/active/_agent_pings.md [2026-05-12 BIG FINDING] — MDPS EmissionDecision schema drift
 

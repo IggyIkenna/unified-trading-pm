@@ -153,12 +153,12 @@ archetype's declaration, so pricing engine (G1.2 → G1.6) and derivation engine
       hook line**:
 
       ```bash
-                                                                      # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
-                                                                      SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
-                                                                      if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
-                                                                        bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
-                                                                      fi
-                                                                      ```
+                                                                          # G1.8 — archetype-capability UAC <-> UI coverage.ts parity.
+                                                                          SYNC_ARCHETYPE_CAPABILITY="${WORKSPACE_ROOT}/unified-trading-pm/scripts/propagation/sync-archetype-capability-to-ui.sh"
+                                                                          if [[ -f "$SYNC_ARCHETYPE_CAPABILITY" ]]; then
+                                                                            bash "$SYNC_ARCHETYPE_CAPABILITY" --check || exit 1
+                                                                          fi
+                                                                          ```
 
 - [x] [AGENT] P0. `lib/architecture-v2/coverage.ts` regenerated via `--write` — now carries the AUTO-GENERATED banner,
       matches the UAC manifest byte-for-byte.
@@ -250,7 +250,7 @@ ls unified-trading-pm/codex/09-strategy/architecture-v2/uac-registry-gaps.md
 ls unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py
 ls strategy-service/strategy_service/engine/strategies/v2/
 # Verify Wave A has merged (spot-check any one)
-ls unified-trading-pm/plans/active/refactor_g1_1_phase_unification_2026_04_20.plan.md
+ls unified-trading-pm/plans/archive/refactor_g1_1_phase_unification_2026_04_20.plan.md
 ```
 
 All must exist. STOP if any missing.

@@ -47,9 +47,9 @@ code_refs:
 
 > **Status:** Design-shipped 2026-05-12 (UAC enum + ARCHETYPE_CONFIG_SEED + PerpHedgeSizer schemas). Implementation
 > gated on Phase 4 Solidity + Phase 5 orchestrator per
-> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/active/defi_recursive_borrow_archetypes_2026_05_10.md)
+> [`plans/active/defi_recursive_borrow_archetypes_2026_05_10.md`](../../../../plans/archive/2026_05/defi_recursive_borrow_archetypes_2026_05_10.md)
 > (Phases 1-9); Phase 6 Hyperliquid LIVE + Phase 7 PerpHedgeSizer + Phase 8 monitor + Phase 12 backtest per
-> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](../../../../plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
+> [`plans/active/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md`](../../../../plans/archive/2026_05/defi_recursive_borrow_archetypes_post_cutover_2026_06_01.md)
 > (Phase 10+).
 
 ## What it does

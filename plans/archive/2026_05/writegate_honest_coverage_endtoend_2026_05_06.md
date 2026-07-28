@@ -2014,10 +2014,10 @@ weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeF
 rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run `--apply-flips`:
 
 - [x] [DOCS] P0. Document the per-asset-group expected backfill volume in
-      `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
-      volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full per-asset-group
-      volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901
-      rows). PM@codex-update-slot5.
+      `unified-trading-pm/codex/15-runbooks/expected-absence-backfill-runbook.md`. Operator picks scan-only first to
+      verify volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full
+      per-asset-group volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260;
+      total 1,455,901 rows). PM@codex-update-slot5.
 - [x] [DOCS] P0. Cross-link from the codex § "Reason taxonomy" matrix → Phase 3.D backfill script + reader-side fallback
       helper. ✅ Updated stale "(planned)" reference at honest-absence-downstream-handling.md § "Cross-references for
       the reason taxonomy" to "shipped 2026-05-07" + proper links to reconciler script, enumerator script, and
@@ -2151,11 +2151,11 @@ sub-phase ships the enumerator that physically writes those rows.
       pass on the data-status panel. Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction
       `PREDICTION_GROUPS` per-day) is the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Updated
-      [`/codex/02-data/expected-absence-backfill-runbook.md`](/codex/02-data/expected-absence-backfill-runbook.md) from
-      PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes table
-      (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard + canonical
-      merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement, dtype-correct
-      fill-default fix), re-run cadence, open follow-ups.
+      [`/codex/15-runbooks/expected-absence-backfill-runbook.md`](/codex/15-runbooks/expected-absence-backfill-runbook.md)
+      from PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes
+      table (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard +
+      canonical merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement,
+      dtype-correct fill-default fix), re-run cadence, open follow-ups.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Marked
       [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
       § "Rollup-vs-drilldown denominator divergence" "Half 2 — Backward-fill" sub-section as **SHIPPED** with VM commit
@@ -2992,18 +2992,18 @@ consumer-side wiring (cascade); 8 dimensions are fully shipped today.
       tradfi+defi+sports+prediction DONE 2026-05-22 (slot-2); cefi follow-up item below. UAC@6498446 + PM@this commit.
 
       **APPLIED 2026-05-22 (slot-2) for tradfi+defi+sports+prediction (cefi blocked — see follow-up item below):**
-                                                                                                                  - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
-                                                                                                                  - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
-                                                                                                                    EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
-                                                                                                                  - Applied results:
-                                                                                                                    | asset_group | candidates | applied | breakdown | shard |
-                                                                                                                    |-------------|-----------|---------|-----------|-------|
-                                                                                                                    | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
-                                                                                                                    | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
-                                                                                                                    | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
-                                                                                                                    | prediction | 51 | 0 | No upgrades | — |
-                                                                                                                    | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
-                                                                                                                  - Consolidator merges tradfi+defi shards within ~5 min of apply.
+                                                                                                                      - Pre-req UAC fix: `non_trading_day_reason` not exported from UAC top-level facade. Fixed + UAC@6498446. QG exit 0.
+                                                                                                                      - Reconciler scope: `empty_confirmed` rows with `error_reason ∈ {SOURCE_RETURNED_ZERO,
+                                                                                                                        EXPECTED_INSTRUMENT_NOT_LISTED}` — rows that got a WRONG default from the 2026-05-07 sweep.
+                                                                                                                      - Applied results:
+                                                                                                                        | asset_group | candidates | applied | breakdown | shard |
+                                                                                                                        |-------------|-----------|---------|-----------|-------|
+                                                                                                                        | tradfi | 5,190 | 5,190 ✅ | **111 → EXPECTED_PARTIAL_HALF_DAY** (US Black Friday/July3 at CME/NASDAQ/NYSE); 5,079 → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-tradfi-1779441974.parquet` |
+                                                                                                                        | defi | 14 | 14 ✅ | 14 EIGENLAYER eigenlayer_rewards → attempted_failed/LBEER | `_index/per_vm/recon-legacy-typed-defi-1779441990.parquet` |
+                                                                                                                        | sports | 1,829,839 | 0 | No upgrades (sports SSOT SRZ rows don't fire Wave 3.S rules via this path) | — |
+                                                                                                                        | prediction | 51 | 0 | No upgrades | — |
+                                                                                                                        | cefi | 85,202 | **BLOCKED** | IS CeFi instruments catalog not found at `gs://instruments-store-cefi-central-element-323112/reference_data/instruments/cefi/all.parquet`; without lifecycle cross-ref, all 85,202 SRZ rows would flip to LBEER (too aggressive). Re-scan after IS CeFi backfill lands catalog. | — |
+                                                                                                                      - Consolidator merges tradfi+defi shards within ~5 min of apply.
 
 **Sequencing note:** the new typed reasons + classifier extensions ship before the migration script (the reconciler
 depends on the extended classifier). Tasks can be parallelised within Wave 3.S (sports) and Wave 3.T (tradfi) and Wave
@@ -4596,7 +4596,7 @@ test files in MTDS) — not caused by my changes, not my files; committed direct
 
 Root cause: `run_validators.py --scope all` runs `validate_plan_links.py` which found 2 broken links:
 
-1. `_agent_pings.md:922` — link `(../plans/active/defi_master.md)` navigated to `plans/plans/active/` (wrong); fixed to
+1. `_agent_pings.md:922` — link `(../plans/epics/defi_master.md)` navigated to `plans/plans/active/` (wrong); fixed to
    `(defi_master.md)`.
 2. `wave2_polymarket_record_captured_from_counts_2026_05_09.md:152` — regex pattern `["'](options_chain|...)["']` inside
    a backtick code span was false-positived by the validator's raw-text link regex. Fixed validator to strip fenced

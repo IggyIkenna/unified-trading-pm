@@ -1145,7 +1145,7 @@ You are slot N of harsh-side parallel agents for 2026-05-18.
 
 READ FIRST (in order):
 1. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
-2. unified-trading-pm/plans/active/work_split_2026_05_18_harsh.md § "Slot N"
+2. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_18_harsh.md § "Slot N"
 3. unified-trading-pm/cursor-configs/CLAUDE.md § "Daily Work-Split Process"
 
 YOUR THEME: <as listed in work_split_2026_05_18_harsh.md § Slot N>

@@ -28,7 +28,7 @@ related:
   [
     /plans/archive/issues/defi_perp_funding_mvp_scope_contradiction_2026_06_29.md,
     /plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    /plans/active/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
   ]
 created: 2026-07-12
 last_updated: 2026-07-12

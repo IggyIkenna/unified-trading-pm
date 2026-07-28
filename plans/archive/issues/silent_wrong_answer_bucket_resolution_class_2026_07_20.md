@@ -29,7 +29,7 @@ tags: [buckets, silent-failure, pnl-correctness, data-correctness, false-green, 
 related:
   [
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
-    /plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     /plans/archive/issues/backfill_vm_disk_starvation_misdiagnosed_as_tardis_quota_2026_07_18.md,
     /plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md,
     /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,

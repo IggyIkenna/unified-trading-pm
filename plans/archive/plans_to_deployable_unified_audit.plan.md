@@ -10,23 +10,79 @@ repos: [deployment-service, system-integration-tests, unified-api-contracts, uni
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-05'
-overview: Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and deployment topology. Four-stage pipeline with Tested and Deployable gates. Supersedes pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
+created: "2026-03-05"
+overview:
+  Canonical workflow for Plans → Code → Tested → Deployable. Unifies PM Codex Drift Zero, Other Alignment, and
+  deployment topology. Four-stage pipeline with Tested and Deployable gates. Supersedes
+  pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
 todos:
-- {id: phase-0-manifest-sync, content: 'Manifest sync (repository_dispatch); update version-bump workflows; remove broken manifest steps. GATE: workspace-manifest.json validates against JSON schema with zero errors; all repo entries have ci_status, quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields present; repository_dispatch event fires on PM push and reaches dependent workflows without error.', status: completed}
-- {id: phase-0b-cleanup, content: 'Codex + PM cleanup; fix paths, merge archives, create SSOT indexes. GATE: no broken relative links in any active plans/active/ .plan.md file; plans/archive/ contains only superseded plans; 00-SSOT-INDEX.md lists all canonical docs.', status: completed}
-- {id: phase-1-manifest-validation, content: JSON schema + topological validation for workspace-manifest.json, status: completed}
-- {id: phase-2-active-plans, content: Create plans/active/INDEX.md; add index-completeness quality gate, status: completed}
-- {id: phase-3-codex-merge-gate, content: Plan-incorporation validator; Codex CI clones PM; doc-only quality gates, status: completed}
-- {id: phase-4-pm-triggers-codex, content: Codex sync-with-pm.yml (workflow_run on PM), status: completed}
-- {id: phase-5-ci-clone, content: PM and services clone Codex (and PM) as siblings in CI, status: completed}
-- {id: phase-6-per-repo-drift, content: run_validators.py --scope/--repo-type; add drift step to quality-gates.sh, status: completed}
-- {id: phase-7-diff-checker, content: Refactor 02-run-diff-checker.py to use validators, status: completed}
-- {id: phase-8-per-file-headers, content: 'DECISION: Approach A — validator only (no file headers). Implement run_validators.py --check-codex-refs which detects if a source file''s last-touched codex doc version is stale relative to the current codex version. No # codex-ref: comments added to files. GATE: run_validators.py --check-codex-refs exits 0 for all T0–T2 repos.', status: completed}
-- {id: phase-9-tested-gate, content: Tested gate — quality gates + integration tests pass, status: completed}
-- {id: phase-10-deployable-gate, content: 'Deployable gate — checklist complete (data availability, deployment, catalogue, gaps, recovery, security)', status: completed}
-- {id: phase-11-audit, content: Audit — trading_system_audit_prompt.plan.md run; target A+, status: completed}
-- {id: checklist-enhancements, content: 'Add the following items to all 19 deployment checklists (checklist.{service}.yaml): (1) data_availability: input/output GCS buckets exist and contain expected data for the service date range; (2) gap_filling: empty date gaps documented with reason and expected fill date; (3) recovery: recovery runbook path documented (e.g. docs/recovery.md); (4) security_audit_trail: AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED events confirmed in Cloud Logging for at least one test run. GATE: all 19 checklist YAML files pass the updated checklist validator with zero missing sections.', status: completed}
+  - {
+      id: phase-0-manifest-sync,
+      content:
+        "Manifest sync (repository_dispatch); update version-bump workflows; remove broken manifest steps. GATE:
+        workspace-manifest.json validates against JSON schema with zero errors; all repo entries have ci_status,
+        quality_gate_status, coverage_pct, bypass_audit_path, testing_level, skipped_gates fields present;
+        repository_dispatch event fires on PM push and reaches dependent workflows without error.",
+      status: completed,
+    }
+  - {
+      id: phase-0b-cleanup,
+      content:
+        "Codex + PM cleanup; fix paths, merge archives, create SSOT indexes. GATE: no broken relative links in any
+        active plans/active/ .plan.md file; plans/archive/ contains only superseded plans; 00-SSOT-INDEX.md lists all
+        canonical docs.",
+      status: completed,
+    }
+  - {
+      id: phase-1-manifest-validation,
+      content: JSON schema + topological validation for workspace-manifest.json,
+      status: completed,
+    }
+  - {
+      id: phase-2-active-plans,
+      content: Create plans/active/INDEX.md; add index-completeness quality gate,
+      status: completed,
+    }
+  - {
+      id: phase-3-codex-merge-gate,
+      content: Plan-incorporation validator; Codex CI clones PM; doc-only quality gates,
+      status: completed,
+    }
+  - { id: phase-4-pm-triggers-codex, content: Codex sync-with-pm.yml (workflow_run on PM), status: completed }
+  - { id: phase-5-ci-clone, content: PM and services clone Codex (and PM) as siblings in CI, status: completed }
+  - {
+      id: phase-6-per-repo-drift,
+      content: run_validators.py --scope/--repo-type; add drift step to quality-gates.sh,
+      status: completed,
+    }
+  - { id: phase-7-diff-checker, content: Refactor 02-run-diff-checker.py to use validators, status: completed }
+  - {
+      id: phase-8-per-file-headers,
+      content:
+        "DECISION: Approach A — validator only (no file headers). Implement run_validators.py --check-codex-refs which
+        detects if a source file's last-touched codex doc version is stale relative to the current codex version. No #
+        codex-ref: comments added to files. GATE: run_validators.py --check-codex-refs exits 0 for all T0–T2 repos.",
+      status: completed,
+    }
+  - { id: phase-9-tested-gate, content: Tested gate — quality gates + integration tests pass, status: completed }
+  - {
+      id: phase-10-deployable-gate,
+      content:
+        "Deployable gate — checklist complete (data availability, deployment, catalogue, gaps, recovery, security)",
+      status: completed,
+    }
+  - { id: phase-11-audit, content: Audit — trading_system_audit_prompt.plan.md run; target A+, status: completed }
+  - {
+      id: checklist-enhancements,
+      content:
+        "Add the following items to all 19 deployment checklists (checklist.{service}.yaml): (1) data_availability:
+        input/output GCS buckets exist and contain expected data for the service date range; (2) gap_filling: empty date
+        gaps documented with reason and expected fill date; (3) recovery: recovery runbook path documented (e.g.
+        docs/recovery.md); (4) security_audit_trail: AUTH_FAILURE, SECRET_ACCESSED, CONFIG_CHANGED events confirmed in
+        Cloud Logging for at least one test run. GATE: all 19 checklist YAML files pass the updated checklist validator
+        with zero missing sections.",
+      status: completed,
+    }
 isProject: false
 ---
 
@@ -80,7 +136,7 @@ deployment-service configs + SSOT = lots to check against.
 
 ## 3. Audit Prompt
 
-**SSOT:** `unified-trading-pm/plans/active/trading_system_audit_prompt.plan.md`
+**SSOT:** `unified-trading-pm/plans/archive/trading_system_audit_prompt.plan.md`
 
 ---
 
@@ -134,7 +190,7 @@ triggers Codex | 5: CI clone | 6: Per-repo drift | 7: Diff checker | 8: Per-file
 | `bash scripts/quality-gates.sh --no-fix` passes            | Per repo                                          | Yes             |
 | `pytest --collect-only -q` exits 0                         | Per repo                                          | Yes             |
 | Unit tests pass (pytest tests/unit/)                       | Per repo                                          | Yes             |
-| Layer 0: Contract alignment (AC↔UIC schemas)              | unified-api-contracts, unified-internal-contracts | Yes             |
+| Layer 0: Contract alignment (AC↔UIC schemas)               | unified-api-contracts, unified-internal-contracts | Yes             |
 | Layer 1: Schema robustness (test_schema_robustness.py)     | Per-service                                       | Yes             |
 | Integration tests (if RUN_INTEGRATION=true)                | tests/integration/                                | Per-repo config |
 | No blocking lint/type violations                           | ruff, basedpyright                                | Yes             |

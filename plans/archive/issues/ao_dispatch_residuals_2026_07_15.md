@@ -22,7 +22,7 @@ tags: [agent-orchestrator, autospawn, dispatch, slot-skips, orphaned-todos, trac
 related:
   [
     /plans/active/issues/ao_docs_reconciliation_2026_07_15.md,
-    /plans/active/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
+    /plans/archive/issues/ao_skip_blind_spawn_budget_phantom_churn_2026_07_15.md,
     /plans/archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     /plans/archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
     /plans/archive/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,

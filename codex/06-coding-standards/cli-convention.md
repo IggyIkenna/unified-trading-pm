@@ -239,7 +239,7 @@ def filter_blob_by_canonical_instrument_ids(
 (the documented canonical form) and `MDPS_VENUES="BINANCE-FUTURES BYBIT"`. The scanner did substring matching, the
 canonical form matched zero blobs, the venue-prefix shortcut applied, and the scanner returned ~200 blobs (every
 instrument in those two venues) instead of 4. Memory hit 70 GB. Operator-side post-mortem:
-[`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
+[`plans/active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md`](../../plans/archive/2026_06/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md)
 § "Finding B".
 
 #### Composes with

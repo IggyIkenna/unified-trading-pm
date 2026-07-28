@@ -40,7 +40,7 @@ code_refs:
 # Custody Providers — single SSOT
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** — per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption); **June-1 flips
 > per-wallet to `COPPER_MPC` / CEFFU** on POD-provided creds. Per-wallet `signing_surface` field on
 > [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
@@ -327,7 +327,7 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 ### §2.4 CeffuCustodyProvider — STUB SHIPPED, API spec pending
 
 > **⚪ DEFERRED to June-1+ flip per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 3.C SPLIT (R9 RESOLVED 2026-05-12).** **CEFFU is OUT-OF-SCOPE for the May-23 cutover.** May-23 ships on
 > `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK envelope encryption per § 2.5 / Plan Phase 3.C.1); the per-wallet
 > `SigningSurface` flip to `COPPER_MPC` / CEFFU happens June-1+ when POD (BVI Fund) delivers institutional KYB-approved

@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [quality-gates, infrastructure, performance, cost]
 related:
   [
-    ../../plans/active/quality_gates_resource_contention_speedup_2026_06_02.md,
+    ../../plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md,
     ../../plans/epics/infrastructure_master.md,
     /codex/06-coding-standards/quality-gates.md,
   ]

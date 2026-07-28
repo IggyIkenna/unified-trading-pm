@@ -48,8 +48,8 @@ code_refs:
 > per-resource cost tables from
 > [`aws_migration_cost_analysis_2026_05_07.md`](../../plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 > for ongoing reference; the "defer AWS to Q3 2026" recommendation is replaced by the dual-cloud decision in
-> [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md) §
-> "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
+> [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md)
+> § "Operator answers" + Phase 0. The cost numbers below remain valid as a research artefact (list pricing 2026-Q1).
 >
 > **Pricing flag**: list pricing as of 2026-Q1, sourced from public pricing pages and workspace invoice snapshots.
 > Verify against actuals (GCP billing console + AWS Cost Explorer pricing API) before any commitment.
@@ -265,7 +265,7 @@ Run). At current scale neither cloud has a decisive cost edge.
 - Source research doc (archived):
   [`plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md`](../../plans/archive/audits/aws_migration_cost_analysis_2026_05_07.plan.md)
 - Active dual-cloud decision:
-  [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
+  [`plans/active/aws_migration_defi_first_2026_05_07.md`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md)
 - Cloud-agnostic SSOT:
   [`/codex/04-architecture/cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md)
 - Pricing sources (verify before commitment): GCP pricing pages 2026-01 snapshot, AWS pricing pages 2026-01 snapshot,

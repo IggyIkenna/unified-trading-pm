@@ -202,7 +202,7 @@ position-balance-monitor in co-located deployments) consume the bus event and ha
 ### KillSwitchScope mapping per code
 
 Per operator decision 2026-05-08 (recorded in
-[`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)
+[`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 Migrated-issues §"Kill-switch publisher hook"):
 
 | `AlertCode`                         | `KillSwitchScope` | scope_key source                               |
@@ -313,7 +313,8 @@ flatten vs hold-and-monitor).
 
 ### Cross-references for ML category
 
-- Plan: [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)
+- Plan:
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
   Phase 1.B + Phase 1.B-ML covers the 6 codes, threshold registry seeds, and routing rules.
 - ML-monitoring producer surface: lives in `ml-inference-service/ml_inference_service/monitoring/` (drift detector,
   staleness clock, latency sampler) — emits alerts through `alerting-service` via PubSub `defi_alerts` topic.
@@ -324,7 +325,8 @@ flatten vs hold-and-monitor).
 
 ### Reference plan + codex
 
-- Plan: [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md)
+- Plan:
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
   Migrated-issues §"Kill-switch publisher hook" + Phase 8 rehearsal extension.
 - Code: `alerting-service/alerting_service/notifiers/router.py` — `_publish_kill_switch_event` /
   `_find_kill_switch_rule` / `_resolve_scope_key` helpers.
@@ -468,7 +470,7 @@ tier is needed (e.g. `OBSERVE` between `WARN` and `INFO`), update both `AlertSev
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`alerting_service_live_rules`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).
 - **Related codex SSOTs:** [`operator-playbook`](./operator-playbook.md), [`threshold-tuning`](./threshold-tuning.md),
   [`rehearsal-procedure`](./rehearsal-procedure.md),
   [`live-deployment-monitoring`](../../05-infrastructure/live-deployment-monitoring.md).

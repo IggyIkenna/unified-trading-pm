@@ -29,8 +29,9 @@ code_refs:
 # Cross-Asset Rescan Protocol
 
 > **STATUS** — Shipped 2026-05-12 as Phase 3 of
-> [`manifest_schema_final_gate_2026_05_09`](../../plans/active/manifest_schema_final_gate_2026_05_09.md). Design SSOT:
-> [`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`](../../plans/active/manifest_cross_asset_rescan_design_2026_05_08.md).
+> [`manifest_schema_final_gate_2026_05_09`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md).
+> Design SSOT:
+> [`plans/active/manifest_cross_asset_rescan_design_2026_05_08.md`](../../plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md).
 
 ## Purpose
 

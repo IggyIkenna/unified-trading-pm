@@ -28,7 +28,7 @@ tags: [agent-orchestrator, backlog, regen, task-id, id-collision, brief-hash, au
 related:
   [
     ../../archive/2026_07/ao_dispatch_hardening_2026_07_16.md,
-    /plans/active/issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
+    /plans/archive/issues/ao_service_clone_frozen_by_untracked_checkpoint_2026_07_16.md,
     /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
     ../../archive/issues/backlog_regen_id_reuse_stale_status_2026_07_15.md,
     ../../archive/issues/ao_dispatch_residuals_2026_07_15.md,
@@ -163,23 +163,24 @@ unauditable tail, reached from a different direction: there they are un-AUDITABL
       `ao_dispatch_hardening_2026_07_16` ruled the content-hash rewrite out (blast radius: `existing_ids` bookkeeping,
       `slot_skips` keyed by task_id, dashboard/API id refs, `done_sha` history). That ruling stands. Re-open ONLY if the
       two todos above prove insufficient — this todo exists so the decision is visible rather than forgotten.
-- [ ] [BACKEND] P2. **New gap found 2026-07-27 (via `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_
-      27.md`): a `dispatched` row has NO equivalent protection to the `done`-row sibling-reset guard, and the in-flight
-      worker is never notified.** This doc's existing analysis only covered `done` rows losing audit history; it did not
-      consider a `dispatched` row (an ACTIVELY-WORKING agent). `sync_backlog_to_db` (`server/bootstrap.py:354-374`)
-      silently resets ANY non-`done` row's `status`→`queued`/`dispatched_to`→`None`/etc on a `brief_hash` mismatch —
-      confirmed already covered by the EXISTING `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`,
-      which asserts the reset fires for `status="dispatched"` exactly like `status="queued"`. Unlike the operator-removed-
-      todo path (`_prune_stale`'s dispatched-orphan-cancel logic, which marks the row `cancelled` so the worker's next
-      `/heartbeat` sees `cancel_task` and stops per `worker.md`), this id-reuse reset path emits NO signal to the
-      in-flight worker at all — it keeps working under its own (originally correct) understanding of the task, and can
-      only discover the mismatch reactively at `/done` time when the stored `brief` no longer matches what it did. Live
-      incident: `cefi_satellite_ao_dispatch_batch1-012` (slot-5, 2026-07-27) — genuinely correct, shipped work
+- [ ] [BACKEND] P2. **New gap found 2026-07-27 (via
+      `backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_     27.md`): a `dispatched` row has NO
+      equivalent protection to the `done`-row sibling-reset guard, and the in-flight worker is never notified.** This
+      doc's existing analysis only covered `done` rows losing audit history; it did not consider a `dispatched` row (an
+      ACTIVELY-WORKING agent). `sync_backlog_to_db` (`server/bootstrap.py:354-374`) silently resets ANY non-`done` row's
+      `status`→`queued`/`dispatched_to`→`None`/etc on a `brief_hash` mismatch — confirmed already covered by the
+      EXISTING `test_sync_resets_terminal_fields_when_id_reused_for_different_checkbox`, which asserts the reset fires
+      for `status="dispatched"` exactly like `status="queued"`. Unlike the operator-removed- todo path (`_prune_stale`'s
+      dispatched-orphan-cancel logic, which marks the row `cancelled` so the worker's next `/heartbeat` sees
+      `cancel_task` and stops per `worker.md`), this id-reuse reset path emits NO signal to the in-flight worker at all
+      — it keeps working under its own (originally correct) understanding of the task, and can only discover the
+      mismatch reactively at `/done` time when the stored `brief` no longer matches what it did. Live incident:
+      `cefi_satellite_ao_dispatch_batch1-012` (slot-5, 2026-07-27) — genuinely correct, shipped work
       (market-tick-data-service@94b4aff5) permanently unable to pass `/done`'s cross-repo verification because the id's
       `brief` had been silently repointed to an adjacent todo mid-flight. Two independent fixes worth considering: (a)
-      extend the `done`-row guard's protection to `dispatched` rows too (refuse the silent reset while a worker holds
-      it — safer, but the guard already carries an accepted "blocks legitimate new-todo routing" cost, which would now
-      also apply here); or (b) on a `dispatched`-row brief-hash mismatch, set `cancel_task` (mirroring the existing
+      extend the `done`-row guard's protection to `dispatched` rows too (refuse the silent reset while a worker holds it
+      — safer, but the guard already carries an accepted "blocks legitimate new-todo routing" cost, which would now also
+      apply here); or (b) on a `dispatched`-row brief-hash mismatch, set `cancel_task` (mirroring the existing
       operator-removal signal) so the in-flight worker gets notified and can revert/stop cleanly instead of shipping
       unmatchable work. Repo: agent-orchestrator.
 

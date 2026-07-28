@@ -71,7 +71,7 @@ running in production must trace back to a known git SHA + builder run on both c
 
 - **Plan(s) implementing this:**
   [`master_to_live_defi_2026_05_23`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md) work-stream F,
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`vm-tarball-deployment`](./vm-tarball-deployment.md),
   [`launcher-script-ssot`](./launcher-script-ssot.md),
   [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md).

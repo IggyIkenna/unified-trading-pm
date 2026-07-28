@@ -303,7 +303,7 @@ would only raise if someone wrongly routed it through the Databento fetch path, 
 
 **⚠️→✅ CORRECTED 2026-07-25** — this section previously described Barchart as a live VIX 15m source; Barchart was
 RETIRED 2026-06-24 (operator ruling, plan-reconcile finding 375, §A2 B-queue — see
-`/plans/active/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
+`/plans/archive/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
 `SOURCE_PRIORITY` for `("tradfi", "ohlcv_15m")` is now `["databento", "massive", "yahoo"]` (was:
 `["databento", "yahoo", "barchart"]`).
 

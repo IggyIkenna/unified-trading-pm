@@ -885,7 +885,7 @@ auth-fail boot prompts inline the same ff-only-when-behind + divergence-STOP blo
 ## References
 
 - Model SSOT:
-  [`plans/active/worktree_ldr_unification_2026_06_08.md`](../../plans/active/worktree_ldr_unification_2026_06_08.md)
+  [`plans/active/worktree_ldr_unification_2026_06_08.md`](../../plans/archive/2026_06/worktree_ldr_unification_2026_06_08.md)
 - Original plan (archived):
   [`plans/archive/per_agent_worktrees_2026_05_10.md`](../../plans/archive/per_agent_worktrees_2026_05_10.md)
 - Bootstrap script: [`scripts/dev/setup-tab-worktrees.sh`](../../scripts/dev/setup-tab-worktrees.sh)

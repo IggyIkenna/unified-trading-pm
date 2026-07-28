@@ -56,9 +56,9 @@ code_refs:
 >   `manifest_schema.V8_NEW_COLUMNS` (Phase 1.A + 1.C, UAC@`174f401` + rename @UAC@`76f950a`).
 >
 > Slice (c) Phase 6.1-6.9 (per-service rollout) is multi-week + tracked by
-> [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md).
+> [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md).
 > v8 manifest column wiring (UTL `ManifestWriter` extension + Phase 4 workspace consumer sweep) is tracked by
-> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 > Phase 2 + 4.
 
 ## The four pieces
@@ -148,9 +148,9 @@ imports UAC. The runtime path is `publisher → resolver → ManifestWriter`; th
   full manifest schema (v8 incl. the 3 new emission columns); `AvailabilityRecord` dataclass.
 - [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md) —
   downstream NaN-handling tolerances per consumer class (the layer below this doc).
-- [`../../plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+- [`../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
   — owns the v8 manifest schema columns + the `next_state` resolver.
-- [`../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+- [`../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
   slices (a) + (b) + (c) — the architecture plan + per-service rollout.
 - `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
 - `unified_api_contracts.canonical.crosscutting.service_emission_policy` — the policy SSOT module.

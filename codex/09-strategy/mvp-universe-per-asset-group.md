@@ -19,7 +19,7 @@ related:
   [
     architecture-v2/category-instrument-coverage.md,
     /codex/02-data/mvp-scope-canonical.md,
-    ../../plans/active/compute_optimization_mock_data_2026_05_13.md,
+    ../../plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md,
   ]
 created: 2026-05-13
 authoritative_for:
@@ -240,7 +240,7 @@ in same memory.
 
 Per-asset-group features-service compute scales with backtest universe size, NOT data-capture universe size.
 Optimization plan
-([`compute_optimization_mock_data_2026_05_13.md`](../../plans/active/compute_optimization_mock_data_2026_05_13.md))
+([`compute_optimization_mock_data_2026_05_13.md`](../../plans/archive/2026_05/compute_optimization_mock_data_2026_05_13.md))
 Phase 2 sizing uses MVP-universe numbers above.
 
 ## Strategy archetypes — backtest-complete by 2026-05-23 vs code-ready (operator direction 2026-05-13)

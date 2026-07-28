@@ -140,8 +140,8 @@ SSOTs:
 
 - UAC `unified_api_contracts.alerting.AlertCode` (codes), `LIVE_ALERT_RULES` (routing rules),
   `ALERT_THRESHOLDS["tick_staleness_seconds"]` (threshold).
-- Plan: `unified-trading-pm/plans/active/alerting_service_live_rules_2026_05_07.md` § "Tick-staleness + connectivity-gap
-  event taxonomy".
+- Plan: `unified-trading-pm/plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md` § "Tick-staleness +
+  connectivity-gap event taxonomy".
 - Coalesce impl: `alerting-service/alerting_service/notifiers/router.py` (`_COALESCE_WINDOW_SECONDS`,
   `_COALESCED_EVENT_NAMES`, `_check_coalesce_window`).
 - Tests: `alerting-service/tests/unit/notifiers/test_router_coalesce.py` (22 unit tests covering all coalesce shapes).

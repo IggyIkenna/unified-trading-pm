@@ -59,7 +59,7 @@ cutover plan.
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-build-lineage`](/codex/05-infrastructure/cloud-agnostic-build-lineage.md),
   [`availability-manifest-and-data-status`](/codex/02-data/availability-manifest-and-data-status.md).
 - **Code:** TBD audit helper — likely a `gcloud storage du` wrapper script that materialises the table.

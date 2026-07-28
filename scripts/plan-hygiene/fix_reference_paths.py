@@ -64,8 +64,13 @@ SKIP_PRE_EXISTING_FRONTMATTER_DEFECTS = {
 # foo.md` written from inside codex/ — the `NN-lowercase-words/` shape is codex's own
 # subdirectory convention, not used anywhere under plans/, so it's an unambiguous signal
 # even without a literal "codex/" in the match).
-CODEX_RE = re.compile(r"(?<![\w/])(?:\.\./)*/?codex/([0-9]{2}-[a-z-]+/[A-Za-z0-9_./-]+\.md)")
-CODEX_RELATIVE_RE = re.compile(r"(?<![\w/])\.\./([0-9]{2}-[a-z-]+/[A-Za-z0-9_./-]+\.md)")
+# Lookbehind excludes word-char / slash / dot / hyphen (matches check_reference_paths.py's
+# BARE_CODEX_RE) so a mid-word occurrence — e.g. the archived repo name
+# `unified-trading-codex/09-strategy/...` in prose — is never mistaken for a bare ref and
+# corrupted into `unified-trading-/codex/09-strategy/...` (confirmed incident: this exact
+# corruption was produced and caught mid-session on 2026-07-28 before being committed).
+CODEX_RE = re.compile(r"(?<![\w/.-])(?:\.\./)*/?codex/([0-9]{2}-[a-z-]+/[A-Za-z0-9_./-]+\.md)")
+CODEX_RELATIVE_RE = re.compile(r"(?<![\w/.-])\.\./([0-9]{2}-[a-z-]+/[A-Za-z0-9_./-]+\.md)")
 
 # A bare filename (no path separator) ending .md, used to scan inside `related:` blocks.
 # Lookbehind excludes word-char / slash / hyphen / dot so a hyphenated or dotted filename

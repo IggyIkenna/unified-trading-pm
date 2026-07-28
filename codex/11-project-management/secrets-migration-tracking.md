@@ -151,8 +151,8 @@ creation + rotation steps per wallet type.
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
-  Phase 4.
+- **Plan(s) implementing this:**
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md) Phase 4.
 - **Credential metadata SSOT:** [`credentials-registry.yaml`](../../../credentials-registry.yaml).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](/codex/05-infrastructure/cloud-agnostic-script-pattern.md),
   [`interface-credential-convention`](/codex/04-architecture/interface-credential-convention.md).

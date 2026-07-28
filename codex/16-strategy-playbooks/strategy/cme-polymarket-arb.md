@@ -37,7 +37,7 @@ code_refs:
 > Phase 4 instruments-service@7a3db05 · Phase 5 strategy-service@2c59f2ce.
 
 **Plan SSOT**:
-[`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/active/cme_polymarket_arb_2026_05_08.md).
+[`plans/active/cme_polymarket_arb_2026_05_08.md`](../../../plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md).
 
 **Source RFC**:
 [`plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md`](../../../plans/archive/issues/cme_event_contracts_cross_venue_arb_shard_design_2026_05_08.md)
@@ -46,8 +46,8 @@ code_refs:
 **Composes with**:
 
 - [`category-instrument-coverage.md`](../../09-strategy/architecture-v2/category-instrument-coverage.md) § "Family 4:
-  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" +
-  slot-label cluster `cme-polymarket-*-up-down-daily-*`.
+  Arbitrage / Structural" → archetype `ARBITRAGE_PRICE_DISPERSION` row "TradFi ↔ Prediction event_contract" + slot-label
+  cluster `cme-polymarket-*-up-down-daily-*`.
 - [`per-category-bucket-layouts.md`](../../02-data/per-category-bucket-layouts.md) § "Multi-axis correction" → "TradFi
   EVENT_CONTRACT" shard atom bullet.
 
@@ -95,8 +95,10 @@ calibrate per archetype config). Below threshold the leg-pair is not entered (tr
 
 ## Leg-balancing assumptions
 
-- **Notional matching**: CME contracts are integer count × $contract_size; Polymarket shares are fractional. Pair must
-  match $ notional per leg ± rounding tolerance (default 1%). Use the smaller leg's $ size to constrain the larger.
+- **Notional matching**: CME contracts are integer count ×
+  $contract_size; Polymarket shares are fractional. Pair must
+  match $ notional per leg ± rounding tolerance (default
+  1%). Use the smaller leg's $ size to constrain the larger.
 - **Expiry alignment**: pair only fires when the CME `resolution_date` matches the Polymarket market's `resolution_time`
   to the same calendar UTC day. CME daily binaries resolve at exchange-published settlement window; Polymarket resolves
   on UMA oracle finalisation. Use `linked_canonical_question_group` (Phase 2) to look up the matching market_id.

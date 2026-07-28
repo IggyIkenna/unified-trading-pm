@@ -44,7 +44,7 @@ last_updated: 2026-05-22
 > phases populate `lib/cloud-helpers.sh` + the Python factory + the QG lint rule.
 
 > **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** Per
-> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0a, the env-tier convention extends to ALL buckets (Group-A `instruments-store` / `market-data` / raw-tick +
 > Group-B features-\*/ml-\*/strategy/execution) across both clouds × 3 envs. New requirements for cloud-agnostic
 > scripts:
@@ -326,8 +326,8 @@ is (per the AWS migration plan Phase 1.5):
 
 ## Cross-references
 
-- **Plan(s) implementing this:** [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md)
-  Phase 1.5 + Phase 2.
+- **Plan(s) implementing this:**
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md) Phase 1.5 + Phase 2.
 - **Related codex SSOTs:** [`cloud-agnostic-audit-2026-05-07`](./cloud-agnostic-audit-2026-05-07.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:**

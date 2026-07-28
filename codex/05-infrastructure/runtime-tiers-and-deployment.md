@@ -302,7 +302,7 @@ Before v7, a deployer set five env vars separately: `CLOUD_MOCK_MODE`, `MOCK_STA
 ## Per-mode credential subset (added 2026-05-12 per Phase 7.A)
 
 Per
-[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+[`api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 Phase 7.A, each pipeline mode (paper / batch / live) declares its required credential set. SSOT yaml:
 [`unified-api-contracts/config/credentials_per_mode.yaml`](../../unified-api-contracts/unified_api_contracts/config/credentials_per_mode.yaml).
 

@@ -6,11 +6,19 @@ status: complete
 nature: record
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [client-reporting-api, deployment-ui, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm]
+repos:
+  [
+    client-reporting-api,
+    deployment-ui,
+    unified-api-contracts,
+    unified-trading-api,
+    unified-trading-library,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-22'
+created: "2026-03-22"
 ---
 
 # 8 Agent Prompts for Citadel-Grade System Refactor
@@ -26,7 +34,7 @@ their specific workstream.
 You are executing one workstream of an 8-agent parallel refactor of the Unified Trading System.
 
 BEFORE ANY CODE: Read these files in order:
-1. unified-trading-pm/plans/active/CITADEL_VISION_2026_03_22.md — the complete system vision
+1. unified-trading-pm/plans/archive/CITADEL_VISION_2026_03_22.md — the complete system vision
 2. Your specific plan file (identified below) — your detailed todos
 3. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md — mandatory coding rules
 4. .cursorrules — workspace standards

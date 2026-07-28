@@ -158,4 +158,4 @@ Required for any drift > 5x threshold OR Path 2/3 used.
   [`preflight_failed.md`](./preflight_failed.md).
 - **Operator playbook:** [`operator-playbook.md`](./operator-playbook.md).
 - **Implementing plan:**
-  [`alerting_service_live_rules_2026_05_07`](../../../plans/active/alerting_service_live_rules_2026_05_07.md).
+  [`alerting_service_live_rules_2026_05_07`](../../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md).

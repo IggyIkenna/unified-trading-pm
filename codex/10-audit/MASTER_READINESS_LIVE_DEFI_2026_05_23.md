@@ -193,19 +193,19 @@ The 7-group readiness applies to:
 - strategy-service
 - execution-service
 - position-balance-monitor-service — work folded into
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   (live-mode wiring) + Group F readiness items 17/18/19 of master plan
 - risk-and-exposure-service — work folded into
-  [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) Phase 9
-  circuit-breaker integration + Group F readiness items 17/19 of master plan
+  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md)
+  Phase 9 circuit-breaker integration + Group F readiness items 17/19 of master plan
 - pnl-attribution-service — work folded into
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 12 batch-live reconciler + Group F readiness item 21 of master plan
 - alerting-service ✓
-  [`alerting_service_live_rules_2026_05_07`](../../plans/active/alerting_service_live_rules_2026_05_07.md) (P0, deadline
-  2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
+  [`alerting_service_live_rules_2026_05_07`](../../plans/archive/2026_05/alerting_service_live_rules_2026_05_07.md) (P0,
+  deadline 2026-05-23 — circuit breakers + paging + ServiceEmissionPolicy tier-up)
 - batch-live-reconciliation-service — work folded into
-  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/active/live_pipeline_mtds_mdps_features_2026_05_08.md)
+  [`live_pipeline_mtds_mdps_features_2026_05_08`](../../plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
   Phase 12 + Group F readiness item 21 of master plan; UTL `batch_live_reconciler` already shipped per UTL@908b1647
 
 > **Audit refresh 2026-05-08**: 5 service rows above previously read "⚠ NO PLAN" — that was technically accurate (no

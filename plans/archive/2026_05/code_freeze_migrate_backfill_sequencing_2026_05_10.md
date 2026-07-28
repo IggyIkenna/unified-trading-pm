@@ -999,12 +999,12 @@ proceed to the next wave with an unresolved verify failure (data-correctness bla
       watchdog). Registration half ✅; rename half blocked-on Phase 2.6 physical migration.
 - [x] ✅ [DOC] P0. **gap-2.6.E** — Operator runbook section in `codex/05-infrastructure/` documenting the 7-wave gating
       protocol above + operator-runnable GO/NO-GO checklist per wave. Shipped at `unified-trading-pm@<pending>`:
-      `/codex/05-infrastructure/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with
-      per-wave operator-runnable pre-checks + action steps + GO/NO-GO criteria + rollback decision tree + post-cutover
-      Step 2.6.5 archive flow + plan-flip closeout. Compliant with Runbook Execution-Owner SSOT (passes
+      `/codex/15-runbooks/phase-2-6-bucket-name-cutover-runbook.md` — full 7-wave protocol (T-1h → T+27h) with per-wave
+      operator-runnable pre-checks + action steps + GO/NO-GO criteria + rollback decision tree + post-cutover Step 2.6.5
+      archive flow + plan-flip closeout. Compliant with Runbook Execution-Owner SSOT (passes
       `check_runbook_execution_owner.py`). Bundled foreign-runbook hygiene fix for
-      `/codex/04-architecture/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key
-      rename — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
+      `/codex/15-runbooks/recursive-leverage-receiver-deploy-runbook.md` (`runbook_metadata:` → `execution:` key rename
+      — same 4-field SSOT). **Owner**: this plan body authorized; slot 3 Day-3/4 if time permits.
 - [x] ✅ [SCRIPT] P0. **Phase 2.6 Step 5 prep** — `deployment-service/scripts/archive-flat-buckets.sh` created —
       deployment-service@9f158d5. Accepts `--env` / `--cloud` / `--retention-days` / `--dry-run`. Sets 30-day Delete
       lifecycle policy on all flat (no-env-tier) GCP + AWS buckets from the Phase 2.6 migration inventory (Tiers 1-7; 50

@@ -66,7 +66,7 @@ sources:
 > [`restart-deployment-stack.sh`](../../scripts/dev/restart-deployment-stack.sh) SSOT (deployment-api on port 8004 +
 > deployment-ui Vite dev on port 5183, both real-cloud mode). The 6-tab lifecycle shell + Monitor sub-tabs +
 > orthogonal-axes design described below is the canonical UX shape the activation work
-> ([`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md))
+> ([`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md))
 > is delivering against. Per the workspace "Plans Run To Actual Completion" rule, body content + per-section concrete
 > file paths gain commit-sha citations as activation phases land; the architectural shape is stable.
 
@@ -74,7 +74,7 @@ sources:
 > (each tier has its own domain → own deployment-api Cloud Run → own GCS bucket scope → own service account scoped to
 > that env's projects only) **is already the architectural target** for the bucket-naming SSOT operator decision (b+)
 > per
-> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0g. No additional UI work needed — env-aware bucket targeting works by the operator navigating to the matching
 > domain. **Post-Phase-0c (env-tiered bucket provisioning lands)**: the per-env deployment-api must resolve env-tiered
 > bucket names via `resolve_bucket_name(cloud=..., kind=..., asset_group=..., env=...)`; if any API code hardcodes flat
@@ -433,7 +433,7 @@ system (deployment-ui@e2b7a81).
   per-request.
 - [`/codex/05-infrastructure/firebase-split-topology.md`](firebase-split-topology.md) — env-tier hosting for
   trading-system-UI. The deployment-UI follows the same pattern (Phase H of the activation plan).
-- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md)
+- [`plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md)
   — the active plan that owns the activation work this doc captures.
 - [`plans/active/deploy_missing_auto_launch_2026_05_07.md`](../../plans/archive/deploy_missing_auto_launch_2026_05_07.md)
   — Phase 2 of that plan wires into the Monitor → Backfill row's Deploy-Missing button.
@@ -446,7 +446,7 @@ system (deployment-ui@e2b7a81).
 ## Plan provenance
 
 Codified by Phase A.3 of
-[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/active/deployment_ui_lifecycle_tabs_2026_05_08.md). That plan
-owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases ship, this
-doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read the SSOT,
-not the old service-axis-organised topology.
+[`deployment_ui_lifecycle_tabs_2026_05_08.md`](../../plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md).
+That plan owns the activation work; this doc is the SSOT for the UX shape the activation produces. As later plan phases
+ship, this doc gains concrete file paths + screenshots; today's stub captures the design upfront so mid-plan agents read
+the SSOT, not the old service-axis-organised topology.

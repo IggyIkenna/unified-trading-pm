@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: 'DeFi Strategies Phase 2: Multi-Coin, LP, SOR, Recursive Staking'
+title: "DeFi Strategies Phase 2: Multi-Coin, LP, SOR, Recursive Staking"
 summary:
 status: complete
 nature: record
@@ -10,7 +10,7 @@ repos: [deployment-service, e2e-testing, execution-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: []
 related: []
-created: '2026-03-30'
+created: "2026-03-30"
 priority: P0
 locked_by: live-defi-rollout
 locked_since: 2026-03-29
@@ -130,7 +130,7 @@ Phase 2 expands to the full DeFi strategy suite.
 
 ```
 Continue the DeFi strategies work from the plan at:
-unified-trading-pm/plans/active/defi_strategies_phase2_2026_03_29.plan.md
+unified-trading-pm/plans/archive/defi_strategies_phase2_2026_03_29.plan.md
 
 Phase 1 is done (lending + basis trade pipeline, batch=live parity).
 Start with Phase 2A: download multi-coin funding rate data for 20 coins

@@ -82,7 +82,7 @@ it must appear here — if it doesn't, that's a finding (file an issue doc per
   (vault venues "live"-labelled with no adapter / handler / capability) + DF-20 (MARGINFI / SOLEND "live" ghosts).
 - ◐ **PARTIAL** — some axes live, others zero. See per-row notes.
 - ✗ **ZERO** — no implementation. Either P0 buildout or post-cutover deferred per
-  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md).
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md).
 - 🔍 **VERIFY** — claimed shipped but unverified in current codebase. Treat as ✗ until verification ships.
 
 When a row flips from 🟢 to ✅, the commit message includes a manifest-coverage cite (sample-parquet inspection result +
@@ -117,7 +117,7 @@ correction)**: `defi_venue_capabilities.py` IS canonical — covers the per-(ven
 > SSOT for Phase 2 adapter authors + Phase 3 MTDS adapter authors. Shard atom MUST be identical across (a) writer
 > atomicity, (b) manifest row key, (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown
 > (per CLAUDE.md "Shard-granularity SSOT" HARD RULE). Migrated from
-> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
 > Phase 2 matrix block (lines ~380-388) — 2026-05-12 by slot 2 `ikenna-defi-catalogue-tab` (Day-2 follow-up).
 >
 > **Base shard atom for ALL DeFi protocols** (per
@@ -240,7 +240,7 @@ Aster / Extended / Lighter.
 ## Per-protocol shard-atom matrix
 
 > **Codex SSOT for per-protocol shard atom** (mirrored from
-> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+> [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
 > Phase 2 design — published 2026-05-12 + mirrored to codex 2026-05-13 by slot 2). Decides bundled-vs-per-instrument per
 > protocol family. Composes with
 > [`shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md)
@@ -360,8 +360,8 @@ follow-up, not yet a todo anywhere.
 ## Cross-references
 
 - **Plan**:
-  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md) is
-  the buildout plan for everything ✗ in this catalogue.
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
+  is the buildout plan for everything ✗ in this catalogue.
 - **Plan**: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md)
   consumes this catalogue (per-pool-shape models per protocol; per-protocol staking yield decomposition).
 - **Codex**: [`defi-data-type-taxonomy.md`](defi-data-type-taxonomy.md) — what data we capture per protocol per

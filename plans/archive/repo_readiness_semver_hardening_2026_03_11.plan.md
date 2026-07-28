@@ -553,27 +553,27 @@ later). BR8 can be granted for batch mode while live mode BR gates are still in 
 
 ## Key Files Modified
 
-| File                                                            | Phase | Change                         |
-| --------------------------------------------------------------- | ----- | ------------------------------ |
-| `codex/10-audit/REPO_READINESS_CHECKLIST.yaml`                  | 1a    | New canonical template (v3.0)  |
-| `codex/10-audit/repos/*.yaml`                                   | 1b    | 65 per-repo status files       |
-| `/codex/10-audit/README.md`                                     | 1c    | SSOT declaration               |
-| `pm/docs/REPO_READINESS_CHECKLIST.md`                           | 2a    | Add codex SSOT banner          |
-| `pm/scripts/setup-workspace-from-manifest.sh`                   | 2b    | .readiness-ref creation        |
-| `deployment-service/.github/workflows/`                         | 2c    | Sibling-clone codex step       |
-| `system-integration-tests/scripts/check-sit-readiness.py`       | 2d    | New DR4 prerequisite check     |
-| `pm/docs/per-repo-semver-rules.yaml`                            | 3a    | New per-type bump rules        |
-| `workspace-manifest.json`                                       | 3b    | semver_rules_ref per repo      |
-| `pm/cursor-rules/core/per-repo-semver-rules.mdc`                | 3c    | New cursor rule                |
-| `pm/scripts/quickmerge.sh`                                      | 4a    | Stage 0.3 major-bump gate      |
-| `.github/workflows/semver-agent.yml`                            | 4b    | Major-bump GitHub Issue        |
-| `pm/AGENTS.md`                                                  | 5a    | Section 10: readiness + semver |
-| `pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                | 5b    | Section 10                     |
-| `.github/workflows/overnight-agent-orchestrator.yml`            | 5c    | Readiness context injection    |
-| `.github/workflows/rules-alignment-agent.yml`                   | 5d    | Readiness mdc check            |
-| `pm/plans/active/code_readiness_master_plan_2026_03_11.plan.md` | 6a    | PM/Codex N/A waivers           |
-| `pm/scripts/check-repo-readiness.py`                            | 7a    | New verifier script            |
-| `.github/workflows/readiness-verifier.yml`                      | 7b    | New GHA workflow               |
+| File                                                             | Phase | Change                         |
+| ---------------------------------------------------------------- | ----- | ------------------------------ |
+| `codex/10-audit/REPO_READINESS_CHECKLIST.yaml`                   | 1a    | New canonical template (v3.0)  |
+| `codex/10-audit/repos/*.yaml`                                    | 1b    | 65 per-repo status files       |
+| `/codex/10-audit/README.md`                                      | 1c    | SSOT declaration               |
+| `pm/docs/REPO_READINESS_CHECKLIST.md`                            | 2a    | Add codex SSOT banner          |
+| `pm/scripts/setup-workspace-from-manifest.sh`                    | 2b    | .readiness-ref creation        |
+| `deployment-service/.github/workflows/`                          | 2c    | Sibling-clone codex step       |
+| `system-integration-tests/scripts/check-sit-readiness.py`        | 2d    | New DR4 prerequisite check     |
+| `pm/docs/per-repo-semver-rules.yaml`                             | 3a    | New per-type bump rules        |
+| `workspace-manifest.json`                                        | 3b    | semver_rules_ref per repo      |
+| `pm/cursor-rules/core/per-repo-semver-rules.mdc`                 | 3c    | New cursor rule                |
+| `pm/scripts/quickmerge.sh`                                       | 4a    | Stage 0.3 major-bump gate      |
+| `.github/workflows/semver-agent.yml`                             | 4b    | Major-bump GitHub Issue        |
+| `pm/AGENTS.md`                                                   | 5a    | Section 10: readiness + semver |
+| `pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`                 | 5b    | Section 10                     |
+| `.github/workflows/overnight-agent-orchestrator.yml`             | 5c    | Readiness context injection    |
+| `.github/workflows/rules-alignment-agent.yml`                    | 5d    | Readiness mdc check            |
+| `pm/plans/archive/code_readiness_master_plan_2026_03_11.plan.md` | 6a    | PM/Codex N/A waivers           |
+| `pm/scripts/check-repo-readiness.py`                             | 7a    | New verifier script            |
+| `.github/workflows/readiness-verifier.yml`                       | 7b    | New GHA workflow               |
 
 ---
 

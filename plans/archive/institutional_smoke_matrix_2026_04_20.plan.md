@@ -36,7 +36,7 @@ locked_since: 2026-04-20
 #   - Fixed: `--max-results 1` dropped from features-calendar, features-delta-one,
 #     and MDPS smoke_matrix.py (3 files). Docstrings updated to reflect that
 #     scope is narrowed via single-date/single-venue/single-category args.
-#   - Rewritten: `/codex/14-playbooks/smoke-testing-playbook.md` now reflects
+#   - Rewritten: `/codex/15-runbooks/smoke-testing-playbook.md` now reflects
 #     SIT=gate / per-service=dev-local, 3-step assertion still canonical.
 #   - SSOT index row (00-SSOT-INDEX.md L15) rewritten.
 #
@@ -328,7 +328,7 @@ todos:
   # ─── Phase 5 — codex playbook + CI integration ──────────────────────────
   - id: phase-5-codex-playbook
     content: |
-      - [x] [DOC] P0. /codex/14-playbooks/smoke-testing-playbook.md (NEW): operational
+      - [x] [DOC] P0. /codex/15-runbooks/smoke-testing-playbook.md (NEW): operational
         runbook for the smoke matrix. Covers: when to run (daily, pre-release,
         post-incident), how to read the per-cell summary, common failure modes
         (TEST bucket not provisioned, IS_TEST_RUN not propagated, dep order broken,
@@ -336,7 +336,7 @@ todos:
     status: done
     note: |
       Shipped 2026-04-20 on live-defi-rollout. New file
-      `unified-trading-pm/codex/14-playbooks/smoke-testing-playbook.md`
+      `unified-trading-pm/codex/15-runbooks/smoke-testing-playbook.md`
       covers: 10 sections (when to run, how to read stdout + summary.json,
       PASS/FAIL/SKIP semantics with `empty_confirmed`=PASS, 6 failure-mode
       recipes — TEST bucket missing, IS_TEST_RUN not propagated, dep cascade

@@ -38,7 +38,7 @@ code_refs:
 # Fireblocks integration spec — June-1 paste-ready implementation
 
 > **Created 2026-05-12** by slot 4 (`ikenna-keys-wallets-tab`) per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 3.C.2 (Fireblocks signer integration, DEFERRED-AFTER-CUTOVER 2026-06-01). Status: **paste-ready design** —
 > implementation gated on client June-1 credential delivery. Successor plan when work starts:
 > `plans/active/fireblocks_copper_client_integration_2026_06_01.md` (operator-spawned when creds land).
@@ -374,7 +374,7 @@ execution:
   (operator-action runbook).
 - [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
   (`SigningSurface.FIREBLOCKS_MPC` enum value + `WalletProvisioningConfig` schema fields consumed).
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   Phase 3.C.2 (parent plan).
 - Fireblocks API docs: <https://developers.fireblocks.com/reference/> (operator-side reference; not for agent fetch —
   agent uses Context7 MCP if needed).

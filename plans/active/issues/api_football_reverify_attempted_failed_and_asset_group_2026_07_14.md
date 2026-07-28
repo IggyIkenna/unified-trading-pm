@@ -285,4 +285,5 @@ runs on every merge for all rows, not just new writes). Independently verified v
 non-sports rows are the already-tracked Finding C rows, not a new gap. Held stable across a re-check ~90s later.
 **Finding B is closed. Both todos above (the heal + the redeploy follow-up) are DONE — no manual Cloud Build/redeploy
 action was actually required.** Full evidence:
-`unified-trading-pm/plans/active/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log, 2026-07-15 entry.
+`unified-trading-pm/plans/archive/2026_07/sports_data_sources_canonical_completion_2026_07_13.md` Progress Log,
+2026-07-15 entry.

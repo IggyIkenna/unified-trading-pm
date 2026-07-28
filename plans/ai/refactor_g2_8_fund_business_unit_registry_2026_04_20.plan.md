@@ -49,7 +49,7 @@ Allocator + reporting services read from this registry instead of strings. Share
 - **G1 cross-refs:** G1.6 derivation engine (allocator call-sites), G1.11 service-family scope (audience mapping)
 - **Codex docs:** `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md`,
   `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md`,
-  `/codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
+  `/codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
 
 ## Mandatory read-set
 
@@ -57,7 +57,7 @@ Allocator + reporting services read from this registry instead of strings. Share
 2. `plans/active/share_class_architecture_2026_04_01.plan.md` — full
 3. `/codex/14-customer-journeys/shared-core/fund-administration-and-custody.md` — custody model SSOT
 4. `/codex/14-customer-journeys/shared-core/treasury-and-subaccount-model.md`
-5. `/codex/14-playbooks/cross-cutting/sma-vs-pooled.md`
+5. `/codex/14-customer-journeys/playbook-concepts/sma-vs-pooled.md`
 6. `/codex/14-customer-journeys/shared-core/org-fund-client-entity-model.md`
 7. `unified-api-contracts/unified_api_contracts/internal/architecture_v2/strategy_availability.py` — existing
    `StrategyAvailabilityEntry` with `business_unit` field

@@ -358,21 +358,21 @@ tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_parti
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                                                                                                                                                                                                                                                                                                                                                 | Successor plan                                                                                                                                    | Successor phase                                                                                                                  |
-> | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated)                                                                                                                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)                            | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep                                                     |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                                                                                                                                                                                                                                   | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)                            | Phase 7 reader-fallback deletion (~2026-06-15)                                                                                   |
-> | ~~v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)~~ **RESOLVED 2026-07-21** — TradFi source is write-stamped `databento`-only at capture via `ManifestWriter._stamp_producer_source` / `--source databento`; the Massive dual-source drain (BLK-b00254d7) is CLOSED — Massive removed as a source 2026-07-19 and purged 2026-07-21. | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) (now `status: superseded`) | ~~Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7)~~ MOOT — no Massive backfill pending |
+> | Temporary state                                                                                                                                                                                                                                                                                                                                                                                 | Successor plan                                                                                                                                     | Successor phase                                                                                                                  |
+> | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated)                                                                                                                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                    | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep                                                     |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                                                                                                                                                                                                                                   | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)                    | Phase 7 reader-fallback deletion (~2026-06-15)                                                                                   |
+> | ~~v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)~~ **RESOLVED 2026-07-21** — TradFi source is write-stamped `databento`-only at capture via `ManifestWriter._stamp_producer_source` / `--source databento`; the Massive dual-source drain (BLK-b00254d7) is CLOSED — Massive removed as a source 2026-07-19 and purged 2026-07-21. | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/archive/tradfi_massive_dual_source_2026_05_28.md) (now `status: superseded`) | ~~Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7)~~ MOOT — no Massive backfill pending |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
 (maximalist final gate per
-[`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md):8-15) which
-adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`: `PUBLISHED_OK` /
-`PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`** (ISO-8601 UTC timestamp
-of the most recent `publish_with_policy()` decision for this row), and **`expected_window_completeness_fraction`**
-(0.0-1.0 fraction of the expected per-row window that was actually populated; denominator-aware coverage metric; renamed
-from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
+[`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md):8-15)
+which adds 3 emission-tracking columns: **`service_emission_state`** (closed-set `ServiceEmissionStateEnum`:
+`PUBLISHED_OK` / `PUBLISHED_DEGRADED` / `STALE_DATA_HEARTBEAT_ONLY` / `BLOCKED`), **`last_emission_decision_at`**
+(ISO-8601 UTC timestamp of the most recent `publish_with_policy()` decision for this row), and
+**`expected_window_completeness_fraction`** (0.0-1.0 fraction of the expected per-row window that was actually
+populated; denominator-aware coverage metric; renamed from `_pct` to `_fraction` at UAC@`76f950a` 2026-05-11 per
 [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg convention).
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
@@ -676,7 +676,7 @@ class AvailabilityRecord:
   - **cefi / defi / tradfi tick data**: `empty_confirmed` only at venue-level (HOLIDAY / WEEKEND / PRE_LAUNCH /
     PRE_GENESIS / PARTIAL_HALF_DAY). Per-instrument-day `empty_confirmed` is NOT legitimate — points to a writer bug.
   - **TradFi L1-L3 tick data (trades / tbbo / mbp_10)**: deferred to post-cutover per
-    [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../../plans/active/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md).
+    [`tradfi_ohlcv_only_mvp_backfill_2026_05_15`](../../plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md).
     `is_in_tradfi_tick_window(date_str)` in UAC `registry/market_data_categories.py` returns `False` for every date —
     `TRADFI_TICK_DATA_WINDOWS = []` triggers the `any([])` short-circuit. This is the intentional MVP gate: MTDS
     suppresses ALL `trades` / `tbbo` fetch attempts so the manifest only contains `ohlcv_1m` rows for CME / ICE / NASDAQ
@@ -1436,7 +1436,7 @@ The closure has two halves, both required:
 **Half 1 — Forward-write `record_expected_empty(reason=EXPECTED_*)`** (writegate Phase 2.E.2 — partly shipped
 2026-05-07). Every NEW empty case at adapter / orchestrator level emits a manifest row with structured reason instead of
 skipping write. Adapter migrations done for sports + cefi + defi + tradfi this session
-([`writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+([`writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 Tier 2A/2B/2C/2D/2E + UTL contract Tier 1).
 
 **Half 2 — Backward-fill the expected universe** (SHIPPED 2026-05-07 — PM@79e47874 + PM@341bb285).
@@ -1476,7 +1476,7 @@ The enumerator has two grain levels that map to these two layers:
 - **v2 (in-flight design)** — instrument-grain expected universe (~190M row estimate); adds SSOT Layer 2. Cross-joins
   v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument lifecycle.
   Designed in
-  [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
+  [`expected_universe_v2_design_2026_05_08.md`](../../plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md):39-73
   (folded into `manifest_evolution_SUPERSEDED_2026_05_21` umbrella; sequenced AFTER v8 schema in gate G3). v2 plan body
   owns the canonical per-asset-group grain matrix — point at the plan as SSOT for the v2 grain matrix until v2 lands.
 
@@ -1486,7 +1486,7 @@ The enumerator has two grain levels that map to these two layers:
   `record_expected_empty(reason=EXPECTED*\*)`for everything in the gap.
   Implementation:`instruments-service/scripts/enumerate_expected_universe.py` + per-VM launcher.
 - **v2 (in-flight design)** — instrument-grain expected universe; ~190M row estimate. Designed in
-  [`expected_universe_v2_design_2026_05_08.md`](../../plans/active/expected_universe_v2_design_2026_05_08.md):39-73
+  [`expected_universe_v2_design_2026_05_08.md`](../../plans/archive/2026_05/expected_universe_v2_design_2026_05_08.md):39-73
   (folded into `manifest_evolution_SUPERSEDED_2026_05_21` umbrella; sequenced AFTER v8 schema in gate G3). v2
   cross-joins v1's `(asset_group, venue, data_type, day)` axis with the instruments-service catalog's per-instrument
   lifecycle (cefi `available_from` / `available_to`, prediction `market_created_at` / `settlement_time`, defi
@@ -1659,7 +1659,7 @@ fabricate placeholder rows, never `fillna(0)` at calc boundaries, never use sent
 prediction empty path at `live_workers.py:268-271` returned `success=True, candles_generated=0` with NO manifest record
 (no `record_empty`, no `record_captured`, no `record_failed`). Distinct from 1440-NaN class but equally opaque. Fix
 owned by
-[`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+[`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 Phase 2.A scope expansion — adds `record_empty(row_key)` so prediction empties surface as honest absence. Per CLAUDE.md
 "Findings Triage" rule, open bugs do NOT live inside SSOT codex docs as long-form prose — this surface now points at the
 owning plan + the plan body's todo carries the closure status. When Phase 2.A flips `live_workers.py:268-271` →
@@ -1977,7 +1977,7 @@ existing caller is unaffected until it explicitly opts in.
 Both fire on the same trigger (`MANIFEST_CONSOLIDATED_STALENESS_SEC` budget exceeded). The Python layer additionally
 fires when the consolidator goes stale **mid-run** (not just at bootstrap). The cefi-heavy backfill launcher
 (`launch-cefi-sharded-backfill.sh`) is the first opt-in caller. See follow-up plan
-[`manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md`](../../plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md).
+[`manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md`](../../plans/archive/2026_05/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md).
 
 ## Honest-coverage measurement script + UI surface (Phase 2, 2026-05-12)
 

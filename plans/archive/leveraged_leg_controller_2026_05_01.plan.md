@@ -496,7 +496,7 @@ Phase 6 (after Phase 4)
 ```
 
 Codex SSOT:
-[`/codex/09-strategy/cross-cutting/restaking-reward-economics.md`](/codex/09-strategy/cross-cutting/restaking-reward-economics.md)
+[`/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md`](/codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md)
 
 - updates to
   [`/codex/09-strategy/cross-cutting/pnl-attribution.md`](/codex/09-strategy/cross-cutting/pnl-attribution.md).
@@ -544,10 +544,9 @@ pnl-attribution-service all green), five operator-asked items shipped in a singl
       before the features-onchain T+1 recon at 02:30 UTC). Reuses the existing `t1_batch_sa` for run.invoker; the
       runtime SA `unified_trading` already has the secretmanager + storage roles. Wrapper command computes
       `--date $(yesterday-utc)` at runtime so the job always picks up the just-closed UTC day.
-- [x] **Phase E** — Production smoke runbook.
-      `unified-trading-pm/codex/14-customer-journeys/playbook-concepts/lst-seasonal-rewards-smoke.md` walks through
-      Secret Manager key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet audit,
-      ad-hoc `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the
+- [x] **Phase E** — Production smoke runbook. `unified-trading-pm/codex/15-runbooks/lst-seasonal-rewards-smoke.md` walks
+      through Secret Manager key checklist (9 keys: ALCHEMY/HELIUS + 7 Etherscan-clones), per-archetype holding_wallet
+      audit, ad-hoc `gcloud run jobs execute` smoke + log diagnosis, parquet round-trip via `ParquetDustLoader`, the
       credential-free SIT, cron enable + 24h first-fire monitoring, and rollback (`gcloud scheduler jobs pause`).
 
 Outstanding (not shipped this session — not load-bearing):

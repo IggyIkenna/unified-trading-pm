@@ -12,7 +12,17 @@ tags: []
 related: []
 created: 2026-05-12
 author: ikenna-v8-mw-mtds-sweep
-source: [market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py, market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py, market-tick-data-service/market_tick_data_service/engine/orchestrator.py, market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py]
+source:
+  [
+    market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/perp_funding_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/oracle_prices_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/lst_rates_handler.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator.py,
+    market-tick-data-service/scripts/mtds_reconcile_partial_bundles.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/pipeline_mode.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
+  ]
 locked_by: live-defi-rollout
 locked_since: 2026-05-12
 ---
@@ -200,11 +210,11 @@ operator approval (banned per spec).
 
 ## Composes with
 
-- `unified-trading-pm/plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` — writegate slice (b)+(c) emission
-  policy SSOT.
-- `unified-trading-pm/plans/active/manifest_schema_final_gate_2026_05_09.md` — Phase 2 manifest schema work that
-  benefits from clean `pipeline_mode` stamping.
-- `unified-trading-pm/plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` (if extant) — Phase 1B established
-  the `pipeline_mode` axis; Phase 4 finalises it.
+- `unified-trading-pm/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` — writegate slice (b)+(c)
+  emission policy SSOT.
+- `unified-trading-pm/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md` — Phase 2 manifest schema work
+  that benefits from clean `pipeline_mode` stamping.
+- `unified-trading-pm/plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md` (if extant) — Phase 1B
+  established the `pipeline_mode` axis; Phase 4 finalises it.
 - `unified-trading-pm/plans/active/predictions_master_2026_05_07.md` — prediction handlers' `pipeline_mode` (Polymarket
   CLOB vs Gamma API).

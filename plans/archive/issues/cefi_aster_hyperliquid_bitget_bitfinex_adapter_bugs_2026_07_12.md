@@ -5,15 +5,15 @@ title:
   epoch-timestamp bug, BITGET-FUTURES/BITFINEX-FUTURES shared datetime64-vs-date comparison error
 summary:
   "Found 2026-07-12 while triaging the 291 genuine 'no data written' results from a full 452-shard IS+MTDS smoke sweep
-  (unified-trading-pm/plans/active/data_pipeline_e2e_check_2026_07_10.md). Sampled real VM run.log evidence for 4 CeFi
-  venues whose MTDS force leg failed across ALL their own data_types (not just one), ruling out the already-documented
-  ASTER book_snapshot_5 REST-limitation as the explanation. Three distinct, real bugs: (1) ASTER fails on `trades` too
-  (not just book_snapshot_5) with a StreamingParquetWriter schema-validation error (missing_column: instrument_id) --
-  broader than the previously-documented gap. (2) HYPERLIQUID trades: adapter received real ticks but every timestamp
-  parsed to Unix epoch (1970-01-01) -- a genuine timestamp-parsing bug, distinct from the already-documented HL
-  under-capture/liquidations issues. (3) BITGET-FUTURES and BITFINEX-FUTURES both fail with the IDENTICAL error 'Invalid
-  comparison between dtype=datetime64[ns] and date' -- a shared Python type-comparison bug in whatever
-  normalization/filter code these two venues' adapters share."
+  (unified-trading-pm/plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md). Sampled real VM run.log evidence for
+  4 CeFi venues whose MTDS force leg failed across ALL their own data_types (not just one), ruling out the
+  already-documented ASTER book_snapshot_5 REST-limitation as the explanation. Three distinct, real bugs: (1) ASTER
+  fails on `trades` too (not just book_snapshot_5) with a StreamingParquetWriter schema-validation error
+  (missing_column: instrument_id) -- broader than the previously-documented gap. (2) HYPERLIQUID trades: adapter
+  received real ticks but every timestamp parsed to Unix epoch (1970-01-01) -- a genuine timestamp-parsing bug, distinct
+  from the already-documented HL under-capture/liquidations issues. (3) BITGET-FUTURES and BITFINEX-FUTURES both fail
+  with the IDENTICAL error 'Invalid comparison between dtype=datetime64[ns] and date' -- a shared Python type-comparison
+  bug in whatever normalization/filter code these two venues' adapters share."
 status: resolved
 nature: notes
 asset_group: [cefi]

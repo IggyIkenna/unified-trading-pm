@@ -1552,7 +1552,7 @@ per cross_cutting #4; cross-side coordinate). Operator clicks APPROVE / REJECT b
 - Plan: [`defi_simulation_realism_2026_05_10.md`](../../plans/archive/defi_simulation_realism_2026_05_10.md) — owns
   implementation.
 - Plan:
-  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/active/defi_catalogue_chain_primitives_2026_05_10.md)
+  [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)
   Phase 3 — ships data_types this doc consumes.
 - Codex: [`defi-data-type-taxonomy.md`](/codex/02-data/defi-data-type-taxonomy.md) — input data shapes.
 - Codex: [`concentrated-liquidity.md`](concentrated-liquidity.md) — V3/V4 + Solana CLMM addendum (Phase 9B update).

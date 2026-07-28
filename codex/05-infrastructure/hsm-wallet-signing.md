@@ -41,7 +41,7 @@ code_refs:
 # HSM-grade wallet signing — tier discipline
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.F. Codifies the per-tier security envelope after R9 sub-(a) RESOLVED 2026-05-12.
 
 ---

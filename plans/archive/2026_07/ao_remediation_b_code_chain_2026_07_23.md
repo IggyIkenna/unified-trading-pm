@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [agent-orchestrator, git-health, worker-liveness, plan-hygiene, plan-reconcile]
 related:
   [
-    /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
+    /plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
@@ -252,7 +252,7 @@ source:
       UTC** — a SECOND, unalerted recurrence of an `ao-self-pull.sh` dirty-gate wedge (root cause: a
       `tempfile.gettempdir()` CWD-fallback bug in `regen_backlog_from_plan.py` planting garbage snapshot dirs directly
       in the orchestrator's own repo checkout, first tripped ~2026-07-10 21:3x UTC per
-      `/plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901) — NOT the more
+      `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901) — NOT the more
       commonly-cited 08:1x UTC `/tmp`-ENOSPC window, which the hourly data shows was a real but CONTAINED incident
       (dispatch recovered fine through 09:00-14:00 UTC). Root-fixed same day at 22:36 UTC via
       `agent-orchestrator@fc9ac53` (`_safe_tempdir_base()` CWD-fallback refusal + a brand-new stale-process wedge-alert
@@ -457,8 +457,8 @@ source:
 
   **Step 3 — connect the timeline to code history.** `git log --since=2026-07-10 --until=2026-07-13 -- server/` in the
   agent-orchestrator slot clone surfaced the relevant commits. Cross-referencing
-  `/plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901 (an already-live record of "TWO
-  LIVE INCIDENTS found + operator-ruled" on 2026-07-12) pins the mechanism precisely:
+  `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` L3876-3901 (an already-live record of
+  "TWO LIVE INCIDENTS found + operator-ruled" on 2026-07-12) pins the mechanism precisely:
   - **Trigger**: `regen_backlog_from_plan.py::_resolve_plans_dir` called `tempfile.mkdtemp(prefix=...)` with no `dir=`
     argument, silently inheriting Python's own `tempfile.gettempdir()` fallback chain — when every real temp location
     (TMPDIR/TEMP/TMP, `/tmp`, `/var/tmp`, `/usr/tmp`) is full/unwritable (the _2026-07-10_ `/tmp`-full incident, a day

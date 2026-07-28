@@ -220,7 +220,7 @@ Concrete examples:
 Resolved via
 `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name( cloud=..., kind="manual-audit", env=...)`.
 The `manual-audit` bucket-kind entry lands in `deployment-service/configs/cloud-providers.yaml` per the
-[`bucket_name_ssot_canonicalisation_2026_05_10`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+[`bucket_name_ssot_canonicalisation_2026_05_10`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 Phase 0i tail (slot 4 owned scope) — proposed shape:
 
 ```yaml

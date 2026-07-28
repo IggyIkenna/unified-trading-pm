@@ -552,9 +552,9 @@ per-instrument-type constraints in the type system alone). The `model_validator`
 - **Upstream lookahead-bias rule (sports)**:
   [`02-data/sports-scheduling-and-sharding.md` §5](/codex/02-data/sports-scheduling-and-sharding.md#5-lookahead-bias--data-crimes)
 - **Active write-gate plan**:
-  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/active/writegate_honest_coverage_endtoend_2026_05_06.md)
+  [`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`](../../plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
 - **Active hard-schema enforcement plan**:
-  [`plans/active/hard_schema_enforcement_2026_05_08.md`](../../plans/active/hard_schema_enforcement_2026_05_08.md)
+  [`plans/active/hard_schema_enforcement_2026_05_08.md`](../../plans/archive/2026_05/hard_schema_enforcement_2026_05_08.md)
 - **Archived predictions migration plan**:
   [`plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md`](../../plans/archive/predictions_canonical_question_group_polymarket_migration_2026_05_06.plan.md)
 - **InstrumentsWriteGate plan**:

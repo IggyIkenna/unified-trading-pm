@@ -72,7 +72,7 @@ for new MTDS writes (per `market_tick_data_service/raw_tick_hive.RAW_TICK_ASSET_
 (co-incident with the reader-fallback retirement gate per
 [`service-output-emission-semantics.md`](./service-output-emission-semantics.md#manifest-read-protocol-per-service_emission_state)).
 Migration scripts owning the legacy-to-canonical rekey:
-[`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+[`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 
 - instruments-service `scripts/migrate_*_bare_to_asset_group.py`. After 2026-06-15 the dual-vocab tolerance in this doc
   is removed; readers + writers go canonical-only. `category=` is the **legacy** form
@@ -98,7 +98,7 @@ particular does NOT follow the same layout as CEFI/TRADFI/DEFI/PREDICTION.
 > **PREDICTION uses the short token `pred`** (not `prediction`) for both stores; AWS swaps `{project_id}` →
 > `{aws_account_id}` (GCP keeps the `-tick-` infix). **Legacy un-tiered buckets** (`market-data-tick-cefi-{project_id}`,
 > no env) are **deprecated** — env-tiered buckets were provisioned + the flat-bucket data migrated in
-> [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
 > Phase 2.6; readers fall back to the legacy name during the ≤30-day window only.
 
 The matrix below shows the canonical **template** form (`{env}` = `${DEPLOYMENT_ENV_SHORT}`, e.g. `prd` in prod):

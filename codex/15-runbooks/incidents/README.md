@@ -13,7 +13,7 @@ referenced_by:
     /codex/15-runbooks/incidents/rb_conn_004.md,
     /codex/15-runbooks/incidents/rb_conn_005.md,
     /codex/04-architecture/incident-gateway-state-machine.md,
-    /plans/active/incident_runbooks_and_evidence_store_2026_05_23.md,
+    /plans/archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
   ]
 ---
 

@@ -151,7 +151,7 @@ todos:
 # ──────────────────────────────────────────────────────────────────────
 
 - id: p4-codex-orphan-audit-doc content: |
-  - [x] [AGENT] P1. Create `/codex/06-coding-standards/orphan-audit.md`: policy (3-phase rollout), scanner behaviour,
+  - [x] [AGENT] P1. Create `/codex/04-architecture/orphan-audit.md`: policy (3-phase rollout), scanner behaviour,
         whitelist rules, how refactoring PRs demonstrate compliance. status: done
 
 - id: p4-propagate-to-other-uis content: |

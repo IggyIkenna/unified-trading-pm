@@ -33,7 +33,7 @@ code_refs:
 > the audit completes; this is the punch list that drives the AWS migration.
 
 > **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** The bucket-naming SSOT operator decision (per
-> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0a) extends the env-tier convention from yaml's Group-B-only (features-\* / ml-\* / strategy-\* / execution-\*)
 > to **ALL buckets** (raw-tick / instruments-store / manifest / etc.) across BOTH clouds × 3 envs
 > (staging/prod/development). Adds a prod → staging/dev sync script with truncated date window (1-2 yrs) + same-region
@@ -67,7 +67,7 @@ migration plan has a concrete punch list rather than "we'll find them as we go."
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+  [`aws_migration_defi_first`](../../plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:** TBD audit script — likely `unified-trading-pm/scripts/audit/cloud-agnostic-audit.sh`.

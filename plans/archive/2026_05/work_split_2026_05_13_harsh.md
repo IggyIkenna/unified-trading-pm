@@ -379,7 +379,7 @@ READ in order:
 1. unified-trading-pm/harsh_orchestrator/AGENT_ONBOARDING.md
 2. unified-trading-pm/cursor-configs/CLAUDE.md
 3. unified-trading-pm/harsh_orchestrator/LEDGER.md § "Slot 2"
-4. unified-trading-pm/plans/active/work_split_2026_05_13_harsh.md § "Slot 2"
+4. unified-trading-pm/plans/archive/2026_05/work_split_2026_05_13_harsh.md § "Slot 2"
 5. unified-trading-pm/plans/active/expected_unattempted_propagation_chain_2026_05_12.md (full read; >50KB)
 6. unified-trading-pm/ikenna_orchestrator/pings/slot_4.md (full handover from Ikenna slot 4)
 
