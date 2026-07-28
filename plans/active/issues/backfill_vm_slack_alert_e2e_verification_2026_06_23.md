@@ -189,7 +189,7 @@ for these messages to close the verification loop.
 - [x] ✅ [DEPLOY] P0. **Rebuild deployment-api image from LDR and redeploy `uts-prod-dp-heartbeat-watcher` Cloud Run
       Job** — unblocks the `RunLogSignals` OOM fix going live (fix is already in code at LDR). (deployment-service) —
       **CONFIRMED LIVE 2026-07-27** via independent evidence in the freshly-filed
-      `/plans/active/issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md` (a same-day,
+      `/plans/archive/issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md` (a same-day,
       unrelated investigation that incidentally proves this): `uts-prod-dp-heartbeat-watcher-cron` fires the Job
       reliably, 10+ consecutive executions all `SUCCEEDED_COUNT=1` (no more OOM crash-before-completion), and its logs
       show real `WARNING heartbeat_stall_watcher: <vm> verdict=stall hb_age=...` output — the detection half genuinely

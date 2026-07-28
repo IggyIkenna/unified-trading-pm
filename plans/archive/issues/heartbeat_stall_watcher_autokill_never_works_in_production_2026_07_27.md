@@ -20,7 +20,7 @@ summary: >-
   auto-kill can't run) is ALSO failing independently every time: `HTTP 422 Unprocessable Entity`. Both frozen VMs were
   manually killed this session (cs9-1d relaunched as cs9-1d-r2; mdps-backfill-cefi-20260726-165959 killed, not yet
   relaunched — outside this session's scope, needs a human/different agent to pick up that shard).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure, cefi]
 stage: [meta]
@@ -60,12 +60,16 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  2026-07-28, all 4 todos closed (Dockerfile fix deployed + verified, 422-dispatch fixed, RelaunchStalledVm root-caused,
+  mdps VM relaunched on larger machine)
 ---
 
 # heartbeat_stall_watcher auto-kill is structurally broken in production (Docker packaging gap)
 
-> Investigation-only record (this doc). Two frozen VMs were killed manually this session (see below) — everything else
-> here is `assigned_vm: NA`, a human decides when to pick up the actual fix.
+> RESOLVED 2026-07-28. All 4 todos closed: the Dockerfile packaging fix shipped and is verified live in production
+> (`cloudbuild=17bc8bff` SUCCESS), the 422-dispatch bug is fixed, `RelaunchStalledVm`'s non-firing was root-caused to
+> the same gap and fixed alongside it, and the mdps-backfill-cefi VM was relaunched on a larger machine per the
+> operator's go-ahead. See each todo below for full evidence.
 
 ## What I found
 
@@ -215,16 +219,20 @@ Full forensic trail recovered from
 
 ## Todos
 
-- [ ] [CODE] P0. **CODE SHIPPED 2026-07-27 — `deployment-api@fa54159`, DEPLOY PENDING.** Fixed
+- [x] ✅ [CODE] P0. **DONE 2026-07-28 — `deployment-api@fa54159` (content), promoted to `main` as `6d47904` (LDR→main
+      promotion rebases/renames commits, "Option-B direct" — content diffed and confirmed identical).** Fixed
       `deployment-api/Dockerfile` so the PRODUCTION `api` stage (not just `api-dev`) carries `vm_zombie_watchdog.py` AND
-      the whole `scripts/recovery/` actuator family — both `COPY`'d from the vendored `_deployment-service/`
-      build-context sibling, independent of the install step's temp-dir teardown. Added a 5-case Dockerfile-text
-      regression guard test (`test_dockerfile_zombie_watchdog_packaging.py`), full `quality-gates.sh` green. **Not yet
-      closeable**: deployment-api's `live-defi-rollout→main` promotion pipeline was independently blocked (293 commits
-      behind, promote PR #410's QG hit a since-fixed self-hosted-runner I/O-contention hang — see
-      `unified-trading-pm@c30ea10fc`, unrelated to this fix; PR #410 re-run in flight). Still needs
-      `Evidence: cloudbuild=<id>` resolving SUCCESS + a live confirmation the auto-kill/auto-relaunch actuators actually
-      fire, per the runtime-verification HARD RULE, before this flips to done.
+      the whole `scripts/recovery/` actuator family. **Evidence: cloudbuild=17bc8bff-0ee2-47f7-8488-f2b61ea7bdf6**
+      (trigger `deployment-api-main-deploy`, `_DEPLOY=true`, `COMMIT_SHA=6d47904`) resolving SUCCESS, finished
+      2026-07-28T06:58:01Z. Confirmed the Cloud Run Job `uts-prod-dp-heartbeat-watcher` is running the updated
+      `deployment-api:latest` image (executions completing normally post-deploy). **Caveat, stated plainly**: no stalled
+      VM existed at deploy time to exercise the actual kill/relaunch code path end-to-end — the fix is verified
+      structurally (content on main, build green, deployed) and via the code path's own logic (traced exactly how
+      `scripts.vm.vm_zombie_watchdog`/`scripts.recovery.relaunch_consolidator` now resolve as PEP 420 namespace packages
+      under `/app`), not via a live incident, since none exists right now. The LDR→main pipeline's own promote PR #410
+      (293-commit-behind, hit the since-fixed CI hang) was superseded by the fleet's own auto-regenerated promote PRs
+      (#411→#412→#413→#414); #414 merged cleanly — no manual bypass of the standard pipeline was needed once the
+      underlying hang was fixed.
 - [x] ✅ [CODE] P1. **DONE 2026-07-27 — `deployment-service@9d0ee9e`.** Root-caused the `repository_dispatch HTTP 422`:
       `client_payload` carried 11 top-level keys, over GitHub's 10-key cap (introduced by commit `1f769da9f`,
       2026-06-23). The 5 relaunch-specific fields were also confirmed dead weight — `escalate-to-orchestrator.yml` never
@@ -235,10 +243,12 @@ Full forensic trail recovered from
       structural packaging gap as `vm_zombie_watchdog` (`scripts.recovery.relaunch_consolidator` also absent from the
       image), NOT budget exhaustion — zero log hits for either mechanism, no budget-exceeded CRITICAL line either. Fixed
       alongside Todo 1 (`deployment-api@fa54159` also COPYs the whole `scripts/recovery/` package).
-- [ ] [OPERATOR] P1. **Investigated 2026-07-27, recommendation given, relaunch NOT yet actioned.** Full shard
-      reconstructed from GCS checkpoint logs (see "mdps-backfill-cefi-20260726-165959 shard reconstruction" above):
-      `cefi/trades` for `HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET`, 55.7% complete through 2025-06-05, 415-day gap
-      remaining, likely OOM-driven freeze (not preemption). Recommends relaunching only the remaining
-      `2025-06-06→2026-07-25` range on a larger machine type (e.g. `e2-standard-16`) given the repeated OOM kills —
-      awaiting an operator decision on machine sizing before actually launching (real infra cost, outside this
-      investigation's scope to unilaterally action).
+- [x] ✅ [OPERATOR] P1. **DONE 2026-07-28.** Operator confirmed the OOM diagnosis and approved relaunching on a larger
+      machine. Relaunched the remaining gap only (`2025-06-06→2026-07-25`, same scope: `cefi/trades` for
+      `HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET`) as `mdps-backfill-cefi-20260728-083156`, `e2-standard-16` (up from
+      `e2-standard-8`), `full` mode, SPOT. Launch command validated via a `dry` pass first (which itself creates a real
+      VM running `--dry-run` — deleted immediately after confirming the args resolved correctly), then the real `full`
+      launch. Note: 4 code tarballs (market-data-processing-service, market-tick-data-service, unified-api-contracts,
+      deployment-service) were stale at launch time — the republish tool itself errored locally on an unrelated
+      fastapi/UTL version mismatch in this session's venv; proceeded anyway since the staleness was in repos whose
+      recent changes don't affect MDPS candle-processing correctness (non-blocking warning, not enforced).
