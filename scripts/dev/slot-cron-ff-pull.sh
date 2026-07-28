@@ -680,13 +680,46 @@ ff_one() {
         if [[ "${genuine_ahead}" -eq 0 && -z "${dirty}" ]]; then
             if [[ "${DRY_RUN}" -eq 1 ]]; then
                 log "[dry-run:adopt-rebase] ${repo_name} (${branch}) — ${ahead} ahead all mirrored to ${int_branch}; would rebase-adopt to ${remote_sha:0:8}"
-            elif git rebase "origin/${int_branch}" >/dev/null 2>&1; then
-                log "[adopt-rebase] ${repo_name} (${branch}) — dropped ${ahead} mirrored dup(s); now == ${int_branch} ${remote_sha:0:8}"
-                _ff_record "ok"
             else
-                git rebase --abort >/dev/null 2>&1 || true
-                log "[skip:adopt-failed] ${repo_name} (${branch}) — rebase aborted unexpectedly; manual inspection"
-                _ff_record "conflict"
+                # TOCTOU re-check before the ONLY ref-rewriting mutation in this script
+                # (slot_cron_ff_pull_toctou_reset_race_2026_07_27). Everything above —
+                # the divergence classification (merge_base, Step 5) and the git-cherry
+                # "every ahead-commit is a mirrored dup" determination — was computed from
+                # ref reads taken earlier this tick (local_sha snapshot at Step 2). If a
+                # NEW local commit lands in that check-then-act window (an autonomous
+                # subagent's `git commit`, the exact trigger in this issue), the "all dups"
+                # verdict was reached against a stale HEAD and must NOT drive an adopt-rebase.
+                # `git rebase` itself replays a genuine new commit rather than dropping it
+                # (and aborts on a dirty tree), so this guard is defence-in-depth, not the
+                # sole safety — but it makes the abort-on-HEAD-moved explicit and keeps the
+                # script from acting on a stale classification. Re-read HEAD and bail to the
+                # next tick (fresh classification) if it moved since the snapshot.
+                # NOTE (root-cause, this issue): the `branch: Reset to origin/<branch>`
+                # reflog signature that silently discarded commits is NOT produced here —
+                # this script only ever runs `git merge --ff-only` (refuses a backward move)
+                # and `git rebase` (replays genuine commits). That signature comes solely
+                # from a force branch-ref reset (`git checkout -B <base> origin/<base>` /
+                # `git branch -f`), whose only call sites are the orchestrator's
+                # worktree_clean_check realign (server/worktree_clean_check/_orphan.py +
+                # _branch_state.py), already guarded by _realign_guard.py and detected by
+                # head_backward_canary.py. This re-check hardens the one lossy-capable path
+                # this script owns; it does not, and cannot, be the sole fix for that issue.
+                local _head_now
+                _head_now=$(git rev-parse HEAD 2>/dev/null || echo "")
+                if [[ "${_head_now}" != "${local_sha}" ]]; then
+                    log "[skip:head-moved] ${repo_name} (${branch}) — local HEAD moved ${local_sha:0:8}→${_head_now:0:8} inside the check-then-act window; deferring adopt-rebase to next tick (fresh re-classify)"
+                    _ff_record "ok"
+                    popd >/dev/null
+                    return 0
+                fi
+                if git rebase "origin/${int_branch}" >/dev/null 2>&1; then
+                    log "[adopt-rebase] ${repo_name} (${branch}) — dropped ${ahead} mirrored dup(s); now == ${int_branch} ${remote_sha:0:8}"
+                    _ff_record "ok"
+                else
+                    git rebase --abort >/dev/null 2>&1 || true
+                    log "[skip:adopt-failed] ${repo_name} (${branch}) — rebase aborted unexpectedly; manual inspection"
+                    _ff_record "conflict"
+                fi
             fi
         else
             log "[skip:diverged] ${repo_name} (${branch} → ${int_branch}) — ahead ${ahead} (${genuine_ahead} genuine), behind ${behind}${dirty:+, dirty tree}; manual/mirror will handle"
