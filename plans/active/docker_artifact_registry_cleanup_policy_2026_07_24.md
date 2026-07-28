@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd]
 related: [/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md]
 created: 2026-07-24
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -315,9 +315,23 @@ Policy shape) assumed it would need to enumerate.
       via [GCP docs](https://docs.cloud.google.com/artifact-registry/docs/repositories/cleanup-policy); decision:
       repo-wide `keep-5-recent` with `packageNamePrefixes` omitted (see § Policy shape). Operator confirmed intent
       matches: never drop latest/deployed per package, trim history past 5 per package.
-- [ ] 5. [INFRA] P2. Draft the `unified-trading-system` cleanup policy JSON/YAML: `keep-deployed-digests` (from Phase
+- [x] 5. [INFRA] P2. Draft the `unified-trading-system` cleanup policy JSON/YAML: `keep-deployed-digests` (from Phase
       A) + `keep-5-recent` floor + `delete-older-than-3d` (tagState any). Done-when: the policy file is committed beside
-      this plan.
+      this plan. ✅ 2026-07-28 —
+      [docker_artifact_registry_cleanup_policy_unified_trading_system.json](/plans/active/docker_artifact_registry_cleanup_policy_unified_trading_system.json)
+      committed. **Field choice differs from § Policy shape's placeholder**: that section sketched
+      `keep-deployed-digests` using `versionNamePrefixes` generically, but the two Phase-A findings that actually need
+      this rule (`deployment-api:05279c0`, `deployment-api:bb6c10b`) are **tags**, not raw digests — in the real AR
+      `CleanupPolicyCondition` schema, `versionNamePrefixes` matches the version's digest name (`sha256:...`), while
+      `tagPrefixes` matches tag strings; a tag-based protection needs `tagPrefixes` scoped by `packageNamePrefixes`
+      (AR's `condition` fields AND together, and prefix-matching a bare git-sha tag against `versionNamePrefixes` would
+      silently match nothing). So the drafted rule is
+      `condition: {tagState: tagged, packageNamePrefixes: [deployment-api], tagPrefixes: [05279c0, bb6c10b]}` — both the
+      currently-aging pin (`05279c0`) and the coincidentally-current `:latest` (`bb6c10b`) are listed explicitly per the
+      plan's own correct-by-construction principle. `keep-5-recent` is repo-wide (`mostRecentVersions.keepCount: 5`, no
+      `packageNamePrefixes`) per todo 4's confirmed per-package semantics. `delete-older-than-3d` uses
+      `olderThan:     "259200s"` (3 days in seconds — the AR API's duration format, not a bare "3d" string). Not yet
+      validated via `cleanupPolicyDryRun` — that's todo 6.
 
 ### Phase C — Dry-run + operator gate
 
@@ -461,3 +475,12 @@ The original audit output lives at the **workspace root, outside any git repo** 
 If absent when the next shift picks this up, **regenerate** via the read-only pull that produced them
 (`gcloud artifacts repositories list` across both projects + `aws ecr describe-images` across the 20 repos); the numbers
 in § Diagnosis are the reference. (Todo 11 uses the CSV only as a convenience index of the ~73 remaining repos.)
+
+- **2026-07-28 (slot 9, infra)**: shipped todo 5 —
+  [docker_artifact_registry_cleanup_policy_unified_trading_system.json](/plans/active/docker_artifact_registry_cleanup_policy_unified_trading_system.json),
+  a 3-rule AR cleanup policy for the `unified-trading-system` repo. Corrected the § Policy shape placeholder's
+  `versionNamePrefixes` to `tagPrefixes` + `packageNamePrefixes` for `keep-deployed-digests`, since the two Phase-A
+  findings needing explicit protection (`deployment-api:05279c0`, `deployment-api:bb6c10b`) are tags, and AR's
+  `versionNamePrefixes` condition field matches digest names, not tags — see the todo 5 checkbox note for the full
+  reasoning. `delete-older-than-3d` uses `olderThan: "259200s"` (AR's duration-string format is seconds, not a bare
+  `"3d"`). Not yet validated against live AR — todo 6 (`cleanupPolicyDryRun`) is next in the sequential chain.
