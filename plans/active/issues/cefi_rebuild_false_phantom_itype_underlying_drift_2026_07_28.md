@@ -229,25 +229,53 @@ and a clean re-run must confirm before the migration proceeds.
       distinct instrument_id-format-drift root cause dominates — see the "Re-run confirmation" section above). Per the
       todo's own conditional wording, the migration-unblock action correctly did NOT happen — it stays gated on the new
       todo below, not on this one. (repo: market-tick-data-service) — issue doc updated this commit.
+- [x] ✅ [DATA] P0. **Sequencing gate (2026-07-28, re-sequenced ahead of the normalizer todo below per main-agent
+      review):** the DERIBIT-residual diagnosis in the "Re-run confirmation" section above was measured against
+      market-tick-data-service@dcbed674 on LDR, which was MISSING a follow-up fix
+      (`fix(cefi): gate CF-11 itype/underlying-drift shadow on non-blank instrument_id`, orig SHA `89112f89`) — that fix
+      gates the itype/underlying-drift shadow-suppression (todo 1 above) on a non-blank `instrument_id`, closing a real
+      over-suppression gap (a blank-iid bundled-chain row, e.g. DERIBIT `futures_chain`/`options_chain`, could
+      cross-match a DIFFERENT underlying's chain cell on the same date/venue/data_type and get wrongly shadow-suppressed
+      — exactly the DERIBIT-chain-style residual this issue's acceptance gate expects to still catch). Landed on LDR
+      this commit: market-tick-data-service@42a2fd9f (cherry-picked from
+      `origin/wip-preserve/orchestrator-slot-2-89112f89`, QG green, 40 CF-11 unit tests passing). **The instrument_id
+      -format-normalizer todo below was designed/drafted BEFORE this gate landed and its premise (the residual's true
+      root cause) is therefore unverified until the full-corpus dry-run is re-run on this gated code** — see the
+      re-diagnosis note on that todo. (repo: market-tick-data-service) — market-tick-data-service@42a2fd9f
+- [ ] [DATA] P0. Re-run the full-corpus `rebuild_cefi_manifest --dry-run` (2019-01-01..present) on the NOW-GATED code
+      (market-tick-data-service@42a2fd9f, includes both the itype/underlying-drift shadow AND its non-blank-iid gate)
+      and re-diagnose the residual `phantom_to_failed` per-venue breakdown. **This determines whether the
+      instrument_id-format-normalizer todo below is still needed at all** — if the DERIBIT-chain-style residual now
+      meets the acceptance gate on its own (the missing `89112f89` gate was the true root cause), the normalizer todo is
+      MOOT: close it as not-needed, restore nothing from the stashed WIP, and unblock
+      `data_completion_cefi_2026_07_15.md`'s migration todo directly from here. Only if a genuine instrument_id-FORMAT
+      residual (OKX-SWAP raw-stem, BINANCE-FUTURES/COINBASE-FUTURES missing `@LIN`/`@INV`) still survives this gated
+      re-run does the normalizer todo proceed — a stashed WIP normalizer implementation + 8 regression tests already
+      exist (git stash on the slot-2 worktree, `_normalize_instrument_id_for_venue` in `_rebuild_cefi_cf11.py`,
+      confirmed correct against all 3 live repros) and can be restored + finished quickly once re-validated against this
+      gated re-run's actual residual. **Background this run via a properly harness-tracked bg task** (same orphan-reaper
+      caveat as todo 4 below). (repo: market-tick-data-service)
 - [ ] [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
       (`_build_shadow_keys_ignoring_itype_and_underlying`, `reemit_cefi_honest_absence_rows` lines ~227-357) so a prior
       captured row is not treated as phantom purely because the prior manifest's `instrument_id` used an older/alternate
       fully-qualified format (`VENUE:TYPE:SYM@MARGIN`, e.g. `OKX-SWAP:PERPETUAL:LTC-USD@INV`) that differs from the
       CURRENT live GCS filename stem for the SAME physical object (`LTC-USD-SWAP`, `OMG-USDT` w/o `@LIN`, `FLOW-USD` w/o
-      `@INV` — see confirmed repros in the "Re-run confirmation" section above). **This is NOT a blanket
-      ignore-instrument_id fix** (unlike itype/underlying, instrument_id is the only field disambiguating distinct
-      instruments on the same date/venue/data_type — a naive `(day, venue, dtype)`-only shadow key would wrongly
-      suppress TRUE phantoms too, which this codebase's own CF-11 doc-comment calls "the WORSE error"). Needs: (a)
-      enumerate the actual historical instrument_id formats per venue (git-blame/read the OLD manifest-writer's
-      instrument_id derivation, plus the confirmed live cases: bare stem, stem-minus-margin-suffix, OKX-SWAP's
-      `-SWAP`-suffix token), (b) a normalizer/synonym table (mirroring `_ITYPE_SYNONYMS`'s pattern) that strips/maps the
-      prior iid to what the CURRENT scan would produce for the same instrument, verified NOT to collapse two distinct
-      instruments into one key, (c) regression tests mirroring `test_wellformed_captured_no_object_still_phantom` (must
-      still catch a TRUE phantom — e.g. two DIFFERENT symbols must never shadow each other) alongside new tests for each
-      confirmed drift case (OKX-SWAP `-SWAP` token, BINANCE-FUTURES/COINBASE-FUTURES missing `@LIN`/`@INV`). Largest
-      residual contributors to prioritize: OKX-SWAP (12,921), BINANCE-FUTURES (9,427), COINBASE-FUTURES (8,442), BYBIT
-      (5,608), OKX-FUTURES (4,329). (repo: market-tick-data-service)
+      `@INV` — see confirmed repros in the "Re-run confirmation" section above). **GATED on the todo above** — only
+      proceed if the gated re-run still shows a genuine instrument_id-format residual; a stashed WIP already implements
+      this (see prior todo). **This is NOT a blanket ignore-instrument_id fix** (unlike itype/underlying, instrument_id
+      is the only field disambiguating distinct instruments on the same date/venue/data_type — a naive
+      `(day, venue, dtype)`-only shadow key would wrongly suppress TRUE phantoms too, which this codebase's own CF-11
+      doc-comment calls "the WORSE error"). Needs: (a) enumerate the actual historical instrument_id formats per venue
+      (git-blame/read the OLD manifest-writer's instrument_id derivation, plus the confirmed live cases: bare stem,
+      stem-minus-margin-suffix, OKX-SWAP's `-SWAP`-suffix token), (b) a normalizer/synonym table (mirroring
+      `_ITYPE_SYNONYMS`'s pattern) that strips/maps the prior iid to what the CURRENT scan would produce for the same
+      instrument, verified NOT to collapse two distinct instruments into one key, (c) regression tests mirroring
+      `test_wellformed_captured_no_object_still_phantom` (must still catch a TRUE phantom — e.g. two DIFFERENT symbols
+      must never shadow each other) alongside new tests for each confirmed drift case (OKX-SWAP `-SWAP` token,
+      BINANCE-FUTURES/COINBASE-FUTURES missing `@LIN`/`@INV`). Largest residual contributors to prioritize: OKX-SWAP
+      (12,921), BINANCE-FUTURES (9,427), COINBASE-FUTURES (8,442), BYBIT (5,608), OKX-FUTURES (4,329). (repo:
+      market-tick-data-service)
 - [ ] [DATA] P1. After the todo above lands, re-run the full-corpus `rebuild_cefi_manifest --dry-run`
       (2019-01-01..present) a third time and confirm `phantom_to_failed` finally drops to a small DERIBIT-chain-style
       residual (DERIBIT-dominant, well-formed bundled `instrument_id=BTC`/`ETH`-style rows only); update this issue
