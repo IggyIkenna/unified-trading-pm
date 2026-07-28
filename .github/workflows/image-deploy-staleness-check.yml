@@ -1,0 +1,125 @@
+name: image-deploy-staleness-check
+
+# The loud failure signal for a cancelled/dropped cloud-build-router dispatch (P2 of
+# plans/active/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md).
+#
+# WHY: a merge to `main` fires quality-gates-v2 → repository_dispatch → cloud-build-router.yml →
+# `gcloud builds triggers run`. A dropped hop in that chain (a shared GHA concurrency group
+# cancelling a sibling dispatch — this issue doc's diagnosed root cause, fixed 2026-07-27 for the
+# top-level case) is SILENT: no error, no Slack post, no PR comment. The only externally-observable
+# symptom is a repo's deployed `:latest` image being older than its `main` HEAD by more than the
+# expected build+dispatch latency.
+#
+# WHAT: runs scripts/cicd/check_image_deploy_staleness.py, which compares each fleet repo's `main`
+# HEAD commit timestamp against its `:latest` image's push timestamp in Artifact Registry, and
+# alarms (Slack, via notify-slack.yml) when the gap exceeds the expected latency.
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md § "Image-deploy staleness check".
+
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      fail_on_stale:
+        description: "Exit non-zero (in addition to alerting) when a repo is stale"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: image-deploy-staleness-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    # CI-cost B1: off billed hosted minutes onto the self-hosted glue pool. Labels are a SUBSET
+    # match, so [self-hosted, glue] lands ONLY on the JIT-ephemeral pool — never on glue-writer.
+    # SSOT: scripts/self-hosted-runners/README.md
+    runs-on: [self-hosted, glue]
+    outputs:
+      stale: ${{ steps.scan.outputs.stale }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      # No actions/setup-python: self-hosted glue pool's python3 IS the slot venv (3.13), already
+      # resident. See reconcile-release-tags.yml for the same convention + rationale.
+
+      - name: Authenticate to GCP via WIF
+        id: auth-wif
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        if: steps.auth-wif.outcome == 'success' || steps.auth-key.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Scan fleet for stale image deploys
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+          FAIL_ON_STALE: ${{ inputs.fail_on_stale || 'false' }}
+        run: |
+          set +e
+          FLAGS=""
+          if [ "$FAIL_ON_STALE" = "true" ]; then FLAGS="--fail-on-stale"; fi
+
+          OUT=$(python3 scripts/cicd/check_image_deploy_staleness.py --json $FLAGS)
+          RC=$?
+          echo "$OUT"
+
+          STALE_COUNT=$(echo "$OUT" | python3 -c "import json,sys; print(len(json.load(sys.stdin).get('stale', [])))" 2>/dev/null || echo "0")
+          ALL_UNKNOWN=$(echo "$OUT" | python3 -c "import json,sys; print('true' if json.load(sys.stdin).get('all_unknown') else 'false')" 2>/dev/null || echo "false")
+
+          if [ "$STALE_COUNT" -gt 0 ] 2>/dev/null; then
+            REPORT_LINES=$(echo "$OUT" | python3 -c "
+          import json, sys
+          d = json.load(sys.stdin)
+          for s in d.get('stale', []):
+              print(f\"  *{s['repo']}*: main HEAD {s['main_head_time']}, :latest pushed {s['latest_image_push_time']} (gap {s['gap_minutes']}min)\")
+          " 2>/dev/null || echo "  (parse error)")
+            FULL_REPORT=":warning: *Image-deploy staleness* — deployed :latest image is stale vs main HEAD (likely dropped cloud-build-router dispatch):\n${REPORT_LINES}\nCheck \`gh run list --workflow=cloud-build-router.yml\` for a cancelled run, and \`gcloud builds list\` for the repo's trigger. SSOT: cloud_build_router_concurrency_drops_dispatch_2026_07_27.md"
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            printf "report<<__EOR__\n%s\n__EOR__\n" "$FULL_REPORT" >> "$GITHUB_OUTPUT"
+          elif [ "$ALL_UNKNOWN" = "true" ]; then
+            echo "stale=true" >> "$GITHUB_OUTPUT"
+            echo "report=:warning: *Image-deploy staleness check* came back ALL-UNKNOWN — the check itself is broken (gh/gcloud auth?), not a healthy fleet. See run log." >> "$GITHUB_OUTPUT"
+          else
+            echo "stale=false" >> "$GITHUB_OUTPUT"
+            echo "report=Image-deploy staleness: all fleet repos current." >> "$GITHUB_OUTPUT"
+          fi
+
+          if [ "$FAIL_ON_STALE" = "true" ]; then
+            exit $RC
+          fi
+          exit 0
+
+  notify:
+    needs: check
+    if: needs.check.outputs.stale == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.check.outputs.report }}
+      severity: WARNING
+      workflow_name: image-deploy-staleness-check
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: image-deploy-stale
+      cooldown_min: 60
+      concurrency_suffix: image-deploy-staleness
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
