@@ -289,10 +289,10 @@ source: >-
       green (267s). This is the writer-side half of re-drift prevention; the QG-gate half is the separate P1 todo above
       ("Route the tradfi writers through the shared build_canonical_instrument_id"). (repos: market-tick-data-service,
       unified-trading-library)
-- [ ] [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12
-      all-GREEN re-run; confirm live `_index.schema_version` is int64 not string `'9'`
-      (`cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`); Layer-1 % recorded. **Legacy-twin bucket
-      DELETEs — RETAGGED (extended §3a, 2026-07-28): reversibility-qualified, 604800s measured. Dispatch `[DATA]`.
+- [x] ✅ [DATA] P1. **v9 schema / manifest-status finish** (`tradfi_v9_stage1_finish_2026_07_06.md`) — fresh CF-1…CF-12.
+      **DONE 2026-07-28 — mtds@ab72ebec**: `schema_version` dtype CONFIRMED int64 (not string `'9'`; 2026-07-20 fix
+      holds); CF-1 ("Layer-1 %") = 100.0000% v9; CF-2-7/9/13/paths GREEN; only pre-adjudicated CF-8/Era-B remain.
+      Legacy-twin DELETEs RETAGGED (§3a, 2026-07-28).
 - [x] ✅ [PM] P1. **Reconcile the stale fork** `data_completion_tradfi_2026_07_15.md` against `tradfi_v9_stage1_finish`
       (flip done todos, re-scope open ones, delete its duplicate paragraph) so the backlog is honest. DONE 2026-07-21
       (docs-reconciliation pass, `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`):
