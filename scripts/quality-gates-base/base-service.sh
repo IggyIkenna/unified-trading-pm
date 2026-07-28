@@ -187,6 +187,40 @@ _qg_exit_handler() {
 }
 trap '_qg_exit_handler' EXIT
 
+# ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──
+# shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md: a killed (not just
+# failed) background quality-gates.sh run vanishes from `ps` with zero error output —
+# a worker polling for completion has no way to distinguish "silently killed" from
+# "still legitimately running" without this. Honest scope: SIGKILL (the kernel
+# OOM-killer's usual weapon, per that doc's own field evidence — 7 consecutive silent
+# kills, no dmesg/exit-code visibility) is fundamentally UNCATCHABLE — no trap anywhere
+# can ever fire for it. This closes the CATCHABLE-signal slice only: a graceful
+# external SIGTERM/SIGINT/SIGHUP reaching this process (e.g. qg-host-governor.sh's own
+# self-abort watchdog — `_qg_watchdog_signal_tree` — a `pkill`, or systemd stopping a
+# unit). Note bash defers a pending trap until the CURRENT FOREGROUND command returns
+# (the same caveat the watchdog's own tree-walk already documents and works around by
+# signaling children first) — a signal reaching only this parent while pytest/
+# basedpyright stays alive won't write the marker until that child exits on its own; a
+# signal reaching the whole process tree (the watchdog's tree-walk, or any
+# process-group signal) fires it promptly.
+_qg_signal_handler() {
+    local sig="$1" marker_dir marker
+    marker_dir="$(command -v _qg_ledger_dir >/dev/null 2>&1 && _qg_ledger_dir || echo "${WORKSPACE_ROOT:-.}/.benchmarks/qg-governor")"
+    mkdir -p "$marker_dir" 2>/dev/null || true
+    marker="${marker_dir}/killed.$$"
+    {
+        echo "killed_by_signal=${sig}"
+        echo "pid=$$"
+        echo "repo=${SERVICE_NAME:-unknown}"
+        echo "killed_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+    } > "$marker" 2>/dev/null || true
+    echo "❌ [quality-gates] received SIG${sig} — wrote kill marker (${marker}) before exit; a poller can now tell this apart from a still-running or a normal-exit run" >&2
+    exit 143
+}
+trap '_qg_signal_handler TERM' TERM
+trap '_qg_signal_handler INT' INT
+trap '_qg_signal_handler HUP' HUP
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 # Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES
 # BEFORE sourcing this script (${VAR:-default} preserves pre-set values).
