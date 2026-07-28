@@ -5,7 +5,7 @@ summary:
   rollout-pre-commit-configs.sh symlinked .gitleaks.toml instead of copying it, which resolves fine locally (sibling
   repo exists) but is a dangling ENOENT in any standalone single-repo CI checkout; broke unified-trading-system-ui's e2e
   build; 22 other repos carried the same latent risk.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -48,7 +48,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 assigned_role: infra-engineer
-resolved_by:
+resolved_by: slot-15 (2026-07-28)
 locked_by:
 source: autonomous-agent-fleet-sweep
 execution_scope: orchestrator-agent
@@ -135,19 +135,18 @@ system-integration-tests, e2e-testing.
 - [x] [SCRIPT] P1. `trading-agent-service` — shipped (`5c401624`).
 - [x] [SCRIPT] P1. `unified-trading-api` — shipped (`5b264c0d`).
 - [x] [SCRIPT] P1. `deployment-api` — shipped (`8703fc6a`).
-- [ ] [SCRIPT] P1. `system-integration-tests` — BLOCKED, not this rollout's doing: its path dependency
-      `instruments-service` now has its `.gitleaks.toml` fix committed, but the pre-flight audit checks for ANY
-      uncommitted state (not just tracked changes) and `instruments-service` still carries the untracked
-      `pipeline_e2e_check_reports/` directory from a concurrent session's live `/data-pipeline-check-is` run (mtime
-      re-confirmed ~90s old at last check — genuinely live, protected, not to be touched or deleted). Retry once that
-      concurrent session finishes and either cleans up or the directory goes stale.
+- [x] ✅ [SCRIPT] P1. `system-integration-tests` — shipped (`1df4043`, slot-15, 2026-07-28). Re-checked the path
+      dependency `instruments-service` in this worktree: clean, no `pipeline_e2e_check_reports/` or other untracked
+      state — the earlier blocker was scoped to a different concurrent session's worktree and had cleared. Replaced the
+      dangling `.gitleaks.toml` symlink with a real file copy (content-identical, verified via `diff -q` pre- and
+      `[ -L ]` post-change), full `quality-gates.sh` green, shipped via quickmerge.
 - [x] [SCRIPT] P1. `e2e-testing` — shipped (`5892f3cc`). Dry-run had also shown an UNRELATED `.pre-commit-config.yaml`
       template drift in `deployment-ui` — correctly NOT pulled in; the `deployment-ui` commit is scoped to
       `.gitleaks.toml` only.
 
-**Result: 22/23 shipped.** Only `system-integration-tests` remains, blocked by a concurrent session's genuinely-live
-untracked directory in its `instruments-service` dependency (not this rollout's doing — see its entry above; retry
-occasionally, don't hammer it). `agent-orchestrator` additionally picked up a bonus fix: its long-pending dynamic
+**Result: 23/23 shipped.** All repos in the fleet-wide rollout now carry a real `.gitleaks.toml` file copy —
+`system-integration-tests` was the last one, shipped 2026-07-28 (slot-15) once its `instruments-service` dependency
+worktree was re-checked clean. `agent-orchestrator` additionally picked up a bonus fix: its long-pending dynamic
 memory-cap `bootstrap_vm.sh` change (blocked all session by the fastapi/UTL SSOT issue) shipped in the same commit once
 that blocker cleared on its own.
 
