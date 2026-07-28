@@ -12,10 +12,23 @@ summary: >-
   sharing one shard object (e.g. MDPS's per-unit finalize threads), but one whose peak memory and I/O cost per flush
   grows linearly with cumulative shard size. A single process that runs long enough (regardless of how efficient any
   individual date's processing is) will eventually exceed available memory once its own per-VM shard gets large enough.
-  Fixed for the sports FIXTURES launcher by routing it through the EXISTING chunked `instruments-backfill` VM_TASK
-  (90-day chunks, fresh process per chunk) instead of the unbounded single-shot dispatch — a launcher-only change, zero
-  shared library/dispatcher code touched. Flagging as a corpus-wide finding because ANY launcher still using the generic
-  single-shot dispatch for a genuinely multi-year date range carries the same latent risk.
+  **First fix attempt (2026-07-27, routing through chunked `instruments-backfill`) was INSUFFICIENT** — confirmed live
+  on the relaunch `af-backfill-20260727-064958`: 14 of 25 chunks still got OOM-killed (chunks 12-25), each time silently
+  advancing past the killed chunk's remainder because the loop's bare `|| true` swallowed the failure, leaving ~832 days
+  of FIXTURES coverage (2023-05-13 → 2026-07-25, mostly chunks 13-25) never actually processed despite the VM
+  self-reporting `exit_code=0`. Root cause of the insufficiency: `VM_NAME` (and therefore `ManifestWriter`'s per-VM
+  shard path `_index/per_vm/{VM_NAME}.parquet`) is set ONCE at VM boot and stays constant for the VM's entire lifetime —
+  a fresh python process per 90-day chunk resets that PROCESS's own memory, but every chunk still reads, merges, and
+  re-uploads the SAME ever-growing shared shard object (confirmed via the run.log's `total entries` climbing
+  161K→175K→…→281K straight through every chunk restart), so the OOM threshold (~155-165K accumulated rows) was hit
+  again and again as soon as the cumulative shard crossed it, regardless of chunking. **Real fix (2026-07-27,
+  `deployment-service@20ce4c9`)**: scope `VM_NAME` to a per-chunk suffix (`${VM_NAME}-c${CHUNK_NUM}`) for just the
+  python subprocess invocation — bounds each chunk's per-VM shard to that chunk's own ~90 days of rows instead of the
+  cumulative multi-year total (the manifest consolidator merges every `_index/per_vm/*.parquet` shard generically
+  regardless of naming, and prunes on mtime/generation, never VM-liveness name-matching, so this is safe); the outer
+  tee-wrapper/heartbeat's own `VM_NAME` — used for `vm-logs/{vm}/PROGRESS.json` and liveness reporting — is untouched.
+  Also added a bounded (4-attempt) per-chunk retry so a killed chunk resumes via skip-if-fresh instead of the loop
+  silently moving on. Zero shared `unified-trading-library` code touched — this is entirely a launcher-script fix.
 status: open
 resolved_by:
 nature: issue
@@ -31,7 +44,7 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 priority: P2
 parent_epic: infrastructure_master
 source: >-
@@ -75,42 +88,50 @@ re-serialize + upload) grows with the CURRENT cumulative shard size, not with th
 `--sports-entity FIXTURES` only) — this is a distinct root cause from the previously-fixed unfiltered
 `read_availability_index(bucket)` OOM class.
 
-## Fix applied (scoped to the one launcher that hit this)
+## Fix history
 
-`deployment-service/scripts/vm/launch-api-football-backfill-vm.sh`: an explicit start/end-date run (the case that can
-span years) now sets `VM_TASK=instruments-backfill` instead of `VM_TASK=sports-backfill`, routing through the EXISTING
-chunked branch in `scripts/vm/setup-data-pipeline-vm.sh` (already used by `launch-sports-instruments-reference-vm.sh` /
-`launch-sports-full-sweep-vm.sh` / `launch-sports-is-gap-fill.sh` / `launch-sports-entity-sweep-vm.sh`) — splits the
-range into `VM_CHUNK_DAYS=90`-day windows, each run as a fresh process. Memory resets between chunks (a fresh process's
-per-VM shard read starts from whatever the PREVIOUS chunk's process already wrote — the read-merge-write cost is bounded
-by chunk size, not total range). A rolling-window run (always a few days wide) and a `--recovery-fixture-ids` run (the
-chunked branch doesn't plumb that flag) are deliberately excluded from the redirect — both stay on the original
-dispatch, unaffected. Zero shared dispatcher/library code changed. Verified live: `af-backfill-20260727-011039` run.log
-shows `task=instruments-backfill`, `Chunk 1/25: 2020-06-06 → 2020-09-03`.
+**Attempt 1 (2026-07-27, INSUFFICIENT)**: `deployment-service/scripts/vm/launch-api-football-backfill-vm.sh` — an
+explicit start/end-date run now sets `VM_TASK=instruments-backfill` instead of `VM_TASK=sports-backfill`, routing
+through the EXISTING chunked branch in `scripts/vm/setup-data-pipeline-vm.sh` (90-day windows, fresh process per chunk).
+This reset each chunk's OWN process memory but NOT the shared per-VM manifest shard (see summary) — verified
+insufficient live: the relaunch `af-backfill-20260727-064958` still OOM-killed 14/25 chunks.
+
+**Attempt 2 (2026-07-27→28, the real fix)**: `deployment-service@20ce4c9` — `setup-data-pipeline-vm.sh`'s
+`instruments_chunk_loop.sh` template now (a) suffixes `VM_NAME` per chunk (`${VM_NAME}-c${CHUNK_NUM}`) scoped to just
+the `python -m instruments_service` subprocess, bounding the per-VM shard to one chunk's rows instead of the whole
+backfill's cumulative total, and (b) retries a killed chunk up to 4 times (skip-if-fresh resumes past whatever that
+chunk already captured) before logging `CHUNK_EXHAUSTED` and moving on — so a genuinely irrecoverable chunk is now LOUD
+instead of silently absorbed by `|| true`. Verified via a standalone fake-subprocess harness (transient-failure
+retry-then-succeed, and permanent-failure bounded-exhaustion, both behave correctly) plus `quality-gates.sh` green. Zero
+shared `unified-trading-library` code touched.
+
+**Gap remediation**: the ~832 missing days from Attempt 1's insufficiency (2023-05-13 → 2026-07-25, mostly chunks 13-25)
+are being refilled by relaunching the SAME launcher command with the fixed script — skip-if-fresh fast-forwards through
+everything already captured and does real work only on the gap.
 
 ## What's NOT fixed — genuinely open
 
-- [ ] [DATA] P2. **Audit other launchers for the same latent risk.** Any launcher that (a) uses the generic single-shot
-      `--operation ...` dispatch (not a dedicated chunked `elif` branch) AND (b) can be invoked with a genuinely
-      multi-year date range carries the same OOM risk once its own per-VM shard grows large enough. Grep
-      `deployment-service/scripts/vm/launch-*.sh` for launchers setting a `VM_TASK` with no dedicated branch in
-      `setup-data-pipeline-vm.sh` (falls through to the generic dispatch), cross-referenced against whether that
-      launcher is ever invoked with a wide date range in practice. **Done when**: every such launcher is either
-      confirmed low-risk (always invoked with a bounded range) or redirected to a chunked task type the same way this
-      one was.
-- [ ] [CODE] P3. **Library-level fix for the `ManifestWriter` per-VM-shard flush cost** — **downgraded from `[OPERATOR]`
-      2026-07-27** (operator ruling: this class of risk — a silent, hard-to-detect correctness regression in shared
-      fleet-wide concurrency-critical code, not a bounded/recoverable-within-7-days mistake like a soft-deleted GCS
-      object — genuinely differs from the reversibility carve-out (§3a) and needed its own ruling rather than a
-      reflexive downgrade. Decided: dispatchable with a STRENGTHENED test bar, not a human sign-off, since
-      quality-gates.sh + real adversarial test coverage is the actual safety net for every other shared-library change
-      in this codebase). Cache the merged per-VM shard DataFrame + its GCS generation in the `ManifestWriter` instance
-      across flushes, using a generation-check to detect whether another writer touched the object since this instance's
-      last upload before trusting the cache (falls back to a full read on any mismatch — must preserve the existing
-      concurrent-writer correctness guarantee exactly, same invariant
+- [ ] [DATA] P2. **Audit other launchers for the same latent risk — INCLUDING already-chunked ones.** The original
+      framing (single-shot dispatch only) was incomplete: Attempt 1 above proves a launcher that's ALREADY routed
+      through a chunked `setup-data-pipeline-vm.sh` branch (e.g. `cefi-hl-aster-backfill`, or any other `elif` branch
+      reusing one `VM_NAME` across many chunk-loop iterations over a long enough total range) carries the SAME latent
+      risk unless it also scopes `VM_NAME` per chunk. Audit every chunked branch in `setup-data-pipeline-vm.sh` (not
+      just single-shot `--operation ...` dispatches) for reused-VM_NAME-across-chunks exposure, cross-referenced against
+      whether that launcher is ever invoked with a range wide enough to grow the shard past the ~155-165K-row OOM
+      threshold in practice. **Done when**: every such launcher is either confirmed low-risk (bounded cumulative-shard
+      growth for its realistic invocation range) or given the same per-chunk `VM_NAME` suffix.
+- [ ] [CODE] P3. **Library-level fix for the `ManifestWriter` per-VM-shard flush cost — NO LONGER BLOCKING, still worth
+      doing eventually.** Re-evaluated 2026-07-28: caching the merged DataFrame + GCS-generation-check (the originally
+      proposed fix) would reduce REDUNDANT download+parse work across flushes, but would NOT reduce PEAK memory at the
+      moment of `merged.to_parquet()` — that allocation is proportional to the CURRENT shard size regardless of whether
+      `existing_df` came from a fresh download or a cache, so it would not actually have fixed this incident. The
+      per-chunk `VM_NAME` suffix (this doc's real fix) addresses the acute case (any launcher that chunks into fresh
+      processes) by capping shard size directly. This item remains open only for the residual case of a genuinely
+      long-running SINGLE process with a constant `VM_NAME` that never restarts (e.g. a live/forward VM) — lower
+      urgency, no longer incident-driving. If picked up: cache the merged per-VM shard DataFrame + its GCS generation in
+      the `ManifestWriter` instance across flushes, generation-checked before trusting the cache (falls back to a full
+      read on any mismatch — must preserve the existing concurrent-writer correctness guarantee exactly, same invariant
       `test_concurrent_writers_same_shard_lose_no_entries` already covers). **Done when**: (a) both existing suites stay
       green (`test_manifest_writer_per_vm.py`, `test_manifest_writer_per_vm_debounce.py`), AND (b) a NEW adversarial
-      test is added that specifically simulates a second writer mutating the shard's GCS generation between this
-      instance's cache-fill and its next flush, proving the generation-check detects the mismatch and falls back to a
-      full read-merge (not just that the happy-path cache hit works) — this new test is the real safety net, not a
-      human's review. `quality-gates.sh` green on `unified-trading-library`.
+      test proves the generation-check detects a concurrent mutation and falls back to a full read-merge (not just that
+      the happy-path cache hit works). `quality-gates.sh` green on `unified-trading-library`.
