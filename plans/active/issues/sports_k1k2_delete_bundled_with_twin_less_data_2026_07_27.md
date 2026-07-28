@@ -185,3 +185,39 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
   doc's original 27.5%/n=40 figure — no material drift, still the risk profile todo 1 above should be sized against. Two
   smaller same-session n=40/60 samples read lower (12.5%/16.7%) but that's sampling noise, not improvement (no migration
   has executed yet to have shrunk the real number). Full detail in the Track C plan's own Progress Log.
+- **2026-07-27/28 (interactive session, operator-authorized execution)** — Operator gave direct go-ahead to run the
+  actual migration (including the Track V delete in the same effort once twin coverage is confirmed). Full run history:
+  1. **SPOT attempts 1-4**: launched full-mode via `launch-canonical-migration-vm.sh sports-k1k2-casing-revert` on
+     default SPOT provisioning. 3 preemptions in ~2h, no attempt surviving past 42min against the ~87min the copy step
+     alone needs uninterrupted — and because the migrate step re-verifies (downloads+compares) every object on every run
+     rather than cheaply resuming, wall-clock progress did NOT accumulate across preemptions. Switched to
+     `ON_DEMAND=true` per CLAUDE.md's documented backfill opt-out.
+  2. **On-demand run #1**: migrate step ran its full scan for the first time and found a REAL bug: 4/374,847 objects
+     that `scan_day`'s live listing found at scan-time 404'd by process-time (no delete audit-log entry, no soft-deleted
+     generation, no concurrently-dispatched AO worker — mechanism unconfirmed, but the script's own "never delete,
+     copy-if-missing" design means a vanished source is safe to skip). The un-fixed script bucketed this into a generic
+     `failed` outcome, flipping the WHOLE multi-year run's exit code and blocking report-gen + manifest-swap over 4
+     objects out of 374,847. **Fixed + shipped** `market-tick-data-service@fa4c731b` (adds a distinct non-fatal
+     `source_vanished` outcome for exactly a 404-on-source-read; every other exception still hard fails) — real,
+     sentinel-bypassed test run confirmed 7,216 passed / 0 failed before shipping.
+  3. **On-demand run #2**: migrate step succeeded end-to-end for the first time (fix confirmed working) and reached
+     manifest-swap, which correctly REFUSED with 480 ADD-key collisions (the collision-safety net added earlier this
+     same effort working as designed). Root cause: the manifest's shard atom has no `fixture_id` component, so when 2+
+     raw objects (e.g. a plain path + a `fixture_id=`-scoped sibling) share a `(day,venue,league_id)` key, the report
+     generator emitted each as an independent, uncollapsed target with its own row_count — guaranteed to disagree.
+     **Fixed + shipped** `market-tick-data-service@fa6fd4cd` — `_aggregate_by_key` groups by `(day,venue,league_id)`,
+     sums row_counts only when every constituent independently verifies PASS, and holds back the whole key as FAIL
+     (never a partial sum) otherwise — 7,297 passed / 0 failed real test run before shipping.
+  4. **On-demand run #3**: launched too early relative to the tarball republish — confirmed via the deployment archive's
+     `started_at` (08:11:07Z) predating the floating tarball's actual upload (08:46:05Z) — so it ran the
+     PRE-aggregation-fix code and reproduced the same collision class (488, not meaningfully different from 480). No new
+     signal; not a regression. **Lesson**: after a `create-code-tarballs.sh` run, independently re-verify the floating
+     tarball's `.manifest.json` `commit_sha` is a descendant of the fix commit (`git merge-base --is-ancestor`)
+     immediately before launching — don't trust the rebuild script's own console output as proof of upload completion
+     timing.
+  5. **On-demand run #4**: launched after explicitly re-confirming the deployed tarball (`commit_sha` includes both
+     fixes) — in progress as of this entry, migrate step completed cleanly, report-gen running. Also hit and worked
+     around (not migration-specific): local `gcloud` user-account session needed interactive reauthentication mid-watch
+     (an org reauth policy, not a credential revocation) — the compute default service account
+     (`1060025368044-compute@developer.gserviceaccount.com`) works without reauth for read-only `describe`/`storage cat`
+     calls and was used for the rest of the session's monitoring.
