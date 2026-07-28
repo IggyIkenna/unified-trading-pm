@@ -132,14 +132,15 @@ and a clean re-run must confirm before the migration proceeds.
 
 ## Todos
 
-- [ ] [DATA] P0. Generalize the CF-11 covered-keys shadow-suppression in
+- [x] ✅ [DATA] P0. Generalize the CF-11 covered-keys shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
       (`reemit_cefi_honest_absence_rows`) to also ignore `instrument_type`/`underlying` drift between the prior
       manifest's stored columns and the live object scan's parsed path — confirmed false-phantom repro: OKX-FUTURES
       `future`→`perpetual`, BYBIT-SPOT `spot_pair`→`perpetual` (itype drift), ASTER non-blank `underlying` column vs
       live path's blank `underlying` for a per-instrument shard (underlying drift). Add regression tests mirroring
       `test_wellformed_captured_no_object_still_phantom` (must still catch a TRUE phantom) alongside new tests for each
-      drift case (must NOT phantom-demote when the object genuinely exists). (repo: market-tick-data-service)
+      drift case (must NOT phantom-demote when the object genuinely exists). (repo: market-tick-data-service) —
+      market-tick-data-service@dcbed674
 - [ ] [DATA] P1. After the fix lands, re-run the full-corpus `rebuild_cefi_manifest --dry-run` (2019-01-01..present) and
       confirm `phantom_to_failed` drops to a small DERIBIT-chain-style residual; update this issue doc + unblock
       `data_completion_cefi_2026_07_15.md`'s "NEXT SESSION — execute the migration" todo. (repo:
