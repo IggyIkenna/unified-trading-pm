@@ -136,11 +136,18 @@ be confirmed against a live Cloud Scheduler resource.
       replaced. Rewrote both header comments (`defi_collection_scheduler.tf:28-33`,
       `lst_seasonal_rewards_scheduler.tf:20-39`) to state the real situation instead of citing a phantom consumer —
       `terraform fmt -check` clean, full `quality-gates.sh` green.
-- [ ] [INFRA] P2. Once the real (or confirmed-absent) consumer deadline is established, either (a) re-stagger
+- [x] ✅ [INFRA] P2. Once the real (or confirmed-absent) consumer deadline is established, either (a) re-stagger
       `collect-solana-defi` (02:05→earlier start or a shorter timeout budget) and `collect-bridge-events` (currently
       worst-case 02:35 UTC) so their worst-case finish lands at or before the confirmed deadline, or (b) if no live T+1
       consumer depends on a hard 02:25/02:30 UTC cutover, update the header comments to state the real constraint (or
-      that there is none) instead of the current unverifiable one. Repo: deployment-service. Source: this doc.
+      that there is none) instead of the current unverifiable one. Repo: deployment-service. Source: this doc. —
+      deployment-service@eeb831c. Chose option (b): P1's investigation already confirmed the features-onchain T+1 recon
+      consumer was deleted 2026-07-13 and never replaced, so there is no deadline to re-stagger against.
+      `defi_collection_scheduler.tf`'s header now carries an explicit "RESOLUTION" block naming both
+      `collect-solana-defi` (worst-case 02:30 UTC) and `collect-bridge-events` (worst-case 02:35 UTC, the tightest of
+      the 14 jobs) and stating the schedule is kept unchanged, purely as a historical TheGraph-rate-limit stagger, not
+      an enforced deadline — closing the 2026-07-22 `residual_defi_pipeline_completion` tightness flag.
+      `terraform fmt     -check` clean, full `quality-gates.sh` green.
 - [ ] [INFRA] P2. Re-check `collect-lst-seasonal-rewards`'s 02:25 UTC start against whatever the P1 todo above
       determines is the real downstream deadline — its own 40-minute timeout budget (worst-case 03:05 UTC finish) is the
       single largest violation found in this doc. Repo: deployment-service. Source: this doc.
