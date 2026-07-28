@@ -201,8 +201,8 @@ Real code fixes / features needed (not backfills, not pure doc drift).
     QG) `plans/active/issues/fleet_data_acquisition_health_2026_06_21.md`
 
 11. **instruments-service's `--run-tag` CLI flag doesn't do what its help text says**
-    `plans/active/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` 3 todos unchecked: decide
-    direction, implement, ship.
+    `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived 2026-07-28, resolved
+    instruments-service@f7e64c54) 3 todos unchecked at the time of this audit: decide direction, implement, ship.
 
 12. **TradFi's mvp_mode fetch-time filter is unreachable dead code**
     `plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
