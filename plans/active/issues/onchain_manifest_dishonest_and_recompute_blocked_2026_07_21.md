@@ -121,4 +121,81 @@ it is NEW upstream work: MTDS (or the onchain collectors) must capture `ltv` / `
 Do NOT hand-edit the frozen prod index (fragile band-aid on a broken subsystem). Treat step 1 (consolidator) as the
 gating fix; the producer honesty is already shipped. Steps 3–4 are genuinely new scope (upstream collection), not a
 rerun — size them as their own work, not as part of "mark→recompute". This reframes the operator's "mark now" as "fix
-the consolidator so the already-shipped producer honesty propagates." </content>
+the consolidator so the already-shipped producer honesty propagates."
+
+## Update 2026-07-28 (slot-12, `data_engineering`) — ROOT CAUSE FOUND: not a broken consolidator, an orphaned migration artifact
+
+**The premise in "The fix chain" step 1 above is corrected by this investigation: there is no broken/frozen live
+consolidator process for this bucket.** Direct evidence (read-only `gcloud storage`/`gcloud storage cat` against
+`gs://features-defi-prd-central-element-323112`, `unified-trading-sa` identity, 2026-07-28):
+
+1. **The 13 rows this doc's table describes live at a path that is DEAD migration debris, not a manifest any
+   consolidator or reader consults.**
+   `gs://features-defi-prd-central-element-323112/onchain/_index/availability_index.parquet` (25 columns, pre-v9-ish
+   shape) holds exactly those 13 rows, all `date=2026-01-25`, all `capture_status=captured` — byte-identical to this
+   doc's table. This nested `onchain/_index/` tree (also has its own `onchain/_index/per_vm/_legacy_seed.parquet` +
+   `onchain/_index/latest.json` stamped `2026-07-18T11:02:44Z`) is a **verbatim carry-over of the legacy
+   `features-onchain-defi-{pid}` bucket's own root manifest**, produced by [[bucket_fold_features_2026_07_17]]'s
+   2026-07-18 migration step ("Reconcile the features-onchain-defi twin THEN parity migrate" —
+   `onchain-defi(727, 977MB)→features-defi-prd/onchain/`). That migration did an "Index-only SKIP" for several OTHER
+   legacy per-kind buckets (delta-one-{defi,tradfi}, volatility-{cefi,tradfi}, mtf-cefi — buckets that held only
+   consolidator artifacts, no real data) but **onchain-defi genuinely had real `by_date/` data (727 objects) that needed
+   migrating, so its whole object tree was copied wholesale — including its own `_index/` subtree**, which should have
+   been excluded the same way the empty legacy buckets' indexes were. The result: the old bucket's frozen manifest
+   snapshot rode along under a `{kind}/` prefix in the new bucket, where it has sat, unreferenced, ever since — no
+   consolidator (live or one-off) has touched it since the copy, because a consolidator cycle takes a real GCS **bucket
+   name**, never a sub-prefix, so `features-defi-prd-.../onchain` was never (and can never be) a valid `--bucket`
+   target.
+
+2. **The bucket's ACTUAL root manifest — the one every consolidator cycle, reader, and data-status surface consults — is
+   alive and current, not frozen.** `gs://features-defi-prd-central-element-323112/_index/availability_index.parquet`
+   (41 columns, current schema) holds exactly **one** onchain-family row:
+   `date=2026-07-26, feature_group=rate_impact, capture_status=captured, instrument_count=71, service_name=features-service`.
+   `_index/latest.json` at the SAME root shows `last_run_at=2026-07-28T09:22:39Z` (minutes before this check),
+   `shards_scanned=1, rows_in=0, incremental=true, no_op=true` — a genuinely fresh, healthy cron tick.
+   `shards_scanned=1` is just the root `_index/per_vm/_legacy_seed.parquet` (the one-time fold-created seed, correctly
+   EXCLUDED from every merge per `manifest_consolidator.py`'s own legacy-seed-exclusion-once-canonical-exists logic —
+   see module docstring 2026-07-15 fix) — i.e. `rows_in=0` is the CORRECT, designed answer given the current write
+   pattern, not a symptom of breakage. The onchain feature-writer's production write path evidently uses the **legacy
+   CAS path** (`_resolve_per_vm_shards()` → `manifest_per_vm_shards` not set for this Cloud Run workload → writes go
+   straight to the canonical, bypassing per-VM shards + the consolidator entirely) rather than per-VM shards —
+   consistent with zero real per-VM shards ever appearing at bucket root.
+
+3. **`onchain/by_date/` itself is current and growing** — 724 real `features.parquet` objects span `day=2026-01-25`
+   through `day=2026-07-26` (re-measured today; the original "GCS objects exist through 2026-05-22" figure above is now
+   itself stale — writes have continued for two more months). So the feature-COMPUTE pipeline is demonstrably alive and
+   writing data today; what's missing is that only ONE of its feature_groups (`rate_impact`) has ever registered a
+   manifest row at the live root — the other 12 groups (including the two legitimately-captured
+   `lending_rates`/`lst_yields`) have **no root-manifest presence at all**, honest or otherwise. Their only manifest
+   "record" is the dead 2026-01-25 nested snapshot.
+
+**Track 8 reconciliation (explicitly required by this todo): NOT a genuine contradiction.** Track 8's 2026-07-22
+correction (`defi_consolidated_closeout_2026_07_18.md`) verified, via read-only `gcloud scheduler jobs list/describe`,
+that `uts-prod-manifest-consolidator-market-data-defi-cron` + the `instruments-defi`/`features-defi` consolidator jobs
+are **ENABLED, running every 1 minute** — a claim about **Cloud Scheduler job state**. That is TRUE and independently
+re-confirmed here (`_index/latest.json`'s `last_run_at` is minutes old). This doc's 2026-07-21 "frozen at 2026-01-25 /
+measured no-op" finding is a claim about **manifest CONTENT at a specific object path** — and that path
+(`onchain/_index/availability_index.parquet`) turns out to be a disconnected legacy artifact the live, correctly-
+running scheduler was never wired to touch. Both claims are correct; they are not measuring the same thing, so there is
+no contradiction to resolve — just a wrong assumption (in this doc's original framing) about which file the "13 rows"
+lived in and what process was responsible for it.
+
+**Root cause, stated plainly:** the 2026-07-18 bucket-fold migration's bulk copy of `features-onchain-defi-{pid}` →
+`features-defi-prd/onchain/` carried the legacy bucket's own stale manifest index along with its real data, creating an
+orphaned duplicate manifest tree with no live owner. Separately (and not a "brokenness" — just a coverage gap), the live
+root manifest was never backfilled with honest rows for the historical `onchain/by_date/` corpus (Jan 25 – present) — it
+only starts accumulating real rows going forward, one write at a time, for whichever feature_group's writer actually
+runs (`rate_impact` so far).
+
+**No trivial one-line fix exists.** Closing this honestly requires a genuine design/migration decision, not a code
+change: (a) delete the orphaned `onchain/_index/` tree (pure migration debris — GCS delete, needs the standard
+delete-safety check + likely `[OPERATOR]` per this repo's delete-gating rule, since it is a prod bucket write) AND (b)
+decide how the historical `onchain/by_date/` corpus (724 objects, Jan 25–Jul 26) should be honestly registered into the
+LIVE root manifest — a bulk one-time backfill of `record_captured`/`record_empty`/`record_failed` rows per (date,
+feature_group) re-validated against real GCS content (the same captured-vs-featureless split this doc's own table
+already worked out for the 13 legacy rows), which is new scope, not a rerun of anything broken. Per this todo's own
+contract, remediation stays open pending that design decision; this Update is the required documented diagnosis.
+Recommend the operator/main decide between: (i) fold this into the existing fix-chain's step 2 ("re-derive the index
+from producer-honest shards") but retarget it explicitly at the ROOT manifest instead of the dead nested one, or (ii)
+treat it as new scope requiring its own plan given it's now a full historical backfill-registration job, not a
+consolidator fix. </content>

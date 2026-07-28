@@ -13,7 +13,7 @@ stage: [meta]
 repos: [instruments-service, unified-api-contracts]
 scope: [admin]
 tags: [reconciliation, ssot-audit, plan-hygiene, instruments-service, honest-coverage, venue-registry, history-extract]
-related: [/plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md]
+related: [/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md]
 created: 2026-07-25
 parent_epic: instruments_master
 priority: P3
@@ -36,7 +36,7 @@ locked_since:
 
 # Instruments-Service Plan Reconciliation — Section B triage roster (history extract, 2026-07-25)
 
-> Extracted verbatim from `plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md` § "Section B —
+> Extracted verbatim from `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` § "Section B —
 > Triage" to bring the parent doc back under the 1000-line hard cap. No content changed.
 
 ## Section B — Triage (contested-token signal across the 67 plans)

@@ -1,0 +1,251 @@
+---
+doc_type: issue
+title:
+  "CeFi book_snapshot_5 writes started FATAL-failing write-time schema validation for every venue since the 2026-07-27
+  validate=True flip -- the registered UAC SchemaContract required a fictional serialised bids/asks string column
+  nothing ever produced, AND market-tick-data-service never derived ts_event for this data_type; both halves fixed"
+summary: >-
+  DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) CRITICAL alert, asset_group=cefi data_type=book_snapshot_5: 299,467
+  attempted_failed of 1,037,001 attempted (28.9%), flagged FRESH (newest attempted_failed activity 0d old, ~4,809 rows
+  on 2026-07-28 alone, up from ~2,563 the day before -- an accelerating trend, not the already-known stale Tardis-403
+  backlog documented in cefi_high_attempted_failed_batch_cluster_2026_07_23.md). Root-caused via a live,
+  column-projected read of gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet:
+  every fresh row's error_reason is "schema contract violated for cefi/<venue>/<perpetual|spot_pair>/book_snapshot_5",
+  spanning many venues (KRAKEN-SPOT, OKX-SWAP, BINANCE-FUTURES, BITFINEX-SPOT, OKX-SPOT, KRAKEN-FUTURES, DERIBIT, ...).
+  Traced to market-tick-data-service@3169d25e (2026-07-27,
+  cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md): that fix turned validate=True on UNCONDITIONALLY at
+  both CeFi Tardis write call sites, based on a code comment claiming
+  "book_snapshot_5/derivative_ticker/incremental_book_l2 have no registered contract" -- FALSE for book_snapshot_5
+  (CEFI_PERPETUAL_BOOK_SNAPSHOT_5 / CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5 ARE registered, requiring a serialised "bids"/"asks"
+  string column that no writer ever produced and no reader ever consumed -- confirmed via a workspace-wide grep/read,
+  the contract was drafted aspirationally on 2026-04-17, six weeks before the real Tardis flattened wire format was even
+  reverse-engineered into a regression test). The moment validate=True shipped, every real book_snapshot_5 write (whose
+  true wire shape is 20 flat per-level columns -- asks[0..4].price/.amount, bids[0..4].price/.amount -- confirmed via
+  tests/unit/test_tardis_book_snapshot_v7.py) started failing the missing_column check on the fictional bids/asks
+  columns, isolated per-shard so it never crashed -- just silently recorded attempted_failed and re-failed every future
+  wave, exactly the class of bug the workspace's DP-FETCH registry exists to catch. Fixed in two commits (one shipped
+  concurrently by another worker mid-investigation, discovered via git pull, not duplicated): (1)
+  unified-api-contracts@8db188fe (slot-9) corrected CEFI_PERPETUAL_BOOK_SNAPSHOT_5 / CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5 to
+  require the real 20 flattened float64 columns instead of the fictional strings -- verified via workspace-wide grep
+  that changing this breaks nothing (nothing produces or consumes the string format; validate_dataframe's dtype="string"
+  check is content-agnostic, so the contract was silently unenforceable garbage from day one). (2)
+  market-tick-data-service@339ca767 (this task) closed the remaining gap: even against the corrected contract,
+  validation still failed missing_column:ts_event because _rename_and_derive_contract_columns (tardis_shared.py) never
+  derived ts_event for book_snapshot_5 (data_type wasn't in _WIRE_COLUMN_RENAMES, so the function early-returned before
+  the ts_event derivation step that trades/liquidations/ quotes already get) -- added book_snapshot_5 to that dict
+  (empty rename map -- the asks[N]/bids[N] column names already matched), corrected the now-doubly-stale comment, and
+  added a regression test exercising the real wire shape end-to-end through finalise_and_write_cefi_shards. Reproduced
+  the failure locally against a realistic wire-shaped DataFrame before the fix (missing_column:ts_event, the sole
+  remaining violation after the contract fix), verified zero violations after. A separate, PRE-EXISTING, un-triggered
+  mismatch was found and left alone: derivative_ticker also has a registered contract (CEFI_PERPETUAL_DERIVATIVE_TICKER)
+  that _rename_and_derive_contract_columns also doesn't bridge to ts_event -- but a live manifest read confirms
+  derivative_ticker's current attempted_failed rows are rate-limit/network causes only (no schema-contract violations),
+  meaning it is not reaching this same write path via live/routine capture right now; left as a documented,
+  currently-dormant gap rather than an unverified speculative fix. Also NOT in scope: features-service's
+  CrossInstrumentRawDataLoader.load_book_snapshots expects a THIRD shape (native list-of-[price,size] columns from a
+  non-existent l2_book_checkpoints writer) -- already broken independent of this fix, a separate pre-existing gap, not
+  touched here. Historical backlog (299k+ attempted_failed rows accumulated since 2026-07-27) is NOT retroactively
+  cleared by this code fix -- it requires a normal idempotent backfill re-attempt on a future wave, same as every other
+  historical-poisoned-rows class already documented in cefi_high_attempted_failed_batch_cluster_2026_07_23.md.
+status: open
+nature: issue
+asset_group: [cefi]
+stage: [data]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
+scope: [engineer]
+tags:
+  [
+    data-correctness,
+    schema-contract,
+    write-time-guard,
+    fail-hard,
+    tardis,
+    book_snapshot_5,
+    ts_event,
+    dp-fetch-009,
+    escalation,
+  ]
+related:
+  [
+    /plans/active/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
+    /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+  ]
+created: 2026-07-28
+parent_epic: cefi_master
+priority: P1
+estimate_class: research
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.4
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+assigned_vm: NA
+execution_scope: local-only
+resolved_by: "market-tick-data-service@339ca767 + unified-api-contracts@8db188fe"
+source:
+  "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
+  data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
+  attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
+last_updated: 2026-07-28
+---
+
+# CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
+
+## Alert as received
+
+```
+Event: DP_RUN_MOSTLY_EMPTY (DP-FETCH-009), severity CRITICAL, asset_group=cefi, data_type=book_snapshot_5
+299,467 attempted_failed of 1,037,001 attempted (ratio 28.9%; abs>=500 or ratio>=10%)
+"A backfill exited 0 / captured climbed but failed this batch invisibly."
+Fresh -- newest attempted_failed activity 0d ago.
+```
+
+No issue doc was pre-filed (`(none — alert carries the details)`); this doc is the escalation-worker's own
+investigation + fix write-up, filed per the standard audit->issue->plan flow.
+
+## Verification -- this IS a fresh regression, not the known stale Tardis-403 backlog
+
+A live, column-projected read of
+`gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` (`book_snapshot_5` rows:
+2,382,157 total, 299,511 `attempted_failed` -- matches the alert almost exactly) shows:
+
+- `max attempted_at` = `2026-07-28T09:05:38Z` (today).
+- Per-day `attempted_failed` counts: 2026-07-28 = 4,809; 2026-07-27 = 2,563; 2026-07-26 = 488 -- an ACCELERATING trend,
+  not a static backlog re-firing (contrast `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`, where the same
+  alert class was confirmed to be a 6-30-day-stale backlog re-evaluated on a periodic sweep).
+- Every one of today's 4,809 rows carries `error_reason` =
+  `"schema contract violated for cefi/<VENUE>/<perpetual| spot_pair>/book_snapshot_5: 1 violation(s); first=column 'ts_event' missing from dataframe"`
+  (verified directly, post-fix, via the reproduction below), spanning KRAKEN-SPOT (1,391), OKX-SWAP (959),
+  BINANCE-FUTURES (725), BITFINEX-SPOT (408), OKX-SPOT (394), KRAKEN-FUTURES (225), COINBASE-SPOT (174),
+  COINBASE-FUTURES (159), OKX-FUTURES (122), BITFINEX-FUTURES (90), ASTER (50), BYBIT (50), DERIBIT (32), OKX (21),
+  LIGHTER-ZKSYNC (9) -- i.e. essentially every CeFi venue that captures book_snapshot_5, which is exactly what "the
+  write-time gate now rejects 100% of this data_type's writes" looks like.
+
+## Root cause
+
+`market-tick-data-service@3169d25e` (2026-07-27, `cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md`)
+turned `validate=True` on UNCONDITIONALLY at both CeFi Tardis write call sites in `tardis_cefi_shards.py`
+(`_write_one_cefi_shard` and `_tardis_cefi_shard_router`) -- the flag is passed regardless of `data_type`, so every
+shard write, not just trades/liquidations/quotes, now looks up and enforces a UAC `SchemaContract`.
+
+That commit's own code comment justified leaving `book_snapshot_5` untouched in the wire-column-bridging step with:
+_"book_snapshot_5/derivative_ticker/incremental_book_l2 have no registered contract here and are deliberately left
+untouched (their consumers still expect the raw wire column names)."_ This claim is **false** for `book_snapshot_5`:
+`CEFI_PERPETUAL_BOOK_SNAPSHOT_5` / `CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5` ARE registered in
+`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py` (added 2026-04-17, `3f6a34fc`/`b82a154e` --
+six weeks _before_ the real Tardis wire format was even reverse-engineered into a regression test, 2026-05-28,
+`tests/unit/test_tardis_book_snapshot_v7.py`). The contract required a serialised `"bids"`/`"asks"` string column
+("Serialised list of top-5 bid (price, size) levels") -- but **no writer anywhere in the workspace ever produced this
+format, and no reader anywhere ever consumed it** (confirmed via a workspace-wide grep across market-tick-data-service,
+market-data-processing-service, features-service, strategy-service). The real Tardis `book_snapshot_5` CSV wire format
+is 20 flat per-level columns:
+`asks[0].price, asks[0].amount, ..., asks[4].price, asks[4].amount, bids[0].price, bids[0].amount, ..., bids[4].price, bids[4].amount`.
+
+Because `unified-api-contracts`'s `validate_dataframe`/`_dtype_matches` treats `dtype="string"` as content-agnostic (any
+non-null string value passes -- it never parses/validates JSON structure), this fictional contract was **silently
+unenforceable garbage from the day it was registered**, invisible until something finally turned `validate=True` on for
+this write path -- which is exactly what `3169d25e` did on 2026-07-27, exposing it immediately.
+
+## The fix -- two halves, two repos, two workers (discovered mid-investigation, not duplicated)
+
+**Half 1 (contract shape) -- `unified-api-contracts@8db188fe`** (shipped by slot-9, 2026-07-28T09:22:12Z, concurrently
+with this investigation -- discovered via `git pull --ff-only` mid-session, not re-done): replaced the fictional single
+"bids"/"asks" string `ColumnSpec` pair with 20
+`ColumnSpec(name=f"{side}[{level}].{field}", dtype="float64", nullable=False)` entries matching the real wire column
+names, for both `CEFI_PERPETUAL_BOOK_SNAPSHOT_5` and `CEFI_SPOT_PAIR_BOOK_SNAPSHOT_5`. Verified safe (breaks nothing)
+because nothing currently produces or consumes the old string format.
+
+**Half 2 (ts_event derivation) -- `market-tick-data-service@339ca767`** (this task): even against the corrected
+contract, `finalise_rows_and_path`'s validation still failed with `missing_column:ts_event` -- reproduced locally
+against a realistic wire-shaped `DataFrame` (20 level columns + `timestamp`/`local_timestamp`/`symbol`/`exchange`,
+matching the real CSV header) BEFORE fixing, confirming this was the sole remaining violation. Root cause:
+`_rename_and_derive_contract_columns` (`tardis_shared.py`) only derives `ts_event` from the raw wire `timestamp` column
+for data_types listed in `_WIRE_COLUMN_RENAMES` (`trades`, `liquidations`, `quotes`) -- `book_snapshot_5` was never
+added, so the function early-returned the frame unchanged, `ts_event` was never created, and validation failed even
+though the level columns now matched. Fix: added `"book_snapshot_5": {}` to `_WIRE_COLUMN_RENAMES` (an empty rename map
+-- the `asks[N]`/`bids[N]` column names already match the corrected contract verbatim, only the `ts_event` derivation
+step needs to run), corrected the now-doubly-stale comment (which repeated the same false "no registered contract"
+claim), and added a regression test (`test_finalise_and_write_cefi_shards_book_snapshot_5_real_wire_shape`) that
+exercises the real wire shape end-to-end through `finalise_and_write_cefi_shards`, asserting zero isolated failures --
+mirroring the existing trades/spot_pair happy-path tests in the same file. Re-verified post-ship: zero violations
+against the reproduction script.
+
+## What was found and deliberately NOT fixed (documented, not silently dropped)
+
+1. **`derivative_ticker` has the same _class_ of gap but is currently dormant, not actively firing.**
+   `CEFI_PERPETUAL_DERIVATIVE_TICKER` is also registered, and `_rename_and_derive_contract_columns` doesn't bridge
+   `ts_event` for it either -- structurally the same shape of bug. But a live manifest read of `derivative_ticker`'s
+   fresh (2026-07-28) `attempted_failed` rows shows ONLY rate-limit (`429`) and network-error causes, zero
+   `"schema contract violated"` rows -- meaning `derivative_ticker` capture is not currently reaching this same
+   Tardis-bulk-CSV write path (it's likely captured via a separate funding-rate/OI polling route). Left as a documented,
+   currently-inert gap rather than an unverified speculative fix -- if a future caller starts writing
+   `derivative_ticker` through `finalise_rows_and_path` with `validate=True`, this will need the same treatment.
+2. **`features-service`'s book_snapshot_5 reader expects a THIRD, different shape, already broken independent of this
+   fix.** `CrossInstrumentRawDataLoader.load_book_snapshots`
+   (`features-service/features_service/cross_instrument/engine/raw_data_loader.py:258-276`) reads the real
+   flattened-column parquet directly but feeds it to `BookDepthCalculator`/`LiquidityWallCalculator`, whose
+   `required_columns` expect native list-of-`[price,size]` columns from a claimed `l2_book_checkpoints` writer that does
+   not exist anywhere in MTDS/MDPS (grepped, zero hits). This consumer was already broken before this investigation and
+   is unrelated to the schema-contract write-time gate -- flagged here as a genuinely new, smaller finding per the
+   findings-triage rule, not fixed in this task (out of scope: a features-service reader/writer design gap, not a
+   data-pipeline write-time-validation bug).
+3. **Historical backlog is not retroactively cleared.** The ~299k `attempted_failed` rows accumulated since 2026-07-27
+   (and the smaller pre-existing backlog underneath, per `cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s
+   book_snapshot_5 entry) stay in the manifest until a normal idempotent backfill re-attempt re-runs those shards -- the
+   same "historical poisoned rows never retried" class already documented there. Not filed as a separate todo -- it is
+   covered by that doc's existing recommendation to work through `cefi_consolidated_closeout_2026_07_18.md`'s queued
+   backfill waves.
+
+## Verification before ship
+
+- `bash scripts/quality-gates.sh --no-fix` in `market-tick-data-service`: EXIT 0 (sentinel `e663d72f...` matched HEAD).
+- `tests/market_interface/adapters/cefi/test_tardis_canonical_output.py`: 38/38 passed, including the new regression
+  test.
+- Reproduced the failure locally (missing_column:ts_event, the sole violation post-contract-fix) BEFORE the MTDS fix,
+  confirmed zero violations AFTER, both via a standalone script calling `_rename_and_derive_contract_columns` +
+  `validate_dataframe` directly against a realistic wire-shaped DataFrame.
+- `git merge-base --is-ancestor $(git rev-parse HEAD) origin/live-defi-rollout` = true post-quickmerge.
+
+## Codex SSOTs
+
+- `/codex/05-infrastructure/data-pipeline-alerts.md` -- DP-FETCH failure-mode registry + escalation model.
+- `/codex/02-data/availability-manifest-and-data-status.md` -- 4-state capture_status, honest-absence contract.
+- `plans/active/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md` -- the predecessor fix this
+  doc's regression descends from.
+- `plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md` -- the earlier, unrelated (stale
+  Tardis-403) alert cluster for the same data_type; this doc's fresh 2026-07-28 numbers are a DIFFERENT, NEW mechanism
+  layered on top, not a re-fire of that backlog.
+
+## Todos
+
+- [x] ✅ [SERVICE] P1. Fix the contract shape (real flattened wire columns, not a fictional serialised string) --
+      **unified-api-contracts@8db188fe** (slot-9).
+- [x] ✅ [SERVICE] P1. Derive `ts_event` for `book_snapshot_5` so the corrected contract actually validates clean +
+      regression test -- **market-tick-data-service@339ca767** (this task).
+- [ ] [DATA] P2. Once a future CeFi Tardis `book_snapshot_5` backfill/live-capture wave runs post-fix, confirm the
+      `attempted_failed` ratio for this cell stops climbing and the `"schema contract violated"` error_reason stops
+      appearing in fresh rows (a re-probe of the manifest, not a code change).
+- [ ] [DATA] P3. If/when `derivative_ticker` capture is ever routed through `finalise_rows_and_path` with
+      `validate=True`, it will need the same `ts_event`-derivation treatment as this doc's fix -- currently dormant, not
+      urgent.
+- [ ] [SERVICE] P3. `features-service`'s `CrossInstrumentRawDataLoader.load_book_snapshots` expects a third,
+      non-existent `l2_book_checkpoints`-shaped input -- a separate, pre-existing reader/writer design gap, unrelated to
+      this write-time-validation fix; needs its own scoping (design decision: build the missing writer, or change the
+      calculators to read the real flattened columns).
+
+## Progress Log
+
+- **2026-07-28 (slot-16, `data_pipeline_failure` escalation worker, task `agt-ff6e10`):** Investigated
+  DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) for cefi/book_snapshot_5. Live manifest read confirmed a FRESH (accelerating,
+  0d-old) regression distinct from the known stale Tardis-403 backlog. Traced to the 2026-07-27 `validate=True` flip
+  (`3169d25e`) hitting a previously-dormant, incorrectly-drafted `book_snapshot_5` SchemaContract. Found
+  `unified-api-contracts@8db188fe` (slot-9) had already shipped the contract-shape half concurrently (discovered via
+  `git pull`, not duplicated). Diagnosed + fixed the remaining `ts_event`-derivation gap in
+  `market-tick-data-service@339ca767`, with a reproduction script proving the failure before and the fix after, plus a
+  new regression test. `quality-gates.sh` green, 38/38 tests passing. Filed this doc (no issue doc existed yet, despite
+  two commits already referencing this slug in comments) to close the loop with the full root-cause + both-halves
+  writeup.

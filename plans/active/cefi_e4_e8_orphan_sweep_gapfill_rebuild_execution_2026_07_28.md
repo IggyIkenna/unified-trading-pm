@@ -23,7 +23,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28
+last_updated: 2026-07-28 # (slot-3: Phase C/F re-scope — legacy bucket already deleted 2026-07-14)
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -102,15 +102,28 @@ step.
       former `data_completion_cefi_2026_07_15.md` "Orphan sweep + bucket-state evidence" todo
       (`data_completion_cefi-013`).
 
-## Phase C — E4b: legacy→canonical gap-fill (additive, VM-scale)
+## Phase C — E4b: legacy→canonical gap-fill (additive, VM-scale) — 🔴 CANNOT-RUN-AS-WRITTEN
 
-- [ ] [DATA] P1. The 5,233-cell legacy-only gap-fill:
+- [ ] [DATA] P1. **🔴 CANNOT-RUN-AS-WRITTEN (2026-07-28, slot-3, data_engineering)**: the source bucket
+      `market-data-tick-cefi-central-element-323112` this phase's `--also-legacy` flag reads from **no longer exists** —
+      `gcloud storage buckets describe` returns 404; Cloud Audit Logs confirm `storage.buckets.delete` by
+      `ikenna@odum-research.com` at `2026-07-14T11:02:29Z`, well before this plan (or its L3 predecessor) was authored.
+      Full evidence: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. Do NOT dispatch this
+      phase as written — `launch-canonical-migration-vm.sh cefi ... --also-legacy` will fail immediately against the
+      now-nonexistent bucket. **Gated on the linked issue doc's migration-before-delete verification** (attempted
+      read-only via the pre-migration snapshot's manifest index — INCONCLUSIVE, naive tuple-diff is unreliable per the
+      same false-phantom normalization bug class already found in
+      `cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`; a proper CF-11-style normalized comparison is
+      still needed). Once that verification lands: if it confirms the legacy-only cells were already migrated before
+      deletion, this phase is DONE-BY-FAIT-ACCOMPLI (nothing left to gap-fill) — flip with that citation. If it finds a
+      genuine residual gap, this phase must be RE-SCOPED to a from-snapshot restore (there is no live bucket left to
+      `--also-legacy` read from) rather than run as currently written. ~~The 5,233-cell legacy-only gap-fill:
       `MIGRATION_EXTRA_ARGS="--also-legacy" bash     launch-canonical-migration-vm.sh cefi <start> <end> full` (bare
       `cefi` category — additive-only, no `--drop-stale` in this phase; `--also-legacy` reads the legacy
       `market-data-tick-cefi` bucket as an additional source and copies any still-missing cell forward to canonical).
       Shard/bigger-mem: the 1.9M legacy-object listing previously stalled an `e2-standard-4` (use
-      `MACHINE_TYPE=e2-standard-16` or shard the date range across multiple VMs). **Done when**: a fresh
-      legacy-only-cells count reads 0 (was 5,233).
+      `MACHINE_TYPE=e2-standard-16` or shard the date range across multiple VMs). Done when: a fresh legacy-only-cells
+      count reads 0 (was 5,233).~~ (original scope, kept for history — source bucket is gone, cannot execute verbatim)
 
 ## Phase D — E5: manifest `_index` rebuild — BLOCKED on the false-phantom fix
 
@@ -132,14 +145,22 @@ step.
       GREEN, flip the "E7 Verify" AND the "Post-walk" audit todos in `data_completion_cefi_2026_07_15.md` (both
       currently RED, most recently re-confirmed 2026-07-28 by slot-6/slot-8) citing this plan's evidence.
 
-## Phase F — E8: legacy bucket delete — human-only hard stop, triple-gated
+## Phase F — E8: legacy bucket delete — ✅ DONE-BY-OPERATOR-2026-07-14 (do not dispatch)
 
-- [ ] [OPERATOR] P0. **Gated on ALL of**: (1) Phase E reads GREEN on all four criteria; (2)
-      `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md`:134 — "Do NOT delete an AG's legacy bucket
-      while its L3 plan is open" — cefi's L3 plan (`data_completion_cefi_2026_07_15.md`) must itself be C-GREEN/closed,
-      or this specific decommission item explicitly re-evaluated against its then-current open items; (3)
-      delete-safety-protocol hard-stop #1 — a **whole-bucket** destroy is NEVER reversibility-qualified under §3a
-      regardless of soft-delete config, so this step is human-execute-only unconditionally. Once all three clear:
+- [x] ✅ [OPERATOR] P0. **DONE-BY-OPERATOR-2026-07-14 (discovered 2026-07-28, slot-3, data_engineering)** — the legacy
+      bucket `market-data-tick-cefi-central-element-323112` is already gone: `gcloud storage buckets describe` returns
+      404, and Cloud Audit Logs confirm `storage.buckets.delete` by `ikenna@odum-research.com` at `2026-07-14T11:02:29Z`
+      — ~2 weeks before this plan (or its predecessor todos) were even authored, and before gates (1)/(2) below were
+      satisfied. Flipping so this phase never gets dispatched against a bucket that no longer exists; **this is NOT a
+      claim that gates (1)/(2) were properly honored before the delete happened** — see
+      `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md` for the full finding (confirmed
+      plan-vs-reality drift + an operator-confirmation todo on whether this was intentional). Original gating (kept for
+      history, in case a future different-AG copy of this plan needs it): **Gated on ALL of**: (1) Phase E reads GREEN
+      on all four criteria; (2) `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md`:134 — "Do NOT delete
+      an AG's legacy bucket while its L3 plan is open" — cefi's L3 plan (`data_completion_cefi_2026_07_15.md`) must
+      itself be C-GREEN/closed, or this specific decommission item explicitly re-evaluated against its then-current open
+      items; (3) delete-safety-protocol hard-stop #1 — a **whole-bucket** destroy is NEVER reversibility-qualified under
+      §3a regardless of soft-delete config, so this step is human-execute-only unconditionally. Once all three clear:
       permanently delete the legacy `market-data-tick-cefi` bucket (both GCP live objects AND the 3.81M
       noncurrent/versioned objects it carries) — canonical `market-data-tick-cefi-prd` becomes the sole SSOT. Record the
       action in `_index/snapshots/decommission_2026_0X.md` per the decommission plan's own convention.
@@ -158,3 +179,19 @@ the already-shipped `--drop-stale` tooling (`mtds@e663d72f`) as a nested done-no
 session, ahead of this plan: the `cefi-drop-stale` VM-launcher category in `deployment-service`
 (`launch-canonical-migration-vm.sh` + regression tests, mocked-GCS only, no prod invocation) — Phases A-C above are how
 that tooling actually gets run against production, one operator-supervised step at a time.
+
+### 2026-07-28 (slot-3, `data_engineering`) — Phase C/F re-scope: legacy bucket already deleted 2026-07-14
+
+Re-verifying `data_completion_cefi-013`'s "bucket-state evidence" (the todo this plan's Phase B already absorbed) found
+the legacy bucket `market-data-tick-cefi-central-element-323112` was deleted 2026-07-14 (Cloud Audit Log confirmed),
+predating this plan's own authoring by two weeks. Per main-agent coordination (slot-4 had already released ownership of
+this plan after `/done`ing `data_completion_cefi-015` without incorporating the re-scope), applied it directly: **Phase
+C** (`--also-legacy` gap-fill) marked CANNOT-RUN-AS-WRITTEN — its source bucket no longer exists; gated on a proper
+normalization-aware migration-before-delete verification (attempted read-only via the pre-migration snapshot's manifest
+index, but INCONCLUSIVE — a naive tuple diff isn't trustworthy for this corpus, same false-phantom bug class as the
+CF-11 finding). **Phase F** (E8 legacy delete) flipped DONE-BY-OPERATOR-2026-07-14 — the bucket is already gone, so
+dispatching this phase would just 404; explicitly NOT a claim that its gates were honored before the delete happened.
+**Phase A/B/D/E unchanged** — Phase B's orphan-sweep targets the `-prd` bucket itself (still live), and D/E (manifest
+rebuild + verify) don't touch the legacy bucket at all. Full evidence + the operator-intent question + the open
+verification item: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. No code shipped (plan
+reconciliation only, per the finding's own recommended decision).

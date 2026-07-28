@@ -34,6 +34,7 @@ related:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-28
 priority: P2

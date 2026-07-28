@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [plan-hygiene, contradiction-audit, reconciliation, operator-decisions, stale-drift]
 related:
   [
-    /plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
+    /plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
     /plans/archive/issues/plan_reconciliation_operator_decisions_history_part1_2026_07_25.md,
     /plans/archive/issues/plan_reconciliation_operator_decisions_history_part2_2026_07_25.md,
     /plans/archive/issues/plan_reconciliation_operator_decisions_history_part3_2026_07_25.md,

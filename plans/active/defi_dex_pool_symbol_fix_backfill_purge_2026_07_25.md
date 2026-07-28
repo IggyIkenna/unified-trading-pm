@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                          (specific `_migrated_*` marker objects, never the bucket), target
-                                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                          Progress Log below.
+                                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                              (specific `_migrated_*` marker objects, never the bucket), target
+                                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                              Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -443,3 +443,62 @@ is quick and doesn't block anything.
       (`DEPLOYMENT_COMPLETED exit_code=0`), do the manifest spot-check for the remaining 3 protocols and finish the
       todo; (3) if somehow still gone without a clean completion log, relaunch scoped to the measured last day (same
       recipe as above -- do NOT replay from 2020-01-20, 2025-01-10, or 2025-04-03).
+
+- **2026-07-28 (later) -- `mtds-dex-pools-symbolfix-batch1` found genuinely STALLED (not preempted), root-caused,
+  killed + relaunched as `mtds-dex-pools-symbolfix-batch1c`. New cross-cutting finding filed.**
+  - **Symptom**: verified via direct `pandas.read_parquet` on
+    `gs://market-data-tick-defi-prd-central-element-323112/_index/per_vm/mtds-dex-pools-symbolfix-batch1.parquet` that
+    the per-VM manifest shard's total row count was FLAT at exactly `1196916` for 35+ minutes after the VM's own launch,
+    while `run.log` repeated `ManifestWriter: per-VM shard updated (1196916 total entries, 1 new, ...)` every ~12s. CPU
+    100-130%, RSS 1.7-3.8GB, no errors, no new day-processing log lines past the VM's first day (2025-04-02).
+    `strace -c` on the live PID showed 83% of syscall time in `futex`, confirming genuine internal
+    contention/computation, not an external hang. `gcloud compute operations list` showed no new preemption event since
+    this VM's own launch -- this was a stall, not the SPOT-preemption pattern from earlier in this same session.
+  - **Root cause** (full detail: new issue doc
+    `issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`, `unified-trading-pm@d7f6b3e59`):
+    `unified_trading_library/manifest_writer/_writer_io.py`'s per-VM shard flush path (`_flush_per_vm_pending`) does a
+    full read-merge-reserialize-upload of the ENTIRE existing per-VM shard on every debounced flush --
+    O(existing-shard-size), not O(new-rows). This VM inherited ~1.2M rows accumulated across its 3 prior preempted
+    incarnations (all sharing the same `VM_NAME`, the intended preemption-recovery pattern). Once the shard passed
+    roughly 1M rows, a single flush round-trip exceeded the 5-second/50-entry debounce window, so the debounce could
+    never batch multiple rows together -- every flush paid the full O(N) cost to drain ~1 pending row at a time
+    (matching the observed `1 new`). The DeFi dex_pools handler makes this land hard because it writes a
+    per-catalogue-pool "empty" manifest marker for every pool a day's subgraph query returned no data for (up to ~384
+    for curve/ETHEREUM, ~294 for trader_joe_v2/AVALANCHE, in a SINGLE day), each going through
+    `DefiManifestRecorder.record_empty` -> `ManifestWriter.add()` individually (`batch_size=1`, intentional per its own
+    docstring for SIGKILL-durability -- NOT the bug, just what made this land fast). Confirmed via a background Explore
+    agent's independent code read (`_dex_pools_subgraph.py:799-815`, `_dex_swaps_queries.py:241-254`,
+    `_defi_manifest.py:129-134`) plus my own direct read of `_writer_io.py:694-783` -- not a deadlock, not a missing
+    subgraph timeout (the 300s per-shard ceiling only wraps the fetch stage, irrelevant here).
+  - **Action taken (mitigation, not a fix)**: killed `mtds-dex-pools-symbolfix-batch1`
+    (`gcloud compute instances delete`, confirmed gone) and relaunched the SAME remaining range
+    (`--start 2025-04-02 --end 2026-07-27 --protocols curve,sushiswap,trader_joe_v2`, on-demand, `--force` alongside the
+    unrelated standing `mtds-dex-pools-backfill` VM) under a FRESH `VM_NAME=mtds-dex-pools-symbolfix-batch1c` so its own
+    per-VM shard starts empty instead of inheriting the 1.2M-row backlog -- per-VM shards are plural-by-design and
+    consolidated centrally later, so a name split is normal, not a special case. Tarballs were stale again (other slots
+    pushed in the interim) -- verified via `git merge-base --is-ancestor 63199601 dcbed674242f...` that the deployed
+    MTDS SHA still descends from the query/parser fix commit before trusting the launch.
+  - **Fix VERIFIED, not just launched**: within ~90 seconds of the new VM's task actually starting, it had already
+    processed 5 days (2025-04-02 through 2025-04-07, ~15s/day) -- matching the ORIGINAL pre-preemption run's throughput,
+    vs. the killed VM's 35-minutes-stuck-on-day-1. Manifest per-VM shard growing normally (`3149 total entries` ->
+    `3935 total entries, 786 new` across consecutive flushes). This is real, measured forward progress, not just "VM is
+    RUNNING."
+  - **Filed the underlying fix as tracked work, not left in chat**:
+    `issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` (`unified-trading-pm@d7f6b3e59`) --
+    3 todos (P2/P3) proposing an append-only delta-shard pattern or an entries-dominant debounce for large shards, both
+    in `unified-trading-library` (shared infra, out of this plan's scope; affects any long-running per-VM-shard
+    backfill, not just DeFi). This plan's todo 4 is NOT blocked on that fix landing -- the fresh-VM-name mitigation is
+    sufficient to complete THIS backfill; the issue doc's fix is for future backfills that would otherwise hit the same
+    wall once their own per-VM shard grows large again.
+  - **What remains**: `mtds-dex-pools-symbolfix-batch1c` continues its ~480-day remaining range (ETA ~2h at the verified
+    ~15s/day rate). If this session compacts before completion, the next session should: (1) check
+    `gcloud compute instances describe mtds-dex-pools-symbolfix-batch1c --zone=asia-northeast1-c --project=central-element-323112`
+    for RUNNING/gone (on-demand, so "gone" likely means clean completion -- verify via `gcloud compute operations list`
+    before assuming success); (2) if complete, spot-check the manifest for curve/ETHEREUM, curve/AVALANCHE,
+    sushiswap/ARBITRUM (mirroring the already-done velodrome_v2/trader_joe_v2 verification), confirming symbol-named
+    leaves with populated `token_a`/`token_b`/`fee_rate_bps` and checking blob CREATION TIMESTAMP against this VM's run
+    window (not just presence, since old address-keyed orphans coexist by design until todo 5's purge); (3) flip todo
+    4's checkbox + `/done`; (4) if somehow stalled/gone without clean completion, do NOT blindly relaunch under the SAME
+    `VM_NAME` again without first checking its OWN per-VM shard size -- if it's again approaching ~1M rows, use yet
+    another fresh name rather than repeating the same mitigation indefinitely, and reference the issue doc for the real
+    fix.

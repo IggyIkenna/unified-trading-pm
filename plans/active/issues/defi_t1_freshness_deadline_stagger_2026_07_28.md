@@ -148,6 +148,13 @@ be confirmed against a live Cloud Scheduler resource.
       the 14 jobs) and stating the schedule is kept unchanged, purely as a historical TheGraph-rate-limit stagger, not
       an enforced deadline — closing the 2026-07-22 `residual_defi_pipeline_completion` tightness flag.
       `terraform fmt     -check` clean, full `quality-gates.sh` green.
-- [ ] [INFRA] P2. Re-check `collect-lst-seasonal-rewards`'s 02:25 UTC start against whatever the P1 todo above
+- [x] ✅ [INFRA] P2. Re-check `collect-lst-seasonal-rewards`'s 02:25 UTC start against whatever the P1 todo above
       determines is the real downstream deadline — its own 40-minute timeout budget (worst-case 03:05 UTC finish) is the
-      single largest violation found in this doc. Repo: deployment-service. Source: this doc.
+      single largest violation found in this doc. Repo: deployment-service. Source: this doc. —
+      deployment-service@b7ab790. Same option (b) resolution as the P2 item above: the P1 investigation already
+      confirmed the features-onchain T+1 recon consumer was deleted 2026-07-13 and never replaced, so there is no live
+      deadline to re-stagger `collect-lst-seasonal-rewards` against. Added a RESOLUTION block to
+      `lst_seasonal_rewards_scheduler.tf`'s header stating the 03:05 UTC worst-case finish explicitly and confirming the
+      schedule (`25 2 * * *`) + timeout (2400s) are kept unchanged — the 02:25 UTC start remains purely to give the
+      upstream collect-* fan-out headroom, not to meet an enforced cutover. `terraform fmt -check` clean, full
+      `quality-gates.sh` green. Closes this doc's last remaining todo.

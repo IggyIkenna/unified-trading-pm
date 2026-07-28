@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 262 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 264 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (43)
+### cefi (44)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -69,6 +69,10 @@ by hand._
   **[draft]** — Gated closeout for cefi_deribit_binance_futures_bundle_verification_2026_06_20.md -- machine-held via
   depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own
   checkboxes/prose once its…
+- [`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28`](./cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md)
+  — Consolidates THREE overlapping, previously-separately-dispatched todos in data_completion_cefi_2026_07_15.md (the
+  "E4 remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state
+  evidence"…
 - [`cefi_migration_cutover_and_track8_completion_2026_07_25`](./cefi_migration_cutover_and_track8_completion_2026_07_25.md)
   — The migration-completion CRITICAL PATH forked out of cefi_consolidated_closeout_2026_07_18.md's 2026-07-25 split.
   Sequential 5-step chain: (1) DERIBIT quote-fix + catalogue rebuild that GATES the cutover, (2) the remaining on-disk
@@ -769,7 +773,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (68)
+### cross-cutting (69)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -998,6 +1002,10 @@ by hand._
   UTL's…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
+- [`ws_i_service_to_service_auth_migration_2026_07_28`](./ws_i_service_to_service_auth_migration_2026_07_28.md) —
+  "Re-homes WS-I (the service-to-service-auth migration onto the UTL create_s2s_auth_dependency factory) out of the
+  archived cicd_consolidated_remaining_2026_06_24.md, per operator decision 2026-07-27 — WS-I specifically is still
+  wanted; the…
 
 ### ao (4)
 
