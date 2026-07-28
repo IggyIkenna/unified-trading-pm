@@ -1009,7 +1009,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 10,
@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "pytest",
         "warn_file_count": 23,
