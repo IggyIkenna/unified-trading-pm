@@ -242,7 +242,14 @@ concurrent workers do not collide on this file.
       `HTTP 200 {"ok":true,"escalation_id":"agt-d37ed9","status":"queued","wall_type":"sit_retry_cap","prompt_template":"cicd"}`.
       `status:"queued"` (no free slot at dispatch time) means the proof landed with zero synthetic worker spawned.
       Local: `pytest tests/test_escalation.py` 79/79 passed incl. the new cross-check test. Source:
-      `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2).
+      `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2). **Full round-trip CONFIRMED
+      2026-07-28**: `agt-d37ed9` above was later dispatched to a live worker (slot 1, `cicd` role) — its boot carried
+      `WALL_TYPE=sit_retry_cap` + the same escalation id, which is itself proof the request cleared both the GHA
+      case-statement AND the `EscalateRequest` pydantic Literal with no 422. The worker confirmed the fix in code
+      (`server/models/escalation.py:44` carries `sit_retry_cap`), pinged the authoring slot, and closed via `/done`.
+      This closes the gap the `status:"queued"` proof above left open (zero synthetic worker spawned at that time) — the
+      chain emit → validate → queue → **dispatch → worker execute → complete** is now proven end-to-end, not just
+      accept/queue.
 - [ ] [INFRA] P2. **Guard the latent self-dispatch repeat.** `.github/workflows/agent-runner.yml:91` and
       `.github/workflows/sit-gate.yml:357` still self-dispatch via `${{ github.repository }}`. They are correct ONLY
       because both files exist solely in PM; rolling either into another repo reproduces the fleet-wide escalation bug
