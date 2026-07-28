@@ -140,11 +140,28 @@ todo below apply fleet-wide, not just here.
       is a real, recurring cost on this repo right now (heavy multi-agent concurrent-write load) — worth a beat of
       coordination (check recent commits / active plan claims) before starting a fix that's plausibly already in flight
       elsewhere.
-- [ ] [SCRIPT] P2. **Document + spot-check other fleet machines** (any other engineer's / VM's checkout of this
+- [x] ✅ [SCRIPT] P2. **Document + spot-check other fleet machines** (any other engineer's / VM's checkout of this
       workspace) for the same decayed `cursor-configs/settings.json` / symlinked-`~/.claude/settings.json` /
-      missing-per-slot-symlink pattern, and apply the same fix. Should now be a no-op for any machine that just runs the
-      hand-off prompt below (re-pull + `link-claude-skills.sh`), since the settings file itself is git-tracked and the
-      hardcoded-path bug is fixed — but not independently re-verified on a 3rd machine as of this writing.
+      missing-per-slot-symlink pattern, and apply the same fix. **Spot-checked 2026-07-28 on a 3rd, independent
+      machine** — `ip-172-31-5-118` (a fleet slot-worker host, distinct from the human-planning VM this issue was
+      originally filed from), across ALL 16 slots present (`.tabs/1`–`.tabs/16`) plus the workspace root: - Workspace
+      root `.claude/{settings.json,hooks,skills}` all correctly relative-symlinked to
+      `../unified-trading-pm/cursor-configs/{settings.json,hooks,skills}`; `~/.claude/settings.json` is a REAL file
+      (2346 bytes), NOT a symlink — correct per the team/personal split. - All 16 slots' `.claude/settings.json`,
+      `.claude/hooks`, `.claude/skills` are correctly symlinked (none missing, none regular files/dirs), and every
+      slot's own `cursor-configs/settings.json` is present, git-tracked, and byte-identical across all 16 (single md5sum
+      `5b2bfacfa08ebc23e023e4bb856e55f9`) — confirms the file arrives via plain `git pull` fleet-wide as designed, no
+      manual re-seed needed anywhere on this host. - Grepped the hooks section for hardcoded `/home/ubuntu` paths —
+      **none found**; all 3 hook `command` strings use `$CLAUDE_PROJECT_DIR` as documented. - **Live-fired proof, not
+      just static inspection**: a diagnostic Bash call in this very session that merely contained the text `rm -rf /`
+      inside an echo/test payload was itself BLOCKED by the PreToolUse `block_destructive_commands.py` guard — direct
+      evidence the hook is loaded and enforcing in a real orchestrator-dispatched slot session on this host, not just
+      present on disk. - Ran `link-claude-skills.sh` explicitly on slot 9 — fully idempotent no-op (`already linked` ×
+      3, personal-key migration `clean — no personal keys to migrate`), confirming the self-healing hand-off prompt
+      works exactly as documented with zero manual intervention needed. - **Net result**: this machine needed ZERO fixes
+      — the 2026-07-23 fix (git-tracking + the linker script wiring) held fleet-wide without drift, confirming the
+      hand-off prompt's "should now be a no-op" prediction on a genuine 3rd machine. No further fleet-wide action items
+      surfaced by this spot-check.
 
 ## Hand-off prompt for other machines / colleagues
 
