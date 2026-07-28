@@ -96,15 +96,111 @@ attempting the full build here:
       `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION`; `("PLASMA", "FLUID")` stays pending (unconfirmed date, per this todo's
       own scope — that's the P2 scoping todo below). All 4 named/sibling test files green (72 tests:
       `test_protocol_launch_dates.py` ×20, `test_chain_genesis_dates.py` ×9, `test_chain_env.py` ×43).
-- [ ] [CODE] P2. **Capture adapter scoping.** Determine what data source is actually reachable for Plasma-chain
+- [x] ✅ [CODE] P2. **Capture adapter scoping.** Determine what data source is actually reachable for Plasma-chain
       Aave/Fluid market data (a Goldsky/The Graph subgraph, direct RPC + known contract addresses, or a DefiLlama-style
       aggregator) — this needs its own investigation, not an assumption that an existing subgraph-pattern adapter (like
       the EULER_V2 Goldsky adapter) directly transfers. Repo: market-tick-data-service. Done when: a concrete
       data-source plan is documented (endpoint/API, auth requirements if any, expected schema) as the basis for a
-      properly-scoped capture-wiring todo — this todo's done-when is the SCOPING, not the implementation.
-- [ ] [CODE] P3. Once the above land, wire real capture for `AAVE-PLASMA` and (once its launch date is confirmed)
-      `FLUID-PLASMA`, verify real rows land in the manifest, and update `defi_venues.py`'s phase from `"pipeline"` to
-      `"live"` for whichever venues have working, verified capture.
+      properly-scoped capture-wiring todo — this todo's done-when is the SCOPING, not the implementation. — **DONE
+      2026-07-28 (slot-8)**: see "## Data-source scoping (P2 findings)" below. Verdict for both venues: **direct RPC via
+      Alchemy, NOT a subgraph** — no Aave-V3-Plasma or Fluid subgraph exists (Fluid has no subgraph on ANY chain today);
+      the existing RPC-fallback adapters (`lending_indices_handler.py`/`lending_indices_rpc.py` for Aave,
+      `fluid_adapter.py`/`fluid_liquidity_resolver.py` for Fluid) already implement exactly this pattern for other
+      chains (OPTIMISM precedent for Aave) — Plasma is a parameter addition to existing code, not new architecture. P3
+      below is now re-scoped with the concrete addresses/files found.
+- [ ] [CODE] P3. Wire real capture for `AAVE-PLASMA` and `FLUID-PLASMA` per the P2 scoping below: (1) add
+      `9745: ChainConfig(rpc_url_template="https://plasma-mainnet.g.alchemy.com/v2/{api_key}", ...)` to `CHAIN_CONFIGS`
+      in `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi_chain_data.py` (repo:
+      unified-api-contracts); (2) add a `"PLASMA"` entry to `_AAVE_V3_POOL_ADDRESSES` +
+      `_AAVE_V3_DATA_PROVIDER_ADDRESSES` in `market_tick_data_service/cli/handlers/lending_indices_handler.py`, using
+      FRESH-pulled addresses from `aave-address-book`'s `AaveV3Plasma.sol` (do not trust this doc's transcription —
+      re-derive at implementation time); (3) confirm `FluidAdapter`/`fluid_liquidity_resolver.py` accept
+      `chain="PLASMA"` without any Ethereum-only hardcoding (spot-check needed, not a rewrite); (4) once wired, verify
+      real rows land in the manifest and update `defi_venues.py`'s phase from `"pipeline"` to `"live"` for whichever
+      venues have working, verified capture. `FLUID-PLASMA`'s launch date must still be confirmed (per the P1 todo
+      above) before its `PROTOCOL_LAUNCH_DATES` entry can land — that's a prerequisite for `FLUID-PLASMA` specifically,
+      not for `AAVE-PLASMA`. Repos: unified-api-contracts, market-tick-data-service.
+
+## Data-source scoping (P2 findings, 2026-07-28, slot-8)
+
+**Verdict: direct RPC via Alchemy for both venues — no subgraph exists for either.** Evidence below (web search + GitHub
+file reads, not a live on-chain/GraphQL call — the implementer should do one live confirmation pass, e.g. an actual
+`eth_getCode`/GraphQL probe, before wiring, per the re-verify notes inline).
+
+### AAVE-PLASMA
+
+- **No Aave V3 subgraph found for Plasma** on The Graph (checked `thegraph.com/explorer` + the `aave/protocol-subgraphs`
+  repo config). This mirrors the existing `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` comment in
+  `unified-api-contracts/unified_api_contracts/registry/capability_declarations/_defi.py` — Aave doesn't reliably
+  publish/maintain subgraphs for every chain, and the codebase already has a working RPC-fallback path for exactly this
+  case.
+- **Aave DOES have canonical contracts on Plasma**, registered in the community-maintained `aave-address-book`
+  (`bgd-labs/aave-address-book`, `src/AaveV3Plasma.sol` exists — confirms Plasma is a real, recognized Aave V3 market,
+  not a rumor):
+  - `POOL`: `0x925a2A7214Ed92428B5b1B090F80b25700095e12`
+  - `POOL_ADDRESSES_PROVIDER`: `0x061D8e131F26512348ee5FA42e2DF1bA9d6505E9`
+  - `AAVE_PROTOCOL_DATA_PROVIDER`: `0xf2D6E38B407e31E7E7e4a16E6769728b76c7419F`
+  - `ORACLE`: `0x33E0b3fc976DC9C516926BA48CfC0A9E10a2aAA5`
+  - **RE-VERIFY before wiring**: these were extracted via an LLM-summarized fetch of the raw Solidity file, not a
+    byte-for-byte diff. Re-pull `src/AaveV3Plasma.sol` directly at implementation time and copy-paste; don't trust this
+    transcription for the actual commit.
+  - Note the DATA_PROVIDER address does **NOT** match the shared CREATE2 address already hardcoded for
+    ARBITRUM/OPTIMISM/POLYGON/AVALANCHE in `lending_indices_handler.py`'s `_AAVE_V3_DATA_PROVIDER_ADDRESSES`
+    (`0x7F23D86Ee20D869112572136221e173428DD740B`) — Plasma is evidently a newer Aave V3 factory deployment, so don't
+    assume that shared address carries over; use Plasma's own.
+- **Concrete wiring** mirrors the existing OPTIMISM RPC-fallback pattern
+  (`market_tick_data_service/cli/handlers/lending_indices_handler.py` + `lending_indices_rpc.py`):
+  1. `CHAIN_CONFIGS[9745]` needs an Alchemy RPC template — Alchemy officially supports Plasma
+     (`https://plasma-mainnet.g.alchemy.com/v2/{api_key}`, confirmed via alchemy.com/rpc/plasma).
+     `MAINNET_CHAIN_IDS["PLASMA"] = 9745` already landed (P1 above); `CHAIN_CONFIGS` is the one remaining registry gap —
+     `AlchemyBaseClient._resolve_rpc_url` chains `MAINNET_CHAIN_IDS` → `CHAIN_CONFIGS`, and chain_id 9745 has no
+     `CHAIN_CONFIGS` entry yet.
+  2. Add `"PLASMA"` to `_AAVE_V3_POOL_ADDRESSES` and `_AAVE_V3_DATA_PROVIDER_ADDRESSES` (addresses above, re-verified).
+  3. **Do NOT** add a `SUBGRAPH_IDS["aave_v3"]["PLASMA"]` entry — leaving it absent is what routes
+     `_fetch_aave_v3_via_rpc` down the RPC-fallback path (same dict shape as the OPTIMISM precedent).
+  4. Expected schema: `lending_indices` only (via `getAllReservesTokens` + the existing `_DATA_PROVIDER_ABI` calls) —
+     same ceiling as OPTIMISM's RPC fallback; no `oracle_prices`/`risk_params`/`liquidations` from this path.
+  5. Auth: none beyond the existing Alchemy API key already used for every other chain (`get_secret_client()`).
+
+### FLUID-PLASMA
+
+- **Fluid IS live on Plasma** with dedicated periphery contracts, confirmed via
+  `Instadapp/fluid-contracts-public/deployments/deployments.md`:
+  - `LiquidityResolver` on Plasma: `0xca13A15de31235A37134B4717021C35A3CF25C60` — **identical to the address already
+    hardcoded** as `FLUID_LIQUIDITY_RESOLVER_ADDRESS` in
+    `market_tick_data_service/market_interface/adapters/defi/fluid_liquidity_resolver.py:110` (that constant's own
+    comment already documents "mainnet/arbitrum/base/polygon/plasma/bnb, all 0xca13A15de31235A37134B4717021C35A3CF25C60"
+    — Fluid deploys this resolver at a deterministic CREATE2 address across every chain, Plasma included). **No new
+    address needed for this contract** — this match is a direct byte-comparison against the existing repo constant, not
+    a fresh transcription, so no re-verify needed here.
+  - `LendingResolver` on Plasma: `0x48D32f49aFeAEC7AE66ad7B9264f446fc11a1569` (not currently consumed by any adapter in
+    this repo — re-verify before use, same caveat as the Aave addresses above).
+  - `Liquidity` core contract on Plasma: `0x52Aa899454998Be5b000Ad077a46Bbe360F4e497` (re-verify before use).
+  - The `FluidVaultResolver` address used by `fluid_adapter.py`
+    (`FLUID_VAULT_RESOLVER_ADDRESS = 0xA5C3E16523eeeDDcC34706b0E6bE88b4c6EA95cC`) was **not** independently confirmed on
+    Plasma in this pass — re-verify via `eth_getCode` against Plasma RPC before assuming the same CREATE2 carries over
+    for this specific contract (only the Liquidity-layer resolver's cross-chain identity is proven above; the Vault
+    resolver's is not).
+- **No Fluid subgraph exists for any chain today** (the `SUBGRAPH_IDS["fluid"]` comment already says "Multi-chain: Fluid
+  subgraph IDs need verification", and there's a still-open community bounty on gov.fluid.io to build one from scratch).
+  Fluid capture in this codebase is already 100% RPC-based (`fluid_adapter.py`/`fluid_liquidity_resolver.py` call the
+  resolver contracts directly via Alchemy) — Plasma slots into the exact same existing pattern, no new adapter
+  architecture needed.
+- **Concrete wiring**:
+  1. Same `CHAIN_CONFIGS[9745]` addition as AAVE above (shared step).
+  2. `FluidAdapter(chain="PLASMA")` should work with no code changes once (1) lands, PROVIDED `fluid_adapter.py`'s
+     vault-discovery step doesn't hardcode `chain="ETHEREUM"` anywhere — needs a quick spot-check at implementation
+     time, not a rewrite.
+  3. Expected schema: identical to existing Fluid rows (Liquidity Layer `getOverallTokenData` → `lending_indices`-shaped
+     rows: supply/borrow totals, utilization, rate data).
+  4. Auth: none beyond the existing Alchemy key.
+
+### Not recommended: DefiLlama aggregator
+
+DefiLlama does track Aave V3 on Plasma at the protocol/chain-TVL level (`defillama.com/protocol/aave-v3` lists Plasma
+among 23 chains), but its public API (`api.llama.fi`) exposes chain-level TVL, not the per-reserve
+`lending_indices`/`risk_params`/`liquidations` granularity this system's DeFi data model requires. Not a substitute for
+the RPC path above — only useful as a coarse cross-check if capture ever needs a sanity-check total.
 
 ## Codex SSOTs
 
