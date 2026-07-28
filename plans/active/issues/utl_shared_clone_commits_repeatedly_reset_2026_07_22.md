@@ -155,17 +155,30 @@ clean+reset-away tree are indistinguishable without checking `git log` against t
       `$branch_name` too). This does not by itself explain the missing preserve ref (a stale origin ref can only ever
       inflate the ahead-count, never cause a false-negative skip) but closes a real, independent correctness gap in how
       fresh `origin/$branch_name` is at both check sites.
-- [ ] 7. [INFRA] P1. **NEW (2026-07-28).** Root-cause why the preserve-before-reset guard (todo 2) did not leave a
-      `refs/wip-preserve/*` ref for either `61efd2e5` or `dbb93c3a` despite being live in HEAD 5 days before this
-      recurrence. Candidates to rule in/out: (a) the executing agent session's own `unified-trading-pm` clone was itself
-      stale (hadn't pulled `06dc7632` yet) at the moment it ran the discarding `cascade_dep_branch` call — this
-      workspace has multiple documented incidents of clones stranding hundreds of commits behind; (b) something later
-      cleaned up `refs/wip-preserve/*` refs (no documented retention/cleanup policy exists for them — check for any
-      `git gc`/prune/manual-cleanup process that might sweep custom refs); (c) a different, not-yet-identified code path
-      bypassed the guard. If (a), consider whether `cascade_dep_branch` should self-verify its own script version (e.g.
-      assert the running quickmerge.sh is not stale relative to origin) before running anything destructive. If (b), add
-      explicit `gc.pruneExpire never` + document a retention policy for `refs/wip-preserve/*`, mirroring the
-      `gc.pruneExpire never` protection `slot-cron-ff-pull.sh` already applies to its reference-clone objects.
+- [x] 7. [INFRA] P1. ✅ **ROOT-CAUSED 2026-07-28 (slot 10) — reproduced live; candidate (c), precisely characterized:
+      the guard itself has an inherent TOCTOU race between its own ahead-check and its own checkout, not a bypass via a
+      different code path and not (necessarily) a stale-clone issue.** Extracted the exact guard sequence from
+      `cascade_dep_branch()` (`scripts/quickmerge.sh:471-490` as of `4901fa945`) into a standalone repro script against
+      a scratch bare-origin + clone (not the real fleet clones — isolated, disposable). The guard's ahead-check
+      (`git rev-list --count origin/$branch_name..refs/heads/$branch_name`) and the subsequent `git checkout -B
+      "$branch_name" "origin/$branch_name"` are TWO SEPARATE, non-atomic git subprocess calls with no lock between
+      them. Injected a delay between the two (simulating shared-host process-scheduling contention — this fleet's host
+      has documented recurring contention, e.g. `shared_host_home_filesystem_full_2026_07_26.md`, load 14.93 on a
+      30-vCPU box observed elsewhere in this same session) and, during that gap, committed a NEW commit on the SAME
+      clone's checked-out branch from a concurrent shell (modeling a different concurrent agent process sharing the
+      same slot's worktree filesystem — e.g. a Workflow subagent or a parallel `Agent`/`Task` call, NOT a different
+      slot; per-slot worktrees are otherwise isolated). Result: the ahead-check ran BEFORE the concurrent commit
+      existed and correctly found `0 ahead` (nothing to preserve at that instant); the checkout then fired AFTER the
+      commit landed and discarded it — reflog signature (`branch: Reset to origin/live-defi-rollout`) matches the real
+      incident EXACTLY, and zero `refs/wip-preserve/*` ref was created, matching the real incident's missing-preserve-
+      ref observation precisely. This directly explains the observed symptom WITHOUT requiring candidate (a) (a stale
+      PM clone) — even a clone fully current on `06dc7632`+ reproduces the exact failure, because the fix's own
+      check-then-act is not atomic. Candidate (b) (something cleaning up the preserve ref later) is now unnecessary to
+      explain the symptom: the ref was never created in the first place, so there was nothing to clean up. **This
+      confirms todo 8's premise** ("preserve-only is not proven reliable") — the preserve mechanism is fundamentally a
+      race-prone band-aid, not a fix, because it re-implements the SAME check-then-act shape as the original 2026-07-22
+      bug, just one level in. Repro script + scratch fixtures kept in this session's scratchpad (not committed — no
+      product code changed by this todo, root-cause only; the fix itself is todo 8's scope, not duplicated here).
 - [ ] 8. [INFRA] P2. Given todo 7 shows preserve-only is not proven reliable, consider a stronger prevention (not just
       recovery) fix for `cascade_dep_branch`: e.g. skip the `checkout -B` entirely (log + leave the ancestor clone
       alone) when local has commits ahead of origin, rather than resetting-then-preserving — the cascade's whole purpose
