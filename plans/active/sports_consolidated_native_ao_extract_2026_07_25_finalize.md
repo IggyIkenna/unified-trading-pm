@@ -93,7 +93,7 @@ drift_direction: advance-code
       pre-archive path. **Done when**: either (a) an explicit confirmation is recorded that no doc reached a terminal
       status via todo 1 (the expected case), or (b) every doc that did is archived in the same commit as its flip, and
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures. Source:
-      `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Re-check whether any of the excluded/scoped-down sub-items' gates have since cleared.**
       Specifically: (1) the KALSHI/POLYMARKET cross-AG bleed exclusion (venue vocabulary todo) — check whether
       `sports_satellite_ao_dispatch_batch3_2026_07_25.md:132`'s disposition candidate has shipped; if so, the parent

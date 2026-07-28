@@ -20,7 +20,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md,
-    /plans/active/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
+    /plans/archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"

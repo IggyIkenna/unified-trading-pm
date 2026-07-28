@@ -98,7 +98,7 @@ drift_direction: advance-code
       already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Resolve the 4 deferred-gate follow-ups from batch 2's own "Deferred" section.** For each: (1) the
       FSS↔ml-service↔strategy-service parity test (gated on 5 sibling naming-migration todos in batch 2 landing) — if
       all 5 shipped (per todo 1 above), add it as a new `- [ ]` todo in a follow-up plan (or this doc, if small enough —
