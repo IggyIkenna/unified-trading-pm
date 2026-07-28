@@ -99,7 +99,7 @@ drift_direction: advance-code
       already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Re-check the 4 conflict-gated + 12 operator-gated Deferred items from batch5's own doc**, now that
       time has passed and batch5's own todos have landed (some of which may resolve a Deferred item's blocker as a side
       effect — e.g. `sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`'s item C is explicitly gated on

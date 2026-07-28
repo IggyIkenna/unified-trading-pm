@@ -80,7 +80,7 @@ drift_direction: advance-code
       already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [ ] [REVIEW] P1. **Resolve the conflict-gated Deferred section from batch3's own doc**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For each of
       the 6 conflict-gated docs (`data_completion_sports_2026_07_24.md` 2 items,
