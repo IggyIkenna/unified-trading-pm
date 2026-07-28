@@ -374,13 +374,20 @@ drift_direction: advance-code
       selector must match by PATH SHAPE, not filename pattern. Repo: market-tick-data-service —
       `plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` dated 2026-07-28 update.
       Source: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
-- [ ] [DATA] P1. Corpus-wide scope audit for the KALSHI_PERP perp_funding manifest-emit failure: scan GCS under the
-      scoped prefix (`pipeline_mode=batch_kalshi_perp/asset_group=defi/venue=KALSHI_PERP/...`) for all 5 observed
-      KALSHI_PERP perp symbols across the full date range objects exist for (single-prefix listing, not a whole-corpus
-      walk), cross-checking each day/symbol against the DeFi manifest index to confirm GCS-present / manifest-absent.
-      Repo: market-tick-data-service (read-only). **Done when**: a per-day, per-symbol count of (GCS present / manifest
-      absent) instances is produced across the full observed date range and recorded in the issue doc's "Not yet done"
-      section, replacing the current single-day framing. Source:
+- [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-16).** Corpus-wide scope audit for the KALSHI_PERP perp_funding
+      manifest-emit failure — scanned GCS under the scoped prefix
+      (`pipeline_mode=batch_kalshi_perp/asset_group=defi/venue=KALSHI_PERP/...`) per-day (single-prefix listing per day,
+      not a whole-corpus walk; a bucket-root delimiter-descent first confirmed 2,400 total `day=` partitions
+      2020-01-01..2026-07-27, then the scoped per-day scan was live-verified empty on both edges of that window before
+      trusting the result). **Found the affected window is 2026-05-29..2026-07-25 (55/58 days), 13 distinct real symbols
+      (not the 5 seen on the single spot-checked day) — 567 (day,symbol) GCS-present instances total, ALL
+      manifest-absent** (streamed the 26,978,131-row DEFI manifest, zero `venue=KALSHI_PERP` rows found). Confirmed zero
+      new defi-labeled objects from 2026-07-26 onward, verifying the cefi-reroute fix
+      (`market-tick-data-service@2aa23de5`, shipped earlier in this batch1 plan) took effect. Also surfaced + filed 2
+      new follow-up findings not in scope to fix here: 3 zero-object gap days (2026-07-17/20/21) and a daily
+      `_migrated_kalshi_perp_*` non-symbol marker artifact (2026-05-29..2026-07-16, then stops). Full breakdown + the 2
+      new `[DIAG] P2` follow-up todos recorded in the issue doc's "Not yet done"/new "Follow-up" sections. No code
+      shipped (read-only audit). Repo: market-tick-data-service (read-only). Source:
       `issues/defi_kalshi_perp_perp_funding_source_not_registered_2026_07_23.md`.
 - [x] ✅ [BACKEND] P1. **DONE 2026-07-26 (slot-14, done as a prerequisite of
       `defi_satellite_ao_dispatch_batch2_2026_07_26.md`'s residual-emitter todo, which discovered this was still
