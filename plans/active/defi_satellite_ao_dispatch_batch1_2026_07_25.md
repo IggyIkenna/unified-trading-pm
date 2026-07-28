@@ -346,12 +346,16 @@ drift_direction: advance-code
       spans (12 EVM chains via `CHAIN_ID_TO_NAME` + `SOLANA` + `BITCOIN`). Filed with `assigned_vm: NA` /
       `execution_scope: local-only` and a single `[OPERATOR] P1` migrate-vs-leave todo — do not decide/execute here, per
       the task brief. Repo: unified-trading-pm. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability gap:
-      `bridge_events_handler.py` has no `--start-date`/`--end-date` CLI support (confirmed via grep, zero matches), so
-      the daily cron can't be reused for a historical backfill to genesis (ACROSS 2021-11-11, STARGATE 2022-03-17)
-      without that flag first. Do not build the flag or run a backfill here. Repo: unified-trading-pm. **Done when**: a
-      new `plans/active/issues/defi_bridge_events_historical_backfill_gap_<date>.md` exists documenting the missing CLI
-      support + genesis dates, correctly scoped as blocked-on-unbuilt-tooling. Source:
+- [x] ✅ [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability
+      gap — **investigation found the premise false**: `--start-date`/`--end-date` CLI support already exists
+      generically (`ServiceBootstrap(add_date_args=True)` default → `BatchIO`/`DateRangeInput` → per-day `BatchPayload`,
+      which `BridgeEventsHandler.process()` already consumes correctly); the grep-zero-matches was a grep-then-conclude
+      trap, not a real gap. The actual blocker is `_catalog_preflight()` omitting `mode=` on its
+      `assert_defi_catalog_fresh()` call (defaults to `"live"` freshness, fails-closed on historical dates) — already
+      tracked by this plan's own "Thread mode= into assert_defi_catalog_fresh()" P1 todo below, which names
+      `bridge_events_handler.py`. Filed the corrected finding + a small follow-up verification todo instead of a false
+      blocked-on-unbuilt-tooling doc. Repo: unified-trading-pm —
+      `plans/active/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md`. Source:
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
 - [ ] [DATA] P1. Measure the true scale of the DeFi legacy pre-hive composite-venue object population (objects shaped
       like `.../venue=ETHENA-ETHEREUM/ticks_migrated_*.parquet` — no `chain=`/`instrument_type=`/`data_type=` hive
