@@ -47,7 +47,7 @@ tags:
   ]
 related: [./mdt_legacy_canonical_row_gap_2026_07_16.md, /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-26
+last_updated: 2026-07-28
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -239,6 +239,47 @@ write a manifest row of any kind — not even `attempted_failed`).
    directly than relying on the sentinel's later reconciliation pass. Low priority given the existing mitigation. (repo:
    market-tick-data-service)
 
+## Todos
+
+> Converted from the prose "Recommended decision / next steps" list above (verbatim text preserved) per
+> `sports_satellite_ao_dispatch_batch6_2026_07_26.md`'s dispatch todo — `regen_backlog_from_plan.py` derives todos from
+> checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
+> invisible to the backlog.
+
+- [ ] [OPERATOR] P0 — confirm deploy + decide on backfill. Confirm the fix (`market-tick-data-service@410d7569`) has
+      reached the production `uts-prod-market-tick-data-service-fast-t1-recon` image (check `gcloud run jobs describe`
+      image digest / trigger a redeploy if the standard promote pipeline hasn't picked it up yet), then confirm the
+      `DATA_NOT_AVAILABLE` error stops appearing in fresh executions. Separately: decide whether the ~1-month gap
+      (2026-06-25…2026-07-25, all leagues) should be backfilled via the Odds-API historical endpoint (credits-cost /
+      priority tradeoff — an operator call, not a worker one). **Note (2026-07-28)**: the DEPLOY half is already
+      satisfied — see the dated correction banner above ("DEPLOY CONFIRMED (2026-07-26, directly verified, not
+      inferred)", image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
+      `DATA_NOT_AVAILABLE`) — only the backfill decision fork (and the reframed two-sub-question backfill scope from the
+      same banner) remains open for the operator.
+- [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
+      `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
+      ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should
+      check current state first, not assume it's still down). Compare a recent 10-day window against a 10-day window
+      before that, same method as this doc's § (c). (repo: market-tick-data-service) — ✅ **Answered (2026-07-28)**:
+      consolidator is HEALTHY now (a live probe read `date=2026-07-28` cleanly; the consolidated blob was itself briefly
+      stale (455.6s > 120s) during the check but the reader's per-VM-shard fallback served the read honestly, per
+      `manifest_consolidator_liveness_health_2026_06_01`, not a hard failure). Measured density
+      (`scripts/check_defi_future_date_guard_blast_radius_2026_07_28.py`, manifest-only, no GCS walk): **Window A — 10
+      days before the fix (2026-07-16..2026-07-25)**: 10/10 days with any row, Σ instrument_count=9,954,532. **Window B
+      — recent 10-day window (2026-07-19..2026-07-28)**: 9/10 days with any row, Σ instrument_count=19,330,244 (higher
+      volume, not lower). **Verdict: NOT AFFECTED** — both windows show near-full daily coverage; no evidence of a
+      same-day capture blackout comparable to sports' pre-fix collapse. DeFi's capture path evidently does not route
+      same-day dispatches through the same future-date-guard chokepoint the way sports did (or was never starved by it
+      at the measured volume), consistent with the source doc's own Prediction blast-radius finding (also not affected).
+- [x] [DATA] P3. Harden `odds_api_adapter.py`'s `_run_league_fetch_loop` with an explicit consecutive-non-422-failure
+      counter (defense-in-depth for the mechanism in § (a) above) — even though the independent sentinel safeguard
+      currently mitigates the worst outcome, a same-session failure counter would surface the condition faster and more
+      directly than relying on the sentinel's later reconciliation pass. Low priority given the existing mitigation.
+      (repo: market-tick-data-service) — ✅ **Shipped**: `market-tick-data-service@6f546b88` (tracks the longest streak
+      of back-to-back non-422 `ClientResponseError`s per league-batch, logs a warning at streak≥3, returns the streak to
+      the caller; 7 new unit tests in `tests/market_interface/unit/sports/test_odds_api_consecutive_failures.py`, QG
+      green at ship time).
+
 ## Verdict (per the dispatching todo's done-when)
 
 **Root cause found — DIFFERENT mechanism than the 2022 outage, and it IS/WAS still live**: not the
@@ -280,3 +321,18 @@ timing). Added a correction banner + this log entry; did not retract the core fi
 fix remain correct and necessary) — only the severity/framing of § (b)'s density argument for the most recent week.
 Backfill decision reframed into two distinct sub-questions (true 06-27…07-15 dormancy vs 07-16…07-25
 lost-granularity-not-lost-days) for the operator.
+
+**2026-07-28 (slot 14, data_engineering)** — Worked `sports_satellite_ao_dispatch_batch6_2026_07_26.md`'s todo (this doc
+was `assigned_vm: planning` but carried zero checkboxes, making its work invisible to `regen_backlog_from_plan.py`).
+Added the `## Todos` section above, converting the 3 prose next-steps into checkboxes verbatim. Item 3 (consecutive-
+non-422-failure counter) was already shipped by a prior slot session (`market-tick-data-service@6f546b88`, QG green, 7
+tests) — confirmed and cited, not re-done. Item 2 (DeFi blast-radius) executed fresh: re-checked
+`market-data-tick-defi-prd-central-element-323112`'s consolidator (HEALTHY now — the earlier
+`ManifestConsolidatorStaleError` was transient/already resolved; a live probe read cleanly, with a brief 455.6s-stale
+consolidated blob correctly recovered via the per-VM-shard fallback, not a hard failure) via
+`scripts/check_defi_future_date_guard_blast_radius_2026_07_28.py` (manifest-only, no GCS walk). Measured Window A (10
+days before the fix, 2026-07-16..2026-07-25): 10/10 days, Σ instrument_count=9,954,532. Window B (recent 10 days,
+2026-07-19..2026-07-28): 9/10 days, Σ instrument_count=19,330,244. **Verdict: DeFi NOT AFFECTED** by the future-date
+guard bug — both windows show near-full daily coverage, consistent with the source doc's own Prediction finding. Item 1
+left unchecked `[OPERATOR]` per the dispatching todo's Step 2, with a note that its DEPLOY half is already satisfied by
+the existing correction banner.
