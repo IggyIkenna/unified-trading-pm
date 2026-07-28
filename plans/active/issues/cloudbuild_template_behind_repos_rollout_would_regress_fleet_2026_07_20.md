@@ -89,9 +89,16 @@ silently regresses the fleet again.
 
 ## Todos
 
-- [ ] [DEVOPS] P1. Add a drift check that renders each template and diffs it against every consumer's committed
-      `cloudbuild.yaml`, failing (or loudly warning) when a repo carries content the template does not. Wire it into
-      PM's `quality-gates.sh` so the divergence surfaces at gate time, not at rollout time.
+- [x] ✅ [DEVOPS] P1. **DONE 2026-07-28 (slot-13, infra)** — delivered standalone
+      `scripts/quality_gates/check_cloudbuild_template_drift.py`: renders every `configs/cloudbuild-*-template.yaml` via
+      `rollout-cloudbuild.py`'s own `generate_cloudbuild()` and diffs each render against the matching consumer's
+      committed `cloudbuild.yaml` via the same `find_dropped_markers()` the rollout tool's would-drop-content guard
+      uses, with a shrinking-ratchet baseline (`cloudbuild_template_drift_baseline.yaml`, seeded 2026-07-28 at the
+      fleet's real per-repo counts). **Deliberately NOT wired into `scripts/quality-gates.sh`** — that wiring is its own
+      gated finalize-plan todo (`ci_satellite_ao_dispatch_batch1_finalize_2026_07_26.md`), same pattern as the
+      `check_no_swallowed_credential_fetch.py` checker shipped alongside it. unified-trading-pm@(this commit — see
+      plan). `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case
+      fails at a seeded baseline, plus the API-template path (not just SERVICE).
 - [x] ✅ [DEVOPS] P2. **DONE 2026-07-28 (slot-9, infra)** — `rollout-cloudbuild.py` refuses to write a file whose live
       content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
       `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
@@ -99,8 +106,9 @@ silently regresses the fleet again.
 - [ ] [DEVOPS] P2. Roll the empty-tag guard out to the 19 consumer repos once the drift check exists (each needs its own
       repo QG + quickmerge). Not urgent: the per-repo copies already carry the important fixes, and the guard only
       changes behaviour for manual `gcloud builds submit`, which is not the normal path.
-- [ ] [DEVOPS] P3. Reconcile the same question for the other templates (`cloudbuild-api-template.yaml`, `-ui-`,
-      `-infra-`, `-sit-`) — this session only measured and fixed the SERVICE template.
+- [x] ✅ [DEVOPS] P3. **DONE 2026-07-28 (slot-13, infra)** — the new drift checker covers ALL FIVE templates, not just
+      SERVICE (see the per-template measurement in the Progress Log below): `-api-`, `-ui-`, `-infra-`, `-sit-` are now
+      all measured, matching the checker's default scope (every consumer `rollout-cloudbuild.py --apply` would touch).
 
 ## Progress Log
 
@@ -120,3 +128,19 @@ silently regresses the fleet again.
   above is more urgent than when it was filed: at this scale a human diffing repo-by-repo before every template touch
   doesn't scale, and the P3 (other templates) is still entirely unmeasured. Not fixing the drift itself here — out of
   this todo's scope (it only had to make the tool incapable of regressing a repo, which it now is).
+- **2026-07-28 (slot-13, infra)** — Shipped `check_cloudbuild_template_drift.py`, closing P1 + P3. Per-template
+  measurement (consumers carrying content their mapped template does not / total consumers mapped to that template —
+  matches the earlier 15/19 fleet-wide figure exactly):
+
+  | Template                           | Drifted / Total | Notes                                                                                                                         |
+  | ---------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+  | `cloudbuild-service-template.yaml` | 12 / 12         | Every service consumer carries content the template lacks.                                                                    |
+  | `cloudbuild-api-template.yaml`     | 2 / 2           | `client-reporting-api` (5), `deployment-api` (26 — `deploy`/`vendor-deps`/`redeploy-monitor-jobs`/`operability-probe` steps). |
+  | `cloudbuild-infra-template.yaml`   | 1 / 1           | `ibkr-gateway-infra` (4) — `fetch-tags` guard the infra template never learned.                                               |
+  | `cloudbuild-sit-template.yaml`     | 0 / 2           | `e2e-testing`, `system-integration-tests` render CLEAN.                                                                       |
+  | `cloudbuild-ui-template.yaml`      | 0 / 2           | `deployment-ui`, `unified-trading-system-ui` render CLEAN.                                                                    |
+
+  All 15 drifted repos' counts are seeded into `cloudbuild_template_drift_baseline.yaml` (shrinking ratchet — never
+  fixed here, intentionally baselined per the todo's own instruction). The checker fails the moment a repo's drift count
+  grows PAST its seeded baseline (a template falling further behind), verified against a synthetic template-lags-repo
+  case in the unit tests. Standalone only — wiring into `quality-gates.sh` stays in the finalize plan per this doc's P1.

@@ -1,0 +1,57 @@
+# Baseline for check_cloudbuild_template_drift.py.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# content markers (whole steps, secretEnv/availableSecrets entries, step
+# args/script lines) that repo's committed cloudbuild.yaml carries which
+# its mapped configs/cloudbuild-*-template.yaml render does NOT. A repo
+# whose live count EXCEEDS its baseline fails — the template fell FURTHER
+# behind this repo (a new divergence landed).
+#
+# LOWER a count (re-run `--update-baseline`) the moment the template is
+# forward-ported or the consumer is reconciled. NEVER raise a count.
+# Repos not listed default to count=0. Intentional per-repo drift (e.g.
+# deployment-api's vendor-deps/deploy/redeploy-monitor-jobs steps) is
+# expected to live here PERMANENTLY, baselined rather than "fixed".
+#
+# SSOT: plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md
+# + plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md.
+note: Seeded 2026-07-28 — ci_satellite_ao_dispatch_batch1 [INFRA] P2.
+repos:
+  alerting-service:
+    count: 10
+  batch-live-reconciliation-service:
+    count: 9
+  client-reporting-api:
+    count: 5
+  deployment-api:
+    count: 26
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 0
+  execution-service:
+    count: 10
+  features-service:
+    count: 12
+  fund-administration-service:
+    count: 6
+  greeks-service:
+    count: 10
+  ibkr-gateway-infra:
+    count: 4
+  instruments-service:
+    count: 7
+  market-data-processing-service:
+    count: 6
+  market-tick-data-service:
+    count: 8
+  ml-service:
+    count: 9
+  strategy-service:
+    count: 13
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 9
+  unified-trading-system-ui:
+    count: 0
