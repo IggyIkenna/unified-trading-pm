@@ -74,20 +74,14 @@ baseline:
     count: 2
   execution-service/execution_service/trade_execution/adapters/_native_base.py:
     count: 3
-  execution-service/execution_service/trade_execution/adapters/binance_native.py:
-    count: 3
   execution-service/execution_service/trade_execution/adapters/bitfinex_native.py:
     count: 2
   execution-service/execution_service/trade_execution/adapters/bitget_native.py:
     count: 2
-  execution-service/execution_service/trade_execution/adapters/bybit_native.py:
-    count: 3
   execution-service/execution_service/trade_execution/adapters/ccxt_common.py:
     count: 5
   execution-service/execution_service/trade_execution/adapters/kraken_rest_transport.py:
     count: 5
-  execution-service/execution_service/trade_execution/adapters/okx_native.py:
-    count: 2
   execution-service/execution_service/trade_execution/error_map.py:
     count: 3
   features-service/features_service/calendar/engine/calendar_orchestrator.py:
