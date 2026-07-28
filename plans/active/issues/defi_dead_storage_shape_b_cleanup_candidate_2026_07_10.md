@@ -245,3 +245,10 @@ data-quality question independent of the flat-vs-hive divergence question this t
 Investigation scripts (read-only, nothing written to GCS; session-local scratchpad, not committed, mirroring the prior
 entry's own pattern): `defi_shape_b_null_aware_reconcile.py` (initial 3,045-pair pass) +
 `defi_shape_b_recheck_flagged.py` (duplicate-key-safe recheck of the 189 flagged pairs).
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Decide: finish the v9 migration vs. delete the stale hive shape** — the SAFE-TO-DELETE audit for
+      the ~104K dead hive-shape `instrument_availability` objects this doc has always recommended was never actioned;
+      this doc stays open pending an explicit operator ruling on migration-completion vs. deletion (per the 2026-07-14
+      NO-GO stance, reaffirmed 2026-07-26).

@@ -70,3 +70,10 @@ both handlers. One tested copy of the curve math instead of N.
 
 - 2026-07-28: Filed by main from REVIEW-craft finding (msg 2486). Acked to reviewer; flagged to operator that it's
   tracked as NA pending a dispatch decision.
+
+## Todos
+
+- [ ] [SCRIPT] P3. **Extract shared Solana address primitives into `_solana_pda.py`** — base58 codec, ed25519 on-curve
+      check, and `find_program_address` PDA derivation are duplicated/hand-rolled across
+      `raydium_classic_amm_handler.py` and `orca_whirlpool_state_handler.py`; consolidate into one shared module and
+      repoint both handlers.

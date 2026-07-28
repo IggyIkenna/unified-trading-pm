@@ -265,3 +265,10 @@ source: >-
   at line 118; (3) `group_c_cloud_run_job_failures_triage_2026_07_16.md` was digested with an open `[INFRA] P1` that is
   `[x]` in the target doc and whose artifact is live in UTL. The remaining 20-odd digest claims in this file re-measured
   clean.
+
+## Todos
+
+- [ ] [DOC] P3. **This index's digest claims have been found stale before (3 of ~20 on the 2026-07-26 re-measure) — it
+      is not "0 open work"** — it catalogs real open todos across ~20 sibling docs (including
+      `BLOCKED-OPERATOR-DECISION` P1 items), so its own checkbox-free format must not be read as evidence the prediction
+      cross-cutting debt is cleared; re-verify each digest count before relying on it.

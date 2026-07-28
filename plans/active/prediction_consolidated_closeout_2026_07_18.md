@@ -551,10 +551,10 @@ The autonomous slot-2 pass (operator: "prediction-specific files only") shipped 
 unit; the items below each require a SHARED file another slot is actively migrating, an irreversible prod-migration
 drain window, or an operator decision. They are ordered, not abandoned — each names its exact blocker.
 
-- **A4 column materialization** (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS
-  `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading
-  `fixture_match_for_instrument_key`); MTDS prediction-tick schema. The resolver + side-table stamping already shipped
-  (`is@85988ade`); this turns it into real parquet/manifest columns.
+- [ ] [DATA] P2. **A4 column materialization** (shared): add the 6 fixture-match fields to UAC `InstrumentRecord`; IS
+      `process_write._records_to_dataframe` join (~6-line extension of the `clob_token_ids` block reading
+      `fixture_match_for_instrument_key`); MTDS prediction-tick schema. The resolver + side-table stamping already
+      shipped (`is@85988ade`); this turns it into real parquet/manifest columns.
 - **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
   `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
   ~66%→~100% — to reach the operator's ~0% gap.

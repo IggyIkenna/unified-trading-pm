@@ -94,6 +94,9 @@ source: >-
       also explicitly out of scope for the dispatched todo that closed this
       (`defi_satellite_ao_dispatch_batch2_2026_07_26.md` item 4: "Do NOT touch the bare-`SUSHISWAP` classic-vs-V3 alias
       question in the same registries — that is explicitly out of scope here (conflict-gated)").
+- [ ] [DATA] P3. **Decide the SUSHISWAP classic-vs-V3 alias question** — the bare-`SUSHISWAP` venue attribution (classic
+      vs `SUSHISWAP_V3`) is a genuinely undecided data-semantics call, explicitly left open when the rest of this doc's
+      VAULT/SUSHISWAP todo closed 2026-07-26.
 
 ## Success criteria
 

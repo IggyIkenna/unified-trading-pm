@@ -140,6 +140,8 @@ materially larger, separate operation, not something to do inside this 1-hour-sc
 4. **[REVIEW] P3 — Corpus hygiene**: the plan's own text ("§U... already-approved... the scale differs by ~10x, so this
    must not be assumed") anticipated exactly this outcome; once (1)-(3) land, update
    `sports_closeout_track_s2_foldin_2026_07_25.md`'s G1 sub-item with the corrected figures and this doc's citation.
+5. [ ] **[DATA] P2 — items 2-4 above are still plain numbered prose, never real checkboxes**: the operator canonical-set
+       decision (2), the §U population reconciliation (3), and the corpus hygiene doc update (4) all remain unactioned.
 
 ## Census script (read-only, no writes)
 

@@ -210,3 +210,9 @@ standalone legacy BUCKET each AG's own E8 step targets has not been deleted for 
 (defi/tradfi/pred/cefi, hard-stop) or AG-specific residual closure (sports: CF-8 + L6-legacy-only). `populate_v9` fix +
 the audit-tool fix + this playbook remove the shared blockers; the per-AG data-content fixes (cefi Era-B/source/CF-5,
 defi source/schema-int) are code+rebuild work still homed in each AG's tracking doc.
+
+## Todos
+
+- [ ] [DATA] P1. **Legacy-bucket delete (all 4 AGs) + cefi CF-audit adjudication** — the standalone legacy bucket each
+      AG's own E8 step targets (cefi/defi/tradfi/sports) remains genuinely undeleted, and cefi's CF-4/CF-5/Era-B
+      data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi).

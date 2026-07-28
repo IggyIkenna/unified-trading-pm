@@ -709,3 +709,14 @@ and the working tree matches origin exactly with zero drift).
 by an unrelated, in-flight 3-way plan split that missed updating this one referrer — blocking every repo's quickmerge,
 not just this one. Fixed via the sanctioned path (re-ran `scripts/plans/regenerate_active_plan_inventory.py`, the
 auto-generated section's own owner script, rather than hand-editing the table) — `unified-trading-pm@1e13d425a`.
+
+## Todos
+
+- [ ] [DESIGN] P0. **Human design decision for 5 broken archetypes (66 rows)** — `RULES_DIRECTIONAL_CONTINUOUS`,
+      `RULES_DIRECTIONAL_EVENT_SETTLED`, `ML_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED`,
+      `VOL_TRADING_OPTIONS` each need a real trading-parameter/design ruling (threshold values, outcome-id convention,
+      option strike/expiry rule) before the mechanical catalog fix can ship; currently held as visible
+      `xfail(strict=True)`.
+- [ ] [SCRIPT] P2. **Sweep the remaining 7 already-drivable archetypes** — `CARRY_FUNDING_DISPERSION`,
+      `DEFI_LP_CONCENTRATED`, `DEFI_LP_POOL`, `DEFI_LP_VAULT` remain fully unchecked against either catalog surface for
+      the same config-key-contract drift bug class this doc found everywhere else.

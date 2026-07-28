@@ -210,5 +210,13 @@ autonomously, as it may be an intended future engine). This is also why the gas-
   class.
 - `*_bucket()` helpers that hardcode a name inline (bypassing both resolvers) would not appear in a resolver-call tally.
 - `e2e-testing/scripts/strategy/backtest_from_wizard_config.py:191` passes `kind="raw_tick_data"` which runtime-raises
-`BucketNamingError`; its caller chain to a live entry point was not traced, so it is recorded but unreported.
+  `BucketNamingError`; its caller chain to a live entry point was not traced, so it is recorded but unreported.
+
+## Todos
+
+- [ ] [BACKEND] P2. **Land the 2 stashed "safe survivor" fixes** — `features-service`'s `paired_dispatch.py`
+    delta-one-prefix fix and `smoke_matrix.py` feature_group-scope fix are written, adversarially reviewed, and green,
+    but stashed (`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`),
+    blocked on reconciling against a peer's concurrent `smoke_matrix --all-handlers` work (see "Verification outcome"
+    above).
 </content>

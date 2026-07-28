@@ -212,3 +212,11 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
    `archetype_capability_registry` / `strategy_instance_catalogue` sections to match.
 4. Separately: investigate the generator/UI structural skew (see Secondary finding) — likely needs its own plan before
    any full regen is safe.
+
+## Todos
+
+- [ ] [ENGINEER] P1. **Resync UI `venue_set_variants`/`archetype_capability_registry`/`strategy_instance_catalogue` +
+      fix the generator/UI structural skew** — the UAC architecture_v2 source is now clean, but the UI's registry copy
+      (`unified-trading-system-ui/lib/registry/ui-reference-data.json`) and the E2E fixture still reference the removed
+      `drift` venue / `jito-kamino-drift-sol-usdc-prod` slot label, and the sync generator itself is stale against the
+      committed UI shape (see "Recommended next steps" items 2-4 above).

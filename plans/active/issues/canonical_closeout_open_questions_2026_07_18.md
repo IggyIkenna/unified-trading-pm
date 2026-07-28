@@ -229,6 +229,13 @@ side).
 NOT the partial 3) + a Wave-D historical re-key, and fix the shard-atom on both axes. If A: mark the UAC LENDING-retire
 item holdings-only-done and drop the UTL/MTDS market-level migration.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Authorize the migration phase (A8) + rule on the 4 parked C2 items** — A8 asks "authorize the
+      migration phase to begin, and confirm the snapshot-first GCS-delete batch (A6)?", never answered; C2b (cefi
+      Track-2 reopen-50.79%), C2c (DeFi expected_unattempted denominator), C2d (GCS lifecycle codex), and C2e
+      (sports_odds_bookmaker locked) remain parked "OPERATOR RULINGS needed."
+
 ## Progress Log
 
 - **2026-07-20** — Folded in the operator's D1/D2 rulings + the A6 GCS-delete correction: C2a `instrument_type` COLUMN

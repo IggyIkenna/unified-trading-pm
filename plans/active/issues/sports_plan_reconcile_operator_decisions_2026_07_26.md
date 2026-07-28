@@ -202,3 +202,13 @@ Listed here only so this doc is a complete record of the shard; each is already 
    with the explicit "ships a launcher script, launches no VM" justification `task_template.md` finding O requires.
 
 A 6th fix of the same class as #3 was written, verified, and then reverted unapplied — see decision 3 above.
+
+## Todos
+
+- [ ] [OPERATOR] P0. **Rule on the epic-level "DO NOT resume FWD/BACKFILL VMs" hard-stop (item 1)** — its own release
+      conditions are already checked in `sports_master.md` and a measured `gcloud compute instances list` shows the VMs
+      have been running for ~2 months, but the directive lives in a locked epic and needs an explicit operator ruling
+      (flip / rewrite / delete).
+- [ ] [OPERATOR] P1. **Rule on splitting `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (item 3)** — the
+      1216L doc is over the line-cap hard gate, blocking even unrelated correctness fixes from being committed; needs an
+      operator decision on split vs promote-to-epic vs leave frozen.

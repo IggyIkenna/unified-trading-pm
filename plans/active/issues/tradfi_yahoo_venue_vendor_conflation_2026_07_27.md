@@ -114,3 +114,9 @@ counts + trace consumers for a venue="YAHOO" dependency; Phase 1: fix the writer
 consumer-relied-upon "give me all Yahoo data" query path; Phase 2: migrate existing rows if scale requires it) — but
 only once resolvable per-instrument venue identities are confirmed to exist and be worth the migration cost for FX/INDEX
 classes (EQUITY looks like the clearest win, since a real exchange is normally resolvable per ticker).
+
+## Todos
+
+- [ ] [DATA] P2. **Run the Phase-0 investigation methodology** (reconcile real counts + trace consumers for a
+      `venue="YAHOO"` dependency) before deciding whether/how to fix the vendor-as-venue stamp — per "Recommended next
+      step," this has NOT been done yet.

@@ -35,6 +35,8 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/june_2026_vintage_audit_findings_2026_07_27.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
+    /plans/active/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md,
   ]
 created: 2026-07-28
 priority: P2
@@ -47,6 +49,8 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  "instruments-service (present-set reconciliation, direction 2 chosen — UAC reverse-lookup) + unified-api-contracts
+  (new `resolve_tradfi_underlying_to_root`), SHAs recorded below, 2026-07-28"
 locked_by:
 locked_since:
 ---
@@ -127,3 +131,9 @@ candidate directions to evaluate:
    the writer itself later needs the same table. Also worth a follow-up: reconcile/backfill the 1.3M-row legacy
    `COMBO`-uppercase residual (including its 246 already-written `expected_unattempted` rows) once the naming mismatch
    is resolved, so the manifest converges on the single lowercase-canonical `combo` instrument_type going forward.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Decide the TradFi COMBO underlying-naming reconciliation approach (writer-side normalization vs.
+      enumerator-side lookup table)** — resolve which of the two candidate directions to build before this is
+      AO-dispatchable; also file the follow-up 1.3M-row legacy `COMBO`-uppercase reconciliation once decided.

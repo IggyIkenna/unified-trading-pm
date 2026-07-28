@@ -228,3 +228,13 @@ full local QG) is gated until the version surfaces are reconciled — run
 `scripts/repo-management/run-version-alignment.sh --fix` (operator/semver) or let the semver-agent re-align.
 Code-correctness is unaffected (the cefi batch + tardis-machine commits are ruff/basedpyright/size/ test-clean —
 verified piecemeal); this is purely the version-surface gate. Repo: market-tick-data-service (version mgmt).
+
+## Todos
+
+- [ ] [CODE] P2. **Align `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key** — live connectors emit
+      `data_type="book_snapshot_5"` but `SOURCE_PRIORITY` keys it as `("cefi", "book_snapshot")`, so `book_snapshot_5`
+      writes are source-EXEMPT (no validation enforced); register `("cefi", "book_snapshot_5")` or rename to one
+      canonical spelling, and sweep other AGs for the same drift. Repo: unified-api-contracts.
+- [ ] [INFRA] P1. **Reconcile mtds version-surface drift blocking LDR→staging QG** — pyproject (`0.31.0`) vs origin/main
+      (`0.24.0`) vs workspace-manifest (`0.25.0`) vs `repositories.mtds.version` (`0.20.0`) VERSION_SPLIT trips the
+      version-alignment pre-gate; run `run-version-alignment.sh --fix` or let the semver-agent re-align.

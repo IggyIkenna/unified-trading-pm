@@ -92,3 +92,11 @@ false "resume" churn.
 3. Not blocking: this doc's discovery didn't require fixing live — I self-verified with a real local QG run before
    trusting each signal, per the archived doc's own standing recommendation, and eventually shipped once the actual
    GMX-removal todo landed (or once genuinely green — see this doc's Progress Log for the resolution).
+
+## Todos
+
+- [ ] [BACKEND] P2. **Re-audit RepoHealthWatcher's `failing_run_is_current` gate against this recurrence** — item 3's
+      claimed Progress Log resolution does not actually exist in this file; re-audit
+      `ci_status`/`failing_run_is_current` against the `fd96e5a2` instance (check whether it read a run against a
+      different branch than `live-defi-rollout`), and consider treating repos with no LDR-triggered CI run as `unknown`
+      rather than falling through to a stale unrelated-branch verdict.

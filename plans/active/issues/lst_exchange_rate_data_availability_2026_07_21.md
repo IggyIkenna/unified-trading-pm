@@ -91,3 +91,9 @@ redemption-rate backfill for full-history correctness, with visible honest-absen
 **recursive-staking collateral leg as blocked** on the Aave-oracle capture (action 4) — do NOT model LST collateral on a
 proxy. The mark-to-market basis leg needs the operator's E1 short-funding answer (see
 [[pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]]) plus the #1/#2 backfills.
+
+## Todos
+
+- [ ] [DATA] P1. **Wire the dormant Aave-oracle adapter (or add the missing Chainlink feeds for
+      wstETH/weETH/rsETH/ezETH)** — per "Close actions" item 4, the true `AaveOracle.getAssetPrice()` is captured on
+      zero days, blocking the recursive-staking collateral leg of the A2 interest build.

@@ -118,6 +118,11 @@ scope a design decision first, then a real parity test becomes possible against 
       correctly gated behind that plan's naming-decision + 3-repo migration todos (it cannot be written until those land
       — there is still no real contract to test parity against). Flipping this duplicate closed instead of leaving it
       open prevents the backlog dispatcher from re-queuing a currently-unactionable duplicate of the same work here.
+- [ ] [SCRIPT] P1. The actual four-way naming migration has not started — the two `[x]` todos above only covered the
+      decision/scoping step (operator ruling BLK-a1ce4719 + authoring the migration plan); re-grepped
+      `SportsFeatureVector` across features-service/ml-service/strategy-service on 2026-07-23 and found zero hits,
+      confirming the real 3-repo migration (`sports_odds_feature_naming_canonicalization_2026_07_21.md`, 8 of 9 todos
+      still `[ ]`) is unstarted.
 
 ## Codex SSOTs
 

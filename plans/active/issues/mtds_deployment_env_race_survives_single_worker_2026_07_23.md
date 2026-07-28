@@ -110,3 +110,9 @@ from a bare `quality-gates.sh --no-fix` run is the actual trigger surface, not g
 did not have time to instrument the cascade step itself (e.g. diffing `os.environ` before/after `STAGE 0: Cascade`
 completes, or checking whether the ancestor repos' own `setup.sh`/dependency-install step executes any Python in the
 same shell) — that instrumentation is the concrete next step, not another blind retry loop.
+
+## Todos
+
+- [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
+      check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
+      this is the concrete next step to root-cause the race, not another blind retry loop.

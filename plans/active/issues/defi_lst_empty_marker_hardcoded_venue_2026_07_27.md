@@ -172,6 +172,14 @@ validators check venue against an enum (`_partition_path_canonicality.py` is str
 keep recurring silently until either the writer-side handlers are audited for hardcoded/wrong venue literals, or a
 venue-vs-`VENUE_TO_ADAPTER_KEY` membership check is added to the canonicality oracle.
 
+## Todos
+
+- [ ] [BACKEND] P2. **Ship the fix + decide on the marker-write architecture** — the venue-hardcoding fix (4-real-venue
+      loop, no fallback venue) passed `quality-gates.sh` 2026-07-27 but is not yet committed/shipped, pending an
+      explicit shipping decision; separately, whether to remove the physical zero-row marker write entirely (per
+      `/codex/02-data/honest-absence-downstream-handling.md:101-102`) in favor of manifest-only absence recording
+      remains a separate, open architectural question.
+
 ## Provenance
 
 Found 2026-07-27 answering an operator question about a specific GCS path; investigated via direct GCS inspection

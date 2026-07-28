@@ -91,3 +91,10 @@ propagated**, not just stale cell content.
 5. Grep for any other UAC-side `architecture_v2` enum/type renames that may have similarly drifted from their UI
    mirrors, since this is evidence the sync pipeline's `--check` gate has not been run in this UI checkout in a while
    (or is not actually wired into that repo's live `quality-gates.sh` path).
+
+## Todos
+
+- [ ] [ENGINEER] P2. **Rename `VenueAssetGroupV2`→`VenueCategoryV2` in the UI and resync `coverage.ts`** — the 5-step
+      recommended fix above (rename + add `CROSS_CATEGORY`, re-run `sync-archetype-capability-to-ui.sh --write`, verify
+      the UI's `quality-gates.sh`, grep for other drifted enums) has not been executed; running `--write` today would
+      still produce a `coverage.ts` that fails the UI's TypeScript strict build.

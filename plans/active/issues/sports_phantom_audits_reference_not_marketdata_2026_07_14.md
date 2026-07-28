@@ -282,3 +282,10 @@ bucket-map edit, no change to the transfermarkt cache-hit behavior (which is wor
 in the phantom auditor's path-matching assumption, not in the writer). This addendum narrows the original "44%
 unverified" down to a fully-explained 99.8% (two confirmed tool-limitation classes, zero real data loss found) plus a
 ~1,335-row (0.19%) residual left unexamined for a future pass.
+
+## Todos
+
+- [ ] [DATA] P3. **Spot-check the remaining ~1,335-row (0.19%) phantom residual** — STANDINGS (460), TEAMS (460), XG
+      (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed false-positive class
+      (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined per the 2026-07-23
+      RE-TRIAGE.

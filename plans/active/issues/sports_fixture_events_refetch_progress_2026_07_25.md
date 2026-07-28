@@ -323,3 +323,10 @@ next should re-ask rather than assume either direction.
 
 No new durable contract. Executes the OR-1 fixture_events re-fetch campaign already specified in
 `issues/canonical_player_stats_fixture_events_quality_2026_07_16.md`.
+
+## Todos
+
+- [ ] [DATA] P1. **Monitor `af-backfill-20260728-141821` to completion, re-run the census script, then flip the parent
+      plan's checkbox** — relaunched 2026-07-28 (`--force`, `2020-06-06→2026-07-25`) under the fixed adapter code; not
+      yet terminal. Once done, re-run `census_fixture_events_schema_variants_2026_07_25.py` to verify convergence before
+      flipping `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo.

@@ -122,3 +122,10 @@ running in a background agent as of this addendum — check its result first, th
 borrow-index leg, shared across 3 archetypes) sequentially per the phased plan (phases touch shared files, run them one
 at a time, never in parallel). The `LENDING_INTEREST` mismodeling correction (E4-ruled, unimplemented) is a small,
 independently-startable item any session can pick up without waiting on the phased build.
+
+## Todos
+
+- [ ] [BACKEND] P2. **`LENDING_INTEREST` mismodeling correction for `carry_staked_basis` not implemented** — E4 already
+      ruled the row-set should drop it entirely, but per this doc's own text implementation has not started; separately,
+      `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`'s rewrite-vs-delete-vs-gate-hardening choice
+      still needs an operator ruling.

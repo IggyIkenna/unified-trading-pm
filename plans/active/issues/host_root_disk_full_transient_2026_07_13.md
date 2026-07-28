@@ -109,3 +109,7 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       150-200G `.venv` footprint could shrink dramatically for free; (c) if hardlink-dedup can't be made to work
       cross-slot, a liveness-aware per-slot `.venv` prune (idle-slot detection, same pattern as the VM-collision guard)
       is the real fix for driver #2, not a blanket cron.
+- [ ] [INFRA] P2. **Follow-on: schedule the uv-cache prune cron + investigate cross-slot `.venv` dedup** — (a) operator
+      runs `install-prune-uv-cache-cron.sh` (not yet scheduled, blocked on sandboxed-slot permissions); (b) investigate
+      why `UV_LINK_MODE=hardlink` isn't deduping `.venv` across slots (~150-200G footprint); (c) if cross-slot dedup
+      can't be made to work, build a liveness-aware per-slot `.venv` prune.

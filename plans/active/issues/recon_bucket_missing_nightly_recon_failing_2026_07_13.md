@@ -150,3 +150,10 @@ bucket-consolidation plan this issue is filed under. Recommend this becomes its 
 
 Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md` Progress Log,
 "2026-07-14, item D" entry.
+
+## Todos
+
+- [ ] [ENGINEER] P0. **Stand up the real green 06:00Z batch-live recon run** — provision the missing execution-service
+      and ml-service Cloud Run Jobs, implement run-tag-aware `_SUCCESS`-marker writers in ml-service/strategy-service,
+      add a self-default date fallback to strategy-service's batch CLI, and un-pause the 7 feature-family schedulers
+      (per the "2026-07-14 update" Conclusion) — no real green scheduled run exists yet.

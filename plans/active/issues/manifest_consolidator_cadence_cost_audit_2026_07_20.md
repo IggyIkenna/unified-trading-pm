@@ -190,3 +190,10 @@ This issue closes when either: (a) the operator explicitly declines to pursue ca
 a documented-but-not-actioned finding, or (b) a plan is authored covering the three coupled pieces in §4 and shipped,
 with a post-change cost verification showing the expected reduction and zero new `CONSOLIDATOR_DOWN` /
 `ManifestConsolidatorStaleError` events attributable to the change.
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Decide whether to proceed with the coupled cadence-reduction fix** — per "Suggested path
+      forward," none of the 4 steps (widen the sports staleness budget, cron + watchdog cadence change, re-verify,
+      correct the codex SSOT) has been executed; this issue closes only once the operator explicitly proceeds or
+      declines per "Resolution criteria."

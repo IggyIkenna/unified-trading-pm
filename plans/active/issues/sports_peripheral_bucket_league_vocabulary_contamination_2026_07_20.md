@@ -76,3 +76,9 @@ does not simply age out.
 
 Evidence: relocation workflow `subagents/workflows/wf_664f7ed4-df6/journal.jsonl` (gcs-sizing surveyor + verifier),
 2026-07-20.
+
+## Todos
+
+- [ ] [DATA] P2. **Trace the writer emitting the `ENGLAND_PREMIER_LEAGUE`/`LA_LIGA_2`/`UNKNOWN` league vocabulary** —
+      per "Required work (not started)" item 1 (the `features-sports-prd` write is live as of 2026-07-11), then
+      root-cause + fix at the write path before migrating the 9,733 historical `instruments-store-sports-prd` objects.

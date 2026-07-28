@@ -99,15 +99,15 @@ drift_direction: advance-code
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
 
       **Evidence + a genuine new finding beyond scope**: re-ran the census live — `FIXTURES` is 100,801 (NOT the
-                                  expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
-                                  (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
-                                  the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
-                                  call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
-                                  map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
-                                  (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
-                                  findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
-                                  pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
-                                  `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
+                                              expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
+                                              (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
+                                              the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
+                                              call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
+                                              map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
+                                              (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
+                                              findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
+                                              pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
+                                              `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
 
 - [x] ✅ [DIAG] P1. **DONE 2026-07-27 (data_engineering slot-10) — market-tick-data-service@76ca401f.** Sweep executed
       via a new read-only script
@@ -134,6 +134,13 @@ drift_direction: advance-code
       contaminated `RUSSIA_PREMIER_LEAGUE` shards) is unblocked by this sizing but NOT started this pass (read-only DIAG
       scope only — zero GCS objects or manifest rows deleted/overwritten/re-derived). Source:
       `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`.
+
+- [ ] [OPERATOR] P2. **Resolve the 4 still-conflict-gated candidates + the 2 still-excluded docs below** — the "Deferred
+      — still genuinely conflict-gated" section (4 candidates, queued as operator-decisions entries #5-8) and the 2
+      `doc_too_large_or_risky_for_batch` docs
+      (`sports_canonical_universe_and_apifootball_reference_expansion_     2026_06_24.md`,
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md`) remain genuinely unresolved and were never converted
+      into dispatchable todos here.
 
 ## Deferred — still genuinely conflict-gated (re-checked 2026-07-25, NOT dispatched)
 

@@ -216,6 +216,11 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
       the `orchestrator.service` unit's own comment); the script failed with "unable to open database file" until
       corrected. Fixed + shipped: `agent-orchestrator@c5157fb`, full QG green (1804 passed, dashboard tsc/vitest green).
 
+- [ ] [BACKEND] P3. **(AF-2-followup) Confirm plan_health throttle's dispatch-rate gate against real live traffic.** —
+      AF-2's own todo text states "Gate verification deferred (honest — this needs live traffic)": the "measured
+      dispatch rate ≤1/interval over 24h, zero `superseded-plan_health` exits" gate was filed as a follow-up
+      re-measurement and has never actually been confirmed against a real post-deploy 24h window.
+
 ## Safeguards
 
 - Never `git reset --hard` / `git clean -fd` / `git checkout` a dirty tree — other agents share this repo.

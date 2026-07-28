@@ -850,6 +850,11 @@ residual: the manifest-row registration follow-up.
 already in GCS, and it is a live honest-coverage hole; OR, if the operator OKs it, launch the orphan VM for the 4
 blocked AGs first so the whole-estate orphan picture is complete before back-filling.
 
+- [ ] [DATA] P1. **Sports orphan back-fill (214,319 rows) + legacy-dup triage (34,385)** — per the "Deferred work after
+      2026-07-21" table above, this is still "Not done" (real data-correctness work; the audit parquets are already in
+      GCS); pick up `estate_orphan_assessment_2026_07_21` todos 1-2. (The table above lists 7 more still-"Not done"
+      items from the same deferral — this is the recommended-next one, not the only one.)
+
 ## Lessons (do not re-learn)
 
 - **In-session single-walk breaks at scale on the manifest DOWNLOAD, not the object walk** — a ~1.8GB

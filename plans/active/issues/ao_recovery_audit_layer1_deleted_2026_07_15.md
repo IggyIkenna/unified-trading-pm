@@ -155,3 +155,10 @@ function.
   `/codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 1 (replacing the 2026-07-15 banner that never
   landed) + scope-clarifier on `/codex/04-architecture/agent-orchestrator-overview.md`'s "removed end-to-end" line. This
   doc stays `open` as the rewire's tracking item. No code/contract changed.
+
+## Todos
+
+- [ ] [BACKEND] P2. **Re-home the recovery-audit-signoff producer (Option B)** — stand up a standalone producer (NOT an
+      AO worker-role) that consumes PubSub `agent-recovery-actions`, decides a `SignoffVerdict`, and POSTs to the
+      already-live `POST /safety-ops/signoffs`; scheduled LAST, after the in-flight AO dispatch-correctness work (see
+      "Operator ruling 2026-07-16" above).

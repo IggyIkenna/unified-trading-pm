@@ -964,3 +964,10 @@ V2/empty-feed protocols decided: accept documented-empty, don't build new covera
 (33/37 open, real partial progress expected honest outcome), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block.
 Script:
 `/Users/ikennaigboaka/.claude/projects/-Users-ikennaigboaka-Code-unified-trading-system-repos--tabs-3/75f22ce1-df33-490d-921e-c63d29f3656f/workflows/scripts/instruments-audit-p0-wave-wf_60ecfd13-752.js`
+
+## Todos
+
+- [ ] [DATA] P0. **Close the 6 remaining Headline P0s not covered by any in-flight workflow** — Turbo API 0/0 bug, CeFi
+      monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
+      Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
+      `wf_60ecfd13-752` Progress Log entry).

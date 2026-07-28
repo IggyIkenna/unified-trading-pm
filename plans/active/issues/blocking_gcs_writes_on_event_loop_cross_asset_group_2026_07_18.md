@@ -110,3 +110,9 @@ flushes. If either happens, give those paths a dedicated executor first.
 Every fix above must be verified the way the shipped ones were: confirm the enclosing function is `async def`, confirm
 the call is still awaited (ordering preserved), and check the file's line/function caps before adding comments — the
 900-line cap is enforced and a rationale comment is enough to break it.
+
+## Todos
+
+- [ ] [INFRA] P2. **Add concurrency (`asyncio.gather` + `Semaphore`) to the DeFi CLI handler family** — per "Open — in
+      priority order" item 1, `_adapter.py`'s BatchPayload loop and the nested protocol/chain loops run fully serial
+      today; do the blocking-write fix (item 2) first or in the same change.

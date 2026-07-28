@@ -62,3 +62,10 @@ one item requires standing up a new S3 state backend before any `terraform impor
 scoping, not a continuation of that plan's build-validation work. Migrated here so the parent plan could archive with
 zero open todos per `/codex/11-project-management/plan-hygiene.md`'s archive discipline, rather than being silently
 dropped.
+
+## Todos
+
+- [ ] [INFRA] P3. **Terraform-import the imperatively-created AWS CodeBuild projects + webhooks** — stand up the
+      commented-out S3 state backend, `terraform import` the 18 live projects/webhooks into `locals.services`, and
+      bundle in the two live-only deltas (the `codebuild:StartBuild` policy-name reconciliation and the `deployment-ui`
+      dispatch-only comment) — see "What's owed" above.

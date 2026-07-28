@@ -109,3 +109,10 @@ True
 ```
 
 That file has zero `# DERIVED` markers on any of its 12 addresses at the time of this test.
+
+## Todos
+
+- [ ] [INFRA] P2. **Apply the fix sketch** — drop the second absolute-path `_is_excluded_path(path)` call in
+      `_iter_py_files` (or scope it to a nested worktree only, not the ambient slot directory) in
+      `check_defi_address_citations.py`; not yet applied, so STEP 5.97 still silently no-ops under every `.tabs/<slot>/`
+      local run.

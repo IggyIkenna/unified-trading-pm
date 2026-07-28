@@ -102,6 +102,11 @@ source: >-
       workflows' results were reviewed and acted on across the 4 subsequent rounds documented below (Rounds 5, 6, 6b,
       7, 8) — this checkbox was simply never flipped once Round 4 itself completed. No outstanding action against this
       specific item.
+- [ ] [DOC] P1. **Finish applying the 70-item batch + the remaining mass-flip** — Round 7's "Deferred work after
+      2026-07-26" table listed "Apply recommendations across the 70-item batch," "Flip each tranche's newly-drafted
+      batchN/finalize pair to active," and the "Mass flip" itself all as "Not started"; Round 8's own Deferred table
+      confirms the mass-flip for cefi/defi/tradfi/prediction/sports batch/finalize pairs is still only "Partially done"
+      (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified).
 
 ## Progress Log
 

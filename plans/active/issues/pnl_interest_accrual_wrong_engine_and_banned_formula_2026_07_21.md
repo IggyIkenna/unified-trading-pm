@@ -752,4 +752,14 @@ that part is settled, matches what shipped. What remains genuinely open (pending
 explicit operator ruling" above) is the **reporting-layer dual-unit VIEWING work** (items 2-4 of the "Smallest correct
 increment" list: wiring `ShareClassFxMatrix` to a real rate feed, un-orphaning `convert_settlement_to_share_class`, and
 the (A)-vs-(B) semantics ruling) — additive work that does not require touching the STAKING leg's already-shipped engine
-code.</content>
+code.
+
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule on the ETH-underlying-units semantics (A vs B) and the two competing `ShareClass` enums** —
+      the E2 investigation's "Needs an explicit operator ruling" section above leaves both design questions open: (1)
+      whether "ETH-underlying units" means a currency-preference view (A) or a genuinely different FX-noise-isolated
+      native-return metric (B); (2) whether `canonical.crosscutting.share_class.ShareClass` and
+      `internal.architecture_v2.enums.ShareClass` should converge to one enum. The reporting-layer dual-unit viewing
+      work (wiring `ShareClassFxMatrix`, un-orphaning `convert_settlement_to_share_class`) is blocked on this
+      ruling.</content>

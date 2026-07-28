@@ -141,3 +141,10 @@ vocabulary gap however `features_onchain_featureless_shards_and_vocabulary_split
 both land, `rate_impact`/`aave_rate_impact` should be treated as **structurally unproduced** for P&L-adjustment purposes
 even though a `captured` manifest row with real-looking rows now exists for 2026-07-26 — flagging this explicitly so no
 downstream consumer mistakes the presence of the row for the presence of signal.
+
+## Todos
+
+- [ ] [BACKEND] P1. **Migrate `AaveRateImpactCalculator` off DefiLlama Yields + re-point strategy-service's reader** —
+      decide whether to switch `fetch_data()` to MTDS `lending_indices` (real `total_borrow_usd`) or another source,
+      then re-point the reader from `aave_rate_impact` to the writer's `rate_impact` name once real values exist; every
+      output column is a deterministic zero today.

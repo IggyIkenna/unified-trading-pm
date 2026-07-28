@@ -98,6 +98,12 @@ market-tick-data-service PR #672 itself is long since closed/superseded; the rep
 now identical (fully promoted). This doc is about preventing the SAME false-positive class recurring for the next
 repo/commit that legitimately uses the dirty-deps carve-out, not about unblocking anything currently stuck.
 
+## Todos
+
+- [ ] [OPERATOR] P2. **Sign off on a fix for the dirty-deps carve-out blind spot** — pick between recognizing a
+      commit-body marker (Option 1) or extending the `Quickmerge:` trailer's accepted values (Option 2, recommended); no
+      fix has been implemented yet.
+
 ## Codex SSOTs
 
 `/codex/08-workflows/ci-cd-flow.md` (quickmerge / strict-quickmerge / carve-out list).

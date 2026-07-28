@@ -601,6 +601,13 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 ---
 
+## Todos
+
+- [ ] [REVIEW] P1. **Track the remaining corpus-wide outstanding items** — this doc's sections B-F list dozens of
+      still-open items as plain prose/bullets, never checkboxes (e.g. B1-B6 canonical-id migration, C2-C8 DeFi
+      adapter/coverage gaps, D1-D9 prediction/sports wiring gaps, F1-F3 data-ops follow-ups); see those sections for the
+      full item-by-item list, evidence, and fix options.
+
 ## Progress Log
 
 - 2026-07-08: Created from the instruments-service docs-cleanup audit (slot-3). 6 of 7 docs rewritten to spec + all

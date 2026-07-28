@@ -97,3 +97,12 @@ For each of the 7 branches, a slot owning that repo should:
 Until reviewed, these 7 branches are LEFT IN PLACE (deletion would lose the only copy). They no longer pollute the
 divergence monitor's signal meaningfully (7 vs the prior 41), and the naming-collision class itself is fixed (no NEW
 `tab/rootm/*` can be created — VM-name-scoped prefix + verify-slot-host-symmetry check #11).
+
+## Todos
+
+- [ ] [OPERATOR] P2. **Review + inherit-or-delete the 7 remaining `tab/rootm/*` branches** — per commit, per repo
+      (agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts×2,
+      unified-trading-library×2): confirm superseded-in-spirit work vs. genuinely valuable unmerged work, then delete or
+      cherry-pick+quickmerge accordingly. Blocked on `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s read-only
+      presence-check todo (still `- [ ]`) landing a dated verdict here first — do not archive this doc until that
+      verdict exists.

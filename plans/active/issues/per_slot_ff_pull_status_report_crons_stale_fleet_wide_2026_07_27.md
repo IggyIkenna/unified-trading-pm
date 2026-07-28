@@ -95,3 +95,10 @@ Captured only; **not yet diagnosed on the slot side.** Needs an owner on the age
 confirm from a slot vantage (readable per-slot crontab / systemd timer) whether the two crons are actually firing, (2)
 correlate against the disk-resize + orchestrator-restart timeline, and (3) re-arm the cron wiring if it was dropped.
 Low-risk today, but re-check the 19/19 trend — if it keeps climbing or drift/dirty counts start rising, escalate.
+
+## Todos
+
+- [ ] [INFRA] P2. **Diagnose + re-arm the per-slot ff-pull/git-status-report crons** — confirm from a slot vantage
+      whether `slot-cron-ff-pull.sh`/`slot-git-status-report.sh` are actually firing fleet-wide, correlate against the
+      2026-07-27 disk-resize + orchestrator-restart timeline, and re-arm the cron wiring if it was dropped (see "Status
+      / next step" above).

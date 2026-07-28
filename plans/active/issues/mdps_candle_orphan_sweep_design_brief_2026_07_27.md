@@ -243,3 +243,9 @@ corpus:
   parent issue doc's claim — not independently re-verified in this research pass.
 - Whether `unified_api_contracts.canonical_path_templates`/`is_valid_shard_key` already has a defined `ShardKey` shape
   for candles (vs raw-tick) was not confirmed — check before hand-rolling a new shard-key dataclass.
+
+## Todos
+
+- [ ] [DATA] P1. **Build the MDPS candle-layer orphan sweep (todo 1 of the parent tooling-gap doc)** — this doc is a
+      pre-implementation research brief only; the actual sweep tool has not been built, and its own "Open items before
+      implementation starts" (per-AG path segment order spot-check, ShardKey shape confirmation) remain unresolved.

@@ -101,5 +101,12 @@ Three real production call sites, deduped across worktree/branch clones:
    provider wired) or the underlying catalogue is proven complete, and removal can follow the same typed-exception
    pattern as `mtds@3253cae3` (raise, don't silently degrade; update tests in the same commit).
 
+## Todos
+
+- [ ] [BACKEND] P2. **Wire live catalogue providers for DEFI/TRADFI/PREDICTION** — extend
+      `deployment-api/venue_resolution.py` to build a live catalogue provider for DEFI, TRADFI, and PREDICTION
+      (mirroring the existing CEFI-only branch); this is revisit-trigger item 1 above, new engineering work not yet
+      drafted as a todo anywhere else in the corpus.
+
 No code change ships from this doc. It exists so the deferred decision has a durable, re-discoverable home instead of
 dangling inside a closed plan todo.

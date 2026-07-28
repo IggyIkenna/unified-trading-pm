@@ -290,6 +290,12 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
 - **Live Binance-futures OI** hardcoded `None` on the WS path (`binance_futures_book_ticker_ws.py`) — OI only via Tardis
   batch on the largest venue.
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Resolve the 4 open operator questions and action the Recommended-decision phases** — e.g. Phase
+      1's FRED macro backfill (adapter exists, has never run in production) and Phase 5 (bring macro/alt-data into the
+      honest-coverage gate); Phases 1-6 remain largely unactioned as of this doc's last update.
+
 ## Audit method + provenance
 
 6 parallel general-purpose audit agents (2026-06-05), one per domain (macro / CeFi / DeFi / TradFi / Sports+Prediction /

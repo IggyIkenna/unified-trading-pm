@@ -80,6 +80,13 @@ Sample real unresolved (home, away) pairs seen across the 4-day window:
 - `Deportes Concepción` vs `Deportes Limache`
 - `Universidad Católica (CHI)` vs `Universidad de Concepción`
 
+## Todos
+
+- [ ] [DATA] P2. **Add the missing Chilean club aliases to `team_mappings.py`** — per the 2026-07-23 RE-TRIAGE, all 3
+      originally-cited fixtures are still unresolved today (now for the other side of each pairing:
+      `Coquimbo Unido`/`Deportes Concepción`/`Deportes Limache`/`Universidad de Concepción` all still raise
+      `TeamResolutionError`); requires a full pull of API-Football's official Chile Primera team list before adding.
+
 (Not exhaustive — re-run the measurement script against a fuller date range to get the complete unresolved-team roster
 before doing the alias-dict fix, since only ~5 real Chile Primera fixtures were captured in this 4-day sample.)
 

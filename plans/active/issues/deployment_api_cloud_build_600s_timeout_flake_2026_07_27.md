@@ -59,6 +59,13 @@ depends_on: []
   verification recipe (`gcloud run services describe ... latestReadyRevisionName` + compare image digest/creation time
   against the build's start time) is a reasonable model.
 
+## Todos
+
+- [ ] [DEVOPS] P3. **Raise the Cloud Build timeout or verify deploys via the live Cloud Run revision** — implement one
+      of the two recommended fixes above (raise `cloudbuild.yaml`'s 600s build timeout, or have whatever gates on this
+      build's status verify the live Cloud Run revision directly); neither has been implemented — currently a
+      low-priority, non-blocking flake (~5% of builds).
+
 ## Evidence
 
 - Build: `34593227-e79e-41e8-a1ca-c5bfb5917a4c`, `createTime=2026-07-27T02:04:19Z`, `finishTime=2026-07-27T02:15:39Z`,

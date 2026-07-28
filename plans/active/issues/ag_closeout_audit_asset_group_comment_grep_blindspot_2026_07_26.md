@@ -120,6 +120,14 @@ way: the audit reports a clean orphan count and a plausible-looking doc total, s
    this session only proved the miss for `prediction`, and the same shape exists across the corpus (the sports, defi and
    cefi forks named in the SKILL's own orthogonality section are the obvious first places to look).
 
+## Todos
+
+- [ ] [SCRIPT] P1. **Amend `/cursor-configs/skills/ag-closeout-audit/SKILL.md` Phase 0.3** to require a
+      frontmatter-block-aware parse that strips YAML comments before tokenising (a single-line
+      `rg '^asset_group:.*<ag>'` is not sufficient) — none of the 4 suggested next steps (SKILL.md amendment,
+      Progress-Log retag convention, corpus-wide divergence guard script, re-run of the other 8 tranches) have been
+      actioned yet.
+
 ## Provenance
 
 Second `/ag-closeout-audit prediction` run, 2026-07-26 (autonomous). The prediction-side consequence is tracked as

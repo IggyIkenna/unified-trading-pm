@@ -891,6 +891,15 @@ Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verif
 
 ---
 
+## Todos
+
+- [ ] [OPERATOR] P1. **Rule which side of entry 11's `locked_by:` archival gap is the bug, and clear the stale
+      `locked_by: live-defi-rollout` on the already-archived copy** —
+      `plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` was archived without
+      `[unlock-plan]` by a concurrent auto-remediation while this session had parked the exact same archival per
+      CLAUDE.md's lock rule; options A/B/C in entry 11 above remain unresolved, and the stale lock on the archived copy
+      still needs clearing either way.
+
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:
 

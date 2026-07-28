@@ -204,6 +204,11 @@ census twice more — once right after the restamp, once after ≥2 consolidator
       `/plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md`. This P0
       restamp is still the right long-term fix (retires the need for the alias set entirely); the routing patch is a
       stopgap that works correctly either way.
+- [ ] [DATA] P1. **Resolve the 55,233 collision-residual decision + re-verify the census** — per the 2026-07-26 update,
+      the `FIXTURES` census did NOT stabilize at the expected 55,233 (it was growing due to a 10th call site, since
+      fixed); decide delete-vs-leave for the stable 55,233-row collision residual (tracked in
+      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) and re-run the census after the next
+      `enum-universe-sports-*` run + ≥2 consolidator cycles to confirm decay toward it.
 
 ## Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_batch4-002)
 

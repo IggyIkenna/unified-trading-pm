@@ -155,3 +155,10 @@ skipped step — the next agent that lands a split/trim of either plan under cap
 edits (search each plan for `cefi_available_at_wallclock_despite_deterministic_row_timestamp_2026_07_24` — if already
 present in the working tree when that split happens, just commit it through; if missing, re-add per this doc's summary
 and the "Recommended fix" section above).
+
+## Todos
+
+- [ ] [DATA] P2. **Fix the 2 confirmed cefi `available_at` wall-clock handlers** — `deribit_volatility_index_handler.py`
+      (derive `available_at` from each row's own `ts_ms`/`timestamp` instead of `attempted_at`) and
+      `book_microstructure_handler.py` (use the already-computed `as_of` instead of `attempted_at`); both break the
+      batch==live ε=0 determinism contract on re-run, mirroring the resolved DeFi `available_at` bug.

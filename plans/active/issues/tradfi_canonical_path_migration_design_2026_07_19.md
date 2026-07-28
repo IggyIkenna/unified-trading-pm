@@ -211,3 +211,10 @@ removal**, (3) **manifest-rebuild casing normalization** (`EQUITY`/`equity` is a
 paths are lowercase). The **Phase-D gate** force-writes fresh data + asserts canonical shape, so a regressing backfill
 fails there. Net: writer-in-lockstep ✅ + write-time guard ✅ + reader companion ✅ + Phase-D assertion — only Massive
 removal + casing normalization remain before backfill-resume.
+
+## Todos
+
+- [ ] [DATA] P1. **Strip Massive routing + fix manifest-rebuild casing normalization** — the two remaining items before
+      tradfi backfills can resume: (2) remove `massive` from `SOURCE_PRIORITY`/routing (non-destructive prep; the
+      1.47M-object purge itself stays operator-gated), and (3) fix the `EQUITY`/`equity` casing inconsistency in the
+      manifest-rebuild pass (physical paths are already lowercase).

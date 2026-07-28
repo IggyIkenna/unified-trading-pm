@@ -159,3 +159,10 @@ change needs a caller audit across the repo before touching it — out of scope 
    silently-dropped-kwarg behavior in a way this issue didn't probe.
 4. [INFRA] P3. Grep the other ~20 repos for the same ambient-default-reliant test pattern before assuming this is unique
    to `unified-trading-library` — not done this session.
+
+## Todos
+
+- [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up** — steps 2-4 above (align
+      `UnifiedCloudServicesConfig.environment`'s alias precedence with `BaseConfig.environment`'s, then revisit whether
+      `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`, then grep the other ~20
+      repos for the same ambient-default-reliant test pattern) remain unstarted.

@@ -148,3 +148,9 @@ gcloud storage ls -l gs://market-data-tick-cefi-prd-central-element-323112/raw_t
 returns the 6.3GB `XRP_USDC-5DEC25-2D2-C.parquet` object as the largest file in that partition by a wide margin (next
 largest legitimate perpetual object in the same partition is <2MB). Repeat for any of the 5 days in the table above to
 reproduce.
+
+## Todos
+
+- [ ] [DATA] P1. **Root-cause + fix DERIBIT's dated-option-into-perpetual misclassification** — find the writer-side
+      bug, run an exhaustive corpus-wide census, backfill/reclassify already-captured objects, then re-run Script 1 for
+      DERIBIT specifically (see "What's NOT done / follow-up needed" above).
