@@ -329,4 +329,12 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
 - [ ] [DATA] P1. **Monitor `af-backfill-20260728-141821` to completion, re-run the census script, then flip the parent
       plan's checkbox** — relaunched 2026-07-28 (`--force`, `2020-06-06→2026-07-25`) under the fixed adapter code; not
       yet terminal. Once done, re-run `census_fixture_events_schema_variants_2026_07_25.py` to verify convergence before
-      flipping `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo.
+      flipping `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo. —
+      **Health-checked 2026-07-28T15:23Z (slot 8, data_engineering), RUNNING, genuine progress**:
+      `gcloud compute     instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob `updateTime`
+      `15:22:50Z` (~29s old at check time); run.log shows live per-fixture writes at `date=2020-12-16` (advanced from
+      the `2020-06-06` start ~65min into the run), real GCS fixture_events writes + manifest per-VM shard updates, no
+      error/stall signature. Not completable this turn (~5.5 years of the `2020-06-06→2026-07-25` range remain).
+      Releasing via `/skip-current-task {"reason_code": "GATED"}` per this doc's own DEDUP NOTE instruction, not
+      repeating the redispatch-churn pattern already flagged above (9+ prior health-check redispatches, unresolved
+      `/blocked`) — not re-escalating, just complying with the documented next-action.
