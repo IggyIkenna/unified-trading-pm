@@ -2,7 +2,7 @@
 doc_type: plan
 title: Distinct-Values non-canonical audit — history / archived Progress Log
 summary: >-
-  Archived Progress Log narrative for /plans/active/distinct_values_noncanonical_audit_2026_07_20.md, split out
+  Archived Progress Log narrative for /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md, split out
   2026-07-24 purely to bring the parent under the 1000-line size cap. Every entry here is fully-completed historical
   record (no open todos) — the parent's own "## Todos" / "Refined worklist" checkboxes already carry the live,
   still-open remainder. Nothing in this file is dispatchable work.
@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [canonicalisation, manifest, data-correctness, ssot-audit, distinct-values, drift, audit, archive]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
   ]
 created: "2026-07-24"
@@ -34,18 +34,18 @@ locked_since:
 supersedes:
 superseded_by:
 source:
-  split from /plans/active/distinct_values_noncanonical_audit_2026_07_20.md 2026-07-24 (size-cap split; archive-bound,
-  no open todos moved here — every checkbox line that existed in the moved range was already [x])
+  split from /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md 2026-07-24 (size-cap split;
+  archive-bound, no open todos moved here — every checkbox line that existed in the moved range was already [x])
 ---
 
 # Distinct-Values non-canonical audit — history / archived Progress Log
 
 > **This is an archive, not a live plan.** It exists only because the parent audit doc
-> (`/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`) exceeded the 1000-line size cap and this range of
-> its Progress Log was 100% fully-completed historical narrative with zero open todos. All content below is moved
-> **verbatim** from that doc's `## Deferred work after 2026-07-20` section through end-of-file, unedited except for this
-> header. For the live todos and current state of the audit, read the parent doc; for the still-open MTDS lending
-> `instrument_type` historical re-stamp specifically, read
+> (`/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`) exceeded the 1000-line size cap and this
+> range of its Progress Log was 100% fully-completed historical narrative with zero open todos. All content below is
+> moved **verbatim** from that doc's `## Deferred work after 2026-07-20` section through end-of-file, unedited except
+> for this header. For the live todos and current state of the audit, read the parent doc; for the still-open MTDS
+> lending `instrument_type` historical re-stamp specifically, read
 > `/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
 
 ## Deferred work after 2026-07-20

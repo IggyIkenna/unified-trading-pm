@@ -94,10 +94,11 @@ lesson, and it silently erodes the one guardrail that is supposed to be un-autom
 
 ## Todos
 
-- [x] [OPERATOR] P1. **Rule on the direction before any mechanism changes** — either (a) the lock is genuinely mandatory
-      and the gate must move somewhere every plan-touching commit passes through, or (b) archiving a resolved+terminal
-      locked doc is acceptable autonomously and CLAUDE.md's "ASK, never autonomous" wording should be narrowed to say
-      what it really means. **Done when**: an operator answer is recorded in
+- [x] [PM] P1. **RETAGGED 2026-07-28 (workspace stale-gate audit) — ruling already recorded, decision closed.** Original
+      ask: rule on the direction before any mechanism changes — either (a) the lock is genuinely mandatory and the gate
+      must move somewhere every plan-touching commit passes through, or (b) archiving a resolved+terminal locked doc is
+      acceptable autonomously and CLAUDE.md's "ASK, never autonomous" wording should be narrowed to say what it really
+      means. **Done when**: an operator answer is recorded in
       `/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` § 11. Not AO-eligible — this is a
       governance/authority call, not a determinable fact. **RULED (a) 2026-07-26** — mandatory; CLAUDE.md's own text is
       unambiguous ("ASK, never autonomous"), this isn't really a policy choice up for grabs, just an enforcement gap to

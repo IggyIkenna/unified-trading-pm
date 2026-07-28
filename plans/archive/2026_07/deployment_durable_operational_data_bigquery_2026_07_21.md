@@ -15,7 +15,10 @@ summary: >-
   shared deployment-events topic today (verified by code search, not assumed), so migration cost is near-zero. The "no
   live UI chart" decision is REVERSED — embed rolling 1h/4h/24h/1wk views into the EXISTING deployment-ui Host Resources
   panel, not a new page.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: verified zero open `- [ ]` todos (all checked, some
+  # with an honest ⚠️ mechanism-proven-not-yet-observed-live-from-a-real-VM caveat, not a claim of full
+  # production verification)
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -49,6 +52,22 @@ source:
     no-live-chart call; added process-category breakdown) -- corrected execution_scope: orchestrator-agent -> local-only
     (was inconsistent with assigned_vm: NA per plans/active/task_template.md)"
 ---
+
+## Deferred work — migrated to:
+
+**Two items were found prose-only in the 2026-07-28 Progress Log entry, with no corresponding tracked `- [ ]` todo, and
+are flagged here rather than silently dropped (this archival pass was not authorized to create a new successor doc for
+them):** (1) process-category UI wiring in deployment-ui — `VmResourceComparison.tsx` needs a new tab/stacked-bar view
+and `mock-api.ts` needs its flat 3-category mock fixture enriched to all 5 categories; the API/mock/client types already
+exist but are unused. (2) A one-line cross-ref edit in `/codex/02-data/live-data-persistence-and-event-log.md` pointing
+back to this plan's BigQuery operational-data section (the 2026-07-27 codex-audit todo explicitly left this open). Both
+are otherwise-minor (a UI nice-to-have and a doc cross-link) — a follow-up issue doc should be filed if this work should
+stay tracked. Separately, the process-category-sampler systemd-timer start bug and the comparison-page filter-scope
+simplification are NOT silently dropped — both are recorded as the 2 remaining "Known gaps" in
+`/codex/05-infrastructure/deployment-observability.md`.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — all tracked todos verified `[x]`; see "Deferred work" above for the
+> 2 items found prose-only during this pass. Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # durable operational data — BigQuery via the event spine
 
@@ -337,7 +356,15 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
       Playwright spec. Filters by a service-name text match only (not the full service × asset_group × mode facet set
       the original ask described) — the backend endpoint only accepts an optional `vm_name` filter today; a richer
       filter would need new query params + SQL `WHERE` clauses, not built this session.
-- [ ] [REVIEW] P2. **STILL OPEN — analysis path doc.** Not written this session.
+- [x] ✅ [REVIEW] P2. **Analysis path doc — DONE 2026-07-28.** Wrote "Analysis path — DuckDB over `bq extract` (ad-hoc,
+      power-user)" into `/codex/05-infrastructure/deployment-observability.md` (new section, right after the existing
+      "Durable operational data — BigQuery via the event spine" section), following `billing-cost-observability.md`'s
+      "Cost snapshot — DuckDB over GCS parquet" section as the structural template (flow steps + a `bq extract`/DuckDB
+      command example + a "when to use this vs. the UI panel" note). Also corrected the adjacent "Known gaps" bullet in
+      the same file while touching it — it still said "partition-expiration TTL isn't set on any table" and
+      "process-category has no publisher yet," both since resolved by the PR-4/TTL and categorization-heuristic-pipeline
+      todos above; updated to the 2 genuinely remaining gaps (comparison-page filter scope, the process-category-sampler
+      systemd-timer start bug).
 - [x] ✅ **Ship verified 2026-07-28** — all five touched repos confirmed clean + fully pushed to
       `origin/live-defi-rollout` (`ahead=0`, `git status --porcelain` empty): deployment-api, deployment-ui,
       deployment-service, unified-trading-library, agent-orchestrator. Re-verified while unblocking an unrelated GHA

@@ -278,6 +278,27 @@ coverage-percent formula written elsewhere in the codebase (e.g. a service-local
 against this invariant before being trusted; see `data_pipeline_e2e_milestones_gate_2026_07_24.md` §10 for the audit
 todo covering this.
 
+**A third sanctioned pattern — `attempt_coverage_pct`** (audited + proven live 2026-07-26,
+`issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md`): unlike the two formulas above, whose denominator is
+a sum of `CaptureStatusCounts` fields, this pattern's denominator is an **independently-derived calendar/shard-universe
+cell count** (`total_expected_cells`) rather than a field-sum — so it is structurally inclusive of `empty_confirmed`
+cells by construction, satisfying the invariant via a different mechanism than either SSOT formula:
+
+```python
+attempt_coverage_pct = (captured + empty_confirmed + attempted_failed) / total_expected_cells
+```
+
+Proven live and widespread across deployment-api: `derive_capture_status_rates`
+(`deployment_api/services/data_status/coverage_metrics.py:406-414`), `overall_attempt_coverage_pct`
+(`manifest.py:490-511`), `rollup_cache.py:180-202`, `data_status_mock.py:60-78,95-99` (numerator credits
+`captured`+`empty_confirmed`+`attempted_failed` against a calendar-derived cell count — same shape); the MTDS-style
+venue/bookmaker rollups `mtds_honest_coverage_for_venue`/`_for_bookmaker` (`data_status/mtds.py:822-834,987-1001`,
+denominator = a schedule/calendar-derived `expected_dates` count); and the `coverage_drift.py` detector
+`_coverage_per_calc_league()` (`services/coverage_drift.py:55-82`, denominator = the raw row count). A corpus-wide grep
+(`empty_confirmed`/`coverage_pct`/`all_shards_coverage`/`reachable_coverage`/`coverage_ratio` across all 24 repo clones)
+found **no violation of the symmetric-inclusion invariant anywhere** — every coverage-percent site in the codebase is
+one of these three sanctioned patterns.
+
 ---
 
 ## Bounded coverage exclusions — out-of-bounds ranges (evidence-gated)

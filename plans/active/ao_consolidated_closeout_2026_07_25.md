@@ -21,7 +21,7 @@ tags: [ao, agent-orchestrator, close-out, consolidation, dispatch, slot-lifecycl
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,

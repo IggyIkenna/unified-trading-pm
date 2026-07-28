@@ -10,7 +10,7 @@ summary: >-
   independently verified clean 2026-07-21 through 2026-07-23 -- one day BEFORE the split. The new plan appears to carry
   a stale pre-completion todo snapshot forward, risking a future slot agent re-launching a real ~40-VM SPOT migration
   fleet against an already-migrated corpus.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
@@ -36,9 +36,22 @@ depends_on: []
 source:
   ["surfaced 2026-07-27 while closing candle_canonical_path_migration_execution-002 (todo 2), slot-4 live verification"]
 resolved_by:
+  All 17 of /plans/active/candle_canonical_path_migration_execution_2026_07_24.md's own top-level todos independently
+  closed 2026-07-27 by 6 different slots (mdps@800f3b5, mdps@caa995c among the real code fixes); no re-launch of the
+  ~40-VM SPOT fleet this doc warned against occurred. This doc's own recommendation is to archive that sibling plan
+  outright too (not trimmed) -- NOT actioned in this pass (that plan was not in this archival batch's file list; left
+  untouched, flagged for a follow-up archival pass). Its two genuinely-still-open residuals (TRADFI ~7.1M quarantined
+  objects, CEFI 149-object retry-idempotency gap) remain correctly tracked on the SIBLING doc
+  issues/candle_feature_canonical_path_divergence_2026_07_20.md (todos 3/19), not duplicated or dropped.
 locked_by:
 locked_since:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — all 17 todos on the flagged sibling plan independently confirmed `[x]`; no unsafe VM
+> re-launch occurred. Note: this doc's own recommendation to archive
+> `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` outright was NOT actioned here (out of this
+> archival pass's file list) — flagged for a follow-up pass. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # candle_canonical_path_migration_execution_2026_07_24.md carries stale, already-completed todos
 
@@ -92,6 +105,21 @@ to reconcile the two docs' conflicting narratives later.
       still substantively open pending an operator ruling); CEFI's 149-object residual = sibling doc todo 19 (`[ ]`,
       "Fix `_copy_verify_delete()`'s retry-idempotency gap", genuinely still open). No re-launch of the ~40-VM SPOT
       fleet occurred — the risk this doc flagged did not materialize.
-- [ ] [DATA] P2. Once reconciled, check whether `candle_canonical_path_migration_execution_2026_07_24.md` should be
+- [x] ✅ [DATA] P2. Once reconciled, check whether `candle_canonical_path_migration_execution_2026_07_24.md` should be
       archived/superseded outright (its entire remaining scope may already live in the sibling doc), or trimmed to only
-      the genuinely-not-yet-done pieces, per the plan archival ritual (SSOT: `plans/active/task_template.md`).
+      the genuinely-not-yet-done pieces, per the plan archival ritual (SSOT: `plans/active/task_template.md`). — **DONE
+      2026-07-28 — decision: ARCHIVE OUTRIGHT (not trimmed).** Re-read
+      `candle_canonical_path_migration_execution_2026_07_24.md` directly: all 17 of its OWN top-level todos are now
+      `[x]` (confirmed via `grep -c '^- \[x\]'`), `status: active` with zero remaining `[ ]` items anywhere in the doc.
+      Its own todo 14 explicitly identifies the two genuinely-open residuals as living on the SIBLING doc, not this one
+      — "TradFi's residual `E1AF0_*` artifact ids are the SEPARATE, still-genuinely-open
+      `NEEDS_CONTENT_TRADFI_ID`/quarantine population tracked in the sibling doc's own todo 3 — not re-opened here" —
+      and todo 14/16's evidence cites the CEFI 149-object retry-idempotency gap the same way (sibling doc's own todo
+      19). So nothing in THIS doc's remaining scope needs preserving via a trim — the entire body is either
+      duplicate-of-already-shipped narrative or explicit pointers to the sibling doc's still-open items.
+      **Recommendation for the centralized archival pass**: archive
+      `candle_canonical_path_migration_execution_2026_07_24.md` outright via the standard 6-step ritual (not run here —
+      flagging as a fresh archival candidate per this session's scope, to avoid collision with concurrent sessions
+      editing shared index files). Do NOT touch the sibling doc
+      (`issues/candle_feature_canonical_path_divergence_2026_07_20.md`) — its own todo 3 (TRADFI quarantine) and todo 19
+      (CEFI retry-idempotency gap) remain genuinely open and unaffected by this decision.

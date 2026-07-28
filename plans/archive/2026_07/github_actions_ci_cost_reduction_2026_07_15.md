@@ -7,9 +7,9 @@ summary: >-
   `plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md` (self-hosted-runner migration,
   COMPLETE, archived, 0 open todos), `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
   (operator-gated followups, ACTIVE, 9 open todos), and
-  `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (staging-branch machinery shutdown, ACTIVE, 1
-  partially-done todo). Kept only so existing cross-references (`related:`, `parent_epic`, old commit messages) still
-  resolve to something — read the matching child instead of this file.
+  `plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md` (staging-branch machinery shutdown,
+  ACTIVE, 1 partially-done todo). Kept only so existing cross-references (`related:`, `parent_epic`, old commit
+  messages) still resolve to something — read the matching child instead of this file.
 status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified thin SPLIT index carrying no todos of its own, all substantive content already extracted to child docs
 nature: process
 asset_group: [ci]
@@ -47,8 +47,8 @@ drift_direction: advance-code
 **None** — this doc's substantive content was already migrated verbatim to three child docs on 2026-07-24 (see its own
 SPLIT banner below): `plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md` (complete),
 `plans/active/github_actions_operator_gated_followups_2026_07_17.md` (active), and
-`plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md` (active). This doc itself carries no todos and no
-unique remaining work.
+`plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md` (active). This doc itself carries no
+todos and no unique remaining work.
 
 # GitHub Actions CI/CD cost reduction
 
@@ -73,7 +73,7 @@ unique remaining work.
   and "Deferred work after 2026-07-23": `plans/active/github_actions_operator_gated_followups_2026_07_17.md`
 - **Staging-branch machinery shutdown (Phase 6, same-day 2026-07-23 audit) — ACTIVE, 1 partially-done todo.** The
   dead-cron shutdown + the staging-backmerge-to-ldr escalation-dispatch bugfix (both DONE, measured) and the remaining
-  codex-SSOT-homing todo: `plans/active/github_actions_staging_machinery_shutdown_2026_07_24.md`
+  codex-SSOT-homing todo: `plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md`
 
 Nothing is tracked in this file anymore — do not add new todos here; file them against whichever child above they belong
 to (or a new plan, if none of the three fit). This doc is kept only so existing cross-references (`related:`,

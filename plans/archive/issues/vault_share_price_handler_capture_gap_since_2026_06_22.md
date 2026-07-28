@@ -42,7 +42,7 @@ tags:
     data-pipeline-correctness,
     cron-scheduling,
   ]
-related: [plans/active/distinct_values_noncanonical_audit_2026_07_20.md]
+related: [plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md]
 created: "2026-07-22"
 parent_epic: defi_master
 priority: P1

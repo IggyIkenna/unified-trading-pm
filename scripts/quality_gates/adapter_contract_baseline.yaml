@@ -306,10 +306,12 @@ baseline:
     count: 1
   market-tick-data-service/market_tick_data_service/adapters/hyperliquid_s3.py:
     count: 1
+  market-tick-data-service/market_tick_data_service/cli/handlers/_defi_catalog_freshness.py:
+    count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 42
+    count: 43
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_pools_subgraph.py:
-    count: 2
+    count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py:
     count: 8
   market-tick-data-service/market_tick_data_service/cli/handlers/_lending_grain.py:

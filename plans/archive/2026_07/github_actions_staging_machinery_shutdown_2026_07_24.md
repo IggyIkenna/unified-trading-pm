@@ -13,7 +13,9 @@ summary: >-
   needs a codex-SSOT home (/codex/08-workflows/ci-cd-flow.md), tracked in
   post_cutover_silent_assumption_sweep_2026_07_23.md — not fully closed out until that codex fix lands, so this plan
   stays active rather than archiving immediately.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: the codex-SSOT residual noted above LANDED
+  # (`unified-trading-pm@97970974e`, 2026-07-26, verified 2026-07-28) -- verified zero open `- [ ]` todos
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -50,6 +52,18 @@ source:
     (2026-07-23) Phase 6 staging-machinery-shutdown extraction."
 drift_direction: advance-code
 ---
+
+## Deferred work — migrated to:
+
+**None** — the one residual noted at authoring time (the staging re-entry runbook needing a codex-SSOT home) landed
+2026-07-26 (`unified-trading-pm@97970974e`, `/codex/08-workflows/ci-cd-flow.md` §"Staging re-entry procedure"),
+re-verified live 2026-07-28. The two related side-findings this plan spun off during execution
+(`plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md`,
+`plans/active/issues/stale_staging_versions_manifest_2026_07_23.md`) are separately tracked docs, not prose deferrals of
+this plan's own scope.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — verified zero open todos; the one residual noted at authoring time
+> is closed (see "Deferred work" above). Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # GitHub Actions staging-branch machinery shutdown
 
@@ -91,14 +105,18 @@ drift_direction: advance-code
       `reconcile-staging-versions.yml` (137/wk) — all measured 100% `schedule`/`success` no-ops. Comment out the
       `schedule:` blocks ONLY (keep `workflow_dispatch` + `repository_dispatch` so the reversibility path is one
       uncomment away), matching the `ldr-to-staging-promote.yml` precedent.
-- [ ] ⚠️ [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook.** — PARTIALLY DONE, and the
-      remaining half is now tracked elsewhere. Every disabled trigger carries an inline dated note naming exactly what
-      to uncomment, and the procedure is written up in `plans/active/issues/staging_workflow_shutdown_2026_07_23.md`.
-      **But it is NOT in codex**, and a plan archives — verified 2026-07-23: `grep -rn -i "uncomment" codex/` returns
-      one unrelated hit. Per CLAUDE.md's SSOT-direction rule this belongs in `/codex/08-workflows/ci-cd-flow.md`.
-      Carried as an open todo in `plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md` (which also
-      found that doc's branch-model section stale at L75-109 / L763 / L777-786 / L1183) so the codex fix lands once,
-      together. **Not ticked as fully done — the reversibility guarantee is still half-true until codex carries it.**
+- [x] ✅ [DOC] P2. **Add "re-enable the staging workflows" to the staging re-entry runbook — DONE.** Every disabled
+      trigger carries an inline dated note naming exactly what to uncomment, and the procedure is written up in
+      `plans/active/issues/staging_workflow_shutdown_2026_07_23.md`. The remaining codex half (previously "NOT in codex"
+      — `grep -rn -i "uncomment" codex/` returned one unrelated hit as of 2026-07-23) is now DONE too: verified
+      2026-07-28 that `/codex/08-workflows/ci-cd-flow.md` §"Staging re-entry procedure (when a repo is routed back
+      through staging)" was landed by a different session, `unified-trading-pm@97970974e` ("docs(ci-cd): staging
+      re-entry procedure + fix stale WARN-default line", 2026-07-26) — carries the full 2-step re-entry procedure (flip
+      the manifest / uncomment the disabled triggers), the fleet-template-vs-PM-driver uncomment table (6 files), the
+      default-branch gotcha, and the "verify by measurement, not by reading the diff" note.
+      `grep -rn -i     "uncomment" codex/` now returns 4 hits inside this exact section (plus the one pre-existing
+      unrelated hit in `quality-gates-memory-governance.md`). The reversibility guarantee is now fully codex-carried,
+      not half-true.
 
 ---
 

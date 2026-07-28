@@ -27,7 +27,7 @@ summary: >-
   are already there — the omission IS the classification defect) reclassifies 1,066,231 rows out of both numerator and
   denominator, reversibly, with zero GCS writes; sports honest coverage moves 94.31% -> 87.64%, which is operator-facing
   and therefore gated on an operator decision.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -47,6 +47,15 @@ assigned_role: data-pipeline
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  Parts 1/2/4 code fixes + vocabulary canonicalisation shipped (unified-api-contracts@a32ad5fb,
+  market-tick-data-service@f7504a10, deployment-api@1f0d3a0); Part 3 remediation predicate resolved (2-agent
+  independent re-derivation, exact match 37,426) and 3 of 5 safety-tooling items shipped 2026-07-26
+  (unified-trading-library@080a84a0 fixes the scheduler env-short-form 404). Zero real `- [ ]` checkboxes remain in this
+  doc. VERIFIED 2026-07-28 (post-archival follow-up): the doc's own Part 3 prose describes the CAS+alarm write-mechanism
+  implementation and item 3.4 (drop phantom uppercase ODDS rows) as remaining safety tooling, and its claim that this is
+  "tracked in sports_consolidated_closeout_2026_07_19.md" is CONFIRMED accurate -- that plan's line 673 carries a real,
+  still-open `- [ ] [CODE] P2. NEW 2026-07-23 (decision 12) — design + build the missing cross-object-CAS safety
+  mechanism` todo covering exactly this work. Nothing was silently dropped.
 locked_by:
 source:
   [
@@ -54,6 +63,10 @@ source:
     sense for odds. are we manifest recording odds per bookmaker where not all bookmakers even exist for all odds?'",
   ]
 ---
+
+> **🟢 RESOLVED 2026-07-28** — zero real `- [ ]` checkboxes remain; see `resolved_by` above for a flagged caveat (Part
+> 3's CAS+alarm implementation + item 3.4 read as genuinely-open safety tooling in this doc's own prose, with an
+> unverified tracking claim). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # SPORTS shard enumeration: cartesian blowup + false honest-absence
 
@@ -348,23 +361,25 @@ migration — not a currently-active bypass.** No quarantine needed; no code fix
 
 ## Part 2 — Vocabulary canonicalisation
 
-### 2.1 ⚠️ BLOCKED-OPERATOR-DECISION — do not run any case normalizer yet
+### 2.1 ✅ RESOLVED 2026-07-22 — see § 4.3 (was BLOCKED-OPERATOR-DECISION, now decided)
 
 The `ODDS`/`odds` (and `ODDS_SNAPSHOT`/`odds_snapshot`, `ODDS_MOVEMENT`/`odds_movement`) split is **frozen legacy, not
 an actively-writing bug** — both cohorts stop at 2026-04-14 while `trades` runs to 2026-06-27, and every live reference
 to uppercase `ODDS` is in a migration/rebuild script, none in the live writer.
 
-**The direction is contested and the codex is on the wrong side of the physical estate:**
+**The direction was contested and the codex was on the wrong side of the physical estate:**
 
-- `unified-trading-pm/codex/02-data/sports-data-types-catalog.md:32-41` K0-DECISION(b), 2026-07-18, declares **UPPER**
+- `unified-trading-pm/codex/02-data/sports-data-types-catalog.md:32-41` K0-DECISION(b), 2026-07-18, declared **UPPER**
   canonical for sports.
 - But GCS holds **only** `data_type=odds` directories on day=2020-07-21, day=2023-05-10 and day=2026-04-14 (5, 5, 2
   objects; **zero** `data_type=ODDS`), while the manifest carries both spellings for those same days. **Uppercase `ODDS`
   is a manifest-only phantom with no backing objects.**
 
-**Action:** put this to the operator (see 4.3). Do **not** touch `migrate_sports_canonical_v9.py:122-133` or
-`scripts/normalize_sports_mtds_data_type_case_2026_06_25.py:44-51` until the direction is re-confirmed — both currently
-point UPPER→lower, which K0 says is superseded, which GCS says is right.
+**Resolved:** § 4.3 below records the operator's 2026-07-22 decision — **REVERSES K0-DECISION(b)**, lowercase is now
+canonical. `migrate_sports_canonical_v9.py:122-133` and
+`scripts/normalize_sports_mtds_data_type_case_2026_06_25.py:44-51` (both UPPER→lower) are confirmed pointed in the
+CORRECT direction — re-point/complete them rather than reversing them. This section is no longer a live gate; read § 4.3
+for the ruling and its downstream todos (2.2/3.4).
 
 ### 2.2 Add a write-time closed-set guard on `data_type` (do this regardless of 2.1's outcome) — ✅ SHIPPED 2026-07-22
 
@@ -993,6 +1008,9 @@ to make.
   My check fails closed (treats unknown as not-paused), so no unsafe write resulted, but the monitor's own
   `REASON_SCHEDULER_PAUSED` classification can never fire. Follow-up todo below.
 
-- [ ] [INFRA] P2. Fix `consolidator_liveness._scheduler_job_name_for_bucket`'s env-short-form resolution — real deployed
-      jobs use `"prod"`, not the `"prd"` bucket-naming short form `_resolve_deployment_env_short()` produces (confirmed
-      live 2026-07-26 via `gcloud scheduler jobs list`, both sports buckets 404). (repo: unified-trading-library)
+- [x] ✅ [INFRA] P2. Fix `consolidator_liveness._scheduler_job_name_for_bucket`'s env-short-form resolution — real
+      deployed jobs use `"prod"`, not the `"prd"` bucket-naming short form `_resolve_deployment_env_short()` produces
+      (confirmed live 2026-07-26 via `gcloud scheduler jobs list`, both sports buckets 404). (repo:
+      unified-trading-library) — **DONE, verified shipped 2026-07-28**: `unified-trading-library@080a84a0` (grep+read
+      confirms `_scheduler_job_name_for_bucket` now uses `_resolve_deployment_env_terraform_word()`, `uts-prod` not
+      `uts-prd`).

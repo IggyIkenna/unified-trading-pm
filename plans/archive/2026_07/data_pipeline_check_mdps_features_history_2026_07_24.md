@@ -32,7 +32,7 @@ tags: [data-pipeline, mdps, candles, features, history, archive-bound, record, p
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -1334,7 +1334,7 @@ mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
 The full "OPTION-A MIGRATION SCOPED" record and the "RESUMPTION STATE 2026-07-21" record (scale correction, blast
 radius, path transform, the 8-phase breakdown, the LOCKED canonical shape, the per-repo shipped/uncommitted-file table,
 RESUME ORDER, and the 🔑 LESSONS) were extracted **verbatim** 2026-07-24 to
-`/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) — that plan
-now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for the full
-record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is `depends_on`-gated
-on that plan's completion.
+`/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) —
+that plan now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for
+the full record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is
+`depends_on`-gated on that plan's completion.

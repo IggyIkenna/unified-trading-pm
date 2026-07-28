@@ -65,15 +65,17 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
 ### From `cefi_venue_backfill_coverage_remediation`
 
-- [ ] [OPERATOR] P3. **Tardis paid key intentionally NOT activated.** All code is coverage-aware (free-only). Paid
-      historical CeFi backfill is out of scope until the operator activates `tardis-api-key`. **ANNOTATION ONLY
-      (2026-07-28, not unparked)**: the Tardis API-key/billing block described here is now CLEARED — operator ruling
-      2026-07-12 (finding 228) activated the paid key + confirmed unlimited access, reconfirmed again 2026-07-27
-      (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED general correction, items #3/#12/#25); the paid
-      historical CeFi Tardis backfill is dispatched/in-progress elsewhere
-      (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`, `data_completion_to_100_all_ag_2026_06_21.md`). This item itself
-      stays under the doc's standing 2026-06-01 "let it be" banner and is NOT actioned here — flagged per this wave's
-      instructions so the stale "NOT activated" framing isn't read as still-current.
+- [ ] [DATA] P3. **RETAGGED 2026-07-28 (workspace stale-gate audit) — the operator gate itself is resolved, this item
+      stays parked by design, not by any remaining decision.** Original ask (2026-06-01): Tardis paid key intentionally
+      NOT activated; all code coverage-aware (free-only); paid historical CeFi backfill out of scope until the operator
+      activates `tardis-api-key`. **ANNOTATION (2026-07-28, not unparked)**: the Tardis API-key/billing block described
+      here is now CLEARED — operator ruling 2026-07-12 (finding 228) activated the paid key + confirmed unlimited
+      access, reconfirmed again 2026-07-27 (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED general
+      correction, items #3/#12/#25); the paid historical CeFi Tardis backfill is dispatched/in-progress elsewhere
+      (`cefi_hl_aster_batch_data_gaps_2026_06_22.md`, `data_completion_to_100_all_ag_2026_06_21.md`). No operator
+      decision remains pending on this line — retagged off [OPERATOR] accordingly. Checkbox stays unchecked and the item
+      stays under the doc's standing 2026-06-01 "let it be" banner (Slot 7 does not action any item here) — that banner
+      parks the item deliberately, it does not indicate an open gate.
 - [ ] [DATA] P3. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) deferred until operator sees fit.**
       Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
       in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.

@@ -525,7 +525,7 @@ domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos)
 (manifest/catalogue distinct-values census gaps across strategy/features/fixtures/UAC registries) ·
 [issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/active/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
 (shard-key CLI convention coverage audit across instruments-service/MDPS/features-service) ·
-[issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md](/plans/active/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md)
+[issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md](/plans/archive/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md)
 (coverage-percent formula symmetric-inclusion invariant audit, honest-coverage-model) ·
 [/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
 (UAC capability-manifest/strategy-catalogue data gaps) ·

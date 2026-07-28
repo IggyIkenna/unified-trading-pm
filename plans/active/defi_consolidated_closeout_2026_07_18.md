@@ -55,7 +55,7 @@ related:
   [
     /plans/archive/defi_consolidated_closeout_history_2026_07_25.md,
     /plans/active/defi_strategy_pnl_axis_index_2026_07_24.md,
-    /plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
     /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md,
     /plans/archive/2026_07/defi_gmx_venue_removal_finalize_2026_07_25.md,
@@ -86,7 +86,7 @@ related:
     issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
     issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     issues/lst_exchange_rate_data_availability_2026_07_21.md,
     issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
@@ -107,7 +107,8 @@ related:
   ]
 created: 2026-07-18
 last_updated: 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27
+  "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -162,7 +163,7 @@ source:
 > | [`defi_track01_per_instrument_and_canon_id_2026_07_24.md`](/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md)                             | The **per-instrument re-architecture (R1-R8)** + **Track 1 residual canon walk** — the single largest, most gating body of work (⛔ gates Half-B historical canonicalisation).         |
 > | [`defi_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md) (archived, `status: complete`) | The 2026-07-18 canonical-target **contradiction-resolution audit** (75 findings, verbatim) + the full **chronological Progress Log** (2026-07-18 → 2026-07-23, ~2090 lines, verbatim). |
 > | [`defi_track5_coverage_mvp_backfill_2026_07_24.md`](/plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md)                                           | **Track 5 (COVERAGE)** — backfill to MVP-100%, incl. the MVP-universe gap-audit + the mvp-defi backlog unpark flipper note; C-GREEN gated on Track 1 → Track 3.                        |
-> | [`defi_consolidated_closeout_aggregated_sources_2026_07_24.md`](/plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md)                   | The **discoverability index** of every other defi-relevant plan/issue with its open-todo digest — read this to find a doc not directly linked from this plan.                          |
+> | [`defi_consolidated_closeout_aggregated_sources_2026_07_24.md`](/plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md)          | The **discoverability index** of every other defi-relevant plan/issue with its open-todo digest — read this to find a doc not directly linked from this plan.                          |
 > | [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md) (`status: complete`)                   | **Track 6 (RENDER) + Track 7 (CULL)**, plus (2nd pass, 2026-07-25) every closed item from Tracks 2/3/4/8 + Open-follow-ups + the full 2026-07-24→2026-07-25 session Progress Log tail. |
 >
 > **Open-todo counts per child (2026-07-24, so a fresh session doesn't have to open each one to see what's live)**:
@@ -356,14 +357,20 @@ Discriminator = **does a manifest row exist**.
 > writer-order bug) + the stale-codex-docs correction, both done; full text verbatim in
 > [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
-- [ ] [OPERATOR] P1. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
-      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket. A
-      whole-BUCKET destroy is never reversibility-qualified regardless of soft-delete config (delete-safety-protocol
-      §3a) — stays snapshot-first + `[OPERATOR]`. Per §3a's approve-executes flow: stage the exact command + snapshot
-      evidence, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
-      authorizes the SAME worker session to run it immediately (no second agent, no manual operator execution) — not the
-      old "an agent must never run it, a human runs it separately" framing. (repos: deployment-service,
-      market-tick-data-service)
+- [ ] [DATA] P1. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — operator ruling 2026-07-28
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
+      reversibility-qualified the same way plain object deletes already were, PROVIDED a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check on the target bucket clears (>=604800s) — the "never
+      reversibility-qualified regardless of soft-delete config" line below is now stale/historical, superseded by this
+      ruling. **Delete the lending-indices legacy bucket (C0f)** + resolve TF estate drift
+      (`market_data_defi_lending_indices_prd` still declared) + the bare `features-onchain` vs asset-group bucket.
+      **Dispatch as**: run a FRESH `gcs_bucket_soft_delete_retention_seconds(bucket)` check on the target bucket right
+      now and cite the actual returned value; if >=604800s, execute the bucket delete via the sanctioned UTL helpers per
+      §3a — no operator step needed. If <604800s (or the check errors), this stays gated — fall back to §3a's
+      approve-executes flow: stage the exact command + snapshot evidence, open a structured BLOCKED question
+      recommending "approve — execute now"; a FINAL operator answer then authorizes the SAME worker session to run it
+      immediately (no second agent, no manual operator execution) — not the old "an agent must never run it, a human
+      runs it separately" framing. (repos: deployment-service, market-tick-data-service)
 - [ ] [BACKEND] P0. **NEW 2026-07-24 — `write_defi_rows()` writes the bare SYMBOL as the filename leaf, not the ruled
       canonical_instrument_id, AND DeFi batch capture is actively writing (NOT stopped as the codex/plan text assumes) —
       so this is a growing defect, not frozen residue.** 13/13 sampled objects fail the UAC id-form oracle
@@ -641,8 +648,11 @@ file, not here.
 - [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path — duplicate of the Track 5 item above**
       (same 4 upload sites, same design sketch, same 2026-07-24 correction re: the knobs NOT being a safe standalone
       step — see that item for full evidence). (repo: market-tick-data-service)
-- [ ] [OPERATOR] P2. **2-VM TheGraph canary** — code-only so far per the original session's instructions; launching the
-      canary VMs is operator-owned (Q3 ruling: "ship code + I run the canary").
+- [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — cite finding W (ambient self-service
+      IAM identity; no different-identity credential requirement) plus the already-decided Q3 ruling: "ship code + I run
+      the canary" was the operator resolving the judgment call as "yes, run the canary", not a standing human-only
+      execution requirement. **2-VM TheGraph canary** — code is already shipped; launch the 2-VM canary via the standard
+      SPOT VM launcher process (monitored, no fire-and-forget) as a normal AO-dispatchable VM-launch todo.
 - [ ] [DATA] P1. **Resume paused DeFi crons NOT scoped to `dex_pool_state`** + fix the honest-coverage-nightly
       right-size + codex-drift doc — gated on Track 1 (LENDING migration + canon walk above) + Track 2 (path-shape-pin
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live
@@ -732,9 +742,9 @@ file, not here.
   report extracted 2026-07-25 (2nd pass) to
   [`defi_consolidated_closeout_history_2026_07_25.md`](/plans/archive/defi_consolidated_closeout_history_2026_07_25.md).
 
-> Moved verbatim to `/plans/active/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` (2026-07-24 line-cap
-> trim, 2nd pass — the umbrella:true exemption was removed same-day). Read that doc for the full discoverability index
-> of every other defi-relevant plan/issue with its open-todo digest.
+> Moved verbatim to `/plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md` (2026-07-24
+> line-cap trim, 2nd pass — the umbrella:true exemption was removed same-day). Read that doc for the full
+> discoverability index of every other defi-relevant plan/issue with its open-todo digest.
 
 **Missing digest entry (gate-audit §12, 2026-07-24)**: `defi_track01_per_instrument_and_canon_id_2026_07_24.md` is
 referenced by "tracked under X below" prose in `defi_consolidated_closeout_aggregated_sources_2026_07_24.md` but never

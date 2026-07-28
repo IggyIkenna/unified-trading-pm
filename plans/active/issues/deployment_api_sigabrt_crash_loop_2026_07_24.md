@@ -296,10 +296,18 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
   deployment-state fact like "1adf54b is the live revision"). **Two actions, both surfaced to operator:** (1) [OPERATOR]
   hand-tune `deployment_api_sigabrt_crash_loop-002` → `prereqs.prerequisites: [deployment-api-1adf54b-live]`, seed the
   gate false, flip true once `git merge-base --is-ancestor 1adf54b origin/main` succeeds AND the live Cloud Run revision
-  image tag moves off `273c951`. (2) [BACKEND] P2 — make `PlanRegenLoop`/dispatch skip re-offering a task whose worker
-  returned "external-precondition-unchanged" (a cooldown or a worker-reported not-ready signal), so this waste-class
-  self-limits without a per-task hand-tune. Until then the re-dispatch is wasteful-not-harmful (worker fast-returns on
-  the unchanged precondition; no corruption).
+  image tag moves off `273c951`. **[PM] RETAGGED 2026-07-28 (workspace stale-gate audit) — MOOT, never hand-tuned.**
+  Superseded 9 minutes later by slot 10's `05:25Z` entry below (chronologically after this reply, listed above it in
+  this reverse-chronological log), which answered the exact same "is `1adf54b` live" question directly via content-diff
+  instead of the ancestor check this hand-tune gate was keyed on — `git merge-base --is-ancestor` is structurally
+  incapable of returning true post-squash-merge (see
+  `/plans/archive/issues/deployment_promote_squash_ancestry_false_negative_2026_07_25.md`). No `prereqs.prerequisites`
+  hand-tune was ever made; by `05:40Z` the doc had already moved on to a different, later precondition (waiting for the
+  next SIGABRT to actually produce a faulthandler dump). No operator action remains outstanding on this line. (2)
+  [BACKEND] P2 — make `PlanRegenLoop`/dispatch skip re-offering a task whose worker returned
+  "external-precondition-unchanged" (a cooldown or a worker-reported not-ready signal), so this waste-class self-limits
+  without a per-task hand-tune. Until then the re-dispatch is wasteful-not-harmful (worker fast-returns on the unchanged
+  precondition; no corruption).
 - **2026-07-24 (slot 2, backend_engineer)** — Correlated + audited per the todo, then went further once the named
   hypothesis was refuted.
   - **Correlation (live `gcloud logging read` against `uts-shared-deployment-api`, project `central-element-323112`)**:

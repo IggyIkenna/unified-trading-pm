@@ -12,7 +12,7 @@ summary: >-
   flagged as "~27.5% of sampled uppercase-keyed rows have no lowercase GCS twin yet". A blind delete would have
   permanently destroyed that slice. HELD per operator decision; the K1/K2 casing-revert migration (copy twin-less rows
   to lowercase) must land first.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -32,6 +32,7 @@ priority: P1
 source: "BLK-2cf85627 (slot 4, 2026-07-27) — operator answered Option B, confirming the finding and directing this doc."
 assigned_vm: planning
 resolved_by:
+  "market-tick-data-service@fa6fd4cd + @26201c44, deployment-service@8b93ae7, unified-trading-pm@4a1ebf203 (2026-07-28)"
 locked_by:
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -151,16 +152,25 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
       (qualifies). Built + shipped `market-tick-data-service@26201c44` (new `delete_stale_uppercase_2026_07_27.py` —
       fresh immediate-before-delete re-verify per object, generation-matched `gcs_conditional_delete`, refuses on
       no-twin/mismatch/src_superset) + wired the launcher category (`deployment-service@8b93ae7`, vm_name-overflow fix
-      `319993f`). Dry-run confirmed 345,852 uppercase objects (exact match to todo 1's own count). **Executing now**
-      on-demand VM `canonical-migration-sports-k1k2-upper-del-20260728-152424`: 230,000/345,852 processed as of 15:50
-      UTC, 0 failures/skips observed so far, ETA ~5 more minutes. Shipping this checkbox flip now rather than waiting
-      for the final terminal marker (operator call) — **if the run does not finish clean, this box gets reopened** and
-      the residual handled as a follow-up. Corrects `batch7` todo 1's K1/K2 half.
-- [ ] [REVIEW] P3. **Audit for other plans/todos that cite `batch7` todo 1 or the pre-2026-07-23 K1/K2 delete evidence
-      as "already proof-gated"** and correct any that inherited the same stale assumption — this is the second recorded
-      instance of a K1/K2-direction mixup in this doc family (see
-      `issues/sports_satellite_batch2_casing_direction_contradicts_k1k2_revert_2026_07_25.md`, resolved), so it is a
-      pattern worth a corpus check, not a one-off.
+      `319993f`). Dry-run confirmed 345,852 uppercase objects (exact match to todo 1's own count). **TERMINAL, VERIFIED
+      COMPLETE**: on-demand VM `canonical-migration-sports-k1k2-upper-del-20260728-152424` finished with
+      `deleted:     345,852 would_delete: 0 skipped_no_twin: 0 skipped_src_vanished: 0 skipped_mismatch: 0 failed: 0`,
+      `rc=0`. **Independently re-verified** via a fresh full-corpus dry-run scan (2020-06-06→2026-07-27, 2243 days, run
+      2026-07-28 post-delete, not trusting the delete script's own self-report): `uppercase (revert candidates): 0`
+      across the ENTIRE range — zero uppercase `instrument_type=ODDS/data_type=TRADES` objects remain anywhere. Corrects
+      `batch7` todo 1's K1/K2 half.
+- [x] [REVIEW] P3. ✅ **Corpus-wide audit complete (2026-07-28).** No hits citing `batch7` todo 1 or pre-2026-07-23
+      K1/K2 evidence as still-valid authority — the actual gap was different:
+      `sports_consolidated_closeout_2026_07_19.md` never had its own K1/K2 checkboxes flipped when the migration
+      completed, and 4 downstream docs inherited that staleness by gating on it. All 5 fixed same day
+      (`unified-trading-pm@4a1ebf203`): `sports_consolidated_closeout_2026_07_19.md` (Step 3 migration + candidate-list
+      re-verify + Track V delete all flipped, raw-keyed league_id delete unblocked, adjacent 6-venue stale-duplicate
+      finding preserved as its own open item), `sports_closeout_track_s2_foldin_2026_07_25.md` +
+      `issues/sports_trades_attempted_failed_2026_07_23.md` (both had a re-check gated on the delete "eventually"
+      executing — unblocked), and `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` (addendum flagging then
+      resolving a follow-up: `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` uppercase — direct manifest query found exactly 4 rows
+      total, all `empty_confirmed`/`row_count=0`, single date 2026-04-14, zero real GCS data behind them — an inert
+      residual, not a K1/K2-style live duplication, no action needed).
 
 ## Progress Log
 
@@ -234,8 +244,22 @@ the manifest claimed do not currently exist (0/197 relevant days via prefix-scop
      immediately before launching — don't trust the rebuild script's own console output as proof of upload completion
      timing.
   5. **On-demand run #4**: launched after explicitly re-confirming the deployed tarball (`commit_sha` includes both
-     fixes) — in progress as of this entry, migrate step completed cleanly, report-gen running. Also hit and worked
-     around (not migration-specific): local `gcloud` user-account session needed interactive reauthentication mid-watch
-     (an org reauth policy, not a credential revocation) — the compute default service account
+     fixes) — **TERMINAL, VERIFIED COMPLETE**: 345,852/345,852 objects, 0 copied/0 source_vanished/0 content_mismatch/0
+     failed (100% already_present_verified), `MIGRATE DONE rc=0`; manifest swap ADD 344,912/REMOVE 215,041,
+     `stale_remaining=0 canon_missing=0 canon_mismatched=0`, `MANIFEST SWAP DONE rc=0`. Also hit and worked around (not
+     migration-specific): local `gcloud` user-account session needed interactive reauthentication mid-watch (an org
+     reauth policy, not a credential revocation) — the compute default service account
      (`1060025368044-compute@developer.gserviceaccount.com`) works without reauth for read-only `describe`/`storage cat`
      calls and was used for the rest of the session's monitoring.
+  6. **Track V gated delete** (todo 2, same session, continuing after the migration landed): built
+     `delete_stale_uppercase_2026_07_27.py` (`market-tick-data-service@26201c44`) + wired `sports-k1k2-uppercase-delete`
+     into the launcher (`deployment-service@8b93ae7`; a first-launch `vm_name` 64-char GCE overflow caught + fixed
+     same-day, `319993f`). Dry-run: 345,852 candidates (exact match to the migrate step's own tally). Full delete
+     on-demand VM `canonical-migration-sports-k1k2-upper-del-20260728-152424`:
+     `deleted: 345,852 would_delete: 0 skipped_no_twin: 0 skipped_src_vanished: 0 skipped_mismatch: 0 failed: 0`,
+     `rc=0`. **Independently re-verified post-delete** via a fresh full-corpus dry-run scan (not trusting the delete
+     script's own self-report): `uppercase (revert candidates): 0` across the entire 2020-06-06→2026-07-27 range (2243
+     days). Spot-checked 2 dates directly against live GCS (an old date + a date inside the original K1 mistake window,
+     including one `fixture_id=`-scoped sub-path) — clean, only lowercase `instrument_type=odds/` present. **The K1/K2
+     casing-revert is fully closed**: data migrated + verified, manifest corrected + verified, stale uppercase source
+     deleted + independently verified absent.

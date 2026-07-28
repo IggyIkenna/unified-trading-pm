@@ -397,8 +397,14 @@ non-terminal case too, so it wants your explicit sign-off, not mine. C: **Treat 
 the doc to `plans/active/issues/` pending a real `[unlock-plan]`, then do A. Most conservative; costs a revert and
 re-fixes referrer paths corpus-wide. Other: operator can type a custom answer
 
-**Status**: open — note that whichever way this goes, the stale `locked_by:` on the archived copy needs clearing
-(tracked as a todo in the gate issue doc).
+**Status**: resolved — option A. Confirmed via
+[`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md):
+that doc's own todo #1 records **RULED (a) 2026-07-26 — mandatory**; its P1/P2 mechanism-fix todos shipped
+(`check-locked-plan-deletion.sh`, commit-msg stage, end-to-end verified; the dead `quality-gates.sh:406-422` block
+removed); and its P2 retro-clean todo is marked done, citing `unified-trading-pm@2c61a8dc4` for clearing
+`locked_by:`/`locked_since:` on the archived copy — independently re-verified here:
+`plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` now carries an empty `locked_by:` and
+a "2026-07-26 — `locked_by:` cleared" dated note. No new operator input needed.
 
 ## 12. Fold target for the near-complete `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (2026-07-26, prediction)
 
@@ -893,12 +899,15 @@ Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verif
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule which side of entry 11's `locked_by:` archival gap is the bug, and clear the stale
-      `locked_by: live-defi-rollout` on the already-archived copy** —
-      `plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` was archived without
-      `[unlock-plan]` by a concurrent auto-remediation while this session had parked the exact same archival per
-      CLAUDE.md's lock rule; options A/B/C in entry 11 above remain unresolved, and the stale lock on the archived copy
-      still needs clearing either way.
+- [x] [REVIEW] P1. **2026-07-28 retag** (was `[OPERATOR]` — already resolved, tag left stale). **Rule which side of
+      entry 11's `locked_by:` archival gap is the bug, and clear the stale `locked_by: live-defi-rollout` on the
+      already-archived copy** — `plans/archive/issues/mtds_uac_adapter_contract_baseline_regression_2026_07_09.md` was
+      archived without `[unlock-plan]` by a concurrent auto-remediation while this session had parked the exact same
+      archival per CLAUDE.md's lock rule. **RESOLVED**:
+      `issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md` ruled option (a) — the lock is
+      mandatory, an enforcement gap, not a policy choice — shipped the mechanism fix (commit-msg-stage
+      `check-locked-plan-deletion.sh`), and its own retro-clean todo is done: the archived copy's
+      `locked_by:`/`locked_since:` are empty, independently re-verified here. See entry 11 above for the full citation.
 
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:

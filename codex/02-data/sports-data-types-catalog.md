@@ -33,7 +33,7 @@ code_refs:
 
 > **⚠️ CANONICAL CORRECTION (2026-07-22) — data_type is LOWER-CASE for sports; this REVERSES the 2026-07-19
 > K0-DECISION(b) below.** Operator ruling 2026-07-22 (interactive session), on physical-estate evidence from the 7-agent
-> audit in `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 / § 2.1: GCS holds
+> audit in `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 4.3 / § 2.1: GCS holds
 > **only** lowercase `data_type=odds` directories on every sampled day — day=2020-07-21 (5 objects), day=2023-05-10 (5
 > objects), day=2026-04-14 (2 objects) — and **zero** `data_type=ODDS` objects on any of them, while the manifest
 > carries BOTH spellings for those same days (e.g. 2020-07-21: 6 uppercase + 5 lowercase). Uppercase `ODDS` is therefore
@@ -70,7 +70,7 @@ code_refs:
 > below prescribed `instrument_type=sports_market`. Measurement (7-agent audit, 2026-07-20) found `sports_market` has
 > **zero rows** in prod against `instrument_type=odds` on 91.5% of the manifest, and this catalog never documented the
 > production-dominant raw-ingest `trades` data_type (1,806,527 rows) at all. Corrected below — see
-> `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4. `sports_market` remains a real
+> `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4. `sports_market` remains a real
 > `unified_api_contracts.registry.taxonomy` enum member but is **not** registered against any sports
 > `(asset_group, instrument_type, data_type)` contract — do not use it in new sports code.
 
@@ -84,8 +84,8 @@ production instrument_type for any of them.
   {`ODDS_API`, `SFI`, `FOOTYSTATS`}, `league_id`, `fixture_id`, `market_type`, `outcome`, `odds_decimal`). Whether
   `trades` and the catalogued `odds` data_type below are one logical stream under two names, or two genuinely distinct
   writers, is open vocabulary-canonicalisation work — see
-  `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` Part 2. Do not assume they merge without
-  reading that section first.
+  `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` Part 2. Do not assume they merge
+  without reading that section first.
 - **MTDS-raw, catalogued**: `odds` — tick-level odds captured directly from bookmakers via The Odds API and direct venue
   APIs.
 - **MDPS-processed** (NEEDS_CANDLE=True): `odds_snapshot`, `odds_movement`, `arbitrage_opportunity`,
@@ -137,7 +137,7 @@ Path resolver: `unified_api_contracts.sports.candidate_parquet_paths()` in
 ### Instrument Type Mapping
 
 > **Corrected 2026-07-22** — was `sports_market` (zero rows in prod); see
-> `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4.
+> `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` § 2.4.
 
 | instrument_type | Data types                                                                                                             |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -487,5 +487,5 @@ All sports MTDS handlers emit honest-coverage entries per the manifest v5 contra
 - `/codex/02-data/availability-manifest-and-data-status.md` — manifest v5 honest-coverage schema
 - `/codex/04-architecture/shard-level-failure-isolation.md` — per-shard error handling invariant
 - Plans epic: `plans/epics/sports_master.md` — sports asset_group umbrella epic
-- `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — 7-agent audit that reversed
+- `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` — 7-agent audit that reversed
   K0-DECISION(b) case direction and corrected the `instrument_type`/`trades` doc↔prod gap (2026-07-22, Part 4)

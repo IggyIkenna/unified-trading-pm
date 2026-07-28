@@ -61,7 +61,7 @@ resolved_by:
 > **✅ ARCHIVED 2026-07-25** — `status: resolved`, core 328k-row finding resolved (the rows were correctly-clipped
 > pre-launch artifacts, not data loss — see STEP 3). One residual item struck as void/superseded (was already explicitly
 > superseded by this doc's own STEP 3); one genuinely-open low-priority P1 forensics item remains, tracked in
-> `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest. Moved to
+> `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest. Moved to
 > `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
 
 # IS sports canonical index: fixtures-job direct write erased 328k rows — L6 gate regressed 28 → 3,316
@@ -425,8 +425,8 @@ session.
       `_legacy_seed.parquet`. Whatever it is bypasses the writer's pre-launch chokepoint and is the true
       illegitimate-row vector. Repos: unified-trading-library, market-tick-data-service. **STILL GENUINELY OPEN as of
       2026-07-25** (confirmed not investigated by the 2026-07-23 RE-TRIAGE below either) — tracked in
-      `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest (this doc's
-      entry) so it stays visible after this doc archives.
+      `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest
+      (this doc's entry) so it stays visible after this doc archives.
 - [x] ✅ [DATA] P2. ~~**Operator ruling on the 2,769 copied objects** (ODDS `footystats_odds` 2018 tree) now in
       canonical without manifest rows — leave (manifest-invisible) or remove.~~ **RESOLVED 2026-07-15 by the floors
       ruling — they were given proper manifest rows, not removed.** Under the amended footystats floor (2018-01-01)

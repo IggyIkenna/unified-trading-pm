@@ -7,8 +7,11 @@ summary:
   parent's sequential flag. Extends the same deployed-digest-keep + keep-5-floor + delete-older-than-3d pattern to
   `unified-trading-library` and the remaining ~73 GCP Artifact Registry repos, designs the equivalent AWS ECR lifecycle
   policy for 20 ECR repos, deletes the legacy (GCR-era) GCS bucket, documents the pattern in codex, and adds a GCS
-  lifecycle rule for the separate code-tarball bucket (a different artifact class, GCS not AR). Local-only — deletes are
-  human-gated (no soft-delete on AR; the legacy bucket delete is a whole-bucket destroy, never reversibility-qualified).
+  lifecycle rule for the separate code-tarball bucket (a different artifact class, GCS not AR). Local-only — AR/ECR
+  image-version deletes stay human-gated (no undelete mechanism exists for AR image versions — untouched by the
+  2026-07-28 §3a extension); the legacy GCR bucket delete is a whole-bucket destroy that IS now reversibility-qualified
+  (2026-07-28 ruling, codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
+  soft-delete-retention check clears.
 status: active
 nature: process
 asset_group: [infrastructure]
@@ -30,7 +33,7 @@ scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd, gcs-lifecycle]
 related: [/plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -61,12 +64,16 @@ source:
 > (§ Diagnosis, § Why audit-first, § Policy shape, § Operator decisions — all still apply here, this doc does not repeat
 > them). **`sequential: true`** — todos 15-17 are a real chain (16 needs 15's referenced-tarball-set output; 17 needs
 > 16's drafted rule); todos 10-13 don't depend on each other or on 15-17, but are kept in the same top-to-bottom order
-> for the same reason the parent plan added the flag — avoid AO reaching an `[OPERATOR]`-gated delete/apply todo
-> (13, 17) before its real prerequisites exist. **Todo numbers (10-13, 15-17) are preserved from the pre-split single
-> plan** for cross-doc traceability — not renumbered, and not contiguous with each other (14 stayed in the parent plan
-> as the codex-stub todo). No AR soft-delete/undelete exists — deletion is permanent. The legacy GCR bucket delete
-> (todo 13) is a whole-bucket destroy, which is never reversibility-qualified regardless of the bucket's own soft-delete
-> config (delete-safety-protocol §3a covers object/version deletes, not bucket deletes) — stays `[OPERATOR]`-gated.
+> for the same reason the parent plan added the flag — avoid AO reaching a gated delete/apply todo (17) before its real
+> prerequisites exist; todo 13 was `[OPERATOR]`-gated at the time of this split but was downgraded to AO-dispatchable
+> 2026-07-28, see its own text below. **Todo numbers (10-13, 15-17) are preserved from the pre-split single plan** for
+> cross-doc traceability — not renumbered, and not contiguous with each other (14 stayed in the parent plan as the
+> codex-stub todo). No AR soft-delete/undelete exists — deletion of an AR image version is permanent and stays
+> human-gated (untouched by the 2026-07-28 §3a extension, which covers only stores WITH an undelete mechanism). The
+> legacy GCR bucket delete (todo 13) is a whole-bucket destroy — **operator ruling 2026-07-28** (codex
+> `gcs-and-manifest-delete-safety-protocol.md` §3a extended) made this class reversibility-qualified too, the same way
+> object deletes already were, provided a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` check on the
+> target bucket clears (>=604800s) — see todo 13 for the dispatch shape.
 
 ## Plan
 
@@ -88,18 +95,24 @@ source:
       list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
       `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. Done-when: a previewed ECR policy
       is presented to the operator for the same sign-off gate as the parent plan's Phase C.
-- [ ] 13. [OPERATOR] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR
-      is shut down). This is a whole-BUCKET destroy, which is never reversibility-qualified regardless of soft-delete
-      config (delete-safety-protocol §3a) — stays `[OPERATOR]`-gated (confirmed live 2026-07-27: the bucket itself
-      carries `soft_delete_policy.retentionDurationSeconds=604800`, but that only protects individual objects/versions
-      inside a bucket, not the bucket resource itself once deleted). **Also confirmed live 2026-07-27 (parent plan's
-      Phase A audit)**: one Cloud Run Job (`live-event-log-compactor`) references a `gcr.io/central-element-323112/...`
-      image, but that image has never existed since the Job's creation (`ContainerMissing`, confirmed via
-      `gcloud run jobs describe`) — so this does NOT block the delete, there is nothing real in that path to lose; note
-      it for the Job's owner separately, it's been silently broken for a month regardless of this bucket. Per §3a's
-      approve-executes flow: stage the exact delete command, open a structured BLOCKED question recommending "approve —
-      execute now"; a FINAL operator answer authorizes the SAME worker session to run it immediately (no second agent,
-      no manual operator execution). Done-when: the bucket is gone and the re-audit no longer lists it.
+- [ ] 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR is
+      shut down). **Downgraded from [OPERATOR] 2026-07-28** — operator ruling 2026-07-28
+      (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
+      reversibility-qualified the same way object/version deletes already were, PROVIDED a fresh same-run
+      `gcs_bucket_soft_delete_retention_seconds(bucket)` check on THIS bucket clears (>=604800s) immediately before the
+      delete. A 2026-07-27 check found `soft_delete_policy.retentionDurationSeconds=604800` on this bucket — that
+      confirms the mechanism exists but is NOT itself the fresh check; re-run the check in the SAME session as the
+      delete and cite the actual returned value. If it clears, execute the bucket delete via the sanctioned UTL storage
+      helpers (`get_storage_client()` — never subprocess `gcloud`/`gsutil`) with no operator step. If the fresh check
+      errors or returns <604800s, it stays gated — fall back to §3a's approve-executes flow (stage the exact delete
+      command, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
+      authorizes the SAME worker session to run it immediately) rather than assuming clearance. **Also confirmed live
+      2026-07-27 (parent plan's Phase A audit)**: one Cloud Run Job (`live-event-log-compactor`) references a
+      `gcr.io/central-element-323112/...` image, but that image has never existed since the Job's creation
+      (`ContainerMissing`, confirmed via `gcloud run jobs describe`) — so this does NOT block the delete, there is
+      nothing real in that path to lose; note it for the Job's owner separately, it's been silently broken for a month
+      regardless of this bucket. Done-when: the bucket is gone and the re-audit no longer lists it, with the fresh
+      retention-check value cited in this plan (or the approve-executes fallback was used, cited here).
 
 ### Phase F — Code-tarball bucket retention (GCS lifecycle, human-gated)
 
@@ -116,9 +129,10 @@ source:
       from [OPERATOR] 2026-07-27 (reversibility-verified, finding T,
       /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a): this is an object/prefix-scoped GCS lifecycle
       delete against a NAMED bucket with a defined predicate (age > 30d AND not current-pointer AND not in the Phase-15
-      referenced set), not a whole-bucket destroy — distinct from todo 13's bucket destroy, which stays
-      [OPERATOR]-gated. The bucket's soft-delete retention was 0 (unset) as of a fresh check this session; enabled live
-      via `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
+      referenced set), not a whole-bucket destroy — distinct from todo 13's bucket destroy (a different reversibility
+      sub-case, downgraded from [OPERATOR] separately on 2026-07-28 — see its own text). The bucket's soft-delete
+      retention was 0 (unset) as of a fresh check this session; enabled live via
+      `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
       re-confirmed at 604800s retention — any object the lifecycle rule deletes is recoverable within that window, same
       as an object delete/overwrite.
 
@@ -141,3 +155,9 @@ Same source as the parent plan — see its § Supporting artifacts for the audit
   `docker_artifact_registry_cleanup_policy_2026_07_24.md`, at the operator's request, once that plan's Phase A audit was
   done locally — see that plan's Progress log for the full split rationale. No work done in this plan yet; all todos
   carried over unchanged (still `[ ]`) from the parent plan.
+- **2026-07-28 (gate-cleanup pass)**: retagged todo 13 from `[OPERATOR]` to `[INFRA]` per the operator's 2026-07-28
+  ruling extending the §3a reversibility carve-out to whole-bucket destroys
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended) — the todo now dispatches as a normal AO
+  todo requiring a fresh same-run soft-delete-retention check before executing the delete, falling back to the
+  approve-executes flow if that check doesn't clear. No delete executed as part of this pass (retag/dispatch-shape
+  only).

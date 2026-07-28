@@ -37,7 +37,7 @@ tags:
 related:
   - /plans/active/issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md
   - /plans/archive/issues/vault_share_price_handler_capture_gap_since_2026_06_22.md
-  - plans/active/distinct_values_noncanonical_audit_2026_07_20.md
+  - plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md
 created: "2026-07-22"
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -141,6 +141,6 @@ via `gcloud run jobs list` / `gcloud scheduler jobs list`.
   closes the "was it still scheduled at all" open question in that doc. The ~1-month historical gap (2026-06-22 through
   2026-07-21) is NOT backfilled by this ship -- only forward capture is fixed. Backfilling the gap is separate,
   non-urgent work (small volume, no data-correctness risk since the gap is honestly absent, not silently wrong).
-- `plans/active/distinct_values_noncanonical_audit_2026_07_20.md`'s "DeFi honest-coverage denominator exclusion" row --
-  the "5 deferred with real distinct defects" language is now resolved; all 5 defects are fixed. The row's underlying
-  `completeness_pct`/`DEFI_VENUE_PHASE` question is untouched by this ship (same as above).
+- `plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`'s "DeFi honest-coverage denominator
+  exclusion" row -- the "5 deferred with real distinct defects" language is now resolved; all 5 defects are fixed. The
+  row's underlying `completeness_pct`/`DEFI_VENUE_PHASE` question is untouched by this ship (same as above).

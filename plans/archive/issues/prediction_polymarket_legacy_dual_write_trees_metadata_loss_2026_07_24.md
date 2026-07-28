@@ -29,7 +29,7 @@ summary: >-
   rows, 100% capture_status=captured, 100% blank instrument_id, most recently written 2026-07-23 -- 2 days before this
   audit) is a genuine non_canonical_axis_value finding not covered by any migration_pending suppression rule in the
   cutover register. Read-only diagnosis; no GCS/manifest writes made.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [data]
@@ -72,6 +72,12 @@ source:
     read-only against prod GCS central-element-323112 (market-data-tick-pred-prd-central-element-323112),
   ]
 resolved_by:
+  ACKED-INTO-PLAN. Schema extension + writer fix shipped (unified-api-contracts@90ddcc01 added title/slug/event_slug as
+  first-class canonical `trades` ColumnSpec entries; market-tick-data-service@84154e1a stopped the writer dropping them
+  at ingest); both registered in codex/02-data/canonical-cutover-register.md §6e +
+  codex/02-data/non-canonical-path-inventory.md row 22. The still-open historical raw-object migration (shapes #3/#3b/#4,
+  explicitly registered `no-migrate-first`, not yet done) is absorbed by the still-active
+  /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (todo 4b) -- not lost, tracked there.
 locked_by:
 estimate_class: research
 estimate_baseline_ai_days: 3
@@ -80,6 +86,10 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-28 (ACKED-INTO-PLAN)** — schema extension + writer fix shipped; the still-open historical
+> migration is absorbed by `/plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` (see `resolved_by`
+> above). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # POLYMARKET legacy dual-write path trees + oracle-blind non-canonical estate (prediction raw-tick)
 
@@ -226,10 +236,18 @@ venue.
       from `instruments-service`'s `prod/catalog.parquet` (`InstrumentRecord.question`) for the condition_ids sampled
       here, before any delete suggestion is entertained for shape #4. Repo: `instruments-service`. — already covered by
       plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
-- [ ] [DATA] P2. Once Q1/Q2 are answered, either (a) register the register-patch stanza in
+- [x] ✅ [DATA] P2. Once Q1/Q2 are answered, either (a) register the register-patch stanza in
       `non-canonical-path-inventory.md` with a real disposition, or (b) design a migration that folds shape #4's extra
       metadata into the canonical schema before any legacy-tree cleanup. Repo: `unified-trading-pm` +
-      `unified-api-contracts` (schema) + `market-tick-data-service` (writer).
+      `unified-api-contracts` (schema) + `market-tick-data-service` (writer). — **DONE, option (b).** Per the Q3
+      operator ruling (2026-07-25) recorded below, the schema was extended rather than dropped or permanently forked:
+      `unified-api-contracts@90ddcc01` added `title`/`slug`/`event_slug` as first-class canonical `trades` `ColumnSpec`
+      entries; `market-tick-data-service@84154e1a` stopped the Polymarket writer from dropping them at ingest
+      (`eventSlug`→`event_slug`/`outcomeIndex`→`outcome_index` canonicalized). Both shipped + QG-green 2026-07-28
+      (slot-12, via `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo "Extend the canonical
+      `trades` schema..." 4a). `non-canonical-path-inventory.md` row 22 registers the resulting disposition
+      (`no-migrate-first` — migration must precede any legacy-tree delete); see the todo directly below for the
+      register-side confirmation.
 - [x] [DESIGN] P1. **Design the extended canonical `trades` schema** (Q3 RESOLVED — operator ruling 2026-07-25: extend,
       don't drop or permanently-fork). Decide which of the 25 `prediction_trades` columns become first-class canonical
       fields (at minimum `title`/`slug`/`event_slug`/`outcome`/`outcome_index` — the market-question + resolution
@@ -244,9 +262,19 @@ venue.
       the canonical `data_type=trades` path/shape under the extended schema — copy+verify+delete per the standard
       delete-safety protocol, no data loss. Repo: `market-tick-data-service`, `unified-api-contracts`. — already covered
       by plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md (see that doc for execution).
-- [ ] [DATA] P2. Register the extended schema + this migration in `canonical-cutover-register.md` and
+- [x] ✅ [DATA] P2. Register the extended schema + this migration in `canonical-cutover-register.md` and
       `non-canonical-path-inventory.md` so a future reconciliation pass doesn't re-flag the (now-closed) gap. Repo:
-      `unified-trading-pm`.
+      `unified-trading-pm`. — **DONE, verified 2026-07-28 (already present, not re-added).** Both registers already
+      carry the exact disposition this todo asks for: `codex/02-data/canonical-cutover-register.md` § 6e ("prediction
+      `trades` schema — POLYMARKET market-question metadata") documents the Q3 ruling, the writer-root fix SHAs, and an
+      explicit `effective-from 2026-07-28 (new writes) / NOT migrated (historical)` state table;
+      `codex/02-data/non-canonical-path-inventory.md` row 22 documents shapes #3/#3b/#4 with the same disposition
+      (`no-migrate-first`), the exact row/date counts, and a pointer to
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b for the still-open migration. **Not marking this
+      gap fully closed** — deliberately, matching the register's own wording: the writer fix is registered as done, but
+      the historical raw-object migration (shapes #3/#3b at 55/348 dates, shape #4 corpus-wide extent still unknown) is
+      registered as explicitly NOT YET migrated, so a future reconciliation pass won't misread partial progress as
+      complete. Both citations re-read fresh this pass, not assumed from an earlier mention.
 
 ## Progress log
 

@@ -135,12 +135,13 @@ rather than deciding unilaterally:
 
 - [x] ✅ [INFRA] P1. Investigate `/tmp` tmpfs exhaustion on the shared orchestrator- adjacent VM(s) — confirm scope
       (this VM only, or fleet-wide), identify the largest un-owned/stale contributors (`pytest-of-ubuntu` cache in
-      particular, 703M observed), and either clear safely or resize the tmpfs. `[OPERATOR]` gated for any delete —
-      determining another slot's temp-file liveness isn't reliably automatable from inside one slot. Repo:
-      agent-orchestrator (or the relevant infra runbook location). **Done when**: `df -h /tmp` shows meaningful headroom
-      restored and a stated root cause (fleet-wide sweep gap / undersized tmpfs / missing cleanup cron) is recorded. —
-      unified-trading-pm (this doc), see 2026-07-27T12:49Z Progress Log entry: confirmed resolved externally between the
-      09:40Z SSM check and this session — no delete/resize performed by this slot.
+      particular, 703M observed), and either clear safely or resize the tmpfs. (Originally gated `[OPERATOR]` for any
+      delete — determining another slot's temp-file liveness isn't reliably automatable from inside one slot; moot now,
+      see resolution below — no delete/resize was ever dispatched under that gate.) Repo: agent-orchestrator (or the
+      relevant infra runbook location). **Done when**: `df -h /tmp` shows meaningful headroom restored and a stated root
+      cause (fleet-wide sweep gap / undersized tmpfs / missing cleanup cron) is recorded. — unified-trading-pm (this
+      doc), see 2026-07-27T12:49Z Progress Log entry: confirmed resolved externally between the 09:40Z SSM check and
+      this session — no delete/resize performed by this slot.
 - [ ] [SCRIPT] P2. Fix `scripts/quality-gates-base/base-service.sh`'s 25 `>/tmp/<name>_qg.log` redirects (STEP 5.93 and
       24 siblings — grep `>/tmp/.*_qg\.log` for the full list) to use a PID-or-mktemp-unique path instead of a fixed
       shared filename, updating each step's paired read-back (`cat`/`grep -q` on the same path) to match. Root cause of
@@ -154,12 +155,18 @@ rather than deciding unilaterally:
       (`qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md`) — check that doc before duplicating work.**
 - [ ] [INFRA] P1. Investigate this VM's sustained oversubscription (2026-07-27 sample: `nproc=8`,
       `load average: 23.66, 36.79, 35.16`, active swap-in up to 5276 KB/s, a dozen-plus concurrent full-CPU processes
-      across 6+ slots) — determine whether this is a one-off burst (many slots' scheduled full-suite QG runs overlapping
-      by chance) or a standing capacity shortfall for the number of slots this VM hosts, and whether a concurrency cap
-      (e.g. the existing "≤2 full QGs at once" convention) is actually being enforced anywhere or is purely advisory.
-      `[OPERATOR]` — this is a capacity/scheduling decision, not a code fix. Repo: agent-orchestrator (or infra
-      runbook). **Done when**: a root cause (burst vs. structural) is recorded and either a documented
-      concurrency-limiting mechanism exists, or a decision to accept the current oversubscription is recorded.
+      across 6+ slots; corroborated 2026-07-27T22:28Z at a higher core count, `nproc=16`,
+      `load average: 86.26, 138.88, 218.93`, see Progress Log — proportionally MORE oversubscribed, not less) —
+      determine whether this is a one-off burst (many slots' scheduled full-suite QG runs overlapping by chance) or a
+      standing capacity shortfall for the number of slots this VM hosts, and whether a concurrency cap (e.g. the
+      existing "≤2 full QGs at once", `max(2, floor(cores/4))` convention) is actually being enforced anywhere or is
+      purely advisory. **Dispatch as a normal audit+build todo, not an operator ask**: record the burst-vs-structural
+      root cause, then implement/enforce the already-standing concurrency-cap convention (e.g. a pre-QG slot-lock/lease
+      so a new full QG run waits rather than piling onto an already-saturated host). Only escalate to `[OPERATOR]` if
+      the audit concludes the fix requires paying for additional VM capacity (a narrower, separable ask than this
+      bundled todo). Repo: agent-orchestrator (or infra runbook). **Done when**: a root cause (burst vs. structural) is
+      recorded and either a documented concurrency-limiting mechanism exists, or a decision to accept the current
+      oversubscription is recorded.
 
 ## Progress Log
 

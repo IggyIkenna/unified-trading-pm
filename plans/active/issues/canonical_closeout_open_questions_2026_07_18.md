@@ -197,9 +197,11 @@ items = scope/time/history (not findings — durability sweeps still running, fo
 > "OPERATOR DECISIONS — ALL THREE RULED 2026-07-20" (D2). **It is the TARGET, NOT yet implemented** — the first attempt
 > was reversed after breaking 5+ (really 8) MTDS lending writers, so the mandatory order is **fix the writers → migrate
 > ~16.7M rows → re-sync the shard atom**, gated on
-> [`../defi_lending_writer_retire_prerequisite_2026_07_20.md`](../defi_lending_writer_retire_prerequisite_2026_07_20.md).
-> Until the migration lands, the uniform-`LENDING` interim holds and market/event flat `LENDING` is `migration_pending`
-> (neither a fresh finding nor an open axis). The option-set below is HISTORY; Option A did NOT win.
+> [`/plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`](/plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md)
+> (archived 2026-07-28, zero open todos — the physical retire is WON'T-DO per its session-3 decision, superseded by a
+> read-side resolver; the migration wave described below did not ship as this plan originally envisioned it). Until the
+> migration lands, the uniform-`LENDING` interim holds and market/event flat `LENDING` is `migration_pending` (neither a
+> fresh finding nor an open axis). The option-set below is HISTORY; Option A did NOT win.
 
 **Context**: the DeFi close-out shipped the operator-ruled lending SSOT — aToken/debtToken as the canonical type for
 lending **HOLDINGS** (IS adapters `@1af1be34`, all 7-adapter guards + the builder bake). Wave B then also retired flat

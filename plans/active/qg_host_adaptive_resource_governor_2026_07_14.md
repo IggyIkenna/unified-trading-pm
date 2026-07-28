@@ -201,7 +201,8 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 0 — Baseline data foundation (partly done this session)
 
-- [x] [OPERATOR] P0. ✅ Shipped the `vm` baseline (22 repos) to LDR — data-only. Evidence: PM@dd7f05e49.
+- [x] [INFRA] P0. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already shipped, `[OPERATOR]` never removed).** Shipped
+      the `vm` baseline (22 repos) to LDR — data-only. Evidence: PM@dd7f05e49.
 - [ ] [INFRA] P1. DEFERRED (already satisfied functionally) — `_qg_repo_peak_mb` reads `max(local, vm)` peak-RSS as the
       single host-portable per-repo cost the governor uses; a further schema-field merge adds no behaviour. Left open
       only if a formal single-canonical schema is later wanted. — Consolidate the baseline schema to a host-portable
@@ -224,11 +225,13 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
-- [ ] [INFRA] P0. BLOCKED-OPERATOR-DECISION — DEFERRED (operator 2026-07-14, "raise K to 6 for now"): the live
-      load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33 GB < the 43 GB (70 %)
-      ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope (`tmux_spawn` §6.2) + 16 GB
-      host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at K=6. The Phase-6 soak (no
-      swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the live repro.
+- [ ] [INFRA] P0. **RESOLVED-BY-RULING — stale DEFERRED tag cleaned 2026-07-28 (stale-tag audit; this was never a live
+      `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14, "raise
+      K to 6 for now": the live load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33
+      GB < the 43 GB (70 %) ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope
+      (`tmux_spawn` §6.2) + 16 GB host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at
+      K=6. The Phase-6 soak (no swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the
+      live repro.
 - [x] [INFRA] P0. ✅ Raised `QG_HOST_CONCURRENCY` from 1 to **6** across all three layers — live tmux global env
       (`setenv -g`, new workers inherit as they cycle) + root `agent-orchestrator/.env.local` (survives restart) +
       `bootstrap_vm.sh` template (survives re-bootstrap). Evidence: AO@222369f (bootstrap) + `.env.local=6` +

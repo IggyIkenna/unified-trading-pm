@@ -159,38 +159,128 @@ once):**
 
 ## Recommended fix path (mirrors Wave-1's playbook exactly)
 
-- [ ] [INFRA] P1. **Category A** — add `runs-on: [self-hosted, glue]` to `staging-lock-check.yml` +
+- [x] [INFRA] P1. **Category A** — add `runs-on: [self-hosted, glue]` to `staging-lock-check.yml` +
       `image-build-gate.yml` in `unified-trading-pm/scripts/workflow-templates/`, run `rollout-workflow-templates.sh`
       fleet-wide, verify on ONE consumer repo's real CI run before trusting it fleet-wide (rule 11), then confirm the
-      rollout landed everywhere (`detect_template_drift.py --workflows` should go clean for these two files).
-- [ ] [INFRA] P1. **Category B** — find `quality-gates-v2.yml.tmpl`'s
+      rollout landed everywhere (`detect_template_drift.py --workflows` should go clean for these two files). —
+      unified-trading-pm@0e33e0840 (template + PM's own `image-build-validate.yml`); rolled out to consumers (evidence:
+      system-integration-tests@30a5ae80d).
+- [x] [INFRA] P1. **Category B** — find `quality-gates-v2.yml.tmpl`'s
       escalate-ldr-qg-failure/notify-ci-watcher/dispatch-cloud-build job definitions, add `runs-on: [self-hosted, glue]`
       (these don't need the conditional `self_hosted_runner_labels` opt-in pattern qg-slices uses, since they're cheap
-      notification/dispatch jobs, not the real test-execution job — but confirm that's still true for
-      dispatch-cloud-build specifically before assuming), re-run `rollout-workflow-templates.sh`.
-- [ ] [INFRA] P2. **Category C** — for each of `uac-registry-sync.yml`/`uic-openapi-sync.yml` (byte-identical,
+      notification/dispatch jobs, not the real test-execution job — confirmed true for dispatch-cloud-build too, it's a
+      pure trigger+poll job with no local build), re-run `rollout-workflow-templates.sh`. — unified-trading-pm@b99b96817
+      (template + PM's own copy); rolled out to consumers (evidence: system-integration-tests@044d778 for its own
+      rendered `quality-gates-v2.yml`).
+- [x] [INFRA] P2. **Category C** — for each of `uac-registry-sync.yml`/`uic-openapi-sync.yml` (byte-identical,
       straightforward): migrate + add to `scripts/workflow-templates/` if not already effectively templated some other
       way. For `publish-package.yml` / `plan-alignment-agent.yml` / `agent-audit.yml`: locate the actual source-of-truth
       (`.tmpl` file, hand-authored per-repo, or something else) BEFORE editing — do not hand-edit N per-repo copies if a
-      single template edit would do it (Wave-1's own "never hand-edit a per-repo workflow copy" hard rule).
-- [ ] [INFRA] P1. **Category D — `unified-trading-system-ui`** (the confirmed cost driver): migrate `ci.yml`,
+      single template edit would do it (Wave-1's own "never hand-edit a per-repo workflow copy" hard rule). —
+      `uac-registry-sync.yml`/`uic-openapi-sync.yml` done in unified-trading-pm@b99b96817 + consumer copies.
+      `publish-package.yml`/`plan-alignment-agent.yml` templates done in unified-trading-pm@794e139e1; consumer copies
+      hand-`cp`'d (byte-identical, confirmed via `md5sum`) to unified-api-contracts, unified-trading-library, and 6
+      services' `plan-alignment-agent.yml` hand-edited directly (execution-service, features-service,
+      instruments-service, market-data-processing-service, market-tick-data-service, strategy-service — evidence:
+      instruments-service@e519ed8e). **`agent-audit.yml` deliberately NOT investigated/migrated** — its only known sync
+      mechanism (`rollout-agent-workflows.sh`) bundles it together with `plan-alignment-agent.yml` from a "prototype"
+      repo source, which would have pulled in unrelated content; migrating it needs its own scoped follow-up, not a
+      bundled rollout. instruments-service's `publish-package.yml` (hash `7a2a1a0...`, flagged above as a real content
+      difference) was flipped for `runs-on` consistency only — its content is still the STALE pre-hatch-vcs-migration
+      workflow (local `python -m build`), a separate, out-of-scope drift from the canonical dispatch-based template.
+- [x] [INFRA] P1. **Category D — `unified-trading-system-ui`** (the confirmed cost driver): migrate `ci.yml`,
       `deploy-uat-on-merge.yml`, `orphan-audit.yml`, `ui-quality-gates-v2.yml`, `ui-quality-gates.yml` to self-hosted.
       `ci.yml`'s Playwright job needs verifying the self-hosted glue pool actually has a working browser toolchain
       (`npx playwright install` dependencies) before assuming a clean swap — this is the one job in this batch most
-      likely to need more than a one-line `runs-on` change.
-- [ ] [INFRA] P2. **Category D — `system-integration-tests`**: migrate `full-workspace-sit.yml` (the highest-value
+      likely to need more than a one-line `runs-on` change. — unified-trading-system-ui@6fb66f9f (all 5 files, one
+      commit). Playwright toolchain NOT yet verified via a real triggered CI run (deliberately deferred to the next real
+      push/PR rather than blocking the migration on it) — if `ci.yml`'s `e2e` job fails on the glue pool, that's the
+      first place to look.
+- [x] [INFRA] P2. **Category D — `system-integration-tests`**: migrate `full-workspace-sit.yml` (the highest-value
       target — it's the most expensive job in the fleet, clones every repo), `performance-test.yml`,
       `sit-plan-sync-agent.yml`, `smoke-test-gate.yml`. Check whether the self-hosted glue pool has enough disk/memory
       headroom for cloning ~24 repos as siblings in one job (this is a meaningfully heavier workload than the per-repo
       QG jobs already migrated) — re-verify VM capacity given
-      `orchestrator_vm_disk_io_contention_runner_burst_     2026_07_28.md`'s still-open P2 capacity-planning todo.
-- [ ] [INFRA] P3. **Category D — remaining single-repo bespoke files**: `unified-api-contracts`'s
+      `orchestrator_vm_disk_io_contention_runner_burst_     2026_07_28.md`'s still-open P2 capacity-planning todo. —
+      system-integration-tests@33aae15 (all 4 files, one commit, QG green 188s). Glue-pool disk/memory headroom for the
+      ~24-repo clone NOT independently re-verified here — same open capacity-planning gap the cited P2 todo already
+      tracks; first real nightly/dispatch run of `full-workspace-sit.yml` is the practical verification point.
+- [x] [INFRA] P3. **Category D — remaining single-repo bespoke files**: `unified-api-contracts`'s
       `canary-offline.yml`/`pr-watcher.yml`/`schema-health.yml`/`weekly-validation.yml`, `execution-service`'s
-      `benchmarks.yml`.
-- [ ] [REVIEW] P2. Once all of the above land, re-run the SAME fleet-wide `md5sum` + `grep     runs-on` sweep this issue
+      `benchmarks.yml`. — unified-api-contracts@882dabb6 (all 4, QG green 212s), execution-service@(quickmerge landed on
+      live-defi-rollout, QG green 164s).
+- [ ] [INFRA] P2. **market-tick-data-service Wave-2 deferral** — its 6 pending Category C `plan-alignment-agent.yml`
+      migrations are the only repo in that batch NOT shipped: `bash scripts/quality-gates.sh` fails on 3 pre-existing
+      test failures in `tests/unit/test_databento_enrichment_combo_underlying.py`, confirmed via `git stash` to fail
+      identically on unmodified HEAD (unrelated to this change). No sanctioned QG skip-flag exists
+      (`SUB_AGENT_MANDATORY_RULES.md`), so the commit-only-from-green-tree rule blocks this repo's ship until either
+      those 3 tests are fixed (a separate, undiagnosed task — no Databento domain context gathered here) or the repo's
+      owner resolves them. `plan-alignment-agent.yml`'s local diff (hand-edited, uncommitted) is sitting in the
+      market-tick-data-service checkout pending this. **STILL OPEN as of the 2026-07-28 re-audit below.**
+- [x] [REVIEW] P2. Once all of the above land, re-run the SAME fleet-wide `md5sum` + `grep     runs-on` sweep this issue
       doc's own audit used, confirm zero remaining `ubuntu-latest` lines outside a deliberately-kept exemption list (if
       any workflow has a real reason to stay hosted — e.g. needing GitHub's own build images for something the
-      self-hosted glue pool can't provide — name it explicitly here rather than leaving it silently unmigrated).
+      self-hosted glue pool can't provide — name it explicitly here rather than leaving it silently unmigrated). —
+      **done, 2026-07-28**; see "Fleet-wide re-audit results" below for the full findings (mostly clean, 3 real gaps
+      found + fixed, 1 large new out-of-scope finding surfaced).
+
+## Fleet-wide re-audit results (2026-07-28) — 3 real gaps found + fixed; 1 large NEW finding surfaced (not actioned)
+
+Re-ran `grep -rn '^\s*runs-on:\s*ubuntu-latest'` across every repo's `.github/workflows/`. Findings, triaged:
+
+**Real gaps (all fixed + shipped today):**
+
+1. **`uac-registry-sync.yml`/`uic-openapi-sync.yml` never actually propagated to their 3 consumers** — the Category C
+   template edit (`unified-trading-pm@b99b96817`) only updated `scripts/workflow-templates-ui/`; there is no rollout
+   script for that directory (unlike `scripts/workflow-templates/`'s `rollout-workflow-templates.sh`), so
+   `features-service`, `fund-administration-service`, and `unified-trading-system-ui` were still running the OLD
+   `ubuntu-latest` copies this whole time. Confirmed via `md5sum` (consumers matched each other, not the
+   already-migrated template) — fixed via manual `cp` + ship: features-service@(landed),
+   fund-administration-service@05b54e2f, unified-trading-system-ui (below).
+2. **`deployment-ui` + `unified-trading-system-ui` each carry their OWN bespoke `quality-gates-v2.yml`** (NOT sourced
+   from `scripts/workflow-templates/quality-gates-v2.yml.tmpl` — both files' own header comments say "Do NOT apply the
+   Python fleet template... The rollout script must exclude [this repo]", since they're TS/UI repos calling a local
+   `ui-quality-gates-v2.yml` reusable, not the Python gate). Same 3 job names as the already-migrated Category B
+   template (escalate-ldr-qg-failure/dispatch-cloud-build/notify-ci-watcher), independently hand-copied, so Category B's
+   template fix never reached them. Hand-edited both directly (no shared template exists for this UI-specific variant) +
+   shipped.
+3. **`agent-orchestrator/escalate-to-orchestrator.yml`** — a reusable-workflow dispatcher (curls `/api/escalate` on a
+   deterministic-pipeline failure), never audited by Wave-1 or earlier Wave-2 passes. Cheap dispatch job, safe to
+   self-host — migrated + shipped (agent-orchestrator@(landed)).
+
+**Confirmed correctly exempt (no action):** `strategy-service/agent-audit.yml` (documented Category C open item — no
+located template source, deliberately not bundled via `rollout-agent-workflows.sh`).
+
+**NEW FINDING (large, NOT actioned today — needs its own scoped follow-up + operator awareness):** unified-trading-pm's
+OWN `.github/workflows/` directory has never been run through its own
+`scripts/self-hosted-runners/classify-glue-workflows.sh` classifier as a directed audit before. Doing so today found
+**39 workflows classified MOVE** (self-hostable, still `ubuntu-latest`) vs 19 KEEP — found live, not previously tracked
+in `github_actions_operator_gated_followups_2026_07_17.md` (that plan's own fleet audit covered the 24 non-PM repos only
+— "178 MOVE across 24 repos" — PM's own workflow set was never turned through the classifier this way). One clear script
+bug found + fixed in the same pass: `glue-pool-starvation-monitor.yml` was missing from `KEEP_MONITORS` despite its own
+header being unambiguous about needing GitHub-hosted independence — shipped (unified-trading-pm@e9e4d4d20).
+
+**Why this is NOT a today's-Wave-2-sweep item**: several of the 39 MOVE-classified files are PM's own core CI/CD
+pipeline automation — `sit-gate.yml`, `sit-debounce-trigger.yml`, `sit-unlock.yml`,
+`ldr-to-main-promote.yml`/`ldr-to-main-promote-fleet.yml`, `staging-to-main.yml`, `conflict-resolution-agent.yml`,
+`hotfix-mode.yml`, `version-registry-update.yml`, and most notably **`cloud-build-router.yml`** — the actual deployment
+orchestrator (tier-ordered prod deploy across T0→T1→T2→services, a **trading kill-switch**, a
+**market-hours/trading-active deployment guard**, and a position-reconciliation gate). Blindly bulk-flipping this set on
+the classifier's automated verdict alone would be a real correctness risk, not just a cost optimization — the
+classifier's own header says "Advisory — eyeball the output before flipping any runs-on" and the
+`glue-pool-starvation-monitor.yml` miss just proved that automated verdicts on this specific set can disagree with a
+file's own documented reasoning. This needs individual per-file review (one at a time, verified on a real triggered run
+each time, per Wave-1's own rule 11 playbook), almost certainly its own follow-up plan rather than a todo bullet here,
+and operator visibility given the blast radius (this is the pipeline that ships code to production and gates trading
+activity).
+
+- [ ] [REVIEW] P1. **Scope + author a proper follow-up plan for unified-trading-pm's own 39 MOVE-classified workflows**
+      (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` in unified-trading-pm — re-run to regenerate the
+      current list). Triage into (a) genuinely low-risk dispatch/notify jobs safe for a quick batch flip (mirroring
+      today's pattern), and (b) core pipeline files (`cloud-build-router.yml` above all, plus the sit-gate/promote/
+      conflict-resolution set) that need individual review + explicit operator sign-off before touching, given the
+      trading-safety and fleet-wide-blast-radius stakes. Ask the operator whether this becomes its own `assigned_vm: NA`
+      human plan or an AO-dispatched plan per the plan-destination hard rule — do not default silently.
 
 ## Codex SSOTs
 

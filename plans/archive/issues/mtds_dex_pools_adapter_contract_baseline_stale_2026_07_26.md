@@ -19,7 +19,7 @@ summary: >
   investigated further here since it predates and is independent of the perf-bundle work. WARN-ONLY today
   (quality-gates.sh prints ⚠️ and does not set a non-zero exit) — did not block shipping the perf-bundle commit. Same
   class of issue as the resolved mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md precedent.
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -37,6 +37,9 @@ priority: P3
 source: [defi_satellite_ao_dispatch_batch2-012 (MTDS DeFi perf bundle), quality-gates.sh run 2026-07-26]
 assigned_vm: planning
 resolved_by:
+  unified-trading-pm scripts/quality_gates/adapter_contract_baseline.yaml surgical update, 2026-07-28 (3 entries
+  corrected: _dex_pools_subgraph.py 2->6, _defi_manifest.py 42->43, added _defi_catalog_freshness.py: 6); re-verified via
+  check_adapter_contract_regression.py --workspace-root .tabs/4 -> "OK -- 330 baselined file(s) at or above minimum"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -44,6 +47,9 @@ depends_on: []
 last_updated: 2026-07-26
 locked_since:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — baseline regenerated surgically (3 entries); QG re-verified `OK`. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # dex_pools_handler.py + _defi_manifest.py adapter-contract baseline stale (2026-07-26)
 
@@ -82,10 +88,24 @@ after legit refactor that intentionally changes counts — never to mask a regre
 
 ## Todos
 
-- [ ] [SCRIPT] P3. **Regenerate `adapter_contract_baseline.yaml`** — run `--regenerate-baseline` for
-      `dex_pools_handler.py` + `_dex_pools_subgraph.py` (confirmed-safe code motion, verified in this doc) and
-      separately for `_defi_manifest.py` + `_defi_catalog_freshness.py` (needs its own confirmation pass by whoever owns
-      that refactor); not yet actioned — still WARN-only in `quality-gates.sh`.
+- [x] ✅ [SCRIPT] P3. **Regenerate `adapter_contract_baseline.yaml` — DONE 2026-07-28.** Note: by the time of this pass,
+      `check_adapter_contract_regression.py --workspace-root .tabs/4` already reported 0 failures (a separate, unrelated
+      `b049c8eb4` surgical baseline fix for a GMX-removal count drop had already updated `dex_pools_handler.py`'s own
+      entry 9→5, so nothing was WARNing any more by the time this was picked up) — but the two entries this doc actually
+      flagged were still stale-but-passing (understating the true minimum, not failing): `_dex_pools_subgraph.py`
+      baseline read 2 vs. a live count of 6, and `_defi_manifest.py` read 42 vs. a live 43, with
+      `_defi_catalog_freshness.py` (6 live calls) missing from the baseline entirely. Did **not** run a full-workspace
+      `--regenerate-baseline` (would have silently absorbed 200+ unrelated files' current — possibly mid-flight-dirty —
+      counts across this actively multi-agent-edited workspace, exactly what the `b049c8eb4` precedent commit rejected
+      for the same reason). Instead did a surgical edit mirroring that precedent: independently re-verified (own count,
+      not just the doc's) that `_defi_catalog_freshness.py` is genuine code-motion — its own docstring states "Split out
+      of `_defi_manifest.py` (2026-07-26 ...) to keep that module under the 900-line cap ... Re-exported by
+      `_defi_manifest` so every existing handler import ... keeps working" — then updated exactly 3 YAML entries:
+      `_dex_pools_subgraph.py` 2→6, `_defi_manifest.py` 42→43, added `_defi_catalog_freshness.py`: 6. Verified via the
+      actual QG script counting logic (not just `grep`) that these match the live files exactly, and re-ran
+      `check_adapter_contract_regression.py --workspace-root .tabs/4` afterward:
+      `OK — 330 baselined file(s) at or     above minimum` (was 329; `dex_pools_handler.py`'s own entry already correct
+      at 5, untouched).
 
 ## Progress log
 

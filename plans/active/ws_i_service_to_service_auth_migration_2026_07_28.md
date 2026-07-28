@@ -104,20 +104,24 @@ keeping the deployment-api decision visibly on record in case it's ever revisite
       `cicd_consolidated_remaining_2026_06_24.md` onto this plan's path. Done-when:
       `grep -n     "cicd_consolidated_remaining" /codex/07-security/service-to-service-auth.md` returns zero hits. —
       evidence: `unified-trading-pm` (this session's commit, see plan Progress Log below for the SHA once shipped).
-- [ ] 2. [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — deployment-api's local `auth.py` → UTL factory migration. HELD at
-      the 2026-06-24 operator ruling (LEAVE AS-IS: `deployment_api/auth.py`'s contract is genuinely different from the
-      factory's — 401 vs the factory's 403 on missing/mismatched token, `DISABLE_AUTH` env vs `CLOUD_MOCK_MODE`,
-      `Security(APIKeyHeader)` DI returning `str` vs the factory's `None`-returning `Request`-based dependency, a
-      generic `"AUTH_FAILURE"` event vs the factory's typed `S2S_AUTH_FAILURE`). This is a genuine
-      business/behavior-contract judgment call (task_template.md § finding U (i) — a standing ruling already on record,
-      not a live gate to re-ask), so it stays non-dispatchable unless/until the operator explicitly reopens it. **If
-      ever reopened**, the done-when is: the operator names the target shape (adopt the factory's contract as-is,
-      accepting the 401→403 / event-name / DISABLE_AUTH semantic changes for every deployment-api caller; OR build a
+- [x] 2. ✅ [DOCS] P3. **Resolved-per-standing-ruling (2026-07-28) — closed, not perpetually
+      `BLOCKED-OPERATOR-DECISION`.** deployment-api's local `auth.py` → UTL factory migration is HELD at the
+      already-on-record 2026-06-24 operator ruling (LEAVE AS-IS: `deployment_api/auth.py`'s contract is genuinely
+      different from the factory's — 401 vs the factory's 403 on missing/mismatched token, `DISABLE_AUTH` env vs
+      `CLOUD_MOCK_MODE`, `Security(APIKeyHeader)` DI returning `str` vs the factory's `None`-returning `Request`-based
+      dependency, a generic `"AUTH_FAILURE"` event vs the factory's typed `S2S_AUTH_FAILURE`). Per the workspace's
+      findings-triage rule (`CLAUDE.md`, "the moment an `[OPERATOR]`/`BLOCKED-OPERATOR` tag resolves, retag to the
+      reflecting tag in the SAME edit — never leave it stale") and `task_template.md` § finding U(i) — this is a
+      standing ruling ALREADY on record, not a live gate awaiting a fresh answer, so it is closed here as
+      resolved-per-standing-ruling rather than left open under an operator tag that reads as still-pending. **If the
+      operator ever explicitly reopens the contract question**, file a fresh `[OPERATOR]` todo at that time; done-when
+      for that future reopening: the operator names the target shape (adopt the factory's contract as-is, accepting the
+      401→403 / event-name / DISABLE_AUTH semantic changes for every deployment-api caller; OR build a
       deployment-api-specific factory variant that preserves its current contract; OR confirm LEAVE AS-IS again) — then
       the swap ships + `deployment-api/tests/unit/test_auth.py` (the existing coverage for
       `verify_api_key`/`api_key_header`/`DISABLE_AUTH`) stays green, extended with the mock-mode-bypass case
       `execution-service/tests/unit/test_auth_s2s_and_timeline_builder.py`'s `TestAuthS2S` class demonstrates as the
-      template.
+      template. No code change needed to close this todo — the standing ruling itself is the resolution.
 - [x] 3. ✅ [DOCS] P3. Verify strategy-service + execution-service both carry ZERO drift from their archived-plan-cited
       shipped SHAs (no uncommitted local changes reverting the migration). Done-when: `git status --short` clean on both
       `strategy_service/{risk,pnl,position}/auth_s2s.py` and `execution_service/auth_s2s.py` in their respective

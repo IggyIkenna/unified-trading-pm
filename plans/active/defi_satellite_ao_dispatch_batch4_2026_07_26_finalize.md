@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, close-out, batch-4, satellite-docs, archival]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -47,9 +47,9 @@ drift_direction: advance-code
 # DeFi satellite AO batch 4 — finalize
 
 > **`status: draft` — NOT dispatched**, and additionally machine-gated on
-> `/plans/active/defi_satellite_ao_dispatch_batch4_2026_07_26.md` (`depends_on` plus `gate_on_depends: true`), so even
-> once flipped `active` no todo below is queued until both batch4 todos are `done`. `sequential: true` because todo 2
-> needs todo 1's reconciliation first and todo 4 (archival) must run last.
+> `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md` (`depends_on` plus `gate_on_depends: true`),
+> so even once flipped `active` no todo below is queued until both batch4 todos are `done`. `sequential: true` because
+> todo 2 needs todo 1's reconciliation first and todo 4 (archival) must run last.
 
 ## Todos
 
@@ -58,10 +58,10 @@ drift_direction: advance-code
       confirm no codex file was touched in that commit (`git show --stat` on it). Then re-read the doc end to end: with
       D2 closed, its only remaining open item should be D15 (the HYPERLIQUID/ASTER `DEFI_VENUE_PHASE` label reconcile),
       whose UAC-registry half is still operator-gated — so the doc stays `status: open`; record that in one line rather
-      than flipping it. (2) `/plans/active/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md` —
-      confirm it is at `plans/archive/issues/` with `status: resolved` and a populated `resolved_by:`, or that batch4's
-      todo closed with a written reason it was NOT archived. **Done when**: both source docs' states are confirmed by
-      reading, with a one-line note each recording why the doc is or is not `resolved`.
+      than flipping it. (2) `/plans/archive/issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`
+      — confirm it is at `plans/archive/issues/` with `status: resolved` and a populated `resolved_by:`, or that
+      batch4's todo closed with a written reason it was NOT archived. **Done when**: both source docs' states are
+      confirmed by reading, with a one-line note each recording why the doc is or is not `resolved`.
 - [ ] [REVIEW] P3. **Re-check batch4's three dropped-by-conflict-check items against batch3's live state.** Batch4
       dropped them because batch3 claimed the same ground. Re-read batch3's corresponding todos: if any has since been
       cancelled, superseded, or re-scoped away from that ground, the dropped item becomes uncovered again and must be
@@ -79,11 +79,11 @@ drift_direction: advance-code
       scheduled invocation does not spin a batch5 that cannot extract anything. If a gate DID clear, name the
       candidate(s) instead. **Done when**: an explicit stop-or-continue verdict with the current residual orphan count
       is written into this doc, dated.
-- [ ] [DOC] P3. **Archive `/plans/active/defi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard 6-step
-      ritual: migrate any still-live Deferred item to a tracked todo elsewhere (todos 2 and 3 above should have resolved
-      or re-confirmed each — verify none silently vanish) → add the archive banner → run the codex-alignment check
-      (batch4 introduces no new durable contract; confirm that is still true) → grep the corpus for every referrer of
-      `defi_satellite_ao_dispatch_batch4_2026_07_26` and repoint each path per the leading-slash convention → confirm
+- [ ] [DOC] P3. **Archive `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard
+      6-step ritual: migrate any still-live Deferred item to a tracked todo elsewhere (todos 2 and 3 above should have
+      resolved or re-confirmed each — verify none silently vanish) → add the archive banner → run the codex-alignment
+      check (batch4 introduces no new durable contract; confirm that is still true) → grep the corpus for every referrer
+      of `defi_satellite_ao_dispatch_batch4_2026_07_26` and repoint each path per the leading-slash convention → confirm
       `locked_by` is empty. **Done when**: the plan is in `plans/archive/2026_07/`, every corpus referrer resolves to
       the new path, and this finalize doc is archived alongside it in the same commit.
 

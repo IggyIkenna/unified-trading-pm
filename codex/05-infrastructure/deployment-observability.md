@@ -26,7 +26,7 @@ related:
     /plans/active/monitoring_control_plane_master_2026_06_10.md,
     /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
-    /plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md,
+    /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
   ]
 created: 2026-06-22
 authoritative_for:
@@ -595,7 +595,8 @@ Three layers, each independent of the one it watches (so a dead watcher is never
 The live/current Resources column above (Firestore, `host_metrics_window` — last ~10 samples) is unchanged and stays the
 source for point-in-time reads. Alongside it, `deployment_operational_data` (BigQuery, `central-element-323112`,
 `asia-northeast1`) is the DURABLE side — full detail + design rationale in
-`/plans/active/deployment_durable_operational_data_bigquery_2026_07_21.md`; this section is the short reference.
+`/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md`; this section is the short
+reference.
 
 **Tables** (all partitioned `DATE(ts)`/`DATE(completed_at)`, clustered): `resource_samples` (per-VM cpu/mem/disk,
 ~1/min), `run_ledger` (one row per completed/failed run — the durable answer past the 30-day `deployments/archive/` GCS
@@ -617,11 +618,50 @@ columns). `unified_trading_library.lifecycle.daemon.HeartbeatDaemon` stays consu
 `vm_name` for the cross-VM view) and `GET /api/vm-resources/process-category`; `deployment-ui`'s `WorkHealthCard`
 (window selector alongside the live snapshot) and the `/ops/vm-resources` comparison page consume them.
 
-**Known gaps** (tracked in the plan, not repeated here): partition-expiration TTL isn't set on any table (the UTL
-`create_table` wrapper has no expiration parameter); process-category has no publisher yet (the bridge cron
-`agent-orchestrator/scripts/orchestrator/resource-monitor.sh` on the orchestrator VM is still the only source, writing
-to a local JSONL, not BigQuery); the cross-VM comparison page filters by service-name text only, not the full
-service×asset_group×mode facet set.
+**Known gaps** (tracked in the plan, not repeated here; updated 2026-07-28 — TTL + process-category publishing both
+shipped since the paragraph above was first written): the cross-VM comparison page filters by service-name text only,
+not the full service×asset_group×mode facet set; the `process_category_sampler.py` systemd timer failed to start
+unattended on first install (manual invocation proven, the bridge cron `resource-monitor.sh` stays the safety net until
+that's root-caused).
+
+## Analysis path — DuckDB over `bq extract` (ad-hoc, power-user)
+
+Alongside the UI's rolling 1h/4h/24h/1wk views (above), the FIVE `deployment_operational_data` tables
+(`resource_samples`, `run_ledger`, `idle_spend`, `reap_events`, `process_samples`) are also directly queryable ad-hoc —
+no server-side snapshot worker for this path (unlike `billing-cost-observability.md`'s automated 12h
+`cost_snapshot_worker.py`; this data is small/cheap enough that BigQuery itself is a fine live query surface, so this
+path exists for offline/local/bulk analysis the UI doesn't expose, not because BigQuery is too slow).
+
+**Flow** (mirrors the `bq extract` → parquet → DuckDB pattern already proven for cost snapshots —
+`deployment_api/scripts/cost_snapshot_worker.py` / `services/cost_observability/snapshot.py`):
+
+1. Extract the table (or a query result materialized via `bq query --destination_table`) to GCS as parquet:
+
+   ```bash
+   bq extract --destination_format=PARQUET \
+     central-element-323112:deployment_operational_data.resource_samples \
+     gs://<scratch-bucket>/duckdb-extracts/resource_samples/*.parquet
+   ```
+
+2. Query it locally (or directly off GCS) with DuckDB — no BigQuery slot cost per query, no Python row materialization:
+
+   ```bash
+   duckdb -c "
+     INSTALL httpfs; LOAD httpfs;
+     SELECT vm_name, DATE(ts) AS day, avg(cpu_pct) AS avg_cpu
+     FROM read_parquet('gs://<scratch-bucket>/duckdb-extracts/resource_samples/*.parquet')
+     GROUP BY 1, 2 ORDER BY 2 DESC;
+   "
+   ```
+
+   (GCS creds via `gcloud auth application-default login`, or a service-account key exported to
+   `GOOGLE_APPLICATION_CREDENTIALS` — the same ADC path DuckDB's `httpfs` extension reads.)
+
+**When to use this vs. the UI panel**: the UI's rolling-window view is the default surface for "what has this VM's
+utilization been recently" (fast, no setup). This path is for questions the UI doesn't answer — a custom multi-VM join,
+a longer-than-1wk historical query, exporting for a spreadsheet/notebook, or a one-off cross-table analysis (e.g.
+`resource_samples` joined to `run_ledger` to correlate CPU spikes with run completions). Full design rationale + the
+FOUR-signal schema: `/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md`.
 
 ## Anti-patterns (banned)
 

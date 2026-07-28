@@ -205,10 +205,15 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       `enum-universe-tradfi-20260709-020218`); IS catalogue done 2026-07-06
       (`catalogue-rollup-tradfi-20260706T154714Z`). All 5 AGs canonical, `migration_verification_orphan_safety` V6/G4
       closed.
-- [ ] [DATA] P1. Operator-gated legacy-twin **deletes** (defi / tradfi / pred; cefi + sports already done) in a quiet
+- [ ] [DATA] P1. Legacy-twin **deletes** (defi / tradfi / pred; cefi already done, **sports is NOT done** — 0 of 34,385
+      `B_legacy_duplicate` rows pass the 5-part proof per `sports_legacy_duplicate_triage_2026_07_22.md`) in a quiet
       window. **STILL OPEN (reconciled 2026-07-28)** — none of this todo's named archived children cover it; the tradfi
-      leg was forked out verbatim to `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
-      (`BLOCKED-OPERATOR-DECISION`), genuinely still gated on operator sign-off, not this tracker's own work.
+      leg was forked out verbatim to `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`. **No
+      longer operator-gated as of 2026-07-28** — the §3a reversibility carve-out
+      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended) now covers hard-stop #2
+      (legacy-object-delete-after-copy) once Part 5's twin-coverage proof independently confirms 100% canonical-twin
+      coverage; that child plan's todo has been retagged and re-dispatched with the fresh-check dispatch shape (see its
+      own text), not this tracker's own work to execute.
 
 ## Stage 2 — Denominator correctness (the core; cefi leads)
 
@@ -593,6 +598,12 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-28 (gate-cleanup pass)** — updated the legacy-twin deletes note (Stage 1) to match its forked child's own
+  2026-07-28 retag: the §3a reversibility carve-out now covers hard-stop #2 (legacy-object-delete-after-copy) once Part
+  5's twin-coverage proof independently confirms 100% coverage
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a extended); see
+  `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` for the retagged todo. No delete executed;
+  this tracker's own item stays open pending that child plan's execution.
 - **2026-07-28 — Stage 1–6 checkbox drift reconciled against 7 now-archived/complete AO children** (via
   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s [ADMIN] P1 reconciliation todo). Grepped each named
   archived child's own checkboxes/Progress Log for shipped-SHA evidence, per unchecked tracker checkbox; flipped only

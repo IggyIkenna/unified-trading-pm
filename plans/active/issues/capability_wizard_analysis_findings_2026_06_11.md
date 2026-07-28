@@ -484,22 +484,33 @@ removed (pm@fix PR #300). broker:ibkr node count 2→1 in the regenerated manife
 
 ### F45 — Exposure normalization is undeclared: primitives exist, no service owns the netting pipeline
 
-**Status**: OPEN — genuine capability gap (answers the `[AGENT] P1 exposure-normalization` gap-tracker item). 2026-06-13
-code-scan across greeks-service / features-service / UTL / UAC. The PRIMITIVES for LST→underlying exposure equivalence
-exist in UAC: `TOKEN_EQUIVALENCE_GROUPS` + `is_token_equivalent()`
-(`registry/capability_declarations/_defi.py:870-940,1019` — full 20+ LST universe: ETH group {ETH,WETH,STETH,WSTETH,
-CBETH,RETH,WEETH,…}, SOL group {SOL,WSOL,MSOL,STSOL,JITOSOL,…}) and `LST_BASE_ASSET` + `lst_adjusted_value()`
-(`registry/token_wrapping.py:43-47,159` — 3 wrapped forms, oracle-ratio base-equivalent quantity). The OUTPUT schema
-exists too: `RiskMetrics.delta_composite: dict[str,Decimal]` ("net delta per underlying", `internal/risk.py:82`) +
-`gross/net/long/short_exposure` (`internal/risk.py:169-172`). greeks-service computes per-INSTRUMENT Black-Scholes
-greeks (`kernels/black_scholes.py:75-183`). **But NO service owns the end-to-end pipeline** that (a) maps each LST leg
-to its ETH/SOL underlying via the equivalence group, (b) multiplies position size × per-leg delta for base-currency-
-denominated delta, (c) nets across legs into `delta_composite` / a USD-normalized exposure view. No `compute_net_delta`
-/ `aggregate_delta` / `portfolio_delta` / `exposure_normalizer` exists in any scanned repo. **Why it matters**: the
-prospectus Exposure section + the wizard's staked-ETH-vs-ETH-equivalence answer + any portfolio-mode netting all need
-this. **Recommended owner**: a risk-service or strategy-service pre-trade layer consuming `lst_adjusted_value` + per-leg
-greeks emitting `delta_composite`. Not built in this dispatch (no LOGIC-FREEZE-safe surface to add it); recorded for a
-successor plan. The prospectus already emits an honest gap line for staked-vs-spot equivalence.
+**Status**: FIXED 2026-06-15 (`plans/archive/2026_06/engine_findings_remediation_2026_06_15.md`) — **UTL@b819cd1c +
+execution-service@b7c63335 + strategy-service@bdac6595**. Owner decision: canonical netting home is UTL
+`unified_trading_library/risk/net_delta.py` (top-level re-exported), NOT strategy-service as originally recommended
+below — an operator-absent architectural decision, documented in the remediation plan per its autonomous rule 1, because
+the workspace's no-service↔service-import HARD RULE forbids execution-service importing a strategy-service module; UTL
+is the only shared T0 lib both services already depend on, while strategy-service still OWNS the position/risk
+orchestration that calls it. Scattered duplicate netting logic (UAC `risk.py`, UTL `risk/`, execution-service leg
+controllers/`perp_hedge_sizer`) was consolidated into 5 pure-Decimal primitives and consumers repointed + the inline
+duplicates deleted. No BLOCKED-OPERATOR-DECISION remains on this item.
+
+**Original finding (2026-06-13, superseded by the FIXED status above — kept for context):** genuine capability gap
+(answers the `[AGENT] P1 exposure-normalization` gap-tracker item). 2026-06-13 code-scan across greeks-service /
+features-service / UTL / UAC. The PRIMITIVES for LST→underlying exposure equivalence exist in UAC:
+`TOKEN_EQUIVALENCE_GROUPS` + `is_token_equivalent()` (`registry/capability_declarations/_defi.py:870-940,1019` — full
+20+ LST universe: ETH group {ETH,WETH,STETH,WSTETH, CBETH,RETH,WEETH,…}, SOL group {SOL,WSOL,MSOL,STSOL,JITOSOL,…}) and
+`LST_BASE_ASSET` + `lst_adjusted_value()` (`registry/token_wrapping.py:43-47,159` — 3 wrapped forms, oracle-ratio
+base-equivalent quantity). The OUTPUT schema exists too: `RiskMetrics.delta_composite: dict[str,Decimal]` ("net delta
+per underlying", `internal/risk.py:82`) + `gross/net/long/short_exposure` (`internal/risk.py:169-172`). greeks-service
+computes per-INSTRUMENT Black-Scholes greeks (`kernels/black_scholes.py:75-183`). **But NO service owns the end-to-end
+pipeline** that (a) maps each LST leg to its ETH/SOL underlying via the equivalence group, (b) multiplies position size
+× per-leg delta for base-currency- denominated delta, (c) nets across legs into `delta_composite` / a USD-normalized
+exposure view. No `compute_net_delta` / `aggregate_delta` / `portfolio_delta` / `exposure_normalizer` exists in any
+scanned repo. **Why it matters**: the prospectus Exposure section + the wizard's staked-ETH-vs-ETH-equivalence answer +
+any portfolio-mode netting all need this. **Recommended owner**: a risk-service or strategy-service pre-trade layer
+consuming `lst_adjusted_value` + per-leg greeks emitting `delta_composite`. Not built in this dispatch (no
+LOGIC-FREEZE-safe surface to add it); recorded for a successor plan. The prospectus already emits an honest gap line for
+staked-vs-spot equivalence.
 
 ### F46 — Three CeFi perp adapters are NotImplementedError scaffolds (binance/bybit/okx) — BLOCKED-CREDENTIALS
 
@@ -618,7 +629,7 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
 | Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                             |
 | Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                    |
-| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | BLOCKED-OPERATOR-DECISION (owner)                | —                                                                                                                             |
+| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                               | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                     |
 | Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                     | strategy-service (3 files)                                                                                                    |
 | Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                             | agent-orchestrator                                                                                                            |
 | Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                  | —                                                                                                                             |
@@ -680,9 +691,12 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 
 - [ ] [ADAPTER] P1. **F46 — implement binance/bybit/okx perp `place_order`** (scaffolds raise NotImplementedError).
       BLOCKED-CREDENTIALS (named venue API creds). Target: execution-service.
-- [ ] [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net delta;
-      primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). BLOCKED-OPERATOR-DECISION (which
-      service owns netting). Target: strategy-service or UTL (operator pick).
+- [x] ✅ [SPEC] P1. **F45 — assign an owner for the exposure-normalization / netting pipeline** (LST→underlying net
+      delta; primitives exist, no service owns it; multi-leg inter-leg delta unmanaged). **DONE 2026-06-15** —
+      `plans/archive/2026_06/engine_findings_remediation_2026_06_15.md` shipped the owner decision + consolidation:
+      canonical netting home = UTL `unified_trading_library/risk/net_delta.py` (strategy-service still owns the
+      position/risk orchestration that calls it) —
+      `UTL@b819cd1c + execution-service@b7c63335 +     strategy-service@bdac6595`. No longer BLOCKED-OPERATOR-DECISION.
 - [x] ✅ [LOGIC] P1. **F27 — carry-staked-basis venue-id CASE MISMATCH** (`deribit`≠`DERIBIT`) blocks emission.
       LOGIC-FREEZE. Target: strategy-service. — **DONE strategy-service@dac939d6.** FREEZE STATUS: verified lifted —
       `epics/strategy_master.md` no longer carries any freeze/no-changes-to-engine language (checked directly, zero

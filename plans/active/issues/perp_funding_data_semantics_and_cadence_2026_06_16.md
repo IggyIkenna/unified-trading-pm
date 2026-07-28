@@ -11,7 +11,15 @@ nature: process
 asset_group: [cross-cutting]
 stage: [meta]
 repos:
-  [deployment-service, e2e-testing, execution-service, features-service, instruments-service, market-tick-data-service]
+  [
+    deployment-service,
+    e2e-testing,
+    execution-service,
+    features-service,
+    instruments-service,
+    market-tick-data-service,
+    unified-api-contracts,
+  ]
 scope: [engineer, admin]
 tags: [data-correctness, cefi, defi, uac, mtds, backfill, deribit, data-pipeline]
 related: []
@@ -106,6 +114,70 @@ via a maintained script) or **inferred from the observed frequency of funding_ti
 captured data (the data already lets us count settlements/day per instrument per day). The analysis harness already
 records observed `n_settlements` per shard as a cross-check seed for this.
 
+### Finding 4 — DERIBIT `funding_timestamp` cannot be safely DERIVED from scratch: it has no discrete charge instant, unlike every other venue this reprocessing fix covers (investigated 2026-07-28, STOPPED pending operator decision)
+
+Follow-up to the DERIBIT line inside the P2 scale-out todo above (which correctly found DERIBIT 100% null and no-op's
+it). The operator separately asked: since DERIBIT `funding_rate` is populated but `funding_timestamp` is 100% null and
+there's no `next_funding_timestamp` column at all, why not DERIVE both from scratch for every historical row, using the
+tick's own `timestamp` + Deribit's known 8h funding cadence (already registered,
+`FUNDING_CADENCE_SECONDS["deribit"] = 28800`)? The explicit ask was to verify the **anchor** (is the 8h grid
+UTC-midnight-aligned — 00:00/08:00/16:00 UTC — the BitMEX/Deribit-pioneered industry convention — or offset
+differently?) empirically, not by assumption, and to STOP and report honestly if genuinely uncertain rather than guess,
+"since an off-by-one here is worse than leaving it null."
+
+**Real production-sample re-confirmation (2026-07-28, extends the shipped script's 3-date spot-check to 7 real shards
+spanning the full history):** pulled real captured parquet directly from
+`gs://market-data-tick-cefi-prd-central-element-323112` —
+`DERIBIT:PERPETUAL:{BNB-USDC@LIN, BTC-USD@INV, ETH-USD@INV, BTC-USDC@LIN, ETH-USDC@LIN}` across
+`day={2019-06-01, 2020-06-01, 2022-01-01, 2023-06-01, 2024-01-01, 2026-05-01}` (7 shards total). **Every single shard**:
+`funding_rate` 0/N null (100% populated), `funding_timestamp` schema-inferred type `null` and N/N null (100% null — has
+literally never had a non-null value in this passthrough), no `next_funding_timestamp` column. Confirms + extends the
+original 3-date spot-check cited in the shipped script's docstring.
+
+**Anchor verification — rigorous, multi-source, NOT an assumption:**
+
+1. **The premise itself does not hold.** Deribit's own live ticker API
+   (`GET /api/v2/public/ticker?instrument_name=BTC-PERPETUAL`, queried live 2026-07-28) returns only two funding-related
+   SCALARS — `current_funding` and `funding_8h` — **no next-funding-time / funding-timestamp field of any kind**. This
+   is a structural difference from Binance/Bybit/OKX's own APIs, which DO expose a genuine discrete
+   `fundingTime`/`nextFundingTime` field (the real field the already-shipped 6-venue fix shifts back one cadence
+   period). Tardis's own documented behavior for `derivative_ticker.funding_timestamp`: "the timestamp of the next
+   funding event... empty if the exchange does not provide one" — which is exactly why our bulk-CSV passthrough has
+   always captured it null for Deribit: **Deribit itself has never had one to relay.**
+2. **Deribit's own support/education documentation** (`insights.deribit.com/education/perpetual-swap-funding`, queried
+   live 2026-07-28): funding is "calculated in real time and transferred every few seconds" — i.e. continuously, not in
+   a lump sum at fixed instants — and separately, account-level settlement (crystallising the continuously-accrued
+   funding PnL into cash balance) happens **once daily at 08:00 UTC**, not three times daily. The "8 hour rate" Deribit
+   displays/stores is explicitly a **comparison-normalisation convention** ("the 8 hour rate is displayed to make
+   comparison simpler... it is actually calculated in real time"), not evidence of a discrete charge event.
+3. **Deribit's own live `get_funding_rate_history` endpoint** (queried live 2026-07-28, `BTC-PERPETUAL`, 48 hourly rows
+   spanning 2025-05-01→02): `interest_8h` is a continuously-evolving, hourly-sampled ROLLING window (e.g. 01:00=8.86e-7
+   → 08:00=1.45e-6 → 09:00=2.63e-6 → 12:00=1.24e-5 → 15:00=1.23e-5 → 16:00=1.19e-5 → 20:00=1.74e-6 →
+   00:00(May-2)=3.96e-6) — **no reset or discontinuity pattern at ANY of the 00:00/08:00/16:00 UTC boundaries**,
+   consistent with a trailing average, not a periodic settlement.
+4. **Real captured parquet** (`DERIBIT:PERPETUAL:BNB-USDC@LIN`, 2026-05-01, 55,291 rows — the operator's own reference
+   sample): `funding_rate` changes value **~1,454 times across the single day** (roughly every 1-90 seconds),
+   continuously tracking the mark/index basis — **no discontinuity precisely at 00:00:00 / 08:00:00 / 16:00:00 UTC**
+   distinguishable from the ambient minute-to-minute noise.
+
+**Conclusion: the anchor cannot be verified because the premise it would anchor does not hold.** Binance/Bybit/OKX/etc.
+genuinely charge funding in discrete lump sums at their own venue's real, discrete `fundingTime` — shifting that raw
+value back one registered cadence period (the already-shipped fix) is a real correction of a real forward-looking
+timestamp. **Deribit has no analogous discrete charge instant to correct or derive** — its funding accrues and is paid
+continuously, and its own APIs (ticker + funding-rate-history) confirm no fixed-instant reset pattern exists at
+00:00/08:00/16:00 UTC or anywhere else. Fabricating a calendar-aligned `funding_timestamp`/`next_funding_timestamp` pair
+for DERIBIT — even using the industry-standard 00:00/08:00/16:00 UTC grid — would assert a "charge instant" Deribit
+itself has never reported and does not appear to have, silently changing `CanonicalDerivativeTicker.funding_timestamp`'s
+documented meaning ("the instant funding_rate was actually CHARGED") to mean something different (a reporting-bucket
+label) for exactly one venue, with no code-visible way for a downstream consumer to tell the difference. Per the
+operator's own stated bar ("an off-by-one here is worse than leaving it null"), this session **STOPS here and does not
+build the derivation** — see the new todo below for the three options this needs an operator decision on. **No
+market-tick-data-service code path was added**; the reprocessing script's docstring was updated (comment-only) to record
+this finding at the DERIBIT `skipped_all_null_no_forward_value` bullet it already documents, so a future reader doesn't
+have to re-derive it. Real full-historical DERIBIT scope RE-VERIFIED this session (fresh `--mode scan` run, not trusted
+from the prior pass): **4,631 shards / 219,152,270 rows, 2019-03-30→2026-05-01** — unchanged from the original scoping
+pass.
+
 ## Why it matters
 
 `carry_staked_basis` ranks the entire perp book by annualised funding; an 8× cadence error on Aster/Deribit, a
@@ -172,57 +244,57 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       `CanonicalDerivativeTicker.funding_timestamp`'s docstring already).
 
       **Operator decision (2026-07-28): option (b) — full historical reprocessing, not a forward-only fix.** Design +
-          build + bounded-sample proof DONE this session; the full-corpus run is a separate VM-launched follow-up (still
-          open, see the dependent todo below) — this todo itself stays unchecked until that full run completes.
-          Shipped: `market-tick-data-service@873c6c73`
-          (`scripts/one_offs/reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py` +
-          `tests/unit/scripts/test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`, quality-gates.sh
-          green). Per-shard correction (Arrow-level, byte-identical on every other column): preserves the raw wire value as
-          `next_funding_timestamp`; derives `funding_timestamp = raw - cadence` via UAC `perp_funding_cadence`
-          (`fundings_per_day`/`is_supported_venue`), mirroring `external/tardis/normalize.py::normalize_tardis_derivative_ticker`'s
-          formula exactly. `--mode scan` is the manifest-driven quantify step (no writes); `--mode apply [--apply]` does the
-          real per-object backup+CAS-overwrite+verify flow for one `--venue`/date-window.
+                                                                                                                              build + bounded-sample proof DONE this session; the full-corpus run is a separate VM-launched follow-up (still
+                                                                                                                              open, see the dependent todo below) — this todo itself stays unchecked until that full run completes.
+                                                                                                                              Shipped: `market-tick-data-service@873c6c73`
+                                                                                                                              (`scripts/one_offs/reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py` +
+                                                                                                                              `tests/unit/scripts/test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`, quality-gates.sh
+                                                                                                                              green). Per-shard correction (Arrow-level, byte-identical on every other column): preserves the raw wire value as
+                                                                                                                              `next_funding_timestamp`; derives `funding_timestamp = raw - cadence` via UAC `perp_funding_cadence`
+                                                                                                                              (`fundings_per_day`/`is_supported_venue`), mirroring `external/tardis/normalize.py::normalize_tardis_derivative_ticker`'s
+                                                                                                                              formula exactly. `--mode scan` is the manifest-driven quantify step (no writes); `--mode apply [--apply]` does the
+                                                                                                                              real per-object backup+CAS-overwrite+verify flow for one `--venue`/date-window.
 
-          **Real scope is wider than this todo's own text assumed** (manifest scan + live-content probe, 2026-07-28) — 10
-          CeFi Tardis venues carry `derivative_ticker` via `pipeline_mode=batch_tardis` (not 4):
-          `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`OKX-FUTURES`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES`/`DERIBIT`/
-          `COINBASE-FUTURES`/`EXTENDED-STARKNET` (+ `LIGHTER-ZKSYNC` registered but 0 `captured` rows today). Manifest-row
-          shard/row counts (captured, batch_tardis): `BINANCE-FUTURES` 273,703 shards / 23.9B rows (2019-12-30→2026-05-22) ·
-          `OKX-SWAP` 194,041 / 25.8B (2021-01-01→2026-05-22) · `KRAKEN-FUTURES` 142,821 / 11.2B (2020-01-01→2026-05-22) ·
-          `BYBIT` 139,331 / 6.5B (2020-01-01→2026-05-01) · `BITGET-FUTURES` 117,185 / 6.3B (2024-11-08→2026-05-22) ·
-          `OKX-FUTURES` 78,293 / 20.4B (2021-01-01→2026-07-24, all dated-FUTURE) · `BITFINEX-FUTURES` 61,320 / 1.8B
-          (2020-01-01→2026-07-24) · `DERIBIT` 4,631 / 219M (2019-03-30→2026-05-01) · `EXTENDED-STARKNET` 281 / 6,744
-          (2026-01-14→2026-06-03) · `COINBASE-FUTURES` 40 / 3.4M (2026-07-24 only, brand-new capture).
+                                                                                                                              **Real scope is wider than this todo's own text assumed** (manifest scan + live-content probe, 2026-07-28) — 10
+                                                                                                                              CeFi Tardis venues carry `derivative_ticker` via `pipeline_mode=batch_tardis` (not 4):
+                                                                                                                              `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`OKX-FUTURES`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES`/`DERIBIT`/
+                                                                                                                              `COINBASE-FUTURES`/`EXTENDED-STARKNET` (+ `LIGHTER-ZKSYNC` registered but 0 `captured` rows today). Manifest-row
+                                                                                                                              shard/row counts (captured, batch_tardis): `BINANCE-FUTURES` 273,703 shards / 23.9B rows (2019-12-30→2026-05-22) ·
+                                                                                                                              `OKX-SWAP` 194,041 / 25.8B (2021-01-01→2026-05-22) · `KRAKEN-FUTURES` 142,821 / 11.2B (2020-01-01→2026-05-22) ·
+                                                                                                                              `BYBIT` 139,331 / 6.5B (2020-01-01→2026-05-01) · `BITGET-FUTURES` 117,185 / 6.3B (2024-11-08→2026-05-22) ·
+                                                                                                                              `OKX-FUTURES` 78,293 / 20.4B (2021-01-01→2026-07-24, all dated-FUTURE) · `BITFINEX-FUTURES` 61,320 / 1.8B
+                                                                                                                              (2020-01-01→2026-07-24) · `DERIBIT` 4,631 / 219M (2019-03-30→2026-05-01) · `EXTENDED-STARKNET` 281 / 6,744
+                                                                                                                              (2026-01-14→2026-06-03) · `COINBASE-FUTURES` 40 / 3.4M (2026-07-24 only, brand-new capture).
 
-          **Per-shard REAL content varies genuinely by data, not by a bug in this script** (live-probed samples across each
-          venue's date range) — the reprocessing script auto-detects each case, no special-casing needed:
-          - `DERIBIT` PERPETUAL shards are **100% null** for `funding_timestamp` across every sampled year (2019/2022/2026)
-            — Deribit's raw Tardis wire apparently never populates a forward value for this data_type (funding_rate itself
-            IS populated) — **nothing to correct, script no-ops cleanly** (`skipped_all_null_no_forward_value`).
-          - Every dated-**FUTURE**-instrument-type shard sampled (`BINANCE-FUTURES`/`BYBIT`/`OKX-FUTURES`/`BITGET-FUTURES`
-            dated contracts) is also 100% null — expected, dated futures have no periodic funding — **no-op, correct**.
-          - `EXTENDED-STARKNET`'s raw wire schema **lacks the `funding_timestamp` column entirely** — `skipped_no_
-            funding_timestamp_column`, no-op.
-          - `COINBASE-FUTURES` is populated (real forward-looking values present) but `"coinbase"` is **not yet registered**
-            in UAC `perp_funding_cadence.FUNDING_CADENCE_SECONDS` — the script correctly applies honest-absence (preserves
-            `next_funding_timestamp`, leaves `funding_timestamp` null rather than guess); registering Coinbase's cadence
-            first is a real, small, separate prerequisite if its (currently tiny — 40 shards, one day) history should get a
-            derived `funding_timestamp` too.
-          - `PERPETUAL` shards for `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES`
-            are the confirmed real-bug population needing correction: ~926,898 shards / ~75.0B rows.
+                                                                                                                              **Per-shard REAL content varies genuinely by data, not by a bug in this script** (live-probed samples across each
+                                                                                                                              venue's date range) — the reprocessing script auto-detects each case, no special-casing needed:
+                                                                                                                              - `DERIBIT` PERPETUAL shards are **100% null** for `funding_timestamp` across every sampled year (2019/2022/2026)
+                                                                                                                                — Deribit's raw Tardis wire apparently never populates a forward value for this data_type (funding_rate itself
+                                                                                                                                IS populated) — **nothing to correct, script no-ops cleanly** (`skipped_all_null_no_forward_value`).
+                                                                                                                              - Every dated-**FUTURE**-instrument-type shard sampled (`BINANCE-FUTURES`/`BYBIT`/`OKX-FUTURES`/`BITGET-FUTURES`
+                                                                                                                                dated contracts) is also 100% null — expected, dated futures have no periodic funding — **no-op, correct**.
+                                                                                                                              - `EXTENDED-STARKNET`'s raw wire schema **lacks the `funding_timestamp` column entirely** — `skipped_no_
+                                                                                                                                funding_timestamp_column`, no-op.
+                                                                                                                              - `COINBASE-FUTURES` is populated (real forward-looking values present) but `"coinbase"` is **not yet registered**
+                                                                                                                                in UAC `perp_funding_cadence.FUNDING_CADENCE_SECONDS` — the script correctly applies honest-absence (preserves
+                                                                                                                                `next_funding_timestamp`, leaves `funding_timestamp` null rather than guess); registering Coinbase's cadence
+                                                                                                                                first is a real, small, separate prerequisite if its (currently tiny — 40 shards, one day) history should get a
+                                                                                                                                derived `funding_timestamp` too.
+                                                                                                                              - `PERPETUAL` shards for `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES`
+                                                                                                                                are the confirmed real-bug population needing correction: ~926,898 shards / ~75.0B rows.
 
-          **Bounded sample proof (2026-07-28, real production data, full delete-safety protocol)**: BYBIT PERPETUAL
-          `derivative_ticker`, 2026-03-25→2026-03-31 (86 real objects, discovered via prefix-scoped listing — NOT via the
-          manifest's own row count, which undercounts this venue/window 7×/day vs the real object count, a pre-existing
-          manifest-vs-GCS drift unrelated to this fix). Dry-run (staging-only): 86/86 `would_correct`, 0 errors; a spot-check
-          confirmed exact math (`next_funding_timestamp - funding_timestamp == 28,800,000,000` µs = 8h for every row, every
-          other column byte-identical). Real `--apply`: 86/86 `corrected`, 0 errors — original backed up
-          (`_migrations/derivative_ticker_funding_timestamp_fix_2026_07_28/backups/20260728-143731/...`, byte-for-byte
-          verified via `gcs_describe_object` size+crc32c match before overwrite), canonical path CAS-overwritten, new content
-          verified landed, old (forward-looking) value verified GONE from the canonical path (independently re-checked
-          post-hoc, not just the script's own internal assertion). Manifest `capture_status`/`row_count` for the exact
-          touched slice (4,207 rows, `row_count` sum 654,890) confirmed **byte-identical** before vs after — the fix does
-          not touch the manifest at all.
+                                                                                                                              **Bounded sample proof (2026-07-28, real production data, full delete-safety protocol)**: BYBIT PERPETUAL
+                                                                                                                              `derivative_ticker`, 2026-03-25→2026-03-31 (86 real objects, discovered via prefix-scoped listing — NOT via the
+                                                                                                                              manifest's own row count, which undercounts this venue/window 7×/day vs the real object count, a pre-existing
+                                                                                                                              manifest-vs-GCS drift unrelated to this fix). Dry-run (staging-only): 86/86 `would_correct`, 0 errors; a spot-check
+                                                                                                                              confirmed exact math (`next_funding_timestamp - funding_timestamp == 28,800,000,000` µs = 8h for every row, every
+                                                                                                                              other column byte-identical). Real `--apply`: 86/86 `corrected`, 0 errors — original backed up
+                                                                                                                              (`_migrations/derivative_ticker_funding_timestamp_fix_2026_07_28/backups/20260728-143731/...`, byte-for-byte
+                                                                                                                              verified via `gcs_describe_object` size+crc32c match before overwrite), canonical path CAS-overwritten, new content
+                                                                                                                              verified landed, old (forward-looking) value verified GONE from the canonical path (independently re-checked
+                                                                                                                              post-hoc, not just the script's own internal assertion). Manifest `capture_status`/`row_count` for the exact
+                                                                                                                              touched slice (4,207 rows, `row_count` sum 654,890) confirmed **byte-identical** before vs after — the fix does
+                                                                                                                              not touch the manifest at all.
 
 - [ ] [DATA] P2. Scale `reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py --mode apply --apply` to
       the full historical corpus via a VM (heavy-I/O rule — not the operator's/an interactive session's local machine),
@@ -237,6 +309,33 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       `_migrations/derivative_ticker_funding_timestamp_fix_2026_07_28/backups/<run_ts>/...` — verify manifest
       `capture_status`/`row_count` unchanged for a sample slice per venue after the run, same as the bounded proof
       above. **Repo: market-tick-data-service + deployment-service** (VM launcher).
+- [ ] [OPERATOR] P2. **Decide DERIBIT `funding_timestamp`/`next_funding_timestamp`: leave honest-absence, or adopt a
+      clearly-labeled bucket convention?** See Finding 4 above — a from-scratch derivation was investigated 2026-07-28
+      and STOPPED (not built) because Deribit has no discrete funding-charge instant to derive (its own ticker/
+      funding-rate-history APIs show a continuously-evolving rate with no reset pattern at 00:00/08:00/16:00 UTC or any
+      other boundary; unlike Binance/Bybit/OKX, Deribit's own API never exposes a next-funding-time field for Tardis to
+      relay). Three options, needs an operator decision (not a worker-determinable outcome):
+
+      A: **[WORKER REC] Leave `funding_timestamp`/`next_funding_timestamp` NULL for DERIBIT permanently** (status quo —
+                                                                                                                          the shipped script's `skipped_all_null_no_forward_value` classification already does this correctly). Honest
+                                                                                                                          absence for a venue that genuinely has no discrete charge instant; zero risk of false precision.
+                                                                                                                          B: Populate DERIBIT `funding_timestamp`/`next_funding_timestamp` using the same UTC 00:00/08:00/16:00 8h grid as
+                                                                                                                          every other 8h-cadence venue, but EXPLICITLY documented (docstring + a distinct `source`/provenance marker, not
+                                                                                                                          silently identical semantics to Binance/Bybit) as a **reporting-bucket convention** — "which 8h window this rate
+                                                                                                                          figure is reported against" — not a literal charge-instant claim, matching how the stored `funding_rate` is
+                                                                                                                          already treated as an "8h figure" by convention (`perp_funding_cadence.py`) even though the real mechanism is
+                                                                                                                          continuous. Restores cross-venue joinability at the cost of a per-venue semantic asterisk that must be documented
+                                                                                                                          everywhere the field is consumed.
+                                                                                                                          C: Populate using DERIBIT's own REAL hourly refresh cadence (`get_funding_rate_history` genuinely returns a fresh
+                                                                                                                          row every hour, on the hour) instead of the 8h grid — this corresponds to an actual discrete update Deribit's API
+                                                                                                                          performs, but it is "last/next rate REFRESH", not "last/next CHARGE" — a still-different semantic from every
+                                                                                                                          other venue's `funding_timestamp`, so it carries the same documentation burden as option B without matching the
+                                                                                                                          registered 8h cadence.
+                                                                                                                          Other: operator can specify a different resolution.
+
+                                                                                                                          **Repo: market-tick-data-service** (the reprocessing script, if B/C chosen) **+ unified-api-contracts** (a
+                                                                                                                          `CanonicalDerivativeTicker.funding_timestamp` docstring caveat, if B/C chosen).
+
 - [ ] [DATA] P2. Add a historical funding-cadence tracker in GCS (canonical-from-docs or inferred from observed
       settlement frequency) so historical annualisation survives a venue cadence change. **Repo: unified-api-contracts +
       market-tick-data-service.**
@@ -255,41 +354,41 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       forward-only ones. **Repo: market-tick-data-service + unified-api-contracts.**
 
       **— derivative_ticker + genesis leg ✅ DONE 2026-06-17 (operator "fully hook up"): `uac@61d5838` (BATCH_ASTER/
-                          LIVE_ASTER/REPLAY_ASTER members + aster capability + `(cefi,derivative_ticker)` source priority),
-                          `utl@3b4bd6b8` (`ASTER→BATCH_ASTER` venue override = self-archive source `aster`, not Tardis), `mtds@5978627`
-                          (`venue_data_types` += `derivative_ticker`; `_perp_funding_hl_aster._write_aster_derivative_ticker` emits
-                          `CanonicalDerivativeTicker` at `asset_group=cefi`, source-aware `batch_aster`/`live_aster`, shard-isolated from
-                          the funding leg; genesis per-(venue,data_type) in `expected_start_dates.yaml`).**
+                                                                                                                                              LIVE_ASTER/REPLAY_ASTER members + aster capability + `(cefi,derivative_ticker)` source priority),
+                                                                                                                                              `utl@3b4bd6b8` (`ASTER→BATCH_ASTER` venue override = self-archive source `aster`, not Tardis), `mtds@5978627`
+                                                                                                                                              (`venue_data_types` += `derivative_ticker`; `_perp_funding_hl_aster._write_aster_derivative_ticker` emits
+                                                                                                                                              `CanonicalDerivativeTicker` at `asset_group=cefi`, source-aware `batch_aster`/`live_aster`, shard-isolated from
+                                                                                                                                              the funding leg; genesis per-(venue,data_type) in `expected_start_dates.yaml`).**
 
-                          **— trades leg ✅ DONE 2026-06-17 (operator "yeah wire it"): `mtds@889b131` — `_perp_funding_hl_aster._write_aster_trades`
-                          fetches `/fapi/v1/aggTrades` (paginated by `fromId`, day-windowed) per symbol, maps onto
-                          `AsterTrade`→`normalize_aster_trade`→`CanonicalTrade`, writes `data_type=trades` at `asset_group=cefi`,
-                          `source=aster`, source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg (Live=Batch, one
-                          run). `trades` is in the cefi `_LEGAL_DATA_TYPES` + Aster `venue_data_types.yaml`; genesis `2021-08-30` already
-                          in `expected_start_dates.yaml`. NO UTL change (the `ASTER→BATCH_ASTER` override is data_type-independent). Unit
-                          test `test_writes_canonical_trades_shard_cefi` asserts the cefi shard path + `m`→buy/sell mapping. NB the
-                          trades write rides `_collect_aster` (funding-genesis-gated) → it covers the **2023-07-22-forward** window; the
-                          pre-funding-genesis trades window (2021-08-30→2023-07-22) needs a standalone trades collect (todo below).
-                          `fetch_klines`+`fetch_depth` adapter scaffolds also landed (one-step-from-ready for the OHLCV+book write legs).**
+                                                                                                                                              **— trades leg ✅ DONE 2026-06-17 (operator "yeah wire it"): `mtds@889b131` — `_perp_funding_hl_aster._write_aster_trades`
+                                                                                                                                              fetches `/fapi/v1/aggTrades` (paginated by `fromId`, day-windowed) per symbol, maps onto
+                                                                                                                                              `AsterTrade`→`normalize_aster_trade`→`CanonicalTrade`, writes `data_type=trades` at `asset_group=cefi`,
+                                                                                                                                              `source=aster`, source-aware `batch_aster`/`live_aster`, shard-isolated from the funding leg (Live=Batch, one
+                                                                                                                                              run). `trades` is in the cefi `_LEGAL_DATA_TYPES` + Aster `venue_data_types.yaml`; genesis `2021-08-30` already
+                                                                                                                                              in `expected_start_dates.yaml`. NO UTL change (the `ASTER→BATCH_ASTER` override is data_type-independent). Unit
+                                                                                                                                              test `test_writes_canonical_trades_shard_cefi` asserts the cefi shard path + `m`→buy/sell mapping. NB the
+                                                                                                                                              trades write rides `_collect_aster` (funding-genesis-gated) → it covers the **2023-07-22-forward** window; the
+                                                                                                                                              pre-funding-genesis trades window (2021-08-30→2023-07-22) needs a standalone trades collect (todo below).
+                                                                                                                                              `fetch_klines`+`fetch_depth` adapter scaffolds also landed (one-step-from-ready for the OHLCV+book write legs).**
 
-                          **— OHLCV/klines leg: DESIGN DECISION 2026-06-17 — `ohlcv_*` is NOT canonized into the cefi tick-data write
-                          (intentional, documented).** `ohlcv_1m`/`ohlcv_15m`/`ohlcv_24h` are registered in UAC
-                          (`market_data_categories.py`/`schema_spec.py`) but are a **TradFi-only** data_type: NOT in the cefi
-                          `_LEGAL_DATA_TYPES` (`tardis_shared.py:73` — the cefi path builder hard-rejects it), NOT in ANY cefi venue's
-                          `venue_data_types.yaml`, NOT in cefi `SOURCE_PRIORITY`, with NO cefi consumer (MDPS consumes
-                          `CanonicalOhlcvBar` for TradFi only; CeFi strategies derive candles from `trades`). The two reference CeFi
-                          venues (BINANCE-FUTURES/BYBIT) deliberately omit ohlcv. Introducing an orphaned cefi `ohlcv_*` would create
-                          dead surface + false expected-absent rows — the exact anti-pattern the Aster `venue_data_types.yaml` comment
-                          warns against. The `fetch_klines` adapter fetch + `normalize_aster_kline` transform ARE ready; see the tight
-                          remaining todo below for the exact one-step write if a cefi ohlcv consumer is ever wired.
+                                                                                                                                              **— OHLCV/klines leg: DESIGN DECISION 2026-06-17 — `ohlcv_*` is NOT canonized into the cefi tick-data write
+                                                                                                                                              (intentional, documented).** `ohlcv_1m`/`ohlcv_15m`/`ohlcv_24h` are registered in UAC
+                                                                                                                                              (`market_data_categories.py`/`schema_spec.py`) but are a **TradFi-only** data_type: NOT in the cefi
+                                                                                                                                              `_LEGAL_DATA_TYPES` (`tardis_shared.py:73` — the cefi path builder hard-rejects it), NOT in ANY cefi venue's
+                                                                                                                                              `venue_data_types.yaml`, NOT in cefi `SOURCE_PRIORITY`, with NO cefi consumer (MDPS consumes
+                                                                                                                                              `CanonicalOhlcvBar` for TradFi only; CeFi strategies derive candles from `trades`). The two reference CeFi
+                                                                                                                                              venues (BINANCE-FUTURES/BYBIT) deliberately omit ohlcv. Introducing an orphaned cefi `ohlcv_*` would create
+                                                                                                                                              dead surface + false expected-absent rows — the exact anti-pattern the Aster `venue_data_types.yaml` comment
+                                                                                                                                              warns against. The `fetch_klines` adapter fetch + `normalize_aster_kline` transform ARE ready; see the tight
+                                                                                                                                              remaining todo below for the exact one-step write if a cefi ohlcv consumer is ever wired.
 
-                          **— book/`book_snapshot_5` leg: batch honest-absence ALREADY CORRECT (no change needed); live WS connector is
-                          the tight remaining unit.** Aster book is `L2_MBP`→`book_snapshot_5` (NOT tbbo); `/fapi/v1/depth` is a live
-                          snapshot only (Binance-compatible, no historical depth) → batch is forward-only honest-absent, already encoded
-                          (`expected_start_dates.yaml` ASTER `book_snapshot_5: null` + absent from Aster's batch `data_types` → no false
-                          expected-absent). A live Aster **trades** WS connector exists (`live/connectors/aster_ws.py`); a live **book**
-                          WS connector does not yet. `fetch_depth` scaffold landed. See the tight live-book todo below. **Repo:
-                          market-tick-data-service + unified-api-contracts.**
+                                                                                                                                              **— book/`book_snapshot_5` leg: batch honest-absence ALREADY CORRECT (no change needed); live WS connector is
+                                                                                                                                              the tight remaining unit.** Aster book is `L2_MBP`→`book_snapshot_5` (NOT tbbo); `/fapi/v1/depth` is a live
+                                                                                                                                              snapshot only (Binance-compatible, no historical depth) → batch is forward-only honest-absent, already encoded
+                                                                                                                                              (`expected_start_dates.yaml` ASTER `book_snapshot_5: null` + absent from Aster's batch `data_types` → no false
+                                                                                                                                              expected-absent). A live Aster **trades** WS connector exists (`live/connectors/aster_ws.py`); a live **book**
+                                                                                                                                              WS connector does not yet. `fetch_depth` scaffold landed. See the tight live-book todo below. **Repo:
+                                                                                                                                              market-tick-data-service + unified-api-contracts.**
 
 - [ ] [DATA] P3. Aster **pre-funding-genesis trades window** (2021-08-30 → 2023-07-22): the canonical Aster `trades`
       write rides `_collect_aster` which is funding-genesis-gated (2023-07-22), so it only covers the forward window. To
@@ -305,8 +404,8 @@ wrong net carry, wrong promote decision. This is the data-pipeline-correctness h
       `trades` — as Aster does — we DERIVE candles from `trades` and do NOT store cefi `ohlcv_*`.**
 
       So the Aster OHLCV leg is correctly not wired: Aster's candles come from its (now-canonicalized)
-                          `trades`. The `fetch_klines` + `normalize_aster_kline` scaffolds stay available (cross-check use), but
-                          no `_write_aster_ohlcv` is added for Aster.
+                                                                                                                                              `trades`. The `fetch_klines` + `normalize_aster_kline` scaffolds stay available (cross-check use), but
+                                                                                                                                              no `_write_aster_ohlcv` is added for Aster.
 
 - [ ] [DATA] P3. **Latent capability: cefi `ohlcv_*` direct-write for a TRADES-LESS cefi venue** (NOT Aster). Today the
       cefi path builder hard-rejects `ohlcv_*` (`tardis_shared.py:73`), so a future OHLCV-only cefi venue (no trades
@@ -461,3 +560,154 @@ contradicting `venue_launch_dates.py`'s `EXPECTED_PRE_VENUE_LAUNCH` clipping for
       native ASTER trades coverage. **Do this before executing the pre-funding-genesis trades backfill todo above**, or
       the backfill will write real archived bytes labeled as native ASTER coverage for a period before the venue is
       confirmed to have existed. **Repo: market-tick-data-service + unified-api-contracts.**
+
+### Finding 5 — EXTENDED-STARKNET `funding_timestamp`: mechanism REVERSE-ENGINEERED with real confidence (both cadence AND anchor); derivation built, registered, and sample-validated on real production data (2026-07-28)
+
+Operator ask (verbatim): "sme for exetedned starknet if we can reverse engineer mechanism" — same treatment as the
+DERIBIT investigation above (Finding 4), conditional on reaching REAL confidence, not a guess. **Verdict: YES,
+reverse-engineered with confidence, mechanism built, shipped, and sample-validated on real production data — this is a
+genuinely different case from DERIBIT, not a repeat of it.**
+
+**Why EXTENDED-STARKNET is a different case from every other venue this issue covers (investigated before assuming
+anything):** its canonical `derivative_ticker` schema is candle-shaped
+(`open`/`high`/`low`/`close`/`volume`/`funding_rate` all present, OHLC always null on funding rows) — this is NOT
+because Extended's funding is candle-derived; it's a harmless artifact of `_umi_extended.fetch_extended_rest`'s
+`pd.concat(all_frames, ...)` unioning the separate per-data_type DataFrames (candles + funding + trades) into one wide
+frame before `PartitionedTickWriter` splits it back out by `data_type` partition — confirmed live by inspecting the
+actual write path (`market_tick_data_service/adapters/_umi_extended.py`,
+`market_tick_data_service/cli/handlers/_onchain_perp_batch_umi.py`). More importantly: `funding_timestamp`/
+`next_funding_timestamp` never existed as COLUMNS at all for this venue (a schema gap, not a null-value gap) — the
+already-shipped `reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py` script's own live probe
+correctly found this and no-op'd it (`skipped_no_funding_timestamp_column`).
+
+**Investigation (per the operator's 3-part ask):**
+
+1. **Corpus grep** (`unified-trading-pm/codex/`, `plans/`, and the MTDS adapter code) for any existing documentation of
+   Extended's funding cadence: found the adapter's own docstring already asserted "hourly"
+   (`_fetch_extended_funding_for_symbol`'s one-line docstring, present since the function was first written) — a genuine
+   prior-engineer belief, but NOT independently cited/verified anywhere in the corpus at the time.
+   `unified_api_contracts.registry.perp_funding_cadence.FUNDING_CADENCE_SECONDS` had NO entry for Extended at all before
+   this session.
+2. **Official API documentation** (fetched live 2026-07-28 — Extended Exchange, a StarkNet perp DEX built by an
+   ex-Revolut team, publishes full public docs): `docs.extended.exchange/extended-resources/trading/funding-payments` —
+   "funding payments are charged every hour and are applied to all users with open positions at that time";
+   `api.docs.extended.exchange` `GET /info/{market}/funding` — "the funding rate is calculated every minute; it is only
+   applied once per hour", and its `T` timestamp field is documented as "the timestamp (in epoch milliseconds) when the
+   funding rate was calculated and applied" — i.e. Extended's own raw `T` field already IS the charge instant (no
+   forward-looking-vs-charge-instant offset exists for this venue the way it did for the Tardis bulk-CSV venues in
+   Finding 2 — there is nothing to shift, only a missing column to add).
+3. **Real production data, pulled live via GCS** (not assumed): sampled
+   `EXTENDED-STARKNET:PERPETUAL:{AAVE,BTC,ETH,SOL,XRP}-USD@LIN` `derivative_ticker` shards across both pipeline_mode
+   lanes (`batch_extended` — the declared native lane — and the currently-mislabelled `batch_tardis` copy, see
+   `plans/active/issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`) and across dates spanning the
+   venue's funding genesis through the present: `2025-07-18` (genesis day), `2025-07-20`, `2025-08-01`, `2026-01-14`,
+   `2026-01-15`, `2026-02-15`, `2026-06-03`. Every sampled shard: exactly 24 rows/day. On `2026-06-03`, EVERY ONE of the
+   5 sampled instruments' 24 `timestamp` values is IDENTICAL across instruments (a single system-wide settlement batch,
+   not a per-market async job) and lands at `minute=0` of every UTC hour, with sub-second jitter clustering tightly
+   around exactly 3600s apart (observed delta range [3599.09s, 3600.94s] — i.e. <=0.95s jitter, consistent with
+   "calculated every minute, applied once per hour"). `2025-07-17` (one day pre-genesis) has ZERO objects in either lane
+   — honest absence, not a flat/fabricated placeholder, matching the adapter's own pre-activation-rows-are-real `0.0`
+   convention for `2025-07-18`/`2025-07-20`.
+
+**Confidence reached: REAL, from two independent sources (official docs + empirical cross-instrument/cross-date
+production data), not a guess.** Cadence = 1h (24/day). Anchor = UTC hour boundaries (`:00:00` each hour), not offset.
+
+**Key gotcha found + fixed (registry key FORM, not just the cadence value):** Extended's canonical `venue` value is
+ALWAYS the compound `"EXTENDED-STARKNET"` (GCS venue-dir, `instrument_id`, the adapter's own `venue` field literal —
+never a bare `"EXTENDED"` anywhere in the codebase), and `-STARKNET` is a CHAIN suffix, not one of
+`perp_funding_cadence._VENUE_SUFFIXES`'s registered INSTRUMENT-TYPE suffixes (`-futures`/`-swap`/`-perpetual`/`-perp`).
+Registering a bare `"extended"` key (mirroring how Coinbase/Hyperliquid are registered) would have silently made
+`is_supported_venue("EXTENDED-STARKNET")` return `False` for every real caller — confirmed live in-session
+(`_canonical_venue("EXTENDED-STARKNET") == "extended-starknet"`, no suffix stripped). The registry key is therefore the
+full lowercased compound string `"extended-starknet"`. **Related (found, NOT fixed here — out of this task's scope):**
+the SAME bug class already exists for the shipped `"lighter"` key — LIGHTER-ZKSYNC's real venue value is also
+`"LIGHTER-ZKSYNC"` (a `-ZKSYNC` chain suffix, same shape as `-STARKNET`), so `is_supported_venue("LIGHTER-ZKSYNC")` is
+`False` today too (confirmed live: `_canonical_venue("LIGHTER-ZKSYNC") == "lighter-zksync"`). Currently DORMANT/harmless
+— every real consumer of `perp_funding_cadence`
+(`features-service/features_service/cefi/calculators/perp_funding_rates.py`,
+`.../onchain/calculators/perp_funding_rates_defi.py`) is MVP-scoped to Binance/ETH-PERP only and never actually calls in
+with `"LIGHTER-ZKSYNC"` yet — but it is a real latent bug, tracked as its own todo below rather than fixed
+opportunistically in this session (a different venue's registry key deserves its own deliberate verification, not a
+drive-by change riding on the Extended fix).
+
+**What shipped:**
+
+- `unified-api-contracts@ee7cb341` (co-mingled with a concurrent sibling agent's Coinbase-cadence commit in this
+  heavily-multi-agent shared checkout — content independently verified identical to what was intended, diff against
+  `origin/live-defi-rollout` is empty): `perp_funding_cadence.FUNDING_CADENCE_SECONDS["extended-starknet"] = 3600`
+  - a new public `cadence_seconds(venue) -> int` helper (single derivation point for "shift/derive by one cadence"
+    corrections, reused by the new MTDS script below) + module-docstring evidence trail + regression tests
+    (`test_perp_funding_cadence.py`: `TestFundingsPerYear.test_extended_starknet_one_hour`, `TestCadenceSeconds`, the
+    venue-dir-form + key-form-absence guards).
+- `market-tick-data-service` (go-forward fix): `adapters/_umi_extended.py::_fetch_extended_funding_for_symbol` now emits
+  `funding_timestamp` (a straight alias of the row's own `timestamp` — Extended's `T` already IS the charge instant) and
+  `next_funding_timestamp` (`funding_timestamp + cadence_seconds("EXTENDED-STARKNET")`) on every funding row. New test
+  `tests/unit/test_umi_extended_funding_timestamp.py` (4 tests: alias-equality, one-cadence-ahead, boundary-exact 24-row
+  seam invariant — row N's `next_funding_timestamp` lands EXACTLY on row N+1's `funding_timestamp` with no gap/overlap —
+  and day-window-filtering regression).
+- `market-tick-data-service` (historical reprocessing, a NEW dedicated script — deliberately NOT an extension of the
+  shipped Tardis script, which is schema-agnostic across every OTHER venue and already correctly no-ops
+  EXTENDED-STARKNET for a different reason):
+  `scripts/one_offs/add_extended_starknet_derivative_ticker_funding_timestamp_2026_07_28.py`. Unlike the Tardis venues'
+  fix (SHIFT a raw forward-looking wire value back one cadence), this is a pure column ADD — there is no raw
+  forward-looking value to correct, only two new columns to derive from the row's own already-correct `timestamp`.
+  Processes both pipeline_mode lanes (`batch_extended` and the currently-mislabelled `batch_tardis` copy) independently
+  and does NOT move/merge/delete anything between them (that re-partition is
+  `onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`'s own separate decision). Same delete-safety rigor as the
+  sibling script: prefix-scoped discovery (never a whole-corpus walk), stage+verify, then backup+CAS-overwrite+verify
+  only under `--apply`. 14 new unit tests
+  (`tests/unit/scripts/test_add_extended_starknet_derivative_ticker_funding_timestamp_2026_07_28.py`): happy path,
+  boundary-exact 24-row seam (re-proven at the Arrow-column level), every per-shard classification (no-timestamp-column
+  / no-funding_rate-column / all-null-funding_rate / idempotency-guard), and the byte-identity assertion's own negative
+  cases (raises on row-count change / mutated pre-existing column / unexpected column addition).
+
+**Bounded sample-validate proof (2026-07-28, real production data, full backup-verify-overwrite-verify protocol):**
+
+- `--mode scan` (manifest-driven): manifest under-counts this venue badly for `batch_extended` (shows only
+  `2026-07-24`→`2026-07-27`, 335 shards — a separate, pre-existing manifest-vs-GCS drift for this venue, NOT something
+  this task fixes) but is accurate for `batch_tardis` (281 shards, `2026-01-14`→`2026-06-03` — matches the number
+  already established by the mislabelled-lane characterization script). Real total scope for BOTH lanes combined is
+  therefore materially larger than the manifest alone shows (real GCS objects exist back to the `2025-07-18` funding
+  genesis for `batch_extended`, confirmed by direct listing) — full-corpus quantification via real (non-manifest)
+  listing is left to the VM-launched follow-up below, consistent with the heavy-I/O rule.
+- `batch_extended`, `--start-date 2025-07-18 --end-date 2025-07-20` (3 days spanning the funding genesis, both
+  instrument coverage and the pre-activation-flat-`0.0` window): dry-run **135/135 `would_add`, 0 errors**; real
+  `--apply` **135/135 `added`, 0 errors** — every object backed up
+  (`_migrations/extended_starknet_derivative_ticker_funding_timestamp_add_2026_07_28/backups/20260728-165200/...`,
+  byte-for-byte verified via `gcs_describe_object` size+crc32c match before overwrite), canonical path CAS-overwritten,
+  new content verified landed.
+- `batch_tardis` (the currently-mislabelled lane), `--start-date 2026-01-14 --end-date 2026-01-14`: real `--apply`
+  **69/69 `added`, 0 errors**, same backup+verify protocol (`.../backups/20260728-165427/...`).
+- **Independent re-verification** (a FRESH read, outside the script's own internal assertions — not just trusting the
+  script's self-report): re-downloaded a corrected canonical object AND its backup for both lanes
+  (`EXTENDED-STARKNET:PERPETUAL:AAVE-USD@LIN`, `2025-07-18` `batch_extended` and `2026-01-14` `batch_tardis`) and
+  confirmed live: the backup carries the ORIGINAL column-less schema; the canonical (post-fix) object carries
+  `funding_timestamp`/`next_funding_timestamp`; `funding_timestamp` equals `timestamp` exactly on every row;
+  `next_funding_timestamp - funding_timestamp == 3600s` exactly on every row; every OTHER column (`open`/`high`/`low`/
+  `close`/`volume`/`funding_rate`/`available_at`/...) is byte-identical between backup and corrected canonical.
+- This fix never touches the manifest (parquet-content-only) — no manifest verification needed the way the sibling
+  Tardis script's proof required one.
+
+- [x] ✅ [DATA] P1. Reverse-engineer + build EXTENDED-STARKNET `funding_timestamp`/`next_funding_timestamp` (mechanism +
+      derivation). **DONE 2026-07-28** — see Finding 5 above for the full evidence trail. Shipped:
+      `unified-api-contracts@ee7cb341` (`perp_funding_cadence` registration + `cadence_seconds()` helper + tests),
+      `market-tick-data-service` (go-forward `_umi_extended.py` fix + new one-off historical-reprocessing script, both
+      with unit tests, `quality-gates.sh` green modulo unrelated concurrent foreign WIP in this shared checkout — see
+      commit for the exact scoped diff). Bounded sample-validated on real production data: 135/135 `batch_extended`
+      objects + 69/69 `batch_tardis` objects corrected, 0 errors, independently re-verified.
+- [ ] [DATA] P2. Scale `add_extended_starknet_derivative_ticker_funding_timestamp_2026_07_28.py --mode apply --apply` to
+      the full historical corpus (both pipeline_mode lanes) via a VM (heavy-I/O rule — the manifest undercounts this
+      venue's `batch_extended` lane, so a real per-day listing pass is needed first to size the true full-corpus scope
+      before launching, not just the manifest's 335+281 shard estimate). **GO recommendation** — the mechanism is proven
+      (204/204 real objects round-tripped with zero errors across both lanes in the bounded sample). **Repo:
+      market-tick-data-service + deployment-service** (VM launcher).
+- [ ] [DATA] P2. Fix the SAME registry-key-form bug for `"lighter"` → `"lighter-zksync"` (LIGHTER-ZKSYNC's real venue
+      value, like EXTENDED-STARKNET's, is a compound `<VENUE>-<CHAIN>` string that `_canonical_venue` does not reduce) —
+      found as a side-discovery while fixing Extended's identical bug class, currently dormant/harmless (no live
+      consumer calls in with the real `"LIGHTER-ZKSYNC"` venue string yet) but a real latent correctness gap. Needs its
+      own verification pass (confirm no existing caller relies on the CURRENT bare `"lighter"` key resolving for some
+      other reason) before changing it — not a same-commit drive-by fix. **Repo: unified-api-contracts.**
+- [ ] [DATA] P2. Fix the pre-existing `batch_extended`/EXTENDED-STARKNET manifest-vs-GCS undercount discovered while
+      scoping Finding 5's `--mode scan` (manifest shows only `2026-07-24`→`2026-07-27` for this pipeline_mode; real GCS
+      objects exist back to the `2025-07-18` funding genesis) — a separate pre-existing drift, not something this task's
+      fix caused or corrects. **Repo: market-tick-data-service.**

@@ -56,8 +56,9 @@ opus/effort-max forcing, tranche-sharded concurrent dispatch, `agent_kind=na_eli
 `lifecycle-complete` in the agents table. That's operational/dispatch-wiring verification, not skill-logic verification,
 and it's still only provable by the timer's own first real fire.
 
-- [x] [OPERATOR] P2. Run `sudo bash scripts/install-na-eligibility-auditor-timer.sh` on the central orchestrator VM —
-      DONE 2026-07-27 via `aws ssm send-command` (instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`, operator
+- [x] [INFRA] P2. **RETAGGED 2026-07-28 (workspace stale-gate audit) — already executed and verified, operator action
+      complete.** Run `sudo bash scripts/install-na-eligibility-auditor-timer.sh` on the central orchestrator VM — DONE
+      2026-07-27 via `aws ssm send-command` (instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`, operator
       unlock-authorized this session). `git pull --ff-only` first picked up `agent-orchestrator@f4a116e` clean.
       Verified: `systemctl status na-eligibility-auditor.timer` → `Loaded: loaded ... enabled`,
       `Active: active     (waiting)`, `Trigger: Tue 2026-07-28 07:01:01 UTC; 16h left` (well within the ≤24h bar).

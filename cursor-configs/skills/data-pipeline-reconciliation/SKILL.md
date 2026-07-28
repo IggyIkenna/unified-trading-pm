@@ -305,10 +305,10 @@ rule still holds per shard; a whole-AG missing surface is a single declared gap,
   > archived).
 - **defi market/event `LENDING` keying (decision D)** — **RULED 2026-07-20 (operator D2 — FULL retire).** Market/event
   flat `LENDING` is `migration_pending` (the retire is gated on
-  `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`). The skill does **NOT REFUSE** it and does **NOT
-  flag** it — it is `migration_pending`, **NOT an open question**. Do not flag `lending` on market/event data_types
-  (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical; only `holdings` uses
-  the `A_TOKEN`/`DEBT_TOKEN` split. SSOT: `/codex/02-data/reconciliation-finding-taxonomy.md` § 5.2.
+  `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`). The skill does **NOT REFUSE** it and
+  does **NOT flag** it — it is `migration_pending`, **NOT an open question**. Do not flag `lending` on market/event
+  data_types (`lending_indices`, `liquidation_events`, `flash_loan_events`, `position_data`) as non-canonical; only
+  `holdings` uses the `A_TOKEN`/`DEBT_TOKEN` split. SSOT: `/codex/02-data/reconciliation-finding-taxonomy.md` § 5.2.
 
 <details>
 <summary>Superseded pre-ruling text (2026-07-20 — kept as history)</summary>

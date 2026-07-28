@@ -479,9 +479,9 @@ stalls forever or migrates something it had no mandate to touch.
   yet implemented).** `cross-asset-canonical-target-ssot.md` §5's "`LENDING` is RETIRED (A_TOKEN/DEBT_TOKEN split)" is
   the correct TARGET, but the first attempt was **reversed in code** because it broke 5+ (really 8) MTDS lending writers
   into `attempted_failed`/zero-data. Mandatory order: **fix the writers → migrate ~16.7M rows → re-sync the shard atom**
-  — gated on `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Until the migration completes,
-  market/event flat `lending` is `migration_pending`** — the reconciler neither flags it as non-canonical nor treats it
-  as an open/unruled axis.
+  — gated on `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`. **Until the migration
+  completes, market/event flat `lending` is `migration_pending`** — the reconciler neither flags it as non-canonical nor
+  treats it as an open/unruled axis.
 - **O4 — honest-coverage formula. ✅ RESOLVED 2026-07-20 — not an open question.** This one was never genuinely unruled:
   it was doc drift, and it is now closed in favour of [`honest-coverage-model.md`](honest-coverage-model.md) § Coverage
   formula — `reachable_coverage = captured / (captured + attempted_failed + expected_unattempted)`, `empty_confirmed`

@@ -328,8 +328,8 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   `market-tick-data-service@d8efc6d6`, `market-tick-data-service@a7f7769a`), banner added, moved to
   `plans/archive/issues/`, `check_terminal_status_archived.py` confirmed clean. Step 4 (corpus-wide referrer fixup)
   completed for 5 of 6 referrers. **One referrer left un-fixed**:
-  `plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (its `related:` frontmatter still points
-  at the old `plans/active/issues/...` path) — that file is 1216 lines, already over the 1000L hard line-cap
+  `plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` (its `related:` frontmatter still
+  points at the old `plans/active/issues/...` path) — that file is 1216 lines, already over the 1000L hard line-cap
   (pre-existing, unrelated to this edit), and `check_line_caps.sh`'s scoped pre-commit check refuses ANY staged commit
   touching an over-cap file (by design, no exceptions — see the script's own comments). Fixing the referrer requires
   first splitting that doc under the cap, which is out of scope for a single-line path fix. Leaving as a known, tracked

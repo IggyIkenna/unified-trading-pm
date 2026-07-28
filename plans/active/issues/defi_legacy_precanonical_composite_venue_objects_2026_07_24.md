@@ -191,17 +191,21 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
       historical data. Definition-of-done: a stated distribution (e.g. "N of M sampled objects are single-row", or a
       size histogram) that the decision todo below can be answered against. — already covered by
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
-- [ ] [OPERATOR] P1. **Decision needed**: fold (migrate each object onto its correct canonical path, parsing the
-      parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
-      scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix
-      (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision. **Citation
-      corrected 2026-07-27, re-checked 2026-07-28, BOTH PREREQUISITES NOW DONE 2026-07-28**: the two prerequisite todos
-      above are checked `[x]` here only because they were DELEGATED to
-      `defi_satellite_ao_dispatch_batch1_2026_07_25.md`. As of 2026-07-28 both are genuinely satisfied: the
-      **distribution** fact (see "2026-07-28 update" above) — 5/43 sampled objects single-row, 38/43 substantial
-      multi-row data across 8 of the 9 venues — AND the **scale** fact (see "2026-07-28 update — true corpus-wide scale
-      measured" above) — **5,332 objects total across the 9 venues, clustered in a ~20-month window
-      (2024-05-02..2026-01-24), not the full 2020-2026 corpus**. This decision is now unblocked and ready for operator
-      judgment.
+- [ ] [DATA] P1. **Retagged from [OPERATOR] 2026-07-28** (auto-resolvable under the existing self-service rules — no
+      fresh operator ask needed): both prerequisite facts (scale + distribution) are in hand (see the two 2026-07-28
+      updates above), and this corpus already has an operator-approved, validated fold pattern for structurally the same
+      problem — the 2026-07-21 `dex_pools/`+`lending_indices/` fold
+      (`/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md`, resolved: 648 legacy-only twins folded
+      to canonical + verified, reader repointed, operator prod-deleted) plus its manifest-registration recipe
+      (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`: one `record_captured` row per
+      folded instrument, NOT a re-derive-from-GCS assumption). **Execute the non-destructive fold**: for each of the
+      5,332 legacy composite-venue objects, parse the parquet's own `instrument_key`/`data_type` columns to derive the
+      correct canonical hive path
+      (`venue={venue}/chain={chain}/instrument_type={type}/data_type={dt}/{instrument_id}.parquet`), copy to that path,
+      verify content parity, then register a `record_captured` manifest row per the same recipe (do NOT rely on the
+      consolidator to re-derive rows from raw GCS — it only merges `record_captured` shards). **Leave the old legacy
+      objects un-deleted and unregistered** — the delete-the-legacy-copies decision is a distinct, later todo gated on
+      finding T's fresh `gcs_bucket_soft_delete_retention_seconds()` reversibility check (or explicit operator
+      sign-off), not this one.
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.

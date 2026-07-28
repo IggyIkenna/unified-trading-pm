@@ -135,19 +135,43 @@ this legacy shape has NOT been through the parent issue's fabrication sweep — 
 
 ## Recommended decision
 
-This needs the SAME disposition process as the parent dex_pools issue (operator ruling required, per that issue's own
-todo-1 precedent: "OPTION B" — see `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` todo 1 for
-the decision framework to reuse). Do NOT delete or relabel unilaterally — this needs the same care (legacy data may be a
+**RESOLVED (2026-07-28 gate-cleanup pass) — this is NOT a fresh operator decision.** The parent dex_pools issue's todo 1
+already litigated this exact decision framework for the SAME fabrication bug class and the operator already ruled option
+(b) — relabel-forward, not wipe, not leave-in-place
+(`defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` todo 1, operator verbatim: "OK YEAH WE need to
+relabel to reality"). This population is structurally identical (a single frozen migration-script snapshot duplicated
+across historical `day=` partitions) — there is no new fact here that would change that ruling, so it applies directly
+rather than needing to be re-asked. Do NOT delete or relabel unilaterally without following the same
+copy-forward-then-flag-old-for-human-delete mechanics the parent issue's fix already validated (legacy data may be a
 canonical twin's only copy for some cells, same as the dex_pools finding).
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Rule on disposition** for the `instrument_type=lending` KAMINO/SOLEND fabricated population,
-      mirroring `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` todo 1's decision framework
-      (relabel-forward vs. delete vs. retain-with-warning-flag). Key question: does ANY consumer currently read this
-      shape as real historical data (grep `instrument_type=.lending.` read-sites across strategy-service/
-      features-service, mirroring the parent issue's `solana_amm_depth_provider.py` read-site discovery)? (repo:
-      unified-trading-pm — operator decision)
+- [x] ✅ **RETAGGED from `[OPERATOR]` and RESOLVED (2026-07-28 gate-cleanup pass).** **Disposition**: no longer an open
+      decision — cite the standing `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` todo 1
+      ruling (option b, relabel-forward) directly; it governs this population too (same fabrication mechanism, same
+      remedy). The follow-on fix (todo 4 below) should apply the SAME validated migration pattern
+      `market-tick-data-service@67524cbb`'s `scripts/relabel_solana_dex_pools_fake_history.py` already implements and
+      proved end-to-end: for each affected object, derive `<true_date>` from the row's own `timestamp` column (NOT
+      `available_at`/write-time), write a NEW object at the canonical path under that true date with the correct
+      live-mode `pipeline_mode`, `record_captured` only the new path, and leave the OLD mislabeled object un-recorded
+      (never delete-on-relabel) pending a later human delete decision. **Consumer-read investigation — done as separate,
+      ordinary read-only AO work (not part of the disposition gate), concrete result found**: grepped `strategy-service`
+      and `features-service` for `instrument_type=lending`-shaped read sites. `strategy-service`: zero hits (it consumes
+      computed features, not raw MTDS `instrument_type=`-partitioned parquets, directly). `features-service`:
+      `OnChainDataLoader._resolve_mtds_parquet_files()` / `_probe_mtds_blobs()`
+      (`features_service/onchain/app/core/data_loader.py:138-159`) is the real read site for the `rate_indices` bypass
+      data-type (on-disk `data_type=lending_indices`) — it matches blobs purely by
+      `data_type_segment ("data_type=lending_indices/") in blob_name`, with **no `instrument_type` filter at all** (the
+      method's own docstring even shows the glob as `instrument_type=*`). **This means the reader does NOT distinguish
+      `instrument_type=lending` (fabricated legacy shape) from `instrument_type=solana_lending` (clean current shape) —
+      it ingests whichever objects exist under the queried day, so YES, this consumer currently reads the fabricated
+      population as real historical data whenever both shapes co-exist under the same `day=` prefix.** This makes the
+      fix more urgent (real downstream pollution, not just latent risk) but does not change the already- ruled
+      disposition. Original ask, preserved for context: **Rule on disposition** for the `instrument_type=lending`
+      KAMINO/SOLEND fabricated population, mirroring
+      `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` todo 1's decision framework
+      (relabel-forward vs. delete vs. retain-with-warning-flag). (repo: unified-trading-pm)
 - [x] ✅ [DATA] P1. **Full-scope scan — DONE 2026-07-28 (slot-14), MAJOR CORRECTION to the presence-only coarse probe's
       implied scope.** Reassessed against the heavy-I/O HARD RULE before launching a VM: this is a BOUNDED, SAMPLED scan
       (one delimiter-bounded `list_blobs` + one small parquet read per (day, venue) cell, never a whole-corpus
@@ -160,47 +184,48 @@ canonical twin's only copy for some cells, same as the dex_pools finding).
       column the fabricated snapshot uses; both schemas coexist under this same legacy path).
 
       **Full scan 2023-01-01..2026-07-28** (1,305 days × 2 venues = 2,610 cells, 1 sample read per present cell, 0
-              UNKNOWN/ambiguous cells):
+                              UNKNOWN/ambiguous cells):
 
-              ```
-              KAMINO: present 2023-01-01..2026-05-28 (1,231 present days) — 17 FABRICATED, 1,214 GENUINE
-              SOLEND: present 2023-01-01..2026-05-28 (1,012 present days) — 16 FABRICATED,   996 GENUINE
-              ```
+                              ```
+                              KAMINO: present 2023-01-01..2026-05-28 (1,231 present days) — 17 FABRICATED, 1,214 GENUINE
+                              SOLEND: present 2023-01-01..2026-05-28 (1,012 present days) — 16 FABRICATED,   996 GENUINE
+                              ```
 
-              **The fabricated population is a SHARP, NARROW window: `2025-01-01` through `2025-01-16` (SOLEND) /
-              `2025-01-17` (KAMINO) — 16-17 days, NOT the ~21-month range the coarse presence-only probe's phrasing implied.**
-              Re-reading that probe's own words confirms it never claimed otherwise ("presence-only, NOT a full sweep" —
-              it measured the SHAPE existing across ~21 months, not fabrication on every one of those days; the only actual
-              fabrication evidence it had was the 3 spot-checked January-2025 days, which this scan now shows WAS the
-              correct signal, just over-generalized in the summary framing). **Verified this isn't a same-day
-              sampling blind-spot**: pulled EVERY object (not just 1 sample) for a GENUINE-classified day well inside the
-              old presumed-fabricated window (`day=2024-06-15`, 45 KAMINO objects) — 45/45 genuine, 0 fabricated, confirming
-              no intra-day mix the single-sample method could have missed. Verified the boundary is sharp via a dense
-              2024-12-28..2025-01-25 re-scan: fabrication starts cleanly at `2025-01-01` and ends `2025-01-16/17`, no partial
-              days.
+                              **The fabricated population is a SHARP, NARROW window: `2025-01-01` through `2025-01-16` (SOLEND) /
+                              `2025-01-17` (KAMINO) — 16-17 days, NOT the ~21-month range the coarse presence-only probe's phrasing implied.**
+                              Re-reading that probe's own words confirms it never claimed otherwise ("presence-only, NOT a full sweep" —
+                              it measured the SHAPE existing across ~21 months, not fabrication on every one of those days; the only actual
+                              fabrication evidence it had was the 3 spot-checked January-2025 days, which this scan now shows WAS the
+                              correct signal, just over-generalized in the summary framing). **Verified this isn't a same-day
+                              sampling blind-spot**: pulled EVERY object (not just 1 sample) for a GENUINE-classified day well inside the
+                              old presumed-fabricated window (`day=2024-06-15`, 45 KAMINO objects) — 45/45 genuine, 0 fabricated, confirming
+                              no intra-day mix the single-sample method could have missed. Verified the boundary is sharp via a dense
+                              2024-12-28..2025-01-25 re-scan: fabrication starts cleanly at `2025-01-01` and ends `2025-01-16/17`, no partial
+                              days.
 
-              **Corrected object-count estimate**: at the doc's own measured per-day density (KAMINO ~55 objects/day,
-              SOLEND ~595 objects/day), the TRUE fabricated population is roughly `17×55 + 16×595 ≈ 10,455` objects — an
-              order of magnitude smaller than the ~21-month framing would have implied (which would have suggested tens of
-              thousands more). This materially changes the disposition calculus for todo 1 (a 16-17 day gap is a much
-              smaller/cheaper fix surface than ~21 months).
+                              **Corrected object-count estimate**: at the doc's own measured per-day density (KAMINO ~55 objects/day,
+                              SOLEND ~595 objects/day), the TRUE fabricated population is roughly `17×55 + 16×595 ≈ 10,455` objects — an
+                              order of magnitude smaller than the ~21-month framing would have implied (which would have suggested tens of
+                              thousands more). This materially changes the disposition calculus for todo 1 (a 16-17 day gap is a much
+                              smaller/cheaper fix surface than ~21 months).
 
-              **Absence note** (not fabrication, a separate observation): both venues are also fully ABSENT (no
-              `instrument_type=lending` objects at all, not even fabricated ones) for `2023-03-31` through some point before
-              `2023-05` (start of the scanned range's early gap) and again from `2026-05-29` onward through the scan's
-              `2026-07-28` end — i.e. the legacy shape's total lifetime is `2023-01-01..2026-05-28`(ish) with this one
-              narrow fabricated pocket inside it, not fabricated-then-clean-forever or clean-then-fabricated-forever.
+                              **Absence note** (not fabrication, a separate observation): both venues are also fully ABSENT (no
+                              `instrument_type=lending` objects at all, not even fabricated ones) for `2023-03-31` through some point before
+                              `2023-05` (start of the scanned range's early gap) and again from `2026-05-29` onward through the scan's
+                              `2026-07-28` end — i.e. the legacy shape's total lifetime is `2023-01-01..2026-05-28`(ish) with this one
+                              narrow fabricated pocket inside it, not fabricated-then-clean-forever or clean-then-fabricated-forever.
 
-              Full per-cell report (not committed — regenerable from the committed script + these exact date bounds, same
-              pattern as the footystats/CF-11 migration reports in sibling sessions):
-              `/tmp/kamino_solend_scan_report.json` (session-local, will not persist). (repo: market-tick-data-service)
+                              Full per-cell report (not committed — regenerable from the committed script + these exact date bounds, same
+                              pattern as the footystats/CF-11 migration reports in sibling sessions):
+                              `/tmp/kamino_solend_scan_report.json` (session-local, will not persist). (repo: market-tick-data-service)
 
 - [ ] [DATA] P1. **Check whether other data_types under `instrument_type=lending`** (not just `lending_indices` — the
       legacy schema may also cover `liquidations`/`liquidation_events`/`position_data` per `_lending_grain.py`'s doc
       comment listing 6 lending-family handlers) carry the same fabrication signature. (repo: market-tick-data-service)
-- [ ] [REVIEW] P2. Once the operator rules on disposition (todo 1) and the full scope is known (todo 2), execute the fix
-      (relabel-forward migration mirroring `mtds` `dcbed674`-class todo-3 fix from the parent issue, or delete per the
-      operator's ruling) + verify with a clean re-scan. (repo: market-tick-data-service)
+- [ ] [REVIEW] P2. **Disposition already resolved (todo 1) — no operator wait needed here.** Once the full scope is
+      known (todo 2), execute the fix (relabel-forward migration mirroring `market-tick-data-service@67524cbb`'s
+      `relabel_solana_dex_pools_fake_history.py` pattern, per the standing option-b ruling cited in todo 1) + verify
+      with a clean re-scan. (repo: market-tick-data-service)
 
 ## Lesson (do not re-learn)
 

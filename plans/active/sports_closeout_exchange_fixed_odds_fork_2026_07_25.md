@@ -72,18 +72,19 @@ drift_direction: advance-code
 
 ## Todos
 
-- [x] ✅ [OPERATOR] P0. **Confirm the ambiguous EXCHANGE_ODDS/FIXED_ODDS venue→class mapping for the 3 still-unresolved
-      venues: bare `BETFAIR` (33 rows), `ODDS_API` (33 rows, an aggregator fitting neither class), and `PINNACLE`
-      (32,616 rows — sportsbook by mechanism, but UAC models it `PINNACLE_AS_LINE` in `_SNAPSHOT_VENUES`, so confirm
-      FIXED_ODDS vs a PINNACLE_AS_LINE special case).** The non-ambiguous poles are already resolved and do not wait on
-      this: EXCHANGE_ODDS = `BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`; FIXED_ODDS =
+- [x] ✅ [DATA] P0. **RETAGGED 2026-07-28 (stale-tag audit — decision already ruled + adjacent code fix already shipped,
+      `[OPERATOR]` never removed).** Confirm the ambiguous EXCHANGE_ODDS/FIXED_ODDS venue→class mapping for the 3
+      still-unresolved venues: bare `BETFAIR` (33 rows), `ODDS_API` (33 rows, an aggregator fitting neither class), and
+      `PINNACLE` (32,616 rows — sportsbook by mechanism, but UAC models it `PINNACLE_AS_LINE` in `_SNAPSHOT_VENUES`, so
+      confirm FIXED_ODDS vs a PINNACLE_AS_LINE special case).** The non-ambiguous poles are already resolved and do not
+      wait on this: EXCHANGE_ODDS = `BETFAIR_EX_UK`/`BETFAIR_EX_EU`/`SMARKETS`/`MATCHBOOK`; FIXED_ODDS =
       `BETFAIR_SB_UK`/`BETMGM`. (repo: unified-trading-pm, decision record). **Done when**: this todo's own text records
       the operator's ruling for all 3 venues (a class or an explicit special case per venue). ✅ **RULING
       (2026-07-26):** - **bare `BETFAIR` (33 rows) → EXCHANGE_ODDS.** Every existing registry already treats the bare
       umbrella key as the exchange product (`venue_constants.py:180` `SPORTS_EXCHANGE_VENUES`; `betfair_ws.py`'s own
       docstring calls it "umbrella exchange venue used by execution + reference"; `bookmaker_registry.py` categorizes it
       `EXCHANGE`). The 33 rows are dead legacy writes from a since-fixed structural bug
-      (`plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md:252,260`, fixed `mtds@accd8aa4`
+      (`plans/archive/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md:252,260`, fixed `mtds@accd8aa4`
       2026-07-20, regression test asserts bare BETFAIR is out of scope going forward) — not an ongoing pattern. -
       **`ODDS_API` (33 rows) → FIXED_ODDS.** The Odds API exclusively aggregates fixed-price sportsbook quotes (never
       exchange/peer-to-peer prices — Betfair Exchange has its own dedicated channel), and existing test fixtures already

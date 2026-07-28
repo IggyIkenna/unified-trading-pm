@@ -95,7 +95,11 @@ about the alert that reports the residue.
    conditions with different responders and different correct actions; collapsing them into one message costs a manual
    dig every time. Dedup by state-transition per `/codex/04-architecture/ci-alerting.md` (fire on change / RESOLVED /
    re-remind), never every tick.
-2. **[OPERATOR] P2 — clear the two current blocks at source** (owner of the bypassed code, NOT this session):
+2. **[DEVOPS] P2 — clear the two current blocks at source** (retagged from `[OPERATOR]` 2026-07-28 — re-shipping or
+   reverting a specific already-identified bypassing commit via the standard quickmerge/revert flow is normal
+   AO-dispatchable work per `/codex/08-workflows/ci-cd-flow.md`, no operator judgment call needed; re-confirmed
+   2026-07-28 that both blocks are still live — `market-tick-data-service@d302f07a` still carries no `Quickmerge:`
+   trailer and is still ahead of `origin/main`, deployment-ui is still 292 commits ahead of `origin/main`):
    - `market-tick-data-service@d302f07a` — re-ship via `quickmerge --agent --files '<paths>'`, or revert on LDR.
    - `deployment-ui` — same; identify its offender the same way (`git log origin/main..origin/live-defi-rollout` + check
      each commit for a `Quickmerge:` trailer). **Do NOT hand-arm auto-merge on either.**

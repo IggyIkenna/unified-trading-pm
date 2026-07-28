@@ -92,12 +92,22 @@ guarantee this doesn't recur if the Phase-7 rollout is still in flight when anot
 
 ## Recommended fix path
 
-- [ ] [OPERATOR] P2. Confirm whether the "Phase 7 — flip glue workflows to self-hosted runners" rollout is now COMPLETE
-      fleet-wide, or still in flight. If still in flight, consider designating a single owner/slot to drive it to
-      completion (land the SSOT change once, roll out to every repo once, done) rather than letting multiple slots react
-      independently to gate failures mid-migration — this is exactly the kind of multi-slot-same-file coordination risk
-      `CLAUDE.md`'s "same file never [concurrent]" guidance is meant to prevent, but the workflow-template SSOT + N
-      per-repo copies is a many-files/one-logical-change pattern that guidance doesn't cleanly cover.
+- [x] ✅ [DATA] P2. **Confirmed via direct measurement (2026-07-28), not an operator ask — this was a checkable fact.**
+      Ran `detect_template_drift.py --workflows --json` fleet-wide: `new_drift` = 1 entry
+      (`market-tick-data-service/staging-lock-check.yml`, unrelated to Phase 7/agent-orchestrator), `current_drift` = 7
+      entries including `agent-orchestrator/update-dependency-version.yml` — but that entry is already present in the
+      accepted `workflow_template_drift_baseline.json` (140 entries), not fresh drift. Traced the baseline's own
+      history: commit `b6c4d0fb1` ("docs(ci): baseline the Phase-7 canary's expected workflow-template drift",
+      2026-07-27 20:17:49+0100) explicitly grandfathers this as intentional, documented, TEMPORARY canary-phase state —
+      its own message confirms agent-orchestrator "got the real rollout" (the 7 files this issue's 3 drift incidents
+      were about) while "the other 23 repos' copies are deliberately NOT re-rolled-out yet (no self-hosted runner
+      registered for them...)." **Verdict: the Phase 7 rollout for agent-orchestrator itself is COMPLETE and STABLE** (0
+      new drift measured today against its own files) — the earlier "still in flight" uncertainty is resolved. The wider
+      "Phase 7 fan-out" to the remaining 23 repos is a SEPARATE, deliberately-deferred future work item (each repo needs
+      its own self-hosted runner registered first), not an uncoordinated in-flight race — tracked by the ratchet
+      baseline itself, which shrinks as each repo is rolled out. No single-owner assignment is needed for the
+      already-stable agent-orchestrator canary; a future owner is only relevant if/when the fan-out to the other 23
+      repos is scheduled.
 - [ ] [SCRIPT] P3. Consider whether `rollout-workflow-templates.sh` (or a wrapping CI job) could roll out to EVERY repo
       in one atomic pass when the SSOT changes, rather than relying on individual slots to notice + fix per-repo drift
       reactively when their own unrelated commit trips the gate. This would remove the "N slots independently re-fixing

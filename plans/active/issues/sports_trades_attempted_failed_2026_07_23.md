@@ -217,7 +217,8 @@ population, and not evidence anything broke.**
       cell's `DP_RUN_MOSTLY_EMPTY` ratio purely as a denominator side-effect. Not urgent (the underlying cell being
       dead/already-tracked means no action was actually needed here), but worth a one-line runbook note so a future
       on-call doesn't re-diagnose this from scratch. Repo: `deployment-service`.
-- [ ] [VERIFY] P3. Once `sports_master_closeout_2026_07_21.md`'s (archived) K1/K2 work is fully flipped to done and the
-      DELETE of old non-canonical objects eventually executes (operator-gated), re-check this cell's ratio settles back
-      down as expected once the legacy lowercase `data_type=="trades"` population's dead-residue rows are themselves
-      migrated/purged rather than left as an orphaned denominator-shrunk remnant.
+- [ ] [VERIFY] P3. **UNBLOCKED 2026-07-28** — the K1/K2 casing-revert migration + the DELETE of old non-canonical
+      objects have both landed and been independently verified complete (`sports_consolidated_closeout_2026_07_19.md`
+      Track V K1/K2 todo, `market-tick-data-service@26201c44`, 345,852/345,852 deleted, 0 failed, 0 remaining
+      post-delete). Re-check this cell's ratio settles back down as expected now that the legacy lowercase
+      `data_type=="trades"` population's dead-residue rows are no longer an orphaned denominator-shrunk remnant.

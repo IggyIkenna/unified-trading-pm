@@ -1513,11 +1513,11 @@ source: >-
     (`issues/defi_gmx_pipeline_mode_mislabeled_hyperliquid_2026_07_21.md`) are believed still uncommitted pending its
     ship — verify both landed before assuming this is done.
   - **Lending-writer-retire prerequisite gate** (agentId `a2386110e55fc02df`,
-    `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`, all 14 todos) — was on its 3rd quality-gate
-    pass (85% through, 13 MTDS files + 1 PM script, 139 tests passing) at checkpoint time. This plan's OWN scope is the
-    writer-fix only — it explicitly must NOT start the ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration itself even once
-    green (that's this closeout plan's Track 1 job, gated on this one flipping its todo-14 banner from BLOCKED to
-    CLEARED).
+    `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`, all 14 todos) — was on its 3rd
+    quality-gate pass (85% through, 13 MTDS files + 1 PM script, 139 tests passing) at checkpoint time. This plan's OWN
+    scope is the writer-fix only — it explicitly must NOT start the ~16.7M-row LENDING→A_TOKEN/DEBT_TOKEN migration
+    itself even once green (that's this closeout plan's Track 1 job, gated on this one flipping its todo-14 banner from
+    BLOCKED to CLEARED).
   - **Zero-capture protocols** (agentId `a18ff7170b7a0d5b7`, Track 4, scoped to uniswap_v2/v4 + trader_joe_v2 +
     velodrome_v2 + Morpho lending indices ONLY — Solana ORCA/RAYDIUM swap indexer deliberately excluded, collides with
     item 4 above) — had given two unverifiable "waiting" reports with zero corroborating evidence (no live process, no

@@ -568,7 +568,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - +4 more (P2/P3) — see file for the rest
 
 - **Cross-cutting infra / audit (shared across asset groups, tradfi-relevant)**:
-  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
+  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
     (16 open — nearly all P0, listed in full per the "never silently drop a P0/P1" rule)
     - **[DATA] P0.** Rebuild code tarballs (`refresh_code_tarballs.sh`) for the 4 already-shipped repos
     - **[DATA] P0.** VERIFY on `-test-` via `/data-pipeline-check-mdps` (force+skip+canonical legs) that the writer now

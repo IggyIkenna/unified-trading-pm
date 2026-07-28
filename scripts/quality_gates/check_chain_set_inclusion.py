@@ -39,36 +39,38 @@ def _load_chain_env() -> object:
     failures (e.g. WIP normalize_utils changes); chain_env.py itself only
     declares plain ``dict`` constants and has no in-package imports, so
     loading the file directly is safe.
+
+    Direct-file load is tried FIRST (not as an ImportError fallback) — a bare
+    package-path import of the registry module almost never raises
+    ImportError (the package usually imports fine), so gating the fast path
+    behind "on failure" meant it never actually ran: every invocation paid
+    the full ``unified_api_contracts`` package ``__init__`` cost (pandas +
+    every ``external``/``canonical`` submodule, ~13s wall) just to read three
+    plain dict constants — measured as the dominant contributor to a
+    quality-gates-v2 timeout on system-integration-tests#311 (2026-07-28).
     """
-    try:
-        from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]  # noqa: qg-deep-import
-            CHAIN_GENESIS_DATES,
-            GAS_FEE_CHAIN_START_DATES,
-            MAINNET_CHAIN_IDS,
-        )
-
-        class _Module:
-            pass
-
-        module = _Module()
-        module.CHAIN_GENESIS_DATES = CHAIN_GENESIS_DATES  # type: ignore[attr-defined]
-        module.GAS_FEE_CHAIN_START_DATES = GAS_FEE_CHAIN_START_DATES  # type: ignore[attr-defined]
-        module.MAINNET_CHAIN_IDS = MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
-        return module
-    except ImportError:
-        pass
-
     workspace_root = Path(__file__).resolve().parents[3]
     chain_env_path = workspace_root / "unified-api-contracts" / "unified_api_contracts" / "registry" / "chain_env.py"
-    if not chain_env_path.exists():
-        msg = f"chain_env.py not found at {chain_env_path}"
-        raise FileNotFoundError(msg)
-    spec = importlib.util.spec_from_file_location("_chain_env_direct", chain_env_path)
-    if spec is None or spec.loader is None:
-        msg = f"cannot build importlib spec for {chain_env_path}"
-        raise ImportError(msg)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
+    if chain_env_path.exists():
+        spec = importlib.util.spec_from_file_location("_chain_env_direct", chain_env_path)
+        if spec is not None and spec.loader is not None:
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
+
+    from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]  # noqa: qg-deep-import
+        CHAIN_GENESIS_DATES,
+        GAS_FEE_CHAIN_START_DATES,
+        MAINNET_CHAIN_IDS,
+    )
+
+    class _Module:
+        pass
+
+    module = _Module()
+    module.CHAIN_GENESIS_DATES = CHAIN_GENESIS_DATES  # type: ignore[attr-defined]
+    module.GAS_FEE_CHAIN_START_DATES = GAS_FEE_CHAIN_START_DATES  # type: ignore[attr-defined]
+    module.MAINNET_CHAIN_IDS = MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
     return module
 
 

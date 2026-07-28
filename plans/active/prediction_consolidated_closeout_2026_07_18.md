@@ -68,7 +68,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/active/prediction_cross_cutting_debt_index_2026_07_25.md,
+    /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
 last_updated: 2026-07-26 # was 2026-07-25 — /plan-reconcile prediction shard re-counted the predictions_master epic digest (38→41 open, 9→12 untagged) and confirmed all 6 data_pipeline_e2e_milestones_gate todos targeted here genuinely landed. 2026-07-25 consolidated-closeout split pass: depends_on now gates on the 4 Phase A-E children, native todos relocated out (0 remaining), related: extended to the satellite/native-extract batch docs and the new cross-cutting-debt-index child
@@ -222,8 +222,8 @@ never `underlying`.
 
 ## Distinct Values / axis-value census (2026-07-20 measured)
 
-The corpus-wide SSOT tracker is `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md` — its 2026-07-20
-ground-truth table already shows prediction clean on every axis (non-canonical/total distinct:
+The corpus-wide SSOT tracker is `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` — its
+2026-07-20 ground-truth table already shows prediction clean on every axis (non-canonical/total distinct:
 `venues 0/2, instrument_types 0/1, data_types 0/4, chains 0/1`). This section adds a second, independent corroborating
 source: the same-day `/data-pipeline-reconciliation` four-surface pass against `asset_group=prediction`, full doc at
 `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`.
@@ -483,7 +483,7 @@ fixture-linked before MVP backfill.
       rest
 
 **Additional cross-cutting / issue-doc coverage** — forked out 2026-07-25 (consolidated-closeout split pass) to
-[`prediction_cross_cutting_debt_index_2026_07_25.md`](/plans/active/prediction_cross_cutting_debt_index_2026_07_25.md),
+[`prediction_cross_cutting_debt_index_2026_07_25.md`](/plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md),
 moved verbatim (~20 docs cataloged: canonical-id-builder retrofit, candle-canonical-path migration execution,
 MDPS/features pipeline-check debt, is-daily-enum capture-heal, cross-asset backfill maintenance windows, and a dozen
 more issue-doc digests whose open work is genuinely cross-AG — defi/cefi/tradfi/sports-scoped, not prediction-owned
@@ -599,11 +599,11 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   index with an enriched Aggregated source docs index covering every active prediction + prediction-touching plan/issue.
 - **2026-07-24 (later same day)** — Distributed 6 gate-doc todos from `data_pipeline_e2e_milestones_gate_2026_07_24.md`
   into this file: added a "Distinct Values / axis-value census" section (cites the corpus-wide SSOT tracker
-  `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`, whose ground-truth table already shows prediction
-  clean on every axis, plus the corroborating same-day `/data-pipeline-reconciliation` run; **correction 2026-07-24
-  same-session**: an earlier draft of this entry wrongly claimed no such tracker doc existed — it does, this entry now
-  cites it directly); added the 4 Phase A-E children to the Aggregated source docs index (previously only in the
-  Split-notice table); added a Codex SSOTs bullet to "MVP universe" citing
+  `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`, whose ground-truth table already shows
+  prediction clean on every axis, plus the corroborating same-day `/data-pipeline-reconciliation` run; **correction
+  2026-07-24 same-session**: an earlier draft of this entry wrongly claimed no such tracker doc existed — it does, this
+  entry now cites it directly); added the 4 Phase A-E children to the Aggregated source docs index (previously only in
+  the Split-notice table); added a Codex SSOTs bullet to "MVP universe" citing
   `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`; and added a new "Queued audits + reviews" section
   with 5 bounded todos (adapter dead-code audit, -is/-mtds/reconciliation 3x-checkpoint top-up, and an adversarial
   AO-dispatch-readiness pass mirroring sports's Track Y) for a future dispatched worker — none executed in this pass,

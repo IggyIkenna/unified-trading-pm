@@ -316,7 +316,8 @@ TOTAL: 0/34,385 rows at yes-twin-confirmed or yes-after-verify.
 **No action in this doc deletes, moves, or modifies anything.** Every disposition above is `no-migrate-first` or N/A.
 Recommended next steps, in priority order:
 
-- [x] 1. [OPERATOR] P1. **Rule on the 1,492 v2 pre-floor rows**: fold into the existing pre-floor-wipe scope (extend
+- [x] 1. [REVIEW] P1. **Rule on the 1,492 v2 pre-floor rows** — resolved by cross-reference, not a fresh operator
+      decision (downgraded from `[OPERATOR]`): fold into the existing pre-floor-wipe scope (extend
       `deployment-service`'s `wipe_pre_floor_sports_2026_07_21.py`-style tool to also cover `sports_reference_v2/`), or
       confirm they're already covered by a follow-up pass. This is a policy-consistency question, not a fresh delete
       decision — the operator already ruled the underlying data category. — already covered by

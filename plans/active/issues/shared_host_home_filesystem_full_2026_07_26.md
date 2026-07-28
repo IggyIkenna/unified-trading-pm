@@ -74,10 +74,13 @@ specific to any one task.
 
 ## Recommended decision
 
-- [x] ✅ [OPERATOR] P1. **MOOT as of 2026-07-27** — verified fresh from this same shared host (confirmed via
-      `.tabs/1`/`.tabs/2` slot dirs present under `unified-trading-system-repos/`, i.e. this session runs on the exact
-      host the finding describes): none of the 3 named directories exist anymore (`ls` on all 3 absolute paths → "No
-      such file or directory") and `df -h` now reports `145G total, 87G used, 59G avail, 60% use` (vs the
+- [x] ✅ [INFRA] P1. **MOOT as of 2026-07-27** — downgraded from `[OPERATOR]`; the recursive-delete this todo escalated
+      was never executed by any agent (correctly BLOCKED by `block_destructive_commands.py`, no §3a-style reversibility
+      carve-out applies to a local-filesystem guardrail) — resolution was by passage of time (operator/another agent
+      cleanup), not an operator ruling this session needs to keep gated. Verified fresh from this same shared host
+      (confirmed via `.tabs/1`/`.tabs/2` slot dirs present under `unified-trading-system-repos/`, i.e. this session runs
+      on the exact host the finding describes): none of the 3 named directories exist anymore (`ls` on all 3 absolute
+      paths → "No such file or directory") and `df -h` now reports `145G total, 87G used, 59G avail, 60% use` (vs the
       `290G     290G 448K 100%` reported 2026-07-26) — the crisis has resolved and the specific delete target is already
       gone (cleaned by the operator or another agent in the interim; not executed by this session). **Classification
       note**: this was never actually a GCS delete-safety-protocol case — it's a LOCAL filesystem recursive-delete,

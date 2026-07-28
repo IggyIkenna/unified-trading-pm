@@ -174,14 +174,66 @@ manifest specifically for these 3 venues, per this same doc's precedent for the 
 3. If they're out of scope (different asset_group / already migrated / legitimately excluded), record why in this doc's
    `resolved_by` and close.
 
+## Investigation (2026-07-28, corpus-only — no live GCS/manifest access from this session)
+
+Ran the doc's own suggested next-steps 1-2 as a corpus grep/read, not a live query:
+
+1. **Where the plan's 561,260/32,616 figures came from**: NOT in `sports_consolidated_closeout_2026_07_19.md` (grepped,
+   0 hits for either figure). Traced instead to
+   `/plans/archive/2026_07/data_status_page_ux_and_canonicalisation_history_2026_07_24.md` (line 993, dated
+   **2026-07-17**): a live snapshot of the sports `availability_index.parquet` taken 10 days before this doc's own
+   2026-07-27 measurement, itemizing only the "evidenced" venues (the ones the 2026-07-18 operator ruling needed) — its
+   own text says "the middle will not be guessed", i.e. it was never a claim of a complete venue enumeration. This
+   confirms the 561,260/32,616 figures are a stale point-in-time snapshot, not a narrower legitimate slice (date-range
+   or data_type-scoped) as this doc's "What this doc is NOT claiming" section speculated might be the case — but see
+   finding 2 below for a real, distinct data_type-scope difference.
+2. **Whether the ~19 unmapped venues have another canonical destination**: strong corpus evidence they do.
+   `/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (Updates 4-12) documents an
+   actively-worked, already-shipped fix chain for MDPS-derived sports odds products (`odds_movement_15m`,
+   `odds_snapshot_15m`, `odds_horizon_bucket`/`_15m`, `arbitrage_opportunity_15m`) whose exact venue list — 23 venues
+   incl. WILLIAMHILL, BETFAIR_EX_EU, BETFAIR_EX_UK, BETONLINEAG, BETRIVERS, BETSSON, BETVICTOR, CASUMO, CORAL,
+   DRAFTKINGS, FANDUEL, LADBROKES_UK, LIVESCOREBET, PADDYPOWER, PINNACLE, SKYBET, SMARKETS, SPORT888, UNIBET, UNIBET_UK,
+   VIRGINBET, BETFAIR_SB_UK, MATCHBOOK — is a near-exact match for this doc's ~19-venue unmapped list. Per that doc's
+   Update 5: `unified_api_contracts.internal.schemas._candle_contracts.py` registers all 4 of these MDPS-derived
+   products under a single **generic `instrument_type="odds"`** (the same instrument_type key this doc's undercount
+   query summed, and the same one `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` is forking) — while this
+   doc's own undercount query (see "What was measured" above) had `filters=None`, i.e. it summed `row_count` across
+   **every `data_type`** under `instrument_type=odds/ODDS`, not just `data_type=trades`. The fork plan's
+   Move-GCS-objects todos are explicitly scoped to `data_type=trades` only (confirmed: both already-executed Move todos
+   measured their live scope as "`instrument_type=ODDS/data_type=TRADES`" specifically). This is consistent with the ~19
+   venues' bulk of row_count being
+   `odds_movement_15m`/`odds_snapshot_15m`/`odds_horizon_bucket`/`arbitrage_opportunity_15m` rows (a DIFFERENT data_type
+   family from `trades`), which would mean they are not orphaned raw sportsbook trades data at all — they are a separate
+   MDPS-derived product line, already tracked and being actively fixed in a different, already-active plan.
+
+**This is a strong, corpus-grounded finding, not a live-manifest-verified one** — it does not itself prove zero
+`data_type=trades` rows exist for these 19 venues (only that a large, separate, already-explained `data_type` family
+does exist for them under the same instrument_type). The one remaining check needed to fully close this doc is narrow
+and mechanical, not open-ended, so this is being left as a normal dispatchable audit todo rather than an operator
+escalation — the ambiguity the original todo worried about ("are the ~19 venues in-scope, or legitimately out of scope")
+now has a concrete, checkable hypothesis to confirm rather than an open judgment call.
+
 ## Todos
 
-- [ ] [OPERATOR] P0. **Reconcile the ~19 unmapped odds venues before legacy retirement** — determine whether the ~19
-      extra venues (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS,
-      UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU)
-      are in-scope and need a venue→class mapping, or are legitimately out of scope, before
-      `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s legacy `odds` contract retirement proceeds (see
-      "Suggested next step" above).
+- [ ] [DATA] P0. **Confirm the ~19 unmapped odds venues are the already-tracked MDPS-derived product line, not orphaned
+      raw trades data, before legacy retirement.** Per the corpus investigation above: query the live sports manifest
+      (`read_availability_index`, manifest-only, no new whole-corpus walk) for each of the 19 venues (BETONLINEAG,
+      UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON,
+      FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU), filtered to
+      `instrument_type` in `{odds,ODDS}` AND `data_type=trades` specifically. **If zero rows** for all 19 (expected, per
+      the investigation above): these venues have no raw sportsbook trades data under `odds` at all — their
+      `instrument_type=odds` footprint is exclusively the MDPS-derived `odds_movement_15m`/`odds_snapshot_15m`/
+      `odds_horizon_bucket`/`arbitrage_opportunity_15m` family, already out of scope for
+      `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s `data_type=trades`-only Move todos and already owned by
+      `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` — close this doc as resolved (false alarm on orphaning, real
+      data-scope conflation in the original undercount query), noting the fork plan's LAST todo (retire the legacy
+      `odds` UAC contract entry) must still separately account for `_candle_contracts.py`'s generic
+      `("sports","odds",data_type)` fallback registration these 4 MDPS products depend on before that retirement is
+      safe. **If any nonzero** rows exist under `data_type=trades` for one or more of the 19: those specific venues
+      genuinely need a venue→class mapping added before the fork's legacy-contract retirement proceeds — escalate only
+      those venues (not the whole list) with the measured row counts. Repo: market-tick-data-service /
+      unified-trading-pm (doc-only close-out either way). **Done when**: the per-venue `data_type=trades` check is run
+      and one of the two dispositions above is recorded with the measured counts.
 
 ## Secondary, smaller finding (not this doc's main subject)
 

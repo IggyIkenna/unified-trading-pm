@@ -219,7 +219,7 @@ similarly omit it at this grain (Drift/Pacifica removed 2026-07-16); only Hyperl
 genuinely have real OI. `funding_rate` + `ts_event` are mandatory. No venue-specific raw-layer aggregation (that's what
 §4's `perp_funding` divergence-removal above is about) — aggregation windows belong downstream in features, not in
 either raw capture data_type. Full per-venue coverage-table evidence (file:line, verified 2026-07-15):
-`unified-trading-pm/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
+`unified-trading-pm/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`.
 
 ---
 

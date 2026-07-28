@@ -277,15 +277,20 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 ### Phase 0 — shape (done / in flight)
 
-- [x] [OPERATOR] P0. Audit both clouds + 4 codebase audits (pipeline / deployment-api / deployment-ui / tarball lane) —
+> **2026-07-28 retag** — all 11 P0 todos below are already ✅-checked with dated 2026-07-17→2026-07-21 operator
+> sign-offs; per the operator's 2026-07-28 stale-gate audit ruling (CLAUDE.md Findings-triage: retag the moment a gate
+> resolves, same edit), retagged the original OPERATOR tag to `[REVIEW]` (this file's convention for
+> sign-off/review-type work) to reflect the completed nature of the work, not a live pending gate.
+
+- [x] [REVIEW] P0. Audit both clouds + 4 codebase audits (pipeline / deployment-api / deployment-ui / tarball lane) —
       all complete; findings captured above.
-- [x] [OPERATOR] P0. Mock-first standalone HTML with REAL probed data (5 views: running / deploy-timeline / pipeline /
+- [x] [REVIEW] P0. Mock-first standalone HTML with REAL probed data (5 views: running / deploy-timeline / pipeline /
       artifacts / health) — shipped at `deployment-ui/public/design-mocks/artifact-pipeline.html`
       (deployment-ui@479f8c2), viewable at `/design-mocks/artifact-pipeline.html`. **Temporary — delete the folder when
       the real page ships.** Iterating with operator.
-- [x] [OPERATOR] P0. Shape locked with the operator 2026-07-17 — **top-level `/ops/artifacts`** (not a cockpit tab),
-      **all 5 views in v1**, **default view = What's running**.
-- [x] [OPERATOR] P0. ✅ Rebuilt "What's running" on the service × version model — `deployment-ui@3fcc112` +
+- [x] [REVIEW] P0. Shape locked with the operator 2026-07-17 — **top-level `/ops/artifacts`** (not a cockpit tab), **all
+      5 views in v1**, **default view = What's running**.
+- [x] [REVIEW] P0. ✅ Rebuilt "What's running" on the service × version model — `deployment-ui@3fcc112` +
       collapsible-groups follow-up. Row unit is now service × artifact version with an expandable host list, a
       `fragmented` flag, cross-links, collapsible service groups and an expand/collapse-all control. Stat tiles are
       computed from the data (a check caught hand-written numbers disagreeing with the table). Interactions verified in
@@ -293,7 +298,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
 
 **Per-tab review gate — real work starts only when ALL of these are signed off:**
 
-- [x] [OPERATOR] P0. **Tab 1 — What's running** — reviewed 2026-07-20; rebuilt to service × version + collapsible +
+- [x] [REVIEW] P0. **Tab 1 — What's running** — reviewed 2026-07-20; rebuilt to service × version + collapsible +
       **build-datetime column**. ✅ **Signed off 2026-07-21.** Review findings folded in (drive the real page from
       these):
   - **Row unit** = service × artifact version, expandable host list, collapsible service groups + expand/collapse-all.
@@ -313,7 +318,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
   - Data source for build-time is confirmed available (image `createTime`, manifest `created_at`); a couple of GCP
     createTimes in the MOCK are deploy-derived only because gcloud auth expired mid-session — a non-issue for the real
     backend (it holds live creds).
-- [x] [OPERATOR] P0. **Tab 2 — Deploy timeline** — ✅ signed off 2026-07-21 (iterated: correctness + usefulness pass).
+- [x] [REVIEW] P0. **Tab 2 — Deploy timeline** — ✅ signed off 2026-07-21 (iterated: correctness + usefulness pass).
       `ui@e01e5fc`. Was one-service (uts-shared-deployment-api) + 4 static AWS rows; now **estate-wide** across 5 real
       sections: Cloud Run for that service (15 revs, each with a computed **held-for** interval so "what ran on date X"
       is a lookup) + other Cloud Run services + **GCE VM launches (a launch IS the tarball-lane deploy)** + the real AWS
@@ -322,13 +327,13 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       `resolve ↗` where a digest→SHA join exists but the value needs a fresh gcloud auth. **Real-page requirement (fold
       into the build):** a **date cursor** so "what ran on date X" is an actual selection — the held-for intervals
       already support the lookup; the real page's date-range picker provides the control.
-- [x] [OPERATOR] P0. **Tab 3 — Pipeline** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Added **All / Failed /
+- [x] [REVIEW] P0. **Tab 3 — Pipeline** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Added **All / Failed /
       Image / Tarball / GCP / AWS** filter chips, surfaced the previously-dead `xlane` flag as a **⇄ both-lanes** badge
       (one commit built as image AND tarball), and a **shipped ↗** through-line hint on successful image builds. Drawer
       (step timeline + failure + log excerpt) unchanged. **Stale-fact fix `ui@57785a3`:** the note claiming the
       failure-watcher "only posts free text to Slack / stamps `unified-trading-pm`" was corrected — that watcher was
       **fixed 2026-07-20** (right repo + notify-slack dedup).
-- [x] [OPERATOR] P0. **Tab 4 — Artifacts** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Was 8 image rows for 2
+- [x] [REVIEW] P0. **Tab 4 — Artifacts** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Was 8 image rows for 2
       repos; now **one row per repo** showing the real sprawl (**ECR inventory probed live 2026-07-21**): 20 repos,
       image counts, latest tags, last-push, **running? + state** (running / App-Runner-PAUSED / ECS-desired=0 /
       orphaned-GC / empty / still-pushing), with **running / orphaned-GC / empty / cloud** filters. GCP AR kept as the
@@ -336,21 +341,21 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       the build):** a per-repo **size** column + a **GC-candidate** flag (no matching build AND not running) so the 1.5
       TB AR sprawl is actionable at row level (ties to the cost page). GCP side needs live auth → real-page, not mock.
       (Overlaps the Phase-6 P3 "orphaned-image GC candidates" stretch — promote into the v1 Artifacts columns.)
-- [x] [OPERATOR] P0. **Tab 5 — Health** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Folded in 3 new
-      **measured** deploy-lane findings (App Runner storm, orphaned ECR estate, ~40% config churn → 13 conditions),
-      added severity **tiles + filter**, an **Area** column, and a **"see in <tab> ↗"** cross-link from every condition
-      to the view that proves it. Note now states none of these fires an alert today. **Stale-fact fix `ui@57785a3`:**
-      corrected the failure-watcher note (fixed 2026-07-20) and the AWS-tarball "`code/` has 0 objects" claim (now
-      **populated**; real defect = the launcher's 404 bucket). The AWS-lane **bugs** (tarball mismatch, freeze-replay)
-      are kept as **real defects tagged `AWS-deferred`**, distinct from the blue "parked · not a defect" tier (App
-      Runner/ECR) — **operator CONFIRMED this framing 2026-07-21** ("what's broken is broken").
-- [x] [OPERATOR] P0. ✅ **AWS-deferred reframe applied across the mock** (operator 2026-07-21) — the AWS state is
+- [x] [REVIEW] P0. **Tab 5 — Health** — ✅ signed off 2026-07-21 (iterated). `ui@e01e5fc`. Folded in 3 new **measured**
+      deploy-lane findings (App Runner storm, orphaned ECR estate, ~40% config churn → 13 conditions), added severity
+      **tiles + filter**, an **Area** column, and a **"see in <tab> ↗"** cross-link from every condition to the view
+      that proves it. Note now states none of these fires an alert today. **Stale-fact fix `ui@57785a3`:** corrected the
+      failure-watcher note (fixed 2026-07-20) and the AWS-tarball "`code/` has 0 objects" claim (now **populated**; real
+      defect = the launcher's 404 bucket). The AWS-lane **bugs** (tarball mismatch, freeze-replay) are kept as **real
+      defects tagged `AWS-deferred`**, distinct from the blue "parked · not a defect" tier (App Runner/ECR) — **operator
+      CONFIRMED this framing 2026-07-21** ("what's broken is broken").
+- [x] [REVIEW] P0. ✅ **AWS-deferred reframe applied across the mock** (operator 2026-07-21) — the AWS state is
       **intentional parking (no credits)**, not breakage. Added a top **GCP-active / AWS-parked banner**; Deploy
       timeline tiles + section headers reframed to "intentionally parked · last active 2026-05-22"; Artifacts states
       `orphaned · GC` → **`parked · AWS deferred`** (kept, not GC) with the GCP legacy AR aggregate as the only true GC
       row; Health demoted the 2 AWS conditions to a blue **`deferred` (not a defect)** tier (now high 5 / med 3 / low 3
       / deferred 2). ✅ Confirmed 2026-07-21 ("what's broken is broken; fix AWS when we need AWS").
-- [x] [OPERATOR] P0. ✅ **Final sign-off on the whole mock — 2026-07-21** → Phases 1–6 UNBLOCKED, build started.
+- [x] [REVIEW] P0. ✅ **Final sign-off on the whole mock — 2026-07-21** → Phases 1–6 UNBLOCKED, build started.
 
 ### Phase 1 — backend read + snapshot layer (deployment-api)
 

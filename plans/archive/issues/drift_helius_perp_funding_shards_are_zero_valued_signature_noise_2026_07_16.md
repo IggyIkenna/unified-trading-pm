@@ -24,7 +24,7 @@ related:
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     plans/active/issues/drift_v2_sig_index_program_wide_helius_oom_2026_07_15.md,
     plans/active/issues/mtds_solana_drift_backfill_manifest_staleness_redoes_captured_days_2026_07_15.md,
-    plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
+    plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md,
   ]
 created: 2026-07-16
 assigned_vm: NA

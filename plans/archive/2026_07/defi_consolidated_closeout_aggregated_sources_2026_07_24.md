@@ -9,7 +9,9 @@ summary: >-
   markers -- see task_template.md finding H -- so this stays structurally un-ingestable by AO's regen_backlog parser
   even though this doc itself is LOCAL/not dispatched). Read this alongside the parent for full context on what's open
   across the defi asset group; the parent's own native Tracks 1-8 are NOT duplicated here.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: this doc's own single [DOC] P3 todo (verify the digest is
+  # accurate) is done; verified zero open todos of its own
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -55,6 +57,19 @@ assigned_role: data_engineering
 drift_direction: none
 ---
 
+## Deferred work — migrated to:
+
+**N/A — this doc is a pure discoverability index, not a work-owning plan.** Its own single todo (verify the digest stays
+accurate) is done. The real open work it catalogs lives in the ~dozens of cited sibling docs (several still carrying
+real double-digit open-todo counts, e.g. `data_completion_defi_2026_07_15.md` (25 open) and
+`candle_canonical_path_migration_execution_2026_07_24.md` (16 open, all P0/P1) as of 2026-07-28) — archiving this index
+does not close any of that work; see the parent `/plans/active/defi_consolidated_closeout_2026_07_18.md` for the live
+picture.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — this doc's own scope (a verified-accurate discoverability digest) is
+> complete; it does not represent the defi asset group being done. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
 # DeFi consolidated close-out — aggregated source docs (discoverability index)
 
 > Extracted verbatim from `/plans/active/defi_consolidated_closeout_2026_07_18.md`'s 2026-07-24 line-cap trim (2nd
@@ -75,9 +90,10 @@ drift_direction: none
     `issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`,
     `issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`,
     `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`); two of its links are NOT tracked elsewhere
-    here: `plans/active/distinct_values_noncanonical_audit_2026_07_20.md` (`asset_group: [cross-cutting]`, 4 open todos,
-    out of this plan's defi-primary scope) and `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`
-    (`asset_group: [infrastructure]`, explicitly "not defi-scoped itself" per its own doc).
+    here: `plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` (`asset_group: [cross-cutting]`, 4
+    open todos, out of this plan's defi-primary scope) and
+    `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (`asset_group: [infrastructure]`,
+    explicitly "not defi-scoped itself" per its own doc).
 
 - **Bucket / storage / migration**:
   - [`plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md`](/plans/active/defi_dedicated_bucket_shared_migration_2026_07_13.md)
@@ -91,7 +107,7 @@ drift_direction: none
       post-genesis; subgraph-zero-on-alive-day cells typed honest, never silent.
   - [`plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md`](/plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/active/candle_canonical_path_migration_execution_2026_07_24.md)
+  - [`plans/active/candle_canonical_path_migration_execution_2026_07_24.md`](/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md)
     (16 open, all P0/P1 — this is the cefi-authored candle-namespace migration epic; defi is sequenced FIRST in its
     per-AG apply order)
     - **[DATA] P0.** Rebuild code tarballs for the 4 already-shipped repos so canonical-shape changes are live on VM
@@ -339,7 +355,7 @@ drift_direction: none
     (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
     broader sweep beyond that concrete precedent filed separately at
     `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
-  - [`plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`](/plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md)
+  - [`plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`](/plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md)
     (5 open — ⛔ GATES Track 1's LENDING retire)
     - **[CODE] P0.** Ship the retire atomically across UAC+MTDS+UTL in ONE wave — a partial wave IS the outage (the
       documented meta-lesson of the earlier reversal).
@@ -426,7 +442,7 @@ drift_direction: none
       CURVE/OPTIMISM.
     - **[SCRIPT] P3.** Repeat the live-subgraph-health spot-check for the remaining un-investigated long-tail
       `attempted_failed` buckets.
-  - [`plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`](/plans/active/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md)
+  - [`plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`](/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md)
     (1 open)
     - **[DESIGN] P1.** GATED on parity results — decide whether to demote `perp_funding` from a captured raw type to a
       DERIVED interval view now that `derivative_ticker` is the canonical raw funding home for all perps.
@@ -788,7 +804,11 @@ drift_direction: none
 
 ## Todos
 
-- [ ] [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos** (by
-      design, non-checkbox digest bullets — e.g. 25 open in `data_completion_defi_2026_07_15.md`, 16 open P0/P1 in
+- [x] ✅ [DOC] P3. **This index is not "0 open work" — it aggregates dozens of sibling docs carrying real open todos**
+      (by design, non-checkbox digest bullets — e.g. 25 open in `data_completion_defi_2026_07_15.md`, 16 open P0/P1 in
       `candle_canonical_path_migration_execution_2026_07_24.md`); do not treat this doc's own checkbox-free format as
-      evidence the defi asset group is done.
+      evidence the defi asset group is done. **Verified accurate 2026-07-28** — re-read the doc in full: the caveat is
+      present and correctly describes the doc's own content (dozens of `- **[TAG] Pn.**` non-checkbox digest bullets
+      across the "Aggregated source docs" section, several still carrying real double-digit open-todo counts, e.g. the
+      cited `data_completion_defi_2026_07_15.md` (25 open) and `candle_canonical_path_migration_execution_2026_07_24.md`
+      (16 open, all P0/P1)). No correction needed; checkbox flipped to record the verification.

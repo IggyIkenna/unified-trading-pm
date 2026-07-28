@@ -212,10 +212,20 @@ For the target `<ag>`:
 3. **AG-primary doc inventory**: for the 5 real AGs + `cross-cutting` + `ao`/`ci`/`infrastructure` (all 9 now have a
    real dedicated `asset_group` value as of 2026-07-27 — see the classification-mechanism section above), enumerate
    every `plans/active/*.md` and `plans/active/issues/*.md` whose frontmatter `asset_group` list contains `<ag>`
-   (`infra` reads as `infrastructure` here, matching the enum). Cross-check against that tranche's own
-   `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists — the two should now largely agree post-retag; a doc
-   present in one but not the other is either a post-2026-07-27 addition never added to the Sources list (fix by adding
-   it there, per the 3-doc example already tracked in
+   (`infra` reads as `infrastructure` here, matching the enum). **Discovery MUST be a frontmatter-block-aware parse that
+   strips YAML comments before tokenising — a single-line `rg '^asset_group:.*<ag>'` is NOT sufficient** (added
+   2026-07-26, `issues/ag_closeout_audit_asset_group_comment_grep_blindspot_2026_07_26.md`): a multi-line
+   `asset_group:\n  [<ag>] # corrected ... -- was [<old-ag>], a genuine mistag`-shaped block (the orthogonality-retag
+   convention this same skill's HARD CHECK below prescribes) defeats single-line grep entirely (the value sits on a
+   continuation line, past the line-anchored colon), and it ALSO defeats a naive block-aware tokenizer that doesn't
+   strip `#` comments first (the quoted old value reads as a live second tag, wrongly excluding the doc as a peer-AG
+   candidate) — either failure drops the doc from the candidate set, the exact invisible-orphan class this phase exists
+   to catch. Collapse continuation lines, strip every `#`-prefixed comment token, THEN tokenise the `asset_group` list.
+   Same requirement applies to the membership greps quoted inside the closeout docs themselves — don't cite a bare
+   `rg -l '^asset_group:.*<ag>'` count as a membership total without the same caveat. Cross-check against that tranche's
+   own `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists — the two should now largely agree post-retag; a
+   doc present in one but not the other is either a post-2026-07-27 addition never added to the Sources list (fix by
+   adding it there, per the 3-doc example already tracked in
    `/plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s own Phase 3), or a genuine new
    mistag worth fixing on sight. For the 5 AGs + cross-cutting, filter out docs whose `asset_group` also contains a
    genuinely DIFFERENT peer asset-group marker (any of `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`,

@@ -49,7 +49,7 @@ related:
   [
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
-    /plans/active/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md,
     ../epics/infrastructure_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
@@ -697,10 +697,10 @@ is ready pending the operator's canonical ruling + the candle-manifest-populatio
 The full "OPTION-A MIGRATION SCOPED" record and the "RESUMPTION STATE 2026-07-21" record (scale correction, blast
 radius, path transform, the 8-phase breakdown, the LOCKED canonical shape, the per-repo shipped/uncommitted-file table,
 RESUME ORDER, and the 🔑 LESSONS) were extracted **verbatim** 2026-07-24 to
-`/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) — that plan
-now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for the full
-record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is `depends_on`-gated
-on that plan's completion.
+`/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) —
+that plan now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for
+the full record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is
+`depends_on`-gated on that plan's completion.
 
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 

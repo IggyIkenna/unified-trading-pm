@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [quality-gates, qg-5.83, adapter-contract-regression, timeout, fleet-wide, shipping-blocked, disk-io]
 related:
   [
-    /plans/active/issues/mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md,
+    /plans/archive/issues/mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md,
     /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
   ]
 created: 2026-07-27

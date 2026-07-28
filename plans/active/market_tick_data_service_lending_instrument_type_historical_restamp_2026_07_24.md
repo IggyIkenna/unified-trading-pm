@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [manifest, data-correctness, restamp, canonicalisation, lending]
 related:
   [
-    /plans/active/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]
@@ -38,9 +38,9 @@ locked_since:
 supersedes:
 superseded_by:
 source:
-  forked from /plans/active/distinct_values_noncanonical_audit_2026_07_20.md per explicit operator rescope decision
-  2026-07-24 (fork ONLY the MTDS lending-instrument-type historical-restamp workstream out; RESTAKING stays in the
-  parent as shipped historical record)
+  forked from /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md per explicit operator rescope
+  decision 2026-07-24 (fork ONLY the MTDS lending-instrument-type historical-restamp workstream out; RESTAKING stays in
+  the parent as shipped historical record)
 last_updated: 2026-07-24
 ---
 
@@ -72,8 +72,8 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
 
 - `/codex/02-data/availability-manifest-and-data-status.md` (manifest row-key / CAS-write model)
 - `/codex/02-data/defi-canonical-naming-ssot.md` (lending instrument_type canonical spelling)
-- `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md` (parent audit — headline finding, classification
-  framework, and the two already-shipped sibling re-stamps this plan mirrors)
+- `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` (parent audit — headline finding,
+  classification framework, and the two already-shipped sibling re-stamps this plan mirrors)
 
 ## Todos
 
@@ -99,17 +99,17 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
 - [ ] [DATA] P2. Post-apply: confirm the distinct-values panel (`GET /distinct-values/defi`) no longer badges
       `liquidation` as a non-canonical/unexpected `instrument_type` value stamped by this writer path (re-pull the live
       nightly honest-coverage rollup and diff against the pre-apply baseline); cross-link the result back into
-      `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md`'s Progress Log, and close out this plan.
+      `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`'s Progress Log, and close out this plan.
 
 ## Progress Log
 
 ### 2026-07-24 — forked out of the parent audit
 
-Forked out of `/plans/active/distinct_values_noncanonical_audit_2026_07_20.md` per an explicit operator rescope decision
-(that plan was ~1627 lines and needed a size-cap split). Only this MTDS lending-instrument-type historical-restamp
-workstream was forked — it is the one genuinely open, unscoped-into-concrete-todos item left on the parent. The parent's
-own already-completed RESTAKING `InstrumentType` workstream is NOT forked (fully shipped and git-verified done
-2026-07-22 — historical record only, not open work) and stays in place there. No code has been written or executed for
-this workstream yet; the 5 todos above are the first concrete breakdown of the narrative description that lived on the
-parent plan's line ~437 ("Writer half fixed... DEFERRED: historical manifest rows...") and line ~151-167 ("Still open —
-one writer fix is only HALF done...").
+Forked out of `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md` per an explicit operator rescope
+decision (that plan was ~1627 lines and needed a size-cap split). Only this MTDS lending-instrument-type
+historical-restamp workstream was forked — it is the one genuinely open, unscoped-into-concrete-todos item left on the
+parent. The parent's own already-completed RESTAKING `InstrumentType` workstream is NOT forked (fully shipped and
+git-verified done 2026-07-22 — historical record only, not open work) and stays in place there. No code has been written
+or executed for this workstream yet; the 5 todos above are the first concrete breakdown of the narrative description
+that lived on the parent plan's line ~437 ("Writer half fixed... DEFERRED: historical manifest rows...") and line
+~151-167 ("Still open — one writer fix is only HALF done...").

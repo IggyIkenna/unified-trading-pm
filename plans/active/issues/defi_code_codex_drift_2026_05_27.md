@@ -170,9 +170,20 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
 - [x] [CODE] P3. **DECIDED 2026-05-27 → KEEP** D13 — `governance_proposals` is an intentional unregistered scaffold for
       the Phase-4B simulation harness (not wired in `cli/main.py`), so it is NOT an active parallel path vs
       `governance_events`. No change; documented in the catalog § "Additional data types".
-- [ ] [INFRA] P3. D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in
+- [x] ✅ [INFRA] P3. D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in
       `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative.
       `lst_rates/` **DONE 2026-05-28**: 1,200 date-prefix parquets deleted; 64,373 stale manifest rows pruned.
       `lending_indices/` + `dex_pools/`: deferred until Gate 2 Solana migration completes (canonical buckets must be
       confirmed superset first). Solana instrument_types added to codex — PM@(Gate 6 commit). Cited: UAC@7e9f4ad9 +
-      UAC@90b2bb9d + MTDS@c38d1ca3 + MTDS@896d5c9 (Gate 5).
+      UAC@90b2bb9d + MTDS@c38d1ca3 + MTDS@896d5c9 (Gate 5). — **CLOSED 2026-05-28 leg + FOLDED+DELETED 2026-07-21 for
+      the remaining two, re-verified 2026-07-28.** The `lending_indices/`/`dex_pools/` deferral resolved: those two
+      prefixes were folded to canonical and operator-prod-deleted 2026-07-21, re-probed at 0 objects. Re-verified this
+      pass (re-reading, not re-deriving): `/codex/02-data/non-canonical-path-inventory.md:96` — "The DO-NOT-DELETE below
+      is HISTORY. The safe fold→repoint→delete order was executed 2026-07-21";
+      `/plans/archive/issues/defi_dex_pools_delete_order_stale_2026_07_20.md` frontmatter `status: resolved`; its
+      spawned residual `/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md` also
+      `status: resolved`; CLAUDE.md's "`dex_pools/` + `lending_indices/` — FOLDED + DELETED 2026-07-21" line. All three
+      legs of D2 (`lst_rates/`, `lending_indices/`, `dex_pools/`) are now closed. Per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, this checkbox flip is read-only bookkeeping — no GCS
+      delete run in this pass (the prod delete already happened 2026-07-21, operator-executed). Source/cross-ref:
+      `plans/archive/2026_07/defi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 1.

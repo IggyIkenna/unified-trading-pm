@@ -132,11 +132,13 @@ drift_direction: advance-code
   already tracked in `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest — not re-created here.
 - **[DATA] P0.** Legacy no-env instruments-store-sports bucket decommission - tracked in
   sports_legacy_bucket_cutover_2026_07_16.md, not here.
-- **[OPERATOR] P2.** Manual review of the 88 mis-keyed-duplicate orphan rows' disposition — **ALREADY RESOLVED, not
-  carried forward as an open todo (2026-07-26, same "finding C" staleness pattern this plan already flags for 4 other
-  items above).** These 88 rows (0.01% of the 2026-07-13 683,592-row dedup cleanup that had no canonical twin to dedupe
-  against, left untouched during `market-tick-data-service@55f9e961`'s fix) are genuinely-captured, unique API-Football
-  `PLAYER_STATS` rows (100% `capture_status=captured`, spread across 21 leagues, 2020-2026) mis-stamped with
+- **[DATA] P2.** **RETAGGED 2026-07-28 (stale-tag audit — this digest entry's own text already says the disposition was
+  decided and executed; `[OPERATOR]` was a stale label from before that, never cleaned up).** Manual review of the 88
+  mis-keyed-duplicate orphan rows' disposition — **ALREADY RESOLVED, not carried forward as an open todo (2026-07-26,
+  same "finding C" staleness pattern this plan already flags for 4 other items above).** These 88 rows (0.01% of the
+  2026-07-13 683,592-row dedup cleanup that had no canonical twin to dedupe against, left untouched during
+  `market-tick-data-service@55f9e961`'s fix) are genuinely-captured, unique API-Football `PLAYER_STATS` rows (100%
+  `capture_status=captured`, spread across 21 leagues, 2020-2026) mis-stamped with
   `service_name=market-tick-data-service` and a blank `asset_group` by the same root-cause bug — real data, not
   corrupted/redundant, so deletion was never the right disposition. The disposition was decided and **executed** the
   same week this bug was found, before this 2026-07-25 plan was even written: `instruments-service@9ce3450e`'s
@@ -268,7 +270,8 @@ drift_direction: advance-code
       P2a/P2b/P2c items above.** R3-daily/R4/R5 sub-items already shipped/verified; R1/R2/R3-history remain blocked
       pending P2a+P2b+P2c — re-run this gate once those land, don't mark it DONE early. (repo: unified-trading-pm).
       **Done when**: P2a/P2b/P2c are all confirmed done AND the gate re-run passes.
-- [x] ✅ [OPERATOR] P2. **Unresolved cefi-before-sports gate TENSION, never ruled** (flagged 2026-07-14, still open).
+- [x] ✅ [DATA] P2. **RETAGGED 2026-07-28 (stale-tag audit — already ruled 2026-07-26, `[OPERATOR]` never removed).**
+      Unresolved cefi-before-sports gate TENSION, never ruled (flagged 2026-07-14, still open).
       `instruments_foundation_completeness_2026_06_24.md` states sports does NOT start its G1→G5 until cefi is DONE, but
       cefi's own G4/G5 were still open when this coordinator's G1 noise-wipe work executed (2026-06-28). Unclear whether
       the 2026-06-27 re-homing was an implicit operator override. (repo: unified-trading-pm, decision record). **Done
@@ -315,12 +318,12 @@ drift_direction: advance-code
   (`sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`, now archived,
   `status: resolved`) shows `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` aligned to `PER_DAY_PER_LEAGUE`,
   `resolved_by: unified-api-contracts@b73c95d5` (2026-07-25).
-- [ ] [DATA] P3. BLOCKED-PREREQUISITES — **sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check, gated on the
-      parent's Track V K1/K2 legacy-object DELETE (`[OPERATOR]`-gated) executing first.** Not a live defect (the 87.2%
-      ratio spike is a K1/K2 denominator-shrink artifact on already-dead residue, not a new outage) — this is just the
-      re-check once that DELETE lands. Filed: `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service,
-      read-only once unblocked). **Done when**: the parent's K1/K2 DELETE todo is confirmed `[x]` AND a fresh ratio
-      check confirms the spike resolves as predicted.
+- [ ] [DATA] P3. **UNBLOCKED 2026-07-28** — sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check. The parent's Track
+      V K1/K2 legacy-object DELETE has landed and is verified complete (`sports_consolidated_closeout_2026_07_19.md`
+      Track V K1/K2 todo, `market-tick-data-service@26201c44`, 345,852/345,852 deleted, 0 failed). Not a live defect
+      (the 87.2% ratio spike is a K1/K2 denominator-shrink artifact on already-dead residue, not a new outage) — this is
+      now the actionable re-check. Filed: `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service,
+      read-only). **Done when**: a fresh ratio check confirms the spike resolves as predicted.
 - **[DOC] P2.** `sports_features_layer_findings_sweep_2026_07_18.md` is NOT closed by this plan or by the parent
   closeout — 73 open todos there are the features-layer correctness backlog, deliberately not duplicated here (too large
   to fold in). Do not treat sports feature-layer correctness as done when this closeout or this child archives; that doc

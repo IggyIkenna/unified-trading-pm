@@ -526,7 +526,7 @@ Three standing qualifiers:
   `:117-118`; `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:158-171`.
 - **Ruled by / when** — reversal was shipped in code; the FORWARD decision is now **RULED 2026-07-20 (operator D2 — FULL
   retire)** (CORRECTION 2026-07-20: was "PARKED for the operator, decision D, 2026-07-19"). The retire is gated on
-  `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`, so the interim flat `LENDING` is
+  `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`, so the interim flat `LENDING` is
   `migration_pending` until the writer retire lands. Holdings are unaffected and stay `A_TOKEN` / `DEBT_TOKEN`.
 - **Suppression rule** — during the `migration_pending` window, never flag `lending` / `solana_lending` on a
   market/event lending data_type as non-canonical (the axis is ruled-but-not-yet-migrated, NOT an open question).
@@ -647,9 +647,9 @@ re-opening a settled ruling.
 ### 5.2 [decision D] DeFi market/event `LENDING` keying — RULED full retire, migration_pending
 
 > **RULED 2026-07-20 (operator D2 — FULL retire).** Market/event flat `LENDING` is `migration_pending`: the retire is
-> gated on `plans/active/defi_lending_writer_retire_prerequisite_2026_07_20.md`. The reconciliation does NOT REFUSE it
-> and does NOT FLAG it — it is `migration_pending`, **NOT an open question**. The old "REFUSED — pending decision D"
-> framing is REMOVED. Holdings are unaffected and stay `A_TOKEN` / `DEBT_TOKEN`.
+> gated on `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`. The reconciliation does NOT
+> REFUSE it and does NOT FLAG it — it is `migration_pending`, **NOT an open question**. The old "REFUSED — pending
+> decision D" framing is REMOVED. Holdings are unaffected and stay `A_TOKEN` / `DEBT_TOKEN`.
 
 **Documentary background — the options weighed before D2 (retained as history; superseded by the full-retire ruling).**
 

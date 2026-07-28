@@ -31,7 +31,7 @@ related_plans:
   - ../active/github_actions_ci_cost_reduction_2026_07_15.md
   - ../active/github_actions_cost_reduction_options_analysis_2026_07_15.md
   - ../active/github_actions_operator_gated_followups_2026_07_17.md
-  - ../active/github_actions_staging_machinery_shutdown_2026_07_24.md
+  - /plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md
   - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
   - ../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md
 last_updated: 2026-07-14
@@ -158,10 +158,11 @@ analysis & decision record
 **status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI cost reduction —
 operator-gated followups (D2/D3/D4 decisions, verification-pending items)
 
-### [`github_actions_staging_machinery_shutdown_2026_07_24`](../active/github_actions_staging_machinery_shutdown_2026_07_24.md)
+### [`github_actions_staging_machinery_shutdown_2026_07_24`](/plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md)
 
-**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions staging-branch machinery
-shutdown — dead-cron audit + escalation-dispatch bugfix (2026-07-23)
+**status**: ✅ ARCHIVED 2026-07-28 (was: active) · **estimate**: 4 cal AI-days (class: infra) · **title**: GitHub
+Actions staging-branch machinery shutdown — dead-cron audit + escalation-dispatch bugfix (2026-07-23) — the one residual
+(codex-SSOT home for the re-entry runbook) landed `unified-trading-pm@97970974e`; verified zero open todos.
 
 ## P3 — backlog; revisit quarterly
 

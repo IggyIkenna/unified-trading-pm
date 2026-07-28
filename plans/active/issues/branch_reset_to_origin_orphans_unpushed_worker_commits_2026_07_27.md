@@ -216,21 +216,32 @@ each other.
 
 ## Investigation (root cause)
 
-- [ ] [OPERATOR] P1. Identify WHAT emits `branch: Reset to origin/live-defi-rollout` on a worktree that carries an
-      unpushed local commit. Candidates: a slot-teardown/prune path, a `setup-tab-worktrees.sh` re-init, or an ff-pull
-      cron that `reset --hard`s instead of `pull --ff-only` (which would only ever fast-forward, never drop ahead
-      commits). Whatever it is, it must NOT hard-reset a branch that is ahead of origin — that discards committed work.
-      Likely same disruption window as the related per-slot-cron-staleness issue (disk resize + 2 orchestrator restarts,
-      same day). **Corroboration 2026-07-28 (slot-12)**: this recurs beyond the 2026-07-27T16:55Z reap window — hit it
-      on `deployment-service` mid-`cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1 work, my session having
-      died and been respawned partway through (per the resumed-session boot message). Reflog showed
+- [x] ✅ **RETAGGED from `[OPERATOR]` and RESOLVED (2026-07-28 gate-cleanup pass) — not an operator judgment call, a
+      worker-determinable fact, now determined.** Re-grepped `unified-trading-pm/scripts/quickmerge.sh` to confirm this
+      doc's own later 2026-07-28T01:1x SUPERSEDED banner (above): `cascade_dep_branch()` (`:362`) runs
+      `git checkout -B "$branch_name" "origin/$branch_name"` at `:483` (the same unconditional-realign pattern recurs at
+      `:1488`/`:1509` elsewhere in the script) — `checkout -B` REALIGNS the local branch to origin regardless of
+      ahead-of-origin state, which is exactly the `branch: Reset to origin/live-defi-rollout` reflog signature every
+      wave in this doc chased. This is NOT the `setup-tab-worktrees.sh`/ff-pull-cron/`reset --hard` candidates
+      originally guessed below — those were exonerated by this doc's own later waves (slot-7's `408a92200` audit clears
+      `slot-cron-ff-pull.sh` specifically). Already root-caused + partially fixed in
+      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`;
+      independent fetch-bug fix `8ca436599`) — that doc is the correct home for any remaining code-fix scope, not this
+      one; do not re-implement here. **Original investigation prompt, preserved for context**: identify WHAT emits
+      `branch: Reset to origin/live-defi-rollout` on a worktree that carries an unpushed local commit. Candidates: a
+      slot-teardown/prune path, a `setup-tab-worktrees.sh` re-init, or an ff-pull cron that `reset --hard`s instead of
+      `pull --ff-only` (which would only ever fast-forward, never drop ahead commits). Likely same disruption window as
+      the related per-slot-cron-staleness issue (disk resize + 2 orchestrator restarts, same day). **Corroboration
+      2026-07-28 (slot-12)**: this recurs beyond the 2026-07-27T16:55Z reap window — hit it on `deployment-service` mid-
+      `cve_affected_pinned_deps_remediation_2026_06_18.md` todo 1 work, my session having died and been respawned
+      partway through (per the resumed-session boot message). Reflog showed
       `HEAD@{1}: branch: Reset to origin/live-defi-rollout` sitting directly on top of my own unpushed
       `chore(deps): lift fastapi/starlette caps...` commit, which vanished from `HEAD` (still recoverable via reflog at
       the time, not checked how long it survives). Lower stakes than the prior cases — a 2-line dependency-bump commit,
-      redone in under a minute rather than needing a reflog cherry-pick — but it strengthens the "session
-      respawn/teardown path" candidate above: this fired specifically around a session-death-then-resume, not just the
-      mass-reap window, suggesting the trigger is closer to "any slot respawn finds an ahead-of-origin worktree" than a
-      one-off incident tied to the 2026-07-27 disk-resize disruption.
+      redone in under a minute rather than needing a reflog cherry-pick — but it strengthens the "any slot respawn finds
+      an ahead-of-origin worktree" framing, which the `cascade_dep_branch()` finding above now explains mechanically (a
+      respawn's quickmerge dependency-cascade re-checkout, not something tied uniquely to the 2026-07-27 disk-resize
+      disruption).
 
 ### Related symptom — corrupted `/done` evidence SHA in the recovery race window (review, 2026-07-27T17:21Z)
 

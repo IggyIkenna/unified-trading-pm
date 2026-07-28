@@ -50,8 +50,8 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
 
 > **✅ ARCHIVED 2026-07-25** — `status: resolved` (all 3 core cross-repo data-correctness findings shipped + verified
 > per the 2026-07-23 RE-TRIAGE); 2 low-priority P3 residuals remain genuinely open and are tracked in
-> `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest (not lost — see the annotated
-> checkboxes below). Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
+> `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s digest (not lost — see the
+> annotated checkboxes below). Moved to `plans/archive/issues/` per the issue-doc-lifecycle archival ritual.
 
 # Sports derived/fixture per-league layout — recompute shape is CANONICAL; the gap is the ml-service day-level-only reader
 
@@ -168,9 +168,9 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
 - [ ] [DOC] P3. **Write the features-bucket path SSOT** (codex/02-data) documenting: odds day-level; derived/fixture
       per-league with RAW af-id keys (historical, addressable); manifest key = canonical league NAME; readers must
       handle both layouts. Cite `writer.py:26-27` + `batch_handler.py:300-323`. **STILL OPEN as of 2026-07-25** —
-      tracked in `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest
-      (this doc's entry) so it stays visible after this doc archives; not migrated to a new doc since it already has an
-      owner.
+      tracked in `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos
+      digest (this doc's entry) so it stays visible after this doc archives; not migrated to a new doc since it already
+      has an owner.
 - [x] [CODE] P2. **ml-service: odds_features cannot join the fixture matrix — join-key mismatch** (found during the P1
       real-bucket runtime verify, 2026-07-14): the real `odds_features` parquet keys rows on **`event_id`** (columns:
       `event_id, home_implied_prob, …`), but `_merge_sports_groups_for_date`
@@ -204,8 +204,8 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
       Burgos CF vs Córdoba). Smaller-league od spellings are likely under-covered; audit mapping coverage against the
       distinct od team names in MDPS bucketed odds and extend the table (IS owns reference data). Until then those
       fixtures' odds rows drop at merge time (honest absence, logged). **STILL OPEN as of 2026-07-25** — tracked in
-      `/plans/active/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest (this doc's
-      entry) so it stays visible after this doc archives.
+      `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest
+      (this doc's entry) so it stays visible after this doc archives.
 
 ## Non-actions (explicit)
 

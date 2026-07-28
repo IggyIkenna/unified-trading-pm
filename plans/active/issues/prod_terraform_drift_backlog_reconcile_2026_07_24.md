@@ -157,7 +157,7 @@ todo below.
       (`defi_removal_probe_daily`), not a GCS-bucket delete/migration the reversibility carve-out (finding T,
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) is scoped to — no equivalent
       reversibility-verification recipe exists for a terraform apply, so left gated rather than guessed.
-- [x] [OPERATOR] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per finding W**
+- [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per finding W**
       (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`): a permission gap on
       `unified-trading-sa`'s own identity is self-fixable, not an operator escalation (the earlier gating pass predates
       finding W). Granted `roles/secretmanager.viewer`, `roles/pubsub.viewer` (superseded), and `roles/pubsub.admin`

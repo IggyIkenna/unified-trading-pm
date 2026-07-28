@@ -254,13 +254,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       fresh process per day) and it is **NOT reliable**: two consecutive single-day chunks for the identical
       9-symbol/3-venue scope used 6GB and 14.6GB respectively (the second OOM-killed), ruling out a simple "memory
       scales with date-range span" theory — the real trigger is unpredictable (per-day data-volume variance, a
-      retry-storm, or a within-process leak). **BLOCKED-OPERATOR-DECISION (2026-07-22): NOT launching further attempts
-      myself.** Filed `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) with full
+      retry-storm, or a within-process leak). **Re-tagged 2026-07-28 — a normal `[MTDS]` P0 debugging dispatch, not an
+      operator ask.** Filed `plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (P0) with full
       evidence — this is a real, cross-cutting MTDS backfill reliability bug (affects the shared `--operation download`
-      / Tardis-adapter CEFI path generically, not specific to LST tokens) that needs actual code-level debugging, not
-      more blind VM relaunches from me. The AAVE oracle backfill (Phase 5's other in-flight VM,
-      `pyth-lst-backfill-20260722-045059`) uses a completely different operation (`collect-oracle-prices`, RPC-based,
-      not Tardis-download) and is confirmed unaffected — still healthy and progressing normally as of this entry.
+      / Tardis-adapter CEFI path generically, not specific to LST tokens) that needs code-level debugging, not more
+      blind VM relaunches. The AAVE oracle backfill (Phase 5's other in-flight VM, `pyth-lst-backfill-20260722-045059`)
+      uses a completely different operation (`collect-oracle-prices`, RPC-based, not Tardis-download) and is confirmed
+      unaffected — still healthy and progressing normally as of this entry.
 - [ ] [FEATURES] P2. **#4 lst_yields backfill** — run the `lst_yields` feature over the full `lst_rates` source history.
       **Original diagnosis WAS WRONG (2026-07-22, Explore agent investigation)**: there is no today-vs-prior inner-join
       or vocab bug to fix — `compute_lst_features_for_day()`

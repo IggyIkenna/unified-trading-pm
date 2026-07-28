@@ -116,12 +116,20 @@ still-fresh commits — fixing it blind risks colliding with whoever is currentl
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Decide (a) vs (b) above** — was Fleet Git-Health's nav entry an accidental drop or an intentional
-      fold during the 2026-07-27 reorg? Check with whoever authored `af3e756`/`d78de0b`/`fb1da34` or the source plan
-      (`deployment_durable_operational_data_bigquery_2026_07_21.md`) for intent.
-- [ ] [UI] P2. **Once (a)/(b) is decided, land the fix** — either restore the `fleet` nav id + route + testids (path a),
-      or update the 13 failing specs to assert the new surface + add a `/fleet` compat redirect (path b, mirroring
-      `deployment_ui_nav_consolidation_2026_07_17.md`'s LandingTabs-deletion precedent). Done-when:
+- [ ] [UI] P2. **(a) vs (b) resolved 2026-07-28 — [OPERATOR] tag dropped, path (b) confirmed**: `deployment-ui@9e692ca`
+      ("refactor(fleet): remove /fleet page — git-health's only home is now agent-orchestrator's own dashboard",
+      2026-07-27 16:19:59 UTC — landed BEFORE `af3e756`/`fb1da34`/`74c0a7d`/`d78de0b` per verified commit timestamps,
+      not after) plus `/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md` (status: resolved,
+      operator-directed: "Delete it anyway, port snapshot-age into AO's popover first") together confirm this was a
+      **deliberate, operator-directed removal**, not an accidental drop during the reorg — `9e692ca` itself deleted
+      `FleetGit.tsx`, the `/fleet` route, the `NavMenu.tsx` nav entry, and the API-client types, and updated the unit
+      tests (`NavMenu.test.tsx`/`TopNavBar.test.tsx`/`Cockpit.test.tsx`) accordingly, but did not touch the
+      `tests/smoke/` Playwright specs — that's the actual source of these 13 failures. **Land path (b)**: update the 13
+      failing specs (`cockpit.spec.ts`, `fleet-git-tab.spec.ts`, `nav-menu-dedup.spec.ts`, `repos-tab.spec.ts`) to
+      assert the new surface (no standalone Fleet nav entry; fleet git-health lives only on agent-orchestrator's own
+      per-VM dashboard) + add a `/fleet` compat redirect (to the external AO dashboard link, matching `RepoCi.tsx`'s
+      already-repointed cross-link) if one doesn't already exist, mirroring
+      `deployment_ui_nav_consolidation_2026_07_17.md`'s LandingTabs-deletion precedent. Done-when:
       `npx playwright test --project=chromium tests/smoke/` exits 0 (`pw:L2 ✓`).
 
 ## Progress Log

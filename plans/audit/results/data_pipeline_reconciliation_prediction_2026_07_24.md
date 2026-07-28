@@ -48,7 +48,7 @@ related:
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md,
-    plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
+    plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md,
     plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md,
     plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md,
   ]
@@ -242,7 +242,7 @@ a separate, narrower defect.
 **F6 — POLYMARKET raw-tick data lives in ≥4 structurally-distinct, oracle-blind path trees for the same shard,
 content-verified as the SAME trades · HIGH · S1 (structure) + S2 (content/schema) · BIG FINDING, issue doc filed +
 operator-notify.** Full evidence in
-[`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`](../../active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md).
+[`plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`](../../active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md).
 Summary: for `day=2025-04-11`/`venue=POLYMARKET`, the SAME 500-row trade batch for one `condition_id` exists,
 content-verified byte-for-byte-matching on `transactionHash`/`timestamp`/`price`/`amount`, under (a) the canonical
 flat-per-contract path, (b) a double-named sibling INSIDE that same canonical directory

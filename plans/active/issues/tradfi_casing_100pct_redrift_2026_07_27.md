@@ -229,8 +229,12 @@ compare case-insensitively in the interim (`migration_pending`).
       `instruments-service@10513f78` (`tests/unit/test_tradfi_manifest_casing_inherited_from_utl_seam.py`, 5 tests) and
       `market-data-processing-service@25faf6d` (same filename, 2 tests). No code change needed in either repo. Full QG
       green both repos.
-- [ ] [OPERATOR] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
+- [ ] [DATA] P2. AFTER the UTL seam ships AND all writer fleets redeploy, re-run
       `migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py --apply` to repair the 82,311 pre-fix lowercase rows
-      (heavy-I/O → VM/in-region; prod-manifest CAS mutation = delete-safety-adjacent, snapshot-first; human-only). Add
+      (heavy-I/O → VM/in-region; prod-manifest CAS mutation, snapshot-first). **Re-tagged off `[OPERATOR]`
+      (2026-07-28)**: per this doc's own line-85 framing ("idempotent, already-proven-safe") plus finding T
+      (`task_template.md` / `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) — a FRESH
+      `gcs_bucket_soft_delete_retention_seconds()` check on the tradfi manifest bucket returning ≥604800s at execution
+      time qualifies this CAS re-stamp as reversibility-verified, no `[OPERATOR]` sign-off required. Add
       `continuous_future → FUTURE` to the restamp's canonical map first so its self-verify does not refuse. (repo:
       market-tick-data-service)

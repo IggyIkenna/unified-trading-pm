@@ -308,10 +308,15 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
   `/plans/active/issues/plan_health_tests_leak_real_slack_alerts_2026_07_24.md` SCRIPT P3. Its stated blocker has
   CLEARED (measured 2026-07-26: `check_no_empty_string_fallback.py --scope unified-trading-pm` reports
   `319 (== baseline)`, so the 320>319 ratchet breach that reverted the diff is resolved — that doc's own BACKEND P2
-  ratchet todo is now done-in-substance and is a `/plan-reconcile` flip candidate, not batch material). But the fallback
-  itself requires reading an environment variable, and `os.getenv()` is a workspace-wide banned pattern, while the
-  script's stated design is "the token never touches disk or argv … resolved in-process via gcloud ADC". How to satisfy
-  both is an unresolved compliance question, not a bounded outcome. **BLOCKED-OPERATOR-DECISION.**
+  ratchet todo is now done-in-substance and is a `/plan-reconcile` flip candidate, not batch material). **No longer
+  BLOCKED-OPERATOR-DECISION** — the `os.getenv()`-vs-"never touches disk or argv" tension resolves via the same
+  self-service IAM path used elsewhere (finding W /
+  `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`): grant `secretmanager.versions.access` on the
+  relevant secret to `unified-trading-sa` so Secret Manager/gcloud-ADC reads succeed in-process for every AO identity —
+  exactly the script's stated design — which obviates the banned `os.getenv()` fallback path entirely; no compliance
+  conflict remains once that grant is made. That SCRIPT P3 todo lives in the source doc (out of this batch's file scope)
+  — dispatch it there as a normal AO todo (make the grant, verify a live read, remove the env-var fallback), not as an
+  operator escalation.
 - **QG-harness worktree-isolation defects** —
   `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` items 4 and 5. Item 5 (a `PROJECT_ROOT`
   override making the `.qg_last_passed_sha` sentinel record MAIN's HEAD instead of the worktree's) changes what "QG
@@ -341,15 +346,24 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 - `/plans/active/ao_fleet_observability_kpis_2026_07_20.md` — carries an explicit "NOT AO-dispatched / operator-driven"
   declaration in prose, not just the `assigned_vm: NA` default. Its remaining todos are now genuinely actionable (see
   this run's report) — extracting them needs the operator to lift that declaration.
-- `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` `[OPERATOR]` P1
-  (pin the JWT secret; needs a maintenance-window restart of the shared orchestrator) and
+- `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` — **no longer
+  operator-gated**: its `[OPERATOR]` P1 todo's sole blocker was needing "an operator-chosen maintenance window" for the
+  shared-orchestrator restart, which the 2026-07-28 CLAUDE.md ruling ("Maintenance-window restarts (e.g. orchestrator)
+  skip operator scheduling pre-live-trading… group + do now, brief downtime OK") clears. The source doc's own tag still
+  reads `[OPERATOR]` (out of this batch's file scope to retag directly) — next time that doc is touched, retag to
+  `[DEVOPS]`/`[SCRIPT]` P1 and dispatch directly: group with any other pending shared-orchestrator restart/pause work,
+  execute now, verify the service comes back healthy afterward.
   `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` `[INFRA]` P3 (re-mint
-  `~/.orch_token`) — credential operations. Their code-side siblings ARE in this batch as todo 3.
+  `~/.orch_token`) remains a distinct credential operation, unaffected by this ruling. Their code-side siblings ARE in
+  this batch as todo 3.
 - `/plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md` and
   `/plans/active/issues/reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` per-slot WIP recovery items
   — each needs foreign-worktree access plus a judgment call on whether specific commits are superseded.
-- `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md` `[OPERATOR]` P1 (watch-log check) and its
-  `[BACKEND]` P2 (root-cause once a recurrence is caught) — the latter is time-gated on an unobserved recurrence.
+- `/plans/active/issues/ao_backlog_done_row_disappearance_2026_07_25.md` — **stale tag here**: its watch-log-check todo
+  is already `[SCRIPT]` P1 in the source doc, downgraded from `[OPERATOR]` on 2026-07-27 ("Category B, read-only: this
+  is a log-tail check via the same read-only AWS SSM path… not a human-only action"); it is a normal AO-dispatchable
+  read-only SSM poll (`/check-agent-orchestrator` / `check-ao-backlog-status.sh`), no operator gate. Its `[BACKEND]` P2
+  (root-cause once a recurrence is caught) remains genuinely time-gated on an unobserved recurrence.
 - `/plans/archive/2026_07/ao_issue_docs_consolidated_remediation_2026_07_23.md` (archived 2026-07-27) — both open items
   were `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-DESIGN` by their own labels and are now marked DEFERRED rather
   than held open.

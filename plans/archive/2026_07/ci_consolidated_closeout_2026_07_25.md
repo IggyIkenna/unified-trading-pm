@@ -7,7 +7,9 @@ summary: >-
   machinery, and build/test tooling flakes. Authored 2026-07-25 from a corpus-wide classification pass (33 docs) — part
   of making the AG↔topic partition (5 AGs + cross-cutting + ao + ci + infra) total across the whole plans/issues corpus,
   per operator request.
-status: active
+status:
+  complete # (was: active) 2026-07-28 archival sweep: this doc's own single [DOC] P3 todo (verify the reachability
+  # digest is accurate) is done; verified zero open todos of its own
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -43,6 +45,18 @@ source: >-
   `orchestrator_master`/`strategy_master`) into this CI tranche, per operator request to make the 5-AG + cross-cutting +
   ao + ci + infra topic partition total (zero orphans) for sharded `/plan-reconcile` and `/ag-closeout-audit` runs.
 ---
+
+## Deferred work — migrated to:
+
+**N/A — this doc is a pure reachability digest, not a work-owning plan.** Its own single todo (verify the digest stays
+accurate) is done. The 2026-07-26 `/ag-closeout-audit ci` finding that 30 of 34 tranche docs were orphaned (no dispatch
+vehicle) is not this doc's own open work — it was already acted on: the extracted subset lives in
+`/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` (status: draft) + its gated finalize. Archiving this index
+does not close any tranche work; see that batch plan for the live picture.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — this doc's own scope (a verified-accurate reachability digest) is
+> complete; it does not represent the CI/CD tranche being done. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # CI/CD consolidated close-out
 
@@ -153,11 +167,14 @@ unblocked on a CI runner.
 
 ## Todos
 
-- [ ] [DOC] P2. **This tranche has no native dispatch vehicle of its own — 30 of 34 tranche docs are orphaned** — per
+- [x] ✅ [DOC] P2. **This tranche has no native dispatch vehicle of its own — 30 of 34 tranche docs are orphaned** — per
       the 2026-07-26 `/ag-closeout-audit ci` entry below, this doc carries zero `- [ ]` todos (a reachability digest
       only) and 12 of the 30 orphans express ALL their remaining work as numbered prose with zero checkboxes; do not
       treat this doc's own checkbox-free format as evidence the CI/CD tranche's remaining work is tracked or done — see
-      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (status: draft) for the extracted subset.
+      `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (status: draft) for the extracted subset. **Verified accurate
+      2026-07-28** — re-read the doc in full: the caveat correctly matches the Progress Log's own 2026-07-26
+      `/ag-closeout-audit ci` findings (30/34 orphaned, 12 prose-only) recorded immediately below it. No correction
+      needed; checkbox flipped to record the verification.
 
 ## Codex SSOTs (read before touching a track)
 

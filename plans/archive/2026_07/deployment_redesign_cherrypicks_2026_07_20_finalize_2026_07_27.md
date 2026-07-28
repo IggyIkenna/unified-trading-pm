@@ -9,7 +9,9 @@ summary: >-
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: draft
+status:
+  complete # (was: draft) 2026-07-28 archival sweep: sole todo DONE 2026-07-28 (verified, not re-executed -- the
+  # gated parent was already archived by a separate same-day plan-hygiene sweep); zero open todos
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -46,6 +48,14 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — the sole todo's gate (`/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md` fully closed)
+was already satisfied by a separate same-day plan-hygiene sweep; nothing left to reconcile or migrate.
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep)** — sole todo verified DONE; the gated parent plan was already archived
+> independently. Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+
 # deployment_redesign_cherrypicks_2026_07_20 — finalize
 
 > **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
@@ -53,10 +63,22 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md`'s checkboxes**
+- [x] ✅ [REVIEW] P2. **Reconcile `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md`'s checkboxes**
       against whatever shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work
       was missed, then run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check,
       update any CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the
       plan is fully closed. If real work remains after the AO-dispatched todos land, leave
       `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md` active (do not force-archive) and note
-      what's still open here instead.
+      what's still open here instead. — **DONE 2026-07-28 (verified, not re-executed).** Read the gated plan directly:
+      it is no longer even sitting at `plans/active/` — a same-day (2026-07-28) plan-hygiene sweep already reconciled
+      and archived it before this finalize doc was picked up. All 5 A-E todos carry `[x]` + a cited landing commit
+      (`deployment-api@c503d35`/`@349946a`/`@b8f7507`, `deployment-ui@2c4e950`/`@615bddf`), frontmatter reads
+      `status: complete` with an inline dated note ("2026-07-28 plan-hygiene sweep: verified all five A-E cherry-picks
+      [x] with shipped-commit + test evidence, Progress Log confirms this plan is complete"), the body carries the
+      `🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled` banner, and its own "Deferred work — migrated to:"
+      section states "None — plan verified fully complete at archival, zero open todos, no prose-only remaining work
+      found." No residual work found on a fresh read. This finalize doc's gate
+      (`depends_on:     [deployment_redesign_cherrypicks_2026_07_20]`, `gate_on_depends: true`) is therefore satisfied
+      and its sole todo is moot — the reconcile-and-archive action it asks for already happened via a different route (a
+      corpus-wide hygiene sweep rather than this doc's own dispatch). Did not re-run the 6-step ritual a second time
+      (nothing left to migrate/banner/codex-align — already done); did not touch the archived plan itself in this pass.
