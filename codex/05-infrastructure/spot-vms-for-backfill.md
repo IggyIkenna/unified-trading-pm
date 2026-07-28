@@ -214,6 +214,48 @@ this is the whole point):
 - **Latent bug also fixed:** `VM_FORCE` was never persisted into `LAUNCH_PARAMS.json`, so the force-PAGE guard was dead
   code that never fired. The guard is now reachable; persisting `VM_FORCE` is part of the per-launcher rollout below.
 
+**Correction (2026-07-25 audit, `vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`) — the "fixes
+every launcher at once" claim above is only true when the launcher's write path calls `ManifestWriter.record_captured`
+directly.** `/vm-preemption-billing-waste-audit`'s first live run found a real, confirmed gap: several launcher
+families write via `ManifestWriter.add()` (bulk/migration rewrite) or don't touch the manifest at all (pure parquet
+reshaping), so `record_vm_progress`'s hook — wired ONLY into `record_captured` — never fires for them, and they wrote
+NO `PROGRESS.json` despite substantial real mid-run preemptions. **Fixed 2026-07-28
+(`infra_satellite_ao_dispatch_batch1_2026_07_26.md`)** with two classes of remediation, verified by local bash
+simulation (kill -9 mid-run child + a second pass reading the checkpoint back — same methodology precedent as
+`deployment-service@3d99865`), not by launching a real VM:
+
+- **Python-level fix (the `rebuild_defi_manifest` gap):** `rebuild_defi_manifest.py` now calls `record_vm_progress()`
+  explicitly per date after real shards are found (it uses `ManifestWriter.add()`, which never hit the hook). This
+  closes `canonical-migration-defi-rebuild` for real, and — because `defi-per-instrument`'s compound chain calls
+  `rebuild_defi_manifest.py` as its final phase under one constant `VM_NAME` — also gives that category's rebuild
+  phase a real artifact-gated checkpoint for free.
+- **Shell-level fallback (no per-date manifest hook to call into):** for launcher families whose write path either has
+  no comparable single Python entry point to patch, or writes no manifest at all, the checkpoint is emitted directly
+  from the launcher's own shell chunk-loop, using whatever artifact-confirmed completion signal that loop can already
+  see in its own captured output — never on bare process-exit alone where a stronger signal exists:
+  - `mtds_chunk_loop.sh` (`tradfi-bf-*`, `mtds-backfill-tradfi-pipelinecheck`, `mtds-dex-swaps-backfill`) and
+    `cefi_hl_aster_loop.sh` (`cefi-aster`, `cefi-hyperliquid`) grep EACH CHUNK'S OWN captured output for its per-date
+    completion log line (MTDS: `Manifest updated: date=... total_records=N complete=...`; the onchain-perp handler:
+    `OnchainPerpBatch: VENUE/data_type/symbol/DATE captured N rows`) and emit `[[VM_PROGRESS]]` for the latest date
+    with `N>0` — artifact-gated, same frontier semantics as `record_vm_progress` itself, just driven from the shell
+    side instead of the Python hook.
+  - `instruments_chunk_loop.sh` (`af-backfill` via `VM_TASK=instruments-backfill`) has no comparable per-date
+    row-count log to grep, so its checkpoint is coarser: the chunk's END date, emitted only when the chunk's own
+    bounded-retry loop reports `rc=0` for the whole `[CS,CE]` window. A resume from an earlier boundary still only
+    costs a cheap presence-skip re-scan, not a re-fetch (same bounded-risk reasoning already accepted below for
+    `defi-rebuild` pre-fix).
+  - `launch-canonical-migration-vm.sh`'s `defi-pi-range` category (single non-chunked invocation, no manifest calls
+    at all — pure parquet split) now wraps its command with `rc=$?; ...; exit ${rc}` and emits ONE
+    `[[VM_PROGRESS]]` marker for the whole `[START_DATE,END_DATE]` scope on success. `defi-per-instrument`'s
+    per-year split-phase loop emits one marker per year on that year's `rc=0`, on top of the Python-level rebuild-phase
+    fix above.
+- **`cefi-queue-heavy-binancefutu-x17`** (the Tardis `SINGLE_VM_QUEUE=1` launcher) was audited and left unfixed here —
+  its per-instrument `StreamingParquetWriter` writes are a finer natural checkpoint granularity than the date-chunk
+  level, CeFi's Tardis fleet already has cap-1 concurrency + dedicated `attempted_failed` tracking
+  (`tardis_concurrent_ip_lockout_2026_07_12.md`), and the 2026-07-25 audit's own priority ordering time-boxed a full
+  trace out. Not re-litigated as part of this fix; a future pass can extend the same shell-level pattern if it proves
+  warranted.
+
 **Remaining (scope precision, non-blocking) — the per-launcher `lc_write_launch_params` rollout.** Only
 `launch-cefi-sharded-backfill.sh` calls it today; the other ~56 SPOT launchers relaunch with the launcher's DEFAULT
 venue/scope (broader than the terminated shard, absorbed by idempotent presence-skip) + persist `VM_FORCE`. The DATE
