@@ -247,12 +247,11 @@ had the prod job existed, the 06:00 schedule would have crashed on dates. Worked
 `--start-date=$TODAY --end-date=$TODAY` on the job. **FOLLOW-UP TODO below** — the recurring daily job must self-default
 to today (a hardcoded date goes stale tomorrow).
 
-- [ ] [SCRIPT] P2. **instruments-service / deployment-service** — make the cefi IS recon job's date default to "today"
-      (yesterday for true T+1) instead of a hardcoded `--start-date`/`--end-date`. Either (a) the IS CLI defaults
-      `--start-date`/`--end-date` to the run day when `--run-tag=t1-recon` and they're unset, OR (b) the
-      `t1_batch_scheduler.tf` scheduler injects `{start-date,end-date}=today` via `httpTarget.body` overrides. Until
-      fixed, the hardcoded job-arg date (set 2026-06-23) makes tomorrow's scheduled run re-fetch the stale 2026-06-23.
-      Provenance: this dispatch — the daily fetch crashed on empty dates (`Invalid date format ''`).
+- [x] ✅ [SCRIPT] P2. **VERIFIED ALREADY SHIPPED (2026-07-28, slot-8)**: option (a) landed same-day this todo was filed
+      — `instruments-service@2217756f` (2026-06-23) `_default_recon_dates_to_today()` (`cli/main.py:310-333`, called
+      pre-`ServiceBootstrap.run()`) self-defaults `--start-date`/`--end-date` to TODAY(UTC) when `--run-tag=t1-recon` +
+      both unset (no-op if explicit). 5/5 `test_recon_date_default.py` pass (re-ran this session); the terraformed cefi
+      job args carry no hardcoded date, so (a) governs live — (b) not needed.
 
 - [x] ✅ [INFRA] P1. Force-ran the IS fetch (`uts-prod-instruments-service-cefi-t1-recon` exec xqcxr) → daily shards
       day=2026-06-23 for ALL 18 cefi venues (10,458 active instruments, full universe per venue — binance-spot 763 /
