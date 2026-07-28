@@ -11,14 +11,18 @@ summary: >-
   <branch> origin/<branch>`-style operation, not a merge/rebase). The commits were not lost data — both were
   re-creatable and re-shipped successfully on retry — but this is a real, reproducible bug in shared multi-slot
   infrastructure that silently discards committed work, not a hypothetical.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
 repos: [unified-trading-pm, unified-trading-library]
 scope: [engineer, admin]
-tags: [ci-cd, git, race-condition, slot-cron, multi-agent-safety, toctou]
-related: [/codex/05-infrastructure/per-tab-worktrees.md]
+tags: [ci-cd, git, race-condition, slot-cron, multi-agent-safety, toctou, duplicate]
+related:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
+  ]
 created: 2026-07-28
 priority: P1
 parent_epic: infrastructure_master
@@ -29,7 +33,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: utl_shared_clone_commits_repeatedly_reset_2026_07_22
 locked_by:
 locked_since:
 ---
@@ -90,11 +94,44 @@ between the two git calls.
 
 ## Recommended fix path
 
-- [ ] [SCRIPT] P1. Audit `slot-cron-ff-pull.sh`'s check-then-act sequence for the ahead/behind determination — the fix
-      is almost certainly to make the check and the fast-forward/reset atomic with respect to the local ref (e.g. take
-      the "ahead" measurement and the reset action from the SAME `git` invocation / same point-in-time ref read, rather
-      than two separate calls with a window between them), or add a final re-check immediately before the reset/checkout
-      executes and abort if the local HEAD moved since the initial read.
-- [ ] [VERIFY] P2. Once fixed, stress-test by scripting a tight commit loop against a scratch repo while the cron sweeps
-      it, confirming zero silent discards across many iterations (this bug is probabilistic/timing-dependent, a single
-      clean run does not prove the fix).
+- [x] [SCRIPT] P1. **AUDITED 2026-07-28 (slot-7) — this doc's own premise was WRONG; `slot-cron-ff-pull.sh` needs no
+      fix.** Read the script in full plus dispatched an independent Explore agent to trace every `checkout`/`reset`/
+      `update-ref`/`branch -f` call fleet-wide. Confirmed (again — this is the SECOND independent confirmation, six days
+      after the first): `slot-cron-ff-pull.sh`'s only ref-mutating paths are a strict `git merge --ff-only` (fails
+      rather than resets when local is ahead) and a patch-id-verified adopt-rebase (only fires when every local commit
+      is already cherry-applied upstream). Its own header claim ("Never destructive... never reset --hard") holds. **The
+      exact reflog signature this doc's title names (`branch: Reset to origin/live-defi-rollout`) is produced by
+      `scripts/quickmerge.sh`'s `cascade_dep_branch()` (line ~476:
+      `git checkout -B "$branch_name"     "origin/$branch_name"`), an ALREADY-TRACKED, ALREADY-PARTIALLY-FIXED issue** —
+      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` root-caused this same mechanism on
+      2026-07-22 (todo 1, done) and shipped a preserve-before-reset guard (`unified-trading-pm@06dc7632`, todo 2, done):
+      before the `checkout -B`, if the local branch has commits ahead of origin, the tip is saved to
+      `refs/wip-preserve/cascade-<ancestor>-<sha12>` first. This doc's incident (`61efd2e5`/`dbb93c3a`, 2026-07-27
+      23:04–23:17, `unified-trading-library`) is a **recurrence of that exact class**, not a new bug — this todo is
+      DUPLICATE tracking of an issue that already has a home; consolidating there rather than maintaining two docs for
+      one mechanism (this doc's `resolved_by` now points at it). **New findings from this pass, folded into the
+      canonical doc as follow-up todos**: (1) checked whether the preserve mechanism actually protected
+      `61efd2e5`/`dbb93c3a` — it did NOT: no `refs/wip-preserve/*` ref exists in `.tabs/1/unified-trading-library` for
+      either sha, and both commit objects are now fully unreachable (`git     cat-file -e` fails on both) despite the
+      guard being live in HEAD 5 days before the incident — the reason the guard didn't fire this time is NOT
+      established (candidates: the executing session's own PM clone was stale and hadn't pulled `06dc7632` yet;
+      something later cleaned up the preserve ref; a different code path). (2) Found + fixed an independent, real bug
+      while reading `cascade_dep_branch()`: it ran `git fetch origin main` (not `$branch_name`) before both the
+      preserve-check and the checkout — a stale holdover from before `live-defi-rollout` became the fleet integration
+      branch (traced via `git log -L` to the original PR that added this function). Fixed:
+      `unified-trading-pm@8ca436599` — now fetches `$branch_name` too, so `origin/$branch_name` is genuinely fresh at
+      both check sites instead of implicitly depending on some OTHER process (`slot-cron-ff-pull.sh`'s own prefetch)
+      having recently touched the same shared clone. This does not by itself explain the missing preserve ref (a stale
+      origin ref can only ever make the ahead-count LARGER, never cause a false-negative skip), but it closes a real,
+      independent correctness gap.
+- [ ] [SCRIPT] P1. **NEW (2026-07-28)** — pinned to the canonical doc's todo list, not duplicated here: root-cause why
+      `refs/wip-preserve/cascade-unified-trading-library-*` does not exist for the discarded `61efd2e5`/`dbb93c3a`
+      commits despite the preserve guard being live in HEAD 5 days before the 2026-07-27 incident. Needs either a live
+      reproduction (script a concurrent commit + cascade race against a scratch clone and confirm the preserve ref
+      appears) or forensic access to whichever agent session's PM clone actually executed the discarding
+      `cascade_dep_branch` call (was it genuinely on a version ≥`06dc7632`?). See
+      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`.
+- [ ] [VERIFY] P2. Once the above is root-caused, stress-test by scripting a tight commit loop against a scratch repo
+      while a concurrent `cascade_dep_branch` sweeps it, confirming the preserve ref reliably appears across many
+      iterations (this bug is probabilistic/timing-dependent — a single clean run does not prove the fix). See the
+      canonical doc.
