@@ -272,4 +272,10 @@ same conclusion, plus two provenance details worth keeping on record:
       fix works end-to-end) or, if none appears after a full day-plus of live operation post-redeploy, escalate — that
       would mean a second, still-undiagnosed issue beyond the lookback bug fixed here. **Blocked on**: PR591 (or its
       successor) actually merging to main — see "Check 1" above; do not dispatch the manifest query before confirming
-      the ancestor check is YES.
+      the ancestor check is YES. **Check 2 (2026-07-28, slot-16) — still NOT merged, re-verified via
+      `git merge-base --is-ancestor 5b5d227     origin/main` → NO.** PR591 (`IggyIkenna/deployment-service#591`, head
+      `f27ada5a4e92`) is still `OPEN` / `mergeStateStatus: BLOCKED`. The `quality-gates-v2` run (`30369898092`) still
+      shows its `QG slice (checks)` and `QG slice (tests)` jobs failed — same wall-clock-budget-breach signature Check 1
+      already attributed to the known fleet-wide self-hosted-runner capacity issue, not a regression in the sports fix.
+      No new escalation needed; this is a genuine external wait (the PR needs to re-run green and merge), not something
+      dispatchable from a worker slot right now. Manifest query still correctly withheld.
