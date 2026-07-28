@@ -236,8 +236,24 @@ MTDS consolidation ruling.)**
       legacy-bucket delete. NOT this session (irreversible). **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
-      (satisfies `pipeline_mode_partition_migration` for cefi). **(MIGRATED FROM:
+- [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
+      (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
+      regression coverage added.** `rebuild_cefi_manifest.py`'s object-scan walk (`scan_and_rebuild`) has stamped
+      `pipeline_mode` on every emitted row since utl@b872bdf1 / PREP2-E5 (2026-06-02, code comments confirm): the
+      `_PM_RE` regex captures the canonical `pipeline_mode=` path segment when present
+      (`rebuild_cefi_manifest.py:179-182`), and for legacy pre-migration objects with no such segment the walk falls
+      back to `derive_pipeline_mode_for_row` (same derivation the live writer + migrator use) rather than stamping blank
+      (`rebuild_cefi_manifest.py:442-461`). `ManifestWriter.add()` has persisted `pipeline_mode` since utl@b872bdf1
+      (`unified_trading_library/manifest_writer/_writer_ingest.py:148`). Path-parsing was already unit-tested
+      (`tests/unit/scripts/test_rebuild_cefi_manifest.py`), but the `scan_and_rebuild`-level stamping (both the
+      from-path and derive-fallback branches) had NO regression coverage — added
+      `test_scan_and_rebuild_stamps_pipeline_mode_from_canonical_path_segment` +
+      `test_scan_and_rebuild_derives_pipeline_mode_for_legacy_path_without_segment` to
+      `tests/unit/test_rebuild_cefi_manifest_cf11.py`, both green, full `quality-gates.sh` green (7265 passed / 17
+      skipped). This confirms the rebuild-walk CODE is ready for when the actual migration runs (still gated on the
+      separate, blocked "NEXT SESSION — execute the migration" P0 todo above — the false-phantom bug at
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`); no code change was needed
+      for this rider itself. `market-tick-data-service@cf8a6817`. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
