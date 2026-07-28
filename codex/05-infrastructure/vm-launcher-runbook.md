@@ -197,6 +197,26 @@ All MTDS launchers follow the same pattern. `CODE_BUCKET` resolves to `deploymen
 - **Duration**: 30 min – 4 hours depending on date range + asset group
 - **Failures**: Tarballs stale → run `create-code-tarballs.sh --asset-group X` first. BQ quota exceeded → reduce date
   range.
+- **⚠️ Not for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET with `--data-types` scoping**: for CeFi on-chain-perp
+  venues this launcher's `--operation download` path does NOT honor per-data-type filtering — it silently fetches the
+  handler's full data_type set regardless of `--data-types` (confirmed 2026-07-28: a `--data-types trades`-scoped
+  HYPERLIQUID run still fetched `book_snapshot_5` + `derivative_ticker`). Use
+  `launch-cefi-hl-aster-historical-backfill.sh` instead — see below.
+
+### `launch-cefi-hl-aster-historical-backfill.sh`
+
+- **When**: Backfill CeFi on-chain-perp venues (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET), especially when
+  scoping to specific `DATA_TYPES` — this is the launcher that actually honors per-data-type filtering for these venues
+  (via `--operation collect-onchain-perp-batch --onchain-perp-data-types`, purpose-sharded for this workload).
+- **Required**: none strictly (`VENUES` defaults to all four; `DATA_TYPES` defaults to
+  `trades;book_snapshot_5;derivative_ticker`, env-overridable — the handler auto-excludes per-venue live-only/dropped
+  types, e.g. ASTER book/liq are WS-live-only, HL liquidations have no feed at all). Optional finer sharding:
+  `SHARD_DAYS=N` (sub-divide each venue's date range into N-day VMs), `OVERRIDE_START_DATE=` / `OVERRIDE_END_DATE=`
+  (clamp the window), `YEARS="2025 2026"` (skip already-resolved year-shards on a re-run).
+- **Duration**: ~30 min – 3.5h per venue-year on one VM; `SHARD_DAYS` parallelizes across VMs (e.g. the full HL trades
+  universe in ~30 min via 21-day shards instead of ~3.5h unsharded).
+- **Failures**: HYPERLIQUID auth via `aws-hyperliquid-s3` Secret Manager key (requester-pays S3). Otherwise same pattern
+  as other MTDS launchers — see "Other MTDS launchers" below.
 
 ### `launch-mtds-perp-funding-backfill-vm.sh`
 
