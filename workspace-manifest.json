@@ -455,9 +455,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 21,
-        "qg_red_reason": null,
         "coverage_pct": null,
+        "warn_file_count": 21,
+        "qg_red_reason": "basedpyright",
         "large_file_count": 0
       }
     },
@@ -485,7 +485,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -698,10 +698,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "warn_file_count": 0,
-        "large_file_count": 0,
         "coverage_pct": 88.24,
-        "qg_red_reason": "ruff"
+        "warn_file_count": 0,
+        "qg_red_reason": "qg",
+        "large_file_count": 0
       },
       "breaking_scan_dir": "ibkr_gateway_client"
     },
@@ -821,10 +821,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "pytest",
         "warn_file_count": 7,
         "coverage_pct": null,
-        "large_file_count": 5,
-        "qg_red_reason": null
+        "large_file_count": 5
       }
     },
     "market-tick-data-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": "basedpyright",
+        "warn_file_count": 45,
         "coverage_pct": null,
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 45
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -947,10 +947,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "warn_file_count": 6,
         "coverage_pct": null,
-        "large_file_count": 0,
-        "qg_red_reason": null
+        "warn_file_count": 6,
+        "qg_red_reason": "basedpyright",
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 0,
-        "coverage_pct": null,
-        "warn_file_count": 0
+        "coverage_pct": 73.13,
+        "warn_file_count": 0,
+        "qg_red_reason": "ruff",
+        "large_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1417,9 +1417,9 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "coverage_pct": null,
         "warn_file_count": 7,
-        "qg_red_reason": null,
-        "coverage_pct": 74.83,
+        "qg_red_reason": "qg",
         "large_file_count": 16
       },
       "breaking_scan_dir": "none"
@@ -1474,10 +1474,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "qg_red_reason": "qg",
         "warn_file_count": 0,
         "coverage_pct": null,
-        "large_file_count": 0,
-        "qg_red_reason": null
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
