@@ -53,6 +53,7 @@ source: >-
   4-agent CEFI-scoped audit dispatched 2026-07-28 per operator directive, then scope-expanded to
   defi/tradfi/sports/prediction + batch/paper/live under /autonomous.
 resolved_by:
+depends_on: []
 ---
 
 # GCS path resolution centralization audit
@@ -212,19 +213,57 @@ bucket family, its own pipeline_mode vocabulary, and potentially its own hand-ro
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Fix the UTL `raw_tick_data` path-registry template**
-      (`unified_trading_library/config_interface/paths/registry.py:18-24`) to match the real, live, 3-agent-confirmed
+- [x] [SCRIPT] P0. **Fix the UTL `raw_tick_data` path-registry template** — DONE 2026-07-28,
+      `unified-trading-library@2943224b`. `path_template`/`partition_keys` now match the real, live, 3-agent-confirmed
       shape:
       `raw_tick_data/by_date/day={date}/pipeline_mode={pipeline_mode}/asset_group={category}/venue={venue}/instrument_type={instrument_type}/data_type={data_type}/`.
-      Highest-leverage fix in this whole audit — one registry correction vs. N per-caller fixes. Must include a
-      regression test asserting the template matches a real captured shape (mirror whatever test already pins
-      `processed_candles`'s template, if one exists). Check `l2_book_checkpoints`/`liquidation_clusters` registry rows
-      for the same gap while in this file. (repo: unified-trading-library)
+      `build_path("raw_tick_data", ...)` now REQUIRES `pipeline_mode=` (KeyError without it), mirroring
+      `processed_candles`/`instruments`. Regression test added:
+      `tests/config_interface/unit/test_paths_registry_smoke.py::test_raw_tick_data_template_now_requires_pipeline_mode`
+      (mirrors `test_processed_candles_template_now_requires_pipeline_mode`). Checked `l2_book_checkpoints`
+      (registry.py:303-309) and `liquidation_clusters` (registry.py:310-316) for the same gap: BOTH have it too (no
+      `pipeline_mode=`/`asset_group=` placeholder in either template) — but unlike `raw_tick_data`, neither has a
+      3-agent-verified live shape or a confirmed real writer (grepped MTDS/features-service: only
+      `domain_client/clients/liquidity.py` consumes them, same dead-abstraction layer as `MarketTickDomainClient`; no
+      writer found). NOT fixed in this pass — guessing the shape without live-GCS verification risks a confidently-wrong
+      fix, worse than the current silent-empty-prefix failure. Tracked as a new P1 todo below. (repo:
+      unified-trading-library)
 
-- [ ] [SCRIPT] P0. **Complete the `MarketTickDomainClient.get_tick_data()` caller census** and fix or confirm-dead —
-      this call site (`unified_trading_library/domain_client/clients/market_data.py:56-65`) is the one place the stale
-      registry template is DEMONSTRABLY consumed live; the fix above may already resolve it once the template is
-      corrected (verify this is actually true, don't assume). (repo: unified-trading-library)
+- [x] [SCRIPT] P0. **Complete the `MarketTickDomainClient.get_tick_data()` caller census** and fix or confirm-dead —
+      DONE 2026-07-28, `unified-trading-library@2943224b`. Caller census: grepped `get_tick_data\b` workspace-wide
+      (excluding tests/.venv) — 3 hits, all inside `unified-trading-library` itself
+      (`domain_client/clients/market_data.py`, `domain/standardized_service.py`, `domain/market_data_client.py`, the
+      latter two independent hand-rolled implementations, not calling this method) — zero real external callers anywhere
+      in the 10+-repo workspace, so the signature change is breaking-change-safe. Fixed
+      `MarketTickDomainClient.get_tick_data()` to require `pipeline_mode: str` and pass `category=asset_group` into
+      `build_path()`, mirroring `MarketCandleDomainClient.get_candles()`'s established convention exactly. No test
+      coverage existed for this specific class (confirmed via grep — `tests/unit/test_domain_clients.py`'s
+      `get_tick_data` tests target the DIFFERENT `MarketTickDataDomainClient` class in `domain/market_data_client.py`),
+      so nothing broke. `tests/unit/test_domain_client_catalog.py:13`'s `raw_tick_data` mock checked — it fully
+      monkey-patches `get_spec()` with its own synthetic spec, isolated from the real registry, so it's unaffected by
+      the template change; no update needed. (repo: unified-trading-library)
+
+- [ ] [SCRIPT] P1. **Verify + fix (or confirm-dead) the `l2_book_checkpoints`/`liquidation_clusters` registry
+      templates** (`unified_trading_library/config_interface/paths/registry.py:303-316`) — found 2026-07-28 while
+      landing the `raw_tick_data` fix above: both templates have the SAME missing-`pipeline_mode=`/`asset_group=` gap,
+      but neither has a live-GCS-verified real shape (unlike `raw_tick_data`'s 3-agent confirmation) or a confirmed
+      writer — grepped MTDS + features-service, found only readers/consumers in the same dead
+      `domain_client/clients/liquidity.py` layer as `MarketTickDomainClient`. First determine whether either dataset has
+      a real producer anywhere in the workspace (if not, these are dead-code cleanup, fold into the P2 dead-code todo
+      below instead); if a real writer exists, verify its actual GCS shape before touching the template — do NOT
+      guess-copy the `raw_tick_data` fix pattern without confirmation. (repo: unified-trading-library)
+
+- [ ] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
+      caller census** — `unified_trading_library/domain/standardized_service.py:125-127`
+      (`f"raw_tick_data/by_date/day={date_str}/data_type={data_type}/{instrument}.parquet"`) and
+      `unified_trading_library/domain/market_data_client.py:236`
+      (`f"raw_tick_data/by_date/day={date_str}/data_type={data_type}"`) — two MORE independent, mutually-disagreeing,
+      hand-rolled `raw_tick_data` path implementations, neither delegating to the registry SSOT. Both live in the same
+      domain-client/domain layer already shown dead for `MarketTickDomainClient.get_tick_data()` (zero real callers
+      workspace-wide) — `tests/unit/test_domain_clients.py`'s `TestMarketTickDataDomainClient` exercises
+      `market_data_client.py`'s class directly, so confirm whether ANY real service imports
+      `MarketTickDataDomainClient`/`StandardizedService` before deciding delete-as-dead vs. fix-to-delegate. (repo:
+      unified-trading-library)
 
 - [ ] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —
       `_discover_instruments()` needs the same `pipeline_mode=`-aware prefix enumeration MDPS's
