@@ -343,6 +343,22 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       **Gate**: `no_empty_string_fallback_baseline.yaml`'s `agent-orchestrator` row carries a `commit:`; a
       deliberately-introduced test site is reported at its real path, not a tail-slice guess.
 
+- [ ] [SCRIPT] P1. **Land the durable per-site `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
+      `market-tick-data-service/scripts/verify_lst_collateral_support.py` (L89 `currency`, L167 `ccy`) — the permanent
+      oscillation source behind the 07-08→07-28 re-reds.** Those two `.get("key", "")` sites are always present, so the
+      repo-wide count sits at the ceiling and any unrelated +2 drift elsewhere tips the total 89→91, re-reds the local
+      STEP 5.101 gate + re-declares the repo-blocker, then drifts back under within the hour (watcher auto-resolve) — a
+      bounce, never a fix. **Verified fix (2026-07-28, slot-1, cicd):** multi-line-wrap each `match = next((...), None)`
+      with `# noqa: qg-empty-fallback — absent <key> key safely falls through to no-match` trailing the `.get(...)`
+      clause, EXACTLY mirroring the precedent already at L220-222 of the same file (comment-only, behaviour identical).
+      Local verify: `check_no_empty_string_fallback.py --scope market-tick-data-service` 89→**87**
+      (`[WARN] 87 < baseline     89`, exit 0, non-blocking), `ruff format` idempotent-stable (noqa stays welded to the
+      `.get` line), `ruff check` clean. **DO NOT ratchet the baseline down to 87** — the count oscillates
+      (non-verify_lst sites drift 87↔89); with verify_lst at 0 the total stays 87↔89 i.e. ≤ baseline 89 forever, so 89
+      is the correct absorbing ceiling and ratcheting to 87 would re-introduce the failure on the next +2 drift. Ship
+      via `quickmerge --agent --files     'scripts/verify_lst_collateral_support.py'` once host QG-load permits a Pass-1
+      sentinel run. (repo: market-tick-data-service)
+
 - **2026-07-27 (Todo 1 closed)** — Re-verified live rather than trusting the 2026-07-16 sweep snapshot: ran
   `check_no_empty_string_fallback.py --workspace-root <ws> --scope market-tick-data-service` directly →
   `[WARN] market-tick-data-service: 90 < baseline 199`. Confirms the mechanism decided in 2026-07-08's Progress Log
@@ -393,3 +409,18 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
   precedent already used at lines 220-222 of the same file) would remove this specific recurring oscillation source
   going forward, but is not required to unblock — flagging it here rather than doing it un-asked, since the P3 todo
   above already covers baseline hygiene, not per-site remediation of the flagged sites themselves.
+
+- **2026-07-28 (slot-1, `RB-b6432008` cicd escalation, the 3rd re-open) — durable fix prepared + verified, handed off as
+  the P1 todo above; blocker already auto-resolved before I could ship, so no bounce-resolve was needed.** Dispatched
+  `cicd`/`ldr_qg_failure` for RB-b6432008 (declarer saw 91>89). By the time I measured, the count had oscillated back:
+  `check_no_empty_string_fallback.py --scope market-tick-data-service` → `[OK] 89 (== baseline)`, exit 0, and both
+  `/api/repo-blockers` (0 open) and `GET /api/repo-blockers/RB-b6432008` (404) confirmed the blocker was already
+  watcher-resolved on the oscillation-down — the same bounce as slot-14→slot-9. Rather than bounce a 4th time, built +
+  verified the durable per-site noqa fix (see the P1 todo above) that drops the count to 87 and ends the oscillation
+  permanently — exactly the L220-222-precedent remediation slot-9 flagged one entry above. Could NOT ship it this
+  session: the shared host was at **31 concurrent full `quality-gates.sh` runs vs the ≤4 cap** (`nproc`=16, load ~87) —
+  running the mandatory Pass-1 sentinel would have violated the cap, piled onto an already-degraded host, and
+  near-certainly been reaped mid-pytest (the exact failure slot-9's own 4th-check hit one entry above; the 2026-07-20
+  AF-1a class). So I reverted my local change to leave the slot clean and captured the fix as the exact-diff, verified,
+  AO-eligible P1 todo — so the next dispatched agent (or a calm-host worker) lands it in minutes instead of
+  re-diagnosing from scratch. Nothing to resolve (blocker already closed); no code shipped this session.
