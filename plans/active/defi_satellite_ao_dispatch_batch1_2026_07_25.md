@@ -374,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -506,13 +506,13 @@ drift_direction: advance-code
       **Not yet re-verified against a rebuilt image** — the fix is source + test only; the next scheduled/manual
       execution (after the image rebuild lands) will exercise it for real, tracked as a follow-up below rather than
       blocking this todo (the terraform-wiring done-when criterion was about the manifest row existing, which it does).
-- [ ] [DATA] P1. Correct `/codex/02-data/defi-data-types-catalog.md` § 7's `staking_yields` row: remove the
-      `Status:     Production (2026-04-24)` label — live-verified FALSE (zero scheduler jobs, zero Cloud Run Job, zero
-      GCS objects across 6 sampled days, confirmed 2026-07-24) — and restate as `Status: Implemented, unscheduled`. Do
-      NOT flip to Production — gated on the separate scheduler-wiring todo shipping. Repo: unified-trading-pm. **Done
-      when**: the row no longer reads `Production (2026-04-24)`, instead reads an unscheduled/never-run status
-      consistent with § 1's live-verification findings. Source:
-      `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
+- [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-5).** Corrected `/codex/02-data/defi-data-types-catalog.md` § 7's
+      `staking_yields` row: replaced the `Status: Production (2026-04-24)` label (live-verified FALSE — zero scheduler
+      jobs, zero Cloud Run Job, zero GCS objects across 6 sampled days, confirmed 2026-07-24) with
+      `Status: Implemented, unscheduled`, consistent with § 1's live-verification findings in the source issue doc. Not
+      flipped to Production — remains gated on the separate scheduler-wiring todo (already shipped above,
+      deployment-service@bd46bf2, but this row change was scoped independently per the todo text). Repo:
+      unified-trading-pm. Source: `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
 - [ ] [VERIFY] P1. Run a bounded, read-only simulation of instruments-service's `enumerate_expected_universe.py` defi
       resolution path (a scoped catalog subset, not a full prod re-run) to measure the `completeness_pct` denominator
       delta of adding the 7 `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']` WITH vs
