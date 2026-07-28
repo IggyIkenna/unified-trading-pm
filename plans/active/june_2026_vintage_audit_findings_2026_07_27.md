@@ -198,7 +198,17 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       historical Tardis-CSV `derivative_ticker.funding_timestamp` is forward-looking" todo — is NOT covered by batch1b's
       5 legs nor the 2-item Excludes note; it needs a design decision (in-place derivation vs. heavy-I/O reprocessing
       backfill), so it isn't a bare-dispatchable AO todo — flagged inline in batch1b, not force-dispatched. Still
-      dual-track, not archivable — both successors remain open.
+      dual-track, not archivable — both successors remain open. **STATUS UPDATE 2026-07-28 (later same-day, VM-launch
+      session)**: the 3rd item's design decision was made (operator: full historical reprocessing, not forward-only) and
+      EXECUTION started this same day — real per-venue VM launches, independently verified against live GCS/VM state
+      rather than trusted from prior text reports (which turned out to understate real progress — see the source doc's
+      own new Progress Log entry).
+      `BINANCE-FUTURES`/`BYBIT`/`OKX-SWAP`/`KRAKEN-FUTURES`/`BITGET-FUTURES`/`BITFINEX-FUTURES` are live on real SPOT
+      VMs (running since ~17:0x BST, healthy, monotonic checkpoints, hours from completion); `COINBASE-FUTURES` ran to
+      full completion (40/40 objects corrected); `EXTENDED-STARKNET` is BLOCKED on an unrelated unresolved merge
+      conflict + uncommitted script in `market-tick-data-service` (not this task's WIP, not touched). Still
+      dual-track/not archivable — the full-corpus reprocessing todo remains open pending the running VMs' completion +
+      the EXTENDED-STARKNET blocker's resolution.
 - [x] ✅ [PLAN] P2. **STATUS CHECK 2026-07-28 (unified-trading-pm)** —
       `plans/active/issues/phantom_captures_prediction_2026_06_28.md`: Track 22 in
       `cross_cutting_consolidated_closeout_2026_07_25.md` already cites this doc by name with real content (not a bare
