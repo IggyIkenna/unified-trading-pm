@@ -14,11 +14,11 @@ summary: >-
   the `underlying={u}/ticks.parquet` chain-bundle tail this class already knows how to build is dead code. Any TradFi
   (or other AG) FUTURE/OPTION/COMBO candle stored bundled-by-underlying is silently unreadable via this loader — exactly
   the "empty frames, NO errors" blast-radius risk the migration plan itself called out.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi, cefi]
 stage: [data]
-repos: [features-service]
+repos: [features-service, unified-trading-api]
 scope: [engineer]
 tags: [candle-canonical, delta_one, data-loader, silent-miss, chain-bundle, data-correctness]
 related:
@@ -42,7 +42,7 @@ source:
     "surfaced 2026-07-27 (slot-8) while running candle_canonical_path_migration_execution_2026_07_24.md todo 15's
     both-axes reader load-test",
   ]
-resolved_by:
+resolved_by: features-service@d16ed8aa, unified-trading-api@10c78f68b
 locked_by:
 locked_since:
 ---
@@ -139,7 +139,15 @@ it was not code-read as part of this finding.
       (`DataLoader("TRADFI").load_candles(     instrument_id="CME:FUTURE:AUD", data_type="ohlcv_1m", day=2026-07-22, pipeline_mode="batch_databento")`
       against real PROD GCS, ADC): **1440 rows, non-empty** (was 0 rows / `is_empty()=True` before the fix). Full
       `bash scripts/quality-gates.sh` green (sentinel verified matching HEAD both pre- and post-quickmerge).
-- [ ] [BACKEND] P2. Audit `unified-trading-api`'s `batch_candles.py` chart reader (also a named dual-reader in
+- [x] ✅ [BACKEND] P2. Audit `unified-trading-api`'s `batch_candles.py` chart reader (also a named dual-reader in
       `candle_canonical_path_migration_execution_2026_07_24.md` todo 3) for the same `data_type`-based chain-detection
       pattern; fix if present. (repo: unified-trading-api). **Done when**: either confirmed not-affected (cite the code
-      read) or fixed + regression-tested.
+      read) or fixed + regression-tested. **DONE 2026-07-27 (slot-9), verified 2026-07-28 (slot 14)** —
+      `unified-trading-api@10c78f68b`. Same bug class confirmed present: `BatchCandleReader._blob_path_candidates`
+      always built the flat `{symbol}.parquet` tail regardless of `instrument_type`. Fixed by keying off UAC's
+      `grain_for_instrument_type` SSOT (the same registry the features-service delta_one fix in todo 1 uses) —
+      `is_chain_bundle = grain_for_instrument_type(category, instrument_type, venue=venue) == GRAIN_BUNDLE_BY_UNDERLYING`,
+      choosing `underlying={symbol}/ticks.parquet` vs `{symbol}.parquet` accordingly. 3 regression tests added (CME
+      future=bundle, BYBIT future=venue-gated flat, DERIBIT option=bundle-everywhere). Re-ran the full
+      `tests/unit/test_batch_candles.py` suite live this session: **14/14 passed**, including all 3 chain-bundle
+      regression tests. (repo: unified-trading-api, no new code needed — verification only this session)
