@@ -284,3 +284,33 @@ defect; it is purely a function of host capacity at any given moment.
   either observation point to confirm whether RAM was ALSO constrained, so cannot confirm this episode's mechanism
   matches the doc's OOM-kill hypothesis vs. being pure CPU starvation — flagging as a related but not
   confirmed-identical data point.
+
+- 2026-07-28 (slot-2, `cicd`, escalation agt-68aa52): **New scope — confirms this pattern now blocks the LDR→main
+  PROMOTION pipeline itself, not just background dev-slot QG runs**, via the SELF-HOSTED `quality-gates-v2` GHA runner
+  (`opt/github-glue-runners-features-service/...` — same shared-host failure class, a different runner identity from the
+  dev-slot fleet). Dispatched to fix `features-service` promotion PR #884's red `quality-gates-v2` (run `30328712723`).
+  Diagnosis, not a code defect — **four independent local reproductions, all clean and fast, each matching a CI failure
+  that hit its own timeout/OOM boundary**:
+  1. CI: `tests` slice hung on the pytest-timeout 60s per-test cap inside `pandas` internals
+     (`test_cross_candle.py::test_calculate_does_not_raise`, `_get_item_cache`) after a ~4min silent gap deep in the
+     suite. Local: that same test passed in 7.25s isolated; the full
+     `calendar+cefi+commodity+cross_instrument+ delta_one/calculators/test_cross_candle.py` scope (1625 tests) passed
+     clean in 25.31s.
+  2. PR #884 auto-superseded by a fresh promote PR #885 (created 04:54:30Z at the new LDR HEAD, per the standing
+     `ldr-to-main-promote.yml` */15 cycle) — its OWN fresh `quality-gates-v2` run (`30330060500`) ALSO failed, ruling
+     out "stale PR head" as the explanation. `tests` slice this time: `base-service.sh` reported `Killed` (OS-level
+     SIGKILL, i.e. OOM-killer) ~40s in, before any pytest output — same
+     `⚠️ QG_MEM_CAP=10G set but systemd-run unavailable on this host` gap this doc already tracks (no cgroup hard cap
+     active).
+  3. Same run, `checks` slice: `[qg-governor] all 4 tokens busy — queued 30s` → `token 1/4 acquired after 44s wait`
+     (governor itself confirming fleet-wide contention) → `[4/6] TYPE CHECK` ran ~2min then
+     `❌ Type check FAILED/timeout (exit=124)` — the exact TYPE-CHECK-timeout signature slot-14 recorded above
+     (`PYRIGHT_EXIT` nonzero from external signal, not a real type error).
+  4. Same run: `[5.E2E/6] E2E PIPELINE DRIVER SMOKE` (`scripts/e2e/run_pipeline_e2e.py --dry-run`, `run_timeout 30`)
+     also failed at exactly its 30s wall-clock cap. Local repro with the identical CI env vars
+     (`CLOUD_MOCK_MODE=true CLOUD_PROVIDER=local GCP_PROJECT_ID=test-project`): completed in 4.1s, exit 0. No fix landed
+     on `live-defi-rollout` (nothing is broken there — confirmed via 4 independent clean local runs). Did not force a
+     3rd retry per this doc's own established precedent (2 consecutive kills on a fresh HEAD = stable condition, not
+     flapping); the standing `ldr-to-main-promote.yml` cycle will keep generating fresh promote PRs and retrying on its
+     own 15-min cadence independent of this one-shot worker holding the slot. Pinged authoring slot with outcome;
+     closing escalation without a code change.
