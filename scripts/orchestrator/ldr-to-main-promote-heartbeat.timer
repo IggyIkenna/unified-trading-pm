@@ -1,0 +1,17 @@
+[Unit]
+Description=Every-15-min timer for the LDR->main promote heartbeat (deterministic gh workflow run dispatch)
+Documentation=unified-trading-pm/scripts/orchestrator/ldr-to-main-promote-heartbeat.sh
+Requires=ldr-to-main-promote-heartbeat.service
+
+[Timer]
+# Fire every 15 minutes, on the quarter-hour -- matches the promoter workflows' own declared
+# */15 cadence (see ldr-to-main-promote.yml); this is the deterministic top-up for ticks GHA's
+# own scheduler drops, not a replacement for the workflows' `schedule:` triggers.
+OnCalendar=*:0/15
+# If the VM was down at a tick, fire within 60s of restart rather than waiting for the next
+# quarter-hour boundary.
+Persistent=true
+AccuracySec=30
+
+[Install]
+WantedBy=timers.target

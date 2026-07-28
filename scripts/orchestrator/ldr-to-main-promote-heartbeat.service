@@ -1,0 +1,20 @@
+[Unit]
+Description=Deterministic 15-min heartbeat: force-dispatch LDR->main promoter workflows via gh workflow run
+Documentation=unified-trading-pm/scripts/orchestrator/ldr-to-main-promote-heartbeat.sh
+After=network.target
+
+[Service]
+Type=oneshot
+# Runs as the same user as the other orchestrator cron units (pm-pull/reap-stale-blockers) so
+# it shares the same gh CLI auth / Secret Manager access path via load-gh-token.sh.
+User=root
+EnvironmentFile=-/etc/orchestrator-env
+ExecStart=/usr/bin/env bash \
+    /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/orchestrator/ldr-to-main-promote-heartbeat.sh
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ldr-to-main-promote-heartbeat
+Environment=ORCHESTRATOR_TAG=orchestrator_master
+
+[Install]
+WantedBy=multi-user.target
