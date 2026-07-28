@@ -102,7 +102,7 @@ affects the LAST mile (does the fix actually run in prod) with zero observabilit
       shares this footgun (grepped for `group:.*github.workflow.*github.ref` + `workflow_call:` co-occurrence — only
       this file matched with multiple distinct callers). Same-repo dispatches still serialize via
       `cloud-build-router.yml`'s own per-repo group, unaffected by this change.
-- [x] [INFRA] P2. ✅ — unified-trading-pm@\<sha\>. Added `scripts/cicd/check_image_deploy_staleness.py` +
+- [x] [INFRA] P2. ✅ — unified-trading-pm@e617c930b. Added `scripts/cicd/check_image_deploy_staleness.py` +
       `.github/workflows/image-deploy-staleness-check.yml` (schedule `*/30`): compares each fleet repo's `main` HEAD
       commit timestamp against its `:latest` image's push timestamp in Artifact Registry (via
       `gcloud artifacts docker images list --format=json`, the `updateTime` field — `docker images describe` was
@@ -116,4 +116,5 @@ affects the LAST mile (does the fix actually run in prod) with zero observabilit
 
 ## Codex SSOTs
 
-- `/codex/08-workflows/ci-cd-flow.md` — the documented promote→build→deploy chain this concurrency bug breaks a link in.
+- `/codex/08-workflows/ci-cd-flow.md` — the documented promote→build→deploy chain this concurrency bug breaks a link in;
+  now also carries § "Image-deploy staleness check" documenting the P2 reconciliation check.

@@ -895,6 +895,23 @@ A code fix landing on `main` does **not** propagate to a running container by it
 (`gcloud run jobs describe … --format='value(spec.template.spec.template.spec.containers[0].image)'`) and the build that
 produced it, not just the merge.
 
+### Image-deploy staleness check — the loud failure signal for a cancelled/dropped dispatch (2026-07-28)
+
+A cancelled/dropped hop in the merge → `repository_dispatch` → `cloud-build-router.yml` → `gcloud builds triggers run`
+chain (e.g. a shared GHA concurrency group cancelling a sibling dispatch — the root cause diagnosed in
+`plans/active/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md`) is **silent**: no error, no Slack
+post, no PR comment — the only symptom is a repo's deployed `:latest` image being older than expected given its `main`
+HEAD. `.github/workflows/image-deploy-staleness-check.yml` (schedule `*/30`) runs
+`scripts/cicd/check_image_deploy_staleness.py`, which compares each fleet repo's `main` HEAD commit timestamp against
+its `:latest` image's push timestamp in Artifact Registry (`gcloud artifacts docker images list --format=json`'s
+`updateTime` — `docker images describe` carries no timestamp field at all) and posts a WARNING via `notify-slack.yml`
+(dedup `image-deploy-stale`, cooldown 60min) when the gap exceeds the expected build+dispatch latency (default 45min).
+Fail-open per-repo on an unresolvable query; an **all-UNKNOWN** run is its own distinct alarm (the check itself is
+broken, never silently read as "0 stale" — the same lesson as the release-tag reconciler's empty-input-set trap, see §
+"Release tag reconciler" below). `agent-orchestrator` is deliberately excluded (it runs as a VM process, not a Cloud Run
+image — no AR package exists for it); `unified-trading-library` uses its own dedicated AR repo, not the shared
+`unified-trading-system` one the other fleet services publish to.
+
 ---
 
 ## Agent vs Human Paths
