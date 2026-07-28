@@ -367,3 +367,29 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
   shipped independent of this gate, mechanical baseline-ratchet drift not a regression from my change). Flagging the
   `watcher_green` false-positive as a possible gap in the repo-health watcher's own check logic for whoever owns that
   mechanism — worth a look if this recurs.
+
+- **2026-07-28 (slot-9, `RB-eb458809` triage) — drifted back UNDER baseline again, ~20min after slot-14's 15:14
+  measurement; resolved the repo-blocker.** Dispatched as the `cicd` role to resolve `RB-eb458809`. Re-verified live,
+  independently, via THREE separate methods rather than trusting either the prior 91-over snapshot or the previous
+  `watcher_green` false-positive: (1) direct checker re-run,
+  `check_no_empty_string_fallback.py --workspace-root <ws> --scope market-tick-data-service` → `[OK] 89 (== baseline)`,
+  run twice for stability; (2) a manual independent re-grep of the exact pattern the checker uses
+  (`grep -rnE '\.get\(["\x27][[:alnum:]_]+["\x27]\s*,\s*["\x27]["\x27]\)' --include="*.py" market_tick_data_service/ scripts/ | grep -v /tests/ | grep -v noqa | wc -l`
+  → `89`, agrees exactly); (3) real remote CI — `market-tick-data-service` `quality-gates-v2` on `live-defi-rollout` has
+  run hourly all day 2026-07-28 (05:04 through 14:51 UTC) with `conclusion: success` on every run, `blocked: false` via
+  `server.ci_status`. The two flagged sites from slot-14's snapshot (`scripts/verify_lst_collateral_support.py:89,167`)
+  are still present unannotated in the file — they were never fixed by anyone — so this is genuinely the SAME
+  oscillation this doc has documented since 07-08: the total repo-wide count moves up and down a couple of sites at a
+  time as unrelated commits land elsewhere in the tree, occasionally ticking over the 89 baseline and back under it
+  again within the hour, with no single site or commit responsible. Attempted a local full
+  `bash scripts/quality-gates.sh --no-fix` re-run as a fourth check per the cicd role's standard verification step,
+  backgrounded per the mandatory heartbeat pattern — it was killed mid-pytest-run (~70% through Stage 3, process
+  vanished from `ps`, no OOM entry in `dmesg`) by unrelated shared-host resource contention (`pgrep -c quality-gates.sh`
+  showed 30+ concurrent full QG invocations across other slots at the time, far past the CLAUDE.md "≤2 full QGs at once"
+  cap) — did not retry given (1)-(3) already independently confirm green from sources unaffected by local host load.
+  Resolved `RB-eb458809` via `POST /api/repo-blockers/RB-eb458809/resolve`. No code fix needed or made — nothing to fix,
+  the gate reads green right now. Left the two unannotated sites as-is (out of scope for a gate-status triage pass, same
+  boundary every prior entry in this doc drew); a durable fix (per-site noqa/fail-fast on those 2 sites, matching the
+  precedent already used at lines 220-222 of the same file) would remove this specific recurring oscillation source
+  going forward, but is not required to unblock — flagging it here rather than doing it un-asked, since the P3 todo
+  above already covers baseline hygiene, not per-site remediation of the flagged sites themselves.
