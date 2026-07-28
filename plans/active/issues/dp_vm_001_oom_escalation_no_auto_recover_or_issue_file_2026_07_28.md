@@ -5,7 +5,7 @@ title:
 summary:
   Operator asked (2026-07-28) to confirm VM/job monitoring (incl. manifest consolidator) has full auto-recovery on death
   including OOM, automated rescale-on-OOM, and an issue auto-filed for investigation. Reading
-  codex/05-infrastructure/data-pipeline-alerts.md found a real self-contradiction — the DP-VM taxonomy table lists
+  /codex/05-infrastructure/data-pipeline-alerts.md found a real self-contradiction — the DP-VM taxonomy table lists
   DP-VM-001 ("VM run.log terminal exit_code != 0, incl. 137 OOM") escalation as plain "page" — no auto-recover, no
   file-issue — while the SAME doc's "Self-heal actuator layer" table separately lists an actuator for
   `DP_VM_EXIT_NONZERO (137 OOM)` → `relaunch_backfill_vm.py (resize-up on OOM)`, capped at ≤2/(vm-prefix, day). Two
@@ -52,7 +52,7 @@ resolved_by:
       of done: a stated, evidence-backed answer (cite the actual code path) — not an assumption.
 - [ ] [BACKEND] P0. If unwired: wire DP-VM-001 to auto-recover FIRST (resize-up relaunch via `relaunch_backfill_vm.py`,
       respecting the existing ≤2/(vm-prefix, day) cap) before paging, matching the pattern already used for DP-VM-003/
-      DP-VM-008. If already wired: fix `codex/05-infrastructure/data-pipeline-alerts.md`'s DP-VM-001 escalation column
+      DP-VM-008. If already wired: fix `/codex/05-infrastructure/data-pipeline-alerts.md`'s DP-VM-001 escalation column
       (currently reads plain "page") to accurately reflect the real behavior — this doc is the operational SSOT other
       agents read to know what already exists, and it is currently wrong either way this resolves.
 - [ ] [BACKEND] P0. Ensure DP-VM-001/OOM ALWAYS files a `plans/active/issues/<slug>_<date>.md` for deeper investigation
