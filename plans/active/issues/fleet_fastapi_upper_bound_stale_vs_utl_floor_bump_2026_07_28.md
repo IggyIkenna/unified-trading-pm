@@ -151,3 +151,21 @@ importable in this pass.)
       repos to match) vs direction B (revert UTL's `3b99d19d` bump, keep canonical at <0.137.0, find another fix for the
       `_IncludedRouter` issue) — see "Recommended decision" above. **Done when**: a direction is chosen and this doc's
       remaining todos are rewritten/dispatched against it.
+
+## Progress Log
+
+- **2026-07-28 (slot-8, `backend_engineer`):** Independently hit the same block shipping an unrelated
+  `deployment-service` change (quickmerge's ancestor cascade pulled `unified-trading-library@3b99d19d` in, breaking
+  `deployment-service`'s `uv pip install -e .` — deployment-service is already listed above). Tried the mechanical
+  one-repo bump (`fastapi>=0.137.0,<1.0.0`) on `deployment-service` alone as an experiment, reverted it once confirmed
+  unsafe: **`deployment-api`** (test-only peer dep, also in the affected list above) fails its OWN editable install the
+  same way, and that failure is SILENT at the deployment-service QG layer — no pytest collection error, just 140 fewer
+  test items collected outright (2903 passed/5 skipped baseline → 2751 passed/17 skipped). **New concrete finding if
+  direction A is chosen**: `deployment-api` needs the SAME `_IncludedRouter`-safe route-introspection fix as
+  strategy-service/client-reporting-api/features-service, not just a version bump —
+  `deployment-api/tests/unit/test_route_ordering_inventory.py:26` iterates `app.routes` filtering
+  `isinstance(route, APIRoute)`, which would likely find zero matches once `include_router()` (60+ call sites in
+  `deployment_api/main.py`) wraps children in `_IncludedRouter` — silently emptying the route-ordering regression
+  guard's assertion target rather than crashing. Add `deployment-api` to whichever todo list ends up doing the
+  `_IncludedRouter` fix pass. No code changed in either repo — reverted cleanly, waiting on this doc's direction
+  decision before resuming.
