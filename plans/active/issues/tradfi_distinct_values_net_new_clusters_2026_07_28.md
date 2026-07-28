@@ -25,7 +25,6 @@ related:
   ]
 created: "2026-07-28"
 last_updated: "2026-07-28"
-author: slot-6-data_engineering
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
