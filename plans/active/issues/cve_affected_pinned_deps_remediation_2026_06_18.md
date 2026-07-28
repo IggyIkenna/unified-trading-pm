@@ -110,88 +110,99 @@ gate is satisfied.
 
 ## Todos — pick-up-ready (UNBLOCKED 2026-06-18)
 
-- [ ] [SCRIPT] P2. **fastapi/starlette adoption — lift the 1.5b caps.** Fix the `_IncludedRouter` route-introspection in
-      UTL `service_framework/fastapi_factory.py` (handle `_IncludedRouter` having no `.path` in
-      `[r.path for r in app.routes]`) + the route-introspection tests in strategy-service / client-reporting-api /
-      features-service. Then bump fastapi `≥0.137` + starlette `≥1.3.1` in `workspace-constraints.toml` +
-      `canonical-dependency-manifest.json` + the 15 declaring repos' pyproject, regen locks atomically, run QG
-      fleet-wide. On green, drop the starlette CVE-2026-54283/-54282 `--ignore-vuln` entries from `base-service.sh` +
-      `base-library.sh`. Repo: unified-trading-library + strategy-service + client-reporting-api + features-service +
-      unified-trading-pm. **[2026-07-14 note, verify-rerun-2 finding 99]**: this coordinated fleet-wide bump is still
-      genuinely OPEN — `workspace-constraints.toml` confirmed as of 2026-07-14 still caps `fastapi>=0.115.0,<0.137.0` +
-      `starlette>=1.1.0,<1.3.0` fleet-wide, and this UTL `_IncludedRouter` fix has not landed. However, ml-service
-      found + shipped (`ml-service@4d16341`, 2026-07-13) an alternate, REPO-LOCAL escape hatch that does NOT require
-      this UTL fix: a `[tool.uv] override-dependencies` floor pin (`starlette>=1.3.1`) forces the resolver's starlette
-      version independent of what UTL's own `fastapi<0.137.0` declares, clearing ml-service's starlette CVEs without
-      touching `workspace-constraints.toml` or this todo's UTL prerequisite (see
-      `issues/ml_service_pip_audit_red_pillow_cryptography_starlette_2026_07_13.md` "Corrections" §2 — the doc's own
-      retraction of its earlier "requires cross-repo UTL change" diagnosis). This does NOT close this todo (the
-      coordinated fleet-wide cap lift + the route-introspection fix are still required for the other 14 declaring
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-28 (slot-16, cicd) — ratification confirmed, checkbox closes.** Per the 2026-07-28
+      notes below (slot-6/slot-7/slot-12), the coordinated fleet-wide fastapi/starlette bump this todo describes was
+      fully executed (UTL `_IncludedRouter` fix + all 14 declaring repos bumped to
+      `fastapi>=0.137.0,<1.0.0`/`starlette>=1.3.1,<2.0.0` + CVE-2026-54283/-54282 ignores dropped) and was blocked only
+      on the sibling P0 doc's `[OPERATOR]` ratification
+      (`fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`, `BLK-0d51ff66`). That ratification landed
+      today (main, commit `f00f514cc`, "retag 81 resolved/newly-unblocked `[OPERATOR]` gates"): direction A confirmed
+      complete, tag dropped, no revert queued. Re-verified independently before flipping:
+      `.venv/bin/python scripts/manifest/check-dependency-alignment.py` → "OK: All dependencies aligned with manifest
+      and canonical constraints." on this host, and spot-checked 4 of the 14 repos (unified-trading-library,
+      market-tick-data-service, deployment-service, agent-orchestrator) directly on `origin/live-defi-rollout` — all
+      show `fastapi>=0.137.0,<1.0.0` in `pyproject.toml`. **fastapi/starlette adoption — lift the 1.5b caps.** Fix the
+      `_IncludedRouter` route-introspection in UTL `service_framework/fastapi_factory.py` (handle `_IncludedRouter`
+      having no `.path` in `[r.path for r in app.routes]`) + the route-introspection tests in strategy-service /
+      client-reporting-api / features-service. Then bump fastapi `≥0.137` + starlette `≥1.3.1` in
+      `workspace-constraints.toml` + `canonical-dependency-manifest.json` + the 15 declaring repos' pyproject, regen
+      locks atomically, run QG fleet-wide. On green, drop the starlette CVE-2026-54283/-54282 `--ignore-vuln` entries
+      from `base-service.sh` + `base-library.sh`. Repo: unified-trading-library + strategy-service +
+      client-reporting-api + features-service + unified-trading-pm. **[2026-07-14 note, verify-rerun-2 finding 99]**:
+      this coordinated fleet-wide bump is still genuinely OPEN — `workspace-constraints.toml` confirmed as of 2026-07-14
+      still caps `fastapi>=0.115.0,<0.137.0` + `starlette>=1.1.0,<1.3.0` fleet-wide, and this UTL `_IncludedRouter` fix
+      has not landed. However, ml-service found + shipped (`ml-service@4d16341`, 2026-07-13) an alternate, REPO-LOCAL
+      escape hatch that does NOT require this UTL fix: a `[tool.uv] override-dependencies` floor pin
+      (`starlette>=1.3.1`) forces the resolver's starlette version independent of what UTL's own `fastapi<0.137.0`
+      declares, clearing ml-service's starlette CVEs without touching `workspace-constraints.toml` or this todo's UTL
+      prerequisite (see `issues/ml_service_pip_audit_red_pillow_cryptography_starlette_2026_07_13.md` "Corrections" §2 —
+      the doc's own retraction of its earlier "requires cross-repo UTL change" diagnosis). This does NOT close this todo
+      (the coordinated fleet-wide cap lift + the route-introspection fix are still required for the other 14 declaring
       repos), but the override-dependencies pattern is now a proven alternative worth considering per-repo while the UTL
       fix is pending.
 
       **[2026-07-28 note, slot-6]**: the UTL `_IncludedRouter`/`.path` route-introspection fix landed today
-                                      (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
-                                      `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
-                                      while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
-                                      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
-                                      analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
-                                      `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
-                                      `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
-                                      roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
-                                      market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
-                                      finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
-                                      newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
+                                          (`unified-trading-library@3b99d19d`, slot-12, `fastapi>=0.137/starlette>=1.3.1`, quickmerge to
+                                          `live-defi-rollout`) — I hit the resulting `ImportError: iter_route_contexts` live in market-tick-data-service
+                                          while running the `data-pipeline-check-mtds` MID-BACKFILL spot-check
+                                          (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`). slot-3 independently found + filed the full
+                                          analysis first and got the direction right (UTL + client-reporting-api are the ones DRIFTED from the
+                                          `canonical-dependency-manifest.json` SSOT, not the ~10 repos still on the old bound) — see
+                                          `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (P0, `[OPERATOR]`-gated on choosing
+                                          roll-forward vs revert, correctly not something a worker should pick unilaterally). I initially bumped
+                                          market-tick-data-service's own `pyproject.toml` cap to unblock my task, then reverted that tracked change after
+                                          finding slot-3's doc mid-session — same reasoning: direction isn't mine to pick. Left my local `.venv` on the
+                                          newer fastapi (untracked, session-only) so my own check could proceed without prejudging the fleet decision.
 
-                                  **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
-                                      hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
-                                      unrelated task — this WAS the escalated wall). Unlike slot-6/slot-8, I shipped the mechanical direction-A
-                                      bump (`ml-service@8914d555`: `fastapi>=0.137.0,<1.0.0`, regenerated `uv.lock` → resolved 0.140.7) rather than
-                                      reverting, because (a) my mandate is specifically to get this gate green, not to audit the fleet, and (b) I
-                                      checked for slot-8's found landmine (a test iterating `app.routes`/`isinstance(route, APIRoute)` post
-                                      `include_router()`, which `_IncludedRouter` wrapping can silently empty) — ml-service's only matching-looking
-                                      test (`tests/inference/unit/test_prediction_stream.py:112`) walks a raw pre-include `APIRouter.routes`, never
-                                      an app's aggregated `.routes`, so it is NOT exposed to the `_IncludedRouter` wrapping. Full
-                                      `quality-gates.sh --no-fix` ran clean (2111 passed, 4 skipped, 80% coverage) both before and after the
-                                      fastapi bump with no count drop. Full details + Progress Log entry in
-                                      `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`. Flagging for the pending
-                                      `[OPERATOR]` direction call: if direction B (revert UTL) is chosen, ml-service's `8914d555` needs a matching
-                                      mechanical revert — trivial, already scoped.
-                                      This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
+                                      **[2026-07-28 note, slot-7/cicd escalation `agt-db0abf`]**: hit the same `ImportError: iter_route_contexts` as a
+                                          hard `quality-gates-v2` red blocking ml-service's LDR→main promotion PR #306 (not a side-effect of an
+                                          unrelated task — this WAS the escalated wall). Unlike slot-6/slot-8, I shipped the mechanical direction-A
+                                          bump (`ml-service@8914d555`: `fastapi>=0.137.0,<1.0.0`, regenerated `uv.lock` → resolved 0.140.7) rather than
+                                          reverting, because (a) my mandate is specifically to get this gate green, not to audit the fleet, and (b) I
+                                          checked for slot-8's found landmine (a test iterating `app.routes`/`isinstance(route, APIRoute)` post
+                                          `include_router()`, which `_IncludedRouter` wrapping can silently empty) — ml-service's only matching-looking
+                                          test (`tests/inference/unit/test_prediction_stream.py:112`) walks a raw pre-include `APIRouter.routes`, never
+                                          an app's aggregated `.routes`, so it is NOT exposed to the `_IncludedRouter` wrapping. Full
+                                          `quality-gates.sh --no-fix` ran clean (2111 passed, 4 skipped, 80% coverage) both before and after the
+                                          fastapi bump with no count drop. Full details + Progress Log entry in
+                                          `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`. Flagging for the pending
+                                          `[OPERATOR]` direction call: if direction B (revert UTL) is chosen, ml-service's `8914d555` needs a matching
+                                          mechanical revert — trivial, already scoped.
+                                          This todo and the new P0 doc now cover the same ground; resolve via the P0 doc's `[OPERATOR]` todo, not here.
 
-                                  **[2026-07-28 note, slot-12]**: this todo is FULLY EXECUTED, but leaving the checkbox unflipped pending the
-                                      P0 doc's `[OPERATOR]` ratification (see below) — same discipline as the notes above. I authored the
-                                      original `unified-trading-library@3b99d19d` fix (`get_route_paths`/`find_matching_route` in
-                                      `service_framework/fastapi_factory.py`, unit-tested) from this exact todo, then completed the whole
-                                      coordinated exercise it describes before finding `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`
-                                      (filed by slot-3 partway through my session): fixed the route-introspection tests in
-                                      strategy-service/client-reporting-api/features-service (as scoped) **+ market-tick-data-service/
-                                      deployment-api** (the two landmines slot-3/slot-6/slot-8 found — `deployment-api`'s ordering-regression
-                                      test now uses `find_matching_route` so it survives `_IncludedRouter` wrapping instead of silently
-                                      matching nothing); bumped `workspace-constraints.toml` + `canonical-dependency-manifest.json` to
-                                      `fastapi>=0.137.0,<1.0.0` / `starlette>=1.3.1,<2.0.0`; bumped + relocked + full-QG'd + shipped ALL 14
-                                      declaring repos (`unified-trading-library`, `strategy-service`, `client-reporting-api`,
-                                      `features-service`, `market-tick-data-service`, `deployment-api`, `alerting-service`,
-                                      `fund-administration-service`, `execution-service`, `greeks-service`, `unified-trading-api`,
-                                      `deployment-service`, `agent-orchestrator`, `trading-agent-service` — current HEADs:
-                                      unified-trading-library@4f0ac48d, strategy-service@d426da98, client-reporting-api@42a9013,
-                                      features-service@4eeebebb, market-tick-data-service@aec1acf5, deployment-api@2c1d446,
-                                      alerting-service@d226937, fund-administration-service@f214f1a, execution-service@204ff58c,
-                                      greeks-service@cfc0137, unified-trading-api@7a7029d, deployment-service@161a979,
-                                      agent-orchestrator@6d20faa, trading-agent-service@67cbb4b); dropped the CVE-2026-54283/-54282
-                                      `--ignore-vuln` entries from `qg-common.sh` (mirrored in `base-service.sh`/`base-library.sh` comments).
-                                      `check-dependency-alignment.py` now reports fully aligned fleet-wide (was drifted before — that IS the
-                                      P0 doc's contradiction, now resolved). Full details + recommendation (ratify, don't revert) in the P0
-                                      doc's Progress Log. Escalated via `/blocked` to main rather than flipping either todo myself.
+                                      **[2026-07-28 note, slot-12]**: this todo is FULLY EXECUTED, but leaving the checkbox unflipped pending the
+                                          P0 doc's `[OPERATOR]` ratification (see below) — same discipline as the notes above. I authored the
+                                          original `unified-trading-library@3b99d19d` fix (`get_route_paths`/`find_matching_route` in
+                                          `service_framework/fastapi_factory.py`, unit-tested) from this exact todo, then completed the whole
+                                          coordinated exercise it describes before finding `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`
+                                          (filed by slot-3 partway through my session): fixed the route-introspection tests in
+                                          strategy-service/client-reporting-api/features-service (as scoped) **+ market-tick-data-service/
+                                          deployment-api** (the two landmines slot-3/slot-6/slot-8 found — `deployment-api`'s ordering-regression
+                                          test now uses `find_matching_route` so it survives `_IncludedRouter` wrapping instead of silently
+                                          matching nothing); bumped `workspace-constraints.toml` + `canonical-dependency-manifest.json` to
+                                          `fastapi>=0.137.0,<1.0.0` / `starlette>=1.3.1,<2.0.0`; bumped + relocked + full-QG'd + shipped ALL 14
+                                          declaring repos (`unified-trading-library`, `strategy-service`, `client-reporting-api`,
+                                          `features-service`, `market-tick-data-service`, `deployment-api`, `alerting-service`,
+                                          `fund-administration-service`, `execution-service`, `greeks-service`, `unified-trading-api`,
+                                          `deployment-service`, `agent-orchestrator`, `trading-agent-service` — current HEADs:
+                                          unified-trading-library@4f0ac48d, strategy-service@d426da98, client-reporting-api@42a9013,
+                                          features-service@4eeebebb, market-tick-data-service@aec1acf5, deployment-api@2c1d446,
+                                          alerting-service@d226937, fund-administration-service@f214f1a, execution-service@204ff58c,
+                                          greeks-service@cfc0137, unified-trading-api@7a7029d, deployment-service@161a979,
+                                          agent-orchestrator@6d20faa, trading-agent-service@67cbb4b); dropped the CVE-2026-54283/-54282
+                                          `--ignore-vuln` entries from `qg-common.sh` (mirrored in `base-service.sh`/`base-library.sh` comments).
+                                          `check-dependency-alignment.py` now reports fully aligned fleet-wide (was drifted before — that IS the
+                                          P0 doc's contradiction, now resolved). Full details + recommendation (ratify, don't revert) in the P0
+                                          doc's Progress Log. Escalated via `/blocked` to main rather than flipping either todo myself.
 
-                      **[2026-07-28 status, slot-12]**: `BLK-0d51ff66` answered by main with INTERIM guidance — hold exactly as-is,
-                          do NOT revert (already shipped + QG-green + a CVE remediation; reverting is the higher-risk action; UTL
-                          is already HEAD-pinned via the editable install and hard-requires the new floor via
-                          `iter_route_contexts`, so "narrower fix" isn't viable now anyway; a revert would also re-break
-                          agent-orchestrator, which crash-looped on this exact `ImportError` after a restart and was recovered by
-                          the same fix direction). Main explicitly reserved the actual `[OPERATOR]` ratification for the operator
-                          and told me not to sit idle waiting on it — proceeding to other backlog work. Checkbox stays unflipped
-                          until that ratification lands.
+                          **[2026-07-28 status, slot-12]**: `BLK-0d51ff66` answered by main with INTERIM guidance — hold exactly as-is,
+                              do NOT revert (already shipped + QG-green + a CVE remediation; reverting is the higher-risk action; UTL
+                              is already HEAD-pinned via the editable install and hard-requires the new floor via
+                              `iter_route_contexts`, so "narrower fix" isn't viable now anyway; a revert would also re-break
+                              agent-orchestrator, which crash-looped on this exact `ImportError` after a restart and was recovered by
+                              the same fix direction). Main explicitly reserved the actual `[OPERATOR]` ratification for the operator
+                              and told me not to sit idle waiting on it — proceeding to other backlog work. Checkbox stays unflipped
+                              until that ratification lands.
 
 - [ ] [TEST] P3. **alerting-service upgrade-time investigation.** `test_synthetic_false_does_not_log_suppressed_event`
       failed ONLY under the 1.5b `--upgrade` pass (it passes on current working deps + Mode-B). When alerting's external
