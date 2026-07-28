@@ -13,7 +13,7 @@ summary: >-
   (`_diff_flips_checkbox`) can never succeed against a brief belonging to a different line, and the fallback
   (`_brief_is_currently_checked`) also can't succeed since that OTHER todo is genuinely still open (real, separate, much
   larger unshipped work — must not be marked done to route around this).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,6 +30,8 @@ parent_epic: infrastructure_master
 priority: P2
 source: "slot-5, discovered while calling /done for cefi_satellite_ao_dispatch_batch1-012, 2026-07-27"
 resolved_by:
+  "slot-16 (cicd), 2026-07-28 — all 3 todos done; root-caused, correction endpoint shipped, and the one outstanding
+  instance self-resolved via redispatch before manual reconciliation was needed"
 locked_by:
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -141,20 +143,33 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
       the 400 unverified-claim refusal, both 404s, the `plans/active/issues/` stale-plan_ref fallback, activity-event
       logging, and dispatched-row safety); full `quality-gates.sh` green (1821 passed, basedpyright/ruff/dashboard
       clean). Repo: agent-orchestrator.
-- [ ] [SCRIPT] P1. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — the todo's own stated unblocking
-      condition (the `/api/backlog/<id>/reconcile-brief` endpoint existing) is now met: it shipped in the second todo
-      above (`agent-orchestrator@09cda29`), which is exactly the "normal, audit-logged, non-operator action" path this
-      todo said to wait for — no more raw out-of-band SQL write needed, so the `ao_backlog_done_row_disappearance` noise
-      concern this todo was held on no longer applies. **Manually resolve `cefi_satellite_ao_dispatch_batch1-012`'s
-      dispatched-but-undone state** — the work is genuinely complete and verified (market-tick-data-service@94b4aff5,
-      unified-trading-pm@dadf5db6e). Call `POST /api/backlog/cefi_satellite_ao_dispatch_batch1-012/reconcile-brief` with
-      `new_brief` set to the currently-checked todo text this task actually corresponds to —
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s "DONE 2026-07-27 (slot-5) — market-tick-data-service@94b4aff5.
-      Widened `_update_cluster_and_chain_counts`…" line (originally cited at `:386`, now at `:411` after subsequent plan
-      edits — resolve the CURRENT line number at execution time, don't assume either cited number) — then confirm the
-      task's stored `brief`/`brief_hash` now match and the row's `dispatched`-but-undone state is resolved. Filed as
-      `/blocked` question `BLK-35875b16` with the same evidence; that question can now be closed citing this resolution
-      path instead of left open.
+- [x] ✅ [SCRIPT] P1. **DONE-AS-MOOT 2026-07-28 (slot-16, cicd) — no action was needed; the situation self-resolved
+      before this todo was picked up.** Attempted the prescribed
+      `POST /api/backlog/cefi_satellite_ao_dispatch_batch1-012/reconcile-brief` per this todo's own recipe → **400
+      `task cefi_satellite_ao_dispatch_batch1-012 not in backlog.yaml`**. Confirmed via a direct read-only query against
+      the live orchestrator DB (`agent-orchestrator/data/state/state.db`'s `tasks` table, the same host `server.py` runs
+      from) that `-012` no longer exists as a row at all — only `cefi_satellite_ao_dispatch_batch1-029` remains for this
+      `plan_ref` (unrelated later todo, also `done`). Reconstructed what actually happened from `activity_log`: after
+      slot-5's original `/done` was correctly hard-rejected by the cross-wired-brief bug (`slot_task_skipped` 2026-07-27
+      08:42:57, citing this exact issue), the dispatcher's normal retry path **re-dispatched the SAME task id `-012` to
+      slot-14** at 09:46:46 — and because the stored `brief` was cross-wired to the SIBLING todo's text (the
+      v6-canonicalisation-proof todo, plan line 386), slot-14 read that brief as its real assignment and did the
+      corresponding real work: proved + executed the cefi chain-tail v6 canonicalisation cutover against a real GCS
+      `-test-` bucket, found + fixed 2 genuine reader bugs along the way, shipped `market-tick-data-service@4e5d0a24`,
+      flipped the plan checkbox (line 386:
+      `- [x] ✅ … DONE 2026-07-27 (slot-14) —     market-tick-data-service@4e5d0a24.`), and called `/done` successfully
+      — `slot_done_verified` fired with `verified: true` at 2026-07-27 11:27:11. So task `-012` closed correctly on its
+      OWN (cross-wired but now genuinely-matching) merits; the false-negative this issue tracks never recurred against
+      it. Separately, slot-5's original real work (the cluster-counts-widening todo,
+      `market-tick-data-service@94b4aff5`) already has its own checkbox correctly flipped in the plan (now line 411:
+      `- [x] ✅ … DONE 2026-07-27 (slot-5) —     market-tick-data-service@94b4aff5.` — this is the SSOT
+      `regen_backlog_from_plan.py` reads) — since the checkbox is already `[x]`, the regen no longer emits an open todo
+      for it, so there is no live backlog row left needing a `reconcile-brief` correction; the endpoint's 400 is the
+      CORRECT answer here, not a failure to work around. `/blocked` question `BLK-35875b16` already carries
+      `answered_at: 2026-07-27 08:39:01`, `answered_by: main`, `disposition: final` (confirmed via `blocked_queue`
+      table) — it was closed same-day and needs no further action. Net: this todo's prescribed action (a manual
+      reconcile-brief call) turned out to be unnecessary — recording that finding, rather than a false claim of having
+      exercised it, is the accurate closure.
 
 ## Evidence
 
