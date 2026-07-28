@@ -104,9 +104,43 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DATA] P0. **Root-cause ASTER's manifest registration gap** — why `record_captured`/`record_failed` writes for the
+- [x] [DATA] P0. **Root-cause ASTER's manifest registration gap** — why `record_captured`/`record_failed` writes for the
       raw-trade adapter aren't landing despite real parquet on GCS (see "Recommended decision" above); this blocks
-      `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg.
+      `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg. — ✅ **market-tick-data-service@7a730cd6**. Root cause:
+      `OnchainPerpBatchHandler.process()` constructs its `ManifestWriter` with no `per_vm_shards` argument, so it
+      resolves from the ambient `MANIFEST_PER_VM_SHARDS` env var (default `False`). The dedicated fleet launcher
+      (`launch-cefi-hl-aster-historical-backfill.sh`) sets that var, but the 2026-07-20/21 raw files were produced by an
+      ad-hoc/manual invocation (no matching VM was ever found running — see "What I found" above — and both `accd8aa4`
+      ASTER rate-limit fix and `aa72787b` row_key fix landed the SAME day, consistent with a manual verification run
+      during that debugging session) that did not inherit the env var. Without it, every manifest write falls back to
+      the legacy single-blob generation-match CAS path, which — on the cefi bucket's large/hot canonical index —
+      exhausts its 15-retry budget without completing (identical mechanism to
+      `/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`, confirmed via
+      `unified-trading-library`'s `_write_to_gcs`/`_drain` code + docstrings). The raw parquet write
+      (`PartitionedTickWriter`) is a fully independent path, so it succeeds regardless — explaining real data on disk
+      with zero manifest registration. `.add()`'s legacy ingest path does NOT hit the separate `MalformedRowKeyError`
+      `chain=""` bug `aa72787b` fixed (that bug only affects `record_empty`/`record_failed`'s `row_key` builder, which
+      `.add()` bypasses entirely) — confirmed NOT a contributing factor for the captured-row gap specifically. Fix:
+      hardcoded `per_vm_shards=True` on the handler's `ManifestWriter` construction (matching the existing safety-net
+      pattern already used by `rebuild_sports_manifest_v9.py` /
+      `recover_tradfi_chain_manifest_registration_2026_07_22.py`), so future runs of this handler register correctly
+      regardless of the invoking environment. QG green (7403 passed, 2 pre-existing unrelated failures fixed as a
+      repo-blocker per RULES.md §4b — `test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`
+      broke after `unified-api-contracts@ee7cb341` registered "coinbase"; another slot landed an equivalent fix
+      concurrently, reconciled via merge).
+- [ ] [DATA] P1. Once the writer-path fix is deployed, re-run a manifest-only reconciliation pass that registers the
+      ALREADY-WRITTEN 2026-07-20/21 raw files + their derived `processed_candles/` as `captured` (idempotent, no
+      re-fetch) — mirrors the recipe in `/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`.
+      Repo: market-tick-data-service.
+- [ ] [DATA] P2. Once ASTER's manifest correctly reflects its real captured range, re-scope
+      `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg (MDPS candle backfill) — it was carved out of that plan's
+      initial delivery pending this fix.
+
+## Progress Log (2026-07-26)
+
+- Root-caused + fixed todo 1 (P0). See the todo's own evidence line for the full mechanism. Shipped
+  `market-tick-data-service@7a730cd6`. P1 (register the already-written 2026-07-20/21 data) and P2 (re-scope the
+  `cefi_satellite_ao_dispatch_batch1-001` ASTER leg) are queued as separate todos above, not yet started.
 
 ## Not yet checked (deliberately out of scope for this discovery pass)
 
