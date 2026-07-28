@@ -141,13 +141,19 @@ heartbeat — real issues get fixed, not hushed.
       hung-worker alert-only, never reaped) — proves the sidecar-gated kill never reaps a live host. FIX 2: meta probe
       of the wave-launcher sentinel = age 3.7m, stale=False (seeded; wave-launcher re-pinned to the fresh image → its
       06:00Z `0 */3` tick refreshes it).
-- [ ] [MONITOR] P2. **deployment-service:latest carries the new wave_launcher.py** — the wave-launcher Cloud Run job was
-      runtime-re-pinned to `deployment-api@56f2060e` (which has `_write_last_run_sentinel`), but its terraform default
-      is `deployment-service:latest` (a SEPARATE image, still old). A `tofu apply` would revert the pin → the
-      wave-launcher would stop writing the host-cron sentinel → false `DP_CRON_DID_NOT_FIRE` after the 6h seed budget.
-      Trigger the `deployment-service-jobs-image-build` from LDR (or let it rebuild on the next LDR push) so
-      `deployment-service:latest` carries the sentinel writer, then the terraform default is correct and the runtime pin
-      can revert harmlessly.
+- [x] ✅ [MONITOR] P2. **deployment-service:latest carries the new wave_launcher.py — VERIFIED RESOLVED 2026-07-28 (no
+      code change needed; closed by 5 weeks of normal CI activity).** The `deployment-service-jobs-image-build` trigger
+      (asia-northeast1, `repositoryEventConfig.push.branch=^main$`, `included_files` incl. `scripts/vm/**`; Dockerfile
+      `COPY scripts/` pulls in top-level `scripts/wave_launcher.py` too) has fired + SUCCEEDED on every `main` push
+      since — confirmed 15 consecutive SUCCESS runs 2026-07-26→2026-07-28
+      (`gcloud builds list --region=asia-northeast1     --filter="substitutions.TRIGGER_NAME=deployment-service-jobs-image-build"`).
+      Most recent: build `1d89c615-ad37-     4050-b063-c69acbe239ef` SUCCESS @ 2026-07-28T08:05:52Z, commit `ddc3cdb9`.
+      Confirmed `7b070fb` (the sentinel-fix commit) IS an ancestor of `ddc3cdb9` (`git merge-base --is-ancestor`), and
+      `git show ddc3cdb9:scripts/     wave_launcher.py` contains `_write_last_run_sentinel` (def line 185, call line
+      425). The pushed `deployment-service:latest` image digest `sha256:a92b283d…` was created 2026-07-28T08:09:51Z
+      (`gcloud artifacts     docker images list`), consistent with that build. Terraform default
+      (`terraform/gcp/wave_launcher_scheduler.tf:58` → `…/deployment-service:latest`) now matches the runtime pin's
+      behavior — a `tofu apply` today is harmless; no `tofu apply` or code change required to close this.
 - [x] ✅ [DOCS] P1. **Codex SSOT update — DONE 2026-06-24.** Added the "Out-of-band liveness + data-pipeline
       self-monitoring (2026-06-24)" section to `/codex/05-infrastructure/deployment-observability.md`: the 3 independent
       layers (Layer-1 dp-\* fleet monitors incl. the sidecar-authoritative heartbeat + sidecar-gated auto-kill +
