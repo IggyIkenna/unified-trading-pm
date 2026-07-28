@@ -764,6 +764,6 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   discoverability: `issues/manifest_reprocessing_generic_utility_2026_07_07.md`,
   `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`,
   `issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (the adjacent already-tracked gap doc itself, now
-  AO-eligible), `issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None were
+  AO-eligible), `archive/issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None were
   tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog. This entry itself does not
   change this hub's own `assigned_vm: NA` gate noted above — that stays operator-controlled.

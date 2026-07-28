@@ -17,7 +17,7 @@ summary: >-
   currently registered AgentRows (/api/agents), consistent with the stuck-display being a stale field rather than a live
   ownership error. Worth closing only if/when it confuses the dashboard or operator view; filed now so the observation
   is not lost.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -55,6 +55,8 @@ resolved_by:
 locked_by:
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed: `agent-orchestrator@c72197d`.
 
 # spawn_base_role stale-display when a different-role agent adopts a session already stuck at a prior one-off role
 
