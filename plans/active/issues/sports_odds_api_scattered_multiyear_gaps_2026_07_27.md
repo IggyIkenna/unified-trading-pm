@@ -126,14 +126,74 @@ against the vendor directly as of 2026-07-26) — every fetch attempt would 401 
 not attempt to root-cause the 6 multi-week gaps beyond the cross-check above — that needs historical scheduler/cron log
 access (likely expired for the older ranges) or VM run-log archaeology, out of scope for this read-only census pass.
 
+## Root-cause investigation (2026-07-28)
+
+**Method**: checked all three evidence surfaces the todo named, for all 6 ranges, before concluding.
+
+**(1) Cloud Logging retention** — `gcloud logging buckets list --project=central-element-323112` shows exactly 2
+buckets, retention **2 days** and **400 days** (no longer-retention bucket exists). 400 days before today
+(2026-07-28) is ≈2025-06-23. Of the 6 ranges, only **2026-02-22..03-28** falls inside that window — the other 5
+(2020-08, 2022-03, 2023-07, 2024-11, 2025-03-11..04-11) are entirely outside Cloud Logging retention; no query can
+recover them.
+
+**(2) Git history depth** — checked the oldest commit in every repo this pipeline touches:
+`market-tick-data-service` 2025-10-22, `instruments-service` 2025-11-08, `unified-trading-library` 2025-11-06,
+`unified-api-contracts` 2026-02-26, `deployment-service` 2026-03-04, `unified-trading-pm` 2026-02-25. **No repo in
+the current workspace has history older than 2025-10-22** — every one of 2020/2022/2023/2024/2025-03 predates every
+repo's earliest commit. Git archaeology is categorically unavailable for those 5 ranges (only 2026-02-22..03-28
+postdates all repos' history starts).
+
+**(3) `vm-logs/` archives** — listed `gs://deployment-scripts-central-element-323112/vm-logs/` in full (3,177
+entries) and filtered for every odds/sports/mtds-backfill-prefixed VM name. The only real (non-`pipelinecheck`-smoke-
+test) sports-odds backfill VM runs found are recent, narrowly-targeted supplemental runs: `mtds-backfill-odds-ucl-gap`,
+`mtds-backfill-odds-ucl-gap2`, `mtds-backfill-sports-odds-3leagues-1` — none cover any of the 6 gap date ranges, and
+there is no trace anywhere of the launcher's documented "Full 5.8yr run" (`--start 2020-06-01 --end 2026-03-28`
+default) ever having executed as one continuous, discoverable VM run. (`log-archive/final/` — the no-TTL durable
+copy — has the same gap; nothing pre-dates 2026-07.)
+
+**(4) Decisive finding for the one in-range window (2026-02-22..03-28)** — a direct Cloud Logging query
+(`resource.labels.job_name=~"sports"`, full 35-day window) returned **zero log entries of any kind** — no Cloud Run
+Job with "sports" in its name executed at all during this window. Cross-checked against git:
+- `deployment-service@1a6fb02` (`feat(sports-scheduler): add --one-shot CLI flag + Cloud Run Job + cron activation`,
+  **2026-04-21**) is the commit that first activates the sports Cloud Scheduler cron + Cloud Run Job in the current
+  infra — i.e. **no automated sports capture scheduler existed at all until 3.5 weeks after this gap ends.**
+- `market-tick-data-service`'s current `odds_api_adapter.py` has no history before **2026-04-11**.
+- The one commit that DOES fall inside the gap window, `market-tick-data-service@22a2cded` (2026-03-10, "sports
+  migration b5 — odds API validation contract"), only adds a schema *validator* — its own commit message states it
+  "remove[s] eager `SportsOddsTickAdapter` import (**was already broken** — UMI `BaseSportsAdapter` not in top-level
+  `__init__`)". The capture adapter was non-functional/unwired at that point, by the shipping developer's own words.
+
+**Conclusion**: all 6 ranges — including the one nominally inside Cloud Logging's retention window — **predate the
+sports odds capture pipeline's own existence as a scheduled, automated system** (scheduler activated 2026-04-21;
+adapter wiring broken as late as 2026-03-10). None of the 3 candidate classes the dispatching todo offered fits:
+not **scheduler-dormancy** (no scheduler existed yet to go dormant — a structurally different situation from the
+already-fixed 2026-06/07 dormancy bug, which affected an *already-running* scheduler), not a **live-pipeline capture
+bug** (no live pipeline was running), and **vendor-side outage** is unfalsifiable either way (the-odds-api.com key is
+currently deactivated, so it can't be tested, and no capture attempt — successful or failed — was ever logged for
+these windows to know if the vendor was even asked). The correct classification is a 4th, more precise one:
+**pre-automation historical-backfill non-coverage** — the 1,608 present days' odds_api data was migrated into the
+canonical manifest via `migrate_orphaned_mtds_odds_api_bucket_rows_2026_07_13.py` from an "orphaned" MTDS location,
+implying some earlier, now-untraceable backfill or ad-hoc process populated most-but-not-all of 2020-06-06..present
+before the live scheduler ever existed; the 635 missing days are simply the days that process never reached (vendor
+historical-data unavailability vs an unretrieved backfill-run failure cannot be distinguished with any surviving
+evidence — both are equally consistent with what's left). **No code defect exists to fix for these 6 ranges** — this
+is evidentiarily distinct from the two already-fixed bugs cross-checked in this doc's original census (the
+2026-06-27..07-15 scheduler-dormancy window and the future-date-guard bug, both of which affected the *live*,
+already-running pipeline and are correctly excluded from these 6). The path forward is unchanged from todo #2 below:
+plain re-backfill of the missing ranges once the vendor key is restored, via the standard idempotent launcher — no
+separate fix commit is needed or possible.
+
 ## Recommended decision / next steps
 
-- [ ] [DATA] P1. Root-cause the 6 undocumented multi-week odds_api gaps above (2020-08-24..10-10, 2022-03-06..04-18,
+- [x] [DATA] P1. Root-cause the 6 undocumented multi-week odds_api gaps above (2020-08-24..10-10, 2022-03-06..04-18,
       2023-07-01..10-06, 2024-11-19..12-31, 2025-03-11..04-11, 2026-02-22..03-28) — check whichever of GCP Cloud Logging
       retention / `vm-logs/` archives / Cloud Scheduler job history still covers each window; classify each as
       scheduler-dormancy (same class as the already-fixed 2026-06/07 bug), vendor-side outage, or a genuine capture bug.
-      Recent ranges (2025, 2026) are far more likely to have retrievable logs than 2020-2022. (repo:
-      market-tick-data-service, deployment-service)
+      Recent ranges (2025, 2026) are far more likely to have retrievable logs than 2020-2022. ✅ — see "Root-cause
+      investigation (2026-07-28)" above. Verdict: all 6 ranges predate the sports capture pipeline's own existence
+      (scheduler activated 2026-04-21; adapter wiring broken as late as 2026-03-10) — classified as pre-automation
+      historical-backfill non-coverage, not scheduler-dormancy/vendor-outage/live-capture-bug (no code fix applies;
+      resolution is the plain re-backfill already tracked in todo #2 below). (unified-trading-pm, this doc)
 - [ ] [DATA] P1. BLOCKED-PREREQUISITES on `sports_odds_api_key_deactivated_2026_07_26.md` landing first (key restoration
       is [OPERATOR]-gated there). Once the key is restored, backfill all 635 missing days via
       `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>` per
