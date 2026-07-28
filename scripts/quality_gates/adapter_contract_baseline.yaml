@@ -88,8 +88,6 @@ baseline:
     count: 10
   features-service/features_service/cefi/calculators/perp_funding_rates.py:
     count: 2
-  features-service/features_service/cefi/cli/handlers/perp_funding_handler.py:
-    count: 5
   features-service/features_service/commodity/cli/handlers/batch_handler.py:
     count: 8
   features-service/features_service/common/manifest_leg_guard.py:
