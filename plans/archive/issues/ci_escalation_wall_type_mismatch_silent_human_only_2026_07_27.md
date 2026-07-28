@@ -8,7 +8,7 @@ summary:
   neither is in agent-orchestrator's server/escalation.py WALL_TYPES set, so both fail the escalate-to-orchestrator.yml
   listener's case-statement validation before ever reaching /api/escalate. The notify job still pages Slack as a generic
   hard failure, masking that no AO worker was ever dispatched for these two standing conditions.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -28,7 +28,7 @@ estimate_calibrated_ai_days: 0.3
 assigned_role: NA
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: "agent-orchestrator@63f5cbd + agent-orchestrator@78d4b59 + unified-trading-pm@b3b4183a5 + unified-trading-pm@2e5f052a4"
 locked_by:
 supersedes:
 superseded_by:
@@ -36,6 +36,10 @@ source:
   Dispatched as one of five parallel audit agents this session investigating "CI failure escalation to AO for all CI
   failures that need agents" (an operator-raised open question, not yet triaged before this session).
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Both todos closed: WALL_TYPES fold
+> (`agent-orchestrator@63f5cbd`) and the fleet-wide third-class audit (`agent-orchestrator@78d4b59` +
+> `unified-trading-pm@2e5f052a4`, found + fixed `harness_lint`).
 
 # CI escalation wall_type mismatch — 2026-07-27
 

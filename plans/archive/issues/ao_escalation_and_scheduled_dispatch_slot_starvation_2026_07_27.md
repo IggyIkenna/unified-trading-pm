@@ -16,7 +16,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [orchestrator, autospawn, fleet-cap, escalation, scheduled-dispatch, starvation]
-related: [/plans/active/issues/ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27.md]
+related: [/plans/archive/issues/ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27.md]
 created: 2026-07-27
 last_updated: 2026-07-27
 parent_epic: orchestrator_master
