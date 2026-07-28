@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -623,12 +623,15 @@ drift_direction: advance-code
       invariant) plus 6 affected unit test files (dex_pools/dex_swaps/lending_indices venue-glue guards narrowed to the
       partition directory, not the leaf, since the leaf legitimately now contains `VENUE-CHAIN`). Full
       `quality-gates.sh` green (sentinel-verified against `0fddb95e`'s parent commit).
-- [ ] [DOC] P1. Correct `canonical-cutover-register.md` §5's blanket "DeFi capture is STOPPED / no new defi writes"
-      premise — measurably false for the batch lane (`pipeline_mode=batch_onchain_subgraph`/`batch_chainlink`/
-      `batch_onchain_rpc`/`batch_aave` objects measured with `time_created=2026-07-24`). Narrow the claim to the
-      live/websocket lane specifically, or substitute the measured fact that batch capture is actively writing. Repo:
-      unified-trading-pm. **Done when**: §5 no longer makes an unqualified "no new defi writes" claim contradicting the
-      measured batch-lane activity, with a cite to the source issue doc's Fact 1. Source:
+- [x] [DOC] P1. ✅ **DONE 2026-07-28 (slot-6) — unified-trading-pm.** Correct `canonical-cutover-register.md` §5's
+      blanket "DeFi capture is STOPPED / no new defi writes" premise — measurably false for the batch lane
+      (`pipeline_mode=batch_onchain_subgraph`/`batch_chainlink`/`batch_onchain_rpc`/`batch_aave` objects measured with
+      `time_created=2026-07-24`). Narrowed the claim to the live/websocket lane specifically (11 collect + 3 forward
+      crons, PAUSED ~40 days) and substituted the measured fact that batch capture never stopped, with a cite to the
+      source issue doc's Fact 1 (including the `COMP-WETH-30.0.parquet` / `time_created=2026-07-24T22:46:34Z` evidence).
+      Also updated the "Writer emits the new leaf" milestone-table cell, which repeated the same stale premise as its
+      Evidence text, to instead note the leaf-naming code fix shipped `mtds@0fddb95e` (2026-07-27, per this plan's own
+      preceding todo) without claiming it's yet independently reconfirmed live in this register. Source:
       `issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
 - [ ] [DOC] P1. Correct the stale "oracle id-form check is tradfi-only" claim in
       `four-surface-reconciliation-procedure.md` §4/§4.3 and `reconciliation-finding-taxonomy.md` §2.2 — the check has
