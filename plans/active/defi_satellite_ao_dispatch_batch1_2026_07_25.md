@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -691,7 +691,7 @@ drift_direction: advance-code
       reports pairwise set differences (verified by running it once); wired into e2e-testing's `quality-gates.sh` if a
       test, lifecycle-marked if a script. Source:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
-- [ ] [DIAG] P1. Verify the 2 unverified signals in the issue doc's §8: (a) sample onchain feature parquets under
+- [x] ✅ [DIAG] P1. Verify the 2 unverified signals in the issue doc's §8: (a) sample onchain feature parquets under
       `gs://features-defi-prd-.../onchain/` (e.g. day=2026-03-05, day=2026-05-20) for exact duplicate rows (same
       timestamp+instrument_id repeated); (b) trace where `instrument_count` is computed in the onchain manifest-write
       path and determine why `onchain/_index/availability_index.parquet` shows the identical value 14,630,914 across six
@@ -699,7 +699,8 @@ drift_direction: advance-code
       Repos: features-service, unified-trading-library (read-only). **Done when**: a written finding is appended to the
       issue doc stating a definitive yes/no for (a) with sampled evidence, and the concrete code-level root cause for
       (b) (or that it could not be determined and why). Source:
-      `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
+      `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`. — **DONE 2026-07-28**: both (a)
+      and (b) CONFIRMED with root cause; not a live-orchestrator bug — see issue doc § "VERIFIED 2026-07-28 (slot-7)".
 - [ ] [DATA] P1. Re-run the HYPERLIQUID `trades` batch backfill with the current (fixed, `@c48096e7`) parser/routing
       code, force/overwrite over 2025-05-25..2025-07-27 (legacy `node_fills`) and 2025-07-28..today
       (`node_fills_by_block`) — do NOT expect 2025-03-22..2025-05-24 to populate (confirmed genuine upstream absence).

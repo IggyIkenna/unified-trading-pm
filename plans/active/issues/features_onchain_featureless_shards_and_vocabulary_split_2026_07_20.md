@@ -192,4 +192,75 @@ These are producer-honesty and loudness fixes. None renames anything, none touch
 - Manifest `instrument_count` is identical (14,630,914) across six different groups, which is implausible as a per-group
   count.
 
-Both warrant a look. Neither was verified, and neither should be repeated as fact until it is. </content>
+Both warrant a look. Neither was verified, and neither should be repeated as fact until it is.
+
+## VERIFIED 2026-07-28 (slot-7) — both §8 signals CONFIRMED, root causes established (investigation only, no fix)
+
+Read-only, per todo's stated scope (`defi_satellite_ao_dispatch_batch1-040`). Repos touched: features-service,
+unified-trading-library (read-only inspection of the live `features-defi-prd-central-element-323112` bucket via UTL's
+`get_storage_client()`/`download_bytes` — no writes).
+
+**(a) Exact duplicate rows — CONFIRMED, sampled evidence from both reference days.**
+
+Downloaded and read the real `onchain/by_date/day={day}/feature_group={g}/features.parquet` shards (note: the actual
+canonical prefix is `onchain/by_date/day=.../`, not the bare `onchain/day=.../` shorthand used in §1 above — confirmed
+via a direct `list_blobs` on the bucket) for all 6 groups that have real objects on disk
+(`flash_loan_availability`/`health_factor`/`lending_rates`/`liquidation_events`/`rewards`/`risk_params`; `lst_yields`
+has no object on either sampled day — consistent with its 15-day-only coverage noted in §1):
+
+| day          | rows written | exact-duplicate `(timestamp, instrument_id)` rows | fraction |
+| ------------ | -----------: | ------------------------------------------------: | -------: |
+| `2026-03-05` |      153,956 |                                           111,341 |   ~72.3% |
+| `2026-05-20` |       84,331 |                                            65,087 |   ~77.2% |
+
+Every one of the 5 feature-less groups is still byte-identical (md5-confirmed) to each other on both days, matching §1's
+finding independently. **Verdict: YES, confirmed — the majority of rows in every sampled shard are exact duplicates on
+the (timestamp, instrument_id) key**, on both reference days named in the todo.
+
+**(b) `instrument_count` identical across six groups — CONFIRMED, root cause found (NOT a live-orchestrator bug).**
+
+Read the manifest directly (`onchain/_index/availability_index.parquet` AND its sole source shard
+`onchain/_index/per_vm/_legacy_seed.parquet` — both byte-for-byte reproduce the same 13 rows). Confirmed live: exactly
+six `feature_group` rows (`lending_rates`, `health_factor`, `rewards`, `liquidation_events`, `risk_params`,
+`flash_loan_availability` — precisely the 6 groups that route through `_process_daily_feature_group()` in
+`orchestrator.py` and have real GCS objects) all carry `instrument_count=14630914`, `date=2026-01-25`,
+`capture_status=captured`.
+
+Traced the live-orchestrator code path first (`features_service/onchain/engine/orchestrator.py:177` +
+`orchestrator_daily_loop.py:202`): `self._last_record_count` is explicitly reset to `0` at the top of
+`process_feature_group()` **before** dispatch to any specific `_process_*` method, and reset again inside
+`_process_daily_feature_group()` — so the live per-call `ManifestWriter.add(row_count=self._last_record_count, ...)`
+path (`orchestrator_manifest.py:90-96`) cannot itself produce a value shared across groups; each call gets its own fresh
+counter. **This rules out a live-code cross-group state-leak as the cause.**
+
+Root cause is instead in the artifact itself: `_index/per_vm/_legacy_seed.parquet` is UTL's own documented "permanently
+frozen, never pruned" bootstrap-seed shard convention (`manifest_consolidator.py` — "so the historical rows appear in
+[the availability index]"), not a live per-day write. Directly verified the number's provenance: summing
+`flash_loan_availability`'s real per-day row count (via parquet metadata `num_rows`, no full download) across **all 118
+real day-partitions** currently on disk (`day=2026-01-25` .. `day=2026-07-26`) gives **exactly 14,630,914** — an exact
+match, not an approximation. So the seed row's `instrument_count` is a **whole-corpus cumulative row-count SUM**,
+stamped onto one synthetic manifest entry dated `2026-01-25` (apparently the first backfill day, used as a placeholder
+date) with `capture_status=captured`, rather than a genuine single-day shard count.
+
+It is identical across all six groups **not because of a copy-paste/shared-variable bug in the seeding process**, but as
+a direct, deterministic consequence of §1's own root defect: all six calculators consume the SAME
+`load_rate_indices()`/merged-loader output and only differ in which COLUMNS they retain (five drop every real feature
+column defensively; `lending_rates` keeps its real columns but drops no ROWS) — so their row cardinality is identical,
+day-for-day, corpus-wide. Six independently-computed 118-day sums over row-identical inputs are mathematically bound to
+land on the same total. **This is not a second, independent bug — it is signal (b) surfacing the same §1 defect from a
+different angle** (row-count/manifest side rather than row-content side).
+
+This also corroborates §5's "manifest frozen at 1 of 118 days" finding: the legacy-seed bootstrap row was never
+superseded by real per-day manifest writes because the consolidator has been stalled since 2026-07-18 (confirmed:
+`onchain/_index/per_vm/` contains only this one shard, `last_modified=2026-07-18T11:02:45Z`, alongside a
+`consolidator_stall_state.json` sentinel) — the same already-tracked consolidator-stall blocker named in
+[[onchain_manifest_dishonest_and_recompute_blocked_2026_07_21]].
+
+**Not determined**: the exact one-off script/process that originally generated `_legacy_seed.parquet` (no matching
+seed/backfill script was found in the current features-service/unified-trading-library/instruments-service trees — it
+was likely an uncommitted or since-deleted ad hoc bootstrap run). The DATA-level mechanism (whole-corpus sum,
+byte-exact-matched) is conclusively established regardless of which script produced it.
+
+**Disposition**: both signals are real and now asserted as fact. No fix applied (investigation-only per this todo's
+scope) — the fix path is already the one this doc's ruling #3 names (fix-consolidator → re-derive-index →
+build-MTDS-collectors → recompute), not a new one.
