@@ -222,25 +222,45 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
       doc's sibling `[OPERATOR/DESIGN] P3` item (decide which of the 5 unfilled xG column groups to build vs prune) is
       deliberately NOT extracted — the doc itself stops at diagnosis per the dispatch-scope rule.
 
-- [ ] [DOC] P1. **Add the missing source-doc-archival todo to the 5 sports `*_finalize` plans — the omission is why a CI
-      gate had to auto-remediate 11 docs at 02:57Z today.** `task_template.md` § 4's finalize-plan rule has three parts:
-      reconcile source-doc checkboxes, re-check deferred items, archive **the plan**. Nothing archives the SOURCE docs
-      the batch drove to terminal status. Concretely, `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md` todo
-      1 says _"Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos"_ — flipping a doc to
-      `resolved` while it sits in `plans/active/issues/` is exactly what `check_terminal_status_archived.py` HARD-fails
-      on. So the finalize plan, as written, creates the hygiene violation, and today the `plan_health` gate's own
-      remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) archived all 11 rather than any
-      plan owning it. Add a 4th todo to each of the 5 sports finalize plans —
+- [x] ✅ [DOC] P1. **DONE — `unified-trading-pm@1e0399d6e`.** Added the missing source-doc-archival todo to the 5 sports
+      `*_finalize` plans — the omission is why a CI gate had to auto-remediate 11 docs at 02:57Z today.**
+      `task_template.md` § 4's finalize-plan rule has three parts: reconcile source-doc checkboxes, re-check deferred
+      items, archive **the plan**. Nothing archives the SOURCE docs the batch drove to terminal status. Concretely,
+      `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md` todo 1 says _"Only flip a doc's `status` to
+      `resolved` if it genuinely reaches 0 open todos"_ — flipping a doc to `resolved` while it sits in
+      `plans/active/issues/` is exactly what `check_terminal_status_archived.py` HARD-fails on. So the finalize plan, as
+      written, creates the hygiene violation, and today the `plan_health` gate's own remediation
+      (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) archived all 11 rather than any plan owning
+      it. Added a new todo — placed immediately AFTER each plan's own reconciliation todo (todo 1), not appended at the
+      end, since the archival must follow directly on the heels of the status flip to close the actual violation window;
+      the deferred-recheck and final-archive-the-plan todos shifted down and their internal cross-references (e.g. "todo
+      2 above") were renumbered to match — to all 5 sports finalize plans:
       `sports_satellite_ao_dispatch_batch{2,3,4,5}_*finalize*.md` and
-      `sports_consolidated_native_ao_extract_2026_07_25_finalize.md` — reading, in substance: _"Archive every source doc
-      this batch drove to `status: resolved`/`complete` (verify 0 open todos + a genuine resolution banner on each
-      first), in the same commit as the flip, so `check_terminal_status_archived.py` never sees a terminal doc in
-      `plans/active/`."_ Repo: unified-trading-pm. **Done when**: all 5 finalize plans carry the new todo, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures. Source:
+      `sports_consolidated_native_ao_extract_2026_07_25_finalize.md` (this last one's todo 1 flips checkboxes back into
+      one parent doc rather than many small source docs, so its new todo is tailored to note the expected-no-op case
+      explicitly). Each new todo reads, in substance: archive every source doc the reconciliation todo drives to
+      `status: resolved`/`complete` (re-verifying 0 open todos + a genuine resolution banner first), in the same commit
+      as the flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/active/`. Repo:
+      unified-trading-pm. Verified: `bash scripts/plan-hygiene/check_line_caps.sh` clean on all 5 (104-125L, well under
+      the 500L soft cap); `check_reference_paths.py` shows no new hit for any of the 5 filenames (baseline unchanged,
+      162/941). `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` does NOT report 0 hard failures corpus-wide — it
+      shows 3 pre-existing hard failures, confirmed via a stash-and-rerun on a clean LDR HEAD to be byte-identical with
+      and without this change: (1) 2 already-`resolved` DeFi issue docs
+      (`defi_maker_vault_share_price_29day_gap_2026_07_26.md`, `defi_mev_events_pagination_gap_2026_07_28.md`) sitting
+      unarchived in `plans/active/issues/` — the exact same systemic gap this todo fixes for sports, corroborating the
+      Deferred section's already-parked "generalise workspace-wide" recommendation below, not a new finding; (2) 1
+      unrelated AG-closeout-linkage orphan (`solana_address_primitives_duplicated_across_mtds_handlers_2026_07_28.md`,
+      `asset_group=[defi]`, created today by other concurrent fleet work); (3) `assigned_vm:NA` corpus size grew 3 docs
+      / 2 todos past its ratchet baseline (388 vs 385, 1410 vs 1408 — ambient fleet backlog with its own designed
+      remedy, `/na-eligibility-audit`). None of the 3 touch sports or any of the 5 files this todo edited — verified
+      none of my edits caused a new violation on any of the 4 checks the sweep runs that DO relate to plan content (line
+      caps, reference paths, frontmatter, todo format all pass). `quality-gates.sh` (the actual per-repo ship gate,
+      which does NOT invoke `run_hygiene_sweep.sh`) is green on this commit. Source:
       `issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2 (the "one durable gap this leaves" note —
-      filed there explicitly as _"a small authoring change, not a decision"_). **Scope guard**: do NOT edit
+      filed there explicitly as _"a small authoring change, not a decision"_). **Scope guard honored**: did NOT edit
       `plans/active/task_template.md` § 4 or the codex rule to make this workspace-wide — generalising the authoring
-      rule to every AG's finalize plans is parked for the operator (see Deferred).
+      rule to every AG's finalize plans stays parked for the operator (see Deferred; the 2 DeFi docs above are fresh
+      supporting evidence for approving that generalisation).
 
 - [ ] [DOC] P2. **Close out `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` — 2 of its 3
       prose steps are now satisfied by shipped commits.** This doc has zero checkboxes and expresses its remaining work
