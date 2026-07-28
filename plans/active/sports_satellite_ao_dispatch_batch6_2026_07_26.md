@@ -164,20 +164,25 @@ serialise all 9): todo 3 (P2) flips a checkbox inside part3, which todo 2 (P1) a
       and part3's § Y checkbox is `[x]` with the shipping sha. Source:
       `issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` § Y.
 
-- [ ] [DATA] P1. **`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` carries `assigned_vm: planning`
-      but ZERO checkboxes — convert its 3 prose next-steps into tracked todos, then execute the 2 bounded ones.** This
-      doc is marked for orchestrator dispatch (`assigned_vm: planning`, `execution_scope: orchestrator-agent`) yet
-      `regen_backlog_from_plan.py` derives todos from checkboxes, so its work is structurally invisible to the backlog —
-      it can never be dispatched in its current shape. Step 1: convert the three items under "Recommended decision /
-      next steps" into properly-tagged `- [ ]` checkboxes under a `## Todos` heading, preserving their text verbatim.
-      Step 2: leave item 1 (the ~1-month-gap backfill decision) as an `[OPERATOR] P0` checkbox — it is a
-      credits/priority call, explicitly not a worker one; note in it that the DEPLOY half of that item is already
-      satisfied by the doc's own dated correction banner (_"DEPLOY CONFIRMED (2026-07-26, directly verified, not
-      inferred)"_, image `f6001`/`410d756` digests + a log-inspected post-deploy execution with zero
-      `DATA_NOT_AVAILABLE`), so only the backfill fork remains. Step 3: execute item 2 — verify whether DeFi's same-day
-      capture was also blocked by the same `TickDataHandler._check_early_exit` future-date guard (the removed design
-      comment said _"DeFi: immediate"_ too, and the fix `market-tick-data-service@410d7569` put DEFI on the relaxed
-      branch, so the question is whether historical DeFi capture was starved before it landed). **Check the defi
+- [x] ✅ [DATA] P1. **`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` carries
+      `assigned_vm: planning` but ZERO checkboxes — convert its 3 prose next-steps into tracked todos, then execute the
+      2 bounded ones.** — unified-trading-pm (this commit, todo doc edit), market-tick-data-service@6ac4e60a (DeFi check
+      script). Added the `## Todos` section (verbatim text preserved) to the source issue doc; item 1 left unchecked
+      `[OPERATOR]` per Step 2 with the DEPLOY-already-satisfied note; item 2 executed fresh — DeFi consolidator
+      confirmed HEALTHY, measured verdict NOT AFFECTED (Window A 10/10 days before fix vs Window B 9/10 days recent,
+      both near-full coverage); item 3 confirmed already shipped by a prior slot (`market-tick-data-service@6f546b88`, 7
+      unit tests, QG green). This doc is marked for orchestrator dispatch (`assigned_vm: planning`,
+      `execution_scope: orchestrator-agent`) yet `regen_backlog_from_plan.py` derives todos from checkboxes, so its work
+      is structurally invisible to the backlog — it can never be dispatched in its current shape. Step 1: convert the
+      three items under "Recommended decision / next steps" into properly-tagged `- [ ]` checkboxes under a `## Todos`
+      heading, preserving their text verbatim. Step 2: leave item 1 (the ~1-month-gap backfill decision) as an
+      `[OPERATOR] P0` checkbox — it is a credits/priority call, explicitly not a worker one; note in it that the DEPLOY
+      half of that item is already satisfied by the doc's own dated correction banner (_"DEPLOY CONFIRMED (2026-07-26,
+      directly verified, not inferred)"_, image `f6001`/`410d756` digests + a log-inspected post-deploy execution with
+      zero `DATA_NOT_AVAILABLE`), so only the backfill fork remains. Step 3: execute item 2 — verify whether DeFi's
+      same-day capture was also blocked by the same `TickDataHandler._check_early_exit` future-date guard (the removed
+      design comment said _"DeFi: immediate"_ too, and the fix `market-tick-data-service@410d7569` put DEFI on the
+      relaxed branch, so the question is whether historical DeFi capture was starved before it landed). **Check the defi
       manifest consolidator's CURRENT health first, do not assume it is still down** — the source doc could not measure
       DeFi because `market-data-tick-defi-prd-central-element-323112`'s index raised `ManifestConsolidatorStaleError`
       (blob age 2204s > 120s) at the time. Compare a recent 10-day window against the 10 days before the fix,

@@ -286,7 +286,7 @@ source:
       content migration (item above) actually applies at scale. (repo: mtds)
 - [x] ✅ [DATA] P2. **DONE 2026-07-28 (slot-2) — same ground as `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
       todo, resolved there in full.** →
-      `plans/active/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (now `status: resolved`, all 5
+      `plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (now `status: resolved`, all 5
       todos done). Ran the corrective `--apply` reclassification: 182,407 below-floor cells (NASDAQ/NYSE/CME) flipped
       `expected_unattempted`(blank)→`empty_confirmed(EXPECTED_PRE_SOURCE_COVERAGE_START)`, writer-side, verified
       420,438→238,031 todo cells (exact delta), 0 below-floor cells remaining on re-check. The original candidate's

@@ -346,12 +346,16 @@ drift_direction: advance-code
       spans (12 EVM chains via `CHAIN_ID_TO_NAME` + `SOLANA` + `BITCOIN`). Filed with `assigned_vm: NA` /
       `execution_scope: local-only` and a single `[OPERATOR] P1` migrate-vs-leave todo — do not decide/execute here, per
       the task brief. Repo: unified-trading-pm. Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
-- [ ] [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability gap:
-      `bridge_events_handler.py` has no `--start-date`/`--end-date` CLI support (confirmed via grep, zero matches), so
-      the daily cron can't be reused for a historical backfill to genesis (ACROSS 2021-11-11, STARGATE 2022-03-17)
-      without that flag first. Do not build the flag or run a backfill here. Repo: unified-trading-pm. **Done when**: a
-      new `plans/active/issues/defi_bridge_events_historical_backfill_gap_<date>.md` exists documenting the missing CLI
-      support + genesis dates, correctly scoped as blocked-on-unbuilt-tooling. Source:
+- [x] ✅ [PM] P1. File a new tracked issue doc for the ACROSS/STARGATE `bridge_events` historical-backfill capability
+      gap — **investigation found the premise false**: `--start-date`/`--end-date` CLI support already exists
+      generically (`ServiceBootstrap(add_date_args=True)` default → `BatchIO`/`DateRangeInput` → per-day `BatchPayload`,
+      which `BridgeEventsHandler.process()` already consumes correctly); the grep-zero-matches was a grep-then-conclude
+      trap, not a real gap. The actual blocker is `_catalog_preflight()` omitting `mode=` on its
+      `assert_defi_catalog_fresh()` call (defaults to `"live"` freshness, fails-closed on historical dates) — already
+      tracked by this plan's own "Thread mode= into assert_defi_catalog_fresh()" P1 todo below, which names
+      `bridge_events_handler.py`. Filed the corrected finding + a small follow-up verification todo instead of a false
+      blocked-on-unbuilt-tooling doc. Repo: unified-trading-pm —
+      `plans/active/issues/defi_bridge_events_historical_backfill_gap_2026_07_28.md`. Source:
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
 - [ ] [DATA] P1. Measure the true scale of the DeFi legacy pre-hive composite-venue object population (objects shaped
       like `.../venue=ETHENA-ETHEREUM/ticks_migrated_*.parquet` — no `chain=`/`instrument_type=`/`data_type=` hive
@@ -361,14 +365,15 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: a real count or tight bounded estimate (with method cited) of how many
       objects across the full 2020-2026 defi date range carry this legacy composite-venue shape is recorded as a dated
       update to the issue doc. Source: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
-- [ ] [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects
-      (beyond the single confirmed ETHENA-ETHEREUM example) — spanning the 9-venue population already identified on the
-      2025-08-06 sample (AAVEV3/CURVE/ETHENA/ETHERFI/LIDO/MORPHO/UNISWAPV2/V3/V4-ETHEREUM) — and report per sampled
-      object whether it's single-row-scale (like the confirmed ETHENA sample) or carries substantial historical data.
-      Repo: market-tick-data-service. **Done when**: a stated distribution (e.g. "N of M sampled are single-row")
-      covering a representative multi-venue/multi-day sample is recorded as a dated update to the issue doc, sufficient
-      for the fold-vs-migrate decision to be answered against. Source:
-      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
+      downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
+      `2025-08-06`). **Result: only ETHENA-ETHEREUM is single-row (5/43); the other 8 venues carry substantial multi-row
+      data (38/43), up to ~54k rows/day for UNISWAPV3-ETHEREUM** — refutes the doc's original single-row assumption.
+      Also found UNISWAPV4-ETHEREUM uses a different filename shape (`ticks.parquet`, no `_migrated_<ts>` marker) from
+      the same 2026-05-12 migration batch — not an active leak (zero recent-day objects in this shape), but a fold
+      selector must match by PATH SHAPE, not filename pattern. Repo: market-tick-data-service —
+      `plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` dated 2026-07-28 update.
+      Source: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 - [ ] [DATA] P1. Corpus-wide scope audit for the KALSHI_PERP perp_funding manifest-emit failure: scan GCS under the
       scoped prefix (`pipeline_mode=batch_kalshi_perp/asset_group=defi/venue=KALSHI_PERP/...`) for all 5 observed
       KALSHI_PERP perp symbols across the full date range objects exist for (single-prefix listing, not a whole-corpus

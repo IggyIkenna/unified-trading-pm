@@ -40,6 +40,9 @@ locked_since:
 
 # slot-cron-ff-pull.sh TOCTOU race silently discards a fresh commit
 
+> **🟢 RESOLVED 2026-07-28** — duplicate tracking of an already-homed issue; consolidated into
+> `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (see `resolved_by` above). Archived.
+
 ## What I found
 
 `crontab -l` on the shared orchestrator VM (visible from any slot's `.tabs/N`) runs, every 5 minutes:

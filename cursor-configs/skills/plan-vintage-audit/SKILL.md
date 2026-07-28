@@ -152,7 +152,7 @@ concludes something should be truly deleted (not archived-with-a-banner — e.g.
 zero live references, not a plan/issue doc), the agent cannot do that deletion itself: **relocate what's still useful
 via `git mv`, and explicitly ask the operator to run the `git rm`** for anything that should actually disappear. Don't
 spend effort finding a clever workaround — the hook's own message says not to, and it's right; that class of action is a
-human call in this environment. See `codex/05-infrastructure/claude-code-settings-symlink.md` for the hook's
+human call in this environment. See `/codex/05-infrastructure/claude-code-settings-symlink.md` for the hook's
 registration.
 
 ## Phase 3 — commit + ship

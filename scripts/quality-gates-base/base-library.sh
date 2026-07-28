@@ -940,12 +940,11 @@ if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     #   resolved absolute path. Fleet stays on the vulnerable pip line because the next pip release is
     #   incompatible with the pinned vcrpy. Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove all three): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282: starlette <1.3.0 (transitive via fastapi). The 1.5b Option-A cap LOWERED the
-    # starlette floor 1.3.1->1.1.0 (to keep working route-introspection — 1.3.1's _IncludedRouter breaks it), which
-    # re-exposes these two (1.3.1 was the CVE-fix floor). Sanctioned ignore (transitive, "speed > security" operator
-    # 2026-06-12) — MUST mirror base-service.sh:1198 (the two drifted: service had them, library did not → UTL red).
-    # Lift when the one-by-one external-dep audit adopts starlette 1.3.1+ WITH the _IncludedRouter route fix.
-    # SSOT: plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md
+    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
+    # floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
+    # fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
+    # QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
+    # plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
     # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used after an unpack error can SEGV. Exploit
     #   surface nil (we never re-use an Unpacker post-error on untrusted data). Fix 1.2.1 exists but is a fleet-wide
     #   transitive lock-bump. SUCCESSOR: bump msgpack >=1.2.1 fleet-wide + lock-regen. Tracked:

@@ -210,11 +210,15 @@ sibling) is **unsatisfiable** → editable install FAILS on any fresh setup flee
 Validated locally on slot-3 (`bash -n` + `shellcheck -S error` clean + sed-rewrite verified); stashed as `git stash` msg
 `boot-script-hardening-uv-pin-pnpm-branch-symlink-2026-06-22` on the slot-3 PM clone.
 
-- [ ] [INFRA] P1. `scripts/workspace/workspace-bootstrap.sh`: (a) Phase 1 — enforce pinned uv `0.10.8` via the astral
-      installer when the present uv differs (was `[SKIP] uv already installed`, letting 0.11.x ride); (b) Phase 1 —
-      install pnpm (corepack → npm → sudo npm fallback) so the UI repo's setup.sh works; (c) after the clone loop —
-      `git checkout live-defi-rollout` for every repo (git clone leaves them on the default `main`, which the FF-pull
-      cron skips + causes cross-branch dep conflicts).
+- [x] ✅ [INFRA] P1. **STALE — already shipped, closing citing the shipping commits.** All three sub-items are present
+      on current `live-defi-rollout` HEAD verbatim, byte-for-byte matching this todo's validated spec: (a)
+      astral-installer uv-`0.10.8` enforcement — `scripts/workspace/workspace-bootstrap.sh:543-555`, landed via PR #498
+      merge commit `unified-trading-pm@20c3364123`; (b) pnpm corepack→npm→sudo-npm fallback —
+      `workspace-bootstrap.sh:563-575`, `unified-trading-pm@703b1e9129` (slot-3, 2026-06-22); (c) post-clone-loop
+      `git checkout live-defi-rollout` per repo — `workspace-bootstrap.sh:668-685`, same commit `703b1e9129`. Both
+      commits verified `git merge-base --is-ancestor` of current LDR HEAD (`189b404fbd2`, 2026-07-28). The slot-3 stash
+      referenced above (`boot-script-hardening-uv-pin-pnpm-branch-symlink-2026-06-22`) evidently landed via a different
+      path than a stash-pop before this doc's checkbox was flipped — plan-flip lag, not outstanding work.
 - [ ] [INFRA] P1. `scripts/workspace/setup-workspace-config-symlink.sh`: emit the root `.code-workspace` as a REGULAR
       file with root-relative paths (sed-rewrite `"../../X"`→`"X"`, `"../../"`→`"."`) instead of the
       symlink-to-cursor-configs (the git-detection bug above).

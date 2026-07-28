@@ -304,9 +304,15 @@ not a mechanical column-list copy.
       pushdown is the dominant memory lever regardless (row-group skip, not post-decode) and applies on both paths.
       Added `test_read_availability_index_is_column_projected` pinning the exact `columns=`/`filters=` call signature —
       17/17 tests passing. Full `quality-gates.sh` green, shipped via quickmerge --agent.
-- [ ] [SCRIPT] P1. **instruments-service** — `engine/orchestrator/venue_core.py:222` `_get_manifest_high_watermarks`:
-      project to its actual column usage (confirmed defi-reachable via `defi.py:229,246` +
-      `test_orchestrator_gaps.py:216,238`).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-4)** — `instruments-service@1a6dad1b`. **instruments-service** —
+      `engine/orchestrator/venue_core.py:222` `_get_manifest_high_watermarks`: projected to
+      `columns=["venue", "instrument_count", "date"]` — confirmed by direct read of the loop body (only these 3 columns
+      are ever accessed: `index_df["venue"]`, `index_df["instrument_count"]`, `index_df["date"]`). Added
+      `test_read_availability_index_is_column_projected` pinning the exact `columns=` call signature so a future edit
+      can't silently drop back to a bare call. Also synced `uv.lock` to `pyproject.toml`'s `fastapi>=0.137.0` constraint
+      (the stale lock pinned 0.135.1, which broke `conftest.py`'s UTL import chain and blocked tests from even
+      collecting — pre-existing drift, unrelated to this fix, fixed as a prerequisite to running QG at all). Full
+      `quality-gates.sh` green (126s, 2nd run against committed HEAD for the sentinel), shipped via quickmerge --agent.
 - [ ] [SCRIPT] P2. **instruments-service** — `engine/orchestrator/process_completeness.py:468`
       `_detect_thin_day_venues`: project to its actual column usage.
 - [ ] [SCRIPT] P2. **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`: project to its

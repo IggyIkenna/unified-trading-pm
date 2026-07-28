@@ -247,12 +247,11 @@ had the prod job existed, the 06:00 schedule would have crashed on dates. Worked
 `--start-date=$TODAY --end-date=$TODAY` on the job. **FOLLOW-UP TODO below** — the recurring daily job must self-default
 to today (a hardcoded date goes stale tomorrow).
 
-- [ ] [SCRIPT] P2. **instruments-service / deployment-service** — make the cefi IS recon job's date default to "today"
-      (yesterday for true T+1) instead of a hardcoded `--start-date`/`--end-date`. Either (a) the IS CLI defaults
-      `--start-date`/`--end-date` to the run day when `--run-tag=t1-recon` and they're unset, OR (b) the
-      `t1_batch_scheduler.tf` scheduler injects `{start-date,end-date}=today` via `httpTarget.body` overrides. Until
-      fixed, the hardcoded job-arg date (set 2026-06-23) makes tomorrow's scheduled run re-fetch the stale 2026-06-23.
-      Provenance: this dispatch — the daily fetch crashed on empty dates (`Invalid date format ''`).
+- [x] ✅ [SCRIPT] P2. **VERIFIED ALREADY SHIPPED (2026-07-28, slot-8)**: option (a) landed same-day this todo was filed
+      — `instruments-service@2217756f` (2026-06-23) `_default_recon_dates_to_today()` (`cli/main.py:310-333`, called
+      pre-`ServiceBootstrap.run()`) self-defaults `--start-date`/`--end-date` to TODAY(UTC) when `--run-tag=t1-recon` +
+      both unset (no-op if explicit). 5/5 `test_recon_date_default.py` pass (re-ran this session); the terraformed cefi
+      job args carry no hardcoded date, so (a) governs live — (b) not needed.
 
 - [x] ✅ [INFRA] P1. Force-ran the IS fetch (`uts-prod-instruments-service-cefi-t1-recon` exec xqcxr) → daily shards
       day=2026-06-23 for ALL 18 cefi venues (10,458 active instruments, full universe per venue — binance-spot 763 /
@@ -888,12 +887,13 @@ These are the remaining cefi items after the consolidator/clip/purge fix. Workin
       the MTDS idempotent-skip line (`all requested data_types fully covered` / `atoms ⊆ captured`) → classified
       HONEST_ABSENCE not SILENT, so resumed/idempotent backfill VMs no longer false-positive `DP_VM_GONE_NO_CAPTURE`.
       Regression test `test_no_capture_reason_mtds_idempotent_preflight_skip` (6/6 classifier tests pass).
-- [ ] [INFRA] P1. **FLAG (foreign, not cefi)**: deployment-service local QG is RED in clones carrying an in-flight
-      foreign change — new
-      `scripts/vm/launch-mtds-{flash-loan-events,liquidation-events,position-data,risk-params}-backfill-vm.sh` +
-      `vm_zombie_watchdog.py` VM_PREFIX_TO_BUCKET prefixes WITHOUT matching `launcher_registry.py` entries →
-      `test_every_watchdog_prefix_has_a_registry_entry` fails. Uncommitted (not on LDR), so not an LDR breakage; the
-      owning agent must wire the launcher_registry entries before shipping. Not cefi-scoped.
+- [x] ✅ [INFRA] P1. **VERIFIED RESOLVED (2026-07-28, slot-8)**: the flagged in-flight foreign change was committed by
+      its owning agent the SAME day this was flagged — deployment-service@ceaa5cad (2026-06-24) wired all 4
+      `launcher_registry.py` entries (`mtds-position-data-`, `mtds-liquidation-events-`, `mtds-flash-loan-events-`,
+      `mtds-risk-params-` → their matching `launch-mtds-*-backfill-vm.sh`). Confirmed on a fresh-pulled slot clone
+      (HEAD=077a063, worktree clean, no in-flight foreign change): `tests/unit/test_launcher_registry.py` 7/7 PASS,
+      including `test_every_watchdog_prefix_has_a_registry_entry`. Not cefi-scoped (foreign flag only) — no code change
+      needed, this was a stale flag from an already-resolved transient uncommitted-WIP state.
 
 ## DP_VM_STALL / DP_EVENT_LOOP_STARVED / DP_CRON_DID_NOT_FIRE flood triage (operator 2026-06-24, 2nd pass)
 

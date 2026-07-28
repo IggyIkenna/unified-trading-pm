@@ -790,18 +790,15 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     fi
     log_ok "Tests PASSED"
 
-    # PM integration test — verifies repo integrates with PM scripts (quality-gates, setup, manifest)
-    PM_INT_TEST="${REPO_ROOT}/unified-trading-pm/tests/integration/test_pm_scripts_integration.py"
-    if [ -f "$PM_INT_TEST" ] && [ -d "${REPO_ROOT}/unified-trading-pm" ]; then
-        if ! PROJECT_ROOT="$PROJECT_ROOT" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
-            log_fail "PM integration test failed — repo must integrate with PM scripts"
-            exit 1
-        fi
-        log_ok "PM integration test PASSED"
-    fi
-
-
-    # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed
+    # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed.
+    # Read + remove _pytest_log IMMEDIATELY after the run that wrote it — do not let an unrelated
+    # subprocess (the PM integration pytest invocation below) run in between. That gap previously let
+    # host-level tmp-scratch interference (e.g. a stale-tmp cleanup cron racing this run's TMPDIR-backed
+    # scratch file) delete the log before it was read, producing a FALSE "ZERO TESTS RAN" failure on a
+    # run that actually passed (observed: features-service CI run 30325671949, 2026-07-28 — main suite
+    # logged "17954 passed, 209 skipped" but the guard read an already-missing file). Narrowing the
+    # write-to-read window to zero intervening work closes that race without touching the TMPDIR
+    # redirect itself (shared_host_tmp_tmpfs_exhaustion_2026_07_08 still needs TMPDIR off small /tmp).
     _TESTS_RAN=$(grep -oE '[0-9]+ passed' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
     _SKIPPED=$(grep -oE '[0-9]+ skipped' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
     rm -f "$_pytest_log"
@@ -813,6 +810,16 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     if [ "${_TESTS_RAN:-0}" -gt 0 ] && [ "${_SKIPPED:-0}" -gt 0 ]; then
         _SKIP_RATE=$(( _SKIPPED * 100 / (_TESTS_RAN + _SKIPPED) ))
         [ "$_SKIP_RATE" -ge 90 ] && { log_warn "High skip rate: ${_SKIP_RATE}% of tests skipped (${_SKIPPED} skipped, ${_TESTS_RAN} ran)"; }
+    fi
+
+    # PM integration test — verifies repo integrates with PM scripts (quality-gates, setup, manifest)
+    PM_INT_TEST="${REPO_ROOT}/unified-trading-pm/tests/integration/test_pm_scripts_integration.py"
+    if [ -f "$PM_INT_TEST" ] && [ -d "${REPO_ROOT}/unified-trading-pm" ]; then
+        if ! PROJECT_ROOT="$PROJECT_ROOT" $PYTHON_CMD -m pytest "$PM_INT_TEST" -v -m integration --tb=line -q 2>/dev/null; then
+            log_fail "PM integration test failed — repo must integrate with PM scripts"
+            exit 1
+        fi
+        log_ok "PM integration test PASSED"
     fi
 
     [ ! -f "tests/unit/test_event_logging.py" ] && { log_fail "Missing tests/unit/test_event_logging.py"; exit 1; }
@@ -1397,16 +1404,11 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282: starlette <=1.1.0 (transitive via fastapi) — 2026-06-15 advisory batch.
-    #   -54283: request.form() ignores max_fields/max_part_size for application/x-www-form-urlencoded → DoS (event-loop
-    #   block on a ~1M-field body / unbounded memory on a large field). -54282: request.url is rebuilt from an
-    #   unvalidated path, so a request-target without a leading "/" can move the authority boundary → request.url.hostname
-    #   becomes attacker-controlled (only reachable by code reading request.url before routing). fix_versions=[1.3.1/1.3.0].
-    #   TRANSITIVE pin (fastapi pins starlette); covered by the operator "speed > security: transitive CVEs WARN not
-    #   block" policy (2026-06-12). Fleet services sit behind auth + a body-size-limiting reverse proxy and do not make
-    #   host-based trust decisions from request.url → exploit surface low. SUCCESSOR (remove this ignore): bump the
-    #   fastapi/starlette floor to a >=1.3.1 line + fleet lock-regen. Tracked: v2_engine_venue_buildout_2026_06_15.md
-    #   follow-ups (alongside the cryptography bump).
+    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
+    #   floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
+    #   fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
+    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
+    #   plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
     # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
     #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
     #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.

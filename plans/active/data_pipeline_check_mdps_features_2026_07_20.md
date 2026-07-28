@@ -311,8 +311,36 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       re-checks that bucket's soft-delete fresh via `gcs_bucket_soft_delete_retention_seconds()` — `>=604800s` →
       autonomous (finding T, §3a); else tag `[OPERATOR]` then, not before. VM-only, never in-session. `depends_on: 11b`.
       Migrations run to real completion per the data-pipeline-correctness HARD RULE.
-- [ ] 12. [SCRIPT] P1. Backfill-processing path (download→process→upload) code-ready + OPTIMIZED learning from cefi
-      (within-VM multiproc, faster-libs/Rust where it pays, 250GB disk, fleet-wide since not Tardis-capped).
+- [x] 12. ✅ [SCRIPT] P1. **DONE 2026-07-28 (slot-9)** — `deployment-service@9e85d42`. Infra-craft-scoped slice shipped
+      (the plan blends infra launcher-config work with backend service-kernel work; per
+      `unified-trading-pm/agents/infra.md` "does_not: Python service business logic", the kernel-level axis stays out of
+      this dispatch's scope — see the note below). Per-axis disposition: - **fleet-wide (the biggest gap closed)**:
+      `launch-features-vm.sh` launched exactly ONE VM per (feature_family × asset_group) cell that walked the WHOLE date
+      range serially (e.g. 2020-01-01..today on one box) — unlike `launch-mdps-sharded-backfill.sh`, which already
+      year-shards MDPS across the fleet. New `launch-features-sharded-backfill.sh` mirrors that pattern: one VM per
+      (family, asset_group, YEAR), fanning out across the fleet since features/MDPS are NOT Tardis-IP-capped (confirmed
+      in the 2026-07-20 audit, `plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`
+      "MDPS/features NOT Tardis-capped → fleet-wide scaling is THE lever"). Reuses `launch-features-vm.sh`'s exact
+      CLI-axis assembly + viability matrix (no duplicated service-CLI logic); manifest rows merge via the same
+      `_index/per_vm/` union mechanism MDPS's sharded launcher already relies on. `--preview`-tested for
+      delta_one×CEFI/TRADFI, onchain (invalid-cell rejection), sports (max-workers correctly n/a) — all correct. -
+      **within-VM multiproc**: `delta_one`/`volatility`/`onchain` service CLIs already expose `--max-workers`
+      (default 4) but NO launcher ever threaded it through. Added `MAX_WORKERS` env passthrough to both
+      `launch-features-vm.sh` and the new sharded launcher, scoped to only those 3 families (the others' CLIs don't
+      accept the flag — verified via `grep -rn -- '--max-workers'` per family before wiring). MDPS's own within-VM
+      multiproc (R1: `MDPS_DATE_CONCURRENCY` + `MAX_WORKERS`) was already shipped/wired 2026-07-27 per the archived
+      history doc — no MDPS-side gap here. - **250GB disk**: already the default on both
+      `launch-mdps-sharded-backfill.sh` and `launch-features-vm.sh` (`BOOT_DISK_GB=250`, `pd-balanced`) — no gap; the
+      new sharded launcher inherits the same default and passes
+      `scripts/quality_gates/check_backfill_vm_disk_provisioning.py` (verified: QG's own disk-provisioning check counted
+      106 compliant launchers post-ship, one more than pre-ship). - **faster-libs/Rust where it pays**: NOT touched —
+      Python service-kernel work (`_read_tick_data`'s full-blob-to-RAM read, whale/carry-forward/HFT pandas loops in
+      MDPS's candle kernel) is backend_engineer-craft scope, not infra. Already assessed in the 2026-07-20 audit as LOW
+      priority (polars core groupby is already fast; Rust would shave only ~6% of wall-clock) — no infra action follows
+      from that finding. If the operator wants the kernel-level vectorization pursued, it needs its own
+      `assigned_role: backend_engineer` dispatch; not filing a new issue doc for it since the audit already recorded the
+      assessment and concluded it's low-value. QG green (119s, deployment-service); shellcheck clean; disk-provisioning
+      gate green.
 - [x] 13. [DATA] P0. **DELIVERED 2026-07-27 (slot-10)** — resolves the 2026-07-20 entry's own "CRITICAL REFRAME... MUST
       be confirmed by a real-VM re-measure against a prod-sized index before being quoted as final" caveat + its sibling
       "NEW todo" below asking for exactly that. **Rate**: this session's
@@ -335,10 +363,25 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       figure is the safe upper bound to plan against.
 - [ ] 14. [SCRIPT] P2. Ship everything via quickmerge --agent per repo; flip these checkboxes same-turn; rule-9 final
       report. Post-phase codex audit (update contracts / stub patterns / CLAUDE.md one-liner for the two new skills).
-- [ ] 15. [DATA] P1. Full DeFi-MVP candle backfill on real infra — GATED on
-      `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (the Option-A canonical-path migration
-      epic) reaching its P8 verify/reconcile; do NOT backfill the corpus into the pre-migration shape (see this plan's
-      `depends_on` frontmatter).
+- [x] ✅ 15. [DATA] P1. **LAUNCHED + VERIFIED HEALTHY (2026-07-28, slot-8)**. Gate confirmed satisfied first:
+      `candle_canonical_path_migration_execution_2026_07_24.md` has all 16 todos closed, P8 verify/reconcile
+      independently re-confirmed clean 2026-07-23/2026-07-27 (that plan's own todo 15). Checked live fleet first: zero
+      `mdps-defi-*` VMs running (no duplicate-launch risk). Found + fixed 2 stale/dangerous doc bugs in the launcher
+      before using it (`deployment-service@679f826`): (a) header claimed "DeFi: SKIPPED — pass-through, no MDPS work"
+      (written 2026-04-28) though DeFi support shipped 2026-05-05 (`489ec0e`) and the comment was never updated; (b)
+      post-backfill reminder pointed at the DANGEROUS `rebuild_manifest_from_canonical_paths()` (the exact
+      whole-bucket-wipe bug this plan's own todo 11a fixed) — repointed to the safe additive
+      `merge_manifest_from_canonical_paths()`. **Launched** the real fleet:
+      `launch-mdps-sharded-backfill.sh defi     --env prod` — 5 SPOT VMs, year-sharded 2022-2026
+      (run-ts=20260728-044648), e2-standard-8. All 5 verified STARTED (RUNNING <60s). Ground-truthed via `run.log` at
+      T+~7min (not just VM status): 4/5 shards actively processing — DeFi instrument universes loaded (2979-10367/year),
+      dependency checks passing, fresh GCS heartbeats every ~30s. Shard 2026 looked stalled (4+min silent after
+      "Installing system packages...") but recovered on recheck — normal SPOT boot variance, now progressing through the
+      same code-deploy sequence as its siblings. This is a multi-day background operation, not a same-session completion
+      — superseding this checkbox with LAUNCHED+HEALTHY, matching this doc's own precedent for VM-fleet todos (see
+      cefi_hl_aster_batch_data_gaps_2026_06_22.md). **Next check-in should verify**: per-shard
+      `DEPLOYMENT_COMPLETED exit_code=0` + real candle-object counts under `processed_candles/by_date/` for DEFI, not
+      just RUNNING/heartbeat status.
 - [ ] 10-followup-a. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** features-service `delta_one`
       compute independently re-runs the per-(instrument,date) MDPS-candle-availability dependency check ONCE PER
       SUB-FAMILY (technical_indicators/moving_averages/oscillators/volatility_realized — 4x total), directly observed
