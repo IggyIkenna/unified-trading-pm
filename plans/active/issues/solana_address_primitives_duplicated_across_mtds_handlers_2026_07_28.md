@@ -19,7 +19,7 @@ stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service]
 scope: [engineer]
 tags: [dry, refactor, solana, base58, ed25519, pda, mtds, handlers, cleanup]
-related: []
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-28
 last_updated: 2026-07-28
 parent_epic: infrastructure_master

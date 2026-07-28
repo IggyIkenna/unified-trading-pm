@@ -23,14 +23,15 @@ related:
   ]
 created: 2026-07-28
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 resolved_by:
 locked_by:
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
 drift_direction: advance-code
 depends_on: []
+assigned_role: data_engineering
 ---
 
 ## What I found
@@ -98,3 +99,11 @@ whoever reads it already knows to discount it, which defeats the point of an aut
 No manifest corruption or data-correctness issue here — every "failed" cell in this run genuinely never launched a VM
 (`vm_not_success:launcher_script_nonzero_rc=1`, zero parquet writes), so nothing was mis-captured. This is a
 checker/launcher-tooling accuracy gap, not a pipeline correctness regression.
+
+## Progress Log
+
+- 2026-07-28 (cicd agent, plan_health gate agt-6c658d): reclassified `assigned_vm: NA → planning`
+  (`execution_scope: orchestrator-agent`, `assigned_role: data_engineering`) — all three todos are bounded, worker-
+  determinable outcomes (gate the guard on `VENUE_TO_ADAPTER_KEY[venue] == 'tardis'` instead of `asset_group == cefi`,
+  re-run the check, update the skill doc), not an operator judgment call; this NA default was never actually assessed
+  for AO eligibility. Done as part of shrinking the `assigned_vm:NA` corpus ratchet back toward baseline.

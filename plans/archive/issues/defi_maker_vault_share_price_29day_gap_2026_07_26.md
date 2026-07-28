@@ -45,6 +45,10 @@ locked_by:
 locked_since:
 ---
 
+> **🟢 RESOLVED 2026-07-28 (slot-11)** — 29-day gap backfilled for all 5 `vault_share_price` protocols
+> (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3), manifest-verified 145/145 rows captured. No code change was needed; the
+> underlying scheduling gap was already fixed by `deployment-service@600d31c`.
+
 # MAKER's vault_share_price has a real 29-day manifest gap
 
 ## What I found

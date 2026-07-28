@@ -46,6 +46,10 @@ superseded_by:
 resolved_by: market-tick-data-service@33fa3b58 (2026-07-28) — cursor decrement fixed, unit test added, live-verified
 ---
 
+> **🟢 RESOLVED 2026-07-28** — fix shipped `market-tick-data-service@33fa3b58` (pagination cursor decrement corrected,
+> unit test added), live-verified against the real Flashbots relay (`row_count` went from a truncated ~100 to 486 for a
+> full day).
+
 ## What I found
 
 `mev_events_handler.py`'s `_fetch_mev_events()`

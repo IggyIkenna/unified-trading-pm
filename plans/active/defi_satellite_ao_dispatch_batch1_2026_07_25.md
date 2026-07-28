@@ -329,14 +329,15 @@ drift_direction: advance-code
       unified-trading-pm (issue-doc update only; no production code touched this todo). Source:
       `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
-- [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-11).** Filed
-      `plans/active/issues/defi_mev_events_pagination_gap_2026_07_28.md` — root cause is the pagination loop's exit
-      branch (`mev_events_handler.py:235`, `cursor = from_slot`) hard-setting the cursor to the loop's own termination
-      value on the "more data" branch, so any day with >100 Flashbots relay payloads only ever captures its newest page
-      (~100 rows) with no `attempted_failed`/partial signal — silent under-coverage, not an outage. Correct frontmatter
-      (`doc_type: issue`, `asset_group: [defi]`, `repos: [market-tick-data-service]`) + a concrete `[BACKEND] P2` fix
-      todo (confirm cursor semantics, decrement correctly, add multi-page unit test, re-verify with a live sample-day
-      backfill). Cross-referenced from the source doc's deferred-work row: updated
+- [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-11).** Filed, then RESOLVED + archived 2026-07-28 —
+      `plans/archive/issues/defi_mev_events_pagination_gap_2026_07_28.md` (fix shipped
+      market-tick-data-service@33fa3b58) — root cause is the pagination loop's exit branch (`mev_events_handler.py:235`,
+      `cursor = from_slot`) hard-setting the cursor to the loop's own termination value on the "more data" branch, so
+      any day with >100 Flashbots relay payloads only ever captures its newest page (~100 rows) with no
+      `attempted_failed`/partial signal — silent under-coverage, not an outage. Correct frontmatter (`doc_type: issue`,
+      `asset_group: [defi]`, `repos: [market-tick-data-service]`) + a concrete `[BACKEND] P2` fix todo (confirm cursor
+      semantics, decrement correctly, add multi-page unit test, re-verify with a live sample-day backfill).
+      Cross-referenced from the source doc's deferred-work row: updated
       `plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md` line 266 ("File the
       mev_events >100-payload/day pagination gap") from "Not filed" to point at the new doc. Repo: unified-trading-pm.
       Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
@@ -374,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
