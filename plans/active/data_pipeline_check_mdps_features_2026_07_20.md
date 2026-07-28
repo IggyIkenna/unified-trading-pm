@@ -924,6 +924,11 @@ not attempted this session — CEFI remains the operator-gated 8-VM billing-wast
 `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
 go-ahead.
 
+- [x] [SCRIPT] P1. ✅ All 4 known `PREDICTION` MDPS-bucket-token bug instances in the `delta_one` module fixed + shipped
+      (`features-service@89e3ad3b`, `features-service@306bef65`) — dependency checker (prior session), lookback
+      validator, batch data loader, live-mode startup gate. `PREDICTION:delta_one` confirmed genuinely computing on real
+      infra (was unconditionally broken before). 127 unit tests updated/added, all passing; quality-gates.sh green both
+      ships. Full writeup: `issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`.
 - [ ] [DATA] P2. Check the final report from `features-e2e-prediction-20260728-142821-0f2a85`
       (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten per-run — read it before it's
       clobbered by a later run) for the actual `PREDICTION:delta_one` throughput/benchmark number, now that the bug
