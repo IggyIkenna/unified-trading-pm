@@ -140,23 +140,23 @@ changed since batch1.
       `data_completion_tradfi_2026_07_15.md`.
 
       **Evidence**: (a) FULLY DONE — fresh live read of `market-data-tick-tradfi-prd-central-element-323112`'s
-                                                                                                      `_index` (5,873,616 rows, up from 5,553,198 confirmed 2026-07-16, a growth not a shrink) shows **0 blank
-                                                                                                      venue, 0 `UNKNOWN` venue, 0 blank data_type, 0 `asset_group=None`** — the 2026-06-04 6,602-row drift finding is
-                                                                                                      fully resolved. Line-54 and line-177 checkboxes in `data_completion_tradfi_2026_07_15.md` flipped with the
-                                                                                                      fresh numbers (residual blank-`instrument_type` finding on a different, non-tracked axis noted inline, not
-                                                                                                      re-opening this candidate). (b) PARTIALLY DONE — tarball rebuilt from a clean LDR checkout
-                                                                                                      (`market-data-processing-service@3328ffd0`) and `mdps-backfill-tradfi-*` relaunched twice
-                                                                                                      (`mdps-backfill-tradfi-20260727-183828` over 2026-07-13..19, `mdps-backfill-tradfi-20260727-185026` over
-                                                                                                      2026-07-20..24, both `--force`, ~5,400+ instrument-day attempts, both VMs self-terminated cleanly). ZERO
-                                                                                                      occurrences of `MalformedRowKeyError` or a missing-source rejection in either run — the deployed fix is
-                                                                                                      confirmed correct and regression-free. The stricter "non-zero newly-captured cells" sub-clause could NOT be
-                                                                                                      demonstrated in either verification window: both show `Candles: 0` for every date, root-caused to TWO NEW,
-                                                                                                      orthogonal blockers found live (neither caused by, nor in scope of, this fix) — filed as
-                                                                                                      `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` with 3 actionable follow-up todos.
-                                                                                                      `data_completion_tradfi_2026_07_15.md` line-629's sub-bullet updated with the full deploy evidence + both new
-                                                                                                      findings. Shipped: `unified-trading-pm` doc updates (this commit) +
-                                                                                                      `deployment-scripts-central-element-323112/code/market-data-processing-service-code@3328ffd0...tar.gz` (GCS,
-                                                                                                      not a git commit).
+                                                                                                          `_index` (5,873,616 rows, up from 5,553,198 confirmed 2026-07-16, a growth not a shrink) shows **0 blank
+                                                                                                          venue, 0 `UNKNOWN` venue, 0 blank data_type, 0 `asset_group=None`** — the 2026-06-04 6,602-row drift finding is
+                                                                                                          fully resolved. Line-54 and line-177 checkboxes in `data_completion_tradfi_2026_07_15.md` flipped with the
+                                                                                                          fresh numbers (residual blank-`instrument_type` finding on a different, non-tracked axis noted inline, not
+                                                                                                          re-opening this candidate). (b) PARTIALLY DONE — tarball rebuilt from a clean LDR checkout
+                                                                                                          (`market-data-processing-service@3328ffd0`) and `mdps-backfill-tradfi-*` relaunched twice
+                                                                                                          (`mdps-backfill-tradfi-20260727-183828` over 2026-07-13..19, `mdps-backfill-tradfi-20260727-185026` over
+                                                                                                          2026-07-20..24, both `--force`, ~5,400+ instrument-day attempts, both VMs self-terminated cleanly). ZERO
+                                                                                                          occurrences of `MalformedRowKeyError` or a missing-source rejection in either run — the deployed fix is
+                                                                                                          confirmed correct and regression-free. The stricter "non-zero newly-captured cells" sub-clause could NOT be
+                                                                                                          demonstrated in either verification window: both show `Candles: 0` for every date, root-caused to TWO NEW,
+                                                                                                          orthogonal blockers found live (neither caused by, nor in scope of, this fix) — filed as
+                                                                                                          `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md` with 3 actionable follow-up todos.
+                                                                                                          `data_completion_tradfi_2026_07_15.md` line-629's sub-bullet updated with the full deploy evidence + both new
+                                                                                                          findings. Shipped: `unified-trading-pm` doc updates (this commit) +
+                                                                                                          `deployment-scripts-central-element-323112/code/market-data-processing-service-code@3328ffd0...tar.gz` (GCS,
+                                                                                                          not a git commit).
 
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-26 (slot-5, review)** — Combined instruments-foundation cleanup pass — 7
       independent, conflict-clear candidates from `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, bundled into
@@ -206,18 +206,18 @@ changed since batch1.
       `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 
       **Evidence**: (1) CME coverage verified against its TRUE declared floor (2020-01-01, not 2019-01-01 — confirmed
-                                                                                                                                                          live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
-                                                                                                                                                          anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
-                                                                                                                                                          (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
-                                                                                                                                                          5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
-                                                                                                                                                          47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
-                                                                                                                                                          range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
-                                                                                                                                                          entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
-                                                                                                                                                          confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
-                                                                                                                                                          Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
-                                                                                                                                                          `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
-                                                                                                                                                          2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
-                                                                                                                                                          in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
+                                                                                                                                                              live via a SPOT VM finding zero active venues for all of 2019); 1 genuine gap (2024-11-08) backfilled, 2
+                                                                                                                                                              anomalous Sundays filed as a new P3 finding. (2) `databento_subscription_allowlist` unit tests already existed
+                                                                                                                                                              (39/39 pass, all 6 scenarios) — no new test needed. (3) The QG grep-ratchet already existed (MTDS STEP
+                                                                                                                                                              5.92/5.93) — re-verified green. (4) 2 of 3 sample re-fetches succeeded (2020-01-02: 38,669 records; 2023-01-03:
+                                                                                                                                                              47,810 records), confirming the pre-lockdown universe was far narrower; full 2020-01-01→2026-06-18 re-fetch
+                                                                                                                                                              range enumerated and filed as a new P2 finding for a dedicated backfill plan. (5) UAC's stale CBOE `ohlcv_15m`
+                                                                                                                                                              entries were already removed (2026-07-15); fixed the one remaining stale MDPS docstring. (6) uac@599acf93
+                                                                                                                                                              confirmed live on `main` via merge-ancestry + zero reverts + the removed symbols still absent a month later. (7)
+                                                                                                                                                              Doc self-contradiction corrected, live-reverified post IS@92084d5c. Shipped:
+                                                                                                                                                              `market-data-processing-service@aebca177c5` (docstring fix) + `instruments-service@6a54828f84` (script bugfix +
+                                                                                                                                                              2024-11-08 backfill, no code diff for the manifest write itself). All findings + underlying checkboxes flipped
+                                                                                                                                                              in `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` in the same commit.
 
 - [x] ✅ [SCRIPT] P1. **Conflict-check (2026-07-25 plan-reconcile): this todo's Done-when flips 3 checkboxes in
       `tradfi_backfill_throughput_followups_2026_07_24.md`; todo 9 below flips a 4th checkbox in that SAME doc. Do not
@@ -245,21 +245,21 @@ changed since batch1.
       flipped/updated in the SAME commit. Source: `tradfi_backfill_throughput_followups_2026_07_24.md`.
 
       **Evidence**: (1) `ohlcv_split_date_slices` (new function in `_tradfi-ohlcv-launcher-lib.sh`) is now the default
-                                                                                          equity shard axis (`OHLCV_SHARD_MODE=date-range`, `--date-slices N` default 5/year-shard) in both
-                                                                                          `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh`; legacy `--shard-mode ticker-group` verified still functional.
-                                                                                          Dry-run-verified: both launchers produce 20 date-range VMs across the 4 year-shards (2023-04-15..today), all
-                                                                                          tickers per VM; the slicer's day-accounting unit-tested for zero gap/duplicate over a full 365-day year and a
-                                                                                          clamped 3-day edge case. (2) 4 of 6 named CME roots measured from real `run.log`s (ES 2.972 / NQ 2.693 / GC 2.725
-                                                                                          / PL 1.454 min/date); 6E and CT have never been launched (zero matching `vm-logs/` objects) — honestly reported
-                                                                                          as ungettable from existing logs per the todo's own "no new VM launch" constraint, with a launch recommendation
-                                                                                          filed. Net finding: the heavy end of the CME spread is now measured WORSE than the prior CL-only anchor (ES/NQ/GC
-                                                                                          all exceed CL's 2.59 min/date) — spread widens ~26×→~30×, so the 15-30h ETA band's upper bound is not
-                                                                                          over-estimated by this data. (3) CME launcher header + shared lib header no longer cite the archived
-                                                                                          `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (now point at this doc); the CME launcher never actually cited
-                                                                                          `tradfi_mvp_set_expansion_2026_07_21.md` (live-grep at fix-time found zero hits there — that stale ref lives in a
-                                                                                          different launcher, out of scope). Shipped `deployment-service@872ac2f` (quality-gates.sh green). All 3
-                                                                                          corresponding checkboxes + the CME-header cleanup note flipped in
-                                                                                          `tradfi_backfill_throughput_followups_2026_07_24.md` in the same commit as this flip.
+                                                                                              equity shard axis (`OHLCV_SHARD_MODE=date-range`, `--date-slices N` default 5/year-shard) in both
+                                                                                              `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh`; legacy `--shard-mode ticker-group` verified still functional.
+                                                                                              Dry-run-verified: both launchers produce 20 date-range VMs across the 4 year-shards (2023-04-15..today), all
+                                                                                              tickers per VM; the slicer's day-accounting unit-tested for zero gap/duplicate over a full 365-day year and a
+                                                                                              clamped 3-day edge case. (2) 4 of 6 named CME roots measured from real `run.log`s (ES 2.972 / NQ 2.693 / GC 2.725
+                                                                                              / PL 1.454 min/date); 6E and CT have never been launched (zero matching `vm-logs/` objects) — honestly reported
+                                                                                              as ungettable from existing logs per the todo's own "no new VM launch" constraint, with a launch recommendation
+                                                                                              filed. Net finding: the heavy end of the CME spread is now measured WORSE than the prior CL-only anchor (ES/NQ/GC
+                                                                                              all exceed CL's 2.59 min/date) — spread widens ~26×→~30×, so the 15-30h ETA band's upper bound is not
+                                                                                              over-estimated by this data. (3) CME launcher header + shared lib header no longer cite the archived
+                                                                                              `tradfi_ohlcv_only_mvp_backfill_2026_05_15.md` (now point at this doc); the CME launcher never actually cited
+                                                                                              `tradfi_mvp_set_expansion_2026_07_21.md` (live-grep at fix-time found zero hits there — that stale ref lives in a
+                                                                                              different launcher, out of scope). Shipped `deployment-service@872ac2f` (quality-gates.sh green). All 3
+                                                                                              corresponding checkboxes + the CME-header cleanup note flipped in
+                                                                                              `tradfi_backfill_throughput_followups_2026_07_24.md` in the same commit as this flip.
 
 - [x] ✅ [SCRIPT] P1. **Correct the live tradfi `availability_index` manifest for the combo/chain objects quarantined by
       the 2026-07-20 recovery run** — `market-tick-data-service@e6e6ce2d` (script
@@ -407,7 +407,7 @@ changed since batch1.
       consolidator merge cycles after resume confirm no resurrection. Source:
       `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`.
 
-- [ ] [TEST] P1. **NICE-TO-HAVE — fix `deployment-service/tests/unit/test_event_logging.py`'s `get_service_name()`
+- [x] ✅ [TEST] P1. **NICE-TO-HAVE — fix `deployment-service/tests/unit/test_event_logging.py`'s `get_service_name()`
       helper** (currently `Path.cwd().name`, confirmed unchanged via live grep 2026-07-25) to resolve the service
       identity from the repo's own identity (pyproject `name` field or git remote) instead of the checkout directory's
       basename, so `test_required_common_events_exist` correctly `pytest.skip`s deployment-service's
@@ -417,7 +417,10 @@ changed since batch1.
       Deferred); this is an unrelated test-infra fix. Repo: deployment-service. **Done when**: the test still skips as
       expected when run from a worktree directory with a different basename, and continues to pass in the canonical
       `deployment-service`-named checkout; `quality-gates.sh` green. Source:
-      `tradfi_multisource_backfill_2026_06_22.md`.
+      `tradfi_multisource_backfill_2026_06_22.md`. — deployment-service@077a063: `get_service_name()` now reads
+      `pyproject.toml`'s `project.name` (falling back to `Path.cwd().name` only if the file is absent); verified live by
+      copying the checkout to a differently-named directory and confirming the skip still fires there while continuing
+      to pass in the canonical checkout; `quality-gates.sh` green.
 
 ## Already shipped independently since batch1's triage (2026-07-25) — NOT re-dispatched
 
