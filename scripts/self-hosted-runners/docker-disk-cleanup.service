@@ -1,0 +1,16 @@
+# docker-disk-cleanup.service — oneshot; reclaims unused docker images/containers/build-cache.
+#
+# Epic: infrastructure_master (orchestrator VM disk-IO contention remediation, 2026-07-28)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Driven by docker-disk-cleanup.timer. Host-wide, not tied to any single runner pool — see
+# docker-disk-cleanup.sh for the full rationale.
+[Unit]
+Description=Reclaim unused docker images/containers/build-cache (host-wide)
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/sbin/docker-disk-cleanup.sh
+# A failed cleanup must be visible in `systemctl status`, not silently retried into oblivion.
+Restart=no

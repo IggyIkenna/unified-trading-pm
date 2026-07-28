@@ -1,0 +1,20 @@
+# docker-disk-cleanup.timer — run the host-wide docker reclaim every 6 hours.
+#
+# Epic: infrastructure_master (orchestrator VM disk-IO contention remediation, 2026-07-28)
+# Lifecycle: permanent   Delete-when: NA
+#
+# Cadence rationale: 6h is frequent enough that stray images/build-cache never accumulate past a
+# single day's fan-out, while staying far cheaper than an hourly sweep for a box whose docker usage
+# is modest (51GB total as of 2026-07-28). Persistent=true so a rebooted VM reclaims promptly
+# rather than waiting out the interval.
+[Unit]
+Description=Periodic host-wide docker disk reclaim
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=6h
+Persistent=true
+Unit=docker-disk-cleanup.service
+
+[Install]
+WantedBy=timers.target
