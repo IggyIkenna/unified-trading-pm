@@ -63,6 +63,12 @@ locked_by:
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-28** — real fix `deployment-service@20ce4c9` (per-chunk `VM_NAME` suffix) verified live via a
+> clean 25/25-chunk relaunch (`af-backfill-20260728-091755`), full-log-audited for zero `Killed`/`CHUNK_EXHAUSTED`/
+> `Traceback`. The 2 still-open follow-up todos below (launcher audit + library-level cache fix) are carried forward
+> into `plans/active/issues/manifest_writer_vm_launcher_audit_followups_2026_07_28.md` (split out at archive time so
+> they stay AO-dispatchable) — this doc archives with the incident's full history intact.
+
 # Per-VM shard growth causes long-running backfills to eventually OOM
 
 ## Root cause (confirmed via code read, not assumed)

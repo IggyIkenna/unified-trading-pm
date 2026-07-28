@@ -40,6 +40,13 @@ resolved_by: slot-3 (interactive), agent-orchestrator@e69f528
 locked_by:
 ---
 
+> **🟢 RESOLVED 2026-07-28** (slot-3, interactive) — `agent-orchestrator@e69f528`: added an explicit quarantined-slot
+> exclude-set to the retry loop (a quarantine failure never spawns a tmux session, so `_pick_free_slot` would otherwise
+> keep re-picking the same slot) + narrowed the branch-quarantine recency guard to 300s for the scheduled-job dispatch
+> family only (900s default unchanged everywhere else), both operator-approved. 6 new tests, full QG green. No open
+> follow-ups (the other parent-doc follow-up, `na_eligibility_auditor` timeout re-measurement, stays separately open
+> there).
+
 # Scheduled-job dispatch: retry + narrow the branch-quarantine recency guard (operator-approved)
 
 ## What I found
