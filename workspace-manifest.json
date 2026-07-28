@@ -695,7 +695,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "large_file_count": 0,
@@ -1351,7 +1351,7 @@
         "coverage_pct": null,
         "warn_file_count": 5
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
