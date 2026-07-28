@@ -125,8 +125,8 @@ this whole `/ag-closeout-audit` rollout — self-referential, included for compl
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
 [issues/reference_path_convention_2026_07_23.md](/plans/active/issues/reference_path_convention_2026_07_23.md)
 (cross-reference leading-slash path convention rollout) ·
-[l0_doc_index_generator_2026_06_24.md](/plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md) (ARCHIVED 2026-07-27
-— 2 remaining items migrated to `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, still open there; L0 doc-index
+[l0_doc_index_generator_2026_06_24.md](/plans/active/l0_doc_index_generator_2026_06_24.md) (ARCHIVED 2026-07-27 — 2
+remaining items migrated to `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, still open there; L0 doc-index
 generator + FF-cron auto-regen) · `task_template.md` (the plan-authoring template/rules doc itself) ·
 [codex_vs_repo_docs_ssot_audit_2026_06_01.md](/plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md) (generic "audit
 all active repo docs vs codex SSOT" hygiene) ·
@@ -137,7 +137,7 @@ operator's original catalogue/process doc for background-agent-driven issue reme
 (code-fixable-items sweep across the issue-doc backlog) ·
 [issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md](/plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md)
 (plan-hygiene tooling migration: prek + fold-to-QG + agentic contradiction resolution) ·
-[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
+[issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md](/plans/active/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md)
 (ARCHIVED; stale codex pointer + abandoned INDEX.md drift findings from the daily plan-reconciler) ·
 [issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md](/plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md)
 (generic UI e2e test-helper `?persona=` bug, unrelated to any AG/AO/CI concern).
