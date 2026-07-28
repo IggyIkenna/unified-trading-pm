@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [sports_track_h_denominator_prereqs_2026_07_28]
+depends_on: [sports_track_h_denominator_prereqs_2026_07_28, sports_track_h_denominator_prereqs_step7_gated_2026_07_28]
 gate_on_depends: true
 source: >-
   Operator-directed split (2026-07-28, answering blocked question BLK-2f9e7680) of
@@ -85,3 +85,12 @@ drift_direction: advance-code
 
 See `sports_track_h_denominator_prereqs_2026_07_28.md`'s Progress Log for the split rationale. The original plan's Track
 H line is replaced with a non-checkbox pointer to this plan (so it stops being offered as an open todo there).
+
+### 2026-07-28 (slot-12) — added a 3rd gate: the MDPS Step-7 reprocess turned out to need its own prereq
+
+Dispatched `sports_track_h_denominator_prereqs_2026_07_28.md`'s todo 1 (MDPS Step-7 reprocess) and found its own
+"raw already canonical" self-justification false — see
+`issues/sports_batch_odds_api_league_id_canonicalization_regressed_2026_07_28.md`. That todo is now itself extracted +
+machine-gated (`sports_track_h_denominator_prereqs_step7_gated_2026_07_28.md`), so THIS plan's `depends_on` now
+includes it too — Track H's denominator cannot ship until both the raw re-fix AND the Step-7 reprocess it gates are
+`done`, not just the (now partially-emptied) original prereqs plan.

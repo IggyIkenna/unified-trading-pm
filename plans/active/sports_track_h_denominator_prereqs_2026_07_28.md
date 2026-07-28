@@ -56,21 +56,12 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [CODE] P1. **Re-run the MDPS `odds_horizon_bucket` reprocess (Step 7 of the league_id namespace migration).**
-      `market-data-processing-service/.../reprocess_sports_odds.py` must be re-run for the historical days so its
-      `bucketed.parquet` output regenerates under the now-canonical `league_id=` partition (raw content is already
-      canonical per the shipped `batch_odds_api` migration — this step regenerates the DERIVED `odds_horizon_bucket`
-      surface from it, per `issues/sports_league_id_namespace_migration_2026_07_20.md` § "Ordered procedure" Step 7).
-      **Mitigate the features double-count hazard** (that doc's STOP condition 7): do the reprocess + stale-object
-      delete inside a drained per-day window, not as a slow background copy, so old-raw and new-canonical
-      `bucketed.parquet` never coexist for a features read. Self-justified, not `[OPERATOR]`-gated: a re-derivation from
-      already-canonical source content, not a destructive operation on source data. (repo:
-      market-data-processing-service). **Done when**: a fresh live manifest census
-      (`read_availability_index(bucket, columns=["league_id","pipeline_mode"])`) shows 0
-      `batch_mdps_odds_horizon_bucket` rows carrying a non-registry `league_id`, and a features read for a migrated day
-      returns a single non-doubled row set (no old+new `bucketed.parquet` double-count). Source:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md` STATUS 2026-07-25 + RE-DISPATCH CHECK 2026-07-28
-      (slot-7/slot-10).
+> **Todo 1 (MDPS `odds_horizon_bucket` Step-7 reprocess) EXTRACTED 2026-07-28 (slot-12)** into
+> `sports_track_h_denominator_prereqs_step7_gated_2026_07_28.md` — dispatch found the "raw content is already
+> canonical" self-justification false (99,607 raw `batch_odds_api` rows still non-registry today), so it is now
+> machine-gated on `issues/sports_batch_odds_api_league_id_canonicalization_regressed_2026_07_28.md` instead of a bare
+> unchecked todo here (this plan's own `depends_on`/`gate_on_depends` can't express "todo 1 is gated, todo 2 isn't" —
+> per the plan-authoring partial-parallelism SPLIT rule). See that gated plan for the live todo + full detail.
 
 - [ ] [CODE] P1. **Build + execute the `batch_footystats` copy+swap pass** (footystats legacy-bundle shape, 16,970
       objects per the 2026-07-20 sizing) — canonicalise its `league_id`, mirroring the already-shipped, adversarially-
