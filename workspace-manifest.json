@@ -78,9 +78,9 @@
     "instruments-service": "0.93.0",
     "market-tick-data-service": "0.99.0",
     "system-integration-tests": "0.15.0",
-    "unified-api-contracts": "0.77.0",
+    "unified-api-contracts": "0.78.0",
     "unified-trading-library": "0.63.0",
-    "unified-trading-pm": "1.2.645",
+    "unified-trading-pm": "1.2.646",
     "market-data-processing-service": "0.22.0",
     "e2e-testing": "0.41.0",
     "agent-orchestrator": "0.97.0",
@@ -1520,7 +1520,7 @@
         "large_file_count": 13,
         "qg_red_reason": "basedpyright"
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "breaking_scan_dir": "server"
     }
   },
