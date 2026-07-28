@@ -118,8 +118,14 @@ correct-and-failing, not stale.
       `/api/deployments`, so the suspected catch-all-shadowing bug isn't present for this route. Fixed by other work
       sometime in the 11 days since this doc was filed (not bisected — not needed). See the dated log entry below for
       full evidence.
-- [ ] [UI] P2. **Fix the `aria-prohibited-attr` WCAG AA violation on `/ops/costs`** (serious impact). The
-      `accessibility_audit.spec.ts:60` assertion is correct — fix `CostObservability.tsx`, do not relax the test.
+- [x] ✅ [UI] P2. **Fix the `aria-prohibited-attr` WCAG AA violation on `/ops/costs`** — ALREADY RESOLVED 2026-07-26
+      (slot-8, pre-existing this task's dispatch): `deployment-ui@2340c68` added `role="button"` to the `InfoTip`
+      tooltip-trigger `<span>` (`CostObservability.tsx`), making its `aria-label` WCAG-legal per the axe
+      `aria-prohibited-attr` rule (a `<span>` has an implicit "generic" role, which prohibits accessible naming via
+      `aria-label`; `role="button"` grants it). Verified 2026-07-28 (slot-4):
+      `npx playwright test --project=chromium     tests/smoke/accessibility_audit.spec.ts -g "Daily Costs"` passes, and
+      the full `accessibility_audit.spec.ts` (all 6 pages) passes 6/6 — no code change needed this session, just
+      confirming the fix already shipped.
 - [ ] [UI] P3. **Update the 5 `daily_costs_and_vm_detail.spec.ts` specs to the post-a9795f3 Cost Observability page**
       ("Daily VM Costs" → "Cost Observability"; re-derive the total/asset-group/date-picker locators from the current
       DOM). Pure spec work — the page is healthy.
