@@ -264,28 +264,49 @@ drift_direction: advance-code
       `data_pipeline_alert_substrate_residual_2026_07_24.md`. **Done when**: both constants exist and are exported with
       UTL QG green, the MTDS emit lands with a test asserting the 429-count payload, and both source checkboxes are
       flipped.
-- [ ] [CODE] P1. **Diagnose the alerting-service Cloud Logging ingestion gap — ONE bug described in two source docs.**
-      `issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "[INFRA] P2 DEPLOYED-INSTANCE Cloud Logging ingestion gap"
-      and `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`'s "[INFRA] P3 alerting-service app-logs not
-      reaching Cloud Run" are the same defect from two angles — do not fix it twice, flip BOTH checkboxes from one
-      investigation. Symptom: the running `dp-alerting-subscriber` surfaces ZERO app logs in Cloud Logging (not even the
-      unconditional `Starting alert subscriber stream` startup line) across all revisions, despite demonstrably
-      consuming `lifecycle-events-sub` and despite the IDENTICAL image flooding those logs to stdout when run locally;
-      no log-router exclusion drops them (`_Default` excludes only audit logs); minScale=1, cpu-throttling=false. Chase
-      the source doc's three named hypotheses in order — the lifespan background task's stdout not reaching the Cloud
-      Run logging agent under uvicorn's asyncio loop, a uvicorn `--log-config` swallowing the root logger, or the
-      event-sink `log_event` path competing — using the doc's own suggested probe (`print(..., flush=True)` at lifespan
-      start, then `gcloud run services logs read`). Repo: alerting-service (`api/main.py` lifespan / uvicorn CMD).
-      **Note**: the sibling "[DEPLOY] P2 ship the alerting-subscriber Cloud-Run code once UAC foreign WIP clears" item
-      in the same doc is already LANDED (`config.run_subscriber_in_api` + the `api/main.py` lifespan are both in the
-      committed tree, verified 2026-07-26) — flip it `[x]` with that evidence, do not re-ship it. Likewise its
-      "Remaining (c) codify `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions and their subscriber IAM
-      in terraform" prose item is DONE: `deployment-service/terraform/gcp/alerting_relay_pubsub.tf` carries both
+- [x] ✅ [CODE] P1. **RESOLVED 2026-07-28 — root cause was NOT alerting-service code (none of the doc's 3 named
+      hypotheses); it was a project-wide Cloud Logging sink exclusion.** `gcloud logging read` on the live
+      `dp-alerting-subscriber` (project `central-element-323112`) returned **zero** `run.googleapis.com/stdout` or
+      `/stderr` entries at ANY severity across a 30-day window, while the service's own structured
+      `run.googleapis.com/requests` + `/varlog/system` logs were present — proving the container was alive and healthy,
+      not silently dead. Cross-check against a Cloud Run **JOB** in the same project (`uts-prod-alerting-paging`) showed
+      its unstructured, DEFAULT-severity (blank) log lines flowing through normally. Root cause: the project's
+      `_Default` Cloud Logging sink carries a `debug-filter` exclusion —
+      `severity <= "DEBUG" AND NOT resource.type="cloud_run_job"` (`gcloud logging sinks describe _Default`). Cloud
+      Run's ingestion agent assigns **plain-text** (non-JSON) stdout/stderr lines Cloud Logging severity `DEFAULT` (0)
+      regardless of the Python log level — it does not parse `%(levelname)s` out of free text. `DEFAULT` (0) ≤ `DEBUG`
+      (100), so every plain-text line from alerting-service (a Cloud Run **service**) was silently dropped before ever
+      reaching Cloud Logging; the exclusion's job carve-out is why the sibling paging JOB was unaffected. The 2026-06-23
+      P2 fix (flushing handler + plain-text formatter) was a real but insufficient fix — flushing solves buffering, not
+      severity-tagging. **Fix (alerting-service@62b850c, quickmerge-landed on live-defi-rollout)**:
+      `api/main.py::_configure_stdout_logging()` now reuses UTL's `setup_cloud_logging(json_format=True)`
+      (`CloudRunJSONFormatter`, `severity=record.levelname`) instead of the hand-rolled plain-text
+      `_FlushingStreamHandler` — this makes Cloud Run's agent honour the real Python level, so INFO+ lines clear the
+      exclusion without touching the shared, cost-sensitive project-wide sink policy (same sink also carries the
+      `prd-gcs-data-access-exclusion` cost-control exclusion — a blanket loosening of `debug-filter` would have
+      re-admitted plain-text DEBUG noise fleet-wide with real billing impact; scoping the fix to alerting-service's own
+      log emission avoids that). **Live-verified**: built + deployed a diagnostic image
+      (`alerting-service:diag-62b850c`) to `dp-alerting-subscriber` (revision `dp-alerting-subscriber-00015-lcn`,
+      2026-07-28T06:18Z) via `gcloud builds submit` + `gcloud run deploy` (no Cloud Build trigger exists for this repo —
+      ad hoc build, matching this exact service's established manual-deploy precedent in the source doc).
+      `gcloud logging read 'resource.labels.revision_name="dp-alerting-subscriber-00015-lcn" AND     logName="...run.googleapis.com%2Fstderr"'`
+      now shows, at correct severities: `INFO Starting alert subscriber     stream: (...)` — the exact
+      previously-invisible "unconditional startup line" the source doc named — plus
+      `INFO     AlertSubscriber initialized: subscriptions=(...)`, `INFO Event logging initialized: mode=local`,
+      `INFO     DP_ALERTING_SUBSCRIBER_RUN_STARTED`,
+      `INFO alerting-service: live AlertSubscriber started in API lifespan`, and
+      `WARNING AlertSubscriber: 4 subscription(s) have no publisher implemented yet`. The gap is closed; no
+      further-consequence follow-up is needed (the `debug-filter` sink exclusion itself is intentionally left unchanged
+      — see the cost-tradeoff note above — since the service-scoped fix is sufficient and lower-risk). **Note**: the
+      sibling "[DEPLOY] P2 ship the alerting-subscriber Cloud-Run code once UAC foreign WIP clears" item in the same doc
+      is already LANDED (`config.run_subscriber_in_api` + the `api/main.py` lifespan are both in the committed tree,
+      verified 2026-07-26) — flip it `[x]` with that evidence, do not re-ship it. Likewise its "Remaining (c) codify
+      `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions and their subscriber IAM in terraform" prose
+      item is DONE: `deployment-service/terraform/gcp/alerting_relay_pubsub.tf` carries both
       `google_pubsub_subscription` resources, both `google_pubsub_subscription_iam_member` bindings, and matching import
       blocks. Sources: `issues/dp_event_pubsub_delivery_gap_2026_06_22.md`,
-      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. **Done when**: app logs from the deployed subscriber
-      appear in Cloud Logging (cite a `gcloud run services logs read` excerpt) or the root cause is documented with a
-      concrete blocked-on statement, and all three checkboxes named above are flipped with their evidence.
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. Evidence: alerting-service@62b850c (QG green
+      sentinel `.qg_last_passed_sha=62b850c`), live `gcloud logging read` excerpt above.
 - [ ] [CODE] P2. **Two bounded data-pipeline-alert bug fixes** (Source:
       `issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`). (a) **Finding 3** — add a
       per-VM shard check to `DP_VM_GONE_NO_CAPTURE`: the alert reads the CONSOLIDATED captured count, but per-VM shards

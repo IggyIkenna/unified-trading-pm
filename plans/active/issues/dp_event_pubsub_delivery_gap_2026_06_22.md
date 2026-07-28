@@ -187,22 +187,19 @@ The "PROPER durable fix (standing item)" named in finding #5 is being shipped: t
       (logging-config) + @8e511d4 (flushing handler) + @9e52751 (observability INFOs); deployed rev
       `dp-alerting-subscriber-00008-csc` (image `:9e52751` + PYTHONUNBUFFERED=1).
 
-- [ ] [INFRA] P2. **MIGRATED 2026-07-27** — this item (and its sibling angle from
-      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`, "app-logs not reaching Cloud Run") are tracked as
-      ONE investigation in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` ("Diagnose the alerting-service
-      Cloud Logging ingestion gap — ONE bug described in two source docs"), not yet executed there either. Leave this
-      checkbox open until that todo ships; flip both docs' checkboxes together citing that todo's evidence.
-      **DEPLOYED-INSTANCE Cloud Logging ingestion gap (residual — the CODE is fixed+proven, this is infra).** After the
-      observability fix above, the running `dp-alerting-subscriber` (rev 00008-csc) STILL surfaces ZERO app logs in
-      Cloud Logging — not even the unconditional `Starting alert subscriber stream` startup log (line 373) — across all
-      revisions/30 min, despite (a) the subscriber DEMONSTRABLY consuming `lifecycle-events-sub` (test events drain),
-      and (b) the IDENTICAL image flooding those exact logs to stdout when run locally (`docker logs`). No log-router
-      exclusion drops them (`_Default` sink excludes only audit logs). minScale=1 + cpu-throttling=false + one
-      continuous instance. Hypotheses to chase: the lifespan background task's stdout not piped to the Cloud Run logging
-      agent under uvicorn's asyncio loop; OR a uvicorn `--log-config` swallowing the root logger on Cloud Run; OR the
-      event-sink `log_event` path competing. Diagnose with a deliberate `print(..., flush=True)` at lifespan start +
-      `gcloud run services logs read`. Repo: alerting-service (`api/main.py` lifespan / uvicorn CMD). Provenance: P2
-      verify 2026-06-23.
+- [x] ✅ [INFRA] P2. **RESOLVED 2026-07-28** — root cause was a project-wide Cloud Logging `_Default` sink exclusion
+      (`debug-filter`: `severity <= "DEBUG" AND NOT resource.type="cloud_run_job"`), not any of the three hypotheses
+      below. Unstructured (plain-text) stdout/stderr lines are ingested by Cloud Run at severity `DEFAULT` (0)
+      regardless of Python log level, so every app log line from this Cloud Run **service** was silently excluded (Cloud
+      Run **jobs** are carved out of the exclusion, which is why the sibling `alerting-paging` job's plain-text logs
+      were never affected). Fixed in alerting-service@62b850c by reusing UTL's
+      `setup_cloud_logging(json_format=     True)` (`CloudRunJSONFormatter`, sets `severity` from the real Python level)
+      instead of the plain-text `_FlushingStreamHandler`. Live-verified on redeployed revision
+      `dp-alerting-subscriber-00015-lcn` (2026-07-28T06:18Z): `gcloud logging read` now shows the previously-invisible
+      `Starting alert subscriber stream:     (...)` startup line plus the full init/lifespan INFO trail, all at correct
+      severities. Full diagnosis + evidence: `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s "Diagnose the
+      alerting-service Cloud Logging ingestion gap" item (flipped same-turn) and
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`'s sibling item (flipped same-turn).
 
 **Remaining (tracked, NOT blocking the relay — it is live as of the 2026-06-23 subscriber-crash fix; see the finding-192
 annotation above re: two intervening breaks between the 06-22 18:27Z claim and actual stability):**
