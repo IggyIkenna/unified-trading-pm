@@ -59,6 +59,7 @@ jobs:
           sparse-checkout: |
             plans/ops/change-freeze-calendar.csv
             scripts/telegram-helpers.sh
+            scripts/cicd/verdict_store.py
 
       - name: Check freeze windows
         id: freeze
@@ -171,6 +172,50 @@ jobs:
           echo "blocked=false" >> "$GITHUB_OUTPUT"
           echo "reason=" >> "$GITHUB_OUTPUT"
           echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
+
+      # ── Firestore verdict-store write (2026-07-27, operator decision — the real generalisation,
+      # not a faithful UI port) ──────────────────────────────────────────────────────────────────
+      # Surfaces THIS evaluator's own pass/fail verdict for the deployment-ui G5 freeze-window
+      # banner, so the panel reads the STORED verdict of the recurrence/DST bash logic above rather
+      # than re-evaluating it in TypeScript (that would risk drifting from the real gate — the exact
+      # trap plans/active/monitoring_control_plane_master_2026_06_10.md's G5 item flags).
+      #
+      # `if: always()` — the "Check freeze windows" step above `exit 1`s on a genuine block (that IS
+      # the gate; callers `needs: freeze-check` on it), but it writes blocked/reason to
+      # $GITHUB_OUTPUT BEFORE exiting, so both steps below still see them and must run regardless of
+      # that exit code. `continue-on-error: true` on both — a Firestore hiccup must NEVER turn an
+      # advisory side-write into a blocker for the 4+ real callers of this reusable workflow.
+      - name: Authenticate to GCP (Firestore verdict-store write)
+        id: freeze_gcp_auth
+        if: always()
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Write change-freeze verdict to Firestore
+        if: always() && steps.freeze_gcp_auth.outcome == 'success'
+        continue-on-error: true
+        env:
+          CHECK_TYPE: ${{ inputs.check_type }}
+          BLOCKED: ${{ steps.freeze.outputs.blocked }}
+          REASON: ${{ steps.freeze.outputs.reason }}
+        run: |
+          set -euo pipefail
+          python3 -c "import google.cloud.firestore" 2>/dev/null \
+            || python3 -m pip install --quiet "google-cloud-firestore>=2,<3"
+          CHECKED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          VERDICT="CLEAR"
+          if [ "${BLOCKED:-false}" = "true" ]; then
+            VERDICT="BLOCKED"
+          fi
+          REASONS_JSON=$(python3 -c "import json,os; print(json.dumps([os.environ['REASON']] if os.environ.get('REASON') else []))")
+          python3 scripts/cicd/verdict_store.py set \
+            --collection change_freeze_verdicts \
+            --key "$CHECK_TYPE" \
+            --verdict "$VERDICT" \
+            --reasons-json "$REASONS_JSON" \
+            --checked-at "$CHECKED_AT"
 
   # ── NO SLACK NOTIFY ON A FREEZE BLOCK (operator ruling 2026-07-20) ────────────────────────────
   #
