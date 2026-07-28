@@ -362,3 +362,22 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `/progress` heartbeats every ≤8 min going forward. **Status at last check**: 67/348 dates done, 0 anomalies, real
   enrichment writes now dominant (past the range slot-16's manual pass + the 4a writer-root fix's retroactive coverage
   already covered). Still running — see this task's next Progress Log entry for the outcome.
+- 2026-07-28 (slot 7, session end — task CANCELLED mid-run): the third resume ran clean for ~2 hours with disciplined
+  heartbeats (no further kills), reaching **140/348 dates enriched, 0 anomalies**, before a `/heartbeat` call returned
+  `dispatch_reason: "cancelled"` + `cancel_task: "prediction_satellite_ao_dispatch_batch4-010"` — the task was removed
+  from active dispatch (plan-regen or operator action; cause not visible from this session). Per
+  `unified-trading-pm/agents/worker.md`'s cancelled-task HARD RULE: stopped working it immediately, did NOT ship or
+  `/done`. The background enrichment process (PID 797194, harness-tracked via `run_in_background`, mid-write on date
+  141/348 = `2025-09-19`) was gracefully `SIGTERM`ed (exact-PID kill) rather than left running unsupervised against
+  production GCS after the cancellation — safe to interrupt: the script only marks a date `canonical_enriched` after a
+  round-trip-verified write, so the in-flight date's write was either fully committed or cleanly abandoned, never
+  partial. **Durable state, verified after stop**: `prediction_trades_migration_report.jsonl` (140 lines, one JSON
+  object per completed date, 0 anomalies) confirms every one of the first 140 dates (2025-04-09..2025-09-18) is
+  content-verified enriched in GCS. **Resumable by anyone, if this todo is re-dispatched**: the report file was
+  session-scratchpad-local (not committed — ephemeral, per the script's own resumability design) so a fresh session
+  won't have it, but that's fine: `all_fields_present` re-derives already-done state per-cell on read, so a bare
+  `--apply` re-run (optionally with a fresh `--report <path>`) is 100% correct, just re-lists GCS for the ~140 already-
+  done days before continuing from where this session left off (~date 141, `2025-09-19` onward, 208 dates remaining).
+  **This todo's checkbox stays unchecked** — real backfill completion is 140/348 (~40%), not done. Called
+  `/skip-current-task` with reason "cancelled — plan item removed" per the HARD RULE; no code/plan-checkbox changes
+  needed for the cancellation itself (this Progress Log entry is the only change, for continuity).
