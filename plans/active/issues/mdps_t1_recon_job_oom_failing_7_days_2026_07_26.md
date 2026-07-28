@@ -13,7 +13,7 @@ stage: [meta]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
-related: [/plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
+related: [/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
 last_updated: 2026-07-27 (Update 10)
 parent_epic: infrastructure_master

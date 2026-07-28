@@ -23,7 +23,7 @@ source: [cefi_satellite_ao_dispatch_batch2_2026_07_26.md item cefi_satellite_ao_
 related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
   ]
 assigned_vm: planning

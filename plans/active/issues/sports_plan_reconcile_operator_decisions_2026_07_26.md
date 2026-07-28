@@ -192,8 +192,8 @@ Listed here only so this doc is a complete record of the shard; each is already 
 1. `/plans/active/sports_consolidated_closeout_2026_07_19.md` — `assigned_vm:` note claimed "This plan has 96 open
    todos"; measured 37 open / 27 done, matching the same doc's own dated `superseded_by:` recount. Count de-hardcoded;
    the lapsed "10-100 todos" cap ground annotated; the ⛔ directive itself untouched.
-2. `/plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` — broken codex ref
-   `/codex/02-data/gcs-object-operations.md` repointed to the real `/codex/05-infrastructure/gcs-object-operations.md`.
+2. `/plans/active/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` — broken codex ref (stale `02-data/` prefix,
+   target since moved) repointed to the real `/codex/05-infrastructure/gcs-object-operations.md`.
 3. `/plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` — a heading split across a blank line into two
    `##` headings, orphaning a `)`.
 4. `/plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md` — mangled inline-code path token restored to the

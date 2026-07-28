@@ -17,7 +17,7 @@ stage: [meta]
 repos: [unified-trading-pm, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, adapter-contract-regression, ci, shared-host-contention]
-related: [/plans/active/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
+related: [/plans/archive/issues/lint_sweep_774602ea8_regression_audit_2026_05_20.md]
 created: 2026-07-27
 last_updated: 2026-07-27
 parent_epic: infrastructure_master
