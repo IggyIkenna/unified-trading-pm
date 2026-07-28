@@ -354,3 +354,59 @@ chain, error_reason):
 
 Source task: `defi_satellite_ao_dispatch_batch1_2026_07_25.md` ("Spot-check live subgraph health for the remaining
 un-investigated `dex_pool_swaps` long-tail").
+
+## Verified live (2026-07-28, DP-FETCH-009 escalation #2 — agt-077924, slot 3)
+
+Dispatched as another fresh `data_pipeline_failure` escalation off a `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page
+firing on the same ~30min re-nag cooldown as the section above (`agt-38b3d6`, slot 7):
+`asset_group=defi data_type=dex_pool_swaps: 1097 attempted_failed cells of 3306806 attempted`. Re-read the live prod
+manifest (`market-data-tick-defi-prd-central-element-323112`, `_index/availability_index.parquet`, 28,166,318 total
+rows, 4,627,955 `dex_pool_swaps` rows) and diffed the per-cell counts against the section immediately above:
+
+| venue/chain                                                | count now | count ~section above | delta | verdict                                               |
+| ---------------------------------------------------------- | --------- | -------------------- | ----- | ----------------------------------------------------- |
+| VELODROME_V2/OPTIMISM (drifted/bad-indexers)               | 665       | 662                  | +3    | still actively failing (already tracked)              |
+| UNISWAP_V3/OPTIMISM (drifted/bad-indexers)                 | 360       | 356                  | +4    | still actively failing (already tracked)              |
+| CURVE/OPTIMISM (OLD pre-fix GraphQL-errors signature)      | 7         | 4                    | +3    | pre-fix VMs still running (already tracked, P3 above) |
+| TRADER_JOE_V2/AVALANCHE                                    | 28        | 28                   | 0     | frozen — confirms "currently healthy" verdict holds   |
+| PANCAKESWAP_V3/BSC                                         | 15        | 15                   | 0     | frozen — confirms "self-healed" verdict holds         |
+| UNISWAP_V4/ETHEREUM (build_instrument_id + GraphQL-errors) | 12        | 12                   | 0     | frozen — separate open P3 todo above, unaffected      |
+| UNISWAP_V2/ETHEREUM                                        | 5         | 5                    | 0     | frozen                                                |
+| PANCAKESWAP_V3/ETHEREUM                                    | 2         | 2                    | 0     | frozen                                                |
+| UNISWAP_V3/POLYGON                                         | 2         | 2                    | 0     | frozen                                                |
+| AERODROME_V3/BASE                                          | 1         | 1                    | 0     | frozen                                                |
+
+**Total 1097, matching this escalation's alert exactly.** Every bucket the section above verdicted "currently healthy"
+or "separate tracked bug" is byte-identical (zero new rows since that check) — strong corroboration those verdicts still
+hold. Only the three already-tracked active-failure cells grew, each by a small amount consistent with an ongoing
+backfill continuing to retry a still-broken condition. **No new root cause, no new venue/chain pair.**
+
+Independently live-reproduced both dominant conditions with a freshly-fetched `thegraph-api-key` (not relying on
+manifest error strings alone) — same production query shapes and gateway URL the real handler uses
+(`https://gateway.thegraph.com/api/{key}/subgraphs/id/{id}`):
+
+- uniswap_v3/OPTIMISM (`univ3` schema — the structurally-correct query, cascade position 1):
+  `{"errors":[{"message":"bad indexers: {0xeccdf8231326a9c5aad32df76a633aaa4c49b104: Unavailable(too far behind), 0xf92f430dd8567b0d466358c79594ab58d919a6d4: BadResponse(no attestation: indexing_error), 0xfeff9093f6b32d0e5cddba743b06a1fedb87c004: Unavailable(no status: indexer not available)}"}]}`
+  — **the identical 3 indexer addresses + identical error kinds** as both 2026-07-27 probes below.
+- velodrome_v2/OPTIMISM (`messari_from` schema — the structurally-correct query per this doc's introspection above):
+  `{"errors":[{"message":"bad indexers: {0x8cc22436ba6f07a4d5dd2043e3109267eee5aab8: Unavailable(no status: failed to get indexing progress), 0xf92f430dd8567b0d466358c79594ab58d919a6d4: BadResponse(expected value at line 1 column 1)}"}]}`
+  — identical to the section above's same-day-earlier probe.
+
+`0xf92f430dd8567b0d466358c79594ab58d919a6d4` is now confirmed unhealthy across **four independent probes spanning
+2026-07-27 through 2026-07-28** (>24h), on **two different Optimism-chain subgraphs**. This is the strongest
+same-fingerprint persistence evidence gathered so far. Whether it now satisfies the open P2 todo's "multi-day window"
+bar for escalating to an upstream Graph-Protocol report / indexer-allowlist research is a judgment call for whoever next
+picks up that todo — flagging the stronger evidence here rather than deciding it myself (that follow-up research is
+explicitly out of scope for a one-shot escalation, same conclusion the section above already reached).
+
+**No code fix applies, same as every prior pass**: the correct query schema is already in the cascade at the correct
+position for both protocols; this is a live, ongoing `BLOCKED-UPSTREAM-OUTAGE` (Graph Protocol indexer health), not a
+`data_pipeline_failure`-agent-fixable root-cause class (not a misclassification, not a canonical-path/env/cron/key-pool
+bug). Marking either cell `known_dead` would still be the wrong direction per this doc's reasoning above (both have
+captured real rows within the last week and are expected to resume once the indexer heals).
+
+No existing todo above is resolved or newly stale by this pass — all three (P2 re-probe/multi-day, P3 CURVE/OPTIMISM VM
+restart, P3 UNISWAP_V4 `build_instrument_id`) remain open exactly as scoped.
+
+Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-077924`, slot 3,
+2026-07-28.
