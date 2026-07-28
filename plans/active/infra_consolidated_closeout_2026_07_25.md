@@ -258,3 +258,31 @@ phases ship.
   `issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
   `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
   `assigned_vm: planning` and live in the AO backlog.
+
+- **2026-07-28** — Second `/ag-closeout-audit infra` run (Autonomous mode, ag_closeout_auditor role, operator away).
+  Phase 0 re-checked all 10 of batch1's conflict-gated Deferred items against their named competing claims: none
+  cleared enough to convert (the `base-service.sh`/`base-library.sh` bundle partially cleared — the `base-library.sh`
+  side is done, `base-service.sh` side still open elsewhere). Phase 1 classified 13 infra-tranche docs created (or
+  last substantively touched) since batch1/batch2 were drafted, via a 13-agent Workflow:
+  [e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md](/plans/active/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md),
+  [issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md](/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md),
+  [issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md](/plans/active/issues/deployment_api_inventory_alert_gate_ondemand_only_2026_07_27.md),
+  [issues/git_health_not_clean_since_pinned_constant_2026_07_27.md](/plans/active/issues/git_health_not_clean_since_pinned_constant_2026_07_27.md),
+  [issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md](/plans/active/issues/gitignore_sync_script_destructive_due_to_stale_central_template_2026_07_27.md),
+  [issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md](/plans/active/issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md),
+  [issues/legacy_bucket_template_literals_2026_07_16.md](/plans/active/issues/legacy_bucket_template_literals_2026_07_16.md),
+  [issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md](/plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md),
+  [issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md](/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md)
+  (likely mistagged — content is CeFi-execution-specific, flagged not fixed),
+  [issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md](/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md),
+  [issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md](/plans/active/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md),
+  [issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md](/plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md),
+  [issues/capability_manifest_ml_models_probe_stale_import_2026_07_26.md](/plans/active/issues/capability_manifest_ml_models_probe_stale_import_2026_07_26.md).
+  Verdicts: 2 `archivable_now` (rotate_exchange_keys, capability_manifest — fully shipped, only frontmatter stale;
+  handed to `/plan-reconcile`'s territory, not touched here), 4 orphaned-but-not-AO-eligible (2
+  operator-decision-gated, 1 human-judgment-gated, 1 mistagged), 1 orphaned-AO-eligible-but-conflict-gated
+  (`vm_launcher_class_b` collides with batch1's own still-open todo 8 on `launcher_common.sh`), 6
+  orphaned-AO-eligible-and-conflict-clear. Phase 3 drafted
+  [infra_satellite_ao_dispatch_batch3_2026_07_28.md](/plans/active/infra_satellite_ao_dispatch_batch3_2026_07_28.md) +
+  [infra_satellite_ao_dispatch_batch3_finalize_2026_07_28.md](/plans/active/infra_satellite_ao_dispatch_batch3_finalize_2026_07_28.md)
+  — 6 todos from 6 source docs, both `status: draft` (NOT ingested; the flip to `active` is the operator's call).
