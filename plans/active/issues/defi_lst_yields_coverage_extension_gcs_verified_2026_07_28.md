@@ -178,3 +178,26 @@ structural limitation.
       shows day-partitions spanning materially more than the current 15 days (targeting near-full coverage from each
       token's own genesis), and the STAKING leg's honest-absence log rate for `carry_staked_basis` positions drops
       correspondingly. Source: this doc.
+
+## Progress Log
+
+- **2026-07-28 (slot-6)**: Before the backfill could write ANY day, hit two independent bugs that made `lst_yields` (and
+  sibling `lst_native_rates`) 100%-unwritable — not historical-data-specific, reproduced even on 2026-04-10 (already
+  inside the prior successful window) when re-run under current code. Root-caused + fixed both (see
+  `/plans/active/issues/lst_yields_writegate_permanently_blocked_2026_07_28.md` for full detail): (1)
+  `lst_native_rate_ts` called `.dt.epoch()` on the raw MTDS `timestamp` column, which is a bare `YYYY-MM-DD` string not
+  a Datetime, producing all-null and tripping the WriteGate's 95%-NaN threshold; (2) unmapped tokens (not in UAC
+  `LST_TOKEN_TO_PROTOCOL_ASSET`) were left in output with null protocol/asset, dragging `completeness_fraction` below
+  1.0 and tripping the `STRICT_FAIL` emission policy for the WHOLE day, not just the unmapped token. Shipped
+  `features-service@3e59ea63`. Verified real GCS writes for 2024-01-01..03 (14/16/16 rows). Full features-service test
+  suite green (17964 passed) before shipping. Then launched the actual backfill: chunked into 60 monthly sub-ranges
+  (2021-08-17 → today), each invocation via `--skip-dependency-check` (required — MTDS has never captured a
+  `perp_funding` data_type for DEFI at any date, an unrelated pre-existing dependency-checker gap also flagged in the
+  same issue doc as a P2 follow-up; NOT needed for `lst_yields` itself, which only reads `lst_rates`+`oracle_prices`).
+  Running as a persistent background supervisor with per-chunk retry (3 attempts) and GCS day-partition-count
+  verification after each chunk — that count, not process liveness, is the progress metric. At ~30s/day of real GCS I/O
+  (no per-day parallelism in the CLI), the full ~1800-day range is a multi-hour operation; expect this to span multiple
+  session turns. If this session ends before the supervisor finishes, the backfill is fully resumable: re-invoking the
+  same monthly chunk list is safe because each completed chunk's `start_date` becomes fresh in the manifest
+  (skip-if-fresh now works correctly since the underlying write bug is fixed) — only genuinely-incomplete chunks would
+  re-run.
