@@ -24,7 +24,7 @@ summary: >-
   name 404s, that suppression can never actually fire on a genuinely-PAUSED consolidator — the alert would fire anyway
   during any deliberate pause (e.g. exactly the kind of remediation `--apply` this session just ran), which is the
   opposite of KEY #2's intent.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -48,13 +48,19 @@ estimate_calibrated_ai_days: 0.15
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: deployment-service@841f464
 ---
+
+> **🟢 RESOLVED 2026-07-28 — `deployment-service@841f464`.** Both todos below are done: `scheduler_env_prefix()` fixed
+> to use the raw Terraform environment word (mirrors `unified-trading-library@080a84a0`), live-verified against real GCP
+> (job-name resolution + a real pause/suppress/resume cycle proving the DP_CRON_DID_NOT_FIRE KEY #2 PAUSED-suppression
+> path). See the Todos section for full evidence. Archived per `/codex/11-project-management/issue-doc-lifecycle.md`
+> trigger 2 (commit SHA fixes the issue).
 
 ## What I found
 
@@ -110,13 +116,36 @@ an unrelated tradfi backfill task).
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Fix `deployment_service/data_pipeline_monitors/meta_targets.py::scheduler_env_prefix()` the same way
-      `unified-trading-library@080a84a0` fixed its twin: resolve the RAW Terraform environment word (`"prod"`, not the
-      bucket short-form `"prd"`) for scheduler-job-name reconstruction. Verify against a live
-      `gcloud scheduler jobs describe` for at least one real `uts-prod-manifest-consolidator-market-data-{ag}-cron` job
-      (mirrors the verification done for the UTL fix). Add/update the corresponding unit test asserting the corrected
-      `uts-prod-...` name. Repo: deployment-service.
-- [ ] [DATA] P2. Once fixed, verify the DP_CRON_DID_NOT_FIRE KEY #2 PAUSED-suppression path actually suppresses for a
-      real paused job (a live test: pause a non-critical consolidator briefly, confirm no page fires, resume) — the fix
-      alone doesn't prove the suppression LOGIC downstream of the corrected name is otherwise correct, only that the
-      name resolves. Repo: deployment-service.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-28 — `deployment-service@841f464`.** Fixed
+      `deployment_service/data_pipeline_monitors/meta_targets.py::scheduler_env_prefix()` the same way
+      `unified-trading-library@080a84a0` fixed its twin: removed the `_ENV_SHORT_FORM` short-form mapping table entirely
+      and made `scheduler_env_prefix()` return `f"uts-{_deployment_env_long()}"` — the RAW Terraform environment word
+      (`"prod"`), matching `deployment-service/terraform/gcp/main.tf:47`'s
+      `env_prefix = lower(replace("${var.bucket_prefix}-${var.environment}", "_", "-"))` (`var.environment` validated to
+      exactly `dev|staging|prod`) byte-for-byte — confirmed this is the SAME `env_prefix` local used by every scheduler/
+      Cloud-Run job in this Terraform module (`manifest_consolidator_scheduler.tf`, `t1_batch_scheduler.tf`, etc.), not
+      just the consolidator, so the fix corrects `consolidator_scheduler_job()`/`consolidator_cloud_run_job()`/every
+      `cli.py` caller of `_scheduler_env_prefix()` in one place. **Live-verified against real GCP** (not just gcloud
+      describe — the full pause/suppress/resume path): (1) `gcloud scheduler jobs list --location=asia-northeast1`
+      confirms every live consolidator job uses `uts-prod-manifest-consolidator-...` naming (18 jobs, all `uts-prod-`,
+      zero `uts-prd-`); (2) the fixed resolver's own output (`meta_targets.consolidator_scheduler_job("tradfi")` →
+      `uts-prod-manifest-consolidator-market-data-tradfi-cron`) exactly matches a real job, confirmed via
+      `gcloud scheduler jobs describe` (state ENABLED); (3) the real `cli._make_scheduler_state_reader()` (actual
+      `google.cloud.scheduler_v1` SDK client, not mocked) round-trips state correctly against that job. Added
+      `test_scheduler_env_prefix_uses_raw_terraform_word_not_bucket_short_form` to
+      `tests/unit/test_data_pipeline_monitors.py` asserting the corrected `uts-prod-...` shape for
+      `scheduler_env_prefix()`/`consolidator_scheduler_job()`/`consolidator_cloud_run_job()`. Full
+      `quality-gates.sh --no-fix` green (267s, sentinel `f0ee04e8` == HEAD before ship). Repo: deployment-service.
+- [x] ✅ [DATA] P2. **DONE 2026-07-28 — live-verified end-to-end, no code needed (folded into the same session as the
+      todo above).** Verified the DP_CRON_DID_NOT_FIRE KEY #2 PAUSED-suppression path actually suppresses for a REAL
+      paused job, using the sanctioned `deployment_service.data_pipeline_monitors.scheduler_maintenance`
+      pause/resume-with-CAS-lock mechanism (never a raw `gcloud scheduler jobs pause`) against the real
+      `uts-prod-manifest-consolidator-market-data-tradfi-cron` job (~13s total exposure window,
+      `pause_for_maintenance(ttl_minutes=3)` → verify → `resume_after_maintenance()` in a `finally`): state read
+      ENABLED→PAUSED→ENABLED (all 3 reads via the REAL `cli._make_scheduler_state_reader()` SDK client); with the job
+      genuinely PAUSED, called the REAL `meta_watchers.check_cron_fired()` (not a mocked reader) against a synthetic
+      stale target sharing that job's real name — log confirms
+      `"DP_CRON_DID_NOT_FIRE suppressed for 'live-verify-tradfi' — scheduler job     'uts-prod-manifest-consolidator-market-data-tradfi-cron' is PAUSED"`.
+      This proves both halves end-to-end: the corrected name resolves to a job whose real state the SDK reads correctly,
+      AND the downstream suppression logic fires on that real state. Job confirmed resumed to ENABLED after. Repo:
+      deployment-service (no code change this todo — pure live verification).

@@ -144,37 +144,37 @@ exactly such ad-hoc per-wrapper hardcodes.
       below-floor todo cells each (none currently exist below their floors in this state).
 
       **Full year-level breakdown** (the exact, verifiable worklist for the corrective reclassification pass, todo
-                                                      below):
+                                                          below):
 
-                                                      | Venue  | data_type | Year | Count  |
-                                                      | ------ | --------- | ---- | ------ |
-                                                      | CME    | ohlcv_1m  | 2018 | 1,916  |
-                                                      | CME    | ohlcv_1m  | 2019 | 3,886  |
-                                                      | NASDAQ | ohlcv_1m  | 2018 | 18,435 |
-                                                      | NASDAQ | ohlcv_1m  | 2019 | 18,429 |
-                                                      | NASDAQ | ohlcv_1m  | 2020 | 18,489 |
-                                                      | NASDAQ | ohlcv_1m  | 2021 | 18,425 |
-                                                      | NASDAQ | ohlcv_1m  | 2022 | 18,449 |
-                                                      | NASDAQ | ohlcv_1m  | 2023 | 5,248  |
-                                                      | NYSE   | ohlcv_1m  | 2018 | 14,965 |
-                                                      | NYSE   | ohlcv_1m  | 2019 | 14,965 |
-                                                      | NYSE   | ohlcv_1m  | 2020 | 15,006 |
-                                                      | NYSE   | ohlcv_1m  | 2021 | 14,965 |
-                                                      | NYSE   | ohlcv_1m  | 2022 | 14,965 |
-                                                      | NYSE   | ohlcv_1m  | 2023 | 4,264  |
+                                                          | Venue  | data_type | Year | Count  |
+                                                          | ------ | --------- | ---- | ------ |
+                                                          | CME    | ohlcv_1m  | 2018 | 1,916  |
+                                                          | CME    | ohlcv_1m  | 2019 | 3,886  |
+                                                          | NASDAQ | ohlcv_1m  | 2018 | 18,435 |
+                                                          | NASDAQ | ohlcv_1m  | 2019 | 18,429 |
+                                                          | NASDAQ | ohlcv_1m  | 2020 | 18,489 |
+                                                          | NASDAQ | ohlcv_1m  | 2021 | 18,425 |
+                                                          | NASDAQ | ohlcv_1m  | 2022 | 18,449 |
+                                                          | NASDAQ | ohlcv_1m  | 2023 | 5,248  |
+                                                          | NYSE   | ohlcv_1m  | 2018 | 14,965 |
+                                                          | NYSE   | ohlcv_1m  | 2019 | 14,965 |
+                                                          | NYSE   | ohlcv_1m  | 2020 | 15,006 |
+                                                          | NYSE   | ohlcv_1m  | 2021 | 14,965 |
+                                                          | NYSE   | ohlcv_1m  | 2022 | 14,965 |
+                                                          | NYSE   | ohlcv_1m  | 2023 | 4,264  |
 
-                                                      (NASDAQ/NYSE 2023 rows are the partial year up to the 2023-04-15 floor, hence the smaller count.) Only one
-                                                      `data_type` (`ohlcv_1m`) appears in the below-floor set for all three venues — no other tradfi `data_type` has
-                                                      pre-floor `expected_unattempted` rows currently.
+                                                          (NASDAQ/NYSE 2023 rows are the partial year up to the 2023-04-15 floor, hence the smaller count.) Only one
+                                                          `data_type` (`ohlcv_1m`) appears in the below-floor set for all three venues — no other tradfi `data_type` has
+                                                          pre-floor `expected_unattempted` rows currently.
 
-                                                      **Boundary verification (the one dangerous failure mode this todo exists to catch)**: checked for off-by-one at
-                                                      the floor date using a strict-inequality partition — 238,031 todo cells sit ON-OR-AFTER their venue's floor
-                                                      (correctly EXCLUDED from the below-floor set), and **103 cells sit EXACTLY ON the floor date** across all
-                                                      venues — these are genuinely fillable (the floor date itself IS in-archive) and are correctly NOT included in
-                                                      the 182,407 below-floor count. No off-by-one drift found; the `<` (strict) comparison is the correct boundary.
-                                                      Raw breakdown CSV retained at
-                                                      `/home/ubuntu/.claude-configs/orch-slot-9/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-9/0f3ea3ca-85ec-474a-b218-34f27ddd735d/scratchpad/tradfi_below_floor_breakdown.csv`
-                                                      (session-scratch, not committed — the table above is the durable record).
+                                                          **Boundary verification (the one dangerous failure mode this todo exists to catch)**: checked for off-by-one at
+                                                          the floor date using a strict-inequality partition — 238,031 todo cells sit ON-OR-AFTER their venue's floor
+                                                          (correctly EXCLUDED from the below-floor set), and **103 cells sit EXACTLY ON the floor date** across all
+                                                          venues — these are genuinely fillable (the floor date itself IS in-archive) and are correctly NOT included in
+                                                          the 182,407 below-floor count. No off-by-one drift found; the `<` (strict) comparison is the correct boundary.
+                                                          Raw breakdown CSV retained at
+                                                          `/home/ubuntu/.claude-configs/orch-slot-9/cc-tmpdir/claude-1000/-home-ubuntu-unified-trading-system-repos--tabs-9/0f3ea3ca-85ec-474a-b218-34f27ddd735d/scratchpad/tradfi_below_floor_breakdown.csv`
+                                                          (session-scratch, not committed — the table above is the durable record).
 
 - [x] ✅ [BACKEND] P1. **Teach the sentinel/enumerator path the discovery floor** so NEW pre-floor cells materialise as
       `expected_unattempted` at write time rather than as `todo`. Resolve the floor from UAC
@@ -205,9 +205,10 @@ exactly such ad-hoc per-wrapper hardcodes.
       root-caused to `unified_trading_library.monitors.consolidator_liveness._scheduler_job_name_for_bucket`
       reconstructing the scheduler job name via the bucket-name short-form suffix (`uts-prd-...`) instead of Terraform's
       real `env_prefix` (`uts-prod-...`), a genuine production naming bug, not a flake. Fixed
-      `unified-trading-library@080a84a0` (deployment-service carries an identical twin bug, tracked separately:
-      `issues/deployment_service_scheduler_job_name_reconstruction_bug_2026_07_27.md`). After the fix, `--apply`
-      succeeded: snapshot written to
+      `unified-trading-library@080a84a0` (deployment-service carried an identical twin bug, FIXED 2026-07-28
+      `deployment-service@841f464`:
+      `plans/archive/issues/deployment_service_scheduler_job_name_reconstruction_bug_2026_07_27.md`). After the fix,
+      `--apply` succeeded: snapshot written to
       `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_tradfi_below_floor_reclassify_20260727.parquet`,
       182,407 rows flipped (CME 5,802 / NASDAQ 97,475 / NYSE 79,130 — exact match to every prior measurement).
       **Before/after verified**: total tradfi `expected_unattempted` (blank-reason "todo") 420,438 → 238,031 (delta =
@@ -216,24 +217,24 @@ exactly such ad-hoc per-wrapper hardcodes.
       (manifest write only, no code change needed for this todo itself).
 
       **2026-07-27 (slot-6) — script built + dry-run verified; live apply BLOCKED-CREDENTIALS.**
-                                                  `instruments-service@4c123b3b` ships
-                                                  `scripts/reclassify_tradfi_below_floor_expected_unattempted_2026_07_27.py`, mirroring the
-                                                  `reclassify_oos_sports_expected_unattempted_2026_06_24.py` precedent exactly (single manifest read, in-place
-                                                  flip, snapshot + CSV audit, `--apply` gated behind `MANIFEST_PER_VM_SHARDS`/`VM_NAME`). Dry-run against the
-                                                  LIVE prod manifest reproduces the exact **182,407** figure byte-for-byte (CME 5,802 / NASDAQ 97,475 / NYSE
-                                                  79,130 — independently re-verified via a separate ad-hoc query before writing the script, same numbers both
-                                                  ways). Before the write path, added a fail-closed `_assert_consolidator_paused` pre-check (the same contract
-                                                  `sports_manifest_remediation_safety.py` uses, inlined via UTL primitives directly since instruments-service
-                                                  doesn't depend on market-tick-data-service) — and that check is what's currently blocking `--apply`: BOTH
-                                                  credentials available this session (`unified-trading-sa@...` via ADC, the actual runtime identity my script
-                                                  authenticates as, AND the `github-actions-deploy@...` gcloud CLI identity) get a 404/`PERMISSION_DENIED` trying
-                                                  to read Cloud Scheduler job state for **every** `market-data-{cefi,defi,sports,tradfi}` consolidator job, not
-                                                  just tradfi's — `manifest_consolidator_scheduler.tf` confirms `market-data-tradfi` IS a real defined for_each
-                                                  key, so this isn't "no consolidator exists for tradfi", it's a genuine IAM gap (`cloudscheduler.jobs.get`/
-                                                  `.list` missing) affecting the SAME safety pattern any already-shipped remediation script (e.g. the sports
-                                                  ones) would hit the moment someone tries to actually `--apply` one. **This blocks safely running the real
-                                                  corrective write, not just this todo** — flagging as its own finding below. Todo stays open pending the IAM
-                                                  grant + the actual `--apply` run + before/after count verification.
+                                                      `instruments-service@4c123b3b` ships
+                                                      `scripts/reclassify_tradfi_below_floor_expected_unattempted_2026_07_27.py`, mirroring the
+                                                      `reclassify_oos_sports_expected_unattempted_2026_06_24.py` precedent exactly (single manifest read, in-place
+                                                      flip, snapshot + CSV audit, `--apply` gated behind `MANIFEST_PER_VM_SHARDS`/`VM_NAME`). Dry-run against the
+                                                      LIVE prod manifest reproduces the exact **182,407** figure byte-for-byte (CME 5,802 / NASDAQ 97,475 / NYSE
+                                                      79,130 — independently re-verified via a separate ad-hoc query before writing the script, same numbers both
+                                                      ways). Before the write path, added a fail-closed `_assert_consolidator_paused` pre-check (the same contract
+                                                      `sports_manifest_remediation_safety.py` uses, inlined via UTL primitives directly since instruments-service
+                                                      doesn't depend on market-tick-data-service) — and that check is what's currently blocking `--apply`: BOTH
+                                                      credentials available this session (`unified-trading-sa@...` via ADC, the actual runtime identity my script
+                                                      authenticates as, AND the `github-actions-deploy@...` gcloud CLI identity) get a 404/`PERMISSION_DENIED` trying
+                                                      to read Cloud Scheduler job state for **every** `market-data-{cefi,defi,sports,tradfi}` consolidator job, not
+                                                      just tradfi's — `manifest_consolidator_scheduler.tf` confirms `market-data-tradfi` IS a real defined for_each
+                                                      key, so this isn't "no consolidator exists for tradfi", it's a genuine IAM gap (`cloudscheduler.jobs.get`/
+                                                      `.list` missing) affecting the SAME safety pattern any already-shipped remediation script (e.g. the sports
+                                                      ones) would hit the moment someone tries to actually `--apply` one. **This blocks safely running the real
+                                                      corrective write, not just this todo** — flagging as its own finding below. Todo stays open pending the IAM
+                                                      grant + the actual `--apply` run + before/after count verification.
 
 - [x] script-built-and-dry-run-verified. ✅ [DATA] P1. **DONE 2026-07-27 (slot-6)** — `instruments-service@4c123b3b`;
       exact 182,407-row reproduction confirmed live. The actual corrective `--apply` run remains genuinely open, tracked
