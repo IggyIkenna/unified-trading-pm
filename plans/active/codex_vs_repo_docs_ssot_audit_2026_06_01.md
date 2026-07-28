@@ -22,13 +22,13 @@ tags: [audit, documentation, ssot, codex, consolidation, deduplication]
 related: []
 created: 2026-06-01
 parent_epic: plan_hygiene_master
-assigned_vm: planning
+assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-06-27
+last_updated: 2026-07-28
 locked_by: live-defi-rollout
 locked_since:
 supersedes:
@@ -48,6 +48,16 @@ thinking: high
 ---
 
 # Codex-vs-repo-docs SSOT audit + consolidation
+
+> **🅿️ PARKED `assigned_vm: NA` — 2026-07-28 (main agt-4d8de7).** All 15 remaining open todos are Phase-3/4/5
+> REDIRECT/DELETE/slim APPLY work, which is held under the operator's standing 2026-06-01 **FIX-STALE-only hold**. The
+> permitted FIX-STALE slice already landed (`mtds@d97ca3c`), so no operator-permitted work remains — yet the plan kept
+> re-dispatching held apply to workers (slot-12 blocked BLK-613a61ff, slot-16 before it). Flipped `planning → NA` to
+> stop the re-dispatch churn while **GATE-1 is pending an operator ruling** (escalated: server block `BLK-d1b29089` +
+> main SPLIT-DECISION). This is a reversible coordination park, NOT a resolution — the moment the operator rules the
+> hold LIFTED (issue-doc Option A/C), flip back to `planning`. Do NOT execute any REDIRECT/DELETE/migrate/slim until
+> then. SSOT for the contradiction + decision:
+> `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
 
 > **Goal**: `unified-trading-pm/codex/` is the single source of truth for all canonical / cross-cutting documentation.
 > Every repo `docs/` folder is audited against it; duplicated content is removed and replaced with a link to the codex
@@ -163,9 +173,17 @@ from scope).
       (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
       indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
 - [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
-      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service).
+      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). >
+      **🛑 GATE (2026-07-27): the REDIRECT/DELETE APPLY here is BLOCKED-OPERATOR-DECISION — do NOT execute it yet.** >
+      This plan's registries say the apply "stays under the operator's standing 2026-06-01 FIX-STALE-only hold", yet >
+      the plan was reclassified NA→planning (dispatching this todo) the same day — a self-contradiction. A worker >
+      cannot infer the hold is lifted. ALSO opus-gated (redirect/slim judgment must run on opus, not sonnet). Await
+      the > operator ruling in >
+      `/plans/active/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md` (server block >
+      `BLK-d1b29089`). The mechanical FIX-STALE archived-mirror sweep (line ~519) IS permitted and already DONE.
 - [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
-      any `INDEX.md` / README doc-index links.
+      any `INDEX.md` / README doc-index links. **🛑 Same GATE as Phase 3 — DELETE-class apply is
+      BLOCKED-OPERATOR-DECISION (see the Phase-3 gate note + issue doc above).**
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
 

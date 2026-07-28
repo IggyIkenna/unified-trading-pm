@@ -115,8 +115,9 @@ bookmaker offers every market. The concern is valid; the original explanation be
    `ODDS_SNAPSHOT`/`odds_snapshot`, `ODDS_MOVEMENT`/`odds_movement`; plus `odds_horizon_bucket` coexisting with
    `odds_horizon_bucket_{15m,1h,4h,1d}`.
 5. **Coverage is not universal even where it IS meaningful** — no bookmaker prices every fixture or market, so a
-   bookmaker x odds cell is only expected where that book actually covers the event. There is no per-(venue,
-   fixture/market) expectation gate.
+   bookmaker x odds cell is only expected where that book actually covers the event. ~~There is no per-(venue,
+   fixture/market) expectation gate.~~ **⚠️ CORRECTION 2026-07-27**: FALSE — a per-(bookmaker,league) gate exists
+   (`sports_bookmaker_league_coverage.py`, wired `sentinels.py:321`, 606,772 rows; §4.5).
 
 ## Prod impact (measured 2026-07-20)
 
@@ -761,14 +762,10 @@ categories share cannot be reused as-is for SPORTS without a real design change:
   already-shipped `is_bookmaker_league_covered_exact` / `REQUESTED_ODDS_API_BOOKMAKERS` machinery from Part 1 as the
   data source rather than re-deriving expected bookmakers from scratch.
 
-### 4.5 Issue-doc corrections to file
+### 4.5 Issue-doc corrections to file — ✅ APPLIED 2026-07-27
 
-`unified-trading-pm/plans/active/issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md` needs a correction
-banner:
-
-- Its summary states _"There is no per-(venue, league) coverage declaration gating the expected universe."_ **FALSE** —
-  `unified-api-contracts/unified_api_contracts/registry/sports_bookmaker_league_coverage.py` exists, is wired at
-  `sentinels.py:321`, and is materialised on 606,772 prod rows. Strike the line.
+- Struck the false "no per-(venue, fixture/market) expectation gate" claim in bullet 5 above — a per-(bookmaker,league)
+  gate exists (`sports_bookmaker_league_coverage.py`, wired `sentinels.py:321`, 606,772 rows).
 - The reason-split figures `538,098 / 369,272` are wrong; the measured values are
   `EXPECTED_BOOKMAKER_NO_LEAGUE_COVERAGE 606,772 / EXPECTED_PAUSED_LEAGUE 459,459 / SOURCE_RETURNED_ZERO 200,864 / VENUE_FETCH_FAILED 94,127 / blank 385,402`.
 

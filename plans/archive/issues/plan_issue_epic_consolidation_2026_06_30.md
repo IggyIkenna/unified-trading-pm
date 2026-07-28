@@ -10,7 +10,7 @@ summary:
   fanned out to background agents in waves (PILOT first, then ≤6 parallel); agents propose dispositions which I write
   INTO this doc's ledger so the operator decides per-doc without blocking; synthesis + execution stay with the main
   loop. OPERATOR AGREED 2026-06-30 (pilot-first · ≤6 parallel · dispositions-in-doc · issues→plans · IS+MTDS-only)."
-status: open
+status: superseded
 nature: record
 asset_group: [meta]
 stage: [meta]
@@ -19,13 +19,13 @@ scope: [admin]
 tags: [consolidation, plan-hygiene, issue-triage, archival, ordering-map, ssot-audit]
 related:
   [
-    ./instruments_service_plan_reconciliation_2026_06_29.md,
-    ./mtds_plan_reconciliation_2026_06_29.md,
-    ../../PLAN_FORMAT.md,
+    /plans/active/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/active/issues/mtds_plan_reconciliation_2026_06_29.md,
+    /plans/PLAN_FORMAT.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-06-30
-last_updated: 2026-06-30
+last_updated: 2026-07-28
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
@@ -36,7 +36,53 @@ depends_on: []
 locked_by:
 locked_since: 2026-06-30
 resolved_by:
+superseded_by:
+  [
+    instruments_completion_tracker_2026_07_06,
+    mvp_scope_catalogue_tagging_2026_06_08,
+    infra_ops_residual_migration_verification_2026_07_24,
+    master_data_canonicalisation_migration_catalogue_2026_06_07,
+    cross_cutting_manifest_canonicalisation_findings_2026_07_11,
+    deribit_options_chain_af_g4_blocker_2026_07_03,
+    cross_cutting_consolidated_closeout_2026_07_25,
+    cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26,
+    tradfi_consolidated_closeout_2026_07_18,
+    data_completion_tradfi_2026_07_15,
+  ]
 ---
+
+> **🟦 FORKED + ARCHIVED 2026-07-28** (per `june_2026_vintage_audit_findings_2026_07_27.md` §3). This doc's own
+> execution already ran 2026-06-30/07-01 (see Progress Log below — 12 docs archived, 1 merged, 14 slimmed). What
+> remained open was the §7 operator-decision queue; each item's residual work was confirmed forked verbatim into a live
+> successor (spot-checked 2026-07-28, content present in each target, not just a name-match):
+>
+> - **D1** (v10→v12 MVP-version drift) → `/plans/active/instruments_completion_tracker_2026_07_06.md` +
+>   `/plans/active/mvp_scope_catalogue_tagging_2026_06_08.md`.
+> - **TradFi-G4-OOM** (migration-VM restart + the downstream `--apply` gates it blocks) →
+>   `/plans/active/infra_ops_residual_migration_verification_2026_07_24.md` +
+>   `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (OOM content confirmed at its "G4
+>   apply run 2026-06-29 — TradFi BLOCKED (OOM-killed migration)" section) +
+>   `/plans/active/issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`.
+> - **D3** (Deribit `options_chain` "G1 complete" false-positive) →
+>   `/plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` (confirmed: same af=10,114/captured=1
+>   G4-gate-blocker finding as this doc's §6 A18/C5).
+> - **M-C7** (warm-GCS-parts live-persistence build) →
+>   `/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` +
+>   `/plans/active/cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`.
+> - **altdata** (asset_group decision) → `/plans/active/tradfi_consolidated_closeout_2026_07_18.md` (confirmed at its
+>   `[OPERATOR-DECISION] altdata home` item) + `/plans/active/data_completion_tradfi_2026_07_15.md`.
+>
+> **Tardis historical billing (775.9k cefi cells, §7 item 4 / A2.3)** — the ONE item this doc's own audit trail left
+> unverified: the billing gate was **LIFTED 2026-07-12** (operator ruling, finding 228 —
+> `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2; also recorded live in
+> `/plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s "MTDS run for all cefi/Tardis venues" `[ ]` todo
+> and `/plans/active/data_completion_to_100_all_ag_2026_06_21.md`'s termination criteria, "No exclusions remain") and
+> **reconfirmed CLEARED again 2026-07-27** (interactive operator-gate session,
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED general correction, items #3/#12/#25). Not
+> credential-gated as of this archival — the 1.72M-cell Tardis backfill is in-scope/dispatchable, tracked forward via
+> the two docs above.
+>
+> No open scope is lost by this archival — every §7 queue item now has a live home.
 
 # Plan / Issue / Epic Consolidation (2026-06-30)
 

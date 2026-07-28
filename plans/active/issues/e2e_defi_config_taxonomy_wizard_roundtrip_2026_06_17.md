@@ -14,7 +14,7 @@ stage: [meta]
 repos: [e2e-testing, strategy-service, unified-api-contracts, unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [defi, strategy, e2e, ui, uac, validation, verification]
-related: [plans/active/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md]
+related: [/plans/archive/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md]
 created: 2026-06-17
 parent_epic: strategy_master
 priority: P2

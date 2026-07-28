@@ -34,8 +34,23 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
+
+> **🟡 CORRECTION (2026-07-27)**: this doc's core premise — "7 branches left in place" — is now factually false.
+> Independently re-verified fresh via `git ls-remote --heads origin 'tab/rootm/*'` across all 6 named repos
+> (agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts,
+> unified-trading-library): **zero matches in every repo** — the branches no longer exist anywhere, matching the
+> 2026-07-26 GitHub-branches-API finding already recorded in
+> `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s todo ("Read-only: is each of the 7 rootm commit-sets'
+> functionality on LDR today?", still open as of 2026-07-27). **Disposition is ALREADY RESOLVED** — this is not an open
+> A/B/C question: `/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` #23 recorded **option A**
+> (status: resolved, 2026-07-26) — "Treat as most-likely-superseded, run batch1 todo 9's read-only presence-check,
+> archive if all present" — and that presence-check is already correctly scoped as the batch1 todo above (with explicit
+> no-push/no-cherry-pick/no-delete guardrails). **Do NOT archive this doc yet**: per its own instruction below, archival
+> waits until `/plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` writes a dated verdict onto this
+> doc — that finalize plan currently only lists the 7-row rootm table as something still to verify (line 61), the batch1
+> presence-check todo itself has not executed yet (still `- [ ]`), so no verdict exists here yet.
 
 ## What I found
 

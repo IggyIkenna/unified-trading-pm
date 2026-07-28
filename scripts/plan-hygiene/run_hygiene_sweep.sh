@@ -245,6 +245,14 @@ else
 fi
 
 echo ""
+echo "--- Domain index regenerator (plans/active/INDEX.md) ---"
+if [ -n "$NO_REGEN" ]; then
+  echo "  ⏭  skipped (--no-regen)"
+else
+  cd "$PM_DIR" && python3 scripts/plans/regenerate_active_plan_index.py 2>&1 | tail -5 || echo "⚠️ regenerator failed"
+fi
+
+echo ""
 echo "========================================"
 echo " Hard failures: $HARD_FAIL  |  Soft warnings: $SOFT_WARN"
 echo "========================================"

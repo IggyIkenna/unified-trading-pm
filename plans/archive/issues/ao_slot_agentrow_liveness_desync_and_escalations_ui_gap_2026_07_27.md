@@ -40,13 +40,17 @@ execution_scope: local-only
 estimate_class: infra
 drift_direction: advance-code
 depends_on: []
-resolved_by: slot-3 (interactive), agent-orchestrator@b94e585
+resolved_by:
+  slot-3 (interactive), agent-orchestrator@b94e585, @6f81da4 (escalation-card liveness join), @e901151 (real
+  resolved/unresolved verdict)
 locked_by:
 ---
 
-> **🟢 RESOLVED 2026-07-27** — fixed `_slot_to_view` to compute main/review liveness from `AgentRow`, not just `SlotRow`
-> (`agent-orchestrator@b94e585`); the escalations-UI gap and the two verified-non-bugs (review-agent stale snapshot,
-> slot 16 SlotRow-staleness artifact) are documented findings, not separate open work.
+> **🟢 RESOLVED 2026-07-27, extended 2026-07-28** — fixed `_slot_to_view` to compute main/review liveness from
+> `AgentRow`, not just `SlotRow` (`agent-orchestrator@b94e585`); shipped the Escalations panel (same commit); joined
+> escalation cards against the live agent registry to stop showing finished one-shot workers as still-dispatched
+> (`@6f81da4`); then gave the escalation queue a REAL resolved/unresolved/abandoned verdict end-to-end, superseding the
+> agent-liveness proxy (`@e901151`, see § Update 2026-07-28 below).
 
 # AO slot liveness desync (SlotRow vs AgentRow) + missing escalations UI
 
@@ -125,3 +129,55 @@ None open — both findings were fixed in the same session. No further action ne
 CPU-core recommendation acted on (resize) or wants the same fix pattern audited for other AO backend surfaces that might
 read `SlotRow` for a main/review slot (not checked beyond `_slot_to_view`, which is the only place `/api/state`'s
 `worker_alive` is computed).
+
+## Update 2026-07-28 — real terminal verdict, not just a liveness proxy
+
+Operator reported the shipped Escalations panel showed "dispatched to slot 10" for a card while the Fleet table already
+showed slot 10 on an unrelated task — a live contradiction. Root cause: `list_active_escalations()` keeps a `dispatched`
+row "active" for up to 2h post-dispatch regardless of whether the one-shot worker already finished (documented as
+intentional — "escalation workers are one-shot with no completion callback"). Fixed (`agent-orchestrator@6f81da4`) by
+joining each dispatched card against the live `/api/agents` registry (`agent_id == escalation_id` by construction,
+`server/escalation.py`'s own 1:1 join) so the card reads "working — slot N" only while genuinely live, else "slot N
+freed — worker no longer active."
+
+That fix was flagged to the operator as a **workaround, not the real fix** — process-liveness can't distinguish success
+from failure. Operator asked for the real fix under `/autonomous`. Investigation found the real mechanism **already
+existed and was already running**, just never exposed via the API:
+
+- `EscalationQueueRow` (`server/orm.py`) already has `resolved_at`/`resolution`/`reescalations` columns, with a
+  documented lifecycle `queued → dispatched → resolved | unresolved | abandoned`.
+- `verify_dispatched_escalations()` (`server/escalation.py`) — called every AutoSpawnLoop tick — polls each dispatched
+  wall's REAL terminal signal (PR merged/closed, or the repo's `quality-gates-v2` going green) via
+  `_poll_wall_resolution`, and writes a genuine verdict via `_mark_resolved` (`resolution` e.g. `"qg_v2_green"` /
+  `"pr_merged"`) or `_mark_unresolved_and_maybe_reescalate` (`"still_red_past_deadline"`, capped re-escalation), each
+  with Slack bookends. This is materially better than a worker-liveness proxy — it answers "did the CI failure actually
+  get fixed," not "is the process still running."
+- The only real gap: `list_active_escalations()` (backing `GET /api/escalations/active`, the dashboard's only read path)
+  filtered to `queued`/`dispatched-within-2h` only and never returned `resolved_at`/`resolution`, or any terminal-status
+  row at all — so this whole working mechanism was invisible to any dashboard consumer. My earlier characterization to
+  the operator ("no completion callback... would need a bigger backend change") was **wrong on the backend half** — the
+  backend piece already existed; only the API surface + UI were missing.
+
+**Fix** (`agent-orchestrator@e901151`):
+
+- `list_active_escalations()` gains an opt-in `include_resolved_within_hours` param that additionally returns
+  recently-terminal rows with their real `resolved_at`/`resolution`, **without changing the default (no-arg) contract**
+  deployment-ui's Repos-CI board depends on — verified via a dedicated test
+  (`test_list_active_escalations_default_excludes_terminal_rows`).
+- `GET /api/escalations/active` exposes it as `?include_resolved_within_hours=` (FastAPI `Query`, default `None`).
+- 4 new tests in `tests/test_escalation.py` (there was zero prior coverage of `list_active_escalations`): default
+  excludes terminal rows, opt-in includes them with real verdicts, the recency window is respected (an old resolved row
+  stays excluded even when opted in), and a still-open dispatched row reports `resolved_at`/`resolution` as `null`
+  rather than omitting the keys.
+- Dashboard: `EscalationView.status` extended to `resolved | unresolved | abandoned`; `api.escalations()` requests a 2h
+  window; `EscalationsPanel` now renders a real resolved (green, `var(--status-working)`) / unresolved (red,
+  `var(--status-stale)`) / abandoned (muted, `var(--status-idle)`) verdict + its timestamp, and distinguishes
+  "dispatched, worker finished, verdict pending" (still no live agent, but no terminal status yet — the watchdog hasn't
+  polled it since the worker exited) from a row still genuinely in-flight.
+
+**Evidence**: `agent-orchestrator@e901151`; full repo `quality-gates.sh` green (1813 server tests + 154 dashboard tests,
+`basedpyright`/`ruff`/`tsc`/`prettier` all clean); shipped via quickmerge to `live-defi-rollout`.
+
+**Follow-ups**: none open. Not checked (future audit candidate if the operator wants it): whether every non-dashboard
+consumer of `/api/escalations/active` (deployment-ui) would actually benefit from the same terminal-verdict surface, or
+whether it's deliberately scoped to only the pending/in-progress signal it already uses.

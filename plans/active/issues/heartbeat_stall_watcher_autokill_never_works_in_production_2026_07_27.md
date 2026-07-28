@@ -84,7 +84,16 @@ stale heartbeat sidecar alone, so the WARN-level `DP_VM_STALL` `log_event()` cal
 **The kill is not** — `_kill_stalled_vm()` (cli.py lines 418-436) needs the `vm_zombie_watchdog` module for its
 `compute_v1.InstancesClient()` + `_kill_vm()` helper, and that module is never present.
 
-### Root cause: `deployment-api/Dockerfile` only copies `scripts/` in the TEST stage
+### Root cause: `deployment-api/Dockerfile` never copied `deployment-service/scripts/` in EITHER stage
+
+**Correction to this doc's own first-pass diagnosis**: the original write-up assumed `api-dev`'s
+`COPY scripts/ ./scripts/` at least covered the test stage, leaving only production broken. That assumption was wrong —
+that line copies **deployment-api's own, unrelated `scripts/` directory** (its local audit/dev tools —
+`audit_running_but_invisible.py`, `census_manifest_data_type_2026_07_24.py`, etc.), not `deployment-service/scripts/`.
+Verified directly: `ls deployment-api/scripts/` has no `vm/` subdirectory at all, and nothing in `cloudbuild.yaml` /
+`buildspec.aws.yaml` ever vendors `deployment-service/scripts/` into deployment-api's own `scripts/` path. So
+`scripts/vm/vm_zombie_watchdog.py` was **never packaged into this image, in any stage, ever** — not a production-vs-test
+gap, a total one.
 
 ```dockerfile
 # production stage "api" (lines ~50-158) — this is what deployment-api:latest IS
@@ -95,7 +104,7 @@ CMD ["gunicorn", "deployment_api.main:app", ...]
 # Stage for quality gates (test-in-image)
 FROM api AS api-dev
 USER root
-COPY scripts/ ./scripts/        # <-- ONLY here, never in the "api" stage above
+COPY scripts/ ./scripts/        # <-- deployment-api's OWN unrelated scripts/, not deployment-service's
 COPY tests/ ./tests/
 ```
 
@@ -104,6 +113,8 @@ COPY tests/ ./tests/
 `--no-deps` wheel install only installs the `deployment_service/` PACKAGE, never the sibling top-level `scripts/`
 directory sitting next to it in that repo. So `scripts/vm/vm_zombie_watchdog.py` is **structurally absent** from
 `deployment-api:latest` — this is not "the image needs a rebuild", a rebuild changes nothing without a Dockerfile edit.
+
+The SAME gap gates the entire Layer-0 recovery-actuator family too — see "RelaunchStalledVm root cause" below.
 
 ### Confirmed via the Cloud Scheduler + Cloud Run Job execution history (not inferred)
 
@@ -120,7 +131,7 @@ While investigating the migration VM (`canonical-migration-cefi-content-apply-05
 hours (1033 minutes)** with the identical `auto-kill: vm_zombie_watchdog unavailable` failure on EVERY 5-minute check
 across that entire window. Nobody had noticed. This is a fleet-wide gap, not a migration-specific one.
 
-### A second, independent broken safety net
+### A second, independent broken safety net — root-caused + FIXED (`deployment-service@9d0ee9e`)
 
 Every single one of these sweeps ALSO logged:
 
@@ -128,12 +139,43 @@ Every single one of these sweeps ALSO logged:
 2026-07-27 16:21:17,824 WARNING dispatch: repository_dispatch HTTP 422 (best-effort): HTTP Error 422: Unprocessable Entity
 ```
 
-The fast-spawn dispatch (meant to hand a stuck-VM finding off to an autonomous worker when the in-band actuator can't
-run) is failing on every attempt too — **not investigated further this session** (out of scope for the immediate
-incident response), but it means the fallback path that's supposed to catch exactly this "actuator degraded" case is
-ALSO not functioning. Whether `RelaunchStalledVm`'s relaunch actuator itself fired for either VM (independent of the raw
-`vm_killer` delete) was not confirmed either — no `relaunch_stalled_vm` log lines were found in the checked windows,
-which could mean its per-(vm-prefix,day) budget was already exhausted, or something else — undetermined.
+**Root cause (confirmed, not guessed)**: `escalation.py::_dispatch_to_orchestrator`'s `client_payload` carried 11
+top-level keys
+(`repo, pr_number, wall_type, context, authoring_slot, model, action, vm_name, relaunch_launcher, deployment_id, asset_group`)
+— GitHub's `repository_dispatch` endpoint caps `client_payload` at **10 top-level properties**. `git blame` traces the
+break to commit `1f769da9f` (2026-06-23, "LDR → staging Tier C auto-drain"), which added the 5 relaunch-binding fields
+on top of the pre-existing 6, pushing 6→11. The 422's actual GitHub-side response body was never logged (only
+`exc.code` + the generic exception string), so the exact reason was invisible in Cloud Logging until this investigation
+read the code directly.
+
+Those 5 fields were also confirmed **dead weight regardless of the 422**: `escalate-to-orchestrator.yml`'s actual
+`POST /api/escalate` body (in `unified-trading-pm`) only ever forwards
+`repo/pr_number/wall_type/context/ authoring_slot/model` — the 5 relaunch-specific fields never reached the orchestrator
+by any path, structured or otherwise. The same vm_name/launcher/deployment_id/asset_group binding already rides in the
+human-readable `context` string via the existing `relaunch_ctx` text, which the workflow DOES forward end-to-end.
+
+**Fixed**: dropped the 5 dead fields, bringing `client_payload` to 6 top-level keys (`deployment-service@9d0ee9e`, full
+`quality-gates.sh` green, 2898+ tests passed). Added a regression test asserting the key count stays ≤10, and corrected
+the existing test that had enshrined the buggy 11-key payload shape as expected behavior.
+
+### `RelaunchStalledVm` root cause — CONFIRMED, same structural gap as `vm_zombie_watchdog`, not budget exhaustion
+
+`RelaunchStalledVm` exists (`deployment-service/scripts/recovery/relaunch_stalled_vm.py:115`), budget-bounded to
+`_MAX_RELAUNCHES_PER_DAY=2` per (vm-prefix, day), and IS wired into `escalation.py::_recover_stalled_vm()` via
+`_DP_RECOVERY_ACTIONS[DP_VM_STALL]` — `route_finding()` runs it every 5-min sweep for both frozen VMs, before the kill
+attempt. **It never actually fired — confirmed to be the SAME Docker-packaging gap, not budget exhaustion**:
+`_recover_stalled_vm` gates on `_ACTUATORS_AVAILABLE` (`escalation.py:105-120`, probing
+`find_spec("scripts.recovery.relaunch_consolidator")`), which returns `UNAVAILABLE`/`actuators_not_in_runtime` before
+ever instantiating any actuator — because the ENTIRE `scripts/recovery/` package (17 files: `relaunch_consolidator`,
+`relaunch_stalled_vm`, `enter_safe_mode`, `restart_service`, etc.) was equally absent from the production image, for the
+identical reason `scripts/vm/vm_zombie_watchdog.py` was. Confirmed via `gcloud logging read` (project
+`central-element-323112`, 24h window): zero hits for `relaunch_stalled_vm`/`RelaunchStalledVm` anywhere, and no
+budget-exceeded CRITICAL log line either (a real budget-exhaustion path would emit one) — the actuator was simply never
+reachable, for either VM.
+
+**Fixed alongside the `vm_zombie_watchdog` Dockerfile fix** (see Todo 1 below) — `scripts/recovery/` is self-contained
+(only `unified_trading_library`/`unified_api_contracts` + stdlib, no cross-import on `scripts.vm`) and already carries
+its own `__init__.py`, so it was folded into the SAME `COPY` fix rather than needing a separate change.
 
 ## Immediate action taken this session (not a fix — a stopgap)
 
@@ -142,20 +184,61 @@ which could mean its per-(vm-prefix,day) budget was already exhausted, or someth
 - Manually deleted `mdps-backfill-cefi-20260726-165959` (NOT relaunched — outside this session's scope; a human or a
   different agent with MDPS backfill context needs to pick up whatever shard this VM was covering).
 
+### `mdps-backfill-cefi-20260726-165959` shard reconstruction (2026-07-27, follow-up investigation)
+
+Full forensic trail recovered from
+`gs://deployment-scripts-central-element-323112/vm-logs/ mdps-backfill-cefi-20260726-165959/` (`LAUNCH_PARAMS.json`,
+`PROGRESS.json`, `run.log`) plus Cloud Audit Logs — **no mutating action taken, read-only**:
+
+- **Shard**: `asset_group=cefi`, `data_type=trades`, `venues={HYPERLIQUID, LIGHTER-ZKSYNC, EXTENDED-STARKNET}`,
+  requested range `2024-01-01→2026-07-25`, `mode=full`, `force=false`.
+- **Progress before freeze**: genuine, verified writes through `2025-06-05` (522/937 days, 55.7% of the requested range)
+  — **415 days (2025-06-06→2026-07-25, 44.3%) remain an open gap**.
+- **Likely cause of freeze**: sustained memory pressure, not preemption. `run.log` shows 11× `rc=-9` (OOM-killed)
+  per-date subprocess failures and a `memory backpressure engaged at 85.7%` warning, RSS peaking ~23.8GB on an
+  `e2-standard-8` (32GB, no swap). No `PREEMPTED` marker was ever written and Cloud Audit Logs show no
+  `compute.instances.preempted` event for this instance — ruling out SPOT reclamation. This looks like a genuine
+  guest-level hang from memory exhaustion, most likely per-date (concurrency was unset/serial, yet still hit 85%+ on a
+  single date's candle aggregation across 3 venues × 7 timeframes) rather than a concurrency artifact.
+- **Timeline**: created `2026-07-26T16:59:5xZ`, last checkpoint `2026-07-26T23:07:10Z`, deleted
+  `2026-07-27T16:26:59Z`/`16:27:55Z` — ~17h20m frozen from last real progress to deletion.
+- **Recommendation** (not yet actioned — `[OPERATOR]` todo below): relaunch the remaining gap only
+  (`2025-06-06→2026-07-25`, same venues/data_type, `mode=full`) rather than the full original range — idempotent
+  skip-if-fresh would no-op the completed span anyway, but narrowing saves wall-clock. Given the repeated OOM kills on
+  this exact shape, consider a larger machine type (e.g. `e2-standard-16`) before relaunching — the memory pressure
+  looks per-date, not concurrency-driven, so throttling concurrency is unlikely to help as much as more RAM would.
+- **Independent gap flagged**: this failure mode (sustained memory pressure, no swap, no preemption, no exit code)
+  currently leaves the standard fleet monitor blind to "wedged but not exited" — it isn't a SPOT preemption the
+  auto-recovery matrix watches for, and it produced no `EXIT_STATUS`. This VM class has a forensic trail (thanks to the
+  `PROGRESS.json`/`LAUNCH_PARAMS.json` checkpoint contract) but no _liveness_ trail beyond the heartbeat log lines
+  themselves going quiet — worth a look independent of this doc's main Dockerfile-packaging thread.
+
 ## Todos
 
-- [ ] [CODE] P0. Fix `deployment-api/Dockerfile` so the PRODUCTION `api` stage (not just `api-dev`) carries whatever
-      `vm_zombie_watchdog.py` needs — either `COPY` the file explicitly into the production stage before the `--no-deps`
-      deployment-service install discards `/tmp/deployment-service`, or restructure so the kill helper doesn't depend on
-      an unpackaged sibling script. Requires an actual image rebuild + Cloud Run redeploy + verification (this is a
-      **production infrastructure change**, bigger blast radius than a pure-python fix — cite
-      `Evidence: cloudbuild=<id>` resolving SUCCESS per the workspace's runtime-verification HARD RULE before marking
-      done).
-- [ ] [CODE] P1. Investigate the `repository_dispatch HTTP 422` fast-spawn dispatch failure — a second, independent
-      broken safety net that should have caught the auto-kill degradation.
-- [ ] [CODE] P2. Confirm whether `RelaunchStalledVm`'s relaunch actuator (separate from the raw kill) actually fired for
-      either VM, and if not, why (budget exhaustion vs a separate bug) — no `relaunch_stalled_vm` log line was found for
-      either VM in the checked windows.
-- [ ] [OPERATOR] P1. Someone with MDPS backfill context needs to determine what shard
-      `mdps-backfill-cefi-20260726-165959` was covering and whether it needs relaunching — this session killed it as a
-      stopgap but has no context on its scope/importance.
+- [ ] [CODE] P0. **CODE SHIPPED 2026-07-27 — `deployment-api@fa54159`, DEPLOY PENDING.** Fixed
+      `deployment-api/Dockerfile` so the PRODUCTION `api` stage (not just `api-dev`) carries `vm_zombie_watchdog.py` AND
+      the whole `scripts/recovery/` actuator family — both `COPY`'d from the vendored `_deployment-service/`
+      build-context sibling, independent of the install step's temp-dir teardown. Added a 5-case Dockerfile-text
+      regression guard test (`test_dockerfile_zombie_watchdog_packaging.py`), full `quality-gates.sh` green. **Not yet
+      closeable**: deployment-api's `live-defi-rollout→main` promotion pipeline was independently blocked (293 commits
+      behind, promote PR #410's QG hit a since-fixed self-hosted-runner I/O-contention hang — see
+      `unified-trading-pm@c30ea10fc`, unrelated to this fix; PR #410 re-run in flight). Still needs
+      `Evidence: cloudbuild=<id>` resolving SUCCESS + a live confirmation the auto-kill/auto-relaunch actuators actually
+      fire, per the runtime-verification HARD RULE, before this flips to done.
+- [x] ✅ [CODE] P1. **DONE 2026-07-27 — `deployment-service@9d0ee9e`.** Root-caused the `repository_dispatch HTTP 422`:
+      `client_payload` carried 11 top-level keys, over GitHub's 10-key cap (introduced by commit `1f769da9f`,
+      2026-06-23). The 5 relaunch-specific fields were also confirmed dead weight — `escalate-to-orchestrator.yml` never
+      forwarded them to `/api/escalate` regardless. Dropped them (back to 6 keys); the same binding still reaches the
+      worker via the existing `context` text. Regression test added asserting the ≤10-key cap; full `quality-gates.sh`
+      green (2898+ tests).
+- [x] ✅ [CODE] P2. **DONE 2026-07-27.** Confirmed `RelaunchStalledVm` never fired for either VM because of the SAME
+      structural packaging gap as `vm_zombie_watchdog` (`scripts.recovery.relaunch_consolidator` also absent from the
+      image), NOT budget exhaustion — zero log hits for either mechanism, no budget-exceeded CRITICAL line either. Fixed
+      alongside Todo 1 (`deployment-api@fa54159` also COPYs the whole `scripts/recovery/` package).
+- [ ] [OPERATOR] P1. **Investigated 2026-07-27, recommendation given, relaunch NOT yet actioned.** Full shard
+      reconstructed from GCS checkpoint logs (see "mdps-backfill-cefi-20260726-165959 shard reconstruction" above):
+      `cefi/trades` for `HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET`, 55.7% complete through 2025-06-05, 415-day gap
+      remaining, likely OOM-driven freeze (not preemption). Recommends relaunching only the remaining
+      `2025-06-06→2026-07-25` range on a larger machine type (e.g. `e2-standard-16`) given the repeated OOM kills —
+      awaiting an operator decision on machine sizing before actually launching (real infra cost, outside this
+      investigation's scope to unilaterally action).

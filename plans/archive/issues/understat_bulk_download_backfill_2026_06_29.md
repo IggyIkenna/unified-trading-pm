@@ -11,7 +11,7 @@ summary: "The understat xG backfill ran date-by-date on a multi-day SPOT VM and 
   record_captured row atom). Nothing is written to GCS until the operator confirms the save path.
 
   "
-status: open
+status: resolved # (was: open) 2026-07-27: all 11/11 sec8 items done, closure note verified, archived
 nature: design
 asset_group:
   [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag: this
@@ -39,14 +39,25 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+  "2026-07-26 closure note (this doc's own Progress Log) -- fresh 605,368-row understat corpus re-verification (0
+  attempted_failed / 0 expected_unattempted / 0 duplicate groups) + final gap deployment-api@b04c082 (XG_SHOTS
+  SPORTS_DATA_TYPE_META registration); corroborated by archived
+  plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md; both re-verified 2026-07-27
+  /plan-vintage-audit"
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-locked_since: 2026-05-21
+locked_since:
 ---
 
 # Understat bulk-download backfill
+
+> **✅ ARCHIVED (archived 2026-07-27)** — all 11/11 §8 todos done, verified via this doc's own 2026-07-26 closure note:
+> a fresh 605,368-row understat corpus re-verification shows 0 attempted_failed / 0 expected_unattempted / 0 duplicate
+> `(date,league_id,data_type)` groups, and the final gap (`SPORTS_DATA_TYPE_META` registration for XG_SHOTS) shipped
+> `deployment-api@b04c082` (verified real via `git log`). Corroborated by the archived sibling
+> [`/plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md`](/plans/archive/2026_07/understat_local_backfill_completion_2026_07_06.md).
 
 > **Working agreement (operator, 2026-06-29):** write this doc first; then verify the download + save path locally in
 > slot-16; **do NOT write any data to GCS / touch the manifest until the operator confirms.** The running date-by-date

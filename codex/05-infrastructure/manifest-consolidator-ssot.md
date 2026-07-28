@@ -595,6 +595,33 @@ the tradfi tick `_index`, 2026-07-20 — dropped 686,005 `batch_massive` + 3,615
    missing `consolidator_content_write_at` fails CLOSED (merge, prune nothing), never a silent drop. SSOT for the
    finding: `plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`.
 
+### Pause-first applies to ANY canonical read-modify-write, not only row removal (2026-07-15 near-miss)
+
+The 6-step recipe above was written for row _removal_, but the PAUSE-first requirement (step 1) is not specific to
+deletion — it applies to **any** direct read-modify-write against `_index/availability_index.parquet`, including
+in-place `capture_status` **reclassification** (floor-clip scripts, rule-based reclass scripts) that change row _values_
+without changing row _count_. A reclass run races the consolidator cron exactly the same way a removal does: both are a
+read-current-state → mutate → write-back against the same canonical object the cron also reads and rewrites on its own
+tick.
+
+**Near-miss precedent (2026-07-15, tradfi floor-clip)**: the 2026-07-15 run of
+`instruments-service/scripts/correct_tradfi_universe_floor_clip_and_vix_index.py --apply` (reclassifying 18,980 rows —
+8,959 `mbp_10` Databento-floor + 10,021 derived `ohlcv_15m` — from `expected_unattempted` to `empty_confirmed`) did a
+direct canonical-index read-modify-write **without pausing** the tradfi consolidator cron
+(`uts-prod-manifest-consolidator-market-data-tradfi-cron`). A post-hoc Cloud Logging phase-by-phase trace confirmed no
+lost-update actually occurred — the one consolidator cycle that ran concurrently wrote its (no-net-change) canonical
+version at 00:48:49Z, _before_ the script's read completed at ~00:49:02Z, and the next cycle didn't start until
+00:49:35Z, _after_ the script's write completed at 00:49:28Z. **This was race-free by observed timing luck, not by an
+enforced pause** — the same interleaving on a busier tick (or a longer-running reclass script) would have raced. Full
+account: `plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (2026-07-15 Progress Log entry,
+"Caveat (transparency, not swept under the rug)").
+
+**Rule**: treat rule-based/additive reclassification scripts the same as a row-removal script for step 1 — PAUSE the
+bucket's consolidator cron first, run the reclass, then RESUME (steps 1 and 6 of the recipe above), regardless of how
+additive or purely rule-derived the reclass logic is. "The script only changes `capture_status` values, it doesn't touch
+row count" is not a reason to skip the pause — the race is on the read-modify-write, not on whether rows are added or
+removed.
+
 ## Composes with
 
 - CLAUDE.md § "Manifest + Honest Absence" — every row in canonical OR per_vm shard is either `captured` /

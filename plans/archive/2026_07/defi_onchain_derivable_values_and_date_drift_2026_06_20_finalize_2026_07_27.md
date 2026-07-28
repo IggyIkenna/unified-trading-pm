@@ -9,7 +9,7 @@ summary: >-
   closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
   reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
   companion gated finalize plan).
-status: draft
+status: complete # (was: draft) 2026-07-27: gate satisfied (parent 14/14 done), reconciled + parent archived
 nature: process
 asset_group: [cefi, defi]
 stage: [meta]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
+    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -48,15 +48,21 @@ drift_direction: advance-code
 
 # defi_onchain_derivable_values_and_date_drift_2026_06_20 — finalize
 
-> **STATUS: `draft` — NOT dispatched.** Flips to `active` only once the gated plan's todos are done (or on explicit
-> operator direction to start reconciling early). Machine-gated via `depends_on` + `gate_on_depends: true`.
+> **STATUS: `complete`** — gate was already satisfied when this finalize plan was reconciled: the parent's own 14/14
+> todos were all `[x]` with real shipped citations at the time of the 2026-07-27 `/plan-vintage-audit` June-2026 sweep.
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `defi_onchain_derivable_values_and_date_drift_2026_06_20.md`'s checkboxes** against
+- [x] ✅ [REVIEW] P2. **Reconcile `defi_onchain_derivable_values_and_date_drift_2026_06_20.md`'s checkboxes** against
       whatever shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was
       missed, then run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check,
       update any CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the
       plan is fully closed. If real work remains after the AO-dispatched todos land, leave
       `defi_onchain_derivable_values_and_date_drift_2026_06_20.md` active (do not force-archive) and note what's still
-      open here instead.
+      open here instead. -- **DONE 2026-07-27**. All 14 todos were already `[x]` with real citations, independently
+      re-verified this session: `unified-api-contracts@4a29261e` (Pyth Hermes facade + jitoSOL clip) and
+      `instruments-service@8b02b647` (LENDING_PROTOCOL_DEPLOY_DATES dead-entry removal) both confirmed via `git log`/
+      `git show` to exist and match their described content. No residual work found. Archived the parent doc via the
+      standard 6-step ritual (banner citing this reconciliation, `status: complete`, codex-alignment check — no new
+      durable contract resulted beyond what's already cited inline, corpus referrers fixed, `locked_by` cleared) --
+      `plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`.

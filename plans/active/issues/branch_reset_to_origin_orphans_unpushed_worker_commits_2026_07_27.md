@@ -112,6 +112,91 @@ worktree reflog or re-derive from this doc.)
       strict-quickmerge pre-push hook. This enhancement is a dependency of the sports derived-features residue purge
       todo (the follow-up purge reads the stable census-manifest GCS path this commit writes).
 
+### Second wave — CONFIRMED RECURRENCE at the ~23:50Z reap (main agt-4d8de7, 2026-07-27T23:54Z)
+
+The bug fired again on two more slots, and this time main directly CONFIRMED the orphaning mechanism from the live
+reflog (not inferred) — proof the runtime respawn / orphan-wip-inheritance path does NOT recover a committed-ahead code
+commit; it resets the branch to origin and drops it:
+
+- **slot-13 `d1c1ad8a`** (features-service CODE,
+  `fix(delta_one): wire per-venue accepted-quote extension into universe filter` + test) — **CONFIRMED ORPHANED.**
+  `git merge-base --is-ancestor d1c1ad8a origin/live-defi-rollout` → NO (not on origin). Worktree HEAD is now `a9429cba`
+  (== origin). Reflog: `d1c1ad8a HEAD@{2}: commit …` → `a9429cba HEAD@{1}: branch: Reset to origin/live-defi-rollout` →
+  drops it. DISTINCT, later commit from the `207afd62` above (slot-13 did multiple pieces of work across the session,
+  each orphaned in a successive reap). Backstop patch:
+  `.orch-orphan-commits-recovery/slot13_d1c1ad8a_features-service.patch`.
+- **slot-11 `ffc02a8c`** (market-tick-data-service CODE,
+  `fix(sports): add consecutive-non-422-failure counter to odds_api_adapter fetch loop` +
+  `test_odds_api_consecutive_failures.py`) — **RECLASSIFIED 2026-07-28T00:29Z (main): NOT a dead orphan — LIVE-owned
+  blocked-WIP, PROTECTED.** When msg 2450 flagged it the slot read dead; it has since RESPAWNED. Re-verified
+  `/api/state`: slot-11 is flapping/booting (`tmux_alive=true`, `tmux_session=orch-slot-11`, `status=working`,
+  `phase=pre_boot`, last_msg "waiting on repo-blocker RB-6ee2583c"). `ffc02a8c` is still `ahead=1` (NOT reset/orphaned;
+  `merge-base` deferred because touching a live slot's worktree is banned). The live worker committed locally and is
+  holding the push until RB-6ee2583c clears — legit blocked-WIP, not data loss. Liveness gate → PROTECT, do NOT recover.
+  Backstop `.orch-orphan-commits-recovery/slot11_ffc02a8c_market-tick-data-service.patch` RETAINED only as a safety net
+  should the in-flight respawn's branch-reset orphan it (third-wave PM-docs case proves that risk is real); it becomes a
+  recovery candidate ONLY if a future reflog confirms `branch: Reset` dropped it. Corrected per review msg 2459.
+
+### Fourth wave — the ROOT-CAUSE FIX itself is now orphan-at-risk on dead slot-5 (main agt-4d8de7, 2026-07-28T00:33Z)
+
+The runtime/operator had already dispatched a task to fix this very bug — **`slot_cron_ff_pull_toctou_reset_race-001`**
+(the TOCTOU reset race in the ff-pull cron is the confirmed mechanism). slot-5 took it and COMPLETED the fix:
+
+- **slot-5 `3becc9ede`** (unified-trading-pm CODE, `scripts/dev/slot-cron-ff-pull.sh`,
+  `fix(ci): harden slot-cron-ff-pull.sh adopt-rebase against a check-then-act HEAD-moved window`, +39/-6). Slot-5 is
+  **confirmed DEAD** (worker_alive=false, tmux_alive=false, tmux_session=null, last_ping 00:25:52Z, status=idle). Commit
+  is still `ahead=1`, NOT yet orphaned (reflog HEAD@{0}=the commit over clean ff-pulls; no `branch: Reset` yet) — but a
+  respawn would orphan it via the same bug it fixes. Backstop:
+  `.orch-orphan-commits-recovery/slot5_3becc9ede_pm-scripts-ff-pull-hardening.patch`. **This is the highest-priority
+  recovery of the set: landing it stops the bleeding.** CODE → main cannot quickmerge unilaterally; escalated with
+  elevated priority.
+  - **UPDATE 00:41Z:** slot-5 respawned and its ff-pull cron did the CORRECT thing this cycle — a
+    `pull --rebase --autostash` cleanly REBASED the commit onto new origin tip `7f0c400ec`, so the fix now lives at
+    **`28ee61192`** (identical +39/-6 content; `3becc9ede` is its pre-rebase sha, NOT orphaned — rebase preserved it).
+    Slot-5 is now flapping (`tmux_alive=true`, `worker_alive=false`). Recovery TARGET is the current ahead HEAD of
+    `.tabs/5/unified-trading-pm` (`28ee61192` as of now) or the saved backstop patch (content-identical) — do NOT chase
+    the stale `3becc9ede` sha. Data point: the TOCTOU reset race is INTERMITTENT (it rebased cleanly here,
+    reset-orphaned the PM docs earlier) — consistent with a check-then-act window that only sometimes loses the race.
+
+- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **PRIORITY ORDER: (1) slot-5 `3becc9ede`** (the
+      root-cause ff-pull TOCTOU fix — land this FIRST to stop new orphaning), then **(2) slot-13 `d1c1ad8a`**
+      (features-service). Do NOT recover slot-11 `ffc02a8c` while slot-11 is alive (reclassified LIVE-owned blocked-WIP
+      above). For each: cherry-pick from `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
+      `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). All clean + complete
+      (review-verified where noted). Code MUST go through quickmerge (QG + provenance trailer).
+
+> **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
+> so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan
+> (`assigned_vm: planning`), (b) a worker is explicitly routed to them, or (c) main is authorized to run the quickmerge
+> recovery directly. Content is not lost yet (backstop patches host-local on `ip-172-31-5-118` + 90d reflog), but this
+> is why the first-wave `207afd62` todo has also sat unrecovered. Escalated to operator for routing.
+
+### Third wave — the branch-reset dropped the runtime's OWN orphan-wip inheritance commit (main agt-4d8de7, 2026-07-28T00:25Z)
+
+The most damning evidence yet: on slot-11's `unified-trading-pm` worktree, the runtime's pre-spawn dirty-state gate
+correctly committed the dead predecessor's dirty WIP as `65c5b0a69`
+(`chore(orphan-wip): inherited WIP from predecessor on slot 11 at 2026-07-28T00:18:03Z`,
+`DirtyStateResolution.COMMIT_AND_PUSH`) — and then, within the SAME spawn, a `branch: Reset to origin/live-defi-rollout`
+orphaned that very commit before it was pushed. Reflog: `65c5b0a69 HEAD@{3}: commit …` →
+`fe7b19392 HEAD@{2}: branch: Reset to origin/live-defi-rollout` → FF-merge to `cd5c0bde1`.
+`merge-base --is-ancestor 65c5b0a69 origin/live-defi-rollout` → NO. This proves the COMMIT_AND_PUSH resolution's
+"…AND_PUSH" half never fires (or is undone by the reset) — the gate commits, the reset drops it, and nothing reaches
+origin. **The orphan-wip mechanism is not a safety net; it is itself a victim of the reset.**
+
+Payload was three DOCS (all main-recoverable): the new issue doc `defi_mev_events_pagination_gap_2026_07_28.md` (+112,
+**untracked in the original WIP → zero reflog recovery for the source file; would have been permanently lost**), its
+`[PM] P1` todo flip in `defi_satellite_ao_dispatch_batch1_2026_07_25.md`, and the archived-source xref update. A
+coherent complete unit (a worker's finished `[PM] P1`).
+
+- [x] slot-11 `65c5b0a69` (PM DOCS) — RECOVERED by main via docs carve-out (applied backstop patch onto origin tip,
+      pushed `unified-trading-pm@9237aee43`). Backstop:
+      `.orch-orphan-commits-recovery/slot11_65c5b0a69_orphan-wip-pm-docs.patch`.
+
+**Root-cause note this adds:** whatever emits the reset runs AFTER the orphan-wip commit within the same spawn sequence
+— so the fix target is narrowed: the spawn/re-init path itself resets the branch to origin immediately after its own
+dirty-commit, discarding it. The dirty-state gate and the reset are the same code path's two halves and they contradict
+each other.
+
 ## Investigation (root cause)
 
 - [ ] [OPERATOR] P1. Identify WHAT emits `branch: Reset to origin/live-defi-rollout` on a worktree that carries an

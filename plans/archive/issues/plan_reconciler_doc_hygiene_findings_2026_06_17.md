@@ -6,7 +6,7 @@ title:
 summary:
   Filed by the daily plan-reconciler (dispatch `agt-3591cc`). Both are reader-verifiable, chronic doc/index drifts
   surfaced deterministically by the hygiene sweep + health digest. Neither is mechanic...
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -24,13 +24,22 @@ source:
     "scripts/plan-hygiene/build_health_digest.sh — INDEX.md ↔ active-plans drift: 99",
   ]
 assigned_vm: planning
-resolved_by:
-locked_by: live-defi-rollout
+resolved_by: unified-trading-pm this commit (2026-07-27)
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
+
+> **🟢 ARCHIVED 2026-07-27.** Both findings resolved: Finding 1 (stale codex pnl-attribution pointer) was already fixed
+> 2026-06-21 (8 referrers, verified — re-checked live 2026-07-27, 0 stale `operational/pnl-attribution.md` refs remain
+> anywhere including inside the now-archived `utl_uac_reuse_consolidation_remediation_2026_06_10.md`). Finding 2
+> (abandoned `plans/active/INDEX.md`) resolved via operator decision
+> (`plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#26): KEEP + AUTO-GENERATE — built
+> `scripts/plans/regenerate_active_plan_index.py`, wired into `scripts/plan-hygiene/run_hygiene_sweep.sh`, regenerated
+> live (263 plans / 10 domains / 0 uncategorized, idempotent). Also recorded against the duplicate parked-decision entry
+> at `issues/infra_plan_reconcile_parked_decisions_2026_07_26.md` §3. `unified-trading-pm` this commit.
 
 # Plan-reconciler doc-hygiene findings (2026-06-17)
 
@@ -125,9 +134,21 @@ Operator call — either (a) formally deprecate `plans/active/INDEX.md`: banner 
 inventory and drop it from the digest's drift check; or (b) add a regenerator and reconcile it. (a) looks correct given
 the auto-inventory already serves the canonical-index role.
 
-- [ ] [DOCS] P3. Decide + execute: deprecate `plans/active/INDEX.md` (superseded by the auto-regenerated inventory now
-      hosted at `/plans/active/active_plan_inventory_dashboard_2026_07_24.md` — target corrected 2026-07-26, was "the
-      master-plan AUTO-INVENTORY", whose host `master_to_live_defi_2026_05_23.md` archived 2026-07-24) OR add a
+- [x] ✅ [DOCS] P3. Decide + execute: deprecate `plans/active/INDEX.md` (superseded by the auto-regenerated inventory
+      now hosted at `/plans/active/active_plan_inventory_dashboard_2026_07_24.md` — target corrected 2026-07-26, was
+      "the master-plan AUTO-INVENTORY", whose host `master_to_live_defi_2026_05_23.md` archived 2026-07-24) OR add a
       regenerator + reconcile the drift (re-derive the live count via
       `bash scripts/plan-hygiene/build_health_digest.sh`; 226 as of 2026-07-26, was 99 at filing). Currently
-      hand-maintained, no regen script. Provenance: plan-reconciler agt-3591cc 2026-06-17.
+      hand-maintained, no regen script. Provenance: plan-reconciler agt-3591cc 2026-06-17. — **DECIDED + DONE
+      2026-07-27** (operator decision, `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#26): KEEP +
+      AUTO-GENERATE, not deprecate — matches `infra_plan_reconcile_parked_decisions_2026_07_26.md` §3 option B's own
+      reasoning (the grouped/by-theme view the plain checkbox-progress table doesn't carry). Built
+      `scripts/plans/regenerate_active_plan_index.py` (mirrors `regenerate_active_plan_inventory.py`): reads every
+      `plans/active/*.md` plan's own `asset_group:`/`summary:` frontmatter and regenerates a domain-grouped
+      `<!-- AUTO-INDEX-START/END -->` block in `plans/active/INDEX.md`; wired into
+      `scripts/plan-hygiene/run_hygiene_sweep.sh` right after the inventory regenerator. Regenerated live 2026-07-27:
+      263 plans across all 10 `plans/PLAN_FORMAT.md`-declared `asset_group` domains, 0 uncategorized, confirmed
+      idempotent on re-run (second run: "already fresh"). Drift is now structurally impossible — the block is
+      regenerated from source frontmatter, never hand-edited — rather than a one-time reconciliation that would drift
+      again. `cursor-configs/CLAUDE.md`'s "Doc retrieval" section updated to point agents at INDEX.md for a domain scan.
+      `unified-trading-pm` this commit.

@@ -345,7 +345,7 @@ def reconcile_day(paper: RunManifest, batch: RunManifest, live: RunManifest | No
 > not a cross-service contract — the cross-service resolution-workflow contract already lives in
 > `unified-internal-contracts` (`ReconciliationAgeFields` / `ReconciliationDimension`). Do not re-flag the stage-grain
 > schemas as a UAC-migration candidate in a future reuse audit. SSOT:
-> `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
+> `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § Verified NON-findings.
 
 ### 4.6 Per-archetype canonical data source (P11.11) — read the real corpus, never fake
 

@@ -59,11 +59,28 @@ _DEFERRED_RE = re.compile(r"\*\*DEFERRED\*\*|\[DEFERRED\]|\bDEFERRED-[A-Z][A-Z0-
 # annotation while reporting a Phase-1 finding — the checker demanded a migration
 # banner for a doc with no actual deferred work of its own.
 _QUOTE_CHARS = "\"'“‘"  # noqa: RUF001 — curly quote variants are real prose punctuation, not lookalike typos
+# `DEFERRED-BY-DESIGN` is a CLOSED, PERMANENT ruling ("this stays this way on purpose,
+# no timeline, nothing to track") — unlike DEFERRED-OPERATOR-DECISION/DEFERRED-BY-HEADROOM
+# (which imply a pending question with a real future resolution to point a banner at),
+# BY-DESIGN has no successor to migrate to: requiring a "## Deferred work — migrated
+# to:" banner for it is a category error, not a real gap. Confirmed 2026-07-27:
+# june_2026_vintage_audit_findings_2026_07_27.md's "e2e_defi_config_taxonomy D1 —
+# confirmed stays DEFERRED-BY-DESIGN, no timeline" is a live, first-party ruling (not a
+# quoted reference), so the quote-exclusion above doesn't apply, but it's the same class
+# of false positive as the quoted case: a marker the rule wasn't meant to catch.
+_DEFERRED_BY_DESIGN_RE = re.compile(r"\bDEFERRED-BY-DESIGN\b")
 
 
 def _has_live_deferred_marker(text: str) -> bool:
-    """True if `_DEFERRED_RE` matches a token NOT immediately preceded by an opening quote."""
-    return any(m.start() == 0 or text[m.start() - 1] not in _QUOTE_CHARS for m in _DEFERRED_RE.finditer(text))
+    """True if `_DEFERRED_RE` matches a token NOT immediately preceded by an opening quote
+    and not itself the closed `DEFERRED-BY-DESIGN` qualifier (see comment above)."""
+    for m in _DEFERRED_RE.finditer(text):
+        if m.start() != 0 and text[m.start() - 1] in _QUOTE_CHARS:
+            continue
+        if _DEFERRED_BY_DESIGN_RE.fullmatch(m.group()):
+            continue
+        return True
+    return False
 
 
 _BANNER_RE = re.compile(r"##\s+Deferred work\s+—\s+migrated to", re.IGNORECASE)

@@ -160,7 +160,7 @@ The writer contract (PricingLedger row shape) is identical across backends; sele
 is no UTL/UAC equivalent to reuse**: UAC ships only `DeltaStrike`-family option-identity/schema types (option metadata,
 not pricing math), and UTL carries no options-pricing kernel. The `Decimal`-only vanilla-European BSM implementation
 here is the correct, sole home for this compute; do not re-flag it in a future reuse audit. SSOT:
-`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
+`plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § Verified NON-findings.
 
 ---
 

@@ -331,8 +331,8 @@ drift_direction: advance-code
   - [`plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md`](/plans/archive/issues/migration_orphan_sweep_performance_decay_2026_07_22.md)
     - 7. **[CODE] P3.** Genuinely stream `_load_manifested_cells()`'s parquet read instead of relying on a bigger
       machine type.
-  - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-    (status: draft) — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+    — ARCHIVED 2026-07-27, 0 open todos (all 9 mini-plans confirmed archived/complete).
   - [`plans/active/data_pipeline_check_mdps_features_2026_07_20.md`](/plans/active/data_pipeline_check_mdps_features_2026_07_20.md)
     (status: active — 28 open; 22 P0/P1 listed, 6 P2 capped)
     - 8. **[DATA] P0.** RUN + VALIDATE `/data-pipeline-check-mdps` e2e across all MVP candle shards.
@@ -438,12 +438,11 @@ drift_direction: advance-code
 - **Cross-AG-touching (cefi + defi/prediction, referenced here for the cefi slice)** — primary tracking:
   [`/plans/active/defi_consolidated_closeout_2026_07_18.md`](/plans/active/defi_consolidated_closeout_2026_07_18.md) /
   [`/plans/active/prediction_consolidated_closeout_2026_07_18.md`](/plans/active/prediction_consolidated_closeout_2026_07_18.md):
-  - [`plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/active/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
-    (status: active)
-    - **[HUMAN-AGENT] P1.** Pyth Hermes coverage SSOT + jitoSOL pre-2023-10 backtest scope — operator go/no-go on the
-      backtest window.
-    - **[SCRIPT] P1.** Latent Bug-class-3 local fallback drift sweep — any local fallback overriding a UAC value without
-      a comment.
+  - [`defi_onchain_derivable_values_and_date_drift_2026_06_20.md`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md)
+    — ✅ ARCHIVED 2026-07-27, all 14 todos done: Pyth Hermes/jitoSOL resolved as **clip**
+    (`unified-api-contracts@4a29261e`), Latent Bug-class-3 local-fallback sweep shipped (`instruments-service@8b02b647`;
+    broader sweep beyond that concrete precedent filed separately at
+    `/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`).
   - [`plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md`](/plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md)
     (status: active)
     - **[VERIFY] P0.** Phase-D gate — full Stage-4 historical carry tracer over 2022-01-01..today across all 7

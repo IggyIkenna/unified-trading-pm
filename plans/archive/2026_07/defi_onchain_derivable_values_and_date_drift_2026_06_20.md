@@ -7,7 +7,7 @@ summary: >-
   to an SSOT script; (B) governance params → time-versioned parquet; (C) real-time reads stay live. Ships
   derive_protocol_launch_dates.py + a pre-commit CI citation gate so new hardcoded addresses/block-numbers cannot land
   without an on-chain citation. Precedent: AAVE_V3 launch date was 49 days wrong.
-status: active
+status: complete # (was: active) 2026-07-27: 14/14 done, archived
 nature: process
 asset_group: [cefi, defi]
 stage: [meta]
@@ -28,9 +28,9 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-06-27
-locked_by: live-defi-rollout
-locked_since: 2026-06-20
+last_updated: 2026-07-27
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -38,6 +38,15 @@ assigned_role: data_engineering
 source:
 drift_direction: advance-code
 ---
+
+> **✅ ARCHIVED (archived 2026-07-27)** — all 14 todos done with real shipped citations, verified via
+> `defi_onchain_derivable_values_and_date_drift_2026_06_20_finalize_2026_07_27.md`'s reconciliation todo: Pyth
+> Hermes/jitoSOL residual (`unified-api-contracts@4a29261e`) and the Latent Bug-class-3 local-fallback sweep
+> (`instruments-service@8b02b647`), both independently re-confirmed real via `git log`/`git show` on 2026-07-27. Broader
+> local-fallback sweep beyond this doc's concrete precedent is a separate, already-filed follow-up:
+> [`/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md`](/plans/active/issues/defi_broader_local_fallback_vs_uac_sweep_2026_07_27.md).
+> Companion finalize plan (also archived):
+> [`/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20_finalize_2026_07_27.md`](/plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20_finalize_2026_07_27.md).
 
 > **Provenance**: extracted 2026-06-20 from the inline `defi_master` epic body (§§ "Hardcoded on-chain-derivable values
 > audit", migrated from archived `defi_eliminate_hardcoded_onchain_derivable_values_2026_05_08`, + "Fork-1 prep — UAC

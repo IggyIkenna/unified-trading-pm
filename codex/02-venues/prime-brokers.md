@@ -147,8 +147,8 @@ Internal children don't need separate credentials; meta's SOR handles downstream
 > TWS-protocol connect is attempted, one level below the "meta-level connection health" this doc's Monitoring section
 > describes. It is not a retry/backoff call (no `@with_retry` target — a plain connect either succeeds or raises
 > `OSError`) and there is no UTL/UAC health-probe primitive it should consolidate onto. Do not re-flag it in a future
-> reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified
-> NON-findings list).
+> reuse audit. SSOT: `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § Verified
+> NON-findings.
 
 ## Risk + kill switches
 

@@ -4,7 +4,7 @@ title: UTL/UAC reuse consolidation — kill local reimplementations, strongest-c
 summary:
   Kill local reimplementations of UTL/UAC utilities across all services and replace with the canonical
   strongest-combination merge.
-status: active
+status: complete # (was: active) 2026-07-27 archived — sole remaining scope folded into plans/epics/infrastructure_master.md § "Folded-in scope 2026-07-15"
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,9 +37,9 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-07-13
-locked_by: live-defi-rollout
-locked_since: 2026-06-10
+last_updated: 2026-07-27
+locked_by: # cleared 2026-07-27 — operator [unlock-plan] granted (june_2026_vintage_audit_findings_2026_07_27.md §5#34)
+locked_since:
 supersedes:
 superseded_by:
 depends_on:
@@ -50,6 +50,15 @@ drift_direction: advance-code
 
 # UTL/UAC Reuse Consolidation — Remediation
 
+> **🟢 ARCHIVED 2026-07-27.** All 9 phases' own todos are shipped + verified (24/25 checkboxes reconciled 2026-07-26,
+> slot-11, `infra_satellite_ao_dispatch_batch1-008` — each sha confirmed via `git show`); the 1 remaining box (Phase 8's
+> "remove the 5 Phase-0 banners + archive this tracker" closing action) was FOLDED OUT 2026-07-15 (plan-reconcile §6
+> operator ruling) to [`plans/epics/infrastructure_master.md`](/plans/epics/infrastructure_master.md) § "Folded-in scope
+> 2026-07-15" — that is the live home for the remaining banner-removal half of the action; archiving THIS tracker doc
+> (the other half) is done here. Operator granted `[unlock-plan]` 2026-07-27
+> (`plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#34, unified-trading-pm this commit). The epic itself
+> is never archived (`plans/epics/README.md`) — only this tracker doc moves.
+>
 > **🟢 SPLIT FOR AO DISPATCH (2026-07-13, operator-approved):** this tracker's remaining 38 open todos across 10 phases
 > exceeded the AO fleet's STRICT 10–20-todo-per-plan dispatch cap (`plans/active/task_template.md` §4), so each phase
 > was carved into its own small `assigned_vm: planning` plan (Phases 1,2,3,4,5,6,9 dispatch immediately as independent;

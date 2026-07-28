@@ -4,7 +4,7 @@ title: Fleet dep-infra blockers — aiohttp CVE-2026-34993 vs vcrpy deadlock + d
 summary:
   The aiohttp `<3.14` cap is LIFTED. **17 of 18 declaring repos bumped to `aiohttp>=3.14.1,<4.0.0`** + `vcrpy>=8.2.1`
   (canonical SSOT in `workspace-constraints.toml` + `canonical-dependency-manifest....
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -41,6 +41,16 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ ARCHIVED (archived 2026-07-27)** — RESOLVED banner below confirmed still accurate: `workspace-constraints.toml`
+> line 11 carries `aiohttp = "aiohttp>=3.14.1,<4.0.0"`. The sole remaining P2 scope (execution-service aioresponses
+> holdout, owned by `/plans/archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md`) is
+> now ALSO fully done — the operator's standing "do not refactor execution-service tests mid-active-development" gate
+> was lifted 2026-07-27 (`/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #18/19) and the
+> migration executed the same day: execution-service@`9ce159a7` (confirmed ancestor of `origin/live-defi-rollout`), 8
+> files migrated to adapter-boundary mocks, `aioresponses` dep removed, `override-dependencies` dropped, aiohttp→
+> 3.14.3, all 11 `--ignore-vuln` CVE entries removed fleet-wide, 179 tests green, QG green. Both this doc and its
+> successor are archived together in this pass. Per `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2.
 
 ## ✅ RESOLVED 2026-06-23 — aiohttp 3.14.1 shipped fleet-wide (vcrpy 8.2.1 unblock)
 

@@ -22,7 +22,7 @@ priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 locked_by: live-defi-rollout
 locked_since: 2026-06-08
 supersedes:
@@ -153,10 +153,29 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       ("Phase 2+; consumers MUST NOT read these stubs"); (2) **no consumer exists** — there is no
       features/strategy/model data-status coverage endpoint to filter (the `scope=mvp` filter is instruments-only), so
       populating typed rules now = dead config the Phase-2 consumer must reconcile; (3) **features membership is an
-      operator policy call** (which feature_groups go live) and (4) **models has no stable `model_id` MVP taxonomy →
-      BLOCKED-OPERATOR-DECISION**. Split for the Phase-2 owner: P2a `FeaturesMvpRule`+`StrategiesMvpRule`
-      (`features_service` registry / 2 archetypes) land WITH their data-status consumer; P2b models membership needs
-      operator sign-off on the identity axes.
+      operator policy call** (which feature_groups go live). **(4) CORRECTED (2026-07-27, operator ruling —
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 29): the "models has no stable `model_id` MVP
+      taxonomy → BLOCKED-OPERATOR-DECISION" framing is STALE.** A stable, already-versioned `model_id` scheme ALREADY
+      EXISTS — `generate_model_id`/`parse_model_id` in `ml-service/ml_service/training/ml/config_schema.py`:
+      `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}` (verified live in the repo 2026-07-27),
+      genuinely unique/stable over time by construction. The identity-axes question is RESOLVED — this is now an
+      implementation task, not an open operator decision. Split for the Phase-2 owner: P2a
+      `FeaturesMvpRule`+`StrategiesMvpRule` (`features_service` registry / 2 archetypes) land WITH their data-status
+      consumer — dispatched verbatim into `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft); P2b
+      `ModelsMvpRule` is now a scoped implementation task tracked in the new todo immediately below, not operator-gated.
+- [ ] [IMPLEMENT] P2. **P2b — wire `ModelsMvpRule` against the existing `generate_model_id`/`parse_model_id` scheme.**
+      Add a `ModelsMvpRule` to UAC's `mvp_scope.py` (replacing the `models` `FeaturesModelsMvpStub` placeholder),
+      deriving MVP membership from the `{ASSET_GROUP}_{ASSET}_{TARGET_TYPE}_{MODEL_TYPE}_{TIMEFRAME}_V{N}` identity axes
+      already produced by `generate_model_id`/`parse_model_id` (`ml-service/ml_service/training/ml/config_schema.py`) —
+      the rule matches on those same identity components (asset_group, asset, target_type, model_type, timeframe),
+      mirroring the grain pattern `FeaturesMvpRule`/`StrategiesMvpRule` already use. Wire it into a data-status coverage
+      consumer for ml-service model output (extend the `scope=mvp|could_exist|all` pattern from `deployment-api@3390c98`
+      to models coverage, same mechanism as the features/strategy consumer). Add unit coverage (MVP-scoped `model_id`
+      included, non-MVP excluded, stub-untouched behavior removed for `models` specifically). Repos:
+      unified-api-contracts, deployment-api, ml-service. Source: this doc's P2b (models MVP taxonomy), corrected
+      2026-07-27 (see the todo above). Done when: `ModelsMvpRule` lands in UAC with a data-status consumer reading it +
+      passing tests, and a real-data run confirms `mvp ≤ could_exist ≤ all` monotonicity holds for model coverage the
+      same way it already does for instruments (`deployment-api@3390c98` parity test pattern).
 - [ ] [DATA] P2. **Verify**: with MVP ON, data-status shows ~100% for captured MVP cells and does NOT count non-MVP
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
       hidden). **BLOCKED on the held migration (2026-06-17 /autonomous assessment):** unit-level parity is already

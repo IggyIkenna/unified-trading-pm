@@ -25,13 +25,13 @@ repos:
   deployment-api:
     count: 0
   deployment-service:
-    count: 11
+    count: 0
   deployment-service-sports-wt:
     count: 11
   deployment-ui:
     count: 0
   e2e-testing:
-    count: 3
+    count: 0
   execution-service:
     count: 0
   features-service:
@@ -43,13 +43,13 @@ repos:
   ibkr-gateway-infra:
     count: 0
   instruments-service:
-    count: 1
+    count: 0
   market-data-processing-service:
     count: 0
   market-tick-data-service:
-    count: 3
+    count: 0
   market-tick-data-service-cid-migration:
-    count: 3
+    count: 0
   market-tick-data-service-sports-wt:
     count: 3
   ml-service:
@@ -67,8 +67,8 @@ repos:
   unified-trading-api:
     count: 0
   unified-trading-library:
-    count: 3
+    count: 0
   unified-trading-pm:
-    count: 11
+    count: 0
   unified-trading-system-ui:
     count: 0

@@ -21,10 +21,11 @@ from __future__ import annotations
 import argparse
 import json
 import logging
-import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from unified_trading_library import get_storage_client
 
 LOG = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -36,19 +37,15 @@ BUCKET_TEMPLATE = "gs://instruments-store-{category}-{project}/instrument_availa
 
 def _list_venues(bucket_prefix: str) -> list[str]:
     """List venue subdirectories under a GCS prefix."""
-    result = subprocess.run(
-        ["gsutil", "ls", bucket_prefix],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    if result.returncode != 0:
+    bucket, prefix = bucket_prefix.removeprefix("gs://").split("/", 1)
+    try:
+        native_iter = get_storage_client(provider="gcp").bucket(bucket).list_blobs(prefix=prefix, delimiter="/")
+        list(native_iter)  # exhaust — `.prefixes` only populates after iteration
+    except (OSError, ValueError, RuntimeError):
         return []
     venues: list[str] = []
-    for line in result.stdout.strip().split("\n"):
-        line = line.strip()
-        if not line:
-            continue
+    for child_prefix in getattr(native_iter, "prefixes", []):
+        line = f"gs://{bucket}/{child_prefix}"
         # Extract venue= from path
         parts = line.rstrip("/").split("/")
         for part in parts:
@@ -62,13 +59,12 @@ def _download_parquet(bucket_prefix: str, venue: str, dest: Path) -> bool:
     """Download a single venue's instruments.parquet from GCS."""
     src = f"{bucket_prefix}venue={venue}/instruments.parquet"
     dest.parent.mkdir(parents=True, exist_ok=True)
-    result = subprocess.run(
-        ["gsutil", "cp", src, str(dest)],
-        capture_output=True,
-        text=True,
-        timeout=60,
-    )
-    return result.returncode == 0
+    bucket, path = src.removeprefix("gs://").split("/", 1)
+    try:
+        get_storage_client(provider="gcp").bucket(bucket).blob(path).download_to_filename(str(dest))
+    except (OSError, ValueError, RuntimeError):
+        return False
+    return True
 
 
 def _read_parquet(path: Path) -> list[dict[str, object]]:

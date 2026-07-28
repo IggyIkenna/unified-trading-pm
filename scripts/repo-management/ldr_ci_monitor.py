@@ -240,6 +240,48 @@ def most_recent_dispatch_sha(repo: str, limit: int) -> str:
     return ldr_runs[0].get("headSha") or ""
 
 
+def has_in_flight_dispatch(repo: str, limit: int) -> bool:
+    """True if the repo's most recent LDR quality-gates-v2 dispatch run is still queued/running.
+
+    Guards the RED-repo unconditional-redispatch path below: that path deliberately bypasses the
+    tip-unchanged dedup (`current_ldr_sha == most_recent_dispatch_sha`) so a RED repo whose own tip
+    never moves still gets re-tested every tick (2026-07-16 fix for the RED-latching bug). But with
+    no in-flight check, a repo stuck RED purely from SHARED-HOST CONTENTION (the qg-governor's fixed
+    concurrency pool exhausted, not a real code regression — confirmed 2026-07-27 on
+    deployment-service, execution-service, agent-orchestrator, ibkr-gateway-infra all failing/stuck
+    simultaneously) gets a FRESH dispatch fired on top of its own still-queued one every tick,
+    piling more load onto the very contention causing the redness — a retry-storm amplification, not
+    a fix. Fail-open on read error (treat as "not in flight" → dispatch anyway, matching this
+    module's existing fail-open convention) since a dispatch failure/skip here is never worse than
+    the pre-fix behavior.
+    """
+    runs = gh_json(
+        [
+            "run",
+            "list",
+            "--repo",
+            f"{ORG}/{repo}",
+            "--workflow",
+            QG_WORKFLOW_FILE,
+            "--branch",
+            LDR_BRANCH,
+            "--event",
+            "workflow_dispatch",
+            "--limit",
+            str(limit),
+            "--json",
+            "status,createdAt,headBranch",
+        ]
+    )
+    if not isinstance(runs, list):
+        return False
+    ldr_runs = [r for r in runs if isinstance(r, dict) and r.get("headBranch") == LDR_BRANCH]
+    if not ldr_runs:
+        return False
+    ldr_runs.sort(key=lambda r: r.get("createdAt") or "", reverse=True)
+    return ldr_runs[0].get("status") not in ("completed", "")
+
+
 def last_green_sha(repo: str, limit: int) -> str:
     """headSha of the most recent COMPLETED-success LDR dispatch run, or "" (for attribution)."""
     runs = gh_json(
@@ -516,7 +558,16 @@ def main() -> int:
             # 2026-07-15, and its own history held nothing to re-run. Cost stays bounded — this
             # re-fires ONLY the already-red repos (normally 0-2/tick), while the green majority
             # still skips, so the 2026-06-11 billing-wall fix is preserved.
+            #
+            # IN-FLIGHT GUARD (2026-07-27, retry-storm fix): a repo stuck RED from shared-host
+            # contention (qg-governor token pool exhausted, not a code regression) previously got
+            # a fresh dispatch piled on top of its own still-queued run EVERY tick — amplifying the
+            # exact contention causing the redness. Skip firing if the repo's last dispatch is
+            # still queued/in_progress; the next tick re-checks once it actually resolves.
             if new_levels.get(repo) == RED:
+                if has_in_flight_dispatch(repo, args.limit):
+                    skipped += 1
+                    continue
                 if dispatch_ldr_run(repo):
                     fired += 1
                 continue

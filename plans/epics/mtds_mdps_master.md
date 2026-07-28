@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mtds, mdps, backfill, polars, book-microstructure, data-correctness, cost, features]
 related:
   [
-    ../active/mdps_features_reduced_artifact_tracker_2026_06_28.md,
+    ../archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md,
     ../archive/2026_07/mdps_book_microstructure_precompute_columns_2026_06_28.md,
     ../archive/2026_07/tradfi_mdps_passthrough_dependency_gap_2026_06_28.md,
     ../archive/2026_07/mdps_features_full_month_benchmark_binance_2026_06_28.md,
@@ -146,8 +146,9 @@ locked_since: 2026-05-20
 > prerequisite-gate for the per-AG canonicalisation walks now folded into M-1 — folding a gate INTO what it gates is an
 > unusual shape; operator overrode the seed mapping's proposed fold) and `sports_manifest_canonicalisation_2026_06_01`
 > stays an `mtds_mdps_master` child per prior operator ruling (175/142/146).
-> `mdps_features_reduced_artifact_tracker_2026_06_28` is KEPT as the live cross-epic tracker for the other 5
-> (non-archived) mini-plans. **Post-fold roster under this epic**: 2 survivors (M-1
+> `mdps_features_reduced_artifact_tracker_2026_06_28` was KEPT (2026-07-13) as the live cross-epic tracker for the other
+> 5 (non-archived) mini-plans — **since ARCHIVED 2026-07-27** (`/plans/archive/2026_07/`): all 9 mini-plans confirmed
+> archived/complete, 0 orphaned scope. **Post-fold roster under this epic**: 2 survivors (M-1
 > `data_completion_to_100_all_ag_2026_06_21`, M-2 `mtds_file_size_refactor_2026_06_08`) +
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05` (standalone prerequisite) +
 > `sports_manifest_canonicalisation_2026_06_01` (delegated vertical) +

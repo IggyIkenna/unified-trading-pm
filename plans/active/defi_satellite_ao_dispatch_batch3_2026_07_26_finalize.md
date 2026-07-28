@@ -76,7 +76,11 @@ drift_direction: advance-code
 - [ ] [DOC] P2. **Action batch3's non-batched findings.** (1) Archive the 2 archivable_now docs
       (`e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md`, `mtds_perp_funding_backfill_hang_2026_07_14.md`)
       via the standard 6-step ritual — but FIRST confirm each still reaches 0 open todos on a fresh read (they were
-      classified archivable_now 2026-07-26; re-verify nothing re-opened). (2) Confirm
+      classified archivable_now 2026-07-26; re-verify nothing re-opened). **PARTIALLY DONE 2026-07-27**:
+      `e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md` was already archived by the separate
+      `june_2026_vintage_audit_findings_2026_07_27.md` §2 execution pass — verify it landed at
+      `/plans/archive/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md` with a clean banner (don't
+      re-archive); `mtds_perp_funding_backfill_hang_2026_07_14.md` still needs its own archival pass here. (2) Confirm
       `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` got retagged off `[defi]` (batch2's finalize
       owns the retag; this is just a cross-check that it happened — if not, file/hand off, do not duplicate the retag
       todo). **Done when**: item (1)'s 2 docs are in `plans/archive/2026_07/` with every corpus referrer fixed (or

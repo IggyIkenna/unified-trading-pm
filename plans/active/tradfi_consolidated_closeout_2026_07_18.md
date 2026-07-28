@@ -621,8 +621,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[SCRIPT] P1.** Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (gated on the seed-context
       fix)
     - +6 more (P2/P3) — see file for the rest
-  - [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-    (`status: draft`) — 0 open todos (closed/archived/record-only; not yet flipped `active`)
+  - [`plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+    — ARCHIVED 2026-07-27, 0 open todos, all 9 mini-plans confirmed archived/complete
   - [`plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md`](/plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md)
     - **[VERIFY] P1.** Check whether manifest regeneration is automatic or requires an explicit re-enumeration trigger
     - **[VERIFY] P2.** Spot-check 2-3 more findings from the smoke-test doc across all 3 layers
@@ -682,7 +682,20 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md`](/plans/active/issues/ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/active/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
-    — 0 open todos (closed/archived/record-only)
+    — **CORRECTED 2026-07-27** (was falsely cited "0 open todos" — F4-F7 are prose findings, not checkboxes, so a naive
+    checkbox-count read the doc as closed): F1-F3 fixed (instruments-service@a4dfa6b,
+    market-tick-data-service@7da5f6ad/75c8f148); F4/F5/F6 are DeFi/CeFi findings, rehomed to
+    `defi_consolidated_closeout_2026_07_18.md` / `cefi_consolidated_closeout_2026_07_18.md`; F7 is the TradFi-relevant
+    finding, rehomed below.
+    - **[DATA] P1.** F7 — TradFi capture is NOT `is_mvp`-gated (CeFi/DeFi catalog readers call `is_mvp`, TradFi gates
+      nowhere). **Operator decision 2026-07-27: gate TradFi capture by `is_mvp`.** Confirmed active out-of-scope under
+      the same `wave_launcher.py` cron: NASDAQ/NYSE full equity universe (~227 of ~278 tickers vs the 105-ticker basis
+      universe, `launch-tradfi-bf-nasdaq-ohlcv-1m.sh:70`), CME 49-root list vs 9 MVP underliers (~39 out, incl. 10 FX
+      futures + crypto BTC/ETH/MBT/MET + micros — operator-confirmed OUT). `ohlcv_1s` + non-MVP DeFi data_types:
+      operator said KEEP pending per-item review, do not auto-strip. **Open keystone**: confirm whether the TradFi
+      `expected_unattempted` enumerator itself filters by `is_mvp` (decides whether out-of-scope cells become dispatched
+      gap cells) before building the gate. Source doc still `locked_by: live-defi-rollout` — archive it only after an
+      explicit `[unlock-plan]` grant (not yet asked).
 
 - **Newly discovered (2026-07-24 completeness sweep — `grep -l '^asset_group:.*tradfi'` hits not previously named in
   this section; several were already mentioned inline in the Phase A2 prose above but never carried a real entry

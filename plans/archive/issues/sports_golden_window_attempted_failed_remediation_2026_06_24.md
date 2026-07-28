@@ -4,7 +4,7 @@ title: Sports golden-window attempted_failed remediation — mostly misclassific
 summary:
   "Golden window is effectively at 100% on FIXTURES/MATCHES/TEAMS/VENUES/LEAGUES/ODDS/XG/STANDINGS/PLAYER_STATS. The
   ~5,900 `attempted_failed` cells are **mostly misclassification, not missing data**:"
-status: open
+status: resolved # (was: open) 2026-07-27: 3 stale items confirmed done + flipped; sole remainder is a dormant contingency, footnoted at /codex/02-data/sports-data-source-coverage-matrix.md §2.3
 nature: process
 asset_group:
   [sports] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -30,12 +30,26 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+  "2026-07-27 /plan-vintage-audit -- 3 stale items independently re-verified against current code (understat.py,
+  gcs_paths.py) + the archived sports_p1_golden_window_mtds_odds_2026_06_27.md Todo 1/2; sole remainder (3-way understat
+  split) footnoted at /codex/02-data/sports-data-source-coverage-matrix.md as a dormant contingency"
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
+
+> **✅ ARCHIVED (archived 2026-07-27)** — the 3 stale-unflipped items (understat per-league 404 scoping, the
+> `candidate_parquet_paths` forward-phantom gap, the odds-api backfill gaps) are all independently re-verified done
+> against current code/docs this session: `instruments_service/engine/orchestrator/understat.py` (404 scoping wired),
+> `unified_api_contracts/canonical/domain/sports/gcs_paths.py` (all 3 missing path shapes present), and
+> `/plans/archive/2026_07/sports_p1_golden_window_mtds_odds_2026_06_27.md` Todo 1+2 (odds-api gap-fill + honest-absence
+> typing, both `[x]` with real gate evidence — the "3 leagues odds-api doesn't carry" premise was itself found
+> inaccurate post-gap-fill). Sole remainder — the 3-way understat absence split (`EXPECTED_NO_PROVIDER_COVERAGE`, P3,
+> dormant, blocked on a coverage-source broadening that hasn't happened) — is a footnote at
+> [`/codex/02-data/sports-data-source-coverage-matrix.md`](/codex/02-data/sports-data-source-coverage-matrix.md) §2.3,
+> not lost.
 
 > **🔱 RE-HOMED to `vm-sports` (2026-06-27).** The open fixes here (#2 understat-404, #5 forward path-shapes, #6
 > IS-ODDS-wipe, the `--unphantom` re-run, the odds-api 3-league gaps) are now owned by the golden-window-first vm-sports
@@ -71,12 +85,15 @@ alerts trigger on VM ERRORs" — confirmed gap).
       radius (the reconciler runs for every AG). f|PLACEHOLDER
       `reconcile_phantom_manifest_rows_all.py --asset-group sports --unphantom --apply` re-run flips the ~258 false
       phantoms back to `captured` (consolidator-paused, verify manifest).
-- [ ] [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored; orchestrator
-      records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest. Mirrors the
-      transfermarkt per-league error-dict pattern. (Same file the off-season-guard agent just shipped — coordinate.)
-      BUILT this session (instruments-service working tree, QG-green) — adapter `_failed_league_names: set[str]` +
-      `_canonical_league_id(name)` mapping (`La_Liga`→`LA_LIGA` verified) in both the XG (`_xg_fetch_errors>0`) and
-      XG_SHOTS branches; per-match `get_match_shots` errors attributed to their league. Pending ship by main agent.
+- [x] ✅ [CODE] P2. understat per-league 404 scoping (`understat.py`): adapter exposes WHICH leagues errored;
+      orchestrator records `record_failed` only for errored leagues, `record_empty(EXPECTED_NO_FIXTURE)` for the rest.
+      Mirrors the transfermarkt per-league error-dict pattern. (Same file the off-season-guard agent just shipped —
+      coordinate.) BUILT this session (instruments-service working tree, QG-green) — adapter
+      `_failed_league_names: set[str]` + `_canonical_league_id(name)` mapping (`La_Liga`→`LA_LIGA` verified) in both the
+      XG (`_xg_fetch_errors>0`) and XG_SHOTS branches; per-match `get_match_shots` errors attributed to their league.
+      **SHIPPED — confirmed via RE-TRIAGE 2026-07-23 + independently re-verified 2026-07-27**:
+      `instruments_service/engine/orchestrator/     understat.py` has `_failed_league_names`/`_canonical_league_id()`
+      wired into both XG + XG_SHOTS branches (lines 189, 272-273, 445-455).
 - [ ] [CODE] P3. **3-way understat absence split (EXPECTED_NO_PROVIDER_COVERAGE) — BLOCKED on a coverage source.** The
       canonical 3-way split (provider-not-covering → `EXPECTED_NO_PROVIDER_COVERAGE`; covered+errored → `failed`;
       covered+no-fixture → `EXPECTED_NO_FIXTURE`) cannot use `is_league_entity_covered` for understat: that gate's
@@ -98,24 +115,34 @@ alerts trigger on VM ERRORs" — confirmed gap).
       `_index/snapshots/pre_api_football_wipe_2026_06_24.parquet` (reversible). Consolidator paused→resumed. Script:
       `market-tick-data-service/.../scripts/wipe_api_football_sports_odds_2026_06_24.py` (oneoff; commit pending a clean
       MTDS tree — foreign WIP present; delete after GCS-orphan-sweep).
-- [ ] [DATA] P2. odds-api backfill gaps surfaced by the wipe: 3 leagues odds_api doesn't carry
+- [x] ✅ [DATA] P2. odds-api backfill gaps surfaced by the wipe: 3 leagues odds_api doesn't carry
       (`soccer_uefa_champs_league`, `soccer_china_superleague`, `soccer_russia_premier_league`, 2025-H2) + the in-scope
       gap-dates behind the former 112,653 api_football failures — backfill via odds-api (the canonical source), not
-      api_football. (UEFA Champions League is the notable one.)
+      api_football. (UEFA Champions League is the notable one.) — **DONE via
+      `/plans/archive/2026_07/sports_p1_golden_window_mtds_odds_2026_06_27.md` Todo 1 (gap-fill backfill, all 13 chunks
+      exit_code=0, complete 2026-06-27) + Todo 2 (honest-absence typing) — confirmed 2026-07-27 by reading that doc: the
+      "3 leagues odds-api doesn't carry" premise was itself found INACCURATE post-gap-fill (odds-api DOES carry all 3 in
+      2025-H2 for covered bookmakers — UCL=153/China SL=82/Russia PL=33 captured, 0 pending/failed, UAC
+      `sports_bookmaker_league_coverage.json` already correctly encodes the per-bookmaker restriction).
 - [x] ✅ #4 [CODE] P2. attempted_failed Slack alert in deployment-service — deployment-service@cb330f7 (QG-green, 8
       tests): per (asset_group, data_type) failure-batch alert so an exit0 backfill that fails thousands of cells is no
       longer invisible. (Gate on real failures, not misclassified honest-absence — fix #1/#2/#3 first so it isn't
       noisy.)
-- [ ] [CODE] P2. **candidate_parquet_paths path-shape gap (FORWARD phantom over-flag — DO NOT run forward `--apply` on
-      sports until fixed).** UAC `unified_api_contracts/canonical/domain/sports/gcs_paths.py` `candidate_parquet_paths`
-      does not emit several real on-disk path shapes, so the reconciler's FORWARD pass false-flags ~144,997 sports
-      captured rows as phantom (running forward `--apply` would flip real `captured`→`attempted_failed`). Missing
-      shapes: (a) the `fetched_at_hour=` segment (footystats odds), (b) the `transfermarkt_teams.parquet` filename, (c)
-      `league=`-without-`season=` (player_values). Add these candidate shapes to `candidate_parquet_paths` (mirror the
-      pipeline_mode= candidate addition), then re-verify the forward sports phantom count drops to ~0 before any forward
-      `--apply`. **Interim**: the reconciler's NEW `--unphantom-only --apply` mode (instruments-service, this session)
-      is the SAFE heal — it runs ONLY the reverse re-validation (phantom→captured), never the forward flip, so the
-      ~258/~5,977 genuinely-false phantoms can be healed now without this gap fixed.
+- [x] ✅ [CODE] P2. **candidate_parquet_paths path-shape gap (FORWARD phantom over-flag — DO NOT run forward `--apply`
+      on sports until fixed).** UAC `unified_api_contracts/canonical/domain/sports/gcs_paths.py`
+      `candidate_parquet_paths` does not emit several real on-disk path shapes, so the reconciler's FORWARD pass
+      false-flags ~144,997 sports captured rows as phantom (running forward `--apply` would flip real
+      `captured`→`attempted_failed`). Missing shapes: (a) the `fetched_at_hour=` segment (footystats odds), (b) the
+      `transfermarkt_teams.parquet` filename, (c) `league=`-without-`season=` (player_values). Add these candidate
+      shapes to `candidate_parquet_paths` (mirror the pipeline_mode= candidate addition), then re-verify the forward
+      sports phantom count drops to ~0 before any forward `--apply`. **Interim**: the reconciler's NEW
+      `--unphantom-only --apply` mode (instruments-service, this session) is the SAFE heal — it runs ONLY the reverse
+      re-validation (phantom→captured), never the forward flip, so the ~258/~5,977 genuinely-false phantoms can be
+      healed now without this gap fixed. **FIXED — confirmed via RE-TRIAGE 2026-07-23 + independently re-verified
+      2026-07-27**: all 3 missing shapes now present in `unified_api_contracts/canonical/domain/sports/gcs_paths.py` —
+      `_FETCHED_AT_HOUR_FOLDERS` (line 169), `transfermarkt_teams.parquet` legacy filename fallback (line 271),
+      `league=`-without-`season=` handling for PLAYER_VALUES (line 287). The "DO NOT run forward `--apply`" warning is
+      stale; the risk is closed.
 
 ## #6 — IS footystats `ODDS` is misplaced (odds = MTDS, not IS) — operator 2026-06-24
 

@@ -167,10 +167,14 @@ The "PROPER durable fix (standing item)" named in finding #5 is being shipped: t
   `lifecycle-events-sub` + project `roles/secretmanager.secretAccessor` for `DATA_PIPELINE_ALERTS_SLACK_WEBHOOK`).
 - **Decommission**: the `alerting-quietness-*` VM is stopped once the Cloud Run service is verified consuming.
 
-- [ ] [DEPLOY] P2. Ship the alerting-subscriber Cloud-Run code (`api/main.py` lifespan + `config.run_subscriber_in_api`)
-      via `quickmerge --agent --files` once UAC `honest_coverage.py` foreign WIP clears (currently dirty-dep-blocked).
-      Repo: alerting-service. The Cloud Run service is already deployed+verified from the local tree; this only lands
-      the source.
+- [x] ✅ [DEPLOY] P2. **VERIFIED LANDED 2026-07-27** — `alerting-service/alerting_service/api/main.py` (lines 73-101)
+      carries the `_lifespan` async context manager that launches `AlertSubscriber(...).run_until_stopped()` as a
+      background task when `config.run_subscriber_in_api` is set (`AlertingSystemConfig.run_subscriber_in_api`, checked
+      at line 88), exactly as this item asks — both the lifespan code and the config field are committed in the tree,
+      not just deployed from a local checkout. Ship the alerting-subscriber Cloud-Run code (`api/main.py` lifespan +
+      `config.run_subscriber_in_api`) via `quickmerge --agent --files` once UAC `honest_coverage.py` foreign WIP clears
+      (currently dirty-dep-blocked). Repo: alerting-service. The Cloud Run service is already deployed+verified from the
+      local tree; this only lands the source.
 
 - [x] ✅ [CODE] P2. App-log observability fix (2026-06-23, slot·human-planning Opus 4.8): the uvicorn entrypoint
       `api/main.py` had NO root-logger config (the CLI `main.py` `basicConfig` never runs under uvicorn) → INFO route
@@ -183,26 +187,40 @@ The "PROPER durable fix (standing item)" named in finding #5 is being shipped: t
       (logging-config) + @8e511d4 (flushing handler) + @9e52751 (observability INFOs); deployed rev
       `dp-alerting-subscriber-00008-csc` (image `:9e52751` + PYTHONUNBUFFERED=1).
 
-- [ ] [INFRA] P2. **DEPLOYED-INSTANCE Cloud Logging ingestion gap (residual — the CODE is fixed+proven, this is
-      infra).** After the observability fix above, the running `dp-alerting-subscriber` (rev 00008-csc) STILL surfaces
-      ZERO app logs in Cloud Logging — not even the unconditional `Starting alert subscriber stream` startup log
-      (line 373) — across all revisions/30 min, despite (a) the subscriber DEMONSTRABLY consuming `lifecycle-events-sub`
-      (test events drain), and (b) the IDENTICAL image flooding those exact logs to stdout when run locally
-      (`docker logs`). No log-router exclusion drops them (`_Default` sink excludes only audit logs). minScale=1 +
-      cpu-throttling=false + one continuous instance. Hypotheses to chase: the lifespan background task's stdout not
-      piped to the Cloud Run logging agent under uvicorn's asyncio loop; OR a uvicorn `--log-config` swallowing the root
-      logger on Cloud Run; OR the event-sink `log_event` path competing. Diagnose with a deliberate
-      `print(..., flush=True)` at lifespan start + `gcloud run services logs read`. Repo: alerting-service
-      (`api/main.py` lifespan / uvicorn CMD). Provenance: P2 verify 2026-06-23.
+- [ ] [INFRA] P2. **MIGRATED 2026-07-27** — this item (and its sibling angle from
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`, "app-logs not reaching Cloud Run") are tracked as
+      ONE investigation in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` ("Diagnose the alerting-service
+      Cloud Logging ingestion gap — ONE bug described in two source docs"), not yet executed there either. Leave this
+      checkbox open until that todo ships; flip both docs' checkboxes together citing that todo's evidence.
+      **DEPLOYED-INSTANCE Cloud Logging ingestion gap (residual — the CODE is fixed+proven, this is infra).** After the
+      observability fix above, the running `dp-alerting-subscriber` (rev 00008-csc) STILL surfaces ZERO app logs in
+      Cloud Logging — not even the unconditional `Starting alert subscriber stream` startup log (line 373) — across all
+      revisions/30 min, despite (a) the subscriber DEMONSTRABLY consuming `lifecycle-events-sub` (test events drain),
+      and (b) the IDENTICAL image flooding those exact logs to stdout when run locally (`docker logs`). No log-router
+      exclusion drops them (`_Default` sink excludes only audit logs). minScale=1 + cpu-throttling=false + one
+      continuous instance. Hypotheses to chase: the lifespan background task's stdout not piped to the Cloud Run logging
+      agent under uvicorn's asyncio loop; OR a uvicorn `--log-config` swallowing the root logger on Cloud Run; OR the
+      event-sink `log_event` path competing. Diagnose with a deliberate `print(..., flush=True)` at lifespan start +
+      `gcloud run services logs read`. Repo: alerting-service (`api/main.py` lifespan / uvicorn CMD). Provenance: P2
+      verify 2026-06-23.
 
 **Remaining (tracked, NOT blocking the relay — it is live as of the 2026-06-23 subscriber-crash fix; see the finding-192
 annotation above re: two intervening breaks between the 06-22 18:27Z claim and actual stability):**
 
-- (a) e2e `_dp_common.py` ship (Wave-4b, currently dirty-MTDS-dep-blocked; no runtime effect until the crons deploy).
-- (b) Deploy the 3 daily-audit Cloud Run crons (digest/hygiene/reprobe) for routine _cadence_ — needs image packaging
-  (Wave-4b).
-- (c) **Durability — codify in terraform**: `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions AND their
-  `roles/pubsub.subscriber` IAM bindings for the alerting VM SA are currently HAND-CREATED (the subgraph tf provisions
-  only the `defi_data_quality_alerts` _topic_). They survive VM relaunches (subs are persistent) but a `terraform apply`
-  or fresh-project bootstrap would drop them. Add to `deployment-service/terraform/gcp/` (alerting pubsub tf): both
-  `google_pubsub_subscription` + `google_pubsub_subscription_iam_member` resources.
+- (a) **DONE, verified 2026-07-27** — e2e `_dp_common.py` ship. `e2e-testing/scripts/audit/_dp_common.py` has
+  `_ensure_live_events()` defined (line 73) and called (line 328); most recent commit on the file is
+  `e2e-testing@98d499af` (2026-07-26, "feat(dp-audit): add shared schema_version_readiness helper + v9-readiness gate in
+  the daily digest"), confirming it is live and actively maintained, not dirty-dep-blocked.
+- (b) **DONE, verified 2026-07-27** — the 4 dp-audit Cloud Run crons are deployed. All 4 jobs + schedulers exist in
+  `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf`: `dp_daily_digest_job`/`_cron` (line 80/115),
+  `dp_manifest_hygiene_changed_job`/`_cron` (line 142/176), `dp_manifest_hygiene_full_job` (line 206), and
+  `dp_reprobe_empty_job`/`_cron` (line 267/304) — also independently confirmed live via `gcloud scheduler jobs list` in
+  `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s INFRA P1 "Consolidate the THREE competing
+  data_pipeline_audit_scheduler.tf todos" entry (DONE 2026-07-26).
+- (c) **DONE, verified 2026-07-27** — Durability — codify in terraform:
+  `deployment-service/terraform/gcp/alerting_relay_pubsub.tf` carries both `google_pubsub_subscription` resources
+  (`lifecycle_events_sub` line 45, `defi_data_quality_alerts_sub` line 71) and both
+  `google_pubsub_subscription_iam_member` bindings (line 63, line 87) for the alerting subscriber SA, plus matching
+  `import` blocks (lines 95-108) to adopt the pre-existing hand-created resources into state without recreating them.
+  `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions AND their `roles/pubsub.subscriber` IAM bindings for
+  the alerting VM SA are no longer HAND-CREATED-only.

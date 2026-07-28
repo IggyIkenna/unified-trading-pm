@@ -174,6 +174,76 @@ no resolvable assignment), noqa-marker skipping, docstring/comment non-matching,
 exclusion), and a `main()` end-to-end smoke; full `unified-trading-pm` `quality-gates.sh` green (1430 tests) with STEP
 5.105 passing alongside STEP 5.69/5.104.
 
+## Follow-up 2026-07-27 (later same day): fixing the grandfathered debt itself, under `/autonomous`
+
+The baseline seeded above was deliberately grandfathered debt, not a fix — including the note that
+`maintenance_handler.py` "is worth a real fix in its own right, but that's separate, scoped work." The operator asked
+for that work to actually happen, dispatched `/autonomous`. Result: **every real repo in the baseline is now at 0**,
+fixed via one direct fix (this session, `deployment-service`, the highest-risk file) + 5 parallelized sub-agent
+dispatches (one per remaining repo, each briefed with the exact per-file fix already decided, never left to re-derive
+judgment calls), all independently re-verified against the actual checker/git state before being trusted (two agents got
+stuck reporting an in-progress background watcher instead of finishing — resumed via `SendMessage`; one had foreign
+concurrent-session files mixed into its staged index — caught via `git status --porcelain` before shipping, unstaged by
+name, never blind-committed).
+
+Per-repo disposition:
+
+- **`deployment-service`** (11→0, fixed directly, not delegated): `maintenance_handler.py` — the live production CLI
+  handler doing `gsutil rm` in a cleanup loop — migrated to `get_storage_client(provider=self.cloud_provider)`
+  (`list_blobs`/`delete_blob`/`bucket().exists()`), covering both the GCP and AWS branches the handler already
+  dispatches on. `phase5a_aws_object_migrate.py` (`sync_bucket`/`spot_check`) migrated to the AWS `S3StorageClient`
+  (`list_blobs`/`copy_blob`/`get_blob_metadata`) — confirmed via its own output CSV never existing that this one-off has
+  NOT yet been run to completion, so it was migrated in place rather than deleted.
+  `analyze_vm_costs.py`/`cleanup_old_tarballs.py` migrated their listing helpers to `list_blobs` (delimiter-listing via
+  `client.bucket(name).list_blobs(prefix=, delimiter="/")` for the shallow one-level case); `cleanup_old_tarballs.py`
+  keeps ONE CLI call (`# noqa: gcs-cli`) for GCS object-VERSION listing (`-a` flag, `#<generation>` suffixes) —
+  `list_blobs()` has no `versions=` parameter, a genuine SDK gap, not laziness. `wipe_pre_floor_sports_2026_07_21.py` (a
+  real pre-floor data-wipe tool, already partially SDK-based) had its one remaining CLI call — the sanctioned shallow
+  delimiter listing of `day=` dirs — migrated to the SAME `list_blobs(..., delimiter="/")` + `.prefixes` pattern,
+  preserving the exact "one level, never a corpus walk" safety invariant the file's own docstring documents. Updated 2
+  existing test files whose mocks targeted the old function names/subprocess surface.
+- **`market-tick-data-service`** (3→0): `analyze_shard_memory.py` migrated (`list_blobs` + `download_as_bytes`).
+  `restamp_mtds_sports_blank_source_2026_06_29.py` **deleted outright** (not migrated) — its own lifecycle marker says
+  delete-after-run, and the sibling `instruments-service` script's docstring independently cross-references it as
+  "already shipped + run successfully... CF-4 GREEN post-run" (mtds@bae321ca) — verified via a live-import grep before
+  deleting, confirmed nothing depends on it. `market-tick-data-service-cid-migration` (a separate clone of the same
+  repo/branch) synced to 0 on its own via the slot's periodic fast-forward-pull cron, no action needed.
+- **`unified-trading-pm`** (11→0): 4 audit/results scripts (`a3v2_manifest_divergence_all_services.py`,
+  `cf_layout_audit_2026_06_01.py`, `cf_manifest_audit_2026_06_01.py`, `cf_manifest_audit_all.py` — the LAST of which is
+  genuinely LIVE production alerting, a daily Cloud Run Job + Scheduler that ALERTS ON ANY RED) all migrated to the SDK.
+  One of these carried a "DNS-robust (gcloud CLI, not gcsfs)" docstring rationale — verified against the actual UTL
+  library source that `GCSStorageClient` uses the native `google-cloud-storage` SDK directly, NOT `gcsfs`, so that
+  specific DNS concern does not carry over to the SDK wrapper; docstring updated to stop citing a comparison that no
+  longer applies. `scripts/migration/verify_flat_to_env_tiered_drift.py` (a cross-cloud Wave-verify GATE script whose
+  exit code drives a real migration-cutover GO/NO-GO) and `scripts/openapi/generate_instrument_snapshot.py` also
+  migrated. Two adjacent, unrelated pre-existing breakages found blocking the shared quality gate for every agent on the
+  branch were fixed in the same pass (invalid YAML frontmatter in one issue doc; a broken-refs fix in another,
+  superseded by a concurrent peer's equivalent fix — the redundant version was discarded rather than committed).
+- **`unified-trading-library`** (3→0, annotation only): `cf_manifest_audit.py`'s 3 CLI call sites annotated
+  `# noqa: gcs-cli`, NOT migrated — genuine, verified capability gap: `download_file`/`upload_file` on the SDK wrapper
+  use a FIXED, non-configurable internal `timeout=600` (10 minutes), which would defeat this file's deliberately SHORT,
+  bounded per-attempt timeout + fast-retry design (confirmed against the actual method source, not assumed).
+- **`e2e-testing`** (3→0, annotation only): `scripts/paper_trading/_gcs.py`'s 3 CLI fallback sites annotated
+  `# noqa: gcs-cli` — this file is a labelled POC deliberately avoiding the UTL dependency to keep its Docker image
+  minimal (already has its own `# noqa: TID251` marker saying exactly that on the primary direct-SDK path); adding a UTL
+  import to satisfy this check would contradict the file's own stated design intent.
+- **`instruments-service`** (1→0): `restamp_is_sports_blank_source_2026_07_13.py`'s `_cp` helper migrated — unlike the
+  MTDS sibling, this one's docstring reads as still-pending (no "shipped + run successfully" cross-reference anywhere),
+  so it was migrated in place rather than deleted. The fix correctly handles a THIRD direction the original task
+  briefing hadn't anticipated (`gs://`→`gs://` same-cloud server-side copy, used by the `--apply` snapshot step) via
+  `copy_blob`, caught by actually reading all 3 call sites before finalizing the fix rather than applying the briefed
+  download/upload-only pattern blindly.
+- **Deliberately left grandfathered, not touched**: `deployment-service-sports-wt` (11) and
+  `market-tick-data-service-sports-wt` (3) — both are real git worktrees (confirmed via `.git` being a `gitdir:` pointer
+  file, not a missing directory) but sitting in **detached HEAD**, last touched 2026-07-21 (6 days stale), carrying
+  their OWN unrelated uncommitted WIP (VM-launcher scripts, a league-ID migration) that predates this effort. Touching
+  them would mean inheriting/committing someone else's in-flight, unrelated work on a stale branch outside the
+  integration branch — out of scope for this remediation, left as-is.
+
+Baseline ratcheted to reflect all of the above: `unified-trading-pm@bb1eb580e`. Re-ran the full workspace-wide checker
+after the ratchet — every repo shows `== baseline` (0 for the 27 fixed/never-had-debt repos, 11/3 for the two
+deliberately-grandfathered stale worktrees).
+
 ## Todos
 
 - [x] [SCRIPT] P1. ✅ **DONE 2026-07-27** — fixed `block_destructive_commands.py`'s error message. Commit
@@ -182,6 +252,12 @@ exclusion), and a `main()` end-to-end smoke; full `unified-trading-pm` `quality-
       mechanical gate that catches a NEW subprocess/os.system GCS/S3 object-CLI call site (as opposed to the doc-level
       rule alone). Baseline seeded from the real, confirmed workspace count (see above). `quality-gates.sh` green,
       shipped via quickmerge.
+- [x] [SCRIPT] P1. ✅ **DONE 2026-07-27 (same day, `/autonomous`)** — fixed the grandfathered debt itself across all 6
+      real repos in the baseline (deployment-service@direct-fix + 5 parallel sub-agent dispatches:
+      market-tick-data-service@964149f66, unified-trading-library@22da5ff71, e2e-testing@420e834,
+      instruments-service@105cfb8f, unified-trading-pm@317648211), ratcheted the baseline down to 0 everywhere except
+      the 2 deliberately-scoped-out stale worktrees (unified-trading-pm@bb1eb580e). See "Follow-up 2026-07-27 (later
+      same day)" above for the full per-repo disposition and every judgment call made.
 - [ ] [SCRIPT] P3. Consider a corpus grep for any OTHER open plan todo that literally instructs `gcloud storage rm`/
       `gsutil rm`/`aws s3 rm` as its stated method (rather than citing the UTL wrapper) — those todos would hit this
       same hook when dispatched; rewrite them to cite `gcs_delete_object()`/`gcs_copy_object()` instead. Not done this

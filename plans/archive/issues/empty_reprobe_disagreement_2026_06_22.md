@@ -4,7 +4,7 @@ title: Empty re-probe disagreements — today's new empties may be C1 bugs (2026
 summary:
   The daily empty re-probe found cells that became empty_confirmed+SOURCE_RETURNED_ZERO today where the UAC coverage
   oracle SHOULD_HAVE_DATA (or a wired re-fetch returned rows), plus ambiguous cells....
-status: open
+status: archived
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -26,6 +26,16 @@ last_updated: 2026-06-27
 ---
 
 # Empty re-probe disagreements — today's new empties may be C1 bugs (2026_06_22)
+
+> **✅ ARCHIVED as stale (archived 2026-07-27)** — a single dated snapshot (4 defi cells, `ORACLE_EXPECTS_DATA`: ALCHEMY
+> gas_fees, CHAINLINK oracle_prices, CURVE dex_pool_state, PANCAKESWAP_V3 dex_pool_state) with no recurring instance
+> found in the original `/plan-vintage-audit` pass. The reprobe mechanism has since industrialized into a scheduled
+> auto-flip system, but that system never auto-flips `ORACLE_EXPECTS_DATA` verdicts specifically — so these 4 cells were
+> never mechanically re-resolved. Archived as a known, accepted gap (not a false-positive, not re-probed this session)
+> rather than re-litigated — operator-directed default disposition per
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2 (also cross-referenced in that doc's §6 as
+> "unclear," resolved to this same disposition in the same session). Per
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2.
 
 > Auto-filed by the daily data-pipeline audit `reprobe_new_empty_confirmed.py` (Wave 4b, Phase 5 scripted→LLM escalation
 > hop). A deterministic candidate list was non-empty — the verdicts below need a planning-VM slot's judgment (real gap

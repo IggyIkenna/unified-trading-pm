@@ -4,7 +4,7 @@ title: "execution-service: migrate aioresponses test mocks → adapter-layer moc
 summary:
   The 2026-06-23 fleet bump moved 17 of 18 repos to `aiohttp>=3.14.1` (vcrpy 8.2.1 unblocked the VCR cassette suites).
   **execution-service is the lone holdout**, held on aiohttp **3.13.5** via a `[to...
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -35,6 +35,13 @@ last_updated: 2026-06-27
 ---
 
 # execution-service: aioresponses → adapter-layer mocks (unblock aiohttp 3.14)
+
+> **✅ ARCHIVED (archived 2026-07-27)** — sole todo done 2026-07-27 (slot-8), execution-service@`9ce159a7` (confirmed
+> ancestor of `origin/live-defi-rollout`). The operator's standing "do not refactor execution-service tests
+> mid-active-development" gate that held this doc back was lifted the same day
+> (`/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #18/19). Archived together with its parent
+> `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` in the same pass. Per
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2.
 
 ## What I found
 

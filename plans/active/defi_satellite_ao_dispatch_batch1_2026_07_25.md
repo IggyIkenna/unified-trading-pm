@@ -273,40 +273,60 @@ drift_direction: advance-code
       broader, cross-adapter version of the same gap (~12 adapters' `{"success": False, ...}` signal is never read by
       the same caller): `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`. Source:
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
-- [ ] [SCRIPT] P1. **Combined `market-tick-data-service/.../dex_swaps_handler.py` fix (2 sub-items merged into one todo
-      — both would EDIT the same file, different venues/bugs):** (a) classify the CURVE/OPTIMISM "no allocations"
-      GraphQL response as a distinct terminal condition at fetch time — detect a 200-status response whose `errors[]`
-      message matches `subgraph not found: no allocations` (or any non-schema-drift GraphQL error repeating identically
-      across all 5 cascade schema attempts) inside `_execute_subgraph_query`/`_run_cascade`, raise a typed terminal
-      error (reuse `SubgraphNotFoundError` or add `_SubgraphDeindexedError`) instead of falling through to the generic
-      RuntimeError, wire the manifest writer to `record_empty(reason=     EXPECTED_SUBGRAPH_DEINDEXED)` instead of
-      `record_failed`; (b) fix the TRADER_JOE_V2 TheGraph query-schema-cascade failure (subgraph
-      `H2VGe2tYavUEosSjomHwxbvCKy3LaNaW8Kjw2KhhHs1K`, confirmed 0% capture 2023-2026, all 5 cascade schemas fail with
-      `bad indexers`) via a new/updated query schema variant or a deployment-ID swap per the live GraphQL error, then —
-      once real TRADER_JOE_V2 rows confirmed flowing — launch a dedicated `dex_pool_swaps` backfill
-      (`deployment-service/scripts/vm/launch-mtds-dex-swaps-backfill-vm.sh`) for TRADER_JOE_V2 + VELODROME_V2 covering
-      2023-01-01 through 2024-10-06. Repos: market-tick-data-service, deployment-service. **Done when**: (a) a live
-      probe (or a simulating unit test) against CURVE/OPTIMISM's dex_pool_swaps cascade results in
-      `record_empty(reason=EXPECTED_SUBGRAPH_DEINDEXED)`, not `record_failed`; a fresh backfill VM run produces no new
-      `attempted_failed` rows for this cause; (b) TRADER_JOE_V2/AVALANCHE queries return real non-empty swap rows on 3+
-      sample dates; the scoped SPOT backfill VM is launched and T+10min health-verified RUNNING; `quality-gates.sh`
-      green. Source: `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-11).** **Combined `market-tick-data-service/.../dex_swaps_handler.py` fix
+      (2 sub-items merged into one todo — both would EDIT the same file, different venues/bugs):** (a) classify the
+      CURVE/OPTIMISM "no allocations" GraphQL response as a distinct terminal condition at fetch time — SHIPPED
+      `market-tick-data-service@dddd1b21`: `_execute_subgraph_query` now detects the `"no allocations"` fingerprint and
+      raises `_SubgraphDeindexedError` (fails fast on the first cascade attempt instead of burning all 5 — the condition
+      is subgraph-level, not query-shape), caught in `_collect_one_shard` and routed to
+      `record_empty(reason=EmptyConfirmedReason.EXPECTED_SUBGRAPH_DEINDEXED)` instead of `record_failed`. Proven via 9
+      new unit tests (fingerprint detector, `_execute_subgraph_query` raising, `_run_cascade` fail-fast propagation, the
+      full outer-loop `process()` → `record_empty` path) — all green, plus the live-reproduced exact CURVE/OPTIMISM
+      GraphQL error confirmed via direct `gateway-arbitrum.network.thegraph.com` probe. (b) TRADER_JOE_V2 —
+      **live-verified NO code fix was actually needed**: the existing cascade's 2nd variant (`messari_from`) already
+      matches the live subgraph schema exactly (introspection-confirmed) and returns real, non-empty swap rows on 3
+      sample dates spanning the target range (2023-01-15, 2023-09-01, 2024-09-01, direct `gateway.thegraph.com` probe
+      with a Secret-Manager TheGraph key). Launched the scoped SPOT backfill VM `mtds-dex-swaps-historical`
+      (`--protocols trader_joe_v2,velodrome_v2 --start 2023-01-01 --end 2024-10-06`), T+10min health-verified RUNNING
+      and actively writing manifest shards. `quality-gates.sh` green (market-tick-data-service, full run). Along the
+      way, live-reproduced a SEPARATE, still-open "bad indexers" transient-indexer-health failure (not schema drift)
+      affecting VELODROME_V2/OPTIMISM + others — folded as corroborating evidence into the existing 2026-07-27 (slot-2)
+      scope-extension todo in the source issue doc rather than treated as blocking this todo's own "done when" bar
+      (which names TRADER_JOE_V2/AVALANCHE specifically). Repos: market-tick-data-service, deployment-service. Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
-- [ ] [SCRIPT] P1. Spot-check live subgraph health for the remaining un-investigated `dex_pool_swaps` long-tail
-      `attempted_failed` buckets (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24, 1-5-row long-tail
-      buckets) — repeat the doc's live-probe methodology (direct POST to each subgraph's TheGraph gateway; fresh
-      `_meta.block.timestamp` = healthy vs 200-with-`errors[]` "no allocations" = dead); re-measure each bucket's
-      current row count against prod `_index/availability_index.parquet`. Read-only. Repo: market-tick-data-service.
-      **Done when**: every distinct (venue, chain) subgraph ID backing the remaining long-tail buckets has a recorded
-      live-probe verdict + current row count, written up as a follow-up issue doc. Source:
-      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`.
-- [ ] [PM] P1. File a new tracked issue doc for the `collect-mev-events` pagination gap: `mev_events_handler.py` only
-      pages the newest ~100 Flashbots relay rows/day (hard-exits after the first page), under-covering any day with >100
-      MEV-Boost relay payloads — already fully root-caused in the source doc, no new investigation needed. Correct
-      frontmatter (`doc_type: issue`, `asset_group: [defi]`, `repos:     [market-tick-data-service]`). Repo:
-      unified-trading-pm. **Done when**: a new `plans/active/issues/defi_mev_events_pagination_gap_<date>.md` exists
-      with the file:line citation + correct frontmatter, cross-referenced from the source doc's follow-up line. Source:
-      `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-5) — no code shipped (read-only spot-check).** The 2026-07-15-era bucket
+      labels named in this todo (`UNISWAP_V3` TimeoutError×25, `UNISWAP_V3`/POLYGON schema-drift×24) no longer match
+      current reality — re-measured fresh against prod `_index/availability_index.parquet` (26,819,985 rows):
+      `dex_pool_swaps` `attempted_failed` is now 866 rows across 11 (venue, chain, error_reason) buckets. Found this
+      exact investigation had ALREADY been done comprehensively same-day by slot-2
+      (`issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`, filed hours earlier) — rather than
+      fork a duplicate doc, live-probed the same subgraph IDs again ~2h later (production `async_post_to_subgraph` path
+      — aiohttp, not bare `urllib`, which Cloudflare-1010-blocks on this host) and appended the re-probe as new evidence
+      to that doc: confirmed every distinct (venue, chain) subgraph backing the current long-tail now has a recorded
+      live-probe verdict + current row count (table in the doc's new "Verified live (re-probe...)" section). Net new
+      signal: PANCAKESWAP_V3/BSC's "bad indexers" condition self-healed within the day (transient, confirmed);
+      UNISWAP_V3/OPTIMISM reproduced the IDENTICAL "bad indexers" error (same 3 indexer addresses) hours apart
+      (stronger-but-not-yet-conclusive evidence toward structural, not blip — existing P2 todo left OPEN pending a
+      genuine multi-day re-check); surfaced a NEW, previously-untracked finding (UNISWAP_V4/ETHEREUM 7 rows,
+      error_reason `build_instrument_id` — a code-level id-construction bug, NOT a subgraph-health issue; the subgraph
+      itself live-probed healthy) with its own new todo added to that doc. Also noted CURVE/OPTIMISM is still emitting
+      fresh `attempted_failed` rows with the pre-fix error signature as of minutes before the probe (likely a
+      not-yet-restarted backfill VM running pre-fix code — operational note, out of this todo's scope). Repo:
+      unified-trading-pm (issue-doc update only; no production code touched this todo). Source:
+      `issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`,
+      `issues/defi_dex_pool_swaps_733_row_indexer_health_findings_2026_07_27.md`.
+- [x] ✅ [PM] P1. **DONE 2026-07-28 (slot-11).** Filed
+      `plans/active/issues/defi_mev_events_pagination_gap_2026_07_28.md` — root cause is the pagination loop's exit
+      branch (`mev_events_handler.py:235`, `cursor = from_slot`) hard-setting the cursor to the loop's own termination
+      value on the "more data" branch, so any day with >100 Flashbots relay payloads only ever captures its newest page
+      (~100 rows) with no `attempted_failed`/partial signal — silent under-coverage, not an outage. Correct frontmatter
+      (`doc_type: issue`, `asset_group: [defi]`, `repos: [market-tick-data-service]`) + a concrete `[BACKEND] P2` fix
+      todo (confirm cursor semantics, decrement correctly, add multi-page unit test, re-verify with a live sample-day
+      backfill). Cross-referenced from the source doc's deferred-work row: updated
+      `plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md` line 266 ("File the
+      mev_events >100-payload/day pagination gap") from "Not filed" to point at the new doc. Repo: unified-trading-pm.
+      Source: `issues/defi_five_never_captured_venues_fix_2026_07_22.md`.
 - [ ] [PM] P1. File a new tracked issue doc for the collect-* Terraform stagger's pre-existing T+1 freshness-deadline
       risk: `defi_collection_scheduler.tf`'s header requires the stagger finish by 02:25 UTC for `features-onchain` T+1
       freshness, but `solana-defi` alone (02:05 start, 1500s timeout) can already finish ~02:30 — appears

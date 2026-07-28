@@ -33,7 +33,7 @@ locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
 
 ## What I found
@@ -178,18 +178,67 @@ for these messages to close the verification loop.
 
 ## Actionable todos for follow-up plan
 
-- [ ] [DEPLOY] P0. **Rebuild deployment-api image from LDR and redeploy `uts-prod-dp-heartbeat-watcher` Cloud Run Job**
-      — unblocks the `RunLogSignals` OOM fix going live (fix is already in code at LDR). (deployment-service)
+> **2026-07-27 /plan-vintage-audit re-verification note**: the dispatch instructions for this pass characterized all 4
+> Gap items as "live-verified... independently confirmed by `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`"
+> — **that citation does NOT hold up**: the cited doc's own entry for this exact doc
+> (`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md:522-525`) is a truncated, unfinished sentence ("Gap 1 (P0
+> redeploy deployment-api heartbeat-watcher):..." with nothing after the colon) — it asserts a verdict without ever
+> stating the evidence. Independently re-investigated each Gap below; only Gap 1 is solidly confirmed. **Flagging this
+> per the findings-triage HARD RULE** rather than silently trusting the citation.
+
+- [x] ✅ [DEPLOY] P0. **Rebuild deployment-api image from LDR and redeploy `uts-prod-dp-heartbeat-watcher` Cloud Run
+      Job** — unblocks the `RunLogSignals` OOM fix going live (fix is already in code at LDR). (deployment-service) —
+      **CONFIRMED LIVE 2026-07-27** via independent evidence in the freshly-filed
+      `/plans/active/issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md` (a same-day,
+      unrelated investigation that incidentally proves this): `uts-prod-dp-heartbeat-watcher-cron` fires the Job
+      reliably, 10+ consecutive executions all `SUCCEEDED_COUNT=1` (no more OOM crash-before-completion), and its logs
+      show real `WARNING heartbeat_stall_watcher: <vm> verdict=stall hb_age=...` output — the detection half genuinely
+      works in production. (That doc found a SEPARATE, new bug — the auto-kill ACTION fails structurally — unrelated to
+      this Gap 1's OOM/redeploy scope.)
 
 - [ ] [CODE] P1. **Add structured JSON logging to Cloud Run job/service images** so Python `logger.info()` calls appear
       in Cloud Logging. Investigate whether stdout is suppressed, then add a JSON log formatter in the entrypoint or UTL
-      bootstrap. (deployment-service + unified-trading-library)
+      bootstrap. (deployment-service + unified-trading-library) — **PARTIALLY done, genuinely still open for
+      alerting-service — NOT flippable as of 2026-07-27**: deployment-api Cloud Run JOBS side is confirmed fixed (see
+      Gap 1 evidence above — real WARNING-level logs now visible for `uts-prod-dp-heartbeat-watcher`). But the
+      alerting-service `dp-alerting-subscriber` Cloud Run SERVICE side is confirmed STILL BROKEN as of the most recent
+      check: `/plans/active/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (line ~195-205) documents the running
+      subscriber (rev 00008-csc) surfacing ZERO app logs in Cloud Logging — not even the unconditional startup line —
+      despite the identical image flooding those logs to stdout locally. This is tracked as a live, dispatched,
+      UNCHECKED `[ ]` todo in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` ("Diagnose the
+      alerting-service Cloud Logging ingestion gap") — not yet executed there either. Do not flip this checkbox until
+      that todo ships; when it does, flip all three source docs' checkboxes together citing its evidence (per that
+      todo's own instruction).
 
 - [ ] [VERIFY] P2. **Operator spot-check `#data-pipeline-alerts` channel** for the 2 `DP_VM_EXIT_NONZERO` CRITICAL
-      alerts from ~13:45 UTC 2026-06-23
+      alerts from ~13:45 UTC 2026-06-23 — genuinely still open, requires an operator to look at Slack; not something an
+      agent can self-certify. Given the alerting-service logging gap above, this is also the ONLY way to currently
+      confirm delivery for that surface (logs can't yet corroborate it).
 
 - [ ] [DEPLOY] P0. **Rebuild + redeploy BOTH alerting-service (`dp-alerting-subscriber`) AND deployment-api
       (`uts-prod-dp-exit-code-monitor`) Cloud Run units** so the Gap-4 verbose/actionable-alert fix (UTL envelope
       unwrap + explain block + run.log snippet + log link) is live; then verify a real `DP_VM_EXIT_NONZERO` renders VM
       name + exit code + log link + error snippet + explanation in `#data-pipeline-alerts`. (alerting-service +
-      deployment-service) to confirm end-to-end Slack delivery is working. (operator action)
+      deployment-service) to confirm end-to-end Slack delivery is working. (operator action) — **CODE confirmed shipped
+      2026-07-27**: `alerting-service@ceed827` (confirmed real + ancestor of `main` via `git log`/
+      `git merge-base --is-ancestor`) + `deployment-service@d2ddb23` (confirmed real via `git log`), both QG-green with
+      new regression tests per `data_completion_sports_2026_07_24.md:220-227`, image builds `c2beac49`/`c0f6dc2f` cited
+      there. **NOT independently confirmed**: whether the CURRENTLY-RUNNING `dp-alerting-subscriber` revision (rev
+      00008-csc, per the Gap-2 evidence above) is actually built FROM the `c2beac49` image, or an earlier one — this
+      needs a live `gcloud run services describe` check (out of this session's scope: no live GCS/GCP verification was
+      run for this item) before the "redeployed" half of this todo can be marked done. Checkbox stays open pending that
+      check + the operator spot-check above.
+
+## Progress Log
+
+- 2026-07-27 (`/plan-vintage-audit` June-2026 sweep, §2 execution): investigated all 4 Gaps against real evidence rather
+  than trusting the dispatch instructions' "independently confirmed by
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`" citation, which turned out to be a truncated/unfinished
+  sentence in that doc with no actual supporting evidence. Findings: **Gap 1 genuinely confirmed done+redeployed**
+  (fresh same-day corroboration from an unrelated investigation doc). **Gap 2 genuinely still open** for the
+  alerting-service Cloud Run Service specifically (confirmed via `dp_event_pubsub_delivery_gap_2026_06_22.md` + a live,
+  dispatched, unexecuted todo in `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`) — only the deployment-api
+  Cloud Run Jobs side is fixed. **Gap 3 genuinely still open** (operator-only action). **Gap 4's code is shipped +
+  verified real, but the "redeployed to the currently-running revision" claim is unconfirmed** (no live GCP check run
+  this session). **Did NOT archive this doc** — 3 of 4 items have genuine remaining work. Flagging the broken
+  corroborating citation per CLAUDE.md's findings-triage HARD RULE.

@@ -5,7 +5,7 @@ title:
 summary:
   Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are
   **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_...
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -38,6 +38,24 @@ last_updated: 2026-06-27
 ---
 
 # Live tardis-machine option + HL/ASTER S3 batch (batch-live symmetry)
+
+> **✅ ARCHIVED (archived 2026-07-27)** — both architecture asks SHIPPED+PROVEN+QG-GREEN and confirmed on `main`+LDR
+> (`git merge-base --is-ancestor`): #1 tardis-machine live option = mtds@`0aa6163` + deployment-service@`b5246a6`; #2
+> HL/ASTER S3 batch handler+launcher = mtds@`1e4dfb2` + deployment-service@`b04cfcc`. The "run launcher over full
+> ranges" residual absorbed via the archived `/plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md` →
+> `/plans/archive/2026_07/cefi_completion_program_2026_07_15.md` (both now themselves complete/archived). Ongoing
+> HL/ASTER-specific batch-gap work continues in the still-active
+> `/plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`. **Checked before archiving**: this doc's §7 "2-day
+> live-health/gap check (in progress)" note (keep the HL+binance live VMs up ≥2 days, verify manifest rows climbing) —
+> this note is NOT tracked in `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (that doc is BATCH-backfill-gap scope, a
+> different surface) and no `mtds-live-*` VM is currently running (`gcloud compute instances list` — zero matches,
+> 2026-07-28). The specific 2026-06-21/22-session VMs are long gone (>5 weeks); the underlying capability the check was
+> validating (CEX live capture writing to the manifest) was independently fully resolved + proven end-to-end by §6
+> (bug#9+#14, 2026-06-22, VM `mtds-live-cefi-binance-futures-trades-20260622-134033`: `capture_status=captured`,
+> `MissingSourceError=0`, `NoPipelineMode=0`) and superseded by the much broader live-persistence/event-log-spine work
+> since (§5-RESOLVED #17 "warm-GCS-parts durable sink APPROVED to build real code", 2026-07-27). Treating this as a
+> stale, time-bound check from a single session rather than a live open gap — no successor doc opened for it. Per
+> `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §2.
 
 Operator 2026-06-21 directed two architecture improvements while reviewing the cefi live + free-venue work. Both are
 **live-pipeline / mtds** scope (the `live_pipeline_mtds_mdps_features` + `batch_live_symmetry_master` epics own them).

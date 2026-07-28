@@ -22,7 +22,7 @@ related:
     defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25,
   ]
 created: 2026-07-25
-last_updated: 2026-07-26
+last_updated: 2026-07-27
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                              (specific `_migrated_*` marker objects, never the bucket), target
-                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                              returned `604800` (7 days) fresh-checked 2026-07-27 per
-                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                              Progress Log below.
+                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                  (specific `_migrated_*` marker objects, never the bucket), target
+                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                  Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -142,14 +142,22 @@ is quick and doesn't block anything.
       would NOT have caught this class of bug). `_parse_curve` itself is untouched and still tested/available
       (`test_parse_curve_full`) -- left in place since the todo didn't call for its removal and a future protocol could
       still need the bare (non-inputTokens) Messari shape.
-- [ ] [DATA] P1. **Live-test whether 2022-era pool metadata is still indexed**, per subgraph, for
+- [x] ✅ [DATA] P1. **Live-test whether 2022-era pool metadata is still indexed**, per subgraph, for
       curve/sushiswap/velodrome_v2/trader_joe_v2 -- before committing to a full historical backfill. Precedent both
       ways: Messari subgraphs are typically full-history (plausibly recoverable), but
       `EmptyConfirmedReason.EXPECTED_SUBGRAPH_DEINDEXED` is a real, shipped precedent for a subgraph going permanently
       unrecoverable (CURVE/OPTIMISM `dex_pool_swaps`, a different shard, see
       `instruments-service/scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`). Done-when: a
       documented per-subgraph verdict (recoverable / partially-recoverable / deindexed) in this plan's Progress Log.
-      (repo: market-tick-data-service)
+      (repo: market-tick-data-service) ✅ **2026-07-27**: shipped `market-tick-data-service@0f40a69f`
+      (`scripts/live_test_2022_dex_pool_subgraph_indexing_2026_07_27.py`, a read-only live-network diagnostic, no GCS
+      writes). Full per-subgraph verdicts in the Progress Log below -- summary: curve/ETHEREUM, curve/AVALANCHE,
+      sushiswap/ARBITRUM, trader_joe_v2/AVALANCHE all RECOVERABLE (real 2022 data, live-verified). curve/OPTIMISM
+      DEINDEXED (independently reconfirms the existing `dex_pool_swaps` precedent -- same dead subgraph id, same "no
+      allocations" error, now shown to also hold for this different data_type/query). velodrome_v2/OPTIMISM is
+      RECOVERABLE but has genuinely ZERO 2022 data -- not a fault, the protocol's real launch window is ~2023-06/07
+      (subgraph confirmed healthy via populated 2024/2025 snapshots); the next todo's backfill range for velodrome_v2
+      must start there, not fabricate a 2022 start.
 - [ ] [BACKEND] P1. **Re-backfill `dex_pool_state` for curve/sushiswap/velodrome_v2/trader_joe_v2** across the full
       historical range using the fixed query (todo above), on an in-region VM per the heavy-I/O rule, scoped only to the
       ranges confirmed recoverable in the prior todo. Done-when: the manifest shows a populated `symbol`/ `pool_address`
@@ -268,3 +276,43 @@ is quick and doesn't block anything.
     `rebuild_defi_manifest.py`'s `scan_and_rebuild()` explicitly skips every `_`-prefixed leaf per the script's own
     module docstring -- so there was no manifest row to purge.)
   - Shipped: `market-tick-data-service@e378643b` (scope-filter code + tests). Plan checkbox flipped same turn.
+
+- **2026-07-27 -- todo 3 live-test executed (closes todo 3): per-subgraph 2022-indexing verdict.**
+  - **Method**: shipped `market-tick-data-service@0f40a69f`
+    (`scripts/live_test_2022_dex_pool_subgraph_indexing_2026_07_27.py`, read-only, no GCS writes -- no delete-safety
+    gating applies). For every `(protocol, chain)` pair the UAC registry declares for
+    curve/sushiswap/velodrome_v2/trader_joe_v2, queried `gateway.thegraph.com` directly with the SAME `_CURVE_QUERY`
+    (messari_basic `liquidityPoolDailySnapshots`) the just-fixed handler now uses in production (todo 2,
+    `market-tick-data-service@63199601`), for two 2022 sample dates (2022-01-15, 2022-06-15). A subgraph returning a
+    GraphQL error is DEINDEXED; one returning 0 rows for both 2022 dates with no error is disambiguated against later
+    dates (2024-08-01, 2025-01-15) to tell "genuinely broken" apart from "protocol simply didn't exist yet in 2022".
+  - **Results** (live-run output, `market-tick-data-service@0f40a69f`):
+
+    | Protocol/Chain          | Subgraph ID                                    | 2022-01-15                                                                      | 2022-06-15            | Verdict                             |
+    | ----------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- | --------------------- | ----------------------------------- |
+    | curve/ETHEREUM          | `3fy93eAT56UJsRCEht8iFhfi6wjHWXtZ9dnnbQmvFopF` | 62 snapshots (named pools, e.g. "Curve.fi DAI/USDC/USDT", "Curve.fi ETH/stETH") | 116 snapshots         | **RECOVERABLE**                     |
+    | curve/OPTIMISM          | `CXDZPduZE6nWuWEkSzWkRoJSSJ6CneSqiDxdnhhURShX` | GraphQL error: `subgraph not found: no allocations`                             | same error            | **DEINDEXED**                       |
+    | curve/AVALANCHE         | `2Vt8WtdXNZUEeaVtzyEd1dpioJf44nvomzkd4HhubfKS` | 15 snapshots (e.g. "Curve.fi avDAI/avUSDC/avUSDT")                              | 23 snapshots          | **RECOVERABLE**                     |
+    | sushiswap/ARBITRUM      | `9tSS5FaePZnjmnXnSKCCqKVLAqA6eGg6jA2oRojsXUbP` | 74 snapshots (e.g. "SushiSwap Wrapped Ether/USD Coin (Arb1)")                   | 84 snapshots          | **RECOVERABLE**                     |
+    | velodrome_v2/OPTIMISM   | `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA` | 0 snapshots, no error                                                           | 0 snapshots, no error | **RECOVERABLE_BOUNDED** (see below) |
+    | trader_joe_v2/AVALANCHE | `H2VGe2tYavUEosSjomHwxbvCKy3LaNaW8Kjw2KhhHs1K` | 567 snapshots (e.g. "Trader Joe Wrapped AVAX/Tether USD")                       | 532 snapshots         | **RECOVERABLE**                     |
+
+  - **curve/OPTIMISM DEINDEXED -- cross-confirms the existing precedent, doesn't just repeat it**: this run queries
+    `liquidityPoolDailySnapshots` (the messari_basic `dex_pool_state` shape, todo 2's fix), a DIFFERENT query/data_type
+    from the prior `dex_pool_swaps` cascade-exhaustion finding
+    (`instruments-service/scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py`) that first
+    identified this subgraph id as dead. Both queries hit the identical `"subgraph not found: no allocations"` error on
+    the SAME subgraph id -- confirming the indexer-economics condition is subgraph-wide (no indexer allocations at all),
+    not specific to one query shape. So the confirmed-recoverable range for curve EXCLUDES OPTIMISM entirely; only
+    ETHEREUM and AVALANCHE are in scope for the next todo's backfill.
+  - **velodrome_v2/OPTIMISM disambiguated, not left ambiguous**: 0 snapshots at both 2022 dates with NO GraphQL error
+    (unlike curve/OPTIMISM) meant the subgraph itself needed a health check before concluding anything. Probed
+    2024-08-01 (380 snapshots, e.g. "Velodrome Finance V2 sAMMV2-msETH/WETH") and 2025-01-15 (366 snapshots) -- both
+    healthy and real, proving the subgraph is NOT deindexed. Bisected the actual launch window live: 2023-01-01 (0),
+    2023-02-01..2023-06-01 (all 0), 2023-07-01 (133, real). So Velodrome V2 on Optimism genuinely has no history before
+    ~2023-06/07 -- there is no 2022 data to recover because the protocol didn't exist yet, not because the subgraph lost
+    it. **Actionable for the next todo**: velodrome_v2's backfill range must start at ~2023-06/07, not 2022 -- scoping
+    it to 2022 would just be a guaranteed-empty scan, not a correctness issue but a wasted pass.
+  - **Confirmed-recoverable range for the next todo (backfill)**: curve (ETHEREUM, AVALANCHE only -- NOT OPTIMISM),
+    sushiswap (ARBITRUM), trader_joe_v2 (AVALANCHE) -- full historical range, live-verified as far back as 2022-01-15.
+    velodrome_v2 (OPTIMISM) -- recoverable from ~2023-06/07 forward only.

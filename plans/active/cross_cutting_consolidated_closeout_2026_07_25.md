@@ -355,21 +355,27 @@ paths blocked on 3 unanswered operator "open questions" + the canonical-v9 migra
 `features_service_e2e_pipeline_test_ 2026_05_26.md` (Phases 0-5 shipped, but stuck behind a **STALE hold banner** citing
 a release channel retired 2026-07-04 — the doc's own 2026-07-12 annotation flags this but never lifts it; escalate to
 the operator to lift it explicitly rather than silently re-dispatching),
-`mdps_features_reduced_artifact_tracker_2026_06_28.md` (coordination hub; Plan 3 —
-`mvp_for_mdps_and_features_universe_uac` — was **never authored**, a real gap blocking 3 downstream plans; needs a human
-UAC-universe scoping pass before it can be AO-dispatched), `mtds_file_size_refactor_2026_06_08.md` (operator-parked, do
-not dispatch), `issues/features_service_coverage_and_script_canon_2026_06_10.md` (2/8 done; 3 bounded items + 2 needing
-an owner design call + 1 large repo-wide sweep).
+`mdps_features_reduced_artifact_tracker_2026_06_28.md` (coordination hub; **CORRECTED 2026-07-27**: Plan 3 —
+`mvp_for_mdps_and_features_universe_uac` — was NOT never-authored, it shipped in full and archived 2026-06-30
+(`plans/archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md`, content-verified: `mdps_mvp_universe`
+uac@682cffb5, `feature_perp_representative` uac@6f0c4bf8, `execution_spot_representative` uac@6cf967c2, 5-AG test matrix
+uac@6a2f6aab, consumed by features-service@48fa8377); none of Plans 2/6/9 were actually blocked on it (2 and 9 already
+independently complete/active, 6 has a stable dependency contract but just isn't implemented yet) — this tracker has 0
+own checkbox todos, slated for archival), `mtds_file_size_refactor_2026_06_08.md` (operator directed 2026-07-27:
+**resume**, no longer parked), `issues/features_service_coverage_and_script_canon_2026_06_10.md` (2/8 done; 3 bounded
+items + 2 needing an owner design call + 1 large repo-wide sweep).
 
 **Sources (fleet health)**: `issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` (likely superseded by
 already-shipped fixes — verify before re-dispatching), `issues/fleet_audit_triad_deferred_followups_2026_06_01.md`
 (**explicit operator "let it be" — exclude from dispatch**), `issues/fleet_data_acquisition_health_2026_06_21.md`
 (mostly done; small residuals: sports ODDS_API recheck, footystats 0-byte log check, a `book_snapshot` key-mismatch
-fix), `issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` (mostly done; one substantial open item — run the
-HL/ASTER batch launcher over the 2023→26/2024→26 ranges, 48.5k `attempted_failed` cells, code proven, backfill not yet
-run), `issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (1/4 done; 2 bounded verify/config items),
-`issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync item + 1
-tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
+fix), `/plans/archive/issues/live_tardis_machine_and_hl_aster_s3_batch_2026_06_21.md` (ARCHIVED 2026-07-27, both
+architecture asks shipped+proven; the backfill-over-full-ranges ask absorbed via the archived
+`mvp_backfill_cefi_tick_v10_2026_06_27.md` → `cefi_completion_program_2026_07_15.md`; ongoing HL/ASTER batch-gap work
+continues in `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`),
+`/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (ARCHIVED 2026-07-27, all 5/5
+done), `issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync
+item + 1 tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
 
 **Excluded (mistag, fixed 2026-07-25)**: `issues/features_service_defi_data_loading_blockers_2026_05_29.md` — its own
 `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as owner; retagged `[defi]`, route to the DeFi

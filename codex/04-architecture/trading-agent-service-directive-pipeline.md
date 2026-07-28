@@ -190,8 +190,8 @@ Both are in `unified_api_contracts.internal` (not public surface) — internal c
 > — execution-service remains the SSOT for order state; the ledger is rebuilt on every trading-agent restart by querying
 > execution-service for open orders (the L6 fill-verify loop). There is no UTL/UAC persistent-ledger primitive this
 > should reuse or migrate to — a durable ledger here would duplicate execution-service's SSOT, not consolidate onto one.
-> Do not re-flag it in a future reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`
-> line 176-179 (verified NON-findings list).
+> Do not re-flag it in a future reuse audit. SSOT:
+> `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § Verified NON-findings.
 
 ---
 

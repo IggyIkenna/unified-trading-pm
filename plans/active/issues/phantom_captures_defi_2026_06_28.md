@@ -4,7 +4,7 @@ title: Phantom captures — defi manifest (2026-06-28)
 summary:
   219,529 phantom captures (10.5% of captured scope) in defi MTDS manifest — swaps_ohlcv_* dominant across Uniswap
   V3/V4, Balancer, SushiSwap. Major data integrity finding.
-status: open
+status: open # 2026-07-27: todo 2 verified done + flipped; todo 1's "already covered" [x] was FALSE (see Progress Log) -- reverted, NOT archived
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -22,11 +22,24 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-28
+last_updated: 2026-07-27
 locked_since: 2026-05-21
 ---
 
 # Phantom captures — defi manifest (2026-06-28)
+
+> **⚠️ NOT ARCHIVED (2026-07-27 /plan-vintage-audit correction)** — a 2026-07-27 pass verified todo 2 ("apply
+> reconciliation") is genuinely done (2026-06-28T21:35:53Z, `bj755413o`, exit_code=0, 219,632 phantoms flipped, verified
+> against `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` +
+> `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and flipped it. **But todo 1's `[x]` was FALSE**:
+> its "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` + this doc's own 2026-07-26 Progress Log
+> entry" citation does not hold up — that Progress Log entry (below) explicitly states "Todos 1+2 above... remain open —
+> out of this todo's scope", and `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (status: active) carries the
+> IDENTICAL root-cause-diagnosis todo still unchecked with zero completion evidence. Reverted todo 1 to open. **This doc
+> is NOT archived** — 1 genuine open item remains, already tracked at
+> `/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md` (line ~687, "Diagnose the root cause of the 2026-06-28
+> defi phantom-capture batch-writer failure"). Flagging per the findings-triage HARD RULE (SSOT-contradiction-adjacent:
+> a checked-but-undone todo citing a doc that disclaims the coverage in its own text).
 
 > Auto-filed by the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`)
 > run during Phase-0 catalogue finalization. Found 219,529 `capture_status=captured` rows in the MTDS defi manifest
@@ -123,13 +136,22 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Todos
 
-- [x] [SCRIPT] P1. Diagnose defi phantom root cause: uniform ~25,400 counts across 7 swaps_ohlcv_* granularities +
+- [ ] [SCRIPT] P1. Diagnose defi phantom root cause: uniform ~25,400 counts across 7 swaps_ohlcv_* granularities +
       UNISWAP_V4 dominance suggest a single batch writer failure. Check DeFi OHLCV writer logs for affected window.
-      Repo: `market-tick-data-service`. — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md + this
-      doc's own 2026-07-26 Progress Log entry (see that doc for execution).
-- [ ] [SCRIPT] P1. Apply defi phantom reconciliation (219,529 rows → `attempted_failed`) BEFORE defi backfill G0. Run
+      Repo: `market-tick-data-service`. **CORRECTED 2026-07-27**: reverted from a false `[x]` — the prior "already
+      covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` + this doc's own 2026-07-26 Progress Log entry" claim
+      does not hold: the Progress Log entry below explicitly scopes itself to a DIFFERENT question (current-writer
+      write-then-record safety, matching todo 3) and says "Todos 1+2 above... remain open"; `batch1`'s own copy of this
+      exact todo (status: active) is still unchecked with no completion evidence. Genuinely open — tracked at
+      `/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`.
+- [x] ✅ [SCRIPT] P1. Apply defi phantom reconciliation (219,529 rows → `attempted_failed`) BEFORE defi backfill G0. Run
       `reconcile_phantom_manifest_rows_all.py --asset-group defi` (no dry-run) with `MANIFEST_PER_VM_SHARDS=true`.
-      Verify with `--dry-run` post-apply confirms 0 phantoms. Repo: `instruments-service`.
+      Verify with `--dry-run` post-apply confirms 0 phantoms. Repo: `instruments-service`. — **APPLY COMPLETE, verified
+      2026-07-27**: `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` records the
+      2026-06-28T21:35:53Z apply run (`bj755413o`, exit_code=0, 219,632 phantoms flipped `captured→attempted_failed`, 0
+      unphantomed — idempotent run confirmed), independently corroborated by
+      `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md:105-110`'s own banner (same timestamp/counts). Both
+      citations re-read + confirmed real this session.
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-26 (worker, slot 6).** Confirmed against the CURRENT writer code (the original
       batch OHLCV writer implicated in this finding was RETIRED 2026-07-18/19 for a per-instrument writer
       re-architecture, `market-tick-data-service@4ca2640d` — this re-checks the NEW path, not the retired one). Full
@@ -139,6 +161,15 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Progress Log
 
+- 2026-07-27 (`/plan-vintage-audit` June-2026 sweep, §2 execution): verified + flipped todo 2 (apply reconciliation) —
+  genuinely complete, 2026-06-28T21:35:53Z (`bj755413o`, exit_code=0, 219,632 phantoms flipped), evidence re-read from
+  `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` +
+  `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner. While reading the doc end-to-end (not just
+  checkbox count), found todo 1's `[x]` was FALSE — its own Progress Log entry below (2026-07-26) explicitly disclaims
+  covering it ("Todos 1+2 above... remain open"), and the plan it cited as coverage
+  (`defi_satellite_ao_dispatch_batch1_2026_07_25.md`, status: active) still carries the identical root-cause-diagnosis
+  todo unchecked with zero completion evidence. Reverted todo 1 to `[ ]`. **Did NOT archive this doc** — 1 genuine open
+  item remains (already has a home: batch1's own todo). Flagged per CLAUDE.md's findings-triage HARD RULE.
 - 2026-07-26 (worker, slot 6, `defi_satellite_ao_dispatch_batch2-021`): re-verified the write-then-record ordering (the
   exact bug class suspected here) across every active DeFi writer handling `dex_pool_swaps`/`gas_fees` in
   `market-tick-data-service` (repo scope per this doc + the batch2 todo). `swaps_ohlcv_*` is out of scope for this repo

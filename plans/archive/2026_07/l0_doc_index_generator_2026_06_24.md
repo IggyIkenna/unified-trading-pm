@@ -38,6 +38,13 @@ drift_direction: advance-code
 
 # L0 doc-index generator (grep-native map) + FF-cron auto-regen
 
+> **✅ ARCHIVED/MIGRATED (2026-07-27)** — the 2 remaining open Deferred items below (central AO-dashboard L0-graph
+> route; on-demand stale-check wrapper) were carried forward Source-verbatim into
+> `/plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md` (~L476-498) and remain open there — track them there
+> going forward, do not duplicate-dispatch from this file. Everything else in this doc (core generator, FF-cron
+> auto-regen, full frontmatter rollout) was already shipped, as recorded below. Archived via `/plan-vintage-audit`
+> June-2026 migration pass (`unified-trading-pm`, this commit); not locked, no unlock needed.
+
 > **W4** of `agent_operating_framework_master` — the CONSUMER of the frontmatter (the actual retrieval payoff). Built
 > NOW so it is ready as docs migrate to the new frontmatter (operator 2026-06-24). The L1 facets (frontmatter) are the
 > input; this L0 map is what agents read FIRST to route — "retrieve less but right".

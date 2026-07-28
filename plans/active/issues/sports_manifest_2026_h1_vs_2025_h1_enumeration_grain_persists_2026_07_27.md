@@ -148,7 +148,7 @@ operator/plan triage rather than actioned here. Neither is a data-correctness em
 data — every affected row is an honest `expected_unattempted`/`empty_confirmed`/`captured` state, just asymmetrically
 distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation-gate freeze trigger.
 
-- [ ] [OPERATOR] P2. Decide whether `expected_universe_v2_scheduler.tf`'s `expected_universe_start_date` (currently a
+- [x] [OPERATOR] P2. Decide whether `expected_universe_v2_scheduler.tf`'s `expected_universe_start_date` (currently a
       static, never-overridden default `"2026-02-20"`, verified via `grep -rn expected_universe_start_date terraform/`
       finding only the one declaration) should be widened/refreshed (e.g. to a genuinely rolling `today - 120d`, or a
       much earlier fixed floor if a wider historical `expected_unattempted` denominator is wanted for pre-2026-02-20
@@ -157,6 +157,35 @@ distributed by date) — both are P2/P3-appropriate follow-ups, not a foundation
       recurring job" — so it needs an explicit operator call, not a silent default. Same static-default pattern likely
       affects cefi/defi/tradfi/prediction too (same `expected_universe_v2_asset_groups` map, same `.tf` file) — NOT
       independently re-measured for those AGs by this sports-scoped todo. (repo: deployment-service)
+
+  > **RESOLVED — operator ruling 2026-07-27** (main agt-4d8de7 msg 2440/2441). Two distinct jobs, per operator's own
+  > 2020-06 sports data-floor ruling (`/codex/02-data/sports-2020-06-data-floor.md`, which makes 2020-06-06 the base
+  > month for ALL sports honest-coverage denominators AND fixture expectations — the `expected_unattempted` universe IS
+  > the fixture-expectation denominator):
+  >
+  > 1. **Recurring scheduler** → flip `expected_universe_start_date` from the static `"2026-02-20"` to a genuinely
+  >    rolling `today - 120d`. Cheap, matches the .tf's documented "slides forward each day" intent, stops the forward
+  >    seeding artifact. This is the operator's pick for the ongoing job.
+  > 2. **One-time historical denominator** → floor at **2020-06-06** (the sports data floor), NOT 2026. Running the
+  >    historical `expected_unattempted` backfill from just 2026 would reproduce this exact artifact one boundary over
+  >    (2020-06..2025 would still carry ZERO `expected_unattempted`, so their honest-coverage % keeps reading
+  >    artificially inflated). This is the gated follow-up the .tf comment flags (~190M rows fleet-wide; the
+  >    sports-scoped subset is smaller) — a deliberate gated backfill, separate from the cheap recurring window.
+
+- [ ] [SCRIPT] P2. Implement job (1): flip `deployment-service/terraform/gcp/expected_universe_v2_scheduler.tf`'s
+      `expected_universe_start_date` from the static default `"2026-02-20"` to a genuinely rolling `today - 120d`
+      (computed at plan/apply time, not a frozen literal — the current default never bumps without a fresh
+      `terraform apply`). Verify the recurring v2 enumerator then seeds `expected_unattempted` for the trailing 120-day
+      window on every run. Keep the sports-scoped change minimal; the same-pattern cefi/defi/tradfi/prediction AGs are a
+      separate follow-up (see below). (repo: deployment-service)
+- [ ] [DATA] P2. Implement job (2): the gated one-time historical `expected_unattempted` denominator backfill floored at
+      **2020-06-06** (sports). Gated + resource-bounded (heavy — run on a VM per the heavy-I/O rule, never locally);
+      scope to sports first. Done-when: 2020-06-06..present sports dates carry a seeded `expected_unattempted` universe
+      so cross-year honest-coverage comparisons share one denominator regime. (repo: deployment-service)
+- [ ] [DATA] P3. Re-measure the same static-default `expected_universe_start_date` pattern for
+      cefi/defi/tradfi/prediction (same `expected_universe_v2_asset_groups` map, same `.tf`) — NOT covered by this
+      sports-scoped issue; likely the same boundary artifact. Read-only measurement first; widen/backfill per the same
+      two-job model if confirmed. (repo: deployment-service)
 - [ ] [DATA] P3. Investigate the FIXTURES/FIXTURES_OUTCOMES/ODDS-specific distinct-`league_id` growth (88->924, 88->926,
       51->384 respectively vs the ~4x baseline other sports data_types show, e.g. WEATHER 94->388, MATCHES 102->406) to
       determine whether it is genuine coverage expansion (more leagues legitimately tracked in 2026) or a

@@ -259,9 +259,20 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`. Launched zero new VMs; did not
       touch slot-7's in-flight run. 9b's own full-matrix completion remains genuinely open, still owned by slot-7 — see
       the disposition note below.
-- [ ] 10. [DATA] P1. Steady-state benchmark VMs (250GB disk) per representative shard-type; measure amortized per-shard-
-      day throughput (RX + rows/s + wall-clock); project full-history time (honest floor + flat 2019) + SPOT cost +
-      parallelization/optimization headroom.
+- [x] 10. ✅ [DATA] P1. **DONE 2026-07-28 (slot-13)** — Steady-state benchmark VMs run for both representative
+      shard-types. **MDPS** (`mdps-backfill-cefi-pcbench-20260727-234527-a84603`, CEFI:BINANCE-FUTURES:trades, 15-day
+      window, exit_code=0): real-compute-day cost **20.7s** (7,615 candles/7 timeframes) on the one day with genuine
+      raw-tick input; empty-input days cost **~14.0s/day** (n=13, subprocess spawn+GCS-list-and-bail) even though zero
+      work happens — input coverage was sparse (1/15 days = 6.7% had real data in the tested window). **Features**
+      (`features-e2e-cefi-20260727-235729-025349`, CEFI:delta_one, 1807-instrument universe across 4 sub-families):
+      observed dependency-pre-check rate ~73.9 log-lines/s sustained (2 independent snapshots agree); confirmed each of
+      the 4 sub-families (technical_indicators/moving_averages/ oscillators/volatility_realized) independently re-scans
+      the SAME (instrument,date) MDPS-availability check — a direct ~4x redundant-work finding, filed as new todo
+      10-followup-a below. Full projection + evidence in the Progress Log entry below. Both local driver processes died
+      mid-run without writing their own reports (the already-tracked
+      `worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md` failure mode, reproduced a 3rd/4th time)
+      — every number here was recovered directly from each VM's own GCS `run.log`, same recovery method already used for
+      todo 8.
 - **[DATA] P0. 11.** Cross-repo orphan/lineage audit (MTDS→MDPS→features→ml/strategy) + MIGRATE existing candle/feature
   data to zero orphans (MVP or not). Migrations run to real completion (data-correctness heartbeat). **Non-checkbox
   rollup header — restructured 2026-07-27 (slot-12) per BLK-1db5424c** (mirrors the identical fix main applied for
@@ -328,6 +339,20 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       `/plans/active/candle_canonical_path_migration_execution_2026_07_24.md` (the Option-A canonical-path migration
       epic) reaching its P8 verify/reconcile; do NOT backfill the corpus into the pre-migration shape (see this plan's
       `depends_on` frontmatter).
+- [ ] 10-followup-a. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** features-service `delta_one`
+      compute independently re-runs the per-(instrument,date) MDPS-candle-availability dependency check ONCE PER
+      SUB-FAMILY (technical_indicators/moving_averages/oscillators/volatility_realized — 4x total), directly observed
+      via the benchmark VM's `run.log` restarting its per-instrument alphabetical iteration order at the start of each
+      family pass. Cache the check result per `(instrument, date)` once per run and share it across all 4 sub-families —
+      a ~4x cut of the dominant pre-check phase (observed ~73.9 log-lines/s, this phase ran for minutes before any real
+      feature compute began on the large 1807-instrument CEFI universe). Repo: features-service.
+- [ ] 10-followup-b. [SCRIPT] P2. **NEW 2026-07-28 (slot-13, from todo 10's benchmark).** MDPS's per-date backfill
+      subprocess loop pays a flat ~14.0s spawn+GCS-list-and-bail tax for EVERY calendar day attempted, even when that
+      day has zero raw-tick input (measured: 13/15 empty days in the CEFI:BINANCE-FUTURES:trades benchmark window, i.e.
+      most days). At full flat-2019 (2757-day) scale this empty-skip tax dominates wall-clock over real compute.
+      Pre-filter the date range against the availability manifest/census (same single-walk discipline already codified
+      for MDPS elsewhere in this plan) BEFORE spawning a per-date subprocess, instead of discovering absence per-date at
+      runtime. Repo: market-data-processing-service / deployment-service (`launch-mdps-backfill-vm.sh`).
 
 ## Progress Log
 
@@ -494,6 +519,73 @@ vulnerable + the launcher-label insufficiency finding + both fixes): `market-dat
 **Disposition:** todo 9b remains OPEN, still owned by slot-7's in-flight run — this closed an ADJACENT gap, not 9b
 itself. **Next session**: `ps aux | grep pipeline_e2e_check` for slot-7 first; if finished, read its report; if died
 mid-matrix, resume from its last shard (both drivers now duplicate-guarded).
+
+### 2026-07-28 (slot-13) — todo 10 DONE: steady-state benchmarks run for both representative shard-types; local driver died twice, numbers recovered from each VM's own GCS log
+
+Dispatched to todo 10 (steady-state benchmark VMs + full-history/SPOT-cost/parallelization projection). Ran the opt-in
+`--legs benchmark` leg for one representative MDPS shard and one representative features shard.
+
+**MDPS** (`market-data-processing-service`, CEFI:BINANCE-FUTURES:trades, `--benchmark-days 14` → window
+2026-06-21..2026-07-05, VM `mdps-backfill-cefi-pcbench-20260727-234527-a84603`): the local driver process was killed
+mid-run by a worker-session teardown (same class as
+`issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`) before it could poll EXIT_STATUS and
+write its report — but the VM itself completed independently on GCP (`exit_code=0`). Recovered the real measurement
+directly from the VM's own `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` (same recovery
+technique already proven for todo 8): 15 calendar days were attempted, but only **1/15 (6.7%)** had genuine captured
+raw-tick input for this venue/data_type — a concrete, independently-confirmed instance of the plan's own documented "the
+input corpus is sparse and uneven" caution. Per-day costs, computed from consecutive `subprocess-per-date: spawning`
+timestamps:
+
+- **Real-compute day** (2026-07-05, the one day with real input): **20.7s** pure compute (VM's own "Total Duration"
+  line) → 7,615 candles across 7 timeframes (15s/1m/5m/15m/1h/4h/24h) — matches the identical candle count independently
+  proven 4-5x already in todo 8. Full round-trip incl. subprocess spawn/shutdown: ~29.8s.
+- **Empty/no-input day** (13 samples, consecutive spawn-to-spawn deltas): mean **14.0s/day** — subprocess bootstrap +
+  GCS list-and-bail + shutdown, even though zero real work happens. This is a real, non-trivial fixed tax paid on EVERY
+  calendar day attempted, filed as new todo 10-followup-b.
+
+**Features** (`features-service`, CEFI:delta_one): first attempt (window 2026-06-21..2026-07-05, matching the MDPS
+window) failed outright — the delta_one dependency check requires MDPS candles for the whole window in the PROD bucket,
+and `2026-06-21` had none (the benchmark leg does NOT honor `--auto-day`, confirmed by reading `_run_benchmark_leg`'s
+use of the raw `_window()` helper vs. `_resolve_window()` used by the other legs — a real gap, itself worth a follow-up
+if the benchmark leg needs auto-day support). Manually located a genuinely-covered window instead by object-counting
+`processed_candles/by_date/day=*` prefixes in `market-data-tick-cefi-prd-central-element-323112`
+(2026-04-10..2026-04-14, 1485-5680 objects/day) and relaunched with `--day 2026-04-14 --benchmark-days 4`. This driver
+ALSO died mid-run to the same teardown class as MDPS (2nd/3rd reproduction this session) — recovered from the VM's own
+run.log (`features-e2e-cefi-20260727-235729-025349`, still `RUNNING` at write-time, self-manages its own 10-hour
+timeout + `VM_SHUTDOWN_ON_COMPLETION=true`, non-blocking to this report). Observed, from two independent full-log
+snapshots 120s apart (11166→20034 lines): a sustained **~73.9 log-lines/s** dependency-pre-check rate. The universe is
+large — 1807 retained instruments (per `universe_filter`) across delta_one's 4 sub-families
+(technical_indicators/moving_averages/oscillators/ volatility_realized) — and **each sub-family independently re-scans
+the identical (instrument, date) MDPS-availability check**, directly confirmed by watching the log's per-instrument
+alphabetical iteration restart from the top at the start of each family's pass. This pre-check phase dominates
+wall-clock before any real feature compute begins on a large-universe AG like CEFI. Filed as new todo 10-followup-a (~4x
+reduction available by caching the check once per run instead of once per family).
+
+**Projection** (SKILL.md formula: `serial_hours = per_shard_day_seconds × shard_days / 3600`;
+`VM_hours = serial_hours / (workers × fleet_width)`; `cost = VM_hours × $/hr`), using MDPS's real COMPLETE measurement
+as the primary input (features' number is a real but partial in-progress observation, not used for the cost projection):
+
+- `per_shard_day_seconds` = 20.7s (compute-only) / 29.8s (full round-trip incl. subprocess overhead)
+- `shard_days` = flat 2019-01-01→today upper bound = 2757 days (per this plan's already-established measured floor); the
+  HONEST per-shard floor is almost certainly far lower given the 6.7%-real-data sparsity measured in this exact
+  benchmark, but that requires its own availability-census (same class of work as todo 13's DeFi ETA) — not re-derived
+  here, flagged as a caveat rather than assumed.
+- Serial (1 VM, compute-only): 20.7 × 2757 / 3600 = **15.9 hours**; full round-trip: 29.8 × 2757 / 3600 = **22.8 hours**
+  — for ONE representative shard's entire flat-2019 history on a single VM.
+- Fleet width (unbounded, MDPS is not Tardis-capped — shard by date range across N VMs for ~N×): 4 VMs → ~4-6 hours; 8
+  VMs → ~2-3 hours.
+- Cost: e2-standard-8 SPOT
+  $0.024-0.107/hr × 15.9-22.8 VM-hours (1 VM, worst case no skip-optimization) ≈
+  **$0.38-$2.44** for one representative
+  shard type's full historical backfill — cheap in absolute terms because compute itself is fast; the REAL cost driver
+  at scale is the empty-skip subprocess tax (13/15 = 86.7% of attempted days in this sample), which is exactly what todo
+  10-followup-b targets.
+- Disk: `pd-balanced 250GB` confirmed already the enforced default (unchanged from prior sessions' finding).
+
+**Disposition:** todo 10 DONE — both representative shard-types benchmarked on real infra, real per-day costs measured
+(MDPS complete, features partial-but-real with the VM continuing independently), full-history/SPOT-cost/ parallelization
+projection written with honest caveats, and two concrete new optimization-headroom todos filed (10-followup-a,
+10-followup-b) rather than absorbed as unplanned scope into this todo.
 
 ## Deferred work after 2026-07-27
 

@@ -83,7 +83,7 @@ isolation fixed on self-hosted runners.
 **Sources**:
 [issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md](/plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md)
 (Cloud Build/tarball-launcher AWS-lane bugs + image-tag/provenance gaps) ·
-[issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/active/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)
+[issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md](/plans/archive/issues/aws_codebuild_pr_approval_status_noise_2026_06_25.md)
 (AWS CodeBuild cosmetic failure-status noise on promote PRs) ·
 [issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md](/plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md)
 (digest-drift-sweep GHA workflow never dispatches → fleet Cloud Builds red) ·

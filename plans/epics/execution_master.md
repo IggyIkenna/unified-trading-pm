@@ -13,9 +13,9 @@ scope: [engineer, admin]
 tags: [execution, defi, quality-gates, escalation, live-trading]
 related:
   [
-    ../active/execution_fidelity_tiers_uac_governed_2026_06_28.md,
+    ../archive/2026_07/execution_fidelity_tiers_uac_governed_2026_06_28.md,
     ../archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
-    ../active/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
+    ../archive/issues/execution_service_aioresponses_to_adapter_mock_migration_2026_06_23.md,
   ]
 created: 2026-05-21
 name: execution_master

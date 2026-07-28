@@ -48,7 +48,7 @@ related_plans:
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
   - ../active/ui_build_warm_cache_2026_06_17.md
-  - ../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md
+  - ../archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md
 last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
@@ -554,10 +554,12 @@ off dedicated buckets onto the shared DeFi tick bucket
 **status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: Host-adaptive RAM+CPU QG admission governor —
 replace fixed-K with resource reservation
 
-### [`utl_uac_reuse_consolidation_remediation_2026_06_10`](../active/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
+### [`utl_uac_reuse_consolidation_remediation_2026_06_10`](../archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
 
-**status**: active · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
-reimplementations, strongest-combination merge
+**status**: archived 2026-07-27 (operator `[unlock-plan]` granted, `june_2026_vintage_audit_findings_2026_07_27.md`
+§5#34) · **estimate**: 7.2 cal AI-days (class: refactor) **title**: UTL/UAC reuse consolidation — kill local
+reimplementations, strongest-combination merge. Its own 9 phases are fully shipped; the sole remaining action (remove
+the 5 Phase-0 banners below) lives in this epic's "Folded-in scope 2026-07-15" section, not the archived tracker.
 
 ## P2 — useful; opportunistic
 
@@ -762,7 +764,11 @@ Active sub-plans owned by or closely coordinated with this epic:
 
 ## Folded-in scope 2026-07-15 (plan-reconcile §6)
 
-- [ ] [VERIFY] P1. Remove the Phase-0 in-flight banners (added to the 5 epic plans); run plan-hygiene + active-inventory
-      regen; archive the tracker (`plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and this whole
-      split family per the 5-step HARD RULE once all repos hit C5. (FOLDED IN from
+- [ ] [VERIFY] P1. **PARTIALLY DONE 2026-07-27**: the tracker
+      (`plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md`) and its whole split family are now
+      archived (operator `[unlock-plan]` granted, `june_2026_vintage_audit_findings_2026_07_27.md` §5#34) — the 10 split
+      children were already archived, this was the last one. **STILL OPEN**: remove the 5 Phase-0 in-flight banners
+      (`> **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation**`, still present in `infrastructure_master.md`,
+      `strategy_master.md`, `features_and_ml_master.md`, `execution_master.md`, `orchestrator_master.md` as of
+      2026-07-27) + run plan-hygiene + active-inventory regen. (FOLDED IN from
       utl_reuse_phase8_codex_ssot_archive_2026_07_13, 2026-07-15, plan-reconcile §6 operator ruling)

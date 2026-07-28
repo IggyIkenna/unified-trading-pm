@@ -159,27 +159,96 @@ drift_direction: advance-code
       the move: **NOT green** — `data_completion_defi_2026_07_15.md`'s C0 path+bucket canonicalisation todo is still
       `- [ ]` open, so the item stays correctly gated on defi C0 reaching C-GREEN in its new home. No other duplicate of
       this item was found anywhere else in the active sports corpus.
-- [ ] [DATA] P1. **Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe, audit-then-conditionally-purge.** First
-      check whether the ~1,437-league/~106k-row NOISE population is the SAME population as the already-approved
-      489-pair/10,869-row §U purge (Track V's non-registry-league decision) — the scale differs by ~10x, so this must
-      not be assumed. If the census confirms it is the same population (or a strict superset), execute the
-      already-approved purge on the residual (snapshot-first, same pattern as every other purge in this doc family). If
-      the census shows a genuinely different population, STOP and report the discrepancy — do not purge an unapproved
-      population. (repo: instruments-service). **Done when**: the population-match census is recorded, AND either the
-      approved purge has executed on the confirmed-matching residual, or a discrepancy report exists (not both silently
-      skipped).
-- [ ] [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis ONLY, do NOT implement a fix.**
-      Determine whether the 2015-2017 zero-captured seasons are a subscription-tier limit or a backfill bug. The source
-      todo bundled an undecided "then fix" after diagnosis (subscription-tier-limit-vs-backfill-bug fix paths differ) —
-      that fork stays human; this todo is diagnosis-only, mirroring the same diagnosis-only pattern already used
-      elsewhere in this doc family (e.g. Track O's `[DIAG]` items). (repo: instruments-service, read-only). **Done
-      when**: a written finding states which of the two causes applies, citing evidence — does NOT implement either fix
-      path.
-- [ ] [DATA] P1. **Sports P2b — reference sources + odds history 2015→present, never started.** Extend the
-      golden-window-proven honest-coverage recipe (weather, soccerfootball_info, transfermarkt, understat, footystats,
-      odds-api) to full 2015→present within each source's own `coverage_start`; season-aware smart-skip only (typed
-      `EXPECTED_*` reasons, never blanket re-fetch). (repo: instruments-service). **Done when**: a fresh coverage census
-      shows each of the 6 named sources extended to its own `coverage_start`, with 0 un-typed skip reasons.
+- [x] ✅ [DATA] P1. **Sports P2a sub-item (a) — G1 non-canonical-league NOISE wipe, audit-then-conditionally-purge —
+      DONE 2026-07-27 via discrepancy-report path, NO purge executed.** Ran a live read-only census against the
+      production `instruments-store-sports-prd-central-element-323112` `_index/availability_index.parquet` (6,860,486
+      rows) reproducing the G1 delete script's own canonical-set derivation. Result: NEITHER the plan's cited
+      ~106k/1,437 figure NOR §U's approved 10,869/489 figure is reproducible today under any of 3 canonical-set cuts
+      tried (full-registry: 268,094 rows/780 leagues; MVP-scope: 1,476,781 rows/1,067 leagues; football-only: 17,767
+      rows/734 leagues) — genuinely different from both historical figures, confirming the todo's own "must not be
+      assumed" warning. Worse: the full-registry cut contains 160,909 rows under 5 symbolic aliases
+      (`PREMIER_LEAGUE`/`CHAMPIONSHIP`/`PRIMERA_DIVISION`/`2._BUNDESLIGA`/`FIRST_DIVISION_A`) already flagged as a P0
+      catastrophic-delete risk in `sports_league_id_namespace_migration_2026_07_20.md` — 100% in `trades`/
+      `odds_horizon_bucket`, real un-migrated canonical-league data belonging to Track V's separate, still-in-flight
+      casing migration, NOT G1 NOISE. Root cause: `delete_noncanonical_sports_leagues_2026_06_25.py` defines
+      `_FOOTBALL_DATA_TYPES` but never uses it to filter — a live scope bug that would delete 250,327 non-football rows
+      if `--apply` ran today. **Fixed same-turn, `instruments-service@7409c5b1`**: wired `_FOOTBALL_DATA_TYPES` into
+      `_delete_noncanonical_rows()`'s mask + 4 new unit tests (non-football survives / football still deleted / mixed
+      same-league_id-both-types / missing-data_type-column fallback), all passing; full QG green. Per this todo's own
+      instruction, STOPPED short of any purge and filed the population discrepancy as actionable follow-ups:
+      `plans/active/issues/sports_g1_noise_population_mismatch_and_scope_bug_2026_07_27.md` (remaining 3 todos:
+      re-baseline the canonical-set decision, reconcile §U's exact population against a raw-content read, update this
+      plan's figures once fixed). (repo: instruments-service). Census + discrepancy recorded — no purge executed, per
+      the todo's own "if genuinely different, do not purge" branch.
+- [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
+      fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was
+      already investigated by the source plan (`sports_p2_history_apifootball_2015_to_present_2026_06_27.md`, archived,
+      todo 2 / G2 diagnosis, lines 133-143 + 468-492): `unified-api-contracts@d858f67d` recorded "VERDICT: SUBSCRIPTION
+      FLOOR" — 35,889 rows, 100% `capture_status=empty_confirmed`, across 76 MVP leagues, all of 2015-2017. Re-verified
+      live against current code this session: 1. **`empty_confirmed` cannot mask a fetch error by construction** —
+      `instruments-service/instruments_service/reference_data/adapters/sports/adapters/api_football.py:1001-1116`.
+      API-Football signals plan/quota/auth/param errors INSIDE the 200-OK JSON envelope
+      (`{"errors": {"plan": "..."},        "response": []}`), never via HTTP status. `_raise_on_api_errors()`
+      (line 1034) raises `ApiFootballResponseError` whenever `errors` is a non-empty dict/list; `_extract_response()`
+      (line 1101) calls it BEFORE returning rows, routing any error to `attempted_failed` via the `RuntimeError` branch
+      in `_fetch_one_venue`. A clean `empty_confirmed` for these rows can therefore only mean the vendor was actually
+      called and returned `{"errors": [], "response": []}` — a genuine empty, not a swallowed error. 2. **Uniformity** —
+      76 leagues × 3 full years, not a scattered/partial failure pattern a backfill bug would produce. 3. **Independent
+      re-affirmation in current UAC code** —
+      `unified-api-contracts/unified_api_contracts/canonical/domain/sports/league_data.py:86-96`
+      (`SOURCE_COVERAGE_START`) comment, dated 2026-07-15, states: "Earlier probes had already shown the subscription
+      returns empty for seasons 2015-2017 (35,889 all-empty_confirmed across 76 MVP leagues — subscription floor, not a
+      backfill bug). CONFIRMED CORRECT — unchanged." — a later, independent audit reached the same conclusion (this
+      constant was since raised again to the 2020-06-06 sports data floor per
+      `/codex/02-data/sports-2020-06-data-floor.md`, which supersedes but does not contradict this 2015-2017
+      sub-finding). 4. **Prior-code corroboration**: `instruments-service/scripts/audit_fixtures_via_api_football.py:93`
+      hardcodes `_DEFAULT_SEASON_RANGE: tuple[int, int] = (2018, 2026)`;
+      `scripts/run_fixture_completeness_audit_2026_06_25.py:31` comments "the 2014-2018 range pre-dates the registry (no
+      expected counts seeded yet)" — both reflect the same prior institutional finding. 5. **No evidence anywhere in the
+      corpus supports the backfill-bug hypothesis** — no `attempted_failed` rows for 2015-2017 (which a code-level error
+      would produce instead of clean empties), no exception-swallowing pattern in the adapter, and no
+      incident/regression doc referencing 2015-2017 specifically. **Residual gap (does not change the verdict, but the
+      diagnosis is not 100% vendor-confirmed)**: no script or log in the corpus has ever captured the live `/status`
+      endpoint's `subscription` field (the field that would give a direct vendor-stated plan/history-limit confirmation)
+      — `_parse_status_body()` (`api_football.py:1063-1099`) only reads `response.requests.limit_day/current` for quota
+      math and never inspects `response.subscription`, even though `/status` is called routinely in production for quota
+      purposes (`data_completion_sports_2026_07_24.md:486-497`). Per this todo's explicit scope (diagnosis-only, no
+      fix), this residual gap is noted but not closed here — a follow-up live
+      `curl -H "x-apisports-key: <KEY>"     https://v3.football.api-sports.io/status` from a credentialed VM, inspecting
+      `response.subscription`, would fully vendor-confirm rather than strongly infer. The
+      subscription-tier-limit-vs-backfill-bug fork this todo exists to resolve is answered: **subscription-tier limit**
+      — any future fix-path decision (e.g., whether to upgrade the API-Football plan) should proceed on that basis. No
+      fix implemented; no code changed. (repo: instruments-service, read-only — verified.)
+- [ ] [DATA] P1. BLOCKED-PREREQUISITES — **Sports P2b — reference sources + odds history, 5 of 6 sources VERIFIED DONE
+      2026-07-27, odds_api genuinely NOT done (real gap, root-cause + fix both gated).** **Scope correction applied
+      first**: this todo's own title says "2015→present," but that framing is stale — the 2026-07-21 operator ruling
+      (`/codex/02-data/sports-2020-06-data-floor.md`) clamped every sports source's `coverage_start` to **2020-06-06**
+      and ruled "any plan/track that backfills sports history before 2020-06 is moot." So "extend to `coverage_start`"
+      today means 2020-06-06→present, not 2015→present; measured against the live `SOURCE_COVERAGE_START` floor.
+      **Method**: single read of `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (6,871,468 rows, one download, bounded columns — no whole-corpus GCS walk),
+      filtered `date >= 2020-06-06`, grouped by `source`. **5/6 sources — open_meteo (weather), soccer_football_info,
+      transfermarkt, understat, footystats — genuinely extended**: each has a manifest row for effectively every
+      calendar day since the floor (2243-2248 of 2243 calendar days), **0 blank/un-typed `error_reason`** on any
+      `empty_confirmed`/`attempted_failed` row across all 5. **odds_api — NOT extended**: 635 of 2243 calendar days
+      since the floor have **ZERO manifest row of any capture_status** (a true absence, not a typed skip — IS has no
+      `odds_api` adapter/expected-universe seeder, confirmed by sub-agent trace, so no denominator cell was ever
+      materialized for these days). Of the 635, only 19 fall inside the already-documented + already-fixed
+      2026-06-27..07-15 scheduler-dormancy window
+      (`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`, fixed
+      `market-tick-data-service@410d7569`), and part of one range overlaps the already-documented 2022-09 canonical
+      under-capture outage (`mdt_legacy_canonical_row_gap_2026_07_16.md`, superseded). **616 days are newly found,
+      previously undocumented** — 30 contiguous ranges >=3 days (6 undocumented multi-week ranges: 2020-08-24.. 10-10
+      [48d], 2022-03-06..04-18 [44d], 2023-07-01..10-06 [98d], 2024-11-19..12-31 [43d], 2025-03-11..04-11 [32d],
+      2026-02-22..03-28 [35d]) plus 120 isolated single-day gaps, roughly even day-of-week distribution (no weekly-cron
+      signature). Filed as a new finding, with root-cause + backfill todos:
+      `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **No backfill attempted**: the
+      odds-api.com key is currently `DEACTIVATED_KEY` (`sports_odds_api_key_deactivated_2026_07_26.md`, `status: open`,
+      independently re-verified live by 3 slots against the vendor directly) — any fetch attempt right now would just
+      401 and add `attempted_failed` noise, so the fix is doubly gated (root-cause first, then the [OPERATOR]-credential
+      restore, then the actual gap-fill). (repo: instruments-service, market-tick-data-service). **Done when**: the new
+      issue doc's root-cause + backfill todos land AND a fresh census shows odds_api at 0 missing days too (the other 5
+      sources' portion of this done-when is already satisfied).
 - [ ] [DATA] P2. BLOCKED-PREREQUISITES — **Sports P2c — features history backfill to ML-ready, blocked on the P2a and
       P2b todos above landing first.** Extend the features-service sports feature matrix from the golden window
       (2025-09-01..11-30) to 2015→present once P2a/P2b land. (repo: features-service). **Done when**: P2a/P2b are both

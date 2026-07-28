@@ -5,7 +5,7 @@ summary:
   Make UAC declare, per instrument and per mode (live/batch), which execution matching fidelity is possible given the
   data we actually have — L2-tick / candle+book-columns / OHLC-bar — and have execution-service select the path
   accordingly, keeping the e2e 1m-candle determinism spine green.
-status: active
+status: complete # corrected 2026-07-27 (mdps_features_reduced_artifact_tracker archival pass) — frontmatter was stale, all 6 todos [x] with QG-green evidence
 nature: design
 asset_group: [cross-cutting]
 stage: [execution, backtest]

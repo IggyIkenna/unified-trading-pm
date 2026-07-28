@@ -280,8 +280,8 @@ peer service. The concrete layers:
 - **Exits 1** on any cross-service Python import in source or tests (blocking merge).
 - Classifies repo types as `service` / `api-service` / `batch-service` / `api` to scope its checks correctly.
 
-Any remaining live violations are tracked in `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` §
-"Service-dependency violations".
+Any remaining live violations are tracked in
+`plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § "Service-dependency violations".
 
 ## Known Tier Violations
 

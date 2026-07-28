@@ -155,7 +155,9 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
       `from unified_api_contracts.internal     import ACCOUNT_STATE_FRESHNESS` now works. (Unblocked once the
       `ledger_asset_resolution` WIP landed.)
 - [ ] [DEFERRED] P0. **Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`** when vcrpy can be bumped (gated on the
-      aiohttp-3.14 unblock — `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`).
+      aiohttp-3.14 unblock — `/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED
+      2026-07-27: aiohttp>=3.14.1 + vcrpy>=8.2.1 fleet-wide since 2026-06-23, GHSA-rpj2 closed for 17/18 repos — verify
+      whether this repo's ignore is still needed or now droppable).
 
 ## Phase 2 — active self-healing (`refetch-feed` recovery action) — depends on Phase 1
 
@@ -210,7 +212,8 @@ Shipping the UAC change surfaced + required fleet-QG fixes (landed PM@`f7f393636
 - **2026-06-19 — `/autonomous` dispatch START** — finishing the rest to DONE. Ordered by dependency (rule 8): UAC T0
   first → tests → Phase 2 → msgpack fleet (lowest priority/value, last) → codex docs → drop msgpack ignore → report.
   - **vcrpy ignore = genuine impossibility (rule 1)** — vcrpy 8.2.1 fixes the YAML CVE but is gated by the aiohttp-3.14
-    pin (`aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`); cannot bump. Documented, ignore stays, keep going.
+    pin (`/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED 2026-07-27); cannot bump
+    at the time this entry was written. Documented, ignore stays, keep going.
   - **msgpack scope** — 1.1.2→1.2.1 (fix exists) across 20 repos (3 already 1.2.1: batch-live-reconciliation,
     client-reporting-api, strategy-service); transitive, not centrally pinned → per-repo
     `uv lock --upgrade-package msgpack`. Drop the msgpack ignore ONLY after all 20 land.
@@ -251,8 +254,9 @@ two items genuinely blocked on OTHER agents' in-flight breakage (documented, own
 **Forced tradeoffs / genuine impossibilities (autonomous rule 1):**
 
 1. **vcrpy CVE ignore stays** — vcrpy 8.2.1 fixes GHSA-rpj2-4hq8-938g but is gated by the fleet-wide aiohttp-`<3.14` pin
-   (`aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`). Two constraints can't coexist; the ignore is the least-bad
-   path.
+   (`/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`, ARCHIVED 2026-07-27 — the fleet-wide
+   pin was since lifted 2026-06-23). Two constraints couldn't coexist at the time; the ignore was the least-bad path
+   then — worth re-checking now.
 2. **msgpack ignore stays (2/20 unbumped)** — `agent-orchestrator` + `alerting-service` are red on PRE-EXISTING FOREIGN
    QG failures (UI test-infra; the ledger-digest `DAILY_LEDGER_DIGEST` parity test). Their `uv.lock` is bumped + ready;
    they can't ship past a foreign red gate without editing foreign code (file-ownership rule). Owners must fix those,
@@ -284,7 +288,8 @@ two items genuinely blocked on OTHER agents' in-flight breakage (documented, own
 
 ## Deferred work — migrated to:
 
-**`plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`** — the inline `[DEFERRED] P3` todo ("Drop
-the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`") is explicitly gated on the aiohttp-3.14 unblock; this issue doc is the
-real, confirmed-open tracker for that unblock (17/18 declaring repos already bumped to `aiohttp>=3.14.1,<4.0.0`), so it
-is the genuine successor for when the vcrpy ignore-vuln can be dropped.
+**`/plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`** (ARCHIVED 2026-07-27) — the inline
+`[DEFERRED] P3` todo ("Drop the vcrpy `--ignore-vuln GHSA-rpj2-4hq8-938g`") was gated on the aiohttp-3.14 unblock; that
+unblock has since fully landed fleet-wide (18/18 repos now on `aiohttp>=3.14.1,<4.0.0`, including the former
+execution-service holdout as of 2026-07-27) — the vcrpy ignore-vuln for THIS plan's repos should be re-checked for
+droppability now rather than treated as still-gated.

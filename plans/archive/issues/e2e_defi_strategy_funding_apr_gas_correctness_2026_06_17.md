@@ -6,7 +6,7 @@ title:
 summary:
   Running the recent **e2e-testing defi-strategy** harness (`scripts/defi/` — staked_basis + light trades, testing APRs)
   surfaced a cluster of **funding / APR / gas / lending-rate correctness bugs**....
-status: open
+status: resolved # (was: open) 2026-07-27: all 6 BUGs fixed + verified shipped, archived
 nature: process
 asset_group:
   [defi] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine mistag:
@@ -33,12 +33,22 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
-locked_by: live-defi-rollout
+  "all 6 BUGs fixed + shipped 2026-06-17 (autonomous run), independently re-verified 2026-07-27 /plan-vintage-audit —
+  UTL@b587b91b/ed622af8, UAC@fd5bcfa/7fade10, execution-service@38c7e06f, strategy-service@b91d3e1f,
+  features-service@16be6c0f"
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-06-27
 ---
+
+> **✅ ARCHIVED (archived 2026-07-27)** — all 6 tracked BUGs fixed + shipped with real citations, independently
+> re-verified via `git log`/`git show` this session: UTL@b587b91b/ed622af8, UAC@fd5bcfa/7fade10,
+> execution-service@38c7e06f, strategy-service@b91d3e1f, features-service@16be6c0f. The 7th line item (delta_one
+> `funding_oi` venue-aware annualisation, `[FEATURE] P2`) stays unchecked by design — it was migrated 2026-06-21 into
+> [`/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`](/plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md)
+> (tracked there, not duplicated here).
 
 ## What I found
 

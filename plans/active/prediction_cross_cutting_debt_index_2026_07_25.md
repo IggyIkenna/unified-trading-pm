@@ -119,8 +119,8 @@ source: >-
   - **[CODE] P0.** Add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`)
   - **[CODE] P0.** With the real traceback now visible, re-run `is-daily-enum-{prediction,sports}` and read the ACTUAL
   - **[VERIFY] P1.** Backfill the missed windows: prediction 07-01→07-06, sports 06-28→07-06
-- [`plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/active/mdps_features_reduced_artifact_tracker_2026_06_28.md)
-  (`status: draft`) — 0 open todos (closed/archived/record-only)
+- [`plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md`](/plans/archive/2026_07/mdps_features_reduced_artifact_tracker_2026_06_28.md)
+  — ARCHIVED 2026-07-27, 0 open todos, all 9 mini-plans confirmed archived/complete
 - [`plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`](/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md)
   (9 open total)
   - **[OPERATOR] P0.** BLOCKED-OPERATOR-DECISION — coordinate a maintenance window with the operator for the prediction

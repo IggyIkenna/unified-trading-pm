@@ -25,7 +25,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-27
 ---
 
 ## What I found
@@ -70,13 +70,16 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       `delta_one/app/calculators/base.py::_apply_custom_aggregations` (no caller; clean break). Shipped 2026-06-10.
 - [ ] [SCRIPT] P3. features-service: `_compute_velocity_from_pivoted` acceleration fallback —
       `odds_features_exporter.py:509-514` elif is unreachable (`np.nan` is a `float` so the line-509 guard always fires)
-      AND the `v_late = a or b` retrieval drops a legit `0.0`. **DEFERRED** — fixing it changes acceleration feature
-      math on inference of intent; needs the sports-features owner to confirm the intended NaN/fallback semantics (no
-      prod data affected — sports feature buckets are empty, so it can be fixed cleanly when decided).
+      AND the `v_late = a or b` retrieval drops a legit `0.0`. ~~**DEFERRED**~~ **RESCOPED 2026-07-27** (operator
+      ruling, vintage-audit `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 35: this is agent-owned
+      scoped work, no human owner needed) — dispatched as a real scoped `- [ ]` [CODE] P2 todo in
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft) with the fix + test criteria spelled out; do
+      not re-dispatch from here, flip this checkbox once that todo ships citing its commit sha.
 - [ ] [SCRIPT] P2. features-service: make `_make_session` resolver construction lazy/loop-safe —
-      `onchain/app/core/data_loader.py:224`. **DEFERRED** — latent only (all callers are async-context); the fix touches
-      aiohttp DNS-resolver config (subtle prod-DNS implications), so it wants a deliberate owner change, not a drive-by
-      edit in a coverage PR.
+      `onchain/app/core/data_loader.py:224`. ~~**DEFERRED**~~ **RESCOPED 2026-07-27** (operator ruling, vintage-audit
+      §5-RESOLVED item 35: agent-owned scoped work) — dispatched as a real scoped `- [ ]` [CODE] P2 todo in
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft) with the fix + test criteria spelled out; do
+      not re-dispatch from here, flip this checkbox once that todo ships citing its commit sha.
 - [ ] [INFRA] P2. features-service: fix the per-module `--cov=<module>` scipy/numpy double-import crash (pin/patch
       scipy↔numpy↔pytest-cov, or a tracked conftest pre-import) so local per-module coverage works.
 - [ ] [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,

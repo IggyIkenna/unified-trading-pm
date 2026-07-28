@@ -424,7 +424,10 @@ verified complete**.
 - [ ] [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace
       (`/api/data-status/pipeline-trace?instrument&date`) threading one instrument/date through all stages with per-hop
       `capture_status`, + a UI view. Larger feature; coordinate with the in-flight data-status canonicalisation slot.
-      Source: e2e-pipeline-manifest-wiring (G-TRACE).
+      Source: e2e-pipeline-manifest-wiring (G-TRACE). **REHOMED 2026-07-27** — per operator decision
+      (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as a new todo directly into
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its `## Deferred`). Not executed yet
+      — tracked there going forward; not duplicating here.
 - [ ] [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
       `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
       canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings).
@@ -445,6 +448,9 @@ verified complete**.
       fleet_audit_triad + api_host_chronic_impairment.
 - [ ] [INFRA] P2. deployment-scripts bucket: add prefix-scoped lifecycle rules (`vm-logs/`>14d, `log-archive/`>90d) +
       cross-bucket soft-delete bloat audit via `gcs_bucket_stats.py --bloat_pct`. Source: deployment_scripts_bucket.
+      **REHOMED 2026-07-27** — per operator decision (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28), filed as
+      a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (own repo section, before its
+      `## Deferred`). Not executed yet — tracked there going forward; not duplicating here.
 
 ## BLOCKED clusters (NOT credentials — discipline / coordination)
 
@@ -460,3 +466,20 @@ A source issue doc archives to `plans/archive/issues/` (with `[unlock-plan]` in 
 **every** item it contributed here is `- [x] ✅` or carries an operator-acked `BLOCKED-*`/`NEEDS-LIVE` line. Docs gated
 on a BLOCKED cluster (cefi_processed_candles, uniswap_28k, fleet_audit_triad, running_vm_fleet, shared_stash) stay open
 with updated status until their cluster clears.
+
+### Archive-readiness verdict (2026-07-27, `/plan-vintage-audit` infra-tranche migration pass)
+
+The infra-tranche slice of this doc is now fully accounted for: the 3 items already cited by
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md` (execution-service `service_name` drift, SIT's 2 QG failures, UAC
+`infura_*` rename) are confirmed present there with real (non-placeholder) content, and this pass rehomed the 2
+remaining true orphans (deployment-scripts bucket lifecycle rules; GAP G-TRACE) into that same plan as new todos, per
+operator decision (`june_2026_vintage_audit_findings_2026_07_27.md` §5#28). **NOT archived, for two independent
+reasons**: (1) this doc carries `locked_by: live-defi-rollout` and no `[unlock-plan]` grant exists for it specifically —
+archiving a locked doc without an explicit grant is a STOP-and-report condition, not an autonomous action; (2) even
+setting the lock aside, this doc's per-source-doc archive criterion above ("every item ... is `[x]` or an operator-acked
+`BLOCKED-*`/`NEEDS-LIVE`") is not met — it still carries substantial genuinely-open, non-infra work outside this
+migration pass's scope: the UAC DeFi venue-registry `BLOCKED-DISCIPLINE` items, alerting-service's `NEEDS-LIVE`
+ML-baseline item, the `## Operator-gated infra` section's other 2 items (`tofu apply` for
+tarball-cleanup/vm-log-archival schedulers), and the `## BLOCKED clusters` section (DeFi/TradFi backfill VM cluster,
+stash-archive purge). This session's mandate was the infra-relevant slice only — the rest is unaffected and stays
+tracked here.
