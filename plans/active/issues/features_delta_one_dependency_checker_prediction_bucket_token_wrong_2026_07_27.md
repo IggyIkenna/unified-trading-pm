@@ -200,3 +200,11 @@ four now route through the one helper.
       progressing, not stalled) rather than babysat to completion in-session given its large universe; a future session
       should check its final report (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten
       per-run) or re-run cleanly for the actual throughput number.
+- [ ] [SCRIPT] P3. Latent (currently unreachable, no live bug today) copy of the same bug pattern in
+      `features_service/volatility/core/{dependency_checker,data_loader}.py` — both call
+      `resolve_bucket_name(kind="market-data", asset_group=...)` directly on a variable `asset_group`, same shape as the
+      4 delta_one instances fixed this session. Unreachable today because `volatility`'s CLI `ASSET_GROUP_CHOICES`
+      (repo: features-service) only lists CEFI/TRADFI — PREDICTION was never a valid choice. Fix before (not after)
+      PREDICTION is ever added to `volatility`'s asset_group choices: route both through
+      `DependencyChecker._resolve_mdps_bucket` (same fix pattern as this issue doc), or extract a shared helper if
+      `dependency_checker.py` cross-family imports are undesirable.
