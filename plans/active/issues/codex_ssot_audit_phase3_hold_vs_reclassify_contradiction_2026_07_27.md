@@ -50,6 +50,13 @@ source:
 > **STATUS: `BLOCKED-OPERATOR-DECISION`.** Server block `BLK-d1b29089` (slot 16, 2026-07-27) escalated this to the
 > operator; main answered SPLIT-DECISION and escalated GATE-1 up. This doc is the durable capture so a fresh session
 > does not re-derive the block from scratch or plow ahead into held work.
+>
+> **UPDATE 2026-07-28 (main agt-4d8de7):** the block RECURRED as predicted — slot-12 hit it on task
+> `codex_vs_repo_docs_ssot_audit-006` (BLK-613a61ff). Main answered PARK and, to stop the re-dispatch churn, executed
+> issue-doc **Option B's park mechanism**: flipped the plan `assigned_vm: planning → NA`
+> (`unified-trading-pm@b1651c1c4`, banner added to the plan). This is a REVERSIBLE coordination stop-gap, NOT the GATE-1
+> resolution — the operator todo below is still OPEN and owns the substantive lift/hold decision. When the operator
+> rules the hold LIFTED (Option A/C), flip the plan back to `planning`.
 
 ## What I found
 
