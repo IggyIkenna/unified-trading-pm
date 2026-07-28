@@ -47,7 +47,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-07-10
+last_updated: 2026-07-28
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -173,8 +173,8 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 ## Stage 0 — Unblock (decisions + plan consolidation)
 
 - [x] [DESIGN] P0. **D1–D3 decided** (see Decision Gates) — **hard gate on Stage 2** (all three decided 2026-07-06)
-- [ ] [ADMIN] P1. Plan consolidation (from `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §F.1) —
-      **REASSESSED 2026-07-06**:
+- [ ] [ADMIN] P1. Plan consolidation (from `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md`
+      §F.1) — **REASSESSED 2026-07-06**:
   - [x] **merge `path_to_100pct` → `data_completion` = ✅ ALREADY DONE** (superseded + archived 2026-06-30;
         `data_completion` § "Folded-in from `path_to_100pct`"; only the DEDUP residual remains = the Stage-5 item).
   - [x] **flip `instruments_catalogue_incremental_rollup` → completed** — was: `⛔ DO NOT FLIP` (its lone open item was
@@ -195,16 +195,20 @@ mode-split + C2 direction (Ikenna 07-03) · v10→v12 MVP drift (defi-only, bann
 
 _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)_
 
-- [ ] [DATA] P0. TradFi v9 G4 `--apply` — per **D3**: `--workers 24` (fallback 16) · per-year chunks 2020→2026
+- [x] ✅ [DATA] P0. TradFi v9 G4 `--apply` — per **D3**: `--workers 24` (fallback 16) · per-year chunks 2020→2026
       (`--start-date/--end-date`) · e2-standard-16 · idempotent restart → `migration_verification_orphan_safety` V6
       closes; **all 5 AGs canonical**. Then `rebuild_tradfi_manifest.py` (E5) + IS enumerate-seed + IS catalogue for
-      tradfi. **🟡 IN FLIGHT (2026-07-06): 2025 smoke VALIDATED (memory 6.7 GB / 64 GB steady, 172k candles migrating) →
-      FANNED OUT 2020-2024 (6 VMs total: `canonical-migration-tradfi-*`, e2-standard-16 · SPOT · workers 24 · MTDS
-      9ecd1e2; launcher fix deployment-service@77cfcda). 2026 held last (live CME-OHLCV capture VMs writing 2026).
-      Post-apply: orphan-sweep E=0 + idempotent re-run for transient-503 stragglers, then `rebuild_tradfi_manifest` + IS
-      enumerate-seed + IS catalogue.**
+      tradfi. **DONE — reconciled 2026-07-28 against `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`
+      (`status: resolved`, all 11 own todos `[x]`).** 2020-2026 `--apply` exit_code=0/fatal=0 both waves
+      (`deployment-service@77cfcda` launcher fix); orphan-sweep GATE MET 2026-07-10 (`orphan_class_E=0`); E5 rebuild
+      done 2026-07-07 (`market-tick-data-service@4ccf52c6`); IS enumerate-seed done 2026-07-09 (run_id
+      `enum-universe-tradfi-20260709-020218`); IS catalogue done 2026-07-06
+      (`catalogue-rollup-tradfi-20260706T154714Z`). All 5 AGs canonical, `migration_verification_orphan_safety` V6/G4
+      closed.
 - [ ] [DATA] P1. Operator-gated legacy-twin **deletes** (defi / tradfi / pred; cefi + sports already done) in a quiet
-      window
+      window. **STILL OPEN (reconciled 2026-07-28)** — none of this todo's named archived children cover it; the tradfi
+      leg was forked out verbatim to `/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`
+      (`BLOCKED-OPERATOR-DECISION`), genuinely still gated on operator sign-off, not this tracker's own work.
 
 ## Stage 2 — Denominator correctness (the core; cefi leads)
 
@@ -213,10 +217,15 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       landed SHA; `a1038eef8` is the pre-quickmerge QG sentinel for the same commit) — consolidates the single public
       `build_expected(ag)` EXPECTED-universe producer, routing `check_enumeration_completeness` +
       `measure_honest_coverage` through it.
-- [ ] [CODE] P0. **2b. cefi gate-authority fix on `build_expected`** (`issues/cefi_layer1_denominator_gaps`): apply
+- [x] ✅ [CODE] P0. **2b. cefi gate-authority fix on `build_expected`** (`issues/cefi_layer1_denominator_gaps`): apply
       D2a/D2b → ASTER live-forward split (**enumerator `start_date` support is a hard prereq before the UAC capability
-      flip**) → BYBIT-SPOT `PERPETUAL` relabel → C2 MVP-data-type intersection
-- [ ] [DATA] P0. **2c. cefi capture-rule residual** (`issues/cefi_universe_capture_rule`) — **REASSESSED (opus,
+      flip**) → BYBIT-SPOT `PERPETUAL` relabel → C2 MVP-data-type intersection. **DONE — reconciled 2026-07-28 against
+      `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md` (`status: resolved`, all own todos `[x]`).**
+      `instruments-service@681f50a` (2a fold with D2a baked into `build_expected`) + `03cfd0f` (D2a landing) +
+      `2170d9a3` (C2 MVP-data-type intersection). Verified dynamically: `build_expected("cefi")` returns 72 tuples over
+      18 of 24 declared cefi venues; every absent venue carries an explicit configuration reason (no silent whole-venue
+      omission).
+- [x] ✅ [DATA] P0. **2c. cefi capture-rule residual** (`issues/cefi_universe_capture_rule`) — **REASSESSED (opus,
       2026-07-06)**: **cap-drop = ✅ ALREADY DONE `is@0fe8e71` (06-23)** (`_passes_asset_filter` now applies only
       accepted-quote + BTC/ETH- options gates; full-universe enumeration verified). **Reclassification `--apply` = ⛔ DO
       NOT RUN — RE-SCOPED.** The `reclassify_cefi_manifest_mvp_universe_2026_06_23.py` script is unsafe + superseded:
@@ -226,19 +235,34 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       flips are ASTER `SOURCE_RETURNED_ZERO`); (d) the 6 "stale" venues are ALREADY in the manifest with real data. It
       already ran 2× on 06-23 (snapshots exist — "never confirmed run" resolved). **→ retire the manifest-pruning
       script; do the MVP filter as a read-time gate in `measure_honest_coverage` folded into 2a `build_expected`,
-      sequenced after 2b + the ASTER split.**
+      sequenced after 2b + the ASTER split.** **DONE — reconciled 2026-07-28 against
+      `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md` (resolved, own todo `[x]`).**
+      `instruments-service@2fa3877` — new public `filter_manifest_to_expected(ag, df)` applies the MVP cut at READ TIME
+      inside `measure_honest_coverage._compute_coverage` for cefi, ZERO manifest mutation (Layer-1 keeps the unfiltered
+      df so stray_tuples stay visible); 11 new + 21 existing tests green.
   - [ ] [CODE] P1. Fix `_fetch_earliest_funding_date`
         (`instruments-service/instruments_service/reference_data/adapters/cefi/aster.py:247-267`) to exclude the
         synthetic pre-launch placeholder funding rows (flat `0.0001` rate) before deriving `available_from_datetime` —
         otherwise ASTER's per-instrument genesis can still stamp a spuriously pre-2023-07-22 date even though the
-        venue-level fallback is correct. Found 2026-07-07 audit.
+        venue-level fallback is correct. Found 2026-07-07 audit. **STILL OPEN (reconciled 2026-07-28)** — no mention in
+        `cefi_layer1_denominator_gaps_2026_07_03.md` or any of this todo's other named archived children; genuinely
+        unaddressed.
   - [ ] [DATA] P1. Reconcile ASTER's `trades` genesis cross-registry contradiction (2021-08-30 in
         `expected_start_dates.yaml` vs. 2023-07-22 everywhere else) — see GAP 4 in
         `issues/perp_funding_data_semantics_and_cadence_2026_06_16.md`. Do before any pre-funding-genesis trades
-        backfill for ASTER.
-- [ ] [DATA] P0. **2d. IS-catalogue completion `B0→B1→B2`** (`instruments_mtds_subset`): backfill instruments to
+        backfill for ASTER. **STILL OPEN (reconciled 2026-07-28)** — not covered by any named archived child; genuinely
+        unaddressed.
+- [x] ✅ [DATA] P0. **2d. IS-catalogue completion `B0→B1→B2`** (`instruments_mtds_subset`): backfill instruments to
       no-missing (B0) → regen catalogue + un-pause daily schedulers (B1) → codify MVP-vs-total universe (B2). _B0 gates
-      every expected-universe consumer._
+      every expected-universe consumer._ **DONE — reconciled 2026-07-28 against
+      `plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md` (`status: complete`, all own todos `[x]`).** B0
+      (backfill to no-missing): MVP-scoped gap = 83 cells (~0.1% of 76k MVP), every residual classified/tracked, 0
+      unexplained gaps. B1 (catalogue regen + un-pause daily schedulers): all 5
+      `lifecycle-catalogue-regen-{cefi,defi,tradfi,sports,prediction}-daily` schedulers confirmed ENABLED + green;
+      weekly full self-heal confirmed running; all 5 `prod/catalog.parquet` fresh. B2 (wire enumerator to
+      `TOTAL_UNIVERSE_AXES` SSOT): `instruments-service@7ded594` — load-time SSOT parity assertion + `is_total_universe`
+      gate + MVP⊆TOTAL invariance test (12 new tests, 175 total green), sentinel
+      `.qg_last_passed_sha=7ded5940661bc89f7e77591471810b4943541b01`.
 - [x] [DATA] P0. **2e. defi seeding apply (D1) — ✅ DONE** (opus, run_id `enum-universe-defi-20260706-130616`):
       **+1,380,376 typed `empty_confirmed` rows** (per-year matches the issue to the row: 2018=695,830 / 2019=683,862 /
       2021-25=684), `expected_unattempted` +0 (zero downloads), fresh full-window scan **→ 0 candidates** (≥1M
@@ -251,9 +275,23 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       at **~63.9M cells**, not 1.38M — this DONE checkbox and the 62.06% figure are the v1 milestone only, not the final
       denominator; the v2 backlog is open work tracked under Track-3 in
       `issues/canonical_closeout_open_questions_2026_07_18.md`.
-- [ ] [VERIFY] P2. **2e follow-on** (was bundled into 2e): the cross-AG never-seeded backlog check on **cefi / tradfi /
-      pred** (scan-only investigation — dispatch separately)
-- [ ] [CODE] P1. **2f.** Reapply the denominator-gap model to **LIGHTER / EXTENDED / PACIFICA**
+- [x] ✅ [VERIFY] P2. **2e follow-on** (was bundled into 2e): the cross-AG never-seeded backlog check on **cefi / tradfi
+      / pred** (scan-only investigation — dispatch separately). **DONE — reconciled 2026-07-28 against
+      `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
+      2026-07-06, Opus slot-7).** Scan-only per contract (zero seeding). Filed
+      `plans/active/issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` quantifying each AG's residual backlog:
+      cefi = catalogue-vs-writer historical-listing gap (Kraken ~6yr class ≈ ~1.75M cells); tradfi = credential-gated
+      EU-seed scaffolds only (recent enumerator commits already moved tradfi honest-cov 5.3%→13.8%, no DeFi-scale
+      canonical re-seed remains); prediction = token-id `instrument_availability` lane not seeded + Kalshi launcher
+      gap + a documented intentional per-conditionId exclusion. 7 actionable P0-P3 todos filed pointing at each owning
+      plan.
+- [x] ✅ [CODE] P1. **2f.** Reapply the denominator-gap model to **LIGHTER / EXTENDED / PACIFICA**. **DONE — reconciled
+      2026-07-28 against `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md` (resolved, own todo `[x]`,
+      2026-07-08).** Both PREREQs confirmed landed: 2b (above) + enumerator `start_date` support
+      (`instruments-service@4a8cff7`, generic per-`(venue, dt)` gate, no ASTER-specific code path); LIGHTER-ZKSYNC /
+      EXTENDED-STARKNET / PACIFICA-SOLANA `VENUE_DATA_TYPE_CAPABILITIES` entries landed as part of D2b
+      (`unified-api-contracts@e76d874a`). Dynamic verification: `build_expected('cefi')` returns exactly 3 tuples per
+      venue for all three, matching the ASTER live-forward profile byte-for-byte — no code change required.
 
 ## Stage 3 — Re-measure + certify Layer-1
 
@@ -323,28 +361,54 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 > `measure_honest_coverage` run, no files in `instruments-service` written. Not attempting the Stage-3 remeasure per the
 > dispatch's own explicit instruction not to when quiescence doesn't hold.
 
-- [ ] [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers are
-      stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04)
+- [x] ✅ [SCRIPT] P0. Re-run `measure_honest_coverage` on the corrected catalogue + seeded manifests (**06-29 numbers
+      are stale** — predate v12, the incremental-rollup switch, and the cefi 122-row ghost-dupe fix of 07-04). **DONE —
+      reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md`
+      (`status:     complete`, own todo `[x]`, DONE 2026-07-07 06:22 UTC).** Multi-AG
+      `measure_honest_coverage.py --asset-group all` run on `is@68f174a` with both cross-plan PREREQs verified
+      (KALSHI-PERP purge + Plan-5 unregistered-handler audit). Run id `2026-07-07T06:20:58Z / is@68f174a`; evidence
+      artefact `coverage_all_20260707T062058Z.json` (4.6 MB).
 - [ ] [VERIFY] P0. Certify per-AG Layer-1; **record fresh numbers in the Progress Log** — only now is any Layer-2 %
-      trustworthy
+      trustworthy. **PARTIALLY DONE (reconciled 2026-07-28) — 4 of 5 AGs certified, tradfi still genuinely open.**
+      `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete) certified cefi 73.61% / defi 94.81%
+      / sports 30.77% / prediction 66.67% (2026-07-06/07, matching this tracker's own Snapshot above). Its tradfi task
+      stayed `🚧 BLOCKED-PLAN2` and was **forked out verbatim 2026-07-24** into
+      `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s own Phase C todo list — that plan, not this checkbox,
+      is where tradfi Layer-1 certification now lives. Leaving unchecked: the item's own Gate ("Certify per-AG Layer-1")
+      is worded all-5-AG and tradfi is not yet certified.
 - [ ] [VERIFY] P1. Reconcile ASTER's two disagreeing missing-date counts before certifying: the manifest cell-presence
       view says 0 missing dates (1,082 consecutive days, 2023-07-22→2026-07-07); the live turbo API says 11 missing /
       1,071 expected for the same venue+window. Confirm which methodology the re-measure adopts. Found 2026-07-07 audit,
-      `issues/aster_mtds_failure_count_regression_2026_07_07.md` context.
-- [ ] [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6)
+      `issues/aster_mtds_failure_count_regression_2026_07_07.md` context. **STILL OPEN (reconciled 2026-07-28)** — no
+      resolution found in `layer1_remeasure_and_certify_2026_07_06.md` or any other named archived child; genuinely
+      unaddressed.
+- [x] ✅ [CODE] P1. Close `honest_coverage_v2` remaining (build_expected done in 2a; UI drill-down → Stage 6). **DONE —
+      reconciled 2026-07-28 against `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own
+      todo `[x]`, CLOSED 2026-07-06 task 008).** Phase 1 `build_expected` consolidation flipped in
+      `honest_coverage_v2_instrument_denominator_2026_06_28.md` (`instruments-service@681f50a`); Phase 2 UI drill-down
+      annotated MOVED to this tracker's Stage 6 (still open there, see below). Measurement track officially closed.
 
 ## Stage 4 — Foundation gate sign-offs (formalize the spine, cefi-first)
 
 _(`instruments_foundation_completeness` has heavy checkbox-vs-reality drift — much of G2/G3 actually ran; the work is
 reconciling + signing off, not redoing.)_
 
-- [ ] [CODE] P0. cefi **G1.2** (`record_failed` routing + 06-26 re-capture) + **G1.3 follow-up** (on-chain-CeFi-perp
+- [x] ✅ [CODE] P0. cefi **G1.2** (`record_failed` routing + 06-26 re-capture) + **G1.3 follow-up** (on-chain-CeFi-perp
       venue form). **Caveat added 2026-07-07:** this is a thin-day/50%-of-trailing-median gate, not DeFi's strict
       never-regress-below-all-time-max block — confirm with operator whether literal DeFi parity is required, or whether
       the looser threshold is the intended CeFi policy (CeFi delistings are real, expected decreases in today's active
       count, unlike DeFi's provably-monotonic contracts). See
       `issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` for the alerting gap on top of this same
-      guard, and the two currently-dark venues (LIGHTER, PACIFICA) it already missed.
+      guard, and the two currently-dark venues (LIGHTER, PACIFICA) it already missed. **DONE — reconciled 2026-07-28
+      against `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, both own
+      todos `[x]`).** G1.2: `record_failed` routing shipped `instruments-service@3c10615` (thin-day reclassify,
+      captured→attempted_failed below 50%-of-14d-median) + metric `instruments-service@cc81cad`; 06-26 partial-cell
+      follow-up VERIFIED 2026-07-06 (single-shard read: count 677 vs 678 baseline = 99.85%, correctly NOT reclassified —
+      captured-with-healthy-count branch satisfied). G1.3: `instruments-service@79f2693` — fixed
+      `_canonical_bare_venue_chain` to bypass the DeFi PROTOCOL-CHAIN split for cefi venues
+      (LIGHTER-ZKSYNC/PACIFICA-SOLANA/EXTENDED-STARKNET), matching the writer's existing bypass; verified cefi `_index`
+      already 100% glued for these venues. The operator-confirm caveat above (thin-day vs. DeFi-parity threshold) was
+      not itself re-litigated by that plan — it stands as an open policy note, not a blocker on this checkbox's Gate.
 - [x] [VERIFY] P0. Reconcile checkbox drift; take the formal **G2 → G5** sign-offs (cefi) — **DONE 2026-07-06** per
       `foundation_gates_and_capture_to_100_2026_07_06.md:146-159` (status: complete): G2/G3/G3b/G4 all fully **SIGNED
       OFF** with shipped SHAs; **G5 is SUB-SIGNED only** (mechanism + typed-reason discipline shipped — UAC@755c40515 +
@@ -359,10 +423,23 @@ reconciling + signing off, not redoing.)_
       time. > `instruments_foundation_completeness` is the actual gate-owning plan; treat **G4 as OPEN pending D2**
       unless the > operator has re-ruled since. This tracker's own Stage 2b ("cefi gate-authority fix" / D2 item) is
       still `[ ]` > unchecked, which is internally consistent with G4 still being open — the stale claim was this one
-      bullet.
+      bullet. > **[NOTE 2026-07-28, reconciled]**: Stage 2b above is now `[x]` (D2 landed,
+      `cefi_layer1_denominator_gaps_2026_07_03.md` resolved) — the internal-consistency condition this correction relied
+      on has changed. Whether G4 itself is now signable is a fresh re-verify against
+      `instruments_foundation_completeness_2026_06_24.md` (owned by this tracker's sibling
+      `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` [AUDIT] "Reconcile GATE 0" todo, not this one) — not
+      re-derived here; G4 stays annotated OPEN pending that dedicated re-check.
 - [ ] [DATA] P1. tradfi **§8 retirement purge** (4-leg GCS delete — ICE / CBOE-OPRA / VX-spread / VIX-cash) —
-      **OPERATOR-CONFIRM**
-- [ ] [DESIGN] P1. defi completeness **oracle** design
+      **OPERATOR-CONFIRM**. **STILL OPEN (reconciled 2026-07-28)** — genuinely operator-gated, not covered by any named
+      archived child; expected to stay open per this todo's own instructions.
+- [x] ✅ [DESIGN] P1. defi completeness **oracle** design. **DONE — reconciled 2026-07-28 against
+      `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
+      2026-07-06).** Design SSOT landed at `/codex/02-data/defi-completeness-oracle.md` (`unified-trading-pm@650c2b881`)
+      — `CompletenessProbe` contract (expected_count from on-chain truth vs. enumerated_count from the IS catalogue,
+      Tier-A/Tier-B probe kinds, fail-closed on empty/probe-failed) intended to replace DeFi's circular
+      `EXPECTED = ENUMERATED` measurement. Design-only, as scoped — implementation follow-ons enumerated in the codex
+      doc's §9 (note: the first implementation slice, the UAC `CompletenessProbe` schema itself, has since landed — see
+      this doc's sibling AO batch's `[x]` **[SCHEMA] P0** todo, `unified-api-contracts@1407b7f`).
 
 ## Stage 5 — Capture to 100% (Layer-2 — only after Layer-1 is honest)
 
@@ -370,8 +447,16 @@ reconciling + signing off, not redoing.)_
       paid RPC · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, + HYPERLIQUID/ASTER —
       operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI holds chain
       classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3) ·
-      rate-limit probe VM
-- [ ] [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**
+      rate-limit probe VM. **STILL OPEN (reconciled 2026-07-28)** — genuinely credential/operator-gated
+      (BLOCKED-CREDENTIALS class), not covered by any named archived child; expected to stay open.
+- [x] ✅ [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**.
+      **DONE — reconciled 2026-07-28 against `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md`
+      (`status: complete`, own todo `[x]`, 2026-07-06, Opus slot-3).** Both DEDUP-flagged items in
+      `data_completion_to_100_all_ag_2026_06_21.md` §"Folded-in from `path_to_100pct_backfill_mtds_is_2026_06_17`"
+      verified against their already-DONE/in-flight parent lanes (Step-0 enumerate = `instruments-service@38cec01` defi
+      expected-universe re-seed; per-AG lanes = the 5 `[x]` per-AG launch-matrix items in `data_completion`) and closed
+      as DEDUP-RECONCILED (flipped `[x]` with explicit "do NOT double-run" notes) in the parent plan — no new code
+      shipped, PM-only plan flip.
 - [x] [CODE] P1. DeFi `risk_params` MTDS handler (193,042 EU, no handler today) — **DONE**, shipped 2026-06-24
       `market-tick-data-service@2854c0a6` (`RiskParamsHandler` + registration + 11 unit tests), with a
       dispatcher-registration regression test added 2026-07-06 `market-tick-data-service@90cd3975` per
@@ -383,10 +468,16 @@ reconciling + signing off, not redoing.)_
       dispatcher (`main.py` import + `"deribit-options-chain"` key) + a regression test asserting the operation
       resolves. NOTE: the `__init__.py` `__all__` step in Ikenna's sketch was cosmetic (main.py imports handlers by full
       path) and correctly skipped. Root cause of D5's captured=0 is now closed at the code level.
-- [ ] [INFRA] P1. **Deribit `options_chain` — live runner**: wire a live cron/VM to run
+- [x] ✅ [INFRA] P1. **Deribit `options_chain` — live runner**: wire a live cron/VM to run
       `--operation deribit-options-chain` (the handler is **live/replay only — no backfill**, `process()` collects
       `date.today()`), so it actually captures BTC/ETH `options_chain` daily → then feeds the Stage-3 re-measure.
-      Historical options are NOT captured by this handler (separate concern if ever needed).
+      Historical options are NOT captured by this handler (separate concern if ever needed). **DONE — reconciled
+      2026-07-28 against `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md` (own todo `[x]`, shipped
+      2026-07-07 by slot-3).** New one-shot worker launcher `scripts/vm/launch-deribit-options-chain-daily.sh`
+      (`deployment-service@e18d585`) — e2-standard-2, singleton-locked on `deribit-opts-fwd-` prefix,
+      `VM_SHUTDOWN_ON_COMPLETION=true`, fires `--operation deribit-options-chain --mode batch --asset-group CEFI` with
+      today's UTC date; registered in the VM-prefix registry (`deribit-opts-fwd-` → `VmPrefixSpec`, EPHEMERAL_BATCH,
+      distinct from the historical `opt-deribit-` Tardis batch prefix).
 - [ ] [SCRIPT] P1. **Systemic unregistered-handler audit** (generalizes the Deribit C5 bug — do BEFORE the Stage-3
       re-measure). Diff every handler class in `market-tick-data-service/.../cli/handlers/` against the `operations={…}`
       dispatcher keys in `cli/main.py` to find handlers that are **built but never wired** (silent `captured=0`, same
@@ -423,18 +514,36 @@ reconciling + signing off, not redoing.)_
 ## Stage 6 — Hygiene (run in parallel; non-blocking)
 
 - [ ] [ADMIN] P2. Flip stale / self-contradictory checkboxes (`instruments_mtds_subset`: `N9c`, `N5r/N6r`,
-      "migrate-first 4 AGs"; `instruments_catalogue_incremental_rollup` → completed)
-- [ ] [VERIFY] P2. `honest_coverage_smoke_harness`: run the deferred **cefi / defi / tradfi / prediction** live-verify
-      slices (only sports ran)
-- [ ] [DATA] P2. v9 `schema_version` tail re-stamp (quiet window, post fleet-drain)
-- [ ] [UI] P2. data-status **UI drill-down** (last open `honest_coverage_v2` item)
-- [ ] [DESIGN] P2. Delete-or-document decision on instruments-service's dead `GET /api/data-status` endpoint (zero real
-      HTTP consumers, only its own unit test). See
-      `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md`.
+      "migrate-first 4 AGs"; `instruments_catalogue_incremental_rollup` → completed). **STILL OPEN (reconciled
+      2026-07-28)** — targets docs outside this todo's 7 named archived children; not covered here.
+- [x] ✅ [VERIFY] P2. `honest_coverage_smoke_harness`: run the deferred **cefi / defi / tradfi / prediction**
+      live-verify slices (only sports ran). **DONE — reconciled 2026-07-28 against
+      `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete, own todo `[x]`, 2026-07-06,
+      slot-9).** Gate satisfied via "discrepancy filed" (the item's own stated acceptance path): ran what exists live
+      in-cloud and surfaced 4 discrepancies (tradfi runner catalogue-404/BLOCKED-PLAN2; prediction runner
+      `BucketNamingError`; `run_live_verify_cefi.py`/`run_live_verify_defi.py` don't exist) at
+      `plans/active/issues/honest_coverage_smoke_harness_4ag_verify_2026_07_06.md` with actionable P2 fix todos. No
+      data-correctness impact (Layer-1 certifications use a different, unaffected code path).
+- [x] ✅ [DATA] P2. v9 `schema_version` tail re-stamp (quiet window, post fleet-drain). **DONE — reconciled 2026-07-28
+      against `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` (resolved, own todo `[x]`, GATE MET
+      2026-07-16).** The fleet-drain precondition (that blocked this across 15+ prior dispatch sessions) genuinely
+      cleared (sustained 8.5-min zero-VM window, both clouds confirmed); the static 13,971-row v4 tail re-stamped; fresh
+      corpus-wide read confirms 100% `schema_version=9` across tradfi, independently verified.
+- [ ] [UI] P2. data-status **UI drill-down** (last open `honest_coverage_v2` item). **STILL OPEN (reconciled
+      2026-07-28)** — not covered by any named archived child; the sibling `layer1_remeasure_and_certify` plan only
+      annotated this item as MOVED here, it did not build it. `[UI]` gate applies — genuinely open.
+- [x] ✅ [DESIGN] P2. Delete-or-document decision on instruments-service's dead `GET /api/data-status` endpoint (zero
+      real HTTP consumers, only its own unit test). See
+      `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md`. **DONE — reconciled 2026-07-28.**
+      `issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md` is `status: resolved`, both its own
+      todos `[x]`: operator decided DELETE (2026-07-18), then deleted — `instruments-service@650dd4b7` (removed
+      `api/data_status.py` + route registration + its unit test; re-verified no workspace caller at delete time; IS gate
+      green, 4559 passed).
 - [ ] [CODE] P2. Build a generic manifest-reprocessing utility (11 near-identical one-off reclassify scripts written
       across instruments-service + market-tick-data-service in 8 weeks; codex's own `script-homes.md` says a recurring
       need like this should graduate to a permanent tool). See
-      `issues/manifest_reprocessing_generic_utility_2026_07_07.md`.
+      `issues/manifest_reprocessing_generic_utility_2026_07_07.md`. **STILL OPEN (reconciled 2026-07-28)** — not covered
+      by any named archived child; genuinely unbuilt.
 
 ---
 
@@ -484,6 +593,17 @@ reconciling + signing off, not redoing.)_
 
 ## 📓 Progress Log
 
+- **2026-07-28 — Stage 1–6 checkbox drift reconciled against 7 now-archived/complete AO children** (via
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s [ADMIN] P1 reconciliation todo). Grepped each named
+  archived child's own checkboxes/Progress Log for shipped-SHA evidence, per unchecked tracker checkbox; flipped only
+  what was genuinely evidenced (citations recorded inline on each item, not restated here). **Flipped `[x]`**: Stage 1
+  TradFi v9 G4 apply; Stage 2 2b/2c/2d/2e-follow-on/2f; Stage 3 re-run `measure_honest_coverage` + close
+  `honest_coverage_v2`; Stage 4 cefi G1.2+G1.3 + defi oracle design; Stage 5 DEDUP tail + Deribit live runner; Stage 6
+  smoke-harness 4-AG slices + v9 schema tail re-stamp + dead `/api/data-status` endpoint deletion. **Left unchecked,
+  annotated still-real** (not covered by the 7 named children): Stage 1 legacy-twin deletes; Stage 2c's 2 ASTER
+  sub-items; Stage 3 tradfi Layer-1 certification (forked to `tradfi_consolidated_closeout_2026_07_18.md` Phase C) +
+  ASTER missing-date reconciliation; Stage 4 tradfi §8 purge; Stage 5 `data_completion` operator-gated items; Stage 6
+  stale-checkbox flip / UI drill-down / manifest-reprocessing utility. No code touched, no live measurement re-run.
 - **2026-07-10 (later still, 17:43 BST)** — **Second independent re-assessment dispatch on this same tracker item —
   re-verified from scratch, did not trust the 17:39 entry below at face value.** Re-confirmed: the 3 specific
   denominator-authority files the original Stage-3 blocker named (`venue_core.py`, `factory.py`,

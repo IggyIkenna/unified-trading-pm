@@ -231,7 +231,7 @@ drift_direction: advance-code
       Progress Log; every REMOVE-verdict kwarg is dropped from its caller(s) with UAC + IS suites green on that subset;
       `min_order_size` and any other ambiguous-verdict field(s) are left explicitly open with their evidence, distinct
       from the resolved set; `extra='forbid'` is NOT merged to main yet (still gated on the remaining judgment calls).
-- [ ] [ADMIN] P1. Reconcile `instruments_completion_tracker_2026_07_06.md`'s Stage 1–6 checkboxes against its own
+- [x] ✅ [ADMIN] P1. Reconcile `instruments_completion_tracker_2026_07_06.md`'s Stage 1–6 checkboxes against its own
       now-**archived/complete** AO children — `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`
       (resolved, Stage 2a/2b/2c/2f all `[x]`), `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md` (resolved),
       `plans/archive/2026_07/is_catalogue_completion_2d_2026_07_06.md` (complete, Stage 2d),
@@ -251,7 +251,28 @@ drift_direction: advance-code
       leave unchecked. Append one dated Progress Log entry summarizing what flipped vs what's confirmed still-real.
       Source: `instruments_completion_tracker_2026_07_06.md`. Done when every Stage 1–5 checkbox reflects its archived
       child's actual shipped state (with citations) and the doc's own Snapshot/open-count is no longer stale relative to
-      those 5 archived plans.
+      those 5 archived plans. **DONE 2026-07-28 — `unified-trading-pm@<see plan-flip commit>`.** Read all 7 named docs
+      in full and grepped every currently-`[ ]` Stage 1–6 checkbox in the tracker. **Flipped 13 checkboxes `[x]`** with
+      `<repo>@<sha>` citations inline: Stage 1 TradFi v9 G4 apply; Stage 2 2b/2c/2d/2e-follow-on/2f; Stage 3 re-run
+      `measure_honest_coverage` + close `honest_coverage_v2`; Stage 4 cefi G1.2+G1.3; Stage 5 DEDUP tail + Deribit live
+      runner; Stage 6 dead `/api/data-status` endpoint deletion. **Diverged from this todo's own "expected open" hint
+      list on 2 items, on evidence, not assumption** — the named archived docs directly and completely cover them with
+      shipped-SHA citations, contradicting the hint: **Stage 4 defi completeness oracle design** is `[x]` in
+      `foundation_gates_and_capture_to_100_2026_07_06.md` (design landed at codex
+      `/codex/02-data/     defi-completeness-oracle.md`, `unified-trading-pm@650c2b881` — design-only scope, matching
+      the tracker item's own wording); **Stage 6 `honest_coverage_smoke_harness`** is `[x]` in
+      `layer1_remeasure_and_certify_2026_07_06.md` (its own Gate — "each AG's smoke slice green or its discrepancy
+      filed" — was satisfied via the discrepancy-filed path, 4 discrepancies filed with actionable follow-up todos).
+      Also flipped **Stage 6 v9 `schema_version` tail re-stamp** (`[x]` in `tradfi_v9_stage1_finish_2026_07_06.md`, not
+      named in the hint list at all but directly evidenced GATE MET 2026-07-16). **Left unchecked with an annotation**
+      (genuinely still open, matching or extending the hint list): Stage 1 legacy-twin deletes; Stage 2c's 2 ASTER
+      sub-items (not covered by the named cefi doc); Stage 3 "certify per-AG Layer-1" (4/5 done, tradfi forked to
+      `tradfi_consolidated_closeout_2026_07_18.md` Phase C) + ASTER missing-date reconciliation; Stage 4 tradfi §8
+      purge; Stage 5 `data_completion` operator-gated items + the systemic-handler-audit widen-scope addendum (already
+      self-annotated) + prediction live-token-universe fix (already correctly pointed elsewhere); Stage 6 stale-checkbox
+      flip / UI drill-down / manifest-reprocessing utility. Tracker's own `last_updated` bumped to 2026-07-28; a dated
+      Progress Log entry appended there per instructions. No code touched, no live re-measurement — citation-grounded
+      reconciliation only.
 - [x] ✅ [SCHEMA] P0. **DONE 2026-07-26 (slot-7) — `unified-api-contracts@1407b7f`.** Landed
       `CompletenessProbe`/`CompletenessProbeStatus`/`CompletenessProbeKind` in
       `canonical/crosscutting/honest_coverage.py` per design doc §2, plus `factory_address_by_chain` on
@@ -345,24 +366,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                                          `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                                          `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                                          prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                                          this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                                          `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                                          (merged via PR #1593), NOT executed here.
+                                                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                                  (merged via PR #1593), NOT executed here.
 
-                                                                          **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                                          (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                                          **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                                          items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                                          flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                                          re-verifies sports.
+                                                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                                  re-verifies sports.
 
-                                                                          Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                                          `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                                          of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
