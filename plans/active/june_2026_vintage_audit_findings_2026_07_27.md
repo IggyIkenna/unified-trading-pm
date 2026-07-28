@@ -706,7 +706,31 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     canonical tradfi shard writer) vs features-service's (158L, independently re-fetches from live FRED API instead of
     reading MTDS's captured output) — **consolidate into MTDS, taking the best of both adapters** (not a pure delete —
     fold in whatever features-service's version does better, e.g. its Secret-Manager config pattern, before removing the
-    duplicate fetch path); (d) first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
+    duplicate fetch path) — **DONE 2026-07-28** — `market-tick-data-service@b45c83c3`, `features-service@21e39fe0`:
+    features-service's Secret-Manager pattern turned out functionally equivalent to MTDS's (both go through
+    `get_secret_client()`) — the ONE genuine gap folded in was **automatic retry-with-backoff on transient errors**,
+    which features-service got "for free" via UTL's `handle_api_errors()` decorator but MTDS's adapter previously lacked
+    (single-shot fetch, raised immediately on 429/500/timeout). Folded in as a bounded whitelist retry (429/500 per the
+    UAC `classify_venue_error("fred", ...)` SSOT, plus connection-timeout) mirroring the established
+    `databento_retry.py` pattern in the same MTDS adapters package — not a blind copy of UTL's swallow-on-failure
+    decorator, which would have violated shard-level failure isolation. Added the 4 series features-service's
+    `economic_results_calculator` needed that MTDS's `KEY_SERIES` didn't yet cover (PAYEMS, GDP, ICSA, PCEPI). Repointed
+    both features-service consumers (`YieldCurveCalculator`, `economic_results_calculator`) at a new
+    `features_service/calendar/adapters/mtds_fred_reader.py` canonical-path reader (mirrors the DeFi
+    `mtds_canonical_reader.py` precedent) that reads MTDS's captured `raw_tick_data` parquets instead of hitting FRED's
+    API a second time; deleted `calendar/adapters/fred_adapter.py` + its unit test + its live-API integration test, no
+    shims. Both `YieldCurveCalculator` ("yield_curve") and `economic_results_calculator`'s CLI handler
+    (`--operation economic_results`) were found to be ORPHANED — neither is currently wired into
+    `CalendarBatchModeHandler`'s `CALENDAR_FEATURE_GROUPS = ["time_features", "economic_events"]` nor into
+    `ServiceBootstrap`'s registered `operations` — so the lower-latency/on-demand objection raised in the original audit
+    doesn't apply today (nothing calls either path in production); left the wiring gap as-is since re-wiring them is out
+    of scope for a dedup task. `EconomicCalendarLoader` (a THIRD, separate FRED consumer — the `/release/dates` schedule
+    endpoint, wired into the ACTIVE `economic_events` batch path) still independently live-fetches FRED and was
+    deliberately left untouched: it queries release SCHEDULE dates, a data shape MTDS's adapter has never captured (only
+    `series/observations` VALUES), so there was nothing to consolidate it against;
+    `CalendarFeaturesConfig. fred_api_key`/`fred_secret_name` stay in `features-service/calendar/config.py` because that
+    loader still needs them. Both repos' `quality-gates.sh` green (full suite, ship mode) before each quickmerge. (d)
+    first-tranche scope = **crypto (CeFi+DeFi) + ETF flows first**.
 39. service_dockerfile_pattern_normalization — **agent owns it** (no more Ikenna/Harsh human-owner split, per the
     general correction above) — proceed with Pattern-A fan-out to the 8 remaining Pattern-B repos + the
     strategy-service/MTDS-vendoring tier-violation investigation.
