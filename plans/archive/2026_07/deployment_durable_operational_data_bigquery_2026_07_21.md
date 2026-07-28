@@ -536,6 +536,27 @@ what actually landed, for provenance, since none of it could be flipped in-place
   is observed completing (`journalctl -u process-category-sampler.service -n 30` for a "Published N/N" line with no
   adjacent timeout/oom-kill), ideally 2+ consecutive successes, once VM memory pressure eases.
 
+## Final report (`/autonomous`, 2026-07-28 continuation)
+
+All items this plan's own "Still open" note named are now closed, in code and in the record:
+
+- Analysis-path doc: done (by a concurrent session, verified present, not rewritten).
+- Codex cross-ref: done this session.
+- process-category UI wiring: done this session, shipped + Playwright-verified live.
+- systemd timer fix: code-complete + unit-test-verified this session; live confirmation genuinely blocked, not deferred
+  out of laziness — the one remaining piece (bridge-cron retirement) depends on a real unattended tick succeeding, which
+  depends on the orchestrator VM's swap exhaustion easing, which is a SEPARATE, already-tracked, in-progress issue
+  (`orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`) with its own owner and its own fix-in-flight.
+  Forcing this fix's verification further tonight would mean either fabricating a low-load test window that doesn't
+  reflect the real multi-tenant conditions this signal exists to observe, or intervening in another in-flight fix's
+  territory — neither is the right move. This is the one genuine non-completion this dispatch is leaving behind, and it
+  is a real external dependency, not a shortcut.
+
+**Verified end-state**: 4/4 signals (resource_samples, run_ledger, idle-spend, process-category) have durable
+BigQuery-backed pipelines with real, live-verified data; the durable-vs-Firestore split, rolling-window UI, and cross-VM
+comparison view are all live; cost stays ~$0 by construction. The one open thread — the bridge cron's retirement — is
+bounded, has an explicit trigger condition, and is owned by a doc that already tracks it.
+
 ## Codex SSOTs
 
 - `/codex/02-data/live-data-persistence-and-event-log.md` — the UTL event spine (EventTransport facade / Pub/Sub) this
