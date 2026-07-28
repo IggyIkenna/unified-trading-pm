@@ -143,6 +143,32 @@ commit; it resets the branch to origin and drops it:
 > recovery directly. Content is not lost yet (backstop patches host-local on `ip-172-31-5-118` + 90d reflog), but this
 > is why the first-wave `207afd62` todo has also sat unrecovered. Escalated to operator for routing.
 
+### Third wave — the branch-reset dropped the runtime's OWN orphan-wip inheritance commit (main agt-4d8de7, 2026-07-28T00:25Z)
+
+The most damning evidence yet: on slot-11's `unified-trading-pm` worktree, the runtime's pre-spawn dirty-state gate
+correctly committed the dead predecessor's dirty WIP as `65c5b0a69`
+(`chore(orphan-wip): inherited WIP from predecessor on slot 11 at 2026-07-28T00:18:03Z`,
+`DirtyStateResolution.COMMIT_AND_PUSH`) — and then, within the SAME spawn, a `branch: Reset to origin/live-defi-rollout`
+orphaned that very commit before it was pushed. Reflog: `65c5b0a69 HEAD@{3}: commit …` →
+`fe7b19392 HEAD@{2}: branch: Reset to origin/live-defi-rollout` → FF-merge to `cd5c0bde1`.
+`merge-base --is-ancestor 65c5b0a69 origin/live-defi-rollout` → NO. This proves the COMMIT_AND_PUSH resolution's
+"…AND_PUSH" half never fires (or is undone by the reset) — the gate commits, the reset drops it, and nothing reaches
+origin. **The orphan-wip mechanism is not a safety net; it is itself a victim of the reset.**
+
+Payload was three DOCS (all main-recoverable): the new issue doc `defi_mev_events_pagination_gap_2026_07_28.md` (+112,
+**untracked in the original WIP → zero reflog recovery for the source file; would have been permanently lost**), its
+`[PM] P1` todo flip in `defi_satellite_ao_dispatch_batch1_2026_07_25.md`, and the archived-source xref update. A
+coherent complete unit (a worker's finished `[PM] P1`).
+
+- [x] slot-11 `65c5b0a69` (PM DOCS) — RECOVERED by main via docs carve-out (applied backstop patch onto origin tip,
+      pushed `unified-trading-pm@9237aee43`). Backstop:
+      `.orch-orphan-commits-recovery/slot11_65c5b0a69_orphan-wip-pm-docs.patch`.
+
+**Root-cause note this adds:** whatever emits the reset runs AFTER the orphan-wip commit within the same spawn sequence
+— so the fix target is narrowed: the spawn/re-init path itself resets the branch to origin immediately after its own
+dirty-commit, discarding it. The dirty-state gate and the reset are the same code path's two halves and they contradict
+each other.
+
 ## Investigation (root cause)
 
 - [ ] [OPERATOR] P1. Identify WHAT emits `branch: Reset to origin/live-defi-rollout` on a worktree that carries an
