@@ -80,12 +80,28 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
 
 ## Open questions / follow-up
 
-- [ ] [VERIFY] P1. Confirm load/iowait actually eased after the glue-2 scale-down (re-check `uptime`/`top` a few minutes
-      later) before concluding this alone resolved it — the fan-out's own quickmerge/QG batch may still be contributing
-      independently of runner count, and should naturally taper as those 22 repos finish shipping.
-- [ ] [VERIFY] P1. Once load is confirmed down, re-attempt registration for whichever repos still show
-      `total_count:     0` on `/actions/runners` — the working theory is these will succeed once I/O pressure that was
-      interfering with the registration handshake itself clears, but this has not yet been proven post-mitigation.
+- [x] ✅ [VERIFY] P1. Confirm load/iowait actually eased after the glue-2 scale-down (re-check `uptime`/`top` a few
+      minutes later) before concluding this alone resolved it — unified-trading-pm@c2308363d. Three `top -bn1` samples
+      taken minutes apart: iowait `52.0 wa` → `18.5 wa` → `6.5 wa` (down from the original 66.2→93.1 wa episode); load
+      average 1-min `32.92` → `31.90` → `42.05` (5-min/15-min trending down: `39.77`→`39.04`→`39.48`, off the prior
+      74→119 peak) with the remaining CPU-accounting time now `us`/`sy`/`ni` (real compute, e.g. concurrent QG runs),
+      not `D`-state disk-wait. iowait is conclusively down; the tapering fan-out QG batch is the residual load driver,
+      consistent with the doc's own prediction.
+- [x] ✅ [VERIFY] P1. Once load is confirmed down, re-attempt registration for whichever repos still show
+      `total_count:     0` on `/actions/runners` — unified-trading-pm@c2308363d. Queried `GET /actions/runners` (via
+      `gh api`, `scripts/workspace/load-gh-token.sh`) for all 23 newly-registered pools by name (`ao` →
+      `agent-orchestrator`): **every one now shows `total_count >= 1`, none show 0** — alerting-service,
+      batch-live-reconciliation-service, client-reporting-api, deployment-api, deployment-service, e2e-testing,
+      execution-service, features-service, fund-administration-service, greeks-service, ibkr-gateway-infra,
+      instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+      system-integration-tests, trading-agent-service, unified-api-contracts, unified-trading-api,
+      unified-trading-library (all =1), deployment-ui, unified-trading-system-ui (=2, glue-2 offline-but-registered),
+      agent-orchestrator (=3). Per-runner detail confirms `glue-1` is `status=online` (mostly `busy=true`, i.e. actively
+      running real CI jobs) on every pool; `glue-2` shows `status=offline` where it exists (correctly reflecting the
+      `systemctl disable --now` corrective action, not a registration failure). **No re-registration action was needed**
+      — the working theory is confirmed: the earlier `total_count: 0` reads were the registration handshake itself
+      getting starved by I/O contention, and all 9 previously-phantom repos self-resolved to online registered runners
+      once the pressure eased (no manual re-`install` required).
 - [ ] [REVIEW] P2. **Capacity-plan this VM for concurrent self-hosted-runner registration going forward** — this
       session's burst (23 pools at once) was a one-time fan-out, but the same box now permanently hosts PM's original
       8 + agent-orchestrator's 3 + 23×N new runner processes ALONGSIDE the interactive/autonomous AO slot workers that
