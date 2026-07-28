@@ -14,7 +14,7 @@ summary: >-
   deployment-service@600d31c (2026-07-22); a post-fix retroactive backfill covered history only through 2026-06-21,
   leaving this exact crack before the new cron's 2026-07-21 start. Underlying cause already fixed + healthy; only the
   29-day backfill (now scoped to all 5 protocols) remains open.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -40,7 +40,7 @@ source:
     rates backfill todo -- direct manifest reads against market-data-tick-defi-prd's availability_index.parquet
     (column+filter pushdown, not a full-corpus read).",
   ]
-resolved_by:
+resolved_by: 2026-07-28 (slot-11) — 29-day gap backfilled for all 5 protocols, manifest-verified 145/145 captured
 locked_by:
 locked_since:
 ---
@@ -130,12 +130,19 @@ confirmed running healthily. The only remaining action is the backfill for the 2
       handler-wide (all 5 protocols show the identical gap, not just MAKER) and confirmed the underlying scheduling gap
       is already fixed + healthy (7/7 executions `Completed True` since 2026-07-22, daily `01:10 UTC`). See "Root cause"
       section above for full evidence. No code change required — nothing to ship in market-tick-data-service.
-- [ ] [SCRIPT] P2. Now UNBLOCKED. Backfill the confirmed 29-day gap (2026-06-22..2026-07-20) for ALL 5
-      `vault_share_price` protocols (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 — not just MAKER, per the root-cause
-      finding above that the gap is handler-wide) via
-      `deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2026-06-22 2026-07-20`,
-      manifest-verify `record_captured` for all 29 days × 5 protocols. (repo: market-tick-data-service,
-      deployment-service)
+- [x] [SCRIPT] P2. ✅ 2026-07-28 (slot-11). Backfilled the confirmed 29-day gap (2026-06-22..2026-07-20) for ALL 5
+      `vault_share_price` protocols (ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3) via
+      `deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2026-06-22 2026-07-20` — SPOT VM
+      `mtds-vault-share-price-20260728-055107` (asia-northeast1-c), ran 05:51:07..05:57:20 UTC, exit_code=0, "Batch
+      complete: 29 results collected", self-deleted on completion. Manifest-verified via direct
+      `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` read
+      (columns=[date,venue,data_type,capture_status,written_at], filters on data_type=vault_share_price — not a
+      full-corpus load): 145/145 rows present for the window (29 days × 5 protocols), all `capture_status=captured`,
+      zero gaps remaining. Non-blocking IAM warning during the run (`run-ledger` pubsub publish 403 on the VM's default
+      service account) is a separate, already-tracked issue
+      (`/plans/active/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`) — did not block or affect the
+      backfill write path. No code change required (repo: market-tick-data-service, deployment-service — launcher script
+      used as-is).
 
 ## Measurement trap (for the next reader)
 
@@ -167,3 +174,18 @@ for a targeted query — the same filtered read above completed in seconds.
   running healthily; flipped `[DIAG] P2` to done and rescoped the remaining `[SCRIPT] P2` backfill todo to cover all 5
   protocols (was MAKER-only) since the finding shows the gap is handler-wide. Did not run the backfill itself — separate
   tracked todo, now unblocked for the next dispatch.
+- 2026-07-28 (slot-11): ran the `[SCRIPT] P2` backfill. Launched
+  `deployment-service/scripts/vm/launch-mtds-vault-share-price-backfill-vm.sh 2026-06-22 2026-07-20` — SPOT VM
+  `mtds-vault-share-price-20260728-055107` (asia-northeast1-c, e2-standard-8), ran 05:51:07..05:57:20 UTC (~6 min, well
+  under the ~15min estimate), exit_code=0, log shows "Batch complete: 29 results collected", self-deleted on completion
+  per `VM_SHUTDOWN_ON_COMPLETION=true`. Manifest-verified via direct filtered read of
+  `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`
+  (columns=[date,venue,data_type,capture_status,written_at], filters=[data_type==vault_share_price] — not a full-corpus
+  load, per this doc's own "measurement trap" note): 145/145 rows present for the 2026-06-22..2026-07-20 window across
+  ETHENA/FRAX/MAKER/MORPHOVAULTS/YEARN_V3 (29 days × 5 protocols), all `capture_status=captured`. The gap is fully
+  closed. Launch-time tarball-freshness warning (4 stale tarballs) did not affect correctness — the handler's vault
+  registry has been unchanged since 2026-05-03 (already confirmed above) and the run's own log confirms it wrote the
+  expected 5-protocol/8-vault set correctly. One non-blocking IAM 403 in the run log (`run-ledger` pubsub publish, VM
+  default service account lacks `pubsub.topics.publish`) did not affect the backfill's data write path — already tracked
+  separately at `/plans/active/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`, no new issue filed.
+  Both todos now done; issue closed (`status: resolved`).
