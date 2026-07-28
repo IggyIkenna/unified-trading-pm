@@ -180,33 +180,128 @@ bespoke prefix-builder, which is structurally why this bug class keeps recurring
 
 ### Not fully verified in round 1
 
-- `MarketTickDomainClient.get_tick_data()`'s real reachability (live vs. effectively-dead) — full caller census
-  incomplete.
-- `l2_book_checkpoints`/`liquidation_clusters` registry rows — flagged, not GCS-verified.
-- MDPS's live-mode async persistence worker (`cli/handlers/live_mode_handler.py:349-354`, `_persistence_worker`) — its
-  logging-only path AND the real write's `data_sink.write(..., partition={...})` dict both omit
-  `pipeline_mode=`/`instrument_type=`; unclear whether UTL's `ProtocolDataSink`/`get_data_sink()` contract actually
-  requires those keys to land canonically. **Needs a UTL-side check of `get_data_sink().write()`'s partition-key
-  contract against this call site** — this is THE live/paper real-time path, the operator's "live" axis, and is
-  currently unresolved.
+- `MarketTickDomainClient.get_tick_data()`'s real reachability — RESOLVED 2026-07-28, see P0 flip above (zero real
+  callers workspace-wide).
+- `l2_book_checkpoints`/`liquidation_clusters` registry rows — RESOLVED 2026-07-28 in round 2 below (confirmed dead, no
+  writer/consumer anywhere).
+- MDPS's live-mode async persistence worker — RESOLVED 2026-07-28 in round 2 below (confirmed dead; live mode's real
+  candle writes go through the same code batch uses).
 - Deribit options_chain / Kalshi-Polymarket-perp findings (MTDS, above) are code-confirmed but not GCS-verified for
   real-world blast radius (sparse/possibly-dormant data_types; a full corpus walk was deliberately avoided per the
   workspace's single-walk/heavy-I/O rule).
 - Full line-by-line audit of MTDS's 100+ one-off migration scripts was NOT performed (spot-checks showed
   dual-shape-awareness is the norm post-2026-07-20; deprioritized vs. LIVE standing code).
 
+## Audit round 2 (DEFI-scoped) — COMPLETE, 4 parallel agents, all returned 2026-07-28
+
+Same methodology as round 1 (MTDS / MDPS / downstream consumers [features-service, strategy-service, execution-service]
+/ UTL+instruments-service), scoped to `asset_group=defi`, explicitly covering batch/paper/live per the operator's
+expanded directive.
+
+### Confirmed bugs
+
+1. **[CRITICAL — live, data-correctness, not just empty-read/retry cost]
+   `execution-service/execution_service/data/defi_data_loader.py:131-140`** (`DeFiDataLoader._gcs_path`) builds the
+   PRE-MIGRATION legacy shape
+   (`raw_tick_data/by_date/day={D}/data_type={DT}/instrument_type={IT}/venue={V}/symbol={S}/{id}.parquet`) — the sibling
+   `canonical_paths.py` module's own docstring documents this shape as broken since the reader-fallback window closed
+   ~2026-06-15 (today is 2026-07-28). Live-verified: real DeFi objects nest `pipeline_mode=`/`asset_group=` between
+   `day=` and any `data_type=`/`venue=` segment; this exact prefix never matches. **Live-wired** into `venues/aave.py`,
+   `venues/morpho.py`, `venues/etherfi.py`, `engine/handlers/flash_loan_handler.py` for oracle prices, lending rate
+   indices, risk params, reward availability. Failure degrades SILENTLY to hardcoded `DEFAULT_RISK_PARAMS`/default
+   prices (a `logger.warning`, no error) — real historical DeFi market data never actually gets used. Primarily
+   batch/backtest-scoped per the module's docstring; not fully verified whether live/paper trading calls this on a hot
+   path vs. only backtest setup. **Highest-priority fix in this whole audit** — the only finding across both rounds
+   where wrong data silently substitutes for real data, vs. an empty-read that just costs a retry. A second, CORRECT
+   `DeFiDataLoader` already exists in the same repo at `execution_service/data/loaders/defi.py` (uses
+   `canonical_paths.build_candidate_raw_tick_paths` properly) — same class name, different module, real misimport risk
+   on top of the bug itself.
+2. **`market_tick_data_service/reader.py:367-373`** (`CanonicalParquetReader._build_shard_bases`) builds DeFi
+   chain-scoped read prefixes as `asset_group=defi/chain={C}/venue={V}/...` — REVERSED vs. the real write shape
+   `asset_group=defi/venue={V}/chain={C}/...` (verified live + against UAC's `build_defi_partition_path()`, the write
+   SSOT). No current production caller passes `chain=` for a DeFi read (dormant today), but it's a public method on a
+   publicly-exported reader class. The codex SSOT (`defi-canonical-naming-ssot.md` gotcha #8) already documents+fixes
+   the IDENTICAL bug in the live WRITER (`mtds@0fcfa803`) but never flagged this second, independent occurrence in the
+   reader.
+3. **`market_data_processing_service/app/core/cloud_data_provider.py:222-225`** (`_load_instruments_by_venue`,
+   explicit-`venue` branch) omits `pipeline_mode=`/`asset_group=`, always misses. Dormant (both production callers pass
+   `venue=None`, routing through a safe branch) but `venue` is a documented public parameter.
+4. **`features-service/features_service/onchain/app/calculators/eigen_rewards_calculator.py:51-55`**
+   (`_mtds_eigen_rewards_blob_candidates`) — two exact-path guesses, both missing `pipeline_mode=`. `blob_exists` always
+   False → silently falls through to the DefiLlama vendor-API fallback even when real MTDS data exists. Batch.
+5. **`features-service/features_service/onchain/collectors/parquet_dust_loader.py:132-136`** — hand-rolled list prefix
+   missing the registry's `onchain/` root segment (the writer correctly uses `build_path("lst_seasonal_rewards", ...)`;
+   reader disagrees by construction). Currently dormant/unwired (`Phase6Driver`'s `dust_loader=` has zero real
+   production call sites) — will silently fail the moment it's wired up as designed.
+
+### Confirmed dead/duplicate code (landmines — fix or delete, don't just leave)
+
+6. **MDPS's entire live-mode async-persistence adapter chain is dead**: `AsyncGCSDataSink`/`GCSDataSink`
+   (`app/core/data_sink.py`), `LiveDataSource`/`GCSDataSource` (`app/core/data_source.py`), and the
+   persistence-queue/thread machinery in `cli/handlers/live_mode_handler.py`. Zero production callers — live mode's real
+   candle writes go through the SAME `CandleWriteMixin._write_candles()` batch uses (safe). **Resolves round 1's
+   flagged-open MDPS live-mode question.** The dead code is ALSO badly broken (no canonical prefix, `date=` not `day=`,
+   random UUID filename instead of `{instrument_id}.parquet`) — a silent-corruption landmine if ever rewired. Recommend
+   deletion, not fix-forward.
+7. **`l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m` PATH_REGISTRY rows are CONFIRMED DEAD** — zero
+   live GCS objects in any asset_group's bucket, zero writer code anywhere in the workspace, and their only consumers
+   (`unified_trading_library/domain_client/clients/liquidity.py`'s 3 client classes) are never instantiated outside
+   their own definition file. **Resolves round 1's open question** — cleanup, not a live bug.
+8. `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s `build_path()` methods
+   hand-roll a stale shape (missing `onchain/` root); their `DataSinkAdapter`/`DataSourceAdapter` subclasses have zero
+   production instantiation (test-only).
+9. `instruments-service/instruments_service/engine/orchestrator/writers.py` hand-rolls the `instrument_availability/`
+   path (currently byte-identical to the registry's `"instruments"` template — no live drift today, but no shared-code
+   guarantee against future drift).
+
+### Confirmed-safe / positive baseline
+
+- `raw_tick_data`/`processed_candles`/`instruments` PATH_REGISTRY templates independently re-verified correct for DeFi
+  (live GCS-checked against real `asset_group=defi` objects).
+- MTDS's `market_interface/adapters/defi/canonical_write.py::write_defi_rows()` is the real DeFi-write SSOT — ~35
+  handlers funnel through it correctly; the live WS writer (`live/websocket_runner.py::live_tick_blob_path`) is correct
+  and self-guards via `canonical_path_violations(require_pipeline_mode=True)`.
+- MDPS's `_check_existing_outputs`/`_list_blobs_scoped_by_venue` (fixed 2026-07-28) +
+  `canonical_writer_shaping.py::derive_candle_object_path()` verified correct for DeFi, including chain-split venue
+  handling.
+- features-service's `onchain/app/core/data_loader.py`, `onchain/adapters/mtds_canonical_reader.py`,
+  `onchain/app/core/feature_writer.py`, `cross_instrument/engine/raw_data_loader.py`,
+  `onchain/calculators/perp_funding_rates_defi.py` all correctly delegate to registry/UAC SSOTs.
+- strategy-service's `canonical_*_provider.py` family (dex_pool/vault/perp_funding/adv_ranked_universe/spot_mark/
+  dated_future_mark) reads MTDS/MDPS's GCS corpus directly rather than through features-service — a DELIBERATE,
+  codex-cited T4 integration pattern (not a service→service violation), using the safe day-prefix+needle-filter
+  convention throughout.
+- execution-service's `canonical_paths.py::build_candidate_raw_tick_paths`, `defi_lateral_loader.py`, the CORRECT
+  `data/loaders/defi.py::DeFiDataLoader`, and `providers/solana_amm_depth_provider.py` are confirmed-safe reference
+  exemplars.
+- instruments-service's DeFi venue/chain naming verified consistent with UAC's declared vocabulary — no drift found.
+
+### Structural gaps flagged (not proven actively firing — needs follow-up, not a guess-fix)
+
+- `onchain_features`/`lst_seasonal_rewards` PATH_REGISTRY templates carry NO `pipeline_mode=` segment at all (unlike
+  `raw_tick_data`/`processed_candles`/`instruments`). Real onchain raw data is captured under 2+ different
+  pipeline_modes (`batch_onchain_rpc`, `batch_onchain_subgraph`) — if the feature-compute step ever derives the same
+  `feature_group`+`day` from both source modes, they'd silently overwrite each other. Not proven active.
+- `PATH_REGISTRY["instruments"].bucket_template` has no `-prd-` env tier (would 404 via a literal
+  `build_bucket("instruments", ...)`) — already guarded by a standing QG
+  (`market-tick-data-service/scripts/quality_gates/check_reader_writer_bucket_parity.py`, STEP 5.91, "C6 incident"
+  class); zero live callers found. Corroborated independently by 2 of the 4 round-2 agents.
+- `_candidate_pipeline_mode_values()` (MDPS `orchestration_scanner.py:119-146`) omits `Mode.REPLAY`, unlike UAC's
+  analogous helper. DeFi has real registered `REPLAY_*` pipeline modes; spot-checked 6 recent dates, zero live
+  `replay_*` DeFi objects found today (dormant), but will silently misbehave the moment a DeFi replay re-fetch runs.
+- MDPS `dependency_checker.py`'s `max_results=1000/2000` listing cap on whole-day DeFi `raw_tick_data` scans (now 6+
+  pipeline_mode sources × multi-venue) — whether this is ever hit in practice is unverified (a full recursive
+  day-listing did not complete in-session; abandoned per single-walk/heavy-I/O discipline).
+
 ## What's NOT done yet (the operator's expanded scope)
 
-Round 1 was CEFI-scoped only (every GCS spot-check, every "confirmed for CEFI too" line, targeted the CEFI bucket).
-**DEFI, TRADFI, SPORTS, PREDICTION have not been audited for this bug class at all** — each asset group has its own
-bucket family, its own pipeline_mode vocabulary, and potentially its own hand-rolled path-construction sites that round
-1 never looked at. The operator explicitly wants:
+Round 1 (CEFI) and round 2 (DEFI) are complete. **TRADFI, SPORTS, PREDICTION have not been audited for this bug class
+yet** — each asset group has its own bucket family, its own pipeline_mode vocabulary, and potentially its own
+hand-rolled path-construction sites. The operator explicitly wants:
 
-1. The same audit methodology (find hand-rolled prefixes, classify read/write, check against live GCS, resolve
-   registry-staleness questions) extended to DEFI/TRADFI/SPORTS/PREDICTION.
-2. Explicitly **batch AND paper AND live** code paths checked, not just batch (today's audit was almost entirely
-   batch/standing-service code; live-mode and paper-trading read/write paths are a distinct, unaudited surface — see the
-   MDPS live-mode landmine above as the one data point so far).
+1. The same audit methodology extended to TRADFI/SPORTS/PREDICTION.
+2. Explicitly **batch AND paper AND live** code paths checked (round 2 covered this for DeFi — see execution-service
+   finding 1 above, the first genuinely live-wired instance found across both rounds).
 3. A genuine **centralization** design, not just point-fixes — i.e., does a true "resolve me the read/write path for
    dataset X, given these partition keys" universal function need to be built (or does one already exist that services
    should be migrated onto), so this bug class becomes structurally impossible instead of periodically re-discovered.
@@ -243,15 +338,76 @@ bucket family, its own pipeline_mode vocabulary, and potentially its own hand-ro
       monkey-patches `get_spec()` with its own synthetic spec, isolated from the real registry, so it's unaffected by
       the template change; no update needed. (repo: unified-trading-library)
 
-- [ ] [SCRIPT] P1. **Verify + fix (or confirm-dead) the `l2_book_checkpoints`/`liquidation_clusters` registry
-      templates** (`unified_trading_library/config_interface/paths/registry.py:303-316`) — found 2026-07-28 while
-      landing the `raw_tick_data` fix above: both templates have the SAME missing-`pipeline_mode=`/`asset_group=` gap,
-      but neither has a live-GCS-verified real shape (unlike `raw_tick_data`'s 3-agent confirmation) or a confirmed
-      writer — grepped MTDS + features-service, found only readers/consumers in the same dead
-      `domain_client/clients/liquidity.py` layer as `MarketTickDomainClient`. First determine whether either dataset has
-      a real producer anywhere in the workspace (if not, these are dead-code cleanup, fold into the P2 dead-code todo
-      below instead); if a real writer exists, verify its actual GCS shape before touching the template — do NOT
-      guess-copy the `raw_tick_data` fix pattern without confirmation. (repo: unified-trading-library)
+- [x] [SCRIPT] P1. **Verify + fix (or confirm-dead) the `l2_book_checkpoints`/`liquidation_clusters` registry
+      templates** — RESOLVED 2026-07-28 by the round-2 DEFI audit (see "Confirmed dead/duplicate code" item 7 above):
+      confirmed dead, zero writer anywhere in the workspace, zero live GCS objects, zero real consumers. Also found a
+      THIRD dead row in the same family, `liquidity_features_1m`. Deletion tracked in a new P2 todo below rather than
+      fixed-forward (nothing needs these). (repo: unified-trading-library)
+
+- [ ] [SCRIPT] P0. **Fix the CRITICAL live execution-service `defi_data_loader.py` bug** — found 2026-07-28 in the
+      round-2 DEFI audit (see "Confirmed bugs" item 1 above). `execution_service/data/defi_data_loader.py:131-140`'s
+      `_gcs_path()` builds the pre-migration legacy shape, broken since the 2026-06-15 reader-fallback-window closure;
+      live-wired into `venues/aave.py`/`morpho.py`/`etherfi.py`/`engine/handlers/flash_loan_handler.py`, silently
+      degrading to hardcoded default risk params/prices instead of real DeFi market data. The HIGHEST PRIORITY item in
+      this whole audit — the only finding where wrong data silently substitutes for real data rather than an empty-read
+      costing a retry. Fix: repoint `_gcs_path()` at `canonical_paths.py::build_candidate_raw_tick_paths` (the
+      confirmed-correct pattern already used by the OTHER, differently-pathed `DeFiDataLoader` in `data/loaders/defi.py`
+      — resolve the naming collision between the two classes at the same time, e.g. rename or consolidate). Verify
+      whether live/paper trading calls this on a hot path (not just backtest setup) before declaring the live/paper
+      blast radius closed. Add a regression test with a real captured shape (fail pre-fix, pass post-fix). (repo:
+      execution-service)
+
+- [ ] [SCRIPT] P1. **Fix `market_tick_data_service/reader.py:367-373`'s DeFi chain/venue segment-order bug** —
+      `CanonicalParquetReader._build_shard_bases` builds `asset_group=defi/chain={C}/venue={V}/...`, reversed vs. the
+      real write shape `asset_group=defi/venue={V}/chain={C}/...`. Dormant today (no live caller passes `chain=`), but a
+      landmine on a public method. Fix the segment order in `_make_base`, update the matching docstring
+      (`reader.py:26-28`) and unit-test contract
+      (`tests/market_interface/unit/test_canonical_parquet_reader.py:702-763`, currently asserting the WRONG order).
+      Also add a follow-up note to `/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8 — it documents the identical
+      bug's fix in the live WRITER (`mtds@0fcfa803`) but never flagged this second, independent reader-side occurrence.
+      (repo: market-tick-data-service, unified-trading-pm for the codex note)
+
+- [ ] [SCRIPT] P1. **Delete MDPS's dead live-mode async-persistence adapter chain** — `AsyncGCSDataSink`/`GCSDataSink`
+      (`app/core/data_sink.py`), `LiveDataSource`/`GCSDataSource` (`app/core/data_source.py`), and the
+      persistence-queue/thread machinery in `cli/handlers/live_mode_handler.py` (~lines 94-133, 313-380). Zero
+      production callers — confirmed via full call-graph trace (round-2 DEFI audit finding 6): live mode's real candle
+      writes go through `CandleWriteMixin._write_candles()`, the same method batch uses. The dead code is also badly
+      broken (wrong prefix, `date=` not `day=`, random UUID filename) — delete rather than fix-forward, nothing needs
+      it. Update/remove the tests that exercise `_persistence_worker` directly (`tests/unit/test_live_mode_handler.py`,
+      `tests/unit/test_live_mode_handler_coverage.py`) since they test dead code. (repo: market-data-processing-service)
+
+- [ ] [SCRIPT] P1. **Fix the two features-service missing-`pipeline_mode=`/wrong-prefix bugs found in round 2** — (a)
+      `onchain/app/calculators/eigen_rewards_calculator.py:51-55`'s `_mtds_eigen_rewards_blob_candidates` omits
+      `pipeline_mode=` from both exact-path guesses (batch, currently silently falls through to the DefiLlama vendor
+      API); (b) `onchain/collectors/parquet_dust_loader.py:132-136`'s list prefix is missing the registry's `onchain/`
+      root segment vs. what the writer actually writes (currently dormant/unwired — `Phase6Driver`'s `dust_loader=` has
+      zero real production callers, so this is a landmine for whenever it IS wired up). Add regression tests for both
+      (fail pre-fix, pass post-fix). (repo: features-service)
+
+- [ ] [SCRIPT] P2. **Delete the 3 confirmed-dead PATH_REGISTRY rows + their dead consumer classes** —
+      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`
+      (`unified_trading_library/config_interface/paths/registry.py:303-323`) plus their only consumers
+      (`unified_trading_library/domain_client/clients/liquidity.py`'s `L2BookCheckpointClient`/
+      `LiquidationClustersClient`/`LiquidityFeaturesClient`, never instantiated outside their own file). Also fold in
+      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s dead
+      `build_path()`/`DataSinkAdapter`/`DataSourceAdapter` classes (test-only, stale shape). (repo:
+      unified-trading-library, features-service)
+
+- [ ] [SCRIPT] P2. **Investigate the `onchain_features`/`lst_seasonal_rewards` `pipeline_mode`-collision structural
+      gap** — neither PATH_REGISTRY template has a `pipeline_mode=` segment, unlike every other DeFi-relevant template.
+      Real onchain raw data is captured under 2+ pipeline_modes (`batch_onchain_rpc`, `batch_onchain_subgraph`); if the
+      feature-compute step ever derives the same `feature_group`+`day` from both, they'd silently overwrite each other.
+      Not proven active — first determine whether this collision can actually happen given the current onchain
+      feature-compute orchestrator's mode-selection logic, then decide fix vs. confirm-safe. (repo: features-service,
+      unified-trading-library)
+
+- [ ] [SCRIPT] P2. **Add `Mode.REPLAY` to MDPS's `_candidate_pipeline_mode_values()`**
+      (`app/core/orchestration_scanner.py:119-146`) — currently enumerates only `(Mode.BATCH, Mode.LIVE)`, unlike UAC's
+      analogous `_canonical_pipeline_mode_prefixes()` which deliberately includes `Mode.REPLAY` "to avoid
+      false-phantoming replay-captured cells." DeFi has real registered `REPLAY_*` pipeline modes; dormant today
+      (spot-checked 6 recent dates, zero live `replay_*` DeFi objects), but will silently misbehave (treat existing
+      replay data as "not existing," redo work) the moment a DeFi replay re-fetch runs. (repo:
+      market-data-processing-service)
 
 - [ ] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
       caller census** — `unified_trading_library/domain/standardized_service.py:125-127`
@@ -294,11 +450,9 @@ bucket family, its own pipeline_mode vocabulary, and potentially its own hand-ro
       genuinely superseded). Low individual risk, real hygiene value, cheap to batch together. (repo:
       market-data-processing-service, features-service, execution-service)
 
-- [ ] [SCRIPT] P1. **Extend the audit to DEFI** — same 4-agent-style methodology (hand-rolled prefix hunt, live GCS
-      spot-check, registry-staleness check), scoped to the DeFi bucket family and DeFi-specific writers/readers across
-      MDPS/MTDS/features-service/strategy-service/execution-service/instruments-service. DeFi has its own
-      `pipeline_mode` vocabulary (see `/codex/02-data/defi-canonical-naming-ssot.md`) — do not assume CEFI's findings
-      transfer directly. (repo: all of the above)
+- [x] [SCRIPT] P1. **Round 2 (DEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above (5 confirmed
+      bugs incl. 1 CRITICAL-live, 4 confirmed dead/duplicate sites, 4 structural gaps flagged). New follow-up todos
+      logged for every finding.
 
 - [ ] [SCRIPT] P1. **Extend the audit to TRADFI** — same methodology, scoped to the TradFi bucket family
       (`/codex/02-data/tradfi-databento-sourcing-ssot.md` for the sourcing/pipeline_mode conventions). (repo: all of the
