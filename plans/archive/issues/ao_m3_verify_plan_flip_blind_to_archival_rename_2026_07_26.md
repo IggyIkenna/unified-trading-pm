@@ -9,8 +9,8 @@ summary: >-
   that `git mv`s the plan file to `plans/archive/`. This is exactly the archival pattern CLAUDE.md itself mandates
   ("this finalize doc itself gets archived alongside it in the same commit") — so the gate structurally cannot verify
   the standard, correct workflow for the final archival todo of every satellite-AO finalize plan.
-status: open
-resolved_by:
+status: resolved
+resolved_by: "agent-orchestrator@587c8db"
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -38,6 +38,10 @@ execution_scope: local-only
 depends_on: []
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed in the same commit as the companion doc
+> `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`
+> (`agent-orchestrator@587c8db`, same root function `check_plan_flip`).
 
 # M3 plan-flip verification is blind to archival renames
 

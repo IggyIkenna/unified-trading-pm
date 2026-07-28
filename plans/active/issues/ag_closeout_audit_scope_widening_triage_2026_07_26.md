@@ -131,7 +131,7 @@ citing file):
 | `issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`                          | infra         | deployment-api/alerting-service backend perf                        |
 | `issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`                          | ao            | AO dashboard Playwright flake                                       |
 | `issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`                               | ao            | AO server DB-lock/shutdown outage                                   |
-| `issues/ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md`                          | ao            | AO `/done` M3 verification gate bug                                 |
+| `/plans/archive/issues/ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md`           | ao            | AO `/done` M3 verification gate bug — RESOLVED, agent-orchestrator@587c8db |
 | `/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`              | ao            | `regen_backlog_from_plan.py` parser bug                             |
 | `issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md`                            | ci            | `cloud-build-router.yml` concurrency-group bug                      |
 | `issues/cost_observability_deferred_followups_2026_07_10.md`                                    | infra         | deployment `/ops/costs` UI follow-ups                               |
@@ -143,14 +143,14 @@ citing file):
 | `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md`                        | ao            | AO `gate_on_depends` dispatcher wiring bug                          |
 | `issues/host_root_disk_full_transient_2026_07_13.md`                                            | infra         | shared-host disk-capacity incident                                  |
 | `issues/manifest_consolidator_cadence_cost_audit_2026_07_20.md`                                 | cross-cutting | manifest-consolidator spend, cross-AG data-pipeline infra           |
-| `issues/manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md`                       | cross-cutting | UTL manifest reader silent-swallow bug                              |
+| `/plans/archive/issues/manifest_reader_silent_empty_on_missing_project_id_2026_07_24.md`        | cross-cutting | UTL manifest reader silent-swallow bug (resolved 2026-07-28)        |
 | `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`                   | ci            | test-env leak blocking quickmerge                                   |
 | `issues/mtds_sports_catalog_reader_timeout_test_flaky_under_contention_2026_07_27.md`           | ci            | same flaky-under-contention class as adapter_contract_regression    |
 | `issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`                  | ao            | AO `orphan_reap` sweep kills detached background work               |
 | `issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`               | infra         | plan-hygiene checker false positive                                 |
 | `issues/production_readiness_checklist_file_missing_2026_07_24.md`                              | infra         | deployment-service + codex governance doc gap                       |
 | `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md`               | ci            | QG step 5.83 timeout root doc                                       |
-| `issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`                   | cross-cutting | same UTL-manifest-reader family as the above                        |
+| `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`     | cross-cutting | same UTL-manifest-reader family as the above (resolved 2026-07-28)   |
 | `issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`                      | ao            | AO `RepoHealthWatcher` false-green recurrence                       |
 | `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                |
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                |
