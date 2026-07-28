@@ -100,17 +100,63 @@ drift_direction: advance-code
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
       to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
-- [ ] [REVIEW] P1. **Re-check the 4 conflict-gated + 12 operator-gated Deferred items from batch5's own doc**, now that
-      time has passed and batch5's own todos have landed (some of which may resolve a Deferred item's blocker as a side
-      effect — e.g. `sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md`'s item C is explicitly gated on
-      batch2_finalize's own re-check mechanism, which may have already run by the time this executes). For each of the
-      16 Deferred items: re-read the specific conflicting/gating ground to check if it has since shipped, been ruled on
-      by the operator, or otherwise cleared — if so, extract it as a new tracked todo in a follow-up `batch6` (do not
-      draft it directly here, this finalize plan's own scope is reconciliation not fresh drafting); if still genuinely
-      unresolved, leave it explicitly deferred (not speculative) — do not re-surface it as a fresh operator-decision
-      entry a second time if already asked, just note the re-check happened and it's still awaiting an answer. **Done
-      when**: each of the 16 Deferred items has either (a) a note that it's ready for `batch6` extraction because its
-      blocker cleared, or (b) an explicit re-verified confirmation the conflict/decision is still open.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-28 — unified-trading-pm (this commit).** Re-checked all Deferred items from batch5's
+      own doc via direct reads of every named target/blocker doc (not trusting batch5's own dated ruling-text at face
+      value — several turned out stale). **Count correction found at pickup**: `grep -c '^- \*\*'` under batch5's own
+      "## Deferred — operator decision needed" section returns **11**, not 12 — the doc's frontmatter/prose "12
+      operator-gated" claim is itself stale (same self-reported-count-drift class this session already fixed once on
+      `sports_consolidated_closeout_2026_07_19.md`'s "96 open todos" note). So the real total is **4 conflict-gated + 11
+      operator-gated = 15**, not 16; flagging rather than silently padding a 16th.
+      **Conflict-gated (4)**: (1) `sports_legacy_duplicate_triage_2026_07_22.md` — part (a) of its RULED-2026-07-28 note
+      is CONFIRMED DONE (§7 todo 1 is `[x]` in the live doc); part (b) — amending the two colliding Track S
+      snapshot-then-cull todos (`sports_consolidated_closeout_2026_07_19.md:519`,
+      `sports_consolidated_native_ao_extract_2026_07_25.md:196`) to exclude the pre-floor range / gate on the resolved
+      decision — is STILL UNDONE, both still read as plain unconditioned `[CLEANUP] P2` todos. **Ready for `batch6`
+      extraction.** (2) `sports_phantom_audits_reference_not_marketdata_2026_07_14.md` — still deferred; its owning
+      re-check (`batch4_finalize` todo 2) has not run — `batch4_finalize` is still `status: draft`, never dispatched.
+      Confirmed still open. (3) `sports_catalog_league_grain_only_scope_2026_07_08.md` — still deferred; no operator
+      ruling found on the Track S/E/V sequencing fork. Confirmed still open. (4)
+      `sports_legacy_fixtures_path_migration_2026_07_24.md` — still deferred;
+      `autonomous_session_operator_decisions_2026_07_25.md` (entry #7's host doc) is still `status: open` with no entry
+      #7 resolution found. Confirmed still open.
+      **Operator-gated (11)**: (5) `data_completion_sports_2026_07_24.md` — MIXED: the rate-limit calibration-probe todo
+      (line 397) was already downgraded `[OPERATOR]`→`[SCRIPT] P1` AO-dispatchable on 2026-07-27 (finding E,
+      vm-launcher-runbook.md), independent of and predating batch5's RULED-2026-07-28 note on it (redundant, not
+      wrong). The API-Football quota-bump todo (line 801) is still plain `[DATA] P2` text, NOT yet retagged to reflect
+      the RULED "proceed with bump" decision + its operator-only vendor-account residual. **Ready for `batch6`
+      extraction** (the quota-bump retag half only). (6)
+      `plans/archive/issues/cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` — **ALREADY
+      FULLY DONE, batch5's RULED-2026-07-28 note is stale.** Direct read: todos 12/13/14 are ALL `[x]` — 12 done
+      2026-07-24 (found on HEAD 2026-07-27), 13 confirmed via behavioral evidence, 14 EXECUTED
+      2026-07-27T01:11:27Z; doc `status: resolved`. The remediation attempt batch5's ruling authorizes had already
+      completed a day before the ruling was written. **Nothing to extract — already closed.** (7)
+      `fixtures_manifest_duplicate_collision_residual_2026_07_24.md` — RULED 2026-07-28 (option 2, scoped verified
+      DELETE) but NOT yet retagged: doc still `status: open`, todo still plain `[ ]` `[DIAG] P2` "decide + execute".
+      **Ready for `batch6` extraction.** (8) `sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md` —
+      confirmed still the correct human-only hard-stop (irreversible prod GCS delete, execution-only remaining, stays
+      `[OPERATOR]`). (9) `sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md` — no new AO todo warranted: (B) is
+      a doc-hygiene note per its own analysis, not new work; (C) confirmed still correctly owned by `batch2_finalize`'s
+      own re-check todo (that plan is `status: active`/dispatched, but no evidence found either way that its specific
+      C-extraction sub-step has run yet — correctly left to that mechanism, not front-run here); (D) confirmed still
+      needs an operator design ruling, no new evidence. (10)
+      `sports_odds_markets_outcomes_settlements_arbitrage_expected_since_2024_zero_captured_2026_07_24.md` — still
+      deferred; BLK-c545ae54 confirmed still only has interim guidance recorded (line 148), no final ruling found. (11)
+      `sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` — still deferred; genuine multi-part design decision
+      (BLK-b567ce7d), no operator ruling found. (12) `sports_group_c_execution_backtest_harness_2026_07_21.md` — still
+      deferred; todo 3 (`SportsMatchingEngine` vs `L0Matcher`) confirmed still `[ ]`, no operator ruling found. (13)
+      `sports_live_availability_and_source_latency_2026_07_24.md` — **ALREADY DONE.** Confirmed the doc's own todo
+      (line 141) already carries the RULED-2026-07-28 retag directly as a live `[DATA] P2` AO todo, exactly as batch5's
+      note claimed. **Nothing to extract — already a normal dispatchable todo in its own doc.** (14)
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md` — still deferred; no operator ruling found on
+      Todo 1 (pursue live sports-odds ingestion). (15) `sports_prelaunch_cf5_verify_residual_2026_07_24.md` — RULED
+      2026-07-28 (option a, extend windows + backfill) but NOT yet retagged: todo 2 still reads the plain either/or
+      "operator-gated" framing. **Ready for `batch6` extraction** (full-completion mandate: `SOURCE_COVERAGE_START`
+      window edit + api_football sub-entity windows + propagate through consumers + re-run
+      `backfill_orphan_class_e_sports.py`).
+      **Summary**: 2 items already fully resolved (6, 13, no further action); 4 items ready for `batch6` extraction
+      (1b, 5-quota-bump-half, 7, 15 — named here, not drafted, per this todo's own instruction); 9 items confirmed still
+      genuinely deferred (2, 3, 4, 8, 9, 10, 11, 12, 14). Every one of the 15 real items now carries either a
+      ready-for-extraction note or a re-verified still-open confirmation. Repo: unified-trading-pm.
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch5_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
       should have already resolved or re-confirmed all 16 — verify none silently vanish) → add the archive banner → run
