@@ -795,3 +795,35 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   should re-verify shipped content post-hoc via a targeted grep of their own edit markers (never trust `exit 0` /
   "Landed on..." alone), and specifically check for the Git conflict-marker triad (repeated left-angle / equals /
   right-angle chars) after ANY rebase-autostash cycle on a heavily-contended shared doc like this one.
+
+- **2026-07-28, ~08:41 BST — SESSION-LIMIT CRASH, all 10 Wave-2/unlock-archival/§6 sub-agents killed simultaneously**
+  (`"You've hit your session limit · resets 9am (Europe/London)"` — a hard usage cap, not a per-agent failure). Main
+  loop independently verified real state before trusting any prior self-report (per the workspace's "never trust exit 0"
+  lesson above, applied one level up): **safety-critical check clean** — the `day=all` GCS delete never proceeded past
+  investigation (both original objects confirmed untouched via `gcloud storage ls`, no backup prefix created).
+  **Salvaged directly by the main loop**: (1) sports_odds regression-test restoration — found real uncommitted
+  `tests/unit/test_orchestrator_sports.py` changes in instruments-service, independently ran the suite (43/43 passed) +
+  full `quality-gates.sh` (green, 140s) before trusting it, shipped `instruments-service@6ecda6de`. (2) CICD Task 1
+  (cron heartbeat) — found 4 complete, well-written, properly lifecycle-marked systemd unit files uncommitted in
+  `scripts/orchestrator/`, `bash -n` syntax-checked, shipped via quickmerge after diagnosing + fixing the actual blocker
+  (strategy-service's local `.venv` had stale `fastapi==0.136.3` against its own `pyproject.toml` floor of `>=0.137.0`,
+  unrelated to this change but failing the fleet-wide re-gate every unified-trading-pm quickmerge runs —
+  `uv sync --frozen` in strategy-service resolved it, per autonomous rule 4 "reconcile everything down here, now").
+  **Completely lost, zero salvageable artifacts** (clean working trees confirmed in every touched repo):
+  `delta_proxy_repricer` wire-in (execution-service), G1-ENUM fix + ModelsMvpRule (unified-api-contracts), FRED
+  consolidation (market-tick-data-service + features-service), Firestore verdict-store monitoring panels
+  (deployment-api/deployment-ui), §6 `data_status_tab` resolution, CICD Tasks 2-3 (provenance-leak fix, WS-I re-homing —
+  never reached). **Found but unverified, sitting safe as uncommitted local diffs, NOT shipped**: greeks-service +
+  strategy-service Dockerfile/cloudbuild Pattern-A normalization (real, thoughtful work — a local `docker build` sanity
+  check got past base-image pull + context load before hitting `ResourceExhausted: no space left on device`, so
+  build-success was NOT confirmed; refused to ship an unverified production Dockerfile change). **Operator invoked
+  `/autonomous` in response** — read `cursor-configs/AUTONOMOUS_AGENT_RULES.md` +
+  `cursor-configs/skills/autonomous/SKILL.md` in full, applied the completion contract: resumed all 9 remaining dead
+  agents (`SendMessage` to each by their original agentId) with the autonomous-mode grant injected (no more asking the
+  operator; full authority to reconcile; finish completely, no DEFERRED/BLOCKED-OPERATOR end-states) plus per-agent
+  specifics on what survived the crash vs. needs a restart, so no agent wastes a cycle re-discovering what the main loop
+  already checked. This log entry IS the loop's handoff document per rule 6/12d — a compressed future-turn should resume
+  from here: check each of the 9 resumed agentIds' task-notifications, verify (don't trust) their self-reports the same
+  way this entry did, ship/reconcile as they land, and keep going until every item in this whole plan doc (§1-§6)
+  reaches a genuinely complete, verified, shipped state per the autonomous completion contract — no stopping at
+  partial/blocked without a documented, genuinely-physically-impossible reason.

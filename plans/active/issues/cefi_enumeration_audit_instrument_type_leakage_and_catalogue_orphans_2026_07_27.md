@@ -202,18 +202,48 @@ adjacent axis the same script happens to also report). **Both findings investiga
       no code fix needed for this majority. The remaining 3.9% (BYBIT/KRAKEN-FUTURES in-scope-but-orphaned, plus 3
       out-of-scope venues) is undetermined — flagged as a genuinely open, smaller residual rather than resolved. See
       "RESOLVED 2026-07-27" under Finding 2 above. Repos: instruments-service, market-tick-data-service.
-- [ ] [DATA] P3. **PARTIAL LEAD, still open (2026-07-28)** — Trace the remaining 3.9% catalogue-orphan residual (BYBIT
-      FUTURE 287, KRAKEN-FUTURES PERPETUAL 256, COINBASE-FUTURES/HYPERLIQUID/BITGET-FUTURES PERPETUAL 217/167/87). A
-      dedicated background investigation into this failed mid-run (session usage limit hit, not a finding) — a lighter,
-      non-exhaustive direct follow-up found: `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`'s own scope list
-      DOES include BYBIT/KRAKEN-FUTURES (no exclusion noted beyond the options-wide skip already priced into the 93.8%
-      finding), so their continued orphan status isn't explained by migration scope alone. A companion catalogue-side
-      script, `cefi_durability_force_converge_2026_07_10.py` (per
-      `plans/archive/2026_07/instrument_id_format_canonicalization_2026_07_08_orchestration_history.md` lines 594-776),
-      appears to have run to completion against BYBIT/KRAKEN-FUTURES/DERIBIT catalog rows on 2026-07-10 (one day after
-      the MTDS-side migration) — **not yet confirmed** whether this fully converged these 2 venues or left a residual;
-      the corrected script filename is `measure_cefi_catalogue_enumeration_gap_2026_07_23.py` (underscore, not the dash
-      this doc originally cited) and has not yet been read/run against this specific residual.
-      COINBASE-FUTURES/HYPERLIQUID/BITGET-FUTURES (outside the 2026-07-09 migration's 6-venue scope) remain completely
-      untraced. Small scale (~1,015 ids, 0.011% of the corpus), not urgent — genuinely open, not resolved. Repos:
-      instruments-service, market-tick-data-service.
+- [x] ✅ [DATA] P3. **TRACED 2026-07-28 — root cause confirmed for all 5 venues, split into 2 distinct classes.** Direct
+      evidence (catalogue read from a fresh `prod/catalog.parquet` pull, manifest read via `read_availability_index`,
+      both live, not inferred):
+
+      **Class A — incomplete marker-format migration on the MANIFEST/writer side (BYBIT FUTURE, COINBASE-FUTURES
+          PERPETUAL, and to a lesser extent BITGET-FUTURES PERPETUAL).** The catalogue is fully `@LIN`/`@INV` marker-format
+          for these exact (venue, instrument_type) combos (BYBIT FUTURE 640/640, verified) — ruling out "stale catalogue"
+          entirely. The MANIFEST, however, is a genuine MIX: BYBIT FUTURE only 248/516 distinct ids (48%) are
+          marker-format, the rest are bare-wire symbols (`ADAUSDT`, `BTC`) or a raw-date dated-future convention
+          (`BYBIT:FUTURE:BTC-01DEC23`) that never went through ANY marker migration — despite BYBIT being explicitly
+          in-scope for `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`, that migration evidently didn't cover this
+          raw-date symbol shape. COINBASE-FUTURES PERPETUAL: 361/584 (62%) marker-format, rest bare `-PERP`-suffixed
+          symbols (`1000BONK-PERP`) — COINBASE-FUTURES was never in scope for ANY marker migration (outside the
+          2026-07-09 script's 6-venue list), so this is an un-started migration, not an incomplete one. BITGET-FUTURES
+          PERPETUAL: 580/627 (92.5%) marker-format, smaller but same-class gap, also never in scope for a migration.
+          **This class is a genuine, real, unresolved defect** — these ids will keep orphaning until a proper
+          backup-first marker migration (matching the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`
+          pattern) covers BYBIT's raw-date shape plus COINBASE-FUTURES/BITGET-FUTURES from scratch.
+
+          **Class B — catalogue-completeness gap, format already fully converged both sides (KRAKEN-FUTURES PERPETUAL,
+          HYPERLIQUID PERPETUAL).** Catalogue: KRAKEN-FUTURES PERPETUAL 501/501 marker-format (100%). Manifest:
+          562/568 distinct ids (99%) marker-format. Both sides are essentially fully converged on FORMAT, yet the
+          manifest still has ~60 more distinct ids than the catalogue carries for this combo (HYPERLIQUID PERPETUAL:
+          345/346 manifest marker-format, catalogue not independently re-checked but the near-100% manifest convergence
+          rules out a format explanation). This is NOT a marker-format problem — it's a genuine catalogue-completeness
+          gap: real, captured, correctly-formatted instruments that were never added to the reference-data catalogue
+          builder's coverage for these 2 venues (same class as the DERIBIT OPTION 93.8% finding's alternate hypothesis
+          (a), just confirmed here rather than superseded by the id-form explanation).
+
+          **Not fixed in this pass** — tracing (this todo's actual scope) is complete; the fix is separate, properly
+          scoped follow-up work (2 new todos below), not a quick inline change, matching how the original 2026-07-09/07-10
+          migrations were themselves separately planned, scripted, and backup-first applied over multiple sessions.
+          Repos: instruments-service, market-tick-data-service.
+
+- [ ] [DATA] P2. Write + backup-first apply a marker-format migration covering: BYBIT's raw-date dated-future symbol
+      shape (`BYBIT:FUTURE:<SYM>-<DDMMMYY>` with no `@INV`/`@LIN` marker — the 2026-07-09 migration's regex evidently
+      missed this shape), plus new coverage for COINBASE-FUTURES PERPETUAL (`-PERP`-suffixed bare symbols) and
+      BITGET-FUTURES PERPETUAL (whatever its bare-symbol residual shape is, not yet characterized) — 3 venues, ~700
+      still-unmigrated ids total. Follow the existing `migrate_cefi_dated_perps_margin_marker_2026_07_09.py` pattern
+      (backup-first, content-patch in place, `derive_row_instrument_id` as SSOT). Repo: market-tick-data-service.
+- [ ] [DATA] P3. Investigate the KRAKEN-FUTURES PERPETUAL (~60 ids) / HYPERLIQUID PERPETUAL catalogue-completeness gap —
+      both venues are already ~99-100% marker-format on both manifest and catalogue sides, so this is NOT a
+      migration-scope problem; determine why real, correctly-formatted, captured instruments are missing from the
+      reference-data catalogue builder's output for these 2 venues (adapter coverage gap? expiry/delisting filter?).
+      Repos: instruments-service, market-tick-data-service.

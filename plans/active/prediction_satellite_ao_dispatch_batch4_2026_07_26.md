@@ -199,14 +199,19 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         plan-authoring rule for this exact carve-out). **Live-verified scope correction to the original premise below**:
         the canonical shape#1 twin exists for EVERY sampled date across the full 2025-03-14..2026-04-14 range (not
         date-range-gated as initially worried) — confirmed via a live read at 6 sampled dates spanning the full range,
-        each showing matching shape#1/shape#4 object counts. **Execution status (this Progress Log entry)**: `--apply`
-        (enrichment only, no deletes yet) launched across all 348 dates, resumable via `--report`; 0 anomalies through
-        the first ~50 dates. The delete pass (`--delete-legacy`) runs as a separate follow-on invocation after the
-        enrichment pass completes and a sample is spot-verified. **Checkbox stays unchecked until the full 348-date
-        enrichment + delete pass is verified complete** (real backfill completion, not code-shipped — per CLAUDE.md
-        "Plans run to actual completion, not smoke-test green"). Repo: market-tick-data-service. **Done when**: all 348
-        dates' shape#3/#3b objects are enriched into their canonical twins (verified via readback) and deleted (verified
-        via `gcs_describe_object(...) is None`), 0 anomalies outstanding.
+        each showing matching shape#1/shape#4 object counts. **Execution status (updated 2026-07-28, session end)**:
+        `--apply` (enrichment only, no deletes yet) ran 55/348 dates (0 anomalies) before the WORKER SESSION DIED
+        mid-run (background process reaped, exit 144/SIGTERM — not a script bug; every write up to that point was
+        content-verified before commit and is durable in GCS). **Resumable by anyone**: re-run
+        `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <path>` — the
+        script's own idempotency check (`all_fields_present`) skips already-enriched canonical objects even without the
+        report file, so a fresh run without one is still 100% correct, just re-lists GCS for the already-done days. The
+        delete pass (`--delete-legacy`) runs as a separate follow-on invocation after the enrichment pass completes and
+        a sample is spot-verified. **Checkbox stays unchecked until the full 348-date enrichment + delete pass is
+        verified complete** (real backfill completion, not code-shipped — per CLAUDE.md "Plans run to actual completion,
+        not smoke-test green"). Repo: market-tick-data-service. **Done when**: all 348 dates' shape#3/#3b objects are
+        enriched into their canonical twins (verified via readback) and deleted (verified via
+        `gcs_describe_object(...) is None`), 0 anomalies outstanding.
   - [ ] [OPERATOR][SCRIPT] P2. **4b-ii — shape #4's corpus-wide extent (Tier-2 SPOT-VM single walk, separately
         dispatched).** Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE for 4b-i
         — its corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY `day=2025-04-11`
@@ -325,3 +330,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   pass (`--delete-legacy`, gated on a live-verified `604800`s soft-delete retention on the prediction bucket) follows
   once enrichment completes and a sample is spot-verified. 4b-i's checkbox stays open until the full 348-date run +
   delete pass verify complete.
+- 2026-07-28 (slot-16, session end): the `--apply` run above got to **55/348 dates (0 anomalies)** before this worker
+  session died mid-run — a background-process reap (exit 144/SIGTERM), NOT a script defect; every write up to that point
+  content-verified before commit and is durable in GCS already. **Lesson**: a plain `nohup ... & disown` inside a single
+  Bash tool call does NOT survive a harness session death the way `run_in_background: true` does — use the latter for
+  any long-running mutating job you need to survive a session boundary. **Remaining work (next session/worker)**: (1)
+  resume the enrichment — re-run
+  `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <path>` from
+  `market-tick-data-service` (idempotent even without the report file — `all_fields_present` skips already-enriched
+  cells on read); (2) once all 348 dates enrich clean, run `--delete-legacy` (re-verify the soft-delete retention fresh,
+  don't assume the `604800`s measured here still holds); (3) flip 4b-i's checkbox with the final counts; (4) do 4c's
+  registration once (1)+(2) land.

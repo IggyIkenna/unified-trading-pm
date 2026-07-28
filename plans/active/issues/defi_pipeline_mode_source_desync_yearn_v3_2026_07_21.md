@@ -118,23 +118,42 @@ vault-share-price collector) end-to-end:
 
 ## Todos
 
-- [ ] 1. [DATA] P2. Confirm the stale-row hypothesis — read the live YEARN_V3/ETHEREUM/yield_bearing/vault_share_price
-      manifest rows' `attempted_at`/`available_at` timestamps and compare against `vault_share_price_handler.py`'s
-      git-blame introduction date; if the desynced row predates the handler, this is a stale/orphaned row, not an
-      active-write-path bug (repo: market-tick-data-service, scoped manifest read only — no new whole-corpus walk).
-- [ ] 2. [DATA] P2. Measure blast radius beyond the single sampled row — scan the defi manifest for any row where
-      `pipeline_mode` implies one vendor source (via `pipeline_mode_for_source` reverse-mapping) while the row's own
-      `source` column names a different vendor, scoped to YEARN_V3 first then all `vault_share_price`-data_type venues
-      (repo: market-tick-data-service).
+- [x] 1. [DATA] P2. **DONE 2026-07-28 (slot-4).** Confirmed/REFUTED via a read-only scan against the LIVE prod defi
+      manifest (`market-tick-data-service@50fb82cf`,
+      `scripts/one_offs/defi_vault_share_price_pipeline_mode_source_desync_scan_2026_07_28.py`, using
+      `read_availability_index(bucket, columns=[...], filters=[("data_type","==","vault_share_price")])` — one
+      predicate-pushdown read, no new whole-corpus walk). **Result: the stale-row hypothesis is REFUTED.**
+      YEARN_V3/ETHEREUM desync rows' `attempted_at` values run through 2026-07-28T01:11:07Z — POSTDATING
+      `vault_share_price_handler.py`'s git-blame introduction (commit `9475e66b`, 2026-05-03T15:01:01Z) — so these are
+      NOT legacy/orphaned rows from a prior collector generation; they are being written by the CURRENT RPC handler
+      right now. Root cause (verified live against the UAC registry, not assumed):
+      `SOURCE_PRIORITY[('defi',     'vault_share_price')] = ['onchain_subgraph']` is the ONLY registered external source
+      for this cell (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:312`),
+      so `default_source()`/`source_required()`
+      (`unified_api_contracts.canonical.crosscutting._source_priority_provenance`) auto-stamp
+      `source='onchain_subgraph'` on EVERY write to this cell — before AND after todo 3's fix below — regardless of
+      whether the row was actually fetched via subgraph or RPC. The `pipeline_mode<->source` combination is a STRUCTURAL
+      consequence of the single-source write-time provenance gate, not evidence any specific row is wrong. Full per-row
+      detail in the plan's flip note (`plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`).
+- [x] 2. [DATA] P2. **DONE 2026-07-28 (slot-4), same scan as todo 1.** Blast radius: 7,476 total `vault_share_price`
+      rows in the manifest; **185 desync rows (2.5%)**, spread EVENLY across **5 venues** (37 rows each) — ETHENA, FRAX,
+      MAKER, MORPHOVAULTS, YEARN_V3 — all sharing the identical
+      `(pipeline_mode=batch_onchain_rpc,     source=onchain_subgraph)` pair. All 5 venues are written by the same
+      `vault_share_price_handler.py` (the vault registry's 5 protocol groups), confirming this is a
+      handler-wide/cell-wide structural artifact, not a YEARN_V3-specific bug.
 - [x] 3. [CODE] P2. Fix `vault_share_price_handler.py` to pass an explicit `source=` on every `record_captured` /
       `record_failed` / `record_zero_rows` call, consistent with the `"onchain_rpc"` already passed to
       `pipeline_mode_for_source` — closing the crosscutting "`source=` required" gap for this handler (repo:
       market-tick-data-service). — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
       execution).
-- [ ] 4. [DECISION] P2. If todo 1 confirms stale legacy rows (not an active-write bug), rule on remediation: leave the
-      legacy row as an accepted historical artifact (annotate the cutover register) vs. a targeted manifest correction
-      pass — do not blind-pick; this is manifest-absence/correction semantics territory per the workspace's
-      data-pipeline-correctness rule (repo: unified-trading-pm, `/codex/02-data/canonical-cutover-register.md`).
+- [ ] 4. [DECISION] P2. **RE-SCOPED 2026-07-28 per todos 1+2's findings** — the original framing ("if todo 1 confirms
+      stale legacy rows, rule on remediation: accept-as-historical-artifact vs targeted-correction") no longer applies:
+      todo 1 REFUTED the stale-row premise, so there is no distinguishing "wrong" row population to correct or annotate.
+      The actual open decision is now: should UAC's `SOURCE_PRIORITY[('defi','vault_share_price')]` register a second
+      source (e.g. `"onchain_rpc"`) so this handler's rows can carry their TRUE collection mechanism instead of the
+      forced single-source auto-stamp? That is a genuine operator/design call (adds a multi-source cell, requires
+      `source_required()`→True for this pair, and a one-time backfill/no-op decision on the 7,476 existing rows) — not
+      resolved here (repo: unified-api-contracts + market-tick-data-service, design decision).
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
