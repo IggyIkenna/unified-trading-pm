@@ -112,11 +112,13 @@ boot contract verbatim is exposed, not just a dev/manual edge case.
       `AgentRow` on this `tmux_session` (mirroring `boot_slot()`'s own typed-role gate,
       `_plan_health.PLAN_HEALTH_FAMILY_ROLES` check at `slots_worker.py:313`) BEFORE falling through to idle-dispatch,
       regardless of `current_task`. Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. Once fixed, audit whether `capability_wizard_gap_discovery-013` (the task this bug's heartbeat call
-      spuriously bound to slot 3) needs to be released back to the queue — check its `dispatched_to`/`status` in the
-      live backlog; if still shown dispatched to slot 3 with no worker ever actually touching it, release via
-      `POST /api/slots/3/skip-current-task` or the equivalent so it doesn't sit falsely "in progress" forever. Repo:
-      agent-orchestrator.
+- [x] ✅ [BACKEND] P3. **DONE 2026-07-28 (same session that filed this doc).** `capability_wizard_gap_discovery-013` was
+      confirmed still `status: dispatched, dispatched_to: 3` in the live backlog (never touched — this session's real
+      work was the plan_health wall, not this task) — released via
+      `POST /api/slots/3/skip-current-task     {"reason_code": "OTHER"}` (slot-scoped skip, no fleet cooldown/auto-park
+      since this was never evidence the task itself is blocked). Confirmed response: `task_skipped`,
+      `tmux_session_kept_alive: true`, task back to `queued` for any other slot. Did NOT require todo 1/2 (the actual
+      mechanism fix) to land first — independent cleanup. Repo: agent-orchestrator.
 
 ## Current session status (informational, not part of the fix)
 
