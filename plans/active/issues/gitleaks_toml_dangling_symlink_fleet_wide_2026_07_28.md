@@ -102,35 +102,54 @@ services depending on library+contracts. layer 3: deployment-api (needs deployme
 system-integration-tests, e2e-testing.
 
 - [x] [SCRIPT] P1. `unified-trading-system-ui` — symptom fixed directly + shipped (`1306658c`).
-- [x] [SCRIPT] P1. `unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh` — root cause fixed, shipping.
+- [x] [SCRIPT] P1. `unified-trading-pm/scripts/propagation/rollout-pre-commit-configs.sh` — root cause fixed, shipped
+      (`776297138`).
 - [x] [SCRIPT] P1. Local working-tree copies replaced for all 22 remaining repos (mechanical `cp`, verified via
       `readlink` before/after) — shipping per-repo below.
 - [x] [SCRIPT] P1. `deployment-ui` — shipped (`e98c575`).
 - [x] [SCRIPT] P1. `unified-api-contracts` — shipped (`feb79db8`).
 - [x] [SCRIPT] P1. `unified-trading-library` — shipped (`5583b94f`).
-- [ ] [SCRIPT] P1. `agent-orchestrator` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `strategy-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `alerting-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `batch-live-reconciliation-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `client-reporting-api` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `deployment-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `execution-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `features-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `fund-administration-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `greeks-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `ibkr-gateway-infra` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `instruments-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `market-data-processing-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `market-tick-data-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `ml-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `trading-agent-service` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `unified-trading-api` — ship via quickmerge (layer 2).
-- [ ] [SCRIPT] P1. `deployment-api` — ship via quickmerge (layer 3, needs deployment-service committed first).
-- [ ] [SCRIPT] P1. `system-integration-tests` — ship via quickmerge (layer 4, needs many layer-2/3 deps committed
-      first).
-- [ ] [SCRIPT] P1. `e2e-testing` — ship via quickmerge (layer 4, needs unified-api-contracts committed first). Dry-run
-      also showed an UNRELATED `.pre-commit-config.yaml` template drift in `deployment-ui` — that update was correctly
-      NOT pulled in; the `deployment-ui` commit above is scoped to `.gitleaks.toml` only.
+- [x] [SCRIPT] P1. `agent-orchestrator` — shipped (`2510361`). Initially BLOCKED (dispatched worker correctly detected
+      an unrelated pre-existing uncommitted `scripts/bootstrap_vm.sh` change and aborted rather than touching it); the
+      `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` SSOT contradiction that had been breaking this
+      repo's own `.venv` test collection resolved on its own between checks (fastapi confirmed 0.140.7, `resolved_by`
+      still blank on that doc but the venv import + full QG both verified clean) — shipped `.gitleaks.toml` and the
+      pending dynamic-memory-cap `bootstrap_vm.sh` fix together in one commit.
+- [x] [SCRIPT] P1. `strategy-service` — shipped (`6cdd8b3f`).
+- [x] [SCRIPT] P1. `alerting-service` — shipped (`7f2cad08`).
+- [x] [SCRIPT] P1. `batch-live-reconciliation-service` — shipped (`bda4bac`).
+- [x] [SCRIPT] P1. `client-reporting-api` — shipped (`9d2cfcbb`).
+- [x] [SCRIPT] P1. `deployment-service` — shipped (`13a4df4c`).
+- [x] [SCRIPT] P1. `execution-service` — shipped (`4f16d812`).
+- [x] [SCRIPT] P1. `features-service` — shipped (`4e1724de`).
+- [x] [SCRIPT] P1. `fund-administration-service` — shipped (`522ab0b`).
+- [x] [SCRIPT] P1. `greeks-service` — shipped (`4d848f3`).
+- [x] [SCRIPT] P1. `ibkr-gateway-infra` — shipped (`2859647e`).
+- [x] [SCRIPT] P1. `instruments-service` — shipped (`da44923a`; worker correctly stopped on an untracked
+      `pipeline_e2e_check_reports/` directory left by a concurrent, genuinely-live session — mtime ~now, so it was left
+      untouched per the liveness-gated inherited-dirty-WIP rule; shipped `.gitleaks.toml` alone, scoped strictly by
+      filename, which never touched that directory — confirmed still present + untouched after the ship).
+- [x] [SCRIPT] P1. `market-data-processing-service` — shipped (`6d319217`).
+- [x] [SCRIPT] P1. `market-tick-data-service` — shipped (`b2cb9a13`).
+- [x] [SCRIPT] P1. `ml-service` — shipped (`f1a4b35d`).
+- [x] [SCRIPT] P1. `trading-agent-service` — shipped (`5c401624`).
+- [x] [SCRIPT] P1. `unified-trading-api` — shipped (`5b264c0d`).
+- [x] [SCRIPT] P1. `deployment-api` — shipped (`8703fc6a`).
+- [ ] [SCRIPT] P1. `system-integration-tests` — BLOCKED, not this rollout's doing: its path dependency
+      `instruments-service` now has its `.gitleaks.toml` fix committed, but the pre-flight audit checks for ANY
+      uncommitted state (not just tracked changes) and `instruments-service` still carries the untracked
+      `pipeline_e2e_check_reports/` directory from a concurrent session's live `/data-pipeline-check-is` run (mtime
+      re-confirmed ~90s old at last check — genuinely live, protected, not to be touched or deleted). Retry once that
+      concurrent session finishes and either cleans up or the directory goes stale.
+- [x] [SCRIPT] P1. `e2e-testing` — shipped (`5892f3cc`). Dry-run had also shown an UNRELATED `.pre-commit-config.yaml`
+      template drift in `deployment-ui` — correctly NOT pulled in; the `deployment-ui` commit is scoped to
+      `.gitleaks.toml` only.
+
+**Result: 22/23 shipped.** Only `system-integration-tests` remains, blocked by a concurrent session's genuinely-live
+untracked directory in its `instruments-service` dependency (not this rollout's doing — see its entry above; retry
+occasionally, don't hammer it). `agent-orchestrator` additionally picked up a bonus fix: its long-pending dynamic
+memory-cap `bootstrap_vm.sh` change (blocked all session by the fastapi/UTL SSOT issue) shipped in the same commit once
+that blocker cleared on its own.
 
 **Pacing note**: workspace hard rule caps shared-host concurrent full QG runs at `max(2, floor(cores/4))` (2 on this
 10-core machine) — shipped via a Workflow dispatching agents in chunks of 2, sequential across chunks, per dependency
