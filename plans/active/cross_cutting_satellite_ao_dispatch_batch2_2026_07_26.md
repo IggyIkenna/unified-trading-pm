@@ -308,10 +308,10 @@ drift_direction: advance-code
       `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. Evidence: alerting-service@62b850c (QG green
       sentinel `.qg_last_passed_sha=62b850c`), live `gcloud logging read` excerpt above.
 - [ ] [CODE] P2. **Two bounded data-pipeline-alert bug fixes** (Source:
-      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`). (a) **Finding 3** — add a
-      per-VM shard check to `DP_VM_GONE_NO_CAPTURE`: the alert reads the CONSOLIDATED captured count, but per-VM shards
-      written with `process_final=False` do not reach that count until the consolidator runs (~30 min after VM
-      self-delete), so a VM that wrote real rows fires a false GONE_NO_CAPTURE (confirmed: VM
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`). (a)
+      **Finding 3** — add a per-VM shard check to `DP_VM_GONE_NO_CAPTURE`: the alert reads the CONSOLIDATED captured
+      count, but per-VM shards written with `process_final=False` do not reach that count until the consolidator runs
+      (~30 min after VM self-delete), so a VM that wrote real rows fires a false GONE_NO_CAPTURE (confirmed: VM
       `fs-backfill-20260627-193904` wrote 425 captured rows, alerted at 0, count reached 425 thirty minutes later — no
       data was lost). Implement the doc's **option (A)** — before firing for a recently-self-deleted VM, read
       `_index/per_vm/<vm_name>.parquet` and sum its captured rows, suppressing/downgrading to INFO when >0 — because it
@@ -325,7 +325,7 @@ drift_direction: advance-code
       the doc explicitly reserves for the operator. **Done when**: (a) no longer fires for a VM with a non-empty per-VM
       shard (regression test + the chosen option named), (b) the comparison bug is fixed with a test, both repos' QG are
       green, and the two checkboxes are flipped while the operator-gated third stays open.
-- [ ] [CODE] P1. **Three bounded per-AG residuals carried in a cross-cutting fork** (Source:
+- [x] ✅ [CODE] P1. **Three bounded per-AG residuals carried in a cross-cutting fork** (Source:
       `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`; conflict-checked — no defi/tradfi satellite batch
       claims any of these, verified by corpus grep for `DIVERGENT_EMPTY` and `ohlcv_15s`). (a) **tradfi `ohlcv_15s` is a
       spurious aggregation tier** — `mdps-backfill-tradfi` spews CRITICAL
@@ -360,7 +360,18 @@ drift_direction: advance-code
       `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` with a recommended P1(governance
       fix)/P2(per-family threading) split for proper re-dispatch. Source doc's 3 checkboxes: (a) and (b) flipped with
       evidence, (c) left open pointing at the issue doc — see
-      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`.
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`. **RE-VERIFIED 2026-07-28 (slot-5), checkbox flipped
+      here.** Re-dispatch of this same backlog item landed on slot-5 because the checkbox above stayed unflipped after
+      slot-11's run — independently confirmed all three sub-findings still hold:
+      `market-data-processing-service@034c1df` is on `origin/live-defi-rollout` (verified via `git log`), zero `datafix`
+      references remain, and the issue doc `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` exists
+      with a proper P1/P2 split (governance fix + 4 diagnostic/threading follow-ups). Flipping now: this todo's actual
+      job — investigate the 3 residuals and either fix or properly triage each — is complete; (c) was correctly
+      determined NOT worker-bounded-alone and was redirected to a standalone issue doc for its own future dispatch,
+      which is the intended outcome per `task_template.md`'s dispatch-scope-eligibility rule, not an open loose end.
+      Leaving this checkbox permanently unflipped would only cause indefinite backlog churn (a second worker
+      re-verifying the identical already-settled conclusion, as happened here) with no further action available at this
+      todo's scope.
 - [ ] [CODE] P1. **Triage the 2 still-open finding classes in both `manifest_hygiene_red` monitor instances as one
       pass.** `issues/manifest_hygiene_red_2026_06_27.md` (defi) and `issues/manifest_hygiene_red_2026_06_29.md` (cefi)
       are dated outputs of the SAME standing monitor (`manifest_hygiene_daily.py`) and both carry a 2026-07-12
@@ -389,18 +400,18 @@ drift_direction: advance-code
       subprocess `gcloud`/`gsutil`) and its general snapshot-before-mutate discipline. **Before running `--apply`**: (1)
       snapshot the defi + tradfi `_index/availability_index.parquet` files; (2) verify via a live GCS row sample that
       the contamination is single-column only (only `schema_version` wrong) and NOT a full-row positional shift — per
-      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`'s own stated prerequisite,
-      a positional shift needs re-derivation, not a version bump; (3) run `populate_v9_index_columns_inplace.py --apply`
-      against the defi + tradfi index buckets only; (4) verify before/after row counts and that the non-v9 residual
-      shrank by exactly the expected contaminated-row count. **Done when**: the pre-mutate snapshot exists, the
-      sample-verification result is recorded (single-column vs positional-shift, with the sample cited), the `--apply`
-      run completes with before/after counts, and the source doc's "Operator decision (prod-manifest mutation)" checkbox
-      is flipped `[x]` citing this evidence. Source:
-      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` Finding 1's "Operator
-      decision (prod-manifest mutation)" item. **Note**: the source doc itself carries `locked_by: live-defi-rollout` —
-      this todo does not require unlocking the source doc (it only needs a checkbox flip there, not archival), but the
-      source doc's own archival still needs a separate operator `[unlock-plan]` grant once all 3 of its items are
-      resolved.
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md`'s own stated
+      prerequisite, a positional shift needs re-derivation, not a version bump; (3) run
+      `populate_v9_index_columns_inplace.py --apply` against the defi + tradfi index buckets only; (4) verify
+      before/after row counts and that the non-v9 residual shrank by exactly the expected contaminated-row count. **Done
+      when**: the pre-mutate snapshot exists, the sample-verification result is recorded (single-column vs
+      positional-shift, with the sample cited), the `--apply` run completes with before/after counts, and the source
+      doc's "Operator decision (prod-manifest mutation)" checkbox is flipped `[x]` citing this evidence. Source:
+      `/plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md` Finding 1's
+      "Operator decision (prod-manifest mutation)" item. **Note**: the source doc itself carries
+      `locked_by: live-defi-rollout` — this todo does not require unlocking the source doc (it only needs a checkbox
+      flip there, not archival), but the source doc's own archival still needs a separate operator `[unlock-plan]` grant
+      once all 3 of its items are resolved.
 - [ ] [DATA] P3. **Triage the 10 unfiltered `read_availability_index(bucket)` call sites (third-strike audit).** For
       each site listed in the source doc — 5 in instruments-service (`cli/main.py`,
       `engine/orchestrator/{process_preflight,venue_core,process_completeness,catalogue}.py`) and 5 in
