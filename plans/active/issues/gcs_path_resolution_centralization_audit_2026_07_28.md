@@ -375,13 +375,14 @@ for the centralization design this whole audit is ultimately building toward.
 
 ## What's NOT done yet (the operator's expanded scope)
 
-Rounds 1 (CEFI), 2 (DEFI), and 3 (TRADFI) are complete. **SPORTS, PREDICTION rounds (4-5) are tracked in the split-off
-continuation doc** `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (this
-parent doc hit 586 lines — split rather than grow past the plan line cap). The operator's third ask — **a genuine
-centralization design**, not just point-fixes (does a true "resolve me the read/write path for dataset X, given these
-partition keys" universal function need to be built, or does one already exist that services should be migrated onto) —
-is still open and tracked as a todo below; it's the item that actually closes the recurring-bug-class problem once
-rounds 4-5 land.
+**All 5 audit rounds are complete** — CEFI/DEFI/TRADFI here, SPORTS/PREDICTION (rounds 4-5) in the split-off
+continuation doc `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (this
+parent doc hit 586+ lines — split rather than grow past the plan line cap). What remains is the accumulated per-finding
+fix todos across both docs (1 CRITICAL already shipped, several P1/P2 dormant bugs + dead-code cleanups still open) and
+the operator's third ask — **a genuine centralization design**, not just point-fixes (does a true "resolve me the
+read/write path for dataset X, given these partition keys" universal function need to be built, or does one already
+exist that services should be migrated onto) — which is the item that actually closes the recurring-bug-class problem
+going forward. Still open, tracked as a todo below.
 
 ## Todos
 
@@ -553,12 +554,26 @@ rounds 4-5 land.
       regression test proving a real discovery list is non-empty for a pipeline_mode-partitioned date (fail pre-fix,
       pass post-fix, matching today's established pattern). (repo: features-service)
 
-- [ ] [DESIGN] P1. **Rule on the two MTDS findings** — (a) `deribit_options_chain_handler.py::_write_shard` missing
-      `pipeline_mode=` insertion (path≠manifest divergence, data_type currently appears dormant) and (b)
-      `_perp_funding_kalshi_polymarket.py`'s "CeFi paths carry no pipeline_mode" comment (contradicts the 2026-06-01
-      operator ruling cited in `symbol_rules.py` — deliberate exception or stale bug?). Needs a real judgment call, not
-      a guessable fix — is (b) a genuine carve-out for these two non-standard prediction-market-shaped cefi writers, or
-      should they conform like every sibling writer? (repo: market-tick-data-service)
+- [ ] [DESIGN] P1. **Rule on the remaining MTDS finding** — `deribit_options_chain_handler.py::_write_shard` missing
+      `pipeline_mode=` insertion (path≠manifest divergence, data_type currently appears dormant). Needs a real judgment
+      call, not a guessable fix. (repo: market-tick-data-service)
+
+- [ ] [SCRIPT] P0. **Fix `_perp_funding_kalshi_polymarket.py`'s missing `pipeline_mode=` insertion** — RULED 2026-07-28
+      by round 5 (PREDICTION-scoped, see the sports_prediction continuation doc): the file's "CeFi paths carry no
+      pipeline_mode" comment is a STALE BUG, not a genuine carve-out — every sibling CeFi writer
+      (`symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
+      `book_microstructure_handler.py`) performs a mandatory post-hoc `.replace()` insertion of `pipeline_mode=` on top
+      of UAC's `build_cefi_partition_path()` (which itself has no `pipeline_mode` param by design); this file is the
+      ONLY cefi writer that skips it. **CONFIRMED LIVE-FIRING, not dormant** — real `KALSHI_PERP` perp-funding objects
+      have been writing under
+      `raw_tick_data/by_date/day={D}/asset_group=cefi/venue=KALSHI_PERP/instrument_type=perpetual/data_type=perp_funding/{id}.parquet`
+      (no `pipeline_mode=` segment at all) since the file's introduction 2026-06-21 — ~5 weeks. Path≠manifest divergence
+      confirmed too (the manifest correctly records `pipeline_mode=batch_kalshi_perp`; the object path doesn't). No
+      downstream consumer reads this data yet (grepped execution-service/strategy-service, zero hits), so it's a
+      landmine, not active data corruption — but real objects sit unreachable under the wrong shape right now. Fix: add
+      the same `.replace()` insertion + a write-time `canonical_path_violations(require_pipeline_mode=True)` guard
+      (currently has none) to `_write_cefi_perp_funding_rows`. Note: KALSHI_PERP/POLYMARKET_PERP are UAC-classified
+      `asset_group=cefi`, not `prediction`, despite the filename. (repo: market-tick-data-service)
 
 - [ ] [DESIGN] P1. **Resolve the MDPS live-mode async-persistence partition-key question** — does UTL's
       `get_data_sink().write(..., partition={...})` actually require `pipeline_mode=`/`instrument_type=` to land

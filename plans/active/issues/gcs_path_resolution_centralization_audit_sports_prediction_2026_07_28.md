@@ -141,9 +141,65 @@ exists to fix). Findings are one real dormant landmine and 5 confirmed dead-and-
 - Pre-2020-06-06-floor `sports_reference` objects still present in GCS — an adjacency to the already-tracked disposition
   item in `sports_consolidated_closeout_2026_07_19.md`, not a new finding of this audit.
 
-## Audit round 5 (PREDICTION-scoped)
+## Audit round 5 (PREDICTION-scoped) — COMPLETE, 1 agent, returned 2026-07-29
 
-_Not yet run — dispatch pending._
+**Resolves round 1's open DESIGN question** (`_perp_funding_kalshi_polymarket.py`'s "CeFi paths carry no pipeline_mode"
+comment) — and the answer is worse than round 1 estimated: **STALE BUG, CONFIRMED LIVE-FIRING**, not a dormant/unproven
+one. Otherwise the PREDICTION asset_group itself (as opposed to the mis-scoped cefi file living in a
+"kalshi_polymarket"-named module) is clean — no PREDICTION-specific PATH_REGISTRY rows exist at all (relies entirely on
+the generic `raw_tick_data`/`processed_candles`/`instruments` rows, all independently re-verified correct here too), and
+execution-service/strategy-service are both confirmed clean by absence (no DeFi-style CRITICAL bug, matching rounds
+3-4).
+
+### Confirmed bugs
+
+1. **[CONFIRMED LIVE-FIRING, ~5 weeks]
+   `market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py:115-168`**
+   (`_write_cefi_perp_funding_rows`) is the ONLY CeFi writer in the entire codebase that skips the mandatory post-hoc
+   `pipeline_mode=` insertion every sibling performs (`symbol_rules.py::_build_partition_path_for_asset_group`,
+   `live/websocket_runner.py::live_tick_blob_path`, `book_microstructure_handler.py` all `.replace()`-insert
+   `pipeline_mode=` on top of UAC's `build_cefi_partition_path()`, which has no such param by design). Live-verified:
+   real `KALSHI_PERP` objects write to
+   `raw_tick_data/by_date/day={D}/asset_group=cefi/venue=KALSHI_PERP/instrument_type=perpetual/data_type=perp_funding/{id}.parquet`
+   — no `pipeline_mode=` ancestor segment — while every sibling cefi venue on the SAME day correctly nests under
+   `pipeline_mode=batch_{venue}/`. File introduced 2026-06-21 (`mtds@88c2f0c7`), KALSHI_PERP launched 2026-05-29 —
+   writing under the wrong shape for ~5 weeks. Path≠manifest divergence confirmed (manifest correctly records
+   `pipeline_mode=batch_kalshi_perp` via `record_captured`; the object path doesn't carry it). No downstream consumer
+   reads this data yet (zero hits in execution-service/strategy-service), so a landmine + unreachable-data problem
+   today, not active data corruption. `POLYMARKET_PERP` has zero real objects (upstream `BLOCKED-UPSTREAM-OUTAGE`) so
+   only the KALSHI_PERP half is actually firing. **Despite the filename, these venues are UAC-classified
+   `asset_group=cefi`, not `prediction`** — worth remembering when picking up the fix todo below. No write-time
+   canonicality guard exists on this path at all (the live writer has one via
+   `canonical_path_violations(require_pipeline_mode=True)`; this batch writer has none).
+
+### Confirmed-safe / positive baseline
+
+- **PATH_REGISTRY has zero prediction-specific rows** — relies entirely on the generic
+  `raw_tick_data`/`processed_candles`/`instruments` rows, independently re-verified correct for `asset_group=prediction`
+  (real bucket family uses the `pred` token, not `prediction` —
+  `market-data-tick-pred-prd-*`/`instruments-store-pred-prd-*`/`features-pred-prd-*`).
+- Batch write (`kalshi_adapter.py` via `symbol_rules.py`) and live write (`websocket_runner.py`, live connector
+  `kalshi_trades_ws.py` marked "Status: ACTIVE") both correctly insert `pipeline_mode=`; live-mode prediction objects
+  just haven't appeared in the 5 sampled recent days (code-correct, currently unexercised in practice).
+- `_candidate_pipeline_mode_values("prediction")` correctly derives from UAC's generic
+  `external_batch_sources_for_asset_group` — no hand-listed source-enumeration gap. The already-tracked generic
+  `Mode.REPLAY` omission applies here too (no new todo).
+- `features-service`'s prediction cross-venue calculators (`prediction_cross_venue_{trade_dispatch,dispatch}.py`,
+  `prediction_cross_venue_betfair.py`) all use the safe day-only-prefix + client-side substring-match pattern.
+- `execution-service`'s prediction execution stack (Kalshi/Polymarket handlers/adapters) — zero GCS/bucket/blob usage
+  anywhere; operates directly against live venue APIs. `strategy-service`'s prediction strategies consume typed
+  event-driven inputs, zero GCS imports. Both confirmed clean by absence, matching rounds 3-4.
+- `instruments-service`'s prediction reference-data sinks (`_instrument_availability_sink_for`,
+  `_market_lifecycle_sink_for`) — pipeline_mode-aware, hand-rolled-but-correct, already fixed for the alphabetical-sort
+  partition-key trap (`instrument_availability_hive_canonicalisation_2026_07_21.md`).
+
+### Not fully verified
+
+- Whether the live `kalshi_trades_ws.py`/`polymarket_trades_ws.py` connectors are wired into a real running
+  deployment-service launcher (inferred dormant from zero live GCS objects, not a direct launcher trace).
+- `_perp_funding_kalshi_polymarket.py`'s manifest row_key uses lowercase `venue="kalshi_perp"` vs. the GCS path's
+  uppercase `venue=KALSHI_PERP` — a possible secondary shard-atom-identity mismatch, noticed but not deep-dived; flag
+  for whoever picks up the primary fix.
 
 ## Todos
 
@@ -165,7 +221,11 @@ _Not yet run — dispatch pending._
       exist. Fold into the parent doc's existing dead-code-cleanup todo rather than duplicating a new one — same class
       of finding. (repo: unified-trading-library)
 
-- [ ] [SCRIPT] P1. **Round 5 (PREDICTION-scoped) audit** — same methodology, scoped to KALSHI/POLYMARKET's
-      `pipeline_mode` conventions. Build from the already-confirmed `market-data-processing-service@df02dd0` data point
-      and the parent doc's open MTDS DESIGN todo (Deribit/Kalshi-Polymarket perp-funding `pipeline_mode` ruling) rather
-      than re-deriving either. (repo: all of the above)
+- [x] [SCRIPT] P1. **Round 5 (PREDICTION-scoped) audit** — DONE 2026-07-29, findings documented above. Resolved round
+      1's open MTDS DESIGN question (stale bug, confirmed live-firing — see the parent doc's flipped todo for the full
+      ruling + fix scope). No other CRITICAL finding; execution-service/strategy-service confirmed clean by absence,
+      matching rounds 3-4.
+
+**All 5 audit rounds (CEFI/DEFI/TRADFI/SPORTS/PREDICTION) are now complete.** See the parent doc's own "What's NOT done
+yet" section (now stale — will be updated in the same pass as this flip) for the remaining open work: the
+genuine-centralization design todo, and the accumulated per-finding fix todos across both docs.
