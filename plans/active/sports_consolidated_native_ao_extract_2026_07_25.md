@@ -253,12 +253,47 @@ drift_direction: advance-code
       and read in this session). Done when: a written root-cause finding confirms or denies the `_SNAPSHOT_VENUES`
       CLV-completeness hypothesis, citing the actual mechanism — satisfied (denied). Source:
       `sports_consolidated_closeout_2026_07_19.md:490-491`.
-- [ ] [DIAG] P1. **Track O — locate the emitter of the 139,620 `venue=ODDS_API, source=api_football, empty_confirmed`
-      rows** (confirmed not `_emit_sports_v1/v2_sentinels`). **Scoping note**: the source todo frames this as "before
-      folding into K2" — that downstream framing is now STALE (K2's casing migration is itself superseded and slated for
-      revert per Track C), so this candidate is pure standalone diagnosis, not a K2-fold-in precondition. (repo:
-      market-tick-data-service / instruments-service, read-only). **Done when**: a written finding names the
-      emitter/mechanism producing these rows. Source: `sports_consolidated_closeout_2026_07_19.md:492-493`.
+- [x] [DIAG] P1. ✅ **Track O — emitter found: the PRE-FIX sentinel path, now dead — both root causes already shipped,
+      wipe verified holding.** **Scoping note**: the source todo frames this as "before folding into K2" — that
+      downstream framing is now STALE (K2's casing migration is itself superseded and slated for revert per Track C), so
+      this candidate was pure standalone diagnosis, not a K2-fold-in precondition. (repo: market-tick-data-service /
+      instruments-service, read-only). **Mechanism**: `_emit_sports_v2_sentinels`/`_emit_sports_v1_sentinels`
+      (`market-tick-data-service/.../engine/orchestrator/sentinels.py`), driven by `_expected_sports_bookmakers()`
+      (`.../engine/orchestrator/venue_fetch.py`) which — BEFORE `mtds@accd8aa4` (2026-07-20) — derived its
+      bookmaker-expectation scope from UAC venue CATEGORIES (5 keys: BETFAIR, MATCHBOOK, ODDS_API, ONEXBET, PINNACLE)
+      instead of the real 23-key Odds-API `bookmakers=` request list (`odds_api_adapter.py`). `ODDS_API` (the aggregator
+      token, not a real bookmaker) was never itself in the request list, so it could never capture and could never pass
+      `is_bookmaker_league_covered()` for ANY league — every (league,date) cell in the cartesian expectation universe
+      for `venue=ODDS_API` routed to `record_empty(was_expected=True)` → `capture_status=empty_confirmed`. This produced
+      exactly 139,620 rows — identical in count to sibling phantom venues BETFAIR(bare) and ONEXBET (139,620 each; all
+      three sum to `sports_shard_enumeration_cartesian_blowup_2026_07_20.md`'s cited 418,860 structurally-false rows),
+      because all three shared the identical (league,date) cartesian scope under the same never-captures mechanism. The
+      `source=api_football` mislabel is a SEPARATE, stacked bug: `SOURCE_PRIORITY[     ("sports","TRADES")]` was missing
+      from UAC's `_source_priority_data.py`, so `derive_pipeline_mode_for_row()` fell through to
+      `_ASSET_GROUP_FALLBACKS["sports"] = BATCH_API_FOOTBALL`, silently shadowing the sentinel caller's real intended
+      default (`BATCH_ODDS_API`) and mis-stamping every sports TRADES sentinel row — including these — as
+      `source=api_football` (full mechanism + evidence in
+      `plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`). **Why
+      "confirmed not `_emit_sports_v1/v2_sentinels`" is correct as stated**: both root causes are now FIXED —
+      `mtds@accd8aa4` (2026-07-20, `_expected_sports_bookmakers()` now derives purely from
+      `expected_odds_api_venue_keys()`, ODDS_API/ONEXBET/bare-BETFAIR structurally excluded from scope) and
+      `unified-api-contracts@44623d25` (2026-07-23, added the missing SOURCE_PRIORITY entry, verified live via
+      `git show` in this session). Post-fix, the CURRENT sentinel code structurally cannot reproduce this population —
+      so while historically this WAS the sentinel-emission mechanism (pre-fix), the 139,620-row population is dead
+      historical residue, not something the current `_emit_sports_v1/v2_sentinels` is still minting. **Live-verified
+      2026-07-28** (this session) via a direct read of the live MTDS sports manifest
+      (`market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`, downloaded via
+      `gcloud storage cp` + queried with DuckDB, 516,196 total rows): **0 rows carry `source=api_football` anywhere in
+      the manifest** (venue=ODDS_API or otherwise) — the population was fully removed by the separate CAS-safe wipe
+      `mtds@e9d9dec0` (2026-07-23, 1,266,874/1,266,874 rows removed, verified via `git show`) and has NOT been
+      re-accumulated in the 5 days since (it would have been, had the sentinel bug still been live — this is the
+      positive proof the fix holds in production, not just that the fix shipped). Current `venue=ODDS_API` rows are 100%
+      legitimate: 123,642 captured + 652 empty_confirmed under `source=mdps_odds_horizon_bucket` (the deliberate
+      aggregate-sentinel identity documented in `instruments-service/scripts/enumerate_expected_universe.py`'s
+      `_SPORTS_MANIFEST_VENUE_OVERRIDE`), plus 8 captured + 18 empty_confirmed under `source=odds_api` — zero
+      `api_football` contamination. **Done when**: a written finding names the emitter/mechanism producing these rows —
+      satisfied (mechanism named + both fixes cited + live-verified zero recurrence). Source:
+      `sports_consolidated_closeout_2026_07_19.md:492-493`.
 - [ ] [DIAG] P2. **Track O — corpus-wide scan for other low-fixture dates whose only in-window odds fall in the
       T-12h↔T-24h dead-zone, + investigate why the multi-shot `TIER_1_OFFSETS` loop apparently didn't run on the quiet
       2025-12 days.** **Scoped DOWN from the source todo**: drops "consider adding a T-18h horizon or widening the T-24h
@@ -278,7 +313,15 @@ drift_direction: advance-code
       carry non-registry-form `league_id` strings; if any non-registry rows remain, STOP and report instead of shipping
       the denominator change (a registry-membership test cannot be correct while non-registry rows exist). (repo:
       deployment-api). **Done when**: the live-probe confirms 0 non-registry `league_id` rows AND the denominator code
-      change ships, verified against a real bucket. Source: `sports_consolidated_closeout_2026_07_19.md:536-541`.
+      change ships, verified against a real bucket. Source: `sports_consolidated_closeout_2026_07_19.md:536-541`. **RUN
+      2026-07-28 (slot-11)**: required first step executed — STOP condition fired, correctly did not ship. Live probe
+      against `market-data-tick-sports-prd-central-element-323112` found 55,160 genuine non-canonical `league_id` rows
+      (57,942 raw non-registry rows minus 2,782 blank/`NaN` sentinel, out of 516,196 total), concentrated in the
+      still-outstanding `batch_mdps_odds_horizon_bucket` (42,652) + `batch_footystats` (14,668) pipeline_modes — exactly
+      the two deferred shapes `issues/sports_league_id_namespace_migration_2026_07_20.md`'s own STATUS 2026-07-25 named
+      as not yet migrated. Full method + numbers in that doc's new "LIVE-PROBE 2026-07-28" section. Still blocked on
+      that migration's `odds_horizon_bucket` MDPS reprocess + `batch_footystats` copy+swap pass landing — re-run the
+      same probe once those ship, not before.
 - [ ] [CODE] P2. **Track H — implement RAISE-on-all-NaT for `AvailableAtStampingError`** (operator-ruled: fail loud at
       the shard that can't be stamped, not skip-with-record) at the CF-8 fix's own code path
       (`market-tick-data-service@af627b5b`). **Scoping note**: only the CODE change ships via this todo — the CF-8

@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-24 # (was: 2026-07-15 -- folded in the CeFi-lane Progress Log entries from M-1 per plan line-cap remediation)
+last_updated: 2026-07-28 # (was: 2026-07-24 -- deployment-api pipeline_mode dedup+drilldown-filter item verified already-shipped, slot-16)
 locked_by:
 locked_since:
 supersedes:
@@ -166,17 +166,28 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
       Cross-ref downstream plan FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
       MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
-      **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
-      `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
-      `SHARD_AXIS_MATRIX`, which for cefi is `(venue, data_type, instrument_type, instrument_id, day)` — pipeline_mode
-      is NOT a cefi shard-atom axis, so multiple `pipeline_mode=` rows for one cell collapse to ONE shard (no
-      double-count). The existing `test_pipeline_mode_rows_do_not_double_count_shards` guards the DeFi
-      **chain**-breakdown builder; REMAINING for the deployment-api/`downstream_services_manifest_canonicalisation`
-      owner: (a) a **cefi parity test** (venue-breakdown builder) as a regression guard, (b) the `pipeline_mode`
-      drilldown **filter param** (a feature-add; UI label is playwright-gated). NOT a cefi-correctness gap today (dedup
-      works); a regression-guard + feature enhancement for the deployment-api owner. (In practice cefi double-count is
-      also unlikely — a cefi cell carries ONE pipeline_mode per day, batch OR live, not both.)
+- [x] ✅ [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter — VERIFIED ALREADY SHIPPED 2026-07-28
+      (slot-16).** Both remaining sub-parts from the 2026-06-03 read-only confirmation were found already landed by
+      prior, unrelated commits — no new code required, verified live: **(a) cefi parity test** —
+      `tests/unit/test_venue_breakdown_shards_cefi_dedup.py` (`deployment-api@51890b3`, 2026-07-26) mirrors
+      `test_pipeline_mode_rows_do_not_double_count_shards` for cefi: 2 instruments × 5 dates × 2 pipeline_modes = 20 raw
+      rows must collapse to 10 distinct `(instrument_id, date)` shard atoms via `_per_instrument_coverage`'s set-based
+      numerator (`found_pairs`) — the cefi shard-atom dedup is structurally immune to the DeFi builder's raw-`len()` bug
+      by construction (no `drop_duplicates` fix needed there), and this test is the regression guard proving it. **(b)
+      `pipeline_mode` drilldown filter param** — already fully wired end-to-end:
+      `GET     /api/data-status/drilldown/{service}/{asset_group}` accepts `pipeline_mode: str | None` Query
+      (`deployment_api/routes/data_status/_deploy_turbo.py`, shipped `deployment-api@4dd2575` "v9 manifest UNION read
+      path + pipeline_mode/source drilldown (G3/M5)") and `GET /api/data-status/turbo` accepts
+      `pipeline_mode: list[str]     | None` (OR-semantics, shipped `deployment-api@0ae5230` "add pipeline_mode filter to
+      /turbo endpoint"); the TS client (`deployment-ui/src/api/client.ts` `_DRILLDOWN_FILTER_KEYS`) already threads
+      `pipeline_mode` through. Re-ran both regression suites live 2026-07-28:
+      `test_venue_breakdown_shards_cefi_dedup.py` + `test_chain_breakdown_shards_vs_dates.py` = 5/5 passed;
+      `test_data_status_hierarchical.py` + `test_data_status_drilldown_provenance.py` = 69/69 passed. No dirty tree, no
+      new commit needed. **Residual, NOT part of this item** (noted for a future UI todo, not blocking):
+      `HierarchicalShardDrilldown.tsx` renders `pipeline_mode` as a display-only per-cell badge — there is no
+      operator-facing filter dropdown wired to the already-existing API param, so the "UI label is playwright-gated"
+      clause never triggered (no new UI surface was added). (MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)
 
 **⚪ P2 / needs-confirm (tracked):** **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
 MTDS consolidation ruling.)**
@@ -192,17 +203,38 @@ MTDS consolidation ruling.)**
       writer's per-instrument path is unaffected (no clusters). Repo: UTL/MTDS — owning VM. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check**: re-run
-      `rebuild_cefi_manifest --dry-run` over a multi-year span (or the full corpus) and confirm `phantom_to_failed`
-      stays small + well-formed (DERIBIT-chain-style true phantoms only), `dropped_malformed_captured` is junk-only, and
-      `unparseable=0`. Cheap final gate before the irreversible-adjacent index overwrite. **(MIGRATED FROM:
+- [x] ✅ [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check — RE-RUN 2026-07-28
+      (slot-12), GATE FAILED — real finding, NOT a clean pass.** Ran `rebuild_cefi_manifest --dry-run` over the FULL
+      corpus (`--start-date 2019-01-01 --end-date 2026-07-28`, `GCP_PROJECT_ID=central-element-323112` exported — the
+      CF-11 pass silently no-ops without it, a first attempt without the env var falsely read "prior _index is
+      empty/missing"). `unparseable=0` ✅ and `dropped_malformed_captured=25,413` (~0.45% of the 5,677,228-row prior
+      index, junk-only per its predicate) ✅ — but **`phantom_to_failed=490,639` (~8.6% of the entire prior index) FAILS
+      the "stays small + DERIBIT-chain-style only" criterion** — per-venue spread is broad (OKX-FUTURES, HYPERLIQUID,
+      ASTER, BYBIT-SPOT, OKX-SWAP, BINANCE-FUTURES, COINBASE-FUTURES, BITFINEX-FUTURES, BITGET-FUTURES, KRAKEN-FUTURES
+      all show large counts; DERIBIT is a small minority of the total, not the dominant class). **Root cause CONFIRMED
+      live** (3 independent GCS spot-checks, 100% false-phantom hit rate — not real absences): the CF-11 covered-keys
+      dedup compares the prior manifest's stored `instrument_type`/`underlying` COLUMNS against the live object scan's
+      parsed path, and multiple venues' actual GCS folder structure (`instrument_type=perpetual` for OKX-FUTURES dated
+      futures / BYBIT-SPOT spot pairs; blank `underlying` for ASTER per-instrument shards) no longer matches what the
+      prior manifest recorded historically — the object is genuinely present, but the exact-tuple key match fails, so
+      it's falsely reclassified `PHANTOM_CAPTURED_NO_OBJECT`. Same bug class as the already-fixed `spot`→`spot_pair`
+      synonym (2026-06-11) and the slash-symbol stem fix (2026-06-04), but NOT covered by either. Full evidence + root
+      cause + recommended fix + follow-up todos:
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. **This BLOCKS the "NEXT
+      SESSION — execute the migration" P0 todo immediately below** — see its updated note. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
-      `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
-      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical +
-      false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
-      **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf) — **🔴 BLOCKED 2026-07-28
+      (slot-12): the dry-run did NOT validate cleanly** — `phantom_to_failed=490,639` (~8.6% of the prior index) is a
+      confirmed false-phantom bug (itype/underlying column drift), not real orphans; see
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`. Running this todo's
+      `--apply` migration as-is would `record_failed` ~490K genuinely-present rows for real — do NOT run until that
+      issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
+      Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+      then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+      then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+      legacy-bucket delete. NOT this session (irreversible). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi). **(MIGRATED FROM:

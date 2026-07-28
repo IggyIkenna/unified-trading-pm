@@ -275,19 +275,29 @@ not a pending physical migration. Cite `tradfi_manifest_content_recovery_complet
 `canonical_instrument_id`**, such that `filename == manifest key == canonical_instrument_id`. This SUPERSEDED the
 previous capture-batch model.
 
-| Milestone                            | Date           | Evidence                                                                                              |
-| ------------------------------------ | -------------- | ----------------------------------------------------------------------------------------------------- |
-| Operator ruling (target set)         | **2026-07-18** | `defi_consolidated_closeout_2026_07_18.md:126` ("shard key = the symbolic `canonical_instrument_id`") |
-| R3 historical migration ALL-TERMINAL | **2026-07-20** | 30/30 sub-shards, full 2020q1–2026q2 corpus (Phase-0 audit synthesis, defi migration_state)           |
-| Writer emits the new leaf            | **NOT YET**    | defi capture is fully STOPPED pending the writer fix                                                  |
+| Milestone                            | Date                                         | Evidence                                                                                                                                                    |
+| ------------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Operator ruling (target set)         | **2026-07-18**                               | `defi_consolidated_closeout_2026_07_18.md:126` ("shard key = the symbolic `canonical_instrument_id`")                                                       |
+| R3 historical migration ALL-TERMINAL | **2026-07-20**                               | 30/30 sub-shards, full 2020q1–2026q2 corpus (Phase-0 audit synthesis, defi migration_state)                                                                 |
+| Writer emits the new leaf            | **NOT YET (as of last live reconfirmation)** | leaf-naming code fix shipped `market-tick-data-service@0fddb95e` (2026-07-27); not yet independently reconfirmed live against fresh writes in this register |
 
-**The writer cutover date is `UNKNOWN` because it has not happened.** DeFi capture is STOPPED (11 collect + 3 forward
-crons PAUSED ~40 days), and the manifest rebuild currently CRASHES in the CF-11 honest-absence re-emit with
-`MalformedRowKeyError`. Therefore:
+**Correction 2026-07-28 — the "DeFi capture is STOPPED / no new defi writes" premise below is FALSE for the batch lane**
+(measured live during `/data-pipeline-reconciliation --asset-group defi`, 2026-07-24; full detail:
+`issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` § "Fact 1"). Only the
+**live/websocket lane** (11 collect + 3 forward crons) was PAUSED (~40 days) — **batch/backfill capture never stopped**:
+`pipeline_mode=batch_onchain_subgraph`/`batch_chainlink`/`batch_onchain_rpc`/`batch_aave` objects were actively writing
+through `day=2026-07-24` (e.g. `.../UNISWAP_V2/.../COMP-WETH-30.0.parquet`, `time_created=2026-07-24T22:46:34Z`, ~1h
+before the probe). The manifest rebuild's `MalformedRowKeyError` crash in the CF-11 honest-absence re-emit is unaffected
+by this correction and remains open separately. Therefore:
 
-- Post-2026-07-20 defi objects at the old batch leaf are **not** a writer regression — there are no new defi writes.
-- The correct `effective_from` for the defi leaf axis is **the date capture resumes with the fixed writer**, which is
-  not yet set. Until then defi leaf-shape findings are `unknown-vintage`, not regressions.
+- Post-2026-07-20 defi objects at the old (pre-fix) batch leaf are **not** frozen historical residue — the batch lane
+  kept writing under the old leaf shape the whole time, so the population was actively growing until the leaf-naming fix
+  (`mtds@0fddb95e`, 2026-07-27) landed in code.
+- The correct `effective_from` for the defi leaf axis is **the date the fixed writer is confirmed live for every DeFi
+  handler routing through `write_defi_rows()`** (6 of 7 handlers per the R1 changelog), which has not yet been
+  independently reconfirmed in this register. Until that reconfirmation, defi leaf-shape findings against batch-lane
+  objects should be read against the pre-fix vs. post-fix commit boundary, not treated as `unknown-vintage` on the
+  now-withdrawn "no new writes" premise.
 
 A stale template inside the designated tie-breaker doc is a known corpus defect: `cross-asset-canonical-target-ssot.md`
 §8 still shows the pre-ruling defi leaf template and is scheduled for correction (plan todo P1-09). Until corrected,
@@ -434,6 +444,30 @@ suppresses the pending axes above for `processed_candles/` paths; pass `require_
 against the fully-migrated LOCKED shape. Shipped `unified-api-contracts@6329fc04`. Folded into
 `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` as a new phase — the actual data migration
 is NOT owned by this reconciliation-skill plan.
+
+---
+
+## §6e — Axis: prediction `trades` schema — POLYMARKET market-question metadata (title/slug/event_slug)
+
+**Target ruled 2026-07-25** (operator,
+`plans/active/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` Q3): extend the
+canonical `data_type=trades` schema to carry `title`/`slug`/`event_slug` (market-question metadata with no surviving
+copy elsewhere once the legacy dual-write trees are retired) instead of dropping it or permanently forking a separate
+canonical shape. Trader-identity/PII fields (`proxy_wallet`/`name`/`pseudonym`/`bio`/`profile_image`) are explicitly
+EXCLUDED from this cutover — still a separate, unresolved operator call.
+
+**Writer-root fix EXECUTED 2026-07-28** (slot-12): `unified-api-contracts@90ddcc01` (added `title`/`slug`/`event_slug`
+`ColumnSpec` entries to `_schema_spec_prediction.py`; `outcome`/`outcome_index` were already present) +
+`market-tick-data-service@84154e1a` (`PolymarketAdapter` no longer drops `title`/`slug`/`eventSlug` at ingest;
+`eventSlug`→`event_slug`/`outcomeIndex`→`outcome_index` renamed to canonical snake_case). **Effective-from 2026-07-28
+for NEW writes only** — the historical legacy raw-tick objects (shapes #3/#3b `data_type=prediction_trades`, 2,477
+manifest rows/348 dates, and shape #4's 10-segment tree, corpus-wide extent unknown) are NOT yet migrated; see
+`plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b and `non-canonical-path-inventory.md`'s
+prediction `prediction_trades` row for the still-open disposition.
+
+| asset_group | effective-from (new writes) | historical backfill state                                                           |
+| ----------- | --------------------------- | ----------------------------------------------------------------------------------- |
+| prediction  | 2026-07-28                  | NOT migrated — shapes #3/#3b/#4 still legacy-only; see plan todo 4b (multi-session) |
 
 ---
 

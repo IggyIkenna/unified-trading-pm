@@ -57,11 +57,12 @@ source: >-
 
 ## Todos
 
-- [ ] [INFRA] P2. **Combined fix + apply for the CURVE/OPTIMISM subgraph-deindex reclassification (2 sub-steps, causally
-      sequential — the 2nd is blocked on the 1st):** (a) fix `setup-data-pipeline-vm.sh`'s `canonical-migration` branch
-      (`:1187`) which hardcodes `cd "$WORKSPACE/mtds"` regardless of `VM_SERVICE` — mirror the `VM_SERVICE`-keyed
-      `cd "$WORKSPACE/instruments"` pattern already used by other branches (e.g. `:1224`) so an instruments-service
-      script can be found and run from this VM path; (b) once (a) lands, launch a fresh canonical-migration VM running
+- [x] ✅ [INFRA] P2. **DONE 2026-07-28 (slot-13, infra)** — **Combined fix + apply for the CURVE/OPTIMISM
+      subgraph-deindex reclassification (2 sub-steps, causally sequential — the 2nd is blocked on the 1st):** (a) fix
+      `setup-data-pipeline-vm.sh`'s `canonical-migration` branch (`:1187`) which hardcodes `cd "$WORKSPACE/mtds"`
+      regardless of `VM_SERVICE` — mirror the `VM_SERVICE`-keyed `cd "$WORKSPACE/instruments"` pattern already used by
+      other branches (e.g. `:1224`) so an instruments-service script can be found and run from this VM path; (b) once
+      (a) lands, launch a fresh canonical-migration VM running
       `instruments-service/scripts/reclassify_defi_curve_optimism_subgraph_deindexed_2026_07_24.py --apply` (dry-run
       already verified 144 matching rows against live prod), T+10min health-verified RUNNING with real progress in
       `run.log`, and confirm it completes. **Delete/apply safety note (finding O, self-justified — no operator gate
@@ -217,6 +218,40 @@ session's final report; condensed here for anyone re-auditing this doc later:
   health-verify RUNNING with real `run.log` progress, confirm completion, spot-check the manifest shows the ~144
   previously-`attempted_failed` CURVE/OPTIMISM rows now carrying `EXPECTED_SUBGRAPH_DEINDEXED`, THEN flip this todo's
   checkbox with the shipped SHA + verification evidence.
+
+- **2026-07-28 (slot-13, infra) — DONE, both sub-steps complete.** Sub-step (a): confirmed ALREADY SHIPPED on
+  `live-defi-rollout` (`deployment-service@0ed2ca6 fix(vm): derive canonical-migration workspace dir from VM_SERVICE`,
+  landed by a different slot after the 2026-07-26/27 WIP above — slot 4's own uncommitted WIP lived in a different
+  slot's worktree this slot cannot reach, so this slot independently re-verified the shipped fix rather than depending
+  on it). Also found a dedicated `defi-curve-optimism-reclassify` launcher category already added to
+  `launch-canonical-migration-vm.sh` (2026-07-27, citing the same `0ed2ca6` fix) — used it as-is. Sub-step (b): **2
+  infra blockers hit and fixed before the real `--apply` could run**: (1) both launch attempts initially warned of STALE
+  code tarballs (`deployment-service`/`unified-api-contracts`/others) — republished via `create-code-tarballs.sh`, which
+  itself first failed with `ImportError: cannot import name 'iter_route_contexts' from fastapi.routing` in both
+  `deployment-service` and `instruments-service` local venvs (stale `.venv` vs `uv.lock`'s pinned `fastapi==0.140.7`,
+  installed was `0.136.3`/`0.135.1`) — fixed via `uv sync --frozen` in each repo (no tracked-file changes, `.venv`
+  only); (2) the first dry-run on the launcher's default `e2-standard-8` (32GB) was **OOM-killed** (`rc=137`, `Killed`
+  after ~76s) reading the 985MB/23.9M-row `_index/availability_index.parquet` — relaunched with
+  `MACHINE_TYPE=e2-highmem-16` (128GB), which succeeded cleanly. Dry-run
+  (`canonical-migration-defi-curve-optm-reclass-20260728-060342`, exit_code=0) found **419** matching rows (346
+  main-index + 73 per-VM shard) — more than the ~144 measured 2026-07-24, expected drift since the docstring notes this
+  is a live, ongoing condition (more backfill attempts kept hitting the dead subgraph in the intervening days). The
+  subsequent `--apply` launch also hit a fresh tarball-staleness race (2 more repos advanced meanwhile from other slots'
+  concurrent pushes) — killed that VM before it started any mutation, republished again, relaunched. **`--apply` run**
+  (`canonical-migration-defi-curve-optm-reclass-20260728-061053`, `e2-highmem-16`, exit_code=0): reclassified **420**
+  rows total — 346 in `_index/availability_index.parquet` (backup:
+  `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.20260728-061342.deindexed.bak.parquet`,
+  27,204,041 rows preserved) + 74 in `_index/per_vm/mtds-dex-swaps-backfill-1.parquet` (backup:
+  `.../per_vm/mtds-dex-swaps-backfill-1.20260728-061342.deindexed.bak.parquet`, 269,806 rows preserved). **Post-run
+  manifest spot-check** (direct pandas read of the post-apply `availability_index.parquet`, 27,204,041 rows):
+  `EXPECTED_SUBGRAPH_DEINDEXED` CURVE/OPTIMISM rows = **346** (matches the log); rows STILL `attempted_failed` matching
+  the dead-subgraph cascade signature = **0**. `quality-gates.sh` green in deployment-service: satisfied by `0ed2ca6`
+  already being merged to `live-defi-rollout` via the standard QG-before-quickmerge gate at shipping time — no new
+  deployment-service code changed this session (verified `git status --porcelain` clean in both `deployment-service` and
+  `instruments-service` after the `uv sync`s). The reclassify script's own `# Delete-when:` header condition (0
+  CURVE/OPTIMISM `dex_pool_swaps` `attempted_failed` rows matching the dead-subgraph cascade error) is now met — left in
+  place as this todo's scope was fix+apply, not cleanup; a future pass can delete the one-off script + its launcher
+  category.
 
 ## Codex SSOTs
 

@@ -235,15 +235,23 @@ named. It never rises above `unknown` confidence and never carries a delete sugg
 `build_*_partition_path` builders**. A reconciler, skill, script, or doc that re-implements the rule downstream is
 review-blocking — that re-implementation is exactly the drift class the function exists to kill.
 
-> **⚠️ The oracle does NOT validate the filename instrument-id.** It drops the last path segment
-> (`partition_segments = segments[:-1]`, _"Last segment is the file name"_) before validating, and only
-> `asset_group=tradfi` single-instrument shards have ever carried a stem rule. A CeFi corpus of **~811,200 objects
+> **⚠️ Filename id-form checking now covers `{tradfi, cefi, defi}` by default — a PRE-2026-07-20 CAVEAT, not the current
+> behavior.** Before `unified-api-contracts@d40c5d7d` (2026-07-20, refined `@1cd27478` 2026-07-23), the oracle dropped
+> the last path segment (`partition_segments = segments[:-1]`, _"Last segment is the file name"_) before validating, and
+> only `asset_group=tradfi` single-instrument shards ever carried a stem rule — a CeFi corpus of **~811,200 objects
 > carrying raw wire instrument_ids** (`ADAF0:USTF0.parquet`) and double-wrapped catalogue-miss ids
-> (`BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) therefore returns **0 violations == CANONICAL**, at both
-> `require_pipeline_mode` settings — a **FALSE-CLEAN verdict for surface A**, on the exact defect this procedure exists
-> to catch (independent measurement puts the CeFi filename surface at **20.82%** canonical by id-form). **Surface-A
-> id-form must be checked separately with the canonical-id check (§ 4.3); a clean oracle result is structure-only.**
-> SSOT: `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
+> (`BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) returned **0 violations == CANONICAL**, at both
+> `require_pipeline_mode` settings — a FALSE-CLEAN verdict for surface A, on the exact defect this procedure exists to
+> catch (independent measurement put the CeFi filename surface at **20.82%** canonical by id-form at the time).
+> **`_stem_id_form_violations()` now closes this gap for `_ID_FORM_CHECKED_ASSET_GROUPS={"cefi","defi"}`** (tradfi's own
+> filename check, clause 8 below, predates and is separate from it) — re-tested live 2026-07-28:
+> `canonical_path_violations()` on the exact worked example above now returns a real violation
+> (`"cefi single-instrument shard filename 'ADAF0:USTF0.parquet' is not a canonical instrument_id ('VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]') — raw venue wire symbol / bare symbol or a double-wrapped catalogue-miss id"`),
+> not a false-clean. **`sports`/`prediction` are NOT in `_ID_FORM_CHECKED_ASSET_GROUPS` and remain filename-blind — §
+> 4.3's "Surface-A id-form must be checked separately" guidance still applies to those two asset_groups.** SSOT:
+> `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (history),
+> `plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
+> correction).
 
 ```python
 def canonical_path_violations(path: str, *, require_pipeline_mode: bool = False) -> list[str]
@@ -268,25 +276,34 @@ Input is a **bucket-relative** path (no `gs://bucket/` prefix; a leading slash i
 8. **tradfi-only clauses** (`:766-823`) — `pipeline_mode=batch_massive` is forbidden outright; `underlying=` must pass
    `is_recognized_tradfi_underlying()`; a `TRADFI_CHAIN_INSTRUMENT_TYPES` shard must end
    `…/underlying=/quote=/margin=/ticks.parquet`; a `TRADFI_SINGLE_INSTRUMENT_TYPES` shard's filename must be the full
-   canonical `instrument_id` (contains `:`), never `ticks.parquet` and never a bare symbol. **This is the ONLY clause
-   that reads the filename, and it is tradfi-gated — it has never covered CeFi.**
+   canonical `instrument_id` (contains `:`), never `ticks.parquet` and never a bare symbol. **This clause is
+   tradfi-gated and predates the cefi/defi id-form check below — it does NOT extend to cefi/defi.**
+9. **cefi/defi filename id-form** (`_stem_id_form_violations()`, called for every non-`None` `asset_group`, gated on
+   `_ID_FORM_CHECKED_ASSET_GROUPS={"cefi","defi"}`) — the filename stem (minus `.parquet`) must itself be a canonical
+   `instrument_id`; `[]` for legitimately stem-less shapes (chain `underlying=…` bundles, the `ticks.parquet` fan-in)
+   and for asset_groups outside the checked set (`sports`/`prediction` — still filename-blind). Shipped
+   `unified-api-contracts@d40c5d7d` (2026-07-20), refined `@1cd27478` (2026-07-23) — **so as of today TWO clauses read
+   the filename** (clause 8 for tradfi, clause 9 for cefi/defi), together covering `{tradfi, cefi, defi}`.
 
 ### 4.3 Path STRUCTURE and instrument-id FORM are ORTHOGONAL — neither alone proves "canonical"
 
 Surface A is really **two** questions. The machine oracle answers only the first:
 
-| question                                                                                                                                                | answered by                                                                                                                             | scope today          |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| Is the **path STRUCTURE** canonical? (prefix, `day=`, `key=value` hive shape, `pipeline_mode`, `asset_group` closed set, venue glue, tradfi chain tail) | `canonical_path_violations()`                                                                                                           | all asset groups     |
-| Is the **instrument-id FORM** canonical? (the filename stem, and the `instrument_id` content column)                                                    | the canonical-id regex/resolver — `_CANON_ID_RE` in `market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py` | tradfi filename only |
+| question                                                                                                                                                | answered by                                                                                                                                                                                                                                                                                          | scope today            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| Is the **path STRUCTURE** canonical? (prefix, `day=`, `key=value` hive shape, `pipeline_mode`, `asset_group` closed set, venue glue, tradfi chain tail) | `canonical_path_violations()`                                                                                                                                                                                                                                                                        | all asset groups       |
+| Is the **instrument-id FORM** canonical? (the filename stem, and the `instrument_id` content column)                                                    | `canonical_path_violations()`'s own `_stem_id_form_violations()` (cefi/defi) + tradfi clause 8 (tradfi); the standalone canonical-id regex/resolver — `_CANON_ID_RE` in `market-tick-data-service/scripts/_cefi_canonical_resolver_migration_2026_07_18.py` — remains available for a direct re-test | `{tradfi, cefi, defi}` |
 
-Canonical id grammar: `VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]`, plus a `COMBO` arm.
+Canonical id grammar: `VENUE:ITYPE:BASE-QUOTE[@LIN|@INV][-YYYYMMDD][-STRIKE-C|P]` for tradfi/cefi,
+`VENUE-CHAIN:TYPE:SYMBOL` for defi, plus a `COMBO` arm.
 
 A path can be structurally perfect and carry a wire-named file; a path can carry a perfect id under a `day-2026-05-01`
-legacy prefix. **A surface-A verdict that cites only the path oracle and concludes "canonical" is wrong — it must state
-that id-form was not machine-checked, or run the canonical-id check itself and report both.** Legitimately stem-less
-shapes (chain `underlying=…/ticks.parquet` bundles, the symbol-less `ticks.parquet` fan-in) have no per-instrument stem
-and must never be counted as id-form violations.
+legacy prefix. **A surface-A verdict for `sports`/`prediction` that cites only the path oracle and concludes "canonical"
+is still wrong — those two asset_groups remain outside `_ID_FORM_CHECKED_ASSET_GROUPS`, so it must state that id-form
+was not machine-checked, or run the canonical-id check itself and report both.** For `{tradfi, cefi, defi}`,
+`canonical_path_violations()` now answers both questions in one call (`violation_classes=` selects STRUCTURAL / ID_FORM
+/ both — see `_select_violation_classes()`). Legitimately stem-less shapes (chain `underlying=…/ticks.parquet` bundles,
+the symbol-less `ticks.parquet` fan-in) have no per-instrument stem and must never be counted as id-form violations.
 
 ### 4.1 CAVEAT — the machine gate is currently WEAKER than the codex declaration
 

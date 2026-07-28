@@ -183,7 +183,12 @@ oracle's PRE-`d40c5d7d` behavior (structure-only), which would have reported the
 - [x] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
       (the register's implicit "capture stopped" reference point) under the bare-symbol leaf shape? A bounded
       per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this. — already covered by
-      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution). **Executed 2026-07-28**: 6,932
+      bare-symbol-leaf objects measured across `pipeline_mode=batch_*` DeFi lanes, 2026-07-20 through 2026-07-27 (the
+      day before the fix shipped); violation rate collapses to ~0-1% the day the leaf fix
+      (`market-tick-data-service@0fddb95e`, 2026-07-27) went live, confirming the fix is effective. Full
+      per-day/pipeline_mode breakdown: `plans/audit/results/defi_bare_symbol_leaf_census_2026_07_28.md` (+ raw `.json`).
+      Script: `market-tick-data-service/scripts/census_defi_bare_symbol_leaf_since_2026_07_20.py`.
 - [x] [CODE] P1. **Fix `write_defi_rows()`'s leaf construction** to use the full `instrument_id` (or
       `canonical_instrument_id` once that column is populated — see the companion FIND-06 in this run's report about the
       missing `canonical_instrument_id`/`asset_group`/`pipeline_mode`/`source`/`schema_version` columns) instead of the

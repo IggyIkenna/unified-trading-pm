@@ -254,7 +254,10 @@ in a registry/exception addition without addressing the discrepancy.
       `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard vs. adding the 7 keys WITHOUT one — a small, bounded,
       read-only simulation against `enumerate_expected_universe.py` (or a scoped subset of the defi catalog) rather than
       a full production re-run. Answers whether Path A is safe to execute directly or needs the guard built first. —
-      already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+      **EXECUTED 2026-07-28 (slot-5), see "## Progress Log" below for the measurement.** Verdict: **the guard is
+      REQUIRED** — without it, adding the 7 keys permanently drags `completeness_pct` down by ~20.6% (relative), zero
+      recoverable via any amount of MTDS backfill; with the guard, the addition is provably (not just expected) inert —
+      zero denominator delta.
 - [ ] [CODE] P2. (Gated on the verify above.) Execute Path A: add the defi-scoped exclusion guard to
       `enumerate_expected_universe.py`, THEN add the 7 `swaps_ohlcv_*` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']`,
       measuring + citing the before/after `completeness_pct` delta (expected: zero, if the guard is correctly scoped).
@@ -265,6 +268,70 @@ in a registry/exception addition without addressing the discrepancy.
 - [x] [VERIFY] P3. Reconcile the `swaps_ohlcv_4h` timeframe discrepancy (real captured data exists at a timeframe not in
       `_candle_contracts.py`'s declared DeFi timeframe set) before either path ships. — already covered by
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
+
+## Progress Log
+
+### 2026-07-28 (slot-5) — completeness_pct denominator-delta simulation (bounded, read-only)
+
+Executed the P2 VERIFY todo above via `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s dispatch of this exact item.
+Ship no registry/code change (per that todo's own instruction) — report only.
+
+**Method.** `instruments-service/scripts/enumerate_expected_universe.py` could not be imported directly in this venv
+snapshot: `ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'`, a **pre-existing, already-
+tracked, fleet-wide environment issue** (`issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` —
+unified-trading-library's fastapi/starlette floor bump vs. the canonical-dependency-manifest SSOT), unrelated to this
+task and not fixed here. Worked around it by re-implementing `enumerate_v2`'s documented per-instrument-grain contract
+exactly as specified in its own docstring ("yield one `ExpectedRow` per `(instrument_id, date, data_type)` triple where
+the instrument is NOT alive on that date (`empty_confirmed`) OR is alive but has no manifest row
+(`expected_unattempted`)"), while importing the ONE live registry input that actually changes between scenarios —
+`unified_api_contracts.registry.market_data_categories.DATA_TYPES_BY_ASSET_GROUP['defi']` — for real, not hardcoded.
+Bounded synthetic catalog (12 defi swap-pool instruments, all alive for the whole window) × a 30-day date axis (NOT a
+full prod re-run, zero GCS/network reads) with an empty `present_set` (mirrors reality for `swaps_ohlcv_*` today: the
+MTDS-tick manifest present_set never contains a row for these MDPS-produced keys — MDPS writes to `processed_candles/`,
+a structurally different bucket/path — confirmed by this doc's own "Established facts" § finding 2).
+
+**Live count today**: `DATA_TYPES_BY_ASSET_GROUP['defi']` = **27** data_types (not the ~25 estimated by eyeballing the
+registry source — counted programmatically).
+
+**Three scenarios, same bounded catalog/date_axis:**
+
+| Scenario                            | data_types resolved | expected rows (12 instr × 30 days × N types) |
+| ----------------------------------- | ------------------: | -------------------------------------------: |
+| 1. Baseline (today, no addition)    |                  27 |                                        9,720 |
+| 2. WITHOUT guard (+7, no exclusion) |                  34 |                                       12,240 |
+| 3. WITH guard (+7, then excluded)   |                  27 |                                        9,720 |
+
+**Decisive result — WITH guard is provably inert, not just "expected."** Scenario 3's `resolved_data_types` set is
+`sorted(with_guard_data_types) == sorted(CURRENT_DEFI)` → **True**, i.e. byte-identical to today's list. Since
+`enumerate_v2`'s entire output is a pure function of `(catalog, date_axis, resolved_data_types)`, an identical
+`resolved_data_types` with the same catalog/date_axis structurally GUARANTEES identical output — this holds for ANY real
+catalog/date_axis, not just the bounded 12×30 sample used here. **Scenario 3 row count == Scenario 1 row count: True,
+delta = 0.** This mirrors `_tradfi_mtds_tick_manifest_data_types()`'s own proven pattern exactly.
+
+**WITHOUT guard — measured, scale-invariant impact.** New rows added = 2,520 (= 12 × 30 × 7, sanity-checked). Framed as
+a fraction of the new (bigger) denominator: 2,520 / 12,240 = **20.59%** — and because this is a ratio of `7 new keys` /
+`34 total keys` it is **scale-invariant**: the same 20.6% figure holds regardless of catalog size or date-axis length
+chosen, since every instrument-day contributes proportionally to both old and new keys equally. Since `present_set` has
+zero matches for any of the 7 new keys in the real MTDS-tick manifest (confirmed structurally — MDPS's real output lives
+in a different bucket/path this present_set never queries), **100% of that 20.6%-of-denominator share would land as
+`expected_unattempted`/`empty_confirmed` with ZERO possible satisfaction via any amount of MTDS backfill** — i.e. for
+any current defi `completeness_pct` baseline `C`, the post-addition value without the guard becomes
+`C × (27/34) ≈ C × 0.7941` — a **permanent ~20.6% relative drop**, not a transient one, matching exactly the failure
+mode `_TRADFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES` was built to prevent for tradfi.
+
+**Note on completeness_pct terminology** — this simulation targets the MTDS-tick-manifest `expected_unattempted`
+denominator `enumerate_expected_universe.py::enumerate_v2` materialises (the mechanism this doc's finding 6 traced).
+This is a **different** completeness_pct computation from `check_enumeration_completeness.py`'s Layer-1
+venue/instrument_type metric (used elsewhere, e.g.
+`issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`'s cited `n_expected=109`/`completeness_pct=2.75`
+figure) — the two share a name but different denominators/producers; flagging explicitly to avoid conflating them.
+
+**Answer to the gating question** (for `defi_satellite_ao_dispatch_batch5_2026_07_27.md`'s gated `[CODE]` todo): **the
+exclusion-guard IS required** — do not execute Path A's registry addition without first landing the
+`_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style guard in `enumerate_expected_universe.py`. The verification script
+was ad-hoc/scratch-only (not committed, per this todo's "ship no registry/code change" instruction) — the method above
+is fully reproducible from this description alone (live `DATA_TYPES_BY_ASSET_GROUP['defi']` import + the documented
+`enumerate_v2` cross-join contract).
 
 ## Not fixed here, why
 

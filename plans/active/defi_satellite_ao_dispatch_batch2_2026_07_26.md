@@ -632,7 +632,8 @@ drift_direction: advance-code
       took over. Checking MAKER under its REAL data type found a genuine, different gap: 61/90 days captured, a
       contiguous 29-day hole (2026-06-22..2026-07-20), confirmed genuinely absent (not `attempted_failed`) via direct
       query. Not root-caused this pass (different bug class than the crash-loop this todo was scoped around) — filed as
-      `issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` with the exact evidence + 2 follow-up todos
+      `archive/issues/defi_maker_vault_share_price_29day_gap_2026_07_26.md` (RESOLVED, archived 2026-07-28, both
+      follow-up todos done — 29-day gap backfilled for all 5 protocols) with the exact evidence + 2 follow-up todos
       (root-cause + backfill, gated on each other). Zero manifest/GCS writes performed — pure verification. Source:
       `issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md`,
       `issues/defi_five_never_captured_venues_fix_2026_07_22.md`. **Done when**: either (a) the 90-day backfill is

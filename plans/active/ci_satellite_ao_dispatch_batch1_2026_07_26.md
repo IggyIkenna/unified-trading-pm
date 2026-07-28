@@ -179,17 +179,19 @@ concurrent workers do not collide on this file.
       repo, and it now measurably cannot: every one of those 15 repos would have been overwritten pre-fix. Recorded in
       the source issue doc's Progress Log for visibility. Source:
       `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P2).
-- [ ] [INFRA] P2. **Deliver a cloudbuild template-vs-consumer drift checker.** Nothing detects the divergence that armed
-      the loaded gun above: the moment a repo fixes something the template does not learn, `rollout-cloudbuild.py` is
-      re-armed. Deliver a NEW standalone `scripts/quality_gates/check_cloudbuild_template_drift.py` that renders each
-      `configs/cloudbuild-*-template.yaml` and diffs it against every consumer's committed `cloudbuild.yaml`, reporting
-      (with a shrinking-ratchet baseline) any repo carrying content the template lacks. Cover ALL templates, not just
-      `-service-` — the source doc's [DEVOPS] P3 explicitly notes only the SERVICE template was ever measured.
-      Intentional per-repo drift (e.g. deployment-api's `vendor-deps`/`deploy`/`rollup` steps) must be baselined, not
-      "fixed". **Do NOT wire into `scripts/quality-gates.sh`** (finalize-plan todo). **Done when**: the checker runs
-      clean against today's tree with the intentional drift baselined, fails on a synthetic template-lags-repo case, and
-      the api/ui/infra/sit template measurements are recorded in the source doc. Source:
-      `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P1 + P3).
+- [x] ✅ [INFRA] P2. **Deliver a cloudbuild template-vs-consumer drift checker.** — unified-trading-pm@8f15ff124.
+      Delivered standalone `scripts/quality_gates/check_cloudbuild_template_drift.py`, reusing `rollout-cloudbuild.py`'s
+      own `generate_cloudbuild()`/`find_dropped_markers()` (never re-implemented) to render every
+      `configs/cloudbuild-*-template.yaml` and diff it against every consumer's committed `cloudbuild.yaml`. Covers ALL
+      FIVE templates, not just `-service-` (measured: service 12/12 drifted, api 2/2, infra 1/1, ui 0/2 clean, sit 0/2
+      clean — matches the earlier 15/19 fleet-wide figure exactly). Shrinking-ratchet baseline
+      (`cloudbuild_template_drift_baseline.yaml`, seeded 2026-07-28 at today's real per-repo counts) bakes in the
+      intentional per-repo drift (e.g. deployment-api's `vendor-deps`/`deploy`/`redeploy-monitor-jobs` steps) rather
+      than "fixing" it. **NOT wired into `scripts/quality-gates.sh`** per the finalize-plan gate.
+      `tests/unit/test_check_cloudbuild_template_drift.py` (14 cases) proves a synthetic template-lags-repo case fails
+      at a seeded baseline, plus the API-template path. Per-template measurements recorded in the source doc's Progress
+      Log. Source: `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P1 +
+      P3, both closed).
 - [x] ✅ [INFRA] P1. **Deliver a checker banning the swallowed-credential-fetch idiom.** — unified-trading-pm@c91844b09.
       Delivered `scripts/quality_gates/check_no_swallowed_credential_fetch.py` (standalone, NOT wired into
       `scripts/quality-gates.sh` per the finalize-plan gate; `glue-runner-run.sh` untouched) + a shrinking-ratchet

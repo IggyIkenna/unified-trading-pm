@@ -43,7 +43,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-28"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -160,7 +160,7 @@ drift_direction: advance-code
       each handler's existing `process()` tests. Source: `data_source_provenance_enforcement_2026_07_24.md`. Done when:
       every listed still-unwired handler calls `assert_defi_catalog_fresh` at its chokepoint, each handler's test suite
       is green with the patch applied, and `market-tick-data-service` quality gates pass.
-- [ ] [DATA] P1. Reconcile the CURRENT (2026-07-25 refresh, 45-total) non-canonical distinct-value set to an owning
+- [x] [DATA] P1. ✅ Reconcile the CURRENT (2026-07-25 refresh, 45-total) non-canonical distinct-value set to an owning
       plan/issue per value, since the original 175-finding per-cluster JSON needed to re-verify the 22 prior category-1
       owning-plan citations was deleted in the 2026-07-21 pre-compact sweep (that JSON being un-recoverable is not a
       blocker — work off live data instead). Run the live `_axis_census.py`/`_distinct_values.py` endpoints per
@@ -174,7 +174,20 @@ drift_direction: advance-code
       `plans/active/distinct_values_noncanonical_audit_2026_07_20.md` line 191 todo + the 2026-07-25 "census refresh
       (the one remaining open todo)" Progress Log section. Done when: every currently non-canonical value across all 5
       AGs has an explicit owning-plan or owning-issue citation recorded in this doc's Progress Log (or a new issue doc
-      filed for any that don't), and the line-191 checkbox is flipped with that evidence cited.
+      filed for any that don't), and the line-191 checkbox is flipped with that evidence cited. **DONE 2026-07-28.**
+      Re-ran the live `GET /distinct-values/{asset_group}` endpoint in-process (deployment-api,
+      `unified_api_contracts`/UAC canonical sets, no reimplementation) for all 5 AGs — current total is **81**
+      non-canonical values (defi 24, cefi 2, tradfi 8, prediction 2, sports 45), up from the 45-total 2026-07-25
+      baseline (net-new drift, largely a sports-side spike — see below). Every value classified: **51 already
+      attributed** to an existing live plan/issue/operator ruling (defi 10, cefi 1, tradfi 6, prediction 2, sports 32 —
+      full per-cluster table in the Progress Log below); **30 new, unattributed values found and filed** across 3 fresh
+      issue docs: `sports_instrument_type_market_token_ssot_gap_2026_07_28.md` (30 sports MDPS market-token
+      `instrument_type` values — real, deliberately-produced output missing an SSOT registration, mirrors the D6
+      precedent), `tradfi_distinct_values_net_new_clusters_2026_07_28.md` (`YAHOO_FINANCE` venue, `ESM0`/
+      `ESM0_MIGRATED_*` chain, `UD` instrument_type), `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`
+      (defi.venues carrying 9 chain-names + 5 cefi-exchange-names, defi+cefi.chains both carrying `FUTURES` — flagged as
+      a **big finding** per findings-triage, cross-AG/cross-repo, not yet root-caused). Full evidence + per-value
+      classification table in the Progress Log below.
 - [ ] [INFRA] P2. **Infra/ops residual tail — bounded fixes (rollup image-lag, deployment-ui could-exist/capture
       surfacing, local-dev restart flakiness, unique_instruments precompute).** Four independent, self-contained fixes
       carried unfixed from the archived migration-verification harness; do all four in one pass: **(A)** Make
@@ -328,24 +341,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                  (merged via PR #1593), NOT executed here.
+                                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                  (merged via PR #1593), NOT executed here.
 
-                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                  re-verifies sports.
+                                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                  re-verifies sports.
 
-                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -477,6 +490,51 @@ drift_direction: advance-code
     confirmed, matching the same bar todo 2 in the source issue doc was accepted against (tradfi/sports). SPOT
     preemption is expected/acceptable (idempotent, safe to just relaunch the same asset_group again, which will resume
     via presence-skip). Once confirmed, flip this todo's checkbox with the day-frontier evidence.
+
+- **2026-07-28 (slot-6) — distinct-values owning-plan reconciliation DONE.** Worked the line-191 todo above. Method:
+  called `deployment_api.routes.data_status._distinct_values.get_distinct_values(asset_group)` in-process
+  (deployment-api `.venv`, `GCP_PROJECT_ID=central-element-323112`) for all 5 asset_groups against today's live nightly
+  honest-coverage rollup (`source_date=2026-07-28`) — the exact shipped endpoint, no reimplementation. **Per-cluster
+  classification** (◆ = already attributed to a live owning plan/issue/ruling, ✚ = new, filed this session):
+
+  | AG         | Axis             | Value(s)                                                                           | Disposition                                                                                                           |
+  | ---------- | ---------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+  | defi       | venues           | BLAZESTAKE, HYPERLIQUID                                                            | ◆ `defi_venue_phase_live_definition_contradiction_2026_07_22.md` (phase=="pipeline" grain)                            |
+  | defi       | venues           | ARBITRUM/AURORA/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON (9)             | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
+  | defi       | venues           | BITFINEX/BITGET/BYBIT/KRAKEN/OKX (5)                                               | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
+  | defi       | data_types       | dex_pools, dex_swaps, rate_indices                                                 | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md`                                                    |
+  | defi       | data_types       | perp_daily_ctx, perp_mark_price                                                    | ◆ `defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md`                                                        |
+  | defi       | data_types       | dex_pool_fees                                                                      | ◆ `defi_dedicated_bucket_shared_migration_2026_07_13.md`                                                              |
+  | defi       | chains           | HYPERLIQUID                                                                        | ◆ (cross-refs the venues row above)                                                                                   |
+  | defi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
+  | cefi       | instrument_types | spot                                                                               | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (uppercase migration)                              |
+  | cefi       | chains           | FUTURES                                                                            | ✚ `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`                                                            |
+  | tradfi     | venues           | BARCHART                                                                           | ◆ operator ruling 2026-07-20 (quarantine-with-tracking)                                                               |
+  | tradfi     | venues           | YAHOO_FINANCE                                                                      | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
+  | tradfi     | instrument_types | FUTURES                                                                            | ◆ `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (case drift)                                       |
+  | tradfi     | instrument_types | UNKNOWN                                                                            | ◆ operator ruling 2026-07-18 (classify-or-quarantine)                                                                 |
+  | tradfi     | instrument_types | continuous_future                                                                  | ◆ `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`                                          |
+  | tradfi     | instrument_types | UD                                                                                 | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
+  | tradfi     | chains           | ESM0, ESM0_MIGRATED_20260418T131054Z                                               | ✚ `tradfi_distinct_values_net_new_clusters_2026_07_28.md`                                                             |
+  | prediction | instrument_types | prediction                                                                         | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 278/338, actively-growing blank/malformed instrument_type todo) |
+  | prediction | data_types       | prediction_trades                                                                  | ◆ `prediction_phase_ab_residuals_2026_07_24.md` (line 539, POLYMARKET schema-extension migration)                     |
+  | sports     | venues           | BET888SPORT, LADBROKES, LADBROKES_UK, SPORT888                                     | ◆ `sports_consolidated_native_ao_extract_2026_07_25.md` (in-flight rename, line 739 follow-up still open)             |
+  | sports     | venues           | SMARKETS                                                                           | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                            |
+  | sports     | venues           | KALSHI                                                                             | ◆ `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` (resolved, residual)                   |
+  | sports     | venues           | FOOTYSTATS                                                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 514/549, legacy bundle mislabel, open todo)                      |
+  | sports     | instrument_types | odds                                                                               | ◆ operator ruling 2026-07-17 (not-a-defect)                                                                           |
+  | sports     | instrument_types | exchange_odds, fixed_odds                                                          | ◆ `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`                                                            |
+  | sports     | instrument_types | ODDS                                                                               | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, K1/K2 uppercase-revert P0)                                  |
+  | sports     | instrument_types | ASIAN_HANDICAP_\* (18), MATCH_ODDS, MATCH_ODDS_LAY, OVER_UNDER_\* (10), SPORT (30) | ✚ `sports_instrument_type_market_token_ssot_gap_2026_07_28.md`                                                        |
+  | sports     | data_types       | ODDS, ODDS_MOVEMENT, ODDS_SNAPSHOT, TRADES                                         | ◆ `sports_consolidated_closeout_2026_07_19.md` (line 406, same K1/K2 revert P0)                                       |
+
+  **Total: 81 non-canonical values, 51 already attributed to a live owning plan/issue/ruling, 30 newly attributed via 3
+  fresh issue docs filed this session.** The sports spike (12 → 45 since 2026-07-25) is almost entirely the
+  `sports_instrument_type_market_token_ssot_gap_2026_07_28.md` cluster — real, deliberately-produced MDPS output (the
+  market-generalization branch) that was never registered against a canonical set, not a regression. The
+  `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` doc is flagged **P1 / big finding** (cross-AG, not yet
+  root-caused) per this workspace's findings-triage rule. Line-191 checkbox flipped on
+  `distinct_values_noncanonical_audit_2026_07_20.md` with this same evidence (cross-linked, not duplicated).
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 

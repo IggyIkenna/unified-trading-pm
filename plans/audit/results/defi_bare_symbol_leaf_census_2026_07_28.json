@@ -1,0 +1,178 @@
+{
+  "bucket": "market-data-tick-defi-prd-central-element-323112",
+  "asset_group": "defi",
+  "start_day": "2026-07-20",
+  "through_day": "2026-07-28",
+  "results": [
+    {
+      "day": "2026-07-20",
+      "pipeline_mode": "batch_aave",
+      "object_count": 12,
+      "id_form_violations": 6
+    },
+    {
+      "day": "2026-07-20",
+      "pipeline_mode": "batch_chainlink",
+      "object_count": 80,
+      "id_form_violations": 39
+    },
+    {
+      "day": "2026-07-20",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 523,
+      "id_form_violations": 479
+    },
+    {
+      "day": "2026-07-20",
+      "pipeline_mode": "batch_pyth_hermes",
+      "object_count": 4,
+      "id_form_violations": 0
+    },
+    {
+      "day": "2026-07-21",
+      "pipeline_mode": "batch_aave",
+      "object_count": 12,
+      "id_form_violations": 6
+    },
+    {
+      "day": "2026-07-21",
+      "pipeline_mode": "batch_chainlink",
+      "object_count": 80,
+      "id_form_violations": 39
+    },
+    {
+      "day": "2026-07-21",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 21,
+      "id_form_violations": 21
+    },
+    {
+      "day": "2026-07-21",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 537,
+      "id_form_violations": 500
+    },
+    {
+      "day": "2026-07-21",
+      "pipeline_mode": "batch_pyth_hermes",
+      "object_count": 4,
+      "id_form_violations": 0
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_aave",
+      "object_count": 12,
+      "id_form_violations": 6
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_chainlink",
+      "object_count": 80,
+      "id_form_violations": 39
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_kalshi_perp",
+      "object_count": 13,
+      "id_form_violations": 13
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 10,
+      "id_form_violations": 10
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 1236,
+      "id_form_violations": 1201
+    },
+    {
+      "day": "2026-07-22",
+      "pipeline_mode": "batch_pyth_hermes",
+      "object_count": 4,
+      "id_form_violations": 0
+    },
+    {
+      "day": "2026-07-23",
+      "pipeline_mode": "batch_kalshi_perp",
+      "object_count": 13,
+      "id_form_violations": 13
+    },
+    {
+      "day": "2026-07-23",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 20,
+      "id_form_violations": 20
+    },
+    {
+      "day": "2026-07-23",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 876,
+      "id_form_violations": 839
+    },
+    {
+      "day": "2026-07-24",
+      "pipeline_mode": "batch_kalshi_perp",
+      "object_count": 13,
+      "id_form_violations": 13
+    },
+    {
+      "day": "2026-07-24",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 18,
+      "id_form_violations": 18
+    },
+    {
+      "day": "2026-07-24",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 833,
+      "id_form_violations": 795
+    },
+    {
+      "day": "2026-07-25",
+      "pipeline_mode": "batch_kalshi_perp",
+      "object_count": 13,
+      "id_form_violations": 13
+    },
+    {
+      "day": "2026-07-25",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 20,
+      "id_form_violations": 20
+    },
+    {
+      "day": "2026-07-25",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 934,
+      "id_form_violations": 901
+    },
+    {
+      "day": "2026-07-26",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 19,
+      "id_form_violations": 10
+    },
+    {
+      "day": "2026-07-26",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 766,
+      "id_form_violations": 728
+    },
+    {
+      "day": "2026-07-27",
+      "pipeline_mode": "batch_onchain_rpc",
+      "object_count": 17,
+      "id_form_violations": 0
+    },
+    {
+      "day": "2026-07-27",
+      "pipeline_mode": "batch_onchain_subgraph",
+      "object_count": 762,
+      "id_form_violations": 9
+    }
+  ],
+  "total_objects": 6932,
+  "total_id_form_violations": 5738
+}
