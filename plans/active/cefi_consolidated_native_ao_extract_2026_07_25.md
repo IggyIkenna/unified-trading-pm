@@ -213,25 +213,53 @@ items explicitly "FENCED" to another named agent/live process).
       explicit design). Full caller list + verdict recorded in
       `issues/uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`; the parent `[OPERATOR]` todo in
       `cefi_misc_audits_and_hygiene_2026_07_25.md` is closed with ruling "KEEP, deferred."
-- [ ] [DATA] P1. **Build + run a dry-run + apply script to rename LIGHTER-ZKSYNC's ~11,283 bare-numeric-market-index GCS
-      object stems to their resolved symbol form**, using the already-shipped `resolve_market_index()`
-      (`instruments-service/instruments_service/reference_data/adapters/cefi/lighter.py`). Follow the established safe
-      idempotent rename pattern already used elsewhere in this codebase (dry-run first → `--apply`: copy to the
-      resolved-symbol path → crc32c-verify → delete the old numeric-stem source + write one captured manifest row per
-      object), mirroring
-      `market-tick-data-service/scripts/restamp_lighter_ohlcv_batch_tardis_to_lighter_api_2026_07_18.py`'s shape — this
-      self-justifies the delete step per `task_template.md` §3 finding O (an established, already-proven-safe
-      copy→verify→delete pattern, not a novel unreviewed delete). **Conflict-check / coordination requirement**:
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` has a separate, already-dispatchable LIGHTER-ZKSYNC `ohlcv_1m`
-      `pipeline_mode` repartition todo touching the SAME venue on a DIFFERENT mutation axis (partition path, not
-      filename stem) — before running this todo's `--apply`, confirm that batch-1 todo has not started against
-      overlapping objects; if it has, re-derive a safe order by reading both scripts' path-enumeration logic rather than
-      assuming either order is safe. Repo: market-tick-data-service. **Done when**: the dry-run's planned-rename count
-      is sane against the ~11,283 estimate (investigate if wildly different), the `--apply` run completes with
-      `moved`/`already-done` for every enumerated object and zero unresolved collisions, and a fresh manifest query
-      shows the LIGHTER-ZKSYNC numeric-stem objects resolved to canonical symbol form. Source:
-      `cefi_consolidated_closeout_2026_07_18.md` (execution-log carryover, LIGHTER-ZKSYNC map item — the resolver itself
-      already shipped per the parent's own Deferred-work table item 6; this todo is the remaining GCS rename).
+- [x] ✅ [DATA] P1. **DONE 2026-07-28 (slot-5, `data_engineering`) — LIGHTER-ZKSYNC's bare-numeric-market-index GCS
+      objects are now fully canonical; NO new bespoke script was needed.** Before building anything, checked whether the
+      general-purpose canonical-rename script already covered this (efficiency craft north-star — don't duplicate an
+      existing mechanism): `market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py`
+      already ships a LIGHTER-ZKSYNC numeric-stem resolver (added 2026-07-23, self-contained fetch of
+      `/orderBookDetails`, mirroring — not importing — `resolve_market_index()`), and prior sessions'
+      `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Findings 8/10 had already run this script's
+      Range A/B/C applies over the 2025-11-01..2026-07-24 "LATE window", closing the vast majority of the ~11,283
+      estimate (that issue doc's own item 6 disposition: "Subsumed by 2b"). That issue doc paused 2026-07-25 with a
+      ~177-object LIGHTER-ZKSYNC residual still queued (never applied) and only covered the LATE window, not LIGHTER's
+      full possible history (deploy 2024-08-01). **Ran a scoped, single-venue dry-run**
+      (`--venue LIGHTER-ZKSYNC     --start-date 2024-08-01 --end-date 2026-07-28`, ~34s, 13,226 objects across 727 days
+      — bounded per-venue, manifest-discovery-scoped, not a corpus walk) to get the TRUE current count rather than trust
+      the stale "~177 residual, not yet applied" note: **already_canonical=12,907, would_rename=0, would_merge=1 (2
+      sources), unresolved_wire=317**. The 177-residual apply had evidently already landed by the time this task ran (0
+      simple renames left) — the ONLY genuinely outstanding item was 1 merge group (2 duplicate objects: `1.parquet`
+      market_id=1/BTC numeric stem + `BTC-USDC@LIN.parquet` bare-symbol stem, both
+      `day=2026-05-01/data_type=derivative_ticker`, 208,486 rows each, byte-consistent). The 317 `unresolved_wire` are
+      OUT OF SCOPE for this todo — confirmed via a targeted classification pass they are 100% `TON-USDC@LIN`-stem
+      `ohlcv_1m` objects (the native-lighter_api candle naming convention this general script's resolver doesn't
+      recognize — a bare-SYMBOL stem, not a bare-numeric-market-index stem; unrelated to this todo). **Found + fixed a
+      real latent bug** blocking the 1 remaining merge: `--apply` failed
+      (`ArrowInvalid: Could not convert 'BTC-USDC@LIN' with type str: tried to convert to int64`) because the numeric-
+      stem source's `symbol` column is `int64` (raw market_id captured verbatim, pre-resolution era) while the
+      bare-symbol source's `symbol` column is `object`/string — `pd.concat` in `do_merge()` silently produced a
+      mixed-type object column that `to_parquet(pyarrow)` cannot write (schema inferred from the first chunk).
+      Root-caused via a local repro (downloaded both real objects, reproduced the exact `ArrowInvalid` outside prod),
+      then shipped a minimal, narrowly-scoped fix in `do_merge()`: detect columns whose dtype actually DISAGREES across
+      the merge's source frames (only `symbol` here) and cast ONLY those to string before writing — verified via the
+      same repro that this resolves the write cleanly with 0 rows dropped, and left every other (nullable/consistently
+      object-typed) column untouched. Re-ran `--apply` (cron paused first via
+      `gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`,
+      verified `PAUSED`): `[merged] LIGHTER-ZKSYNC:PERPETUAL:BTC-USDC@LIN sources=2 rows 416972->416972 (dropped 0)`.
+      **Verified directly against GCS** (not just trusting the log): both wire-form sources (`1.parquet`,
+      `BTC-USDC@LIN.parquet`) confirmed deleted (`gcs_describe_object` → `None`), canonical target
+      `LIGHTER-ZKSYNC:PERPETUAL:BTC-USDC@LIN.parquet` confirmed present (11,082,011 bytes). **Fresh full-history
+      re-verification dry-run**: `already_canonical=12,908, would_rename=0, would_merge=0` — LIGHTER-ZKSYNC's
+      bare-numeric-market-index population is now fully resolved for every object this script's resolver can see. Cron
+      resumed + verified `ENABLED`. Code: `market-tick-data-service@feeb8a6e` (`do_merge()` dtype-normalization fix,
+      quality-gates.sh green, shipped via quickmerge). Repo: market-tick-data-service (script run against prod; no new
+      script needed — reusing the existing general-purpose migration avoided duplicating its already-proven safe
+      idempotent copy/merge→verify→delete + paired-manifest-rewrite mechanism). **Conflict-check**: confirmed
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s separate LIGHTER-ZKSYNC `ohlcv_1m` `pipeline_mode` repartition
+      todo already completed 2026-07-27 (slot-2) on the orthogonal partition-path axis — no overlap risk. Source:
+      `cefi_consolidated_closeout_2026_07_18.md` (execution-log carryover, LIGHTER-ZKSYNC map item);
+      `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` (Findings 8/10, prior Range A/B/C work this
+      todo built on).
 - [ ] [DATA] P2. **Re-run the CeFi instrument catalogue rollup to resolve the 33 BITGET-FUTURES CME-letter-month gap
       rows** (`BTCUSDH26`-style dated futures currently at 0 catalogue rows against on-disk data that exists) — per the
       parent doc's own Deferred-work table item 5: the gap-measurement script is already shipped
