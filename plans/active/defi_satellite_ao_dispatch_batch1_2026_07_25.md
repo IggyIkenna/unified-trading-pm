@@ -374,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                              "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -513,13 +513,20 @@ drift_direction: advance-code
       flipped to Production — remains gated on the separate scheduler-wiring todo (already shipped above,
       deployment-service@bd46bf2, but this row change was scoped independently per the todo text). Repo:
       unified-trading-pm. Source: `issues/defi_staking_yields_lst_rates_handler_gaps_2026_07_24.md`.
-- [ ] [VERIFY] P1. Run a bounded, read-only simulation of instruments-service's `enumerate_expected_universe.py` defi
-      resolution path (a scoped catalog subset, not a full prod re-run) to measure the `completeness_pct` denominator
-      delta of adding the 7 `swaps_ohlcv_{15s,1m,5m,15m,1h,4h,1d}` keys to `DATA_TYPES_BY_ASSET_GROUP['defi']` WITH vs
-      WITHOUT a `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style exclusion guard (mirroring the existing tradfi
-      pattern in the same file). Ship no registry/code change — report only. Repo: instruments-service (read-only).
-      **Done when**: a report citing the measured completeness_pct delta for both scenarios exists, answering whether
-      the registry addition is safe directly or needs the guard first. Source:
+- [x] ✅ [VERIFY] P1. **DONE 2026-07-28 (slot-5).** Ran a bounded, read-only simulation (12 synthetic defi swap-pool
+      instruments × 30-day date axis, zero GCS/network I/O — `enumerate_expected_universe.py` itself couldn't be
+      imported in this venv due to the pre-existing, already-tracked fleet-wide `iter_route_contexts` fastapi
+      ImportError, see `issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`; re-implemented
+      `enumerate_v2`'s documented per-instrument-grain cross-join contract instead, using the real live-imported
+      `DATA_TYPES_BY_ASSET_GROUP['defi']` = 27 keys today) measuring the `completeness_pct` denominator delta of adding
+      the 7 `swaps_ohlcv_*` keys WITH vs WITHOUT a `_DEFI_MTDS_TICK_MANIFEST_EXCLUDED_DATA_TYPES`-style exclusion guard.
+      **Verdict: the guard IS required.** WITH the guard, `resolved_data_types` is byte-identical to today's list —
+      structurally proven zero denominator delta (not just "expected"). WITHOUT the guard, the 7 new keys are a
+      scale-invariant 20.59% (7/34) share of the new denominator, 100% of which is permanently unsatisfiable via MTDS
+      backfill (MDPS writes to a different bucket/path) — i.e. `completeness_pct → completeness_pct × 0.7941`, a
+      permanent ~20.6% relative drop. Full method + numbers in the source issue doc's new "## Progress Log" section.
+      Ship no registry/code change (report only, per spec) — unified-trading-pm@<pending>. Repo: unified-trading-pm (doc
+      only; instruments-service read-only, no code changed). Source:
       `issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`.
 - [ ] [VERIFY] P1. Determine the root cause of the `swaps_ohlcv_4h` timeframe discrepancy — live manifest shows 51,985
       real captured rows despite `4h` being absent from `unified-api-contracts`'s `_candle_contracts.py`
