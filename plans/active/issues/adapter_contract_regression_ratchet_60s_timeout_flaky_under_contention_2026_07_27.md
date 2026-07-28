@@ -95,11 +95,15 @@ an adapter/handler file.
 
 ## Todos
 
-- [ ] 1. [INFRA] P2. Raise `run_timeout 60` to a longer wall-clock budget (e.g. 180-300s) for STEP 5.83 in
+- [x] ✅ 1. [INFRA] P2. Raise `run_timeout 60` to a longer wall-clock budget (e.g. 180-300s) for STEP 5.83 in
       `features-service/scripts/quality-gates.sh` (and any other per-repo `quality-gates.sh` copies that wrap the same
       `no_adapter_contract_regression.sh` call with the same 60s timeout — grep for
       `run_timeout 60.*no_adapter_contract_regression` across all repos' `scripts/quality-gates.sh`) to absorb realistic
-      shared-host I/O contention without weakening the hard-fail semantics itself.
+      shared-host I/O contention without weakening the hard-fail semantics itself. — features-service, execution-service,
+      and instruments-service were already fixed to 300s by prior work (commit `chore(qg): raise STEP 5.83
+      adapter-contract-regression run_timeout 60->300s` in each). This todo closes the last remaining repo:
+      `market-tick-data-service@57dfccc7` (same fix, same commit message). Verified via corpus-wide grep for
+      `run_timeout.*no_adapter_contract_regression` across every repo in the workspace — no other copies remain at 60s.
 - [ ] 2. [INFRA] P3. Consider whether `no_adapter_contract_regression.sh`'s per-file walk can be made faster/more
       I/O-light (e.g. operating on `git     diff --name-only` against the baseline commit instead of a broader
       filesystem walk, if it isn't already) so the check is less exposed to contention regardless of the timeout value.
@@ -114,3 +118,8 @@ an adapter/handler file.
   delta_one task; this is a QG-infra gap affecting the whole fleet, filed per findings-triage as its own issue). My
   actual task's fix (orchestrator.py pipeline_mode threading) is unaffected — pytest (17900 passed, 0 failed) and
   basedpyright typecheck both passed clean on a full run; only this ratchet step flaked.
+- **2026-07-28** — Todo 1 completed. Corpus-wide grep (`run_timeout.*no_adapter_contract_regression` across every
+  repo's `scripts/quality-gates.sh`) found `execution-service`, `features-service`, and `instruments-service` already
+  fixed to `run_timeout 300` by prior work; only `market-tick-data-service` still had `run_timeout 60`. Fixed there —
+  `market-tick-data-service@57dfccc7`, full `quality-gates.sh` green (sentinel-verified), shipped via quickmerge.
+  No other repo in the workspace still wraps the check at 60s.
