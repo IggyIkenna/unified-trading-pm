@@ -68,11 +68,12 @@ reusing the shared `_migrate_drop_stale.py` helper originally built for `migrate
 E8 sweep (snapshot-first → per-object twin-verify → backup-copy → parity-check → delete → verify-gone → HARD-ABORT on
 any mismatch). Needs `--apply`; dry-run reports only.
 
-A VM-launcher category wiring this tool was added this session (slot-4, `deployment-service` —
+A VM-launcher category wiring this tool was added this session (slot-4, `deployment-service@9dd27ff` —
 `launch-canonical-migration-vm.sh cefi-drop-stale <start> <end> {dry|full}`, DRY-BY-DEFAULT, `--apply` for full,
-`--also-legacy` available via `MIGRATION_EXTRA_ARGS`). **Neither of these ships a prod-touching run** — both are tooling
-only, proven in unit tests with mocked GCS, never invoked against production. This plan is where that invocation
-actually happens, phase by phase, with an operator at each irreversible step.
+`--also-legacy` available via `MIGRATION_EXTRA_ARGS`; quality-gates.sh green, 4 new regression tests). **Neither of
+these ships a prod-touching run** — both are tooling only, proven in unit tests with mocked GCS, never invoked against
+production. This plan is where that invocation actually happens, phase by phase, with an operator at each irreversible
+step.
 
 ## Phase A — E4a(i): PRE-DELETE GUARANTEE copy pass (additive, reversible, VM-launched)
 

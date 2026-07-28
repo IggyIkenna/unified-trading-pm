@@ -679,9 +679,10 @@ chain, already independently declined-for-execution by a 2026-07-27 slot-14 sess
 not execute; author one consolidated, phased LOCAL plan instead. Shipped this session: (1) a `cefi-drop-stale`
 VM-launcher category in `deployment-service` (`scripts/vm/launch-canonical-migration-vm.sh` + 4 new regression tests in
 `tests/unit/test_vm_launcher_scripts.py`, mocked-GCS only — wires slot-3's already-shipped `--drop-stale` tool into the
-launcher fleet, DRY-BY-DEFAULT + `--apply` for full, `--also-legacy` via `MIGRATION_EXTRA_ARGS`, no prod invocation);
-(2) the new plan `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` — 6 phases (A:
-pre-delete-guarantee copy pass, B: the irreversible orphan-sweep delete, C: legacy gap-fill, D: E5 rebuild gated on the
-false-phantom fix, E: E7 verify, F: E8 legacy-bucket delete triple-gated) all `[OPERATOR]`/human-supervised. All three
-source todos above annotated `SUPERSEDED-BY` inline (checkboxes left UNCHECKED — no sweep has run against prod). Did
-**not** flip any of the three todos' checkboxes.
+launcher fleet, DRY-BY-DEFAULT + `--apply` for full, `--also-legacy` via `MIGRATION_EXTRA_ARGS`, no prod invocation;
+quality-gates.sh green, shipped `deployment-service@9dd27ff`); (2) the new plan
+`plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` — 6 phases (A: pre-delete-guarantee copy
+pass, B: the irreversible orphan-sweep delete, C: legacy gap-fill, D: E5 rebuild gated on the false-phantom fix, E: E7
+verify, F: E8 legacy-bucket delete triple-gated) all `[OPERATOR]`/human-supervised. All three source todos above
+annotated `SUPERSEDED-BY` inline (checkboxes left UNCHECKED — no sweep has run against prod). Did **not** flip any of
+the three todos' checkboxes.
