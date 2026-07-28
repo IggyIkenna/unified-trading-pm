@@ -23,10 +23,12 @@ created: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: NA
 priority: P2
-author: slot-15
 source: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 resolved_by:
 locked_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # VM shutdown RUN_LEDGER_RECORDED publish hits IAM_PERMISSION_DENIED
