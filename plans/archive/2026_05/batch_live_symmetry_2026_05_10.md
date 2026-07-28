@@ -732,7 +732,7 @@ BEFORE doing anything, read in order:
   1. unified-trading-pm/plans/active/batch_live_symmetry_2026_05_10.md § Tab 8
   2. unified-trading-pm/plans/archive/batch_live_design_symmetry_preaudit_2026_05_10.md § 1.Tab8 + § 6 risks #4-#6 + § 9 recipe
   3. unified-trading-pm/plans/archive/2026_07/master_to_live_defi_2026_05_23.md § Group F items 17-22
-  4. unified-trading-pm/plans/active/defi_master.md
+  4. unified-trading-pm/plans/epics/defi_master.md
   5. unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md
 
 Your agent-tag: tab8-carry-staked-basis.

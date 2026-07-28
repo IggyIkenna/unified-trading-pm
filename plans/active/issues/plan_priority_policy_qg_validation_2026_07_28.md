@@ -2,7 +2,7 @@
 doc_type: issue
 title: No QG validates a plan's priority against the new tier + foundation-gate policy
 summary:
-  codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md (2026-07-28) codifies how `priority:` should
+  /codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md (2026-07-28) codifies how `priority:` should
   be assigned (CI/audit escalation first, then asset-group tier + sports/tradfi backfill carve-out, then the
   foundation-gate pipeline-stage within a tier) — but nothing mechanically checks a plan's declared priority against its
   asset_group/content. Enforcement today depends entirely on whoever authors/reprioritizes a plan having read the policy

@@ -2014,7 +2014,7 @@ weekend/holiday rows over 5 years; CeFi has ~few hundred chain-genesis rows; DeF
 rows; sports has ~thousands of paused-league rows). Operator decision per asset_group on when to run `--apply-flips`:
 
 - [x] [DOCS] P0. Document the per-asset-group expected backfill volume in
-      `unified-trading-pm/codex/02-data/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
+      `unified-trading-pm/codex/15-runbooks/expected-absence-backfill-runbook.md`. Operator picks scan-only first to verify
       volume, then `--apply-flips` per asset_group sequentially. ✅ File shipped 2026-05-07 with full per-asset-group
       volume table (TradFi 35,033 / Sports 13,176 / CeFi 119,152 / Prediction 2,280 / DeFi 1,286,260; total 1,455,901
       rows). PM@codex-update-slot5.
@@ -2151,7 +2151,7 @@ sub-phase ships the enumerator that physically writes those rows.
       pass on the data-status panel. Fine-grained per-instrument lifecycle (cefi instrument-listed-since / prediction
       `PREDICTION_GROUPS` per-day) is the v2 universe in Phase 3.D.5 below, not Phase 3.D.4.
 - [x] [DOCS] P0 (shipped 2026-05-07, PM@5e8f8ca6). Updated
-      [`/codex/02-data/expected-absence-backfill-runbook.md`](/codex/02-data/expected-absence-backfill-runbook.md) from
+      [`/codex/15-runbooks/expected-absence-backfill-runbook.md`](/codex/15-runbooks/expected-absence-backfill-runbook.md) from
       PLANNED stub to SHIPPED runbook: documents both passes (reconciler + enumerator), per-asset-group volumes table
       (1,455,901 total rows), scan-only / apply-write recipe, verification protocol (events + per-VM shard + canonical
       merge spot-check), operational hazards (cap-bump for DeFi, per-VM shard isolation requirement, dtype-correct

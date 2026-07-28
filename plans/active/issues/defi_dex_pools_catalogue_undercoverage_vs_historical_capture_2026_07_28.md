@@ -67,13 +67,13 @@ protocols) shows well over 100 distinct pool addresses captured historically for
    `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5 states "Done-when: zero unattributed (address-keyed)
    `dex_pool_state` leaves remain for these venues within the confirmed-recoverable range" — but purging the 541,890
    no-replacement leaves would be a permanent, uncompensated DATA LOSS for pools the catalogue never tracked, violating
-   the exact delete-safety principle (`codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) this whole plan is
+   the exact delete-safety principle (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) this whole plan is
    built on. I am completing todo 5 with the SAFETY-CORRECT interpretation instead (purge only the 190,955
    content-verified-superseded leaves), not the literal "zero remain" text — full rationale in that plan's Progress Log.
 2. **The gap is structural, not specific to this plan.** ANY future catalogue-scoped backfill for these (or other) DEX
    protocols will hit the identical ceiling — ~3/4 of real historical trading activity for these 4 protocols alone is
    simply invisible to catalogue-filtered capture. This likely also affects Honest Coverage denominators
-   (`codex/02-data/honest-coverage-model.md`) for `dex_pool_state`, since the catalogue-derived `expected_unattempted`
+   (`/codex/02-data/honest-coverage-model.md`) for `dex_pool_state`, since the catalogue-derived `expected_unattempted`
    population undercounts the true historical pool universe by the same ~74%.
 3. **Precedent for scale**: this is a MUCH larger version of the same "catalogue undercounts reality" pattern already
    flagged for cefi in `cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md` — worth
