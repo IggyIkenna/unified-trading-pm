@@ -399,3 +399,33 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   `/progress` heartbeats every ≤8 min going forward. **Status at last check**: 67/348 dates done, 0 anomalies, real
   enrichment writes now dominant (past the range slot-16's manual pass + the 4a writer-root fix's retroactive coverage
   already covered). Still running — see this task's next Progress Log entry for the outcome.
+- 2026-07-28 (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-013`): dispatched this
+  same 4b-i resume independently, discovered mid-session that **this exact todo was concurrently dispatched to at least
+  3 slots** (7, 8, 13) — each running its own
+  `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <own-scratchpad-path>`
+  in parallel, unaware of each other (report files live under per-slot scratchpad dirs, not a shared location — no
+  cross-slot lock exists for this class of resumable script). Found slot-7's report at 140/348 with real substantive
+  enrichment (48,901 canonical objects / 6,996,559 rows enriched — genuine writes, not idempotent skips) vs. my own
+  re-derived 21/348 (all idempotent skips, redundant re-reads of already-slot-7-covered days) and slot-13's 45/348 (also
+  all idempotent skips). **This is real wasted GCS read cost from duplicate dispatch, though NOT a correctness risk** —
+  the script's merge is additive-only/deterministic per cell, so even genuinely concurrent writes to the same object
+  would converge to identical content; the only cost is redundant work, not corruption. **Fix applied**: merged all 3
+  slots' report `.jsonl` files (dedup by `day`, preferring the entry with the higher `canonical_enriched` count) into
+  one 140-day checkpoint, relaunched `--apply --report <merged-path>` from day 141 onward via the harness's tracked
+  `run_in_background` (not a manual `nohup`/`setsid`/`disown` chain — hit the exact same self-inflicted confusion this
+  doc's own prior entry already named: checked the WRONG pid (`setsid`'s own transient wrapper pid, not the exec'd
+  python worker) after a manual background launch, wrongly concluded the run had died, and relaunched a second,
+  redundant instance that briefly raced on the same report file for ~3 overlapping days — verified byte-identical
+  duplicate lines, no corruption, before killing the redundant one). Also observed my own **first** relaunch attempt
+  (pre-merge, pointed at my own slot's report path) die silently sometime between date 21 and my next check, ~4-5 min
+  later, with **no OOM or orphan_reap/kill_session signature** in that window's `journalctl -k` — root cause
+  undetermined this time (possibly a heartbeat-staleness `kill_session` just outside the narrow grep window I checked;
+  did not chase further given the merged-checkpoint relaunch was the higher-value next step). **Now running** from the
+  141/348 baseline via `run_in_background`, with a self-heartbeating Monitor (posts `/progress` to the orchestrator
+  every 5 min regardless of my own turn cadence, specifically to avoid the `WorkerLivenessWatchdog` collateral-kill this
+  doc's slot-7 entry already hit). **Finding worth a fleet-level fix (not actioned here, out of this todo's scope)**:
+  the backlog dispatcher has no de-dup/lock for a long-running resumable script matching this shape — consider either a
+  shared (not per-slot-scratchpad) report-file location keyed by task id, or a dispatcher-side in-flight check before
+  handing the same todo to a second slot. Filed as
+  `plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`. Still running — see this task's
+  next Progress Log entry for the outcome.
