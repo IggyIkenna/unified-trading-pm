@@ -1520,7 +1520,7 @@
         "coverage_pct": null,
         "large_file_count": 13
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
     }
   },
@@ -2190,8 +2190,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.77.1.dev8+gc9fd29d4a",
-      "published_at": "2026-07-28T12:33:32Z",
+      "version": "0.78.1.dev1+g9deb482ef",
+      "published_at": "2026-07-28T13:25:40Z",
       "registry": "artifact-registry"
     }
   }
