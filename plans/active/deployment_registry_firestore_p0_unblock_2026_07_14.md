@@ -120,11 +120,27 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
       shipped and archived 2026-07-15, and its own Progress Log says "Handoff: P2 + P4 both flipped `status: active`" —
       confirming P1→P2→P3→P4 all progressed. This checklist item's checkbox just never caught up.
 
-- [ ] [BACKEND] P1. **Root-cause + fix why the reaper isn't actually draining `active/` toward the live-VM count** — per
-      the 2026-07-24 [REVIEW] finding, a 30-entry random sample of already-self-classified-`stale` entries remained
+- [x] ✅ [BACKEND] P1. **Root-cause + fix why the reaper isn't actually draining `active/` toward the live-VM count** —
+      per the 2026-07-24 [REVIEW] finding, a 30-entry random sample of already-self-classified-`stale` entries remained
       unreaped; Cloud Run logs show the reaper tick's `run_in_executor` call repeatedly interrupted by `CancelledError`
-      during container shutdown, and root cause is not yet diagnosed. Filed with full detail in
-      `issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`.
+      during container shutdown. **Already root-caused, fixed, deployed, and convergence-verified live on 2026-07-25
+      (slot 5) — this checkbox simply never caught up** (same false-unchecked pattern as the sibling item above). Full
+      multi-day investigation chased several red herrings (gunicorn wrong-file leader-election bug, `CancelledError`
+      grace-period, CPU-throttling/stdout-silence) before landing the real bug:
+      `DeploymentsRegistry._read_true_exit_code`'s `except FileNotFoundError` was written against the
+      `InMemoryStorageClient` test fake, but the REAL storage client lets `google.api_core.exceptions.NotFound`
+      propagate raw on a 404 — every VM whose `EXIT_STATUS` blob was missing crashed the ENTIRE `reap_stale()` batch on
+      its first bad entry, silently, on every tick, across every revision this whole investigation touched. Fixed
+      (unified-trading-library, LDR `2aa25c82`) + a Cloud Scheduler-triggered synchronous reap-tick endpoint added
+      (`deployment-api`, `POST /api/internal/reap-tick`, OIDC-verified, `deployment_api/routes/_reap_scheduler.py`) per
+      operator ruling on `BLK-d5db60a5` (Option B — sidesteps Cloud Run CPU-throttling starving the background asyncio
+      loop, at zero extra always-on cost vs `--no-cpu-throttling`). Live convergence measured 2026-07-25: `active/`
+      406→4 vs ~9 running VMs. **Re-verified fresh this session (2026-07-28, slot 8)**: the fix code + scheduler route
+      are present in the current tree; the Cloud Scheduler job `deployment-registry-reap-tick` (`asia-northeast1`,
+      `*/10 * * * *`) is `state: ENABLED` with a clean (empty) `status` on its most recent attempt
+      (`lastAttemptTime: 2026-07-28T14:20:00Z`); `active/` object count = **31** vs **33** currently-running GCE VMs —
+      same order of magnitude, holding the convergence 3 days later. Full root-cause writeup + evidence chain:
+      `/plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`.
 
 ## Folded-in scope 2026-07-17 (registry-fork discovery — the REAL dual-write blocker)
 
@@ -305,6 +321,24 @@ entry). UTC datetimes only. `quality-gates.sh`-green before each commit; commit 
 - No `os.getenv`; UTC datetimes; reaper never raises into the sync loop; QG green on both repos.
 
 ## Progress Log
+
+- **2026-07-28 (slot 8, backend_engineer) — [BACKEND] P1 "Root-cause + fix why the reaper isn't actually draining
+  `active/`" — CHECKBOX FLIP ONLY, no new code needed.** This todo was dispatched to me as an open root-cause task, but
+  the referenced issue doc (`/plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md`)
+  shows the root cause was already found, fixed, deployed, and convergence-verified live on 2026-07-25T18:50Z (slot 5) —
+  a real exception-type bug (`_read_true_exit_code`'s `except FileNotFoundError` never catching the real client's
+  `google.api_core.exceptions.NotFound`, silently crashing every `reap_stale()` batch on its first bad entry), NOT the
+  `CancelledError`/CPU-throttling theories chased earlier in the same doc. The plan's own checkbox here just never
+  caught up to that closure — same false-unchecked pattern already noted for the sibling `[INFRA] P0` item just above
+  it. Before flipping, independently re-verified the fix is still holding 3 days later rather than trusting the doc at
+  face value: confirmed the fix code (`unified-trading-library`, exception handling at `deployment_registry.py:501-539`)
+  and the Cloud-Scheduler-triggered reap endpoint (`deployment-api/deployment_api/routes/_reap_scheduler.py`, wired in
+  `main.py`) are present in the current `live-defi-rollout` tree; confirmed the live `deployment-registry-reap-tick`
+  Cloud Scheduler job (`asia-northeast1`, `*/10 * * * *`) is `state: ENABLED` with a clean `status` on its most recent
+  attempt (`lastAttemptTime: 2026-07-28T14:20:00Z`); measured
+  `gs://deployment-scripts-central-element-323112/deployments/active/` = 31 objects vs 33 currently-`RUNNING` GCE
+  instances — same order of magnitude, holding convergence. No code changed this session (pure plan-hygiene flip + fresh
+  verification); flipped the checkbox with the full evidence trail inline.
 
 - **2026-07-25T05:20Z (slot 10, review) — [REVIEW] P2 "Verify Resources column against DEPLOYED API" — VERIFIED LIVE,
   corrects a false-negative from slot 2.** Re-dispatched after slot 2's 04:50Z "NOT YET LIVE" note. Rather than
