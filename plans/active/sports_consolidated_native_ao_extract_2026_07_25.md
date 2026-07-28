@@ -204,11 +204,20 @@ drift_direction: advance-code
       (repo: unified-trading-pm, doc edit — locate the cutover runbook via
       `sports_legacy_bucket_cutover_2026_07_16.md`'s own references). **Done when**: the cutover runbook is corrected
       and cites this doc. Source: `sports_consolidated_closeout_2026_07_19.md:423-429`.
-- [ ] [CODE] P1. **Track E — wire the T0/T1 dependency gate for real: make every real caller of the pre-flight pass
-      `date=`.** Currently the pre-flight only fires `if date is not None` and no caller passes it, so the fail-loud
-      boundary is unreachable (`sports_t0_t1_dependency_gate_never_wired_2026_07_15`). (repo: instruments-service /
-      market-tick-data-service — locate the pre-flight + its real callers by symbol). **Done when**: a T0-before-T1
-      ordering violation actually raises in a test (not just "the code path exists but is never hit"). Source:
+- [x] [CODE] P1. **Track E — wire the T0/T1 dependency gate for real: make every real caller of the pre-flight pass
+      `date=`.** ✅ instruments-service@3c424e61 — threaded `date=`/`bucket=` through all 5 real production call sites
+      (`footystats.py` x3: predictions/matches/odds, `transfermarkt.py`, `understat.py`, `sfi.py`); confirmed via grep
+      that no other repo (incl. market-tick-data-service) calls `create_sports_reference_adapter` or
+      `check_api_football_dependency` — the gate + its callers are entirely instruments-service-scoped. Each call was
+      placed AFTER its function's own skip/guard checks so the gate fires only when a fetch is actually about to be
+      attempted (avoids retroactively breaking idempotent re-runs of already-captured dates, e.g. understat's pre-2018
+      historical data, where api-football's own pre-2018 coverage floor would otherwise now block a harmless
+      skip-and-return). Added `tests/unit/test_sports_t0_t1_gate_real_callers.py` — 4 tests exercising the REAL
+      orchestrator functions end-to-end (not just the factory) proving a T0-before-T1 ordering violation raises
+      `DependencyError` from `_fetch_footystats_predictions`, `_fetch_understat_xg`, `_fetch_sfi_data`, and
+      `_fetch_transfermarkt_data`. Fixed 4 pre-existing tests in `test_orchestrator_polymarket_capture_status.py` whose
+      `create_sports_reference_adapter` stub lambdas didn't accept the new kwargs. Full `quality-gates.sh` green (4978
+      tests passed). `sports_t0_t1_dependency_gate_never_wired_2026_07_15`. Source:
       `sports_consolidated_closeout_2026_07_19.md:450-453`.
 - [ ] [DIAG] P1. **Track O — root-cause the 112,277 `attempted_failed` rows confined to exactly BETFAIR/MATCHBOOK/
       PINNACLE (all 6 years) — DIAGNOSIS ONLY, do NOT relabel.** Likely `_SNAPSHOT_VENUES` CLV completeness, not primary
