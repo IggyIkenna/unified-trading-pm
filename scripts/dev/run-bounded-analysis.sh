@@ -38,8 +38,12 @@
 # itself a signal it should be a bounded/streamed read or a dedicated VM, not a bigger
 # cap.
 #
-# macOS / non-systemd hosts: no cgroup equivalent without root — this degrades to an
-# advisory warning only (same graceful-degrade posture as QG_MEM_CAP on macOS).
+# Hosts without a working systemd --user instance (confirmed 2026-07-27: `systemd-run`
+# reports available but the scope launch itself silently fails on some hosts) fall back to
+# a per-process RLIMIT_AS hard cap via `ulimit -v` (bash builtin, no root required, enforced
+# by the kernel independent of cgroups) — NOT just an advisory log line. Only genuine
+# non-Linux hosts (macOS, where `ulimit -v` is accepted by bash but not enforced by the
+# kernel) fall all the way through to the advisory-only warning.
 #
 # SSOT: codex/05-infrastructure/vm-launcher-runbook.md § heavy-compute-on-shared-host,
 # codex/06-coding-standards/quality-gates-memory-governance.md (the mechanism this reuses).
@@ -47,6 +51,24 @@ set -euo pipefail
 
 DEFAULT_MEM_CAP="4G"
 MEM_CAP="${ANALYSIS_MEM_CAP:-$DEFAULT_MEM_CAP}"
+
+# Convert a systemd-run-style size (e.g. "4G", "512M", "2048K", or a bare byte count) into
+# whole kilobytes for `ulimit -v` (which always takes KB). Prints nothing (empty stdout) on
+# an unrecognized format so the caller can skip the ulimit fallback rather than mis-cap.
+_mem_cap_to_kb() {
+    local val="$1" num unit
+    if [[ "$val" =~ ^([0-9]+)([KMGT]?)$ ]]; then
+        num="${BASH_REMATCH[1]}"
+        unit="${BASH_REMATCH[2]}"
+        case "$unit" in
+            K) echo "$num" ;;
+            M) echo $(( num * 1024 )) ;;
+            G) echo $(( num * 1024 * 1024 )) ;;
+            T) echo $(( num * 1024 * 1024 * 1024 )) ;;
+            "") echo $(( (num + 1023) / 1024 )) ;; # bare bytes -> KB, round up
+        esac
+    fi
+}
 
 if [[ "${1:-}" == "--mem-cap" ]]; then
     if [[ $# -lt 2 ]]; then
@@ -78,8 +100,19 @@ if [[ "$MEM_CAP" != "0" ]]; then
         echo "[run-bounded-analysis] cgroup mem cap active: MemoryMax=${MEM_CAP} MemorySwapMax=0" >&2
     else
         echo "⚠️  [run-bounded-analysis] systemd-run unavailable on this host (macOS / no user systemd instance)" >&2
-        echo "    → running UNWRAPPED — no cgroup enforcement, this is advisory only here" >&2
-        echo "    → keep the analysis genuinely bounded (streamed/chunked read) rather than relying on a cap" >&2
+        MEM_CAP_KB="$(_mem_cap_to_kb "$MEM_CAP")"
+        if [[ -n "$MEM_CAP_KB" ]] && (ulimit -v "$MEM_CAP_KB") >/dev/null 2>&1; then
+            # Hard fallback: RLIMIT_AS via `ulimit -v`, enforced by the kernel for this
+            # process tree regardless of cgroup/systemd availability. A real Linux host
+            # without systemd-run still gets genuine enforcement, not just a log line.
+            MEM_WRAP=(bash -c 'ulimit -v "$1"; shift; exec "$@"' bash "$MEM_CAP_KB")
+            echo "    → falling back to a hard RLIMIT_AS cap: ulimit -v ${MEM_CAP_KB}K (~${MEM_CAP})" >&2
+        else
+            # `ulimit -v` itself failed (e.g. macOS, where bash accepts the builtin but the
+            # kernel does not enforce it) — no enforcement mechanism is available at all.
+            echo "    → ulimit -v unsupported on this host too — running fully UNWRAPPED, advisory only" >&2
+            echo "    → keep the analysis genuinely bounded (streamed/chunked read) rather than relying on a cap" >&2
+        fi
     fi
 fi
 
