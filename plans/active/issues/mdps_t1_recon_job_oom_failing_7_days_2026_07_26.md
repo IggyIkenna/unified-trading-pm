@@ -876,12 +876,43 @@ bookmakers); **1,940 coarse aggregate rows, 100% still `ODDS_API`** (correct, by
 check falsely flagged 17,393 remaining rows — the gap was a separate, already-documented, out-of-scope population
 (28,660 rows with `league_id` present but `timeframe` blank); caught before it became a false regression report.
 
-**The 3,063 remaining rows are a genuine, separate, pre-existing data-quality gap, not fixable by this script.** From
-the run log's sample errors: the bulk have `row_count` already `NaN` in the manifest, clustered at the 2020-06/07 edge
-of the sports data floor; a smaller set are `404 NotFound` (manifest says `captured`, physical `bucketed.parquet` shard
-doesn't exist); 5 are genuine row-count mismatches. The row-count-conservation HARD-abort is what made the real
-2,229,975-row write provably lossless — the same discipline correctly refuses to fabricate a breakdown against
-unverifiable source data. Tracked as a new P3 todo below.
+**The 3,063 remaining rows are a genuine, separate, pre-existing data-quality gap, not fixable by this script** — NaN
+`row_count` / `404 NotFound` shard / genuine mismatch. The row-count-conservation HARD-abort is what made the real
+2,229,975-row write provably lossless. Full breakdown + reclassification: Update 13.
+
+## Update 13 (2026-07-28, follow-up session) — P2 (subprocess-timeout) and P3 (unresolvable-row) closed out with real investigation, real fixes, real writes
+
+Both open Update-12 todos investigated properly per the operator's "proper investigation" instruction — not guessed.
+
+**P2 — real cause was NOT `--force`; retries were structurally guaranteed to lose all progress.** Real logs
+(`...-pr268`): throughput `[100/2318] ... 0.1/s` — **~8.5h/date, a ~17x overrun** against the 1800s budget; CPU never
+exceeded ~130% of 8 vCPUs (I/O-bound). Proven live: attempt 2 logged `Processing 2318 files (0 skipped)` despite attempt
+1 already durably completing 100+ instruments. **Real root cause**: `_check_existing_outputs`'s hand-rolled GCS prefix
+omits the `pipeline_mode=` hive segment the 2026-07-20 LOCKED canonical shape requires (confirmed live: real KALSHI
+output at `.../pipeline_mode=batch_kalshi/...`) — the same bug class already fixed once for raw-tick LISTING
+(`_list_blobs_scoped_by_venue`, `mdps_cefi_candle_backfill_recent_date_bugs_2026_07_26.md` bug 1), never applied to
+output-existence. **Fix** (`market-data-processing-service@df02dd0`): probes every candidate `pipeline_mode` (via the
+existing `_candidate_pipeline_mode_values`, UAC-derived) alongside the bare prefix; regression test proven
+fail-pre-fix/pass-post-fix. Also split PREDICTION's dispatch into one subprocess per (date, venue) — KALSHI vs
+POLYMARKET — when `--venues` doesn't narrow it already; every other category unchanged. 125 tests + full QG green.
+`OrchestrationSchedulingMixin`'s also-broken duplicate is dead code (zero callers) — left.
+
+**P3 — reclassified the genuinely-unresolvable rows; scoped (not launched) the real backfill.**
+`scripts/reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py` (`@99436b8`) re-checks each of Update 12's
+3,063 rows FRESH, reclassifying only ones still genuinely unresolvable. A local smoke test caught a real bug before prod
+(`_load_target_rows` 2-tuple vs. 3-value unpack) — fixed pre-write (`@c939230`), zero side effects. New
+`sports-odds-reclassify-unresolvable` VM category (`deployment-service@fc82b35`), same pause-first recipe. **Applied on
+attempt 1**: **3,055 rows `captured`→`attempted_failed`** (1,944 `SHARD_FILE_MISSING`, 1,080
+`ROW_COUNT_NAN_UNVERIFIABLE`, 31 `ROW_COUNT_MISMATCH_UNVERIFIABLE`); 8 left untouched (resolvable since Update 12).
+Independently re-verified: counts exact, `available=False` on all 3,055, row count unchanged (9,191,971 before/after).
+Consolidator resumed.
+
+**Backfill scoping (investigation only — nothing launched, per operator instruction).** `SHARD_FILE_MISSING` is the
+clear, actionable target: **1,944 rows / 1,832 (date, league_id) pairs / 625 dates / 38 league_ids**,
+2020-06-26..2026-05-22 (top: `PRIMERA_DIVISION`(238)/`PREMIER_LEAGUE`(132)/`SUPER_LIG`(125)/`SERIE_A`(122)). Root cause
+understood (recurring `_PIVOT_INDEX_EXCLUDE` defect, 3 known instances), raw ticks confirmed present, so a
+`reprocess_sports_odds.py` re-derive is plausible to work. The 1,080-row `ROW_COUNT_NAN_UNVERIFIABLE` population is NOT
+yet scoped (shard existence unchecked); 543 of those (50%) sit in 2022 alone — unexplained.
 
 ## Todos
 
@@ -938,42 +969,31 @@ unverifiable source data. Tracked as a new P3 todo below.
       `/plans/archive/issues/mdps_sports_odds_horizon_bucket_h2h_anchor_fix_2026_07_27.md`. **Fix sports
       `odds_horizon_bucket`'s Path A½ honest-absence check silently suppressing ALL non-MATCH_ODDS candle output**
       (MATCH_ODDS_LAY/ASIAN_HANDICAP/OVER_UNDER) — the check assumed `tick_data` was a full per-fixture/bookmaker
-      bundle, but production already slices it to ONE market before calling `process_to_candles`, so the check was
-      unconditionally `True` for any non-MATCH_ODDS instrument regardless of real data presence. Confirmed via a real
-      WILLIAMHILL file (12 genuine `totals` rows) returning an empty `CandleOutput`, and cross-checked against
-      production output showing zero non-MATCH_ODDS objects anywhere — apparently never worked for any market other than
+      bundle, but production already slices it to ONE market first, so the check was unconditionally `True` for any
+      non-MATCH_ODDS instrument regardless of real data presence — apparently never worked for any market other than
       h2h, for the product's entire history. See Update 9. (repo: market-data-processing-service)
 
-- [ ] [DESIGN] P2. **`subprocess-per-date`'s fixed 1800s (30-min) timeout is too short for a full day of PREDICTION
-      candle derivation now that the KALSHI schema mapping actually works** — newly discovered 2026-07-27 (Update 10)
-      verifying the KALSHI todo above. With ~2,170 instruments × 7 timeframes now genuinely processing (previously every
-      row crashed instantly, so real throughput was never observed), both dates timed out twice each
-      (`subprocess-per-date: date=<d> TIMED OUT after 1800s`, 14:04/14:34/15:05/15:35) against execution
-      `uts-prod-market-data-processing-service-t1-recon-pr268`, ending `Completed=False` despite healthy RSS (NOT the
-      OOM class this doc otherwise chases) and zero schema errors. Real candle output DID get written for whichever
-      instruments finished before each kill (see Update 10). **Not fixed here** — needs a capacity-planning decision
-      (raise the 1800s constant? split PREDICTION into narrower per-venue/per-cqg subprocess units? profile the real HFT
-      feature compute cost?), not a guessable fix. (repo: market-data-processing-service)
+- [x] [DESIGN] P2. **`subprocess-per-date`'s fixed 1800s (30-min) timeout is too short for a full day of PREDICTION
+      candle derivation.** **DONE 2026-07-28, see Update 13** — NOT a capacity-tuning question: a
+      `_check_existing_outputs` bug made every retry redo ALL work regardless of real prior progress; fixed
+      (`market-data-processing-service@df02dd0`) + split PREDICTION dispatch per (date, venue). (repo:
+      market-data-processing-service)
 
 - [x] [SCRIPT] P2. **Apply the `odds_horizon_bucket` venue=ODDS_API→bookmaker manifest migration on a VM** (Update 11
-      Phase 2). **DONE 2026-07-28 — see Update 12.** Root cause of 5 prior failed attempts: the migration's CAS write
-      raced `uts-prod-manifest-consolidator-instruments-sports-cron` (`*/1min` against the same bucket) and could never
-      win regardless of retry count; fixed by pausing the cron for the write (codex-sanctioned pause-first recipe), then
-      resuming. Applied via `canonical-migration-sports-odds-venue-mig-20260728-141141`: **166,849 rows reconciled,
-      row-count conservation held exactly (old_sum=new_sum=5,410,990), 2,229,975 new per-bookmaker rows written**,
-      manifest grew 7,128,841 → 9,191,967 rows. Independently re-verified by downloading the post-apply manifest and
-      re-querying with the script's own row-selection logic (not just trusting its self-report): 3,063 rows correctly
-      left unmigrated (matches exactly), 2,229,975 new rows confirmed carrying real bookmaker venues
-      (unibet/paddypower/pinnacle/draftkings/williamhill/betfair_ex_uk/+20 more), 1,940 coarse aggregate rows correctly
-      untouched. Consolidator resumed, canonical generation confirmed stable (no resurrection) across ~10 min of
-      post-resume cycles. (repo: market-data-processing-service, deployment-service)
+      Phase 2). **DONE 2026-07-28, see Update 12** — root cause of 5 prior failed attempts was a CAS race against the
+      `*/1min` consolidator cron, fixed via the pause-first recipe. Applied via
+      `canonical-migration-sports-odds-venue-mig-20260728-141141`: **166,849 rows reconciled, conservation exact
+      (5,410,990=5,410,990), 2,229,975 new per-bookmaker rows written**, independently re-verified. (repo:
+      market-data-processing-service, deployment-service)
 
-- [ ] [SCRIPT] P3. **Investigate the 3,063 pre-existing `odds_horizon_bucket` manifest rows that could not be migrated**
-      (surfaced by the venue-migration apply, Update 12 Phase 2d) — a genuine, separate, pre-existing data-quality gap,
-      not caused by and not fixable within that migration. Two sub-populations: (a) manifest rows whose `row_count` is
-      already `NaN`, clustered at the 2020-06/07 edge of the sports data floor; (b) `404     NotFound` rows where the
-      manifest claims `capture_status=captured` but the physical
-      `processed/.../data_type=odds_horizon_bucket/.../bucketed.parquet` shard doesn't exist in GCS (an honest-absence
-      violation — these should likely be reclassified, not left as phantom `captured` rows). Needs real investigation
-      before a fix (is this isolated to the data-floor boundary dates, does it affect other sports data_types, was there
-      a writer bug at that specific time) — not a guessable one-liner. (repo: market-data-processing-service)
+- [x] [SCRIPT] P3. **Investigate the 3,063 pre-existing `odds_horizon_bucket` manifest rows that could not be
+      migrated.** **DONE 2026-07-28, see Update 13** — reclassified the 3,055 genuinely-still-unresolvable rows
+      `captured`→`attempted_failed` (`market-data-processing-service@99436b8`+`c939230`, `deployment-service@fc82b35`),
+      independently re-verified; 8 now-resolvable rows correctly left untouched. (repo: market-data-processing-service,
+      deployment-service)
+
+- [ ] [OPERATOR] P2. **Decide + launch the real `odds_horizon_bucket` backfill for the 1,944 `SHARD_FILE_MISSING` rows**
+      (scoped in Update 13, not launched — operator asked to review scope first). 1,832 (date, league_id) pairs / 625
+      dates / 38 league_ids, 2020-06-26..2026-05-22; root cause understood, raw ticks present. The separate 1,080-row
+      `ROW_COUNT_NAN_UNVERIFIABLE` population is NOT yet scoped (unknown shard existence). (repo:
+      market-data-processing-service)
