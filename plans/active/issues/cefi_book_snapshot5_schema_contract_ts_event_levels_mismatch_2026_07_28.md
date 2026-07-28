@@ -226,9 +226,15 @@ against the reproduction script.
       **unified-api-contracts@8db188fe** (slot-9).
 - [x] ✅ [SERVICE] P1. Derive `ts_event` for `book_snapshot_5` so the corrected contract actually validates clean +
       regression test -- **market-tick-data-service@339ca767** (this task).
-- [ ] [DATA] P2. Once a future CeFi Tardis `book_snapshot_5` backfill/live-capture wave runs post-fix, confirm the
-      `attempted_failed` ratio for this cell stops climbing and the `"schema contract violated"` error_reason stops
-      appearing in fresh rows (a re-probe of the manifest, not a code change).
+- [x] ✅ [DATA] P2. **DONE 2026-07-28 (slot-2, `data_pipeline_failure` escalation worker, task agt-ba5c2f, re-probe)** —
+      confirmed via a fresh column-projected manifest read (`data_type=book_snapshot_5`,
+      `capture_status=attempted_failed`) at 2026-07-28T18:08Z: max `attempted_at` across the WHOLE cell is still
+      `2026-07-28T10:49:59Z` — i.e. **zero new `"schema contract violated"` rows in the 7+ hours since** (the fix landed
+      09:45:54Z; the last 473 violation rows, all `attempted_at` 10:48:10-10:49:59Z, are the tail of an in-flight
+      KRAKEN-SPOT/OKX-SWAP run that started before the fixed code was deployed/picked up — not a recurrence after). The
+      ratio-climbing / error-reason-recurring condition this todo was gating on has not recurred. Confirms both fix
+      halves (`unified-api-contracts@8db188fe` + `market-tick-data-service@339ca767`) are effective in production, not
+      just in the regression test.
 - [ ] [DATA] P3. If/when `derivative_ticker` capture is ever routed through `finalise_rows_and_path` with
       `validate=True`, it will need the same `ts_event`-derivation treatment as this doc's fix -- currently dormant, not
       urgent.
@@ -249,3 +255,17 @@ against the reproduction script.
   new regression test. `quality-gates.sh` green, 38/38 tests passing. Filed this doc (no issue doc existed yet, despite
   two commits already referencing this slug in comments) to close the loop with the full root-cause + both-halves
   writeup.
+- **2026-07-28 (slot-2, `data_pipeline_failure` escalation worker, task `agt-ba5c2f`):** Received a SEPARATE dispatch
+  for the same underlying DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) cefi/book_snapshot_5 alert (300,253/1,041,006 = 28.8%,
+  flagged Fresh) — a duplicate escalation of the one `agt-ff6e10`/slot-16 already resolved. Read this doc first (per the
+  pre-task plan/issue conflict-check rule) and found both fix commits already on `origin/live-defi-rollout` in my
+  worktree (`git merge-base --is-ancestor` true for both `unified-api-contracts@8db188fe` and
+  `market-tick-data-service@339ca767`) — no code work to duplicate. Did an independent live re-probe (own
+  column-projected manifest read, not just trusting the doc) to verify the fix is actually holding in production, not
+  just in the regression test: found 473 `attempted_failed` rows with `attempted_at` AFTER the fix's commit timestamp
+  (09:45:54Z) — all clustered 10:48:10-10:49:59Z, `service_name=market-tick-data-service`, venues KRAKEN-SPOT (bulk) +
+  OKX-SWAP — but ZERO after that, checked again at current wall-clock 18:08Z (7+ hours later). Concluded the 10:48-10:49
+  cluster was an in-flight run whose worker process/image was already resolving code from before the fix landed (a
+  normal deploy-lag window, not a fix failure) — not a live process still failing. Flipped the P2 verification todo with
+  this finding. No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged
+  `dp-fleet-monitor` (my `AUTHORING_SLOT`) with the duplicate-escalation outcome.
