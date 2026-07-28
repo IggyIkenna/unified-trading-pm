@@ -578,7 +578,9 @@ defect, just confirming the coupling is daily, not real-time.
 
 ## 10. Todos
 
-- [ ] [BACKEND] P1. **Close BLRS's still-open gaps (G1/G3/G10)** — status as of 2026-07-28:
+- [x] ✅ [BACKEND] P1. **Close BLRS's still-open gaps (G1/G3/G10)** — status as of 2026-07-28 (this todo's own job —
+      ship what's closable, rehome the rest with proper scope + tracking — is done; G3/G10 continue as their own todos
+      in the new issue doc below, not left dangling here):
   - G1 ✅ DONE (batch-live-reconciliation-service@80380c5). Resolution API now reads real Stage-5
     `index.json`/`summary_*.json` output instead of the 3 hardcoded mock breaks; falls back to mock only when no run has
     ever produced a summary. 6 new unit tests, QG green.

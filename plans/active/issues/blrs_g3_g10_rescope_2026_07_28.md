@@ -50,8 +50,7 @@ agent dispatch markdown-only), G10 (UI→resolution-API wiring unverified) — t
 the recon bucket (`_current_breaks()`), falling back to the illustrative mock set only when no run has ever produced a
 summary (never masking a genuine zero-deviation day). `stage5_results_writer.py` now serializes per-deviation detail
 (`metric_name`/`actual_value`/`threshold`/`instrument_id`/...) into the summary JSON so the resolution API has real data
-to flatten into breaks. 6 new unit tests, full QG green. Evidence: `batch-live-reconciliation-service@<SHA>` (see plan
-flip).
+to flatten into breaks. 6 new unit tests, full QG green. Evidence: `batch-live-reconciliation-service@80380c5`.
 
 **G3 — NOT done. "Wire the real dispatch call" undersells the actual gap.** `trading-agent-service`'s `api/main.py`
 exposes ONLY `/health` + `/readiness` (via UTL `make_health_router`) — there is no inbound endpoint, no PubSub/event

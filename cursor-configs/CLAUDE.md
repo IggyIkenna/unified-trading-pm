@@ -40,13 +40,13 @@
 Default **Sonnet 5**; model tier (sonnet/opus/fable) and effort (`low<medium<high<xhigh<max`) are INDEPENDENT axes — no
 effort level requires or implies a model tier (ground truth: `agent-orchestrator/server/model_tier.py`, 2026-07).
 **`model_tier: opus-required` is PURELY QUALITATIVE — main orchestrator role / cross-repo architecture judgment /
-trading judgment ONLY, never plan/context size (operator ruling 2026-07-23: Sonnet 5 has 1M context, same as Opus 4.8 —
-retires the old ">200k ctx"/">50KB plan" triggers).** Every AO planning-VM-eligible plan (`assigned_vm: planning`)
-defaults to **Sonnet 5 at `effort: max`** regardless of size — this is the standard, not a fallback. **Effort default
-(operator ruling 2026-07-22)**: a plan/task declaring no tier gets a todo-count-derived default, not a silent "medium" —
-`xhigh` baseline, `max` past `LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override.
-Sub-agent `Agent` calls MUST set `model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP;
-effort mismatch → HARD STOP. SSOT: `/codex/06-coding-standards/model-tier-selection.md`.
+trading judgment ONLY, never plan/context size (2026-07-23 ruling: Sonnet 5's 1M context retires the old size
+triggers).** Every AO planning-VM-eligible plan (`assigned_vm: planning`) defaults to **Sonnet 5 at `effort: max`**
+regardless of size — this is the standard, not a fallback. **Effort default (operator ruling 2026-07-22)**: a plan/task
+declaring no tier gets a todo-count-derived default, not a silent "medium" — `xhigh` baseline, `max` past
+`LARGE_PLAN_TODO_THRESHOLD` (10) open todos; declare `effort:` explicitly to override. Sub-agent `Agent` calls MUST set
+`model=` explicitly. Self-check every task start: Sonnet on opus-required → STOP; effort mismatch → HARD STOP. SSOT:
+`/codex/06-coding-standards/model-tier-selection.md`.
 
 ## Environment + how to run quality gates
 
@@ -174,9 +174,9 @@ grep it). Narrow with L1 frontmatter facets: `rg -l '^authoritative_for:.*<topic
 axes for broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `tags`, e.g.
 `rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
 before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). The
-conditional domain index below stays the curated shortcut for known domains; the L0/L1 grep is the general path for
-everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` §1 + epic
-`agent_operating_framework_master` § "Target architecture (L0–L4)".
+domain index below is the shortcut for known domains; L0/L1 grep covers everything else. SSOT:
+`/codex/11-project-management/doc-frontmatter-schema.md` §1 + epic `agent_operating_framework_master` § "Target
+architecture (L0–L4)".
 
 ## Plans — format + authoring discipline
 
@@ -243,9 +243,11 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
 
 - **Plans run to actual completion, not smoke-test green** — backfills/migrations run on real infra with
   manifest-verified rows (both cloud identities are IAM-self-service — grant a missing role yourself, don't pause).
-  **Hard-stops (human-only)**: wallet keys, force-push main, 1.0.0 graduation. **Kill-switch is direction+scope-aware**:
-  protective arming always autonomous; resume/un-kill autonomous only within the auto-recovery matrix (`manual_unkill` =
-  human-only). SSOTs: `/codex/04-architecture/autonomous-recovery-matrix.md`,
+  **Hard-stops (human-only)**: wallet keys, force-push main, 1.0.0 graduation. **Maintenance-window restarts (e.g.
+  orchestrator) skip operator scheduling pre-live-trading (2026-07-28)** — group + do now, brief downtime OK; real
+  scheduled windows resume once live trading starts. **Kill-switch is direction+scope-aware**: protective arming always
+  autonomous; resume/un-kill autonomous only within the auto-recovery matrix (`manual_unkill` = human-only). SSOTs:
+  `/codex/04-architecture/autonomous-recovery-matrix.md`,
   `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **Data pipeline correctness is the heartbeat** — an audit's issues are fixed in FULL (no deadline deferrals, no
   asset_group skipped); only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE` defer; a RED
@@ -255,8 +257,10 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
 - **Findings triage**: in your file → fix in same commit; adjacent → fix in YOUR plan; outside-plan small+clear → ≤30
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
   `plans/active/issues/<slug>_<date>.md` — issue resolves to folded-in-plan/AO-scope/operator-gated, never passive.
-  **big finding** (data-correctness / May-23 critical path / cross-repo / SSOT contradiction) → NOTIFY OPERATOR + issue
-  doc. "Pre-existing" is NOT a triage criterion. **Priority**: CI/audit > tier (cross-cutting>cefi>defi>sports>tradfi +
+  **The moment an `[OPERATOR]`/`BLOCKED-OPERATOR` tag resolves, retag to the reflecting tag in the SAME edit — never
+  leave it stale** (2026-07-28 audit: 65 of 214 gated files were already-resolved tags nobody removed). **big finding**
+  (data-correctness / May-23 critical path / cross-repo / SSOT contradiction) → NOTIFY OPERATOR + issue doc.
+  "Pre-existing" is NOT a triage criterion. **Priority**: CI/audit > tier (cross-cutting>cefi>defi>sports>tradfi +
   carve-out) > pipeline stage. SSOT: `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md`.
 - **Version graduation**: `feat!` on 0.x = MINOR; NEVER bump manually (semver-agent); graduate via
   `request-major-bump.yml`. **No summary docs** (`*_SUMMARY.md` etc.) — finish with text. **Prettier**
@@ -368,15 +372,10 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   `…/spot-vms-for-backfill.md`, `…/vm-tarball-deployment.md`, `…/deployment-observability.md`,
   `…/vm-preemption-and-billing-waste-monitoring.md`.
 - **Working on DeFi EXECUTION?** Credential convention; `DefiErrorCode` (35 codes);
-  IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko) — do NOT
-  reference (**Massive (formerly Polygon.io) REMOVED as a tradfi source 2026-07-19** — operator ruling: Databento =
-  batch SoT, Yahoo = daily; NO LONGER in `SOURCE_PRIORITY`/routing [`uac@a2beed46` + `mtds@362a487e`]; `batch_massive`
-  GCS data
-  - `possible_manifest`/`PipelineMode` recognition KEPT until the gated GCS purge →
-    `/codex/02-data/tradfi-databento-sourcing-ssot.md`,
-    `plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md`; the `polygon` you see in DeFi code is
-    the CHAIN, not the vendor); Pyth Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT:
-    `/codex/04-architecture/defi-execution-overview.md`.
+  IS→MTDS→features-onchain→strategy→execution; removed providers (Elysium/Arkham/Bloxroute/Infura/Kaiko/Massive
+  formerly-Polygon.io, removed as tradfi source 2026-07-19) — do NOT reference, SSOT
+  `/codex/02-data/tradfi-databento-sourcing-ssot.md` (the `polygon` in DeFi code is the CHAIN, not the vendor); Pyth
+  Solana-only; custody `CLOUD_KMS_ENCRYPTED`. SSOT: `/codex/04-architecture/defi-execution-overview.md`.
 - **Touching TRANSFERS / funds / clients?** **HARD: funds NEVER move between clients** — every transfer scoped to one
   `client_id` (`TransferCoordinator` raises `CrossClientTransferForbiddenError`); "cross-client rebalancing" framing is
   review-blocking. Per-client isolation = one subprocess per client. SSOTs:
