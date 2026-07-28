@@ -98,6 +98,24 @@ drift_direction: advance-code
 > until that spec is fixed. Enforcement: the shared UI gate (`base-ui.sh`) + `verify-slot-host-symmetry.sh` now require
 > Node ≥22. Issue (RESOLVED): `deployment_ui_test_env_esm_breakage_2026_06_16.md`.
 
+> **🟡 pw:L2 RE-RUN (2026-07-28) — the prediction_v9_breakdown blocker is now independently FIXED; a NEW, unrelated
+> blocker replaced it, so the 3 UI items below stay unticked.** Fresh full run
+> (`npx playwright test --project=chromium tests/smoke/`, deployment-ui HEAD `dfa5d0e`, slot `.tabs/4`): **410/423
+> passed.** `prediction_v9_breakdown.spec.ts` has **0** failures (root-caused + fixed same-day 2026-06-16 by
+> deployment-ui@`687d4ce`, confirmed still fixed). Every data-status-focused spec passes, incl. the vitest regression
+> (`tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`) all 3 items below cite. **But 13 NEW,
+> unrelated failures** now keep the full-suite exit non-zero: `cockpit.spec.ts` / `fleet-git-tab.spec.ts` /
+> `nav-menu-dedup.spec.ts` / `repos-tab.spec.ts`, all clustering on a standalone "Fleet Git-Health" nav entry that
+> appears to have been dropped from `NAV_ITEMS_CANONICAL` during 2026-07-27 Cockpit/observability nav work (unrelated to
+> this plan). None reference `DataStatusTab.tsx`, venue-filter, de-dupe-panel, or pagination code. Filed as its own
+> issue rather than fixed inline (ambiguous fold-vs-regression call + risk of colliding with whoever is actively in that
+> nav territory — task_template.md finding S, don't guess a scope-unclear fix):
+> `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. Per this doc's own established
+> precedent (the 2026-06-16 banner above) and the `pw:L2` SSOT definition
+> (`codex/06-coding-standards/ ui-testing-layers.md`: full `tests/smoke/` exits 0), the 3 UI items below stay formally
+> unticked pending that separate doc's resolution — this is evidence-backed "genuinely still blocked," not a stale
+> unrun-check.
+
 ## Phase A (TIER 1 cleanup) — Scope + venue-filter correctness
 
 - [x] ✅ [CODE] P1. **instruments-service "out of scope" — PROPER fix** — DONE deployment-api@`8710152`: new
@@ -137,17 +155,26 @@ drift_direction: advance-code
 - [ ] [UI] P1. **Venue filter — frontend** — CODE-SHIPPED deployment-ui@`80c547d` (re-fetch `useEffect` on
       `selectedVenues`/folders/data-types change, post-first-load guarded; regression:
       `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`; vitest+tsc+build green under Node 22).
-      **NOT ticked ✅ — `pw:L2` smoke pending a browser-capable slot** (playwright HARD RULE). — deployment-ui `[UI]`
+      **NOT ticked ✅ — `pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit
+      0** (13 unrelated failures, see the 🟡 2026-07-28 banner above +
+      `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked on that separate doc, not
+      an unrun check. — deployment-ui `[UI]`
 
 ## Phase B (TIER 1 cleanup) — UI clarity (duplicate panels, pagination)
 
 - [ ] [UI] P2. **Collapse duplicate "available" vs "available dates"** — CODE-SHIPPED deployment-ui@`80c547d` (legacy
       "Data Types" block gated so it no longer double-renders beside the honest panel; same regression spec; green under
-      Node 22). **`pw:L2` pending** a browser-capable slot. — deployment-ui `[UI]`
+      Node 22). **`pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit 0**
+      (same unrelated 13-failure Fleet-Git nav regression, see the 🟡 2026-07-28 banner above +
+      `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked, not an unrun check. —
+      deployment-ui `[UI]`
 - [ ] [UI] P2. **Pagination visible-count selector** — CODE-SHIPPED deployment-ui@`80c547d` (`DateList` size selector
       50/100/200/1000/2000/All; same regression spec; green under Node 22). Static server-truncation `+{N} more` labels
       (`:3891,3911,5386`, `VenuePillList :230`) still need a backend `limit` bump to be client-pageable — follow-on if
-      wanted. **`pw:L2` pending.** — deployment-ui `[UI]`
+      wanted. **`pw:L2` RAN 2026-07-28 (410/423, 0 failures touching this item) but the full suite doesn't exit 0**
+      (same unrelated 13-failure Fleet-Git nav regression, see the 🟡 2026-07-28 banner above +
+      `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`). Genuinely still blocked, not an unrun check. —
+      deployment-ui `[UI]`
 - [ ] [UI] P3. **Rollup-difference clarity** (audit §F, by-design): optional small UI note/tooltip explaining IS is a
       per-venue/day reference bundle (no data_type axis) vs MTDS's 5-axis market-data shards — so the structurally
       different drilldown reads as intentional, not broken. — deployment-ui
@@ -356,7 +383,17 @@ the canon plan; track there, not as duplicate todos:
       server error, check server logs", req_id bee0103f… — the large-catalogue CSV build errors; NEW finding, needs a
       Cloud Run server-log triage — likely a build OOM/timeout or a sports/tradfi-specific CSV-shape bug). Net: the DeFi
       502 the §A fix targeted does NOT reproduce (DeFi + MTDS-DeFi both 200 real CSV); the break is now sports+tradfi. —
-      deployment-api
+      deployment-api. **RESOLVED 2026-07-20** — filed + fully root-caused + fixed same window, archived:
+      `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`
+      (deployment-api@`65f5593`). **tradfi** was a real bug (67.41 MiB CSV built as one buffered `Response`, exceeding
+      Cloud Run's ~32 MiB buffered cap — the platform rejected it, no Python traceback; fixed by streaming via
+      `_iter_catalogue_csv_chunks` + `StreamingResponse`; cefi was 0.7 MiB from the same cliff and is now covered too).
+      **sports** was NOT a code bug — a transient manifest-consolidator staleness (honest-absence 500 by design,
+      re-measure succeeds). Regression:
+      `deployment-api/tests/unit/test_route_data_status_catalogue.py::TestDownloadCatalogueCsvPerAssetGroupSmoke` +
+      `TestDownloadCatalogueCsvStreamingBoundaries`. (Verified re-checking 2026-07-28: no newer successor doc was needed
+      — this one already closes the loop; a fresh live re-probe against prod during this session returned 200 for sports
+      on the first attempt, consistent with the documented "transient, not a bug" finding.)
 - [x] ✅ [CODE] P1. **Fix DeFi download path-drift against the FINAL v9 shape** (audit §A): thread `chain` from
       `download_shard_csv` (`_downloads.py:407`) into `build_instruments_shard_csv_export` and reconstruct the
       **combined** DeFi venue token for the `venue=` GCS segment (`f"{venue}-{chain}"`, matching
