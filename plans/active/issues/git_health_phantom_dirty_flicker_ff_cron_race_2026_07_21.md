@@ -116,9 +116,14 @@ before POSTing.
       capture already answered the question it was asking (raw bytes were EMPTY, so the paths are neither mtime churn
       nor real edits), and the phantom class does not reproduce on the live fleet (Verification §2). The doc's own
       caveat applies — "reproduction is well-characterized enough to fix without this".
-- [ ] [INFRA] P2. Implement the `dirty_consecutive_ticks >= 2` gate on the `not_clean_since` clear + sync-nudge in
-      `agent-orchestrator/server/routes/git_health.py`; add a unit test that a single clean poll between two dirty polls
-      does NOT reset `not_clean_since`.
+- [x] [INFRA] P2. ✅ **DONE — agent-orchestrator@2530316.** Implement the `dirty_consecutive_ticks >= 2` gate on the
+      `not_clean_since` clear + sync-nudge in `agent-orchestrator/server/routes/git_health.py`; add a unit test that a
+      single clean poll between two dirty polls does NOT reset `not_clean_since`. Shipped via
+      `_propagate_not_clean_since`/`_maybe_send_sync_nudge` reading `dirty_consecutive_ticks`, with
+      `tests/test_git_health_dirty_consecutive_ticks_gate.py::test_single_clean_blip_with_elevated_ticks_does_not_reset_not_clean_since`
+      proving the exact case (plus a control test that a genuinely-resolved clean tick still clears normally, and
+      symmetric sync-nudge suppress/fire tests). Verified on `ao_satellite_ao_dispatch_batch1-004` (2026-07-28):
+      checkbox was simply never flipped after shipping.
 
 ## Addendum 2026-07-22 — a distinct data-quality facet: dirty row for a worktree that does not exist on the host
 
@@ -201,22 +206,25 @@ the reporter bug, explicitly flagging the fleet-wide FF-pull-starvation risk on 
 (added to the main orchestrator's next-operator-contact list): a monitoring reporter bug is now silently degrading a
 real fleet operation (FF-pull currency) on live slots.
 
-- [ ] [INFRA] P2. **NARROWED + DOWNGRADED 2026-07-23 (P1→P2): the root-cause half is probably already answered; the
-      guard half is the live work.** `agent-orchestrator@529b0dc` (live) ended the cross-host `(host, slot_id)` row
-      clobber, which is a complete mechanism for "all 24 repos flip dirty at one instant with an identical
-      `not_clean_since`" — another host's slot-N report overwriting this host's row wholesale. That fits the
-      shared-per-sweep-trigger fingerprint better than 24 independent per-repo races, and the phantom has not reproduced
-      since (Verification §2/§3). **Do NOT spend time re-hunting a reporter-internal race until a recurrence is observed
-      post-`529b0dc`** — if one is, that falsifies the clobber reading and the hunt resumes. **What REMAINS regardless
-      of cause**: the `dirty_consecutive_ticks >= 2` gate must also guard the **FF-pull skip decision**
-      (`slot-cron-ff-pull.sh`), not just `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty must never
-      skip an FF-pull, whatever produced it. Original item: root-cause the all-repos-simultaneous false-dirty (identical
-      `not_clean_since` across 24 repos on one slot) in `slot-git-status-report.sh` — this points at a
-      shared-precondition/shared-artifact race in the reporter, not per-repo `git status` churn. Because it drives
-      `ff_pull_last_result=skip:dirty` and thus starves the FF-pull cron, the `dirty_consecutive_ticks >= 2` gate
-      proposed above should also guard **the FF-pull skip decision** (`slot-cron-ff-pull.sh`), not just
-      `not_clean_since` clearing + sync-nudge — a one-tick phantom dirty must not skip an FF-pull. Add a test that a
-      single-tick all-repos-dirty observation neither clears/sets `not_clean_since` nor causes an FF-pull skip.
+- [x] [INFRA] P2. ✅ **DONE — unified-trading-pm@dd172d6b7 (the guard half; root-cause half stays closed per the
+      2026-07-23 narrowing below — no post-`529b0dc` recurrence observed).** **NARROWED + DOWNGRADED 2026-07-23 (P1→P2):
+      the root-cause half is probably already answered; the guard half is the live work.** `agent-orchestrator@529b0dc`
+      (live) ended the cross-host `(host, slot_id)` row clobber, which is a complete mechanism for "all 24 repos flip
+      dirty at one instant with an identical `not_clean_since`" — another host's slot-N report overwriting this host's
+      row wholesale. That fits the shared-per-sweep-trigger fingerprint better than 24 independent per-repo races, and
+      the phantom has not reproduced since (Verification §2/§3). **Do NOT spend time re-hunting a reporter-internal race
+      until a recurrence is observed post-`529b0dc`** — if one is, that falsifies the clobber reading and the hunt
+      resumes. **What REMAINED regardless of cause**: the `dirty_consecutive_ticks >= 2` gate also guarding the
+      **FF-pull skip decision** (`slot-cron-ff-pull.sh`), not just `not_clean_since` clearing + sync-nudge — a one-tick
+      phantom dirty must never skip an FF-pull, whatever produced it. Shipped: `ff_one()`'s per-repo confirm-gate (keyed
+      by `repo_key`, not a shared sweep-wide aggregate — `unified-trading-pm@5cc0ea829` fixed a cross-repo contamination
+      bug in the first cut) plus `tests/test_slot_cron_ff_pull_dirty_gate.bats` proving: a single-tick dirty tracked-mod
+      stays `dirty:unconfirmed` (does not skip), two consecutive ticks confirm to `skip:dirty`, a clean tick resets the
+      streak, and cross-repo isolation (repo Y's first dirty tick is never confirmed by repo X's already-confirmed
+      streak). Verified on `ao_satellite_ao_dispatch_batch1-004` (2026-07-28): checkbox was simply never flipped after
+      shipping. Original item retained below for the evidence trail: root-cause the all-repos-simultaneous false-dirty
+      (identical `not_clean_since` across 24 repos on one slot) in `slot-git-status-report.sh` — this points at a
+      shared-precondition/shared-artifact race in the reporter, not per-repo `git status` churn.
 
 ### Sharper root cause 2026-07-22 (review msg 1666, 12:49Z + main code trace) — endpoint disagreement pins it to the fleet PROXY-MERGE layer, not a live reporter race
 
