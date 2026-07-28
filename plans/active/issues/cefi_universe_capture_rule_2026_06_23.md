@@ -94,10 +94,40 @@ and the catalogue has **no `margin_type` field**. Deribit inverse is the only co
       (always-mvp by pre-existing Deribit PERPETUAL branch). Full live-data 24h-vol/OI spot-check to dynamically pick
       more-liquid margin side is a TODO (requires live Tardis API calls per contract; scaffolded with a comment in
       mvp_scope.py § "live-liquidity hook TODO").
-- [ ] [MTDS] P2. **Implement the live-data 24h-vol/OI spot-check for margin-side selection** — the dynamic per-contract
-      liquidity pick is still only a scaffolded comment hook (`mvp_scope.py` § "live-liquidity hook TODO"); today's
-      margin-side default is deterministic (BINANCE-DELIVERY via base-membership, Deribit inverse always-mvp), not the
-      live spot-check the todo above originally called for.
+- [x] ✅ [MTDS] P2. **UAC selector contract shipped — `unified-api-contracts@cae957ab`.** Investigated first (premise
+      was stale): (1) the "scaffolded comment hook" in `mvp_scope.py` no longer exists — grepped all 4 `_mvp_scope_*.py`
+      submodules, zero `margin`/`liquidity` hits; (2) the deterministic default this todo described (BINANCE-DELIVERY
+      via base-membership) is GONE — a LATER operator ruling (v10, 2026-06-27, decision #3, `_mvp_scope_rules.py:452`)
+      removed BINANCE-DELIVERY from the cefi MVP venues entirely (COIN-M delivery ruled not MVP), so that specific
+      ambiguity no longer exists. BUT the underlying problem is still real for OTHER venues: `_infer_margin_type`
+      (instruments-service `tardis/parsing.py`) confirms BYBIT (bare canonical venue) and OKX-SWAP both expose linear
+      AND inverse legs of the same base under one canonical venue key, and both venues are still declared in the cefi
+      MVP `venues` frozenset (`_mvp_scope_rules.py:403,414-415`) — since `is_in_mvp_capture_universe` has zero
+      margin_type-awareness, BOTH legs currently pass the MVP gate unfiltered (not wrong, just not the "pick the more
+      liquid one" behavior this rule specifies). Found the established precedent for exactly this shape of problem:
+      `liquid_representative.py` already ships `execution_spot_representative`/`feature_perp_representative` — PURE
+      functions taking caller-supplied volume observations (aggregated by the caller from data we already capture, e.g.
+      MDPS candle volume — NOT a live external API call, contra this todo's original "requires live Tardis API calls per
+      contract" framing). Added `margin_type_representative(venue, base, margin_volumes) -> MarginType` +
+      `MarginVolumeObservation` dataclass to the SAME module, mirroring the pattern exactly (sums volume per
+      margin_type, LINEAR wins ties + no-data per the operator's documented "default linear" rule); exported from
+      `unified_api_contracts/__init__.py` top-level facade. 15 new unit tests in `test_liquid_representative.py` (basic
+      selection, volume-sum-per-type, QUANTO-ignored, filtering, purity/determinism) — mirror the existing test classes'
+      structure. QG green (571s). **Follow-up (NOT this todo — a genuinely separate consumer-wiring task, not done here
+      to avoid guessing at untested MTDS capture-flow integration details):** wire `margin_type_representative` into
+      MTDS's `cefi_catalog_reader.py` capture-universe derivation for BYBIT/OKX-SWAP/KRAKEN-FUTURES so only the winning
+      margin type is actually captured (today both are captured, unfiltered — safe but not cost-minimal) — see the new
+      todo below.
+- [ ] [MTDS] P3. **Wire `margin_type_representative` (unified-api-contracts, shipped `cae957ab`) into MTDS's capture
+      layer** — `market-tick-data-service/market_tick_data_service/engine/cefi_catalog_reader.py`'s capture-universe
+      derivation currently captures BOTH linear and inverse legs for any (venue, base) where a venue exposes both under
+      one canonical key (BYBIT, OKX-SWAP, KRAKEN-FUTURES — confirmed via `_infer_margin_type` in instruments-service
+      `tardis/parsing.py`), because `is_in_mvp_capture_universe` has no margin_type-awareness. Needs: (1) a
+      volume-observation source for `MarginVolumeObservation` (candle/manifest-derived aggregate — the same "computed
+      once per window" basis the existing spot/perp selectors use, likely from MDPS candle volume); (2) call
+      `margin_type_representative` per (venue, base) for the 3 dual-margin venues and skip capturing the losing margin
+      type's instruments. NOT margin-gating DERIBIT (both legs stay unconditional) or BINANCE-DELIVERY (already fully
+      out of MVP scope, nothing to wire).
 
 ## EXCEPTION — staking/restaking/LST spot (spot-without-perp allow-list, operator 2026-06-23)
 
