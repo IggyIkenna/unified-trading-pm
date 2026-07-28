@@ -11,7 +11,7 @@ summary: |
   detached `git worktree` checked out at the exact seeding commit (13f17c203) that the live count was ALREADY 320 at
   that commit — i.e. the baseline was undercounted by 1 at the moment of its own creation, not drifted afterward. This
   is the same failure class already tracked in
-  `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (Todo 3: "Check whether
+  `plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (Todo 3: "Check whether
   other repos have the same latent gap") — confirmed here for unified-trading-pm specifically.
 status: resolved
 nature: process
@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [quality-gates, empty-string-fallback, baseline-ratchet, ci-blocking, seed-bug]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/archive/issues/manifest_writer_dry_run_gcs_write_leak_2026_07_08.md,
   ]
 created: 2026-07-08

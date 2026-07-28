@@ -67,7 +67,7 @@ drift_direction: advance-code
       any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch. Repo:
       unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with the
       specific evidence checked).
-- [ ] [DOC] P3. Confirm the known mistag (`issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`)
+- [ ] [DOC] P3. Confirm the known mistag (`archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`)
       has actually been retagged away from `asset_group: [defi]` by its already-tracked
       `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76` todo; if still untagged, do not re-draft a new
       todo — just verify the existing todo is still open and note its status here. Repo: unified-trading-pm. Done when:

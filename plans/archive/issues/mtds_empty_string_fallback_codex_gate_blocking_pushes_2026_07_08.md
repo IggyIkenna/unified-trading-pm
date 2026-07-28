@@ -17,7 +17,7 @@ summary:
   explicitly DISABLED (WS-L #1014, 2026-06-26 operator policy: ''the full quality gate is mandatory before every push...
   no skip flags''), so there is currently no way to quickmerge ANY change to this repo, including changes fully
   unrelated to this violation class.'
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, meta]
@@ -35,7 +35,7 @@ source:
   on-chain calls, but cannot be pushed via the mandatory quickmerge.sh path because the repo's quality gate is
   independently red for unrelated pre-existing reasons."
 assigned_vm: planning
-resolved_by:
+resolved_by: "agent-orchestrator@9a68cd2 + agent-orchestrator@78d4b59 + unified-trading-pm@a5ba3c974"
 locked_by:
 execution_scope: orchestrator-agent
 model_tier: sonnet-doable
@@ -51,6 +51,12 @@ assigned_role: data_engineering
 drift_direction: advance-code
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Every todo is `[x]`; the STEP 5.101 baseline-ratchet mechanism is built + fleet-wide,
+> `agent-orchestrator`'s recurring over-baseline regression is fixed + commit-anchored, and every repo in
+> `no_empty_string_fallback_baseline.yaml` now carries a `commit:` anchor. One residual finding split into its own
+> doc rather than reopening this one: `/plans/active/issues/deployment_service_empty_string_fallback_ratchet_claim_unlanded_2026_07_28.md`.
 
 > **CI-BLOCKING finding — every quickmerge push to `market-tick-data-service` is currently blocked**, not just the
 > author's own change. Confirmed independently via real remote CI (not just a local run).

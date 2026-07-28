@@ -267,7 +267,7 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 
 ### Known, already-tracked mistag (no action needed here)
 
-- `issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but is
+- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but is
   fleet-wide CI/QG infra content. Already flagged by batch2/batch3 and carries an open `[DOC] P2` retag todo in
   `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76`. Not re-flagged as a new finding.
 

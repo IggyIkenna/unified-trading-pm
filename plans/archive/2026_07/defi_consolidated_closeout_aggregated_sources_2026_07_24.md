@@ -655,7 +655,7 @@ picture.
       heterogeneous file list may carry wrong leading-bin seeds.
   - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](/plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
+  - [`plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`](/plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md)
     (4 open)
     - **[DECISION] P1.** Decide the fix mechanism for 338 empty-string-fallback call sites — bulk-annotate safe ones,
       rewrite unsafe ones fail-fast, or add a baseline-ratchet file.

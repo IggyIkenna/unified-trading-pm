@@ -397,7 +397,7 @@ Phase-3 conflict-check confirmed these 4 items are already claimed by a covering
 
 ## Note — 1 mistag (exclude_cross_cutting)
 
-- `issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but real
+- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but real
   content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific. Should be retagged `cross-cutting` or `infra`
   (batch2 already flagged this as a mistag Note).
 

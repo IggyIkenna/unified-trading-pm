@@ -39,7 +39,7 @@ related:
     ../archive/issues/ao_fleet_stall_opus_spawn_and_skip_thrash_2026_07_07.md,
     ../archive/issues/dispatcher_role_eligibility_gap_review_slots_2026_07_13.md,
     ../archive/issues/ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md,
-    issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
+    archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/archive/2026_07/ao_host_disk_pressure_2026_07_16.md,
     ../archive/issues/ao_autospawn_role_blind_dispatch_starvation_2026_07_14.md,
     ../epics/orchestrator_master.md,
@@ -156,7 +156,7 @@ Three of this plan's own source docs prescribe fixes that current code contradic
       DOWN. The checker flags it as a "positional tail-slice — no baseline commit on record for this repo yet", so
       confirm the site is genuinely new before annotating. **Gate**: `bash scripts/quality-gates.sh --no-fix` on
       agent-orchestrator reaches STEP 5.101 green. (Tracked as the owning todo on
-      `issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`; flip it there too.)
+      `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`; flip it there too.)
 
 ### Phase 1 — stop the burn (P0)
 

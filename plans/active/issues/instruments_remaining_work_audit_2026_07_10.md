@@ -633,7 +633,7 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
    MVP-for-features selector, honest-coverage smoke harness, execution fidelity tiers, Polars engine sharpening, etc.).
 
 5. **market-tick-data-service quality-gates.sh Codex compliance red repo-wide** (empty-string-fallback ratchet)
-   `plans/active/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` Ongoing churn (overage
+   `plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` Ongoing churn (overage
    bouncing 380→368→377→372 across concurrent sessions); latest entry shows instruments-service still 3 sites over its
    ratchet baseline, still blocking quickmerge pushes.
 
