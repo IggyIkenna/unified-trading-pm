@@ -156,3 +156,10 @@ Recovery: resumed again (idempotent via `--report`) + immediately began sending 
 - [ ] [SCRIPT] P3. Optional — investigate whether `agent-orchestrator/server/orphan_reap.py` should special-case a
       worker-shell-parented background process (recommended decision 2 above). Lower priority; the RULES.md/worker.md
       fix is the primary mitigation and now shipped; this remains open only as a defense-in-depth nice-to-have.
+- [ ] [SCRIPT] P3. Cross-check `plans/active/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s own
+      evidence (its logged death timestamps) against `journalctl | grep -E 'orphan_reap sweep|kill_session'` for the
+      same windows — some or all of its "RAM exhaustion" occurrences may actually be this doc's `nohup`/`orphan_reap`
+      bug (or the sibling `kill_session` heartbeat-staleness collateral-kill, see this doc's 2026-07-28 addendum above)
+      misdiagnosed, not genuine memory pressure. If confirmed, correct that doc's root-cause framing rather than leaving
+      two docs describing the same incidents under different causes. Repo: unified-trading-pm (investigation + doc
+      correction only, no code).
