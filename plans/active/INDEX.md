@@ -234,9 +234,8 @@ by hand._
   gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the
   originating bug report…
 - [`defi_expected_unattempted_seeder_design_2026_07_26`](./defi_expected_unattempted_seeder_design_2026_07_26.md) —
-  Human/operator-driven design track for the real DeFi expected_unattempted seeder ruled for on BLK-7c950d06 (Option A)
-  — DeFi currently has NO expected_unattempted signal at all (MTDS orchestrator excludes every defi venue from the
-  sentinel…
+  Design track for the real DeFi expected_unattempted seeder ruled for on BLK-7c950d06 (Option A) — DeFi currently has
+  NO expected_unattempted signal at all (MTDS orchestrator excludes every defi venue from the sentinel fan-out;…
 - [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) —
   End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live cutover gate: run
   the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN) GCS coverage, confirm the
