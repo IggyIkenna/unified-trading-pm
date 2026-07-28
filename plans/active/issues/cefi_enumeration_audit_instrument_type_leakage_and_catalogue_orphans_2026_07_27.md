@@ -202,9 +202,18 @@ adjacent axis the same script happens to also report). **Both findings investiga
       no code fix needed for this majority. The remaining 3.9% (BYBIT/KRAKEN-FUTURES in-scope-but-orphaned, plus 3
       out-of-scope venues) is undetermined — flagged as a genuinely open, smaller residual rather than resolved. See
       "RESOLVED 2026-07-27" under Finding 2 above. Repos: instruments-service, market-tick-data-service.
-- [ ] [DATA] P3. Trace the remaining 3.9% catalogue-orphan residual (BYBIT FUTURE 287, KRAKEN-FUTURES PERPETUAL 256,
-      COINBASE-FUTURES/HYPERLIQUID/BITGET-FUTURES PERPETUAL 217/167/87) — BYBIT/KRAKEN-FUTURES are in the 2026-07-09
-      marker migration's scope yet still orphaned (unexplained); the other 3 venues fall outside that migration
-      entirely. Possibly the smaller, independently-documented catalogue-rollup-staleness class in
-      `instruments-service/scripts/measure_cefi_catalogue_enumeration_gap_2026_07-23.py` — not confirmed. Small scale
-      (~1,015 ids, 0.011% of the corpus), not urgent. Repos: instruments-service, market-tick-data-service.
+- [ ] [DATA] P3. **PARTIAL LEAD, still open (2026-07-28)** — Trace the remaining 3.9% catalogue-orphan residual (BYBIT
+      FUTURE 287, KRAKEN-FUTURES PERPETUAL 256, COINBASE-FUTURES/HYPERLIQUID/BITGET-FUTURES PERPETUAL 217/167/87). A
+      dedicated background investigation into this failed mid-run (session usage limit hit, not a finding) — a lighter,
+      non-exhaustive direct follow-up found: `migrate_cefi_dated_perps_margin_marker_2026_07_09.py`'s own scope list
+      DOES include BYBIT/KRAKEN-FUTURES (no exclusion noted beyond the options-wide skip already priced into the 93.8%
+      finding), so their continued orphan status isn't explained by migration scope alone. A companion catalogue-side
+      script, `cefi_durability_force_converge_2026_07_10.py` (per
+      `plans/archive/2026_07/instrument_id_format_canonicalization_2026_07_08_orchestration_history.md` lines 594-776),
+      appears to have run to completion against BYBIT/KRAKEN-FUTURES/DERIBIT catalog rows on 2026-07-10 (one day after
+      the MTDS-side migration) — **not yet confirmed** whether this fully converged these 2 venues or left a residual;
+      the corrected script filename is `measure_cefi_catalogue_enumeration_gap_2026_07_23.py` (underscore, not the dash
+      this doc originally cited) and has not yet been read/run against this specific residual.
+      COINBASE-FUTURES/HYPERLIQUID/BITGET-FUTURES (outside the 2026-07-09 migration's 6-venue scope) remain completely
+      untraced. Small scale (~1,015 ids, 0.011% of the corpus), not urgent — genuinely open, not resolved. Repos:
+      instruments-service, market-tick-data-service.

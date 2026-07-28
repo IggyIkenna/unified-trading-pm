@@ -248,7 +248,9 @@ phases ship.
   asset_group coverage widened 2026-07-26 to include `meta`/`infrastructure`, but the discoverability index here was
   never backfilled for it). Added here for future tranche-sweep discoverability:
   `docker_artifact_registry_cleanup_policy_2026_07_24.md`, `issues/stranded_prek_stash_patch_2026_07_23.md`,
-  `issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md`,
+  `issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md` (archived — resolved,
+  deployment-service@5690ad3, now at
+  `/plans/archive/issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md`),
   `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`,
   `issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`,
   `issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`,

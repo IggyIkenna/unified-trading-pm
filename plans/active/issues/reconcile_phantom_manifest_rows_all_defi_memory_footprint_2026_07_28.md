@@ -16,7 +16,8 @@ scope: [engineer]
 tags: [manifest, memory, oom, infra-capacity, defi, reconciliation]
 related:
   [
-    /plans/active/issues/pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/issues/pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
@@ -95,8 +96,9 @@ Two non-exclusive directions:
    whole index (the actual `--apply` mutation path, which needs full-frame safety guarantees regardless).
 
 Given this session's actual task resolved via other means (see
-`pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md`'s Progress Log), this doc is filed to prevent the same wall
-from blocking the next defi manifest-recon need, not because it is currently blocking anything urgent.
+`/plans/archive/issues/pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md`'s Progress Log, now
+resolved/archived), this doc is filed to prevent the same wall from blocking the next defi manifest-recon need, not
+because it is currently blocking anything urgent.
 
 - [ ] [OPERATOR] P2. Decide direction 1 (bump default VM/Cloud-Run provisioning for defi manifest-recon) vs direction 2
       (add a column-pruned read path for verification-only callers) vs both — see "Recommended decision" above. **Done

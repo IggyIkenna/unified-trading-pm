@@ -350,3 +350,26 @@ escalate to a `cicd` worker.
   workaround: closed the stale PR #413 by hand (`gh pr close 413`, comment references that doc) so the next tick's
   `gh pr create` (which only fires when no existing open PR is found) has a clear path - did not touch the ref, the
   allowlist file, any other repo, or the VM.
+
+- 2026-07-28 (cicd agent, slot-4, escalation `agt-a7fb1c`, `main_ci_red` on `market-data-processing-service`, no PR —
+  post-promotion `push:[main]` failure, not a promotion-PR wall): **9th corroboration + per-repo fix.** Failing run
+  `30336297316` (main HEAD `8a6947a`, a `chore(promote): LDR → main` merge) showed a variant signature of the same
+  class: `QG slice (tests)` progressed normally to 88% (`pytest-xdist`, dot-progress) then hit an `INTERNALERROR` — a
+  worker crashed inside `pytest_runtest_logfinish` while flushing its execnet channel, root-caused to
+  `pytest_timeout.py`'s SIGALRM handler firing (`Failed: Timeout (>60.0s) from pytest-timeout`) mid-flush — an
+  otherwise-fast test starved past its 60s budget by CPU/IO contention, not a genuine hang or code regression (the LDR
+  commit this promoted, `034c1df`, is a real fix already verified green on `live-defi-rollout` before promotion).
+  Confirmed the repo's own Phase-7 rollout commit `446a9d4` ("feat(ci): Phase 7 + quality-gates-v2 self-host rollout for
+  market-data-processing-service", landed 2026-07-27 22:20 UTC — same wave as the other 8) and exactly 1 registered
+  runner (`glue-ip-172-31-5-118-1`, `online`, `busy`, shared with the rest of the fleet) via
+  `gh api .../actions/runners`. No open repo-blocker existed for this repo. Applied the same precedented fix: reverted
+  `self_hosted_runner_labels` to `""` (to `ubuntu-latest`) via the same hand-edit pattern + `quickmerge --agent` —
+  `market-data-processing-service@17ab96a2`; local `quality-gates.sh` (run inside quickmerge) passed in 68s. Verified
+  live: triggered a fresh run (`30337347465`) on `live-defi-rollout`, confirmed via `gh api .../jobs` every job ran on
+  `labels: ["ubuntu-latest"]` (not self-hosted), and it completed fully green (`quality-gates-v2` conclusion=success).
+  Did not touch the shared allowlist file, any other repo, or the VM — same scope boundary as the prior eight fixes.
+  Distinct from all 8 prior entries in one respect: this wall surfaced on the **post-merge `push:[main]`** trigger
+  (dispatched by `escalation.py` as `wall_type=main_ci_red`, a repo-health-watcher classification, not the standard
+  `ldr_qg_failure` promotion-PR path) rather than a promotion PR itself — worth noting for whoever eventually resolves
+  this doc's `[SCRIPT]` P0 allowlist-cleanup todo, since a fix landed on `live-defi-rollout` only reaches `main` on the
+  next LDR→main promotion cycle (the failing `main` push itself cannot be re-run against the fix).

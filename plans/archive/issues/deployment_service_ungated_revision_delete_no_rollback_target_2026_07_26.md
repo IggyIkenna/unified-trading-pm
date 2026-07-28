@@ -35,6 +35,10 @@ depends_on: []
 execution_scope: orchestrator-agent
 ---
 
+> **✅ RESOLVED 2026-07-28** — fix shipped `deployment-service@5690ad3`: both scripts now delegate to
+> `canary-deploy.sh`'s health-gated promote pattern instead of the unconditional deploy+traffic-shift+delete-all
+> sequence, plus a `--keep-revisions N` retention bound. See Resolution section below.
+
 ## What I found
 
 Both scripts hard-delete every other Cloud Run revision immediately after switching 100% traffic to the new one, with
@@ -91,7 +95,7 @@ nothing, but `unified-trading-system-ui/.github/workflows/deploy-uat-on-merge.ym
 `scripts/deploy-cloud-run.sh` wrapper on every push to `live-defi-rollout` — it auto-deploys UAT
 (`odum-portal-staging`). So `deploy-ui.sh` is NOT operator-invoked-manually-only; it runs on every LDR push. This raises
 (not lowers) the priority of the fix relative to the issue's original risk assessment. `deploy-agent-orchestrator.sh` is
-confirmed historical/not-live (`codex/05-infrastructure/agent-orchestrator-deploy.md`: "Not running today" — superseded
+confirmed historical/not-live (`/codex/05-infrastructure/agent-orchestrator-deploy.md`: "Not running today" — superseded
 2026-05-20 by the EC2 systemd deploy) but is kept in-repo for cloud-agnostic optionality, so it isn't a deletion
 candidate either — fixed it too since the safety gap would otherwise resurface if it's ever re-activated.
 

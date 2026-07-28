@@ -139,27 +139,31 @@ drift_direction: advance-code
       credential-ask issue docs filed + their adapter scaffolds/tests land (each PASSING with BLOCKED-CREDENTIALS
       status, no real vendor calls); AND the launch-protocol gate-check ships + is exercised against both a GREEN and a
       non-GREEN asset_group in a test/dry-run, with both todos flipped `[x]` in the source doc citing repo@sha evidence.
-- [ ] [MTDS] P1. **A12a follow-through — wire `assert_defi_catalog_fresh()` preflight into the still-unwired DeFi
-      collect handlers.** Re-verified against current code (2026-07-26): of the doc's original 23-handler list, several
-      are already wired (progress since 2026-06-04) — `lending_indices_handler`, `liquidations_handler`,
-      `liquidation_events_handler`, `bridge_events_handler`, `token_transfers_handler`, `aggregator_route_handler`,
-      `flash_loan_events_handler`, `solana_defi_handler` all already call `assert_defi_catalog_fresh` (that subset is
-      instead covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s separate "thread `mode=`" todo — do not
-      re-wire those). The genuinely still-unwired handlers in
-      `market-tick-data-service/market_tick_data_service/cli/handlers/`: `dex_swaps_handler.py`,
-      `perp_funding_handler.py`, `oracle_prices_handler.py`, `staking_yields_handler.py`,
-      `eigenlayer_rewards_handler.py`, `vault_share_price_handler.py`, `gas_fee_handler.py`,
-      `governance_events_handler.py`, `governance_proposals_handler.py`, `mev_events_handler.py`,
-      `position_data_handler.py`, `jupiter_quote_handler.py`, `phoenix_orderbook_handler.py`,
-      `orca_whirlpool_state_handler.py`, `raydium_classic_amm_handler.py`, `evm_defi_handler.py` (confirm
-      `drift_v2_historical_handler` still exists under its current name before wiring; skip if renamed/removed). For
-      each: call `assert_defi_catalog_fresh(...)` at the handler's `process()` chokepoint before the source fetch,
-      mirroring the exact pattern already shipped in
-      `dex_pools_handler.py`/`lst_rates_handler.py`/`lending_indices_handler.py` (import + wrap + route honest absence
-      via `record_failed` per shard, never raise in the per-venue loop); patch `assert_defi_catalog_fresh` → True in
-      each handler's existing `process()` tests. Source: `data_source_provenance_enforcement_2026_07_24.md`. Done when:
-      every listed still-unwired handler calls `assert_defi_catalog_fresh` at its chokepoint, each handler's test suite
-      is green with the patch applied, and `market-tick-data-service` quality gates pass.
+- [x] ✅ [MTDS] P1. **A12a follow-through — wire `assert_defi_catalog_fresh()` preflight into the still-unwired DeFi
+      collect handlers.** — market-tick-data-service@f7d6f5fd. 15 of the 16 listed handlers wired: `dex_swaps_handler`,
+      `oracle_prices_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`, `vault_share_price_handler`,
+      `gas_fee_handler`, `governance_events_handler`, `governance_proposals_handler`, `mev_events_handler`,
+      `position_data_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`, `orca_whirlpool_state_handler`,
+      `raydium_classic_amm_handler`, `evm_defi_handler` — each calls `assert_defi_catalog_fresh(...)` at its
+      `process()`/per-shard chokepoint before the source fetch, mirroring `dex_pools_handler.py`/`lst_rates_handler.py`/
+      `lending_indices_handler.py` (stale catalog routes honest absence via
+      `DefiManifestRecorder.record_catalog_unavailable` per shard, never raises in the per-venue loop); every touched
+      handler's existing `process()` tests patch `assert_defi_catalog_fresh` → True. `perp_funding_handler.py`
+      intentionally NOT wired (finding, not a skip): re-read against current code, its only live venues
+      (KALSHI_PERP/POLYMARKET_PERP) are UAC-classified `cefi` (`VENUE_TO_ASSET_GROUP`), write via
+      `DefiManifestRecorder(asset_group="cefi")`, and never consult the IS DeFi catalog at all (no
+      `catalogue_pool_ids_for_shard`/`load_*_for_date` calls) — its own listing gate is the hardcoded
+      `_KALSHI_PERP_LAUNCH_DATE`/`_POLYMARKET_PERP_LAUNCH_DATE`. `assert_defi_catalog_fresh` hardcodes
+      `asset_group="defi"` reader/writer bucket-parity resolution, so wiring it here would gate a CEFI shard's capture
+      on an unrelated DeFi catalog — a category mismatch, not a genuine A12a fit (this handler's live venues narrowed to
+      CEFI-only via the 2026-07-08/07-16/07-25 onchain-perp-venue retirements, after this todo's original 2026-06-04
+      handler list was written). `drift_v2_historical_handler.py` confirmed removed/renamed — no file exists under that
+      name in `cli/handlers/`, nothing to wire. Several handlers' inline preflight insertion initially exceeded the
+      codex 50-line method / 900-line file caps; resolved by extracting small preflight helpers (module-level functions
+      for dex_swaps/oracle_prices/evm_defi/ vault_share_price, mirroring `dex_pools_handler.py`'s `_run_process` split;
+      a `_gas_fee_helpers.py` addition; per-class helper methods elsewhere) — zero new suppressions. Full
+      `market-tick-data-service` quality-gates.sh green: 7243 passed, 0 failed, method/file size clean. Source:
+      `data_source_provenance_enforcement_2026_07_24.md`.
 - [x] [DATA] P1. ✅ Reconcile the CURRENT (2026-07-25 refresh, 45-total) non-canonical distinct-value set to an owning
       plan/issue per value, since the original 175-finding per-cluster JSON needed to re-verify the 22 prior category-1
       owning-plan citations was deleted in the 2026-07-21 pre-compact sweep (that JSON being un-recoverable is not a
@@ -341,24 +345,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                                  `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                                  `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                                  prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                                  this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                                  `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                                  (merged via PR #1593), NOT executed here.
+                                                                      `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                      `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                      prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                      this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                      `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                      (merged via PR #1593), NOT executed here.
 
-                                                                  **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                                  (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                      **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                      (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                                  **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                                  items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                                  flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                                  re-verifies sports.
+                                                                      **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                      items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                      flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                      re-verifies sports.
 
-                                                                  Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                                  `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                                  of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                      Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                      `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                      of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the

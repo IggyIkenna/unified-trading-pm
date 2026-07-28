@@ -183,46 +183,49 @@ docs" digest (the confirmed DIGEST TRAP: listing ≠ dispatch). This batch close
         **This is the WRITER-ROOT fix that `scripts/canonicalize_prediction_manifest_2026_07_18.py`'s OPERATOR-REVIEW
         CHECKLIST item 0 was gated on** — that script's manifest-only canonicalization can now proceed per its own
         checklist (still operator-held for items 1-6, unrelated to this todo).
-  - [ ] [DATA] P1. **4b — migrate the legacy raw-tick objects (OPEN — genuinely multi-session, NOT completable in one
-        worker turn; scope discovered 2026-07-28, slot-12).** Migrate shapes #3/#3b (`data_type=     prediction_trades`
-        bundle-per-underlying) and shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) into the canonical
-        `data_type=trades` path under the now-extended schema — copy+verify+delete per the delete-safety protocol
-        (content-verify before any delete, no data loss). **Scope findings (read before starting):** (a) Shapes #3/#3b
-        are MANIFEST-KNOWN, not a new walk: a single `_index/availability_index.parquet` read (predicate-pushdown
-        `data_type=prediction_trades`) returns exactly 2,477 rows, 100% `capture_status=captured`, 348 distinct dates,
-        14 distinct `underlying` values (`BTC/ETH/OTHER/SPX/DJIA/NDX/GOLD/SILVER/CRUDE_OIL/DOGE/     XRP/BNB/HYPE/SOL` —
-        wider than the single-day sample's BTC/ETH/OTHER), `chain=POLYGON`, `instrument_type=prediction_market`, blank
-        `instrument_id`. Each row is a per-(date,underlying) bundle; the physical GCS object count is up to 2× this
-        (shapes #3 and #3b are two DIFFERENT paths that may consolidate to one manifest row) — verify via
-        `gcs_describe_object` per the delete-safety Part-1 proof, don't assume. (b) Shape #4's corpus-wide extent is
-        GENUINELY UNKNOWN — the issue doc explicitly flags this ("its true corpus-wide extent is UNKNOWN without a
-        Tier-2 SPOT-VM single walk"); the "158+" figure is a ONE-DAY (`day=2025-04-11`) sample only (confirmed by a live
-        listing: exactly 158 objects under
-        `raw_tick_data/by_date/day=2025-04-11/pipeline_mode=batch_polymarket_clob/asset_group=prediction/     data_source=POLYMARKET_CLOB/`),
-        not a corpus total. Enumerating every day shape #4 exists on IS a new whole-corpus walk (review-blocking per
-        CLAUDE.md single-walk discipline) — it must run as the ONE sanctioned Tier-2 SPOT VM single walk per
-        `/codex/02-data/reconciliation-census-and-compute-tiers.md`, never in an interactive worker session. (c) Per-row
-        content requires a MERGE, not a plain copy: canonical shape #1 objects already exist for the same (day, cid)
-        cells (content-verified byte-identical trades) — the migration is "read legacy row, join to the matching
-        canonical row (by `transaction_hash`+`timestamp` — condition_id alone is not unique per row), merge in
-        `title`/`slug`/`event_slug`, rewrite the canonical object, content-verify 0-loss, THEN delete the legacy object"
-        — a genuine read-transform-write per cell, not a server-side `gcs_copy_object`. **Why not done in this
-        session**: the combination of (b)'s VM-gated enumeration requirement and (c)'s per-cell merge complexity across
-        ~348+ dates makes this a multi-session migration (issue doc's own estimate: 3.6 ai-days), not a same-turn
-        extension of 4a. Attempting a rushed prod merge+delete here would risk exactly the kind of data-correctness
-        mistake the delete-safety protocol's five-part proof exists to prevent. **Next steps for whoever picks this
-        up**: (i) build the manifest-driven migration script for shapes #3/#3b (scope known, ~2,477 rows/348 dates)
-        first — this alone is session-doable; (ii) file/dispatch the Tier-2 SPOT VM enumeration for shape #4's
-        corpus-wide extent separately (per `/codex/02-data/reconciliation-census-and-compute-tiers.md`); (iii) 4c below
-        (docs) can register the WRITER cutover now but must be revisited once the raw-object migration actually
-        executes. Repo: market-tick-data-service, unified-trading-pm. **Done when**: 3/3b's ~2,477 rows + 4's full
-        corpus-wide object set are migrated with a verified 0-loss content-check per delete-safety Part 2, legacy
-        objects deleted only after verification.
+  - [ ] [DATA] P1. **4b-i — migrate shapes #3/#3b (session-doable slice; IN PROGRESS 2026-07-28, slot-16).** Enrich the
+        existing canonical `data_type=trades` objects with `title`/`slug`/`event_slug` recovered from the legacy
+        `data_type=prediction_trades` bundle-per-underlying tree (shapes #3/#3b — manifest-known, 2,477 rows / 348
+        distinct dates, 14 `underlying` values), then delete the now-redundant legacy objects once content-verified.
+        **Script shipped**: `market-tick-data-service@e4acf0c4`
+        (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py` + 20 unit tests, QG green) — additive-only
+        enrichment (never overwrites an existing column; some canonical objects already carry a richer pre-existing
+        schema variant with these fields under camelCase aliases — alias-aware, skipped, not overwritten — a real bug
+        caught + fixed by the script's own `_original_columns_unchanged` safety check during dry-run validation before
+        any real write). Merge key: `transaction_hash` (legacy) == `transactionHash` (canonical), cross-checked against
+        `timestamp` (unix-seconds). Delete gated on a FRESH `gcs_bucket_soft_delete_retention_seconds()` check (codex
+        delete-safety §3a) — measured `604800`s (exactly 7 days) on `market-data-tick-pred-prd-central-element-323112`
+        at execution time, qualifying the delete as reversibility-qualified (no `[OPERATOR]` gate needed per CLAUDE.md's
+        plan-authoring rule for this exact carve-out). **Live-verified scope correction to the original premise below**:
+        the canonical shape#1 twin exists for EVERY sampled date across the full 2025-03-14..2026-04-14 range (not
+        date-range-gated as initially worried) — confirmed via a live read at 6 sampled dates spanning the full range,
+        each showing matching shape#1/shape#4 object counts. **Execution status (this Progress Log entry)**: `--apply`
+        (enrichment only, no deletes yet) launched across all 348 dates, resumable via `--report`; 0 anomalies through
+        the first ~50 dates. The delete pass (`--delete-legacy`) runs as a separate follow-on invocation after the
+        enrichment pass completes and a sample is spot-verified. **Checkbox stays unchecked until the full 348-date
+        enrichment + delete pass is verified complete** (real backfill completion, not code-shipped — per CLAUDE.md
+        "Plans run to actual completion, not smoke-test green"). Repo: market-tick-data-service. **Done when**: all 348
+        dates' shape#3/#3b objects are enriched into their canonical twins (verified via readback) and deleted (verified
+        via `gcs_describe_object(...) is None`), 0 anomalies outstanding.
+  - [ ] [OPERATOR][SCRIPT] P2. **4b-ii — shape #4's corpus-wide extent (Tier-2 SPOT-VM single walk, separately
+        dispatched).** Shape #4 (10-segment `data_source=POLYMARKET_CLOB/...` tree) is explicitly OUT OF SCOPE for 4b-i
+        — its corpus-wide extent is GENUINELY UNKNOWN (the issue doc's "158+" figure is a ONE-DAY `day=2025-04-11`
+        sample only, live-confirmed exactly 158 objects for that one day, not a corpus total). Enumerating every day
+        shape #4 exists on IS a new whole-corpus walk (review-blocking per CLAUDE.md single-walk discipline) — it must
+        run as the ONE sanctioned Tier-2 SPOT VM single walk per
+        `/codex/02-data/reconciliation-census-and-compute-tiers.md`, never in an interactive worker session, hence
+        `[OPERATOR]` (VM launch gating). Once the corpus-wide extent is known, the merge logic is the SAME
+        read-transform-write-per-cell pattern as 4b-i's shipped script (shape #4 already carries `title`/`slug`/
+        `eventSlug` per the issue doc's content-verify — the merge direction may in fact be shape#4 -> shape#1, richer
+        source into the (possibly still-bare) canonical twin, mirroring 4b-i's alias-aware additive-only approach).
+        Repo: market-tick-data-service. **Done when**: shape #4's full corpus-wide object set is enumerated (VM-run),
+        merged into canonical with a verified 0-loss content-check per delete-safety Part 2, and legacy objects deleted
+        only after verification.
   - [ ] [DATA] P2. **4c — register the writer cutover in `canonical-cutover-register.md` +
         `non-canonical-path-inventory.md`.** 4a's writer-root fix (title/slug/event_slug now flow to new canonical
-        writes) is registerable now; the raw-object migration disposition (4b) must be added/updated once 4b actually
-        executes — don't mark the `prediction_trades`/shape-#4 rows `yes-twin-confirmed` until they are. Repo:
-        unified-trading-pm.
+        writes) is registerable now; the raw-object migration disposition (4b-i shapes #3/#3b, 4b-ii shape #4) must be
+        added/updated once each actually executes — don't mark the `prediction_trades`/shape-#4 rows
+        `yes-twin-confirmed` until they are. Repo: unified-trading-pm.
 
 ## Deferred — gated on a sibling todo landing (NOT dispatched speculatively)
 
@@ -310,3 +313,15 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   gated-on-#1 `[OPERATOR]` walk/backfill items + the design/cross-cutting/upstream deferrals. Left `status: draft` per
   the autonomous-mode safety rail — operator flips to `active` to dispatch. No new issue doc filed: the orphans are
   already tracked as their own docs; this batch + batch3 are the actionable artifacts.
+- 2026-07-28 (slot-16, data_engineering): split 4b into 4b-i (shapes #3/#3b, session-doable) + 4b-ii (shape #4,
+  operator/VM-gated) per the todo's own "next steps". Built + shipped `market-tick-data-service@e4acf0c4`
+  (`scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py`, 20 unit tests, QG green) after live-verifying the
+  actual GCS schema/paths (manifest read: 2,477 rows/348 dates confirmed; sampled 6 dates across the full range
+  confirmed the canonical shape#1 twin exists everywhere, correcting an initial worry that it might be
+  date-range-gated). Caught + fixed a real join-key-typing bug (int vs str) and a real overwrite risk (some canonical
+  objects already carry a richer pre-existing schema with title/slug under different column names) via the script's own
+  dry-run safety checks before any prod write. Launched the real `--apply` enrichment run across all 348 dates
+  (resumable, additive-only, 0 anomalies through the first ~50 dates at last check) — running in background; the delete
+  pass (`--delete-legacy`, gated on a live-verified `604800`s soft-delete retention on the prediction bucket) follows
+  once enrichment completes and a sample is spot-verified. 4b-i's checkbox stays open until the full 348-date run +
+  delete pass verify complete.

@@ -214,10 +214,17 @@ concurrent workers do not collide on this file.
       `cooldown_min: 60`. `tests/unit/test_glue_pool_starvation_monitor.py` (16 cases) proves the synthetic
       starved-queue case (queued > threshold + 0 in-progress) fires and a healthy/busy/under-threshold pool fires none.
       Full `bash scripts/quality-gates.sh` green.
-- [ ] [INFRA] P2. **`workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes `success`.**
-      Make the workflow exit non-zero when it emits a failure line. **Done when**: a run that logs the failure concludes
-      `failure`, and a genuinely-aligned run still concludes `success`. Source:
-      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` § F4.
+- [x] ✅ [INFRA] P2. **`workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes
+      `success`.** Make the workflow exit non-zero when it emits a failure line. **Done when**: a run that logs the
+      failure concludes `failure`, and a genuinely-aligned run still concludes `success`. —
+      unified-trading-pm@8b151aa38: removed the blanket `|| true` on the validation step
+      (`.github/workflows/workspace-quickmerge-validation.yml`) so the job's exit code is the script's real exit code,
+      added `if: always()` to the artifact-upload + summary steps so they still run on a failing validation; also fixed
+      a latent `set -e` early-exit bug in `scripts/validate-workspace-quickmerge.sh` where a failing repo's subshell
+      terminated the script before `ec=$?` was ever read, skipping the dependent-skip cascade + matrix write for every
+      repo after the first failure. Verified via a local harness (fake manifest + 3 fake repos, one made to fail):
+      failure path now exits 1 with a full PASS/FAIL/SKIPPED matrix (dependent correctly marked SKIPPED); all-pass path
+      exits 0. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` § F4.
 - [ ] [INFRA] P2. **The `sit_retry_cap` escalation can never succeed.** `sit-debounce-trigger.yml` dispatches
       `wall_type: "sit_retry_cap"`, which is not in `escalate-to-orchestrator.yml`'s accepted set, so the one
       auto-escalation for repeated SIT failure hard-errors every time. Fix it so the dispatch can actually be accepted

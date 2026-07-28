@@ -127,7 +127,46 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       already named** — the EBS iops/throughput bump suggested in the Phase-7 doc (a live, non-disruptive `gp3`
       modify-volume op) is worth trying before further headcount reductions on the runner side, since CPU/RAM are not
       what's constrained here.
+
+      **Update 2026-07-28 ~06:25 UTC — contention has substantially EASED, likely on its own as the fan-out's own
+                  CI/QG batch finished draining, not from any further intervention.** Re-checked `VolumeQueueLength` across a
+                  1h window (6 datapoints, 10-min granularity) after ~5h holding flat at the elevated `5.6-6.5` level (3
+                  consecutive prior checks, ~00:20-01:35 UTC): the LATEST readings are `0.84 → 0.81 → 1.88 → 5.53 → 1.93 → 0.50`
+                  — mostly back down near the pre-burst `0.5-2` baseline range, with one brief `5.53` spike (a single 10-min
+                  bucket, not sustained). Fleet-wide sweep the same check found only 3 failures, ALL already resolved by a
+                  newer green run on retry (instruments-service, system-integration-tests, trading-agent-service) — no
+                  lingering `[qg-governor] all 4 tokens busy` or SIT `ci-status-update` timeout signatures observed this pass,
+                  consistent with the queue backlog having actually cleared rather than just gone quiet. **Net read: this
+                  looks like the burst genuinely working itself out over ~5-6h as PM's own fan-out's git/QG activity tapered
+                  (the doc's own original prediction), not evidence the underlying capacity gap was fixed** — the EBS
+                  iops/throughput headroom question above remains open and worth doing before the NEXT bulk registration or
+                  fan-out event reproduces this, but it is no longer an active, ongoing symptom as of this check. Downgrading
+                  urgency accordingly; re-verify if/when the next bulk self-hosted-runner change happens rather than continuing
+                  to poll an already-recovered metric.
+
 - [ ] [REVIEW] P3. The AO dashboard's Host Resources panel reporting only `us+sy+ni` (no iowait) means an operator
       glancing at "CPU 41%" during an episode like this would not see the real problem. Consider whether the panel
       should surface iowait or load-average alongside CPU% specifically because self-hosted CI runners on this box make
       disk contention a live, recurring risk category the panel currently cannot show.
+- [x] ✅ [VERIFY] P2. **Cross-check against the Phase-7 4-repo verification spot-check sweep**
+      (instruments-service/strategy-service/unified-api-contracts/market-tick-data-service) for independent confirmation
+      this episode's impact was real and has now cleared. instruments-service's own `quality-gates-v2`
+      `workflow_dispatch` chain (`30311641098`→`30314016051`→`30315154036`→`30317528373`, each cancelled with ZERO jobs
+      within the 22:41-01:34 UTC window — squarely inside this doc's contention window) is a third, more granular
+      confirmation: a manual/scripted cancel-and-retry loop hitting the exact iowait spike, not GitHub's push-triggered
+      concurrency auto-cancel (`workflow_dispatch` has `cancel-in-progress=false` per this repo's own workflow). The 5th
+      attempt (`30320617101`, dispatched 01:33:56Z, after the EBS IOPS/throughput fix had time to take effect) succeeded
+      on `glue-ip-172-31-5-118-1`; the pool has run 5+ green since. strategy-service's `QG slice (checks)` job on run
+      `30315156486` (23:45 UTC) failed via basedpyright killed at `run_timeout ${PYRIGHT_TIMEOUT:-120}` (exit=124, empty
+      output — a kill, not a real type error) directly behind a logged `[qg-governor] all 4 tokens busy` / "token 4/4
+      acquired after 216s wait" queue-contention signature — the SAME commit (`b26bb306`) re-ran clean twice afterward
+      (03:04 and 03:23 UTC) on identical self-hosted infra, confirming this was this episode's contention hitting a
+      fixed 120s timeout budget, not a runner-migration defect or pre-existing code issue. No code fix applied to either
+      repo (none needed — both self-resolved).
+- [ ] [SCRIPT] P3. **New, more specific follow-up from the strategy-service basedpyright-timeout instance above**: if a
+      `PYRIGHT_TIMEOUT`-triggered `exit=124` kill recurs on ANY repo once this episode's capacity fix is confirmed
+      durable (i.e. NOT during a future burst/fan-out event), consider a fleet-wide bump of `PYRIGHT_TIMEOUT` in
+      `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (currently a hardcoded 120s default) — a shared
+      script change needs the same "verify blast radius on one consumer before fleet rollout" discipline as any other
+      shared QG change, not a silent per-repo override (a per-repo bump would mask recurrence of the SAME root cause
+      instead of surfacing it).

@@ -236,20 +236,46 @@ MTDS consolidation ruling.)**
       legacy-bucket delete. NOT this session (irreversible). **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
-      (satisfies `pipeline_mode_partition_migration` for cefi). **(MIGRATED FROM:
+- [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
+      (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
+      regression coverage added.** `rebuild_cefi_manifest.py`'s object-scan walk (`scan_and_rebuild`) has stamped
+      `pipeline_mode` on every emitted row since utl@b872bdf1 / PREP2-E5 (2026-06-02, code comments confirm): the
+      `_PM_RE` regex captures the canonical `pipeline_mode=` path segment when present
+      (`rebuild_cefi_manifest.py:179-182`), and for legacy pre-migration objects with no such segment the walk falls
+      back to `derive_pipeline_mode_for_row` (same derivation the live writer + migrator use) rather than stamping blank
+      (`rebuild_cefi_manifest.py:442-461`). `ManifestWriter.add()` has persisted `pipeline_mode` since utl@b872bdf1
+      (`unified_trading_library/manifest_writer/_writer_ingest.py:148`). Path-parsing was already unit-tested
+      (`tests/unit/scripts/test_rebuild_cefi_manifest.py`), but the `scan_and_rebuild`-level stamping (both the
+      from-path and derive-fallback branches) had NO regression coverage — added
+      `test_scan_and_rebuild_stamps_pipeline_mode_from_canonical_path_segment` +
+      `test_scan_and_rebuild_derives_pipeline_mode_for_legacy_path_without_segment` to
+      `tests/unit/test_rebuild_cefi_manifest_cf11.py`, both green, full `quality-gates.sh` green (7265 passed / 17
+      skipped). This confirms the rebuild-walk CODE is ready for when the actual migration runs (still gated on the
+      separate, blocked "NEXT SESSION — execute the migration" P0 todo above — the false-phantom bug at
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`); no code change was needed
+      for this rider itself. `market-tick-data-service@cf8a6817`. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
       (closes `data_source_provenance` cefi). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
       2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P0. Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
+- [ ] [DATA] P0. **🔴 BLOCKED 2026-07-28 (slot-8, confirmed by main) — real predecessor is
+      `plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`, not this todo's own
+      action.** Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
       v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
       column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
       **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
-      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission. **(MIGRATED FROM:
-      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission — **this is a GATE, do not flip
+      it on a RED audit (data-pipeline-correctness HARD RULE + foundation-completion-gate).** **RE-RUN 2026-07-28
+      (slot-8, live, `mode=changed`, no `--apply`) — STILL RED, criteria NOT met**: v9=97.4% (not 100%), source
+      blank=24.0% (not 0%), pipeline_mode blank=1.4% (not 0%), Era-B chain-dtype rows=490,332 (not 0) — expected, since
+      the underlying walk this todo is post- has not executed yet and remains blocked on the false-phantom itype/
+      underlying-drift fix (see the 2026-07-28 slot-12 entry above + the issue doc linked at the top of this item). **Do
+      not flip until the walk executes AND a fresh audit reads GREEN on all four criteria** (v9=100% / source blank=0% /
+      pipeline_mode blank=0% / Era-B chain rows=0). See the 2026-07-28 (slot-8) Progress Log entry for the full per-CF
+      readout. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation
+      ruling.)**
 
 - [ ] [DATA] P0. **Orphan sweep + bucket-state evidence (slot/Harsh bucket-state verification 2026-06-02).** Measured
       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-cefi-prd` 1,545,850 (~65% of legacy
@@ -526,3 +552,31 @@ VM-launched execution plan (matching the pattern used for the cefi Track-1/Track
 the E8 delete as its own final, separately-gated step confirmed against
 `legacy_bucket_dual_write_decommission_2026_07_24.md`'s L3-open rule at execution time, not bundled into one dispatch.
 Did not flip this todo's checkbox. Filed the same finding via `/blocked` for operator awareness given the scale/stakes.
+
+### 2026-07-28 (slot-8, `data_engineering`) — "Post-walk" audit todo (line 247): re-ran the reusable audit tool live — RED, checkbox correctly NOT flipped (walk still hasn't run)
+
+Dispatched task `data_completion_cefi-012` = the "Post-walk: re-read the canonical `_index` DATA-STATE (re-run the
+reusable audit tool)" todo. Ran `unified_trading_library.cf_manifest_audit.audit()` (the reusable tool named by the
+todo) read-only, `mode=changed` (index-only, no GCS bulk walk — single-walk discipline), directly against both live cefi
+buckets, no `--apply`:
+
+- **`instruments-store-cefi-prd-central-element-323112`** (84,507 rows): CF-1/CF-3/CF-4/CF-5/CF-6/CF-8/CF-13/Era-B all
+  **GREEN** (v9=100%, source blank=0%, pipeline_mode populated=100%). Only CF-2-paths/CF-3-partition RED — the
+  `entity=fixtures` non-hive path already documented as a pre-existing, accepted schema characteristic (2026-07-12
+  finding-144 waiver, quoted above in this same file), not this todo's raw-tick concern.
+- **`market-data-tick-cefi-prd-central-element-323112`** (9,177,562 rows) — the bucket this todo's criteria actually
+  gate — is **still RED on exactly the criteria this checkbox names**: CF-1 v9=**97.4%** (8,943,353/9,177,562; not
+  100%), CF-4 source blank=**24.0%** (2,206,913/9,177,562; not "populated on every cell"), CF-3 pipeline_mode
+  populated=**98.6%** (126,228 blank; CF-3-partition segment itself IS present=GREEN), CF-8 available_at RED (a
+  pre-existing schema-evolution artifact per the same finding-144 waiver, not a fresh defect), Era-B RED (**490,332**
+  rows still carry legacy-form `data_type=options_chain/futures_chain` instead of the post-Era-B `trades` scheme, so not
+  yet 0). CF-13 (source-aware pipeline_mode form) is GREEN on the populated subset.
+
+**Verdict: the "100% of rows v9 / source populated on every cell / pipeline_mode non-blank" acceptance bar is NOT met.**
+This is not a new problem — it reconfirms, with fresh live numbers, the already-tracked fact (2026-07-27/28 entries
+above) that the actual walk this checkbox is "post-" (the C0(b)/(d) source+pipeline_mode riders, the E4 gap-fill/orphan
+sweep, the E5 rebuild) has **not executed yet** and remains blocked on the false-phantom itype/underlying-drift bug
+(`plans/active/issues/cefi_rebuild_false_phantom_itype_underlying_drift_2026_07_28.md`). Did **not** flip this todo's
+checkbox — doing so on a RED audit would be fabricated progress. No new issue doc filed (these findings corroborate, not
+introduce, the already-open blocker). Whoever unblocks the walk should re-run this exact audit command afterward; if
+CF-1/CF-3/CF-4 all read GREEN and Era-B reads 0, that todo can then honestly flip.

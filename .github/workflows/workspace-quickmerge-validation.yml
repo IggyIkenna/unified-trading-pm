@@ -67,9 +67,10 @@ jobs:
       - name: Run workspace quickmerge validation
         run: |
           cd unified-trading-pm
-          bash scripts/validate-workspace-quickmerge.sh || true
+          bash scripts/validate-workspace-quickmerge.sh
 
       - name: Upload matrix artifact
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: quickmerge-matrix
@@ -77,6 +78,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Workflow summary
+        if: always()
         run: |
           if [ -f unified-trading-pm/artifacts/quickmerge-matrix.json ]; then
             echo "## Workspace Quickmerge Validation" >> $GITHUB_STEP_SUMMARY

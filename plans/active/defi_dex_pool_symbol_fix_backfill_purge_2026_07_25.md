@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                          (specific `_migrated_*` marker objects, never the bucket), target
-                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                          Progress Log below.
+                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                  (specific `_migrated_*` marker objects, never the bucket), target
+                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                  Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -372,3 +372,37 @@ is quick and doesn't block anything.
     affect data correctness or this todo's done-when). Filed as
     `issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md` since it is generic VM-launcher shutdown code,
     not specific to this plan.
+  - **batch1 SPOT-preempted at ~07:38 UTC, recovered per the preemption-recovery HARD RULE (two attempts, first one
+    WRONG -- correcting the record).** Confirmed via `gcloud compute operations list` (`compute.instances.preempted`,
+    not a clean `DEPLOYMENT_COMPLETED`) -- last confirmed processing day was 2025-01-14 (~87% through the
+    2020-01-20..2026-07-27 range, ~1.13M manifest entries written).
+    - **First relaunch attempt (WRONG, corrected within minutes)**: relaunched with the IDENTICAL original
+      `--start 2020-01-20` on the (mistaken) assumption that `ManifestFreshnessCache`'s skip-if-fresh check would
+      recognize the ~1.13M already-captured (venue,chain,date) cells and fast-skip through them, resuming real work near
+      the preemption point. **This did not happen** -- the relaunch's log showed REAL subgraph queries being re-issued
+      starting from day 2020-01-22 (the very beginning of the range), not a fast skip. Root cause (inferred, not
+      exhaustively proven): `ManifestFreshnessCache.is_now_skip_worthy()` depends on `read_availability_index()` finding
+      the target day already captured in the CONSOLIDATED manifest index -- and this bucket's manifest consolidator was
+      independently observed to be stale/behind during this same session (the `ManifestConsolidatorStaleError` already
+      noted on batch2's log, `vm_run_ledger...` is unrelated but the consolidator-staleness condition is the same one).
+      When the consolidated index can't be read fresh, the skip check appears to fail open to "not captured" rather than
+      skip -- meaning a same-start-date relaunch would have silently REDONE the entire ~87%-complete range from scratch
+      (~7+ more wasted hours), producing correct but massively redundant output (per-instrument shard filenames are
+      stable/symbol-keyed, so a redo overwrites rather than duplicates -- not a correctness bug, but a severe efficiency
+      one this specific handler's `ttl_seconds=60` per-day cache construction does not protect against across a VM
+      restart). **Caught within ~5 minutes** (before any of the ~7h of wasted redo work accrued) by checking the
+      relaunched VM's own log tail rather than assuming the skip mechanism worked.
+    - **Corrected relaunch**: deleted the wrongly-restarting VM immediately, relaunched scoped to `--start 2025-01-10`
+      (last confirmed processing day 2025-01-14, minus a few days' safety margin for any partially-written day at the
+      moment of preemption) `--end 2026-07-27` -- i.e., resuming from MEASURED PROGRESS per the letter of the codex HARD
+      RULE, not from the original START_DATE. This is the ~13% remaining tail (~563 days vs. the original ~2380),
+      cutting the remaining runtime from ~7h+ to an estimated ~1-1.5h.
+    - **Lesson for future preemption recoveries on this handler family**: do NOT assume `ManifestFreshnessCache`
+      transparently makes a same-start-date relaunch safe/efficient -- verify the relaunch's own log shows real skips
+      (or manifest-entry-count barely moving while advancing many days quickly) within the first few minutes; if it's
+      re-issuing real subgraph queries for already-done early dates, kill and rescope to the measured resume point
+      immediately rather than trusting the mechanism to self-correct.
+    - Tarball freshness check warned STALE for 3 repos on both relaunch attempts (other slots pushed newer unrelated
+      commits in the interim) -- verified via `git merge-base --is-ancestor` that the actually-deployed tarball SHA
+      (`33fa3b58`) still descends from the query/parser fix commit (`63199601`), so no re-publish was needed before
+      trusting either relaunch's output.

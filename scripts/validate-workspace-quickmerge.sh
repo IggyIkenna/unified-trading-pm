@@ -89,12 +89,17 @@ for repo in "${SORTED_REPOS[@]}"; do
   echo "=========================================="
   echo "[$repo] Running quickmerge --unit-only"
   echo "=========================================="
+  # errexit disabled around this one call: under `set -e`, a non-zero subshell exit here
+  # terminates the script immediately (before `ec=$?` is ever reached), skipping the
+  # RESULTS_FILE write + dependent-skip cascade for every repo after the first failure.
+  set +e
   if [ -n "$DEP_BRANCH" ]; then
     (cd "$WORKSPACE_ROOT/$repo" && bash scripts/quickmerge.sh "chore: workspace validation" --unit-only --dep-branch "$DEP_BRANCH" 2>&1)
   else
     (cd "$WORKSPACE_ROOT/$repo" && bash scripts/quickmerge.sh "chore: workspace validation" --unit-only 2>&1)
   fi
   ec=$?
+  set -e
   if [ $ec -eq 0 ]; then
     echo "${repo}|PASS|0|" >> "$RESULTS_FILE"
   else
