@@ -124,7 +124,7 @@ drift_direction: advance-code
       `sports_consolidated_closeout_2026_07_19.md:244-259`.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-27 (slot-14) — Track C re-verified: existing candidate list still matches current
       corpus state, no correction needed.** Re-ran the existing `verify_k1k2_lowercase_twins_2026_07_27.py` census (same
-      query/scope as `plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s own
+      query/scope as `/plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s own
       investigation — no new script, no corpus walk) against live prod
       (`market-data-tick-sports-prd-central-element-323112`). **Fresh population**: 275,136 uppercase-keyed
       (`instrument_type=ODDS, data_type=TRADES`) rows as of this check (a precise, dated figure — prior docs cite
@@ -491,7 +491,7 @@ above is replaced with a non-checkbox pointer so it no longer counts as an open 
 
 Dispatched to the Track C `[REVIEW]` todo. Ran the existing, already-reviewed
 `market-tick-data-service/scripts/sports/verify_k1k2_lowercase_twins_2026_07_27.py` script (built + sanity-validated by
-an earlier session per `plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`) fresh
+an earlier session per `/plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`) fresh
 against live prod — no new tooling, no corpus walk, same bounded sample-existence-probe methodology.
 
 - **Population** (`instrument_type=ODDS`, `data_type=TRADES`, `row_count>0` on

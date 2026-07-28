@@ -211,7 +211,7 @@ consume these paths must be updated in lockstep with the writer.
       shape as the sports K1/K2 casing-revert migration (also 5-figure-object, also copy-then-later-gated-purge) — that
       one hit the exact bundling mistake the original todo 7c's text already avoided (a single `[OPERATOR]` tag covering
       both the copy AND the purge, when only the purge is genuinely irreversible): see
-      `plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s history for the concrete
+      `/plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md`'s history for the concrete
       near-miss. Mirrors `market-tick-data-service/scripts/sports/k1k2_casing_revert_2026_07_27/`'s
       migrate/report/manifest-swap trio as a structural template if useful.
 - [ ] 8. [REVIEW] P1. On writer ship, record the `instrument_availability` full-hive cutover date in
