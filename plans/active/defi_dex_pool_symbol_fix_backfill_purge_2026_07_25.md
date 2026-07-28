@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                          | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                          | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                          | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                          | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                          | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                          "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                          the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                          genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                          for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                          `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                          (specific `_migrated_*` marker objects, never the bucket), target
-                                          `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                          returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                          `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                          this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                          per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                          Progress Log below.
+                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                              (specific `_migrated_*` marker objects, never the bucket), target
+                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                              Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -372,3 +372,13 @@ is quick and doesn't block anything.
     affect data correctness or this todo's done-when). Filed as
     `issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md` since it is generic VM-launcher shutdown code,
     not specific to this plan.
+  - **batch1 SPOT-preempted at ~07:38 UTC, recovered per the preemption-recovery HARD RULE.** Confirmed via
+    `gcloud compute operations list` (`compute.instances.preempted`, not a clean `DEPLOYMENT_COMPLETED`) -- last
+    confirmed processing day was 2025-01-14 (~87% through the 2020-01-20..2026-07-27 range, ~1.13M manifest entries
+    written). Relaunched immediately with the IDENTICAL original params (same `--start`/`--end`/`--protocols`, no
+    `--force`/redo-all flag on the handler itself) so the manifest freshness-cache skip-if-fresh logic resumes near the
+    preemption point rather than re-walking from 2020-01-20 -- per codex's HARD RULE that a relaunch replaying original
+    params is correct for skip-enabled (non-force) runs. The relaunch's tarball freshness check warned STALE for 3 repos
+    (other slots pushed newer unrelated commits in the interim) -- verified via `git merge-base --is-ancestor` that the
+    actually-deployed tarball SHA (`33fa3b58`) still descends from the query/parser fix commit (`63199601`), so no
+    re-publish was needed before trusting this relaunch's output.
