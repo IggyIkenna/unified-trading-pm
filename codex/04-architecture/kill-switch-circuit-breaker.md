@@ -211,8 +211,8 @@ Kill Switch Activated (manual or automatic)
 > disarm/auto-cooldown decision engine over the UAC `CircuitBreakerId`/`BreakerConfig` taxonomy, wired to the
 > kill-switch bus (see `disaster_recovery_circuit_breakers_2026_05_10.md` Phase 5). It does not observe per-venue order
 > failure rates and cannot replace the CLOSED/DEGRADED/OPEN/HALF_OPEN state machine below. Do not re-flag this as a
-> duplicate in a future reuse audit. SSOT: `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line
-> 176-179 (verified NON-findings list).
+> duplicate in a future reuse audit. SSOT: `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md`
+> § Verified NON-findings.
 
 ### States
 

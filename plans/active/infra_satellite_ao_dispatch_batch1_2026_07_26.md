@@ -51,7 +51,7 @@ related:
     /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
     /plans/active/issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md,
     /plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md,
-    /plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md,
+    /plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md,
     /plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md,
     /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/repo_scripts_governance_audit_2026_06_18.md,
@@ -59,7 +59,7 @@ related:
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
-    /plans/active/l0_doc_index_generator_2026_06_24.md,
+    /plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md,
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
     /plans/active/issues/reference_path_convention_2026_07_23.md,
@@ -471,7 +471,13 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       write the literal skip-ci marker** in any commit message or body here. **Done when**: (a) is shipped with the PR
       gate intact, (b) is confirmed deleted by the operator with `gcloud run jobs list` showing the job gone, and (c)
       both docs describe only the live model. Repos: unified-trading-pm, deployment-service. Source:
-      `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`.
+      `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`. **Operator approval now on record
+      (2026-07-27)**: `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21 — "RULE-11 — APPROVED (drop
+      `schedule:`/Haiku, delete the Cloud Run hygiene-sweep job)." Re-verified this session: `env_prefix=uts-prod`
+      resolves the job to `uts-prod-plan-hygiene-sweep` in GCP project `central-element-323112`; the terraform +
+      entrypoint files above both still exist at the named paths. The `[OPERATOR]` tag stays (per this todo's own
+      "operator confirms before the delete" — the explicit approval already given doesn't substitute for the delete-time
+      confirmation), but the wait is now purely "someone executes it," not "someone decides."
 
 - [ ] [BACKEND] P2. **Serve the generated L0 doc-graph from the AO dashboard for central human visibility.**
       `scripts/docs/gen_doc_graph.py` already produces `DOC_GRAPH.generated.html` (self-contained, gitignored, per-host:
@@ -546,6 +552,34 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       the mover did not update referrers. **Done when**: the SKILL either demonstrably covers the class (cite the
       specific hunter text) or carries a new hunter for it, and the determination is recorded in the source doc. Repo:
       unified-trading-pm. Source: `issues/reference_path_convention_2026_07_23.md`.
+
+- [ ] [INFRA] P2. **Add prefix-scoped lifecycle rules to the deployment-scripts bucket + a cross-bucket soft-delete
+      bloat audit.** Rehomed 2026-07-27 from `issues/issue_docs_remediation_sweep_2026_06_02.md`'s "Operator-gated
+      infra" section as a true orphan (per operator decision, `june_2026_vintage_audit_findings_2026_07_27.md` §5#28) —
+      that source doc is otherwise fully covered elsewhere in this batch (execution-service `service_name` drift, SIT's
+      2 QG failures, UAC `infura_*` rename, all drafted above) and this was its last uncovered item alongside G-TRACE
+      below. Add prefix-scoped GCS lifecycle rules to the deployment-scripts bucket: `vm-logs/` objects older than 14
+      days, `log-archive/` objects older than 90 days. Then run a cross-bucket soft-delete bloat audit via
+      `gcs_bucket_stats.py --bloat_pct` to quantify how much soft-deleted (not-yet-purged) storage is accumulating
+      fleet-wide. Author the lifecycle rules as terraform (matching the existing bucket-lifecycle pattern elsewhere in
+      `deployment-service/terraform/gcp/`), do not hand-apply via `gcloud`. **Done when**: the lifecycle-rule terraform
+      is authored + `tofu plan` shows the expected add (apply itself may need an `[OPERATOR]` follow-up per the usual
+      prod-terraform-apply gate), and the bloat audit's output is recorded in this todo or a linked follow-up. Repo:
+      deployment-service. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md` (deployment_scripts_bucket).
+
+- [ ] [CODE] P3. **Build GAP G-TRACE — a cross-service E2E data-pipeline trace API + UI view.** Rehomed 2026-07-27 from
+      `issues/issue_docs_remediation_sweep_2026_06_02.md` as a true orphan (per operator decision,
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5#28). Add `/api/data-status/pipeline-trace?instrument&date` to
+      deployment-api: thread one instrument/date through every pipeline stage (IS→MTDS→MDPS→features→strategy→
+      execution) and return per-hop `capture_status`, so an operator can answer "where did this instrument/date get
+      stuck" in one call instead of checking each service's manifest separately. Add a corresponding deployment-ui view
+      (playwright gate applies — `pw:L2 ✓` + a cited regression spec). This is a larger feature than most items in this
+      batch; coordinate with any in-flight data-status canonicalisation work touching `DataStatusTab.tsx` /
+      `data_status_service` before landing (this batch's own Deferred item 4 already flags `DataStatusTab.tsx` as a
+      multi-batch collision point — read it first). **Done when**: the trace endpoint returns real per-hop
+      `capture_status` for a known instrument/date, the UI view renders it with `pw:L2 ✓` evidence, and both are
+      QG-green. Repos: deployment-api, deployment-ui. Source: `issues/issue_docs_remediation_sweep_2026_06_02.md`
+      (e2e-pipeline-manifest-wiring, G-TRACE).
 
 ## Deferred — real AO-eligible work held back, with the reason (per the non-batchable taxonomy)
 

@@ -252,7 +252,7 @@ invariants) + client-reporting-api `core/hwm_seeds.py` (per-account seed resolut
 > pre-tracking-start Equity-HWM and PnL-recovery-seed constants for accounts with history predating our equity-curve
 > data. It feeds UTL's three-method HWM (§8 above) as a seed value — it is NOT a `max(equity)` HWM reimplementation and
 > does not duplicate `post_trade/hwm_invariants.py`. Do not re-flag it in a future reuse audit. SSOT:
-> `plans/active/utl_uac_reuse_consolidation_remediation_2026_06_10.md` line 176-179 (verified NON-findings list).
+> `plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md` § Verified NON-findings.
 
 > **Verified NON-finding (UTL/UAC reuse audit, `utl_reuse_phase1_strategy_risk_hwm_2026_07_13`, 2026-07-13)**:
 > strategy-service's `RiskCalculator.calculate_drawdown` / `compute_drawdown` (`risk/core/risk_calculator.py`) and the
