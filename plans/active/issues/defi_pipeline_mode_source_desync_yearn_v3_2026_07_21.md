@@ -23,16 +23,16 @@ status: open
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [market-tick-data-service, unified-trading-pm]
+repos: [market-tick-data-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer, admin]
 tags: [data-correctness, defi, pipeline-mode, manifest, source-desync, yearn-v3, honest-coverage, vault-share-price]
 related: [data_pipeline_reconciliation_defi_2026_07_20]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
@@ -118,23 +118,56 @@ vault-share-price collector) end-to-end:
 
 ## Todos
 
-- [ ] 1. [DATA] P2. Confirm the stale-row hypothesis — read the live YEARN_V3/ETHEREUM/yield_bearing/vault_share_price
-      manifest rows' `attempted_at`/`available_at` timestamps and compare against `vault_share_price_handler.py`'s
-      git-blame introduction date; if the desynced row predates the handler, this is a stale/orphaned row, not an
-      active-write-path bug (repo: market-tick-data-service, scoped manifest read only — no new whole-corpus walk).
-- [ ] 2. [DATA] P2. Measure blast radius beyond the single sampled row — scan the defi manifest for any row where
-      `pipeline_mode` implies one vendor source (via `pipeline_mode_for_source` reverse-mapping) while the row's own
-      `source` column names a different vendor, scoped to YEARN_V3 first then all `vault_share_price`-data_type venues
-      (repo: market-tick-data-service).
-- [x] 3. [CODE] P2. Fix `vault_share_price_handler.py` to pass an explicit `source=` on every `record_captured` /
-      `record_failed` / `record_zero_rows` call, consistent with the `"onchain_rpc"` already passed to
-      `pipeline_mode_for_source` — closing the crosscutting "`source=` required" gap for this handler (repo:
-      market-tick-data-service). — already covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for
-      execution).
-- [ ] 4. [DECISION] P2. If todo 1 confirms stale legacy rows (not an active-write bug), rule on remediation: leave the
-      legacy row as an accepted historical artifact (annotate the cutover register) vs. a targeted manifest correction
-      pass — do not blind-pick; this is manifest-absence/correction semantics territory per the workspace's
-      data-pipeline-correctness rule (repo: unified-trading-pm, `/codex/02-data/canonical-cutover-register.md`).
+- [x] 1. [DATA] P2. **DONE 2026-07-28 (slot-4) — NOT stale, active ongoing bug.** Scoped manifest read
+      (`read_availability_index` with row-group filters, no new whole-corpus walk) shows the desynced pairing
+      (`pipeline_mode=batch_onchain_rpc`, `source=onchain_subgraph`, `row_count=3`) on YEARN_V3/vault_share_price for
+      EVERY day from 2026-06-21 through 2026-07-27 (today at read time), `attempted_at` timestamps ranging
+      2026-07-22T18:39Z→2026-07-28T04:56Z — all postdate the handler's git-blame introduction
+      (`9475e66b`, 2026-05-03T15:01:01Z) by 7+ weeks and are still being written daily. The ORIGINAL sampled row
+      (day=2026-04-14) no longer exists in this desynced form — it was superseded on 2026-07-23 by a manifest-rebuild
+      pass (`f2e3ad41`, "harden manifest rebuild to route 0-row shards to honest-absence") that backfilled a
+      correctly-paired zero-row marker (`batch_onchain_subgraph`/`onchain_subgraph`, row_count=0) for that date. So the
+      one row the audit sampled is resolved/superseded, but the bug that PRODUCED that pairing is the handler's own
+      live write path and has been firing every single day since — this is an active-write-path bug, not a stale
+      legacy row.
+- [x] 2. [DATA] P2. **DONE 2026-07-28 (slot-4).** Scanned the full `vault_share_price` data_type (all 5 registered
+      protocols, 7,476 manifest rows). Every protocol shows the identical desync: 37 rows each of
+      `pipeline_mode=batch_onchain_rpc`+`source=onchain_subgraph` (desynced) vs. 952-2497 correctly-paired
+      `batch_onchain_subgraph`+`onchain_subgraph` rows (the rebuilt zero-row markers from todo 1). Total: **185
+      desynced rows** (37 × 5) across ETHENA, FRAX, MAKER, MORPHOVAULTS, YEARN_V3 — blast radius is the WHOLE handler,
+      not just YEARN_V3, confirming this is one bug in the shared `vault_share_price_handler.py` write path, not a
+      per-venue issue.
+- [x] 3. [CODE] P2. **DONE 2026-07-28 (slot-4) via `defi_satellite_ao_dispatch_batch1_2026_07_25.md`
+      (market-tick-data-service@\<sha\>) — shipped a DIFFERENT value than this todo's suggested `"onchain_rpc"`.**
+      Root-caused WHY the handler passed blank `source=`: UAC `SOURCE_PRIORITY[("defi","vault_share_price")]` (
+      `_source_priority_data.py:312`) registers **only** `["onchain_subgraph"]` — `is_valid_manifest_source("defi",
+      "vault_share_price", "onchain_rpc")` returns `False`. Passing `source="onchain_rpc"` as this todo originally
+      suggested would make `ManifestWriter._resolve_and_validate_source` raise `MissingSourceError` on every future
+      write — caught + swallowed by `DefiManifestRecorder._emit_captured_add`'s try/except (D10 isolation), silently
+      dropping the captured row from the manifest entirely. That is a WORSE regression than today's desynced-but-present
+      row (verified live via `is_valid_manifest_source`/`valid_manifest_sources` — see todo 6). Shipped instead: every
+      call site now passes `source="onchain_subgraph"` explicitly (the only currently-registered value, identical to
+      what UAC's `default_source()` auto-stamp already produced — zero behavior change to written manifest rows),
+      satisfying the crosscutting "`source=` required on `record_captured`" rule without introducing a write failure.
+      A code comment at the constant's definition documents why `"onchain_rpc"` was NOT used and points here.
+- [x] 4. [DECISION] P2. **RESOLVED 2026-07-28 — reframed by todo 1's finding.** Not a stale-legacy-row question (the
+      sampled row is gone, superseded by rebuild). The real remediation decision is the UAC registry gap captured in
+      NEW todo 6 below — routed there instead of the cutover register.
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+- [ ] 6. [DATA] P1. **NEW 2026-07-28 (slot-4) — the genuine root-cause fix, cross-repo, needs a UAC-owner/operator
+      decision, not done here.** Register `"onchain_rpc"` as a valid manifest source for `("defi",
+      "vault_share_price")` in `unified-api-contracts/unified_api_contracts/canonical/crosscutting/_source_priority_data.py:312`
+      — currently `["onchain_subgraph"]`, should genuinely reflect the RPC-only `convertToAssets` collection mechanism
+      this handler has used since its 2026-05-03 introduction (no subgraph-based vault_share_price collector has ever
+      existed in this codebase — grep-verified). Direct precedent: commit `6bf6012a` fixed the mirror-image bug for
+      DeFi `mev_events`/FLASHBOTS (handler passed the wrong pipeline_mode string against an ALREADY-correct UAC
+      registration; here it's the UAC registration itself that's wrong against an already-correct handler). Open
+      decision for whoever picks this up: REPLACE `["onchain_subgraph"]` → `["onchain_rpc"]` outright (my
+      recommendation — no genuine second source exists) vs. ADD `"onchain_rpc"` as a second source (would flip
+      `source_required()` to `True` for this cell, forcing every future caller — including the 185 already-correct
+      `batch_onchain_subgraph` zero-row-marker writers — to pass an explicit source or start raising). Once landed,
+      flip `market-tick-data-service`'s `_VAULT_SHARE_PRICE_SOURCE` constant (`vault_share_price_handler.py`) from
+      `"onchain_subgraph"` to `"onchain_rpc"` to match. Repos: unified-api-contracts (primary), market-tick-data-service
+      (follow-up one-line flip).
