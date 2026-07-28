@@ -366,24 +366,24 @@ drift_direction: advance-code
       `test_manifest_writer_record_empty_reason.py` for both signature changes.
 
       **Residual, NOT fixed here (filed separately)**: prediction's object-path scheme genuinely lacks
-                                                                                              `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
-                                                                                              `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
-                                                                                              prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
-                                                                                              this is a genuine architect-level design call (not a mechanical copy) — filed as
-                                                                                              `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
-                                                                                              (merged via PR #1593), NOT executed here.
+                                                                                                              `asset_group=`/`pipeline_mode=` segments (CF-2-paths/CF-3-partition RED) — unlike cefi/defi/tradfi (where
+                                                                                                              `pipeline_mode` is a single constant value, so retrofitting the path segment was harmless uniformity),
+                                                                                                              prediction carries 4 distinct `pipeline_mode` values across 2 structurally different existing path shapes, so
+                                                                                                              this is a genuine architect-level design call (not a mechanical copy) — filed as
+                                                                                                              `plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`
+                                                                                                              (merged via PR #1593), NOT executed here.
 
-                                                                                              **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
-                                                                                              (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
+                                                                                                              **[OPERATOR] VM-launch + legacy-bucket delete**: NEVER executed — confirmed unnecessary for cefi/defi/tradfi
+                                                                                                              (already canonical) and correctly gated behind the pred architect decision above (out of scope for this todo).
 
-                                                                                              **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
-                                                                                              items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
-                                                                                              flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
-                                                                                              re-verifies sports.
+                                                                                                              **`instruments_master_audit_instructions.md` CF-coverage checkboxes**: NOT flipped — that checklist's CF-1…CF-12
+                                                                                                              items are worded as ALL-5-AG (including sports), and this todo's scope + today's re-audit is non-sports only;
+                                                                                                              flipping those checkboxes on partial (4-of-5-AG) evidence would overclaim. Leaving them open for whoever next
+                                                                                                              re-verifies sports.
 
-                                                                                              Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
-                                                                                              `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
-                                                                                              of which are now the ONLY reds, exactly matching the filed issue doc's scope).
+                                                                                                              Evidence: unified-trading-library@03cfa0ac, instruments-service@9c203ce1+a4e8e1c9; live re-audit output (cefi/defi/tradfi
+                                                                                                              `=== SUMMARY …: GREEN — all CF pass ===`; pred `=== SUMMARY …: RED — ['CF-2-paths', 'CF-3-partition'] ===`, both
+                                                                                                              of which are now the ONLY reds, exactly matching the filed issue doc's scope).
 
 - [ ] [SCRIPT] P3. Fix `canonicalize_instruments_store_index.py`'s `_bucket_for` to route `asset_group=prediction`
       through `kind="instruments-store-prediction", asset_group=None` instead of raising `BucketNamingError` via the
@@ -560,6 +560,14 @@ drift_direction: advance-code
   `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` doc is flagged **P1 / big finding** (cross-AG, not yet
   root-caused) per this workspace's findings-triage rule. Line-191 checkbox flipped on
   `distinct_values_noncanonical_audit_2026_07_20.md` with this same evidence (cross-linked, not duplicated).
+  **2026-07-28 addendum**: the table's two `sports` rows citing `sports_consolidated_closeout_2026_07_19.md` line 406
+  (`ODDS` instrument_type; `ODDS, ODDS_MOVEMENT, ODDS_SNAPSHOT, TRADES` data_types) had their owning todo flipped done
+  the same day — the K1/K2 `ODDS`/`TRADES` uppercase population is migrated + deleted + independently verified absent
+  from GCS. Left as historical record (not rewritten) rather than edited in place, but flagging: a fresh census re-run
+  would confirm whether `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` are fully covered by that same closure or are a genuinely
+  separate, still-open population outside K1/K2's scope (this K1/K2 effort only ever touched
+  `instrument_type=ODDS/data_type=TRADES`, never the `_MOVEMENT`/`_SNAPSHOT` data_types) — not yet re-run, a real
+  follow-up, not assumed clean.
 
 - **2026-07-28 (slot-6) — DONE — InstrumentRecord `extra='forbid'` authoritative measurement + REMOVE dispositions
   applied.** `instruments-service@ee2d6c75`.

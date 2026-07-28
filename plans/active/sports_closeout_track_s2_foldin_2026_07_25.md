@@ -318,12 +318,12 @@ drift_direction: advance-code
   (`sports_weather_uac_layout_per_day_bare_vs_writer_per_day_per_league_2026_07_20.md`, now archived,
   `status: resolved`) shows `SPORTS_DATA_TYPE_LAYOUT["WEATHER"]` aligned to `PER_DAY_PER_LEAGUE`,
   `resolved_by: unified-api-contracts@b73c95d5` (2026-07-25).
-- [ ] [DATA] P3. BLOCKED-PREREQUISITES — **sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check, gated on the
-      parent's Track V K1/K2 legacy-object DELETE (`[OPERATOR]`-gated) executing first.** Not a live defect (the 87.2%
-      ratio spike is a K1/K2 denominator-shrink artifact on already-dead residue, not a new outage) — this is just the
-      re-check once that DELETE lands. Filed: `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service,
-      read-only once unblocked). **Done when**: the parent's K1/K2 DELETE todo is confirmed `[x]` AND a fresh ratio
-      check confirms the spike resolves as predicted.
+- [ ] [DATA] P3. **UNBLOCKED 2026-07-28** — sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check. The parent's Track
+      V K1/K2 legacy-object DELETE has landed and is verified complete (`sports_consolidated_closeout_2026_07_19.md`
+      Track V K1/K2 todo, `market-tick-data-service@26201c44`, 345,852/345,852 deleted, 0 failed). Not a live defect
+      (the 87.2% ratio spike is a K1/K2 denominator-shrink artifact on already-dead residue, not a new outage) — this is
+      now the actionable re-check. Filed: `sports_trades_attempted_failed_2026_07_23.md`. (repo: deployment-service,
+      read-only). **Done when**: a fresh ratio check confirms the spike resolves as predicted.
 - **[DOC] P2.** `sports_features_layer_findings_sweep_2026_07_18.md` is NOT closed by this plan or by the parent
   closeout — 73 open todos there are the features-layer correctness backlog, deliberately not duplicated here (too large
   to fold in). Do not treat sports feature-layer correctness as done when this closeout or this child archives; that doc
