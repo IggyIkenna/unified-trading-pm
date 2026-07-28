@@ -72,6 +72,30 @@ _qg_content_hash() {
 _qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
 trap '_qg_exit_handler' EXIT
 
+# ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──
+# Mirror of base-service.sh's own signal trap (see that file for the full rationale) —
+# shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md's field evidence
+# includes library-tier repos (unified-api-contracts) directly, so this needs the same
+# fix, not just the service-tier base. SIGKILL stays fundamentally UNCATCHABLE (no trap
+# fires for it); this closes the CATCHABLE-signal slice only (SIGTERM/SIGINT/SIGHUP).
+_qg_signal_handler() {
+    local sig="$1" marker_dir marker
+    marker_dir="$(command -v _qg_ledger_dir >/dev/null 2>&1 && _qg_ledger_dir || echo "${WORKSPACE_ROOT:-.}/.benchmarks/qg-governor")"
+    mkdir -p "$marker_dir" 2>/dev/null || true
+    marker="${marker_dir}/killed.$$"
+    {
+        echo "killed_by_signal=${sig}"
+        echo "pid=$$"
+        echo "repo=${PACKAGE_NAME:-unknown}"
+        echo "killed_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+    } > "$marker" 2>/dev/null || true
+    echo "❌ [quality-gates] received SIG${sig} — wrote kill marker (${marker}) before exit; a poller can now tell this apart from a still-running or a normal-exit run" >&2
+    exit 143
+}
+trap '_qg_signal_handler TERM' TERM
+trap '_qg_signal_handler INT' INT
+trap '_qg_signal_handler HUP' HUP
+
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}

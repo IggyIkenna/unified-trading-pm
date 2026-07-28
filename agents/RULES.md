@@ -87,6 +87,11 @@ git push origin HEAD:live-defi-rollout
 # 3) Call /done with SHA_CODE
 ```
 
+**Ordering note**: commit BEFORE running `quality-gates.sh` (as the snippet above already shows) — the QG sentinel is
+keyed to HEAD at the moment it's written, so QG-before-commit moves HEAD past the sentinel and forces an avoidable
+re-run on the very next quickmerge call. See `worker.md`'s Pass-1/Pass-2 section for the full rationale
+(`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`).
+
 **Server M3 verification** (codified 2026-05-18 re-review — DOES verify cross-repo flips): after `/done`, the server
 walks the sibling PM worktree at `.tabs/<your-slot>/unified-trading-pm/` and runs
 `git log --since="10 minutes ago" -- <plan_ref>`. Found → M3 satisfied (`reason: "cross_repo_pm_flip_verified"` +

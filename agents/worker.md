@@ -341,6 +341,13 @@ a) Commit your code with a conventional commit. The task brief usually tells you
 
 a2) SHIP via the v2 canonical quality-gate flow (MANDATORY — two passes):
 
+- **Run Pass 1 AFTER committing (step a), never before.** The sentinel Pass 1 writes is keyed to
+  the exact HEAD SHA at the moment it finishes — running QG on a dirty/uncommitted tree, then
+  committing afterward, moves HEAD past the sentinel's recorded SHA, so Pass 2's `--agent` sentinel
+  check refuses (mismatch) and forces an avoidable full re-run. Commit first, so the one QG pass
+  you pay for lands on the SHA you're actually shipping
+  (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — this exact ordering mistake
+  compounded a real shared-host contention incident into extra wasted re-run cycles).
 - **Pass 1 — LOCAL QUALITY GATES** (full, no skip flags): `bash scripts/quality-gates.sh`. This MUST exit 0. A clean
   full run writes a `.qg_last_passed_sha` sentinel = your committed HEAD. A partial run (`--skip-tests` / `--skip-codex`
   / `--quick`) does NOT write the sentinel and CANNOT ship. If QG fails: fix it, re-commit, re-run until green. Do NOT
