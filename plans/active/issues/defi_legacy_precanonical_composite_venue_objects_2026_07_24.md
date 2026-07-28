@@ -100,6 +100,54 @@ it.
   separate legacy tree the foundational migration didn't sweep — not traced.
 - A fix design — this issue is the finding + scoping, not a remediation plan.
 
+## 2026-07-28 update — parquet content sampled across all 9 venues x 5 days (43 objects)
+
+Per `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s `[DIAG] P1` todo, downloaded and read the actual parquet content
+(not just object size/metadata) for every one of the 9 known composite-venue objects across 5 sampled days
+(`2024-06-15`, `2025-01-15`, `2025-03-15`, `2025-06-01`, `2025-08-06` — bounded, not a corpus-wide walk; UNISWAPV4 only
+present from `2025-03-15` onward, giving 43 objects total). Bucket:
+`gs://market-data-tick-defi-prd-central-element-323112`.
+
+**Distribution: 5/43 sampled objects (all ETHENA-ETHEREUM) are single-row-scale; 38/43 (8 of the 9 venues) carry
+substantial multi-row historical data.** The single-ETHENA-row assumption in this doc's original scoping does NOT
+generalize to the other 8 venues:
+
+| venue              | rows/day (range across sample) | data_type(s)                                          | distinct instrument_keys |
+| ------------------ | ------------------------------ | ----------------------------------------------------- | ------------------------ |
+| ETHENA-ETHEREUM    | 1 (every day)                  | oracle_prices                                         | 1                        |
+| LIDO-ETHEREUM      | 96 (constant)                  | oracle_prices                                         | 1                        |
+| CURVE-ETHEREUM     | 96–950                         | liquidity(, swaps from 2025-08)                       | 1–7                      |
+| ETHERFI-ETHEREUM   | 97 (constant)                  | oracle_prices, rewards                                | 1                        |
+| MORPHO-ETHEREUM    | 240–724 (growing)              | rate_indices, utilization                             | 25–49                    |
+| AAVEV3-ETHEREUM    | 2920–2929 (constant)           | oracle_prices, rate_indices, risk_params, utilization | 40–50                    |
+| UNISWAPV2-ETHEREUM | 3030–10878                     | liquidity, swaps                                      | 17–18                    |
+| UNISWAPV4-ETHEREUM | 6062–12393                     | liquidity, swaps                                      | 40–67                    |
+| UNISWAPV3-ETHEREUM | 24563–53854 (largest)          | liquidity, swaps                                      | 138–155                  |
+
+Full per-object table (day, venue, filename, size, row count, data_types, distinct keys, ts range) — 43 rows — is
+recorded in the session transcript for `defi_satellite_ao_dispatch_batch1-018`/`-020`; reproducible via
+`google.cloud.storage.Client.list_blobs()` + `pandas.read_parquet()` over the 9 venue prefixes x the 5 sample days above
+(no new tooling needed).
+
+**Secondary finding — filename pattern split.** 8 of the 9 venues' objects carry a `ticks_migrated_20260418T*.parquet`
+filename (a fixed migration-run timestamp, `2026-04-18`), consistent with a single one-time backfill/migration batch.
+UNISWAPV4-ETHEREUM's objects are instead named plain `ticks.parquet` — no migration-run timestamp. Checked whether this
+means UNISWAPV4 is an ACTIVELY GROWING leak into this legacy shape (as opposed to a frozen historical artifact): probed
+`day=2026-07-20/2026-07-25/2026-07-27` (near-present) for `venue=UNISWAPV4-ETHEREUM/` under this same non-canonical
+prefix — **zero objects found**, and the sampled `ticks.parquet` objects' own GCS `Creation time` is `2026-05-12` (same
+batch/day as the other 8 venues' `_migrated_` objects, confirmed via `gcloud storage ls -l`). So this is NOT an active
+ongoing writer bug — just a naming inconsistency WITHIN the same one-time 2026-05-12 migration batch (UNISWAPV4
+presumably came from a different source script in that batch that didn't apply the `_migrated_<ts>` naming convention
+the other 8 got). Flagging for whoever executes the fold: UNISWAPV4's objects need the same fold treatment but won't
+match a filename-pattern-based `_migrated_` selector if one is used — must select by path shape (missing
+`chain=`/`instrument_type=`/`data_type=` segments), not by filename.
+
+**Answers the fold-vs-migrate decision's data prerequisite**: this is NOT a "handful of trivial single-row objects" —
+it's substantial captured historical data (up to ~54k rows/day for UNISWAPV3) sitting completely outside manifest
+coverage. A "some other disposition" (delete/ignore) reading of the operator decision below would silently discard real
+historical DeFi tick data; fold (re-derive the canonical path from each object's own `instrument_key`/`data_type`
+columns) is the only disposition that doesn't lose data, for at least the 8 non-ETHENA venues.
+
 ## Todos
 
 - [x] [DATA] P1. Measure the true scale of this legacy population — either extend `rebuild_defi_manifest`'s own
@@ -119,11 +167,12 @@ it.
       parquet's own `instrument_key`/`data_type` columns to re-derive it) vs. some other disposition — gated on the
       scale + sample-distribution facts from the two todos above. This is a genuine judgment call, not a mechanical fix
       (per task_template.md's bounded-outcome rule) — do not execute a fold/migrate without this decision. **Citation
-      corrected 2026-07-27**: the two prerequisite todos above are checked `[x]` here only because they were DELEGATED
-      to `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (todos at its lines ~307/315) — as of this re-check, THOSE
-      todos are still open `[ ]` there, so the scale + distribution facts this decision needs have NOT actually been
-      gathered yet. Kept operator-gated (genuine design judgment, not a reversibility question), but decide fresh once
-      the satellite plan's measurement todos actually land — do not treat the `[x]` above as proof the prerequisite data
-      already exists.
+      corrected 2026-07-27, re-checked 2026-07-28**: the two prerequisite todos above are checked `[x]` here only
+      because they were DELEGATED to `defi_satellite_ao_dispatch_batch1_2026_07_25.md`. As of 2026-07-28: the
+      **distribution** prerequisite (the `[DIAG]` todo) IS now genuinely done — see "2026-07-28 update" above (5/43
+      sampled objects single-row, 38/43 substantial multi-row data across 8 of the 9 venues). The **scale** prerequisite
+      (the `[DATA]` todo, true corpus-wide count of how many objects/dates carry this shape) is STILL open `[ ]` in the
+      satellite plan as of this update — decide only once that scale figure also lands, do not treat the distribution
+      finding alone as sufficient (it answers "how bad per-object" but not "how many objects total").
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.

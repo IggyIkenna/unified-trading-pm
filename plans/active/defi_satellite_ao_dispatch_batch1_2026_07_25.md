@@ -365,14 +365,15 @@ drift_direction: advance-code
       market-tick-data-service. **Done when**: a real count or tight bounded estimate (with method cited) of how many
       objects across the full 2020-2026 defi date range carry this legacy composite-venue shape is recorded as a dated
       update to the issue doc. Source: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
-- [ ] [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects
-      (beyond the single confirmed ETHENA-ETHEREUM example) — spanning the 9-venue population already identified on the
-      2025-08-06 sample (AAVEV3/CURVE/ETHENA/ETHERFI/LIDO/MORPHO/UNISWAPV2/V3/V4-ETHEREUM) — and report per sampled
-      object whether it's single-row-scale (like the confirmed ETHENA sample) or carries substantial historical data.
-      Repo: market-tick-data-service. **Done when**: a stated distribution (e.g. "N of M sampled are single-row")
-      covering a representative multi-venue/multi-day sample is recorded as a dated update to the issue doc, sufficient
-      for the fold-vs-migrate decision to be answered against. Source:
-      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+- [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
+      downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
+      `2025-08-06`). **Result: only ETHENA-ETHEREUM is single-row (5/43); the other 8 venues carry substantial multi-row
+      data (38/43), up to ~54k rows/day for UNISWAPV3-ETHEREUM** — refutes the doc's original single-row assumption.
+      Also found UNISWAPV4-ETHEREUM uses a different filename shape (`ticks.parquet`, no `_migrated_<ts>` marker) from
+      the same 2026-05-12 migration batch — not an active leak (zero recent-day objects in this shape), but a fold
+      selector must match by PATH SHAPE, not filename pattern. Repo: market-tick-data-service —
+      `plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` dated 2026-07-28 update.
+      Source: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 - [ ] [DATA] P1. Corpus-wide scope audit for the KALSHI_PERP perp_funding manifest-emit failure: scan GCS under the
       scoped prefix (`pipeline_mode=batch_kalshi_perp/asset_group=defi/venue=KALSHI_PERP/...`) for all 5 observed
       KALSHI_PERP perp symbols across the full date range objects exist for (single-prefix listing, not a whole-corpus
