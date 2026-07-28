@@ -173,14 +173,21 @@ are identified (2) and the ledger exists (3).
 **E — Rehomed from `issues/batch_live_reconciliation_service_audit_2026_05_27.md` (2026-07-27 pre-June-1 stale-work
 audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked them:**
 
-- [ ] [CODE] P1.BLRS1 (was G1, P1). **Wire BLRS `resolution_api.py` to Stage-5 outputs** — it's mock-backed / in-memory
-      today (hardcoded breaks), never reads `index.json`/`summary_*.json`. Real P1 pre-F21-prod-activation blocker.
-      Repo: batch-live-reconciliation-service.
-- [ ] [CODE] P2.BLRS2 (was G3, P2). **stage4 agent dispatch to trading-agent-service** — currently a markdown-only stub;
-      wire the real dispatch call. Repo: batch-live-reconciliation-service / trading-agent-service.
-- [ ] [UI] P3.BLRS3 (was G10, P3). **Verify UI→resolution-API wiring** (`unified-trading-system-ui` `use-reports.ts`
-      hooks) — unverified against the real API. Gated behind P1.BLRS1 (no point verifying UI wiring against a still-mock
-      resolution API).
+- [x] ✅ [CODE] P1.BLRS1 (was G1, P1) — DONE (batch-live-reconciliation-service@80380c5). **Wired BLRS
+      `resolution_api.py` to Stage-5 outputs** — `_current_breaks()` reads `t1-recon/recon/index.json` +
+      `summary_{date}.json` from the recon bucket, falling back to the mock set only when no run has ever produced a
+      summary; `stage5_results_writer.py` now serializes per-deviation detail into the summary JSON. 6 new unit tests,
+      full QG green. Repo: batch-live-reconciliation-service.
+- [ ] [CODE] P2.BLRS2 (was G3, P2) — RESCOPED, not done. **stage4 agent dispatch to trading-agent-service** turned out
+      to need a real design decision, not a mechanical wire-up: `trading-agent-service` exposes zero inbound consumption
+      surface for a "reconciliation analysis task" today (health/readiness only). See
+      `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the 3 options + recommendation. Repo:
+      batch-live-reconciliation-service / trading-agent-service.
+- [ ] [UI] P3.BLRS3 (was G10, P3) — VERIFIED, not done. **UI→resolution-API wiring is confirmed broken on BOTH sides**
+      (not just BLRS's): `unified-trading-system-ui`'s 9 `use-reports.ts` reconciliation hooks call gateway routes that
+      don't exist anywhere in `unified-trading-api` (`reporting.py`/`positions.py`) — but zero UI pages consume those
+      hooks, so nothing is live-broken today. See `/plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md` for the
+      per-repo build todos. Gated behind P1.BLRS1 (now done) + the gateway-proxy build.
 
 ---
 
