@@ -240,11 +240,13 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       verbatim into batch2. All items now resolved-in-place or migrated. **NOT archived**: doc carries
       `locked_by: live-defi-rollout` (line 27), no `[unlock-plan]` grant this session — STOP-and-report; this doc is
       otherwise fully closeable.
-- [ ] [PLAN] P2. `plans/active/issues/uv_pin_fleet_drift_2026_06_22.md` →
+- [x] ✅ [PLAN] P2. **PARTIAL — content-verified + 2 stale boxes flipped, NOT archived (locked, no `[unlock-plan]`
+      grant)** — unified-trading-pm@cff8d611b. `plans/active/issues/uv_pin_fleet_drift_2026_06_22.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`. setup.sh fleet rollout + boot-script hardening already "DONE
       2026-07-26" there (instruments-service@40240042, unified-trading-pm@703b1e912); residue (0.10.8 constant
-      centralization, uv-version drift-guard, Harsh's-laptop/epic-VM realignment) parked as batch1's own items 2-3. Flip
-      several done-but-unchecked boxes in the source doc first.
+      centralization, uv-version drift-guard) cross-referenced to batch1 Deferred items 2/3 (real content, confirmed).
+      Harsh's-laptop/epic-VM item NOT covered by batch1 (verified 0 grep hits) — epic-VM half moot now (durable fix
+      shipped), laptop half stays a small open manual step.
 - [x] [PLAN] P2. `plans/active/l0_doc_index_generator_2026_06_24.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (~L476-498). 2 remaining Deferred items (AO-dashboard L0-graph
       route; on-demand stale-check wrapper) cited Source verbatim, still open there. — ✅ archived with banner
@@ -280,10 +282,12 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       (§5-RESOLVED #24/#27), not `instruments_completion_tracker_2026_07_06.md`. **NOT archived — doc is
       `locked_by: live-defi-rollout` and this wave had no `[unlock-plan]` authorization; all residual content
       (C2/C4/C5/C6/C9) is now confirmed homed or closed, so archival is a pure `[unlock-plan]` ask away.**
-- [ ] [PLAN] P2. `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` →
+- [x] ✅ [PLAN] P2. **PARTIAL — orphans rehomed, NOT archived (locked, no grant + genuine non-infra remainder)** —
+      unified-trading-pm@cff8d611b. `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` →
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, which cites this doc for 3 open todos (execution-service
-      `service_name` drift; SIT's 2 QG failures; UAC `infura_*` rename). 2 true orphans (deployment-scripts bucket
-      lifecycle rules; G-TRACE E2E trace API) need a home before archiving.
+      `service_name` drift; SIT's 2 QG failures; UAC `infura_*` rename), confirmed present with real content. Both true
+      orphans (deployment-scripts bucket lifecycle rules; G-TRACE E2E trace API) filed as new todos into that same plan
+      per operator decision (§5#28).
 - [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
@@ -383,9 +387,17 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       reconciled Track-1 todos still genuinely open per its own 2026-07-27 note) — not yet "end-to-end green," so 1.5b
       correctly stays open+gated, not dispatched. Whole doc NOT archived (real remainder: 1.5b + the 3
       superseded-but-not-yet-shipped bookkeeping items).
-- [ ] [PLAN] P2. `plans/active/codex_violations_ratchet_to_five_2026_06_10.md` — vast majority done (all fleet repos ≤5
-      violations, verified 2026-07-27); MTDS >900-line-tail confirmed done in code — flip it, rewrite the
-      "remaining >900 tail" catch-all to just instruments-service `_solana_utils.py` (1068L). 2 items (UAC
+- [x] ✅ [PLAN] P2. **PARTIAL — flipped in place, `[unlock-plan]` exercised (granted §5#19), NOT archived (real
+      remainder)** — unified-trading-pm@103ce6a64. Verified fleet-wide `CODEX_MAX_VIOLATIONS` ≤5 (max=deployment-api
+      at 5) and MTDS >900-tail done in code (0 files >900L) — both flipped citing the measurements. **Corrected the
+      `_solana_utils.py` "longest file" claim**: it's 1068L but NOT the longest >900L file in instruments-service any
+      more — `api_football.py` (1201L) and `footystats.py` (1199L) are longer (sports-tranche files, out of this
+      catch-all's original scope) — rewrote the item accurately. Cross-referenced (not duplicated) the 2 items already
+      in `infra_satellite_ao_dispatch_batch1_2026_07_26.md`. No `batch2` exists yet — pip-audit bumps, domain-client
+      retarget, and the corrected `delta_proxy_repricer.py` item (§5#19: wire in, NOT delete) stay open in the source
+      doc per the stated fallback. `plans/active/codex_violations_ratchet_to_five_2026_06_10.md` — vast majority done
+      (all fleet repos ≤5 violations, verified 2026-07-27); MTDS >900-line-tail confirmed done in code — flip it,
+      rewrite the "remaining >900 tail" catch-all to just instruments-service `_solana_utils.py` (1068L). 2 items (UAC
       `defi_position.py` threshold; deployment-api codex 5→0) already migrated into
       `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, still open there — remove/cross-reference the duplicates.
       Rehome pip-audit bumps, domain-client base-gate retarget, `delta_proxy_repricer.py` confirm, and the Phase-3
@@ -396,7 +408,13 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       market-data-processing-service@bffb9df, ml-service, trading-agent-service) — 0 checkboxes flipped, flip them.
       execution-service, greeks-service, strategy-service (also vendoring MTDS) still confirmed Pattern-B, gated on
       "Owner: Ikenna" design call — see §5. Track remainder via `infra_consolidated_closeout_2026_07_25.md` Track 1.
-- [ ] [PLAN] P2. `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — 9/11 done. Item (a)
+- [x] ✅ [PLAN] P2. **PARTIAL — both items homed, NOT archived (locked, no grant)** — unified-trading-pm@cff8d611b. Item
+      (a) RULE-11 flipped citing the migration into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`
+      ([OPERATOR]-tagged, open); approval on record (§5#21) but execution (edit `plan-health-agent.yml` + template twin,
+      delete the live Cloud Run job + scheduler, edit deployment-service terraform) NOT done this session — cross-repo
+      live-prod-delete out of this task's file scope, files located for the next pass. Item (b) (fold `--precommit` into
+      quality-gates-v2) filed as a new todo directly into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` next to
+      RULE-11. `plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md` — 9/11 done. Item (a)
       RULE-11 (drop `schedule:`/Haiku, delete Cloud Run hygiene-sweep job) confirmed still needed and already migrated
       verbatim into `infra_satellite_ao_dispatch_batch1_2026_07_26.md` ([OPERATOR]-tagged, open) — flip here. Item (b)
       "fold `--precommit` sweep into quality-gates-v2 + retire standalone plan-health-gate GHA job" is a true orphan —
