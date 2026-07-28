@@ -32,6 +32,7 @@ related:
   [
     /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md,
+    /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-28
@@ -373,16 +374,13 @@ for the centralization design this whole audit is ultimately building toward.
 
 ## What's NOT done yet (the operator's expanded scope)
 
-Rounds 1 (CEFI), 2 (DEFI), and 3 (TRADFI) are complete. **SPORTS, PREDICTION have not been audited for this bug class
-yet** — each asset group has its own bucket family, its own pipeline_mode vocabulary, and potentially its own
-hand-rolled path-construction sites. The operator explicitly wants:
-
-1. The same audit methodology extended to TRADFI/SPORTS/PREDICTION.
-2. Explicitly **batch AND paper AND live** code paths checked (round 2 covered this for DeFi — see execution-service
-   finding 1 above, the first genuinely live-wired instance found across both rounds).
-3. A genuine **centralization** design, not just point-fixes — i.e., does a true "resolve me the read/write path for
-   dataset X, given these partition keys" universal function need to be built (or does one already exist that services
-   should be migrated onto), so this bug class becomes structurally impossible instead of periodically re-discovered.
+Rounds 1 (CEFI), 2 (DEFI), and 3 (TRADFI) are complete. **SPORTS, PREDICTION rounds (4-5) are tracked in the split-off
+continuation doc** `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (this
+parent doc hit 586 lines — split rather than grow past the plan line cap). The operator's third ask — **a genuine
+centralization design**, not just point-fixes (does a true "resolve me the read/write path for dataset X, given these
+partition keys" universal function need to be built, or does one already exist that services should be migrated onto) —
+is still open and tracked as a todo below; it's the item that actually closes the recurring-bug-class problem once
+rounds 4-5 land.
 
 ## Todos
 
@@ -567,13 +565,10 @@ hand-rolled path-construction sites. The operator explicitly wants:
       3-way-duplicated-but-currently-correct partition-path implementation (architecture-hygiene evidence for the
       centralization design todo). New follow-up todos logged for every finding.
 
-- [ ] [SCRIPT] P1. **Extend the audit to SPORTS** — same methodology. Sports is where today's ORIGINAL P2/P3 work
-      happened (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`) — cross-reference against that doc's findings so
-      this doesn't re-discover the same ground. (repo: all of the above)
-
-- [ ] [SCRIPT] P1. **Extend the audit to PREDICTION** — same methodology, scoped to KALSHI/POLYMARKET's `pipeline_mode`
-      conventions (today's P2 fix, `market-data-processing-service@df02dd0`, is the one already-confirmed PREDICTION
-      data point — build from there, don't re-derive it). (repo: all of the above)
+- [x] [SCRIPT] P1. **Extend the audit to SPORTS + PREDICTION** — MOVED 2026-07-28 to
+      `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (a split-off
+      continuation doc, created once this parent doc reached 586 lines) rather than growing this doc past the plan line
+      cap. Track rounds 4-5 there, not here.
 
 - [ ] [DESIGN] P1. **Design + build genuine centralization** — the real fix the operator is asking for, beyond
       individual bug patches: a single canonical "resolve the read/write path for dataset X given these partition keys,
