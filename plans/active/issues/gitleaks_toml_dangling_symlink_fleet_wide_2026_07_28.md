@@ -43,7 +43,11 @@ related: []
 created: 2026-07-28
 parent_epic: infrastructure_master
 priority: P1
-assigned_vm: NA
+assigned_vm: planning
+estimate_class: infra
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.8
+assigned_role: infra-engineer
 resolved_by:
 locked_by:
 source: autonomous-agent-fleet-sweep
@@ -103,8 +107,7 @@ system-integration-tests, e2e-testing.
       `readlink` before/after) — shipping per-repo below.
 - [x] [SCRIPT] P1. `deployment-ui` — shipped (`e98c575`).
 - [x] [SCRIPT] P1. `unified-api-contracts` — shipped (`feb79db8`).
-- [ ] [SCRIPT] P1. `unified-trading-library` — ship via quickmerge (layer 1, needs unified-api-contracts committed
-      first).
+- [x] [SCRIPT] P1. `unified-trading-library` — shipped (`5583b94f`).
 - [ ] [SCRIPT] P1. `agent-orchestrator` — ship via quickmerge (layer 2).
 - [ ] [SCRIPT] P1. `strategy-service` — ship via quickmerge (layer 2).
 - [ ] [SCRIPT] P1. `alerting-service` — ship via quickmerge (layer 2).
