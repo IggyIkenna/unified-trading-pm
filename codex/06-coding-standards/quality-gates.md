@@ -971,7 +971,8 @@ an existing baselined occurrence that moved files in the same commit that moves 
 
 ## STEP 5.70: Explicit `pipeline_mode=` at every `record_*` call (manifest v8)
 
-Enforces [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase
+Enforces
+[`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md) Phase
 4 "explicit-or-fail" contract + CLAUDE.md [**Live = batch (CRITICAL)**](../../cursor-configs/CLAUDE.md): the only
 legitimate difference between batch and live for a given `(asset_group, data_type)` is which SOURCE serves it — so the
 manifest must record that source. Manifest schema v8 makes `pipeline_mode` a first-class column; this ratchet keeps it
@@ -1046,7 +1047,7 @@ enum extension).
 ## STEP 5.102: `ManifestWriter.record_*()` early-return missing `.write()`/`.flush()`
 
 Enforces the follow-up standing-guard todo from
-[`manifest_early_return_missing_write_loss_2026_07_09.md`](../../plans/active/issues/manifest_early_return_missing_write_loss_2026_07_09.md):
+[`manifest_early_return_missing_write_loss_2026_07_09.md`](../../plans/archive/issues/manifest_early_return_missing_write_loss_2026_07_09.md):
 a `record_*()` call only appends to the calling `ManifestWriter` INSTANCE's local buffer — `.write()`/`.flush()` is what
 moves those records into the module-level pending buffer that actually reaches GCS. An early-return guard block that
 calls `record_*()` in a loop then `return`s with no `.write()`/`.flush()` silently discards every honest-absence write

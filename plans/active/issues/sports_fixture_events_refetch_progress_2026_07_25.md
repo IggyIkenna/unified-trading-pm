@@ -297,7 +297,7 @@ code — correctness over efficiency per the workspace's data-pipeline-correctne
 now confirmed on the expanded "mega plan" quota so the extra redundant work is affordable. Tarballs refreshed first
 (`instruments-service@5a6deafd`, `unified-api-contracts@f3ae871c` — both confirmed "tarball fresh" by the launcher's own
 freshness check at launch time, not just claimed). **New finding**: the original `2019-01-01` start date is now REJECTED
-by a 2020-06-06 sports-data-floor guard in the launcher (`codex/02-data/sports-2020-06-data-floor.md`) that either
+by a 2020-06-06 sports-data-floor guard in the launcher (`/codex/02-data/sports-2020-06-data-floor.md`) that either
 wasn't wired in yet on 2026-07-25 or was never exercised by this specific campaign — corrected the launch to start
 `2020-06-06` (pre-floor 2019 dates are fabrication-by-construction and were already wiped from GCS/manifest elsewhere,
 so recovery-listed fixture_ids before the floor, if any, are expected to no-op harmlessly). Launched
