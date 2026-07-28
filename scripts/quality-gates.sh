@@ -368,6 +368,11 @@ HARDCODED_PROJECT_EXCLUDE_GLOBS+=(
     # `gcloud builds describe` verification (same category — the value IS the project; overridable
     # via --project; no config injection for a post-gate probe; not a secret).
     "!**/check_evidence_backed_completion.py"
+    # build_dispatch_staleness_monitor: DEFAULT_PROJECT_ID is the fleet's single Cloud Build/
+    # Artifact Registry project (same category — the value IS the project; overridable via the
+    # GCP_PROJECT_ID env var; this is a standalone GHA script, not a service with config
+    # injection; not a secret).
+    "!**/build_dispatch_staleness_monitor.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
