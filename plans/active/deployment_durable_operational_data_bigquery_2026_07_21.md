@@ -137,7 +137,7 @@ and fix those as part of the plan too — otherwise I just want the best, most r
       resource-sample event stays its own event/topic rather than reusing `DEPLOYMENT_PROGRESS`, since the flat-schema
       requirement (typed BQ columns) is easier to keep clean on a purpose-built payload than by carving fields back out
       of the general lifecycle event.
-- [x] ✅ _*PR-6 DONE 2026-07-27 (peak_* deferred, see below)_* — run-ledger: `started_at`/`completed_at` now flow
+- [x] ✅ _\*PR-6 DONE 2026-07-27 (peak_* deferred, see below)_* — run-ledger: `started_at`/`completed_at` now flow
       through both the daemon's default builder and `heartbeat_cli.py`'s `_vm_run_summary_payload`; `peak_*` resources
       are NOT built (only instantaneous-at-completion `cpu_pct`/`mem_pct`/`disk_pct`, honestly documented in the code
       comment as a follow-up — real peak-tracking needs a running-max mechanism this pass didn't add). Idle-spend: the
@@ -316,8 +316,12 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
       the original ask described) — the backend endpoint only accepts an optional `vm_name` filter today; a richer
       filter would need new query params + SQL `WHERE` clauses, not built this session.
 - [ ] [REVIEW] P2. **STILL OPEN — analysis path doc.** Not written this session.
-- [ ] [INFRA] P1. Ship (`quickmerge.sh "msg" --agent --files '<paths>'` across the repos) + flip todos same turn
-      (`docs(plans):`).
+- [x] ✅ **Ship verified 2026-07-28** — all five touched repos confirmed clean + fully pushed to
+      `origin/live-defi-rollout` (`ahead=0`, `git status --porcelain` empty): deployment-api, deployment-ui,
+      deployment-service, unified-trading-library, agent-orchestrator. Re-verified while unblocking an unrelated GHA
+      self-hosted-runner fan-out that hit this plan's own QG failures in deployment-api (`vm_resource_history.py`
+      codex-compliance) and deployment-ui (`NavMenu`/`TopNavBar` nav-count tests) — both fixed and shipped as part of
+      that session, confirmed still landed here.
 - [x] ✅ **Codex audit DONE 2026-07-27 (light pass)** — added a "Durable operational data" section to
       `/codex/05-infrastructure/deployment-observability.md` (tables, write/read path, known gaps) + a `related:` link
       to this plan. NOT done: a cross-ref edit inside `/codex/02-data/live-data-persistence-and-event-log.md` itself
