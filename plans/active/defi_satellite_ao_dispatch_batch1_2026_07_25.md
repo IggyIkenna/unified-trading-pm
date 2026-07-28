@@ -374,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-              (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-              discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-              **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-              ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-              UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-              objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-              the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-              Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-              decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-              "2026-07-28 update — true corpus-wide scale measured" section. Source:
-              `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -462,13 +462,21 @@ drift_direction: advance-code
       correct). unified-trading-pm@00e073836. Repos: instruments-service, market-tick-data-service,
       market-data-processing-service, unified-trading-pm (read-only audit, no code changed). Source:
       `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
-- [ ] [DOC] P1. Port the already-decided two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md`
-      — document that `instrument_id` stays bare `pool_address.lower()` while `chain` lives only in the symbolic
-      `canonical_instrument_id`/`glued_pair_id` (Option A, operator ruling 2026-07-18), sourcing content already
-      established in `unified_api_contracts/canonical/crosscutting/defi.py:313-331,409-435`,
-      `instruments-service/docs/DEFI_INSTRUMENTS.md`, and the closeout plan's "The two-id model" section. Repo:
-      unified-trading-pm. **Done when**: the codex doc contains a section documenting the two-id model consistent with
-      those 3 sources. Source: `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
+- [x] ✅ [DOC] P1. **DONE 2026-07-28 (slot-13, landed ahead of this todo's own dispatch) — verified 2026-07-28
+      (slot-2).** Ported the two-id/dual-key POOL model into `/codex/02-data/defi-canonical-naming-ssot.md` — new "##
+      POOL identity is a two-id / dual-key model (Option A, operator-ruled 2026-07-18)" section documents
+      `instrument_id` staying bare `pool_address.lower()` (machine/join key) while `chain` disambiguates only inside the
+      symbolic `canonical_instrument_id`/`glued_pair_id` (`<VENUE>-<CHAIN>:POOL:<BASE>-<QUOTE>[-<FEE_BPS>]`), plus the
+      `DefiPoolIdentity` dataclass/`build_pool_identity()`/`parse_glued_pool_id()` provenance, the 6 known cross-chain
+      collision rows being expected-not-buggy under Option A, the catalogue-internal
+      `_aggregate_key`/`pool::{chain}::{pool_address}` key (explicitly distinguished from the two-id model), and the
+      open P2 bare-`instrument_id`-only preflight/dedup gap. Re-verified consistent with all 3 cited sources:
+      `unified_api_contracts/canonical/crosscutting/defi.py`'s
+      `DefiPoolIdentity.canonical_instrument_id`/`glued_pair_id` properties,
+      `instruments-service/docs/DEFI_INSTRUMENTS.md`'s "Instrument ID format" section, and the closeout plan's "The
+      two-id model" section (`defi_consolidated_closeout_2026_07_18.md`). No further code change needed —
+      unified-trading-pm@bf2594119. Repo: unified-trading-pm. Source:
+      `issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`.
 - [x] ✅ [INFRA] P1. Add a `staking-yields` entry to `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s
       `defi_collect_operations` map (cron `50 1 * * *`, the free slot between `eigenlayer-rewards` at 01:45 and
       `evm-defi` at 01:55; tier mirroring `eigenlayer-rewards`), apply via the same single-PR flow every other job in
