@@ -33,7 +33,7 @@ tags: [ci, cloudbuild, base-image, gcp, trigger, fleet, p0, infra, deploy-blocke
 related:
   [
     /plans/archive/issues/deployment_registry_reaper_not_draining_stale_entries_2026_07_24.md,
-    /plans/active/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
+    /plans/archive/issues/base_image_digest_sweep_broken_fleet_builds_red_2026_07_18.md,
   ]
 created: 2026-07-25
 parent_epic: infrastructure_master

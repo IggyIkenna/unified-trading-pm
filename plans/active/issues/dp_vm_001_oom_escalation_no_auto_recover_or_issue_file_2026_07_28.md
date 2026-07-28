@@ -5,7 +5,7 @@ title:
 summary:
   Operator asked (2026-07-28) to confirm VM/job monitoring (incl. manifest consolidator) has full auto-recovery on death
   including OOM, automated rescale-on-OOM, and an issue auto-filed for investigation. Reading
-  codex/05-infrastructure/data-pipeline-alerts.md found a real self-contradiction — the DP-VM taxonomy table lists
+  /codex/05-infrastructure/data-pipeline-alerts.md found a real self-contradiction — the DP-VM taxonomy table lists
   DP-VM-001 ("VM run.log terminal exit_code != 0, incl. 137 OOM") escalation as plain "page" — no auto-recover, no
   file-issue — while the SAME doc's "Self-heal actuator layer" table separately lists an actuator for
   `DP_VM_EXIT_NONZERO (137 OOM)` → `relaunch_backfill_vm.py (resize-up on OOM)`, capped at ≤2/(vm-prefix, day). Two
@@ -70,7 +70,7 @@ resolved_by:
           5. **The non-OOM subcase of DP-VM-001 genuinely IS plain `page`** (`exit_code_fleet_monitor.py:335` — non-OOM →
              `PAGE_OPERATOR` directly, no actuator attempted) — a non-OOM crash has no deterministic auto-fix, so this half
              of the doc's claim is correct.
-          6. **The doc is what's wrong, not the code.** `codex/05-infrastructure/data-pipeline-alerts.md:137`'s DP-VM-001
+          6. **The doc is what's wrong, not the code.** `/codex/05-infrastructure/data-pipeline-alerts.md:137`'s DP-VM-001
              escalation column reads plain `page` with no auto-recover/file-issue callout, which is accurate ONLY for the
              non-OOM subcase — it fails to disclose that the OOM subcase (the common case in practice, and the one the
              same doc's own actuator table at line 209 describes) auto-recovers first. This resolves the "If already
@@ -78,7 +78,7 @@ resolved_by:
 
 - [ ] [BACKEND] P0. If unwired: wire DP-VM-001 to auto-recover FIRST (resize-up relaunch via `relaunch_backfill_vm.py`,
       respecting the existing ≤2/(vm-prefix, day) cap) before paging, matching the pattern already used for DP-VM-003/
-      DP-VM-008. If already wired: fix `codex/05-infrastructure/data-pipeline-alerts.md`'s DP-VM-001 escalation column
+      DP-VM-008. If already wired: fix `/codex/05-infrastructure/data-pipeline-alerts.md`'s DP-VM-001 escalation column
       (currently reads plain "page") to accurately reflect the real behavior — this doc is the operational SSOT other
       agents read to know what already exists, and it is currently wrong either way this resolves.
 - [ ] [BACKEND] P0. Ensure DP-VM-001/OOM ALWAYS files a `plans/active/issues/<slug>_<date>.md` for deeper investigation
