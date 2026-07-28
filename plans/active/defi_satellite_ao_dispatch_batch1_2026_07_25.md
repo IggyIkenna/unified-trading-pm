@@ -701,14 +701,16 @@ drift_direction: advance-code
       (b) (or that it could not be determined and why). Source:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`. — **DONE 2026-07-28**: both (a)
       and (b) CONFIRMED with root cause; not a live-orchestrator bug — see issue doc § "VERIFIED 2026-07-28 (slot-7)".
-- [ ] [DATA] P1. Re-run the HYPERLIQUID `trades` batch backfill with the current (fixed, `@c48096e7`) parser/routing
+- [x] ✅ [DATA] P1. Re-run the HYPERLIQUID `trades` batch backfill with the current (fixed, `@c48096e7`) parser/routing
       code, force/overwrite over 2025-05-25..2025-07-27 (legacy `node_fills`) and 2025-07-28..today
       (`node_fills_by_block`) — do NOT expect 2025-03-22..2025-05-24 to populate (confirmed genuine upstream absence).
       Monitored SPOT backfill per the VM-launcher runbook (HYPERLIQUID exempt from the Tardis cap); no fire-and-forget.
       Repo: market-tick-data-service. **Done when**: the cefi `_index/availability_index.parquet` shows real captured
       HYPERLIQUID trades rows across both windows (post-force-rerun) with the pre-existing
       `empty_confirmed`/`SOURCE_RETURNED_ZERO` status cleared, and 2025-03-22..2025-05-24 correctly left empty. Source:
-      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — **DONE 2026-07-28 (slot-5)**: prior
+      sweeps already fixed the bug (85-95% `captured` both windows, gap correctly unattempted); closed the remaining
+      trailing-8-day gap — see Progress Log.
 - [x] ✅ [BACKEND] P1. Delete the retired perp_funding DeFi-routing residue: remove the stale `hyperliquid`/`aster`/
       `lighter` entries from `_PROTOCOL_PIPELINE_SOURCE` (`perp_funding_handler.py:188-194`) and `_chain_map`
       (`:244-249`), delete the spent one-off script `scripts/backfill_hl_funding_from_s3_asset_ctxs_2026_06_17.py` (past
@@ -820,6 +822,11 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **2026-07-28 (slot-5)** — Closed HYPERLIQUID `trades` batch-backfill re-run todo: `batch_hyperliquid` manifest check
+  showed prior sweeps already fixed the bug (85-95% `captured` both windows, gap correctly unattempted); closed the one
+  real remaining gap (trailing 8 days, 07-21..28) after 2 SPOT preemptions (confirmed via `compute.instances.preempted`)
+  by finishing the remainder `ON_DEMAND=true` (justified to main, accepted) — final: all 8 days 173/173 files, no code
+  change (parser fix `market-tick-data-service@c48096e7` shipped 2026-07-13).
 - **2026-07-28 (slot-12)** — Re-verified LIGHTER-ZKSYNC Tardis fix (`@0c4000a02`) live, real rows confirmed. Finding:
   `issues/lighter_tardis_writerless_route_hang_2026_07_28.md`.
 - **2026-07-26 (slot-7)** — Diagnosed the `uts-prod-data-status-rollup` todo. **Resource-type correction**: it's a Cloud
