@@ -240,18 +240,18 @@ MTDS consolidation ruling.)**
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
 
       **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
-                      (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
-                      `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
-                      other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
-                      evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
-                      dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
-                      (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
-                      Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-                      then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-                      then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-                      legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-                      chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-                      2026-07-13 per MTDS consolidation ruling.)**
+                          (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+                          `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+                          other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+                          evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+                          dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+                          (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+                          Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+                          then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+                          then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+                          legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+                          chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+                          2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -273,9 +273,20 @@ MTDS consolidation ruling.)**
       for this rider itself. `market-tick-data-service@cf8a6817`. **(MIGRATED FROM:
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
-      (closes `data_source_provenance` cefi). **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-      2026-07-13 per MTDS consolidation ruling.)**
+- [ ] [OPERATOR] P1. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-12)**: same reclassification as its 5 sibling cefi
+      todos in this file (3 E4-E8 todos retagged by slot-9, Post-walk + E7-Verify retagged by slot-13, all same day) —
+      deterministically blocked on the successor plan's Phase D `--apply` rebuild (human-execution-only,
+      delete-safety-protocol hard-stop class; see the Post-walk todo's retag note below for full rationale). This
+      rider's `source` stamping only lands once that walk actually executes. Confirmed still-blocked this session via
+      main's own ruling (do-not-flip-on-RED, `data_completion_cefi_2026_07_15.md:272`) + this session's evidence commits
+      (`b87980d15`, `ce4af5f15`) — see
+      `plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` for the
+      `/done`-gate gap this evidence-only closure hit. Retagging so backlog regen classifies this `operator_gated`
+      instead of re-dispatching an unwinnable re-run to another `data_engineering` worker. **SUPERSEDED-BY
+      `plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md` Phase E (2026-07-28)** — checkbox
+      left UNCHECKED, the audit has not gone GREEN. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`,
+      swap-resilient) lands in THIS walk (closes `data_source_provenance` cefi). **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-13)**: same reclassification as its E7-Verify sibling
       immediately below and the 3 E4-E8 todos above — deterministically blocked on Phase D's `--apply` rebuild
@@ -299,10 +310,10 @@ MTDS consolidation ruling.)**
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-                          (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-                          when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-                          completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-                          No checkbox flip — criteria still unmet pending that re-run's result.
+                              (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                              when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                              completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                              No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
