@@ -406,7 +406,7 @@ re-fixes referrer paths corpus-wide. Other: operator can type a custom answer
 candidate**: 1 open todo, 10 done. Per the skill's Phase-4 routing, WHERE a live remnant lives is a planning decision —
 autonomous mode parks it with a named recommendation rather than auto-folding.
 
-Side A — the remnant itself, `/plans/active/prediction_perps_kalshi_polymarket_parked_2026_07_24.md:129`:
+Side A — the remnant itself, `/plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md:129`:
 
 > `- [ ] [SCRIPT] P1. **Polymarket-perp enumerator — BLOCKED-UPSTREAM (no public perps API exists yet — CONFIRMED`
 

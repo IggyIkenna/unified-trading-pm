@@ -48,7 +48,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 locked_by:
 locked_since:
 supersedes:
@@ -200,6 +200,96 @@ summarized in the table above. Key raw responses:
   \`account\`"}]}`; `messari_from` schema → real swap data (5 rows, pool names/tokens/amounts populated).
 - aerodrome_v3/BASE, uniswap_v4/ETHEREUM, uniswap_v3/POLYGON, pancakeswap_v3/ETHEREUM, velodrome_v2/OPTIMISM: minimal
   `{ swaps(first: 1) { id timestamp } }` probe returned real data for all 5.
+
+## Verified live (2026-07-28, DP-FETCH-009 escalation — VELODROME_V2/OPTIMISM newly joins the "bad indexers" bucket)
+
+Dispatched as a `data_pipeline_failure` escalation worker off a fresh `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL
+page: `asset_group=defi data_type=dex_pool_swaps: 1087 attempted_failed cells of 3039478 attempted` (abs>=500
+threshold), flagged "fresh — newest attempted_failed activity 0d ago". Re-read the live prod manifest
+(`market-data-tick-defi-prd-central-element-323112`, `_index/availability_index.parquet`, 27,699,487 total rows) to get
+the current per-(venue,chain,error_reason) breakdown rather than trust the alert's aggregate count alone:
+
+| venue          | chain     | error_reason (90-char truncated)                                                 | count | min attempted_at     | max attempted_at     |
+| -------------- | --------- | -------------------------------------------------------------------------------- | ----- | -------------------- | -------------------- |
+| VELODROME_V2   | OPTIMISM  | All 5 cascade schemas drifted for velodrome_v2/OPTIMISM (subgraph=A4Y1A82YhSLTn9 | 662   | 2026-07-27T18:51:13Z | 2026-07-28T09:16:44Z |
+| UNISWAP_V3     | OPTIMISM  | All 8 cascade schemas drifted for uniswap_v3/OPTIMISM (subgraph=Cghf4LfVqPiFw6fp | 356   | 2026-07-22T17:53:33Z | 2026-07-28T09:24:30Z |
+| TRADER_JOE_V2  | AVALANCHE | All 5 cascade schemas returned GraphQL errors for trader_joe_v2/AVALANCHE        | 28    | 2026-07-23T07:56:40Z | 2026-07-23T19:36:07Z |
+| PANCAKESWAP_V3 | BSC       | All 8 cascade schemas drifted for pancakeswap_v3/BSC                             | 15    | 2026-07-23T07:55:39Z | 2026-07-27T11:40:13Z |
+| UNISWAP_V4     | ETHEREUM  | build_instrument_id / All 1 cascade schemas returned GraphQL errors              | 12    | 2026-07-22T20:52:46Z | 2026-07-27T05:32:25Z |
+| UNISWAP_V2     | ETHEREUM  | All 1 cascade schemas returned GraphQL errors for uniswap_v2/ETHEREUM            | 5     | 2026-07-22T16:46:07Z | 2026-07-22T17:06:48Z |
+| CURVE          | OPTIMISM  | All 5 cascade schemas returned GraphQL errors for curve/OPTIMISM (OLD signature) | 4     | 2026-07-28T07:16:58Z | 2026-07-28T09:16:17Z |
+| PANCAKESWAP_V3 | ETHEREUM  | All 8 cascade schemas drifted for pancakeswap_v3/ETHEREUM                        | 2     | 2026-07-24T17:20:32Z | 2026-07-27T16:06:50Z |
+| UNISWAP_V3     | POLYGON   | All 8 cascade schemas returned GraphQL errors for uniswap_v3/POLYGON             | 2     | 2026-07-24T17:20:31Z | 2026-07-25T13:29:00Z |
+| AERODROME_V3   | BASE      | All 8 cascade schemas drifted for aerodrome_v3/BASE                              | 1     | 2026-07-24T23:21:21Z | 2026-07-24T23:21:21Z |
+
+**Total 1087, matching the alert exactly.** 409 of the 1087 rows carry `attempted_at` on 2026-07-28 itself: 393
+VELODROME_V2/OPTIMISM, 12 UNISWAP_V3/OPTIMISM, 4 CURVE/OPTIMISM — i.e. the alert's "fresh, 0d ago" signal is almost
+entirely VELODROME_V2/OPTIMISM's brand-new regression, not the already-tracked long-tail residue below it.
+
+**VELODROME_V2/OPTIMISM is a NEW finding — not the same as its historical 118-row entry this doc's first pass already
+investigated.** That earlier probe (2026-07-27, this doc's first table) live-verified it HEALTHY via a minimal
+`{ swaps(first:1) { id timestamp } }` probe (`hasIndexingErrors=false`). The 662 fresh rows here (all dated
+2026-07-27T18:51Z onward — i.e. appearing a few hours AFTER that healthy verdict) are the actual PRODUCTION cascade
+query failing, which a minimal probe never exercises. Live-diagnosed today with the real production client
+(`market_tick_data_service.market_interface.clients.thegraph_base_client.async_post_to_subgraph`, subgraph
+`A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`):
+
+- **Introspected the live `Swap` type** — confirms the correct field shape is `from` (String, not `account{id}`) +
+  `pool` (not `liquidityPool`) — i.e. `messari_from`, cascade position 2 of 5 for this protocol (non-univ3 Messari
+  family: messari → messari_from → messari_lp → messari_lp_from → sushi_custom).
+- **`messari` (position 1)**: `Type \`Swap\` has no field \`account\`` — genuine schema-shape mismatch, correctly falls
+  through (not the bug).
+- **`messari_from` (position 2, the STRUCTURALLY CORRECT query)**: reproduced 3/3 identical across 3 different API keys
+  from the round-robin pool —
+  `bad indexers: {0x8cc22436ba6f07a4d5dd2043e3109267eee5aab8: Unavailable(no status: failed to get indexing progress), 0xf92f430dd8567b0d466358c79594ab58d919a6d4: BadResponse(expected value at line 1 column 1)}`.
+  This is NOT a schema bug — the correct query is already in the cascade at position 2; it fails at the gateway's
+  indexer-selection layer before ever reaching real data.
+- **`messari_lp`/`messari_lp_from` (positions 3-4)**: `has no field liquidityPool` / `has no field account` — the
+  post-2024-upgrade schema variant genuinely doesn't apply here, correctly falls through.
+- Net effect: the cascade exhausts all 5 (1 genuine drift, 1 bad-indexers on the otherwise-correct query, 2 more genuine
+  drift, presumably sushi_custom too) and raises "All 5 cascade schemas drifted" — collapsing a bad-indexers condition
+  into the SAME error bucket as genuine schema drift, same ambiguity this doc's item 2 already flagged for
+  UNISWAP_V3/OPTIMISM.
+
+**This directly corroborates item 2's "still open" question in the other direction**: indexer
+`0xf92f430dd8567b0d466358c79594ab58d919a6d4` appears in BOTH the UNISWAP_V3/OPTIMISM bad-indexers signature (this doc's
+original table, reproduced 3/3 same-day AND again several hours later) AND now VELODROME_V2/OPTIMISM's — the **same
+indexer node serving (at least) two independent Optimism-chain subgraphs is unhealthy simultaneously**. That is stronger
+evidence toward "a real indexer-fleet health problem on Optimism-chain subgraphs specifically" than either
+single-subgraph observation alone, though still not proof of "permanent" (the existing todo's multi-day bar still
+applies — this is one more same-week data point, not a multi-day recheck).
+
+**No code fix applies here**: the correct query schema (`messari_from`) is already in the cascade at the correct
+position; there is no missing schema variant to add and no bug to ship. Re-ordering the cascade wouldn't help either — a
+structurally-valid query still has to reach a real indexer to execute, and gateway-level "bad indexers" routing is
+independent of which valid query hits it. This is a genuine `BLOCKED-UPSTREAM-OUTAGE` (external Graph Protocol indexer
+health), not an `attempted_failed`-vs-`empty_confirmed` misclassification and not a canonical-path/bucket-env/cron bug —
+none of the `data_pipeline_failure` agent's fixable DP-FETCH-009 root-cause classes apply. Marking VELODROME_V2/OPTIMISM
+`known_dead` would be a HONEST-ABSENCE VIOLATION in the wrong direction — it captured 14,272-16,195 real rows per run as
+recently as 2026-07-23 and is expected to resume once the indexer heals (mirrors PANCAKESWAP_V3/BSC's confirmed same-day
+self-heal in this doc's first pass) — the alert is correctly surfacing a real, current capture gap, not a false
+positive.
+
+- [ ] [DATA] P2. **Extends the existing P2 todo above (still open).** Re-probe UNISWAP_V3/OPTIMISM AND
+      VELODROME_V2/OPTIMISM (subgraph `A4Y1A82YhSLTn998BVVELC8eWzhi992k4ZitByvssxqA`, correct query = `messari_from`) on
+      a later date — if `0xf92f430dd8567b0d466358c79594ab58d919a6d4` is still serving both and still unhealthy after a
+      multi-day window, this crosses from "transient dip" into "file an upstream/Graph-Protocol-side report and consider
+      whether our indexer-preference/allowlist options (if any exist at the gateway API level) can steer routing away
+      from it" — out of scope to research further in this one-shot escalation. Repo: market-tick-data-service.
+- [ ] [DATA] P3. **Separate, small (4 rows), already-anticipated in this doc's Takeaway 3.** CURVE/OPTIMISM is STILL
+      generating fresh `attempted_failed` rows with the pre-fix error signature as of 2026-07-28T09:16Z, a full day
+      after the `EXPECTED_SUBGRAPH_DEINDEXED` runtime-detection fix (`market-tick-data-service@dddd1b21`) landed on
+      live-defi-rollout — confirmed via `git merge-base --is-ancestor dddd1b21 HEAD` on `live-defi-rollout` today.
+      `mtds-dex-swaps-backfill-1`/`mtds-dex-swaps-backfill-2` (GCP, `asia-northeast1-c`) have been RUNNING continuously
+      since 2026-07-23T07:03Z per `TARBALL_PINS.json` (floating `MTDS_TARBALL_SHA`/`UTL_TARBALL_SHA`, baked at VM launch
+      — VMs don't live-reload) — i.e. 4 days before the fix shipped, so they are still writing pre-fix rows. Low
+      priority (4 rows/day) but the fix is a VM restart onto current code once these backfills are confirmed either
+      complete or safely restartable without losing checkpointed progress — not investigated further here (out of this
+      one-shot escalation's scope; flagging so the next person who touches these VMs isn't surprised the CURVE/OPTIMISM
+      count doesn't drop to zero). Repo: deployment-service (VM restart), market-tick-data-service (already fixed).
+
+Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-38b3d6`, slot 7,
+2026-07-28.
 
 ## Verified live (re-probe, 2026-07-27, ~2h later — slot-5)
 

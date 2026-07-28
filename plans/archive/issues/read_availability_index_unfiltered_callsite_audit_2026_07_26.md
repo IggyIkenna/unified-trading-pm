@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [oom, manifest, read-availability-index, performance, backfill, recurring-bug-class]
 related:
   [
-    /plans/active/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md,
+    /plans/archive/issues/sports_freshness_preflight_stale_scope_escape_burns_shared_quota_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-26

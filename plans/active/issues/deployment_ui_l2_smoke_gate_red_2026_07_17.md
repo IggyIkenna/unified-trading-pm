@@ -112,11 +112,12 @@ correct-and-failing, not stale.
 
 ## Todos
 
-- [ ] [UI] P2. **Diagnose the 5 row-mismatch failures before touching any spec** — establish whether
-      `/api/deployments/inventory` is catch-all-shadowed (cf. deployment-ui@0c817d2) or whether `Deployments.tsx` reads
-      the wrong mock source. Evidence: mock defines the rows (`mock-api.ts` L1181/L1414); a live `/deployments` load
-      renders 18 rows from `MOCK_DEPLOYMENTS` (L107), excluding both. **Outcome decides everything else**: a real
-      shadowing bug means these specs are correct and the product/mock is wrong.
+- [x] ✅ [UI] P2. **Diagnose the 5 row-mismatch failures before touching any spec — RESOLVED 2026-07-28 (slot-3): NOT
+      REPRODUCIBLE.** Re-ran cockpit.spec.ts + deployments-page.spec.ts fresh; none of the 5 fail today —
+      `Deployments.tsx` already calls `getDeploymentInventory()` (`/api/deployments/inventory`), not the plain
+      `/api/deployments`, so the suspected catch-all-shadowing bug isn't present for this route. Fixed by other work
+      sometime in the 11 days since this doc was filed (not bisected — not needed). See the dated log entry below for
+      full evidence.
 - [ ] [UI] P2. **Fix the `aria-prohibited-attr` WCAG AA violation on `/ops/costs`** (serious impact). The
       `accessibility_audit.spec.ts:60` assertion is correct — fix `CostObservability.tsx`, do not relax the test.
 - [ ] [UI] P3. **Update the 5 `daily_costs_and_vm_detail.spec.ts` specs to the post-a9795f3 Cost Observability page**
@@ -124,8 +125,77 @@ correct-and-failing, not stale.
       DOM). Pure spec work — the page is healthy.
 - [ ] [UI] P3. **Disambiguate `mobile_responsive.spec.ts:101`** — use `nav-cockpit` / `mobile-menu-btn` testids instead
       of the `/menu|hamburger|navigation/i` role-name regex that matches both buttons.
+- [x] ✅ [UI] P2. **Fix `cockpit.spec.ts`'s 3 stale fleet-tab-removal specs — DONE 2026-07-28 (slot-3)**: removed
+      `"fleet"` from `TAB_IDS`, removed the `/fleet` nav + `cockpit-fleet`/`cockpit-fleet-git` assertions from "each tab
+      switches and renders its pane" (now starts from `/cockpit`), deleted the now-moot "Fleet tab shows only the
+      git-health surface" test (the whole page it guarded is gone per
+      `plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`). Verified 38/38 `cockpit.spec.ts` + 49/49
+      combined with `deployments-page.spec.ts` passing. `deployment-ui@<pending sha, see commit for exact hash>`.
+- [ ] [UI] P2. **Delete `tests/smoke/fleet-git-tab.spec.ts` entirely** — all 4 of its tests guard the `/fleet` page that
+      `deployment_ui_fleet_tab_removal_2026_07_27.md` deleted; same fix class as the `cockpit.spec.ts` item above.
+      Attempted 2026-07-28 (slot-3) but the file delete (`rm`/`git rm`) was BLOCKED by this VM's
+      `block_destructive_commands.py` "recursive rm" guardrail pattern-matching a single-file delete as a tree delete —
+      needs either a VM/host where the guardrail doesn't false-positive on a plain `git rm <single-file>`, or an update
+      to that hook's pattern to distinguish a real recursive delete from a named single-file one.
+- [ ] [UI] P2. **Fix `nav-menu-dedup.spec.ts`'s 5 stale fleet-tab-removal failures** — remove the
+      `["fleet", "/fleet", "cockpit-fleet"]` row from the `CANONICAL` array; re-derive (don't guess) the "17 entries"
+      count (16 canonical nav items exist today per `NavMenu.tsx`'s own `NAV_ITEMS_CANONICAL`, split into N
+      cockpit-tabs + M navlinks — count both live rather than hardcoding); rewrite "the top bar stays visible OFF the
+      cockpit" to click a tab that still exists instead of `cockpit-tab-fleet`; re-derive what `/infra` and `/infra`
+      (previously-selected-service case) actually redirect to now that `/fleet` doesn't exist for them to redirect to
+      (per `NavMenu.tsx`'s own comment, `/infra` "now falls through to the catch-all" — verify live, don't assume).
+- [ ] [UI] P3. **Diagnose the ~7 apparently-unrelated 2026-07-28 failures** (not touched this session, no root cause
+      established): `cadence_badge_drilldown.spec.ts:39`, `mobile_responsive.spec.ts:178`,
+      `needs-attention-panel.spec.ts:40` + `:56`, `repos-tab.spec.ts:272` (name mentions "fleet" cross-link — check
+      against the same removal first), `stateful-flows.spec.ts:236`, `venue_year_coverage.spec.ts:173`.
 - [ ] [UI] P2. **Re-baseline + green the gate, then state it in the codex** — once the above land,
       `npx playwright test --project=chromium tests/smoke/` must exit 0 so `pw:L2 ✓` becomes truthful evidence again.
+      **Not a quick job**: as of 2026-07-28 the gate carries 19 failures (up from 12 on 2026-07-17, the suite itself
+      grew to 425 tests) — see the dated log entry below for the full current breakdown.
+
+## 2026-07-28 update (slot-3, ui_developer) — the 5 row-mismatch failures are RESOLVED; a bigger, different regression is now the blocker
+
+Picked up the "Diagnose the 5 row-mismatch failures" P2 todo. **Outcome: NOT REPRODUCIBLE ANYMORE.** Installed the
+missing playwright chromium binary (this environment had none — `npx playwright install chromium`), then re-ran
+`tests/smoke/cockpit.spec.ts` + `tests/smoke/deployments-page.spec.ts` fresh: none of the 5 originally-failing tests
+(cockpit.spec.ts:222/:267, deployments-page.spec.ts:14/:34/:53) fail today — the specific rows
+(`deployment-row-sports-backfill-20260621`, `feed-health-cefi-instruments-backfill`) render correctly, and
+`Deployments.tsx` already calls `getDeploymentInventory()` (→ `/api/deployments/inventory`), not the plain
+`/api/deployments` endpoint — the suspected catch-all-shadowing bug (cf. deployment-ui@0c817d2) is NOT present for this
+route. Whatever fixed this landed sometime in the 11 days since this doc was filed; not independently bisected (not
+necessary — the outcome itself is the deliverable).
+
+**But the gate is still red today, for a DIFFERENT and larger reason.** A fresh full `tests/smoke/` run (425 tests, up
+from 355+12 — the suite grew substantially) shows **19 failures**, almost none of which are the original 12:
+
+- **A NEW, connected stale-spec cluster (fleet-tab removal, 2026-07-27)** —
+  `deployment_ui_fleet_tab_removal_2026_07_27.md` (archived, shipped) deleted `/fleet` entirely (fleet git-health now
+  lives on agent-orchestrator's own dashboard) and correctly updated `Cockpit.test.tsx` (the Vitest unit test) for the
+  new tab count, but **missed 3 different L2 smoke spec files** that still assert the removed tab/page exists:
+  - `cockpit.spec.ts:59/:89/:434` — **FIXED this session** (removed "fleet" from `TAB_IDS`, removed the `/fleet`
+    navigation + fleet-testid assertions from "each tab switches", deleted the now-moot "Fleet tab shows only the
+    git-health surface" test; `deployment-ui@<pending sha>`, verified 38/38 passing).
+  - `fleet-git-tab.spec.ts` (all 4 tests) — this WHOLE FILE is dedicated to the removed `/fleet` page and should be
+    deleted (same pattern as the `Cockpit.test.tsx` fix in the removal PR). **NOT fixed this session** — a file delete
+    via `rm`/`git rm` was blocked by this VM's `block_destructive_commands.py` guardrail (a coarse "recursive rm"
+    pattern match that doesn't distinguish a single tracked source-file delete from an actual tree delete; the hook's
+    own suggested escalation is a slot ping since the GCS-SDK carve-out it describes doesn't apply to a git-tracked test
+    file). Left as a clean follow-up todo below.
+  - `nav-menu-dedup.spec.ts` (5 of its failures) — the `CANONICAL` array still lists
+    `["fleet", "/fleet", "cockpit-fleet"]`; "the top bar carries the same 17 entries" needs recounting (16 canonical nav
+    entries exist today, `NavMenu.tsx`'s own `NAV_ITEMS_CANONICAL` already correctly excludes fleet — only the spec's
+    hardcoded 17/10 counts are stale); two bookmark-compat-redirect tests still assert `/infra → /fleet` even though
+    `NavMenu.tsx`'s own comment says `/infra` "now falls through to the catch-all" since `/fleet` doesn't exist to
+    redirect to. **NOT fixed this session** (needs the counts + redirect target re-derived from the current app
+    behavior, not guessed — left as a follow-up todo).
+- **~7 apparently UNRELATED failures** (not diagnosed this session — out of scope for the dispatched todo):
+  `cadence_badge_drilldown.spec.ts:39`, `mobile_responsive.spec.ts:178`, `needs-attention-panel.spec.ts:40` + `:56`,
+  `repos-tab.spec.ts:272` (note: its name mentions "fleet" too — cross-link target, worth checking against the same
+  removal), `stateful-flows.spec.ts:236`, `venue_year_coverage.spec.ts:173`.
+
+**Net for the "Re-baseline + green the gate" P2 todo**: was 12 failures (2026-07-17), is 19 failures today (16 after
+this session's fix), of which the fleet-removal cluster (8 remaining) + the ~7 unrelated ones need their own diagnosis
+passes — this is NOT a quick re-baseline, the gate has drifted meaningfully since this doc was filed.
 
 ## Lessons (carry these; they each cost real time)
 

@@ -262,17 +262,17 @@ perp-eligible LST is stETH, per E1) — traced by reading the actual collector c
 
 ## Deferred work after 2026-07-21
 
-| item                                                                   | state          | blocked-on                                                                                                      |
-| ---------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
-| A2 build (staking via #4 + borrow via aave_borrow_index)               | Not done       | the 2 in-flight sweeps landing + the 4-rate audit confirming which rate = #4                                    |
-| LST rate coverage (which of #1–#4 we actually have)                    | Cannot yet     | audit `wf_268532e0-323` result                                                                                  |
-| `lst_yields` sparse coverage (only 15 days)                            | Not done       | features/MTDS — file the coverage extension once the audit confirms the source                                  |
-| STAKING-leg data if #4 not fully captured                              | Cannot yet     | audit result — may need a new collector (Lido redemption)                                                       |
-| Onchain consolidator frozen (mark→recompute blocker)                   | Not done       | see [[onchain_manifest_dishonest_and_recompute_blocked_2026_07_21]]                                             |
-| MTDS chain-field collectors (ltv/liq_threshold/…)                      | Not done       | new upstream scope (same doc)                                                                                   |
-| 2 adjacent onchain vocabularies (required_inputs, \_feature_contracts) | Not done       | a dedicated UAC reconciliation pass                                                                             |
-| prod-NAV historical recompute                                          | Operator-owned | human-gated; only after the A2 code is reviewed + landed                                                        |
-| 2 features-service safe-survivor fixes                                 | Not done       | stashed `features-safe-survivor-fixes-2026-07-20-DEFERRED…`; reconcile against peer `features-service@9ce1f4ab` |
+| item                                                                   | state          | blocked-on                                                                                                                                    |
+| ---------------------------------------------------------------------- | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| A2 build (staking via #4 + borrow via aave_borrow_index)               | Not done       | the 2 in-flight sweeps landing + the 4-rate audit confirming which rate = #4                                                                  |
+| LST rate coverage (which of #1–#4 we actually have)                    | Cannot yet     | audit `wf_268532e0-323` result                                                                                                                |
+| `lst_yields` sparse coverage (only 15 days)                            | Filed          | GCS-verified + backfill scope proposed, see [[defi_lst_yields_coverage_extension_gcs_verified_2026_07_28]] (backfill itself not yet executed) |
+| STAKING-leg data if #4 not fully captured                              | Cannot yet     | audit result — may need a new collector (Lido redemption)                                                                                     |
+| Onchain consolidator frozen (mark→recompute blocker)                   | Not done       | see [[onchain_manifest_dishonest_and_recompute_blocked_2026_07_21]]                                                                           |
+| MTDS chain-field collectors (ltv/liq_threshold/…)                      | Not done       | new upstream scope (same doc)                                                                                                                 |
+| 2 adjacent onchain vocabularies (required_inputs, \_feature_contracts) | Not done       | a dedicated UAC reconciliation pass                                                                                                           |
+| prod-NAV historical recompute                                          | Operator-owned | human-gated; only after the A2 code is reviewed + landed                                                                                      |
+| 2 features-service safe-survivor fixes                                 | Not done       | stashed `features-safe-survivor-fixes-2026-07-20-DEFERRED…`; reconcile against peer `features-service@9ce1f4ab`                               |
 
 **Recommended next item:** process the two in-flight sweeps (`wf_268532e0-323` first — it gates WHICH rate to use), then
 build A2 only for the legs whose data the audit confirms; surface any missing rate (esp. #4 protocol redemption or #3
@@ -525,9 +525,15 @@ unwired since the earlier pass (`index_ratio_accrual.py` + its test) are now com
       — its debt-cost leg honestly books zero, never a proxy from Aave's index; `KAMINO_SOLANA` never appears as a
       `protocol` value in `lending_rates` at all (MTDS's Kamino connector is a BLOCKED-CREDENTIALS scaffold) — both legs
       skip for that reserve. Full evidence + quality-gate status in the linked doc's Phase 2 entry.
-- [ ] [DATA] P2. `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS once
+- [x] [DATA] P2. `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS once
       bandwidth allows; until then, STAKING_REWARD honestly books zero (with a visible log) for any day outside that
-      window.
+      window. — **FILED 2026-07-28 (slot-12, data_engineering)**: GCS-verified the exact gap (features-onchain
+      `lst_yields` = exactly 15 day-partitions, 2026-04-03..2026-04-19 with a 2-day internal hole; MTDS raw `lst_rates`
+      spans years on both sides per EVM token — LIDO confirmed 2021-08-17..2026-07-27, ETHERFI confirmed at least
+      2024-01-01..2026-07-27, all 11 active EVM LST venues confirmed present on one representative in-window day) and
+      proposed the concrete backfill scope (repo, date range, CLI mechanism) — confirmed a features-layer batch-compute
+      lag, not raw-data absence. Backfill itself NOT executed (read-only investigation + proposal doc, per its own
+      scope). See [[defi_lst_yields_coverage_extension_gcs_verified_2026_07_28]].
 
 ## E2 INVESTIGATION 2026-07-23 (sub-agent, design-only — no code changed)
 

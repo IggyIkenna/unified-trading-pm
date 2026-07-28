@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/agent-orchestrator-api-host.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     plans/active/task_template.md,
-    ../../plans/active/issues/ao_operator_delete_gating_aws_iam_and_corpus_sweep_2026_07_27.md,
+    /plans/archive/issues/ao_operator_delete_gating_aws_iam_and_corpus_sweep_2026_07_27.md,
   ]
 created: 2026-07-27
 authoritative_for:

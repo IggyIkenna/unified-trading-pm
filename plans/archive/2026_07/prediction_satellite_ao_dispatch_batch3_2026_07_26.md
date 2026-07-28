@@ -70,8 +70,9 @@ drift_direction: advance-code
 > (`/plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md`, `BLK-c2d1fff9`, human-only
 > credential decision); todo 2's `[OPERATOR]` residual close-out migrated to its own source doc
 > (`/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`, now `assigned_vm: planning`) so
-> it stays dispatchable. Archived via `/plans/active/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`
-> (archived alongside this doc, same commit).
+> it stays dispatchable. Archived via
+> `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` (archived alongside this doc,
+> same commit).
 >
 > **Status: active — operator-approved 2026-07-26.** Dispatched per CLAUDE.md's plan-destination rule and the
 > ag-closeout-audit skill's autonomous-mode guidance (a skill-drafted AO batch is never auto-shipped; this flip followed
