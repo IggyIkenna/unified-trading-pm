@@ -134,6 +134,20 @@ directly to the Bash tool's `run_in_background: true`, no `nohup`/`&` wrapper) �
 this a zero-cost resume (no data lost, only compute time). Confirms the recommended-decision-1 fix (below) directly,
 independently, a day later — implementing it now rather than leaving it open a third time.
 
+**A DIFFERENT, second kill hit the same task 25 min after the `run_in_background` fix landed (2026-07-28, slot 7):**
+after switching to the correct pattern (long-running command passed directly to `run_in_background: true`, no `nohup`),
+the resumed backfill ran cleanly for ~25 minutes of local-only bash progress-checking with **no `/progress` heartbeat**
+sent in that window — the worker.md Heartbeat HARD RULE's ≤10-min cadence was violated. `WorkerLivenessWatchdog` read
+the slot as stale and triggered `kill_session(orch-slot-7)`, which SIGTERMs the pane's whole descendant tree BEFORE
+`tmux kill-session` (by design, `_reap_pane_tree` in `tmux_spawn.py`) — killing the properly-parented backfill as
+collateral, confirmed via `journalctl | grep 'kill_session(orch-slot-7)'` at the death timestamp, a DIFFERENT log
+signature from `orphan_reap sweep: ... KILLED`. **This means `run_in_background` fixes the orphan-reap failure mode but
+does NOT exempt a worker from the heartbeat rule while monitoring a long job** — heartbeat cadence is the binding
+constraint, independent of how well-parented the background process is. Documented as its own numbered item (5) in
+`/codex/12-agent-workflow/async-wait-and-poll-discipline.md` § "Watcher coverage" (the durable SSOT for this class of
+lesson) rather than folded into this doc's own `nohup`-specific open work, since it is a genuinely separate mechanism.
+Recovery: resumed again (idempotent via `--report`) + immediately began sending `/progress` every ≤8 min.
+
 ## Open work
 
 - [x] ✅ [DOC] P2. Add the one-line `nohup`-avoidance callout to `unified-trading-pm/agents/RULES.md` § 2 or
