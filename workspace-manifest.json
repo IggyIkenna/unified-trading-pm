@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 84.46,
+        "warn_file_count": 21,
         "qg_red_reason": null,
-        "warn_file_count": 21
+        "coverage_pct": null,
+        "large_file_count": 0
       }
     },
     "features-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
-        "coverage_pct": 83.46,
+        "warn_file_count": 45,
         "qg_red_reason": null,
-        "warn_file_count": 45
+        "coverage_pct": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -1301,9 +1301,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": 73.1
+        "coverage_pct": null,
+        "warn_file_count": 0
       }
     },
     "unified-trading-api": {
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1419,8 +1419,8 @@
       "codebase_health": {
         "warn_file_count": 7,
         "qg_red_reason": null,
-        "large_file_count": 16,
-        "coverage_pct": 75.41
+        "coverage_pct": 74.83,
+        "large_file_count": 16
       },
       "breaking_scan_dir": "none"
     },
@@ -1474,10 +1474,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": 99.24,
-        "large_file_count": 0,
         "warn_file_count": 0,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
