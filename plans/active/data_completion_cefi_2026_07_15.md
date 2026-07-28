@@ -151,20 +151,24 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 **🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):** **(MIGRATED FROM:
 `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
-      f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
-      reads (`instruments-store-{pid}/instruments/latest/manifest.json`, `features-store-{pid}/health/latest.json`,
-      `ml-store-{pid}/training/latest/metrics.json`, `execution-store-{pid}/t1_recon/latest/summary.json`) are NON-AG
-      **pipeline-health summary** buckets carrying `# CORRECT-LOCAL` markers (a deliberate QG STEP-5.69 allowlist), NOT
-      the AG-scoped market-data stores. The canonical `resolve_bucket_name(kind="instruments-store", asset_group=…)`
-      everywhere else resolves a PER-AG bucket (`instruments-store-cefi-…`) with a different path shape — there is no
-      single non-AG `instruments-store-{pid}` in that registry, so swapping these would point the health reads at
-      wrong/nonexistent buckets (they already `try/except`→None-degrade gracefully today). REMAINING for the
-      deployment-api/downstream owner: decide the UAT health-summary bucket MODEL (keep the `# CORRECT-LOCAL` aggregate
-      form, or migrate the health summaries into per-AG/env-tiered buckets) — a model decision, not a slot-3 mechanical
-      edit. `deployment_api_config.py` store buckets already use typed `effective_*` config (FLAG-3-compliant).
-      Cross-ref downstream plan FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
-      MTDS consolidation ruling.)**
+- [x] ✅ [CODE] P1. **deployment-api FLAG-3 — MODEL DECIDED 2026-07-28 (operator, BLK-9817ba72): option C
+      (leave functionally as-is + honest markers + tracked follow-up), NOT the stale 2026-06-02 "env-tier
+      generically" note cited in the prediction plan sibling (that note predates the 2026-07-17 bucket-fold
+      work and no longer matches the registry shape).** Live check of `deployment-service/configs/cloud-providers.yaml`
+      confirmed NO non-AG aggregate `instruments-store` or `features-store` bucket kind exists (only per-AG
+      `instruments-store` + family-specific `features-*` kinds) — Options A (per-AG loop, arbitrary for
+      features) and B (new cross-cutting `pipeline-health` bucket written by instruments-service +
+      features-service) were both rejected FOR THIS TODO (A fabricates a number; B needs cross-repo
+      writer-side work out of deployment-api-only scope). Shipped: replaced the misleading
+      `# CORRECT-LOCAL` / `# QG-allow: legacy-bucket-name-migration` marker-adjacent comments in
+      `commentary/pipeline_uat.py`'s instruments/features health reads with an honest "KNOWN GAP, not a
+      migration" annotation, keeping the exact marker tokens needed for `quality-gates.sh` STEP 5.31/5.96 to
+      stay green. Option B tracked as the correct deferred future fix (NOT abandoned) in
+      `plans/active/issues/deployment_api_flag3_uat_health_summary_bucket_model_2026_07_28.md`. `ml-store`/
+      `execution-store` reads in the same file were already migrated (unaffected). `deployment_api_config.py`
+      store buckets already use typed `effective_*` config (FLAG-3-compliant). Cross-ref downstream plan
+      FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)**
 
 - [x] ✅ [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter — VERIFIED ALREADY SHIPPED 2026-07-28
       (slot-16).** Both remaining sub-parts from the 2026-06-03 read-only confirmation were found already landed by
