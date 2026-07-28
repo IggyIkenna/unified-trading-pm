@@ -824,8 +824,8 @@ captured/(cap+empty+failed+eu) = 1,005,848/6,519,518 = **15.43%**.
   - **DURABLE UTL FIX = a tracked issue (cross-cutting, NOT rushed mid-backfill)**: the memory-bounded-cache fix
     (`_invalidate_index_cache` evict/cap `_CANONICAL_CACHE` per-bucket, or stream the per-VM merge) touches the LIVE
     cefi/sports/tradfi manifest path + has a perf trade-off (the sports warm-cache opt) → filed
-    `plans/active/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md` (does NOT block the DeFi backfill, which
-    the highmem machine unblocks). — unified-trading-library
+    `plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md` (does NOT block the DeFi backfill,
+    which the highmem machine unblocks). — unified-trading-library
   - **HIGHMEM FIX CONFIRMED WORKING (real infra)**: `mtds-dex-pools-eu-hm` (e2-highmem-8/64GB) processed **7 days**
     (through 2026-02-27, `DEX pools collection complete` ×7) with NO OOM — past the day-1 OOM point. The backfill is
     genuinely running now (~1 day/min; 125-day range ≈ hours per data_type).
