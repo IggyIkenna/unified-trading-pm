@@ -31,6 +31,7 @@ repos:
   deployment-api:
     count: 2
   deployment-service:
+    commit: fc82b35bdb085d91b4c15d6eae4acbf05dd9a3b0
     count: 91
   deployment-ui:
     count: 0
@@ -47,7 +48,8 @@ repos:
   ibkr-gateway-infra:
     count: 0
   instruments-service:
-    count: 366
+    commit: e519ed8e11802c7e05f701313d35c468acb9358a
+    count: 362
   market-data-processing-service:
     commit: 43d8f7d7d30de3430202bf91568cdb61e3a652fc
     count: 66
@@ -55,13 +57,15 @@ repos:
     commit: a6c8e29e7573c3048b9de2a2ec301667a9679e4b
     count: 89
   ml-service:
-    count: 8
+    commit: 8c2ca3cd26aca20a58567f3ca9f6a4a4a4570b8c
+    count: 6
   strategy-service:
     count: 166
   system-integration-tests:
     count: 1
   trading-agent-service:
-    count: 2
+    commit: acaf1ee4408e35216b87c6a76cc480b3d8c21d51
+    count: 1
   unified-api-contracts:
     count: 12
   unified-trading-api:
