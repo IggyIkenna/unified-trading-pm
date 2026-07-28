@@ -59,7 +59,7 @@ related:
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
     /plans/active/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md,
-    /plans/archive/2026_07/l0_doc_index_generator_2026_06_24.md,
+    /plans/active/l0_doc_index_generator_2026_06_24.md,
     /plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
     /plans/active/issues/reference_path_convention_2026_07_23.md,
