@@ -16,7 +16,7 @@ summary: >-
   risk. This affects every live CeFi margin computation through CefiVenueBalanceReader (both the pre-existing
   margin_health.py read path and the new emit_live_cefi_margin_events push path) — not introduced by this session, but
   newly surfaced by its tests.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [strategy]
@@ -29,7 +29,7 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-28"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,7 +42,7 @@ drift_direction: advance-code
 source:
   "slot-10, 2026-07-27, discovered while testing emit_live_cefi_margin_events
   (capability_wizard_gap_discovery_2026_06_11.md P1 todo)"
-resolved_by:
+resolved_by: unified-trading-library@3b13b69e, unified-trading-library@71970a2f
 locked_by:
 locked_since:
 depends_on: []
@@ -150,8 +150,29 @@ direction.
       one. Added `_DEFAULT_UNLISTED_ASSET_MMR` constant + regression test asserting a $40k/$1k-debt position with an
       unresolved asset (`SOL-USD-PERP`) now grades `OK` (~2.05% usage) instead of `WARNING` (~71.8%). Full
       quality-gates.sh green.
-- [ ] 3. [BACKEND] P2. **Audit whether any live/paper trading already ran through this path** since the margin-cluster
-      remediation shipped (2026-06-15) — if `margin_health.py`'s live query API or alerting-service has actually
-      consumed a misclassified `MarginEvent`/`MarginHealthSnapshot` in production, note it for the operator
+- [x] 3. ✅ [BACKEND] P2. **Audit whether any live/paper trading already ran through this path** since the
+      margin-cluster remediation shipped (2026-06-15) — if `margin_health.py`'s live query API or alerting-service has
+      actually consumed a misclassified `MarginEvent`/`MarginHealthSnapshot` in production, note it for the operator
       (informational — no automated recovery action without a human decision on backfill/notification). Repo:
-      strategy-service + alerting-service.
+      strategy-service + alerting-service. — **Verdict: no live/paper trading was exposed.** Evidence (all UTC, via
+      `git log`/`git show -s --format=%ai`): - **Pull path** (`margin_health.py`'s
+      `compute_live_cefi_snapshots`/`get_margin_health`, added strategy-service@b9b26433, 2026-06-15 14:04:35) has
+      **zero callers anywhere in the codebase** outside its own tests — not wired to any FastAPI route
+      (`position/api/routes/*.py`), CLI handler, scheduler, or UI; `grep -rln "get_margin_health"` workspace-wide hits
+      only the two test files. It's a live-compute function with no persistence layer (its own docstring: "no GCS read —
+      that is the Phase-2 historical layer"), so it never wrote a `MarginHealthSnapshot` anywhere. - **Push path**
+      (`emit_live_cefi_margin_events`, `venue_balance_tracker.py:704`, wired into `cli/handlers/monitor_handler.py:95`
+      reachable only via `--operation monitor --mode live`) did not exist until strategy-service@3c14639d, 2026-07-27
+      13:24:45 — the **first-ever** production caller of `emit_margin_event_for_cefi` (confirmed via
+      `grep -rn "emit_margin_event_for_cefi("` outside tests). That same commit's message already flags the
+      hyphenated-id bug. The two fix commits (unified-trading-library@3b13b69e 13:57:56, @71970a2f 14:24:19) landed
+      33–60 min later, same session. No evidence in this checkout of an actually-deployed `--mode live` monitor process
+      invoking the emitter in that narrow window (no Cloud Run/VM deployment-log access from this sandbox). -
+      `MarginEvent` (`unified-api-contracts/.../inter_service_events.py:90`) has no found GCS/BigQuery/Firestore sink in
+      this repo checkout — it flows transport→alerting-service rules, not into a queryable historical table. **For the
+      operator**: if independent confirmation is wanted, check alerting-service Cloud Logging for `MarginEvent` with
+      `venue_type=cefi` + grade WARNING/CRITICAL between 2026-06-15 and 2026-07-27 14:24 UTC (or the `margin-events`
+      Pub/Sub topic's subscription metrics for that window) — strong prior is this is empty, since no code path
+      published such events before 2026-07-27 13:24:45. - The underlying parsing bug itself predates the margin-cluster
+      commit (present since unified-trading-library@cbe74911/@117261fd, 2026-05-01) but was inert until the push path
+      existed — caught same-session before any real exposure, not "ran live for weeks with bad data."
