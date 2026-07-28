@@ -32,8 +32,8 @@ code_refs: [unified-trading-pm/scripts/self-hosted-runners/]
 
 # Self-hosted glue-runner security posture
 
-> Provenance: `plans/active/github_actions_ci_cost_reduction_2026_07_15.md` (STEP 2 self-hosting migration, 2026-07).
-> Operator directive 2026-07-16: record the posture explicitly — "important, not blocking".
+> Provenance: `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` (STEP 2 self-hosting migration,
+> 2026-07). Operator directive 2026-07-16: record the posture explicitly — "important, not blocking".
 
 ## TL;DR
 

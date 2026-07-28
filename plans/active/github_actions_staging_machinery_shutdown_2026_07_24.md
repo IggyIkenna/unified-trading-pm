@@ -2,16 +2,17 @@
 doc_type: plan
 title: GitHub Actions staging-branch machinery shutdown — dead-cron audit + escalation-dispatch bugfix (2026-07-23)
 summary: >-
-  Same-day (2026-07-23) staging-machinery audit forked from github_actions_ci_cost_reduction_2026_07_15.md per the plan
-  line-cap remediation triage. `staging` has been dead in every repo since 2026-06-27 (600-967 commits behind LDR, 0
-  open PRs fleet-wide) yet ~6,900 runs/week were still firing against it (~$166/mo, almost entirely the 1-minute-minimum
-  tax on the 2 fleet templates, which cannot be self-hosted — they are registered PM-only). Stopped the dead-branch
-  triggers + PM-side hourly no-op crons (both DONE, measured zero post-effect); re-entry stays MANUAL via
-  workspace-manifest.json so nothing is silently trapped. Also carries the adjacent staging-backmerge-to-ldr.yml
-  escalation-dispatch bug found + fixed the same day (0% real-escalation success rate fleet-wide, now fixed in all 24
-  repos). One residual: the staging re-entry runbook note needs a codex-SSOT home (/codex/08-workflows/ci-cd-flow.md),
-  tracked in post_cutover_silent_assumption_sweep_2026_07_23.md — not fully closed out until that codex fix lands, so
-  this plan stays active rather than archiving immediately.
+  Same-day (2026-07-23) staging-machinery audit forked from
+  /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the plan line-cap remediation triage.
+  `staging` has been dead in every repo since 2026-06-27 (600-967 commits behind LDR, 0 open PRs fleet-wide) yet ~6,900
+  runs/week were still firing against it (~$166/mo, almost entirely the 1-minute-minimum tax on the 2 fleet templates,
+  which cannot be self-hosted — they are registered PM-only). Stopped the dead-branch triggers + PM-side hourly no-op
+  crons (both DONE, measured zero post-effect); re-entry stays MANUAL via workspace-manifest.json so nothing is silently
+  trapped. Also carries the adjacent staging-backmerge-to-ldr.yml escalation-dispatch bug found + fixed the same day (0%
+  real-escalation success rate fleet-wide, now fixed in all 24 repos). One residual: the staging re-entry runbook note
+  needs a codex-SSOT home (/codex/08-workflows/ci-cd-flow.md), tracked in
+  post_cutover_silent_assumption_sweep_2026_07_23.md — not fully closed out until that codex fix lands, so this plan
+  stays active rather than archiving immediately.
 status: active
 nature: process
 asset_group: [ci]
@@ -44,17 +45,17 @@ supersedes:
 superseded_by:
 depends_on: []
 source:
-  - "Split from plans/active/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation triage
-    (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 3 of 3): the same-day
+  - "Split from /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation
+    triage (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 3 of 3): the same-day
     (2026-07-23) Phase 6 staging-machinery-shutdown extraction."
 drift_direction: advance-code
 ---
 
 # GitHub Actions staging-branch machinery shutdown
 
-> **🟡 ACTIVE — forked 2026-07-24 from `github_actions_ci_cost_reduction_2026_07_15.md`** (line-cap remediation,
-> 2026-07-23 triage, row 13 of 30). This is the same-day (2026-07-23) staging-machinery audit that the parent's Phase 6
-> discovered — a distinct topic from the self-hosted-runner migration (archived at
+> **🟡 ACTIVE — forked 2026-07-24 from `/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`**
+> (line-cap remediation, 2026-07-23 triage, row 13 of 30). This is the same-day (2026-07-23) staging-machinery audit
+> that the parent's Phase 6 discovered — a distinct topic from the self-hosted-runner migration (archived at
 > `plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md`) and from the parent's other open
 > follow-ups (at `github_actions_operator_gated_followups_2026_07_17.md`). Content below is moved **verbatim** from the
 > parent — nothing summarized or rewritten.

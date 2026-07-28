@@ -82,9 +82,10 @@ superseded_by:
       (still said "never dispatch until someone notices" — the exact gap this plan closes) — updated it to describe the
       shipped detection+remediation flow. Updated both real `related:` path references corpus-wide
       (`plans/active/issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`, this finalize doc's own
-      `related:`) to the new archived path; left the auto-regenerated `active_plan_inventory_dashboard_2026_07_24.md`
-      table row alone (self-corrects on next regen) and the two bare-mention provenance citations (codex table cell,
-      `depends_on`) as historical record, not broken links. Moved the parent via `git mv` to
+      `related:`) to the new archived path; left the auto-regenerated
+      `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` table row alone (self-corrects on next
+      regen) and the two bare-mention provenance citations (codex table cell, `depends_on`) as historical record, not
+      broken links. Moved the parent via `git mv` to
       `plans/archive/2026_07/ao_backlog_collision_alert_and_remediation_ui_2026_07_26.md`. Cleared
       `locked_by`/`locked_since` (both carried the identical boilerplate `live-defi-rollout`/`2026-05-21` values found
       on this finalize doc too — a stale template default predating either plan's creation, not a real lock) — this

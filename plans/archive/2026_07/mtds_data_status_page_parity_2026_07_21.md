@@ -32,7 +32,7 @@ related:
     /plans/active/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/active/data_status_page_ux_and_canonicalisation_2026_07_16.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
-    /plans/active/deployment_redesign_cherrypicks_2026_07_20.md,
+    /plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md,
     /plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md,
   ]
 created: "2026-07-21"
@@ -559,12 +559,12 @@ the same fixes.
       here so a future reader doesn't re-discover the MTDS gap from scratch.
 
       **DONE 2026-07-22.** `mvp_scope_catalogue_tagging_2026_06_08.md`'s "Composes with" section already carries the
-                                                                                                                                          pointer back here (added earlier in this session/plan's lifecycle) and it remains accurate: MTDS still has no
-                                                                                                                                          MVP wiring at the UI level despite this session's `/turbo` backend `scope` param addition
-                                                                                                                                          (`deployment-api@511084b`) — confirmed by the parity-confirmation todo above (no UI consumer threads `scope`
-                                                                                                                                          through). This plan's "already exists" section (UAC `is_mvp`, precomputed catalogue `mvp` column,
-                                                                                                                                          `CoverageScope` toggle, Catalogue Explorer) is unchanged and still accurate — nothing shipped this session
-                                                                                                                                          duplicates or invalidates it. No update needed to either doc beyond this confirmation.
+                                                                                                                                                  pointer back here (added earlier in this session/plan's lifecycle) and it remains accurate: MTDS still has no
+                                                                                                                                                  MVP wiring at the UI level despite this session's `/turbo` backend `scope` param addition
+                                                                                                                                                  (`deployment-api@511084b`) — confirmed by the parity-confirmation todo above (no UI consumer threads `scope`
+                                                                                                                                                  through). This plan's "already exists" section (UAC `is_mvp`, precomputed catalogue `mvp` column,
+                                                                                                                                                  `CoverageScope` toggle, Catalogue Explorer) is unchanged and still accurate — nothing shipped this session
+                                                                                                                                                  duplicates or invalidates it. No update needed to either doc beyond this confirmation.
 
 - [x] N. ✅ [BACKEND] P2. **MDPS honest-coverage follow-up — SHIPPED** (`deployment-api@43f067e`, content-verified on
       origin via `merge-base --is-ancestor` against the exact SHA). Made the Tier-2 (venue-level, non-per-instrument)
@@ -643,7 +643,8 @@ the same fixes.
 precompute) · `data_status_page_ux_and_canonicalisation_2026_07_16.md` P6 (the Catalogue Explorer pattern this plan
 reuses, not forks) · `data_status_cell_grid_rearchitecture_2026_07_18.md` (the cell-grid perf work — relevant if MTDS's
 coverage view hits the same OOM/perf class once MVP filtering is added) ·
-`deployment_redesign_cherrypicks_2026_07_20.md` (sibling deployment-ui/api workstream, same epic).
+`/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md` (sibling deployment-ui/api workstream, same
+epic).
 
 ## Progress Log
 

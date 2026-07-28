@@ -15,7 +15,7 @@
 # `<root>/.claude/CLAUDE.md` is NOT a path Claude Code reads as memory.
 #
 # WHY #3 EXISTS (added 2026-07-23, see
-# plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md): unlike CLAUDE.md and
+# /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md): unlike CLAUDE.md and
 # skills/, cursor-configs/settings.json is GITIGNORED (personal model/effortLevel drift used to jam
 # slot-cron-ff-pull's dirty-check — see .gitignore) — so it never arrives via `git pull` and must be
 # manually re-seeded per clone. This script does NOT invent or copy that content across clones (there
@@ -74,7 +74,7 @@ SKILLS_SRC="${PM_CFG}/skills"
 
 # ── (0) Self-heal: personal keys (model/effortLevel/theme) don't belong in the team file ──
 # Runs BEFORE anything else touches settings.json — see migrate-personal-settings-keys.sh header
-# for the full story (plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md).
+# for the full story (/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md).
 # Best-effort: that script never fails loudly, so no guard needed here.
 _migrate_script="${_self}/migrate-personal-settings-keys.sh"
 [ -x "$_migrate_script" ] && bash "$_migrate_script" "${PM_CFG}/settings.json"
@@ -143,7 +143,7 @@ fi
 # Promotes local-only Claude Code hook scripts (e.g. context-threshold-nudge.sh,
 # precompact-block-auto.sh) to a git-tracked, symlinked home so an edit propagates to every
 # root instead of living only on whichever machine authored it. Added 2026-07-23 — see
-# plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md. Placed before
+# /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md. Placed before
 # the skills block (same reason as the settings.json block above): the skills block has early
 # `exit 0` paths that would otherwise skip this.
 HOOKS_SRC="${PM_CFG}/hooks"

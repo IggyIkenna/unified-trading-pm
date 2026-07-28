@@ -179,11 +179,11 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   in `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` alternation
   (`CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION` — no `PREREQUISITES`), so it
   re-derives as dispatchable regardless of line placement — a DIFFERENT bug from the already-fixed continuation-line
-  issue (`blocked_marker_continuation_line_not_scanned_2026_07_26.md`). Retagged both open checkboxes above (P1
-  backfill + P2 verify) with the correct, recognized `BLOCKED-CREDENTIALS` token — the real blocker genuinely is the
-  operator-gated odds-api key. Filed the general corpus-wide finding (15 files use the unrecognized token, not just this
-  doc) as `issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` rather than mass-editing
-  every file — several other occurrences are legitimately same-corpus todo dependencies needing
+  issue (`/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`). Retagged both open
+  checkboxes above (P1 backfill + P2 verify) with the correct, recognized `BLOCKED-CREDENTIALS` token — the real blocker
+  genuinely is the operator-gated odds-api key. Filed the general corpus-wide finding (15 files use the unrecognized
+  token, not just this doc) as `issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md` rather
+  than mass-editing every file — several other occurrences are legitimately same-corpus todo dependencies needing
   `sequential`/`depends_on`, not a text-marker fix, so that needs real per-case triage. Not running the backfill (still
   BLOCKED-CREDENTIALS); skipping this task.
 

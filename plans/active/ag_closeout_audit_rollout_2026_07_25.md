@@ -263,7 +263,8 @@ source: >-
   longer orphaned, listed here only for the historical snapshot count),
   `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`,
   `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`,
-  `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`, `issues/tardis_concurrent_ip_lockout_2026_07_12.md`,
+  `/plans/archive/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`,
+  `issues/tardis_concurrent_ip_lockout_2026_07_12.md`,
   `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`. Next: archive the 7
   `archivable_now` docs (careful ship this time — the earlier sports archival hit a half-landed-rename bug from
   concurrent branch activity, verify AT HEAD not just exit code) + launch the AO-eligibility triage for the 29 orphaned.

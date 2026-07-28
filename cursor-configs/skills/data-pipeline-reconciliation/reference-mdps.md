@@ -71,7 +71,7 @@ the layer ([`per-asset-group-bucket-layouts.md`](/codex/02-data/per-asset-group-
 - **S1** path under `processed_candles/` — checked against the LOCKED template (oracle-exempt namespace, H2).
 - **S2** MDPS candle contract via `lookup_mdps_contract(mdps_data_type_key)` — OHLC/`open` nullability is PER-TYPE
   (deriv + empty-window nullable, resolved P0 —
-  [`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
+  [`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
   Columns per [`chart-candle-delivery-flow.md`](/codex/02-data/chart-candle-delivery-flow.md) §6; the candle is
   timestamped on its RIGHT edge (`t_close`, half-open `[t_open, t_close)`) per
   [`bar-boundary-candle-edge-convention.md`](/codex/02-data/bar-boundary-candle-edge-convention.md).
@@ -129,7 +129,7 @@ surviving duplicate copies are `legacy_duplicate` (content-verify before any ded
   ([`candle_feature_…`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md) finding 3).
 - **`derivative_ticker` candle schema violation — RESOLVED 2026-07-20**: OHLC nullability now inherits per-type from the
   UAC SSOT; do NOT re-file it
-  ([`mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
+  ([`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)).
 
 ## Known-good spot-check — run BEFORE trusting any absence result
 
@@ -178,4 +178,4 @@ Added 2026-07-21 — the in-session distinct-value census
 [`/codex/02-data/canonical-cutover-register.md`](/codex/02-data/canonical-cutover-register.md) (candle rows) ·
 [`plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md`](../../../plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md)
 ·
-[`plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
+[`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](../../../plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)

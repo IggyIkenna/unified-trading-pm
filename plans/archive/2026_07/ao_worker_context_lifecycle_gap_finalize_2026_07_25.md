@@ -134,8 +134,8 @@ new P0 todo, see parent's Progress Log) are `[x]`. Flipped this plan `draft` →
      `/plans/archive/2026_07/ao_worker_context_lifecycle_gap_2026_07_25.md`. Left informal backtick-only prose mentions
      (in that same doc and in `ao_fleet_throughput_incident_finalize_2026_07_25.md`) as-is — not the corpus's enforced
      path-link convention. This finalize plan's own `related:`/`depends_on:` entries updated below. Regenerated
-     `active_plan_inventory_dashboard_2026_07_24.md` via `scripts/plans/regenerate_active_plan_inventory.py` rather than
-     hand-editing it.
+     `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` via
+     `scripts/plans/regenerate_active_plan_inventory.py` rather than hand-editing it.
   5. **File move**:
      `git mv plans/active/ao_worker_context_lifecycle_gap_2026_07_25.md plans/archive/2026_07/ao_worker_context_lifecycle_gap_2026_07_25.md`.
   6. **Lock**: `locked_by`/`locked_since` were already empty on the parent plan — nothing to clear.

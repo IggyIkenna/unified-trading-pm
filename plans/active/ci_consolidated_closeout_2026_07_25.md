@@ -99,7 +99,8 @@ isolation fixed on self-hosted runners.
 (`digest-drift-sweep.yml` `GITHUB_TOKEN` cross-repo scope bug, silent no-op since birth) ·
 [issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md](/plans/archive/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md)
 (github-actions-deploy SA has over-broad project-wide Secret Manager access) ·
-`github_actions_ci_cost_reduction_2026_07_15.md` + `github_actions_cost_reduction_options_analysis_2026_07_15.md` +
+`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md` +
+`github_actions_cost_reduction_options_analysis_2026_07_15.md` +
 `github_actions_operator_gated_followups_2026_07_17.md` + `github_actions_staging_machinery_shutdown_2026_07_24.md` (GHA
 cost-reduction program: options analysis → redirect index → operator-gated followups → dead staging-machinery shutdown).
 
@@ -168,11 +169,11 @@ unblocked on a CI runner.
   in a Track's Sources is discoverability, not dispatch — so every remaining open item in this tranche is currently
   tracked-but-unworked. Phase 1 read all 34 tranche-primary docs end-to-end: **30 orphaned** (20
   `orphaned_partial_coverage`, 10 `orphaned_never_touched`), 2 `archivable_now`
-  (`github_actions_ci_cost_reduction_2026_07_15.md`, now a pure redirect index that says so itself, and
-  `github_actions_cost_reduction_options_analysis_2026_07_15.md`, a closed decision record whose Appendix-4 `☐` items
-  are explicitly "reference checklist, not dispatch todos"), and 2 NOT orphaned because they are already AO-dispatched.
-  A recurring trap: **12 of the 30 orphans express ALL their remaining work as numbered prose with zero checkboxes**, so
-  a checkbox count answers nothing here.
+  (`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`, now a pure redirect index that says so
+  itself, and `github_actions_cost_reduction_options_analysis_2026_07_15.md`, a closed decision record whose Appendix-4
+  `☐` items are explicitly "reference checklist, not dispatch todos"), and 2 NOT orphaned because they are already
+  AO-dispatched. A recurring trap: **12 of the 30 orphans express ALL their remaining work as numbered prose with zero
+  checkboxes**, so a checkbox count answers nothing here.
   - **Drafted (both `status: draft`, NOT dispatched — flipping to `active` is the operator's call)**:
     [/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md](/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md)
     (29 conflict-cleared bounded todos, 33 Deferred by taxonomy) +

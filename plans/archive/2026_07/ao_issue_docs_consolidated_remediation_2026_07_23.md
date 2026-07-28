@@ -139,9 +139,10 @@ this plan. They stay in their own issue docs until resolved interactively:
   matches how sibling plans A/B and the Q2 dispatch plan were delisted on archival),
   `plans/active/ao_consolidated_closeout_2026_07_25.md` (Track 5 Sources link repointed + noted archived),
   `plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md` (2 prose references repointed), and
-  `active_plan_inventory_dashboard_2026_07_24.md` (regenerated via `regenerate_active_plan_inventory.py`, not
-  hand-edited — it's auto-generated). The 3 sibling docs already in `plans/archive/` that also reference this plan
-  (`ao_remediation_a_independent_fixes_2026_07_23`, `ao_remediation_b_code_chain_2026_07_23`,
-  `ao_held_safety_fixes_dispatch_2026_07_24`) and `master_to_live_defi_2026_05_23` were left as-is — archives are closed
-  historical records (`check_frontmatter_schema.py` explicitly excludes `plans/archive/**`, operator decision
-  2026-07-04), not retroactively maintained.
+  `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (regenerated via
+  `regenerate_active_plan_inventory.py`, not hand-edited — it's auto-generated). The 3 sibling docs already in
+  `plans/archive/` that also reference this plan (`ao_remediation_a_independent_fixes_2026_07_23`,
+  `ao_remediation_b_code_chain_2026_07_23`, `ao_held_safety_fixes_dispatch_2026_07_24`) and
+  `master_to_live_defi_2026_05_23` were left as-is — archives are closed historical records
+  (`check_frontmatter_schema.py` explicitly excludes `plans/archive/**`, operator decision 2026-07-04), not
+  retroactively maintained.

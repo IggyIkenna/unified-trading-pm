@@ -2,15 +2,16 @@
 doc_type: issue
 title:
   "check_finalize_plan_coverage.py regression (2 > baseline 1) —
-  sports_derived_features_postfloor_residue_purge_2026_07_27.md ships assigned_vm:planning with no gated finalize plan"
+  /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md ships assigned_vm:planning with
+  no gated finalize plan"
 summary: >-
   Discovered while shipping an unrelated fix (ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3,
   slot-git-status-report.sh loopback preference) — quickmerge.sh's corpus-wide pre-flight re-gate failed on
   check_finalize_plan_coverage.py, which scans ALL of plans/active/ (not just changed files) for assigned_vm:planning
   plans with more than 1 open todo and no companion finalize plan. Root-caused via git log —
-  plans/active/sports_derived_features_postfloor_residue_purge_2026_07_27.md (unified-trading-pm@6af68d7b2, slot-12,
-  "author the derived_features postfloor residue census+purge follow-up plan") shipped `assigned_vm: planning` but has
-  no `<slug>_finalize_*.md` companion with `depends_on: [<slug>]` + `gate_on_depends: true` (task_template.md §4
+  /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md (unified-trading-pm@6af68d7b2,
+  slot-12, "author the derived_features postfloor residue census+purge follow-up plan") shipped `assigned_vm: planning`
+  but has no `<slug>_finalize_*.md` companion with `depends_on: [<slug>]` + `gate_on_depends: true` (task_template.md §4
   pattern). This corpus-wide gate blocks EVERY slot's quickmerge on unified-trading-pm, not just mine — confirmed by
   running the checker standalone (`check_finalize_plan_coverage.py --workspace-root ...`), which reports 2 violations
   against a baseline of 1 (the other, `deployment_registry_firestore_p0_unblock_2026_07_14.md`, is the pre-existing
@@ -24,7 +25,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]
 tags: [quality-gates, finalize-plan-coverage, plan-hygiene, repo-blocker, sports]
-related: [/plans/active/sports_derived_features_postfloor_residue_purge_2026_07_27.md, /plans/PLAN_FORMAT.md]
+related: [/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md, /plans/PLAN_FORMAT.md]
 created: "2026-07-27"
 last_updated: "2026-07-27"
 parent_epic: infrastructure_master
@@ -50,7 +51,7 @@ depends_on: []
 > correctly); the check_finalize_plan_coverage.py repo-blocker this doc was filed against is resolved in substance.
 > Archived per issue-doc-lifecycle.**
 
-# finalize-plan-coverage regression — sports_derived_features_postfloor_residue_purge_2026_07_27.md
+# finalize-plan-coverage regression — /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md
 
 ## What I found
 
@@ -61,7 +62,7 @@ Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize p
 
 Plans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true to a new/existing
 companion plan — see task_template.md §4):
-  - unified-trading-pm/plans/active/sports_derived_features_postfloor_residue_purge_2026_07_27.md
+  - unified-trading-pm/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md
   - unified-trading-pm/plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
 
 ❌ Regression: 2 > baseline 1. New AO plan(s) shipped without a gated finalize plan — author one before merging
@@ -70,10 +71,10 @@ companion plan — see task_template.md §4):
 
 `deployment_registry_firestore_p0_unblock_2026_07_14.md` is already listed in
 `scripts/quality_gates/finalize_plan_coverage_baseline.yaml`'s `baseline_files` (the one accepted pre-existing
-violation) — the NEW regression is `sports_derived_features_postfloor_residue_purge_2026_07_27.md`
-(`unified-trading-pm@6af68d7b2`, authored 2026-07-27 01:48 UTC by slot-12). This is a corpus-wide scan (runs over ALL of
-`plans/active/`, not scoped to a changeset), so it blocks every slot's `quickmerge.sh` on this repo until fixed, not
-just the session that discovered it.
+violation) — the NEW regression is
+`/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (`unified-trading-pm@6af68d7b2`,
+authored 2026-07-27 01:48 UTC by slot-12). This is a corpus-wide scan (runs over ALL of `plans/active/`, not scoped to a
+changeset), so it blocks every slot's `quickmerge.sh` on this repo until fixed, not just the session that discovered it.
 
 ## Why it matters
 
@@ -96,7 +97,7 @@ actual scope.
 ## Todos
 
 - [ ] [SCRIPT] P1. Author the gated finalize plan for
-      `plans/active/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (task_template.md §4 pattern), OR
-      flip its `assigned_vm` to `NA` if it was never meant for AO dispatch — whichever matches the plan owner's actual
-      intent. **Done when**: `check_finalize_plan_coverage.py --workspace-root <ws>` reports violations at/below
-      baseline (1) again. (repo: unified-trading-pm)
+      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (task_template.md §4
+      pattern), OR flip its `assigned_vm` to `NA` if it was never meant for AO dispatch — whichever matches the plan
+      owner's actual intent. **Done when**: `check_finalize_plan_coverage.py --workspace-root <ws>` reports violations
+      at/below baseline (1) again. (repo: unified-trading-pm)

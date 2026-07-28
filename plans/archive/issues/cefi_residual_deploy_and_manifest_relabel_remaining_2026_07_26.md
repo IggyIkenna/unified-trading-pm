@@ -24,7 +24,7 @@ related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
-    /plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
+    /plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
   ]
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -38,13 +38,14 @@ resolved_by:
 drift_direction: advance-code
 ---
 
-# SUPERSEDED — see cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md
+# SUPERSEDED — see /plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md
 
 This doc was filed by slot-3 before discovering that slot-10 had already filed
-`issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` covering the SAME `cefi_satellite_ao_dispatch_batch2-010`
-todo's 4 sub-items, already correctly gated. Per main's ruling on `BLK-dca02ac2`, all resolution evidence (items 2+4
-done, items 1+3 remaining) has been merged into that doc's "Resolution update (2026-07-26, slot-3)" section instead of
-duplicating it here. This doc is kept only as a redirect — do not action its (now-stale) content below.
+`/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` covering the SAME
+`cefi_satellite_ao_dispatch_batch2-010` todo's 4 sub-items, already correctly gated. Per main's ruling on
+`BLK-dca02ac2`, all resolution evidence (items 2+4 done, items 1+3 remaining) has been merged into that doc's
+"Resolution update (2026-07-26, slot-3)" section instead of duplicating it here. This doc is kept only as a redirect —
+do not action its (now-stale) content below.
 
 # CeFi residual followups — 2 of 4 sub-items still open
 
@@ -95,13 +96,13 @@ Items 1 and 3 remain genuinely open and are why I did not flip `cefi_satellite_a
 ## Recommended decision
 
 **SUPERSEDED — do not dispatch from this doc.** Both remaining-work items below are tracked as the live, canonical todos
-in `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` (`[OPERATOR]`-gated there so they do not
+in `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` (`[OPERATOR]`-gated there so they do not
 auto-dispatch). Struck here to prevent a duplicate backlog derivation from this superseded copy:
 
 - ~~[INFRA] P1. Deploy the D3 reader-bridge to the 4 in-scope consumers~~ — see
-  `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 2.
+  `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 2.
 - ~~[SCRIPT] P2. Write + dry-run-validate an OKX-FUTURES dated-futures PERPETUAL→FUTURE manifest relabel script~~ — see
-  `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
+  `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todo 3.
 
 ## Codex SSOTs
 

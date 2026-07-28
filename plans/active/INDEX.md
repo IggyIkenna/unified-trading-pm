@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 267 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 260 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (44)
+### cefi (43)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -73,13 +73,10 @@ by hand._
   — Consolidates THREE overlapping, previously-separately-dispatched todos in data_completion_cefi_2026_07_15.md (the
   "E4 remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state
   evidence"…
-- [`cefi_migration_cutover_and_track8_completion_2026_07_25`](./cefi_migration_cutover_and_track8_completion_2026_07_25.md)
-  — The migration-completion CRITICAL PATH forked out of cefi_consolidated_closeout_2026_07_18.md's 2026-07-25 split.
-  Sequential 5-step chain: (1) DERIBIT quote-fix + catalogue rebuild that GATES the cutover, (2) the remaining on-disk
-  GCS…
 - [`cefi_migration_cutover_and_track8_completion_finalize_2026_07_25`](./cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md)
-  **[draft]** — Gated closeout for cefi_migration_cutover_and_track8_completion_2026_07_25.md — machine-held via
-  depends_on + gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent…
+  **[draft]** — Gated closeout for /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md —
+  machine-held via depends_on + gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles
+  the parent…
 - [`cefi_misc_audits_and_hygiene_2026_07_25`](./cefi_misc_audits_and_hygiene_2026_07_25.md) — 3 independent, ungated
   todos on different files/repos forked from cefi_consolidated_closeout_2026_07_18.md's "Operator dispositions" section
   (2026-07-25 split): the `[OPERATOR]`-gated UAC per-venue seed fallback removal decision, a bounded…
@@ -470,7 +467,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (44)
+### sports (42)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -550,14 +547,6 @@ by hand._
 - [`sports_consolidated_native_ao_extract_2026_07_25_finalize`](./sports_consolidated_native_ao_extract_2026_07_25_finalize.md)
   **[draft]** — Gated closeout for sports_consolidated_native_ao_extract_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 26 of that plan's todos are done. Reconciles each completed todo's evidence back into…
-- [`sports_derived_features_postfloor_residue_purge_2026_07_27`](./sports_derived_features_postfloor_residue_purge_2026_07_27.md)
-  — Follow-up to sports_consolidated_native_ao_extract_2026_07_25.md's Todo 1, which self-mis-scoped as "Not
-  [OPERATOR]-gated" for a delete against a real `-prd-` production bucket (`features-sports-prd-central-element-323112`)
-  — corrected…
-- [`sports_derived_features_postfloor_residue_purge_2026_07_27_finalize_2026_07_27`](./sports_derived_features_postfloor_residue_purge_2026_07_27_finalize_2026_07_27.md)
-  **[draft]** — Gated closeout for sports_derived_features_postfloor_residue_purge_2026_07_27.md -- machine-held via
-  depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own
-  checkboxes/prose once its…
 - [`sports_group_c_execution_backtest_harness_2026_07_21`](./sports_group_c_execution_backtest_harness_2026_07_21.md) —
   Scopes a `run_sports_backtest` CLI in execution-service, mirroring the 3 existing domain runners
   (run_cefi_backtest/run_tradfi_backtest/run_defi_backtest), so sports/predictions gets a real Group-C execution-alpha
@@ -780,7 +769,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (69)
+### cross-cutting (68)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -916,13 +905,10 @@ by hand._
 - [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
   — Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
   venues, and full wizard parameterization for all supported archetypes.
-- [`deployment_redesign_cherrypicks_2026_07_20`](./deployment_redesign_cherrypicks_2026_07_20.md) — Harsh's
-  feat/data-status-redesign branch (deployment-ui + deployment-api, late May) is ~800–1090 commits behind LDR and
-  superseded as a whole — do NOT merge it. A capability-by-capability comparison against current production found five…
 - [`deployment_redesign_cherrypicks_2026_07_20_finalize_2026_07_27`](./deployment_redesign_cherrypicks_2026_07_20_finalize_2026_07_27.md)
-  **[draft]** — Gated closeout for deployment_redesign_cherrypicks_2026_07_20.md -- machine-held via depends_on +
-  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
-  its AO-dispatched todos…
+  **[draft]** — Gated closeout for /plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md -- machine-held
+  via depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own
+  checkboxes/prose once…
 - [`distinct_values_noncanonical_audit_2026_07_20`](./distinct_values_noncanonical_audit_2026_07_20.md) — Audit every
   value the data-status /distinct-values panel badges non-canonical, across all five asset_groups (defi, cefi, tradfi,
   prediction, sports) and all four axes (venues/instrument_types/data_types/chains) from the live nightly…
@@ -1031,7 +1017,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (9)
+### ci (8)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -1047,27 +1033,21 @@ by hand._
 - [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) — "OPERATOR DECISION
   (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is: commits reach LDR via
   local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main. Staging is…
-- [`github_actions_ci_cost_reduction_2026_07_15`](./github_actions_ci_cost_reduction_2026_07_15.md) — SPLIT 2026-07-24
-  (plan line-cap remediation, plan_line_cap_remediation_2026_07_23.md row 13) — this doc is now a thin redirect index,
-  not a live record; nothing is tracked here anymore. The full content lives in 3 child docs:…
 - [`github_actions_operator_gated_followups_2026_07_17`](./github_actions_operator_gated_followups_2026_07_17.md) — Open
-  follow-up work forked from github_actions_ci_cost_reduction_2026_07_15.md per the 2026-07-23 plan line-cap remediation
-  triage. Carries every todo from the parent that was still open (9 total): the quickmerge --agent sentinel-race P0,…
+  follow-up work forked from /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the 2026-07-23
+  plan line-cap remediation triage. Carries every todo from the parent that was still open (9 total): the quickmerge…
 - [`github_actions_staging_machinery_shutdown_2026_07_24`](./github_actions_staging_machinery_shutdown_2026_07_24.md) —
-  Same-day (2026-07-23) staging-machinery audit forked from github_actions_ci_cost_reduction_2026_07_15.md per the plan
-  line-cap remediation triage. `staging` has been dead in every repo since 2026-06-27 (600-967 commits behind LDR, 0
-  open…
+  Same-day (2026-07-23) staging-machinery audit forked from
+  /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the plan line-cap remediation triage.
+  `staging` has been dead in every repo since 2026-06-27 (600-967…
 - [`monitoring_control_plane_master_2026_06_10`](./monitoring_control_plane_master_2026_06_10.md) — Master coordinator
   for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the orchestrator, providing a
   single-pane view of repo pipeline state and slot health.
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (16)
+### infrastructure (15)
 
-- [`active_plan_inventory_dashboard_2026_07_24`](./active_plan_inventory_dashboard_2026_07_24.md) — Workspace-wide
-  auto-regenerated inventory of every plans/active/*.md plan's checkbox progress, calibrated AI-days remaining, and
-  epic-orphan status. Extracted 2026-07-24 from master_to_live_defi_2026_05_23.md (archived that same day per…
 - [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) — A new /ops/artifacts
   page that shows the deployment estate's FINAL stage end-to-end — every Docker image and VM tarball built, where it
   landed, what git SHA it carries, why a build failed, and (the view that does not exist today) what each…
@@ -1117,7 +1097,7 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (12)
+### meta (11)
 
 - [`agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28`](./agent_orchestrator_mobile_and_worker_tmux_chat_2026_07_28.md)
   — Operator (Ikenna) wants three things — (1) real two-way chat with a plan-dispatch slot worker's tmux session, since
@@ -1127,9 +1107,6 @@ by hand._
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
   LDR code AND the production orchestrator on the planning VM (read-only SSM — live state.db, activity_log, process
   table,…
-- [`asset_group_ao_ci_infra_schema_expansion_2026_07_27`](./asset_group_ao_ci_infra_schema_expansion_2026_07_27.md) —
-  ao/ci/infra content has been tagged bare `asset_group=cross-cutting` since 2026-07-25 (avoiding a schema migration) --
-  but `/ag-closeout-audit`'s own docs admit this needs real per-doc content judgment, not a mechanical rule, because…
 - [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
   "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
   DP_RUN_MOSTLY_EMPTY across sports/cefi/defi/tradfi and DP_VM_EXIT_NONZERO for features-sports VMs — and asked (a) why…

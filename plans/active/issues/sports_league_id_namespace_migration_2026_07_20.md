@@ -773,8 +773,8 @@ doc's own "Still genuinely outstanding" list (STATUS 2026-07-25) names as the ga
   reruns `reprocess_sports_odds.py` against this migration's canonical league_id shape.
 - **`batch_footystats` copy+swap — still outstanding.** No apply/swap script exists yet in market-tick-data-service
   beyond the read-only `census_footystats_orphan_content_2026_07_25.py`;
-  `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md:191-196` confirms this shape "was
-  never in this swap's scope and remains genuinely un-migrated."
+  `/plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md:191-196` confirms
+  this shape "was never in this swap's scope and remains genuinely un-migrated."
 
 **Net: 2 of 3 blockers remain open, so the STOP condition still holds and the denominator change still must not ship.**
 No code changed here either. Narrowing this to the exact 2 remaining blockers (rather than 3) is the only new

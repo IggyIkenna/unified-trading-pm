@@ -15,7 +15,7 @@ summary: >-
   `.tabs/2` — because `setup-tab-worktrees.sh` was never wired to create it (it only ever provisions CLAUDE.md +
   skills). Net effect on this host before the fix: the destructive-command safety hook was not loaded ANYWHERE, and no
   team policy was in effect at all — every Claude Code session was running on defaults only.
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -40,12 +40,18 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
+  "link-claude-skills.sh responsibilities #3/#4 (settings.json + hooks symlinks) + migrate-personal-settings-keys.sh +
+  cursor-configs/settings.json re-tracked (e5be0047c) + portable-hook-path fix (35a3926c1); fleet spot-checked
+  2026-07-28 on ip-172-31-5-118 across all 16 slots, zero further fixes needed — see Progress Log"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-23
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

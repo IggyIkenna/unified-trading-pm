@@ -9,9 +9,9 @@ summary:
   aggregated-sources, satellite-batch, and native-extraction docs. VERDICT — for the INSTRUMENT-ID CANONICALIZATION axis
   (GCS filename / parquet column / manifest key / reader), the migration is Phase-C dry-run-clean, awaiting only the
   operator-approved cutover (now the sequential critical path in
-  cefi_migration_cutover_and_track8_completion_2026_07_25.md). CeFi is NOT "done" overall — a REOPENED coverage question
-  (the archived "honest-done 50.79%" rested on a code-bug-induced throughput collapse mistaken for a 1.8-year physical
-  ceiling, now fillable in ~1-2 days) and an operator-ruled "done first" side-quest
+  /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md). CeFi is NOT "done" overall — a
+  REOPENED coverage question (the archived "honest-done 50.79%" rested on a code-bug-induced throughput collapse
+  mistaken for a 1.8-year physical ceiling, now fillable in ~1-2 days) and an operator-ruled "done first" side-quest
   (cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md's Phases 1/1b/1c/2/5) both remain open.
 status: active
 nature: process
@@ -87,17 +87,18 @@ source:
 
 - **Instrument-ID canonicalization (4 surfaces: GCS filename / parquet `instrument_id` column / manifest key / reader):
   YES, this is the FINAL migration for that axis.** The 4-script program is Phase-C dry-run-clean; the operator-gated
-  drain+apply is now the sequential critical path in `cefi_migration_cutover_and_track8_completion_2026_07_25.md`.
-  Everything id-format-related is subsumed, absorbed, or already done — see that child plan for the full
-  predecessor-subsumption record.
+  drain+apply is now the sequential critical path in
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Everything id-format-related is
+  subsumed, absorbed, or already done — see that child plan for the full predecessor-subsumption record.
 - **CeFi OVERALL: NOT done.** Several separate open tracks remain — none blocks the id-migration; several are real
   data-correctness work; Track 2 (coverage) is a decision that reframes "cefi done."
 
 ## Reachability map — how a reader gets to every piece of real work from here
 
-1. **Migration-completion critical path** → `cefi_migration_cutover_and_track8_completion_2026_07_25.md`
-   (`sequential: true`, 5 todos: DERIBIT quote fix → on-disk `:PERP:` rename → cutover `--apply` → post-cutover flip →
-   terminal enumeration checkpoint) → its gated finalize.
+1. **Migration-completion critical path** →
+   `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (`sequential: true`, 5 todos:
+   DERIBIT quote fix → on-disk `:PERP:` rename → cutover `--apply` → post-cutover flip → terminal enumeration
+   checkpoint) → its gated finalize.
 2. **Coverage-backfill path** → `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` (gated on path 1 finishing) →
    its gated finalize.
 3. **Candle-namespace path** → `cefi_track7_candle_namespace_residual_2026_07_25.md` (gated on
@@ -163,8 +164,9 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 
 ## Track 1 — Instrument-ID canonicalization (THE final id migration) · FORKED
 
-> **Forked 2026-07-25** to `cefi_migration_cutover_and_track8_completion_2026_07_25.md` (sequential 5-todo critical path
-> — path 1 in the Reachability map above). This section stays as a compact pointer + the historical subsumption record.
+> **Forked 2026-07-25** to `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`
+> (sequential 5-todo critical path — path 1 in the Reachability map above). This section stays as a compact pointer +
+> the historical subsumption record.
 
 - **Vehicle**: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
   `_cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
@@ -277,15 +279,15 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   (`BTC-USD-PERP`) never match `CEFI_MARGIN_TIERS`; the tier-miss fallback then self-referentially substitutes
   `mmr_warning_pct` as the assumed MMR rate, misclassifying healthy positions as WARNING/CRITICAL. Affects every live
   CeFi margin computation (both `margin_health.py` and the new `emit_live_cefi_margin_events` push path). P1, open.
-- `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md` F5 (rehomed here 2026-07-27, was falsely cited "0 open
-  todos" there) — bybit dated-futures fetches (`BTC-26DEC25`, `MNTUSDT-29MAY26`) time out en masse against
+- `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md` F5 (rehomed here 2026-07-27, was falsely
+  cited "0 open todos" there) — bybit dated-futures fetches (`BTC-26DEC25`, `MNTUSDT-29MAY26`) time out en masse against
   `datasets.tardis.dev` (~2,600 failures/VM across `cefi-bybit-2025-light`/`cefi-bybit-2026-light`) while perps succeed;
   the date is marked OK regardless. Open question: are these failures recorded as honest-absence (`record_captured`
   failed/unattempted) or silently dropped — verify before deciding whether it's a vendor-gap skip-list fix or a
   recording-correctness bug. P2, open.
-- `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §C9 (rehomed here 2026-07-28 per operator ruling
-  2026-07-27, interactive session §5#27; source doc archived 2026-07-28, `[unlock-plan]` granted — see that doc's C9
-  section) — EXTENDED candle/ohlcv fetch path (`_fetch_extended_candles_for_symbol`,
+- `/plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md` §C9 (rehomed here 2026-07-28 per
+  operator ruling 2026-07-27, interactive session §5#27; source doc archived 2026-07-28, `[unlock-plan]` granted — see
+  that doc's C9 section) — EXTENDED candle/ohlcv fetch path (`_fetch_extended_candles_for_symbol`,
   `adapters/_umi_extended.py:151`) silently swallows HTTP-error/exception/ empty-200 failures (no
   `failed_per_instrument` param wired, unlike sibling `/funding`/`/trades`/`/orderbook`) — a real honest-absence
   violation, low MVP urgency (ohlcv non-MVP today), ~10-line fix (thread the failure router + `record()` on error +
@@ -300,7 +302,8 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 > when its item lands.
 
 - **DERIBIT missing-quote fix + `prod/catalog.parquet` rebuild** → forked to
-  `cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1) — see the Reachability map above.
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1) — see the Reachability
+  map above.
 - [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE
       `market-tick-data-service@3253cae3`. New `InstrumentCatalogUnavailableError(RuntimeError)`; cefi/defi/tradfi
       `list_instruments` + sentinel paths now RAISE on absent/empty/schema-drift; off-season empty sports stays honest.
@@ -348,7 +351,7 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`'s live-manifest-worklist table.
 - **Coverage gap (why the `--apply` must WAIT)**: Scripts 1-4 resolve ~380k bare-wire; ~1.48M non-canonical rows
   (blank-itype-driven bare-wire, `:PERP:`, missing-quote, COMBO) need DEDICATED paths — Track 8 gates the cutover
-  `--apply` (now `cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
+  `--apply` (now `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
 
 - [x] ✅ [REVIEW] P0. **Operator canonical rulings — RECEIVED 2026-07-18.** The rebuilt catalogue is the SSOT: (1)
       blank/missing instrument_type → catalogue-resolve + venue-suffix-infer; (2) orphans not in catalogue → DROP unless
@@ -359,15 +362,15 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       cutover.** Casing freeze lifted 2026-07-20 (ruling D1, UPPERCASE ratified) — ruling recorded in
       `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § D1.
 - **`:PERP:` → `:PERPETUAL:` rewrite** — manifest side SHIPPED (`instruments-service@555ddf1c`, 374,227/374,272 rows).
-  **On-disk GCS rename** → forked to `cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 2).
-  **Writer-side fix** (future captures) → dispatched as candidate 8 of
+  **On-disk GCS rename** → forked to `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`
+  (todo 2). **Writer-side fix** (future captures) → dispatched as candidate 8 of
   `cefi_consolidated_native_ao_extract_2026_07_25.md`.
 - [x] ✅ [SCRIPT] P1. **bare-wire / missing-quote / DATED-contract recovery** — DONE `instruments-service@555ddf1c`
       (operator Option A + resolver-gap fix). +115,225 captured dated rows / ~40.7B ticks recovered via the dated-wire
       itype-fix; +3,531 rows / 186M ticks via the `-SPOT`/`-SWAP` override. Result: adjusted canonical-fraction 99.41%.
       Residual 53,965 captured rows / 7.46B ticks, all genuinely-unresolvable (captured-with-data dropped = 0).
 - **POST-CUTOVER: flip the smoke-check + downloader to canonical ids** → forked to
-  `cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4). Full evidence:
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4). Full evidence:
   `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`.
 - **Re-add the "data status" enumeration to deployment-ui/api** — code COMPLETE + `quality-gates.sh`-green
   (deployment-ui shipped `deployment-ui@3fb6779`; deployment-api blocked only on 3 dirty sibling-repo deps as of
@@ -375,8 +378,8 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
   a NEW read-only endpoint (`GET /api/data-status/axis-value-census`) rather than touching the legitimate math fix that
   eroded the raw-value signal. **Dispatched**: landing the quickmerge (with a fresh dirty-deps re-check first) is
   candidate 5 of `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **Enumeration-audit terminal checkpoint** → forked to `cefi_migration_cutover_and_track8_completion_2026_07_25.md`
-  (todo 5).
+- **Enumeration-audit terminal checkpoint** → forked to
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5).
 
 ## CEFI CANONICAL SPEC (operator-authoritative, 2026-07-18 — the migration target)
 

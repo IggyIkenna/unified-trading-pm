@@ -126,9 +126,9 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       operational re-run blocked on the scoping bug too)
 
       **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-                                          correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-                                          This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-                                          is needed first. Still blocked only on the operator's credential fix (todo above).
+                                                  correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+                                                  This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+                                                  is needed first. Still blocked only on the operator's credential fix (todo above).
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
@@ -249,7 +249,7 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   `plans/active/*.md` found ~50 checkboxes where a `BLOCKED-*` marker exists only in continuation text, not on the
   checkbox's own line) — filed a dedicated dispatcher-bug doc rather than mass-editing every occurrence myself (many are
   already resolved/moot; blast radius needs its own scoped audit):
-  `plans/active/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`. Not running the backfill (still
+  `/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`. Not running the backfill (still
   BLOCKED-CREDENTIALS); skipping this task.
 - 2026-07-28 (slot-7): Dispatched via `sports_odds_api_scattered_multiyear_gaps-002`'s P1 todo (which points here as
   prerequisite). Re-verified live per this doc's established discipline: pulled `odds-api-key` fresh

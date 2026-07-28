@@ -40,7 +40,7 @@ related:
   [
     /plans/active/issues/migration_vm_hung_detection_monitoring_gap_2026_07_27.md,
     /plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
@@ -184,7 +184,8 @@ its own `__init__.py`, so it was folded into the SAME `COPY` fix rather than nee
 ## Immediate action taken this session (not a fix — a stopgap)
 
 - Manually deleted `canonical-migration-cefi-content-apply-055803-cs9-1d` (relaunched as `cs9-1d-r2`, part of this
-  session's own migration campaign — see `cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
+  session's own migration campaign — see
+  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`).
 - Manually deleted `mdps-backfill-cefi-20260726-165959` (NOT relaunched — outside this session's scope; a human or a
   different agent with MDPS backfill context needs to pick up whatever shard this VM was covering).
 

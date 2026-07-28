@@ -203,8 +203,7 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   be an agent-orchestrator plan (picked up and executed by background agents) or a human plan (operator-driven, not
   auto-dispatched)?"_ **Default is human** (`assigned_vm: NA`) unless the operator explicitly says otherwise. **Valid
   `assigned_vm` values = `{planning, NA}` only** (multi-VM dispatch deprecated 2026-06-27). Automation work routes by
-  `assigned_role` (skill-based), not VM. (`human-planning` was the pre-2026-06-27 alias — use `planning` now;
-  `human-planning` still accepted but treated as `planning` for compatibility.)
+  `assigned_role` (skill-based), not VM. (legacy alias `human-planning` == `planning`, still accepted.)
 
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
   `/codex/11-project-management/doc-frontmatter-schema.md`). All plans carry: `doc_type: plan`, `title`, `summary`,
@@ -226,7 +225,7 @@ everything else. SSOT: `/codex/11-project-management/doc-frontmatter-schema.md` 
   auto-memory/chat-summary/a prose "next steps" note — a recurring violation). **Fanning out work = a tracked plan
   todo** (target repo named; never verbal dispatch). **A plan with every todo done + unlocked MUST be archived
   immediately (HARD RULE, recurring gap)** — don't leave it sitting `active`; `locked_by:` blocks archival without
-  `[unlock-plan]` (ASK, never autonomous). SSOT for both:
+  `[unlock-plan]` (ASK, never autonomous). SSOT for both (incl. the 6-step ritual + fact-vs-path referrer rule):
   `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. **Cross-doc references** are
   `/plans/...`/`/codex/...` leading-slash, repo-root-relative — never a bare filename, never `../`-relative (fragile:
   breaks if the CITING file ever moves, even though the target didn't); enforced hard via a shrinking-ratchet baseline

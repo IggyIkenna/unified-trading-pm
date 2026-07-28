@@ -73,8 +73,8 @@ governance — ruff-lint, deprecate/delete audit) ·
 (lift CVE-driven dependency caps once blockers clear) ·
 [issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
 (fleet-wide setuptools CVE, PYSEC-2026-3447, blocking the zero-tolerance codex gate) ·
-[/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv binary drifted off
-its pinned version on the VM fleet) ·
+[/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv
+binary drifted off its pinned version on the VM fleet) ·
 [issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM
 `scripts/` basedpyright typecheck-debt ratchet regression) ·
 [utl_uac_reuse_consolidation_remediation_2026_06_10.md](/plans/archive/2026_07/utl_uac_reuse_consolidation_remediation_2026_06_10.md)
@@ -113,7 +113,7 @@ the billing-waste pre-flight gate designed + shipped.
 ## Track 3 — PM plan-format / plan-hygiene tooling · P2
 
 **Sources**:
-[active_plan_inventory_dashboard_2026_07_24.md](/plans/active/active_plan_inventory_dashboard_2026_07_24.md)
+[/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md](/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md)
 (workspace-wide plan-checkbox/AI-days inventory dashboard) ·
 [ag_closeout_audit_rollout_2026_07_25.md](/plans/active/ag_closeout_audit_rollout_2026_07_25.md) (the meta-plan driving
 this whole `/ag-closeout-audit` rollout — self-referential, included for completeness) ·
@@ -257,6 +257,6 @@ phases ship.
   `issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md`,
   `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`,
   `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`,
-  `issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
+  `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
   `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
   `assigned_vm: planning` and live in the AO backlog.

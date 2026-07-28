@@ -5,7 +5,7 @@ summary:
   35 adversarially-verified doc contradictions vs the migration/backfill/purge reality, from workflow wf_40c3b4fe, to
   APPLY after the content-migration lands (so migration-complete claims reflect post-apply reality). Plus 4 stale codex
   docs (Massive-purge-pending) + non-canonical-path-inventory register patch from the tradfi reconciliation.
-status: open
+status: resolved
 nature: record
 asset_group: tradfi
 created: 2026-07-21
@@ -23,7 +23,12 @@ depends_on: []
 source: docs-reconciliation workflow wf_40c3b4fe (2026-07-21)
 locked_by:
 resolved_by:
+  "unified-trading-pm@935de9424 + @1dd1a22fd (32 findings applied 2026-07-21, final 3 applied 2026-07-27) — doc's own
+  banner states '35/35 checkboxes applied'"
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # TradFi docs↔reality contradictions — 35 verified, pending application
 

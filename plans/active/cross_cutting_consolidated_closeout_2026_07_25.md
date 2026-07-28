@@ -374,8 +374,8 @@ architecture asks shipped+proven; the backfill-over-full-ranges ask absorbed via
 `mvp_backfill_cefi_tick_v10_2026_06_27.md` → `cefi_completion_program_2026_07_15.md`; ongoing HL/ASTER batch-gap work
 continues in `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md`),
 `/plans/archive/issues/monitor_jobs_auto_repin_and_alerting_cli_wiring_2026_06_24.md` (ARCHIVED 2026-07-27, all 5/5
-done), `/plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded terraform-image-sync
-item + 1 tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
+done), `/plans/archive/issues/dp_alert_flood_triage_and_monitor_fixes_2026_06_23.md` (nearly all done; 1 bounded
+terraform-image-sync item + 1 tradfi OOM fix blocked-on-land by a concurrent dirty-dep conflict).
 
 **Excluded (mistag, fixed 2026-07-25)**: `issues/features_service_defi_data_loading_blockers_2026_05_29.md` — its own
 `master:` field names `defi_manifest_canonicalisation_2026_06_01.md` as owner; retagged `[defi]`, route to the DeFi
@@ -527,7 +527,7 @@ domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos)
 (shard-key CLI convention coverage audit across instruments-service/MDPS/features-service) ·
 [issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md](/plans/active/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md)
 (coverage-percent formula symmetric-inclusion invariant audit, honest-coverage-model) ·
-[issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/active/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
+[/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
 (UAC capability-manifest/strategy-catalogue data gaps) ·
 [issues/features_service_catalogue_completeness_inventory_2026_07_24.md](/plans/archive/issues/features_service_catalogue_completeness_inventory_2026_07_24.md)
 (features-service catalogue completeness across all 9 modules) ·
@@ -599,7 +599,7 @@ end-to-end for all 5 AGs.
 drift, sports league-drilldown) ·
 [data_status_tab_and_downloads_remediation_2026_06_16.md](/plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md)
 (data-status tab bugs + instruments CSV download regressions, gated on the v9 manifest migration) ·
-[deployment_redesign_cherrypicks_2026_07_20.md](/plans/active/deployment_redesign_cherrypicks_2026_07_20.md)
+[/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md](/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md)
 (cherry-picks from a superseded branch: triage panel, dark-theme default, `reason_summary`/`reason_category`, mock-mode
 coverage-summary, flat `capture_status` matrix endpoint — all data-status/API items).
 
@@ -698,8 +698,8 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   live prod state" — **false**: `gcloud run jobs describe` returns `cpu=2;memory=4Gi` for `uts-prod-dp-daily-digest` and
   `uts-prod-dp-reprobe-empty`, and the tracked `.tf` still reads 4Gi at :91-92/:148-149/:267-268, so those 4 monitoring
   jobs remain OOM-killable (the image-default half DID land, :57); (2) the same doc's `--reclassify-apply` scheduling
-  item and `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item were both
-  still marked 🟡 BLOCKED-ON-DIRTY-DEP from 2026-06-22/23 but have in fact LANDED (`.tf:281`;
+  item and `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md`'s "ship the alerting-subscriber code" item
+  were both still marked 🟡 BLOCKED-ON-DIRTY-DEP from 2026-06-22/23 but have in fact LANDED (`.tf:281`;
   `config.run_subscriber_in_api` + the `api/main.py` lifespan in-tree), as has that doc's prose-only "codify
   `lifecycle-events-sub` + `defi_data_quality_alerts` subscriptions + subscriber IAM in terraform" item
   (`alerting_relay_pubsub.tf` carries both subscriptions, both IAM members, and import blocks) — dropped from the batch

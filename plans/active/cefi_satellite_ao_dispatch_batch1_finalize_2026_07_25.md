@@ -74,7 +74,8 @@ drift_direction: advance-code
       `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md` (2 todos),
       `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`,
       `/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` (already resolved + archived
-      2026-07-27 — no checkbox left to flip), `issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`,
+      2026-07-27 — no checkbox left to flip),
+      `/plans/archive/issues/rotate_exchange_keys_stale_venue_registry_2026_07_23.md`,
       `issues/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17.md`. For each: after flipping,
       re-check whether it now has 0 open todos remaining. Only flip a doc's `status` to `resolved` if it genuinely
       reaches 0 open todos (checkbox AND prose-form). **Done when**: all 21 source docs' corresponding

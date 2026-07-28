@@ -2,14 +2,14 @@
 doc_type: plan
 title: GitHub Actions cost reduction — full options analysis & decision record
 summary: >-
-  Companion decision-menu to github_actions_ci_cost_reduction_2026_07_15.md. Four parallel investigations (service
-  fold-in, GitHub-native YAML levers, runner infrastructure, drastic redesigns) evaluated every realistic way to cut the
-  ~$1,000/mo GitHub Actions bill. Verdict: the truly drastic options (Cloud Build as CI runner, monorepo, merge queue)
-  are the WORST on savings-per-risk; the real money is in (A) no-new-infra GitHub-native fixes — two of which are latent
-  BUGS already half-built and silently disabled — and (B) choosing where the fleet glue executes (self-hosted runner vs
-  fold into the existing deployment-api service vs a third-party runner in our own AWS). deployment-api already has most
-  building blocks. ALL DECISIONS ARE NOW CLOSED (2026-07-15/16) — this doc is the DECISION RECORD + evidence base;
-  execution lives in the sibling plan, which is ACTIVE.
+  Companion decision-menu to /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md. Four parallel
+  investigations (service fold-in, GitHub-native YAML levers, runner infrastructure, drastic redesigns) evaluated every
+  realistic way to cut the ~$1,000/mo GitHub Actions bill. Verdict: the truly drastic options (Cloud Build as CI runner,
+  monorepo, merge queue) are the WORST on savings-per-risk; the real money is in (A) no-new-infra GitHub-native fixes —
+  two of which are latent BUGS already half-built and silently disabled — and (B) choosing where the fleet glue executes
+  (self-hosted runner vs fold into the existing deployment-api service vs a third-party runner in our own AWS).
+  deployment-api already has most building blocks. ALL DECISIONS ARE NOW CLOSED (2026-07-15/16) — this doc is the
+  DECISION RECORD + evidence base; execution lives in the sibling plan, which is ACTIVE.
 status: complete
 nature: design
 asset_group: [cross-cutting]
@@ -29,7 +29,7 @@ tags:
     decision-record,
   ]
 related:
-  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
   - /plans/active/cicd_mvp_ldr_to_main_pipeline_2026_06_30.md
   - /plans/archive/issues/github_billing_dashboard_access_2026_07_09.md
 created: 2026-07-15
@@ -62,7 +62,8 @@ drift_direction: advance-code
 > **🟢 DECISION RECORD — all decisions CLOSED (2026-07-15/16).** The earlier "suggestions, not decisions" framing is
 > withdrawn; see § "Decisions — MADE". This doc is the **evidence base + the record of what we chose and why** (incl.
 > the options we rejected and the audit numbers). **It is NOT the execution vehicle** — every actionable item lives in
-> the sibling plan [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md),
+> the sibling plan
+> [`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`](/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md),
 > which is **ACTIVE**. `assigned_vm: NA` → never auto-dispatched. Read this for _why_; execute from the sibling.
 
 ## Corrected baseline (measured this session)
@@ -384,9 +385,9 @@ B-conditional work** (A3/A4 only if staying on Actions; the chosen B path otherw
 ## Recommended sequencing — ⛔ SUPERSEDED (2026-07-16), do NOT execute from here
 
 > This section was the pre-decision proposal. **It is superseded by the sibling plan's todos**
-> ([`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md), now ACTIVE) —
-> execute from there, not here. It is kept only as a record of the original proposal. Specifically, three items here are
-> now **factually wrong** and must not be followed:
+> ([`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`](/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md),
+> now ACTIVE) — execute from there, not here. It is kept only as a record of the original proposal. Specifically, three
+> items here are now **factually wrong** and must not be followed:
 >
 > - _"Choose the Set B target architecture"_ → **decided: B1** (self-host on the planning-VM); B2 dropped, B3 parked.
 > - _"Execute the chosen Set B path via the workflow-template SSOT + `rollout-workflow-templates.sh`"_ → **WRONG.** The
@@ -558,7 +559,7 @@ _(Reference checklist, not dispatch todos — `☐` open, `✅` done.)_
   fold-in host, not agent-orchestrator (:8765, no inbound rule)
 - `codex/05-infrastructure/` — runner/VM conventions; workflow-template rollout
 - Sibling execution plan:
-  [`github_actions_ci_cost_reduction_2026_07_15.md`](github_actions_ci_cost_reduction_2026_07_15.md)
+  [`/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md`](/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md)
 
 ## Progress Log
 

@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quickmerge, quality-gates, sentinel, race-condition, agent-workflow, developer-experience]
 related:
   [
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,

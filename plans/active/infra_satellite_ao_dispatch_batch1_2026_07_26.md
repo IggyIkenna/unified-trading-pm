@@ -205,10 +205,10 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       entirely, so 21/21 of that untouched pre-existing spec's tests fail at `waitForURL`. If a restored fast-path is
       chosen, gate it to `NEXT_PUBLIC_AUTH_PROVIDER=demo` + `NEXT_PUBLIC_MOCK_API=true` so nothing changes for the real
       prod login flow. (3) Re-run `tests/e2e/admin-strategy-assignments.spec.ts` and record the `pw:L2 ✓` evidence
-      retroactively on `issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s item. **Why
-      this is P2-but-urgent**: while this helper is broken, NO admin-gated E2E spec can produce the `pw:L2 ✓` evidence
-      the UI-todo contract requires, so every UI worker either silently claims evidence it does not have or gets stuck
-      `BLOCKED-PLAYWRIGHT` on already-shipped features. **Done when**:
+      retroactively on `/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md`'s
+      item. **Why this is P2-but-urgent**: while this helper is broken, NO admin-gated E2E spec can produce the
+      `pw:L2 ✓` evidence the UI-todo contract requires, so every UI worker either silently claims evidence it does not
+      have or gets stuck `BLOCKED-PLAYWRIGHT` on already-shipped features. **Done when**:
       `npx playwright test --project=chromium tests/e2e/user-management.spec.ts` exits 0 as the cited regression check,
       and the prod (non-demo) login path is confirmed unchanged. Repo: unified-trading-system-ui. Source:
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`.

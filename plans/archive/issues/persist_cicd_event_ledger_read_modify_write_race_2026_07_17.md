@@ -28,7 +28,7 @@ tags:
   [ci-cd, github-actions, event-ledger, gcs, race-condition, data-loss, silent-failure, read-modify-write, telemetry]
 related:
   [
-    plans/active/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
     plans/active/issues/d13_orphaned_version_readers_and_manifest_drift_2026_07_17.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]

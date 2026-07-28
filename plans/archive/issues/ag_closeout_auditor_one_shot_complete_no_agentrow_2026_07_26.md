@@ -3,7 +3,7 @@ doc_type: issue
 title:
   "ag_closeout_auditor (and likely other role-spawned) sessions booted directly via POST /api/slots/{N}/boot never get a
   lifecycle=one_shot AgentRow — one_shot_complete permanently rejects with 'no active agent owns its session', distinct
-  from the already-fixed slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md bug"
+  from the already-fixed /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md bug"
 summary: >-
   Reproduced live on slot 8, 2026-07-26, running a fresh ag_closeout_auditor dispatch (tranche=tradfi). Session was
   spawned per the standard AGENT BOOT sequence (heartbeat -> read RULES.md/worker.md/ag_closeout_auditor.md -> POST
@@ -14,9 +14,9 @@ summary: >-
   /api/slots/8/done {"task_id": "", "sha": "", "evidence": "...", "one_shot_complete": true}`), the call was rejected:
   `{"detail": "one_shot_complete on slot 8 but no active agent owns its session 'orch-slot-8' — a Class-A worker must
   /done with a task_id."}`. This is the SAME error message documented in
-  `slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`, but that bug's root cause (a stale `spawn_base_role` with
-  no matching live `AgentRow`, fixed `agent-orchestrator@1e74784`/`@41840c1`) does NOT apply here: this session's
-  `/boot` response showed `already_in_progress: true` with an UNRELATED Class-A backlog task
+  `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`, but that bug's root cause (a stale
+  `spawn_base_role` with no matching live `AgentRow`, fixed `agent-orchestrator@1e74784`/`@41840c1`) does NOT apply
+  here: this session's `/boot` response showed `already_in_progress: true` with an UNRELATED Class-A backlog task
   (`slot_stale_spawn_base_role_stuck_task_less-004`, ironically the very task tracking the OTHER bug) already bound to
   the slot — releasing it via `POST /api/slots/8/skip-current-task` and re-`/boot`ing cleanly resolved that binding
   (`dispatch_reason` went from `"resume"` to `"no queued task available — prereqs/collisions block all candidates"`,
@@ -26,14 +26,14 @@ summary: >-
   (hypothesis, unconfirmed against server code this session) the AgentRow for a `plan_health`-family role is only
   created by the `POST /api/plan-health/dispatch` handler itself, and this session's tmux/session lifecycle bypassed
   that endpoint entirely (spawned directly against a slot the same way any generic worker session is).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [orchestrator, slot-lifecycle, one-shot, ag_closeout_auditor, plan_health, self-heal]
-related: [/plans/active/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md]
+related: [/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md]
 created: 2026-07-26
 parent_epic: agent_operating_framework_master
 priority: P2
@@ -48,8 +48,14 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "agent-orchestrator@a01aeae (lazy AgentRow construction on direct /boot of a plan_health-family role + 3 regression
+  tests) + read-only timer-code investigation (2026-07-27) confirming no live production exposure via the installed
+  daily timer — both recommended-decision items DONE, doc concludes the gap is closed either way"
 drift_direction: advance-code
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

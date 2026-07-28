@@ -27,7 +27,7 @@ summary: >
   My quickmerge's internal stash-pop then conflicted ("deleted by us" / "needs merge"). `git rm` on the path was
   blocked. `git update-index --force-remove <path>` resolved it cleanly in one command, `check_ag_closeout_linkage.py`
   re-verified 0 violations, `ahead=0`/`behind=0` confirmed after.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -53,8 +53,14 @@ drift_direction: advance-code
 last_updated: 2026-07-27
 locked_by:
 resolved_by:
+  "technique documented and already successfully applied in the encountered case (2026-07-27, orphan cleanup on
+  coverage_floor_new_backfill_gaps_found_2026_07_27.md — check_ag_closeout_linkage.py re-verified 0 violations,
+  ahead=0/behind=0 confirmed); this is a completed runbook/technique writeup, not an open defect"
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 # git rm guardrail — index-only conflict resolution technique
 

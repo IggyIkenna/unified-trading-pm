@@ -670,7 +670,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[SCRIPT] P3.** S3-c — repoint `features-service/scripts/sports/smoke_matrix.py` SSOT citations
     - **[SCRIPT] P3.** S3-b — sports dual entrypoint operator/design adjudication (fold submodule behind family flag OR
       bless it)
-  - [`plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/active/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
+  - [`/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`](/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md)
     - **[DATA] P1.** Assess blast radius on EXISTING candle data — any past MDPS run with `max_workers>1` over a
       heterogeneous file list
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
@@ -718,7 +718,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`](/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md)
     — 0 open todos (closed/archived/record-only; the follow-up `tradfi_phase_d_terminal_gate_2026_07_24.md` P0 gates on
     this finding)
-  - [`plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`](/plans/active/issues/tradfi_docs_reconciliation_findings_2026_07_21.md)
+  - [`/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`](/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md)
     (uses a line-referenced audit-finding format, not `[TAG] P<N>.` — quoted as-is)
     - **P1 (L97).** Ground-truth verdict header needs a supersede banner inserted (superseded by later migration
       progress)

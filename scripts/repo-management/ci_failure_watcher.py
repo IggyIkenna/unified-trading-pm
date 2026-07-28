@@ -171,7 +171,7 @@ RENAG_FLAPPING_MIN = 240  # re-nag cooldown for flapping workflows (4 h)
 # KEEP-M hosted (it must NOT run on the box it watches) and already crons */15, so the check is a
 # step in an ALREADY-BILLED job (~$0). A standalone watchdog would cost ~$52/mo at */5 or ~$17/mo
 # at */15 (per-job 1-min minimum) — a third of the saving this whole plan exists to capture.
-# SSOT: plans/active/github_actions_ci_cost_reduction_2026_07_15.md.
+# SSOT: /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md.
 GLUE_QUEUED_ALERT_MIN = 10  # operator 2026-07-16: a glue job queued longer than this pages
 RENAG_GLUE_STARVED_MIN = 15  # operator 2026-07-16: page LOUDLY every 15 min until it is fixed
 # The two pools' distinguishing labels. DISJOINT by design — `glue-writer` deliberately does NOT

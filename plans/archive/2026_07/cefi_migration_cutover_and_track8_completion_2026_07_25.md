@@ -13,7 +13,7 @@ summary: >-
   cefi_consolidated_native_ao_extract_2026_07_25.md (drafted by a parallel sibling triage of this same parent's native
   todos): the MTDS writer-side `:PERP:` fix (that plan's own todo 7, ships alone, no data motion) and the `_DRYRUN_COLS`
   chain-drop blind-spot fix (that plan's own todo 12).
-status: active
+status: complete # (was: active) 2026-07-28 plan-hygiene sweep: verified all 5 todos [x], residual gap explicitly CLOSED 2026-07-28 with cited live-verified proof
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -53,7 +53,17 @@ sequential: true
 drift_direction: advance-code
 ---
 
+## Deferred work — migrated to:
+
+**None** — plan verified fully complete at archival, zero open todos, no prose-only remaining work found.
+
 # CeFi migration cutover + Track 8 completion
+
+> **🗄️ ARCHIVED 2026-07-28 (plan-hygiene sweep) — role fulfilled.** Verified at archival: all 5 sequential todos [x]
+> (DERIBIT quote fix, `:PERP:`->`:PERPETUAL:` on-disk rename, Track-1 `--apply` cutover, post-cutover smoke-check flip,
+> enumeration-audit terminal checkpoint at 99.49% canonical). Todo 4's residual gap (live re-fetch proof) was explicitly
+> CLOSED 2026-07-28 via a real end-to-end VM smoke run (`pipeline_e2e_check.py`, `exit=0`, canonical-id parquet written
+> and manifest-`captured`).
 
 > **Status: draft.** Per CLAUDE.md's plan-destination rule, never auto-shipped to `active` — flip only after operator
 > review. **`sequential: true`**: each todo below is a real, verified prerequisite of the next (todo 1 GATES the cutover

@@ -3,9 +3,9 @@ doc_type: issue
 title:
   MDPS TRADFI candle derivation crashes on a corrupted raw-tick timestamp (year 58317) — IBIT/ETHA all timeframes fail
 summary: >-
-  Real-VM proof-sweep of `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3 found
-  `TRADFI:NASDAQ:trades` (day=2026-05-07, auto-day) failing ALL 7 timeframes for BOTH instruments in the scoped batch
-  (`IBIT`, `ETHA` — Bitcoin/Ethereum spot ETFs) with `Out of bounds nanosecond timestamp: 58317-01-15 ...` — a
+  Real-VM proof-sweep of `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3
+  found `TRADFI:NASDAQ:trades` (day=2026-05-07, auto-day) failing ALL 7 timeframes for BOTH instruments in the scoped
+  batch (`IBIT`, `ETHA` — Bitcoin/Ethereum spot ETFs) with `Out of bounds nanosecond timestamp: 58317-01-15 ...` — a
   corrupted/garbage raw-tick timestamp value overflowing pandas' `datetime64[ns]` range (max ~2262), crashing candle
   aggregation before any parquet write. Distinct bug class from the derivative_ticker schema-violation issue: this is a
   raw-tick DATA-QUALITY defect, not a schema/contract gap, and it correctly reports failure (exit_code=1) — the
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [data-correctness, mdps, candles, tradfi, timestamp, data-quality]
 related:
   [
-    /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-27
@@ -27,7 +27,7 @@ parent_epic: infrastructure_master
 priority: P1
 source:
   [
-    "mdps_derivative_ticker_candle_schema_violation_2026_07_20.md todo 3, dispatched task
+    "/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md todo 3, dispatched task
     mdps_derivative_ticker_candle_schema_violation-002, slot-10 2026-07-27, real VM
     mdps-backfill-tradfi-pipelinecheck-20260727-114131-44d2d0",
   ]

@@ -100,7 +100,7 @@ citing file):
 | `deployment_registry_firestore_p0_unblock_2026_07_14.md`                                  | infra   | `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`                                                                            |
 | `issues/ao_docs_reconciliation_2026_07_15.md`                                             | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
 | `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`                              | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
-| `issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`                          | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`           | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`                                    | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md`                       | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
 | `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`                          | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
@@ -117,7 +117,7 @@ citing file):
 
 | Doc                                                                                             | Tranche       | Why                                                                 |
 | ----------------------------------------------------------------------------------------------- | ------------- | ------------------------------------------------------------------- |
-| `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`                                        | infra         | corpus retag/schema-hygiene tooling (org hygiene)                   |
+| `/plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`                 | infra         | corpus retag/schema-hygiene tooling (org hygiene)                   |
 | `data_pipeline_alerts_batch_remediation_2026_07_15.md`                                          | cross-cutting | data-pipeline alerts spanning sports/cefi/defi/tradfi, no single AG |
 | `deployment_durable_operational_data_bigquery_2026_07_21.md`                                    | infra         | deployment/VM observability persistence                             |
 | `deployment_registry_firestore_migration_2026_07_14.md`                                         | infra         | deployment registry infra migration (overview)                      |
@@ -126,13 +126,13 @@ citing file):
 | `deployment_registry_firestore_p5_verify_2026_07_14.md`                                         | infra         | same family, Phase 5                                                |
 | `deployment_ui_observability_ux_tracker_2026_07_17.md`                                          | infra         | deployment-ui workstream tracker                                    |
 | `issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`   | ci            | QG step timeout flake under shared-host contention                  |
-| `issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md`                        | ao            | AO dispatch entry-point / AgentRow bug                              |
+| `/plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md`         | ao            | AO dispatch entry-point / AgentRow bug                              |
 | `issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` | ao            | AO `/reply` endpoint routing bug                                    |
 | `issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`                          | infra         | deployment-api/alerting-service backend perf                        |
 | `issues/ao_dashboard_backlog_detail_queue_lag_e2e_flaky_2026_07_26.md`                          | ao            | AO dashboard Playwright flake                                       |
 | `issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`                               | ao            | AO server DB-lock/shutdown outage                                   |
 | `issues/ao_m3_verify_plan_flip_blind_to_archival_rename_2026_07_26.md`                          | ao            | AO `/done` M3 verification gate bug                                 |
-| `issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`                             | ao            | `regen_backlog_from_plan.py` parser bug                             |
+| `/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`              | ao            | `regen_backlog_from_plan.py` parser bug                             |
 | `issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md`                            | ci            | `cloud-build-router.yml` concurrency-group bug                      |
 | `issues/cost_observability_deferred_followups_2026_07_10.md`                                    | infra         | deployment `/ops/costs` UI follow-ups                               |
 | `issues/credential_ask_orphan_checker_ping_format_stale_2026_07_27.md`                          | infra         | plan-hygiene checker false positive                                 |
@@ -154,7 +154,7 @@ citing file):
 | `issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`                      | ao            | AO `RepoHealthWatcher` false-green recurrence                       |
 | `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                |
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                |
-| `issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                               | ao            | AO slot-dispatcher stale-role bug                                   |
+| `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                | ao            | AO slot-dispatcher stale-role bug                                   |
 | `issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md`         | ci            | doc-index determinism test, same flake class                        |
 | `issues/uac_service_emission_policy_duplicate_module_2026_07_27.md`                             | cross-cutting | UAC duplicate-module bug, shared schema layer                       |
 | `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`                | ao            | AO worker interactive-session teardown behavior                     |

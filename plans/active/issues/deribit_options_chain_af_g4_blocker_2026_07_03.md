@@ -154,9 +154,10 @@ meaningful change, and both are still ≫1,000. **Verdict: FAIL — this gate is
    (`cefi_satellite_ao_dispatch_batch2-008`, `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`'s Progress
    Log): Track 2 was forked 2026-07-25 to `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, which is
    `status: draft` and machine-gated (`gate_on_depends: true`) on
-   `cefi_migration_cutover_and_track8_completion_2026_07_25.md` — and that gating plan itself is `status: draft`, 0/5
-   todos done, no Progress Log. There is no "post-backfill manifest" to check yet, and filing a new issue doc for "the
-   backfill didn't fix it" would misrepresent a backfill that hasn't been attempted as one that failed.
+   `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` — and that gating plan itself is
+   `status: draft`, 0/5 todos done, no Progress Log. There is no "post-backfill manifest" to check yet, and filing a new
+   issue doc for "the backfill didn't fix it" would misrepresent a backfill that hasn't been attempted as one that
+   failed.
 
 **Not closing this doc.** `status` stays `open`; this is not a fresh finding needing a new issue doc, it is the same
 already-tracked blocker (this doc's own correction banner + the Track-1→Track-2 dependency chain) still pending its

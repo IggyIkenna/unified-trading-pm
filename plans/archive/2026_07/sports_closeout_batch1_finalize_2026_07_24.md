@@ -107,11 +107,11 @@ drift_direction: advance-code
       `sports_odds_manifest_captured_outranks_blocks_legacy_leak_correction_2026_07_24.md`,
       `qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md`) — all repointed to
       `/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`; the one actual markdown LINK (not a bare
-      prose mention) was in the auto-generated `active_plan_inventory_dashboard_2026_07_24.md`, fixed by regenerating it
-      (`regenerate_active_plan_inventory.py`, 0 orphans). The parent plan's own cross-reference banner
-      (`sports_consolidated_closeout_2026_07_19.md` line 97) rewritten to state archived-and-complete, pointing at the
-      new path. Bare backtick prose citations (e.g. "shipped via `sports_closeout_batch1_ao_ready_2026_07_24.md` todo
-      8") were NOT touched — not navigable links, just historical evidence citations naming a file that still exists
-      (just moved); `check_doc_body_links.py` only flags actual `[text](path)` markdown links, confirmed these don't
-      trip it. (6) `locked_by` confirmed already empty. **Done when met**: plan moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, parent plan's banner updated to archived-and-complete.
+      prose mention) was in the auto-generated `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`,
+      fixed by regenerating it (`regenerate_active_plan_inventory.py`, 0 orphans). The parent plan's own cross-reference
+      banner (`sports_consolidated_closeout_2026_07_19.md` line 97) rewritten to state archived-and-complete, pointing
+      at the new path. Bare backtick prose citations (e.g. "shipped via `sports_closeout_batch1_ao_ready_2026_07_24.md`
+      todo 8") were NOT touched — not navigable links, just historical evidence citations naming a file that still
+      exists (just moved); `check_doc_body_links.py` only flags actual `[text](path)` markdown links, confirmed these
+      don't trip it. (6) `locked_by` confirmed already empty. **Done when met**: plan moved to `plans/archive/2026_07/`,
+      every corpus referrer resolves to the new path, parent plan's banner updated to archived-and-complete.

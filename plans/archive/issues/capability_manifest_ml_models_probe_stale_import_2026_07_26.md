@@ -10,7 +10,7 @@ summary: >-
   registries had (a real import-path bug, not an environment-setup gap). Not investigated further or fixed (out of scope
   for the CI-scoping task that found it) -- ml-service's actual module layout needs to be checked to find the correct
   current import path, or determine the registry was renamed/removed.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -28,12 +28,18 @@ priority: P3
 estimate_class: refactor
 assigned_vm: planning
 resolved_by:
+  "unified-trading-pm@da5bf1591 (probe body fix) + unified-api-contracts@c8029f80 (manifest regen) +
+  unified-trading-system-ui@be08ce4eb (re-sync + test count updates) — verified live, deterministic byte-identical
+  regen, 113/113 affected UI tests passed, full quality-gates.sh green"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 source: [unified-trading-pm/scripts/openapi/_capability_gaps.py, ml-service/ml_service/training/ml/model_registry.py]
 ---
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 ## What I found
 

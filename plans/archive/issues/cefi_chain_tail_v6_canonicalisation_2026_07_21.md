@@ -19,7 +19,7 @@ tags:
   [canonicalisation, cefi, chain-tail, quote-margin, v5-v6, partitioned-writer, write-guard, migration, operator-ruling]
 related:
   [
-    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
     /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
     /plans/archive/issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md,

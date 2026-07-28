@@ -196,19 +196,20 @@ for these messages to close the verification loop.
       works in production. (That doc found a SEPARATE, new bug — the auto-kill ACTION fails structurally — unrelated to
       this Gap 1's OOM/redeploy scope.)
 
-- [ ] [CODE] P1. **Add structured JSON logging to Cloud Run job/service images** so Python `logger.info()` calls appear
-      in Cloud Logging. Investigate whether stdout is suppressed, then add a JSON log formatter in the entrypoint or UTL
-      bootstrap. (deployment-service + unified-trading-library) — **PARTIALLY done, genuinely still open for
-      alerting-service — NOT flippable as of 2026-07-27**: deployment-api Cloud Run JOBS side is confirmed fixed (see
-      Gap 1 evidence above — real WARNING-level logs now visible for `uts-prod-dp-heartbeat-watcher`). But the
-      alerting-service `dp-alerting-subscriber` Cloud Run SERVICE side is confirmed STILL BROKEN as of the most recent
-      check: `/plans/archive/issues/dp_event_pubsub_delivery_gap_2026_06_22.md` (line ~195-205) documents the running
-      subscriber (rev 00008-csc) surfacing ZERO app logs in Cloud Logging — not even the unconditional startup line —
-      despite the identical image flooding those logs to stdout locally. This is tracked as a live, dispatched,
-      UNCHECKED `[ ]` todo in `/plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` ("Diagnose the
-      alerting-service Cloud Logging ingestion gap") — not yet executed there either. Do not flip this checkbox until
-      that todo ships; when it does, flip all three source docs' checkboxes together citing its evidence (per that
-      todo's own instruction).
+- [x] ✅ [CODE] P1. **CONFIRMED FIXED + LIVE-VERIFIED 2026-07-28 (unified-trading-pm, verification pass)** — was: add
+      structured JSON logging to Cloud Run job/service images so Python `logger.info()` calls appear in Cloud Logging.
+      deployment-api Cloud Run JOBS side confirmed fixed (Gap 1 evidence above). The alerting-service
+      `dp-alerting-subscriber` Cloud Run SERVICE side — the half that was still broken as of 2026-07-27 — is now fixed:
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`'s todo shipped (`alerting-service@62b850c` — root cause
+      was a project-wide Cloud Logging sink `debug-filter` exclusion silently dropping plain-text/`DEFAULT`-severity
+      stdout, not a code bug in this doc's own hypotheses; fixed by switching to UTL's
+      `setup_cloud_logging(json_format=True)` so Cloud Run's agent honours the real Python level). **Independently
+      re-confirmed live this session** (not just trusting the batch2 citation): `gcloud logging read` against
+      `dp-alerting-subscriber` now returns real structured app-level entries (`Event: ALERT_SENT`,
+      `Event: ALERT_ROUTED`, `Event: PERSISTENCE_COMPLETED`, etc.) — the "zero app logs" symptom this Gap originally
+      reported is gone. Flipping per the todo's own instruction (all three source docs together): this doc +
+      `dp_event_pubsub_delivery_gap_2026_06_22.md` (already archived, resolved) +
+      `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` (already `[x]`) are now all consistent.
 
 - [ ] [VERIFY] P2. **Operator spot-check `#data-pipeline-alerts` channel** for the 2 `DP_VM_EXIT_NONZERO` CRITICAL
       alerts from ~13:45 UTC 2026-06-23 — genuinely still open, requires an operator to look at Slack; not something an
@@ -223,11 +224,17 @@ for these messages to close the verification loop.
       2026-07-27**: `alerting-service@ceed827` (confirmed real + ancestor of `main` via `git log`/
       `git merge-base --is-ancestor`) + `deployment-service@d2ddb23` (confirmed real via `git log`), both QG-green with
       new regression tests per `data_completion_sports_2026_07_24.md:220-227`, image builds `c2beac49`/`c0f6dc2f` cited
-      there. **NOT independently confirmed**: whether the CURRENTLY-RUNNING `dp-alerting-subscriber` revision (rev
-      00008-csc, per the Gap-2 evidence above) is actually built FROM the `c2beac49` image, or an earlier one — this
-      needs a live `gcloud run services describe` check (out of this session's scope: no live GCS/GCP verification was
-      run for this item) before the "redeployed" half of this todo can be marked done. Checkbox stays open pending that
-      check + the operator spot-check above.
+      there. **"Redeployed" half now CONFIRMED 2026-07-28 (unified-trading-pm, live check)**: ran a real
+      `gcloud run services describe dp-alerting-subscriber --region asia-northeast1` — the currently-running revision
+      (`dp-alerting-subscriber-00015-lcn`) is built from `alerting-service:diag-62b850c`, and
+      `git merge-base --is-ancestor ceed827 62b850c` confirms `ceed827` IS an ancestor (62b850c is a later commit that
+      also carries the Gap-2 logging fix). The Gap-4 code is genuinely live, not just merged. **Still NOT independently
+      confirmable**: whether a real `DP_VM_EXIT_NONZERO` actually renders with full VM name/exit code/log link/snippet —
+      checked `gcloud logging read` (30-day window) and the `alerting/history/` GCS partitions for any
+      `DP_VM_EXIT_NONZERO`/`EXIT_NONZERO` occurrence; **none found** — no VM has exited non-zero in the observable
+      window, so there is no real event to inspect yet. This is not a stale citation, it's a genuine "nothing to verify
+      against" gap — same class as Gap 3 below (operator-only, and only actionable once/if a real occurrence happens to
+      land in `#data-pipeline-alerts`). Checkbox stays open pending a live occurrence to inspect.
 
 ## Progress Log
 
@@ -242,3 +249,11 @@ for these messages to close the verification loop.
   verified real, but the "redeployed to the currently-running revision" claim is unconfirmed** (no live GCP check run
   this session). **Did NOT archive this doc** — 3 of 4 items have genuine remaining work. Flagging the broken
   corroborating citation per CLAUDE.md's findings-triage HARD RULE.
+- 2026-07-28 (unified-trading-pm, verification pass): **Gap 2 flipped** — independently re-confirmed via live
+  `gcloud logging read` that `dp-alerting-subscriber` now emits real structured app logs (batch2's fix,
+  `alerting-service@62b850c`, is genuinely live). **Gap 4's "redeployed" half flipped** — live
+  `gcloud run services describe` + `git merge-base --is-ancestor` confirm the running revision is built from a
+  `ceed827`-descendant image. **Gap 4's render-verification half and Gap 3 both stay open**: checked 30 days of Cloud
+  Logging + GCS `alerting/history/` for any `DP_VM_EXIT_NONZERO` occurrence — none found, so there is currently nothing
+  for anyone (agent or operator) to inspect. Doc stays open (Gap 3 + Gap 4's render-verification remain genuine,
+  currently un-triggerable, operator-only work) — not archived.

@@ -836,8 +836,8 @@ source: >-
       (`batch_footystats` copy+swap) — CORRECTED: not a casing task.** The 16,969-object population was mis-stamped
       `batch_odds_api` data, already merged to canonical on 2026-07-17 (`market-tick-data-service@75f226e8`) — no
       copy+swap work remains. What's left is a human-gated orphan-object PURGE (5-part delete-safety proof, staged not
-      executed): `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`. Full step detail +
-      dry-run baselines: `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`,
+      executed): `/plans/archive/issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md`.
+      Full step detail + dry-run baselines: `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`,
       `issues/sports_league_id_swap_silently_reverted_toctou_2026_07_25.md`. Source:
       `issues/sports_league_id_namespace_migration_2026_07_20.md`.
 

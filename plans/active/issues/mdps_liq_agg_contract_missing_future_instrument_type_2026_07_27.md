@@ -2,9 +2,9 @@
 doc_type: issue
 title: MDPS liquidation-candle derivation has no UAC SchemaContract for instrument_type=FUTURE — 4 CeFi instruments fail
 summary: >-
-  Real-VM proof-sweep of `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3 found
-  `CEFI:BINANCE-FUTURES:liquidations` (day=2026-05-22, auto-day) 485/489 instruments succeeded (3,693,275 candles) but 4
-  FUTURE-instrument_type instruments (`ETH-USDT@LIN-20260925`, `BTC-USDT@LIN-20260925`, `BTCUSDT_260626`,
+  Real-VM proof-sweep of `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` todo 3
+  found `CEFI:BINANCE-FUTURES:liquidations` (day=2026-05-22, auto-day) 485/489 instruments succeeded (3,693,275 candles)
+  but 4 FUTURE-instrument_type instruments (`ETH-USDT@LIN-20260925`, `BTC-USDT@LIN-20260925`, `BTCUSDT_260626`,
   `ETHUSDT_260626`) failed with "No SchemaContract registered for asset_group='cefi' instrument_type='FUTURE'
   data_type='liq_agg_1d' venue='BINANCE-FUTURES'". Distinct bug class from the original derivative_ticker
   missing-columns issue — this is a missing CONTRACT REGISTRATION entirely for one instrument_type dimension of the
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [data-correctness, mdps, candles, schema, liquidations, contract-registry, futures]
 related:
   [
-    /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-27
@@ -26,7 +26,7 @@ parent_epic: infrastructure_master
 priority: P1
 source:
   [
-    "mdps_derivative_ticker_candle_schema_violation_2026_07_20.md todo 3, dispatched task
+    "/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md todo 3, dispatched task
     mdps_derivative_ticker_candle_schema_violation-002, slot-10 2026-07-27, real VM
     mdps-backfill-cefi-pipelinecheck-20260727-113830-18d1f9",
   ]
@@ -67,8 +67,9 @@ liquidations but never registered the equivalent for `instrument_type=FUTURE`.
 
 ## Why it matters
 
-- This is a DIFFERENT defect class from `mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` — that issue was
-  missing DATAFRAME COLUMNS on an already-registered contract; this is a missing CONTRACT REGISTRATION entirely for one
+- This is a DIFFERENT defect class from
+  `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md` — that issue was missing
+  DATAFRAME COLUMNS on an already-registered contract; this is a missing CONTRACT REGISTRATION entirely for one
   instrument_type dimension. The proof-sweep's job (confirm the derivative_ticker fix's seam generalizes) is satisfied
   for `liquidations` — 485/489 clean — but this surfaces a second, narrower gap the same sweep exists to catch.
 - Blocks candle backfill for CeFi dated-futures liquidations specifically (perpetuals are unaffected — 485 passed).

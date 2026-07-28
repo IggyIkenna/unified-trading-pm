@@ -18,7 +18,7 @@ tags: [claude-code, settings, symlink, onboarding, permissions]
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md,
+    /plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md,
   ]
 created: 2026-06-27
 authoritative_for: [Claude Code team-shared vs personal settings split, per-slot settings.json symlink inheritance]
@@ -128,7 +128,7 @@ root) work unmodified fleet-wide, regardless of username or workspace path on a 
 needed. Official reference: [code.claude.com/docs/en/hooks.md](https://code.claude.com/docs/en/hooks.md)
 (`${CLAUDE_PROJECT_DIR}` env-var table entry) — this fact was never captured anywhere in this codex before 2026-07-23,
 which is why the hardcoded path crept in originally; see
-`plans/active/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md` for the full investigation.
+`/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md` for the full investigation.
 
 **Known gap (unrelated, flagging so it isn't re-discovered the hard way)**:
 `claude -p ... --dangerously-skip-permissions` (non-interactive print/headless mode) does NOT enforce `PreToolUse` hook

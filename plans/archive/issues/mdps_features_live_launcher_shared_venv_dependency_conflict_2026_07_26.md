@@ -42,7 +42,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
+    /plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md,
     /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
     /codex/04-architecture/deprecation-ledger.yaml,

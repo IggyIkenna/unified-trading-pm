@@ -8,8 +8,8 @@ summary: >-
   over 2 days (slot-4, slot-6, slot-10, slot-6 again, slot-14, slot-7), each re-verifying the same still-dead odds-api
   credential and skipping. The checkbox's own line already carried a `BLOCKED-PREREQUISITES` marker on its own physical
   line (not a continuation-text placement bug — that class was already fixed in
-  `blocked_marker_continuation_line_not_scanned_2026_07_26.md`, agent-orchestrator@e856b56). The actual cause is
-  different: `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` only recognizes
+  `/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`, agent-orchestrator@e856b56). The
+  actual cause is different: `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` only recognizes
   `BLOCKED-(CREDENTIALS|OPERATOR(-DECISION)?|BILLING|UPSTREAM-OUTAGE|PLAYWRIGHT|JURISDICTION)` — `PREREQUISITES` is not
   in that alternation, so a `BLOCKED-PREREQUISITES` todo re-derives as dispatchable on every regen tick regardless of
   line placement. A corpus grep (`grep -rl "BLOCKED-PREREQ" plans/active/`) found 15 files using this token (one is a
@@ -23,7 +23,7 @@ scope: [engineer]
 tags: [dispatch, backlog-regen, blocked-marker, worker-lifecycle, fleet-wide]
 related:
   [
-    /plans/active/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
+    /plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md,
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
@@ -58,7 +58,8 @@ across the prior 2 days for closely related checkboxes in this same investigatio
 odds-api key live (still `error_code=DEACTIVATED_KEY`) and correctly declined to act — but the marker meant to stop
 re-dispatch, `BLOCKED-PREREQUISITES`, was already sitting on the checkbox's own physical line
 (`issues/ sports_odds_api_scattered_multiyear_gaps_2026_07_27.md:154`), so this is NOT the continuation-line bug
-(`blocked_marker_continuation_line_not_scanned_2026_07_26.md`, already fixed at agent-orchestrator@e856b56).
+(`/plans/archive/issues/blocked_marker_continuation_line_not_scanned_2026_07_26.md`, already fixed at
+agent-orchestrator@e856b56).
 
 Read `_NON_DISPATCHABLE_RE` directly (`server/regen_backlog_from_plan.py:975-980`):
 
@@ -88,9 +89,10 @@ never matches this regex, so `_parse_open_todos` keeps re-deriving it as an open
   `sports_satellite_ao_dispatch_batch4_2026_07_25.md`, `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`,
   `issues/autonomous_session_operator_decisions_2026_07_25.md`,
   `issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`,
-  `issues/instruments_remaining_work_audit_2026_07_10.md`, `issues/tradfi_docs_reconciliation_findings_2026_07_21.md` —
-  these need re-checking after the counting fix below (my quick count only matched todos where `BLOCKED-PREREQ` sits on
-  the SAME line as `- [ ]`; several likely have it on the line immediately after, same pattern as the fixed doc).
+  `issues/instruments_remaining_work_audit_2026_07_10.md`,
+  `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` — these need re-checking after the counting
+  fix below (my quick count only matched todos where `BLOCKED-PREREQ` sits on the SAME line as `- [ ]`; several likely
+  have it on the line immediately after, same pattern as the fixed doc).
 
 **Important nuance — this is NOT simply "add PREREQUISITES to the regex."** Unlike `BLOCKED-CREDENTIALS`/`-OPERATOR`/
 `-UPSTREAM-OUTAGE` (genuine external-only blocks that only an operator/vendor can lift), many `BLOCKED-PREREQUISITES`

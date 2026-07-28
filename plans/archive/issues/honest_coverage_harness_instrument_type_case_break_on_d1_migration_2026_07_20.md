@@ -20,7 +20,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/canonical-cutover-register.md,
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-25
@@ -133,7 +133,7 @@ flip:
       (its own docstring delta (iv): "instrument_type COLUMN drift — 3.19M BLANK + lowercase/aliased -> canonical"; it
       reassigns `out["instrument_type"] = new_itype` with the UPPERCASE-space canonicalised value) — this is EXACTLY
       todo 3 ("Execute the minutes-gap hybrid cutover (Track 1)") of
-      `plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Added a cross-link gate blockquote to
-      that todo citing this issue + the shipped fix's commit sha (`instruments-service@867b68f6`), confirming the
-      normalisation landed BEFORE that `--apply` runs (the plan is `status: draft`, not yet dispatched) and that the
-      todo is now unblocked on this specific dependency. Ordering is enforced.
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`. Added a cross-link gate
+      blockquote to that todo citing this issue + the shipped fix's commit sha (`instruments-service@867b68f6`),
+      confirming the normalisation landed BEFORE that `--apply` runs (the plan is `status: draft`, not yet dispatched)
+      and that the todo is now unblocked on this specific dependency. Ordering is enforced.

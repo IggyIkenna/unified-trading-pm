@@ -47,10 +47,11 @@ epic-scoped elsewhere but reclassified in by content — see that doc's own Prog
 2026-07-27, `unified-trading-pm@a97bc7bed` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 10
 values: `cefi · defi · tradfi · sports · prediction · cross-cutting · ao · ci · infrastructure · meta`). The
 2026-07-25→27 workaround this section used to describe (no dedicated value, ground-truth only via each tranche's Sources
-list) is RETIRED — a 2026-07-27 corpus-wide retag pass (`asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`)
-mechanically re-derived membership from all 4 non-AG tranches' closeout Sources lists and applied it to the frontmatter
-directly: 119 docs retagged (`asset_group: [cross-cutting]` → `[ao]`/`[ci]`/`[infrastructure]` as appropriate), verified
-via `check_ag_closeout_linkage.py` (0 orphans) and a re-run of the citation pre-filter (cross-cutting's never-cited rate
+list) is RETIRED — a 2026-07-27 corpus-wide retag pass
+(`/plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`) mechanically re-derived membership
+from all 4 non-AG tranches' closeout Sources lists and applied it to the frontmatter directly: 119 docs retagged
+(`asset_group: [cross-cutting]` → `[ao]`/`[ci]`/`[infrastructure]` as appropriate), verified via
+`check_ag_closeout_linkage.py` (0 orphans) and a re-run of the citation pre-filter (cross-cutting's never-cited rate
 dropped 92.5% → 3%). **`asset_group` containing `ao`/`ci`/`infrastructure` is now the PRIMARY membership signal for
 these 3 tranches** — use it exactly like the 5 real AGs (subject to the same Orthogonality HARD CHECK below).
 `parent_epic` (`ao` ≈ `orchestrator_master` + `agent_operating_framework_master`; `ci`/`infra` split the
@@ -200,7 +201,7 @@ For the target `<ag>`:
    plan. b. **Dependency-graph path**: read `<ag>_consolidated_closeout_*.md`'s frontmatter `depends_on:` + `related:`
    (and its `_history_*`/`_native_ao_extract_*` siblings' own `depends_on:`/`related:`) and follow every listed slug
    regardless of its `assigned_vm`/`status` — this catches plans FORKED OUT of the consolidated closeout itself during a
-   line-cap split (e.g. `cefi_migration_cutover_and_track8_completion_2026_07_25.md`,
+   line-cap split (e.g. `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`,
    `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`), whose filenames describe their CONTENT (a Track/phase
    name), not the `ao_dispatch`/`satellite`/`batch` pattern — path (a) alone silently misses these, which would
    misclassify an already-covering, already-AO-readiness-scrubbed plan as an orphan needing a fresh draft. For BOTH
@@ -214,28 +215,28 @@ For the target `<ag>`:
    (`infra` reads as `infrastructure` here, matching the enum). Cross-check against that tranche's own
    `<ag>_consolidated_closeout_2026_07_25.md`'s Track/Sources lists — the two should now largely agree post-retag; a doc
    present in one but not the other is either a post-2026-07-27 addition never added to the Sources list (fix by adding
-   it there, per the 3-doc example already tracked in `asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s own
-   Phase 3), or a genuine new mistag worth fixing on sight. For the 5 AGs + cross-cutting, filter out docs whose
-   `asset_group` also contains a genuinely DIFFERENT peer asset-group marker (any of
-   `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`, EXCLUDING `<ag>` itself and the historically-confirmed
-   same-work dual-tag `prediction` when auditing `sports` or vice versa — that pairing describes the same betting-market
-   work tagged two ways, not two different scopes) — these are the deterministic cross-cutting candidates to exclude
-   from the deep audit. This is a CANDIDATE filter only; the per-doc agent in Phase 1 re-checks scope from real content
-   (step 5 below), since asset_group tagging is not perfectly reliable. Further exclude docs already
-   `status: resolved`/`archived`/`superseded` — they're already closed, not orphans. **Orthogonality HARD CHECK (added
-   2026-07-25 — a real corpus-quality bug, not a hypothetical)**: `cefi`/`defi`/ `tradfi`/`prediction`/`sports` and
-   `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a doc belongs to exactly one specific AG, or is
-   genuinely cross-AG, never both. A doc tagged with exactly ONE specific AG PLUS `cross-cutting` (e.g.
-   `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively dangerous: per the exclusion
-   rule above, such a doc gets excluded from `<ag>`'s own audit (cross-cutting reads as "a different peer marker") AND
-   excluded from `cross-cutting`'s own audit (the specific AG reads as "a different peer marker" there too) — it falls
-   through BOTH audits and becomes an invisible orphan the discovery step itself creates, exactly the failure class this
-   whole skill exists to catch. **Before running Phase 1 for `<ag>` OR for `cross-cutting`**, grep the corpus for
-   `asset_group:.*cross-cutting` and check each hit's array for exactly one other specific-AG marker (not the legitimate
-   "spans multiple/all 5 AGs + cross-cutting" pattern used by genuine cross-AG coordination docs, e.g.
-   `ag_closeout_audit_rollout_2026_07_25.md`, which is fine as-is, if slightly redundant — cross-cutting alone would
-   already imply multi-AG scope). Any single-AG+cross-cutting hit found must be RETAGGED correctly (read the doc's real
-   content/repos to decide which side is right — confirmed examples fixed 2026-07-25:
+   it there, per the 3-doc example already tracked in
+   `/plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`'s own Phase 3), or a genuine new
+   mistag worth fixing on sight. For the 5 AGs + cross-cutting, filter out docs whose `asset_group` also contains a
+   genuinely DIFFERENT peer asset-group marker (any of `cefi`/`defi`/`tradfi`/`quant`/`options`/`cross-cutting`,
+   EXCLUDING `<ag>` itself and the historically-confirmed same-work dual-tag `prediction` when auditing `sports` or vice
+   versa — that pairing describes the same betting-market work tagged two ways, not two different scopes) — these are
+   the deterministic cross-cutting candidates to exclude from the deep audit. This is a CANDIDATE filter only; the
+   per-doc agent in Phase 1 re-checks scope from real content (step 5 below), since asset_group tagging is not perfectly
+   reliable. Further exclude docs already `status: resolved`/`archived`/`superseded` — they're already closed, not
+   orphans. **Orthogonality HARD CHECK (added 2026-07-25 — a real corpus-quality bug, not a hypothetical)**:
+   `cefi`/`defi`/ `tradfi`/`prediction`/`sports` and `cross-cutting` are meant to be a MUTUALLY EXCLUSIVE partition — a
+   doc belongs to exactly one specific AG, or is genuinely cross-AG, never both. A doc tagged with exactly ONE specific
+   AG PLUS `cross-cutting` (e.g. `[cefi, cross-cutting]`) is a MISTAG, not a valid third category — and it is actively
+   dangerous: per the exclusion rule above, such a doc gets excluded from `<ag>`'s own audit (cross-cutting reads as "a
+   different peer marker") AND excluded from `cross-cutting`'s own audit (the specific AG reads as "a different peer
+   marker" there too) — it falls through BOTH audits and becomes an invisible orphan the discovery step itself creates,
+   exactly the failure class this whole skill exists to catch. **Before running Phase 1 for `<ag>` OR for
+   `cross-cutting`**, grep the corpus for `asset_group:.*cross-cutting` and check each hit's array for exactly one other
+   specific-AG marker (not the legitimate "spans multiple/all 5 AGs + cross-cutting" pattern used by genuine cross-AG
+   coordination docs, e.g. `ag_closeout_audit_rollout_2026_07_25.md`, which is fine as-is, if slightly redundant —
+   cross-cutting alone would already imply multi-AG scope). Any single-AG+cross-cutting hit found must be RETAGGED
+   correctly (read the doc's real content/repos to decide which side is right — confirmed examples fixed 2026-07-25:
    `coinbase_bare_name_migration_execution_service_2026_07_10.md` was genuinely cefi-only, `cross-cutting` dropped;
    `issues/manifest_v6_batch3_residual_orphaned_work_2026_07_21.md` was genuinely cross-AG, `cefi` dropped), never
    silently left dual-tagged or silently excluded from both audits. **After every retag, re-run

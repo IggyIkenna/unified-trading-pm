@@ -115,12 +115,12 @@ plan set. Entries point at plans already archived (e.g. `cme_polymarket_arb_2026
 > hardcoded 99 was re-staling on every corpus change, so it is replaced above with the command that derives it. (3)
 > _Was_ "The live, maintained index is the `<!-- AUTO-INVENTORY -->` block in
 > `plans/archive/2026_07/master_to_live_defi_2026_05_23.md`" — that host was ARCHIVED 2026-07-24 and the live block
-> **moved to `/plans/active/active_plan_inventory_dashboard_2026_07_24.md`**; ground truth is the regenerator's own
-> constant, `scripts/plans/regenerate_active_plan_inventory.py:38` →
-> `MASTER_FILE = PLANS_DIR / "active_plan_inventory_dashboard_2026_07_24.md"`. (The archived doc still contains a frozen
-> copy of the block, which is why a grep alone does not disambiguate — read the constant.) The finding's conclusion is
-> UNCHANGED and if anything stronger: an auto-regenerated inventory already occupies the canonical-index role, so
-> INDEX.md's self-description is the thing that is wrong.
+> **moved to `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`**; ground truth is the regenerator's
+> own constant, `scripts/plans/regenerate_active_plan_inventory.py:38` →
+> `MASTER_FILE = PLANS_DIR / "/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md"`. (The archived doc
+> still contains a frozen copy of the block, which is why a grep alone does not disambiguate — read the constant.) The
+> finding's conclusion is UNCHANGED and if anything stronger: an auto-regenerated inventory already occupies the
+> canonical-index role, so INDEX.md's self-description is the thing that is wrong.
 
 ### Why it matters
 
@@ -135,9 +135,9 @@ inventory and drop it from the digest's drift check; or (b) add a regenerator an
 the auto-inventory already serves the canonical-index role.
 
 - [x] ✅ [DOCS] P3. Decide + execute: deprecate `plans/active/INDEX.md` (superseded by the auto-regenerated inventory
-      now hosted at `/plans/active/active_plan_inventory_dashboard_2026_07_24.md` — target corrected 2026-07-26, was
-      "the master-plan AUTO-INVENTORY", whose host `master_to_live_defi_2026_05_23.md` archived 2026-07-24) OR add a
-      regenerator + reconcile the drift (re-derive the live count via
+      now hosted at `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` — target corrected
+      2026-07-26, was "the master-plan AUTO-INVENTORY", whose host `master_to_live_defi_2026_05_23.md` archived
+      2026-07-24) OR add a regenerator + reconcile the drift (re-derive the live count via
       `bash scripts/plan-hygiene/build_health_digest.sh`; 226 as of 2026-07-26, was 99 at filing). Currently
       hand-maintained, no regen script. Provenance: plan-reconciler agt-3591cc 2026-06-17. — **DECIDED + DONE
       2026-07-27** (operator decision, `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#26): KEEP +

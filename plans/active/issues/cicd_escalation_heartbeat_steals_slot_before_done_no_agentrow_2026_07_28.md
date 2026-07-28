@@ -4,7 +4,7 @@ title:
   "cicd escalation worker's own mandated STEP-0 heartbeat auto-dispatches an unrelated backlog task onto the slot before
   any real work starts, and the escalation's one_shot AgentRow is gone by /done time — one_shot_complete 400s 'no active
   agent owns its session', a distinct trigger from the already-fixed
-  ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md"
+  /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md"
 summary: >-
   Reproduced live on slot 3, 2026-07-28, running escalation agt-5c9281 (repo=unified-trading-pm, wall_type=plan_health).
   Followed cicd.md's boot sequence exactly: STEP 0 `POST /api/slots/3/heartbeat` (mandatory liveness ping, before
@@ -27,8 +27,8 @@ scope: [engineer]
 tags: [orchestrator, slot-lifecycle, one-shot, cicd, escalation, heartbeat, self-heal]
 related:
   [
-    /plans/active/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
-    /plans/active/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
+    /plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md,
+    /plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md,
     /plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
   ]
 created: 2026-07-28
@@ -53,9 +53,10 @@ drift_direction: advance-code
 
 ## What I found
 
-This is the SAME terminal symptom as `ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md`
-(`one_shot_complete` rejects with "no active agent owns its session") but a **distinct trigger**, not yet covered by
-that doc's shipped fix (`agent-orchestrator@a01aeae`, `boot_slot()`'s lazy-`AgentRow` construction gated on
+This is the SAME terminal symptom as
+`/plans/archive/issues/ag_closeout_auditor_one_shot_complete_no_agentrow_2026_07_26.md` (`one_shot_complete` rejects
+with "no active agent owns its session") but a **distinct trigger**, not yet covered by that doc's shipped fix
+(`agent-orchestrator@a01aeae`, `boot_slot()`'s lazy-`AgentRow` construction gated on
 `req.slot_role in PLAN_HEALTH_FAMILY_ROLES = {plan_health, plan_reconciler, docs_reconciler, ag_closeout_auditor, na_eligibility_auditor}`).
 `cicd` is not in that set, and — unlike the precedent doc's case — this session was NOT booted directly via
 `/api/slots/{N}/boot` bypassing a dispatch endpoint. It was spawned the documented way, through `POST /api/escalate` →

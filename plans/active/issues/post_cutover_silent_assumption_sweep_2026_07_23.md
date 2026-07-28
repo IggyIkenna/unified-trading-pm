@@ -36,7 +36,7 @@ related:
   - /plans/archive/issues/staging_workflow_shutdown_2026_07_23.md
   - /plans/active/issues/stale_staging_versions_manifest_2026_07_23.md
   - /plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md
-  - /plans/active/github_actions_ci_cost_reduction_2026_07_15.md
+  - /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md
 created: 2026-07-23
 priority: P1
 parent_epic: infrastructure_master

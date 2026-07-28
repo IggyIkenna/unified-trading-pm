@@ -15,7 +15,7 @@ summary: >-
   (2022-06-15) reconfirms the archived doc's 2026-07-17 exhaustive finding that this population is a pure duplicate of
   already-canonical batch_odds_api content (0 unique keys either side). Staging a delete-suggestion per the 5-part proof
   — NOT executing; this is a prod-bucket delete, human-only.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -38,12 +38,19 @@ estimate_class: infra
 source:
   sports_satellite_ao_dispatch_batch2_2026_07_24.md, league_id casing migration todo, step (4), BLK-8e3fdaff answer
 resolved_by:
+  "market-tick-data-service@c03890b3 (exhaustive 2,139-day census, 0 missing days) — all 3 todos DONE 2026-07-26 (slot
+  9): census refresh, 280-day-bucket disposition, provenance trace all complete. The actual GCS delete is intentionally
+  human-only per /codex/02-data/gcs-and-manifest-delete-safety-protocol.md's prod-bucket hard stop, not incomplete
+  scope."
 locked_by:
 drift_direction: advance-code
 depends_on: []
 ---
 
 # batch_footystats mis-stamped ODDS_API population — orphaned objects, staged delete-suggestion
+
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
 
 > **Cross-reference note (2026-07-27)**: `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Phases 0-3 fixed a
 > DIFFERENT `venue=ODDS_API` conflation (MDPS's `reprocess_sports_odds.py` odds_horizon_bucket manifest writer). This

@@ -57,6 +57,9 @@ locked_by:
 > and fixed the unrelated main-session liveness gap found while re-verifying. Live-verified: `GET /api/agents` and
 > `?include_finished=true` both `200` (were `500`). No open follow-ups.
 
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 # AO dashboard outage — AgentKind Literal gap + fail-soft hardening
 
 ## What I found

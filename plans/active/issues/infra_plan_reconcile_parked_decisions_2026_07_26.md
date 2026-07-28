@@ -127,15 +127,16 @@ in place) and the finding got **stronger**, not weaker:
   plans). It was **99** when the finding was filed — the drift has more than doubled.
 - The competing index is auto-regenerated twice daily and its host has _moved_:
   `scripts/plans/regenerate_active_plan_inventory.py:38` →
-  `MASTER_FILE = PLANS_DIR / "active_plan_inventory_dashboard_2026_07_24.md"`.
+  `MASTER_FILE = PLANS_DIR / "/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md"`.
 
-A: **Deprecate INDEX.md** — add a `> **SUPERSEDED by /plans/active/active_plan_inventory_dashboard_2026_07_24.md**`
-banner, drop it from `build_health_digest.sh`'s drift check, and stop the recurring red. The auto-regenerated inventory
-already occupies the canonical-index role, so INDEX.md's self-description is the thing that is wrong. [WORKER REC] B:
-Build a regenerator for INDEX.md and reconcile the 226-entry drift — only worth it if INDEX.md carries a view the
-auto-inventory does not (it is grouped/annotated by theme, which the generated table is not); otherwise this is a second
-generator maintaining a second index. C: Leave as-is and mute the digest check — cheapest, but keeps a doc that actively
-lies to readers about being canonical. Other: operator can type a custom answer
+A: **Deprecate INDEX.md** — add a
+`> **SUPERSEDED by /plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md**` banner, drop it from
+`build_health_digest.sh`'s drift check, and stop the recurring red. The auto-regenerated inventory already occupies the
+canonical-index role, so INDEX.md's self-description is the thing that is wrong. [WORKER REC] B: Build a regenerator for
+INDEX.md and reconcile the 226-entry drift — only worth it if INDEX.md carries a view the auto-inventory does not (it is
+grouped/annotated by theme, which the generated table is not); otherwise this is a second generator maintaining a second
+index. C: Leave as-is and mute the digest check — cheapest, but keeps a doc that actively lies to readers about being
+canonical. Other: operator can type a custom answer
 
 **Status**: resolved — **option B** (operator decision 2026-07-27,
 `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5#26, resolving

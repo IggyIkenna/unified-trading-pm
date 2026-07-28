@@ -56,10 +56,10 @@ fetch is a small fraction of the backfill's total request volume), not a structu
 repeated live-leg smoke check, or a real `--mode live` producer launch, against a Tardis venue while a real
 backfill/sharded-VM run is active could reproduce the measured 403-storm / false-`attempted_failed` corruption.
 
-A prior precedent (`cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`) exercised `launch-mtds-live.sh --test-run`
-successfully for `mtds-live-smoke-cefi-hyperliquid-trades-...` — HYPERLIQUID is CAP-EXEMPT (native-REST, not Tardis), so
-that run never touched this gap. This is the first known exercise of the live-leg smoke path against a Tardis-sourced
-venue while a Tardis-consuming VM was concurrently running.
+A prior precedent (`/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md`) exercised
+`launch-mtds-live.sh --test-run` successfully for `mtds-live-smoke-cefi-hyperliquid-trades-...` — HYPERLIQUID is
+CAP-EXEMPT (native-REST, not Tardis), so that run never touched this gap. This is the first known exercise of the
+live-leg smoke path against a Tardis-sourced venue while a Tardis-consuming VM was concurrently running.
 
 ## Why it matters
 

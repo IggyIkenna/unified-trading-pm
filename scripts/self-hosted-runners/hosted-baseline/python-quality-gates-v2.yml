@@ -100,7 +100,7 @@ jobs:
   # once a tree+gate is green ANYWHERE it hits everywhere, which is sound because the key
   # pins both the exact content and the exact gate. SSOT:
   # plans/active/cicd_v2_latency_reduction_2026_06_10.md Phase 3 +
-  # plans/active/github_actions_ci_cost_reduction_2026_07_15.md A2.
+  # /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md A2.
   content-gate:
     name: content sentinel
     runs-on: ubuntu-latest

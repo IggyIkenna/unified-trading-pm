@@ -27,7 +27,7 @@ tags: [quality-gates, qg-5.83, adapter-contract-regression, timeout, fleet-wide,
 related:
   [
     /plans/active/issues/mtds_dex_pools_adapter_contract_baseline_stale_2026_07_26.md,
-    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
   ]
 created: 2026-07-27
 last_updated: 2026-07-27
@@ -47,7 +47,8 @@ superseded_by:
 resolved_by:
 source: >-
   measured 2026-07-27 (slot 8) while attempting to ship features-service@<pending> for
-  features_by_date_root_canonicalisation_2026_07_21.md todo 6 — real host measurement, not inferred.
+  /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md todo 6 — real host measurement, not
+  inferred.
 depends_on: []
 ---
 
@@ -128,13 +129,14 @@ Two independent, non-exclusive fixes:
 ## Progress Log
 
 - **2026-07-27 (slot 8, data_engineering)**: Filed while attempting to ship a real fix (`features-service` delta_one
-  candle-reader `pipeline_mode` threading, for `features_by_date_root_canonicalisation_2026_07_21.md` todo 6's blocking
-  P0). QG hard-failed at STEP 5.83 before my commit could ship; confirmed pre-existing/unrelated to my diff via
-  `git stash` reproduction; confirmed the underlying scanner is I/O-bound (`D` state) and genuinely exceeds the 60s
-  budget under current host load, not a logic bug. Escalating per CLAUDE.md's cross-cutting "big finding" rule — this
-  blocks shipping fleet-wide, not just my task. NOT actioned (raising the timeout / making the scan incremental) — out
-  of `data_engineering` craft scope (infra/CI ownership of `scripts/quality-gates.sh` + the shared QG script template),
-  and I should not unilaterally raise a shared QG timeout without infra sign-off given it's rolled out via
+  candle-reader `pipeline_mode` threading, for
+  `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6's blocking P0). QG hard-failed at
+  STEP 5.83 before my commit could ship; confirmed pre-existing/unrelated to my diff via `git stash` reproduction;
+  confirmed the underlying scanner is I/O-bound (`D` state) and genuinely exceeds the 60s budget under current host
+  load, not a logic bug. Escalating per CLAUDE.md's cross-cutting "big finding" rule — this blocks shipping fleet-wide,
+  not just my task. NOT actioned (raising the timeout / making the scan incremental) — out of `data_engineering` craft
+  scope (infra/CI ownership of `scripts/quality-gates.sh` + the shared QG script template), and I should not
+  unilaterally raise a shared QG timeout without infra sign-off given it's rolled out via
   `rollout-workflow-templates.sh`-style propagation to every repo.
 - **2026-07-27 (cicd, slot 5, escalation RB-6696c2a9)**: Reproduced independently —
   `check_adapter_contract_regression.py` exceeded 120s standalone in slot 5's workspace too, confirming this isn't

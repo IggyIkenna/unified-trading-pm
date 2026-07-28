@@ -141,9 +141,9 @@ sequential: true
      `/plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md`. Left the bare-slug `depends_on:` field on this
      finalize plan's own frontmatter untouched (machine-parsed bare slug, explicitly out of scope per
      `cross-reference-path-convention.md`) and left informal backtick-only prose mentions (no leading slash) as-is —
-     neither is the corpus's enforced path-link convention. `active_plan_inventory_dashboard_2026_07_24.md`'s stale row
-     was NOT hand-edited — regenerated via `scripts/plans/regenerate_active_plan_inventory.py` instead (180 plans, 0
-     orphans post-regen).
+     neither is the corpus's enforced path-link convention.
+     `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`'s stale row was NOT hand-edited —
+     regenerated via `scripts/plans/regenerate_active_plan_inventory.py` instead (180 plans, 0 orphans post-regen).
   5. **File move**:
      `git mv plans/active/ao_fleet_throughput_incident_2026_07_25.md plans/archive/2026_07/ao_fleet_throughput_incident_2026_07_25.md`.
   6. **Lock**: `locked_by`/`locked_since` were already empty on the parent plan — nothing to clear.

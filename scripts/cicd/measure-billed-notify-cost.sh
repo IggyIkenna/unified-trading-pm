@@ -10,7 +10,7 @@
 # │ This produced the notify-slack spend numbers that the CI-cost plan's KEEP-D / A3 / A4 / A5      │
 # │ decisions rest on, and the plan still has an OPEN todo that needs it again:                     │
 # │   "After 3-5 days, re-measure PM's billed minutes; confirm the moved workflows bill ~$0"        │
-# │ (plans/active/github_actions_ci_cost_reduction_2026_07_15.md). Without this script that todo is │
+# │ (/plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md). Without this script that todo is │
 # │ unverifiable and the whole project's success metric is an assertion. It lived in a scratchpad   │
 # │ until 2026-07-16.                                                                               │
 # └────────────────────────────────────────────────────────────────────────────────────────────────┘

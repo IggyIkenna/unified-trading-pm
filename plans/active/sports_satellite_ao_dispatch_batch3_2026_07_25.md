@@ -188,7 +188,7 @@ drift_direction: advance-code
       `af_team_id=9580`). 72 residual names are genuinely unmappable today (no alias / not in team_mapping_v2 / no
       league vote) and are left dropping at ml-service merge time per this todo's own accepted behavior. Repo:
       instruments-service@dd3ecff1 (`scripts/odds_api_team_mapping_coverage_audit_2026_07_27.py`). Findings + full
-      breakdown: `plans/active/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`. Source:
+      breakdown: `/plans/archive/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`. Source:
       `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`.
 - [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-11)** — Remove/relabel the 2 confirmed cross-asset_group mislabeled rows
       sitting in the SPORTS manifest: (1)

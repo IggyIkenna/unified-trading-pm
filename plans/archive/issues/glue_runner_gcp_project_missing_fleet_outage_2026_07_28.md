@@ -31,6 +31,9 @@ depends_on: []
 > since). Durable fix: `setup-glue-runners.sh` now unconditionally writes the same fallback to the runtime env file that
 > the install-time self-test and systemd template already used. Fleet backlog drained naturally. No open follow-ups.
 
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 # Self-hosted glue-runner fleet-wide crash-loop — GCP_PROJECT never written to runtime env files
 
 ## What happened

@@ -3,12 +3,12 @@ doc_type: plan
 title: >-
   deployment_redesign_cherrypicks_2026_07_20 — finalize (reconcile + archive gate)
 summary: >-
-  Gated closeout for deployment_redesign_cherrypicks_2026_07_20.md -- machine-held via depends_on + gate_on_depends:
-  true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once its AO-dispatched
-  todos ship (citing each landing commit), then archives it via the standard 6-step ritual once fully closed. Authored
-  2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1 reclassification pass, per
-  task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a companion gated finalize
-  plan).
+  Gated closeout for /plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md -- machine-held via depends_on
+  + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
+  its AO-dispatched todos ship (citing each landing commit), then archives it via the standard 6-step ritual once fully
+  closed. Authored 2026-07-27 as part of na_docs_validity_and_ao_eligibility_audit_2026_07_26.md's Phase 1
+  reclassification pass, per task_template.md's finalize-plan-coverage rule (every assigned_vm:planning plan needs a
+  companion gated finalize plan).
 status: draft
 nature: process
 asset_group: [cross-cutting]
@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/deployment_redesign_cherrypicks_2026_07_20.md,
+    /plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md,
     /plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -39,9 +39,9 @@ depends_on: [deployment_redesign_cherrypicks_2026_07_20]
 gate_on_depends: true
 source: >-
   na_docs_validity_and_ao_eligibility_audit_2026_07_26.md Phase 1 (2026-07-27) --
-  deployment_redesign_cherrypicks_2026_07_20.md was reclassified assigned_vm:NA -> planning after verifying its
-  remaining open todos are bounded/deterministic and conflict-free against currently-active AO plans; this finalize doc
-  closes the finalize-plan-coverage gate the reclassification itself triggered.
+  /plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md was reclassified assigned_vm:NA -> planning after
+  verifying its remaining open todos are bounded/deterministic and conflict-free against currently-active AO plans; this
+  finalize doc closes the finalize-plan-coverage gate the reclassification itself triggered.
 assigned_role: backend_engineer
 drift_direction: advance-code
 ---
@@ -53,9 +53,10 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile `deployment_redesign_cherrypicks_2026_07_20.md`'s checkboxes** against whatever shipped
-      -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work was missed, then run the
-      standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check, update any CLAUDE.md/codex
-      pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the plan is fully closed. If
-      real work remains after the AO-dispatched todos land, leave `deployment_redesign_cherrypicks_2026_07_20.md` active
-      (do not force-archive) and note what's still open here instead.
+- [ ] [REVIEW] P2. **Reconcile `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md`'s checkboxes**
+      against whatever shipped -- flip each `- [ ]` to `- [x]` citing the landing commit(s), confirm no residual work
+      was missed, then run the standard 6-step archival ritual (migrate DEFERRED items, banner, codex-alignment check,
+      update any CLAUDE.md/codex pointer on a new contract, update every referrer's path corpus-wide, clear lock) if the
+      plan is fully closed. If real work remains after the AO-dispatched todos land, leave
+      `/plans/archive/2026_07/deployment_redesign_cherrypicks_2026_07_20.md` active (do not force-archive) and note
+      what's still open here instead.

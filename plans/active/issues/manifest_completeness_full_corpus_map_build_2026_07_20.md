@@ -26,7 +26,7 @@ tags: [data-correctness, p0, performance, manifest, mdps, backfill-blocker, oom-
 related:
   [
     ../data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
+    /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20

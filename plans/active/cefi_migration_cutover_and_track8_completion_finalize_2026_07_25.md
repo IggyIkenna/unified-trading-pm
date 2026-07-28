@@ -2,8 +2,8 @@
 doc_type: plan
 title: CeFi migration cutover + Track 8 completion — finalize (reconcile checkboxes + archive)
 summary: >-
-  Gated closeout for cefi_migration_cutover_and_track8_completion_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent
+  Gated closeout for /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md — machine-held
+  via depends_on + gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-1/Track-8 checkboxes AND the plan's own two true source docs
   (cefi_residual_followups_after_honest_done_2026_07_17.md,
   cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md), then archives the now-fully-done
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, close-out, canonicalisation, migration, cutover, archival]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
@@ -48,9 +48,10 @@ drift_direction: advance-code
 
 # CeFi migration cutover + Track 8 completion — finalize
 
-> **Machine-gated on `cefi_migration_cutover_and_track8_completion_2026_07_25.md`** (`depends_on` +
-> `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan are `done`.
-> `sequential: true` because todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
+> **Machine-gated on `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`**
+> (`depends_on` + `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan
+> are `done`. `sequential: true` because todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run
+> last.
 
 ## Todos
 
@@ -67,9 +68,9 @@ drift_direction: advance-code
       `cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` — confirm its findings are now
       resolved by the POST-CUTOVER flip and update/close it accordingly. Repo: unified-trading-pm. **Done when**: both
       source docs' checkboxes/status reflect the shipped work, cited with verified commits.
-- [ ] [DOC] P2. **Archive `cefi_migration_cutover_and_track8_completion_2026_07_25.md`** via the standard 6-step ritual
-      (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the archive banner → run
-      the codex-alignment check → grep the corpus for every referrer of
+- [ ] [DOC] P2. **Archive `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`** via the
+      standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the
+      archive banner → run the codex-alignment check → grep the corpus for every referrer of
       `cefi_migration_cutover_and_track8_completion_2026_07_25` and fix each path to point at the archived location →
       clear `locked_by` (already empty, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same

@@ -287,8 +287,8 @@ routed via the new `--output-bucket`, both using real VMs polled through the sha
 **Run 1 — CEFI:DERIBIT:derivative_ticker (force+skip+canonical), day auto-substituted 2026-07-15 → 2024-02-08:**
 
 - Report: `plans/audit/results/data_pipeline_e2e_check_mdps_2026_07_15.md` — total=21 passed=7 failed=7 skipped=7.
-- **FOUND A P0** (filed `issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`, PM@9ef516eec): every
-  parquet write failed
+- **FOUND A P0** (filed `/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`,
+  PM@9ef516eec): every parquet write failed
   `StreamingParquetWriter pre-write validation … [schema_violation] column 'funding_rate_mean' / 'mark_price_mean' / 'index_price_mean' missing`.
   ZERO objects; 140 manifest rows (7tf × 20 instruments) ALL `attempted_failed/SCHEMA_VALIDATION_FAILED` row_count=0.
   **Yet the VM exited rc=0 reporting "20 success, 0 failed, 152,300 candles"** — a backfill would burn full compute,
@@ -400,7 +400,8 @@ The P0 the skill found on its first run is fixed to the operator's exact semanti
   local-runtime-proven, not yet re-proven on the VM tarball path.
 - **Bonus finding from the fix:** because deriv is now `supports_prior_day_seed=False`, it no longer reads the shared
   seed context → deriv is REMOVED from the set of adapters exposed to the P0 concurrency bug
-  (`issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`). The bug remains for trades/book/tbbo/defi.
+  (`/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`). The bug remains for
+  trades/book/tbbo/defi.
 
 ### 2026-07-20 — LOOP-CLOSE: derivative_ticker fix PROVEN CORRECT on a real VM; end-to-end blocked by a deployment gap (filed)
 
@@ -804,10 +805,11 @@ none, destroying signal (1) and making the gap invisible.
    typed reason. An all-NaN "capture" is the INVERSE phantom and is equally misleading. **Add this assertion to the MDPS
    driver's content check** (todo below).
 
-**Applied immediately to the in-flight P0 fix** (`issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`):
-the fix must (a) leave empty bins NaN/0 rather than LOCF-filling them, (b) record `empty_confirmed` + typed reason when
-the ENTIRE shard-day is empty rather than writing an all-NaN parquet as `captured`, and (c) document the two-signal
-contract in-code so nobody "helpfully" re-adds carry-forward.
+**Applied immediately to the in-flight P0 fix**
+(`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`): the fix must (a) leave empty
+bins NaN/0 rather than LOCF-filling them, (b) record `empty_confirmed` + typed reason when the ENTIRE shard-day is empty
+rather than writing an all-NaN parquet as `captured`, and (c) document the two-signal contract in-code so nobody
+"helpfully" re-adds carry-forward.
 
 - [ ] NEW todo. [SCRIPT] P1. Add the all-NaN-parquet-vs-`captured` assertion to `/data-pipeline-check-mdps` (and the
       features twin where a family can emit an all-null feature frame) as a distinct `content_check=` verdict, so the
@@ -865,9 +867,10 @@ per-instrument-day unit cost above (25.9s serial, write-bound) is the measured i
       instrument×timeframe; S4 full parquet read-back per write; S5 GIL at the pandas boundary; S6 a hard cap of 2 on
       venue-file listing regardless of `MAX_WORKERS`; S7 the emission-policy lookup on 3/7 timeframes), each already
       tracked as its own follow-up todo in this plan (R1 concurrent date-subprocesses; the shared-seed-context P0
-      concurrency bug, `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`, confirmed still `status: open` —
-      NOT yet fixed, so raising in-process concurrency remains gated on that fix landing first). No new code change from
-      this todo — it was a measurement-methodology question, now closed with the correct answer on record.
+      concurrency bug, `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`, confirmed still
+      `status: open` — NOT yet fixed, so raising in-process concurrency remains gated on that fix landing first). No new
+      code change from this todo — it was a measurement-methodology question, now closed with the correct answer on
+      record.
 - [ ] NEW todo. [DOC] P2. Correct `/codex/06-coding-standards/performance-targets.md`: `mdps_compute` is WRITE/IO-bound
       (measured ~94% write, ~6% polars), not compute-bound; the c2-standard-16 recommendation does not follow.
 
@@ -1049,8 +1052,8 @@ killed by measurement (the O(n^2) flush, and this) — both times the corrected 
   (`cloud_data_provider.py:277`) · S7 the emission-policy manifest lookup on 3 of 7 timeframes — **independently
   corroborating the other agent's `compute_completeness_fraction` finding**.
 
-**🔴 P0 CONCURRENCY BUG — filed `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`. I VERIFIED BOTH HALVES BY
-DIRECT READ.** `candle_write_mixin.py:406-411` `_set_prior_seed_context` writes
+**🔴 P0 CONCURRENCY BUG — filed `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`. I VERIFIED
+BOTH HALVES BY DIRECT READ.** `candle_write_mixin.py:406-411` `_set_prior_seed_context` writes
 `self._seed_category / _seed_date_str / _seed_input_venue / _seed_underlying / _seed_pipeline_mode / _seed_frame_cache`
 onto the **SHARED** orchestrator instance, while `batch_workers.py:332-335` submits `self._process_instrument_file` to
 the pool. With `max_workers>1` over a HETEROGENEOUS file list (multiple venues/underlyings/pipeline_modes in one
@@ -1069,7 +1072,7 @@ serial `while` over dates). ~K x wall-clock, and **LOW risk precisely because se
 lever, and it does NOT require raising in-process `max_workers` first.
 
 - [x] ✅ NEW todo. [SCRIPT] P0. **VERIFIED 2026-07-27 (slot-8): already shipped, duplicate of already-completed work.**
-      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`'s own todos 1+2 are `[x]` SHIPPED
+      `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`'s own todos 1+2 are `[x]` SHIPPED
       `market-data-processing-service@b3376b8` ("fix(mdps): thread-safe per-call seed context (P0) + opt-in concurrent
       date-subprocesses (R1)"), confirmed still an ancestor of current LDR tip (`git merge-base --is-ancestor`). Direct
       code read of `market_data_processing_service/app/core/candle_write_mixin.py` confirms zero remaining
@@ -1078,8 +1081,8 @@ lever, and it does NOT require raising in-process `max_workers` first.
       `tests/unit/test_seed_context_thread_safety.py` exists (the regression test that fails-on-old/passes-on-new +
       meta-guard the issue doc's todo 2 describes). No code change needed. The issue doc's own todo 3 (blast-radius
       assessment on existing candle data) remains separately open — not this todo's scope, tracked at
-      `issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md` directly, matching the "NEW todo. [DATA] P1. Blast
-      radius..." item just below.
+      `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md` directly, matching the "NEW todo.
+      [DATA] P1. Blast radius..." item just below.
 - [ ] NEW todo. [DATA] P1. Blast radius: did any PAST prod MDPS run use max_workers>1 over a heterogeneous list? If so
       those shards may carry wrong leading-bin seeds and need re-derivation.
 - [x] ✅ NEW todo. [SCRIPT] P0. **WIRED 2026-07-27** — R1 shipped (mdps@b3376b8) but unused; wired opt-in

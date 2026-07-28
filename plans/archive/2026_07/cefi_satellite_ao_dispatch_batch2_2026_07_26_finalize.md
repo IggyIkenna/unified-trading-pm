@@ -75,9 +75,9 @@ drift_direction: advance-code
       sub-items annotated: flipped sub-item 2 (features-service image build, `features-service@586a5cea`/`@8661a7af`
       verified) and sub-item 4 (codex SSOT reconciliation, `unified-trading-pm@8e435b425` verified) to `[x]`; annotated
       sub-items 1 and 3 as **STILL OPEN**, correctly NOT flipped (real remaining work, spun to
-      `issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todos 1/3). **No doc reached 0 open todos** — every
-      source doc checked (17 distinct todos across 18 physical doc files, since item -015 cites 2 sibling docs) carries
-      genuine remaining prose or checkbox work (verified past checkbox-count alone — e.g.
+      `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` todos 1/3). **No doc reached 0 open
+      todos** — every source doc checked (17 distinct todos across 18 physical doc files, since item -015 cites 2
+      sibling docs) carries genuine remaining prose or checkbox work (verified past checkbox-count alone — e.g.
       `cefi_universe_capture_rule_2026_06_23.md` shows 0 unchecked boxes but has a real prose-form open TODO, a
       scaffolded live-liquidity hook + an unactioned side-finding, so it correctly stays `status: open`, not flipped to
       `resolved`) — so no `status: resolved` flips were made this pass.
@@ -162,11 +162,12 @@ drift_direction: advance-code
       (5) 7 live corpus path-referrers fixed to the new archive path (`cefi_satellite_ao_dispatch_batch3_2026_07_26.md`
       ×2 entries [batch2 + this finalize doc], `cefi_satellite_ao_dispatch_batch3_finalize_2026_07_26.md`,
       `cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`,
-      `cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` ×2 entries [related: + an inline path-shaped citation],
-      `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`, `cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s
-      inline path-shaped citation, and this doc's own self-referencing `related:` entry); bare-filename prose citations
-      (no leading path) in ~10 other docs correctly left alone (never resolvable paths, same convention as the
-      batch1-finalize precedent); `active_plan_inventory_dashboard_2026_07_24.md` (auto-generated) and every
+      `/plans/archive/issues/cefi_batch2_010_misscoped_gated_bundle_2026_07_26.md` ×2 entries [related: + an inline
+      path-shaped citation], `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`,
+      `cefi_hl_aster_batch_data_gaps_2026_06_22.md`'s inline path-shaped citation, and this doc's own self-referencing
+      `related:` entry); bare-filename prose citations (no leading path) in ~10 other docs correctly left alone (never
+      resolvable paths, same convention as the batch1-finalize precedent);
+      `/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md` (auto-generated) and every
       `plans/archive/**` mention also correctly left alone. (6) `locked_by` confirmed empty on both docs. `git mv` both
       docs to `plans/archive/2026_07/` in this same commit. `check_frontmatter_schema.py` and
       `check_ag_closeout_linkage.py` both green post-change. — `unified-trading-pm@(this commit)`.

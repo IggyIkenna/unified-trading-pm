@@ -44,7 +44,7 @@ locked_by:
 locked_since:
 resolved_by:
   unified-api-contracts@11adf279, unified-api-contracts@dfecc787; Finding 2 closed 2026-07-27 per
-  cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 4
+  /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 4
 ---
 
 > **🟢 RESOLVED 2026-07-18 -- both findings fully resolved and verified shipped. Archived per issue-doc-lifecycle.**
@@ -103,8 +103,8 @@ catalogue map — the same map FIX D3 already builds candidate filename stems fr
 (`scripts/pipeline_e2e_check.py::_sample_raw_symbol_from_prod_listing`) no longer skips canonical-looking parquet stems.
 Manifest lookups now key on the same id form the writer records, so the "manifest verdicts are unreliable mid-migration"
 caveat below no longer applies — the VM `run.log` cross-check remains good practice but is no longer required to
-compensate for this specific gap. See `plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 4
-for the shipping commit.
+compensate for this specific gap. See
+`/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 4 for the shipping commit.
 
 ~~The smoke check verifies a manifest row keyed on the sampled RAW symbol while the writer records the row under the
 CANONICAL id, so `manifest_status_invalid:no_matching_row` appears even when the fetch and write both succeeded. Read

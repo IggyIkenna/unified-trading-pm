@@ -357,7 +357,7 @@ TRADFI delta_one and volatility (CEFI+TRADFI) had zero legacy objects to begin w
 2026-07-27**: `gcloud storage ls` on `delta_one/day=`, `volatility/`, and bucket-root `day=` in
 `features-cefi-prd-central-element-323112` all return zero matches; `delta_one/by_date/day=…/` is populated and live.
 Full detail:
-[`../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md)
+[`../../plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`](../../plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md)
 (todos 1-8, all closed). Non-canonical-path-inventory row #17 retired in lockstep.
 
 ---

@@ -4,11 +4,11 @@ title:
   "delta_one's CEFI candle-loading path never threads pipeline_mode — cannot find ANY real CEFI candle data (all current
   MDPS writes are pipeline_mode-partitioned)"
 summary: >-
-  Discovered while trying to PROVE the by_date/day= writer fix (features_by_date_root_canonicalisation_2026_07_21.md
-  todo 6) green on a real day for delta_one CEFI. Every real-VM + direct-CLI attempt failed candle lookback validation
-  with "0/N candles" or "No pre-loaded candles" for EVERY instrument tried — including
-  HYPERLIQUID:PERPETUAL:BTC-USD@LIN, independently confirmed to have real, non-empty candle parquet (24 real 1h rows,
-  real OHLCV) at
+  Discovered while trying to PROVE the by_date/day= writer fix
+  (/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md todo 6) green on a real day for delta_one
+  CEFI. Every real-VM + direct-CLI attempt failed candle lookback validation with "0/N candles" or "No pre-loaded
+  candles" for EVERY instrument tried — including HYPERLIQUID:PERPETUAL:BTC-USD@LIN, independently confirmed to have
+  real, non-empty candle parquet (24 real 1h rows, real OHLCV) at
   gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/day=2026-07-19/pipeline_mode=batch_hyperliquid/timeframe=1h/data_type=trades/instrument_type=PERPETUAL/venue=HYPERLIQUID/HYPERLIQUID:PERPETUAL:BTC-USD@LIN.parquet.
   Root-caused: `features_service/delta_one/engine/orchestrator.py::_load_and_validate_candles` calls
   `DataLoader.load_candles_with_buffer(...)` WITHOUT a `pipeline_mode` argument (always defaults to `None`). UTL's
@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [data-correctness, candles, pipeline_mode, delta_one, cefi, canonical, gcs-paths]
 related:
   [
-    /plans/active/issues/features_by_date_root_canonicalisation_2026_07_21.md,
+    /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
     /codex/02-data/pipeline-mode-partition.md,
   ]
@@ -50,9 +50,9 @@ supersedes:
 superseded_by:
 resolved_by:
 source: >-
-  measured 2026-07-27 while proving features_by_date_root_canonicalisation_2026_07_21.md todo 6 (real-VM
-  pipeline_e2e_check.py delta_one CEFI force+skip run + direct scoped CLI invocations) — real GCP infra, real GCS
-  objects, not inferred.
+  measured 2026-07-27 while proving /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md todo 6
+  (real-VM pipeline_e2e_check.py delta_one CEFI force+skip run + direct scoped CLI invocations) — real GCP infra, real
+  GCS objects, not inferred.
 ---
 
 # delta_one's CEFI candle reader never threads pipeline_mode — structural zero-candles bug
@@ -60,7 +60,7 @@ source: >-
 ## What was found
 
 While attempting to PROVE the delta_one/volatility `by_date/day=` writer fix
-(`features_by_date_root_canonicalisation_2026_07_21.md` todo 6) green on a real day:
+(`/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6) green on a real day:
 
 1. Launched the sanctioned `/data-pipeline-check-features` real-VM harness
    (`features-service/scripts/pipeline_e2e_check.py --day 2026-07-26 --asset-group CEFI --family delta_one --legs force,skip --auto-day --require-captured`).
@@ -100,12 +100,13 @@ While attempting to PROVE the delta_one/volatility `by_date/day=` writer fix
 ## Why this matters (do not descope)
 
 This is a **CEFI delta_one feature-computation-blocking bug** — independent of, and NOT introduced by, the
-`features_by_date_root_canonicalisation_2026_07_21.md` `by_date/day=` writer-path fix (that fix is separately
-unit-test-verified correct — 30/30 tests pass, explicitly asserting the `delta_one/by_date/` and `volatility/by_date/`
-prefixes). This candle-reader gap means **delta_one CEFI feature computation cannot succeed against ANY
-currently-written real CEFI candle data**, via either the VM launcher's bulk-preload path or the CLI's per-instrument
-fallback path — a genuine, severe, silent data-pipeline correctness gap (features that should compute from real data
-instead silently produce nothing, logged only as unremarkable per-instrument WARNINGs that are easy to miss at scale).
+`/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` `by_date/day=` writer-path fix (that fix is
+separately unit-test-verified correct — 30/30 tests pass, explicitly asserting the `delta_one/by_date/` and
+`volatility/by_date/` prefixes). This candle-reader gap means **delta_one CEFI feature computation cannot succeed
+against ANY currently-written real CEFI candle data**, via either the VM launcher's bulk-preload path or the CLI's
+per-instrument fallback path — a genuine, severe, silent data-pipeline correctness gap (features that should compute
+from real data instead silently produce nothing, logged only as unremarkable per-instrument WARNINGs that are easy to
+miss at scale).
 
 **Related but distinct** from `candle_feature_canonical_path_divergence_2026_07_20.md` (which documents the WRITER side
 emitting both pipeline_mode-partitioned and pipeline_mode-less shapes on the same day, and that doc's todo 5 claims the
@@ -158,30 +159,30 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
       TradFi/CME fallbacks still work. Full `quality-gates.sh` green, sentinel-verified. features-service@615abbaa.
 
       **Real-day proof, END-TO-END, against real prod GCS data** (via the `-test-` sink bucket, no prod mutation):
-              `HYPERLIQUID:PERPETUAL:BTC-USD@LIN`, day=2026-07-19, `candlestick_patterns` feature_group (the only real
-              pipeline_mode-partitioned 1h candle data currently backfilled for CEFI — see "real-data caveat" below) —
-              lookback validation PASSED (was: hard-fail 0/68), 24 real candles loaded via the pipeline_mode-threaded reader,
-              features computed, and a real partition WRITTEN to the canonical
-              `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/`
-              tree (confirming `features_by_date_root_canonicalisation_2026_07_21.md`'s writer canonicalization is correct on
-              real data, not just unit tests). Re-ran the identical command a second time to confirm skip/re-run stability
-              (idempotent, consistent `Completed 1/1 instruments` both times).
+                      `HYPERLIQUID:PERPETUAL:BTC-USD@LIN`, day=2026-07-19, `candlestick_patterns` feature_group (the only real
+                      pipeline_mode-partitioned 1h candle data currently backfilled for CEFI — see "real-data caveat" below) —
+                      lookback validation PASSED (was: hard-fail 0/68), 24 real candles loaded via the pipeline_mode-threaded reader,
+                      features computed, and a real partition WRITTEN to the canonical
+                      `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/`
+                      tree (confirming `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`'s writer canonicalization is correct on
+                      real data, not just unit tests). Re-ran the identical command a second time to confirm skip/re-run stability
+                      (idempotent, consistent `Completed 1/1 instruments` both times).
 
-              **Real-data caveat (a genuine, separate data-availability gap — NOT a code bug, out of scope for this fix)**:
-              only `day=2026-07-19` currently has real `processed_candles/.../pipeline_mode=batch_hyperliquid/timeframe=1h/`
-              objects for this instrument (verified via direct GCS listing across 2026-07-18 through 2026-07-26 — every other
-              day 404s). Raw MTDS `trades` capture IS continuous 2026-06-01..2026-07-20 per the manifest, but MDPS candle
-              DERIVATION hasn't backfilled most of those days yet — so `technical_indicators` (needs 50 candles) and other
-              higher-lookback feature_groups still correctly report "insufficient data" (24 real candles available, not a
-              bug). `candlestick_patterns` (lookback=10) was the smallest-lookback group that could be proven green against
-              the currently-available real data. This means `features_by_date_root_canonicalisation_2026_07_21.md` todo 6's
-              broader claim ("PROVE ... green on one real day") is now proven for delta_one/CEFI at the code level (the
-              by_date writer + candle reader chain both work end-to-end on real data), but a full production run across all
-              feature_groups still needs MDPS to backfill more candle-derivation days — separate, pre-existing scope, not
-              re-opened here. Volatility's real-day leg remains separately blocked on missing `options_chain` input near this
-              window, as already noted in that issue's todo 6 (untouched by this fix).
+                      **Real-data caveat (a genuine, separate data-availability gap — NOT a code bug, out of scope for this fix)**:
+                      only `day=2026-07-19` currently has real `processed_candles/.../pipeline_mode=batch_hyperliquid/timeframe=1h/`
+                      objects for this instrument (verified via direct GCS listing across 2026-07-18 through 2026-07-26 — every other
+                      day 404s). Raw MTDS `trades` capture IS continuous 2026-06-01..2026-07-20 per the manifest, but MDPS candle
+                      DERIVATION hasn't backfilled most of those days yet — so `technical_indicators` (needs 50 candles) and other
+                      higher-lookback feature_groups still correctly report "insufficient data" (24 real candles available, not a
+                      bug). `candlestick_patterns` (lookback=10) was the smallest-lookback group that could be proven green against
+                      the currently-available real data. This means `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6's
+                      broader claim ("PROVE ... green on one real day") is now proven for delta_one/CEFI at the code level (the
+                      by_date writer + candle reader chain both work end-to-end on real data), but a full production run across all
+                      feature_groups still needs MDPS to backfill more candle-derivation days — separate, pre-existing scope, not
+                      re-opened here. Volatility's real-day leg remains separately blocked on missing `options_chain` input near this
+                      window, as already noted in that issue's todo 6 (untouched by this fix).
 
-              Updated `features_by_date_root_canonicalisation_2026_07_21.md` todo 6 to reflect this real-day proof result.
+                      Updated `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6 to reflect this real-day proof result.
 
 - [ ] 4. [DATA] P2. Check whether the SAME `pipeline_mode=None` gap affects other CEFI-reading call sites in
       features-service (cross_instrument, multi_timeframe) or other asset groups where MDPS candle writes have also
@@ -189,21 +190,22 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
 
 ## Progress Log
 
-- **2026-07-27** — Filed while working `features_by_date_root_canonicalisation_2026_07_21.md` todo 6 (real-day proof).
-  Root-caused via direct code read + real GCS verification (not inferred). Did not attempt the fix in this pass — out of
-  scope for the by_date/day= writer-proof task this was discovered under, and the bulk-preload path's fix location needs
-  its own investigation. Real-VM check (`features-e2e-cefi-20260727-083854-025349`) was left running in the background
-  against the `-test-` bucket (no prod mutation) — expected to eventually report `PROVED NOTHING` per this root cause;
-  its report can serve as further corroborating evidence once it completes.
+- **2026-07-27** — Filed while working `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo
+  6 (real-day proof). Root-caused via direct code read + real GCS verification (not inferred). Did not attempt the fix
+  in this pass — out of scope for the by_date/day= writer-proof task this was discovered under, and the bulk-preload
+  path's fix location needs its own investigation. Real-VM check (`features-e2e-cefi-20260727-083854-025349`) was left
+  running in the background against the `-test-` bucket (no prod mutation) — expected to eventually report
+  `PROVED NOTHING` per this root cause; its report can serve as further corroborating evidence once it completes.
 - **2026-07-27** — Todo 1 shipped: `features-service@e9430f0d`. Full `quality-gates.sh` green (pytest 17900 passed/0
   failed, basedpyright clean, adapter-contract-call ratchet clean). Both delta_one CEFI candle-reader paths (the
   bulk-preload path from todo 2 and the per-instrument path from this todo) now thread a resolved `pipeline_mode`. Todo
-  3 (re-run the real-day proof for `features_by_date_root_canonicalisation_2026_07_21.md` todo 6) is now unblocked.
+  3 (re-run the real-day proof for `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6)
+  is now unblocked.
 - **2026-07-27 (slot 8)** — Independently arrived at the identical todo-1 fix (same helper name, same
   `resolve_pipeline_mode` call shape, same never-raising contract) while working
-  `features_by_date_root_canonicalisation_2026_07_21.md` todo 6; discovered on rebase that slot-6 had landed it moments
-  earlier (features-service@e9430f0d) — dropped my redundant local diff/test rather than double-ship. Also independently
-  hit + filed the SAME QG STEP 5.83 timeout as slot-6, under a different name
+  `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6; discovered on rebase that slot-6
+  had landed it moments earlier (features-service@e9430f0d) — dropped my redundant local diff/test rather than
+  double-ship. Also independently hit + filed the SAME QG STEP 5.83 timeout as slot-6, under a different name
   (`/plans/active/issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md`,
   unified-trading-pm@7575271a4) — duplicate of slot-6's
   `adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md`; flagging for consolidation

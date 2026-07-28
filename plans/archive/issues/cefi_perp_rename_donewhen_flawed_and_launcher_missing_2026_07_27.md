@@ -5,14 +5,15 @@ title:
   done-when check, no vetted VM launcher, and lands right after a sibling fleet showed 21/44 shards failing"
 summary: >-
   Investigated (read-only, no execution) before dispatching todo 2 of
-  cefi_migration_cutover_and_track8_completion_2026_07_25.md — the on-disk GCS filename rename for `:PERP:` ->
-  `:PERPETUAL:` (Script 2, market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py). Three
-  compounding concerns, none individually fatal but together enough to stop short of executing interactively: (1) the
-  todo's stated done-when — a fresh run of scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py showing 0
-  :PERP:-form rows — reads the AVAILABILITY MANIFEST, not GCS object filenames; the manifest side was already fixed by
-  Script 3 (instruments-service@555ddf1c, 374,227/374,272 rows), so that check will almost certainly already read 0
-  today regardless of whether Script 2's on-disk rename runs at all. The stated verification does not prove the thing
-  the todo claims to prove. (2) No existing VM launcher wraps Script 2 — prior KRAKEN-SPOT/DERIBIT runs used an ad hoc
+  /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md — the on-disk GCS filename rename
+  for `:PERP:` -> `:PERPETUAL:` (Script 2,
+  market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py). Three compounding concerns,
+  none individually fatal but together enough to stop short of executing interactively: (1) the todo's stated done-when
+  — a fresh run of scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py showing 0 :PERP:-form rows — reads
+  the AVAILABILITY MANIFEST, not GCS object filenames; the manifest side was already fixed by Script 3
+  (instruments-service@555ddf1c, 374,227/374,272 rows), so that check will almost certainly already read 0 today
+  regardless of whether Script 2's on-disk rename runs at all. The stated verification does not prove the thing the todo
+  claims to prove. (2) No existing VM launcher wraps Script 2 — prior KRAKEN-SPOT/DERIBIT runs used an ad hoc
   dirty-tarball + custom VM_MIGRATION_CMD metadata override, not a registered launch-*.sh script; the workspace's
   unconditional heavy-I/O rule (>few-hundred-object renames must run on a VM in-region, never interactively) means
   proper execution requires building that launch path first, not reusing a vetted one. (3) A sibling migration fleet for
@@ -33,7 +34,7 @@ scope: [engineer]
 tags: [data-correctness, cefi, migration, gcs-rename, done-when-flaw, vm-launcher-gap, operator-notify]
 related:
   [
-    /plans/active/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
+    /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
@@ -43,9 +44,10 @@ created: 2026-07-27
 priority: P1
 parent_epic: cefi_master
 source: >-
-  data_engineering-craft investigation of cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2, dispatched
-  to slot 8 via /heartbeat "resume" 2026-07-27, before any GCS mutation was attempted. No commit landed against the
-  target repos; this doc is the sole output of the investigation.
+  data_engineering-craft investigation of
+  /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2, dispatched to slot 8 via
+  /heartbeat "resume" 2026-07-27, before any GCS mutation was attempted. No commit landed against the target repos; this
+  doc is the sole output of the investigation.
 execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
@@ -53,12 +55,13 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
-  unified-trading-pm (cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2) -- 9-shard --dry-run
-  re-verification against real GCS/filename state confirmed 0 further planned changes, 2026-07-27
+  unified-trading-pm (/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md todo 2) --
+  9-shard --dry-run re-verification against real GCS/filename state confirmed 0 further planned changes, 2026-07-27
 ---
 
-> **🟢 RESOLVED 2026-07-27 -- todo 2 of cefi_migration_cutover_and_track8_completion_2026_07_25.md executed safely with
-> real live GCS-state verification (not just the manifest audit this doc flagged as insufficient); this doc's
+> **🟢 RESOLVED 2026-07-27 -- todo 2 of
+> /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md executed safely with real live
+> GCS-state verification (not just the manifest audit this doc flagged as insufficient); this doc's
 > stop-before-executing caution has been overtaken by a successful, verified execution. Archived per
 > issue-doc-lifecycle.**
 
