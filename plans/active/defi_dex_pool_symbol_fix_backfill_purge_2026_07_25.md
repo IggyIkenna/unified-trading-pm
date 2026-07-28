@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                              (specific `_migrated_*` marker objects, never the bucket), target
-                                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                              Progress Log below.
+                                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                                  (specific `_migrated_*` marker objects, never the bucket), target
+                                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                                  Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -158,10 +158,13 @@ is quick and doesn't block anything.
       RECOVERABLE but has genuinely ZERO 2022 data -- not a fault, the protocol's real launch window is ~2023-06/07
       (subgraph confirmed healthy via populated 2024/2025 snapshots); the next todo's backfill range for velodrome_v2
       must start there, not fabricate a 2022 start.
-- [ ] [BACKEND] P1. **Re-backfill `dex_pool_state` for curve/sushiswap/velodrome_v2/trader_joe_v2** across the full
+- [x] ✅ [BACKEND] P1. **Re-backfill `dex_pool_state` for curve/sushiswap/velodrome_v2/trader_joe_v2** across the full
       historical range using the fixed query (todo above), on an in-region VM per the heavy-I/O rule, scoped only to the
       ranges confirmed recoverable in the prior todo. Done-when: the manifest shows a populated `symbol`/ `pool_address`
-      for the previously-unattributed cells within the confirmed-recoverable range. (repo: market-tick-data-service)
+      for the previously-unattributed cells within the confirmed-recoverable range. (repo: market-tick-data-service) ✅
+      **2026-07-28**: `mtds-dex-pools-symbolfix-batch1c` completed cleanly (`DEPLOYMENT_COMPLETED exit_code=0`,
+      self-deleted) after walking its full assigned range (2025-04-02→2026-07-27) for curve/sushiswap/trader_joe_v2 —
+      full detail in the Progress Log below.
 - [ ] [SCRIPT] P1. **Purge the now-superseded old data** for curve/sushiswap/velodrome_v2/trader_joe_v2 dex_pool_state
       -- the old FLAGGED `_migrated_*` markers AND the still-current-but-unattributed address-keyed per-instrument
       leaves (e.g. `0x00836fe5....parquet`-style names), now replaced by the backfill's properly symbol-named leaves.
@@ -443,6 +446,47 @@ is quick and doesn't block anything.
       (`DEPLOYMENT_COMPLETED exit_code=0`), do the manifest spot-check for the remaining 3 protocols and finish the
       todo; (3) if somehow still gone without a clean completion log, relaunch scoped to the measured last day (same
       recipe as above -- do NOT replay from 2020-01-20, 2025-01-10, or 2025-04-03).
+
+- **2026-07-28 (final) -- `mtds-dex-pools-symbolfix-batch1c` completed; todo 4 verified + closed.**
+  - **Completion**: monitored via a background watchdog (VM status + `run.log` tail every ~50s). VM finished cleanly at
+    11:27:18Z -- `[vm-exec] command exited rc=0`, `DEPLOYMENT_COMPLETED 10a69b7c... (exit_code=0)`, self-deleted
+    (`VM_SHUTDOWN_ON_COMPLETION=true`). Confirmed via `run.log`'s own `date=` progression that it walked the FULL
+    assigned range through to the target end date (`2026-07-27`), not a partial/truncated run. The only warning was the
+    already-tracked, non-blocking `pubsub.topics.publish` IAM gap on `run-ledger`
+    (`issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`) -- observability-only, no effect on data
+    correctness. No preemption during this final leg (on-demand, no `compute.instances.preempted` operations).
+  - **Manifest spot-check** (creation-timestamp-verified against the VM's run window, per the lesson logged earlier in
+    this session about coexisting old address-keyed orphans):
+    - `curve/ETHEREUM` + `curve/AVALANCHE` at `day=2026-07-27`: symbol-named leaves (e.g.
+      `CURVE-ETHEREUM:POOL:CRV-AAVE.parquet`, `CURVE-AVALANCHE:POOL:USDC-USDT.parquet`) created
+      `2026-07-28T11:27:04-05Z` -- squarely inside batch1c's run window.
+    - `trader_joe_v2/AVALANCHE`: `day=2026-07-27` itself had zero results that specific day (matches the log's own
+      per-day count, trader_joe_v2 snapshots are sparse -- only 19/482 days nonzero in this VM's window), so
+      spot-checked a confirmed-nonzero day instead: `day=2025-11-28` ->
+      `TRADER_JOE_V2-AVALANCHE:POOL:WAVAX-ANI-30.0.parquet` created `2026-07-28T10:22:15Z`, matching the log's
+      `trader_joe_v2_AVALANCHE: 1` result for that exact processing pass.
+    - `sushiswap/ARBITRUM`: **investigated a real-looking anomaly, resolved as expected behavior, not a bug.** Every
+      single one of batch1c's 482 processed days logged `sushiswap_ARBITRUM: 0` -- initially looked like the fix wasn't
+      working for this protocol. Root-caused via `_catalogue_filter.py`'s own docstring (`market-tick-data-service`):
+      the catalogue-as-filter design is INTENTIONAL -- the handler only queries the subgraph for pool addresses the IS
+      catalogue currently lists in-window (4 pools for sushiswap/ARBITRUM), and a catalogued pool the subgraph returns
+      nothing for on a given day is a legitimate `EXPECTED_NOT_ENOUGH_TVL` empty (recorded via
+      `record_catalogue_residual_empty_typed`), not a fabricated/silent gap. Confirmed the fix genuinely works for
+      sushiswap when the catalogued pools DO have activity: `day=2022-01-15` and `day=2022-06-15` (captured by the
+      ORIGINAL pre-preemption `mtds-dex-pools-symbolfix-batch1` run, before this VM's own 2025-04-02+ range) both have
+      real symbol-named leaves (`SUSHISWAP-ARBITRUM:POOL:$SLURP-USDC-3000.parquet`,
+      `SUSHISWAP-ARBITRUM:POOL:$SLURP-WETH-3000.parquet`). Conclusion: sushiswap/ARBITRUM's 4 catalogued pools have
+      simply been dormant (no snapshot-worthy activity) since roughly mid-2022 through the present -- a genuine
+      real-world data pattern, not a defect in this plan's query/parser fix or in the backfill run. No issue doc filed;
+      this was a resolved investigation, not an open defect.
+    - `velodrome_v2/OPTIMISM`: already verified complete in the earlier `mtds-dex-pools-symbolfix-batch2` checkpoint
+      above (batch2 finished first, independently).
+  - **Done-when satisfied**: the manifest shows populated `symbol`/`pool_address` for previously-unattributed cells
+    within the confirmed-recoverable range, verified per-protocol as above, across the full assigned historical range
+    (2020-01-20 through 2026-07-27 for curve/sushiswap/trader_joe_v2 across the batch1/batch1c continuity; 2023-06-01
+    through 2026-07-27 for velodrome_v2 via batch2). Todo 5 (purge) remains gated -- it is the next dispatchable todo in
+    this `sequential: true` chain and is NOT executed by this todo.
+  - No code shipped for this todo (pure VM-execution + verification; the query/parser fix itself shipped under todo 2).
 
 - **2026-07-28 (later) -- `mtds-dex-pools-symbolfix-batch1` found genuinely STALLED (not preempted), root-caused,
   killed + relaunched as `mtds-dex-pools-symbolfix-batch1c`. New cross-cutting finding filed.**
