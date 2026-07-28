@@ -22,7 +22,6 @@ related:
     cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27,
   ]
 created: 2026-07-28
-author: slot-16
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -32,6 +31,7 @@ drift_direction: worsening-slowly
 source: [plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # DeFi dex_pools instruments-service catalogue drastically under-covers historically-captured pools
