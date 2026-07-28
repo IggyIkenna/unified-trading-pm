@@ -242,32 +242,42 @@ and a clean re-run must confirm before the migration proceeds.
       -format-normalizer todo below was designed/drafted BEFORE this gate landed and its premise (the residual's true
       root cause) is therefore unverified until the full-corpus dry-run is re-run on this gated code** — see the
       re-diagnosis note on that todo. (repo: market-tick-data-service) — market-tick-data-service@42a2fd9f
-- [ ] [DATA] P0. Re-run the full-corpus `rebuild_cefi_manifest --dry-run` (2019-01-01..present) on the NOW-GATED code
-      (market-tick-data-service@42a2fd9f, includes both the itype/underlying-drift shadow AND its non-blank-iid gate)
-      and re-diagnose the residual `phantom_to_failed` per-venue breakdown. **This determines whether the
-      instrument_id-format-normalizer todo below is still needed at all** — if the DERIBIT-chain-style residual now
-      meets the acceptance gate on its own (the missing `89112f89` gate was the true root cause), the normalizer todo is
-      MOOT: close it as not-needed, restore nothing from the stashed WIP, and unblock
-      `data_completion_cefi_2026_07_15.md`'s migration todo directly from here. Only if a genuine instrument_id-FORMAT
-      residual (OKX-SWAP raw-stem, BINANCE-FUTURES/COINBASE-FUTURES missing `@LIN`/`@INV`) still survives this gated
-      re-run does the normalizer todo proceed — a stashed WIP normalizer implementation + 8 regression tests already
-      exist (git stash on the slot-2 worktree, `_normalize_instrument_id_for_venue` in `_rebuild_cefi_cf11.py`,
-      confirmed correct against all 3 live repros) and can be restored + finished quickly once re-validated against this
-      gated re-run's actual residual. **Background this run via a properly harness-tracked bg task** (same orphan-reaper
-      caveat as todo 4 below). (repo: market-tick-data-service)
+- [x] ✅ [DATA] P0. Re-run the full-corpus `rebuild_cefi_manifest --dry-run` (2019-01-01..2026-07-28) on the NOW-GATED
+      code (market-tick-data-service@42a2fd9f, includes both the itype/underlying-drift shadow AND its non-blank-iid
+      gate) and re-diagnose the residual `phantom_to_failed` per-venue breakdown.
 
       **🟡 2026-07-28 (slot-12) — triple-dispatch found, do NOT launch another copy of this re-run.** Landed here via
-          `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
-          predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
-          `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
-          (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
-          slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
-          launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
-          2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work. **Whichever
-          of slot-2/slot-15 finishes first should update this todo with the re-diagnosed per-venue breakdown** — do not
-          dispatch a fourth run. If both stall or die without updating this doc within a few hours, the next session should
-          check `ps aux` for a live `rebuild_cefi_manifest` process before re-launching, not just check this doc's checkbox
-          state.
+              `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
+              predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
+              `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
+              (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
+              slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
+              launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
+              2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work.
+
+          **✅ 2026-07-28 (slot-2) — RESULT: slot-2's run (started 10:49, run_id `20260728T104947Z-4180ee53`) completed
+              first (elapsed 928.0s), superseding slot-15's in-flight copy for this todo — if slot-15's run is still live,
+              it can be treated as redundant/discarded, no need to wait on it. Final summary:
+              `total_shards=4,566,607 phantom_to_failed=55,201` (up from the pre-gate-fix 50,615 — EXPECTED, the
+              non-blank-iid gate correctly un-suppresses some previously wrongly-suppressed DERIBIT bundled-chain rows).
+              Per-venue `phantom_to_failed` breakdown (tallied from the full run log's
+              `PHANTOM_CAPTURED_NO_OBJECT` lines):
+
+              ```
+              OKX-SWAP: 12,921   BINANCE-FUTURES: 9,435   COINBASE-FUTURES: 8,442   BYBIT: 7,081
+              DERIBIT: 5,592     OKX-FUTURES: 4,456        BITGET-FUTURES: 3,198     BITFINEX-FUTURES: 2,610
+              KRAKEN-FUTURES: 882  COINBASE-CDE: 388       HYPERLIQUID: 184          ASTER: 12
+              ```
+
+              **VERDICT: the acceptance gate is STILL NOT met — the normalizer todo below is CONFIRMED still needed, NOT
+              moot.** DERIBIT rose from 2,545→5,592 (correctly — the gate fix restored true phantoms the old bug was
+              wrongly suppressing) but is still only 5,592/55,201 = **10.1%** of the residual, nowhere near dominant.
+              Every instrument_id-format-drift venue's count is essentially UNCHANGED from the pre-gate-fix run
+              (OKX-SWAP 12,921→12,921 identical; BINANCE-FUTURES 9,427→9,435; COINBASE-FUTURES 8,442→8,442 identical) —
+              proof this is a genuinely DISTINCT root cause the `89112f89` gate fix does not touch. The main-agent's
+              sequencing directive is fully validated: it was right to gate the normalizer on this re-run, and the
+              re-run confirms the normalizer's original premise was correct all along. Proceeding to restore + finish
+              the normalizer per the todo below. (repo: market-tick-data-service)
 
 - [ ] [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
