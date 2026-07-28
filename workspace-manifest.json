@@ -341,9 +341,9 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "large_file_count": 6,
         "warn_file_count": 16,
+        "coverage_pct": 82.68,
+        "large_file_count": 6,
         "qg_red_reason": null
       }
     },
@@ -591,10 +591,10 @@
         "subscription-redemption"
       ],
       "codebase_health": {
-        "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 83.9,
-        "large_file_count": 0
+        "qg_red_reason": null,
+        "large_file_count": 0,
+        "coverage_pct": null
       },
       "ldr_ci_status": "GREEN"
     },
@@ -698,10 +698,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": 88.24
+        "coverage_pct": null,
+        "large_file_count": 0,
+        "qg_red_reason": null
       },
       "breaking_scan_dir": "ibkr_gateway_client"
     },
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 8,
         "warn_file_count": 11,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "large_file_count": 8,
+        "coverage_pct": 91.0
       }
     },
     "market-data-processing-service": {
@@ -882,9 +882,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 45,
-        "qg_red_reason": null,
-        "coverage_pct": null,
-        "large_file_count": 0
+        "coverage_pct": 83.46,
+        "large_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "ml-service": {
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 89.25,
-        "qg_red_reason": null,
         "warn_file_count": 23,
-        "large_file_count": 7
+        "qg_red_reason": null,
+        "large_file_count": 7,
+        "coverage_pct": null
       }
     },
     "unified-trading-pm": {
@@ -1300,10 +1300,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 0,
+        "warn_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "warn_file_count": 0
+        "large_file_count": 0,
+        "coverage_pct": 73.1
       }
     },
     "unified-trading-api": {
@@ -1386,10 +1386,10 @@
         "standard"
       ],
       "codebase_health": {
-        "coverage_pct": 50.92,
-        "qg_red_reason": null,
+        "warn_file_count": 38,
+        "coverage_pct": 50.95,
         "large_file_count": 34,
-        "warn_file_count": 38
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "none"
@@ -1475,9 +1475,9 @@
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 0,
-        "qg_red_reason": null,
-        "coverage_pct": null,
-        "large_file_count": 0
+        "coverage_pct": 99.24,
+        "large_file_count": 0,
+        "qg_red_reason": null
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": "SIT passed — validated + unlocked",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
