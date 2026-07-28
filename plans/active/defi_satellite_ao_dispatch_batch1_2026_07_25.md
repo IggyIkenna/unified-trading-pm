@@ -375,18 +375,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                          (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                          discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                          **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                          ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                          UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                          objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                          the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                          Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                          decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                          "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                          `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -740,12 +740,12 @@ drift_direction: advance-code
       pyth_hermes/solana_rpc), tradfi 6→9 (+databento/eia/massive); sports unaffected (no inline templates).
       `quality-gates.sh` green (275-322s across runs). Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [DIAG] P1. Run a real past-day EXTENDED-STARKNET `book_snapshot_5` backfill and a real current-day run against the
-      shipped fix (`@55dac12a`, current-only-endpoint honest-skip) — confirm the past-day run produces 0 book rows with
-      no fabricated HTTP/timestamp (honest absence) and the current-day run produces a real live current book row via
-      the WS connector. Repo: market-tick-data-service. **Done when**: both runs are observed on real infra with the
+- [x] ✅ [DIAG] P1. Run a real past-day EXTENDED-STARKNET `book_snapshot_5` backfill and a real current-day run against
+      the shipped fix (`@55dac12a`, current-only-endpoint honest-skip) — confirm the past-day run produces 0 book rows
+      with no fabricated HTTP/timestamp (honest absence) and the current-day run produces a real live current book row
+      via the WS connector. Repo: market-tick-data-service. **Done when**: both runs are observed on real infra with the
       expected 0-past-row / real-current-row outcome, recorded in the doc's Progress Log. Source:
-      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+      `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — DONE 2026-07-28 (Progress Log).
 - [ ] [DIAG] P1. Re-verify the LIGHTER-ZKSYNC Tardis exchange-slug + numeric market_id fix
       (`market-tick-data-service@0c4000a02`) against a real, free-tier-compatible first-of-month historical date to
       confirm real `trades`/`book_snapshot_5`/`derivative_ticker` rows still return. Repo: market-tick-data-service.
@@ -923,6 +923,9 @@ drift_direction: advance-code
     host-oversubscription root-cause section + a new `[INFRA] P1` todo — **still uncommitted as of this note** (hit
     branch drift 3x on a very active shared repo; deprioritized in favor of the actually-required manifest cleanup). Low
     risk — it's a working-tree-only diff, not at risk of loss, just not yet pushed.
+
+- **2026-07-28 (slot-10)** — `mtds@55dac12a` confirm: batch CLI can't reach this gate so called `fetch_extended_rest`
+  directly — past-day 0 book rows (honest absence), current-day 1 real book row. WS connector is BLOCKED-CREDENTIALS.
 
 ## Deferred
 
