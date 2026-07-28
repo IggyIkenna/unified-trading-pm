@@ -167,13 +167,21 @@ drift_direction: advance-code
       doc's own RESOLVED section for the reference back to this commit). 6 new + 1 updated unit test file prove the
       resolution logic against a synthetic `CeFiWireCanonicalMap` (canonical→raw hit, raw passthrough, mixed list,
       unresolvable-honest-passthrough, no-catalogue-registered passthrough) — full `quality-gates.sh` green
-      (sentinel-verified SHA == HEAD before quickmerge). **Residual gap, not yet closed**: the plan's own Done-when also
-      asks for "a targeted re-fetch of a canonical-named instrument returns real rows" — a LIVE end-to-end proof via a
-      real VM smoke run (`scripts/pipeline_e2e_check.py --tardis-only`) against one of the 8 already-canonical-only
-      cells measured 2026-07-18 (BITFINEX-FUTURES / BYBIT-SPOT / COINBASE-FUTURES). NOT performed in this session —
-      launching a VM smoke check is a real-cost, Tardis-N=1-gated operation outside a routine single-worker dispatch's
-      scope without confirming no other slot is mid-Tardis-fetch; deferred to whichever session runs todo 5's live
-      backfill (already a VM-launch context) or a dedicated follow-up. Repos: market-tick-data-service,
+      (sentinel-verified SHA == HEAD before quickmerge). **Residual gap CLOSED 2026-07-28**: the plan's own Done-when
+      also asked for "a targeted re-fetch of a canonical-named instrument returns real rows" — proved via a real, live
+      end-to-end VM smoke run:
+      `scripts/pipeline_e2e_check.py --day 2024-06-15 --venue BITFINEX-FUTURES     --tardis-only --legs force --auto-day`,
+      run only after confirming the Tardis cap-1 guard was genuinely clear fleet-wide (`gcloud compute instances list`
+      matched zero instances against the guard's own `TARDIS_VM_NAME_PATTERN`). The `CEFI:BITFINEX-FUTURES:trades` shard
+      — the direct proof of canonical-id resolution — **passed**: `exit=0`, a real parquet written
+      (`BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN`, day=2026-07-24 via `--auto-day`), manifest status `captured`. The
+      other 8 shards in the same run (
+      `book_snapshot_5`/`derivative_ticker`/`liquidations`/`options_chain`/`futures_chain`/`ohlcv_1m`/`perp_funding`/
+      `volatility_index`) failed with `no_parquet_under` — NOT a regression of this fix: the script's own log shows "no
+      PROD-captured row ... falling back to smoke_matrix representative symbol (last resort, no PROD ground truth for
+      this day)" for each — BITFINEX-FUTURES (a perpetual-futures venue) genuinely has no captured data for those
+      data_types on this day, an unrelated data-availability gap, not a canonical-id-resolution failure. Full report:
+      `plans/audit/results/data_pipeline_e2e_check_mtds_2024_06_15.md`. Repos: market-tick-data-service,
       unified-trading-pm. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 8, POST-CUTOVER item).
 - [x] ✅ [DATA] P1. **DONE 2026-07-27 — Enumeration-audit terminal checkpoint.** Re-ran
       `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only, manifest-index read — local-safe,

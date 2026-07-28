@@ -148,12 +148,40 @@ compute on the victim slot, which must re-run to green before it can ship regard
       write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
       a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional
       hardening, not required if the RULES.md addendum alone is judged sufficient.
-- [ ] [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient — build
-      a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a `pkill`/`pgrep`
-      wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up
+- [x] ✅ [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient —
+      build a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a
+      `pkill`/`pgrep` wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up
       `slot-identity-lib.sh`) that intercepts a bare `pkill -f <pattern>` / `pkill <name>` invocation lacking a
       slot-specific discriminator (no PID/PGID numeric argument, and the pattern doesn't contain the invoking slot's own
       absolute `.tabs/<N>/` cwd substring) and REFUSES with a one-line error pointing at this issue doc + the
       exact-PID-only rule, instead of silently executing host-wide. Must not break legitimate exact-PID (`kill <pid>`)
       or cwd-scoped (`pkill -f ".tabs/5/.*quality-gates"`) usage — only the bare name-only pattern is blocked. (repo:
-      unified-trading-pm, `scripts/hooks/` alongside `slot-identity-lib.sh`)
+      unified-trading-pm, `scripts/hooks/` alongside `slot-identity-lib.sh`) — **unified-trading-pm**
+      `scripts/hooks/     pkill-guard.sh` (the `pkill()`/`pgrep()` guard functions: refuse unless a numeric
+      `-g/-G/-P/-s/-U/-u/-T` target OR the caller's own `.tabs/<N>/` substring is present in the pattern; deliberate
+      bypass = `command pkill`/absolute path, matching how any bash wrapper works) +
+      `scripts/dev/install-pkill-guard-shell-env.sh` (idempotent managed `~/.bashrc`/`~/.zshrc` block installer, mirrors
+      `install-uv-cache-shell-env.sh`/`install-qg-governor-shell-env.sh`; slot-aware `WS_ROOT` derivation so the sourced
+      path stays valid host-wide regardless of which slot clone ran the installer) + `tests/test_pkill_guard.bats` (19
+      cases, verified green locally via a scratch `bats-core` v1.12.0 install: numeric-target allow, cwd-scoped-pattern
+      allow, cross-slot-substring refuse, bare-name/`-f` refuse, signal-flag-doesn't-confuse-parser,
+      wrapper-refuse-path-never-execs-real-binary). Live-verified on this host: `pkill -f "quality-gates.sh --no-fix"`
+      and `pkill quality-gates.sh` REFUSE; a `.tabs/<N>/`-scoped `-f` pattern and a numeric `-g` target both ALLOW
+      through to the real binary (confirmed via the internal `_pkill_guard_check` function directly, never by sending a
+      real signal against a live shared-host process). Shipped: unified-trading-pm@`18ecbffb1` (live-defi-rollout).
+      **Host-wide `~/.bashrc` rollout on this shared host is NOT YET done**: `install-pkill-guard-shell-env.sh` derives
+      its guard-lib path against the CANONICAL root `unified-trading-pm` clone
+      (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`, for install stability across any single slot's
+      clone being recycled), and that root clone currently carries unrelated genuine dirty tracked files (other
+      in-flight plan-doc edits, not mine to touch per the root-repo-is-READ-ONLY worker rule) — its own `pm-pull.timer`
+      cron (every 5 min) SKIPS a fast-forward while genuinely dirty, so it hasn't picked up `18ecbffb1` yet. Follow-up:
+      once the root clone is clean and has fast-forwarded past `18ecbffb1`, run
+      `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on this host to complete the
+      `~/.bashrc` rollout (idempotent, safe to re-run).
+- [ ] [SCRIPT] P2. Once the root `unified-trading-pm` clone
+      (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`) is clean and has fast-forwarded past `18ecbffb1`
+      (this host's shared `pm-pull.timer` cron is currently skipping the pull because that clone carries unrelated
+      genuine dirty tracked files), run `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on
+      this shared host to complete the `~/.bashrc`/`~/.zshrc` rollout of the guard from `pkill-guard.sh` (todo above).
+      Idempotent — safe to run more than once, and safe on any other shared host running these agents. Verify with a NEW
+      shell: `pkill -f quality-gates.sh` should print `REFUSED: ...` instead of executing.

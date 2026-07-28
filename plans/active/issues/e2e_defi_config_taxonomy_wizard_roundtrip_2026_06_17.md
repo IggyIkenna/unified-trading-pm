@@ -61,17 +61,37 @@ CARRY_BASIS_PERP(drift-perp). No off-taxonomy venue/instrument_type except D3 be
       (The orchestrator-based tests — `test_concurrent_*`, scen c, `backtest_solana_basis.py` — DO use the canonical
       factory.) WHEN the isolation phase ends (operator-owned, no timeline): route the smokes through
       `load_strategy_config_by_type`/ `register_instance` so they exercise the real config→factory path. Repo:
-      e2e-testing. **Backlog-dispatch bug fixed 2026-07-28** — `_NON_DISPATCHABLE_RE` in `regen_backlog_from_plan.py`
-      did not exclude `DEFERRED-BY-DESIGN` items, so this exact todo kept re-entering the backlog under a P-tag-less
-      default priority and getting dispatched to workers every regen tick despite the standing 2026-06-17 ruling; fixed
-      agent-orchestrator@12d656f (mirrors the existing BLOCKED-* exclusion).
-- [ ] [SCRIPT] P2. **D2 — e2e-hardcoded engine params are not wizard-expressible.** `entry_bps`/`exit_bps`/
-      `stake_fraction`/`candidate_venues` (comma-list)/token identities/`dispersion_bps`/`cost_bps` are free-form engine
-      params, NOT axis enums; the wizard form exposes archetype + per-leg venue/instrument only. A wizard user can
-      select the same archetype/venues/instrument_types but CANNOT reproduce the exact tuned e2e config. DECISION
-      NEEDED: should these tuning params be (a) first-class wizard form fields, (b) named config presets, or (c)
-      intentionally engine-internal defaults? Repos: unified-trading-system-ui (wizard) + strategy-service (config
-      schema).
+      e2e-testing. **Backlog-dispatch + M3 done-gate bugs fixed 2026-07-28** — this exact todo exposed 3 live gaps in
+      agent-orchestrator: (1) `_NON_DISPATCHABLE_RE` in `regen_backlog_from_plan.py` did not exclude
+      `DEFERRED-BY-DESIGN` items, so it kept re-entering the backlog under a P-tag-less default priority and getting
+      dispatched to workers every regen tick despite the standing 2026-06-17 ruling — fixed agent-orchestrator@12d656f
+      (mirrors the existing BLOCKED-* exclusion); (2) `check_plan_flip`'s M3 `/done` verification had no accepted
+      disposition for a todo retagged DEFERRED-BY-DESIGN (only `[x]`-flip or CANCELLED) — fixed
+      agent-orchestrator@85eb84b (`_diff_defers_checkbox`, mirrors the existing CANCELLED-marker exception); (3) the
+      PM-log lookback window (`_pm_log_commits_touching_plan_ref`) was 10 minutes, too short for a worker's own session
+      (PM-flip commit → real root-cause code fix → QG → ship) — widened to 30 minutes, fixed agent-orchestrator@14af586.
+- [x] ✅ [SCRIPT] P2. (RE-VERIFIED 2026-07-28, slot-11 — was `- [ ]`, stale: the same Phase C work that resolved the
+      sibling P1 "Wizard parameterizes ~0..." item below also resolves D2, but that checkbox never got flipped here)
+      **D2 — e2e-hardcoded engine params are not wizard-expressible.** RESOLVED — decision (a) "first-class wizard form
+      fields" shipped. Re-verified live on current `live-defi-rollout` HEAD: EVERY param this todo named is a
+      `PARAM_SCHEMA_REGISTRY` row in `strategy-service/strategy_service/engine/strategies/v2/param_schema.py` —
+      `entry_bps`/`exit_bps` (CARRY_STAKED_BASIS, staked_basis.py:387-388), `stake_fraction` (CSB + APD),
+      `candidate_venues` (ARBITRAGE_PRICE_DISPERSION, type `str`, comma-list — required, price_dispersion.py), token
+      identities `start_token`/`native_asset`/`lst_asset` (CSB), `dispersion_bps`/`cost_bps` (APD,
+      price_dispersion.py:200-201, defaults 30/10 — engine defaults, NOT the e2e-smoke 20/5 constants, per
+      `test_param_schema.py::test_apd_dispersion_and_cost_bps_are_engine_defaults_not_smoke`) — exported into both
+      `unified-api-contracts/openapi/capability-manifest.json` and the byte-identical UI copy
+      `unified-trading-system-ui/lib/registry/capability-manifest.json`, and rendered by
+      `unified-trading-system-ui/components/wizard/ParamForm.tsx` (str type → text input, comma-list-capable) wired at
+      wizard stage `K_PARAMS` (`app/(wizard)/wizard/page.tsx:478`). Shipped: strategy-service `f2d4bef5` ("declare
+      per-archetype PARAM_SCHEMA SSOT for wizard parameterization (Phase C)"). Original text preserved for context — the
+      gap it describes no longer exists. Original: "**D2 — e2e-hardcoded engine params are not wizard-expressible.**
+      `entry_bps`/`exit_bps`/`stake_fraction`/`candidate_venues` (comma-list)/token
+      identities/`dispersion_bps`/`cost_bps` are free-form engine params, NOT axis enums; the wizard form exposes
+      archetype + per-leg venue/instrument only. A wizard user can select the same archetype/venues/instrument_types but
+      CANNOT reproduce the exact tuned e2e config. DECISION NEEDED: should these tuning params be (a) first-class wizard
+      form fields, (b) named config presets, or (c) intentionally engine-internal defaults? Repos:
+      unified-trading-system-ui (wizard) + strategy-service (config schema)."
 - [ ] [REGISTRY] P2. **D3 — `backtest_solana_basis.py` models a drift-perp / Orca(Raydium) SOL-DEX-spot basis, but the
       Solana-DEX spot leg has NO cell.** `CARRY_BASIS_PERP` matrix/wizard spot venues are CEX/`uniswap_v3` only —
       `orca`/`raydium`/`whirlpool` absent from the cells AND the wizard `leg:CARRY_BASIS_PERP:spot`. The backtest only

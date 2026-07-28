@@ -343,6 +343,32 @@ This is the `Workflow()`-specific instance of the same principle as § "Dispatch
 above — a background task's own self-report (including "no report at all") is never sufficient evidence of what it did;
 only a fresh measurement of the target state is.
 
+## A resumed sub-agent that arms its OWN background watchdog and ends its turn reads as "finished" to the parent — every time (codified 2026-07-28)
+
+A sub-agent correctly following § "Direct-check beats polling" below for a long-running check (a `quality-gates.sh` run,
+a Docker build, a manifest CAS-write retry) will often reach for `run_in_background` + end its turn, expecting to be
+"woken" when that background process completes — the pattern that works fine for a top-level agent talking directly to
+the operator. **It does not work the same way one level down.** From the PARENT orchestrator's perspective, a dispatched
+sub-agent that ends its turn with no live `Agent`-tool child of its own is **indistinguishable from having finished** —
+the parent's harness fires a real completion notification regardless of what background shell processes the sub-agent
+itself left running. The sub-agent's own watchdog then fires into a turn nobody is listening to; the parent must notice,
+manually resume the sub-agent, and only then does real progress continue.
+
+**Incident (2026-07-28, `june_2026_vintage_audit_findings_2026_07_27.md` autonomous-completion wave):** 7 of 9 resumed
+sub-agents hit this at least once — some 2-3 times in a row — each ending its turn on a message equivalent to "I'll wait
+for the background watchdog/monitor to notify me," each triggering a real `<task-notification status="completed">` that
+the parent then had to resolve by resending the SAME task with an explicit "check synchronously now, do not re-arm
+another wait" instruction. Each round-trip cost a full sub-agent turn for zero net task progress.
+
+**RULE for anyone authoring a sub-agent prompt that includes a genuinely long-running step:** tell the sub-agent
+explicitly, in the dispatch prompt, to **wait synchronously within its own turn** (a bounded `wait`/sleep/poll-loop
+inside one Bash call, not a `run_in_background` job it then stops watching) for anything it needs the result of before
+it can call itself done — arming a background watchdog and ending the turn is the anti-pattern here, not the fix,
+precisely because "ending the turn" is the signal that reads as completion one level up. If the wait is genuinely too
+long for one turn (e.g. a multi-hour backfill), that is a sign the sub-agent's OWN task is not actually "wait for X" but
+"kick off X and report back now" — split it into two dispatches (kick off, then a second dispatch/resume once the
+parent's own watchdog confirms X is done) rather than asking the sub-agent to straddle both.
+
 ## Direct-check beats polling (operator 2026-06-23)
 
 A build / Cloud Run execution / PR / job status is a **single on-demand query** (`gcloud builds describe`,

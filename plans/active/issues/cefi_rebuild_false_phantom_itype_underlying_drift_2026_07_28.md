@@ -247,59 +247,56 @@ and a clean re-run must confirm before the migration proceeds.
       gate) and re-diagnose the residual `phantom_to_failed` per-venue breakdown.
 
       **🟡 2026-07-28 (slot-12) — triple-dispatch found, do NOT launch another copy of this re-run.** Landed here via
-              `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
-              predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
-              `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
-              (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
-              slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
-              launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
-              2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work.
+                  `data_completion_cefi_2026_07_15.md`'s blocked todo (whose own note points to this issue doc as the real
+                  predecessor). On arrival, `ps aux` showed this EXACT full-corpus dry-run (same start/end dates, same gated
+                  `market-tick-data-service@42a2fd9f`) already running concurrently in **two** other slot worktrees: slot-2
+                  (`.tabs/2`, started 10:49, holds the stashed WIP normalizer referenced above — likely this todo's true owner) and
+                  slot-15 (`.tabs/15`, started 10:57, log explicitly named `rebuild_cefi_dryrun_42a2fd9f_run2.log`). I had already
+                  launched a third copy before checking; killed it immediately (PID 3023906, reached only `date=2023-07-22` of
+                  2019-01-01..2026-07-28, no output written) to avoid a third full-corpus GCS scan for identical work.
 
-          **✅ 2026-07-28 (slot-2) — RESULT: slot-2's run (started 10:49, run_id `20260728T104947Z-4180ee53`) completed
-              first (elapsed 928.0s), superseding slot-15's in-flight copy for this todo — if slot-15's run is still live,
-              it can be treated as redundant/discarded, no need to wait on it. Final summary:
-              `total_shards=4,566,607 phantom_to_failed=55,201` (up from the pre-gate-fix 50,615 — EXPECTED, the
-              non-blank-iid gate correctly un-suppresses some previously wrongly-suppressed DERIBIT bundled-chain rows).
-              Per-venue `phantom_to_failed` breakdown (tallied from the full run log's
-              `PHANTOM_CAPTURED_NO_OBJECT` lines):
+              **✅ 2026-07-28 (slot-2) — RESULT: slot-2's run (started 10:49, run_id `20260728T104947Z-4180ee53`) completed
+                  first (elapsed 928.0s), superseding slot-15's in-flight copy for this todo — if slot-15's run is still live,
+                  it can be treated as redundant/discarded, no need to wait on it. Final summary:
+                  `total_shards=4,566,607 phantom_to_failed=55,201` (up from the pre-gate-fix 50,615 — EXPECTED, the
+                  non-blank-iid gate correctly un-suppresses some previously wrongly-suppressed DERIBIT bundled-chain rows).
+                  Per-venue `phantom_to_failed` breakdown (tallied from the full run log's
+                  `PHANTOM_CAPTURED_NO_OBJECT` lines):
 
-              ```
-              OKX-SWAP: 12,921   BINANCE-FUTURES: 9,435   COINBASE-FUTURES: 8,442   BYBIT: 7,081
-              DERIBIT: 5,592     OKX-FUTURES: 4,456        BITGET-FUTURES: 3,198     BITFINEX-FUTURES: 2,610
-              KRAKEN-FUTURES: 882  COINBASE-CDE: 388       HYPERLIQUID: 184          ASTER: 12
-              ```
+                  ```
+                  OKX-SWAP: 12,921   BINANCE-FUTURES: 9,435   COINBASE-FUTURES: 8,442   BYBIT: 7,081
+                  DERIBIT: 5,592     OKX-FUTURES: 4,456        BITGET-FUTURES: 3,198     BITFINEX-FUTURES: 2,610
+                  KRAKEN-FUTURES: 882  COINBASE-CDE: 388       HYPERLIQUID: 184          ASTER: 12
+                  ```
 
-              **VERDICT: the acceptance gate is STILL NOT met — the normalizer todo below is CONFIRMED still needed, NOT
-              moot.** DERIBIT rose from 2,545→5,592 (correctly — the gate fix restored true phantoms the old bug was
-              wrongly suppressing) but is still only 5,592/55,201 = **10.1%** of the residual, nowhere near dominant.
-              Every instrument_id-format-drift venue's count is essentially UNCHANGED from the pre-gate-fix run
-              (OKX-SWAP 12,921→12,921 identical; BINANCE-FUTURES 9,427→9,435; COINBASE-FUTURES 8,442→8,442 identical) —
-              proof this is a genuinely DISTINCT root cause the `89112f89` gate fix does not touch. The main-agent's
-              sequencing directive is fully validated: it was right to gate the normalizer on this re-run, and the
-              re-run confirms the normalizer's original premise was correct all along. Proceeding to restore + finish
-              the normalizer per the todo below. (repo: market-tick-data-service)
+                  **VERDICT: the acceptance gate is STILL NOT met — the normalizer todo below is CONFIRMED still needed, NOT
+                  moot.** DERIBIT rose from 2,545→5,592 (correctly — the gate fix restored true phantoms the old bug was
+                  wrongly suppressing) but is still only 5,592/55,201 = **10.1%** of the residual, nowhere near dominant.
+                  Every instrument_id-format-drift venue's count is essentially UNCHANGED from the pre-gate-fix run
+                  (OKX-SWAP 12,921→12,921 identical; BINANCE-FUTURES 9,427→9,435; COINBASE-FUTURES 8,442→8,442 identical) —
+                  proof this is a genuinely DISTINCT root cause the `89112f89` gate fix does not touch. The main-agent's
+                  sequencing directive is fully validated: it was right to gate the normalizer on this re-run, and the
+                  re-run confirms the normalizer's original premise was correct all along. Proceeding to restore + finish
+                  the normalizer per the todo below. (repo: market-tick-data-service)
 
-- [ ] [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
+- [x] ✅ [DATA] P0. Design + implement a venue-aware instrument_id-format normalizer for the CF-11 shadow-suppression in
       `market-tick-data-service/market_tick_data_service/scripts/_rebuild_cefi_cf11.py`
-      (`_build_shadow_keys_ignoring_itype_and_underlying`, `reemit_cefi_honest_absence_rows` lines ~227-357) so a prior
-      captured row is not treated as phantom purely because the prior manifest's `instrument_id` used an older/alternate
-      fully-qualified format (`VENUE:TYPE:SYM@MARGIN`, e.g. `OKX-SWAP:PERPETUAL:LTC-USD@INV`) that differs from the
-      CURRENT live GCS filename stem for the SAME physical object (`LTC-USD-SWAP`, `OMG-USDT` w/o `@LIN`, `FLOW-USD` w/o
-      `@INV` — see confirmed repros in the "Re-run confirmation" section above). **GATED on the todo above** — only
-      proceed if the gated re-run still shows a genuine instrument_id-format residual; a stashed WIP already implements
-      this (see prior todo). **This is NOT a blanket ignore-instrument_id fix** (unlike itype/underlying, instrument_id
-      is the only field disambiguating distinct instruments on the same date/venue/data_type — a naive
-      `(day, venue, dtype)`-only shadow key would wrongly suppress TRUE phantoms too, which this codebase's own CF-11
-      doc-comment calls "the WORSE error"). Needs: (a) enumerate the actual historical instrument_id formats per venue
-      (git-blame/read the OLD manifest-writer's instrument_id derivation, plus the confirmed live cases: bare stem,
-      stem-minus-margin-suffix, OKX-SWAP's `-SWAP`-suffix token), (b) a normalizer/synonym table (mirroring
-      `_ITYPE_SYNONYMS`'s pattern) that strips/maps the prior iid to what the CURRENT scan would produce for the same
-      instrument, verified NOT to collapse two distinct instruments into one key, (c) regression tests mirroring
-      `test_wellformed_captured_no_object_still_phantom` (must still catch a TRUE phantom — e.g. two DIFFERENT symbols
-      must never shadow each other) alongside new tests for each confirmed drift case (OKX-SWAP `-SWAP` token,
-      BINANCE-FUTURES/COINBASE-FUTURES missing `@LIN`/`@INV`). Largest residual contributors to prioritize: OKX-SWAP
-      (12,921), BINANCE-FUTURES (9,427), COINBASE-FUTURES (8,442), BYBIT (5,608), OKX-FUTURES (4,329). (repo:
-      market-tick-data-service)
+      (`_build_shadow_keys_ignoring_itype_and_underlying`, `_reemit_cf11_row`) so a prior captured row is not treated as
+      phantom purely because the prior manifest's `instrument_id` used an older/alternate fully-qualified format
+      (`VENUE:TYPE:SYM@MARGIN`, e.g. `OKX-SWAP:PERPETUAL:LTC-USD@INV`) that differs from the CURRENT live GCS filename
+      stem for the SAME physical object. **Shipped market-tick-data-service@9a2927ad**
+      (`_normalize_instrument_id_for_venue` + `_MARGIN_MARKER_SUFFIX_RE`/`_OKX_SWAP_QUALIFIED_RE`, new
+      `reemit_skipped_shadow_iid_format` counter, 8 new regression tests — 46/46 CF-11 unit tests green, full
+      quality-gates.sh green). Implementation: for OKX-SWAP, reconstructs the raw Tardis stem (`VENUE:TYPE:SYM@MARGIN` →
+      `SYM-SWAP`); for every other margin-marker venue, strips a trailing bare `@LETTERS` token only (never a
+      dated-future's `@LIN-20230728` suffix — unconfirmed shape, left untouched). **NOT a blanket ignore-instrument_id
+      fix** — margin type is a deterministic function of the quote currency already embedded earlier in the symbol (per
+      `tardis_margin_marker.derive_settlement_dimensions`'s venue matrix), so the transform can never collapse two
+      genuinely different (base, quote) instruments into one shadow key; verified via dedicated over-suppression guard
+      tests (`test_iid_format_normalizer_does_not_shadow_a_different_symbol`,
+      `test_okx_swap_iid_format_normalizer_does_not_shadow_a_different_symbol`) confirming a DIFFERENT symbol on the
+      same venue/date/dtype still correctly phantom-flags. (repo: market-tick-data-service) —
+      market-tick-data-service@9a2927ad
 - [ ] [DATA] P1. After the todo above lands, re-run the full-corpus `rebuild_cefi_manifest --dry-run`
       (2019-01-01..present) a third time and confirm `phantom_to_failed` finally drops to a small DERIBIT-chain-style
       residual (DERIBIT-dominant, well-formed bundled `instrument_id=BTC`/`ETH`-style rows only); update this issue
