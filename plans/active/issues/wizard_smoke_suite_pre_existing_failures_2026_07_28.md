@@ -16,7 +16,6 @@ related: [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md]
 created: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P3
-author: slot-4
 assigned_vm: NA
 resolved_by:
 locked_by:
@@ -25,6 +24,9 @@ source:
     full `npx playwright test --project=chromium tests/smoke/` run during capability_wizard_gap_discovery-012,
     2026-07-28,
   ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # unified-trading-system-ui wizard smoke-suite pre-existing failures
