@@ -192,3 +192,20 @@ escalate to a `cicd` worker.
 - Template wiring: `scripts/workflow-templates/rollout-workflow-templates.sh` `get_qg_runner_labels()` (line ~207-214),
   `scripts/workflow-templates/quality-gates-v2.yml.tmpl` line 67
 - Fix shipped: `execution-service@<see quickmerge output>` (revert of `self_hosted_runner_labels` only)
+
+## Progress Log
+
+- 2026-07-28 (cicd agent, slot-4, escalation `agt-70dbed`, `ldr_qg_failure` on `batch-live-reconciliation-service`#255
+  LDR→main promotion PR): **2nd corroboration + per-repo fix**, same pattern as execution-service. Failing run
+  `30305786014` ran **51m18s** (vs normal 8-15min): `QG slice (checks)` typecheck hit a hard `timeout` (exit=124) after
+  being admitted, then `lint-codex` got `Terminated`; `QG slice (tests)` queued behind `[qg-governor] all 4 tokens busy`
+  for 6+ minutes and never started before also being `Terminated`. Confirmed NOT a code regression: a clean local
+  `quality-gates.sh` run at the same HEAD (`806fba72`) passed in 58s. This repo's flip landed via `1c2b5ba` ("Phase 7 +
+  quality-gates-v2 self-host rollout for batch-live-reconciliation-service"), same ~21:40-21:55 UTC 2026-07-27 window as
+  the other 18. Applied the same fix as execution-service: reverted `self_hosted_runner_labels` to empty (→
+  `ubuntu-latest`) via hand-edit (documented per-repo override field, not templated-identical content) +
+  `quickmerge --agent` — `batch-live-reconciliation-service@2f591901160e2edbadf250f11a2256c25f2540c7`. Did not touch the
+  shared allowlist file, any other repo, or the VM — same scope boundary as the execution-service fix. This repo is also
+  independently named in `/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`'s P2 todo
+  (its SIT `cross-repo-invariants` dispatch blew a 90s poll budget same window) — one shared root cause (oversubscribed
+  `i-0c9b283b31d6b5ca7`) manifesting across multiple symptoms for this repo.
