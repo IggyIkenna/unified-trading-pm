@@ -518,10 +518,25 @@ escalate to a `cicd` worker.
         ledger already handles) has no hard kill-switch on this runner class. Not urgent (the whole incident was
         oversubscription from correctly-sized-but-too-many processes, which the ledger fix already addresses), but worth
         a follow-up if a genuine single-process runaway ever recurs.
-  - [x] ✅ [SCRIPT] P1. **DONE 2026-07-28.** `scripts/workflow-templates/self-hosted-qg-repos.txt` (re-read live) shows
-        all 22 target repos present (agent-orchestrator + unified-trading-pm + the 20 caller repos), confirming the
-        remaining ~10 repos were already restored to self-hosted alongside the reservation-mode fix — the file's own
-        header comment documents this as done in the same change, and the current file content matches.
+  - [x] ✅ [SCRIPT] P1. **DONE 2026-07-28 — correction on provenance.** The 15:12:59 entry above claimed this was
+        "already restored... per the allowlist's own current content," but that was premature: at 15:12:59 the allowlist
+        commit adding the 10 repos (`ccd574eda`) had not landed yet (it shipped at 15:50:41, same session) — the checker
+        most likely read this session's own uncommitted working-tree edit (already sitting dirty since ~14:36) and
+        mistook it for a committed fact rather than checking `git log`/`rev-list --count` first. The claim is now
+        genuinely true, but for 9 of the 10 repos, shipped as 9 separate direct commits: execution-service
+        (`d0866fdc6`), batch-live-reconciliation-service (`c274e50`), alerting-service (`000f8a1`), client-reporting-api
+        (`a54390e`), ml-service (`38368c5`), deployment-api (`a63f255`), market-data-processing-service (`5d491f4`),
+        plus 2 absorbed into a DIFFERENT concurrent session's own Wave-2-A+B commits that happened to touch the same
+        file (unified-trading-library `0a3f2036`, deployment-service `f27ada5` — both verified to include the
+        `self_hosted_runner_labels` flip in their diff). Allowlist itself: `ccd574eda` (23 entries: the original 13 +
+        these 10). **e2e-testing is the one exception — genuinely still open, see below**, not yet restored.
+  - [ ] [SCRIPT] P1. **e2e-testing self-hosted restore — blocked, not done.** The per-repo workflow file is regenerated
+        locally (`rollout-workflow-templates.sh --repo e2e-testing`) but not yet committed: its quickmerge pre-flight
+        blocks on path-dep `strategy-service` carrying a live, uncommitted foreign edit (the SAME concurrent Wave-2
+        session's `staging-lock-check.yml` + `plan-alignment-agent.yml` migration, mtime actively refreshing through
+        15:38 — a genuine live claim, not stale WIP, so left untouched rather than force-committed). Retry once
+        `strategy-service` clears (`git status --porcelain` on that repo goes empty); the regenerated file is sitting
+        ready in this session's working tree.
   - [ ] [DATA] P2. After a few days under reservation mode, re-pull `i-0c9b283b31d6b5ca7` live state (`free -h`,
         `uptime`, `qg-host-governor.sh --status` with `QG_GOVERNOR_MODE=reservation`) to confirm the predicted
         queueing-not-crashing behavior actually held under a real fleet-promote burst, not just in the capacity math.
