@@ -274,13 +274,16 @@ each time, per Wave-1's own rule 11 playbook), almost certainly its own follow-u
 and operator visibility given the blast radius (this is the pipeline that ships code to production and gates trading
 activity).
 
-- [ ] [REVIEW] P1. **Scope + author a proper follow-up plan for unified-trading-pm's own 39 MOVE-classified workflows**
-      (`bash scripts/self-hosted-runners/classify-glue-workflows.sh` in unified-trading-pm — re-run to regenerate the
-      current list). Triage into (a) genuinely low-risk dispatch/notify jobs safe for a quick batch flip (mirroring
-      today's pattern), and (b) core pipeline files (`cloud-build-router.yml` above all, plus the sit-gate/promote/
-      conflict-resolution set) that need individual review + explicit operator sign-off before touching, given the
-      trading-safety and fleet-wide-blast-radius stakes. Ask the operator whether this becomes its own `assigned_vm: NA`
-      human plan or an AO-dispatched plan per the plan-destination hard rule — do not default silently.
+- [x] [REVIEW] P1. **Scope + author a proper follow-up plan for unified-trading-pm's own 39 MOVE-classified workflows**
+      — re-ran `bash scripts/self-hosted-runners/classify-glue-workflows.sh` (2026-07-28, confirmed still 39 MOVE / 19
+      KEEP), triaged into Tier A (21 low-risk dispatch/notify/schedule-only, safe for a quick batch flip) and Tier B (18
+      core-pipeline/trading-safety-adjacent — `cloud-build-router.yml` foremost, plus the
+      sit-gate/promote/conflict-resolution/hotfix/version-registry family — needing individual per-file review +
+      operator sign-off), authored as `/plans/active/pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md`.
+      Plan-destination `/blocked` question (BLK-7593bf4c) answered same-day by main-agent interim guidance:
+      `assigned_vm: NA` (human-driven), the CLAUDE.md default, given Tier B's trading-safety stakes — plan set to
+      `status: active`, `assigned_vm: NA`; Tier-B todos stay `[OPERATOR]`-gated; whether Tier A is later re-tiered to
+      `assigned_vm: planning` is left open as a separate operator call — unified-trading-pm@(see next commit).
 
 ## Codex SSOTs
 

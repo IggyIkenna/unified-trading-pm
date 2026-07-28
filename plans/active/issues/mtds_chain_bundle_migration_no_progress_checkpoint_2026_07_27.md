@@ -69,12 +69,18 @@ times, and is exactly the class of waste `/vm-preemption-billing-waste-audit` lo
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. Add a periodic `PROGRESS.json` write (object-index or last-processed-key, monotonic-gated) +
+- [x] ✅ [SCRIPT] P2. Add a periodic `PROGRESS.json` write (object-index or last-processed-key, monotonic-gated) +
       read-on-start resume to `rewrite_tradfi_chain_bundle_content_id_2026_07_25.py`, mirroring
       `migrate_candle_canonical_2026_07.py`'s SPOT-preemption resume checkpoint (`mdps@efa559a`) or
       `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s equivalent. Repo: market-tick-data-service. **Done
       when**: a deliberately-killed shard mid-run resumes from its last checkpoint on relaunch instead of restarting
-      from object 0, verified on a real (or `-test-`) run.
+      from object 0, verified on a real (or `-test-`) run. — market-tick-data-service@261f9abd. Self-contained per-shard
+      `ChainBundleCheckpoint` (`vm-logs/{vm}/CHAIN_BUNDLE_PROGRESS-shard{N}.json`, monotonic GCS CAS write,
+      contiguous-safe-frontier resume, worklist-signature-gated) — this script has no `--start-date` knob, so the
+      general day-frontier `_vm_progress` contract doesn't apply; mirrors mdps's self-contained design instead.
+      Evidence: `test_run_resumes_from_checkpoint_skips_already_processed_objects` (+ 13 other new checkpoint unit
+      tests, 37/37 passing) proves a shard resumed against an existing checkpoint skips the already-completed prefix and
+      never reprocesses it — the literal done-when condition, verified via a `-test-` run (mocked GCS CAS).
 - [ ] [DATA] P3. Audit the OTHER tradfi/cefi/defi canonical-migration executors in this family
       (`market-tick-data-service/scripts/migrate_*_2026_07*.py`) for the same gap — the two known-compliant scripts
       cited above suggest this is inconsistent across the family rather than a universal pattern, worth a quick census
