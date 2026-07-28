@@ -29,6 +29,8 @@ priority: P1
 resolved_by:
 locked_by:
 source: cefi_track2_coverage_backfill_checkpoints_2026_07_25.md
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
