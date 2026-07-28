@@ -759,3 +759,24 @@ No code changed. This section exists so a future dispatch, once the `odds_horizo
 `batch_ footystats` copy+swap pass + coverage-registry refresh land (this doc's own "Still genuinely outstanding" list,
 STATUS 2026-07-25 above), can re-run the same probe rather than re-deriving the method, and can cite this dated
 measurement as evidence the denominator change was correctly withheld on 2026-07-28.
+
+## RE-DISPATCH CHECK 2026-07-28 (slot-7, same day, no new probe needed) — 1 of 3 blockers now closed
+
+Track H's denominator todo re-dispatched to a second slot the same day. Rather than re-running the slot-11 live-probe
+(nothing suggested the manifest state had moved in a few hours), checked the shipped-status of the three items this
+doc's own "Still genuinely outstanding" list (STATUS 2026-07-25) names as the gate:
+
+- **Coverage-registry refresh — DONE.** `unified-api-contracts@8e8d2e5b` (2026-07-22) + `@804858c9` (2026-07-27,
+  "canonicalise BOOKMAKER_LEAGUE_COVERAGE league ids," fixed 358/1129 double-keyed raw-vs-canonical pairs). Confirmed
+  closed in `sports_satellite_ao_dispatch_batch7_2026_07_27.md:153-160`.
+- **`odds_horizon_bucket` MDPS reprocess (Step 7) — still outstanding.** No commit in market-data-processing-service
+  reruns `reprocess_sports_odds.py` against this migration's canonical league_id shape.
+- **`batch_footystats` copy+swap — still outstanding.** No apply/swap script exists yet in market-tick-data-service
+  beyond the read-only `census_footystats_orphan_content_2026_07_25.py`;
+  `issues/sports_batch_footystats_mistamped_odds_orphan_delete_staging_2026_07_25.md:191-196` confirms this shape "was
+  never in this swap's scope and remains genuinely un-migrated."
+
+**Net: 2 of 3 blockers remain open, so the STOP condition still holds and the denominator change still must not ship.**
+No code changed here either. Narrowing this to the exact 2 remaining blockers (rather than 3) is the only new
+information — a future dispatch can skip re-verifying the coverage-registry piece and go straight to checking whether
+the MDPS reprocess + footystats copy+swap have landed before re-running the full manifest census.
