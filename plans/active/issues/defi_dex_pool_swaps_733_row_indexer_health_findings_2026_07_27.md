@@ -410,3 +410,38 @@ restart, P3 UNISWAP_V4 `build_instrument_id`) remain open exactly as scoped.
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-077924`, slot 3,
 2026-07-28.
+
+## Verified live (2026-07-28, DP-FETCH-009 escalation #3 — agt-0afc1b, slot 3) — corroborates, no new finding
+
+Another `data_pipeline_failure` dispatch off the same cooldown-gated `DP_RUN_MOSTLY_EMPTY` page
+(`asset_group=defi data_type=dex_pool_swaps: 1099 attempted_failed cells of 3410476 attempted`). Independently
+re-derived the full per-(venue,chain) breakdown from a fresh `availability_index.parquet` pull (28,264,019 total rows)
+BEFORE reading this doc's two prior 2026-07-28 sections, then cross-checked against them: VELODROME_V2/OPTIMISM=666,
+UNISWAP_V3/OPTIMISM=360, TRADER_JOE_V2/AVALANCHE=28, PANCAKESWAP_V3/BSC=15, CURVE/OPTIMISM=8, UNISWAP_V4/ETHEREUM=12 (7
+`build_instrument_id` + 5 GraphQL-errors), UNISWAP_V2/ETHEREUM=5, PANCAKESWAP_V3/ETHEREUM=2, UNISWAP_V3/POLYGON=2,
+AERODROME_V3/BASE=1 — total 1099, matching this escalation's alert exactly and consistent with the small ongoing-retry
+growth the section above already characterized (+2 VELODROME_V2, CURVE unchanged at this snapshot).
+
+Independently reproduced the two dominant conditions via GraphQL schema introspection + 5 fresh probes against the live
+production client (not reusing the manifest's cached error text): VELODROME_V2/OPTIMISM's `Swap` type currently exposes
+`from`/`pool` (not `account`/`liquidityPool`/`pair`) — confirming `messari_from` (cascade position 2 of 5) is the
+structurally-correct schema — yet all 5/5 fresh attempts against it return the identical `bad indexers` fingerprint
+(`0x8cc22436...`, `0xf92f430d...`) already documented above; CURVE/OPTIMISM's subgraph still returns
+`"subgraph not found: no allocations"` on all 5 schema attempts, which the current codebase's
+`_is_subgraph_deindexed_error`/`dex_swaps_handler.py` correctly detects (confirmed by direct code read — the `dddd1b21`
+fix is present and correct), so the 8 residual rows are exclusively the already-flagged stale-VM artifact.
+
+**Independently reached the identical verdict as both prior 2026-07-28 sections**: no code fix applies (the correct
+query schema is already in the cascade; the block is an external Graph Protocol indexer-health condition, not a
+`data_pipeline_failure`-agent-fixable class), and both existing open todos (P2 re-probe/multi-day, P3 CURVE/OPTIMISM VM
+restart) remain correctly scoped as-is — not editing them further to avoid duplicate-todo churn across three
+back-to-back escalation dispatches of the same cooldown-gated alert. **Process note for whoever owns
+`DP_RUN_MOSTLY_EMPTY`'s dedup config**: this is the third `data_pipeline_failure` worker dispatched against the exact
+same static, already-fully-diagnosed, non-code-fixable condition within roughly the alert's own 1800s cooldown window
+(`agt-38b3d6`→`agt-077924`→`agt-0afc1b`, all `dex_pool_swaps`/defi) — mirrors the alerting-hygiene question already
+raised and left `[OPERATOR]`-gated for cefi's `DP_RUN_MOSTLY_EMPTY` cluster
+(`plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md`); not re-opening that policy question here
+(same operator-gated scope), just noting the pattern is now reproducing across asset_groups.
+
+Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-0afc1b`, slot 3,
+2026-07-28.
