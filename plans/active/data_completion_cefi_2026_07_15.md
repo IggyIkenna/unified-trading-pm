@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-24 # (was: 2026-07-15 -- folded in the CeFi-lane Progress Log entries from M-1 per plan line-cap remediation)
+last_updated: 2026-07-28 # (was: 2026-07-24 -- deployment-api pipeline_mode dedup+drilldown-filter item verified already-shipped, slot-16)
 locked_by:
 locked_since:
 supersedes:
@@ -166,17 +166,28 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
       Cross-ref downstream plan FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
       MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
-      **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
-      `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
-      `SHARD_AXIS_MATRIX`, which for cefi is `(venue, data_type, instrument_type, instrument_id, day)` — pipeline_mode
-      is NOT a cefi shard-atom axis, so multiple `pipeline_mode=` rows for one cell collapse to ONE shard (no
-      double-count). The existing `test_pipeline_mode_rows_do_not_double_count_shards` guards the DeFi
-      **chain**-breakdown builder; REMAINING for the deployment-api/`downstream_services_manifest_canonicalisation`
-      owner: (a) a **cefi parity test** (venue-breakdown builder) as a regression guard, (b) the `pipeline_mode`
-      drilldown **filter param** (a feature-add; UI label is playwright-gated). NOT a cefi-correctness gap today (dedup
-      works); a regression-guard + feature enhancement for the deployment-api owner. (In practice cefi double-count is
-      also unlikely — a cefi cell carries ONE pipeline_mode per day, batch OR live, not both.)
+- [x] ✅ [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter — VERIFIED ALREADY SHIPPED 2026-07-28
+      (slot-16).** Both remaining sub-parts from the 2026-06-03 read-only confirmation were found already landed by
+      prior, unrelated commits — no new code required, verified live: **(a) cefi parity test** —
+      `tests/unit/test_venue_breakdown_shards_cefi_dedup.py` (`deployment-api@51890b3`, 2026-07-26) mirrors
+      `test_pipeline_mode_rows_do_not_double_count_shards` for cefi: 2 instruments × 5 dates × 2 pipeline_modes = 20 raw
+      rows must collapse to 10 distinct `(instrument_id, date)` shard atoms via `_per_instrument_coverage`'s set-based
+      numerator (`found_pairs`) — the cefi shard-atom dedup is structurally immune to the DeFi builder's raw-`len()` bug
+      by construction (no `drop_duplicates` fix needed there), and this test is the regression guard proving it. **(b)
+      `pipeline_mode` drilldown filter param** — already fully wired end-to-end:
+      `GET     /api/data-status/drilldown/{service}/{asset_group}` accepts `pipeline_mode: str | None` Query
+      (`deployment_api/routes/data_status/_deploy_turbo.py`, shipped `deployment-api@4dd2575` "v9 manifest UNION read
+      path + pipeline_mode/source drilldown (G3/M5)") and `GET /api/data-status/turbo` accepts
+      `pipeline_mode: list[str]     | None` (OR-semantics, shipped `deployment-api@0ae5230` "add pipeline_mode filter to
+      /turbo endpoint"); the TS client (`deployment-ui/src/api/client.ts` `_DRILLDOWN_FILTER_KEYS`) already threads
+      `pipeline_mode` through. Re-ran both regression suites live 2026-07-28:
+      `test_venue_breakdown_shards_cefi_dedup.py` + `test_chain_breakdown_shards_vs_dates.py` = 5/5 passed;
+      `test_data_status_hierarchical.py` + `test_data_status_drilldown_provenance.py` = 69/69 passed. No dirty tree, no
+      new commit needed. **Residual, NOT part of this item** (noted for a future UI todo, not blocking):
+      `HierarchicalShardDrilldown.tsx` renders `pipeline_mode` as a display-only per-cell badge — there is no
+      operator-facing filter dropdown wired to the already-existing API param, so the "UI label is playwright-gated"
+      clause never triggered (no new UI surface was added). (MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)
 
 **⚪ P2 / needs-confirm (tracked):** **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
 MTDS consolidation ruling.)**
