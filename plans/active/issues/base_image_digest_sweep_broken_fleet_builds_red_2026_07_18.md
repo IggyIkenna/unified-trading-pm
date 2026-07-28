@@ -16,7 +16,7 @@ summary: >-
   redeploy ml-service for bucket_fold_ml Phase D). The fresh UTL base :latest sha256:76a15429… (v0.55.0, 07-18T10:36)
   correctly carries the ignore (grep count 2). ml-service was unblocked with a manual pin bump (this session); the other
   10 repos + the broken sweep remain.
-status: open
+status: resolved
 nature: notes
 asset_group: [ci]
 stage: [meta]
@@ -43,7 +43,7 @@ created: 2026-07-18
 parent_epic: infrastructure_master
 priority: P1
 assigned_vm: planning
-resolved_by:
+resolved_by: base_image_digest_sweep_broken_fleet_builds_red-001 (2026-07-28 addendum, confirmed sweep durably working)
 locked_by:
 source:
   "Found 2026-07-18 during /autonomous execution of bucket_fold_ml_2026_07_17 Phase D (redeploy ml-service + cite
@@ -161,9 +161,67 @@ once (a scheduled/fleet-wide redeploy sweep landing on a shared stale pin), or c
 flagging the timestamp cluster so it isn't lost; `gcp_cloud_run_revisions` /
 `/api/artifacts/deploys?days=30&change=fail` is the fastest way to re-pull it.
 
+## Addendum 2026-07-28 — CONFIRMED: the auth-fixed sweep IS durably preventing recurring drift (closes the 07-23 open question)
+
+Read the sweep's own GH Actions run logs (`gh run view <id> --log`, `digest-drift-sweep.yml` in `unified-trading-pm`)
+for every run 07-18→28, and `deployment-api`'s `Dockerfile` git history over the same window, plus a spot-check of 4
+other fleet repos (`execution-service`, `strategy-service`, `agent-orchestrator`, `alerting-service`, `ml-service`).
+
+**1. Sweep run history for `deployment-api`, 07-18→21**: fires and dispatches correctly, almost every 6h tick — the
+GH_PAT fix (`f6e98bbdd`, 07-18 11:51:54) worked from the moment it landed. Sample of the actual per-run log lines:
+
+```
+2026-07-18T18:18:03Z  deployment-api: STALE (…796c33b9… → …07af6d57…) — dispatching digest refresh → ✅ Dispatched
+2026-07-19T00:27:07Z  deployment-api: STALE (…07af6d57… → …c05d3c62…) — dispatching digest refresh → ✅ Dispatched
+2026-07-19T06:50:57Z  deployment-api: STALE (…c05d3c62… → …e22ef991…) — dispatching digest refresh → ✅ Dispatched
+… (continues dispatching almost every run through 07-21T18:27:59)
+```
+
+Each dispatch is matched by a `chore(deps): refresh base-image digest pin` commit in `deployment-api` landing
+seconds later (e.g. sweep dispatch `2026-07-21T18:27:59Z` → commit `e8679a3` `2026-07-21T18:28:13+00:00`) — the
+dispatch → `update-dependency-version.yml` → commit chain is proven end-to-end, not just "the sweep read a
+Dockerfile."
+
+**2. `BASE_IMAGE_DIGEST` regex-visibility vs. a Cloud Build substitution — the 🟡 2026-07-22 correction's mechanism
+claim is WRONG, correcting it here.** That note asserted "GCP Cloud Build triggers pass `--build-arg
+BASE_IMAGE_DIGEST=<current>` explicitly at build time … the Dockerfile's hardcoded ARG default … is only consulted by
+local `docker build` and AWS CodeBuild." Checked `deployment-api/cloudbuild.yaml` (and cross-checked
+`alerting-service`, `execution-service`, `strategy-service`, `deployment-service`, `greeks-service`,
+`fund-administration-service`, `market-data-processing-service`, `trading-agent-service`, `client-reporting-api`,
+`agent-orchestrator`, `ml-service` — all 11 repos in this doc's original blast radius): **none of them pass
+`--build-arg BASE_IMAGE_DIGEST=…` in the `build` step.** Every one's `pull-base-image` step instead does
+`PIN=$(sed … Dockerfile)` then `docker pull "${BASE}@${PIN}"` — i.e. GCP Cloud Build reads and depends on the exact
+same static `ARG BASE_IMAGE_DIGEST=` default in the Dockerfile that the sweep's regex bumps. Cloud Build is **not**
+immune to a stale pin; it fails identically to local/AWS builds if the pin goes stale. The reason the 07-22 fleet
+sweep (`test_fleet_image_builds_from_current_code_2026_06_17.md` Phase 2) found every GCP build green was never "Cloud
+Build bypasses the pin" — it's that the (already-fixed-by-then) digest-drift-sweep had been keeping every pin fresh
+continuously since 07-18, so there was no staleness for any build path to hit. The sweep's regex is exactly what
+GCP Cloud Build also consults — there is no blind spot between them.
+
+**3. Has `deployment-api` (or others) drifted a third time since 07-22?** No. The last **manual** re-pin was
+`2531d92` (2026-07-22T04:09:35Z); every Dockerfile commit since then is an **automated**
+`chore(deps): refresh base-image digest pin`, most recently `c2417b0` (2026-07-28T12:36:59Z) — continuous,
+same-day coverage through today with zero manual intervention needed. Two windows initially looked like multi-hour
+sweep gaps (07-20T00:00→12:42, ~18h; 07-23T12:32→07-25T13:40, ~44h) — read the sweep's own per-run log for those
+windows and both are genuine, not failures: every run in between logged `deployment-api: digest current — no
+dispatch needed` (UTL simply didn't republish during that stretch), and the sweep caught the next real republish
+within one 6h tick (`2026-07-25T13:39:59Z` STALE detected → commit `108e2fd` at `13:40:11Z`, 12 seconds later).
+Cross-checked `gcloud builds list` for `deployment-api-main-deploy` since 07-22: one `FAILURE`
+(`5966a585`, 07-27T18:47:42Z) is a Cloud Run revision-version `ABORTED: Conflict` on the deploy step — unrelated to
+the base image/pip-audit/import failure mode this doc tracks; several `TIMEOUT`s are unrelated build-time timeouts.
+No digest-drift-pattern failure recurred. Spot-checked `execution-service`, `strategy-service`,
+`agent-orchestrator`, `alerting-service`, `ml-service` — all show the same continuous auto-refresh cadence through
+2026-07-28, confirming the fix is durable fleet-wide, not a `deployment-api`-only coincidence.
+
+**Verdict: Option A (the GH_PAT token fix) is confirmed durably effective.** The digest-drift-sweep has not gone
+silent or missed a real drift event since the fix landed 07-18. No further action needed on the sweep itself. This
+closes the "genuinely open question" from the 2026-07-23 Addendum.
+
 ## Todos
 
-- [ ] [ENGINEER] P1. **Confirm whether the auth-fixed digest-drift-sweep is actually preventing recurring drift** — read
-      the sweep's run history/dispatch log for `deployment-api` around 07-18→21, check whether `BASE_IMAGE_DIGEST` bumps
-      are visible to its regex vs. a Cloud Build substitution it can't see, and re-check whether `deployment-api` (or
-      others) has drifted a third time; per the 2026-07-23 Addendum this remains unresolved.
+- [x] ✅ [ENGINEER] P1. **Confirm whether the auth-fixed digest-drift-sweep is actually preventing recurring drift** —
+      confirmed via the sweep's own run logs 07-18→28 + `deployment-api` Dockerfile git history + `gcloud builds list`
+      + a 5-repo fleet spot-check (see Addendum 2026-07-28 above). Also corrected a wrong mechanism claim in the
+      2026-07-22 note (Cloud Build does NOT bypass the pin via an explicit build-arg — it reads the same Dockerfile
+      `ARG BASE_IMAGE_DIGEST=` the sweep bumps). No code fix needed — the sweep is confirmed working; no third drift
+      occurred. — unified-trading-pm (this doc), investigation only, no code changes required.
