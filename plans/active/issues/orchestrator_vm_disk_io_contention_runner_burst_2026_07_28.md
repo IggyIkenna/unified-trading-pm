@@ -108,7 +108,25 @@ This was chosen over re-running `install` with a lower `GLUE_COUNT` specifically
       are its primary tenant. Consider: (a) whether `glue-2` should stay disabled long-term per new pool (permanent
       capacity decision, not just a burst mitigation) vs. re-enabled once steady-state load is confirmed low, (b)
       whether a FUTURE bulk runner-pool registration (e.g. onboarding more repos later) should be explicitly staggered
-      /rate-limited rather than batched, given this measured impact on interactive sessions.
+      /rate-limited rather than batched, given this measured impact on interactive sessions. **Update 2026-07-28 ~00:20
+      UTC — steady-state load is NOT low, arguing against re-enabling `glue-2` and FOR treating this as a real capacity
+      gap, not a one-time burst.** Re-checked `vol-0b4f0237fa0f5cd0f`'s `VolumeQueueLength` via CloudWatch ~2h after the
+      `52→18.5→6.5 wa` post-mitigation reading above (which was real and correct at the time): the LATEST 6 datapoints
+      (30-min window, 5-min granularity) show a SUSTAINED `5.7-6.5` average — roughly DOUBLE the `~2.5-2.9` level
+      measured earlier this same evening (itself already called out in
+      `github_actions_operator_gated_followups_2026_07_17.md`'s Phase-7 P2 todo as "the residual level after glue-2 was
+      halved, not healthy-baseline"). CPU stayed moderate throughout (29-51% avg, matching the 50-70%-target framing,
+      not the bottleneck). Corroborating symptom same window: `system-integration-tests`' `cross-repo-invariants` job (2
+      consecutive real failures, `full-workspace-sit` runs `30312490597`/`30314690222`) polls a `ci-status-update`
+      dispatch per SIT-covered repo with an 18×5s=90s budget — 4/21 repos (agent-orchestrator, alerting-service,
+      batch-live-reconciliation-service, client-reporting-api) blew that budget and got reported as
+      `conclusion=unknown/timeout`, but spot-checking one (agent-orchestrator's dispatch, run `30314879898`) shows it
+      actually completed `success` ~6 minutes later — a real false-negative from a polling window that's too tight for
+      CURRENT (degraded) conditions, not a code bug in that job. **Net read: the glue-2 disable was a correct, working
+      burst mitigation, but load has climbed back since, so it has NOT solved the underlying capacity question this todo
+      already named** — the EBS iops/throughput bump suggested in the Phase-7 doc (a live, non-disruptive `gp3`
+      modify-volume op) is worth trying before further headcount reductions on the runner side, since CPU/RAM are not
+      what's constrained here.
 - [ ] [REVIEW] P3. The AO dashboard's Host Resources panel reporting only `us+sy+ni` (no iowait) means an operator
       glancing at "CPU 41%" during an episode like this would not see the real problem. Consider whether the panel
       should surface iowait or load-average alongside CPU% specifically because self-hosted CI runners on this box make
