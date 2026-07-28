@@ -361,7 +361,8 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       **Gate**: `no_empty_string_fallback_baseline.yaml`'s `agent-orchestrator` row carries a `commit:`; a
       deliberately-introduced test site is reported at its real path, not a tail-slice guess.
 
-- [ ] [SCRIPT] P1. **Land the durable per-site `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
+- [x] ✅ [SCRIPT] P1. **LANDED 2026-07-28 — `market-tick-data-service@69738677`.** **Land the durable per-site
+      `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
       `market-tick-data-service/scripts/verify_lst_collateral_support.py` (L89 `currency`, L167 `ccy`) — the permanent
       oscillation source behind the 07-08→07-28 re-reds.** Those two `.get("key", "")` sites are always present, so the
       repo-wide count sits at the ceiling and any unrelated +2 drift elsewhere tips the total 89→91, re-reds the local
@@ -451,3 +452,10 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
   entry in this doc. Also observed (not authored by this pass) a concurrent commit-anchor stamp on
   `deployment-service`'s row (count unchanged, 91) that landed in the same working-tree window — carried forward as-is,
   not claimed.
+- **2026-07-28 (slot-2, P1 todo checkbox flip)** — dispatched to land the durable per-site noqa fix; found it already
+  shipped by slot-9 as `market-tick-data-service@69738677` (`git merge-base --is-ancestor` confirms it's on
+  `origin/live-defi-rollout`). Independently re-verified rather than trusting the commit message: both L89 (`currency`)
+  and L178 (`ccy`, not L167 — the site shifted a few lines since the todo was written) carry
+  `# noqa: qg-empty-fallback — "" never equals a real token`, matching the L220-222 precedent; direct checker re-run
+  confirms `[WARN] market-tick-data-service: 87 < baseline 89`. No code change needed this pass — flipping the checkbox
+  only.
