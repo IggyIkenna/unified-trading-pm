@@ -21,7 +21,7 @@ summary: >-
   scan.canonical_days and scan.non_canonical_days` branch (line 874) fires and reports `non_canonical_input` — the wrong
   diagnosis. The correct signal here is `no_captured_input_for_window` (line 876), which is what would tell an operator
   "this needs a backfill/capture fix", not "this needs a migration".
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -49,11 +49,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: features-service@bfac5033
 source: >-
   measured 2026-07-27 while proving /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md todo 6 —
   real GCP infra, real availability-index rows, not inferred.
 ---
+
+> **🟢 RESOLVED 2026-07-28** — fixed via `features-service@bfac5033`. Archived.
 
 # pipeline_e2e_check.py mislabels zero-capture as `non_canonical_input` for `raw_chains`/`raw_defi` families
 
@@ -113,13 +115,13 @@ captured that day) should fall through to `no_captured_input_for_window`, not `n
 
 ## Todos
 
-- [ ] 1. [DATA] P2. Fix `_scan_input_coverage` (scripts/pipeline_e2e_check.py:758) to filter `rows` to
-      `data_type.isin(model.data_types)` (or the DeFi-raw equivalent) before splitting into `canonical`/ `non_canonical`
-      for `raw_chains`/`raw_defi` kind families, so an unrelated data_type capture on a day no longer taints that day's
-      coverage verdict for a family it has nothing to do with. Add a unit test asserting: a day with only
-      `trades`/`book_snapshot_5` captured (no `options_chain`/`futures_chain` at all) resolves
-      `no_captured_input_for_window` for the volatility family, not `non_canonical_input`. Run
-      `bash scripts/quality-gates.sh`, ship via quickmerge (repo: features-service).
+- [x] ✅ 1. [DATA] P2. **DONE 2026-07-28**. `_scan_input_coverage` now filters `rows` to
+      `data_type.isin(model.data_types or _defi_raw_data_types())` before splitting into `canonical`/`non_canonical`,
+      for `raw_chains`/`raw_defi` kind families only (`candles` kind unaffected). Added 3 regression tests: an
+      unrelated-data_type-only day no longer taints `non_canonical_days` and resolves `no_captured_input_for_window` via
+      `_resolve_window` (the exact CEFI:volatility repro from this doc); the family's own data_type still classifies
+      `non_canonical` when its shape is genuinely wrong (sanity check the fix doesn't over-correct).
+      `bash scripts/quality-gates.sh --no-fix` green (17974+ tests). — features-service@bfac5033
 
 ## Progress Log
 

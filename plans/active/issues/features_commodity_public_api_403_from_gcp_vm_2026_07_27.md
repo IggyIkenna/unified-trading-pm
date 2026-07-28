@@ -81,10 +81,13 @@ environment-level cause (VM IP / headers) than 3 independent site outages.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. **features-service** — add/verify a realistic `User-Agent` header (and any other headers these public
-      sites' bot-detection commonly checks) on `http_get` calls in
-      `features_service/commodity/adapters/     base_source.py` (or wherever the shared HTTP client lives); re-test from
-      a GCP VM after the change.
+- [x] ✅ [SCRIPT] P2. **features-service** — **DONE 2026-07-28**. `http_get()` (`base_source.py`) now merges a realistic
+      Chrome User-Agent + `Accept` header into every request by default (urllib's own default `"Python-urllib/3.x"` is a
+      well-known bot signature; caller-supplied headers, e.g. `yahoo_finance.py`'s existing explicit override, still
+      take precedence per-key). Added regression tests: the default header is sent and is not the urllib signature, and
+      a caller-supplied header still wins. `bash scripts/quality-gates.sh --no-fix` green (17974+ tests). **Re-test from
+      a real GCP VM not run this session** (would require launching a VM — see todo below, which stays open pending that
+      live re-test). — features-service@d06919bf
 - [ ] [DATA] P3. **operator** — if the header fix doesn't resolve it, check whether `central-element-323112`'s egress IP
       range is on any of EIA/CFTC/Baker Hughes' block-lists (unlikely to be operator-actionable beyond routing through a
       different egress path); not urgent — commodity is a P1/lower-priority family, not currently gating anything else
