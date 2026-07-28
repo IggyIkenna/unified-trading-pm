@@ -56,21 +56,12 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [CODE] P1. **Re-run the MDPS `odds_horizon_bucket` reprocess (Step 7 of the league_id namespace migration).**
-      `market-data-processing-service/.../reprocess_sports_odds.py` must be re-run for the historical days so its
-      `bucketed.parquet` output regenerates under the now-canonical `league_id=` partition (raw content is already
-      canonical per the shipped `batch_odds_api` migration — this step regenerates the DERIVED `odds_horizon_bucket`
-      surface from it, per `issues/sports_league_id_namespace_migration_2026_07_20.md` § "Ordered procedure" Step 7).
-      **Mitigate the features double-count hazard** (that doc's STOP condition 7): do the reprocess + stale-object
-      delete inside a drained per-day window, not as a slow background copy, so old-raw and new-canonical
-      `bucketed.parquet` never coexist for a features read. Self-justified, not `[OPERATOR]`-gated: a re-derivation from
-      already-canonical source content, not a destructive operation on source data. (repo:
-      market-data-processing-service). **Done when**: a fresh live manifest census
-      (`read_availability_index(bucket, columns=["league_id","pipeline_mode"])`) shows 0
-      `batch_mdps_odds_horizon_bucket` rows carrying a non-registry `league_id`, and a features read for a migrated day
-      returns a single non-doubled row set (no old+new `bucketed.parquet` double-count). Source:
-      `issues/sports_league_id_namespace_migration_2026_07_20.md` STATUS 2026-07-25 + RE-DISPATCH CHECK 2026-07-28
-      (slot-7/slot-10).
+> **Todo 1 (MDPS `odds_horizon_bucket` Step-7 reprocess) EXTRACTED 2026-07-28 (slot-12)** into
+> `sports_track_h_denominator_prereqs_step7_gated_2026_07_28.md` — dispatch found the "raw content is already
+> canonical" self-justification false (99,607 raw `batch_odds_api` rows still non-registry today), so it is now
+> machine-gated on `issues/sports_batch_odds_api_league_id_canonicalization_regressed_2026_07_28.md` instead of a bare
+> unchecked todo here (this plan's own `depends_on`/`gate_on_depends` can't express "todo 1 is gated, todo 2 isn't" —
+> per the plan-authoring partial-parallelism SPLIT rule). See that gated plan for the live todo + full detail.
 
 - [ ] [CODE] P1. **Build + execute the `batch_footystats` copy+swap pass** (footystats legacy-bundle shape, 16,970
       objects per the 2026-07-20 sizing) — canonicalise its `league_id`, mirroring the already-shipped, adversarially-
@@ -156,3 +147,28 @@ empty-string-fallback ratchet, 91 sites > baseline 89, both flagged sites in `sc
 (repo-blocker, condition `repo-market-tick-data-service-qg-green`) rather than fixing the unrelated baseline myself;
 will commit+push+flip this checkbox the moment the repo clears. The PROD data-correctness work above is already complete
 and verified independent of the code-ship — this is a shipping-mechanics gap only, not a data-correctness one.
+
+### 2026-07-28 (slot-12) — todo 1 (MDPS `odds_horizon_bucket` Step-7 reprocess) NOT SHIPPED — raw prerequisite proven
+still dirty, would not reach done-when
+
+Dispatched to run todo 1. Before launching the multi-hour multi-VM reprocess job, re-verified this todo's own stated
+prerequisite ("raw content is already canonical per the shipped `batch_odds_api` migration") with a fresh manifest
+census — same method as the parent migration doc's 2026-07-28 LIVE-PROBE
+(`read_availability_index(bucket, columns=["league_id","pipeline_mode"])` vs. the full 390-entry `LEAGUE_REGISTRY`).
+It does **not** hold: raw `batch_odds_api` still carries **99,607 non-registry `league_id` rows**
+(`instrument_type=odds/data_type=trades/capture_status=captured`, spanning 2020-06-06..2026-06-24, 1,580 dates — the
+identical top-offender cast as the original 2026-07-20 measurement at ~half its scope), directly contradicting
+`issues/sports_league_id_namespace_migration_2026_07_20.md`'s "STATUS 2026-07-25" claim of a stable, verified swap.
+Cross-checked (`batch_mdps_odds_horizon_bucket` derived rows): 42,978 non-registry of 124,294 total, corroborating
+slot-11's same-day LIVE-PROBE (42,652).
+
+Since the MDPS reprocess derives its output partition from the raw content column, re-running it now would NOT reach
+this todo's done-when (0 non-registry `batch_mdps_odds_horizon_bucket` rows) — it would just re-derive non-canonical
+output from still-dirty raw input. Declining to launch the multi-hour reprocess job on that basis (this exact job
+already ran twice for this migration without reaching canonical — a 3rd blind run repeats the wasteful-duplicate
+pattern `issues/mdps_odds_horizon_bucket_launch_prep_stale_todo_duplicate_dispatch_2026_07_27.md` already flagged).
+
+Filed `issues/sports_batch_odds_api_league_id_canonicalization_regressed_2026_07_28.md` (P1, 2 todos: re-investigate +
+re-fix the raw swap, then re-dispatch this todo). **Checkbox intentionally left unchecked** — same STOP-condition
+discipline the parent Track H todo has already correctly applied 4 times today. This todo cannot ship until the new
+issue doc's prerequisite work lands.
