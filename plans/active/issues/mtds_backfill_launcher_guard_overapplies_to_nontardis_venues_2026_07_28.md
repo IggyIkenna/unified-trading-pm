@@ -83,10 +83,10 @@ whoever reads it already knows to discount it, which defeats the point of an aut
 
 ## Recommended decision
 
-- [ ] [DATA] P1. Scope the guard call in `launch-mtds-backfill-vm.sh` to Tardis-sourced venues only — reuse the same
+- [x] ✅ [DATA] P1. Scope the guard call in `launch-mtds-backfill-vm.sh` to Tardis-sourced venues only — reuse the same
       CAP-EXEMPT venue list (HYPERLIQUID / ASTER / LIGHTER-ZKSYNC / EXTENDED-STARKNET / PACIFICA-SOLANA) the codex
       already documents elsewhere, e.g. gate on `VENUE_TO_ADAPTER_KEY[venue] == 'tardis'` (UAC) rather than
-      `asset_group == cefi`. (repo: deployment-service)
+      `asset_group == cefi`. (repo: deployment-service) — deployment-service@2d6b01a
 - [ ] [DATA] P2. Once P1 ships, re-run this plan's MID-BACKFILL `/data-pipeline-check-mtds` force/skip leg to get a
       genuine (non-guard-polluted) verdict for the non-Tardis venues at minimum; Tardis venues will still correctly show
       refused/skipped while a real backfill VM is active — that part of the behavior is correct and should stay. (repo:
@@ -107,3 +107,16 @@ checker/launcher-tooling accuracy gap, not a pipeline correctness regression.
   determinable outcomes (gate the guard on `VENUE_TO_ADAPTER_KEY[venue] == 'tardis'` instead of `asset_group == cefi`,
   re-run the check, update the skill doc), not an operator judgment call; this NA default was never actually assessed
   for AO eligibility. Done as part of shrinking the `assigned_vm:NA` corpus ratchet back toward baseline.
+- 2026-07-28 (slot 7, data_engineering): P1 shipped — `deployment-service@2d6b01a`. Added `TARDIS_CAP_EXEMPT_VENUES` +
+  `tardis_venue_list_needs_guard()` to `tardis-concurrency-guard.sh` (the SSOT for the CAP-EXEMPT list, mirroring UAC
+  `VENUE_TO_ADAPTER_KEY`) and wired `launch-mtds-backfill-vm.sh`'s guard call to check `--venues` against it before
+  invoking `tardis_concurrency_guard`; skips the guard entirely when every requested venue is cap-exempt, still applies
+  it (unscoped `--venues`, or any non-exempt venue present) otherwise. Note: verified against the live UAC registry
+  (`unified_api_contracts/registry/venue_adapter_keys.py`) that **PACIFICA-SOLANA is decommissioned**
+  (`DECOMMISSIONED_VENUE_BASES`, operator ruling 2026-07-16) and no longer a real venue, and that **COINBASE-CDE** is
+  also currently a non-Tardis cefi venue (native Advanced Trade REST) not named in this doc's original list — used the
+  CURRENT 5-venue set (HYPERLIQUID/ASTER/LIGHTER-ZKSYNC/EXTENDED-STARKNET/COINBASE-CDE) rather than the doc's
+  PACIFICA-SOLANA-inclusive one. `quality-gates.sh` green (deployment-service, 119s); manually verified
+  `tardis_venue_list_needs_guard` against empty/single/mixed/case-insensitive venue lists. P2/P3 left open — P2 (re-run
+  the MID-BACKFILL checker leg) needs a live Track-2 backfill window to be meaningful; P3 (skill doc note) is a separate
+  unified-trading-pm-repo todo.
