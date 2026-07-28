@@ -401,9 +401,21 @@ to today (a hardcoded date goes stale tomorrow).
      workspace's multi-week CeFi backfill history are dominated by the self-inflicted lockout, not real per-cell data
      unavailability.
 
-- [ ] [MTDS] P2. **Empty/failed re-analysis**: classify which existing `empty_confirmed`/`attempted_failed` cells were
-      caused by the prior SMALL (≤33) instrument catalogue vs genuine absence → re-fetch the catalogue-caused ones now
-      that the full universe is known.
+- [x] ✅ [MTDS] P2. **Empty/failed re-analysis** — market-tick-data-service@83fee813. Shipped
+      `scripts/classify_cefi_catalogue_caused_gaps_2026_07_28.py` (+ 5-case unit test,
+      `tests/unit/scripts/test_classify_cefi_catalogue_caused_gaps.py`): joins consolidated cefi manifest
+      `empty_confirmed`/`attempted_failed` rows against IS `catalog.parquet`'s `available_from`
+      (`= MIN(first observed by_date snapshot day, declared Tardis genesis)`) to distinguish **catalogue_caused**
+      (cell.date < 2026-06-23 AND the instrument's `available_from` >= 2026-06-23 — the OLD SMALL (≤33/venue) catalogue
+      never observed the instrument, so no genuine attempt could have been driven for it) from **genuine_absence**
+      (already known + attempted under a correctly-sized catalogue, or not in the catalogue at all — pre-listing/never
+      existed). Mirrors `reclassify_cefi_manifest_mvp_universe_2026_06_23.py`'s convention: **DEFAULT = DRY-RUN**
+      (prints counts, writes nothing); `--apply` is gated (snapshots the pre-flip manifest first) and flips
+      `catalogue_caused` cells to `expected_unattempted` so the ALREADY-RUNNING Track-2 full-universe backfill
+      (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) naturally re-attempts them on its next skip-if-fresh
+      pass — no new VM launch needed for the "re-fetch" half of this todo. `--apply` itself is left for a follow-up
+      operator-approved run (same Phase-C-style gate as the sibling script) — code shipped + QG green (7326 passed) is
+      this todo's done_definition.
 - [ ] [SCRIPT] P3. **NICE-TO-HAVE** **deployment-service** — `create-code-tarballs.sh --asset-group X` hard-`exit`s on
       the FIRST dirty service repo in the asset-group set (a peer's uncommitted WIP in e.g. features-service), aborting
       the loop BEFORE the end-of-run upload → even the CLEAN core tarballs (mtds/UAC/UTL) never upload. Make the
