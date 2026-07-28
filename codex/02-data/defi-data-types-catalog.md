@@ -264,7 +264,7 @@ Aave V3 FlashLoan events. Captures flash loans including amount, premium (fee), 
 | **Sources**         | Lido REST API (`api.lido.fi/v1/protocol/steth/apr/sma`), EtherFi REST API, DefiLlama (`api.llama.fi/protocol/eigenlayer`) |
 | **Shard key**       | venue × chain × date                                                                                                      |
 | **Instrument type** | `spot_asset` (written as `SPOT_ASSET`)                                                                                    |
-| **Status**          | Production (2026-04-24)                                                                                                   |
+| **Status**          | Implemented, unscheduled                                                                                                  |
 | **Schema fields**   | symbol, ts_event, venue, chain, apy, apy_7d, apy_30d                                                                      |
 | **Protocols**       | LIDO-ETHEREUM (stETH), ETHERFI-ETHEREUM (weETH), EIGENLAYER-ETHEREUM                                                      |
 

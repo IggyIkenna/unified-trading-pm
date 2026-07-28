@@ -570,19 +570,35 @@ shipped diff is the true minimal 3-line delta (`captured_at`, `tuple_count` 41�
 `["CBOE", "index", "ohlcv_15m"]`). Included in the same `instruments-service@03f71c81` commit since it was required to
 get MY tradfi-scoped test green — did not touch any other finding's logic.
 
-**Historical already-seeded rows — decision: defer, do not touch in this pass.** The alert batch's own numbers (807/807
-`corporate_action_confirmed`, 799/799 `earnings_result`, both against `market-data-tick-tradfi-prd`) are the only counts
-available; not independently re-verified against a live manifest query in this pass. Considered cleaning these up now
-(mirroring the cefi-orphan-rows precedent elsewhere in this remediation wave) but chose to leave them as a documented
-follow-up rather than force it, for the same reason the `mbp_10` resolution above did: this is PRODUCTION DATA MUTATION
-(deleting/reclassifying live manifest rows) that deserves its own carefully-scoped pass — precisely identifying the
-predicate, picking the sanctioned rewrite mechanism (this repo has several `reconcile_*`/`purge_*`/
-`delete_phantom_rows_from_shards.py`-style precedents for exactly this shape of cleanup), a scan-only dry run, and
-review — not something to bolt onto a code-scoping fix under the same commit. Stopping the seed going forward is the
-higher-value, lower-risk half of this fix (it is what prevents the cell from growing further and re-triggering
-`DP_RUN_MOSTLY_EMPTY`); the historical rows will age out of the manifest's rolling window naturally, or can be cleaned
-up explicitly in a dedicated follow-up pass whenever someone picks up the `corporate_action_confirmed`/`earnings_result`
-follow-up flagged to `macro_micro_econ_data_capture_audit_2026_06_05.md`'s owner above.
+**Historical already-seeded rows — ✅ DONE 2026-07-28 (slot-7, data_engineering), the deferred follow-up below.**
+Originally deferred (decision: defer, do not touch in this pass) — the alert batch's own numbers (807/807
+`corporate_action_confirmed`, 799/799 `earnings_result`, both against `market-data-tick-tradfi-prd`) were the only
+counts available at the time; not independently re-verified against a live manifest query in this pass. Considered
+cleaning these up then (mirroring the cefi-orphan-rows precedent elsewhere in this remediation wave) but chose to leave
+them as a documented follow-up rather than force it, for the same reason the `mbp_10` resolution above did: this is
+PRODUCTION DATA MUTATION (deleting/reclassifying live manifest rows) that deserves its own carefully-scoped pass —
+precisely identifying the predicate, picking the sanctioned rewrite mechanism (this repo has several
+`reconcile_*`/`purge_*`/ `delete_phantom_rows_from_shards.py`-style precedents for exactly this shape of cleanup), a
+scan-only dry run, and review — not something to bolt onto a code-scoping fix under the same commit.
+
+**Resolution (2026-07-28, `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` todo,
+`market-tick-data-service@c24db4cf`).** Re-querying the live manifest ahead of the cleanup found the 807/799 figures
+badly stale — the alert batch had only ever counted the narrower `attempted_failed` slice of a much larger
+already-misclassified population: **420,803 rows** in `_index/availability_index.parquet` (`corporate_action_confirmed`
+210,446 + `earnings_result` 210,357, all `empty_confirmed`/`expected_unattempted`, **0 `attempted_failed`, 0
+`captured`**) and **7,540 rows** in `_index/expected_universe_ranges.parquet`. STOP-ON-SURPRISE cleared (0 `captured`
+rows for either data_type — no real data would be lost). Followed the exact snapshot / STOP-ON-SURPRISE /
+predicate-filter / write-back / verify-HOLD playbook already used for the YAHOO_FINANCE phantom-venue cleanup above,
+plus a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` check (604800s, qualifies per delete-safety codex
+§3a) ahead of the overwrite: paused `uts-prod-manifest-consolidator-market-data-tradfi-cron`, snapshotted both files to
+`_index/snapshots/`, deleted all target rows from both, verified 0 residual rows in both immediately after write,
+resumed the scheduler, then proved HOLD across **6 real consolidator merge cycles** (target rows stayed 0 every check —
+no resurrection). Scripts:
+`market-tick-data-service/scripts/{query,delete}_tradfi_corporate_action_earnings_orphans_2026_07_28.py`. The
+`corporate_action_confirmed`/`earnings_result` follow-up flagged to
+`macro_micro_econ_data_capture_audit_2026_06_05.md`'s owner (measuring this data correctly in features-service's own
+manifest) remains open and OUT OF SCOPE for this cleanup — this resolution only removes the misclassified MTDS-side
+rows.
 
 ## Verdict — Yahoo Finance source-vs-venue investigation (2026-07-15, operator-directed re-check)
 
@@ -952,3 +968,10 @@ UAC) — no separate deploy needed here.
   rides on whether that SAME VENUE had an unrelated whole-venue failure that day. So a SEPARATE write-time decision
   point does exist (not just DP-FETCH-009's no-recency-window count) — full trace + file:line citations in
   `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`'s now-flipped `[VERIFY] P3` todo. No code changes.
+- 2026-07-28 (slot 7, data_engineering): Closed the deferred `corporate_action_confirmed`/`earnings_result` historical
+  orphan-row cleanup (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` todo). Live re-query found the population far
+  larger than the 807/799 alert-batch figures (420,803 rows in `availability_index.parquet` + 7,540 in
+  `expected_universe_ranges.parquet`, 0 `captured`) — deleted via the same snapshot/STOP-ON-SURPRISE/predicate-filter/
+  write-back/verify-HOLD playbook as the YAHOO_FINANCE cleanup, HOLD proven across 6 real consolidator merge cycles.
+  `market-tick-data-service@c24db4cf`. Full evidence in "Resolution — corporate_action_confirmed / earnings_result"
+  above.

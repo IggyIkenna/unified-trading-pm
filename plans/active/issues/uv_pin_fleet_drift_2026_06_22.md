@@ -219,9 +219,16 @@ Validated locally on slot-3 (`bash -n` + `shellcheck -S error` clean + sed-rewri
       commits verified `git merge-base --is-ancestor` of current LDR HEAD (`189b404fbd2`, 2026-07-28). The slot-3 stash
       referenced above (`boot-script-hardening-uv-pin-pnpm-branch-symlink-2026-06-22`) evidently landed via a different
       path than a stash-pop before this doc's checkbox was flipped — plan-flip lag, not outstanding work.
-- [ ] [INFRA] P1. `scripts/workspace/setup-workspace-config-symlink.sh`: emit the root `.code-workspace` as a REGULAR
-      file with root-relative paths (sed-rewrite `"../../X"`→`"X"`, `"../../"`→`"."`) instead of the
-      symlink-to-cursor-configs (the git-detection bug above).
+- [x] ✅ [INFRA] P1. **DONE 2026-07-28 (slot-16) — STALE, already shipped, closing citing the shipping commit.**
+      `scripts/workspace/setup-workspace-config-symlink.sh` on current `live-defi-rollout` HEAD already emits the root
+      `.code-workspace` as a REGULAR file with root-relative paths
+      (`sed -e 's#"path": "\.\./\.\./"#"path": "."#g' -e     's#"path": "\.\./\.\./#"path": "#g'`, dropping any legacy
+      symlink first) instead of the symlink-to-cursor-configs — byte-for-byte matching this todo's described fix, and
+      the script's own comment already cites this issue doc as the SSOT. Verified via `git log -p --follow` on the file:
+      shipped in `unified-trading-pm@703b1e912` ("fix(workspace): harden bootstrap so fresh VMs avoid today's failures",
+      2026-06-22 — commit stat title: "setup-workspace-config-symlink.sh: emit a regular root-relative
+      .code-workspace"), confirmed `git merge-base --is-ancestor` of current `origin/live-defi-rollout`. Plan-flip lag,
+      not outstanding work — no code change needed. Repo: unified-trading-pm.
 - [ ] [INFRA] P2. `scripts/setup.sh` astral-uv fallback (the per-repo fix above) — couples to the fleet rollout.
 
 ### PM version-promotion divergence — the blocker (operator/machinery)

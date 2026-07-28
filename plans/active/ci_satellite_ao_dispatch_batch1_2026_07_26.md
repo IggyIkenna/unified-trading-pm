@@ -153,13 +153,32 @@ concurrent workers do not collide on this file.
       skipped; sentinel matched committed HEAD). Sources:
       `issues/provenance_gate_override_and_unenforced_quickmerge_hook_2026_07_17.md` ([DEVOPS] P2) +
       `issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md` (Fix direction 3).
-- [ ] [INFRA] P2. **Make `rollout-cloudbuild.py` unable to regress a repo.** Add a "would drop content" guard: refuse to
-      write a file whose LIVE content contains markers absent from the rendered output (the measured 2026-07-20
-      near-miss was a rollout that would have dropped `secretEnv: ["GH_PAT"]` + the authenticated `--unshallow` fetch +
-      the `VERSION="0.0.0.dev0"` PEP440 fallback from all 19 consumer copies). Also default to `--dry-run` and require
-      an explicit `--apply`. **Done when**: a rendered-vs-live diff that would drop a marker is refused with a
-      diagnostic naming the marker, `--apply` is required to write, and a dry run over all 19 consumers is clean.
-      Source: `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P2).
+- [x] ✅ [INFRA] P2. **DONE 2026-07-28 (slot-9, infra)** — `rollout-cloudbuild.py` can no longer regress a repo. —
+      unified-trading-pm@ddf0b89f4. Added `find_dropped_markers()`: parses both the live cloudbuild.yaml and the
+      freshly-rendered template (structural, not a raw line diff — a purely cosmetic YAML reflow like a one-line vs.
+      two-line `args: [...]` parses identically either way, so it never false-positives) and diffs top-level keys, step
+      ids, `secretEnv`/`availableSecrets` entries, and per-step arg content (list items compared as a set; heredoc/bash
+      script content compared line-wise, since YAML block scalars preserve those breaks verbatim — this is what catches
+      an in-place fallback change like the 2026-07-20 `VERSION="0.0.0.dev0"` case, not just whole-step drops). Any
+      marker present live but absent from the render refuses the write with a diagnostic naming it (`main()` in
+      `scripts/propagation/rollout-cloudbuild.py`). Default flipped write→dry-run; writing now requires an explicit
+      `--apply` (`--dry-run` still accepted, forces dry-run even if `--apply` is also passed). Verified nothing
+      programmatic invokes the old write-by-default path (grepped the corpus — only manual/docstring usage; not wired
+      into `scripts/quality-gates.sh`, confirmed pre-existing exclude). Full PM `quality-gates.sh` green (sentinel
+      matched committed HEAD before the rebase-recovery push; the pre-existing bare `except Exception:` lint hit was
+      fixed by narrowing to `except yaml.YAMLError:`, not bypass-documented). **Finding surfaced while proving "done
+      when" #3** ("a dry run over all 19 consumers is clean"): a real `--dry-run` today correctly REFUSES 15/19
+      consumers — the template has drifted far past the single 2026-07-20 near-miss (secretEnv/`--unshallow`/VERSION
+      fallback, since forward-ported and clean) to include entire steps the template still lacks (MTDS's
+      `stage-workspace-deps`/`image-import-smoke` dep-skew guard, deployment-api's
+      `vendor-deps`/`deploy`/`redeploy-monitor-jobs`, and a `fetch-tags`/`operability-probe` pair now present on most
+      service repos). Only `deployment-ui`, `e2e-testing`, `system-integration-tests`, `unified-trading-system-ui` are
+      currently write-clean. This is real and current, not a detector bug (spot-verified several diffs by hand); it is
+      squarely the scope of this same plan's next todo (drift checker) and the source issue doc's P3 (all-templates
+      reconciliation) — out of scope for this todo, which only had to make the tool incapable of silently regressing a
+      repo, and it now measurably cannot: every one of those 15 repos would have been overwritten pre-fix. Recorded in
+      the source issue doc's Progress Log for visibility. Source:
+      `issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md` ([DEVOPS] P2).
 - [ ] [INFRA] P2. **Deliver a cloudbuild template-vs-consumer drift checker.** Nothing detects the divergence that armed
       the loaded gun above: the moment a repo fixes something the template does not learn, `rollout-cloudbuild.py` is
       re-armed. Deliver a NEW standalone `scripts/quality_gates/check_cloudbuild_template_drift.py` that renders each

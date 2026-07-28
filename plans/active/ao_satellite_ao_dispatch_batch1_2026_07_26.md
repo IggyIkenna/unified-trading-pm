@@ -134,15 +134,21 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (INFRA P2) and
       `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (SCRIPT
       P2).
-- [ ] [INFRA] P2. **Gate the git-health dirty signal on `dirty_consecutive_ticks >= 2` at BOTH decision sites** — the
+- [x] [INFRA] P2. ✅ **Gate the git-health dirty signal on `dirty_consecutive_ticks >= 2` at BOTH decision sites** — the
       `not_clean_since` clear plus the sync-nudge in `agent-orchestrator/server/routes/git_health.py`, and the FF-pull
       skip decision in `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` — so a one-tick phantom-dirty reading can
       neither reset `not_clean_since` nor make the FF-pull cron skip. **Done when**: a unit test proves a single clean
       poll between two dirty polls does NOT reset `not_clean_since`, and a second check proves a one-tick phantom dirty
-      does not produce an FF-pull skip; `quality-gates.sh` green. Source:
+      does not produce an FF-pull skip; `quality-gates.sh` green. **Already shipped** — verified on this pass, checkbox
+      was simply never flipped: `agent-orchestrator@2530316` (`_propagate_not_clean_since`/`_maybe_send_sync_nudge`
+      gate + `tests/test_git_health_dirty_consecutive_ticks_gate.py`, 4 tests incl. the exact clean-blip-between-two-
+      dirty-polls case) and `unified-trading-pm@dd172d6b7` (`ff_one()`'s per-repo `dirty_consecutive_ticks>=2`
+      confirm-gate in `slot-cron-ff-pull.sh` + `tests/test_slot_cron_ff_pull_dirty_gate.bats`, incl. the one-tick-
+      phantom-does-not-skip case and cross-repo isolation). Both trees clean at HEAD on this repo/slot. Source:
       `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` (both remaining INFRA P2 todos
-      — combined because they are one gate applied at two sites). Per that doc's own 2026-07-23 narrowing, do NOT
-      re-hunt a reporter-internal race unless a post-`agent-orchestrator@529b0dc` recurrence is observed.
+      — combined because they are one gate applied at two sites, both now flipped too). Per that doc's own 2026-07-23
+      narrowing, do NOT re-hunt a reporter-internal race unless a post-`agent-orchestrator@529b0dc` recurrence is
+      observed.
 - [ ] [UI] P2. **Derive the Playwright dev-server port per slot instead of from a shared constant** in
       `deployment-ui/playwright.config.ts` and all three `webServer` blocks of
       `unified-trading-system-ui/playwright.config.ts`, keeping `reuseExistingServer: true`, and log the resolved port

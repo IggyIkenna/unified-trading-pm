@@ -325,3 +325,28 @@ escalate to a `cicd` worker.
     may be silently masking the same `iter_route_contexts` break until its own runner-capacity fix (or any other trigger
     for a clean `.venv` rebuild) exposes it, same as happened here. Did not touch the shared allowlist file, any other
     repo, or the VM — same scope boundary as the prior six fixes.
+
+- 2026-07-28 (cicd agent, slot-8, escalation `agt-b03e9f`, `ldr_qg_failure` on `deployment-api`, promotion PR #413 LDR
+  to main): **8th corroboration + per-repo fix, plus a new secondary symptom.** Failing run `30330086289` (PR #413, head
+  `promote/deployment-api/2c1d446f5090`) showed the same signature: `QG slice (checks)` `TYPE CHECK` step hit a hard
+  `timeout` (Type check FAILED/timeout, exit=124) after `basedpyright` initialized fine, not a genuine type error.
+  Confirmed the repo's own Phase-7 rollout commit `c19edcc` ("feat(ci): Phase 7 + quality-gates-v2 self-host rollout for
+  deployment-api") and exactly 1 registered runner (`glue-ip-172-31-5-118-1`, `online`, shared with the rest of the
+  fleet) via `gh api .../actions/runners`. Applied the same precedented fix: reverted `self_hosted_runner_labels` to
+  `""` (to `ubuntu-latest`) via the same hand-edit pattern + `quickmerge --agent` - `deployment-api@3df07f9`; local
+  `quality-gates.sh` passed in 129s. Verified live: since PR #413's own head is an IMMUTABLE per-SHA promote ref frozen
+  at the pre-fix commit (so re-running on that exact head could never pick up the fix), triggered a direct
+  `gh workflow run quality-gates-v2.yml --ref live-defi-rollout` instead - run `30332079351` completed fully green
+  (`QG slice (tests)` 5m14s, `QG slice (checks)` 2m24s, all jobs confirmed on `labels: ["ubuntu-latest"]`), GH's own "QG
+  Recovered" Slack step fired. **Corroborates a second, concurrently-filed bug**: PR #413 itself never got superseded by
+  a fresh promote ref/PR carrying the fix. Manually dispatched `ldr-to-main-promote-fleet.yml`
+  (`only_repo=deployment-api`) twice (runs `30331728195`, `30331954123`) expecting a new
+  `promote/deployment-api/3df07f9...` ref per STEP 1's frozen-head design - both runs completed `success` at the job
+  level, both logged `TIER A PASS`/`CONTENT GATE PASS`/`SIT GATE PASS`/`LABEL-CHECK PASS` for `deployment-api` then went
+  silent (no `frozen-head:`/`PR:`/`WARN` line, no new ref created, repo counted in NEITHER `Promoted`/`Blocked`/
+  `Conflicted`) - the exact same symptom independently found by slot-11 on `deployment-service`#576 in the same window;
+  see `/plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` for the
+  full analysis + the `[OPERATOR]`/`[SCRIPT]` follow-up todos (not duplicating here). Applied their precedented
+  workaround: closed the stale PR #413 by hand (`gh pr close 413`, comment references that doc) so the next tick's
+  `gh pr create` (which only fires when no existing open PR is found) has a clear path - did not touch the ref, the
+  allowlist file, any other repo, or the VM.

@@ -92,9 +92,10 @@ silently regresses the fleet again.
 - [ ] [DEVOPS] P1. Add a drift check that renders each template and diffs it against every consumer's committed
       `cloudbuild.yaml`, failing (or loudly warning) when a repo carries content the template does not. Wire it into
       PM's `quality-gates.sh` so the divergence surfaces at gate time, not at rollout time.
-- [ ] [DEVOPS] P2. Make `rollout-cloudbuild.py` refuse to write a file whose live content contains markers absent from
-      the rendered output (a "would drop content" guard), so the tool cannot regress a repo even if the drift check is
-      bypassed. Default to `--dry-run` and require an explicit `--apply`.
+- [x] ✅ [DEVOPS] P2. **DONE 2026-07-28 (slot-9, infra)** — `rollout-cloudbuild.py` refuses to write a file whose live
+      content contains markers absent from the rendered output; default flipped to `--dry-run`, write requires
+      `--apply`. unified-trading-pm@ddf0b89f4. Full details + the drift measurement below in the Progress Log; also
+      recorded on `plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md` item 5.
 - [ ] [DEVOPS] P2. Roll the empty-tag guard out to the 19 consumer repos once the drift check exists (each needs its own
       repo QG + quickmerge). Not urgent: the per-repo copies already carry the important fixes, and the guard only
       changes behaviour for manual `gcloud builds submit`, which is not the normal path.
@@ -108,3 +109,14 @@ silently regresses the fleet again.
   `cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md` lineage). During investigation I rendered MTDS's
   file twice to measure the diff and restored it from git both times — verified byte-identical to its pre-write state,
   and the repo's foreign dirty WIP was never touched.
+- **2026-07-28** — Shipped the P2 "would drop content" guard (unified-trading-pm@ddf0b89f4). While proving it against
+  the real fleet (`--dry-run`, no `--apply`), measured that the drift has grown well past the single 2026-07-20
+  near-miss: **15 of 19 consumers now carry content the SERVICE template does not** — not cosmetic, whole steps (MTDS's
+  `stage-workspace-deps`/`image-import-smoke` dep-skew guard; deployment-api's
+  `vendor-deps`/`deploy`/`redeploy-monitor-jobs`; a `fetch-tags`/`operability-probe` pair now on most service repos).
+  Only `deployment-ui`, `e2e-testing`, `system-integration-tests`, `unified-trading-system-ui` render clean. The new
+  guard means `rollout-cloudbuild.py --apply` would now correctly REFUSE all 15 instead of silently overwriting them —
+  the disaster this issue exists to prevent is now structurally blocked — but it also means the P1 drift-checker todo
+  above is more urgent than when it was filed: at this scale a human diffing repo-by-repo before every template touch
+  doesn't scale, and the P3 (other templates) is still entirely unmeasured. Not fixing the drift itself here — out of
+  this todo's scope (it only had to make the tool incapable of regressing a repo, which it now is).

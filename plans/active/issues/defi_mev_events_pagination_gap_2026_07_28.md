@@ -13,7 +13,7 @@ summary: >-
   truncated-but-successful row count and `record_captured` stamps it as complete). Already fully root-caused (not
   re-investigated here) in `plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md` § "FLASHBOTS
   (mev_events) -- NEVER SCHEDULED", deferred-work row "File the mev_events >100-payload/day pagination gap".
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [data]
@@ -43,7 +43,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-tick-data-service@33fa3b58 (2026-07-28) — cursor decrement fixed, unit test added, live-verified
 ---
 
 ## What I found
@@ -105,10 +105,16 @@ slot number (needs a one-off API-contract check against the Flashbots relay docs
 the two — both are simple, mechanical fixes once confirmed). No schema/contract change needed; this is contained
 entirely inside `_fetch_mev_events()`.
 
-- [ ] [BACKEND] P2. Fix the `_fetch_mev_events()` pagination cursor step in
+- [x] ✅ [BACKEND] P2. Fix the `_fetch_mev_events()` pagination cursor step in
       `market-tick-data-service/market_tick_data_service/cli/handlers/mev_events_handler.py:235` so the loop pages
       through the FULL target-day slot range (`from_slot`..`to_slot`) instead of hard-exiting after the first 100-row
       page — confirm whether the Flashbots relay `cursor` query param is an absolute slot number or a page-offset before
       choosing the exact decrement, add a unit test with a mocked >100-row multi-page response asserting all pages are
       fetched and merged, and re-run a live sample-day backfill to confirm `row_count` now exceeds 100 on a day with
-      known relay volume >100 payloads. Repo: market-tick-data-service. Source: this doc.
+      known relay volume >100 payloads. Repo: market-tick-data-service. Source: this doc. —
+      market-tick-data-service@33fa3b58. Confirmed via `flashbots/mev-boost-relay` source (`services/api/service.go` +
+      `database/database.go`: `slot <= :cursor`, `ORDER BY slot DESC`) that `cursor` is an absolute slot number, not a
+      page offset — stepped to `min(slot in page) - 1`. Added `test_pages_through_full_multi_page_response` (100+50-row
+      mocked multi-page fetch, asserts both pages requested + merged); all 26 unit tests green. Live-verified against
+      the real Flashbots relay for 2026-07-20: `row_count` went from a truncated ~100 to 486, spanning the full day
+      (00:01–23:55 UTC) instead of just the newest page.
