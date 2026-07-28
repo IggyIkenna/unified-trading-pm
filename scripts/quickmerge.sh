@@ -432,7 +432,14 @@ PYEOF
     echo "[cascade] 🔀 $ancestor → branch '$branch_name'..."
     (
       cd "$ancestor_path" || exit 1
-      git fetch origin main --quiet 2>/dev/null || true
+      # Fetch $branch_name itself (not just main — a stale holdover from before
+      # live-defi-rollout became the fleet integration branch, per PR #43). The
+      # preserve-check + checkout below both operate against origin/$branch_name;
+      # leaving that ref un-fetched here means its freshness silently depends on
+      # some OTHER process (slot-cron-ff-pull.sh's prefetch) having touched this
+      # same shared clone recently — an undocumented, easy-to-break coupling.
+      # Fetching main too preserves this function's original (unrelated) behavior.
+      git fetch origin "$branch_name" main --quiet 2>/dev/null || true
 
       # Stash local changes if any
       local_changes=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
