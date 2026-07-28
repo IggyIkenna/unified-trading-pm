@@ -952,7 +952,7 @@
         "large_file_count": 0,
         "qg_red_reason": "pytest"
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1009,7 +1009,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 10,
@@ -1100,7 +1100,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
         "warn_file_count": 0,
@@ -1262,7 +1262,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": 89.24,
         "large_file_count": 7,
@@ -1351,7 +1351,7 @@
         "warn_file_count": 5,
         "coverage_pct": null
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-system-ui": {
       "promotion_model": "ldr_main",
