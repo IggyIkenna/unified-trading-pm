@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [evidence-backed-completion, cloud-build, citation-format, review-gate, quality-gates, evidence-integrity]
 related:
   [
-    /plans/active/issues/deployment_api_cloud_build_600s_timeout_flake_2026_07_27.md,
+    /plans/archive/issues/deployment_api_cloud_build_600s_timeout_flake_2026_07_27.md,
     /plans/active/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
   ]
 created: 2026-07-27

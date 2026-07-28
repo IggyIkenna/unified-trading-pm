@@ -23,7 +23,7 @@ summary: >
   risk is downstream: any automation gating on Cloud Build's own `status` field (rather than directly checking the live
   Cloud Run revision) could incorrectly treat a genuinely-successful deploy as failed and either alert falsely or retry
   unnecessarily.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -41,11 +41,15 @@ assigned_vm: NA
 execution_scope: local-only
 assigned_role: devops
 drift_direction: advance-code
-last_updated: 2026-07-27
+last_updated: 2026-07-28
 locked_by:
-resolved_by:
+resolved_by: deployment-api@ea8b9b7 (2026-07-28) — cloudbuild.yaml timeout 600s -> 900s
 depends_on: []
 ---
+
+> **🟢 RESOLVED 2026-07-28** — `deployment-api/cloudbuild.yaml`'s `timeout:` raised 600s -> 900s
+> (deployment-api@ea8b9b7), the first of the two recommended fixes; `quality-gates.sh` green. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # deployment-api Cloud Build 600s timeout flake (deploy step CANCELLED, deploy itself succeeds)
 
@@ -61,10 +65,12 @@ depends_on: []
 
 ## Todos
 
-- [ ] [DEVOPS] P3. **Raise the Cloud Build timeout or verify deploys via the live Cloud Run revision** — implement one
+- [x] [DEVOPS] P3. **Raise the Cloud Build timeout or verify deploys via the live Cloud Run revision** — implement one
       of the two recommended fixes above (raise `cloudbuild.yaml`'s 600s build timeout, or have whatever gates on this
       build's status verify the live Cloud Run revision directly); neither has been implemented — currently a
-      low-priority, non-blocking flake (~5% of builds).
+      low-priority, non-blocking flake (~5% of builds). — deployment-api@ea8b9b7 (raised `cloudbuild.yaml`'s `timeout:`
+      600s -> 900s, the first recommended fix; `quality-gates.sh` green — `cloudbuild.yaml` structure/substitutions
+      checks (STEP 5.17/5.19) pass).
 
 ## Evidence
 
