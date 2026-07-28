@@ -224,3 +224,36 @@ slow (~1.5s/marker, ~2h projected for this 5,000-item batch) — a contention-dr
 the process climbs steadily, `ps` shows healthy RSS ~150MB, not swapping). Letting it run to completion rather than
 interrupting a working approach; will relaunch subsequent batches (~9,500 markers remain after this one) the same way
 (direct `run_in_background`, no `nohup`) once this one lands.
+
+## Update 2026-07-28 (later still, slot-14) — harness-tracked run DID eventually die too, but survived ~10x longer than nohup-detached attempts; refining the mechanism theory, not discarding it
+
+After restarting once more at doubled concurrency (`--discover-workers 8 --verify-workers 8`, no `--limit`, still no
+`nohup`) to process the full remaining ~13k-marker scope in one run, the process ran healthily for a long stretch —
+resume-log climbed steadily from 10,620 through 14,538 (3,918 markers processed) over roughly 90+ minutes of wall-clock,
+well past the earlier confirmed-sustained checkpoint. It then went silent: the harness itself returned a
+`status: "stopped"` task-notification with **no completion record** ("may have been stopped via the UI, Monitor timeout,
+or agent teardown — these leave no transcript marker, or it may have been running when the previous Claude Code process
+exited"). `ps aux` confirmed the process is genuinely gone. Resume-log survived intact at 14,538 entries — no data lost,
+safely resumable per the established contract.
+
+**Host state at the moment this was discovered** (checked immediately after the notification, not assumed):
+`cat /proc/loadavg` → `93.52 74.77 69.15` (1-min spiking back up while 5/15-min were still elevated-but-lower — a fresh
+spike, not a sustained plateau) and, critically, `free -h` → **swap 15Gi/15Gi used (100%, only 275Mi free)**, RAM free
+only 1.1Gi. This is the MOST severe memory-pressure reading of this entire incident sequence — every prior reading had
+at least some swap headroom (52-87% used); this one shows swap **fully exhausted**. A fully-exhausted swap is the
+textbook precondition for the kernel OOM-killer to activate aggressively regardless of any single process's own
+footprint, and is consistent with either the specific tracked process being reaped OR (per the notification's own
+wording) the surrounding session/tooling layer itself being torn down under the same pressure.
+
+**Refining, not discarding, the nohup-detachment theory**: the harness-tracked (non-nohup) approach survived roughly
+**10x longer** than any nohup-detached attempt (90+ minutes vs. 1-3 minutes) before finally succumbing to what looks
+like a genuine, severe resource-exhaustion event (100% swap) rather than the earlier session/cgroup- boundary pattern
+(which killed nohup'd processes at a consistent short duration regardless of load level). Both mechanisms are real:
+nohup+disown detachment is a near-immediate, load-independent kill; sustained/peak host resource exhaustion is a
+separate, less frequent but still real risk that eventually catches even a properly harness-tracked background process.
+Avoiding `nohup` remains clearly worth doing (it moved the failure mode from "minutes" to "an hour-plus"), but does not
+make a long-running local process on this host bulletproof against a genuine capacity spike.
+
+**Next step**: NOT retrying into a 100%-swap host immediately. Waiting for swap/load to show real recovery before the
+next resume attempt (same recipe: harness `run_in_background`, no `nohup`, `--resume-log` pointed at the same
+14,538-entry checkpoint).
