@@ -580,10 +580,10 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   (`unified-trading-pm@<pending>`, execution_scope corrected where stale):
   `issues/defi_lending_protocol_capabilities_instrument_types_stale_atoken_debttoken_2026_07_27.md` (1 todo, bounded
   code+verify), `issues/mtds_chain_bundle_migration_no_progress_checkpoint_2026_07_27.md` (2 todos, mirrors an
-  already-shipped sibling pattern), `issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md` (todo 1 is a
-  bounded audit with a stated done-when; todo 2 retagged `[CODE]→[OPERATOR]` — its own text says "too risky to rush,"
-  touches fleet-wide concurrency-critical code, needs explicit sign-off before an AO worker attempts it). Kept NA
-  despite the classifier's `ao_eligible: true`:
+  already-shipped sibling pattern), `/plans/archive/issues/per_vm_shard_growth_oom_long_running_backfills_2026_07_27.md`
+  (todo 1 is a bounded audit with a stated done-when; todo 2 retagged `[CODE]→[OPERATOR]` — its own text says "too risky
+  to rush," touches fleet-wide concurrency-critical code, needs explicit sign-off before an AO worker attempts it). Kept
+  NA despite the classifier's `ao_eligible: true`:
   `issues/deribit_dated_option_trades_perpetual_misclassification_2026_07_27.md` (the doc's OWN `execution_scope: human`
   field already says so — "find + fix a writer-side bug" is open-ended diagnostic work, not a bounded outcome);
   `issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` (AO/orchestrator-infrastructure

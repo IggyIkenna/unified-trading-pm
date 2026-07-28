@@ -26,6 +26,11 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-28** — live fix: `GCP_PROJECT=central-element-323112` appended to all 23
+> `/etc/github-glue-runner-*.env` files, crash-looping units restarted (34/34 confirmed `active running`, 0 restarts
+> since). Durable fix: `setup-glue-runners.sh` now unconditionally writes the same fallback to the runtime env file that
+> the install-time self-test and systemd template already used. Fleet backlog drained naturally. No open follow-ups.
+
 # Self-hosted glue-runner fleet-wide crash-loop — GCP_PROJECT never written to runtime env files
 
 ## What happened
