@@ -752,12 +752,12 @@ drift_direction: advance-code
       **Done when**: a live Tardis probe on a first-of-month date for LIGHTER-ZKSYNC returns real, correctly-shaped rows
       for all 3 data types using current code, recorded in the doc's Progress Log. Source:
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
-- [ ] [DIAG] P1. Investigate (live API probe) whether EXTENDED-STARKNET's `/info/markets/{symbol}/trades` endpoint's
+- [x] ✅ [DIAG] P1. Investigate (live API probe) whether EXTENDED-STARKNET's `/info/markets/{symbol}/trades` endpoint's
       descending cursor can actually walk back to historical (non-today) dates — the endpoint takes no
       `startTime`/`endTime` param and 0 trades rows of any capture_status exist at any date. Repo:
       market-tick-data-service. **Done when**: a live probe either confirms deep cursor-walking reaches a real
       historical date (record how far back) or confirms it structurally cannot, recorded in the doc's Progress Log.
-      Source: `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`.
+      Source: `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`. — **DONE 2026-07-28: CONFIRMED cannot** (see source issue doc's Progress Log + § 3).
 - [ ] [DATA] P1. Diagnose (and ship a fix ONLY if a clear, undisputed one-line correction — otherwise document + stop)
       why the onchain `availability_index` manifest consolidator is a measured no-op: 13 index rows frozen at
       `date=2026-01-25` while GCS objects exist through 2026-05-22, a fresh scan measures `shards_scanned=1/rows_in=0`

@@ -134,10 +134,16 @@ Two secondary findings:
   (`_umi_extended.py:415`) stamps the snapshot with `datetime.now(tz=UTC)` instead of the requested backfill `date`,
   then the very next line discards the row unless it falls inside the target day's window — which is always false for
   any day except "today." Manifest confirms 0 rows ever, at any date.
-- `trades`: **REAL code, structurally can't backfill** — the adapter's `/info/markets/{symbol}/trades` endpoint
-  (`_umi_extended.py:284`) takes no `startTime`/`endTime` param at all (unlike Extended's candles/funding endpoints,
-  which do), only a descending cursor. 0 rows of any capture_status exist. Plausible but not confirmed that deep
-  historical cursor-walking can't reach old dates.
+- `trades`: **REAL code, structurally can't backfill — CONFIRMED 2026-07-28 (slot-16, live API probe).** The adapter's
+  `/info/markets/{symbol}/trades` endpoint (`_umi_extended.py:284`) takes no `startTime`/`endTime` param at all (unlike
+  Extended's candles/funding endpoints, which do; explicit past-day `startTime`/`endTime` values are silently
+  ignored), and its `cursor` param is forward-only (ascending toward "now") within a small live rolling buffer
+  (~50-row hard cap regardless of `limit`, ~2-7 min of trades) — arbitrarily small cursor values (`0`, `1`, values far
+  below the live id range) all resolve to the same near-"now" window rather than the earliest retained trade, proving
+  the underlying store has no deeper history to walk back into. No undocumented pagination param (`before`/`toId`/
+  `fromId`/`endId`/`offset`) works either. 0 rows of any capture_status exist, and this is now confirmed CORRECT
+  (honest absence, not a code bug) — full probe evidence in
+  `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md` Progress Log, 2026-07-28 (slot-16) entry.
 - `derivative_ticker`: **REAL, verified working** (downloaded and confirmed real hourly funding-rate rows) — but only
   captured on 4 distinct days across the full window (2024-10-01→present), reading as ad-hoc manual verification runs
   rather than a scheduled pipeline.
@@ -450,3 +456,34 @@ Two secondary findings:
     is ALREADY covered by the existing `Mode.LIVE` prefix (live_hyperliquid), so this is future-proofing, not an active
     bug — re-attempt when the UAC tree is quiescent. The `--unphantom` reverse-pass heal is a separate attended
     real-infra step (only needed if any rows are still flipped after the live_ coverage).
+
+- **2026-07-28 (slot-16) — EXTENDED-STARKNET `/trades` cursor investigation: CONFIRMED it structurally cannot walk
+  back to historical dates.** Live-probed `https://api.starknet.extended.exchange/api/v1/info/markets/{symbol}/trades`
+  directly (BTC-USD + ETH-USD, several dozen calls) to test whether the descending `cursor` param can reach non-today
+  data:
+  - **Hard row cap, `limit` ignored**: `limit=5`, `limit=200`, `limit=1000`, `limit=5000` all returned exactly 50 rows
+    every time — the endpoint silently clamps to a fixed 50-row page regardless of the requested limit.
+  - **No-cursor call always returns a live, near-"now" window**: repeated calls with no `cursor` param tracked real
+    time forward (`max T` always within ~1s of wall-clock `now`), confirming the endpoint serves a live rolling buffer,
+    not a queryable historical store.
+  - **`startTime`/`endTime` are silently ignored on `/trades`** (unlike Extended's `/candles`/`/funding`, which do
+    honor them) — passing an explicit full-day past range (2026-07-01 00:00→24:00 UTC) returned `status: OK` + 50 rows,
+    but the data was still today's live window, not the requested past day.
+  - **`cursor` is forward-only (ascending), not a backward/descending walk**: passing a REAL trade id from a fetched
+    page as `cursor` returned the NEXT ~50 trades strictly newer than that id (all returned ids > cursor, verified
+    both directions — using the OLDEST id in a page as cursor returns trades starting ~1s after that id's timestamp,
+    walking toward "now", never before it).
+  - **Passing arbitrarily small/large cursor values (`0`, `1`, `5e17`, `1.04e18`, `2e18`, all far below the real live
+    id range ~2.08e18) all returned the IDENTICAL most-recent ~50-row window** — if the store retained real history
+    and cursor walked from an id, a near-zero cursor should have returned the earliest available trades; instead it
+    always resolves to "now". This is the decisive evidence: the underlying trade store itself only retains a small
+    live rolling buffer (empirically ~2-7 minutes of trades depending on symbol activity), not a full history — the
+    `cursor` param can only page FORWARD within that live buffer, it cannot reach anything before it.
+  - **No undocumented pagination param works either**: tried `before`, `toId`, `fromId`, `endId`, `offset` — all
+    silently ignored (unknown query params don't error, they're dropped; output identical to no-param calls).
+  - **Conclusion**: EXTENDED-STARKNET's `/trades` endpoint is structurally incapable of returning historical
+    (non-today) data via any cursor value, date-range param, or undocumented pagination param tested. The manifest's
+    "0 trades rows of any capture_status exist at any date" is the CORRECT, honest reflection of reality, not a bug in
+    the backfill code — there is no code fix available here (the endpoint itself has no historical surface to call).
+    This closes the § 3 "plausible but not confirmed" hedge with a definitive "confirmed cannot." Flips the
+    corresponding todo in `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`.
