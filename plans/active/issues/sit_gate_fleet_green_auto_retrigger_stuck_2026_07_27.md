@@ -66,6 +66,31 @@ resolved_by:
 4. Unblocked by manually running `gh workflow run full-workspace-sit.yml --repo IggyIkenna/system-integration-tests`
    (its `workflow_dispatch: {}` trigger) — run 30266902462, started 2026-07-27T12:40:44Z.
 
+## Recurrence — 2026-07-28
+
+Recurred within 24h, same failure class, now with precise root-cause evidence for the P3 item below. Discovered while
+resolving `ldr_qg_failure` escalation `agt-c3b95e` (strategy-service PR #448, closed/superseded by #449) — #449's own
+`quality-gates-v2` is GREEN (both on the PR head and on `strategy-service`'s `live-defi-rollout` directly), but the PR
+stayed `mergeStateStatus: BLOCKED` on `sit-gate/fleet-green`, sourced from `full-workspace-sit` run 30318661102
+(2026-07-28T00:53:28Z, conclusion=failure).
+
+Root cause is now precisely quantified: `cross-repo-invariants`' stamp-verification loop polls each dispatched
+`ci-status-update` run for **up to 90s** (`for _ in $(seq 1 18); do ... sleep 5; done`) before giving up and marking it
+`conclusion=unknown/timeout`. Checked all 6 runs the SIT job reported as timed-out/failed directly
+(`gh run view <id> --repo IggyIkenna/unified-trading-pm`) — **5 of 6 had already completed with `conclusion=success`**,
+just AFTER the 90s window closed (observed actual durations: ml-service 129s, strategy-service 148s,
+trading-agent-service 307s, unified-api-contracts 303s, unified-trading-library 145s — all self-hosted `glue-writer`
+runner jobs). Only 1 of 6 (unified-trading-api, run 30320312155) was a genuine `conclusion=failure` (620s runtime before
+failing; job log expired/`BlobNotFound` by the time this was checked, so root cause of that specific failure is
+unconfirmed). So the SIT gate is failing predominantly on a **poll-timeout sized for a runner-speed assumption that no
+longer holds**, not on real cross-repo invariant breaks — confirms and quantifies the P3 hypothesis below.
+
+At time of writing, a new `full-workspace-sit` run (30327524879, `schedule` trigger, started 2026-07-28T04:00:53Z) was
+already in flight — consistent with this being genuinely recurring/frequent rather than a one-off. Did not wait for it
+synchronously (one-shot bounded task, shared CI-firefighter capacity) — a fresh SIT run finishing green will clear the
+gate for #449 same as for any other currently-blocked promote PR fleet-wide once the promoter's next tick reads it (or
+sooner if the retrigger-reliability question above turns out to matter here too).
+
 ## Why it matters
 
 If the promoter's on-red re-dispatch genuinely isn't firing (vs. e.g. only firing under a narrower condition than "any
@@ -86,7 +111,11 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
         `full-workspace-sit` run (repo: system-integration-tests or unified-trading-pm, wherever `ci-status-update`
         lives) — if this is a recurring flake (not a one-off), it's worth a retry-with-backoff inside
         `cross-repo-invariants` rather than failing the whole SIT run on a downstream write timeout for repos that
-        otherwise passed.
+        otherwise passed. **Confirmed recurring 2026-07-28** (see Recurrence section) — 5/6 "timeout" runs in that
+        occurrence had actually completed `success` within 129-307s, all past the stamp-verification loop's fixed 90s
+        poll budget in `cross-repo-invariants`'s job (repo: system-integration-tests). Fix: widen the poll budget (e.g.
+        `seq 1 18` → cover ≥310s observed worst-case, or make it adaptive) rather than retry-with-backoff alone — the
+        runs ARE succeeding, the gate is just not waiting long enough to see it.
 
 ## Codex SSOTs
 
