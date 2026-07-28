@@ -1520,7 +1520,7 @@
         "coverage_pct": null,
         "large_file_count": 13
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
     }
   },
