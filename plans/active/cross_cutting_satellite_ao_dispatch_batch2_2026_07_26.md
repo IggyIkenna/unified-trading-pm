@@ -344,7 +344,23 @@ drift_direction: advance-code
       fidelity, not correctness). **Done when**: (a) a tradfi MDPS run no longer emits the `ohlcv_15s` CRITICAL and no
       `ohlcv_15s` contract was added, (b) a fleet image build carries the registry JSONs and imports
       `build_fetch_evidence` from the published wheel with the datafix layer removed, (c) the defi handlers pass real
-      HTTP status through with a test, and the three source checkboxes are flipped.
+      HTTP status through with a test, and the three source checkboxes are flipped. **RUN 2026-07-28 (slot-11) — (a) and
+      (b) DONE, (c) genuinely NOT bounded as scoped, checkbox stays unflipped.** (a) SHIPPED —
+      `market-data-processing-service@034c1df`: the tier-ceiling mapping alone (already correct as of `mdps@36e80cd`
+      2026-07-27) wasn't sufficient — an explicit CLI/env-var `timeframes` override bypassed it entirely;
+      `resolve_timeframes()` now always intersects against the ceiling, 3 new regression tests, QG green. (b) VERIFIED
+      already resolved 2026-06-23 (this dispatch's source doc's own "2026-06-23 follow-ups RESOLVED" note) — re-verified
+      live 2026-07-28: zero `datafix` references anywhere in the codebase, alerting-service Dockerfile confirms the
+      standard clean UTL-base-image pattern, no regression. (c) Researched, NOT shipped — the literal scope ("thread the
+      ACTUAL...HTTP status...with a test") turns out to span 25+ call sites across non-uniform fetch mechanisms (most
+      with no HTTP status concept at all — RPC multicall, on-chain calls), several needing a per-fetch-family
+      helper-signature widen rather than a call-site edit, plus one genuine C1 correctness bug found in
+      `governance_adapter.py` (swallowed fetch error, contradicting this todo's "danger class already closed" premise)
+      that outranks the fidelity nicety. Not a worker-determinable-alone bounded change — filed as
+      `issues/defi_clean_path_fetch_evidence_fidelity_scope_2026_07_28.md` with a recommended P1(governance
+      fix)/P2(per-family threading) split for proper re-dispatch. Source doc's 3 checkboxes: (a) and (b) flipped with
+      evidence, (c) left open pointing at the issue doc — see
+      `data_pipeline_ag_residual_backfill_decisions_2026_07_24.md`.
 - [ ] [CODE] P1. **Triage the 2 still-open finding classes in both `manifest_hygiene_red` monitor instances as one
       pass.** `issues/manifest_hygiene_red_2026_06_27.md` (defi) and `issues/manifest_hygiene_red_2026_06_29.md` (cefi)
       are dated outputs of the SAME standing monitor (`manifest_hygiene_daily.py`) and both carry a 2026-07-12
