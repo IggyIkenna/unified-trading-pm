@@ -30,6 +30,19 @@
 # 10 still have their self-hosted runner pool registered + online (verified via the GitHub API), so no new pool
 # setup is needed. Re-added now that admission is RAM-aware; if the host shows renewed contention, the governor's
 # own queueing (not a repo-by-repo revert) is the first thing to check — see the issue doc.
+#
+# unified-trading-library REVERTED AGAIN 2026-07-28 (cicd agent, escalation agt-5fd0b2, ldr_qg_failure at
+# 0a3f2036, 11th corroboration in the issue doc): this is NOT the queueing case the note above anticipates —
+# `QG slice (tests)` was already ADMITTED (past the governor's gate) and then sat in_progress on
+# "Run quality gates (leg tests)" for 3+ hours with zero step completion (run 30375127722), while the host itself
+# showed `uptime` load average 90.8/80.5/81.8 on a 16-vCPU box and 13/15GB swap in use (87%) — i.e. severe
+# whole-host thrashing, not a governor-admission miss. A separate run at the same commit also failed earlier with
+# a `uv sync` "Failed to write to the distribution cache: No such file or directory" (a shared ~/.cache/uv path
+# race under this level of host contention). Reservation-mode governor prevents an oversized admission from
+# CRASHING the host; it does not prevent an admitted job from starving once the host is already this saturated
+# from other concurrent load (co-resident AO agent slot-worker sessions + other self-hosted runner jobs). Reverted
+# to ubuntu-latest per the doc's own precedented per-repo fix (10 prior instances); re-adding needs either the host
+# load easing durably or a tighter admission cap, not just re-flipping this line.
 agent-orchestrator
 unified-trading-pm
 strategy-service
@@ -48,7 +61,6 @@ batch-live-reconciliation-service
 alerting-service
 client-reporting-api
 e2e-testing
-unified-trading-library
 ml-service
 deployment-api
 market-data-processing-service
