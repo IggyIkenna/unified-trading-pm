@@ -99,10 +99,13 @@ items explicitly "FENCED" to another named agent/live process).
       **Done when**: a list of every non-Tardis cefi VM class with its measured typical runtime, a PASS/FAIL verdict per
       class against the "shard across machines once multi-hour+" bar, and a follow-up todo filed for each FAIL, is
       recorded in this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 6).
-- [ ] [DATA] P1. **Run `/data-pipeline-check-is` for cefi as a dated PRE-BACKFILL baseline** (independent of when the
+- [x] ✅ [DATA] P1. **Run `/data-pipeline-check-is` for cefi as a dated PRE-BACKFILL baseline** (independent of when the
       Track-2 coverage backfill itself actually launches — establishes a dated reference point regardless). Repo:
       instruments-service (skill run, no code change). **Done when**: the skill's report path + run date is cited in
-      this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence).
+      this plan's Progress Log. Source: `cefi_consolidated_closeout_2026_07_18.md` (Track 2 checkpoint cadence). ✅ —
+      report `plans/audit/results/data_pipeline_e2e_check_is_2026_03_15.md` (+ `.json`), run date `2026-03-15`,
+      promoted + shipped in this same commit (see Progress Log entry below for full detail incl. the recovered-stash
+      provenance).
 - [x] ✅ [DATA] P1. **Run `/data-pipeline-check-mtds` for cefi as a dated PRE-BACKFILL baseline** (same independence
       rationale as the `-is` baseline above — a real dated run distinct from any prior skill-upgrade-only todo). Repo:
       market-tick-data-service (skill run, no code change). **Done when**: the skill's report path + run date is cited
@@ -421,6 +424,32 @@ would remove the only implementation for those 2 venues entirely — a materiall
 bitfinex/bitget still wanted as execution venues? has CCXT support improved since May 2026?) that needs its own scoped
 judgment call, not a reflexive deletion under this todo. Filed as
 `issues/execution_service_bitfinex_bitget_native_unreachable_2026_07_28.md`.
+
+### 2026-07-28 (slot-6, `data_engineering`) — Todo 3 (`/data-pipeline-check-is` cefi PRE-BACKFILL baseline)
+
+Reused an already-existing, same-day, full-MVP-matrix run rather than launching a fresh one — with a correctness fix
+along the way. The run itself (`--day 2026-03-15 --legs live`, 26 MVP cefi venues,
+`total=26 passed=21 failed=1 ambiguous=0 skipped=4`) was already executed 2026-07-28 01:25–02:44 UTC for the sibling
+MID-BACKFILL spot-check todo in `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`, but its report had only ever
+landed in instruments-service's local `./pipeline_e2e_check_reports/` scratch dir (the `pipeline_e2e_check.py` script's
+`--report-dir` default) rather than the skill's documented canonical destination
+(`unified-trading-pm/plans/audit/results/`) — it was never actually committed, and got swept into a slot-tagged git
+stash (`orchestrator-slot-6-cefi_track2_coverage_backfill_checkpoints-002`) on a later `/done`. That means the sibling
+plan's already-flipped checkbox was citing an evidence path that didn't durably exist. Found this while trying to cite
+the same report here: recovered it via `git stash pop`, verified its content matches the sibling plan's citation
+byte-for-byte (26/21/1/4 totals, same per-venue table), then promoted it to the canonical location in this same commit
+(adds `plans/audit/results/data_pipeline_e2e_check_is_2026_03_15.md` + `.json`). This durably fixes the sibling plan's
+evidence gap as a side effect (no separate issue doc needed — the fix IS the promotion, already landed).
+
+Per this todo's own "independent of when the Track-2 backfill launches" framing (same rationale as the sibling MTDS Todo
+4 below), a real dated cefi IS pipeline-check run satisfies the bar regardless of the MID-BACKFILL framing it was
+originally run under — did NOT launch a second redundant VM sweep (the Track-2 coverage backfill VM
+`cefi-queue-heavy-binancefutu-x17-20260727-210013` was still confirmed running/holding the sole Tardis IP lease as of
+2026-07-28T05:31Z per the sibling entry, so a fresh run would add cost with no new signal).
+
+**Report**: `plans/audit/results/data_pipeline_e2e_check_is_2026_03_15.md` (+ sibling `.json`). **Run date**:
+`2026-03-15`. **1 genuine gap** (COINBASE-CDE, `no_parquet_at`) already has its own follow-up issue doc
+(`issues/cefi_coinbase_cde_urdi_zero_records_2026_07_28.md`) filed by the sibling todo — not duplicated here.
 
 ### 2026-07-28 — Todo 4 (`/data-pipeline-check-mtds` cefi PRE-BACKFILL baseline)
 
