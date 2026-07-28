@@ -233,16 +233,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       v2-never-reported deadlock + skip-ci-jam PR classes surface as explicit badges. Pure UI (data already on the
       detail payload). Added `repo-detail-history` test-id + scoped the drill-down test's branch assertions to it (the
       pipeline `main` stage label otherwise made the exact-text match ambiguous). Repo: deployment-ui (`RepoCi.tsx`).
-- [ ] [CODE] P0. **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
-      VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard. Repo: deployment-api (run/ingest) +
-      deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** VERSION_SPLIT
-      needs per-repo source `pyproject.version` fetches (25 GitHub calls/load), and the two cheap manifest-internal
-      checks are exactly the ones CLAUDE.md flags as "VESTIGIAL_SCALAR_DRIFT harmless when stale" + "dep-floors are
-      INTENTIONAL — syncing defeats pull-not-push", so a deployment-api reimplementation risks the "do NOT fix apparent
-      inconsistency blindly" trap (CLAUDE.md § "Manifest version-surface semantics"). Correct design: the panel reads
-      `assert_version_coherence.py`'s VERDICT (the workflow-status→store generalisation the operator described
-      2026-06-11), not a second implementation. **BLOCKED-ON: verdict-store (Firestore generalisation, gated by the
-      CI/CD billing wall) OR operator OK on a faithful port.**
+- [x] ✅ [CODE] P0. DONE 2026-07-28 — **UNBLOCKED + SHIPPED** (operator decision 2026-07-27, §5-RESOLVED item 10: no
+      CI/CD billing wall anymore, build the real Firestore verdict-store generalisation, not a faithful-port
+      workaround). **Version-coherence panel** — `assert_version_coherence.py` verdicts (VERSION_SPLIT /
+      VESTIGIAL_SCALAR_DRIFT / DEP_FLOOR_UNSATISFIABLE) per repo on the dashboard, reading the checker's stored VERDICT
+      (never re-derived) per the 2026-06-12 design assessment. Generalized verdict-store (doc-per-key, latest-wins CAS
+      via a `checked_at` ordering guard — simpler than `ci_status_store.py`'s rank/no-downgrade lifecycle since a
+      verdict is a stateless point-in-time re-evaluation, not a monotonic CI state) shared with the G5 change-freeze
+      panel below. unified-trading-pm@24fd56819 (`scripts/cicd/verdict_store.py` +
+      `write_version_coherence_verdicts.py` + `.github/workflows/version-coherence-check.yml`, scheduled */30 * * * *) +
+      unified-trading-pm@170322056 (`assert_version_coherence.py --json` mode) | 16+8=24 new unit tests green +
+      ruff/basedpyright clean — deployment-api@e23328d (`routes/_verdict_store_reader.py` generic Firestore reader +
+      `routes/version_coherence.py` GET /api/version-coherence/overview) | 22 new route/reader tests green, full QG
+      green (119s) — deployment-ui@76dc977 (`components/VersionCoherencePanel.tsx` on `/repos`) | pw:L2 ✓ 34/34 |
+      regression: tests/smoke/verdict-store-panels.spec.ts. Firestore write cadence: every 30 min
+      (`version-coherence-check.yml`, `workflow_dispatch` also armed for manual verification).
 - [ ] [CODE] P0. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P0. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
@@ -443,15 +448,21 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
       deployment-ui.
-- [ ] [CODE] P0. **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when
-      a freeze blocks a scheduled/autonomous run; add a freeze-window banner on `/repos` (active? window? reason?).
-      Repo: deployment-ui. **ASSESSED 2026-06-12 (Harsh) — WANTS A VERDICT-STORE, do NOT reimplement inline.** The "is a
-      freeze active NOW" verdict spans 6 recurrence types (daily / every_8h / 1st_friday_monthly / 3rd_friday_monthly /
-      8x_yearly / quarterly) + DST notes in `plans/ops/change-freeze-calendar.csv`, and the SSOT evaluator is **inline
-      bash in `.github/workflows/change-freeze-check.yml`** — reimplementing that recurrence/DST logic in deployment-ui
-      risks drift against the gate. Same class as version-coherence: surface the workflow's stored verdict, don't
-      re-evaluate. **BLOCKED-ON: verdict-store (Firestore generalisation) OR operator OK on a faithful port of the bash
-      evaluator.**
+- [x] ✅ [CODE] P0. DONE 2026-07-28 — **UNBLOCKED + SHIPPED** (operator decision 2026-07-27, §5-RESOLVED item 10).
+      **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when a freeze
+      blocks a scheduled/autonomous run; a freeze-window banner on `/repos` (active? window? reason?) now surfaces the
+      workflow's OWN stored verdict — the 6-recurrence-type + DST bash evaluator in `change-freeze-check.yml` is NEVER
+      re-evaluated client-side, closing the drift-risk this item was originally blocked on. Reuses the SAME generalized
+      verdict-store as the version-coherence panel above (collection `change_freeze_verdicts`, doc-per- `check_type` —
+      `PROD_DEPLOY` / `AUTONOMOUS` — vs. the version-coherence panel's doc-per-repo; both share one
+      `scripts/cicd/verdict_store.py` CAS/reader implementation). unified-trading-pm@170322056 (the reusable workflow's
+      own "Write change-freeze verdict to Firestore" step, `continue-on-error: true` + `if: always()` so a Firestore
+      hiccup can never turn an advisory side-write into a blocker for the 4+ real callers — cloud-build- router.yml /
+      cloud-build-router-aws.yml / freeze-deferred-build-replay.yml / overnight-agent-orchestrator.yml) —
+      deployment-api@e23328d (`routes/change_freeze.py` GET /api/change-freeze/status, both check_types always reported
+      even when Firestore only has a doc for one) | 22 new route/reader tests (shared with version-coherence above) —
+      deployment-ui@76dc977 (`components/ChangeFreezeBanner.tsx`, renders only when ≥1 check_type reads BLOCKED) | pw:L2
+      ✓ 34/34 | regression: tests/smoke/verdict-store-panels.spec.ts.
 - [x] ✅ [CODE] [UI] P3. DONE-LOCAL 2026-06-12 (**on LDR, draining to staging/main via the routine promote — billing
       restored, verified 2026-06-12**) — deployment-api@0232b5a + deployment-ui@367b5b7 | deployment-api QG green (14/14
       route tests) + full UI QG | pw:L2 ✓ 202/202 | regression: tests/smoke/repos-tab.spec.ts (lag chip) +
