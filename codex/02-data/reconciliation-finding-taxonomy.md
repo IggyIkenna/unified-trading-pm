@@ -234,12 +234,21 @@ emits.
   the finding either floods false positives on old data or silently passes post-cutover regressions.
 - **Known weakness to state in every report** — the oracle's `require_pipeline_mode` defaults **False**, so the machine
   gate is currently WEAKER than the codex declaration. A report must name which setting it used.
-- **Second known weakness — the oracle does NOT validate the filename instrument-id.** It drops the last path segment
-  before validating; only `asset_group=tradfi` single-instrument shards have a stem rule. So a wire-named or
-  double-wrapped CeFi object (`ADAF0:USTF0.parquet`, `BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) **can never raise
-  this finding** — ~811,200 such objects read as canonical. Path STRUCTURE and instrument-id FORM are orthogonal; a
-  report must either run the canonical-id check separately or state plainly that id-form was not machine-checked. SSOT:
-  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
+- **Second known weakness — historical, now closed for `{tradfi, cefi, defi}`.** Before `unified-api-contracts@d40c5d7d`
+  (2026-07-20, refined `@1cd27478` 2026-07-23) the oracle dropped the last path segment before validating and only
+  `asset_group=tradfi` single-instrument shards had a stem rule, so a wire-named or double-wrapped CeFi object
+  (`ADAF0:USTF0.parquet`, `BITFINEX-FUTURES:PERPETUAL:ADAF0:USTF0.parquet`) could never raise this finding — ~811,200
+  such objects read as canonical at the time. `_stem_id_form_violations()` now checks the filename stem for
+  `_ID_FORM_CHECKED_ASSET_GROUPS={"cefi","defi"}` too (tradfi's own filename clause predates it), so
+  `canonical_path_violations()` now covers id-form for `{tradfi, cefi, defi}` in one call — re-tested live 2026-07-28,
+  the worked example above now DOES raise this finding, not a false-clean. **`sports`/`prediction` remain outside
+  `_ID_FORM_CHECKED_ASSET_GROUPS` and are still filename-blind** — for those two asset_groups only, a report must run
+  the canonical-id check separately or state plainly that id-form was not machine-checked. Path STRUCTURE and
+  instrument-id FORM are still orthogonal in general (a structurally-perfect path can carry a bad stem and vice versa)
+  even where both are now machine-checked. SSOT:
+  `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (history),
+  `plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
+  correction).
 - **Safe remediation** — migrate (copy) to the canonical path. Never in this reconciliation's own process.
 - **Delete-eligible** — **NO, not on this finding alone.** Non-canonical location is not evidence of duplication. It
   becomes delete-eligible only if it independently classifies as `legacy_duplicate` with a CONTENT-verified twin.
