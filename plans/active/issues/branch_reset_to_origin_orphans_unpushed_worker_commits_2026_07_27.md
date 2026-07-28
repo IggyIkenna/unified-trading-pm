@@ -137,11 +137,26 @@ commit; it resets the branch to origin and drops it:
   should the in-flight respawn's branch-reset orphan it (third-wave PM-docs case proves that risk is real); it becomes a
   recovery candidate ONLY if a future reflog confirms `branch: Reset` dropped it. Corrected per review msg 2459.
 
-- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commit (slot-13 `d1c1ad8a` ONLY — slot-11 `ffc02a8c` was
-      reclassified LIVE-owned blocked-WIP above, do NOT recover it while slot-11 is alive): cherry-pick `d1c1ad8a` from
-      `.tabs/13/features-service` reflog (or apply the saved backstop patch) onto current `origin/live-defi-rollout`,
-      then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). Clean + complete + test-backed
-      (review-verified). Code MUST go through quickmerge (QG + provenance trailer).
+### Fourth wave — the ROOT-CAUSE FIX itself is now orphan-at-risk on dead slot-5 (main agt-4d8de7, 2026-07-28T00:33Z)
+
+The runtime/operator had already dispatched a task to fix this very bug — **`slot_cron_ff_pull_toctou_reset_race-001`**
+(the TOCTOU reset race in the ff-pull cron is the confirmed mechanism). slot-5 took it and COMPLETED the fix:
+
+- **slot-5 `3becc9ede`** (unified-trading-pm CODE, `scripts/dev/slot-cron-ff-pull.sh`,
+  `fix(ci): harden slot-cron-ff-pull.sh adopt-rebase against a check-then-act HEAD-moved window`, +39/-6). Slot-5 is
+  **confirmed DEAD** (worker_alive=false, tmux_alive=false, tmux_session=null, last_ping 00:25:52Z, status=idle). Commit
+  is still `ahead=1`, NOT yet orphaned (reflog HEAD@{0}=the commit over clean ff-pulls; no `branch: Reset` yet) — but a
+  respawn would orphan it via the same bug it fixes. Backstop:
+  `.orch-orphan-commits-recovery/slot5_3becc9ede_pm-scripts-ff-pull-hardening.patch`. **This is the highest-priority
+  recovery of the set: landing it stops the bleeding.** CODE → main cannot quickmerge unilaterally; escalated with
+  elevated priority.
+
+- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **PRIORITY ORDER: (1) slot-5 `3becc9ede`** (the
+      root-cause ff-pull TOCTOU fix — land this FIRST to stop new orphaning), then **(2) slot-13 `d1c1ad8a`**
+      (features-service). Do NOT recover slot-11 `ffc02a8c` while slot-11 is alive (reclassified LIVE-owned blocked-WIP
+      above). For each: cherry-pick from `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
+      `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). All clean + complete
+      (review-verified where noted). Code MUST go through quickmerge (QG + provenance trailer).
 
 > **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
 > so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan
