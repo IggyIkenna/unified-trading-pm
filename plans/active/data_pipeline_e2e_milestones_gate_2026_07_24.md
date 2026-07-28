@@ -300,8 +300,8 @@ MDPS, or features-service) and ASPIRATIONAL elsewhere. instruments-service's `--
 `--shard-key`/`--instrument-type`/`--day`/`--root` at all.
 
 - [x] [BACKEND] P1. ✅ **DONE 2026-07-24 (both tracked in one new doc)** — target: new issue doc. Created
-      `plans/active/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md` with both the 6-tuple audit and the
-      chain-scoping-flag enumeration as bounded todos. `pm@<commit-pending>`.
+      `/plans/archive/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md` (archived 2026-07-28, all 4 todos done)
+      with both the 6-tuple audit and the chain-scoping-flag enumeration as bounded todos. `pm@<commit-pending>`.
 - [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — same new doc as above (see previous item).
 - [x] [BACKEND] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/sports_consolidated_closeout_2026_07_19.md`. Added
       the fixture-level-targeting-flag confirmation todo. `pm@<commit-pending>`.

@@ -67,7 +67,7 @@ related:
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
-    /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
@@ -407,15 +407,18 @@ instances fixed; **both in-flight items now settled 2026-07-26**, was: "[IN FLIG
 `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`; the 23 sports-cell UAC registration was
 deliberately **NOT actioned — its premise is superseded by a later operator ruling** and is left unflipped on purpose,
 do not re-dispatch it as if it were pending work; a stray empty-test-bucket delete stays human-only, deferred to
-`bucket_estate_consolidation_to_sub100`) + `issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (a broader
-10-lens follow-up spinoff, NOT duplicate of the above — 7/24 candidates survived adversarial review, 4 shipped, 2
-deferred [blocked on reconciling a peer's concurrent commit], 1 needs a schema-contract decision; **one residual is a
-direct deepening of the other doc's finding #1**: the bucket-NAME fix landed, but the gas-fee PATH within that bucket
-still resolves nowhere — unfixed, needs a data-pipeline research answer on where gas-fee data actually lives) +
-`distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY; **census refresh DONE
-2026-07-25**, `unified-trading-pm@b2b170cd6` — 175 → 45 non-canonical distinct values, plus a rollup-overwrite gotcha
-filed; was: "[IN FLIGHT 2026-07-25] … running now". 2 unrelated todos remain open: reconcile every drift cluster to an
-owning plan, and the MDPS `canonical_writer_shaping.py::_type_token_from_canonical_id` bug).
+`bucket_estate_consolidation_to_sub100`) + `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md`
+(archived 2026-07-28, a broader 10-lens follow-up spinoff, NOT duplicate of the above — 7/24 candidates survived
+adversarial review, 4 shipped, **2 formerly-deferred now RECONCILED 2026-07-28** — `paired_dispatch.py` was already
+shipped independently via `features-service@57f8b45d9`, `smoke_matrix.py` fixed fresh via `features-service@ab53855b` —
+1 needs a schema-contract decision, tracked in
+`/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`; **one residual is a direct deepening
+of the other doc's finding #1**: the bucket-NAME fix landed, but the gas-fee PATH within that bucket still resolves
+nowhere — unfixed, tracked in the same untracked-followups doc, needs a data-pipeline research answer on where gas-fee
+data actually lives) + `distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY;
+**census refresh DONE 2026-07-25**, `unified-trading-pm@b2b170cd6` — 175 → 45 non-canonical distinct values, plus a
+rollup-overwrite gotcha filed; was: "[IN FLIGHT 2026-07-25] … running now". 2 unrelated todos remain open: reconcile
+every drift cluster to an owning plan, and the MDPS `canonical_writer_shaping.py::_type_token_from_canonical_id` bug).
 
 **Close-out criterion**: the bucket-resolution doc's residuals settled (`aave_rate_impact` ✅ run; sports-cells ✅
 superseded-not-actioned; empty-test-bucket delete still operator-gated); the audit-candidates doc's 2 deferred
@@ -523,8 +526,9 @@ historical-snapshot banner.
 domain-level `AssetClass`→`AssetGroup` enum rename across all 5 AGs + 7 repos) ·
 [issues/catalogue_census_equivalents_inventory_2026_07_24.md](/plans/active/issues/catalogue_census_equivalents_inventory_2026_07_24.md)
 (manifest/catalogue distinct-values census gaps across strategy/features/fixtures/UAC registries) ·
-[issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/active/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
-(shard-key CLI convention coverage audit across instruments-service/MDPS/features-service) ·
+[issues/cli_shard_split_flag_coverage_audit_2026_07_24.md](/plans/archive/issues/cli_shard_split_flag_coverage_audit_2026_07_24.md)
+(shard-key CLI convention coverage audit across instruments-service/MDPS/features-service — RESOLVED 2026-07-28,
+features-service@87e73cee) ·
 [issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md](/plans/archive/issues/coverage_percent_symmetric_inclusion_audit_2026_07_24.md)
 (coverage-percent formula symmetric-inclusion invariant audit, honest-coverage-model) ·
 [/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md](/plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md)
@@ -764,6 +768,6 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   discoverability: `issues/manifest_reprocessing_generic_utility_2026_07_07.md`,
   `issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`,
   `issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md` (the adjacent already-tracked gap doc itself, now
-  AO-eligible), `archive/issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None were
-  tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog. This entry itself does not
-  change this hub's own `assigned_vm: NA` gate noted above — that stays operator-controlled.
+  AO-eligible), `archive/issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None
+  were tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog. This entry itself
+  does not change this hub's own `assigned_vm: NA` gate noted above — that stays operator-controlled.

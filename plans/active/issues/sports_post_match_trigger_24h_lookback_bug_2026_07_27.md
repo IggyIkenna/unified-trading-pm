@@ -278,4 +278,21 @@ same conclusion, plus two provenance details worth keeping on record:
       shows its `QG slice (checks)` and `QG slice (tests)` jobs failed — same wall-clock-budget-breach signature Check 1
       already attributed to the known fleet-wide self-hosted-runner capacity issue, not a regression in the sports fix.
       No new escalation needed; this is a genuine external wait (the PR needs to re-run green and merge), not something
-      dispatchable from a worker slot right now. Manifest query still correctly withheld.
+      dispatchable from a worker slot right now. Manifest query still correctly withheld. **Check 3 (2026-07-28,
+      slot-12) — still NOT merged, re-verified via `git merge-base --is-ancestor 5b5d227 origin/main` → NO.** PR591
+      (`IggyIkenna/deployment-service#591`) is now `CLOSED` (not merged) along with two further superseding attempts,
+      `#592` and `#593`, also `CLOSED`/unmerged — the standing LDR→main fleet promoter (`ldr-to-main-promote.yml`) keeps
+      opening a fresh promote PR per tick when the prior one closes without merging. The current live successor is
+      `#594` (`promote/deployment-service/0545f414f721`, opened 2026-07-28T20:34:27Z, `OPEN`,
+      `mergeStateStatus: BLOCKED`, `mergeable: MERGEABLE`) — confirmed `5b5d227` IS an ancestor of its head via
+      `git merge-base --is-ancestor 5b5d227 origin/promote/deployment-service/0545f414f721` → YES. Of the three required
+      LDR→main gates: `quality-gates-v2` run `30396931613` is `success` (green, unlike Check-1/2's wall-clock-budget
+      failures — that specific flake has since cleared); `semver-agent/label-check` is `success`; but
+      `sit-gate/fleet-green` reads `failure` — the referenced `full-workspace-sit` run (`30396073451`,
+      system-integration-tests) shows `conclusion=cancelled`, not a real invariant failure. `gh run list` on
+      `full-workspace-sit.yml` shows heavy concurrency churn right now (7 runs in the last ~20min, most `cancelled`, one
+      `pending`, one `in_progress`) — consistent with the known auto-retrigger/concurrency-group-cancel pattern in
+      `plans/active/issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`, not a new failure mode. This is
+      still a genuine external wait (a fresh SIT run needs to land green and the promoter needs to re-post the gate) —
+      no action a worker slot can take beyond what's already tracked in that sibling issue doc. Manifest query still
+      correctly withheld pending the ancestor check reading YES.

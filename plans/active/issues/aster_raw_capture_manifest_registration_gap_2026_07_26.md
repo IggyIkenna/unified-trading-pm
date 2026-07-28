@@ -128,10 +128,18 @@ depends_on: []
       repo-blocker per RULES.md §4b — `test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`
       broke after `unified-api-contracts@ee7cb341` registered "coinbase"; another slot landed an equivalent fix
       concurrently, reconciled via merge).
-- [ ] [DATA] P1. Once the writer-path fix is deployed, re-run a manifest-only reconciliation pass that registers the
+- [x] [DATA] P1. Once the writer-path fix is deployed, re-run a manifest-only reconciliation pass that registers the
       ALREADY-WRITTEN 2026-07-20/21 raw files + their derived `processed_candles/` as `captured` (idempotent, no
       re-fetch) — mirrors the recipe in `/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`.
-      Repo: market-tick-data-service.
+      Repo: market-tick-data-service. — ✅ **market-tick-data-service@9415ef7a**. Live-verified 2026-07-28: the daily
+      ASTER capture had already self-healed MOST of the 2026-07-19..07-22 window post-fix (07-21/07-22 fully `captured`;
+      candles for 07-20/07-21 already registered by MDPS on 07-27). The residual registration gap was exactly 8 (date,
+      instrument) cells — real raw parquet on GCS, manifest still `attempted_failed` (4 on 07-19:
+      BANK/ESPORTS/MERL/XAN-USDT@LIN; 4 on 07-20: BANK/DOGS/MMT/WET-USDT@LIN). New one-off
+      `register_aster_onchain_perp_manifest_gap_2026_07_28.py` (dry-run/--apply, targeted GCS listing + slim manifest
+      diff, additive `ManifestWriter.add(per_vm_shards=True)` mirroring `OnchainPerpBatchHandler._record_captured`'s
+      exact field shape) registered all 8 — verified via a same-instance-identity read showing gap 8→0. Candle side
+      needed no code change (already correctly registered). 9 new unit tests; QG green (sentinel=HEAD, 7414+ passed).
 - [ ] [DATA] P2. Once ASTER's manifest correctly reflects its real captured range, re-scope
       `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg (MDPS candle backfill) — it was carved out of that plan's
       initial delivery pending this fix.
@@ -141,6 +149,12 @@ depends_on: []
 - Root-caused + fixed todo 1 (P0). See the todo's own evidence line for the full mechanism. Shipped
   `market-tick-data-service@7a730cd6`. P1 (register the already-written 2026-07-20/21 data) and P2 (re-scope the
   `cefi_satellite_ao_dispatch_batch1-001` ASTER leg) are queued as separate todos above, not yet started.
+
+## Progress Log (2026-07-28)
+
+- Closed todo 2 (P1). See the todo's own evidence line for the full mechanism + verification. Shipped
+  `market-tick-data-service@9415ef7a`. P2 (re-scope `cefi_satellite_ao_dispatch_batch1-001`'s ASTER leg) remains — not
+  started this session.
 
 ## Not yet checked (deliberately out of scope for this discovery pass)
 

@@ -159,8 +159,8 @@ drift_direction: advance-code
       `fleet_data_acquisition_health_2026_06_21.md`. Done when: each of the 4 items has either a shipped fix (repo@sha
       cited) or a confirmed-resolved/no-longer-reproducible note, logged into the doc's body/Progress Log, and its
       `status:` frontmatter updated to `resolved` if all 4 close.
-- [x] ✅ [UTL] P2. **Bound the un-evicted `_CANONICAL_CACHE` to stop the manifest-read OOM (Option A, lowest-risk)** — in
-      `unified_trading_library/manifest_writer/_state.py`'s `_invalidate_index_cache` (~L142-166), cap
+- [x] ✅ [UTL] P2. **Bound the un-evicted `_CANONICAL_CACHE` to stop the manifest-read OOM (Option A, lowest-risk)** —
+      in `unified_trading_library/manifest_writer/_state.py`'s `_invalidate_index_cache` (~L142-166), cap
       `_CANONICAL_CACHE` to the single current bucket: on a bucket-change, `del` the prior bucket's cached DataFrame
       before caching the new one, instead of leaving every visited bucket's merged index pinned in the process-global
       cache forever. This targets the confirmed root cause of the DeFi multi-day batch-backfill OOM (exit_code=137 on
@@ -174,8 +174,8 @@ drift_direction: advance-code
       regression test to confirm the same-bucket warm-read path (`~27s` avoided re-read) is unaffected — this is
       cross-cutting shared code on the LIVE cefi/sports/tradfi manifest-read path, so the no-regression check on the
       warm-cache win is mandatory, not optional. Source:
-      `plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md`. Done when: the per-bucket eviction is
-      implemented in `_state.py`, the new eviction unit test and the existing sports warm-cache test both pass,
+      `plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md`. Done when: the per-bucket eviction
+      is implemented in `_state.py`, the new eviction unit test and the existing sports warm-cache test both pass,
       `quality-gates.sh` is green, and the change is shipped via quickmerge with the issue doc's frontmatter `status`
       flipped to reflect the resolved Option A (leaving Option B noted as a still-open, separately-scoped follow-on if
       desired, not silently implied done). — **DONE 2026-07-28**: `unified-trading-library@0db19a72`. Option A shipped
@@ -242,29 +242,19 @@ drift_direction: advance-code
       with new Aster `derivative_ticker` shards visible in the manifest for the backfill range; (d) lands with a unit
       test asserting the 5-level book write + manifest record at `pipeline_mode=live_aster`; (e) is recorded as a
       Progress Log finding (confirmed unchanged, or a new dated issue doc if Aster's collateral rules changed).
-- [ ] [BUG] P0. **Recover the 2 features-service DEFERRED stash fixes and resolve Finding #2's gas-fee data-location
-      question.** (1) In features-service, `git stash list` to find
-      `features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`, `git stash apply`,
-      then reconcile the two contained fixes: the `paired_dispatch.py:246` `paired_price_dispersion` delta-one
-      `by_date/`→Fold-A `delta_one/` prefix fix (already tested, 29 green) and the `smoke_matrix.py:204`
-      feature_group-scoping fix — the latter overlaps landed peer commit `features-service@9ce1f4ab` ("extend
-      smoke_matrix with --all-handlers per-handler coverage validation"), so re-diff against that commit and
-      rework/dedupe rather than blind-reapply; run features-service QG green, then ship both via quickmerge (or, if
-      genuine unresolved overlap remains after reconciliation, leave DEFERRED and record why in this doc, not a silent
-      drop). **Coordinate with the sibling `features_service_coverage_and_script_canon_2026_06_10.md` todo below — that
-      one relocates `smoke_matrix.py` files to `e2e-testing/`; land THIS stash-recovery fix to `smoke_matrix.py` first
-      (or check whether the relocation already landed and re-target the recovered diff accordingly) to avoid editing a
-      file mid-move.** (2) For Finding #2 (`pnl_input_builder.py:56,94` — `_load_gas_fee_data` reads
-      `gas_fees/chain_id=…/`, a prefix confirmed to exist in NO bucket, so DeFi PnL gas cost is hardcoded to 1 gwei),
-      investigate where DeFi gas-fee data is actually captured today (grep MTDS `gas_fee_handler.py` and its writer
-      path, check GCS for any gas-fee-bearing prefix across DeFi buckets) and append the answer to this doc: either the
-      real bucket/prefix to point `_load_gas_fee_data` at (do NOT ship a blind path-string guess), or a documented
-      conclusion that gas-fee data is never captured (file as its own scoped issue/BLOCKED-CREDENTIALS if a new capture
-      path is needed — do not fix the read path without a confirmed write-side source). Source:
-      `silent_wrong_answer_audit_candidates_2026_07_20.md`. Done when: both stash fixes are either landed (QG green,
-      commit sha cited) or explicitly re-DEFERRED with a stated reason in this doc, AND Finding #2 has a documented
-      gas-fee-data-location answer (source found + path fix landed, or a BLOCKED/new-issue-doc conclusion) appended to
-      this doc.
+- [x] ✅ [BUG] P0. **DONE 2026-07-28 (part 1) / re-scoped (part 2).** (1) Stash recovery: the original stash
+      (`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`) was confirmed
+      unrecoverable from the features-service clone (`git stash list` empty, no matching dangling commit in
+      `git     fsck`) — both fixes re-derived fresh instead. `paired_dispatch.py`'s delta-one-prefix fix was ALREADY
+      independently shipped via `features-service@57f8b45d9` (2026-07-22, confirmed via `git blame`) — no action needed.
+      `smoke_matrix.py`'s feature_group-scoping fix was genuinely still missing after peer `features-service@9ce1f4ab`
+      (`--all-handlers`) landed (that commit added the per-feature_group loop but never scoped the manifest-row check to
+      `feature_group`) — fixed fresh + reconciled against the peer's shape, 2 regression tests added,
+      `bash scripts/quality-gates.sh --no-fix` green. — features-service@ab53855b. (2) Finding #2 (gas-fee data-location
+      question) is NOT resolved here — re-scoped as its own tracked todo in
+      `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md` (strategy-service repo, out of
+      this dispatch's features-service/cross-cutting scope) rather than answered inline in this doc, so it isn't lost.
+      Source: `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (archived 2026-07-28).
 - [ ] [SCRIPT] P3. Close the stale `strategy_store_split_brain_2026_07_13.md` issue doc — its two remaining reader-code
       legs are already shipped, the doc frontmatter just never flipped. Verify both live: (1)
       `deployment-api/deployment_api/deployment_api_config.py` `effective_strategy_store_{cefi,tradfi,defi}_bucket` all

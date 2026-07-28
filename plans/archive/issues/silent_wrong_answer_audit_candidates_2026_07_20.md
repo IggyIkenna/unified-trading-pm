@@ -14,7 +14,7 @@ summary: >-
   reader prices every DeFi fill at a hardcoded 1 gwei because its `gas_fees/` path exists in no bucket. The recurring
   shape is a wrong bucket/path/token resolving to nothing, an exception or empty default swallowing the miss, and a
   plausible wrong number or false-green verdict flowing on.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data, features]
@@ -36,6 +36,8 @@ related:
     /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     /plans/active/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
+    /plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md,
+    /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
   ]
 created: 2026-07-20
 parent_epic: infrastructure_master
@@ -53,9 +55,15 @@ source:
     "10-lens silent-wrong-answer audit workflow run 2026-07-20; 7 finder lenses completed, all adversarial verifiers
     died on a session limit so most findings are finder-evidenced only",
   ]
-resolved_by:
+resolved_by: features-service@ab53855b
 locked_by:
 ---
+
+> **🟢 RESOLVED 2026-07-28** — the doc's one formal todo (2 stashed fixes) is reconciled: `paired_dispatch.py` already
+> shipped via `features-service@57f8b45d9`; `smoke_matrix.py` fixed fresh via `features-service@ab53855b`. The 4 shipped
+> survivors + 1 latent-follow-up from the "Verification outcome" section stay on record below (this doc is the
+> historical audit trail). The 2 remaining untracked prose threads (gas-fees reader, 4-pillar schema-contract decision)
+> are now tracked todos in `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`. Archived.
 
 # Silent-wrong-answer audit — candidate findings
 
@@ -214,9 +222,21 @@ autonomously, as it may be an intended future engine). This is also why the gas-
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Land the 2 stashed "safe survivor" fixes** — `features-service`'s `paired_dispatch.py`
-    delta-one-prefix fix and `smoke_matrix.py` feature_group-scope fix are written, adversarially reviewed, and green,
-    but stashed (`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`),
-    blocked on reconciling against a peer's concurrent `smoke_matrix --all-handlers` work (see "Verification outcome"
-    above).
+- [x] ✅ [BACKEND] P2. **RECONCILED 2026-07-28** — the original stash
+    (`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`) is unrecoverable
+    from this clone (`git stash list` empty, no matching dangling commit in `git fsck`) — checked
+    `git log`/`git   stash list` per rule 4 before re-deriving, per the finding rule. Reconciled fresh against the
+    peer's landed work: (1) `paired_dispatch.py`'s delta-one-prefix fix was ALREADY independently shipped via
+    `features-service@57f8b45d9` ("R1 features by_date/day= root canonicalisation", 2026-07-22, confirmed via
+    `git   blame` — the current code already carries the `delta_one/` kind-prefix this fix was for) — no action needed.
+    (2) `smoke_matrix.py`'s feature_group-scope fix was genuinely still missing even after the peer's
+    `features-service@9ce1f4ab` (`--all-handlers`) landed: that commit added the per-feature_group CLI-invocation loop
+    but never scoped `_verify_test_manifest`'s manifest-row check to `feature_group` (only date+asset_group), so one
+    feature_group's row could pass all 11 handler cells. Fixed fresh + reconciled against the peer's `--all-handlers`
+    shape, with 2 new regression tests. `bash scripts/quality-gates.sh --no-fix` green (17974+ tests). —
+    features-service@ab53855b (smoke_matrix fix; paired_dispatch already covered by @57f8b45d9). The 2 other
+    genuinely-still-open findings this audit's prose named but never tracked as todos (gas-fees reader path in
+    strategy-service, the 4-pillar schema-contract decision in e2e-testing) are now filed as tracked todos in
+    `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md` so archiving this doc doesn't
+    drop them.
 </content>

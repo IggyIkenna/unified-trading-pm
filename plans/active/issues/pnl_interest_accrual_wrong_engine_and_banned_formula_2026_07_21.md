@@ -25,7 +25,7 @@ tags: [pnl-correctness, interest-accrual, determinism-spine, ssot-contradiction,
 related:
   [
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
-    /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master

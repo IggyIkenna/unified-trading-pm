@@ -231,10 +231,18 @@ verified piecemeal); this is purely the version-surface gate. Repo: market-tick-
 
 ## Todos
 
-- [ ] [CODE] P2. **Align `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key** — live connectors emit
-      `data_type="book_snapshot_5"` but `SOURCE_PRIORITY` keys it as `("cefi", "book_snapshot")`, so `book_snapshot_5`
-      writes are source-EXEMPT (no validation enforced); register `("cefi", "book_snapshot_5")` or rename to one
-      canonical spelling, and sweep other AGs for the same drift. Repo: unified-api-contracts.
+- [x] ✅ [CODE] P2. **Align `book_snapshot` vs `book_snapshot_5` SOURCE_PRIORITY key** — registered
+      `("cefi", "book_snapshot_5"): ["tardis", "aster", "hyperliquid", "extended"]` additively (same source list as the
+      legacy `("cefi", "book_snapshot")` alias, which stays for the closed-set pipeline_mode round-trip per
+      `test_validity_matrix_completeness.py`'s existing `CEFI_LEGACY_KEY` exclusion). Added the matching
+      `AVAILABILITY_AT_SEMANTICS[("cefi","book_snapshot_5")] = "tick_timestamp"` entry required by the bidirectional
+      SOURCE_PRIORITY↔AVAILABILITY_AT_SEMANTICS round-trip test
+      (`test_every_source_priority_pair_has_availability_semantic`). Swept other AGs for the same drift via
+      `DATA_TYPES_BY_ASSET_GROUP`: only `cefi` and `prediction` declare `book_snapshot_5` as a valid data_type, and
+      `prediction` was already keyed correctly (`("prediction","book_snapshot_5")` pre-existing) — no other AG drift
+      found. Added regression test `test_cefi_book_snapshot_5_source_priority_registered_fleet_health_2026_06_21`
+      (`tests/unit/test_source_priority.py`). `quality-gates.sh` full suite green. Evidence:
+      `unified-api-contracts@7d41bc34`.
 - [x] ✅ [INFRA] P1. **STALE — already self-resolved via normal semver-agent operation, 2026-07-28.** The specific
       version numbers cited (pyproject `0.31.0`/origin-main `0.24.0`/workspace-manifest `0.25.0`/
       `repositories.mtds.version` `0.20.0`) no longer exist — mtds has advanced through ~70+ version bumps since this

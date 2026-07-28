@@ -429,6 +429,42 @@ def attribute_carry_lending(atoken_balance: Decimal, liquidity_index_now: Decima
     )
 ```
 
+### Funding Accrual Model — DISCRETE vs CONTINUOUS_TIME_WEIGHTED (2026-07-28)
+
+Not every venue's perp funding follows the same settlement mechanics, and the accrual math must match which model a
+venue actually uses — `unified_api_contracts.registry.perp_funding_cadence.FundingAccrualModel` is the evidence-based,
+per-venue closed-set classification (`FUNDING_ACCRUAL_MODEL` dict, `funding_accrual_model(venue)`):
+
+- **`DISCRETE`** — the venue charges funding as a discrete lump-sum event at a fixed settlement instant (its own
+  `fundingTime`/`nextFundingTime` boundary) — Binance/Bybit/OKX/Aster/Bitget/Bitfinex/Kraken (TWAP-then-settled every
+  8h/4h) and Hyperliquid/Lighter/Coinbase/EXTENDED-STARKNET (computed-then-settled hourly). The economically correct
+  accrual over a holding interval is the SUM, over each discrete settlement instant inside the interval, of
+  `position_size_at_that_instant × rate_at_that_instant`.
+- **`CONTINUOUS_TIME_WEIGHTED`** — the venue computes AND transfers funding continuously; there is no discrete charge
+  instant to sum over. The correct accrual is a TIME-WEIGHTED AVERAGE (integral) of the continuously-observed rate over
+  the holding interval: `integral[entry,exit] position_size(t) × rate(t) dt` (or, constant position size,
+  `position_size × time_weighted_average(rate)`). **DERIBIT is the confirmed sole exception** (investigated 2026-07-28,
+  `plans/active/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md` Finding 4): its ticker API exposes only
+  two scalars (`current_funding`/`funding_8h`), no next-funding-time field of any kind; its own education docs state
+  funding is "calculated in real time and transferred every few seconds"; a real 55,291-row production sample shows
+  `funding_rate` changing ~1,454 times across a single day with no discontinuity at 00:00/08:00/16:00 UTC or any other
+  boundary.
+
+**Why this is informational today, not a computation branch**: the shared, live-wired funding-leg mechanism
+(`CanonicalDerivativeTickerFundingProvider.day_funding_fraction` → `paper_run_passive.build_paper_run_passive` /
+`paper_run_attribution.build_paper_run_attribution`) already takes a per-day TICK-LEVEL MEAN of the captured
+`funding_rate` column and scales it by `fundings_per_day` — a discrete Riemann-sum approximation of the time integral
+that is mathematically correct for BOTH models at the day-accrual granularity the paper/batch determinism spine
+currently uses: a tick-mean over a `DISCRETE` venue's piecewise-constant series approximates the time-weighted average
+of that day's distinct settlement-cycle levels; a tick-mean over a `CONTINUOUS_TIME_WEIGHTED` venue's series
+approximates the true continuous integral directly. **No venue-conditional branch exists or is needed in the accrual
+formula itself** — proven by
+`strategy-service/tests/unit/engine/backtest/test_deribit_continuous_vs_discrete_funding_accrual.py` (golden-math,
+cross-venue formula-identity, gap-handling, end-to-end PnL, and paper==batch ε=0 determinism, all against real
+fluctuating synthetic series). The classification exists as a documented semantic tag for downstream consumers
+(reporting/UI, or a future finer-than-day-granularity accrual engine that would need to treat entry/exit mid-cycle
+differently per model) — re-derive nothing, read the tag.
+
 ### Options Greeks Attribution
 
 For options strategies, P&L is decomposed into greek components:

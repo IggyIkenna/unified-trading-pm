@@ -138,3 +138,15 @@ forces an operator/main manual DB patch outside the normal flow.
   Root-caused by reading `server/verify.py::check_plan_flip` directly (not guessing) -- two independent causes
   identified (30-min window + missing 4th disposition). Per main's instruction: task LEFT in-progress, NOT
   skipped/redispatched, checkbox NOT flipped.
+- 2026-07-28 (worker, slot 12, second occurrence, different task): Hit the SAME
+  `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` 409 on `sports_post_match_trigger_24h_lookback_bug-005`
+  (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) -- a `[VERIFY] P1` todo genuinely
+  still open because its completion condition (`deployment-service@5b5d227` confirmed on `origin/main`) is not yet true
+  (verified: still not merged -- successor PR594 blocked on the fleet-wide `sit-gate/fleet-green` flake). Pushed an
+  evidence-only "Check 3" doc update (`unified-trading-pm@6ef574cc2`) mirroring the existing "Check 1"/"Check 2" entries
+  already in that doc from two PRIOR slots (10, 16) who evidently hit the identical wall -- confirms this is not a
+  one-off, it recurs on any todo whose done-condition is externally gated, not just data-correctness RED-gates. This
+  case has no HARD-RULE reason to forbid the flip (unlike the cefi case above) -- it's simply not true yet -- so the
+  proposed 4th disposition (`BLOCKED-ON:<ref>` marker, recommendation below) should be worded generically for "condition
+  not yet met" rather than RED-gate-specific. Per the same precedent: task LEFT in-progress, NOT skipped/redispatched,
+  checkbox NOT flipped.
