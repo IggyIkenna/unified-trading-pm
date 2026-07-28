@@ -327,7 +327,7 @@ drift_direction: advance-code
       (`plans/archive/2026_07/sports_shard_enumeration_cartesian_blowup_deferred_history_2026_07_22.md`) Deferred-work
       table row for §4.5 from "Not done" to a dated done-state citing the correction commit. Incidentally discovered and
       filed an unrelated pre-existing `check_plan_discipline.py` false-positive:
-      `issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`. Source:
+      `archive/issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`. Source:
       `issues/sports_shard_enumeration_cartesian_blowup_2026_07_20.md`.
 
 ## Deferred — conflict-gated (NOT dispatched; queued for operator review)

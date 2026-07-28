@@ -19,7 +19,7 @@ summary: >-
   silent-failure runs cost a full quality-gates.sh cycle (60-300s depending on host load) for zero effect — pure wasted
   compute under exactly the contention regime (many concurrent slots on one shared branch) this fleet runs in
   constantly.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [quickmerge, git-push, silent-failure, race-condition, branch-contention, ci-cd, ldr]
 related: [/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md, /codex/08-workflows/ci-cd-flow.md]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-28"
 parent_epic: infrastructure_master
 source:
   "slot-11 (infra), discovered while shipping ao_satellite_ao_dispatch_batch1_2026_07_26.md item 3 (5 consecutive
@@ -38,13 +38,19 @@ execution_scope: local-only
 priority: P1
 estimate_class: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm@0e48ffe51 (2026-07-27, already shipped before this doc's own todo was verified)
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 depends_on: []
 ---
+
+> **✅ RESOLVED — `unified-trading-pm@0e48ffe51`.** Already fixed by a concurrent session before this doc's todo was
+> picked up: the final push now runs a bounded, exit-code-checked retry loop with a rebase-and-retry cycle between
+> attempts, exactly per this doc's own recommendation. Archived. (A separate, still-open sibling doc —
+> `quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md` — tracks unrelated follow-on polish
+> on the same code path.)
 
 # quickmerge.sh's final push silently swallows non-fast-forward rejections
 

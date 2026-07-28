@@ -126,9 +126,10 @@ source:
                                               todo + a re-run-once-fixed todo), which is where sports completion is now tracked, not here. Secondary finding
                                               filed separately (unrelated to
                                               the backfill itself, found while verifying it):
-                                              `plans/active/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md` (a
+                                              `plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md` (a
                                               `read_availability_index(columns=..., filters=...)` broad except silently converts ANY `ValueError` — including
-                                              a caller's missing `GCP_PROJECT_ID` — into a false-empty result).
+                                              a caller's missing `GCP_PROJECT_ID` — into a false-empty result). **Resolved + archived 2026-07-28**
+                                              (`unified-trading-library@0db19a72`).
 
 - [x] ✅ [DATA] P1. **RESOLVED 2026-07-28 (slot-5)**: the genuine remainder tracked in
       `/plans/archive/issues/sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` is now fully closed — all

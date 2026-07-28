@@ -33,7 +33,7 @@ scope: [engineer, admin]
 tags: [git, race-condition, shared-clone, multi-agent, commit-message, prek, per-tab-worktrees, evidence-integrity]
 related:
   [
-    /plans/active/issues/quickmerge_silent_push_failure_under_contention_2026_07_27.md,
+    /plans/archive/issues/quickmerge_silent_push_failure_under_contention_2026_07_27.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-28

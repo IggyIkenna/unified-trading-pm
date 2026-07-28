@@ -15,7 +15,7 @@ summary: >-
   1), discovered while shipping an unrelated `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` doc correction
   (worked around via the CLAUDE.md "pure doc/plan-flip -> prek only" carve-out, which does not run this corpus-wide
   check).
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -29,6 +29,7 @@ related:
     /plans/archive/issues/plan_discipline_quoted_deferred_false_positive_2026_07_26.md,
   ]
 created: 2026-07-27
+last_updated: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P3
 estimate_class: refactor
@@ -40,9 +41,13 @@ depends_on: []
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@ddf138deb (2026-07-27, already shipped before this doc's own todo was verified)
 source: ["slot 8, data_engineering, 2026-07-27, discovered while shipping sports_satellite_ao_dispatch_batch3-011"]
 ---
+
+> **✅ RESOLVED — `unified-trading-pm@ddf138deb`.** Already fixed by a concurrent session before this doc's todo was
+> picked up: `_DEFERRED_BY_DESIGN_RE` fullmatch exclusion added, covering exactly this unquoted-report-prose class,
+> with a regression test using this doc's own cited text. Archived.
 
 ## What I found
 
