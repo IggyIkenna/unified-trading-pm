@@ -47,6 +47,12 @@ superseded_by:
 > a scoped, tracked 3-repo migration underway to execute it. Do not resolve this staleness gap unilaterally from either
 > doc — check the closeout's current Track C/H sections (and its own Progress Log) for the latest state before acting on
 > either doc; the closeout is getting its own reconciliation todo about this specific conflict as a separate step.
+>
+> **Dispatch model formalized, 2026-07-29 (operator ruling)**: `assigned_vm: NA` stays as declared, but remaining
+> bounded todos on this plan are sanctioned to land via the satellite AO-dispatch-batch pattern already in practice
+> (e.g. `sports_satellite_ao_dispatch_batch5_2026_07_26.md` / its `_finalize` sibling), rather than requiring a fresh
+> personal review before every landing — this codifies what was already happening piecemeal, per
+> `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`'s reconciliation todo.
 
 # Canonicalize sports odds-feature naming on UAC's SportsFeatureVector
 

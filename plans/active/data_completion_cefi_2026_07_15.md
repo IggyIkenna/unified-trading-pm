@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-28 # (was: 2026-07-28 deployment-api pipeline_mode dedup+drilldown-filter verified already-shipped, slot-16 -- consolidated 3 overlapping E4-E8 todos into cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md, slot-4)
+last_updated: 2026-07-29 # (was: 2026-07-28 deployment-api pipeline_mode dedup+drilldown-filter verified already-shipped, slot-16 -- consolidated 3 overlapping E4-E8 todos into cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md, slot-4; now: 2026-07-29 real cefi candle-coverage gap todo closed via live manifest verification, slot-12)
 locked_by:
 locked_since:
 supersedes:
@@ -256,18 +256,18 @@ MTDS consolidation ruling.)**
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
 
       **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
-                                                              (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
-                                                              `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
-                                                              other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
-                                                              evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
-                                                              dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
-                                                              (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
-                                                              Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-                                                              then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-                                                              then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-                                                              legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-                                                              chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-                                                              2026-07-13 per MTDS consolidation ruling.)**
+                                                                  (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+                                                                  `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+                                                                  other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+                                                                  evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+                                                                  dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+                                                                  (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+                                                                  Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+                                                                  then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+                                                                  then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+                                                                  legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+                                                                  chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+                                                                  2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -326,10 +326,10 @@ MTDS consolidation ruling.)**
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-                                                                  (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-                                                                  when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-                                                                  completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-                                                                  No checkbox flip — criteria still unmet pending that re-run's result.
+                                                                      (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                                                                      when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                                                                      completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                                                                      No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
@@ -472,18 +472,31 @@ MTDS consolidation ruling.)**
       on the foreign non-deterministic flake `features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux
       `quality-gates-v2` re-verifies at promotion). Repo: features-service. **(Promoted 2026-07-27 from the Absorbed
       rollup's sub-item 1 — no content change.)**
-- [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill) — RE-SCOPED 2026-07-27 (slot-14), now a manifest
-      gap, not (only) a data gap.** The `ohlcv_*` manifest-row sparsity this item's original text cites is a STALE
-      symptom of the wrong query vocabulary (see the VERIFY todo below) — the REAL candle files themselves are growing,
-      not stuck: a fresh live listing of `processed_candles/by_date/day=2026-05-03/` today shows **1,238 files**
-      (BITGET-FUTURES 664 / BITGET-SPOT 340 / BITFINEX-FUTURES 199 / KRAKEN-FUTURES 35) — roughly **2x** this item's
-      original 2026-06-03 count (578: 319/151/90/18 same venues, same day) — so candle GENERATION for this venue set is
-      active and growing. What's now confirmed missing is the MANIFEST recording of those writes (see the VERIFY todo
-      below) — track + complete BOTH: (a) the manifest backfill/repair for already-written candle files, (b) whether
-      candle generation is missing entirely for OTHER major cefi venues (BYBIT/OKX/COINBASE/DERIBIT/HYPERLIQUID etc. —
-      not checked this session, still open). Repo: MDPS. Likely VM-scale given the breadth of (b); needs its own scoped
-      follow-up, not a quick fix. **(Promoted 2026-07-27 from the Absorbed rollup's sub-item 2 to a first-class,
-      independently-dispatchable todo.)**
+- [x] ✅ [DATA] P1. **Both (a) and (b) CLOSED 2026-07-29 (slot-12) — via the already-completed sibling campaign,
+      verified fresh against the live consolidated manifest, not assumed from the campaign's own writeup.** This todo's
+      own text asked for two things: (a) manifest backfill/repair for already-written candle files, (b) whether candle
+      generation is missing entirely for OTHER major cefi venues (BYBIT/OKX/COINBASE/DERIBIT/HYPERLIQUID). Both are
+      answered by the now-fully-shipped `plans/active/mdps_candle_manifest_population_disconnect_2026_07_25.md` (todos
+      1-7 all done, root cause fixed `market-data-processing-service@caa995c`) + its sibling
+      `plans/active/issues/mdps_candle_manifest_near_total_coverage_gap_2026_07_27.md` (corpus-wide orphan-sweep +
+      `backfill_candle_manifest.py` campaign, `market-data-processing-service@cf94e23`) — that campaign's cefi leg was a
+      full-corpus sweep (405,496 actionable rows), not scoped to the 4 originally-named venues, so it inherently covers
+      (b)'s venue-breadth question too; this session verified that landed rather than re-trusting the campaign's own
+      VERDICT line. **Fresh live read this session** (downloaded
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` directly, filtered
+      `service_name=="market-data-processing-service"`): **509,049 candle-manifest rows across 19 distinct venues**
+      (507,610 `captured` + 1,439 honest `attempted_failed`, zero silent placeholders) — including every venue this todo
+      named as unchecked: DERIBIT 3,486 / BYBIT 3,311 / OKX-SWAP+SPOT+FUTURES 3,991 combined / COINBASE-SPOT 1,006 /
+      HYPERLIQUID 481,115 (the dominant venue, consistent with it being the most actively-traded), plus
+      BINANCE-FUTURES/SPOT, UPBIT, BITFINEX/BITGET/KRAKEN spot+futures, EXTENDED-STARKNET, ASTER, LIGHTER-ZKSYNC. **(a)
+      is closed**: this is the direct backfill result (25,593 cefi cells recorded this campaign), now present in the
+      consolidated index. **(b) is closed, answer NO**: candle generation is NOT missing for the named venues — real GCS
+      candle objects exist and are now manifested for all of them (the backfill tool only records against objects that
+      genuinely exist on GCS; it never fabricates rows). COINBASE-FUTURES specifically is a separate, already- tracked
+      gap (`cefi_coinbase_futures_blank_instrument_type_2026_07_27.md`, a raw-tick `instrument_type` nullness on one day
+      — not this todo's candle-manifest scope). No code change needed this session (the fix already shipped); this
+      closure is a verification-only checkbox flip citing real, freshly-read evidence, not a re-run of the campaign.
+      **(Originally promoted 2026-07-27 from the Absorbed rollup's sub-item 2; RE-SCOPED same day by slot-14.)**
 - [x] ✅ [DATA] P1. **VERIFY MDPS candle-manifest faithfulness — DONE 2026-07-27 (slot-14).** Verdict: **YES, MDPS is
       dramatically under-emitting manifest rows relative to real candle files it writes** — confirmed by direct
       comparison, not assumption. _\*Root cause of the original "8,715 sparse ohlcv_* rows" premise_*: STALE query
