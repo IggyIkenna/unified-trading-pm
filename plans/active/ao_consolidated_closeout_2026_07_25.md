@@ -13,7 +13,11 @@ summary: >-
   here.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ao] # corrected 2026-07-29 (ag-closeout-audit cross-cutting-tranche run) -- was [cross-cutting]. This is the `ao`
+  # tranche's OWN top-level consolidated-closeout/coordinator doc; the 2026-07-27 asset_group_ao_ci_infra_schema_
+  # expansion retag (unified-trading-pm@a97bc7bed) re-derived membership for docs CITED in each tranche's Sources
+  # list but missed each tranche's own master doc, which still carried its pre-2026-07-27 [cross-cutting] tag.
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]

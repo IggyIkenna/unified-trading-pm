@@ -16,7 +16,13 @@ summary: >-
   left it for a follow-up that was never filed.
 status: open
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group:
+  [cross-cutting] # corrected 2026-07-29 (ag-closeout-audit orthogonality fix) -- was [defi, cross-cutting], a genuine
+  # mistag: P1 (e2e-testing schema-contract gap, 51/61 asset_group x data_type pairs) is unambiguously cross-AG, and
+  # parent_epic is infrastructure_master (cross-cutting's own scoping epic), not defi_master; already cited/covered as
+  # cross-cutting content under Track 12 of cross_cutting_consolidated_closeout_2026_07_25.md. P0's gas-fee reader fix
+  # touches DeFi-specific code but was surfaced by the same cross-cutting-lineage audit (silent_wrong_answer_audit_
+  # candidates_2026_07_20.md) -- doc as a whole is cross-cutting, not defi.
 stage: [strategy, data]
 repos: [strategy-service, e2e-testing]
 scope: [engineer, admin]

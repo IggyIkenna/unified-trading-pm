@@ -14,7 +14,12 @@ summary:
   corrupted by the kills.
 status: open
 nature: issue
-asset_group: [sports, cross-cutting]
+asset_group:
+  [cross-cutting] # corrected 2026-07-29 (ag-closeout-audit orthogonality fix) -- was [sports, cross-cutting], a
+  # genuine mistag: content is a shared-host process-management/multi-agent-safety finding (nohup-detachment reaping,
+  # fleet-wide OOM/swap exhaustion), not football/sports data content -- the sports tag was inherited from the
+  # task-in-progress when the incident occurred. Sibling doc of the identical incident class,
+  # pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md, is tagged [cross-cutting] only.
 stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer, admin]
