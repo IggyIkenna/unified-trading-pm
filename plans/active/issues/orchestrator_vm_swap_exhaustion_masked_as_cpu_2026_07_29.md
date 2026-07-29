@@ -162,13 +162,33 @@ not resource capacity — flagged for whoever owns that plan, out of scope for t
   later the same day to **2026-08-02** for one account. The `docs_reconciler` "no headroom" failure at 03:03 UTC was a
   real, whole-pool exhaustion event, not a code defect. Fixing this for real means provisioning more accounts into the
   rotation (a subscription-cost decision, same class as the EBS/IOPS one above) — not attempted here.
-- **The 4 daily reconciler jobs' "wait until tomorrow on no-capacity" is a documented, deliberate design choice**, not
-  an oversight: `scripts/install-plan-reconciler-timer.sh`'s own header states _"No-capacity at fire time → the dispatch
-  503s; the timer's next-day run retries. (Deliberate: a daily reconcile skipped for a day is fine; queueing semantics
-  belong to CI escalations, not housekeeping.)"_ Given this session confirmed the fleet is genuinely
-  capacity-constrained, this design reads as more correct than ever (housekeeping shouldn't out-compete real CI fixes
-  for scarce slots) — flagged to the operator rather than silently changed, since reversing it is a priority judgment
-  call, not a bug fix.
+- **The 4 daily reconciler jobs' "wait until tomorrow on no-capacity" was a documented, deliberate design choice —
+  operator explicitly overrode it after being told the tradeoff.** Flagged first (see the original framing above,
+  preserved for the record); operator's response: _"waiting tomorrow is enever ending"_ — disagreed with the priority
+  call once it was made explicit. **Implemented same session**: all 4 timers
+  (`plan_reconciler`/`docs_reconciler`/`ag_closeout_auditor`/`na_eligibility_auditor`) now fire **hourly** instead of
+  once/day, staggered by minute (`:00`/`:15`/`:30`/`:45`) to preserve the original no-simultaneous-contention intent.
+  Each dispatch script queries `/api/scheduled-jobs/recent` before firing and no-ops if today's run already landed
+  (per-tranche for the two sharded jobs), so a successful run isn't wastefully re-attempted every remaining hour.
+  Shipped `agent-orchestrator@97d8ba6`; `bash -n` + `shellcheck -S warning` clean on all 4 outer scripts, the generated
+  inner dispatch scripts extracted and syntax-checked separately, the tranche-filter logic functionally tested against
+  mock data. **Installed live** (re-ran all 4 `install-*.sh` on the orchestrator VM as root) and **verified working with
+  real data within the hour**: `plan_reconciler` — stuck since 01:02 UTC on the `protected_live_peer` guard —
+  **dispatched successfully on its very first hourly retry**; 4 of 9 `ag_closeout_auditor` tranches dispatched
+  immediately (ci/ao/prediction/defi), directly reflecting the same-session capacity increase from the instance resize.
+
+  **New, separate finding surfaced by this same verification run**: 5 of 9 `ag_closeout_auditor` tranches and all 9
+  `na_eligibility_auditor` tranches failed — but with a DIFFERENT signature than the account/slot exhaustion this
+  session was chasing:
+  `dirty-state quarantined ... features-service: refused: HEAD already 1 commit(s) ahead of origin/live-defi-rollout` /
+  `git add -A failed: Unable to create '.../features-service/.git/index.lock': File exists` /
+  `nothing to commit (race)`. This points at one or more slot worktrees having a stuck/dirty `features-service` checkout
+  (a stale lock file, or a local commit that's been sitting unpushed past the age-guard) that's causing the
+  branch-preservation step to quarantine those slots on every attempt. Not investigated further this session — flagged
+  as its own distinct issue for whoever picks it up next; the hourly retry will keep re-attempting these tranches every
+  hour regardless, so no work is lost while it's open, but the underlying stuck worktree(s) won't self-resolve without
+  someone looking at it directly.
+
 - **The escalation queue was checked and found genuinely busy, not stuck.** High retry-attempt counts on some
   escalations (72, 50 attempts over 3+ hours) reflect real, sustained capacity scarcity (verified: 14 of 17 slots had
   fresh <1min-old pings on real in-flight work at the time of checking), not a broken retry loop — and it was observed
@@ -188,6 +208,11 @@ not resource capacity — flagged for whoever owns that plan, out of scope for t
 - [ ] [OPERATOR] P3. Decide whether to provision additional Claude accounts into the scheduled-jobs headroom-check
       rotation pool, given 5/6 are currently exhausted through 2026-08-02 in the worst case — a real subscription-cost
       decision, not something to action without operator sign-off.
+- [ ] [BACKEND] P2. Investigate the `features-service` dirty-worktree quarantine blocking 5/9 `ag_closeout_auditor` +
+      9/9 `na_eligibility_auditor` tranches (see finding above, run window 2026-07-29T05:00-05:18 UTC). Identify which
+      slot worktree(s) have the stuck `features-service` checkout (stale `.git/index.lock`, or a local commit sitting
+      ahead of `origin/live-defi-rollout` past the 900s age guard) and clear it. The hourly retry means no work is lost
+      while this is open, but it won't self-resolve.
 
 ## Codex SSOTs
 
