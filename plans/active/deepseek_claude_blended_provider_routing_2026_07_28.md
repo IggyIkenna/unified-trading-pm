@@ -270,22 +270,40 @@ entirely):
   prompt/instruction pipeline — routing happens one layer below (which HTTP endpoint `claude` talks to), entirely
   underneath where file-loading and prompt-construction logic lives.
 
-## Deferred work after 2026-07-29
+- **Code+doc timing analysis for shipping readiness** (2026-07-29): merge-to-live is **fully automatic, no manual gate**
+  — `ao-self-pull.sh` runs as root cron every ~15 min on the planning VM, FF-pulls `origin/live-defi-rollout`, and runs
+  `systemctl restart orchestrator` the moment HEAD moves; there is no staged canary or manual approval step between
+  "quickmerge lands on LDR" and "that code is serving the real 14-agent fleet." `KillMode=process` means the systemd
+  restart never kills in-flight tmux worker sessions. The zero-DeepSeek-account safety net is proven: `accounts.json` is
+  gitignored (per-VM, never shipped via git), so merging new routing code does NOT register the DeepSeek account on its
+  own — production's `accounts.json` stays with 4 Claude entries only. `select_account_for_spawn()`'s very first check
+  (`has_deepseek = any(a.provider == "deepseek" for a in accounts)`) is a hard no-op without that separate registration
+  step. **The real risk from the code merge is the shared plumbing**: `_spawn_param_plan()` tuple shape (4→5),
+  `_reconcile_task_fields()` signature, and `regen_backlog_from_plan.py` per-plan parsing all run on EVERY dispatch for
+  EVERY task, DeepSeek accounts or not. These paths are validated by mocked unit tests (1923 passed) but not by any
+  in-flight production dispatch since the redesign. **Creds-bucket distribution** (separate, safe to do independently):
+  `push_creds_to_gcs.sh` uploads to `gs://central-element-323112-orchestrator-creds/accounts/<id>.env`; S3 side
+  (`s3://uts-orchestrator-creds-427895769566/accounts/<id>.env`) has no sanctioned script in the repo — manual
+  `aws s3 cp` mirroring the 4 existing Claude accounts' convention. `CredsEnvPoller` only syncs an env file when an
+  account IS in that VM's own `accounts.json`, so pushing a file ahead of registration is harmless/noop.
 
-| Item                                                                     | State / why deferred                                                        | Blocked on                                                        |
-| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Ship the held-back code (todos 1-5)                                      | Not done — implemented, tested, quality-gates green, deliberately unshipped | Operator go-ahead (standing instruction: local-only until proven) |
-| Re-run local pilot against the redesigned policy                         | Not done — real work, next logical step                                     | Nobody — pick up next                                             |
-| Isolated-local-pilot runbook / fix `AgentKeeper`+watchdog isolation gaps | Not done — real work                                                        | Nobody                                                            |
-| Fix/guard the `ORCHESTRATOR_SERVER_URL` production-reachability gap      | Not done — real work, should land BEFORE the next pilot re-run              | Nobody                                                            |
-| End-to-end test `provider:` frontmatter through real `regen()`           | Not done — real work, small                                                 | Nobody                                                            |
-| Spend-guard ceiling before routing to DeepSeek                           | Not done — real work, now more urgent (0.8 default, not 0.3)                | Nobody                                                            |
-| Dashboard provider badge (UI)                                            | Not done — real work, not started this session                              | Nobody                                                            |
+## Recommended rollout sequence (2026-07-29)
 
-**Recommended next**: fix the `ORCHESTRATOR_SERVER_URL` gap first (small, prevents repeating the 2026-07-29 respawn-
-loop incident), then re-run the local pilot against the redesigned policy — that pilot run is what actually clears todos
-4/5 for shipping. The operator's last question in-session ("re-run the pilot now, or hold?") was still open when this
-checkpoint was written.
+1. **(done)** `~/.claude-accounts/deepseek-v4-pro.env` wired + smoke-tested + `$5` prepaid balance added.
+2. Push the env file to both creds buckets (GCS via `push_creds_to_gcs.sh`, S3 manual mirroring) — harmless ahead of
+   registration, unblocks later steps.
+3. Fix the `ORCHESTRATOR_SERVER_URL` local-pilot production-reachability gap (todo below) — small, prevents repeating
+   the 2026-07-29 respawn-loop incident.
+4. Re-run the local pilot against the redesigned policy specifically (todo below) — exercises the real spawn plumbing
+   under real concurrent dispatch with the new accumulator/quota-adaptive/mutual-fallback logic; the 2026-07-29 pilot
+   ran the OLD code (fraction 0.5, modulo split, no quota-adaptation), not this one.
+5. **Then** quickmerge the held-back agent-orchestrator code — with the operator present, watching it land, not walking
+   away (~15 min self-pull cron = fast). The code merge and the DeepSeek VM-side `accounts.json` registration are TWO
+   decoupled steps — ship code first, confirm the fleet restarts cleanly (all 14 slots resume normal Claude- only work —
+   `has_deepseek` is still False on the real VM), THEN separately register the account.
+6. Manually add `deepseek-v4-pro` to the real VM's `data/config/accounts.json` — the actual activation switch.
+7. Watch the first real DeepSeek fleet spawns; revert via removing that entry (or setting `deepseek_route_fraction=0` as
+   a kill-switch) if anything looks wrong.
 
 ## Todos
 
