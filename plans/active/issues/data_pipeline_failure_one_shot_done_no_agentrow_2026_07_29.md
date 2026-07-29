@@ -137,3 +137,10 @@ still in flight.
   without live DB/dashboard access; left the remaining root-cause step (which branch fired / what changed the AgentRow's
   status) as the first todo for whoever picks this up. Did not attempt a blind code fix without confirming which of the
   two failure hypotheses (never-registered vs. registered-then-status-changed) is correct.
+
+- **2026-07-29 (cicd escalation worker, slot 9, `agt-0cd704`, role=`cicd` not `data_pipeline_failure`):** corroborating
+  — same 400 (`"no active agent owns its session 'orch-slot-9' ... a Class-A worker must /done with a task_id"`) on two
+  `/done {one_shot_complete: true}` attempts, once with `task_id: ""` and once with `task_id: "agt-0cd704"` — confirms
+  this is not `data_pipeline_failure`-specific (title should probably be read as the _discovering_ role, not the
+  _affected_ role scope) and not sensitive to which `task_id` value is sent. Ending session without a clean `/done` per
+  this doc's own precedent (no blind fix attempted); relying on the idle-lingering-reclaim reaper path.
