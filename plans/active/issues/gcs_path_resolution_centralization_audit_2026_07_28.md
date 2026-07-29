@@ -35,7 +35,7 @@ related:
     /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -554,9 +554,40 @@ going forward. Still open, tracked as a todo below.
       regression test proving a real discovery list is non-empty for a pipeline_mode-partitioned date (fail pre-fix,
       pass post-fix, matching today's established pattern). (repo: features-service)
 
-- [ ] [DESIGN] P1. **Rule on the remaining MTDS finding** — `deribit_options_chain_handler.py::_write_shard` missing
-      `pipeline_mode=` insertion (path≠manifest divergence, data_type currently appears dormant). Needs a real judgment
-      call, not a guessable fix. (repo: market-tick-data-service)
+- [x] [DESIGN] P1. **Rule on the remaining MTDS finding** — RULED + FIXED + SHIPPED 2026-07-29,
+      `market-tick-data-service@d2270ac426f652f458f9a6fac14a9519d389fdba`. Verdict: **same stale-bug pattern as
+      KALSHI_PERP/POLYMARKET_PERP**, not a genuine carve-out. `_write_shard` called UAC `build_cefi_partition_path(...)`
+      and used the result directly for the GCS read/write with no post-hoc `pipeline_mode=` insertion, while the
+      manifest record (`recorder.record_captured`/`record_zero_rows`/`record_failed`) already carried
+      `pipeline_mode=PipelineMode.LIVE_DERIBIT` — a genuine path≠manifest divergence, structurally identical to the
+      Kalshi finding, just not yet independently verified. History check found this is actually a REGRESSION: an earlier
+      fix (`deribit_live_options_chain_path_noncanonical_2026_07_21.md` todo 2, `mtds@ec0df878`, 2026-07-26) correctly
+      rewrote the path from a totally-broken THIRD shape to the v6 canonical chain-bundle shape, but in doing so DROPPED
+      the (mis-positioned) legacy `pipeline_mode=` segment entirely instead of re-inserting a correctly-positioned one —
+      so the path has been missing `pipeline_mode=` since that rewrite, not from day one. **Confirmed genuinely
+      dormant** (not merely "currently appears dormant"): (a) GCS-verified zero objects at either shape across 9 sampled
+      days (2026-07-20 through 2026-07-28) in
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=.../`; (b) zero
+      `deribit-opts-fwd-*` (the handler's own launcher VM prefix) or `cefi-fwd-daily-cron-*` (the cron host meant to
+      fire it daily at 09:15 UTC) VM instances exist now or in `gs://deployment-scripts-central-element-323112/vm-logs/`
+      ever; (c) `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md`'s own 2026-07-07 entry documents the
+      cron wiring shipped but its required follow-on ("re-launch the existing `cefi-fwd-daily-cron-*` VM ... Follow-on
+      (operator action, NOT this task)") was never executed — the crontab that would fire this operation has never
+      actually been installed on a live host. So `--operation deribit-options-chain` has never fired in prod, at any
+      shape, ever. **Fix** (mirrors `book_microstructure_handler.py`'s pattern, the closest sibling): `_write_shard` now
+      takes a required `pipeline_mode: PipelineMode` param, `.replace()`-inserts it directly after `day={D}/` (same
+      position as every other CeFi writer — `symbol_rules.py`, `websocket_runner.py`, `book_microstructure_handler.py`),
+      and calls `enforce_structural_and_observe_id_form(require_pipeline_mode=True, ...)` as a write-time canonicality
+      guard (this file had none before). The 3 callers (`_collect_currency`/`_collect_expiry_shard`) already pass
+      `PipelineMode.LIVE_DERIBIT` to the manifest calls unchanged — `_write_shard`'s one call site now passes the SAME
+      enum value, so path and manifest are guaranteed identical by construction. Regression tests updated/added in
+      `tests/unit/test_deribit_options_chain_handler.py`: flipped the 3 pre-existing `_write_shard` unit tests (which
+      had asserted `pipeline_mode=live_deribit` NOT in path — the exact stale assumption this fix corrects) to assert it
+      IS present in the correct position, plus a new end-to-end assertion in
+      `test_collect_expiry_shard_records_options_chain_instrument_type` proving the real call chain
+      (`_collect_expiry_shard` → `_write_shard`) threads the pipeline_mode through, not just the isolated unit. Fixing
+      this now (before the first real fire, once the operator re-launches the cron host) avoids a repeat of the Kalshi
+      incident (~5 weeks of wrong-shape prod objects before being caught). (repo: market-tick-data-service)
 
 - [x] [SCRIPT] P0. **Fix `_perp_funding_kalshi_polymarket.py`'s missing `pipeline_mode=` insertion** — RULED 2026-07-28
       by round 5, FIXED + SHIPPED 2026-07-29, `market-tick-data-service@52e8f256e6a314b38b3baeeaced919b040a985aa`.
@@ -620,16 +651,15 @@ going forward. Still open, tracked as a todo below.
 ## Deferred work after 2026-07-29
 
 Both confirmed-live-firing bugs found across all 5 rounds (execution-service's DeFi loader, MTDS's KALSHI_PERP writer)
-are fixed and shipped — the operator's directive is functionally satisfied on the "find and fix what's actively broken"
-axis. What remains is real work, not blocked on anyone:
+are fixed and shipped, and the Deribit `_write_shard` ruling (a third, dormant instance of the same pattern) is now also
+fixed and shipped — the operator's directive is functionally satisfied on the "find and fix what's actively/ imminently
+broken" axis. What remains is real work, not blocked on anyone:
 
 | Item                                                                                                               | State    | Blocked on                                                                                                                                                                                                                          |
 | ------------------------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | ~16 P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other                                                                                                                                                                                     |
-| Deribit `_write_shard` missing `pipeline_mode=` ruling                                                             | Not done | nobody — the Kalshi/Polymarket sibling question (same doc, same day) was resolved by direct investigation this session; the same approach applies here, just not yet run                                                            |
 | Genuine centralization design (the operator's original capstone ask)                                               | Not done | nobody, but it's real design work — needs someone to actually read every confirmed-safe pattern found across 5 rounds and decide whether `build_path()` + the now-fixed registry already IS the answer, or something more is needed |
 
-**Recommended next item**: the Deribit ruling — it's the same shape of question as the Kalshi one just resolved (a
-`[DESIGN]` judgment call that turned out to be answerable by direct live-GCS investigation rather than requiring an
-actual human decision), and closing it would leave the centralization design as the only remaining open judgment call in
-the whole audit.
+**Recommended next item**: the centralization design — it is now the ONLY remaining open `[DESIGN]` judgment call in the
+whole audit (both sibling `[DESIGN]` rulings — Kalshi/Polymarket and Deribit — resolved the same way: direct
+investigation found a stale-bug pattern rather than a genuine carve-out, and both are now fixed + shipped).
