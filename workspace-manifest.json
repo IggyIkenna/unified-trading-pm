@@ -146,10 +146,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 1,
         "warn_file_count": 0,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 81.47
+        "large_file_count": 1
       }
     },
     "batch-live-reconciliation-service": {
@@ -274,9 +274,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 4,
+        "coverage_pct": null,
         "qg_red_reason": null,
-        "coverage_pct": 74.69
+        "warn_file_count": 4
       }
     },
     "deployment-api": {
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 9,
         "warn_file_count": 10,
-        "coverage_pct": 90.99,
-        "qg_red_reason": "pytest"
+        "coverage_pct": null,
+        "qg_red_reason": null,
+        "large_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -881,10 +881,10 @@
       ],
       "ldr_ci_status": "RED",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": "pytest",
         "warn_file_count": 45,
-        "coverage_pct": 83.52
+        "coverage_pct": 83.52,
+        "qg_red_reason": null,
+        "large_file_count": 0
       }
     },
     "ml-service": {
