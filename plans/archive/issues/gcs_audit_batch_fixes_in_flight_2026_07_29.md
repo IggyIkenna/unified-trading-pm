@@ -2,24 +2,17 @@
 doc_type: issue
 title: GCS path-audit batch fixes — 10 in-flight cross-repo fixes, uncommitted, blocked on dependency-ship order
 summary: >-
-  Resumption playbook for a batch of 10 P1/P2 point-fixes dispatched under /autonomous to close out
-  /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md and its sports_prediction continuation
-  doc. UPDATE 2026-07-29 (same day, later still): 9 of 10 fixes now SHIPPED — UAC FRED/ECB/OFR (62d3aa03), UTL dead-code
-  cleanup (f4987fb8) + FRED/ECB/OFR venue-overrides (f2945749), features-service dependency_checker.py (be36b42b),
-  execution-service combined fix (8039c3e5f), MDPS Mode.REPLAY (eed7b53) + dead-code deletion (c9f7d9f),
-  features-service onchain fixes + adv.py (see per-fix #9 for the exact SHA once landed). #4 (MTDS reader.py
-  chain/venue-order fix, content re-verified correct via 2 independent full pytest passes, 7486 passed both times) and
-  #5 (MTDS live-mode sports odds writer fix, QG previously confirmed clean) both remain — same repo
-  (market-tick-data-service), can ship as 2 separate commits once a clean QG run lands. Blocked purely by a basedpyright
-  type-check timeout that recurred across BOTH features-service and MTDS under a host-wide load spike that hit
-  137/140/89 (vs. 16 cores) — see "Host contention update" for the full escalation and the `PYRIGHT_TIMEOUT` override
-  that worked around it once load normalized. Also discovered mid-session: a SEPARATE, already-shipped UAC breaking
-  change (`fa25a345`, made `pipeline_mode` a required kwarg on
-  `build_cefi_partition_path`/`build_tradfi_partition_path`) had left features-service's own two call sites broken until
-  another AO worker (slot-15) independently shipped the companion fix (`d7da0ec7`) — caught via a stashed-changes merge
-  conflict, resolved by taking the already-shipped version. See "Host contention update" section below before retrying
-  anything.
-status: open
+  RESOLVED 2026-07-29. Resumption playbook for a batch of 10 P1/P2 point-fixes dispatched under /autonomous to close out
+  /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md and its sports_prediction continuation doc
+  — ALL 10 SHIPPED: UAC FRED/ECB/OFR (62d3aa03), UTL dead-code cleanup (f4987fb8) + FRED/ECB/OFR venue-overrides
+  (f2945749), features-service dependency_checker.py (be36b42b) + onchain fixes (95b8233b), execution-service combined
+  fix (8039c3e5f), MDPS Mode.REPLAY (eed7b53) + dead-code deletion (c9f7d9f), MTDS reader.py chain/venue fix (b7b79b14)
+  + live-mode sports odds writer fix (d6d539a8). All evidence folded into both parent audit docs
+  (unified-trading-pm@5b12ea785, @3844740ef). Archived as a durable record of the session's host-contention lessons
+  (task-notification exit-code-0 unreliability, PYRIGHT_TIMEOUT override, load-spike-vs-genuine-code-failure diagnosis)
+  and the mid-flight cross-agent conflict-resolution pattern (taking an already-shipped companion fix over a local
+  duplicate) — see "Host contention update" and per-fix sections below.
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [meta]
@@ -59,7 +52,8 @@ source: >-
   repos and the session was approaching a context-compaction point (/pre-compact invoked) — this doc is that ritual's
   Step-5 deferred-work artifact, promoted to a full issue doc given the scale (6 repos, real reviewed diffs) rather than
   a table inside the parent audit doc.
-resolved_by:
+resolved_by: >-
+  All 10 batch fixes shipped and evidence-folded 2026-07-29 — see summary for the full commit list.
 depends_on: []
 ---
 
@@ -286,50 +280,47 @@ markers). Already promoted LDR→main (`55bd0ebd9`).
       attempt, never retried) — caught during this later pass, re-shipped as `unified-trading-library@f4987fb8`. (repo:
       unified-trading-library)
 
-- [ ] [SCRIPT] P1. **Ship MTDS reader.py chain/venue fix + the codex-note companion commit** (item 4) — the codex note
-      already shipped (`unified-trading-pm@62918201e`). The code fix itself is READY (content verified correct in the
-      working tree) but a `quickmerge.sh` attempt failed on a `basedpyright` timeout (exit=124, real host-contention
-      failure per the "Host contention update" section above, NOT a code issue) — retry
-      `cd market-tick-data-service && bash scripts/quickmerge.sh "fix: ..." --agent --files 'market_tick_data_service/reader.py tests/market_interface/unit/test_canonical_parquet_reader.py'`
-      once host load allows. (repo: market-tick-data-service)
+- [x] [SCRIPT] P1. **Ship MTDS reader.py chain/venue fix + the codex-note companion commit** (item 4) — DONE,
+      `market-tick-data-service@b7b79b14`. Codex note shipped earlier (`unified-trading-pm@62918201e`). Took 3 attempts
+      total, all prior failures were genuine host-contention (`basedpyright` timeouts) — pytest content passed clean all
+      3 times (7486 passed). Final clean run: `ALL QUALITY GATES PASSED (210s)` once host load recovered.
 
-- [ ] [SCRIPT] P1. **Ship MTDS sports live-mode odds writer fix** (item 5) — QG confirmed clean (combined run with
-      reader.py, `be1hbbev3`, zero `❌` markers). `_sports_tick_path.py` confirmed to have real, correct content (a
-      legitimate extraction to keep `websocket_runner.py` under the file-size limit). Ship as a SEPARATE commit from
-      reader.py (different files):
-      `--files 'market_tick_data_service/live/connectors/odds_api_ws.py market_tick_data_service/live/websocket_runner.py market_tick_data_service/live/_sports_tick_path.py tests/unit/test_odds_api_ws_connector.py tests/unit/test_odds_api_live_batch_shard_parity.py'`.
-      (repo: market-tick-data-service)
+- [x] [SCRIPT] P1. **Ship MTDS sports live-mode odds writer fix** (item 5) — DONE, `market-tick-data-service@d6d539a8`.
+      `ALL QUALITY GATES PASSED (224s)`. Also flipped the P0 URGENT todo in the sports_prediction audit doc.
 
-- [ ] [SCRIPT] P1. **Re-verify + ship MDPS Mode.REPLAY fix** (item 6) — still needs ONE clean completed QG run (3
-      attempts so far: 1 real-but-likely-cross-contaminated codex-compliance failure, 1 queue-wait timeout, host
-      contention throughout). Diff itself is correct and small (2 files, `orchestration_scanner.py` +
-      `tests/unit/test_orchestration_scanner_coverage.py`) — not a code problem. (repo: market-data-processing-service)
+- [x] [SCRIPT] P1. **Re-verify + ship MDPS Mode.REPLAY fix** (item 6) — DONE, `market-data-processing-service@eed7b53`.
+      `ALL QUALITY GATES PASSED (459s)` (shipped together with item 7 as 2 separate commits from one QG sweep).
 
-- [ ] [SCRIPT] P1. **Review + QG + ship MDPS dead-code deletion** (item 7) — the one fix in this batch not independently
-      re-verified by the orchestrating session; read the diff and the agent's zero-callers re-verification claim before
-      trusting it, then QG + ship. (repo: market-data-processing-service)
+- [x] [SCRIPT] P1. **Review + QG + ship MDPS dead-code deletion** (item 7) — DONE,
+      `market-data-processing-service@c9f7d9f`. Independently re-verified zero-callers workspace-wide (fresh grep across
+      MTDS/execution-service/features-service/UTL) before shipping — confirmed clean; the two grep-hits that looked
+      concerning both resolved to the unrelated UTL `DataSink` class / a pure explanatory docstring comment.
 
 - [x] [SCRIPT] P1. **Ship features-service dependency_checker.py fix + flip the companion PM todo** (item 8) — DONE,
       `features-service@be36b42b`. **Also fixed a REAL bug found via QG** (not in the original scope): the
       pipeline_mode-aware fix pushed `_discover_instruments()` to 70 lines, over the 50-line method-size QG limit —
-      refactored by extracting `_list_instrument_ids_for_prefix()`. **Companion PM todo flip
-      (`delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4) NOT yet done** — still needed.
-      (repo: features-service, unified-trading-pm)
+      refactored by extracting `_list_instrument_ids_for_prefix()`. Companion PM todo flip DONE:
+      `unified-trading-pm@9a045e620` (todo 4 in
+      `delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md`).
 
-- [ ] [SCRIPT] P1. **Ship features-service onchain fixes** (item 9) — the `test_library_deps_integration.py` companion
-      deletion DID resolve the original cross-repo failure, but a re-verification run then hit an unrelated
-      host-contention test timeout (`delta_one/app/calculators/base.py`, nothing to do with these files). Re-run once
-      host load allows:
-      `bash scripts/quality-gates.sh --no-fix --files 'features_service/onchain/app/calculators/eigen_rewards_calculator.py features_service/onchain/collectors/parquet_dust_loader.py tests/onchain/unit/test_eigen_rewards_calculator.py tests/onchain/unit/test_parquet_dust_loader.py tests/calendar/unit/test_library_deps_integration.py'`.
-      (repo: features-service)
+- [x] [SCRIPT] P1. **Ship features-service onchain fixes** (item 9) — DONE, `features-service@95b8233b`. Two mid-flight
+      discoveries along the way: (a) a merge conflict against an already-shipped companion fix from a different AO
+      worker for a separate UAC breaking change (`fa25a345`, pipeline_mode now required on the partition-path builders)
+      — resolved by taking the shipped version and fixing my own test's stale placeholder-string reference; (b) my own
+      earlier UTL dead-code cleanup had accidentally deleted the still-live `calendar_features` PATH_REGISTRY row,
+      already caught/fixed by another AO worker — reverted my premature test-deletion back to a live, passing test.
+      `ALL QUALITY GATES PASSED (399s)` once host load recovered.
 
 - [x] [SCRIPT] P1. **Ship execution-service's combined dead-code/naming-collision/INDEX-mapping fix** (item 10) — DONE,
       `execution-service@8039c3e5f` (already promoted LDR→main). QG explicitly confirmed clean
       (`ALL QUALITY GATES PASSED (2712s)`, zero `❌`). (repo: execution-service)
 
-- [ ] [SCRIPT] P2. **Fold every shipped commit's evidence into both parent audit docs' todos** (flip `[x]` + cite
-      `repo@sha` for all 10 items above) once shipped — the todo text already exists in both docs verbatim, this is pure
-      evidence-attachment, not new writing. (repo: unified-trading-pm)
+- [x] [SCRIPT] P2. **Fold every shipped commit's evidence into both parent audit docs' todos** (flip `[x]` + cite
+      `repo@sha` for all 10 items above) once shipped — DONE, `unified-trading-pm@5b12ea785` +
+      `unified-trading-pm@3844740ef`. Also flipped a 6-site batch dead-code todo (all 6 confirmed addressed across the
+      shipped commits) and downgraded one todo from a false full-flip to an accurate partial-progress note (the UTL
+      PATH_REGISTRY dead-code todo's broader scope — instruments-service, features-service onchain adapters, volatility
+      loader — was never actually shipped, only the UTL rows + execution-service piece landed).
 
-- [ ] [SCRIPT] P3. **Archive this doc** once every todo above is `[x]` and both parent audit docs are fully up to date.
-      (repo: unified-trading-pm)
+- [x] [SCRIPT] P3. **Archive this doc** once every todo above is `[x]` and both parent audit docs are fully up to date.
+      All 10 batch fixes shipped, all evidence folded — archiving now.
