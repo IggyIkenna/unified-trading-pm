@@ -1,0 +1,17 @@
+{
+  "lifecycle": {
+    "rule": [
+      {
+        "action": {
+          "type": "Delete"
+        },
+        "condition": {
+          "age": 30,
+          "matchesPrefix": ["code/"],
+          "matchesSuffix": [".tar.gz", ".manifest.json"],
+          "matchesPattern": ["code/.*@.*"]
+        }
+      }
+    ]
+  }
+}

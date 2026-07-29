@@ -131,10 +131,13 @@ source:
       referenced.** All 30 live VMs use `vm/setup-data-pipeline-vm.sh` which downloads the current-pointer
       `<repo>-code.tar.gz`. No VM has any `*_TARBALL_SHA` metadata pin set. No launcher scripts reference @sha tarballs.
       1,189 @sha tarballs across ~20 repos — all are safe to age out. Only current-pointers are referenced.
-- [ ] 16. [INFRA] P3. Draft a GCS lifecycle rule on the `code/` prefix that ages out old `@sha` tarballs + manifests
+- [x] ✅ 16. [INFRA] P3. Draft a GCS lifecycle rule on the `code/` prefix that ages out old `@sha` tarballs + manifests
       (e.g. `age > 30d` AND not the current-pointer AND not in the Phase-15 referenced set); the per-repo
-      `<repo>-code.tar.gz` current-pointer is always kept. Done-when: the lifecycle JSON is committed and a dry
-      enumeration shows only stale `@sha` objects in scope.
+      `<repo>-code.tar.gz` current-pointer is always kept. — **Complete 2026-07-29.** Lifecycle JSON committed at
+      `gcs_code_tarball_lifecycle_rule.json`: Delete objects in `code/` prefix with `matchesPattern: "code/.*@.*"`,
+      `age: 30`, `matchesSuffix: [".tar.gz", ".manifest.json"]`. Dry enumeration verified: 2,396 old @sha objects
+      targeted (0.01 GB), 43 current-pointers never matched (the `@` character cleanly separates them). All @sha objects
+      are historical CI-push artifacts — zero referenced by any live VM or launcher (todo 15).
 - [ ] 17. [INFRA] P3. Apply the tarball lifecycle rule live on `gs://deployment-scripts-central-element-323112`.
       Done-when: `gcloud storage buckets describe` shows the rule and the `code/` prefix size stops growing. Downgraded
       from [OPERATOR] 2026-07-27 (reversibility-verified, finding T,
