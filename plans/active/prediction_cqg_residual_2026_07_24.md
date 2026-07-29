@@ -92,13 +92,16 @@ source: >-
       `classify_kalshi_to_canonical_group` return type is `-> CanonicalQuestionGroup`, never `Optional`) — add to leg
       (2)'s cleanup scope when that leg is picked up. Repos: unified-api-contracts, market-tick-data-service. Original
       provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded — see 2026-07-27 re-based numbers below).
-- [ ] [DATA] P2. **249-b — prediction cqg grain (`prediction_canonical_question_group`) — re-scoped 2026-07-26, decision
-      338 resolved (OTHER for all).** The cqg grain needs deriving the canonical-question-group per conditionId; per the
-      re-scoped todo above, virtually every object now classifies (to a real group or `OTHER`, never unclassified), so
-      this is no longer gated on an open operator decision. The rollup already materialises the cqg grain when `cqg_str`
-      is non-empty (the loader yields `cqg=""` today) — wire the cqg into the loader (from the classifier or a
-      `_canonical_group` write-back) and the cqg-grain rows emit automatically. Repo: instruments-service +
-      unified-api-contracts.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 — 249-b — prediction cqg grain (`prediction_canonical_question_group`) — re-scoped
+      2026-07-26, decision 338 resolved (OTHER for all).** Wired the cqg into the loader via a `_canonical_group`
+      write-back: `unified-api-contracts@283d7449` adds an additive `InstrumentRecord.canonical_question_group` field;
+      `instruments-service@38e393de` has the Polymarket/Kalshi adapters write back the already-computed `group.value`
+      onto it (previously dropped after deriving `underlying`), and `build_prediction_catalogue_dataframe` now reads it
+      PER-ROW (a single `instruments.parquet` blob spans many cqg groups — the path-level `cqg` value stays
+      legacy-fallback-only) so the cqg-grain rows emit — verified via a new rollup test proving two markets sharing one
+      group fold into one bundle row. `quality-gates.sh` green in both repos. Prod `catalog.parquet` promotion
+      explicitly NOT run, per `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 2's scope boundary — carried
+      by `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen.
 
 ## Success criteria
 
@@ -111,6 +114,11 @@ source: >-
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   work done yet on either todo beyond what the parent's archived Progress Log already recorded.
+- 2026-07-29 — todo 2 (249-b, cqg grain) shipped and flipped, per
+  `prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize.md` todo 1's reconciliation instruction —
+  `unified-api-contracts@283d7449` + `instruments-service@38e393de`. Todo 1's leg (2) code-cleanup
+  (`rebuild_prediction_manifest.py`/`kalshi_adapter.py` dead `None`-branch comments) remains open, tracked separately
+  under the MTDS CODE_QUICK backlog pass (`issues/code_quick_cross_repo_fix_backlog_2026_07_28.md`).
 - 2026-07-27T15:25:50Z — **todo 1 leg (1) re-measurement complete** (dispatched via
   `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 1, read-only, no `--apply`/no mutation). **Method**:
   single consolidated-object read of the live prediction availability manifest via UTL

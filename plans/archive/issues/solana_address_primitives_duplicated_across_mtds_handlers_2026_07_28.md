@@ -12,7 +12,7 @@ summary: >-
   already exists in that exact dir (_solana_rpc_async, which orca imports). P3 non-blocking DRY consolidation: both
   handlers pass QG and are tested — this is a cleanup so the next Solana handler reuses one tested copy of the curve
   math instead of rolling a 3rd.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [meta]
@@ -36,7 +36,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-tick-data-service@f2f89fad
 source: >-
   REVIEW-craft finding 2026-07-28 (msg 2486, non-blocking P3) after slot-3 shipped defi_satellite_ao_dispatch_batch1-007
   (mtds@f771e841). Reviewer flagged the duplication and asked main to file as a tracked todo. Both handlers pass QG +
@@ -71,9 +71,17 @@ both handlers. One tested copy of the curve math instead of N.
 - 2026-07-28: Filed by main from REVIEW-craft finding (msg 2486). Acked to reviewer; flagged to operator that it's
   tracked as NA pending a dispatch decision.
 
+## Resolution (2026-07-29)
+
+Extracted base58 codec + ed25519 on-curve + `find_program_address` into
+`market_tick_data_service/cli/handlers/_solana_pda.py`; both `raydium_classic_amm_handler.py` and
+`orca_whirlpool_state_handler.py` now import from it instead of hand-rolling their own copies. New
+`tests/unit/test__solana_pda.py`; `test_raydium_classic_amm_handler.py` updated to import `base58_encode` from the
+shared module. `quality-gates.sh` green. — market-tick-data-service@f2f89fad.
+
 ## Todos
 
-- [ ] [SCRIPT] P3. **Extract shared Solana address primitives into `_solana_pda.py`** — base58 codec, ed25519 on-curve
-      check, and `find_program_address` PDA derivation are duplicated/hand-rolled across
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-29** — Extract shared Solana address primitives into `_solana_pda.py`** — base58
+      codec, ed25519 on-curve check, and `find_program_address` PDA derivation are duplicated/hand-rolled across
       `raydium_classic_amm_handler.py` and `orca_whirlpool_state_handler.py`; consolidate into one shared module and
-      repoint both handlers.
+      repoint both handlers. — market-tick-data-service@f2f89fad.
