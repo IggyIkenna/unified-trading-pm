@@ -477,3 +477,10 @@ hit the same quota wall within ~2min, stopped+deleted) established that even the
   redo-all is unnecessary and wasteful) once this probe shows quota restored. Monitoring via the VM-free probe on an
   hourly cadence rather than repeated VM launches. Releasing, not duplicate-launched, VM confirmed absent (not just
   stopped — deleted, per the singleton lock's RUNNING-status check).
+
+**Checked 2026-07-29T15:22Z (slot 15, data_engineering)**: ran the same VM-free `/status` probe — still exhausted
+(`errors.requests: "You have reached the request limit for the day..."`). Only 13 min since the 15:09Z probe, no reset
+expected on that cadence; no VM launched (none needed for this check). Not a new data point, just confirms nothing has
+changed since the last entry. Releasing via `/skip-current-task {"reason_code": "GATED"}`, respecting the established
+hourly probe cadence rather than re-checking again immediately. Next dispatch: re-probe once ~1h has elapsed since the
+15:09Z check (i.e. not before ~16:09Z), or sooner only if there's reason to think the vendor's reset window is closer.

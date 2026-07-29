@@ -104,3 +104,22 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
       market-tick-data-service + deployment-service). **Done when**: a full re-census of ASTER `derivative_ticker`
       manifest rows for 2023-07-22→2023-11-01 shows either genuine captured/empty_confirmed coverage (backfill ran) or a
       documented decision that the window predates real Aster activity (no backfill needed).
+
+## Progress Log
+
+- 2026-07-29T15:3xZ (slot 15, data_engineering): attempted to resolve the genesis-date ambiguity via external research
+  (mirroring how the sibling margining-registry todo in this same batch was resolved via a live API check) — **this
+  deepens the ambiguity rather than resolving it, do NOT act on it as a green-light to pick a date.** Public sources
+  (Cointelegraph, CryptoSlate, The Block, Chainwire, The Defiant — Astherus/APX Finance merger press coverage) place
+  Astherus+APX Finance's merger and the "Aster" rebrand/DEX launch at **2025-03-31**, with the native `ASTER` token
+  launching 2025-09-17 — i.e. the real-world Astherus/Aster product's public history postdates ALL THREE candidate
+  genesis dates in this doc (2023-07-22 / 2023-11-01 / 2024-01-01) by well over a year. This means the "Binance-proxied
+  Astherus funding" label the source doc's 2026-06-17 operator-confirmed genesis note uses for pre-2024 data is most
+  likely describing an internal/methodological construct (a synthetic funding-rate proxy our own pipeline computes from
+  Binance data under an "Astherus" label) rather than tracking any real-world Astherus product timeline — so this is NOT
+  a fact a web search can settle; the actual question ("what date did WE decide to start treating Binance-proxied
+  synthetic Astherus/Aster funding as valid, and does the manifest reflect that decision correctly") is internal/
+  operator-methodology-only. **Not resolved — still needs the original 2026-06-17 operator-confirmed-genesis
+  conversation/decision-record consulted (not re-discoverable from either code or public sources), or a fresh operator
+  ruling.** No VM launched, no date guessed, no code changed. Filed as a `/blocked` question from the parent plan's todo
+  (`cross_cutting_satellite_ao_dispatch_batch1b-006`) rather than proceeding.

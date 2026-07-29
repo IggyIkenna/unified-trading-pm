@@ -106,13 +106,85 @@ exclusive:
 3. At minimum, document this race in `/codex/08-workflows/ci-cd-flow.md` so future agents know to re-verify FILE CONTENT
    (not just `git log`) after a revert that lands close to a promote cycle boundary.
 
+## Root cause — CONFIRMED (2026-07-29, slot 8, todo #1)
+
+Ground-truthed against the live `instruments-service` graph (all times UTC; SHAs re-verified reachable):
+
+- fix `2941646c` @14:42:34 — adds the `ENV UV_EXTRA_INDEX_URL…` block.
+- revert `8df0e94e` @14:52:52 — removes it; lands on `live-defi-rollout`.
+- squash-promote `4fc4900a` @14:54:32 — **single parent `3d8af8c5`** (the _previous_ promote @14:35:12, which predates
+  the fix); its squashed tree carries the fix but NOT the revert.
+- backmerge `ed04b405` @15:01:35 — merges `main` → LDR.
+- **`git merge-base 8df0e94e 4fc4900a` = `3d8af8c5`** (verified), and `3d8af8c5` is a verified ancestor of the fix
+  `2941646c` (i.e. pre-fix).
+
+Two mechanics compose:
+
+1. **Frozen-head promote pins a PAST LDR SHA (the ENABLER).** `ldr-to-main-promote-fleet.yml` reads the LDR tip once
+   (`LDR_SHA`/`LDR_TREE`), freezes an immutable per-SHA ref `promote/<repo>/<sha>`, and opens the promote PR from that
+   frozen ref (workflow lines ~530-540). A promote tick that fired between the fix (14:42) and the revert (14:52) pinned
+   `promote/instruments-service/2941646c` and opened a PR; that PR auto-merged at 14:54:32 (squash `4fc4900a`) AFTER the
+   revert had already landed on LDR at 14:52:52 — so `main` received pre-revert content even though the revert was
+   already on LDR. (The frozen head exists to close a _different_ TOCTOU — the SIT/differ classifying a tree other than
+   the one gated, lines ~620-635 — but it opens this stale-content-to-main window.)
+2. **The squash's stale merge-base makes the backmerge's 3-way merge blind to the revert (the SILENT-LOSS).** A squash
+   commit discards LDR's real ancestry; `4fc4900a`'s only parent is the pre-fix `3d8af8c5`. So when
+   `main-backmerge-to-ldr.yml` runs `git merge --no-ff origin/main` into LDR (line ~114), the 3-way merge-base is
+   `3d8af8c5`:
+   - base `3d8af8c5` (pre-fix): block **ABSENT**
+   - ours = LDR tip (fix + revert): block **ABSENT** (net of add-then-revert)
+   - theirs = `main` squash `4fc4900a`: block **PRESENT** → base==ours==absent, theirs==present ⇒ git reads it as
+     "theirs _added_ new content, ours untouched" ⇒ takes theirs ⇒ the block is re-added to LDR. **No conflict** (ours
+     never diverged from base on those lines), so no marker, no failed check — exactly the reported signature (`git log`
+     shows the revert; file content does not). The backmerge's no-op guard (`rev-list LDR..main --count == 0`, line ~97)
+     does not fire because the squash `4fc4900a` IS a `main` commit absent from LDR's graph.
+
+### Which candidate closes the gap
+
+- **Candidate 1 (shared reference point) — CLOSES it; the correct root fix.** The promote already knows the exact LDR
+  SHA it promoted (encoded in `promote/<repo>/<sha>`). Concrete shape: the promote stamps a
+  `Promoted-From-LDR: <ldr_sha>` trailer on the squash commit; the backmerge, when the incoming `main` commit carries
+  that trailer, uses `<ldr_sha>` as the merge-base instead of the synthetic squash parent. Re-running the confirmed
+  graph with base=`2941646c` (the promoted SHA): base=**present**, ours=**removed** (revert), theirs=**present** ⇒ git
+  takes ours (removed) ⇒ revert preserved. Gap closed at the source.
+- **Candidate 2 (post-backmerge content-diff) — does NOT close it as written ("flag, not block"): the stale content
+  still lands on LDR.** Upgraded to a _blocking_ pre-push guard it closes it and is the right defense-in-depth: before
+  the FF push (line ~153), if the merge result reintroduces on any path lines that an LDR commit within the promote
+  window removed, ABORT the silent push and route to the existing visible conflict-PR + orchestrator escalation the
+  backmerge already has (lines ~176-211). Repo-agnostic; catches residual cases the trailer cannot (a promote missing
+  the trailer, or a genuine `main`-only revert).
+- **Candidate 3 (document) — necessary, insufficient.** Does not change behavior; still required so the invariant is
+  named (todo P3).
+
+**Verdict:** ship Candidate 1 (trailer + merge-base) as the root closure AND Candidate 2-blocking as the safety net;
+keep Candidate 3 as the doc. Implementation is tracked as its own todo below — this todo was root-cause +
+confirm-fix-shape only.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Root-cause the exact squash-promote/backmerge mechanics that let step 5's merge silently reintroduce
-      content step 3 removed with no conflict — read `ldr-to-main-promote.yml` + `main-backmerge-to-ldr.yml` (or their
-      PM-hosted reusable equivalents) to find where the source-range/merge-base boundary is computed, and confirm which
-      of the 3 candidates above (or another fix) actually closes the gap. Repo: unified-trading-pm (workflows),
-      cross-repo impact.
+- [x] ✅ [SCRIPT] P1. Root-cause the exact squash-promote/backmerge mechanics that let step 5's merge silently
+      reintroduce content step 3 removed with no conflict — read `ldr-to-main-promote.yml` + `main-backmerge-to-ldr.yml`
+      (or their PM-hosted reusable equivalents) to find where the source-range/merge-base boundary is computed, and
+      confirm which of the 3 candidates above (or another fix) actually closes the gap. Repo: unified-trading-pm
+      (workflows), cross-repo impact. **DONE 2026-07-29 (slot 8)** — root cause confirmed + ground-truthed (see "Root
+      cause — CONFIRMED" section above): frozen-head promote pins a pre-revert LDR SHA to `main`, and the squash's stale
+      merge-base (`merge-base(revert, squash)`=`3d8af8c5`, verified pre-fix) makes the backmerge's 3-way merge take
+      `main`'s re-added block with no conflict. **Candidate 1 (promote stamps `Promoted-From-LDR: <sha>` trailer →
+      backmerge uses it as merge-base) is the fix that actually closes the gap**; Candidate 2 closes it only if upgraded
+      to a blocking pre-push guard (best as defense-in-depth); Candidate 3 is necessary-but-insufficient documentation.
+      Evidence: `unified-trading-pm` (this doc) — analysis only, no workflow code changed by this todo (implementation
+      is the P1 todo below).
+- [ ] [SCRIPT] P1. **Implement the confirmed fix (Candidate 1 + Candidate-2-blocking safety net).** In
+      `unified-trading-pm/scripts/workflow-templates/`: (a) `ldr-to-main-promote-fleet.yml` (+
+      `ldr-to-main-promote.yml`) — stamp a `Promoted-From-LDR: <LDR_SHA>` trailer on the squash-promote commit body (the
+      SHA is already captured as `$LDR_SHA` at the content gate). (b) `main-backmerge-to-ldr.yml` — when an incoming
+      `main` commit carries the `Promoted-From-LDR:` trailer, use that SHA as the merge-base (e.g.
+      `git merge-recursive`/explicit base) so downstream LDR reverts are preserved; AND add a blocking pre-push guard:
+      before the FF push, if the merge result reintroduces lines a recent LDR commit removed, abort the silent push and
+      route to the existing conflict-PR + orchestrator escalation instead. Roll out via `rollout-workflow-templates.sh`
+      (all copies committed + pushed). Add a regression test reproducing the confirmed instruments-service graph
+      (add→revert→stale-squash→backmerge ⇒ revert must survive). Repo: unified-trading-pm (workflows), cross-repo
+      impact.
 - [ ] [DATA] P2. Fleet sanity sweep: given this pattern could have silently reintroduced OTHER reverted commits
       undetected (not just this session's), spot-check a handful of recent revert commits across the fleet
       (`git log     --grep='^revert' --all` per repo) and confirm their reverted content is still actually absent on

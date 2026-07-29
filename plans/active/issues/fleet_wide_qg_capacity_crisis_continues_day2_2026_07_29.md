@@ -142,3 +142,22 @@ not just noting.
   not reproduced here in full — re-run the same query for a fresh sample).
 - Original doc: `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (1000 lines, at
   cap as of this writing).
+
+## Progress Log
+
+- **2026-07-29 (cicd escalation `agt-575a4c`, slot 3)**: corroborating data point for the P2 "re-measure protected-6
+  post-resize" todo above. `instruments-service` PR #1012 (LDR→main promote, created 2026-07-29T04:49:40Z) hit
+  `ldr_qg_failure` — checks-leg `QG_SLICE=typecheck` timed out (`exit=124`, run
+  [30423320298](https://github.com/IggyIkenna/instruments-service/actions/runs/30423320298), ~04:52-04:54Z) while the
+  SAME job's `QG_SLICE=lint-codex` selector independently printed "ALL QUALITY GATES PASSED" — confirms the failure was
+  isolated to the typecheck selector, not a codex-compliance/lint regression (3 pre-existing tolerated violations —
+  `sports_reference_fixtures.py` 914L file-size + a `process.py` function-size violation since fixed — sat within
+  `CODEX_MAX_VIOLATIONS=3` in both this and later runs; the file-size violation is still present today and non-blocking,
+  a red herring). Tests-leg failed independently in the same run via a pytest-xdist
+  `RuntimeError: Unexpectedly no active workers available` AFTER all 1176 tests had already passed — a worker-teardown
+  crash, not a test failure. Self-healed with no code change: PR #1012 closed, and 8 subsequent promote-PR incarnations
+  (#1013, #1015, #1017-#1020) merged clean over the following ~10h, with the latest direct `live-defi-rollout`
+  push-triggered run (`30462644516`, 2026-07-29T14:47:46Z) green — `QG_SLICE=typecheck` PASSED in 9s (vs.
+  ~2min-before-timeout in the failing run), consistent with transient host contention, not a code regression. No fix
+  applied (none needed — nothing is currently broken); filed as evidence for the re-measurement todo, not as a fresh
+  unresolved occurrence.

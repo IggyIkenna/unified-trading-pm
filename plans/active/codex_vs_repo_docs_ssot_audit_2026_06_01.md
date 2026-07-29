@@ -181,19 +181,26 @@ from scope).
       BLOCKED-CREDENTIALS/-OPERATOR-DECISION/-UPSTREAM-OUTAGE defer" + the dispatch-scope-eligibility ruling
       (2026-07-23: a non-determinable operator gate must not keep an otherwise-complete, worker-determinable phase open
       indefinitely / re-dispatching). Phase 3 (redirect + slim) can proceed on schedule.
-- [ ] [DOCS] P1. **Phase 3 — redirect + slim.** Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to
-      repo-local + codex links. Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). **✅
-      GATE CLEARED 2026-07-28 (operator ruling, Option A of the issue doc below): the FIX-STALE-only hold is LIFTED —
-      this REDIRECT/DELETE APPLY is cleared to execute.** Still opus-gated (redirect/slim editorial judgment must run on
-      an opus sub-agent per this plan's "Execution model" section, not a default-tier worker delegating the call out) —
-      that requirement is unchanged, only the hold itself lifted. Full-completion mandate: apply REDIRECT/slim across
-      every repo in the per-repo rollout list (Appendix A/B) in this pass, not a partial subset; the mechanical
-      FIX-STALE archived-mirror sweep (line ~519) was already DONE under the old hold and does not need repeating. SSOT
-      for the ruling: `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
-- [ ] [DOCS] P1. **Phase 4 — delete pure-dups.** Remove DELETE-class docs (migration already done in Phase 2). Update
-      any `INDEX.md` / README doc-index links. **✅ Same gate-clearance as Phase 3 — DELETE-class apply is cleared to
-      execute (2026-07-28 operator ruling, see the Phase-3 note + issue doc above).** Full-completion mandate applies
-      here too: every DELETE-class doc identified in Appendix A/B, not a partial sweep.
+- [x] [DOCS] P1. **Phase 3 — redirect + slim.** ✅ CANCELLED 2026-07-29 (main) — REDUNDANT: the per-repo satellite tasks
+      (Appendix A/B; backlog `-004..-013`) own the combined Phase-3/4 apply per repo. Backlog task `-001` was already
+      cancelled on this basis; this reconciles the plan so regen stops re-deriving it. Original scope kept for
+      provenance: Convert REDIRECT docs to the S5.11 template; slim KEEP-ESSENTIAL docs to repo-local + codex links.
+      Per-repo commit + push (PR where LDR is branch-protected — e.g. features-service). **✅ GATE CLEARED 2026-07-28
+      (operator ruling, Option A of the issue doc below): the FIX-STALE-only hold is LIFTED — this REDIRECT/DELETE APPLY
+      is cleared to execute.** Still opus-gated (redirect/slim editorial judgment must run on an opus sub-agent per this
+      plan's "Execution model" section, not a default-tier worker delegating the call out) — that requirement is
+      unchanged, only the hold itself lifted. Full-completion mandate: apply REDIRECT/slim across every repo in the
+      per-repo rollout list (Appendix A/B) in this pass, not a partial subset; the mechanical FIX-STALE archived-mirror
+      sweep (line ~519) was already DONE under the old hold and does not need repeating. SSOT for the ruling:
+      `/plans/archive/issues/codex_ssot_audit_phase3_hold_vs_reclassify_contradiction_2026_07_27.md`.
+- [x] [DOCS] P1. **Phase 4 — delete pure-dups.** ✅ CANCELLED 2026-07-29 (main, BLK-3b8233e0) — REDUNDANT with the
+      per-repo satellite tasks (own combined Phase-3/4 apply); mirrors the `-001` cancellation. Also carried a LIVE
+      same-file collision (all-repos delete of unified-trading-library `docs/specs/README.md` vs `-006` editing that
+      repo on slot 9) and is opus-required (was dispatched to a Sonnet slot). Backlog task `-002` deleted. Original
+      scope kept for provenance: Remove DELETE-class docs (migration already done in Phase 2). Update any `INDEX.md` /
+      README doc-index links. **✅ Same gate-clearance as Phase 3 — DELETE-class apply is cleared to execute (2026-07-28
+      operator ruling, see the Phase-3 note + issue doc above).** Full-completion mandate applies here too: every
+      DELETE-class doc identified in Appendix A/B, not a partial sweep.
 - [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
 
@@ -331,11 +338,25 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `docs/sports/ROADMAP.md` is forward-looking sports planning content (expired trial windows now annotated
       historical) that belongs in a sports epic, not an e2e-testing repo doc. Migrate the roadmap content into the
       sports epic, then slim/redirect the repo copy. (repo: e2e-testing, unified-trading-pm)
-- [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **REOPENED
-      2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification predates the
-      single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when it isn't).
-      Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22 pass
-      reconciled no longer exist under those names —
+- [x] ✅ [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **RE-CLOSED
+      2026-07-29 (slot-11, fresh audit against current single-VM/Path-B code) — agent-orchestrator@`3abe56c`**
+      (FIX-STALE apply, shipped via `quickmerge --agent` by slot-12; this session ground-truth-verified the applied
+      fixes are correct + complete, then flipped). The REOPENED fresh audit found the Appendix-B classification HOLDS:
+      only 2 FIX-STALE docs, no DELETE/REDIRECT/MIGRATE. **`dashboard/API_REFERENCE.md`** — all retired `tab/<op>/N`
+      branch literals repointed to `live-defi-rollout` (SlotView `branch` comment L53; the `/bootstrap` endpoint desc
+      now describes Path-B `git clone --reference`-on-LDR clones, no tab branch; stdout/stderr examples + the
+      branch-name convention note). **`docs/AUTH_INVENTORY.md`** — bare `agents/{worker,main}.md` →
+      `unified-trading-pm/agents/…` (L161) + a re-verify banner on the 2026-05-19 prod-cutover/URL status (predates the
+      2026-06-27 single-VM pivot; points to `/codex/04-architecture/runtime-deployment-topology.md`). Final sweep of
+      both docs: **zero** un-annotated tab-branch literals, **zero** port-8026 refs, **zero** bare `agents/` paths,
+      **zero** archived-mirror `unified-trading-codex/` refs, **zero** multi-vm refs. KEEP the rest (README rewritten
+      2026-07-24 single-VM-aligned;
+      ENV_VARS/REPO_PROVENANCE/SLOTS_AGENTS_AND_FLEET/WORKER_SPAWN_PREREQUISITES/BACKLOG_RELATIONS/DESIGN_* = repo-local
+      impl SSOT cited BY `/codex/04-architecture/agent-orchestrator-overview.md`, fix-in-place not redirect). —
+      **REOPENED 2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification
+      predates the single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when
+      it isn't). Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22
+      pass reconciled no longer exist under those names —
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
       `/codex/04-architecture/runtime-deployment-topology.md` are the current SSOTs (multi-VM dispatch deprecated
       2026-06-27; single central orchestrator VM + role-based dispatch replaced it). The "backlog-model / base-branch
