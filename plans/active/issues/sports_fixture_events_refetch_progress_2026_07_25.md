@@ -354,4 +354,15 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       OR continued in-date fixture-fetch advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code`
       marker, VM self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no
       `--limit`) before flipping `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
-      `sports_satellite_ao_dispatch_batch2-011` todo.
+      `sports_satellite_ao_dispatch_batch2-011` todo. — **Health-checked 2026-07-29T00:41Z-00:43Z (slot 6,
+      data_engineering), RUNNING, confirms slot 14's 15:55Z check on 2026-07-28**: heartbeat blob `updateTime`
+      `2026-07-29T00:43:23Z` (fresh, `gcloud compute instances list` unavailable this check — active gcloud account
+      lacked `compute.instances.list` on this project, an account-permission gap unrelated to the VM itself; heartbeat +
+      run.log growth already establish liveness independently). 2-read progress-metric check over ~2min: run.log grew
+      149,361→149,572 lines (+211), `date=` boundary advanced `2023-10-01→2023-10-03`, live per-fixture
+      `Fetched N events for fixture=X` lines + normal rate-limit sleep/retry cycling + a fresh `PIPELINE_HEARTBEAT` line
+      at `00:42:06Z`, `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 (no terminal marker). Genuine forward progress, no
+      stall. Not completable this turn (~3.2 years of the `2020-06-06→2026-07-25` range remain). Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this health-check
+      (2-read progress-metric check); once terminal, re-run the census script per "Next action" above before flipping
+      this checkbox + the parent todo.
