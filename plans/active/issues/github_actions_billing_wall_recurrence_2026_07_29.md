@@ -271,3 +271,16 @@ return to a normal (non-zero-job) run.
   `/blocked` (same standing `[OPERATOR] P0` todo covers the decision; avoiding escalation-spam per the P3 todo above).
   Not pinging the authoring slot (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal that 400s per the entries
   above). No code or workflow change made or needed; `alerting-service` left clean on `live-defi-rollout`.
+
+- **2026-07-29T23:35Z (cicd escalation `agt-d04227`, slot 7)**: `instruments-service` `ldr_qg_failure` (`#0`, no PR; the
+  escalation-triggering run `30495422100`, 22:14:38Z). Local `bash scripts/quality-gates.sh` at HEAD `7f272911` (clean
+  tree, up to date with `origin/live-defi-rollout`) passed fully (104s, `ALL QUALITY GATES PASSED`, sentinel
+  `.qg_last_passed_sha=7f272911169efb8ebc30db4a922816499f4d6c10` written matching HEAD) — no code/test defect exists to
+  fix. Independently confirmed the exact billing-wall signature on both the triggering run and a fresh re-dispatch:
+  `gh api .../actions/runs/30495422100/timing` and `.../30494581378/timing` both
+  `{"billable":{},"run_duration_ms":1000}`; a brand-new `workflow_dispatch` this session (`30500040561`, 23:35:55Z) →
+  `startup_failure`, `jobs: []`, same zero-billable-ms signature — wall still active, no self-recovery, now confirmed
+  past 23:35Z. Not filing a fresh `/blocked` (same standing `[OPERATOR] P0` todo covers the decision; avoiding
+  escalation-spam per the P3 todo above). Not pinging the authoring slot (`AUTHORING_SLOT=ci-reconcile`, the known
+  non-numeric literal that 400s per the entries above). No code or workflow change made or needed; `instruments-service`
+  left clean on `live-defi-rollout`.
