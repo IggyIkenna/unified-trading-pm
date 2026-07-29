@@ -325,6 +325,17 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Progress Log
 
+**Dispatch-order finding #2 — 2026-07-29 (slot 14, data_engineering)**: dispatched task
+`mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron", line 162) while `-001` ("Apply
+`rebuild_prediction_manifest.py`", line 157, `-006`'s direct predecessor/prerequisite) was still `queued` on the live
+backlog (`GET /api/backlog`), never dispatched to anyone — the exact same failure class as the 2026-07-14
+"Dispatch-order finding" below, despite `sequential: true` already being set on this plan's frontmatter (the fix that
+closed THAT instance). Declined to execute `-006` (nothing to resume — the backfill hasn't been applied yet; resuming
+the cron now would defeat the pause/apply/resume sequence this plan's sports-CF8-precedent HARD constraint exists to
+enforce). Filed `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` for a backend_engineer to
+root-cause why `sequential: true`'s prereq-wiring didn't hold for this specific pair (out of data_engineering craft
+scope). No production writes made; no cron touched; task released via `/skip-current-task {"reason_code": "GATED"}`.
+
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
 `uts-prod-manifest-consolidator-market-data-tradfi-cron` paused 2026-07-14T11:06:16Z → resumed 11:12:43Z; first
