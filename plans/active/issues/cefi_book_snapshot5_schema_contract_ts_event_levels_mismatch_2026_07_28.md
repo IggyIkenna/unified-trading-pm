@@ -67,7 +67,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
+    /plans/archive/issues/cefi_tardis_write_schema_contract_column_mismatch_2026_07_27.md,
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/02-data/availability-manifest-and-data-status.md,

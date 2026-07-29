@@ -23,7 +23,7 @@ summary: >-
   schema contract and self-isolate as `attempted_failed` (shard-level isolation swallows the raise, so the failure is
   silent — zero crash, zero data written, retried and re-failed every future backfill wave forever) — exactly the silent
   `attempted_failed` billing-waste pattern the workspace already audits for.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -43,7 +43,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: market-tick-data-service@45924760 (P3 remainder; P1/design already done market-tick-data-service@3169d25e)
 ---
 
 # CeFi Tardis write-time SchemaContract validation blocked on a real column-name mismatch
@@ -160,10 +160,11 @@ the CeFi contract from being a one-off exception downstream readers have to spec
       — `price`/`amount` now parse `float64` — then through `finalise_rows_and_path(..., validate=True)` end-to-end:
       **zero violations**, `ts_event` dtype `datetime64[ns, UTC]` landing entirely inside `day=2026-06-29` (min
       `00:00:05.021`, max `23:59:55.921`), `size`/`price` both `float64`.
-- [ ] [SERVICE] P3. **Fix `_apply_time_filter`'s wrong epoch unit** (`tardis_csv_transport.py:354`, `unit="ns"` should
-      be `unit="us"`) — confirmed WRONG (silently produces a 1970-01-21 timestamp, no error), currently
-      dormant/unreachable in production (no live caller passes `start_time`/`end_time` to Tardis today); worth a cleanup
-      pass before any future caller starts exercising it.
+- [x] ✅ [SERVICE] P3. **DONE 2026-07-29 — Fix `_apply_time_filter`'s wrong epoch unit** (`tardis_csv_transport.py`,
+      `unit="ns"` → `unit="us"`) — confirmed WRONG (silently produced a 1970-01-21 timestamp, no error), was
+      dormant/unreachable in production (no live caller passes `start_time`/`end_time` to Tardis today). New regression
+      test `test_apply_time_filter_parses_local_timestamp_as_microseconds` (parses the real raw wire int64 confirmed in
+      §8.1, asserts it lands on 2026-06-29). `quality-gates.sh` green. — market-tick-data-service@45924760.
 
 ## 7. Codex SSOTs
 
