@@ -120,12 +120,12 @@ the onchain FOLD-A comment block):
 
 ## Todos
 
-- [x] [BACKEND] P1. Restore the `calendar_features` `DataSetSpec` row to
+- [ ] [BACKEND] P1. Restore the `calendar_features` `DataSetSpec` row to
       `unified_trading_library/config_interface/paths/registry.py` (unified-trading-library repo), verbatim as recovered
       above. **Done when**:
       `tests/calendar/unit/test_library_deps_integration.py::TestUnifiedTradingLibrary::test_build_path_for_calendar_features`
       and `tests/calendar/integration/test_unified_domain_client_integration.py` pass, and full
-      `bash scripts/quality-gates.sh` is green on unified-trading-library. — unified-trading-library@<pending>
+      `bash scripts/quality-gates.sh` is green on unified-trading-library.
 
 ## Evidence
 
