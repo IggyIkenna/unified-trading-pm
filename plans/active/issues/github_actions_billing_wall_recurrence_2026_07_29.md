@@ -304,3 +304,22 @@ return to a normal (non-zero-job) run.
   the decision; avoiding escalation-spam per the P3 todo above). Not pinging the authoring slot
   (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal that 400s per the entries above). No code or workflow
   change made or needed; `alerting-service` left clean on `live-defi-rollout`.
+
+- **2026-07-29T23:47Z (cicd escalation `agt-614695`, slot 14)** — same repo as `agt-d04227`/slot 7 above
+  (`instruments-service`), different escalation id (scheduler re-dispatch pattern). Independently re-confirmed: local
+  `bash scripts/quality-gates.sh` at HEAD `7f272911` (backgrounded, self-contained exit-code capture per the mandatory
+  pattern) passed clean — `EXITCODE:0`, `ALL QUALITY GATES PASSED (119s)`, sentinel written matching HEAD — agreeing
+  with `agt-d04227`'s finding, no code/test defect exists to fix. Contributing two isolating tests not yet on record in
+  this doc: (1) `agent-audit.yml` on this repo calls the same reusable workflow at ref `@main` instead of
+  `@live-defi-rollout` (`30500340205`, 23:41:43Z) — also `startup_failure`, ruling out "the `live-defi-rollout` ref
+  specifically can't resolve" as a variant hypothesis; (2)
+  `unified-trading-pm/.github/workflows/ldr-to-main-promote.yml` — self-hosted (`[self-hosted, glue]`) but with **zero**
+  job-level reusable-workflow `uses:` at all (only step-level `actions/checkout@v5` +
+  `actions/create-github-app-token@v3`) — fresh dispatch (`30500315383`, 23:41:12Z) also `startup_failure`, `jobs: []`,
+  further isolating the wall to the account level rather than any content in the
+  `python-quality-gates-v2.yml`/`notify-slack.yml` reusable-workflow chain. Fresh re-dispatch of `instruments-service`
+  itself (`30500539587`, 23:45:29Z) → still `startup_failure`, `jobs: []` — wall still active, now confirmed past 23:47Z
+  (~5h35m since onset). Not filing a fresh `/blocked` (same standing `BLK-21d55fb1` condition; the `[OPERATOR] P0` todo
+  above already covers the decision — avoiding the escalation-spam pattern the P3 todo flags). Not pinging the authoring
+  slot (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal from `ci_reconcile.py:546` that 400s per the
+  entries above). No code or workflow change made or needed; `instruments-service` left clean on `live-defi-rollout`.
