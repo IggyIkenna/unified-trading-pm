@@ -558,22 +558,21 @@ going forward. Still open, tracked as a todo below.
       `pipeline_mode=` insertion (path≠manifest divergence, data_type currently appears dormant). Needs a real judgment
       call, not a guessable fix. (repo: market-tick-data-service)
 
-- [ ] [SCRIPT] P0. **Fix `_perp_funding_kalshi_polymarket.py`'s missing `pipeline_mode=` insertion** — RULED 2026-07-28
-      by round 5 (PREDICTION-scoped, see the sports_prediction continuation doc): the file's "CeFi paths carry no
-      pipeline_mode" comment is a STALE BUG, not a genuine carve-out — every sibling CeFi writer
-      (`symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
-      `book_microstructure_handler.py`) performs a mandatory post-hoc `.replace()` insertion of `pipeline_mode=` on top
-      of UAC's `build_cefi_partition_path()` (which itself has no `pipeline_mode` param by design); this file is the
-      ONLY cefi writer that skips it. **CONFIRMED LIVE-FIRING, not dormant** — real `KALSHI_PERP` perp-funding objects
-      have been writing under
-      `raw_tick_data/by_date/day={D}/asset_group=cefi/venue=KALSHI_PERP/instrument_type=perpetual/data_type=perp_funding/{id}.parquet`
-      (no `pipeline_mode=` segment at all) since the file's introduction 2026-06-21 — ~5 weeks. Path≠manifest divergence
-      confirmed too (the manifest correctly records `pipeline_mode=batch_kalshi_perp`; the object path doesn't). No
-      downstream consumer reads this data yet (grepped execution-service/strategy-service, zero hits), so it's a
-      landmine, not active data corruption — but real objects sit unreachable under the wrong shape right now. Fix: add
-      the same `.replace()` insertion + a write-time `canonical_path_violations(require_pipeline_mode=True)` guard
-      (currently has none) to `_write_cefi_perp_funding_rows`. Note: KALSHI_PERP/POLYMARKET_PERP are UAC-classified
-      `asset_group=cefi`, not `prediction`, despite the filename. (repo: market-tick-data-service)
+- [x] [SCRIPT] P0. **Fix `_perp_funding_kalshi_polymarket.py`'s missing `pipeline_mode=` insertion** — RULED 2026-07-28
+      by round 5, FIXED + SHIPPED 2026-07-29, `market-tick-data-service@52e8f256e6a314b38b3baeeaced919b040a985aa`.
+      `_write_cefi_perp_funding_rows` now takes a required `pipeline_mode: str` param and `.replace()`-inserts it into
+      both the empty-shard AND per-instrument sharding-loop write paths (both branches were affected).
+      `_collect_kalshi_perp` resolves `pipeline_mode` via the SAME
+      `perp_funding_handler._resolve_pipeline_mode_for_protocol()` call the manifest record already uses, so path and
+      manifest are guaranteed identical by construction, not just convention. Added a write-time
+      `enforce_structural_and_observe_id_form(require_pipeline_mode=True, ...)` guard (mirroring
+      `book_microstructure_handler.py`'s pattern — this file had ZERO write-time canonicality guard before). Regression
+      tests added (`tests/unit/test_perp_funding_kalshi_polymarket.py`): populated-shard shape, empty-shard shape,
+      venue-agnostic passthrough (POLYMARKET_PERP), and an end-to-end live-mode test proving `live_kalshi_perp` threads
+      through correctly (not hardcoded to batch). QG green (7460 passed, 0 failed). Stale "no pipeline_mode needed"
+      comment deleted. Target shape confirmed:
+      `raw_tick_data/by_date/day={D}/pipeline_mode=batch_kalshi_perp/asset_group=cefi/venue=KALSHI_PERP/instrument_type=perpetual/data_type=perp_funding/{symbol}.parquet`.
+      (repo: market-tick-data-service)
 
 - [x] [DESIGN] P1. **Resolve the MDPS live-mode async-persistence partition-key question** — RESOLVED 2026-07-28 by
       round 2's DEFI audit (see "Confirmed dead/duplicate code" item 6 above, missed flipping this todo at the time —
