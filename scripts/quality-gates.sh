@@ -368,6 +368,11 @@ HARDCODED_PROJECT_EXCLUDE_GLOBS+=(
     # `gcloud builds describe` verification (same category — the value IS the project; overridable
     # via --project; no config injection for a post-gate probe; not a secret).
     "!**/check_evidence_backed_completion.py"
+    # check_repo_docs_ssot (+ its test): a DOC linter whose whole job is to DETECT a hardcoded
+    # project id in repo docs, so the literal IS its detection pattern / test fixture — same
+    # category as the two above (the value IS what the checker matches; not a secret, not runtime config).
+    "!**/check_repo_docs_ssot.py"
+    "!**/test_check_repo_docs_ssot.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
@@ -734,6 +739,30 @@ if [ -f "$BODY_LINK_CHECKER" ]; then
             echo "   Pre-existing debt: python3 scripts/quality_gates/check_doc_body_links.py --update-baseline" >&2
             _post_gate_fail "doc-body-links"
         fi
+    fi
+fi
+
+# ── Post-gates: repo-docs-defer-to-codex (S5.11 / S5.6) — baselined ratchet (blocking on NEW drift) ──
+# SSOT: codex/06-coding-standards/documentation-standards.md § S5.11 (+ S5.6).
+# Phase 5 of plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md — the enforcement that keeps the
+# Phase 1-4 remediation from silently rotting back. Walks every SIBLING repo's living docs (docs/**/*.md
+# + root README.md; unified-trading-pm excluded — it IS the codex SSOT) and flags the two deterministic
+# drift classes the audit found dominant: (1) a repo doc referencing the ARCHIVED unified-trading-codex/
+# mirror instead of the live PM /codex/ SSOT, (2) a repo doc hardcoding a resolver-owned literal S5.6 bans
+# (the real GCP project id — use {project_id}). Ratcheted against repo_docs_ssot_baseline.yaml (32 pre-
+# existing seeded 2026-07-29) so old debt doesn't fail every run — only NEW drift blocks. Needs
+# WORKSPACE_ROOT (the sibling clones); CI (siblings absent) degrades to a no-op, so this is the LOCAL /
+# full-workspace gate, same shape as the codex-freshness + workflow-template-parity gates.
+REPO_DOCS_SSOT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_repo_docs_ssot.py"
+if [ -f "$REPO_DOCS_SSOT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running repo-docs-defer-to-codex check (S5.11/S5.6 baselined ratchet)..."
+    if python3 "$REPO_DOCS_SSOT_CHECKER" --workspace-root "$WORKSPACE_ROOT" --quiet; then
+        log_success "Repo-docs-defer-to-codex check passed (at-or-below baseline)"
+    else
+        echo "❌ Repo-docs-defer-to-codex drift — a repo doc references the archived unified-trading-codex/" >&2
+        echo "   mirror or hardcodes a resolver-owned literal. Repoint at unified-trading-pm/codex/… or use" >&2
+        echo "   the {project_id} placeholder (S5.6). Pre-existing debt: --update-baseline (see script header)." >&2
+        _post_gate_fail "repo-docs-ssot"
     fi
 fi
 
