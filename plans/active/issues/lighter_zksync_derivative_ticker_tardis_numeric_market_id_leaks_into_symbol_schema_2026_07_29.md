@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [cefi, lighter-zksync, derivative-ticker, funding-rate, tardis, schema-contract, data-pipeline-correctness]
 related:
   [
-    /plans/active/issues/lighter_zksync_trades_generic_tardis_path_bypasses_no_batch_source_2026_07_29.md,
+    /plans/archive/issues/lighter_zksync_trades_generic_tardis_path_bypasses_no_batch_source_2026_07_29.md,
     /plans/active/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
   ]
 created: 2026-07-29

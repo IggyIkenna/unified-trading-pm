@@ -605,7 +605,7 @@ file, not here.
       root-caused to a real, ACTIVE code bug: `dex_pools_handler.py`'s `messari_basic` subgraph query never requests
       `inputTokens { symbol }` (verified byte-for-byte against the working sibling query), starving symbol resolution
       for these venues even in CURRENT/live captures (see
-      `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided: delete the bad
+      `archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`). **Operator decided: delete the bad
       data, fix the query, re-backfill** — `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` (5 todos, sequential:
       fix → live-test recoverability → backfill → purge superseded data). - **lst_rates** (COINBASE/MAKER/SWELL/ETHENA)
       — root-caused: legitimate single-row/day snapshots, re-derivable on demand from the current canonical RPC-based

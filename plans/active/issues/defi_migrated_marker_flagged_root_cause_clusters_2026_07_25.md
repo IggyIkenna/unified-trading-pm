@@ -131,7 +131,7 @@ analysis above:
     DEX/CEX it trades on, captured by the existing `dex_pool_state`/`dex_swaps`/cefi market-data paths, same as any
     other token.
 - **TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state — root cause is an ACTIVE CODE BUG, not just historical.** Full
-  detail in the new sibling issue, `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`: the
+  detail in the new sibling issue, `archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`: the
   subgraph query used for these 3 venues (`_CURVE_QUERY`, verified byte-for-byte in `dex_pools_handler.py`) never
   requests `inputTokens { symbol }` from the subgraph -- only a sibling query variant (`_MESSARI_DEX_QUERY`, used by
   other venues) does. This means symbol resolution ONLY happens via the instruments-service catalogue fallback (tier 1),
@@ -157,7 +157,7 @@ analysis above:
   current equivalent -- the old markers are the only record, for whatever that's worth given the underlying
   attribution/classification issues.
 
-Full detail on the active bug: `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`.
+Full detail on the active bug: `archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`.
 
 ## Update (2026-07-26 — GMX cluster confirmed CLOSED; overall `status` stays `open`)
 

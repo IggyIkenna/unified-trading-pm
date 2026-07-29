@@ -4,22 +4,21 @@ title: >-
   A generic Tardis batch-download path still attempts (and fails) LIGHTER-ZKSYNC trades every day, bypassing the
   already-declared VENUE_DATA_TYPE_NO_BATCH_SOURCE exclusion
 summary: >-
-  Discovered while backfilling mdps candles for HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET trades (2026-07-28/29
-  campaign). UAC's `VENUE_DATA_TYPE_NO_BATCH_SOURCE["LIGHTER-ZKSYNC"] = frozenset({"trades", "book_snapshot_5"})` and
-  the specific `_onchain_perp_batch_lighter.py`/`_onchain_perp_batch_live_only.py` handlers correctly exclude these
-  combos from the batch expected/reachable universe (per the 2026-07-15 operator ruling documented in those handlers'
-  docstrings: a "physically cannot be retrieved" combo should never be seeded, no `expected_unattempted`, no
-  `empty_confirmed`). But the consolidated cefi manifest shows `market-tick-data-service` (pipeline_mode=`batch_tardis`)
-  is STILL writing `attempted_failed`/`empty_confirmed` rows for `(LIGHTER-ZKSYNC, trades)` as recently as
-  2026-07-28T17:26:59Z (same day as this doc) — 24,559 total rows for this combo (22,871 expected_unattempted, 1,661
-  empty_confirmed, 26 attempted_failed, 1 captured), spanning dates back to 2026-02-20 and writes as recent as today.
-  This is a DIFFERENT code path than the specific handlers already fixed for this venue (per
-  `non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md`'s extensive fix history) — the generic `--operation
-  download` Tardis orchestrator (the same one `_onchain_perp_batch_lighter.py`'s own docstring says it reuses for other
-  Tardis-CeFi venues) appears to not check `venue_data_type_has_batch_source()` before attempting LIGHTER-ZKSYNC trades
-  via Tardis, so it keeps trying and failing (or writing a typed empty row) every day, forever, for a combo that can
-  never succeed.
-status: open
+  RESOLVED 2026-07-29. Discovered while backfilling mdps candles for HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET
+  trades (2026-07-28/29 campaign). UAC's `VENUE_DATA_TYPE_NO_BATCH_SOURCE["LIGHTER-ZKSYNC"] = frozenset({"trades",
+  "book_snapshot_5"})` and the specific `_onchain_perp_batch_lighter.py`/`_onchain_perp_batch_live_only.py` handlers
+  correctly exclude these combos from the batch expected/reachable universe (per the 2026-07-15 operator ruling
+  documented in those handlers' docstrings: a "physically cannot be retrieved" combo should never be seeded, no
+  `expected_unattempted`, no `empty_confirmed`). But the consolidated cefi manifest showed `market-tick-data-service`
+  (pipeline_mode=`batch_tardis`) STILL writing `attempted_failed`/`empty_confirmed` rows for `(LIGHTER-ZKSYNC, trades)`
+  — a DIFFERENT code path than the specific handlers already fixed for this venue. Fixed: `get_expected_data_types_for_venue()`
+  gained a `for_batch` filter (unified-api-contracts@d4045838, market-tick-data-service@6365f05f), the same bug
+  confirmed + fixed for `(LIGHTER-ZKSYNC, book_snapshot_5)` and `(EXTENDED-STARKNET, book_snapshot_5)`, and the
+  ~69,223 polluting manifest rows across all 3 combos were deleted (snapshot-gated). A separate follow-on bug
+  (Tardis numeric market_id leaking into the symbol column) was found while attempting a real
+  `(LIGHTER-ZKSYNC, derivative_ticker)` backfill and split into its own companion doc,
+  `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]

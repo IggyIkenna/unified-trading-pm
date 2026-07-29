@@ -2,17 +2,18 @@
 doc_type: plan
 title: Artifact Registry / ECR cleanup — side-tracks (other repos, AWS ECR, legacy GCR bucket, GCS tarball bucket)
 summary:
-  Satellite plan split out of docker_artifact_registry_cleanup_policy_2026_07_24.md on 2026-07-27 so this work can run
-  IN PARALLEL with that plan's Phase B-D `unified-trading-system` spine instead of being serialized behind it by the
-  parent's sequential flag. Extends the same deployed-digest-keep + keep-5-floor + delete-older-than-3d pattern to
-  `unified-trading-library` and the remaining ~73 GCP Artifact Registry repos, designs the equivalent AWS ECR lifecycle
-  policy for 20 ECR repos, deletes the legacy (GCR-era) GCS bucket, documents the pattern in codex, and adds a GCS
-  lifecycle rule for the separate code-tarball bucket (a different artifact class, GCS not AR). Local-only — AR/ECR
-  image-version deletes stay human-gated (no undelete mechanism exists for AR image versions — untouched by the
-  2026-07-28 §3a extension); the legacy GCR bucket delete is a whole-bucket destroy that IS now reversibility-qualified
-  (2026-07-28 ruling, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
-  soft-delete-retention check clears.
-status: active
+  COMPLETE 2026-07-29 — all 7 todos (10-13, 15-17) done. Satellite plan split out of
+  docker_artifact_registry_cleanup_policy_2026_07_24.md on 2026-07-27 so this work can run IN PARALLEL with that plan's
+  Phase B-D `unified-trading-system` spine instead of being serialized behind it by the parent's sequential flag.
+  Extended the same deployed-digest-keep + keep-5-floor + delete-older-than-3d pattern to `unified-trading-library`
+  (unified-trading-pm@75e21803) and the remaining ~73 GCP Artifact Registry repos (unified-trading-pm@d836194,
+  18 repos policied); designed the equivalent AWS ECR lifecycle policy for 20 ECR repos (presented for operator
+  sign-off before live application — the live ECR flip was never this plan's own todo, only the design); deleted the
+  legacy (GCR-era) GCS bucket (reversibility-qualified whole-bucket destroy, executed + verified gone); and applied a
+  GCS lifecycle-equivalent cleanup for the separate code-tarball bucket (2,396 old @sha objects deleted, 7-day
+  soft-delete window). AR/ECR image-version deletes stayed human-gated throughout (no undelete mechanism exists for AR
+  image versions).
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

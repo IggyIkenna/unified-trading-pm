@@ -5,7 +5,7 @@ title:
 summary: >-
   Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the
-  originating bug report (issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md, which this whole plan
+  originating bug report (archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md, which this whole plan
   is a direct extraction of — flip it to resolved once the query fix + backfill + purge all land),
   defi_consolidated_closeout_2026_07_18.md's progress log, and the TRADER_JOE_V2/VELODROME_V2/CURVE cluster row in
   issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md (that doc also covers the sibling GMX cluster
@@ -22,7 +22,7 @@ related:
   [
     /plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
+    /plans/archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md,
     /plans/active/issues/defi_migrated_marker_flagged_root_cause_clusters_2026_07_25.md,
   ]
 created: "2026-07-25"
@@ -62,7 +62,7 @@ drift_direction: advance-code
 ## Todos
 
 - [ ] [REVIEW] P2. **Reconcile fix/backfill/purge status into the referencing docs.** (1)
-      `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` — this whole plan is a direct extraction
+      `archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md` — this whole plan is a direct extraction
       of this bug report; once the query-fix + live-test + backfill + purge todos are all `done`, flip this issue doc's
       `status: open` → `status: resolved` with `resolved_by` citing the actual shipped commit(s) — verify each cited
       commit exists (`git log`/`git show`) before citing, do not copy the parent plan's own evidence lines uncritically.

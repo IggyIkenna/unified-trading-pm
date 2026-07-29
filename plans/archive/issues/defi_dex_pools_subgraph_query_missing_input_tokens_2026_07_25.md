@@ -4,16 +4,16 @@ title:
   dex_pools_handler messari_basic subgraph query never requests inputTokens symbols
   (curve/sushiswap/gmx/velodrome_v2/trader_joe_v2)
 summary:
-  Verified byte-for-byte in market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py and
-  _dex_pools_subgraph.py -- the messari_basic query entry (_CURVE_QUERY / _CURVE_QUERY_FILTERED), used by 5 venues
-  (curve, sushiswap, gmx, velodrome_v2, trader_joe_v2), requests only `pool { id, name }` from the subgraph -- it never
-  asks for `inputTokens { symbol }`. The sibling messari_dex entry (pancakeswap_v3/aerodrome_v3) DOES request
-  inputTokens and works correctly. This starves tier-2 symbol resolution entirely for these 5 venues; only pools ALSO
-  registered in the instruments-service catalogue (tier-1 lookup) resolve. This is an ACTIVE ongoing gap in the live
-  capture code, not just a historical migration artifact -- it will keep producing unattributed pool_state rows the
-  moment DeFi live capture resumes (currently operator-paused since 2026-07-18 pending the per-instrument
-  re-architecture).
-status: open
+  RESOLVED 2026-07-29 (resolved-by-reference). Verified byte-for-byte in
+  market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py and _dex_pools_subgraph.py -- the
+  messari_basic query entry (_CURVE_QUERY / _CURVE_QUERY_FILTERED), used by 5 venues (curve, sushiswap, gmx,
+  velodrome_v2, trader_joe_v2), requests only `pool { id, name }` from the subgraph -- it never asks for
+  `inputTokens { symbol }`. The sibling messari_dex entry (pancakeswap_v3/aerodrome_v3) DOES request inputTokens and
+  works correctly. This starves tier-2 symbol resolution entirely for these 5 venues; only pools ALSO registered in the
+  instruments-service catalogue (tier-1 lookup) resolve. The actual fix + backfill/purge work is tracked and executed in
+  `/plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`; this doc's own single todo is closed by
+  reference to that plan. Archived as a resolved finding record.
+status: resolved
 nature: issue
 asset_group: defi
 stage: [data]

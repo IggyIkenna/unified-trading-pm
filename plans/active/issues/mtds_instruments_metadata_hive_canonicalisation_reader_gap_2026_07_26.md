@@ -39,9 +39,10 @@ tags:
 related:
   [
     instrument_availability_hive_canonicalisation_2026_07_21,
-    defi_manifest_no_expected_unattempted_seeder_2026_07_26,
+    /plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md,
     /codex/02-data/canonical-cutover-register.md,
     /codex/02-data/honest-absence-downstream-handling.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-26
 parent_epic: infrastructure_master

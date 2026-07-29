@@ -3,7 +3,7 @@ doc_type: plan
 title: Fix dex-pools subgraph symbol-resolution bug, backfill, purge superseded/orphaned DeFi historical data
 summary:
   Operator decision 2026-07-25 -- delete the bad unattributed TRADER_JOE_V2/VELODROME_V2/CURVE dex_pool_state data, fix
-  the subgraph-query bug that caused it (see issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md),
+  the subgraph-query bug that caused it (see archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md),
   then re-backfill with proper symbols. Also purge the orphaned lst_rates `_migrated_*` markers
   (COINBASE/MAKER/SWELL/ETHENA) -- superseded by the current canonical RPC-based lst_rates_handler.py capture
   (re-derivable from any historical block on demand) or, for MAKER/ETHENA, already reclassified into
@@ -58,7 +58,7 @@ bad/orphaned data, keep only what's canonical going forward):
 1. **dex_pools_handler.py's `messari_basic` query** (used by curve/sushiswap/velodrome_v2/trader_joe_v2 -- gmx is
    excluded here, it is being removed entirely by `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) never
    requests `inputTokens { symbol }` from the subgraph -- full analysis in
-   `issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`. This produced years of unattributed
+   `archive/issues/defi_dex_pools_subgraph_query_missing_input_tokens_2026_07_25.md`. This produced years of unattributed
    (address-keyed) `dex_pool_state` data for these venues, both the old `_migrated_*` markers AND (for CURVE
    specifically, confirmed live) still-current address-keyed leaves.
 2. **lst_rates** `_migrated_*` markers for COINBASE/SWELL/MAKER/ETHENA are all legitimate-but-orphaned single-row
