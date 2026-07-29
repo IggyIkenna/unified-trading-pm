@@ -384,4 +384,17 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       (2-read progress-metric check — a new `date=` boundary OR continued in-date fixture-fetch advance both count as
       live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM self-deleted/TERMINATED), re-run
       `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox +
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo. —
+      **Health-checked 2026-07-29T03:53Z-03:55Z (slot 10, data_engineering), RUNNING, confirms slot 5's 03:53Z check**:
+      `gcloud compute instances list` (via `unified-trading-sa`, already active) confirms `RUNNING` in
+      `asia-northeast1-c`. 2-read progress-metric check over ~2min: heartbeat blob fresh at both reads (`updateTime`
+      03:54:10Z and 03:55:12Z, both <1min old at check time); run.log grew 195,670→196,432 lines (+762); `date=`
+      boundary advanced `2024-09-28→2024-10-01`, live per-fixture `Fetched N events for fixture=X` +
+      `Recovery-mode merge for fixture_events/league=... : N existing rows + M new = T total` writes, no error/stall
+      signature; `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 at the second read. Genuine forward progress, no stall.
+      Not completable this turn (~1.8 years of the `2020-06-06→2026-07-25` range remain, currently at `2024-10-01`).
+      Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this
+      health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date fixture-fetch advance
+      both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM self-deleted/TERMINATED), re-run
+      `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox +
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo.
