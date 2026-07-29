@@ -145,6 +145,17 @@ return to a normal (non-zero-job) run.
       generating `ldr_qg_failure` escalation spam (like this one) fleet-wide for every affected repo, which is wasted
       escalation-worker dispatch on a wall no worker can fix. Not actioned in this session (out of scope for a
       single-repo one-shot escalation worker) — flagging for the next fleet-wide CI hygiene pass.
+- [ ] [BACKEND] P3. Every bare-LDR (`pr_number=0`) `ldr_qg_failure` escalation raised by the scheduler passes the
+      literal string `authoring_slot="ci-reconcile"` (`agent-orchestrator/server/ci_reconcile.py:546`), not a real
+      numbered slot — so a dispatched `cicd` worker's mandated "ping the authoring slot on completion" step
+      (`unified-trading-pm/agents/cicd.md` § "PING THE AUTHORING SLOT") always 400s
+      (`POST /api/slots/ci-reconcile/message` → `int_parsing`, path expects an int; confirmed `agt-69e9e4`/slot 14,
+      2026-07-29T22:xxZ). `_notify_authoring_slot` (the server's own dispatch-time ping) already treats it as a label,
+      not a real target, so this is a structural mismatch between the worker contract and this escalation source, not a
+      one-off. Either have `cicd.md` special-case a non-numeric `AUTHORING_SLOT` (skip the ping, it's advisory-only per
+      the source comment) or give scheduler-raised escalations a pingable surface (e.g. a Slack note keyed off
+      `escalation_id` instead of a slot). Low priority — the ping is best-effort/advisory, not a completion-blocking
+      check. (repo: agent-orchestrator, unified-trading-pm)
 
 ## Evidence log
 
@@ -220,5 +231,11 @@ return to a normal (non-zero-job) run.
   — exact match to this doc's signature, still active ~40min past the last sample above. Added
   `unified-trading-system-ui` to this doc's `repos:` frontmatter (newly-confirmed affected repo, not in the original
   sampled table). Not filing a fresh `/blocked` (same standing `[OPERATOR] P0` todo already covers this decision;
-  avoiding the escalation-spam pattern the P3 todo above flags). Pinged the authoring slot with the outcome. No code or
-  workflow change made or needed; `unified-trading-system-ui` left clean on `live-defi-rollout`.
+  avoiding the escalation-spam pattern the P3 todo above flags). **Could not ping the authoring slot**: this
+  escalation's `AUTHORING_SLOT=ci-reconcile` is the hardcoded literal `ci_reconcile.py:546` passes for scheduler-raised
+  bare-LDR `ldr_qg_failure` walls (confirmed by reading the source) — not a real numbered slot, so
+  `POST /api/slots/ci-reconcile/message` 400s (`int_parsing`, path expects an int). `_notify_authoring_slot` (the
+  server's own dispatch-time Slack ping) already logs `authoring_slot=ci-reconcile` as a label rather than a real
+  target, so this looks like a structural gap in the worker-completion-ping step for this specific escalation source,
+  not something a one-shot worker can route around — flagging rather than guessing a slot number. No code or workflow
+  change made or needed; `unified-trading-system-ui` left clean on `live-defi-rollout`.
