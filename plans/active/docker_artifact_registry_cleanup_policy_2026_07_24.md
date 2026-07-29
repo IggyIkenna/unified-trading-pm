@@ -381,13 +381,14 @@ Policy shape) assumed it would need to enumerate.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
       actual GB/$ drop vs the dry-run projection AND that no `ImagePullBackOff` / failed-deploy / failed-scale incident
       fired in the window. Done-when: a re-audit CSV shows the reduction and the incident check is clean.
-- [ ] 14. [INFRA] P2. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
+- [x] ✅ 14. [INFRA] P2. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
       decision, the keep-deployed-digest + keep-floor + delete-window pattern, and an explicit disambiguation of
       **Docker images (ephemeral, CI-rebuildable, prunable) vs data/model artifacts (permanent retention per
-      artifact-versioning.md)**, stating the delete policy is scoped to AR Docker repos ONLY and must never touch the
-      data-artifact GCS buckets. Done-when: the codex doc exists and is linked from this plan. (Numbering kept
-      non-contiguous with 5-9 intentionally — preserved from the pre-split single plan for cross-doc traceability; todos
-      10-13, 15-17 now live in the satellite plan, see the intro blockquote.)
+      artifact-versioning.md)**. — unified-trading-pm@<SHA>. **Complete 2026-07-29.** Codex doc created covering: 3-rule
+      policy shape with per-package scoping rationale, `:latest`-tracking inherent protection, `versionNamePrefixes` vs
+      `tagPrefixes` disambiguation, `olderThan` seconds format, no-AR-undelete operator gate, ECR adapted 2-rule policy
+      with mapping table, GCP-managed repos out-of-scope list, code-tarball GCS lifecycle distinction, and application
+      procedure (Phases A-D). Links to both implementation plans + artifact-versioning.md.
 
 ## Review findings this plan encodes
 
