@@ -114,7 +114,16 @@ terminated/idle, not re-kicked.
       `test_no_override_keeps_default_frozen_nudge`; plus `tests/test_done_one_off.py`'s existing archive test extended
       to assert `last_msg.startswith("idle:")`), all passing alongside the full existing 49-test suite (4 pre-existing
       exact-call assertions updated for the new `text_override` kwarg, behavior unchanged for every case that isn't the
-      new one). `quality-gates.sh` green before ship.
+      new one). `quality-gates.sh` green before ship. **Shipped**: `agent-orchestrator@0e9ce0b` (landed on
+      `live-defi-rollout`, verified `ahead=0/behind=0` against origin). Ship was blocked for several hours by an
+      unrelated dependency: `unified-trading-library` (a path dependency of agent-orchestrator) had a separate, real,
+      uncommitted test-determinism fix sitting dirty with no owning session visibly active on it — after confirming
+      genuine staleness (mtime static ~3h, no lock/open-FD, diff complete and coherent) I took it over, found and fixed
+      a real race condition the sleep-removal refactor had introduced
+      (`tests/unit/test_manifest_freshness.py::test_concurrent_write_race_loser_skips_after_ttl` — the loser thread's
+      post-TTL check had no guarantee the winner thread's write had landed yet; the original `time.sleep(1.1)`
+      accidentally provided that ordering, the fake-clock replacement did not), verified `quality-gates.sh` green, and
+      shipped it separately as `unified-trading-library@2e39d98b` before retrying this ship.
 - [ ] [REVIEW] P3. **Not fixed this pass, flagged as a real residual risk found during investigation**: if a stuck
       one-shot slot crosses `kick_escalation_threshold` (default 3 consecutive non-recovered kicks — including a
       corrective one, per this fix), `_maybe_auto_respawn_stuck_slot`/`_respawn.py` has zero lifecycle/one-shot
