@@ -60,6 +60,32 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── SELF PID FILE — deterministic, worktree-scoped kill handle ───────────────
+# pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md: the shipped pkill-guard
+# (scripts/hooks/pkill-guard.sh) refuses a bare `pkill -f quality-gates.sh`, and
+# its documented safe alternative is a `.tabs/<N>/`-cwd-scoped -f pattern — but
+# the canonical background-launch idiom (`nohup bash scripts/quality-gates.sh &
+# ...`) invokes via a RELATIVE path, so the process's actual argv never contains
+# the cwd and that "safe alternative" silently matches zero processes. A worker
+# who loses `$!` across separate Bash-tool calls (no shell state persists
+# between calls — the exact situation both incidents in that doc started from)
+# is left with only a broad ps-hunt. This file closes the gap with a
+# deterministic handle: `cat "${TMPDIR:-/tmp}/qg-pid-<sanitized-worktree>.pid"`.
+# Deliberately OUT of the repo tree (never ${PROJECT_ROOT}/...) — an in-repo
+# untracked artifact made every post-QG tree dirty until a fleet-wide gitignore
+# rollout landed, which blocked quickmerge's dirty-DEPS pre-flight for repos
+# that hadn't picked it up yet (the same root cause already documented for the
+# .qg_cache move, see qg-common.sh "MOVED out of ${PROJECT_ROOT}/.qg_cache"
+# above); this file is fully transient (removed by _qg_exit_handler below on
+# every exit path — success, failure, or a caught signal), so keeping it out of
+# the repo avoids that whole incident class at zero gitignore-fanout cost.
+# Sanitized on the FULL worktree path (not just the repo basename) so two slots
+# running the same repo concurrently (confirmed real: recurrence #2 above,
+# slots 2 + 8 both running market-tick-data-service QG at once) never collide.
+_QG_PID_FILE="${TMPDIR:-/tmp}/qg-pid-$(printf '%s' "$PROJECT_ROOT" | tr '/' '_').pid"
+echo "$$" > "$_QG_PID_FILE" 2>/dev/null || true
+echo "ℹ️  [quality-gates] running as PID $$ — precise kill handle: cat \"$_QG_PID_FILE\"" >&2
+
 # ── QG RESOURCE GOVERNANCE ────────────────────────────────────────────────────
 # Plan: quality_gates_resource_contention_speedup_2026_06_02.
 # (1) Host concurrency governor — token bucket so at most K QG heavy-phases run
@@ -181,6 +207,7 @@ fi
 # EXIT trap — bash exits with the original status unless the trap calls `exit`).
 _qg_exit_handler() {
     local rc=$?
+    rm -f "${_QG_PID_FILE:-}" 2>/dev/null || true
     if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
     return 0
