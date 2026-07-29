@@ -6,7 +6,7 @@ summary:
   stale-order QG run) killed a DIFFERENT slot''s actively-running quality-gates.sh (features_service coverage, pytest
   child at 87% CPU). Violates the HARD RULE ''never bulk-kill another slot''s pytest/QG''. Root cause + fix: never
   pattern-kill a QG process; always capture and kill by the exact PID you started.'
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,6 +20,11 @@ parent_epic: agent_operating_framework_master
 source: "Self-reported by slot-13 during capability_wizard_gap_discovery-011, 2026-07-28"
 assigned_vm: planning
 resolved_by:
+  "All 4 todos [x]: RULES.md prose addendum (unified-trading-pm@agents/RULES.md); base-service.sh running.$$ ledger
+  marker + test-qg-running-marker.sh; mechanical pkill()/pgrep() shell-guard shipped (unified-trading-pm@18ecbffb1 —
+  pkill-guard.sh + install-pkill-guard-shell-env.sh + test_pkill_guard.bats); host-wide ~/.bashrc/~/.zshrc rollout
+  completed + live-verified 2026-07-29 (slot 10) — bare `pkill -f quality-gates.sh` REFUSED, slot-scoped pattern passes
+  through, confirmed no other slot's live QG process was touched."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -189,10 +194,19 @@ compute on the victim slot, which must re-run to green before it can ship regard
       once the root clone is clean and has fast-forwarded past `18ecbffb1`, run
       `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on this host to complete the
       `~/.bashrc` rollout (idempotent, safe to re-run).
-- [ ] [SCRIPT] P2. Once the root `unified-trading-pm` clone
+- [x] ✅ [SCRIPT] P2. Once the root `unified-trading-pm` clone
       (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`) is clean and has fast-forwarded past `18ecbffb1`
       (this host's shared `pm-pull.timer` cron is currently skipping the pull because that clone carries unrelated
       genuine dirty tracked files), run `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on
       this shared host to complete the `~/.bashrc`/`~/.zshrc` rollout of the guard from `pkill-guard.sh` (todo above).
       Idempotent — safe to run more than once, and safe on any other shared host running these agents. Verify with a NEW
-      shell: `pkill -f quality-gates.sh` should print `REFUSED: ...` instead of executing.
+      shell: `pkill -f quality-gates.sh` should print `REFUSED: ...` instead of executing. — **Done 2026-07-29 (slot
+      10):** confirmed root clone was already clean + `18ecbffb1` an ancestor of HEAD; ran
+      `install-pkill-guard-shell-env.sh`, which installed the managed block into both `~/.bashrc` and `~/.zshrc`.
+      Live-verified in a genuinely NEW interactive shell (`bash -ic`, not just a sourced non-interactive one — `.bashrc`
+      early-returns for non-interactive shells, so this distinction matters): `type pkill`/`type pgrep` show the guard
+      functions; `pkill -f quality-gates.sh` and `pkill quality-gates.sh` (bare, no discriminator) print the
+      `REFUSED:     ...` message and exit 1 without touching any process; a `.tabs/10/`-scoped pattern passes the
+      guard's check through to the real binary (confirmed via `ps aux` immediately after — the several live
+      `quality-gates.sh` processes belonging to other slots, e.g. slot 8/9, were unaffected, since the pattern never
+      matched them). Host-wide rollout of this issue doc's P1 mechanical guard is now COMPLETE.
