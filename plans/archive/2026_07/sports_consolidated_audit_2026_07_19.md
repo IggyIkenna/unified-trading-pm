@@ -6,7 +6,7 @@ summary: >-
   odds, market-data-processing-service bucketing, features-service) plus SSOT/codex alignment and plan reconciliation.
   Produced by a 6-agent parallel fan-out, every claim backed by a GCS/parquet/manifest measurement. Feeds the actionable
   sports_consolidated_closeout_2026_07_19 plan. This is a LOCAL audit doc — not AO-ingested.
-status: active
+status: complete
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -46,6 +46,9 @@ source:
 assigned_role: data_engineering
 drift_direction: advance-code
 ---
+
+> **🗄️ ARCHIVED 2026-07-29** — status=complete, 0 open todos. Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
 
 # Sports consolidated audit — measured current state (2026-07-19)
 

@@ -130,6 +130,14 @@ session the way the rest of this workspace's automation does.
       whoever owns the sanctioned apply process) to run `terraform apply` for this one resource** — until then the code
       fix is correct but inert; preempted one-off VMs still need manual relaunch (done throughout this session from
       measured `PROGRESS.json`, never replaying `START_DATE`).
+- [ ] [OPERATOR] P1. Run `terraform apply` for `data_pipeline_fleet_monitor_scheduler.tf`'s `timeout_seconds` 300→900
+      change (`deployment-service@3da9ffa`, code-complete but not yet applied to production — requires
+      `-var project_id/environment/bucket_prefix` values not present in the checkout, no CI-driven apply pipeline exists
+      for this repo's terraform). Until applied, `uts-prod-dp-exit-code-monitor-cron` keeps hitting its 300s Cloud Run
+      timeout on every execution and `DP_VM_PREEMPTED` never fires — the fleet-wide preemption safety net stays broken
+      for every one-off migration VM, not just this venue family. Verify via: no more `"Terminating task"` timeout log
+      lines for `uts-prod-dp-exit-code-monitor`, and a real `DP_VM_PREEMPTED` log line appearing within 15 min of a
+      genuine preemption. Repo: deployment-service (Terraform apply, human-gated).
 
 ## Progress Log
 

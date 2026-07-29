@@ -176,6 +176,12 @@ no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-u
       dedup set was not verified/fixed in this pass (different repo, out of this dispatch's scope); re-file as a
       standalone MDPS-scoped todo if not already covered elsewhere. Repos: market-tick-data-service (done),
       market-data-processing-service (still open).
+- [ ] [DATA] P2 (MDPS half). Fix the bare-`instrument_id`-only pre-flight/dedup keying gap in
+      `market_data_processing_service/app/core/orchestration_scanner.py`'s `existing_outputs` dedup set (~L680-693) —
+      mirror the MTDS fix above (`market-tick-data-service@5bf8a3c7`: colon-prefix `chain` into the atom string when
+      present) so cross-chain-colliding bare pool addresses (CURVE/BALANCER) stay distinct in MDPS's dedup set too, with
+      a regression test using the real CURVE collision address (`0x004c167d27ada24305b76d80762997fa6eb8d9b2`, AVALANCHE
+      vs OPTIMISM). Repo: market-data-processing-service.
 
 ## Provenance
 

@@ -88,8 +88,8 @@ drift_direction: advance-code
     — archived alongside its parent (0 open todos, pure history).
 
 - **Audit / doc-health reconciliation**:
-  - [`plans/active/sports_consolidated_audit_2026_07_19.md`](/plans/active/sports_consolidated_audit_2026_07_19.md) — 0
-    open todos (the 6-agent audit that fed this closeout; fully absorbed).
+  - [`plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md`](/plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md)
+    — 0 open todos (the 6-agent audit that fed this closeout; fully absorbed).
   - [`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`](/plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md)
     (13 open — doc-corpus self-consistency findings):
     - **[DOC] P0.** `authoritative_for` collision, code-verified (`sports-batch-live.md` in-play claim)

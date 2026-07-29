@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [manifest, g1-enum, tradfi, combo, instrument_type, casing, migration]
 related:
   [
-    /plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
+    /plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]

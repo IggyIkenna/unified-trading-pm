@@ -32,6 +32,20 @@
 # locked_by docs are excluded from the count (they cannot be archived without [unlock-plan]
 # regardless of todo state, so flagging them would be a false positive the operator can't act on).
 #
+# A doc that is `depends_on:`+`gate_on_depends: true` for another STILL-status:draft plan in
+# plans/active/ is ALSO excluded (found 2026-07-29 fixing the first real backlog this gate
+# caught): the ag-closeout-audit skill's "satellite batchN" pattern deliberately leaves a
+# fully-done batch plan un-archived until its own dedicated `<name>_finalize_<date>.md` companion
+# runs the archival (with extra per-source-doc reconciliation that a generic archive pass would
+# skip) — and per CLAUDE.md, flipping a draft finalize plan to `active` is an operator decision,
+# never autonomous. Four real instances confirmed this session
+# (prediction_satellite_ao_dispatch_batch1/batch2, sports_satellite_ao_dispatch_batch4,
+# tradfi_satellite_ao_dispatch_batch4 — each verified by reading its finalize companion). This is
+# NOT the same as `locked_by` (no lock exists) and NOT the same as a genuine miss — it is a
+# different, already-designed ownership mechanism the mechanical checkbox count can't see on its
+# own, so this check now looks for it explicitly instead of the operator hand-raising the
+# baseline every time the pattern recurs (which CLAUDE.md's own ratchet rule forbids).
+#
 # Usage: bash scripts/plan-hygiene/check_archive_candidates.sh [--quiet] [--update-baseline]
 # Exit 0 = candidate count <= baseline. Exit 1 = count exceeds baseline (a NEW candidate appeared).
 # --update-baseline: after archiving flagged docs, persist the new (lower) count. Refuses to raise
@@ -74,6 +88,18 @@ for f in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
   done_count="${done_count:-0}"
 
   if [ "$open_count" -eq 0 ] && [ "$done_count" -gt 0 ]; then
+    stem="${name%.md}"
+    owned_by_finalize=""
+    for candidate_finalize in "$PM_DIR/plans/active"/*.md; do
+      [ -f "$candidate_finalize" ] || continue
+      [ "$candidate_finalize" = "$f" ] && continue
+      grep -qE "^depends_on:.*(\[|,|[[:space:]])${stem}(\]|,|[[:space:]])" "$candidate_finalize" 2>/dev/null || continue
+      grep -qE '^gate_on_depends:[[:space:]]*true' "$candidate_finalize" 2>/dev/null || continue
+      owned_by_finalize="$(basename "$candidate_finalize")"
+      break
+    done
+    [ -n "$owned_by_finalize" ] && continue
+
     status="$(grep '^status:' "$f" 2>/dev/null | head -1 | sed 's/status: //')"
     status="${status:-unknown}"
     FOUND+=("${f#"$PM_DIR"/}  done=${done_count}  status=${status}")

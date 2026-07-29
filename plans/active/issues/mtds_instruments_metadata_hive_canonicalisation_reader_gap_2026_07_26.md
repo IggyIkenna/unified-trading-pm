@@ -38,6 +38,7 @@ tags:
   ]
 related:
   [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     instrument_availability_hive_canonicalisation_2026_07_21,
     defi_manifest_no_expected_unattempted_seeder_2026_07_26,
     /codex/02-data/canonical-cutover-register.md,

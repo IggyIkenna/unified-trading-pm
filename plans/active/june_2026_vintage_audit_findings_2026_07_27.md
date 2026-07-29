@@ -653,9 +653,10 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     of which reconciles with the catalog's short-root-code convention ("HO"/"PL") — the present-set rollup fix IS doing
     real work here (1.1M+ rows re-keyed, confirmed via direct probe) but the resulting `underlying` values still don't
     match what the seed expects; filed as
-    `plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`, a genuine
-    follow-up design question, not guessed at here). G5 ownership + the 5-per-AG-plan staleness check remain open (out
-    of this task's scope — that's the G4/backfill-plan half of this item, unrelated to the G1-ENUM present- set fix).
+    `plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`, a
+    genuine follow-up design question, not guessed at here). G5 ownership + the 5-per-AG-plan staleness check remain
+    open (out of this task's scope — that's the G4/backfill-plan half of this item, unrelated to the G1-ENUM present-
+    set fix).
 15. citadel_paper_batch_live P2.7.3/P7.3 — stands, human-only custody gate, external.
 16. live_mode_event_sink_topic — **Option A chosen**: repoint UTL `_sink_factory.py` to canonical
     `service-lifecycle-events`; delete the interim unmanaged `market-tick-data-service-events` topic after.

@@ -149,6 +149,12 @@ source:
       `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
       re-confirmed at 604800s retention — any object the lifecycle rule deletes is recoverable within that window, same
       as an object delete/overwrite.
+- [ ] [INFRA] P3. Set up a recurring Cloud Scheduler → Cloud Run Job to re-run the same Python @sha-tarball cleanup
+      script (todo 17) on an ongoing cadence against `gs://deployment-scripts-central-element-323112/code/` (predicate:
+      `@` in object name + `.tar.gz`/`.manifest.json` suffix + age>30d, skip current-pointers) — the native GCS
+      lifecycle rule couldn't be applied (`matchesPattern` unsupported for project 1060025368044), so without a
+      recurring job new `@sha` tarballs pushed after 2026-07-29 will silently re-accumulate with no automated cleanup.
+      Repo: deployment-service. Done when a scheduled job exists and one real triggered run is verified.
 
 ## Codex SSOTs
 

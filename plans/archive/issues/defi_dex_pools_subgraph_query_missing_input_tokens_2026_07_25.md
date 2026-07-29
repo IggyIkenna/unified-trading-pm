@@ -13,7 +13,7 @@ summary:
   capture code, not just a historical migration artifact -- it will keep producing unattributed pool_state rows the
   moment DeFi live capture resumes (currently operator-paused since 2026-07-18 pending the per-instrument
   re-architecture).
-status: open
+status: resolved
 nature: issue
 asset_group: defi
 stage: [data]
@@ -37,9 +37,16 @@ source:
     definitions before filing this",
   ]
 resolved_by:
+  "market-tick-data-service (dex_pools_handler.py's messari_basic query now requests inputTokens{symbol}/fees, switched
+  curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 to _parse_messari_dex, live-retry-verified populated inputTokens for
+  velodrome_v2/trader_joe_v2, dispatch-wiring unit tests) — shipped via
+  plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md todo 2"
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos. Archived per
+> /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule.
 
 # dex_pools_handler messari_basic subgraph query never requests inputTokens symbols
 

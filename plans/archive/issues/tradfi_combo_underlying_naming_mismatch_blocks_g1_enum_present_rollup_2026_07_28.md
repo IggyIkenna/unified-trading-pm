@@ -23,7 +23,7 @@ summary: >-
   like `"CME:COMBO:ESU4-ESH5"` (a calendar-spread pair code, not a clean root) — `_derive_underlying()`'s hyphen-split
   heuristic mis-parses this into `"CME:COMBO:ESU4"`, which is also wrong. Both are separate, real mismatches from the
   grain-symmetry bug the shipped fix addresses.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -46,12 +46,15 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: "unified-api-contracts (resolve_tradfi_underlying_to_root + tradfi_symbology.py, 12 unit tests) + instruments-service (_derive_underlying/_rollup_present_bundle_grain wiring, 8 unit tests), 2026-07-28; production-quantified 0-change traced to a separate composite-id MVP-gate bug, filed as plans/archive/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md; 1.3M-row uppercase-casing residual filed as plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md"
   "instruments-service (present-set reconciliation, direction 2 chosen — UAC reverse-lookup) + unified-api-contracts
   (new `resolve_tradfi_underlying_to_root`), SHAs recorded below, 2026-07-28"
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos. Archived per
+> /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule.
 
 # TradFi COMBO underlying-naming mismatch blocks the G1-ENUM present-set rollup from closing tradfi phantom cells
 

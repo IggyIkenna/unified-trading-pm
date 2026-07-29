@@ -35,7 +35,7 @@ scope: [engineer]
 tags: [g1-enum, expected-universe, tradfi, combo, mvp-gate, underlying-naming, data-correctness]
 related:
   [
-    /plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
+    /plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
     /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,

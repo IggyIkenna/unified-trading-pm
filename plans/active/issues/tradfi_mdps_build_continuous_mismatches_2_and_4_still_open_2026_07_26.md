@@ -923,6 +923,13 @@ SAME backfill a second time" todo: a plain, cheap, idempotent re-run to pick up 
 pass already gave up on a date. All 3 remaining P2 todos in this doc are small and can be picked up independently by
 anyone, any time — none are blocking.
 
+- [ ] [AGENT] P2. Re-run the ES/MES per-contract process-step backfill a THIRD time (`launch-mdps-backfill-vm.sh` or the
+      established 7-per-year-VM `y*es-*` sharding pattern, `MDPS_INSTRUMENT_IDS='CME:FUTURE:ES CME:FUTURE:MES'`) now
+      that the empty-day-listing retry mitigation (`_retry_empty_day_listing`, `market-data-processing-service@22b926c`)
+      is live, then re-measure the `1d`/`24h` `continuous_future` hit rate against the 454/2398 (~18.9%) baseline to
+      check whether it moves — if flat, escalate the GCS list-consistency hypothesis instead of re-running again (see
+      "Deferred work after 2026-07-26" table above). Repo: market-data-processing-service.
+
 - 2026-07-26 (slot 3, reconciliation): confirmed via the operations log that my `140251`→`144837` resume chain was
   genuinely KILLED by slot 2 (not SPOT-preempted as I'd diagnosed from an empty `gcloud describe` alone — a real gap in
   my own monitoring: I should have checked `operations list`'s `user` field sooner, which showed the same
