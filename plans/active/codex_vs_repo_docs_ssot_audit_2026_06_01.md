@@ -596,7 +596,7 @@ genuine-UI, out of scope.
       `agent-orchestrator/AUTH_INVENTORY.md`'s staleness (retired `agents/worker.md`/`main.md` PATHS — now under
       `unified-trading-pm/agents/`) is a **separate non-archived-mirror FIX-STALE** tracked in the Appendix-B
       agent-orchestrator entry, NOT this `unified-trading-codex/`-repoint todo's scope.
-- [ ] [DOCS] P1. **client-reporting-api commercial-facts migration into codex — RULED, cleared to execute (operator
+- [x] ✅ [DOCS] P1. **client-reporting-api commercial-facts migration into codex — RULED, cleared to execute (operator
       confirmed 2026-07-28: "Yes, the client roster/fee numbers ARE still current. Confirmed, no re-check needed.").**
       The committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s + three-HWM invoicing model
       live ONLY in `client-reporting-api/docs/{CLIENT_OPERATIONS_GUIDE,PNL_AND_INVOICING_GUIDE}.md`, NOT in
@@ -608,7 +608,17 @@ genuine-UI, out of scope.
       placeholder violation to fix on migration. Full-completion mandate: migrate the commercial facts into codex FIRST
       (this plan's own Principle 2 — never lose the delta), then convert the repo docs to S5.11 redirects; no partial
       migration that leaves half the commercial facts still repo-local-only. (repo: client-reporting-api,
-      unified-trading-pm)
+      unified-trading-pm) — **DONE 2026-07-29.** Migrated ALL commercial facts (roster + orgs + tranches + pooled IK
+      weights + per-client Odum/trader/introducer fee %s + four-tier HWM model + three HWM methods + per-client HWM
+      seeds/GP-pnl_based/nuances + committed Apr-9 invoice + refund history) into the new codex SSOT
+      `/codex/14-customer-journeys/commercial-model/client-roster-and-fee-model.md` FIRST (never-lose-the-delta),
+      verified against the live machine SSOT `execution-service/configs/credentials-registry.yaml` (all fee %s + pool
+      weights + underwater flags match). Cross-referenced from `client-reporting-architecture.md` (pipeline-vs-numbers
+      split) + listed in the commercial-model README. THEN converted both repo docs to S5.11 redirect form keeping only
+      the repo-local ops runbook + code-file map, added `owner/cadence/verifier/last_executed` runbook frontmatter, and
+      replaced hardcoded `central-element-323112` with `{project_id}`. unified-trading-pm@codex-doc-commit +
+      client-reporting-api@77b2d54 (quickmerge, landed LDR). Doc gates: prettier-clean, doc-body-links clean, my refs
+      add 0 danglers.
 - [ ] [DOCS] P2. **[OPERATOR-DECISION] ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo
       contradicts itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived;
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
