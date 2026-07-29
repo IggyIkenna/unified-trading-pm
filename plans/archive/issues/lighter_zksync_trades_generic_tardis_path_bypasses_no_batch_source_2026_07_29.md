@@ -60,7 +60,16 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "unified-api-contracts@d4045838 (for_batch= filter on get_expected_data_types_for_venue) + market-tick-data-service@
+  6365f05f (2 call sites wired) + market-tick-data-service's reclass_cefi_no_batch_source_phantom_rows_2026_07_29.py
+  cleanup (69,223 phantom rows removed, snapshot-verified), 2026-07-29"
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, all 3 todos done + production-verified (writer fixed, 3 combos confirmed
+> excluded, 69,223 polluting manifest rows removed). Follow-on `derivative_ticker` backfill bug (a SEPARATE defect found
+> while closing this doc out) is tracked in its own companion doc,
+> `lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
 
 # Generic Tardis batch path still attempts LIGHTER-ZKSYNC trades despite the declared no-batch-source exclusion
 

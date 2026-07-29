@@ -176,6 +176,11 @@ no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-u
       dedup set was not verified/fixed in this pass (different repo, out of this dispatch's scope); re-file as a
       standalone MDPS-scoped todo if not already covered elsewhere. Repos: market-tick-data-service (done),
       market-data-processing-service (still open).
+- [ ] [DATA] P2. Trace Stage 4 (features-service) and Stage 5 (manifest/data-status) for the same bare-`instrument_id`
+      -only chain-collision keying gap already confirmed at Stage 2 (MTDS preflight, fixed market-tick-data-service@
+      5bf8a3c7) and Stage 3 (MDPS orchestration_scanner, split off to
+      mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md) — per the 2026-07-26 Update section
+      above these 2 stages were "left as explicit follow-up" and were never independently traced.
 
 ## Provenance
 

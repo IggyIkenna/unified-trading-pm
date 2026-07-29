@@ -328,6 +328,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       columns are structurally null in every row. Live-confirmed across 3 dates, 0/12 sampled non-null. No commit.
 - [x] [DATA] P2. ✅ Purged — `batch1_ao_ready` todo 14. `features-service@bf088de1` (verified via `git log`), 16,868
       rows purged (snapshotted first). Post-purge census: 0 rows for all 4 groups.
+- [ ] [DIAG] P1. Root-cause why the features-service `sfi_progressive` manifest group is corpus-empty (1 manifest row in
+      `features-sports-prd`) despite a documented 2020→today backfill window — confirm whether it's a real
+      unexecuted/failed backfill or a recording artifact of the CLI calculator-grain mismatch tracked in
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §C1, fix or fold into that doc's scope. Source:
+      `plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md` §1.4/§2.6 (relocated here per that now-archived
+      snapshot doc's own convention that actionable work lives in this closeout).
 
 ## Track C — CANON: data_type LOWER-case + venue/instrument_type/chain + manifest atom · P0
 

@@ -53,6 +53,12 @@ locked_by:
 locked_since:
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, direction-2 UAC reverse-lookup fix shipped + production-quantified
+> (`unified-api-contracts`/`instruments-service`, see `resolved_by`). Two follow-on residuals it surfaced were filed and
+> independently resolved: `tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md` (P1, resolved) and
+> `tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` (P3, resolved). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # TradFi COMBO underlying-naming mismatch blocks the G1-ENUM present-set rollup from closing tradfi phantom cells
 
 > **🗄️ ARCHIVED 2026-07-29** — status=resolved, 0 open todos. `resolve_tradfi_underlying_to_root` shipped (direction 2).

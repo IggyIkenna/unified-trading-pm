@@ -908,6 +908,11 @@ Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verif
       mandatory, an enforcement gap, not a policy choice — shipped the mechanism fix (commit-msg-stage
       `check-locked-plan-deletion.sh`), and its own retro-clean todo is done: the archived copy's
       `locked_by:`/`locked_since:` are empty, independently re-verified here. See entry 11 above for the full citation.
+- [ ] [DOC] P3. Confirm whether the 2026-07-25 `/autonomous` closeout-audit rollout
+      (`ag_closeout_audit_rollout_2026_07_25.md`) is still active/generating new operator-decision-caliber questions. If
+      concluded: flip this doc's frontmatter `status:` from `open` to `resolved` (all 38 logged entries + the item above
+      are currently resolved with citations) before running the archival ritual. If still ongoing: leave this doc
+      `status: open` in `plans/active/issues/` as the standing decision-queue home per its own stated purpose.
 
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:
