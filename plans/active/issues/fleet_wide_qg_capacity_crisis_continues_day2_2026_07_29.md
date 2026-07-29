@@ -227,3 +227,25 @@ not just noting.
   filing my own bounded `/blocked` for escalation `agt-dfdd5b` referencing this doc + `BLK-21d55fb1` rather than
   duplicating the operator page; if unanswered within the 2-min bound, stopping per the one-shot contract. Slot left
   clean on `live-defi-rollout` (no branch changes made).
+
+- **2026-07-29 ~21:20Z (cicd escalation `agt-614695`, slot 15) — DIFFERENT from every entry above: a real, separate
+  local test regression, not pure infra**. Dispatched for `instruments-service` `ldr_qg_failure` (`#0`). CI showed the
+  same fleet-wide `startup_failure` (0 jobs, 0 billable ms, confirmed via `.../actions/runs/<id>/timing`) this doc
+  already tracks — but per the boot contract I also reproduced locally FIRST, and unlike `agt-dfdd5b`'s clean repro,
+  `bash scripts/quality-gates.sh` at HEAD `4c05f2d3` genuinely failed: 10 failed / 5034 passed. Root-caused as
+  cross-repo editable-dependency drift (`unified-api-contracts@0c0f6953` registered `FRED` as a new tradfi venue +
+  `ohlcv_1d` as a genuine tradfi data_type) breaking two stale instruments-service test-side assumptions: (1) 9 tradfi
+  v2 enumerator tests in `test_enumerate_expected_universe_v2.py` relied on `ohlcv_1d` silently passing through
+  `_row_data_types`' unknown-data_type escape hatch to dodge NASDAQ/ETF's validity matrix + the MVP data_type-narrowing
+  gate — now a real registered data_type, the passthrough no longer applies and row_dts collapsed to empty; (2)
+  `test_pipeline_e2e_prediction.py`'s pinned `_PER_AG_TARGET_COUNTS["TRADFI"]` (7) went stale vs. the real UAC registry
+  (now 8 venues). While diagnosing, discovered `slot-14` had independently found + fixed the identical root cause
+  moments earlier (`instruments-service@7f272911`, "fix(tests): update tradfi test fixtures for FRED's ohlcv_1d/venue
+  registration") — my own from-scratch fix converged on the same data_type swap (`ohlcv_1m`) and the same count bump
+  (7→8), confirming the diagnosis independently. Discarded my redundant local changes in favor of the already-landed,
+  already-verified commit (`git checkout HEAD --` on both files) rather than force a duplicate/conflicting push.
+  Re-verified at current HEAD: `ALL QUALITY GATES PASSED (93s)`, 5044 passed / 0 failed. **This underlying test
+  regression is now fully fixed on `live-defi-rollout`** — the residual CI red on this repo is purely the ongoing
+  fleet-wide `startup_failure` incident this doc already tracks (`BLK-21d55fb1`), not re-filing it. Pinged
+  `AUTHORING_SLOT=ci-reconcile` with the outcome. Slot left clean on `live-defi-rollout`, no branch changes beyond the
+  (already-shipped) fix confirmed.
