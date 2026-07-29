@@ -770,6 +770,21 @@ deletions on the live bucket. Shipped: deployment-service@3c42df5.
 >    cycle.
 > 3. Verify the tarball is present before firing launchers: `gsutil stat gs://.../code/<repo>@<sha>.tar.gz`.
 
+> **Pin-aware retention (fixes the 2026-07-20 outage,
+> `plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`)**: the sweep no longer ranks purely by GCS
+> mtime. `deployment_service/vm/tarball_pins.collect_in_use_pins()` computes the protected set as a UNION of two sources
+> — **Leg A** live GCE instance metadata (the five-then-eight pinning launchers write `*_TARBALL_SHA` there;
+> `unified_trading_library` carries `metadata` through `aggregated_list_instances` as of
+> `unified-trading-library@52ee4056`) and **Leg B** the durable `vm-logs/{vm}/TARBALL_PINS.json` registry written by
+> `lc_write_tarball_pin_record` at launch (`14`-day grace, covers the SPOT-preempted/deleted window Leg A can't see).
+> **Fails CLOSED** (`InUsePinsUnavailableError`, deletes nothing) when any RUNNING VM's pins are unobservable by either
+> leg. Tarball+manifest deletion is now atomic pair semantics (`_delete_tarball_pair` — manifest first, tarball only on
+> manifest-delete success; a partial failure leaves the COMPLETE pair untouched rather than minting an orphan manifest).
+> The relaunch path (`scripts/recovery/relaunch_backfill_vm.py`) re-pins loudly (`DP_VM_TARBALL_REPINNED`) onto the
+> newest COMPLETE pair when a requested pin's tarball is gone, and pages rather than silently falling back to the
+> floating tarball when no complete pair exists. Shipped: `unified-trading-library@52ee4056`,
+> `deployment-service@4c6cef9` + `@dfd7608`.
+
 ### `validate_vm_prefix_mapping.py` — prod audit: `VM_PREFIX_TO_BUCKET` vs live GCS buckets
 
 ```bash

@@ -13,7 +13,7 @@ summary:
   DEFEATING the shipped PROGRESS.json checkpoint contract. A v1 fix was attempted and is INERT — it sources pins from
   `LAUNCH_PARAMS.json`, which no pinning launcher writes. The correct source (GCE instance metadata) is NOT reachable
   through the UTL cloud interface, which is the open design decision this doc gates.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, tradfi, defi]
 stage: [meta, data]
@@ -42,15 +42,15 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: "unified-trading-library@52ee4056, deployment-service@4c6cef9+@dfd7608 (2026-07-29)"
 ---
 
 # Tarball rotation breaks VM recovery (2026-07-20)
 
-> **🔴 BLOCKED ON A DESIGN DECISION.** The measured incident and both root causes below are settled. The fix is NOT
-> shipped: the prescribed pin source (GCE instance metadata) is not reachable through the UTL cloud interface, and
-> closing that requires a change to `unified-trading-library`, which the current work order forbids. See § Open
-> decision.
+> **✅ RESOLVED 2026-07-29.** Operator ruled Option C (both A and B). Shipped: `unified-trading-library@52ee4056` (Leg A
+> — instance metadata carried through `aggregated_list_instances`) + `deployment-service@4c6cef9`+`@dfd7608` (Leg B
+> durable registry, union of both sources, fail-closed gate, atomic pair deletion, loud re-pin actuator). See the Todos
+> section below for the full shipped-evidence citation.
 
 ## 1. Measured incident
 
@@ -177,10 +177,16 @@ until the fix lands — storage cost is negligible against a silently bricked fl
 
 ## Todos
 
-- [ ] [CODE] P0. **RULED 2026-07-29 (operator direct answer) — Option C, both A and B.** (A) Add `metadata` to the
+- [x] ✅ [CODE] P0. **RULED 2026-07-29 (operator direct answer) — Option C, both A and B.** (A) Add `metadata` to the
       `aggregated_list_instances` result dict in `gcp_compute.py:172-179` (plus the abstraction docstring) — purely
       additive, UTL tree is clean, covers already-running VMs on day one. (B) Add `lc_write_tarball_pin_record` to
       `lib/launcher_common.sh`, call it from all five pinning launchers, write `vm-logs/{vm}/TARBALL_PINS.json` at
       launch — covers the deleted/preempted window A alone can't. Union both sources for the retention sweep; remaining
       requirements unchanged (fail-closed on lister/registry error, atomic pair semantics, a real re-pin actuator, the
-      ambient-env gate observable, non-vacuous tests). (repos: unified-trading-library, deployment-service)
+      ambient-env gate observable, non-vacuous tests). (repos: unified-trading-library, deployment-service) —
+      `unified-trading-library@52ee4056` (Leg A: instance metadata carried through `aggregated_list_instances`),
+      `deployment-service@4c6cef9`+`@dfd7608` (`deployment_service/vm/tarball_pins.py`: union of Leg A + Leg B
+      `vm-logs/{vm}/TARBALL_PINS.json` durable registry, fail-closed `InUsePinsUnavailableError`, atomic
+      `_delete_tarball_pair`, loud re-pin actuator `DP_VM_TARBALL_REPINNED` in `relaunch_backfill_vm.py`,
+      `lc_write_tarball_pin_record` called from all 8 pinning launchers, tests exercise real launcher output shape per
+      `tests/unit/test_tarball_pins.py`). Codex SSOT updated at `codex/05-infrastructure/vm-tarball-deployment.md`.
