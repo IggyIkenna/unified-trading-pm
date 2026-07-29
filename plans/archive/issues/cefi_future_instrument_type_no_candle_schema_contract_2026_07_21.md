@@ -15,7 +15,7 @@ summary: |
   asset_group='cefi' instrument_type='FUTURE' data_type=... venue='DERIBIT'" (shard-isolated —
   logged + skipped, not a raise, so it never surfaces as a VM crash, only as
   "cefi/trades/FUTURE: ALL FAILED (N/N)" in the VM's own processing summary).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -28,7 +28,7 @@ related:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -43,11 +43,17 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-api-contracts@4ad3f14f, unified-api-contracts@f909e112
 source: >-
   measured 2026-07-21 on a real -test- VM (mdps-backfill-cefi-pipelinecheck-20260721-172552-c829e9) while verifying the
   candle-canonical migration foundation on real infra.
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-INTO-CODE.** All 3 todos done: standalone `future` trades contract
+> (`unified-api-contracts@4ad3f14f`), corpus-wide venue scan (confirmed OKX-FUTURES also affected, same fix covers it),
+> and the class-of-bug book5 gap + generalized regression sweep (`unified-api-contracts@f909e112`). See
+> `plans/archive/issues/mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27.md` (also archived) for the
+> sibling liq_agg finding this doc's todo 3 closed together.
 
 # CEFI standalone FUTURE instrument_type has no registered candle SchemaContract
 
@@ -119,9 +125,19 @@ on. Filed separately per the workspace's findings-triage rule (outside the migra
       not this todo's failure class. Prediction could not be fully checked — no dedicated
       `market-data-tick-prediction-*` bucket exists; prediction-market raw ticks appear to live inside the DeFi bucket
       (an unexpected `pipeline_mode=batch_kalshi_perp` shard was found there) — flagged, not resolved, in this pass.
-- [ ] 3. [SCRIPT] P2. Once ruled, register the contract (or fix the routing) + add a regression test asserting every
-      raw-tick-capturable CEFI instrument_type has a registered candle contract for its capturable data_types (closes
-      the class of bug, not just this instance).
+- [x] ✅ 3. [SCRIPT] P2. **DONE 2026-07-29 — unified-api-contracts@f909e112.** The corpus-wide audit
+      (`plans/archive/issues/mdps_liq_agg_contract_missing_future_instrument_type_2026_07_27.md` todo 2) found one more
+      genuine gap beyond trades/liq_agg: real, ongoing `instrument_type=future/data_type=book_snapshot_5` raw-tick
+      capture on both DERIBIT and OKX-FUTURES (live-sampled, 4 days, 33-104 shards/day) had no registered candle
+      contract — the identical crash class, just not yet triggered by a live VM run. Registered `book5_ohlcv_{tf}` for
+      `(cefi, future)` in `_candle_contracts.py`, mirroring `perpetual`'s book5 registration. `derivative_ticker` was
+      deliberately NOT added — the same 4-day/2-venue sample found ZERO real `future/derivative_ticker` objects (dated
+      futures don't emit a funding/mark ticker stream). Added `test_cefi_future_book5_candles` plus a generalized
+      class-of-bug regression, `test_cefi_every_capturable_instrument_type_has_candle_contract`, which cross-checks
+      every CEFI leaf instrument_type's raw-tick-capturable data_types (`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`)
+      against the candle `CONTRACT_REGISTRY`, so a future raw-tick capability added without a matching candle contract
+      fails this test instead of crashing a live VM run — this is the "closes the class of bug" mechanism the todo asked
+      for. `quality-gates.sh --no-fix` green (398s), shipped via `quickmerge --agent`.
 
 # 2026-07-27 update (slot-8) -- todo 1 RULED + fix ready, blocked on host disk-full (BLK-ff0ebe7f), NOT re-dispatchable to this slot
 
