@@ -93,7 +93,7 @@ AAVE_V3's >1000-row days in the same run).
       DISPROVEN** — pulled the real VM log
       (`gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260729-193529/run.log`)
       and confirmed `market_count_map()` worked correctly:
-      `compound_v3/ETHEREUM: compound_v3_custom schema succeeded (4     rows)` immediately followed by
+      `compound_v3/ETHEREUM: compound_v3_custom schema succeeded (4 rows)` immediately followed by
       `Wrote 4 rows across 4 instrument shard(s)` — 4/4 distinct markets parsed + written per chain, every day sampled.
       **Real root cause**: the 2026-07-26 catalogue-residual wiring (`market-tick-data-service@eae703b0`, from
       `defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`) diffs two DIFFERENT id spaces.
