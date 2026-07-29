@@ -6,7 +6,7 @@ summary:
   stale-order QG run) killed a DIFFERENT slot''s actively-running quality-gates.sh (features_service coverage, pytest
   child at 87% CPU). Violates the HARD RULE ''never bulk-kill another slot''s pytest/QG''. Root cause + fix: never
   pattern-kill a QG process; always capture and kill by the exact PID you started.'
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -20,12 +20,20 @@ parent_epic: agent_operating_framework_master
 source: "Self-reported by slot-13 during capability_wizard_gap_discovery-011, 2026-07-28"
 assigned_vm: planning
 resolved_by:
+  "slot 11, 2026-07-29 — ran scripts/dev/install-pkill-guard-shell-env.sh on the shared host (root unified-trading-pm
+  clone confirmed clean, HEAD b7605db21 containing 18ecbffb1); verified in a fresh interactive shell that `pkill -f
+  quality-gates.sh` is REFUSED and that a `.tabs/<N>/`-scoped `-f` pattern + a numeric `-g` target both pass through to
+  the real binary. `~/.bashrc`/`~/.zshrc` rollout confirmed COMPLETE on this host."
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-29
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Mechanical guard codified in /codex/05-infrastructure/per-tab-worktrees.md § "pkill/pgrep
+> cross-slot-kill guard".
 
 # pkill broad-pattern cross-slot QG kill — 2026-07-28 incident
 
@@ -189,10 +197,12 @@ compute on the victim slot, which must re-run to green before it can ship regard
       once the root clone is clean and has fast-forwarded past `18ecbffb1`, run
       `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on this host to complete the
       `~/.bashrc` rollout (idempotent, safe to re-run).
-- [ ] [SCRIPT] P2. Once the root `unified-trading-pm` clone
-      (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm`) is clean and has fast-forwarded past `18ecbffb1`
-      (this host's shared `pm-pull.timer` cron is currently skipping the pull because that clone carries unrelated
-      genuine dirty tracked files), run `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` once on
-      this shared host to complete the `~/.bashrc`/`~/.zshrc` rollout of the guard from `pkill-guard.sh` (todo above).
-      Idempotent — safe to run more than once, and safe on any other shared host running these agents. Verify with a NEW
-      shell: `pkill -f quality-gates.sh` should print `REFUSED: ...` instead of executing.
+- [x] ✅ [SCRIPT] P2. Root `unified-trading-pm` clone confirmed clean (`nothing to commit, working tree clean`) with
+      HEAD `b7605db21` containing `18ecbffb1` as an ancestor (`git merge-base --is-ancestor 18ecbffb1 HEAD` → true). Ran
+      `bash unified-trading-pm/scripts/dev/install-pkill-guard-shell-env.sh` on this shared host — idempotent re-install
+      confirmed the managed block in both `~/.bashrc` and `~/.zshrc` correctly points at the canonical root clone's
+      `scripts/hooks/pkill-guard.sh`. Verified in a fresh interactive shell (`bash -i -c '...'`):
+      `pkill -f     quality-gates.sh` → `REFUSED: ...` (no numeric target, no `.tabs/<N>/` substring); a
+      `/.tabs/11/`-scoped `-f` pattern and a numeric `-g` target both pass through to the real binary with no REFUSED
+      text. `~/.bashrc`/`~/.zshrc` rollout is COMPLETE on this host. — unified-trading-pm (host-level
+      `~/.bashrc`/`~/.zshrc` install, no repo commit to cite for the install itself).

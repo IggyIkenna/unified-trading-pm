@@ -50,7 +50,11 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   launch time (`$!`, or the child PID) — **never** `pkill -f <script-basename>` / `pkill -f "quality-gates.sh --no-fix"`
   / any pattern lacking a slot-specific discriminator (full absolute cwd, or PID/PGID). Every slot invokes shared
   scripts with identical argv, so a name-based pattern is host-wide, not slot-scoped, and will kill a DIFFERENT slot's
-  live QG run — confirmed incident: `plans/active/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
+  live QG run — confirmed incident (now resolved + archived, two recurrences):
+  `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`. **Mechanically enforced** on any host
+  where `scripts/dev/install-pkill-guard-shell-env.sh` has run: a `pkill`/`pgrep` shell function REFUSES a bare
+  name-only pattern instead of executing it host-wide — see `/codex/05-infrastructure/per-tab-worktrees.md` §
+  "pkill/pgrep cross-slot-kill guard".
 
 ---
 

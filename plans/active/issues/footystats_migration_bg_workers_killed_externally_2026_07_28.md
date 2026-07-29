@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [multi-agent-safety, process-management, incident, shared-host, background-tasks]
 related:
   [
-    /plans/active/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md,
+    /plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
   ]
 created: 2026-07-28
