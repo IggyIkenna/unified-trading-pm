@@ -20,7 +20,7 @@ summary: >-
   gap in `gcloud compute instances list`, check each preempted VM's last `PROGRESS.json` checkpoint, and manually
   relaunch each one resuming from measured progress (never replaying the original `START_DATE`, per the existing HARD
   RULE).
-status: open
+status: blocked
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -42,7 +42,7 @@ source:
     "gcloud compute operations list — 5 confirmed compute.instances.preempted events within ~2h",
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: "deployment-service@bf51669 (sharding), deployment-service@3da9ffa (preemption-recovery root-cause fix)"
 locked_by:
 execution_scope: local-only
 drift_direction: advance-code
@@ -105,6 +105,32 @@ session the way the rest of this workspace's automation does.
    manual) that lists `RUNNING`-expected-but-missing one-off migration VMs by name pattern, reads their last checkpoint,
    and relaunches — cheaper to build than (a) if fleet-monitor integration is a bigger lift than it looks.
 
+- [x] ✅ [SCRIPT] P2. Sharding: `--shards N` / `SHARD_COUNT` added to `launch-cefi-funding-timestamp-fix-vm.sh` (new
+      shared lib `scripts/vm/_cefi-fts-launcher-lib.sh`, `cefi_fts_split_date_shards`) — N evenly-spaced contiguous date
+      sub-ranges, last shard absorbs the remainder, bounded at `MAX_SHARDS=8` (GCE 63-char instance-name limit + a
+      fat-finger guard), N=1 default path byte-identical to pre-fix behavior (regression-verified), per-shard
+      `lc_write_launch_params` records THAT shard's own start/end (not the original full range) so a preemption-relaunch
+      resumes the correct sub-range. Verified via dry-run smoke test (10-day window into 3 shards: 3/3/4 days,
+      exhaustive, no gap/overlap) + the repo's `test_vm_launcher_scripts.py` suite. **DONE 2026-07-29 —
+      `deployment-service@bf51669`.**
+- [x] ✅ [SCRIPT] P2. Preemption recovery: root-caused via real investigation, NOT the general sweep-script fallback
+      this doc's own text proposed. The existing fleet-monitor mechanism (`exit_code_fleet_monitor.py` →
+      `DP_VM_PREEMPTED` → `RelaunchPreemptedVm`) DOES already cover the `-fts-` prefix (registered in
+      `vm_prefix_registry.py`, contradicting this doc's original "not wired into the fleet monitor" framing) and IS on a
+      real `*/5` Cloud Scheduler cadence (`uts-prod-dp-exit-code-monitor-cron`) — but real Cloud Run execution logs
+      (`gcloud logging read`) show it has been hitting its 300s Cloud Run task timeout on EVERY SINGLE execution for at
+      least 2 days (`2026-07-27T05:00` onward — the fleet outgrew the timeout that was last tuned for memory, not
+      wall-clock, on 2026-06-23), so `DP_VM_PREEMPTED` has never fired even once in that window (0 matching log lines in
+      3 days) — a genuinely BROKEN safety net, not merely a scope gap. Fix: `timeout_seconds` 300→900 in
+      `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`. **Code shipped 2026-07-29 —
+      `deployment-service@3da9ffa`; the actual `terraform apply` to production could NOT be completed in-session** —
+      this repo's terraform has no CI-driven apply pipeline and requires `-var project_id/environment/bucket_prefix`
+      values not present anywhere in the checkout (no `.tfvars`, no discoverable apply workflow) — guessing them against
+      live alerting infra with no plan-review safety net was judged the wrong risk to take blind. **Needs a human (or
+      whoever owns the sanctioned apply process) to run `terraform apply` for this one resource** — until then the code
+      fix is correct but inert; preempted one-off VMs still need manual relaunch (done throughout this session from
+      measured `PROGRESS.json`, never replaying `START_DATE`).
+
 ## Progress Log
 
 - 2026-07-28 (autonomous session): found while scaling the CeFi funding_timestamp fix to its full corpus. Worked around
@@ -112,3 +138,13 @@ session the way the rest of this workspace's automation does.
   relaunched 5 preempted VMs from their measured `PROGRESS.json` checkpoints, never replaying original `START_DATE`).
   Filing as a real, scoped follow-up rather than building the general fix under this session's time budget — the
   workaround is proven safe (idempotency-guard-backed), just not automated.
+- 2026-07-29 (autonomous session, resumed after a session-limit crash mid-workflow): built and shipped both fixes.
+  Sharding matched the doc's own recommendation exactly. Preemption recovery required real investigation rather than the
+  assumed sweep-script build — the doc's premise ("not wired into the fleet monitor") turned out to be incomplete: the
+  mechanism exists and is correctly registered, it is just chronically timing out. Fixing the ACTUAL root cause (a
+  3x-too-small Cloud Run timeout) is a smaller, more correct fix than building a parallel sweep script would have been,
+  and it fixes recovery for the WHOLE one-off-migration-VM population once deployed, not just this venue family. Status
+  `resolved` reflects the CODE being complete and correct; the doc stays discoverable via this Progress Log entry until
+  the terraform apply is confirmed live (verify via: no more `"Terminating task"` timeout log lines for
+  `uts-prod-dp-exit-code-monitor`, and a real `DP_VM_PREEMPTED` log line appearing within 15 min of a genuine
+  preemption).

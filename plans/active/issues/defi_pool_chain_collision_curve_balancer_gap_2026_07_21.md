@@ -164,15 +164,18 @@ pre-flight/dedup-skip layers (Stages 2-3), both the SAME architectural bug class
 no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-up todo below (distinct from the resolved
 `@CHAN` patch finding and the still-open CURVE-fix / codex-doc todos already in this doc).
 
-- [ ] [DATA] P2. **Fix the bare-`instrument_id`-only pre-flight/dedup keying gap** found 2026-07-26: add `chain` to the
-      atom/key tuple in `market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check`
-      (currently `(venue, data_type) → {instrument_id}`, needs `(venue, chain, data_type) → {instrument_id}` or fold
-      `chain` into the atom string itself), and verify/fix the equivalent gap in
-      `market_data_processing_service/app/core/orchestration_scanner.py`'s `existing_outputs` dedup set (confirm whether
-      MDPS output filenames already embed chain — if so this may be a non-issue at that specific site, still needs the
-      scoped GCS check that timed out in this pass). **Done when**: both sites are confirmed either chain-safe (with
-      cited evidence) or fixed, with a regression test for the 2-chain-same-address case using one of the 6 real
-      collision addresses above. Repos: market-tick-data-service, market-data-processing-service.
+- [x] ✅ [DATA] P2 (MTDS half). **DONE 2026-07-29 — Fixed the bare-`instrument_id`-only pre-flight/dedup keying gap in
+      `market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check`.** `chain` is now
+      colon-prefixed into the atom string when present (`f"{chain}:{atom}"`), so cross-chain-colliding bare pool
+      addresses (CURVE/BALANCER) stay distinct in the skip-set instead of one chain's captured shard silently masking
+      the other's genuinely-uncaptured shard; falls back to the bare atom when no `chain` value exists (non-DeFi rows
+      unaffected). New regression tests in `test_preflight_atom_coverage.py` using the real CURVE collision address
+      (`0x004c167d27ada24305b76d80762997fa6eb8d9b2`, AVALANCHE vs OPTIMISM) proving the two chains' shards stay
+      distinct, plus a no-chain-column fallback test. `quality-gates.sh` green. — market-tick-data-service@5bf8a3c7.
+      **MDPS half still open** — `market_data_processing_service/app/core/orchestration_scanner.py`'s `existing_outputs`
+      dedup set was not verified/fixed in this pass (different repo, out of this dispatch's scope); re-file as a
+      standalone MDPS-scoped todo if not already covered elsewhere. Repos: market-tick-data-service (done),
+      market-data-processing-service (still open).
 
 ## Provenance
 

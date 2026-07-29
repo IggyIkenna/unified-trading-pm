@@ -675,7 +675,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       heterogeneous file list
   - [`plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md`](/plans/active/issues/phantom_audit_estate_coverage_gap_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
+  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
     — 0 open todos (closed/archived/record-only)

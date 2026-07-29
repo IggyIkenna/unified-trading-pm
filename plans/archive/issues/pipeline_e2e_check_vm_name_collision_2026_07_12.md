@@ -18,7 +18,7 @@ summary:
   sweep run (the actual 2026-07-09 452-shard sweep ran at concurrency=20, and multiple SIBLING agents were independently
   running concurrent `pipeline_e2e_check.py` invocations against this exact file/tool during this same session — cross-
   agent collisions are equally possible, not just within one process's own concurrency)."
-status: open
+status: resolved
 nature: notes
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data, meta]
@@ -32,6 +32,8 @@ priority: P2
 source: [pipeline_e2e_check todo-25 triage, real concurrent-launch reproduction, 2026-07-12]
 assigned_vm: planning
 resolved_by:
+  market-tick-data-service@a79ccaf93 (source fix, 2026-07-12) + market-tick-data-service@5bf8a3c7 (regression test,
+  2026-07-29)
 locked_by:
 execution_scope: orchestrator-agent
 estimate_class: infra
@@ -115,12 +117,14 @@ safe there since matching is prefix-only, not confirmed against any other exact-
 
 ## Todos
 
-- [ ] [CODE] P2. Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to
-      `pipeline_e2e_check.py::_vm_name()`, keeping the total name under GCE's 63-char instance-name limit. Verify the
-      change against `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET` prefix-match (prefix-only, so a suffix addition is
-      safe) and add a regression test asserting two same-asset_group, same-second shard launches produce distinct VM
-      names. Definition-of-done: the test passes and a real concurrent re-launch of the two documented collision pairs
-      (POLYMARKET book_snapshot_5/trades, KRX trades/corporate_action_confirmed) produces two distinct VMs.
+- [x] ✅ [CODE] P2. **DONE — source fix already shipped 2026-07-12 (`market-tick-data-service@a79ccaf93`, verified via
+      `git blame`): `_vm_name()` already adds an 8-hex `hashlib.sha256(f"{venue}:{data_type}")` slug, keeping the total
+      name under GCE's 63-char limit. The missing piece — a regression test asserting two same-asset_group, same-second
+      shard launches produce distinct VM names — shipped 2026-07-29** (`TestVmNameCollisionResistance` in
+      `tests/unit/test_pipeline_e2e_check.py`: asserts the 2 documented real collision pairs — POLYMARKET
+      book_snapshot_5/trades, KRX trades/corporate_action_confirmed — now produce distinct names, plus determinism,
+      63-char-limit, and registered-prefix-shape coverage). `quality-gates.sh` green. —
+      market-tick-data-service@5bf8a3c7 (test-only; the source fix predates this session).
 
 ## Progress log
 

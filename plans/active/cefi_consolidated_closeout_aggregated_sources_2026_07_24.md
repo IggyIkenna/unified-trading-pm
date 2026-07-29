@@ -379,7 +379,7 @@ drift_direction: advance-code
          `data-pipeline-check-mtds/SKILL.md`.
     - 6. **[DATA] P3.** instruments-service: decide whether `market_lifecycle`/`futures_contracts` are in the canonical
          shard grammar's scope.
-  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
+  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md`](/plans/active/issues/fail_hard_canonical_enforcement_design_2026_07_20.md)
     - **[WRITER] P1.** A-iso — rebuild the `tardis_cefi_shards.py:144` groupby loop as per-shard isolated. Ships alone.

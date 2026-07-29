@@ -80,7 +80,12 @@ times, and is exactly the class of waste `/vm-preemption-billing-waste-audit` lo
       general day-frontier `_vm_progress` contract doesn't apply; mirrors mdps's self-contained design instead.
       Evidence: `test_run_resumes_from_checkpoint_skips_already_processed_objects` (+ 13 other new checkpoint unit
       tests, 37/37 passing) proves a shard resumed against an existing checkpoint skips the already-completed prefix and
-      never reprocesses it — the literal done-when condition, verified via a `-test-` run (mocked GCS CAS).
+      never reprocesses it — the literal done-when condition, verified via a `-test-` run (mocked GCS CAS). **Addendum
+      2026-07-29**: a second, independently-authored `record_vm_progress` date-level heartbeat (the generic fleet-wide
+      `PROGRESS.json` SSOT other migration scripts already use, read by `RelaunchPreemptedVm`) was merged in ALONGSIDE
+      the `ChainBundleCheckpoint` mechanism above — complementary (different consumer, different GCS path), not
+      redundant. 2 new tests (`test_run_apply_reports_progress_only_once_per_completed_date`,
+      `test_run_dry_run_never_reports_progress`). — market-tick-data-service@5bf8a3c7.
 - [ ] [DATA] P3. Audit the OTHER tradfi/cefi/defi canonical-migration executors in this family
       (`market-tick-data-service/scripts/migrate_*_2026_07*.py`) for the same gap — the two known-compliant scripts
       cited above suggest this is inconsistent across the family rather than a universal pattern, worth a quick census

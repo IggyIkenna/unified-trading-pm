@@ -15,7 +15,7 @@ summary: >-
   covered by the existing `scripts/migrate_instrument_type_lowercase.py`, which rewrites hive-partitioned
   `instrument_type=` path segments in the actual data files — a different target, not reusable as-is for this
   manifest-index residual).
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,7 +38,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: "instruments-service@f3cd7dd1 — migration applied live to prod 2026-07-29"
 locked_by:
 locked_since:
 ---
@@ -119,3 +119,24 @@ Scope a new migration script (e.g. `migrate_tradfi_combo_manifest_casing.py`, mi
 Not urgent (P3) — the manifest reads today already tolerate both casings via the grain-symmetry + naming-mismatch fixes
 (`bundle_instrument_type_for_leaf`/`grain_for_instrument_type` normalise `instrument_type.strip().lower()` before
 lookup), so this is a cleanliness/consolidation migration, not a correctness blocker.
+
+## Progress Log
+
+- 2026-07-29 (autonomous session, resumed after a session-limit crash mid-workflow): built + ran
+  `instruments-service/scripts/migrate_tradfi_combo_manifest_casing.py`, following exactly the recommended-next-step
+  shape (dry-run default, timestamped backup, CAS-conditional live-index overwrite with retry-on-concurrent-write,
+  fresh-read post-apply verification gate — using the UTL `gcs_conditional_put`/`gcs_read_object_with_generation`
+  wrappers, not the precedent script's now-superseded direct `google.cloud.storage` import). 13 unit tests (relabel
+  logic, all-4-capture_status coverage, idempotency, row-identity preservation). **Ran the real `--apply` against live
+  prod** (`market-data-tick-tradfi-prd-central-element-323112/_index/ availability_index.parquet`): pre-migration census
+  (generation `1785287282530951`, 5,855,418 total rows — the manifest has grown since this issue was filed, real drift
+  noted per the script's own sanity-window log) showed `COMBO`(upper)=1,315,878 across the same 4 capture_status buckets
+  / `combo`(lower)=23,428; snapshot backed up to
+  `_index/backups/availability_index.pre_combo_casing_relabel_20260729T042832Z.parquet`; CAS-write succeeded first
+  attempt (new generation `1785299530346811`); **fresh-read post-apply verification (a second, independent read, not the
+  script's own in-memory frame) confirmed GATE PASSED: `COMBO`(upper)=0 residual, `combo`(lower)=1,339,306 — exactly
+  matching the pre-migration sum.** Item 6 of the recommended next steps (re-run the G1-ENUM tradfi quantification to
+  confirm no regression) was covered as part of the sibling
+  `tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md` fix's own before/after production
+  verification, run against the manifest AFTER this migration landed — no regression, `combo` now correctly appears in
+  the `expected_unattempted` breakdown. **DONE — `instruments-service@f3cd7dd1`.**

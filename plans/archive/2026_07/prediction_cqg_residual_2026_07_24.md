@@ -5,7 +5,7 @@ summary: >-
   2 small residual todos forked out of the archived migration-verification/orphan-safety harness plan (2026-07-24 plan
   line-cap remediation split): the operator-gated prediction cqg-classifier coverage decision (before the pred G4 apply)
   and the downstream cqg-grain catalogue wiring it gates.
-status: active
+status: complete # (was: active) 2026-07-29 — both todos done, archived
 nature: process
 asset_group:
   [prediction] # corrected 2026-07-25 (ag-closeout-audit orthogonality fix) -- was [cross-cutting], a genuine
@@ -66,32 +66,31 @@ source: >-
 
 ## Todos
 
-- [ ] [DATA] P1. **STALE PREMISE, re-scoped 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md`
-      entry #14): the 94.5%/`ClassifierConfidenceLow` measurement below is from 2026-06-11, BEFORE
-      `unified-api-contracts@d4523602`/the OTHER-catch-all classifier change — read from current HEAD 2026-07-26, both
-      `classify_polymarket_to_canonical_group` and `classify_kalshi_to_canonical_group` are non-Optional (never return
-      `None`) and route every unmatched market to `OTHER`, not `attempted_failed[ClassifierConfidenceLow]`. The "extend
-      registry vs ratify out-of-registry-stays-failed" decision this todo poses is now MOOT — there is no
-      out-of-registry-stays-failed path left to ratify. **Re-scoped to**: (1) re-run the coverage measurement against
-      current HEAD — **DONE 2026-07-27, see Progress Log**: `ClassifierConfidenceLow` is confirmed 0.0000% for BOTH
-      venues (not just "expected"), but the `~94.5% OTHER` expectation in this todo's own text was WRONG — measured
-      `OTHER` share is ~55.2% of captured rows / ~11.1% of captured shards (per-venue split differs materially: KALSHI
-      49.8% rows / POLYMARKET 56.6% rows), because the registry has been extended far beyond just the OTHER-catch-all
-      since 2026-06-11 (alt-coins, weather, macro, ~17 sports leagues per decision 338 pass 2), so most of the
-      formerly-`ClassifierConfidenceLow` mass now routes to REAL named groups, not just `OTHER`. **This todo's own
-      re-scope premise is itself now annotated re-based, not left implying `~94.5% OTHER` is current.** (2) verify
+- [x] ✅ [DATA] P1. **STALE PREMISE, re-scoped 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #14): the 94.5%/`ClassifierConfidenceLow` measurement
+      below is from 2026-06-11, BEFORE `unified-api-contracts@d4523602`/the OTHER-catch-all classifier change — read
+      from current HEAD 2026-07-26, both `classify_polymarket_to_canonical_group` and
+      `classify_kalshi_to_canonical_group` are non-Optional (never return `None`) and route every unmatched market to
+      `OTHER`, not `attempted_failed[ClassifierConfidenceLow]`. The "extend registry vs ratify
+      out-of-registry-stays-failed" decision this todo poses is now MOOT — there is no out-of-registry-stays-failed path
+      left to ratify. **Re-scoped to**: (1) re-run the coverage measurement against current HEAD — **DONE 2026-07-27,
+      see Progress Log**: `ClassifierConfidenceLow` is confirmed 0.0000% for BOTH venues (not just "expected"), but the
+      `~94.5% OTHER` expectation in this todo's own text was WRONG — measured `OTHER` share is ~55.2% of captured rows /
+      ~11.1% of captured shards (per-venue split differs materially: KALSHI 49.8% rows / POLYMARKET 56.6% rows), because
+      the registry has been extended far beyond just the OTHER-catch-all since 2026-06-11 (alt-coins, weather, macro,
+      ~17 sports leagues per decision 338 pass 2), so most of the formerly-`ClassifierConfidenceLow` mass now routes to
+      REAL named groups, not just `OTHER`. **This todo's own re-scope premise is itself now annotated re-based, not left
+      implying `~94.5% OTHER` is current.** (2) verify
       `market-tick-data-service/market_tick_data_service/scripts/rebuild_prediction_manifest.py`'s `compute_object_atom`
-      (its `None`-branch dead code + stale "the rebuild follows the [None→failed] contract" docstring/comment, ~lines
-      329-354, 411-429) matches the now-unreachable-`None` reality — clean up the dead branches and the comment, don't
-      leave them describing an impossible path. **STILL OPEN** — read-only re-measurement (leg 1) does not include this
-      code-cleanup leg; also found (2026-07-27, same read-only pass):
-      `market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py` carries the SAME stale pattern —
-      its module docstring (lines 21-29) still documents "a sub-threshold classification returns `None`" and its
-      `_add_canonical_question_group`-equivalent call site (line 591) still guards
-      `group.value if group is not None else None`, both now describing an unreachable path (confirmed:
-      `classify_kalshi_to_canonical_group` return type is `-> CanonicalQuestionGroup`, never `Optional`) — add to leg
-      (2)'s cleanup scope when that leg is picked up. Repos: unified-api-contracts, market-tick-data-service. Original
-      provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded — see 2026-07-27 re-based numbers below).
+      (its `None`-branch dead code + stale "the rebuild follows the [None→failed] contract" docstring/comment) matches
+      the now-unreachable-`None` reality — **DONE 2026-07-29**: both `rebuild_prediction_manifest.py`'s
+      `compute_object_atom` docstring/comments AND `kalshi_adapter.py`'s module docstring (lines 21-29) + its
+      `_add_canonical_question_group`-equivalent call site (previously `group.value if group is not None else None`) are
+      corrected to state the classifier is non-Optional (never `None`) and the `None`-handling branches are kept only as
+      a defensive `ClassifierConfidenceLow` safety net for a regressed/test-double classifier, not describing a
+      reachable live path. `quality-gates.sh` green. — market-tick-data-service@5bf8a3c7. Repos: unified-api-contracts,
+      market-tick-data-service. Original provenance: /tmp/r7_proj/prediction2.log 2026-06-11 (now superseded — see
+      2026-07-27 re-based numbers below).
 - [x] ✅ [DATA] P2. **DONE 2026-07-29 — 249-b — prediction cqg grain (`prediction_canonical_question_group`) — re-scoped
       2026-07-26, decision 338 resolved (OTHER for all).** Wired the cqg into the loader via a `_canonical_group`
       write-back: `unified-api-contracts@283d7449` adds an additive `InstrumentRecord.canonical_question_group` field;

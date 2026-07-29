@@ -476,3 +476,26 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   **Lesson for future resumers of this todo**: this host's shared `gcloud config` account is NOT stable across a
   long-running poll loop — always pin `--account=` explicitly on every gcloud CLI call in a long-lived watcher, never
   rely on the ambient active account. Still waiting — see next entry for the outcome.
+- 2026-07-29T09:xxZ (slot 14, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`): resumed
+  from slot-8's hand-off. **Root cause of the block identified — this is a decision-relevant update, not just another
+  wait-cycle.** No watcher process was alive (slot 8's `resume_4bi_watcher.sh` did not survive past its own session);
+  cron `uts-prod-manifest-consolidator-market-data-prediction-cron` confirmed still `PAUSED`. Checkpoint unchanged at
+  157/348 across all 6 scratchpad copies (oldest 2026-07-29T01:23Z, newest 05:32Z, all byte-identical 53,636 bytes) —
+  **zero forward progress in ~8h**, consistent with the blocking predecessor being genuinely stuck, not merely slow.
+  Traced WHY: this cron's pause is owned by `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s prediction-lane
+  Apply/Resume pair (its own todos `-001`/`-later`). While independently dispatched a task from THAT plan
+  (`mtds_available_at_cross_asset_backfill-006`, "Resume the prediction consolidator cron"), found + filed
+  `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (`unified-trading-pm@c69688b84`): that
+  plan's own Apply todo (`-001`, the ONE thing that needs to land before this cron can safely resume) has been sitting
+  `queued`/never-dispatched while a LATER todo in the same `sequential: true` plan kept getting offered to workers
+  instead — a live dispatcher bug, not an "it'll finish eventually" delay. **Implication for this todo**: waiting
+  quietly for the cron to flip is no longer clearly the right posture — it may wait indefinitely until a
+  backend_engineer fixes the dispatch-order bug (filed as that issue doc's own P1 todo) OR someone manually
+  prioritizes/hand-executes `mtds_available_at_cross_asset_backfill-001`. Not arming a fresh watcher this touch (the
+  pattern is proven correct but a 5th consecutive watcher-death cycle on an ~8h-static blocker adds little — the
+  checkpoint is safe, durable, and unchanged; nothing is lost by not polling right now). **Recommend**: main agent or
+  operator either (a) prioritize a fix for the dispatch-order issue doc, or (b) directly work
+  `mtds_available_at_cross_asset_backfill-001` (its own prerequisites — dry-run, snapshot, pause — are already all
+  checked done) to unblock this cron and this todo's resume in one move. Copied the 157/348 checkpoint to this slot's
+  scratchpad for continuity. Released via `/skip-current-task {"reason_code": "GATED"}` — not completable this turn, and
+  arming yet another blind watcher is lower value than surfacing the real blocker to a decision-maker.

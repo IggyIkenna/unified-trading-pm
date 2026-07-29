@@ -26,7 +26,7 @@ summary: >-
   the underlying resolved to the real root. This means real MVP-eligible ES-complex (S&P 500) combo instruments —
   explicitly the ONLY tradfi options/combo underlier the 2026-07-14 operator ruling put in MVP scope — are being wrongly
   excluded from the expected-universe denominator entirely, not merely mis-keyed.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -51,6 +51,9 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  "instruments-service@5853635b -- resolved directly in an interactive/autonomous session, NOT via AO backlog dispatch
+  (assigned_vm: planning was never claimed -- locked_by empty throughout); noting here so the backlog regen doesn't
+  redispatch already-completed work."
 locked_by:
 locked_since:
 ---
@@ -135,3 +138,32 @@ at all, where today it is completely absent).
 **Priority P1** (not P0) because it is a real, confirmed, silent denominator-correctness gap on a live-traded MVP
 complex (ES options/combo) — but it is not actively corrupting a customer-facing number today (the coverage % this feeds
 is already known-incomplete for tradfi per other open items), so it does not require an emergency freeze.
+
+## Progress Log
+
+- 2026-07-29 (autonomous session, resumed after a session-limit crash mid-workflow): implemented the recommended fix —
+  `_derive_tradfi_combo_root` strips a recognised `VENUE:COMBO:` prefix and extracts the real product root from the
+  first leg (root+month-code+year, same shape as the existing `futures_factory.py` precedent), validated against
+  `TRADFI_ROOTS` so an unresolved shape falls through to the pre-existing "-"-split byte-identical to before
+  (under-matching beats mis-keying, unchanged). Also handles the CBOE `VX/<expiry>:<n>:<side>` calendar-spread leg
+  shape. Real production sampling (distinct COMBO `instrument_id` values pulled live from the prod catalog, not
+  synthesised) confirmed the fix across every real shape found: CME single/multi-letter roots, digit-leading currency
+  futures, crypto (`BTCG2`), CBOE `VX`, and the ICE whitespace-token shape (falls through correctly to the
+  already-shipped ICE handling). **Found a SECOND, deeper bug via real end-to-end verification that a
+  synthetic-fixture-only test could not have caught**: even with the id-parse fixed, the full pipeline still showed ZERO
+  combo candidates. Root cause: the instruments-service catalog pre-tags EVERY COMBO leaf row `mvp=False`
+  UNCONDITIONALLY (confirmed live: all 59,228 catalog COMBO rows, never `None`) — `_tradfi_entry_in_mvp_universe`'s
+  "prefer the pre-tagged mvp column" behavior short-circuited before the live MVP predicate ever saw the roll-up's
+  correctly-resolved underlying. Fixed by adding a `base_override` parameter that bypasses the pre-tag specifically for
+  COMBO leaves in the bundle-mvp roll-up (narrowly scoped — an initial broader version that bypassed the pre-tag for ALL
+  tradfi bundle types regressed a real futures_chain/options_chain test fixture, caught by re-running the full test
+  suite before shipping, then narrowed to `instr.instrument_type.upper() == "COMBO"` only). **Real production
+  before/after quantification** (full `2018-01-01..2026-07-28` tradfi scan, scan-only, live prod catalog + manifest):
+  `combo` went from **0 rows** in the `expected_unattempted` breakdown (baseline, both pre- and post- the sibling
+  naming-mismatch fix) to **1,652 rows** (3,112 total combo candidates incl. `empty_confirmed`) — **every single one
+  correctly keyed `underlying=ES`**, the sole MVP-scoped tradfi combo underlier per the 2026-07-14 operator ruling,
+  confirming the fix targets exactly the right instrument and nothing else leaked in. 19 new/extended unit tests
+  (composite-id parse across real shapes, unresolvable-root fallback, non-tradfi/no-prefix regression guards, the
+  mvp-pretag-bypass mechanism with both the bug-reproduction and fixed-behavior cases, and an end-to-end rollup test
+  asserting the synthetic entry itself carries `mvp=True`) plus the full existing 227-test suite green. **DONE —
+  `instruments-service@5853635b`.**
