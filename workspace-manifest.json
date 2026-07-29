@@ -146,9 +146,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "qg",
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 0,
-        "coverage_pct": 81.41,
         "large_file_count": 1
       }
     },
@@ -273,10 +273,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": "ruff",
+        "qg_red_reason": null,
+        "warn_file_count": 4,
         "coverage_pct": 74.71,
-        "warn_file_count": 4
+        "large_file_count": 0
       }
     },
     "deployment-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 6,
-        "qg_red_reason": "basedpyright",
-        "coverage_pct": null,
-        "warn_file_count": 16
+        "qg_red_reason": "pytest",
+        "coverage_pct": 82.77,
+        "warn_file_count": 16,
+        "large_file_count": 6
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "large_file_count": 6,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "warn_file_count": 7
+        "warn_file_count": 7,
+        "coverage_pct": 73.23,
+        "large_file_count": 6
       }
     },
     "execution-service": {
@@ -529,10 +529,10 @@
       ],
       "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/.",
       "codebase_health": {
-        "large_file_count": 1,
-        "qg_red_reason": "basedpyright",
-        "coverage_pct": null,
-        "warn_file_count": 14
+        "qg_red_reason": null,
+        "coverage_pct": 85.96,
+        "warn_file_count": 13,
+        "large_file_count": 2
       },
       "ldr_ci_status": "GREEN"
     },
@@ -593,7 +593,7 @@
       "codebase_health": {
         "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 83.9,
+        "coverage_pct": null,
         "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
@@ -651,10 +651,10 @@
         "carry-rates"
       ],
       "codebase_health": {
-        "coverage_pct": null,
         "qg_red_reason": null,
-        "large_file_count": 0,
-        "warn_file_count": 0
+        "coverage_pct": 86.35,
+        "warn_file_count": 0,
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
     },
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 10,
-        "large_file_count": 9,
-        "qg_red_reason": "pytest",
-        "coverage_pct": null
+        "large_file_count": 9
       }
     },
     "market-data-processing-service": {
@@ -879,12 +879,12 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
-        "coverage_pct": null,
-        "qg_red_reason": "basedpyright",
-        "large_file_count": 0,
-        "warn_file_count": 45
+        "qg_red_reason": "pytest",
+        "warn_file_count": 45,
+        "coverage_pct": 83.3,
+        "large_file_count": 0
       }
     },
     "ml-service": {
@@ -947,10 +947,10 @@
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19",
       "codebase_health": {
-        "large_file_count": 0,
-        "qg_red_reason": "pytest",
-        "coverage_pct": 82.62,
-        "warn_file_count": 6
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "warn_file_count": 6,
+        "large_file_count": 0
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1213,8 +1213,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": null,
-        "warn_file_count": 33,
-        "coverage_pct": null,
+        "coverage_pct": 96.45,
+        "warn_file_count": 34,
         "large_file_count": 27
       }
     },
@@ -1241,7 +1241,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1264,10 +1264,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 23,
-        "large_file_count": 7,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "warn_file_count": 23,
+        "coverage_pct": 89.28,
+        "large_file_count": 7
       }
     },
     "unified-trading-pm": {
@@ -1417,10 +1417,10 @@
       "semver_policy": "agent",
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "large_file_count": 16,
         "qg_red_reason": null,
-        "coverage_pct": 74.83,
-        "warn_file_count": 7
+        "coverage_pct": 74.49,
+        "warn_file_count": 6,
+        "large_file_count": 16
       },
       "breaking_scan_dir": "none"
     },
@@ -1474,9 +1474,9 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
-        "qg_red_reason": "pytest",
+        "qg_red_reason": null,
         "warn_file_count": 0,
-        "coverage_pct": 98.04,
+        "coverage_pct": null,
         "large_file_count": 0
       },
       "ldr_ci_status": "GREEN",
@@ -1515,10 +1515,10 @@
       ],
       "cascade_invalidated_by": "unified-api-contracts=0.31.0",
       "codebase_health": {
+        "qg_red_reason": null,
+        "coverage_pct": null,
         "warn_file_count": 8,
-        "large_file_count": 13,
-        "qg_red_reason": "pytest",
-        "coverage_pct": null
+        "large_file_count": 13
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server"
@@ -2005,7 +2005,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed — validated + unlocked",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
