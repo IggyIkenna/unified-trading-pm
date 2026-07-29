@@ -499,3 +499,9 @@ predictably still read exhausted until then. No VM launched (none needed/useful 
 past that time, re-probe once, and on a clean (non-`errors`) response relaunch WITHOUT `--force` per the 15:00Z-15:10Z
 note (plain skip-if-fresh re-run — the fixed adapter code already correctly recorded `2026-07-12`'s failures as
 `attempted_failed`, so a normal run retries them naturally; only ~13 days of the `2020-06-06→2026-07-25` range remain).
+
+**Checked 2026-07-29T23:25Z (slot 9, data_engineering)**: bare check only, no probe run (per this doc's own prior
+guidance — "do not bother re-probing before `2026-07-30T00:00Z`"). Current time is still ~35min short of that gate. No
+VM running, nothing new to observe. Releasing via `/skip-current-task {"reason_code": "GATED"}` without a redundant
+probe. Next dispatch: unchanged from the 20:14Z entry — wait for `2026-07-30T00:00Z`, then re-probe once and relaunch
+WITHOUT `--force` on a clean response.
