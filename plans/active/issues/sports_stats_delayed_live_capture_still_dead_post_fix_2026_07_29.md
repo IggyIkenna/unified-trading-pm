@@ -241,7 +241,36 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
       `capture_status=captured`, `written_at` > the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a
       fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). Repo:
-      instruments-service / market-tick-data-service (read-only).
+      instruments-service / market-tick-data-service (read-only). — **Checked 2026-07-29T03:50Z-04:00Z (slot 5,
+      data_engineering): premature, both this todo's own gates are still open, not the "confirming no fix is needed"
+      escape hatch.** (1) Item-2 (the `active_venues` trace above) has NOT landed — grepped `instruments-service` for
+      any commit since `2026-07-29T00:00Z` touching `urdi_reference_provider`/`active_venues`: none. (2) Only ~2h20m
+      elapsed since the item-1 sentinel fix shipped (`unified-api-contracts@6186be5a`, `2026-07-29T01:30:49Z`) vs. the
+      "day-plus of live operation" this todo requires — re-running Step 3 now is a checkpoint, not a verdict, either
+      way. **Attempted the escape hatch anyway** (confirm item-2's fix isn't needed by checking whether a real
+      XG-entity-scoped dispatch ever hits the adapter-key error) — **inconclusive, do not treat as resolved**: a single
+      direct execution trace (`03:51:33-03:51:50Z`, `Sports entity filter from CLI: XG`) showed ZERO
+      `No URDI     adapter`/`URDI fetch...failed` lines — that execution instead logged
+      `Per-fixture enrichment: 39 fixtures x 0     entities = 0 calls queued` (same "0 calls queued" pattern the parent
+      doc's Step-3 investigation already flagged). But a bulk nearest-preceding-line correlation over the last ~10h of
+      logs (137 `No URDI adapter` occurrences) attributed 48/137 to a preceding `XG` entity-filter line — the two
+      signals conflict because the Cloud Run Job runs multiple entities as CONCURRENT subprocesses whose log lines
+      interleave (e.g. `XG` and `FIXTURE_STATS` entity-filter lines land within the same second in the combined log), so
+      "nearest preceding line" is not a valid per-execution correlation without a trace/PID discriminator — exactly the
+      gap item-2's own scope already flagged ("out of scope for this read-only verification pass"). **New finding for
+      whoever picks up item-2**: one clean, non-interleaved trace (`03:26:21-03:26:42Z`) DOES show the error firing
+      directly after `LEAGUES`/`INJURIES`/ `TRANSFERS` entity-filter lines, immediately followed by
+      `Date filter <date>: N instruments active (from URDI     fetch)` — confirms the doc's own hypothesis that this is
+      a shared "core entity"/venue-universe completeness check, not something scoped to a single specific entity; worth
+      using a trace/PID discriminator (not nearest-preceding-line) to nail down definitively whether XG ever hits it.
+      **Step 3 manifest re-check (checkpoint, not final)**: still 0 fresh non-`batch_understat` XG captures since the
+      `2026-07-28T22:37:45Z` cutoff; all 7,714 captured XG rows remain 100% `batch_understat`, max `written_at` still
+      `2026-07-22T05:23:36Z` — unchanged from the parent doc's original finding, as expected this early. Not completable
+      this turn (both gates — item-2 landing and day-plus elapsed — still open). Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: once item-2 lands AND a day-plus has elapsed since
+      ITS redeploy (not item-1's), re-run Step 3 for the real verdict; if item-2 is deprioritized/not attempted, wait
+      out the day-plus from item-1's `01:30:49Z` cutoff instead (i.e. not before `2026-07-30T01:31Z`) before
+      re-checking.
 - [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
