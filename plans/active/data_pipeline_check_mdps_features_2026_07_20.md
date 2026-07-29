@@ -661,46 +661,16 @@ projection written with honest caveats, and two concrete new optimization-headro
 > nullability fix, and the final P0 close) was extracted verbatim to
 > `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`.
 
-## Deferred work after 2026-07-21
+> **Deferred work after 2026-07-21** (9-item table: driver/manifest/index/candle-canonical items, all already tracked in
+> their cited issue docs) and **Session close 2026-07-21 — what shipped + proven** (the 3-P0-fixed narrative + measured
+> throughput) were extracted verbatim 2026-07-29 (slot-6, plan over its 1000-line hard cap again) to
+> `/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`. Nothing lost, only moved.
 
-Every item below is already a tracked todo in the cited issue doc (nothing lost). None blocks the operator's DeFi-MVP
-backfill decision — the derivative_ticker write path (the one hard blocker found this session) is PROVEN fixed.
-
-| #   | Item                                                                                                                                                     | Priority | Where tracked                                                       | Gating                                                          |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------------------------------------------------------------------- | --------------------------------------------------------------- |
-| 1   | Driver reads MERGED index not the leg VM's per-VM shard → reports "failed" on a successful write (EXACT fix spec'd)                                      | P2       | `mdps_derivative_ticker_candle_schema_violation` todo 4             | none — unit-testable, no VM                                     |
-| 2   | Exit-code-lies: a run whose every write fails still exits rc=0 (shard-isolation-safe fix needed)                                                         | P1       | same issue, todo 2                                                  | none                                                            |
-| 3   | Proof-sweep the other empty-window candle types (book5/liq exempt) — the fix already covers them via the shared seam                                     | P1       | same issue, todo 3                                                  | none                                                            |
-| 4   | Candle object↔manifest disconnect: 6 degenerate MDPS rows vs 20k+ objects/day — candle manifest never systematically populated                           | P0       | `candle_feature_canonical_path_divergence` todo 7                   | none — root-cause needed before trusting skip-if-fresh at scale |
-| 5   | Canonical A/B/C ruling for the candle object-path shape (instrument_type= presence + source vs aggregated data_type)                                     | P1       | same issue, todo 1                                                  | **OPERATOR-GATED**                                              |
-| 6   | Split-brain candle layout (pipeline_mode present on some objects, absent on others) + extend the UAC canonical oracle to the processed_candles namespace | P1       | same issue, todos 9,10                                              | partly operator-gated (follows the A/B/C ruling)                |
-| 7   | Real features-service writing smoke (proves the features skill's green path)                                                                             | P2       | this plan                                                           | candle input coverage (blocked by #4)                           |
-| 8   | Full DeFi-MVP candle backfill on real infra                                                                                                              | —        | this plan / ETA                                                     | operator's run (SPOT fleet ready; per the delivered ETA)        |
-| 9   | Defense-in-depth UAC pin on the other service launchers (mtds/instruments/mdps-sharded/mtds-dex-swaps)                                                   | P2       | `mdps_vm_stale_uac_contract_propagation` (resolved; follow-up note) | none — already covered fleet-wide by shared setup Fix 2/3       |
-
-## Session close 2026-07-21 — what shipped + proven
-
-**Delivered:** both skills (`/data-pipeline-check-mdps` + `/data-pipeline-check-features`) built, shipped,
-harness-registered, and VALIDATED end-to-end on real infra — where they earned their keep by catching 3 silent P0s no
-green-tick smoke would surface. **3 P0s fixed + PROVEN on live VMs:** (1) derivative_ticker candle write (0→140
-objects + 140 `captured` rows, via adapter `mdps@beea161` + nullability `mdps@d4052e20b`); (2) UAC contract-propagation
-(`deployment@e978f32d`, fleet-wide silent staleness); (3) read-path amplification 16.7x + seed-context thread-safety
-(`utl@80d2497e`/`mdps@b4db0af`/`b3376b8`) shipped earlier. Root cause of (1) was CORRECTED mid-flight by an adversarial
-8-agent workflow (my first "key mismatch" hypothesis was a red herring — the real cause was category-gated nullability
-in the MDPS pre-upload validator). **Measured:** trades write-rate ~16.9s/instrument-day; full MDPS MVP breadth 462
-shard cells. **Ground-truthed (operator-gated resolution):** the existing-candle estate's canonical orphans (split-brain
-layout, no candle oracle, 6-row manifest vs 20k objects/day). Every finding is a tracked todo; the SPOT backfill fleet
-is ready pending the operator's canonical ruling + the candle-manifest-population root-cause.
-
-### 2026-07-21 — Option-A candle canonical-path migration EXTRACTED to its own plan
-
-The full "OPTION-A MIGRATION SCOPED" record and the "RESUMPTION STATE 2026-07-21" record (scale correction, blast
-radius, path transform, the 8-phase breakdown, the LOCKED canonical shape, the per-repo shipped/uncommitted-file table,
-RESUME ORDER, and the 🔑 LESSONS) were extracted **verbatim** 2026-07-24 to
-`/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (plan-hygiene line-cap remediation) —
-that plan now owns the migration epic end-to-end (census → executor → per-AG SPOT migration → verify). See that file for
-the full record; nothing here was summarized or lost, only moved. This plan's own remaining work (todo 15) is
-`depends_on`-gated on that plan's completion.
+> **2026-07-21 — Option-A candle canonical-path migration EXTRACTED to its own plan**: the full record already lives at
+> `/plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md` (extracted 2026-07-24, and this
+> active plan's copy was a stale duplicate removed 2026-07-29 — confirmed byte-identical to the archived original before
+> removal). That plan now owns the migration epic end-to-end. This plan's own remaining work (todo 15) is
+> `depends_on`-gated on that plan's completion.
 
 ### 2026-07-27 (slot-7) — todo "Run /data-pipeline-check-features across ALL shards" IN FLIGHT, not blocked
 
@@ -883,10 +853,17 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       day=2026-07-19 — flagged an open question: that day falls 2 days past the 2026-07-18 re-derive's
       `2019-01-01..2026-07-17` window, so this may be normal data-capture lag rather than a regression; not
       independently diagnosed further).
-- [ ] [DATA] P2. MTDS has never ingested DeFi
-      `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding` raw-tick bypass-grain data types
-      (confirmed via direct dependency-check error, both a 30d and a 3d window) — blocks `DEFI:onchain` entirely until
-      MTDS backfill/ingestion for these data_types starts.
+- [ ] [DATA] P2. **CORRECTED 2026-07-29 (slot-6) — narrowed to `perp_funding` specifically, not all 5 data_types.** A
+      12-day `DependencyChecker` sweep (2026-05-01 through 2026-07-28, see
+      `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`'s now-flipped P2 todo for full
+      evidence) found `vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices` all show real captured manifest
+      rows on MOST tested days (day-to-day freshness gaps, not "never ingested" — the original framing here was
+      stale/wrong for these 4). Only `perp_funding` shows **zero** manifest rows on **every one of the 12 tested days**
+      — a genuine, currently-live gap, despite a daily `collect-perp-funding` Cloud Scheduler job (01:15 UTC) and a
+      historical `perp_funding=12,500 captured` count (`data_completion_defi_2026_07_15.md`). Root-cause tracked as its
+      own new follow-up todo in that issue doc (scheduler/handler/manifest-registration investigation, out of scope
+      here). Net: `DEFI:onchain`'s dependency check (requires ALL 5, `required: True`) still fails on every tested day —
+      blocks `DEFI:onchain` entirely until `perp_funding` ingestion resumes / is diagnosed.
 - [x] [DATA] P1. Remaining todo-10 scope: CEFI/TRADFI/DEFI/PREDICTION `delta_one`, `volatility`, `multi_timeframe`,
       `cross_instrument`, `commodity` — PARTIALLY DONE 2026-07-28 (slot-2): checked here ONLY because this todo's own
       AO-derived `brief` was truncated mid-sentence by plan-regen (ends at this exact point, no closing punctuation),
@@ -1000,3 +977,24 @@ TRADFI/DEFI/PREDICTION this session, they would very likely just re-hit the same
       `asset_group=`); added a new `_resolve_mdps_bucket` helper used by both `_resolve_gcs_path` and
       `_mdps_manifest_capture_status`; 2 new regression tests (7/7 passing). Day=2026-07-19 still can't be re-tested
       (falls inside the ~6-month PREDICTION MDPS candle production gap) — needs a day ≥2026-07-25 per the issue doc.
+
+### 2026-07-29 (slot-6, data_engineering) — re-dispatched to the gated per-family-numbers todo (line ~906); all 3 gates re-verified still closed, DEFI:onchain framing corrected
+
+Re-picked up the gated todo above (`data_pipeline_check_mdps_features-056`). Re-checked all 3 upstream gates fresh: CEFI
+operator go-ahead still not granted (re-grepped `plans/active/`, no approval text); TRADFI:volatility's raw-tick
+backfill status unchanged. For DEFI:onchain, ran a 12-day `DependencyChecker("central-element-323112")` sweep
+(2026-05-01 through 2026-07-28, direct calls via the repo's own `.venv` — no VM launch needed) resolving the open
+question left by `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`: the "MTDS never
+ingested" framing was stale for 4 of the 5 required deps (`vault_share_price`/`lst_rates`/`lending_indices`/
+`oracle_prices` all show real captured rows on most days, just with day-to-day freshness gaps) — only `perp_funding` is
+genuinely absent on **every one of the 12 tested days**, a real live gap despite a daily Cloud Scheduler job and a
+historical 12,500-row capture count. Corrected the gating note above (line ~886) to name `perp_funding` specifically and
+filed a new targeted follow-up todo in that issue doc to root-cause the scheduler/manifest gap. **Net: the dependency
+check still fails on every tested day (requires ALL 5), so DEFI:onchain stays correctly gated — all 3 upstream gates
+(CEFI/TRADFI/DEFI) remain closed.** The parent throughput-measurement checkbox (line ~906) stays `[ ]` — declining the
+dispatch again via `skip-current-task` (`reason_code: GATED`) rather than false-completing it, per the
+plans-run-to-actual-completion HARD RULE. Also fixed this plan's own 1000-line hard-cap breach (was at 1009 after the
+doc edits above) by extracting the fully-historical "Deferred work after 2026-07-21" + "Session close 2026-07-21"
+sections (already superseded by later work, nothing still-open) to
+`/plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md`, and removing a stale duplicate copy of
+the already-archived "Option-A candle canonical-path migration" section.

@@ -957,9 +957,17 @@ jobs:
               # Arm auto-merge (SQUASH only — LDR carries merge commits from the backmerge-sink design, so
               # rebase-merge is structurally impossible). Use the PAT: the App token cannot enable auto-merge
               # (WS-L canary finding 2026-06-26); the PAT can. LOUD on failure (no 2>/dev/null swallow).
+              # Promoted-From-LDR trailer (silent-revert-loss fix, ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md):
+              # stamps the EXACT LDR SHA this squash represents. A squash commit's real git
+              # parent is main's PREVIOUS tip, not this LDR SHA — so main-backmerge-to-ldr's
+              # default merge-base computation can silently land on a STALE ancestor if a
+              # revert (or any follow-up correction) lands on LDR between this bot's content-gate
+              # read and the auto-merge actually landing. The backmerge reads this trailer and
+              # uses $LDR_SHA as an EXPLICIT merge-base instead, so a downstream LDR revert can
+              # never be silently undone by the backmerge.
               if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_URL" --auto --squash --delete-branch \
                    --subject "chore(promote): LDR → main (Option-B direct)" \
-                   --body "LDR→main fleet bot — squash (LDR is the backmerge sink; not rebaseable)." \
+                   --body "$(printf 'LDR→main fleet bot — squash (LDR is the backmerge sink; not rebaseable).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
                    --repo "$OWNER/$REPO"; then
                 echo "  ✅ auto-merge (squash, delete-branch) armed — merges + deletes immutable ref when quality-gates-v2 is green"
               else
@@ -1011,9 +1019,10 @@ jobs:
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null || true
                     if provenance_check_ok "$PR_NUM"; then
+                      # Promoted-From-LDR trailer — see the primary arm site above for the full rationale.
                       GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                            --subject "chore(promote): LDR → main (Option-B direct)" \
-                           --body "LDR→main fleet bot — squash (close+reopen re-arm)." \
+                           --body "$(printf 'LDR→main fleet bot — squash (close+reopen re-arm).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
                            --repo "$OWNER/$REPO" 2>/dev/null || true
                       _done PROMOTED; return 0
                     else
@@ -1038,9 +1047,10 @@ jobs:
                   _done BLOCKED; return 0
                 fi
                 echo "  $REPO: existing PR #$PR_NUM state=$MSTATE — (re)arming squash auto-merge (delete-branch)"
+                # Promoted-From-LDR trailer — see the primary arm site above for the full rationale.
                 if GH_TOKEN="$GH_PAT_FOR_ARM" gh pr merge "$PR_NUM" --auto --squash --delete-branch \
                      --subject "chore(promote): LDR → main (Option-B direct)" \
-                     --body "LDR→main fleet bot — squash (re-arm)." \
+                     --body "$(printf 'LDR→main fleet bot — squash (re-arm).\n\nPromoted-From-LDR: %s' "$LDR_SHA")" \
                      --repo "$OWNER/$REPO"; then
                   echo "  ✅ re-armed squash auto-merge (delete-branch) on #$PR_NUM"
                 else

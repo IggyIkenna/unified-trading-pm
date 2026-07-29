@@ -174,7 +174,26 @@ confirm-fix-shape only.
       to a blocking pre-push guard (best as defense-in-depth); Candidate 3 is necessary-but-insufficient documentation.
       Evidence: `unified-trading-pm` (this doc) — analysis only, no workflow code changed by this todo (implementation
       is the P1 todo below).
-- [ ] [SCRIPT] P1. **Implement the confirmed fix (Candidate 1 + Candidate-2-blocking safety net).** In
+- [ ] [SCRIPT] P1. **🟡 IN PROGRESS (2026-07-29, slot 15).** Core fix implemented + shipped:
+      `unified-trading-pm@d3a47773a` (`.github/workflows/ldr-to-main-promote-fleet.yml` stamps
+      `Promoted-From-LDR: <sha>` on all 3 squash-merge arm/re-arm sites;
+      `scripts/workflow-templates/main-backmerge-to-ldr.yml` + PM's own `.github/workflows/` copy read that trailer and
+      force the 3-way merge onto that explicit base via `git merge-tree --write-tree     --merge-base=<sha>` instead of
+      git's stale computed one; added `check_no_silent_revert_loss()` as a narrowly-scoped Candidate-2 defense-in-depth
+      safety net — flags a merge that fully discards LDR's own last commit's effect, independent of the trailer). New
+      regression test `scripts/quality-gates-base/tests/test-backmerge-silent-revert-loss-guard.sh` reproduces the
+      CONFIRMED instruments-service graph shape with real git operations (control: default merge-base reintroduces the
+      revert; fix: explicit-base preserves it; extracted real `check_no_silent_revert_loss()` correctly flags the buggy
+      result and not the fixed one) — 7/7 assertions pass. **Scope note**: did NOT touch `ldr-to-main-promote.yml`
+      (PM-only bot) — it uses `--merge`, not `--squash`, so it keeps real ancestry and carries no trailer; it is not
+      vulnerable to this bug class at all. **Fleet rollout in progress**:
+      `rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml` synced all 24 sibling repo copies (verified
+      only `unified-trading-pm` itself — deliberately excluded from that script — needed a manual sync, done, preserving
+      its pre-existing `runs-on: ubuntu-latest` rather than silently flipping it to `[self-hosted, glue]` to match the
+      canonical template, since that's an unrelated, out-of-scope drift); each of the 24 now needs its own Pass-1 QG +
+      Pass-2 quickmerge to actually land the file — running via a background driver script, per-repo results will be
+      recorded below as they land. **Done when**: all 24 repo copies are committed + pushed (not just the local
+      working-tree sync). Original todo text below, preserved for context:
       `unified-trading-pm/scripts/workflow-templates/`: (a) `ldr-to-main-promote-fleet.yml` (+
       `ldr-to-main-promote.yml`) — stamp a `Promoted-From-LDR: <LDR_SHA>` trailer on the squash-promote commit body (the
       SHA is already captured as `$LDR_SHA` at the content gate). (b) `main-backmerge-to-ldr.yml` — when an incoming
