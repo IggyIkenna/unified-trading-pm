@@ -534,7 +534,7 @@
         "large_file_count": 2,
         "qg_red_reason": "pytest"
       },
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": null,
         "coverage_pct": null,
@@ -879,7 +879,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "qg_red_reason": "basedpyright",
         "coverage_pct": null,
@@ -1009,7 +1009,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "pytest",
         "coverage_pct": 85.82,
@@ -1210,7 +1210,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 34,
@@ -1298,7 +1298,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "qg_red_reason": "ruff",
         "coverage_pct": 72.69,
