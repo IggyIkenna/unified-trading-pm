@@ -292,9 +292,40 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve the 4 open operator questions and action the Recommended-decision phases** — e.g. Phase
-      1's FRED macro backfill (adapter exists, has never run in production) and Phase 5 (bring macro/alt-data into the
-      honest-coverage gate); Phases 1-6 remain largely unactioned as of this doc's last update.
+- [x] ✅ [OPERATOR] P1. **Operator-ruled 2026-07-29 (interactive decision session): FRED only — run the backfill.
+      Explicitly declined Glassnode Pro and CoinGlass (not paying for either); operator already holds FRED API
+      credentials.** Resolve the 4 open operator questions and action the Recommended-decision phases — e.g. Phase 1's
+      FRED macro backfill (adapter exists, has never run in production) and Phase 5 (bring macro/alt-data into the
+      honest-coverage gate); Phases 1-6 remain largely unactioned as of this doc's last update. Questions 1 (altdata
+      home) and 4 (tranche scope) stay open — narrowed to FRED-only, no immediate call needed since FRED already has a
+      home (`asset_group=tradfi`, venue=`FRED`, per the existing adapter). Question 2 (paid vendors) is now CLOSED — no
+      Glassnode/CoinGlass. Question 3 (duplicate FRED adapter) was independently already resolved 2026-07-27 (see
+      `june_2026_vintage_audit_findings_2026_07_27.md` item 41c) — features-service's adapter was deleted in favor of a
+      pure MTDS-reader; only
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/     fred_adapter.py`'s
+      `FredAdapter` remains, nothing left to delete.
+
+- [ ] [DESIGN] P1. **Scope + build the actual FRED backfill invocation — no runnable entry point exists today, confirmed
+      2026-07-29.** `FredAdapter` is registered in `market_interface/factory.py`'s venue registry (29 `KEY_SERIES`,
+      writes via `write_tradfi_shard`) but is instantiated NOWHERE outside its own module + tests — not wired into
+      `get_venues_for_asset_groups("TRADFI")` (only `_VENUE_MAPPING.all_databento_venues` is added there), no CLI
+      handler, no seed-instrument list. This is architecturally DIFFERENT from the working Yahoo-Finance precedent
+      (FX/KRX/ICE/CBOE-treasury — see `adapters/_umi_yahoo.py::route_yahoo_tradfi`): Yahoo serves ALTERNATE data for
+      venues Databento already lists (FX/KRX/ICE are themselves members of `all_databento_venues`, and
+      `route_yahoo_tradfi` intercepts specific `data_types` for those venues before falling through to Databento). FRED
+      has no Databento-venue analog to piggyback on — it needs its OWN venue-list entry and either a
+      `route_fred_tradfi`-style dispatch function (mirroring `_umi_yahoo.py`'s shape) or a small dedicated driver
+      script, PLUS: (a) a decision on how the 29 `KEY_SERIES` map to synthetic `instrument_id`s (FRED series aren't
+      exchange-listed instruments), (b) a fix for the `data_type` mismatch already found (`market_data_categories.py`
+      declares FRED's type as `macro_result`, but the adapter itself writes `yield_curve`/`ohlcv_1d`), (c) an
+      `expected_coverage` registry entry (`registry/expected_coverage.py`'s `_TRADFI` dict has no FRED key yet — Phase 5
+      of this doc) — `coverage_starts.py` already has `"FRED": date(1962,1,2)` and Secret Manager already holds
+      `fred-api-key`, so credentials aren't the blocker. **Do this BEFORE running any backfill** — running against an
+      unwired adapter will not populate rows. Repo: market-tick-data-service, unified-api-contracts.
+- [ ] [DATA] P1. **Run the FRED backfill** once the driver above exists — operator confirmed they already hold the
+      `fred-api-key` credential (Secret Manager); this becomes a normal backfill VM launch (SPOT per the hard rule) once
+      a real invocation path exists. Register the `expected_coverage` entry in the SAME change so honest-coverage never
+      reads a false gap for the newly-populated rows.
 
 ## Audit method + provenance
 
