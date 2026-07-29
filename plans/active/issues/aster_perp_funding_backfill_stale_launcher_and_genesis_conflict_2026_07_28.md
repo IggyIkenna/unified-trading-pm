@@ -128,3 +128,10 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
   conversation/decision-record consulted (not re-discoverable from either code or public sources), or a fresh operator
   ruling.** No VM launched, no date guessed, no code changed. Filed as a `/blocked` question from the parent plan's todo
   (`cross_cutting_satellite_ao_dispatch_batch1b-006`) rather than proceeding.
+- 2026-07-29T20:19Z (slot 4, data_engineering): re-verified from scratch after a fresh pull — no operator answer to
+  `BLK-a94f446d` yet (grepped the corpus for the id, checked recent commit history on this doc + the parent plan's todo,
+  both confirm no change since main's `[OPERATOR]`-gate tag). All 4 sibling legs (a/b/d/e) remain resolved; this is the
+  sole open leg on the parent todo, and it has no unblocked partial action available — the uncontested 2023-11-01+ floor
+  is already fully captured (226,008 rows through 2026-07-27), so the ONLY remaining scope is the disputed
+  2023-07-22→2023-11-01 window this blocker gates. Nothing to do until the operator answers. Released via
+  `/skip-current-task {"reason_code": "BLOCKED"}` on the parent todo.

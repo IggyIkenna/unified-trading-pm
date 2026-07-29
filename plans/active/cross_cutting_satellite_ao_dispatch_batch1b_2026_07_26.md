@@ -317,7 +317,12 @@ drift_direction: advance-code
       this is an internal/methodological decision, not a discoverable fact). Filed `BLK-a94f446d` with 3 options
       (consult the original operator decision / default to the earliest-real-captured-row date / default to the
       launcher's current default). Full detail in the issue doc's Progress Log (`unified-trading-pm@263739b7c`).
-      Checkbox stays unchecked pending the answer.
+      Checkbox stays unchecked pending the answer. — **Status 2026-07-29T20:19Z (slot 4, data_engineering)**:
+      re-verified `BLK-a94f446d` still unanswered (fresh pull, corpus grep, commit history — no change). No unblocked
+      action available: legs (a/b/d/e) resolved, leg (c)'s only open scope is the disputed 2023-07-22→2023-11-01 window
+      this blocker gates (the uncontested 2023-11-01+ floor is already fully captured). Full detail in
+      `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Released via
+      `/skip-current-task {"reason_code": "BLOCKED"}`.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
       versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from
