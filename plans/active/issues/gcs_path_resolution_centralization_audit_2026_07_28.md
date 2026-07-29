@@ -705,31 +705,36 @@ below for the footgun fix itself.
       follow-up SCRIPT todo below closes that footgun at the source; everything else needed is already tracked. (repo:
       unified-api-contracts, market-tick-data-service)
 
-- [ ] [SCRIPT] P1. **Close the CeFi/TradFi `pipeline_mode` write-side footgun** — add `pipeline_mode: str` as a required
-      parameter to UAC's `build_cefi_partition_path()`/`build_tradfi_partition_path()`
-      (`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`), mirroring
-      `build_defi_partition_path()`'s existing contract, so the builder inserts the segment itself instead of every
-      caller needing to remember a manual post-hoc `.replace()`. Migrate MTDS's 3 confirmed call sites
-      (`symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
-      `book_microstructure_handler.py`, plus the now-fixed `_perp_funding_kalshi_polymarket.py`/
-      `deribit_options_chain_handler.py`) onto the new required-param contract, deleting the now-redundant `.replace()`
-      calls. This is the todo that makes the "insert pipeline_mode after `.build_*_partition_path()`" bug class
-      structurally impossible going forward, closing the recurring-bug-class problem the whole audit was about. (repo:
-      unified-api-contracts, market-tick-data-service)
+- [x] [SCRIPT] P1. **Close the CeFi/TradFi `pipeline_mode` write-side footgun** — DONE 2026-07-29,
+      `unified-api-contracts@fa25a345` (added required `pipeline_mode: str` param to `build_cefi_partition_path()`/
+      `build_tradfi_partition_path()`, mirroring `build_defi_partition_path()`'s existing contract — every existing
+      caller workspace-wide updated, no default value added so the footgun can't silently persist) +
+      `market-tick-data-service@94067e1a` (migrated all 5 CeFi call sites —
+      `symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
+      `book_microstructure_handler.py`, `_perp_funding_kalshi_polymarket.py`, `deribit_options_chain_handler.py` — onto
+      the required-param contract, deleting every now-redundant post-hoc `.replace()` call). One genuine exception
+      correctly left in place with a clear comment: `symbol_rules.py`'s TradFi branch still can't delegate to
+      `build_tradfi_partition_path()` because the orchestrator carries lowercase legacy series-class instrument_type
+      tokens (`rates`/`etf_flows`/`futures_chain`) the UAC `InstrumentType` enum doesn't cover — a pre-existing,
+      separate gap, not a re-introduction of the footgun (that branch still correctly inserts `pipeline_mode=` via the
+      same explicit derivation, just via `.replace()` rather than the builder param). QG passed (full test suite,
+      batch+live smoke matrix green). This is the todo that makes the "insert pipeline_mode after
+      `.build_*_partition_path()`" bug class structurally impossible going forward — the last piece of the whole audit.
+      (repo: unified-api-contracts, market-tick-data-service)
 
 - [x] [SCRIPT] P1. **Round 1 (CEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above.
 
 ## Deferred work after 2026-07-29
 
 Every confirmed-live-firing bug found across all 5 rounds (execution-service's DeFi loader, MTDS's KALSHI_PERP writer,
-MTDS's Deribit writer) is fixed and shipped, and the centralization design question is RULED (see the section above) —
-**zero open `[DESIGN]` judgment calls remain in the whole audit.** What's left is entirely bounded, independent SCRIPT
-execution work, not blocked on anyone:
+MTDS's Deribit writer) is fixed and shipped; the centralization design question is RULED; and the write-side
+`pipeline_mode` footgun that let the same bug recur 3 times is now closed at the source (both above). **Zero open
+`[DESIGN]` judgment calls remain, and the recurring-bug-class problem itself is structurally closed.** What's left is
+entirely bounded, independent SCRIPT execution work — point-fixes for already-found instances, not blocked on anyone:
 
-| Item                                                                                                                     | State    | Blocked on                                                                                         |
-| ------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------- |
-| Close the CeFi/TradFi `pipeline_mode` write-side footgun (new todo above)                                                | Not done | nobody — the highest-leverage remaining item, closes the recurring-bug-class problem at the source |
-| ~16 other P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other                                                    |
+| Item                                                                                                               | State    | Blocked on                                      |
+| ------------------------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------- |
+| ~16 P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other |
 
-**Recommended next item**: the write-side footgun fix — it's the one todo that actually stops this bug class from
-recurring a 4th time, versus the other ~16 items which are each independent point-fixes for already-found instances.
+**Recommended next item**: any of the remaining P1s — none is individually higher-leverage than another at this point
+(the one structural fix that mattered, the footgun, is done); pick by repo/area convenience.
