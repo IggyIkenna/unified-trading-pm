@@ -616,3 +616,20 @@ going forward. Still open, tracked as a todo below.
       (repo: unified-trading-library, and every consumer once the mechanism is chosen)
 
 - [x] [SCRIPT] P1. **Round 1 (CEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above.
+
+## Deferred work after 2026-07-29
+
+Both confirmed-live-firing bugs found across all 5 rounds (execution-service's DeFi loader, MTDS's KALSHI_PERP writer)
+are fixed and shipped — the operator's directive is functionally satisfied on the "find and fix what's actively broken"
+axis. What remains is real work, not blocked on anyone:
+
+| Item                                                                                                               | State    | Blocked on                                                                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~16 P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other                                                                                                                                                                                     |
+| Deribit `_write_shard` missing `pipeline_mode=` ruling                                                             | Not done | nobody — the Kalshi/Polymarket sibling question (same doc, same day) was resolved by direct investigation this session; the same approach applies here, just not yet run                                                            |
+| Genuine centralization design (the operator's original capstone ask)                                               | Not done | nobody, but it's real design work — needs someone to actually read every confirmed-safe pattern found across 5 rounds and decide whether `build_path()` + the now-fixed registry already IS the answer, or something more is needed |
+
+**Recommended next item**: the Deribit ruling — it's the same shape of question as the Kalshi one just resolved (a
+`[DESIGN]` judgment call that turned out to be answerable by direct live-GCS investigation rather than requiring an
+actual human decision), and closing it would leave the centralization design as the only remaining open judgment call in
+the whole audit.
