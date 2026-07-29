@@ -161,3 +161,32 @@ not just noting.
   ~2min-before-timeout in the failing run), consistent with transient host contention, not a code regression. No fix
   applied (none needed — nothing is currently broken); filed as evidence for the re-measurement todo, not as a fresh
   unresolved occurrence.
+
+- **2026-07-29 ~20:45Z (cicd escalation `agt-eda323`, slot 14)**: a DIFFERENT failure signature than every entry above —
+  not host-contention-during-real-execution (timeouts, uv cache races, worker-teardown crashes), but the gate never
+  starting at all. Dispatched to fix `instruments-service`#1025 (LDR→main promote) `ldr_qg_failure`; found
+  `content-gate` ("content sentinel") + the `quality-gates-v2` aggregation job (both still hardcoded
+  `runs-on: ubuntu-latest` in `python-quality-gates-v2.yml` — never migrated by either Wave-1 or Wave-2, which only
+  touched `qg-slices` and the CALLER template's escalate/notify/dispatch jobs) failing in 2-3s with **zero steps and
+  zero log blob**. Confirmed via `GET .../actions/runs/<id>/timing`: `"billable":{"UBUNTU":{"total_ms":0,...}}` for all
+  4 ubuntu-latest jobs across two separate attempts (PR-triggered `30477967414` @18:00Z and a `workflow_dispatch` retry
+  `30479612102` @18:22Z), while the SAME runs' self-hosted `[self-hosted, glue]` jobs (escalate-ldr-qg-failure,
+  notify-ci-watcher) succeeded normally (runner `glue-ip-172-31-5-118-1`, confirmed online + idle both times).
+  `QG slice` (the job that runs the actual test/lint/type work) was SKIPPED both times — i.e. **the real gate never ran;
+  there is no code defect to fix**. GitHub status page checked live: Actions fully operational (only Copilot degraded) —
+  rules out a platform incident. Widened the check fleet-wide: `agent-orchestrator`, `deployment-service`,
+  `unified-trading-pm`, `market-data-processing-service`, `features-service` all show the SAME pattern on their most
+  recent runs (19:20-20:45Z), and it has escalated over the evening from partial (only the ubuntu-latest jobs within a
+  mixed run fail) to full run-level `startup_failure` with `total_count: 0` jobs (e.g. `unified-trading-pm` run
+  `30489671842`, `agent-orchestrator` run `30487051711`) — nothing is even being scheduled for these workflows now, not
+  just the QG reusable one. Working theory (not yet operator-confirmed): the retry-storm volumes this doc already
+  documents (46 + 78 + many more `ldr_qg_failure` attempts fleet-wide) plus PM's own still-not-migrated Tier-B pipeline
+  files (`ldr-to-main-promote(-fleet)`, `sit-gate`, etc. — all still `ubuntu-latest` per this doc's sibling
+  `gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`) have now burned through the account's GitHub
+  Actions spending limit for GH-hosted (ubuntu-latest) runners specifically — self-hosted jobs are unaffected because
+  GitHub doesn't bill/gate self-hosted runner minutes at all, which is exactly the asymmetry observed. **If confirmed,
+  this blocks EVERY repo's promotion pipeline fleet-wide right now, not just instruments-service#1025** — filed
+  `BLK-21d55fb1` (task `agt-eda323`) to the dashboard for operator/main-agent decision (check/raise the GH Actions
+  spending limit vs. migrate the remaining ubuntu-latest jobs to the already-oversubscribed self-hosted pool) rather
+  than attempting a code "fix" for a gate that was never actually exercised. No code changed on `instruments-service`;
+  slot left clean on `live-defi-rollout`.
