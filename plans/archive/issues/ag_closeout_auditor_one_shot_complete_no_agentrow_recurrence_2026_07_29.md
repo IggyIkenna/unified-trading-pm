@@ -66,6 +66,9 @@ source: >-
   (agent-orchestrator@a01aeae) did not close this instance.
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule.
+
 # `one_shot_complete` recurrence — `spawn_base_role` was already typed before this session's own `/boot` ever ran
 
 ## What I found
