@@ -98,12 +98,17 @@ is confirmed. Also update the parent plan's leg (c) text to stop citing the reti
 
 ## Todos
 
-- [ ] [DATA] P2. Confirm the correct Aster funding genesis date for the 2023-07-22→2023-11-01 gap window (native vs
-      Binance-proxied vs never-existed), then launch the scoped backfill via
-      `launch-cefi-hl-aster-historical-backfill.sh` (command above) for whichever sub-window is confirmed real. (repo:
-      market-tick-data-service + deployment-service). **Done when**: a full re-census of ASTER `derivative_ticker`
-      manifest rows for 2023-07-22→2023-11-01 shows either genuine captured/empty_confirmed coverage (backfill ran) or a
-      documented decision that the window predates real Aster activity (no backfill needed).
+- [ ] [DATA][OPERATOR] P2. Confirm the correct Aster funding genesis date for the 2023-07-22→2023-11-01 gap window
+      (native vs Binance-proxied vs never-existed) — **OPERATOR-gated 2026-07-29 (main, BLK-a94f446d)**: this is an
+      operator-recall decision (the 2026-06-17 confirmed-genesis intent), not worker-resolvable; slot-15 already
+      researched it and re-blocked. Confirmed facts: 2023-11-01 = real earliest captured row; 2023-07-22→2023-10-31 =
+      zero manifest rows ever; 2023-07-22 was the operator-confirmed Binance-proxied (synthetic) start. Interim guidance
+      already given to workers: proceed on the 2023-11-01+ real floor (honest-absence-safe). Operator to decide ONLY
+      whether the 2023-07-22→2023-11-01 Binance-proxied window is reconstructed or declared out-of-scope; then launch
+      the scoped backfill via `launch-cefi-hl-aster-historical-backfill.sh` (command above) for whichever sub-window is
+      confirmed real. (repo: market-tick-data-service + deployment-service). **Done when**: a full re-census of ASTER
+      `derivative_ticker` manifest rows for 2023-07-22→2023-11-01 shows either genuine captured/empty_confirmed coverage
+      (backfill ran) or a documented decision that the window predates real Aster activity (no backfill needed).
 
 ## Progress Log
 
