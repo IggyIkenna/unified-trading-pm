@@ -412,7 +412,7 @@ split across 2 docs under different names); (3) none of the 5 AG plans' own "MVP
 cells have actually been proven wired through backfill=paper=live, vs. just declared in-scope.
 
 - [x] [DOC] P1. ✅ **DONE 2026-07-24** — target: new cross-cutting investigation. Created
-      `plans/active/issues/mvp_scope_resolver_code_read_2026_07_24.md` with the bounded code-read todo (the
+      `plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md` with the bounded code-read todo (the
       investigation itself is future dispatch work). `pm@<commit-pending>`.
 - [x] [DATA] P2. ✅ **DONE 2026-07-24** — target: `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`. Extended
       "## MVP universe" with a real per-cell proven-wired-vs-declared table + an honest gap finding.

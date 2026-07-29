@@ -141,7 +141,7 @@ locked_by:
       the way (240 objects briefly written empty on the first `--apply`, root-caused, live-refetch-remediated 240/240
       with mandatory read-back verification) — see
       `/plans/archive/issues/sports_player_stats_normalize_empty_write_incident_2026_07_26.md` (archived; follow-ups:
-      `/plans/active/issues/sports_player_stats_empty_write_followups_2026_07_26.md`). (2) Root-caused the 1,298
+      `/plans/archive/issues/sports_player_stats_empty_write_followups_2026_07_26.md`). (2) Root-caused the 1,298
       missing-GCS cells: 1,210 (93%, 2018-2020) match the doc's own Defect-3 writer-generation quirk; 88 (7%, 2025) are
       a NEW anomaly, filed as its own follow-up rather than guessed at. No manifest reconciliation executed (explicit
       non-actionable ruling, filed as a follow-up) — findings landed in

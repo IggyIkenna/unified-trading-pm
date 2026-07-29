@@ -535,7 +535,7 @@ features-service@87e73cee) ·
 (UAC capability-manifest/strategy-catalogue data gaps) ·
 [issues/features_service_catalogue_completeness_inventory_2026_07_24.md](/plans/archive/issues/features_service_catalogue_completeness_inventory_2026_07_24.md)
 (features-service catalogue completeness across all 9 modules) ·
-[issues/mvp_scope_resolver_code_read_2026_07_24.md](/plans/active/issues/mvp_scope_resolver_code_read_2026_07_24.md)
+[issues/mvp_scope_resolver_code_read_2026_07_24.md](/plans/archive/issues/mvp_scope_resolver_code_read_2026_07_24.md)
 (code-read of the paper/live strategy-universe resolver vs UAC `MVP_SCOPE`, across all 5 AG plans) ·
 `data_pipeline_e2e_milestones_gate_2026_07_24.md` (already cited — the 14-criteria gate doc itself; kept here as a
 pointer, not duplicated, since Track 1 already references its `related:` graph indirectly).

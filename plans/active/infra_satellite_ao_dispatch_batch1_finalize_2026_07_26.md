@@ -24,7 +24,7 @@ related:
   [
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
+    /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -72,7 +72,8 @@ source: >-
       one (the setuptools 3-step chain, the uv `setup.sh` fix + rollout pair, the e2e-login 3-step chain, the
       PROGRESS.json rollout folding three families, the fleet-monitor pair, the launcher-write pair) — flip ALL the
       constituent boxes, not just one per todo, and say in each flip which combined todo covered it. The 17 source docs
-      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`, `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
+      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`,
+      `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`,
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
@@ -81,14 +82,14 @@ source: >-
       `codex_violations_ratchet_to_five_2026_06_10.md`, `repo_scripts_governance_audit_2026_06_18.md`,
       `issues/service_dockerfile_pattern_normalization_2026_06_17.md`, `codex_vs_repo_docs_ssot_audit_2026_06_01.md`,
       `issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md`,
-      `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`, `l0_doc_index_generator_2026_06_24.md`,
-      `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`, `stash_pile_workspace_cleanup_2026_06_03.md`,
-      `issues/reference_path_convention_2026_07_23.md`. (That list is 18 entries because
-      `session_bound_vm_monitoring_reliability_gap` co-sourced one combined todo with the billing-waste doc — reconcile
-      both.) **Several of these carry `locked_by: live-defi-rollout`** — flipping a checkbox is fine on a locked doc;
-      ARCHIVING one is not (that needs `[unlock-plan]`). **Done when**: every source-doc box corresponding to a done
-      batch-1 todo is flipped with a verified sha, and any box that could NOT be flipped is listed with the reason.
-      Repo: unified-trading-pm.
+      `/plans/archive/issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10.md`,
+      `l0_doc_index_generator_2026_06_24.md`, `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`,
+      `stash_pile_workspace_cleanup_2026_06_03.md`, `issues/reference_path_convention_2026_07_23.md`. (That list is 18
+      entries because `session_bound_vm_monitoring_reliability_gap` co-sourced one combined todo with the billing-waste
+      doc — reconcile both.) **Several of these carry `locked_by: live-defi-rollout`** — flipping a checkbox is fine on
+      a locked doc; ARCHIVING one is not (that needs `[unlock-plan]`). **Done when**: every source-doc box corresponding
+      to a done batch-1 todo is flipped with a verified sha, and any box that could NOT be flipped is listed with the
+      reason. Repo: unified-trading-pm.
 
 - [ ] [REVIEW] P1. **Re-check batch 1's 10 CONFLICT-GATED deferrals — the only category that clears without a ruling.**
       For each, go read the specific competing claim named in batch 1's `## Deferred` and determine whether it has since
