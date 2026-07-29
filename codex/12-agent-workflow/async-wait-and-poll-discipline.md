@@ -460,3 +460,21 @@ So, before trusting a zero from an artifact check:
    Never collapse them.
 3. Entity names split/rename over a corpus's life; the June-era objects still sit under the OLD name, so "the old name
    exists in GCS" does NOT prove it is still the write target.
+
+## A liveness check is only valid at the instant you act on it — re-check immediately before touching, never from an earlier read (codified 2026-07-29)
+
+Hit during a multi-hour autonomous session: an mtime-based liveness check on a foreign dirty file read as "64 minutes
+stale" (safely dead, eligible to inherit per the standard liveness gate). By the time the next tool call actually went
+to touch it moments later, an immediate re-check showed mtime=13 seconds (genuinely live — another agent had just
+resumed work on it). The first reading was not wrong when taken; it was simply **stale by the time it was acted on**,
+because real time passed between the check and the action (other tool calls, reasoning, dispatch overhead).
+
+**The rule**: liveness is a point-in-time fact, not a durable one. A "dead, safe to inherit" verdict from an earlier
+check in the same turn or session is not sufficient grounds to act — **re-run the liveness check immediately before the
+touch**, not before the intervening work. This is cheap (one `stat`/`git status` call) and is the only way to close the
+race between "I checked" and "I act." Treat any liveness check as expired the moment something else happens in between —
+a tool call, a wait, a dispatch — even if that gap is only seconds.
+
+This is the same class of bug as trusting a cached "task done" status instead of re-verifying at the moment you rely on
+it (see the resumed-sub-agent section above) — the fix is identical: re-verify at the point of action, not at the point
+of the earlier observation.
