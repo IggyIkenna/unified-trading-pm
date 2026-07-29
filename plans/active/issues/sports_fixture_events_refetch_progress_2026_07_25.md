@@ -365,4 +365,23 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       stall. Not completable this turn (~3.2 years of the `2020-06-06→2026-07-25` range remain). Releasing via
       `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this health-check
       (2-read progress-metric check); once terminal, re-run the census script per "Next action" above before flipping
-      this checkbox + the parent todo.
+      this checkbox + the parent todo. — **Health-checked 2026-07-29T03:49Z-03:53Z (slot 5, data_engineering), RUNNING,
+      confirms slot 6's 00:41Z-00:43Z check**: `gcloud compute instances list` initially failed with a
+      `compute.instances.list` permission gap on the active `github-deploy` account (same WIF-poisoning class as
+      `issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`) — fixed in-session by switching to
+      `unified-trading-sa` per the RULES.md self-service-grant rule (an ambient identity switch, not a new grant), which
+      then confirmed `RUNNING` in `asia-northeast1-c`. 3-read progress-metric check over ~4min: heartbeat blob fresh at
+      every read (03:50:02Z, 03:51:04Z, 03:53:08Z, all <30s old at check time); run.log grew 194,345→195,178→195,670
+      lines; `date=` boundary advanced `2024-09-19→2024-09-23→2024-09-28`, live per-fixture `Fetched N ... for date=X` +
+      `GCS fixture lookup` lines, no error/stall signature; `grep -c DEPLOYMENT_COMPLETED` = 0 at every read. **Tooling
+      note (not a VM issue)**: an earlier automated polling script transiently reported a false `TERMINAL_DETECTED` on
+      an intermediate read whose backing log file was never actually written to disk — re-verified directly against a
+      fresh `gcloud storage cat` immediately after and found zero genuine `DEPLOYMENT_COMPLETED`/`exit_code` occurrences
+      anywhere in the log; the VM's own `gcloud compute instances list` status (`RUNNING`) is the authoritative signal
+      and was checked directly, not inferred from the flaky script. Genuine forward progress, no stall. Not completable
+      this turn (~1.9 years of the `2020-06-06→2026-07-25` range remain, currently at `2024-09-28`). Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat this health-check
+      (2-read progress-metric check — a new `date=` boundary OR continued in-date fixture-fetch advance both count as
+      live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM self-deleted/TERMINATED), re-run
+      `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox +
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo.
