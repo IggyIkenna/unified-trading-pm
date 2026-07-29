@@ -898,3 +898,12 @@ section above, which conflated answered and open items):
   `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`, was ALSO reclassified this session but no
   longer needs a Sources mention — a real AO worker already claimed, resolved, and archived it mid-session, per
   `unified-trading-pm@4be5cf08f`.)
+
+- **na-eligibility-audit 2026-07-29**: KEEP-NA, valid — citing this doc's own 2026-07-23 operator ruling (frontmatter
+  `assigned_vm` comment, line 55: "DO NOT flip to `planning` directly") banning the `assigned_vm` flip, and
+  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s own precedent (line 111-112) explicitly excluding this doc
+  from its Phase-1 sweep on the same citation. Per the `/na-eligibility-audit` skill's "never re-litigate an established
+  ruling" rule, verdicted on the citation alone — not re-derived. **Deliberately out of scope for a stale-items sweep
+  this run too**: this is the sports master closeout hub, under active edit (entries dated through today) with prose-only
+  cross-todo sequencing warnings the skill's own confirmed-trap list calls out — a mechanical stale-item sweep here risks
+  colliding with concurrent edits or misjudging a mid-sequence item as stale. No content changes.
