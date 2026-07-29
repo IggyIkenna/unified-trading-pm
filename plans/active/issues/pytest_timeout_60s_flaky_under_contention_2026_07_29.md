@@ -158,3 +158,20 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   library) is outside the escalation's target repo (`unified-api-contracts`) and workspace-wide in blast radius, so it
   needs the same dedicated, tracked treatment the precedent issue gave its narrower fix. No code change needed on
   `unified-api-contracts` itself — LDR was already green by the time of investigation (content-sentinel-verified).
+- **2026-07-29** — 3rd confirmed instance, 2nd repo: `ldr_qg_failure` escalation `agt-218b27` for `deployment-api`
+  promotion PR #425 (`quality-gates-v2` run `30430147179`, `QG slice (tests)` job). Failing test:
+  `tests/unit/test_dockerfile_zombie_watchdog_packaging.py::TestVmZombieWatchdogPackaging::test_api_stage_copies_recovery_actuator_package`
+  — a pure Dockerfile-text-parsing test (`Path.read_text()` + `str.index()` on a small file, no I/O, no subprocess, no
+  network) hit `Failed: Timeout (>60.0s) from pytest-timeout.`, which crashed the pytest-xdist worker
+  (`worker_internal_error` → `AssertionError` in the controller's `worker_workerfinished`), failing the whole slice
+  despite `2709 passed, 9 skipped` in the same run. Same mechanism as the precedent entries: no legitimate code path in
+  this test can take anywhere near 60s: the wall-clock deadline fired under xdist-worker scheduling contention, not a
+  real hang. No deployment-api code/test fix applied — confirmed no action was needed: by the time of investigation (~5h
+  after the original escalation), the standard 15-min LDR→main promotion cycle had already regenerated fresh promotion
+  PRs (#426 closed unmerged, #427 merged 09:16:47Z, #428 merged 12:52:19Z) and `quality-gates-v2` on `live-defi-rollout`
+  is green on the latest run (`30456732896`, success). This is exactly the precedent's own outcome ("no action needed...
+  LDR already green on a later run") — strengthens todo 3's evidence that the flake is transient and self-clears on
+  retry, and that a 2nd repo (`deployment-api`, self-hosted-runner-backed per `8561af1`'s revert commit in its own
+  history) reproduces the same class independent of runner type. Still unresolved: todo 1 (the actual
+  `PYTEST_TIMEOUT_SECONDS` override + raised default) has not landed — every future occurrence still costs a full ~20min
+  CI cycle + a cicd-role escalation until it does.
