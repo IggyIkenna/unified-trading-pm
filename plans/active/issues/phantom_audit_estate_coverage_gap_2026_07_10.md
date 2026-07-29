@@ -169,3 +169,14 @@ noted here only so the two aren't conflated.
       widen `_BUCKET_KIND_MAP` to the full kind×AG matrix) instead of the hardcoded 5-entry map, so the other 42
       un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case) get phantom-checked too
       (see "Suggested fix" above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. Live-checked both cited code paths — the 5-entry
+  `_BUCKET_KIND_MAP` and the missing `--manifest-bucket` override are both still true as of today, so the finding is
+  current, not stale. The doc's own "Suggested fix" section names two competing implementation approaches (loop
+  `--manifest-bucket` per bucket vs. widen the map) without choosing one, plus an unresolved runtime/parallelism
+  scoping concern for a ~20-bucket fan-out — a genuine design/judgment call, not a fully bounded worker-determinable
+  outcome, despite being well-specified. No duplicate: the sibling `consolidator_throughput_backlog_monitor_2026_07_09.md`
+  plan explicitly scopes its own dynamic-enumeration work as separate (a cockpit feature, not this phantom-scan fix).
+  Correctly stays NA.

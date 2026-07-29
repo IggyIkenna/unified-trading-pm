@@ -26,7 +26,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
   ]
 created: 2026-07-26

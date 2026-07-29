@@ -70,7 +70,9 @@ source:
       live 2026-07-18 (research: 3 wired sites). Tracking issue
       `databento_default_executor_dns_starvation_risk_2026_07_17.md` is now STALE (fix landed) → doc-hygiene flip
       pending. (repo: market-tick-data-service)
-- [ ] [INFRA] P1. **Backfill-VM startup OOM rc137** (`mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`, open) + **OOM
+- [ ] [INFRA] P1. **Backfill-VM startup OOM rc137** (`plans/archive/2026_07/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`
+      — **CORRECTED 2026-07-29 (na-eligibility-audit): RESOLVED + ARCHIVED, not open** — this bundled sub-item is done,
+      the other 2 below are not) + **OOM
       remediation baked default** (`tradfi_backfill_oom_remediation_2026_06_24.md`, e2-highmem-4, verify) +
       **consolidator throughput/backlog monitor** (`consolidator_throughput_backlog_monitor_2026_07_09.md`). (repos:
       deployment-service, market-tick-data-service)

@@ -975,3 +975,8 @@ UAC) — no separate deploy needed here.
   write-back/verify-HOLD playbook as the YAHOO_FINANCE cleanup, HOLD proven across 6 real consolidator merge cycles.
   `market-tick-data-service@c24db4cf`. Full evidence in "Resolution — corporate_action_confirmed / earnings_result"
   above.
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. Read the full 978-line doc end-to-end. Of the original 7 todos,
+  6 are checked and shipped with hard evidence (commit SHAs, cloudbuild SUCCESS ids, live manifest re-queries,
+  HOLD-proven consolidator merge cycles) — not a doc padded with unflipped-but-done work. The single remaining open
+  checkbox is a DESIGN decision (whether real aggregated ohlcv_15m/24h TradFi bars are wanted) with no
+  worker-determinable answer. Correctly stays NA.

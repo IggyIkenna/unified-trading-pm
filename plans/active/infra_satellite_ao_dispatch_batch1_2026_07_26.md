@@ -44,7 +44,7 @@ related:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
     /plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,

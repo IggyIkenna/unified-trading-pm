@@ -41,7 +41,7 @@ related:
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
     /plans/active/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
+    /plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
     /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
 created: "2026-07-25"
@@ -139,11 +139,11 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`, single-leg todo already `[x]`; nothing to
       re-verify here). Gate: KRX-equities mismatch re-verified still resolved, and the FX KRW cell separately confirmed
       to have no registry-vs-adapter gap. (repos: instruments-service, market-tick-data-service)
-- **[DECISION] P2.** The `mvp_mode` dead-gate decision (wire a real caller, or remove the dead path) is a SEPARATE,
-  still-open design call, tracked in its own doc
-  (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) — genuinely operator-gated (already
-  classified "0 AO-eligible candidates" by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s own re-triage).
-  Non-dispatchable pointer, not a real checkbox (finding H) — not resolved by the verify todo above.
+- **[DECISION] P2.** ~~The `mvp_mode` dead-gate decision (wire a real caller, or remove the dead path) is a SEPARATE,
+  still-open design call~~ **CORRECTED 2026-07-29 (na-eligibility-audit): RESOLVED + ARCHIVED.** The referenced doc
+  (`plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) shipped direction (a) — wire a real
+  caller — via `market-tick-data-service@e7581b8b`+`@6bc9d676` (2026-07-10/11, both confirmed ancestors of
+  `origin/live-defi-rollout`), 2 days after filing. Not a live design call anymore; no action needed here.
 - [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
       `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`. Gate: every open finding in the 3 cited docs

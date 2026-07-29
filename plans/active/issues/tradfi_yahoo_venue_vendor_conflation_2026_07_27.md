@@ -120,3 +120,11 @@ classes (EQUITY looks like the clearest win, since a real exchange is normally r
 - [ ] [DATA] P2. **Run the Phase-0 investigation methodology** (reconcile real counts + trace consumers for a
       `venue="YAHOO"` dependency) before deciding whether/how to fix the vendor-as-venue stamp — per "Recommended next
       step," this has NOT been done yet.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. This doc's sole open todo is a genuine open-ended investigation,
+  not a bounded audit — the doc's own body flags three unresolved unknowns (whether resolvable per-instrument venue
+  identities exist for FX/INDEX classes, whether migration cost is worth it, and a downstream consumer-query-path
+  preservation requirement) that need exploration/judgment before a fix direction can even be chosen. Correctly stays
+  NA.

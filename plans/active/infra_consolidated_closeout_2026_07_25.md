@@ -119,8 +119,9 @@ the billing-waste pre-flight gate designed + shipped.
 **Sources**:
 [/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md](/plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md)
 (workspace-wide plan-checkbox/AI-days inventory dashboard) ·
-[ag_closeout_audit_rollout_2026_07_25.md](/plans/active/ag_closeout_audit_rollout_2026_07_25.md) (the meta-plan driving
-this whole `/ag-closeout-audit` rollout — self-referential, included for completeness) ·
+[ag_closeout_audit_rollout_2026_07_25.md](/plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md) (the
+meta-plan that drove this whole `/ag-closeout-audit` rollout, ARCHIVED 2026-07-29 — self-referential, included for
+completeness) ·
 [issues/autonomous_session_operator_decisions_2026_07_25.md](/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md)
 (operator-decisions log companion to the rollout plan) ·
 [issues/issue_docs_zero_checkbox_sweep_2026_07_24.md](/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md)

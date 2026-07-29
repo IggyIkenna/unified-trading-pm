@@ -24,7 +24,7 @@ related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"

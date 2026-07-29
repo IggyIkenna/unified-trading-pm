@@ -24,10 +24,10 @@ related:
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-07-29
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1
@@ -96,7 +96,11 @@ operator-notified 2026-07-21.
       `data_status_sports.py:42,74`); 58 are blocked by content-incomplete twins (canonical holds ~2-10% of the legacy
       row count). See that doc's own todos for the recommended follow-up (fold into the wipe / migrate-forward / repoint
       readers) — none of which is a fresh delete decision.
-- [ ] 3. [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — deployment-service@f8e885f
+- [x] 3. ✅ [INFRA] P1. **Run the orphan sweep for defi / cefi / tradfi / prediction on a VM** — **DONE, closed
+      2026-07-29 (na-eligibility-audit) — stale checkbox, objective already met in this doc's own later updates.**
+      All 4 sweeps completed: tradfi (2026-07-22), cefi (2026-07-22 later same day, 8,501,253-object walk,
+      `E_orphan_real=935,714`), prediction (2026-07-22 ~20:00 UTC COMPLETE), defi (2026-07-24 session-3, 6th attempt,
+      15,865,384 `orphan_class_E` rows — see "Update 2026-07-24 (session 3)" below). deployment-service@f8e885f
       shipped `launch-orphan-sweep-vm.sh` (registered `orphan-sweep-{ag}-` prefixes, SPOT, singleton-locked,
       tarball-freshness-checked) reusing the Tier-2 launcher machinery. First launch attempt 2026-07-22 04:22-04:23 UTC
       (`orphan-sweep-cefi-20260722-042242`, `-defi-20260722-042258`, `-tradfi-20260722-042317`,
@@ -511,3 +515,18 @@ landed before re-starting the investigation from scratch.
   minutes between the two reverify passes, consistent with ongoing production catch-up). Measured rate: ~227 objects/s
   (1000 objects per ~4.4s) — FASTER than cefi's observed ~173/s. **Projected total runtime ≈ 47 minutes**, not the
   originally-feared 20-30 hours. Continuing to track to the VERDICT line.
+
+- **na-eligibility-audit 2026-07-29**: RECLASSIFY, conflict-cleared — `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`; `assigned_role: data_engineering` (unchanged, already correct).
+  Closed stale todo 3 (objective already met per this doc's own later updates — all 4 asset_group sweeps completed).
+  Todos 6 (batched `record_cells()` for `backfill_orphan_class_e.py --apply`), 7 (14 cefi-in-defi-bucket objects,
+  copy+verify+register), and 8 (measure prediction's `B_legacy_duplicate` population) are each bounded/deterministic —
+  no open design judgment call, no `[OPERATOR]` tag needed (todo 7's actual delete decision is explicitly deferred to a
+  separate future todo). Conflict-check cleared against `instruments_master`'s active `assigned_vm: planning` docs (the
+  one same-script hit, `defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md`, is a different, already-shipped bug in
+  the same function — milestone-only overlap, not a competing claim) and against
+  `tradfi_consolidated_closeout_2026_07_18.md`'s digest (passive reference only). **Residual caveat, not blocking**: this
+  doc's own last Progress Log entry above ends mid-monitoring ("Continuing to track to the VERDICT line") for the defi
+  `--apply` backfill run (`backfill-orphan-e-defi-20260724-190637`, ~637,523 rows) — todo 3c is marked done citing only
+  the measurement sweep's completion, not this later apply run's final outcome, and no later doc in the corpus records
+  it. Whoever picks up todos 6-8 should spot-check that run's final state before assuming it's still relevant context.

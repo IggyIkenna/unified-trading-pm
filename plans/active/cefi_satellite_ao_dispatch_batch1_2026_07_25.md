@@ -35,7 +35,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,

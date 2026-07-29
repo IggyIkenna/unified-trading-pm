@@ -557,7 +557,8 @@ going forward. Still open, tracked as a todo below.
       `_canonical_pipeline_mode_prefixes()` which deliberately includes `Mode.REPLAY` "to avoid false-phantoming
       replay-captured cells." Fixed. Evidence: `market-data-processing-service@eed7b53`.
 
-- [ ] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
+- [x] ✅ [SCRIPT] P2. **CLOSED 2026-07-29 (na-eligibility-audit) — shipped, deleted-as-dead.** **Decide + act on the two
+      duplicate `raw_tick_data` path builders found during the `get_tick_data()`
       caller census** — `unified_trading_library/domain/standardized_service.py:125-127`
       (`f"raw_tick_data/by_date/day={date_str}/data_type={data_type}/{instrument}.parquet"`) and
       `unified_trading_library/domain/market_data_client.py:236`
@@ -568,6 +569,9 @@ going forward. Still open, tracked as a todo below.
       `market_data_client.py`'s class directly, so confirm whether ANY real service imports
       `MarketTickDataDomainClient`/`StandardizedService` before deciding delete-as-dead vs. fix-to-delegate. (repo:
       unified-trading-library)
+      Shipped `unified-trading-library@f4987fb8` (same commit as the PATH_REGISTRY cleanup below). Verified live:
+      `domain/market_data_client.py` deleted entirely; `domain/standardized_service.py` no longer contains any
+      `raw_tick_data` string.
 
 - [x] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —
       `_discover_instruments()` needed the same `pipeline_mode=`-aware prefix enumeration MDPS's
@@ -636,13 +640,21 @@ going forward. Still open, tracked as a todo below.
       already-verified-correct). Tracked for deletion in the dead-code-cleanup todo below. (repo:
       unified-trading-library, market-data-processing-service)
 
-- [ ] [SCRIPT] P2. **Delete or fix the 6 confirmed dead/duplicate path-construction sites** listed above
+- [ ] [SCRIPT] P2. **5 of 6 CLOSED 2026-07-29 (na-eligibility-audit) — 1 genuinely remains, checkbox stays open.**
+      **Delete or fix the 6 confirmed dead/duplicate path-construction sites** listed above
       (`OrchestrationSchedulingMixin._check_existing_outputs`, `get_raw_tick_path()`, `GCSDataSource`,
       `build_processed_candle_path()`, `adv.py::_candidate_paths`, `execution-service`'s duplicate
       `MarketDataLoader.build_path()` files) — CLAUDE.md's "delete deprecated code, no shims" rule; each is either truly
       dead (delete) or a landmine waiting for its first real caller (fix to match canonical shape first, or delete if
       genuinely superseded). Low individual risk, real hygiene value, cheap to batch together. (repo:
       market-data-processing-service, features-service, execution-service)
+      5 of 6 DONE, verified live: `OrchestrationSchedulingMixin._check_existing_outputs`, `get_raw_tick_path()`, and
+      `build_processed_candle_path()` all confirmed absent (`market-data-processing-service@c9f7d9f8`); `GCSDataSource`
+      (`app/core/data_source.py`) confirmed deleted (same commit); execution-service's duplicate
+      `MarketDataLoader.build_path()` files (`utils/loader.py` + `utils/io/loader.py`) confirmed deleted
+      (`execution-service@8039c3e5`). **STILL GENUINELY OPEN**: the 6th site,
+      `features-service/features_service/cross_instrument/app/calculators/adv.py::_candidate_paths()` — confirmed
+      unchanged (`_TIMEFRAME_24H` constant still defined/used), the wrong-timeframe-token bug is still live.
 
 - [x] [SCRIPT] P1. **Round 2 (DEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above (5 confirmed
       bugs incl. 1 CRITICAL-live, 4 confirmed dead/duplicate sites, 4 structural gaps flagged). New follow-up todos
@@ -760,3 +772,15 @@ entirely bounded, independent SCRIPT execution work — point-fixes for already-
 
 **Recommended next item**: any of the remaining P1s — none is individually higher-leverage than another at this point
 (the one structural fix that mattered, the footgun, is done); pick by repo/area convenience.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Of 13 open todos at Phase-1 read time, 5 were already
+  closed by the live shipping worker (concurrent activity — same-day commits, ~15:54) before this pass reached the
+  doc; verified those closures stayed intact. Closed 2 more directly (duplicate `raw_tick_data` builders, fully
+  shipped; the "6 dead sites" item, 5/6 shipped — partial closure, 6th genuinely still open). checkbox_count at
+  application time: 8 → 6 remain open (457, 475, 518, 540, 547, and the 6th-site remainder inside the partial item).
+  **Flag for a future pass, not acted on here**: this doc's own closing note explicitly frames its remaining work as
+  "entirely bounded, independent SCRIPT execution work... nobody blocking" — a RECLASSIFY candidate on its face, but
+  outside this audit's per-doc scope to re-litigate past the Phase 1 hunter's KEEP_NA_STALE_ITEMS verdict; worth a
+  fresh look next cycle.

@@ -16,7 +16,8 @@ summary:
   what e2-standard-4 (16GB) can hold, EVERY MTDS backfill VM across every asset_group is now at OOM risk, not just DeFi.
   This blocks mvp_backfill_defi_onchain_v10-002's G2 gate and may be silently killing other in-flight backfill VMs
   fleet-wide."
-status: open
+status: resolved
+last_updated: 2026-07-29
 nature: record
 asset_group: [defi, cefi, tradfi, sports]
 stage: [data]
@@ -34,12 +35,20 @@ assigned_vm: NA
 source: [mvp_backfill_defi_onchain_v10-002]
 parent_epic: defi_master
 priority: P0
-resolved_by:
+resolved_by: production-verified (dex_pools handler exit_code=0, lending_indices Morpho backfill healthy); archived
+  2026-07-29 na-eligibility-audit
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-29 (na-eligibility-audit) — RESOLVED.** All 21 todos done; the doc's own text declares the core
+> OOM mechanism (unscoped `ManifestFreshnessCache` reads) "RESOLVED and production-verified." The one prose-only
+> residual (whether to resume the paused manifest-consolidator scheduler) is independently confirmed done by a
+> dated-later (2026-07-22) direct `gcloud` check in `defi_consolidated_closeout_2026_07_18.md` ("scheduler SIGKILL is
+> RESOLVED (2026-07-14/15)," consolidator cron ENABLED running every 1 minute). Follow-on verification work forked
+> into `mtds_dex_pools_swaps_backfill_verification_2026_07_24.md`.
 
 ## What I found
 

@@ -275,3 +275,11 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
 - `EXCHANGE_CODE_TO_NAME` disagreement — full exhaustive diff in § "Exhaustive `EXCHANGE_CODE_TO_NAME` diff" above:
   `unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:552` vs
   `unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py:166`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. The single open checkbox is a genuine, well-evidenced
+  operator-gated judgment call — it requires resolving which of two disagreeing UAC `EXCHANGE_CODE_TO_NAME` dicts
+  (96 keys vs 61 keys, both confirmed present at the cited lines) should win, with a real 17-mismatch/46-universe-only/
+  11-symbology-only/33-match distribution. No SSOT already resolves this; a design/policy decision, not a checkable
+  fact. Correctly stays NA.

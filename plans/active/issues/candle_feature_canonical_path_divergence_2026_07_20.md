@@ -426,11 +426,17 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 - [x] 8. ✅ [DATA] P1. **Fix the bundled-name rule** (going-forward writer): `candle_leaf_filename` now decides the leaf
       by "is this write bundled by `underlying=`?" (→ `ticks.parquet`) rather than the data_type-in-set check. Shipped
       `mdps@752eaff`. **Repair/purge of EXISTING empty-stem objects is still pending P5/P7** (backward migration).
-- [ ] 9. [DATA] P1. **Split-brain candle layout** (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
+- [x] 9. ✅ [DATA] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — quantify step done.** **Split-brain candle layout**
+      (addendum iii-a): the same cefi day (2026-05-23) holds BOTH
       `pipeline_mode=…/timeframe=…` and `pipeline_mode`-less `timeframe=…` candle objects. Quantify the corpus-wide
       split (how many days / objects lack the `pipeline_mode=` segment) and fold it into the A/B/C migration — a
       `pipeline_mode`-blind vs `pipeline_mode`-aware reader see disjoint subsets. Part of the same operator ruling (todo
-      1), not an independent decision. **Pending P5 executor (dedup phase).**
+      1), not an independent decision.
+      P0 census 2026-07-22 produced exact per-AG `SPLIT_BRAIN_DUPLICATE` counts —
+      `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md:342-347`: prediction
+      1,165,458 (~100% split-brain); cefi 804,670; tradfi 724,214. The quantify step is done and already folded into
+      the A/B/C migration's own dedup phase (P5 executor) — that phase's own execution status is tracked separately,
+      not by this todo.
 - [x] 10. ✅ [SCRIPT] P1. Oracle extended for the candle namespace (`processed_candles/` — the features namespace
       remains out of scope, not attempted): `PROCESSED_CANDLES_PREFIX` + `_candle_path_violations()` +
       `require_candle_migration_complete=` on `canonical_path_violations`/`is_canonical`, validating the CORRECTED
@@ -540,3 +546,10 @@ new defect), now precisely quantified for the first time as a headline number ra
 verified clean across all 4 asset groups** — 0 orphans, 0 malformed objects, every residual fully accounted for (CEFI's
 149 = todo 19, TRADFI's ~7.1M = todo 3). **This issue doc stays `status: open`** — todos 2, 3, 7, 9, 13, 15, 16, 19
 remain genuinely open content-level work, distinct from the path-migration infra lift this phase completed.
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed todo 9 (split-brain quantify) with evidence — the
+  P0 census already produced the corpus-wide per-AG counts this todo asked for (prediction 1,165,458; cefi 804,670;
+  tradfi 724,214), already folded into the A/B/C migration's dedup phase. (Note: the "todos 2, 3, 7, 9..." list two
+  paragraphs above is now stale on the "9" — todo 9 is closed as of this pass, not a re-open of the phase verdict
+  above.) Remaining open todos (2, 3, 7, 13, 15, 16, 19) genuinely still open per Phase 1 review — not reclassified,
+  each is either content-level judgment work or lower-priority cleanup, correctly stays NA.

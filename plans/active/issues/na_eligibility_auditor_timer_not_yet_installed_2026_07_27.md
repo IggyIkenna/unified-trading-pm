@@ -20,7 +20,7 @@ related:
   [
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
   ]
 created: "2026-07-27"
 parent_epic: orchestrator_master

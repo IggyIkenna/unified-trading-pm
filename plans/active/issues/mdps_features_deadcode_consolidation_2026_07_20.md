@@ -71,11 +71,24 @@ launcher deletions. Other: operator free-text.
       `VM_SERVICE=market_data_processing_service+features_service` → ModuleNotFoundError; plan archived) but registered
       in `vm_prefix_registry.py:841-851` (5 rows). DELETE launcher + 5 rows OR finish the dispatcher branch (pending
       operator).
-- [ ] 3. [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted by `launch-mdps-sharded-backfill.sh:206` but registered
+      **CITATION FIX 2026-07-29 (na-eligibility-audit) — not closed, ownership transferred, still genuinely open.**
+      The underlying problem is now owned by a newer, more detailed doc:
+      `plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` — its own investigation
+      (after the separate tarball-install bug was fixed, `plans/archive/issues/mdps_features_live_launcher_shared_venv_dependency_conflict_2026_07_26.md`)
+      found the problem is DEEPER than a missing dispatcher branch: neither service's CLI actually supports a
+      "run all live for this asset_group" invocation shape the launcher assumes, so "finish the dispatcher branch"
+      alone (this item's stated option) cannot fully resolve it — real design work is still needed. Do not close this
+      checkbox from this doc; track further progress on the newer doc instead.
+- [x] ✅ 3. **CLOSED 2026-07-29 (na-eligibility-audit) — shipped.** [SCRIPT] P1. S1-c — `mdps-sports-<year>-<ts>` emitted
+      by `launch-mdps-sharded-backfill.sh:206` but registered
       in NEITHER `vm_prefix_registry.py` NOR `launcher_registry.py` → sports MDPS shard invisible to zombie watchdog +
       no relaunch binding; parity test misses it (both registries agree). Add `mdps-sports-` (bucket `_TICK_SPORTS`,
       EPHEMERAL_BATCH) to both, OR drop `sports` from the sharded launcher default set. Add a launcher→emitted-name
       test.
+      Shipped `deployment-service@c79f984c` ("fix(vm): wire SPOT preemption auto-recovery fleet-wide + register
+      mdps-sports- prefix"). Verified live: `data_pipeline_monitors/launcher_registry.py:122`
+      (`"mdps-sports-": "launch-mdps-sharded-backfill.sh"`) and `vm_prefix_registry.py:296`
+      (`"mdps-sports-": VmPrefixSpec(...)`, bucket `_TICK_SPORTS`, `EPHEMERAL_BATCH`) both present.
 - [ ] 4. [SCRIPT] P3. S2-a — trim `launch-features-backfill-vm.sh` to the redirect stub (lines 170-309 unreachable dead
       body; duplicate `lc_verify_tarball_freshness` 274-278/280-284; pre-consolidation module names in
       `_python_module_for`).
@@ -102,3 +115,13 @@ produced-but-unconsumed to VERIFY: TRADFI `ohlcv_1s`, DEFI `book_snapshot_5/mark
 captured → should be pinned False). These are handled by the `/data-pipeline-check-mdps` + `-features` skills' canonical
 
 - orphan checks (parent plan `data_pipeline_check_mdps_features_2026_07_20.md` todos 11/13).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed todo 3 (S1-c registration) with shipped-commit
+  evidence (`deployment-service@c79f984c`, both registry lines verified present). Did NOT close todo 2 (S1-b) as the
+  Phase 1 hunter suggested — verification found the underlying problem is genuinely still open and deeper than
+  originally scoped (real CLI-contract design work needed, per the newer owning doc
+  `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`); added a citation-fix note instead of a false
+  closure. Remaining todos (1, 2, 4-8) correctly stay open/NA — each is either pending an operator A/B/C decision or
+  genuine cleanup work.

@@ -358,9 +358,14 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
 ## Deferred — operator-gated (a ruling, not a re-triage, unblocks these)
 
 Unchanged and NOT re-surfaced here, per the skill's "do not re-ask an already-asked operator question":
-`issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (the `mvp_mode` wire-vs-delete DECISION — note that
+~~`issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (the `mvp_mode` wire-vs-delete DECISION — note that
 `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` is `status: active` and DOES carry a live re-check todo for
-it, which corrects batch3's own claim that this deferral "has no live owner");
+it, which corrects batch3's own claim that this deferral "has no live owner")~~ **CORRECTED 2026-07-29
+(na-eligibility-audit): both stale.** The `mvp_mode` doc is now `plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`
+— RESOLVED + ARCHIVED (direction (a) shipped `market-tick-data-service@e7581b8b`+`@6bc9d676`, 2026-07-10/11). Its own
+re-check finalize (`tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`) is ALSO archived now
+(`plans/archive/2026_07/...`, `status: complete`), not "active" as stated here — that re-check already ran and closed
+the loop. No live owner needed, nothing left to re-ask;
 `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (which `EXCHANGE_CODE_TO_NAME` is authoritative);
 `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (bucket deletes, hard-stop);
 `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s G1 retirement section-8 purge, its ES and ES_OPT MVP-cell

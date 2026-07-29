@@ -318,14 +318,22 @@ correctness.
       `--files 'market_tick_data_service/live/connectors/odds_api_ws.py market_tick_data_service/live/websocket_runner.py market_tick_data_service/live/_sports_tick_path.py tests/unit/test_odds_api_ws_connector.py tests/unit/test_odds_api_live_batch_shard_parity.py'`.
       (repo: market-tick-data-service)
 
-- [ ] [SCRIPT] P1. **Re-verify + ship MDPS Mode.REPLAY fix** (item 6) — still needs ONE clean completed QG run (3
+- [x] ✅ [SCRIPT] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — shipped.** **Re-verify + ship MDPS Mode.REPLAY fix**
+      (item 6) — still needs ONE clean completed QG run (3
       attempts so far: 1 real-but-likely-cross-contaminated codex-compliance failure, 1 queue-wait timeout, host
       contention throughout). Diff itself is correct and small (2 files, `orchestration_scanner.py` +
       `tests/unit/test_orchestration_scanner_coverage.py`) — not a code problem. (repo: market-data-processing-service)
+      Shipped `market-data-processing-service@eed7b532` ("fix: add Mode.REPLAY to MDPS's
+      _candidate_pipeline_mode_values()"), authored by slot-2 2026-07-29 15:54:56 +0100 — verified commit exists on
+      LDR.
 
-- [ ] [SCRIPT] P1. **Review + QG + ship MDPS dead-code deletion** (item 7) — the one fix in this batch not independently
+- [x] ✅ [SCRIPT] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — shipped.** **Review + QG + ship MDPS dead-code
+      deletion** (item 7) — the one fix in this batch not independently
       re-verified by the orchestrating session; read the diff and the agent's zero-callers re-verification claim before
       trusting it, then QG + ship. (repo: market-data-processing-service)
+      Shipped `market-data-processing-service@c9f7d9f8` ("fix: delete dead live-mode async-persistence adapter chain"),
+      authored by slot-2 2026-07-29 15:54:33 +0100, commit body states "Closes gcs_path_resolution_centralization_audit"
+      — verified commit exists on LDR.
 
 - [x] [SCRIPT] P1. **Ship features-service dependency_checker.py fix + flip the companion PM todo** (item 8) — DONE,
       `features-service@be36b42b`. **Also fixed a REAL bug found via QG** (not in the original scope): the
@@ -351,3 +359,10 @@ correctness.
 
 - [ ] [SCRIPT] P3. **Archive this doc** once every todo above is `[x]` and both parent audit docs are fully up to date.
       (repo: unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed items 6 and 7 with shipped-commit evidence
+  (`market-data-processing-service@eed7b532`, `@c9f7d9f8`, both authored by slot-2 ~15:54 the same day this doc was
+  filed). Items 4, 5, 9, plus the fold-evidence (P2) and self-archive (P3) todos remain genuinely open — not
+  reclassified, correctly stays NA (in-flight batch, judgment-adjacent verify/ship work).

@@ -10,6 +10,7 @@ status: open
 nature: record
 asset_group: tradfi
 created: 2026-07-21
+last_updated: 2026-07-29
 tags: [tradfi, manifest, canonical, writer-bug, data-correctness, backfill]
 related:
   [
@@ -22,9 +23,10 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]
 parent_epic: tradfi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
+assigned_role: data_engineering
 drift_direction: fix-code
 depends_on: []
 source:
@@ -239,7 +241,7 @@ do NOT warrant handing to the heavyweight historical content-recovery plan
 (`tradfi_manifest_content_recovery_ completion_2026_07_24.md`, which is explicitly for the frozen historical backlog,
 not a live regression), but real enough to need their own scoped root-cause-and-fix pass. See the follow-up todos below.
 
-## Follow-up (unchecked, added 2026-07-27 by this re-measurement — NOT auto-dispatched, `assigned_vm: NA` on this doc)
+## Follow-up (added 2026-07-27 by this re-measurement; reclassified to `assigned_vm: planning` 2026-07-29 — see Progress Log)
 
 - [ ] [DATA] P1. Root-cause + fix the live-path null-`instrument_id` write for tradfi equity/ETF (NASDAQ/NYSE,
       `ohlcv_1m`+`trades`) — find the call site writing these manifest rows (confirmed NOT the `tradfi-bf-*` backfill
@@ -301,3 +303,16 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   Four follow-up todos added above. Full working scripts (not committed — scratch analysis) used
   `unified_trading_library.get_storage_client().download_bytes()` +
   `resolve_bucket_name(kind="market-data", asset_group="tradfi")`, single-object reads only, no GCS walk.
+
+- **na-eligibility-audit 2026-07-29**: RECLASSIFY, conflict-cleared — `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`; added missing `assigned_role: data_engineering` (field was absent
+  on this doc). All 4 follow-up todos are checkable-fact / scoped-code-change / stated-done-when tasks with direct
+  successful AO-dispatch precedent in this doc's own history (`mtds@56d39325`; batch4's FX SPOT_PAIR investigate+fix
+  todo) — no GCS delete/`--apply`/VM launch, no `[OPERATOR]` tag needed. The "NOT auto-dispatched" note was the
+  discovering worker's own default-NA choice under the ask-before-creating rule, not a considered operator ruling.
+  Conflict-check cleared against `tradfi_master`'s active `assigned_vm: planning` docs — `tradfi_satellite_ao_dispatch_
+  batch2_2026_07_25.md` and `_batch4_2026_07_26.md` both only cite this doc as provenance/source (batch2's own todo is
+  investigate-only and explicitly points here for the fix; batch4's matching todo is already `[x]` done, citing this doc
+  by name as where the 4 follow-ups live) — no competing claim. Todo 3 flags a genuine judgment sub-question (Yahoo
+  venue-naming design) that stays explicitly out of scope per its own text; the bounded instrument_id-canonicalization
+  root cause is separable and is what's being dispatched.

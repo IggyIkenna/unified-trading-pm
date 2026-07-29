@@ -89,8 +89,20 @@ scope).
       and either fix the writer to leave `chain=""` for tradfi (mirrors the cefi `_canonical_manifest_venue_chain`
       precedent) or re-stamp the 7+7 rows if the writer fix alone would fragment row identity (same caution as the MTDS
       venue-as-chain precedent on this doc). Source: this doc.
-- [ ] [DATA] P3. Confirm whether `YAHOO_FINANCE` should be added to `VENUES_BY_ASSET_GROUP['tradfi']` (real, working
+- [x] ✅ [DATA] P3. **CLOSED 2026-07-29 (na-eligibility-audit) — resolved, not a venue.** Confirm whether `YAHOO_FINANCE`
+      should be added to `VENUES_BY_ASSET_GROUP['tradfi']` (real, working
       daily-source venue per the 2026-07-19 sourcing decision) or is a mis-stamped `source=` value leaking into the
       `venue` column. Source: this doc.
+      `unified-api-contracts/unified_api_contracts/registry/venue_adapter_keys.py:130` — "YAHOO_FINANCE removed
+      2026-07-15 — it was a source-as-venue modeling error, not a real venue (no adapter, no fetch code stamps
+      venue=YAHOO_FINANCE). Yahoo is a SOURCE; its rows land under real venues with source=yahoo." Confirmed: the
+      mis-stamp answer, not the register-as-venue answer.
 - [ ] [DIAG] P3. Identify what writes `instrument_type='UD'` in tradfi and either register it (if a real, distinct
       instrument type) or trace it as a mis-stamp. Source: this doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed the YAHOO_FINANCE venue-registration item with a
+  direct codex/registry citation (already resolved 2026-07-15 — Yahoo is a source, not a venue). The ESM0 chain-axis
+  item and the `instrument_type='UD'` item remain genuine open investigation work — not reclassified, correctly stay
+  NA.

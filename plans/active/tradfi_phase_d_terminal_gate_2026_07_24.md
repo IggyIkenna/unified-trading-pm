@@ -490,3 +490,13 @@ tracked elsewhere in this doc, which remains genuinely open.
 **End of forked content.** For MVP universe / ground-truth-verdict context, Phase A2/C (adapter correctness,
 data-status, honest-coverage) still tracked on the parent, and the full aggregated source-doc list, see
 `tradfi_consolidated_closeout_2026_07_18.md`.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. Both open checkboxes are explicitly self-gated on the same
+  unresolved SSOT contradiction as `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (two UAC
+  `EXCHANGE_CODE_TO_NAME` registries disagree, not cleanly invertible) — verified that blocker is still live (both
+  citing docs still `status: open`). Item 1 (P0 MVP backfill gate) is explicitly self-blocked in-doc pending an
+  operator design ruling; item 2 (P1) inherits the same gate. Neither is a worker-determinable task right now — a
+  genuine unresolved judgment call, not defaulted-to-NA busywork. No active `assigned_vm: planning` doc has extracted
+  either todo (the parent `tradfi_consolidated_closeout_2026_07_18.md` only digests them). Correctly stays NA.

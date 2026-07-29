@@ -46,6 +46,10 @@ depends_on: []
 
 ## 1. ICE qualifier variants — population is much bigger than previously known [RECOMMEND OPTION A]
 
+> **RULED 2026-07-28 (na-eligibility-audit 2026-07-29 confirms) — Option A.**
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md:233` carries "RULED 2026-07-28 — Option A (normalize
+> qualifier + map to base root)". Decision rendered; execution tracked on that doc's own todo, not here.
+
 **Pre-existing decision, not new** — this was already flagged `BLOCKED-OPERATOR-DECISION` in
 `tradfi_manifest_content_recovery_completion_2026_07_24.md` before this session started. What's new: this session's live
 catalogue + by-day-corpus full-sweep (2026-07-25) measured the REAL scale for the first time, and it is much larger than
@@ -73,6 +77,11 @@ maps for the bare root. ICE is NOT in the tradfi MVP universe, so none of this b
 - Other: your call.
 
 ## 2. Chain-manifest recovery — retire-phase 50,520-row `--apply` still needs your review
+
+> **DONE 2026-07-26 (na-eligibility-audit 2026-07-29 confirms).**
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md:934` — "Retire-phase candidate list reviewed + APPLIED —
+> DONE 2026-07-26 (operator go-ahead)." Fresh dry-run found 65,628 safe-to-retire (up from the 50,520 this item
+> originally cited); applied — 65,628 rows dropped in place, exact match verified.
 
 **Pre-existing, unchanged since 2026-07-22/23** — `tradfi_manifest_content_recovery_completion_2026_07_24.md`'s
 P1-OPERATOR-REVIEW todo. The register phase (1,545 rows) is done and durability-reverified by this session (still
@@ -138,10 +147,14 @@ ingested, NOT dispatched, nothing working them: `tradfi_satellite_ao_dispatch_ba
 `tradfi_consolidated_native_ao_extract_2026_07_25.md:19` (10), `…_finalize.md:12` (3) = **49 open todos, zero
 dispatched.**
 
-**Why it matters (not cosmetic).** batch3's own Deferred section defers
-`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` on the grounds that batch2_finalize "already owns the job of
-re-checking" it. That is only true if batch2_finalize is live. It is draft — so that deferral currently has **no live
-owner** (this run corrected the "(active)" mislabel in batch3 itself; the ownership gap is the residue).
+**Why it matters (not cosmetic, historical — the illustrating example below is now moot).** batch3's own Deferred
+section defers `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` on the grounds that batch2_finalize "already owns
+the job of re-checking" it. That is only true if batch2_finalize is live. It is draft — so that deferral currently has
+**no live owner** (this run corrected the "(active)" mislabel in batch3 itself; the ownership gap is the residue).
+**CORRECTED 2026-07-29 (na-eligibility-audit)**: the illustrating example itself is now moot —
+`tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` is RESOLVED + ARCHIVED (`plans/archive/2026_07/...`, direction
+(a) shipped `market-tick-data-service@e7581b8b`+`@6bc9d676`) — but the underlying batch2_finalize draft-status
+question (item 5 below) is a separate, still-genuinely-open concern, independent of this one example's resolution.
 
 **Options:**
 
@@ -181,6 +194,11 @@ with its linkage line. (Tradfi's side already holds — `tradfi_consolidated_clo
 - Other: your call.
 
 ## 7. An AO todo that launches a billed VM with neither `[OPERATOR]` nor a stated justification [RECOMMEND OPTION A]
+
+> **MOOT 2026-07-29 (na-eligibility-audit) — already shipped.**
+> `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:161` — the whole combined 7-item todo (incl. sub-item 1, the CME
+> backfill-for-any-real-gap launch this item was about) is `[x] ✅ DONE 2026-07-26 (slot-5, review)`. No decision
+> needed; it already executed.
 
 **The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md:141-147` (`assigned_vm: planning`)
 reads: "(1) Verify instruments-service CME (GLBX.MDP3) instrument-definition catalog manifest coverage … **launch a
@@ -226,6 +244,11 @@ children. Per the skill's Phase 4, where a near-complete remnant folds is operat
 
 ## 9. Three Deferred entries in the ACTIVE batch3 plan are truncated mid-sentence [RECOMMEND OPTION A]
 
+> **RESOLVED 2026-07-26 (na-eligibility-audit 2026-07-29 confirms).**
+> `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` (archived, `status: complete`) — "🟢 ARCHIVED 2026-07-26.
+> All 3 todos done: source-doc reconciliation (todo 1), Deferred re-check (todo 2, all 4 [entries re-verified])." The 3
+> truncated entries were re-emitted in full per Option A.
+
 **The two sides.** `plans/active/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` lines 208, 215 and 232 each end in a
 literal `...` mid-sentence — e.g. line 208: "…which is STILL OPEN (verified live:
 `status:...", line 232 (the file's last line): "…features-service@34a5d4ff + mdps@7d630a3, per the now-archived...". Against that, the `/ag-closeout-audit`
@@ -256,6 +279,11 @@ what each sentence was going to say, and rewriting another session's just-commit
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` and confirm 0 orphans in the SAME commit as any retag.
 
 ## 10. TIME-CRITICAL — the legacy-bucket delete was 2026-07-14, not 2026-07-06; your soft-delete check is more likely to succeed than the doc says [RECOMMEND OPTION A]
+
+> **RESOLVED 2026-07-26 (na-eligibility-audit 2026-07-29 confirms).**
+> `plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` is now
+> `status: resolved`, ARCHIVED — "🟢 RESOLVED 2026-07-26 — recovery window confirmed CLOSED (soft-delete restore
+> unavailable); operator decision: accept the loss." Option A's check was run; the outcome landed.
 
 **Appended 2026-07-26 by `/ag-closeout-audit` (tradfi tranche, autonomous pass). This is not a design question — it is
 one read-only command only you can run, plus a measured correction that changes its urgency.**
@@ -291,3 +319,12 @@ the 403-denied list call yields it). No available worker credential can close th
 
 **Recommendation: A.** It is a single read-only command, it is the only step that can still change the outcome, and
 every day narrows or closes it permanently.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Updated 5 of 10 numbered items in place with resolved
+  status + citations (items 1, 2, 7, 9, 10 — decisions rendered, work shipped, or checks completed since this doc was
+  filed). Neither of the 2 tracked checkboxes could be closed: item 3 (chain-bundle SSOT contradiction) and items 5, 6,
+  8 remain genuinely open operator-decision items not resolved by any citation found. Item 4 is purely informational
+  (confirms a hard-stop stayed correctly parked). Doc correctly stays NA — real remaining operator-decision content,
+  now more accurately reflecting which items still need a live answer.

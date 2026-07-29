@@ -62,9 +62,10 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-28
+last_updated: 2026-07-29
 parent_epic: tradfi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
@@ -245,3 +246,18 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   Confirmed NASDAQ/NYSE's share of the original alert is already resolved (separate, already-closed root cause). No fix
   implemented in this pass — this todo was investigate/diagnose-only per its own Done-when; remediation todos above are
   the follow-up.
+
+- **na-eligibility-audit 2026-07-29**: RECLASSIFY, conflict-cleared — `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`; `assigned_role: data_engineering` (unchanged, already correct).
+  All 4 todos have a worker-determinable outcome: todo 1 is a deterministic per-row check-then-correct, gated by
+  dry-run-default + snapshot-before-write (a stated safe-idempotent justification, same operation class already
+  AO-executed with no `[OPERATOR]` tag in the sibling `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` plan, line
+  ~339-357); todo 2 is a scoped code-hardening change with a clear acceptance test; todo 3's "if found" branch is
+  itself a checkable fact (denominator delta) with an already-established code-side fix target, not an open design
+  decision; todo 4 is a simple metric recompute. Conflict-check cleared: `tradfi_satellite_ao_dispatch_batch2_2026_07_
+  25.md` and `_batch4_2026_07_26.md` (the two `tradfi_master`-epic docs referencing this bug) only cite this doc as the
+  investigation's home — batch2's todo is explicitly investigate-only and points here for the fix, batch4's todo is
+  already `[x]` done. No competing claim. **Housekeeping note (not a blocker)**: todo 4's own text says "after todo 1
+  lands" but `depends_on`/`sequential` aren't set — todo 1 is P0 and todo 4 is P2 so priority ordering favors the
+  correct sequence in practice, but a worker could still pick up todo 4 early; not gating this since a premature
+  re-measurement is a cheap, non-destructive re-run, not a correctness risk.

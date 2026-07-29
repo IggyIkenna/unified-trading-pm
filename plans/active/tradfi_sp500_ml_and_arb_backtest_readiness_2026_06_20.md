@@ -88,7 +88,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       (data_type=ohlcv_1m). MDPS process VM launched for 2020-01-01→2026-06-23 (`mdps-backfill-tradfi-20260624-065912`).
       **Sequencing**: process → build-continuous → features (3 VMs in order). See todos below for build-continuous +
       features VM steps.
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26, was stale BLOCKED-OPERATOR-DECISION).** The
+- [x] ✅ [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26, was stale BLOCKED-OPERATOR-DECISION).** The
       operator-decision fork itself is resolved — partial fixes shipped 2026-06-28/29
       (`market-data-processing-service@cc63d1b`: MDPS's `TradfiTradesAdapter` now writes `data_type=ohlcv_1m`, fixing
       mismatch (1); `features-service@34a5d4ff`: fixed the blank-`instrument_id` manifest-lookup bug;
@@ -111,13 +111,25 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       actually lands at
       `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`.
       Follow-up: `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
-- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26)** Run `features-delta-one-service` for **tradfi/ES**
+      **CLOSED 2026-07-29 (na-eligibility-audit) — done-when satisfied.** The follow-up doc's own todos are `[x]`:
+      mismatch 2 fixed `market-data-processing-service@62a1255`, mismatch 4 fixed `features-service@65606d26`, MDPS
+      build-continuous run for ES completed + GCS/parquet-verified `market-data-processing-service@e9edb39`. All 3
+      commits confirmed present on LDR.
+- [x] ✅ [AGENT] P0. **CLOSED 2026-07-29 (na-eligibility-audit) — done-when satisfied (scope note below).**
+      **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26)** Run `features-delta-one-service` for **tradfi/ES**
       across its calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic).
       Confirm feature parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row
       (write-time). (Epic L245.) Same re-diagnosis as P0 item above: the operator-decision fork is resolved but the
       underlying pipeline is still unverified working — gated on the SAME mismatches (2)+(4) fix + build-continuous run
       above landing real `continuous_future` parquets for `underlying=ES` before this can run (and succeed rather than
       repeat the 3 prior failed VM attempts).
+      Real production VM `features-delta-one-tradfi-20260726-132027` landed 4 real feature parquet objects
+      (1m/5m/15m/1h), verified via direct GCS listing + parquet-content inspection, with 5 real manifest `captured`
+      rows (2026-07-26) — per
+      `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`'s own `[x]` todo. **Scope note**:
+      proven for one date (2024-06-17), not the full 2020-2026 history a real backtest eventually needs — the item's
+      literal done-when ("run X, confirm parquets land clean") is met; full-history backfill is separate follow-up
+      work not re-opened by this closure.
 - [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-29, was stale BLOCKED-UPSTREAM citing an unresolved MDPS
       gap).** Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
@@ -193,3 +205,14 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 backtest execute on real infra against real data and produce verified parquets / metrics — code-shipped is not
 operationally- shipped. The backtest-harness fidelity + the May-23 cutover decision are gated in master Group F, not
 here.
+
+## Progress Log (na-eligibility-audit)
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed 2 P0 items (MDPS build-continuous fix+run;
+  features-delta-one-service run for tradfi/ES) — both done-whens satisfied per already-completed, already-verified
+  work in the live tracker `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` (3 commits
+  verified present: `market-data-processing-service@62a1255`/`@e9edb39`, `features-service@65606d26`; real production
+  VM evidence for the delta-one run). Item 3 (features-volatility for ES/CBOE-VIX) confirmed still genuinely
+  BLOCKED-UPSTREAM as of today's own re-diagnosis — a different code path than delta-one, zero captures landed. Items
+  4-8 remain correctly gated/open — not reclassified (investigative engineering work with an uncertain path, correctly
+  NA rather than bounded).

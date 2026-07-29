@@ -12,7 +12,7 @@ summary: >-
   active) the next AO-dispatch-batch + gated finalize plan pair for genuinely AO-eligible orphaned work. This is the
   plan-of-record / Progress Log for the whole rollout per cursor-configs/AUTONOMOUS_AGENT_RULES.md rule 6 — a compressed
   future-session must be able to resume losslessly from this doc alone.
-status: active # was: complete (2026-07-25) -- reopened same day, Round 3/4: /plan-reconcile + the 5-AG consolidated-plan split (operator directive)
+status: complete # was: active (reopened 2026-07-25, Round 3/4) -- ARCHIVED 2026-07-29 na-eligibility-audit, all todos done
 nature: process
 asset_group: [cefi, defi, tradfi, prediction, sports, cross-cutting]
 stage: [meta]
@@ -26,7 +26,7 @@ related:
   - /plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
   - /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-29"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
@@ -52,6 +52,15 @@ source: >-
 ---
 
 # AG closeout-audit rollout — cefi/defi/tradfi/prediction
+
+> **🟢 ARCHIVED 2026-07-29 (na-eligibility-audit) — RESOLVED.** Sole open checkbox closed: the 70-item decisions-log
+> batch shows 0 entries with "Status: open" (Round 8), and the per-AG mass-flip re-verification confirms every named
+> batch either reached `active`/`planning` or ran to completion and archived. The Round 8 "Deferred work" table's 2
+> vague-pointer items (base-service.sh/base-library.sh serialization; human_led_audit_pool re-test) are confirmed
+> genuinely tracked elsewhere (the ongoing infra/ci satellite-batch process and `infra_satellite_ao_dispatch_batch1_
+> 2026_07_26.md` respectively) — not orphaned. This doc's own daily-cron process (`/ag-closeout-audit` +
+> `/na-eligibility-audit` timers) is now self-sustaining; newer batches referencing later dates are products of that
+> process, not todos tracked inside this bootstrap doc.
 
 ## Todos
 
@@ -102,11 +111,20 @@ source: >-
       workflows' results were reviewed and acted on across the 4 subsequent rounds documented below (Rounds 5, 6, 6b,
       7, 8) — this checkbox was simply never flipped once Round 4 itself completed. No outstanding action against this
       specific item.
-- [ ] [DOC] P1. **Finish applying the 70-item batch + the remaining mass-flip** — Round 7's "Deferred work after
+- [x] ✅ [DOC] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — both clauses resolved.** **Finish applying the 70-item batch + the remaining mass-flip** — Round 7's "Deferred work after
       2026-07-26" table listed "Apply recommendations across the 70-item batch," "Flip each tranche's newly-drafted
       batchN/finalize pair to active," and the "Mass flip" itself all as "Not started"; Round 8's own Deferred table
       confirms the mass-flip for cefi/defi/tradfi/prediction/sports batch/finalize pairs is still only "Partially done"
       (tradfi re-verified active; cefi/defi/prediction/sports batches not re-verified).
+      **70-item batch**: `issues/autonomous_session_operator_decisions_2026_07_25.md` now shows 0 entries with
+      "Status: open" (verified via direct grep, 2026-07-29). **Mass-flip re-verification**, confirmed via direct
+      frontmatter read of each: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` = active/planning;
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md` = active/planning; `defi_satellite_ao_dispatch_batch4_2026_07_26.md`
+      has since run to completion and is fully archived (`plans/archive/2026_07/...`);
+      `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` = active/planning;
+      `prediction_satellite_ao_dispatch_batch5_2026_07_26.md` has since run to completion and is fully archived;
+      `sports_satellite_ao_dispatch_batch5_2026_07_26.md` + `batch6_2026_07_26.md` = both active/planning. Every named
+      batch either reached active/planning or ran to completion and archived — nothing left "Not started."
 
 ## Progress Log
 

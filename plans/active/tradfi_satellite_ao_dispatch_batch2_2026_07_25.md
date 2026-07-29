@@ -487,11 +487,15 @@ genuinely unresolved (the competing claim has not shipped, been superseded, or b
 
 ## Deferred — operator-gated, not conflict-gated (unchanged, needs a ruling not a re-triage)
 
-`issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` — 0 AO-eligible candidates (the doc IS the undecided
+~~`issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` — 0 AO-eligible candidates (the doc IS the undecided
 `mvp_mode` design/judgment call); its 1 recorded conflict is against a closeout Phase A2 todo that also just restates
 the same undecided question rather than resolving it. This is genuinely operator-gated per the ag-closeout-audit skill's
 non-batchable taxonomy — no re-triage will produce a batch3 candidate here until the operator rules "wire a real caller"
-vs "remove the dead path."
+vs "remove the dead path."~~ **CORRECTED 2026-07-29 (na-eligibility-audit): this item is RESOLVED, not operator-gated
+anymore.** `plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` — direction (a), "wire a real
+caller," shipped `market-tick-data-service@e7581b8b`+`@6bc9d676` (2026-07-10/11) — 2 days after this doc was first
+filed, but this batch's own re-triage (dated 2026-07-25, two weeks later) never re-verified the code and relied on the
+issue doc's own unchanged checkbox state instead. Archived; no longer a live Deferred item.
 
 ## Still excluded — too-large-or-risky-for-a-batch (unchanged from batch1)
 

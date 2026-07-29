@@ -337,6 +337,20 @@ Two independent judgment calls neither this triage nor a single ≤30min fix sho
 - `gcloud scheduler jobs list/describe` for every candidate's owning scheduler (state, schedule, `userUpdateTime`)
   cross-checked against `deployment-service/terraform/gcp/*.tf` for IaC ownership.
 
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID — no changes applied. The Phase 1 classification pass flagged
+  this doc's sole todo as stale (superseded by a sibling doc's 2026-07-28 finding disproving the merge-side gap, plus
+  the second clause independently done). My own verification did not support closing it: the todo's own text already
+  carries an explicit, dated "RULED 2026-07-29 (operator direct answer) — proper rewrite, not a shrink-allowance flag"
+  — a SAME-DAY operator ruling that directly contradicts the "superseded/disproven" claim (a ruling made TODAY takes
+  precedence over an older automated finding, per this skill's own "never re-litigate an established ruling" guidance
+  — here applied in the opposite direction, refusing to litigate PAST an already-fresher ruling). The second clause's
+  citation (`data_pipeline_self_healing_completion_residual_2026_07_24.md`, "2026-07-26 entry") does not precisely
+  match on inspection — that doc documents dp-audit OOM fixes generally but no verbatim "dp-manifest-hygiene-changed"
+  reference was found. Left the checkbox untouched; this is genuine, correctly-open, freshly-directed work, not a
+  stale item.
+
 ## Not deep-dived this session (scoped out, noted for a future pass)
 
 - `uts-prod-dp-manifest-hygiene-changed` (fails daily, SIGKILL ~19s after "Event logging initialized" — a single Cloud

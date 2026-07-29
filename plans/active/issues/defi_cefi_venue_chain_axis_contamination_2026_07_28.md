@@ -124,3 +124,13 @@ in this read-only audit pass (time-bounded scope).
 - [ ] [DATA] P2. Once root-caused, fix the writer (if writer bug) or the consolidator (if TOCTOU regression) and
       re-stamp affected historical rows per the paired writer-fix + re-stamp pattern already used for the cefi
       venue-as-chain fix on this same plan. Source: this doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. All 3 open todos are open-ended root-cause DIAGNOSIS work with
+  two explicitly-unconfirmed candidate mechanisms (wrong-axis writer mis-stamp vs. cross-AG manifest-consolidator
+  TOCTOU bleed) — "trace which writer/consolidator path produces X" matches the dispatch-scope-eligibility rubric's
+  disqualifying "figure out why X happens" pattern, not a checkable fact. Todo 3 (fix) is explicitly gated on 1/2's
+  root-cause outcome and can't be scoped until that judgment call resolves. Confirmed as the live citation target in
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s reconciliation table — genuinely the owning home for
+  this finding. Correctly stays NA.

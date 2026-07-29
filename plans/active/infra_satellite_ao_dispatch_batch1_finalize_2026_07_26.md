@@ -25,7 +25,7 @@ related:
     /plans/active/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"

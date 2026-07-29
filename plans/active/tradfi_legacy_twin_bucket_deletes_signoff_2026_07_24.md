@@ -29,7 +29,7 @@ created: "2026-07-24"
 last_updated: 2026-07-28
 parent_epic: instruments_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -181,3 +181,18 @@ restated here.
   moved verbatim; no new work performed. The parent plan's remaining task (Folded-in-scope Layer-1 certify) moved to
   `tradfi_consolidated_closeout_2026_07_18.md` in the same pass, leaving the parent with 0 open todos — it was archived
   to `plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md`.
+
+- **na-eligibility-audit 2026-07-29 (RE-AUDIT)**: KEEP_NA_VALID — held over from RECLASSIFY. Fixed a pre-existing
+  hygiene mismatch: `execution_scope` was `orchestrator-agent` alongside `assigned_vm: NA` (should be `local-only` per
+  `task_template.md`'s canonical LOCAL-track pairing); corrected. Todo 1 (dry-run) remains a genuine duplicate of
+  `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 2nd todo, re-verified still open there — nothing to close.
+  Todo 2 (legacy-twin bucket deletes) is a well-specified, correctly-cited RECLASSIFY-shaped candidate under
+  delete-safety §3a's 2026-07-28 hard-stop-#2 extension — **but** a live, OPEN, P1 issue filed TODAY,
+  `plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`, shows this EXACT codex
+  clause being read inconsistently elsewhere in the corpus (a same-day cefi plan explicitly denies §3a reaches
+  hard-stop #2 at all), with an open `[OPERATOR]` todo on that doc asking which reading is authoritative — unresolved
+  as of this audit. Staying KEEP_NA_VALID rather than RECLASSIFY: flipping this doc to unattended AO dispatch today
+  risks an agent executing an irreversible-if-wrong hard-stop-#2 delete under a reading the operator hasn't confirmed
+  survives that live dispute. **Re-triage once the cefi contradiction resolves**: reading (a) confirmed → clean
+  RECLASSIFY (this todo's own 3-step check-then-conditionally-execute shape already satisfies it); reading (b)
+  confirmed → retag todo 2 explicitly `[OPERATOR]`.

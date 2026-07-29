@@ -468,8 +468,8 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       `tardis_csv_transport._get_parse_executor`)
     - **[AUDIT] P2.** Sweep the repo for other `run_in_executor(None, ...)` call sites doing network-blocking work
     - **[CODE] P2.** Consider an `aiodns`/`AsyncResolver` for aiohttp sessions
-  - [`plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
-    — 0 open todos (closed/archived/record-only)
+  - [`plans/archive/2026_07/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`](/plans/archive/2026_07/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md)
+    — 0 open todos (ARCHIVED 2026-07-29, na-eligibility-audit)
   - [`plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md`](/plans/active/issues/tradfi_backfill_oom_remediation_2026_06_24.md)
     - **[INFRA] P2.** After the next deployment-service image rebuild, drop the runtime `TRADFI_OHLCV_MACHINE` env
       override
@@ -727,12 +727,12 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
     - **[BACKEND] P1.** Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
   - [`plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
-    — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
-    - **[DECISION] P2.** Decide whether `mvp_mode` should ever be wired live
-    - **[SCRIPT] P2.** Implement the chosen direction (wire a real caller, or remove the dead path cleanly)
-    - **[SCRIPT] P2.** Ship via quickmerge, quality-gates green in both market-tick-data-service and
-      unified-api-contracts
+    — **CORRECTED 2026-07-29 (na-eligibility-audit): stale, this digest predates 2026-07-27's 4 new follow-up
+    todos.** Now `assigned_vm: planning` (reclassified 2026-07-29), 4 open todos — see that doc directly, not this
+    stale "0 open" digest line.
+  - [`plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
+    — **CORRECTED 2026-07-29 (na-eligibility-audit): RESOLVED + ARCHIVED**, 0 open todos (real, not digest-stale this
+    time) — direction (a) shipped `market-tick-data-service@e7581b8b`+`@6bc9d676`.
   - [`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
     - **[DATA] P1.** Re-measure and break down the 182,407 by (venue, data_type, year)
     - **[BACKEND] P1.** Teach the sentinel/enumerator path the discovery floor
@@ -782,3 +782,14 @@ cross-cutting checker bugs but is not yet fully green, blocked on the chain-bund
 native-todo AO-eligibility extract (`tradfi_consolidated_native_ao_extract_2026_07_25.md`) have since drafted
 AO-dispatchable candidates off this plan's satellite docs and native todos — all `status: draft`, pending operator
 activation.
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_DUPLICATE, citation confirmed correct — no checkbox edit needed.
+  This is the tranche's trimmed coordination-index umbrella; `grep -cE '^- \[ \]'` = 1, matching inventory. The sole
+  open checkbox (line ~250, per-MVP-cell backfill=paper=live wiring verify) is verbatim-extracted as todo 1 of the
+  ACTIVE `tradfi_consolidated_native_ao_extract_2026_07_25.md` (assigned_vm: planning — note the "all `status: draft`"
+  framing two paragraphs above is now stale on this one point, that plan is `active`, not `draft`), with a gated
+  finalize plan (`..._finalize.md`, `depends_on`+`gate_on_depends: true`) whose job is flipping this closeout's native
+  checkbox once the extract's 10 todos land — the textbook "checkbox never flipped to cite the extraction" pattern.
+  Separately, `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 8 already parks the orthogonal,
+  genuinely-unresolved question of whether to fold/archive this umbrella vs. keep it as the tranche linkage anchor —
+  not re-decided here, outside this audit's scope.

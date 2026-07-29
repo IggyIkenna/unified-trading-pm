@@ -126,3 +126,8 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
 - 2026-07-29 (slot 14, data_engineering): found + filed. Declined to execute `-006` as dispatched (documented in the
   parent plan's own Progress Log). Not yet root-caused in AO code — out of data_engineering craft scope; needs a
   backend_engineer pass per the Recommended decision above.
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. Both open todos are genuinely NA-appropriate: todo 1 [BACKEND] is
+  an open-ended root-cause investigation into a live dispatch-order bug in `agent-orchestrator`'s
+  `_wire_sequential_prereqs`, with 3 unverified hypotheses and the doc's own text stating this is a
+  judgment/investigation call, not a mechanical fix; todo 2 is a verify step gated on todo 1's fix landing. Correctly
+  stays NA.

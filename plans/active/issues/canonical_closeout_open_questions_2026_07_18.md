@@ -240,19 +240,41 @@ item holdings-only-done and drop the UTL/MTDS market-level migration.
       always specified. (2) C2b: resume the cefi Track-2 backfill — restore the operator's original 50.79% coverage
       acceptance; the autonomous reopen/reversal in `cefi_consolidated_closeout:119` is overridden. (repos:
       instruments-service, market-tick-data-service)
-- [ ] [DOCS] P2. **C2c/C2d/C2e — lower-stakes, docs-only follow-ups, still need action** (not covered by the A8/C2b
+- [x] ✅ [DOCS] P2. **CLOSED 2026-07-29 (na-eligibility-audit) — all 3 sub-items resolved.**
+      **C2c/C2d/C2e — lower-stakes, docs-only follow-ups** (not covered by the A8/C2b
       ruling above, which addressed only the two consequential forks): C2c — add a correction note to
       `instruments_completion_tracker:242` that its 1.38M/62.06% figure is the retired v1 grain, the real v2 backlog is
-      63.9M (open, tracked under Track-3); C2d — align `/codex/05-infrastructure/gcs-lifecycle-policies.md` with the
-      operator's 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store) and confirm the exact ladder;
+      63.9M (open, tracked under Track-3) — **DONE**, `instruments_completion_tracker_2026_07_06.md:276-280` carries
+      the exact "CORRECTION (2026-07-25, per issues/canonical_closeout_open_questions_2026_07_18.md C2c)" note
+      requested, verified present. C2d — align `/codex/05-infrastructure/gcs-lifecycle-policies.md` with the
+      operator's 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store) and confirm the exact ladder
+      — **DONE**, `gcs-lifecycle-policies.md:101-108` carries an "Updated 2026-07-19 (Wave-3 folds)" block documenting
+      the STANDARD→COLDLINE@60d default across the folded Group B buckets, verified present.
       C2e — checked 2026-07-29: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` is still `status: active`,
       `locked_by: live-defi-rollout` since 2026-06-20, and is NOT referenced anywhere under
       `plans/epics/sports_master.md` or its closeout docs — the 28-unmapped-league-tier work has not migrated elsewhere,
       this doc remains its genuine live home. No unlock/archive action needed; this item is resolved as "confirmed still
-      live," not parked.
+      live," not parked — the CHECK itself (not the underlying work) is what this sub-item asked for, and it's done.
+
+- [ ] [DOCS] P3. **C4 residual — verify/apply the small auto-fix checklist above** (§ "C4 — small auto-fixes
+      VERIFIED-provable"), or confirm each item already landed via a subsequent `/plan-reconcile` pass: cefi Track-4
+      deribit_options_chain repoint, cefi headline "+Track-6 alignment" phrasing, defi Track-6 distinct-values endpoint
+      repoint, data_completion_to_100 lease-mode phrasing, scratch_scenarios-13 "Drift" drop, tradfi A2 restoration
+      phrasing, codex_alignment_deviations `assigned_vm` (target doc now archived — likely moot, confirm), bucket_estate
+      ml count, strategy_master 53→59 count. na-eligibility-audit 2026-07-29 spot-checked 3 of ~10 items
+      (codex_alignment_deviations_2026_06_25.md is archived — target moot; C1's gcs_hive_partition_malformed doc is
+      archived — done; C5's 3 sampled docs are all archived — done) but did not exhaustively verify the remainder;
+      converted from prose to a real todo per the todos-not-prose rule so it isn't lost if this doc archives later.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS. Closed the A8/C2b todo's sibling C2c/C2d/C2e todo (all 3
+  sub-items independently confirmed resolved with citations). Checked the doc's dense prose sections before treating
+  0-open-checkboxes as archive-ready (this corpus's documented "prose-only remaining work" trap) — found C1 (archived,
+  confirmed), C3 (moot, its own text already notes GMX removal voided the comparison), C5-sample (archived, confirmed),
+  but C4's ~10-item small-fix checklist is unverified 11 days on. Converted C4 to a real `- [ ]` todo (was prose only)
+  rather than let it evaporate into an archived doc, and left this doc `status: open` — NOT archiving yet, since one
+  todo (C4 verification) is now open and unconfirmed. Re-triage for archival once C4 is verified or closed.
 - **2026-07-20** — Folded in the operator's D1/D2 rulings + the A6 GCS-delete correction: C2a `instrument_type` COLUMN
   casing RULED (D1, UPPERCASE, catalogue-authoritative), section D (market/event lending data_type keying) RULED (D2, no
   longer parked), and the A6 `dex_pools/`+`lending_indices/` prefix-delete authorization corrected/reversed after a live

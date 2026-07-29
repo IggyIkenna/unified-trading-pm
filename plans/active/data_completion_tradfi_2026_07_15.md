@@ -361,19 +361,22 @@ drift_direction: advance-code
       manifest_master. **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
 
-- [ ] [DATA] P0. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
+- [x] ✅ [DATA] P0. **CLOSED 2026-07-29 (na-eligibility-audit) — operator decision rendered, no longer pending.**
+      **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
       cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
       canonical copy is G7-verified. Without the flag, 2,008 legacy days orphan. Repo: market-tick-data-service.
       parent_epic: mtds_mdps_master. Provenance: orphan-coverage drill-down, slot-6 2026-06-08. **(MIGRATED FROM:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** — **AUDITED
-      2026-07-26, VIOLATION CONFIRMED, DATA-LOSS FINDING FILED — checkbox stays OPEN pending operator decision.**
+      2026-07-26, VIOLATION CONFIRMED, DATA-LOSS FINDING FILED.**
       Code-verified (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh`@`77cfcda`, the commit live at
       apply time) that the 2026-07-06 completing apply's launcher NEVER passes `--also-legacy`. The one attempt that did
       use the flag (`canonical-migration-tradfi-20260629-053023`) OOM-crashed after copying only ~1% (37k/3.8M
       processed_candles) and was never resumed with the flag. The legacy bucket
       (`market-data-tick-tradfi-central-element-323112`) is confirmed permanently deleted (ADC
-      `bucket.exists() ==     False`). Full evidence + recommended decision:
-      `issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`.
+      `bucket.exists() ==     False`). Full evidence + resolution:
+      `plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` — now
+      `status: resolved`, ARCHIVED — 🟢 RESOLVED 2026-07-26: recovery window confirmed CLOSED (soft-delete restore
+      unavailable), operator decision: accept the loss.
 
 - [x] ✅ [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of
       the old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
@@ -402,7 +405,8 @@ applies there with first-class IV data — folded into the coordinator ⑥/⑦ f
 preserves it; the seed must admit it). **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13
 per MTDS consolidation ruling.)**
 
-- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
+- [x] ✅ [INFRA] P2. **CLOSED 2026-07-29 (na-eligibility-audit)** — fixed same-day it was flagged.
+      **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
       → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
       (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
       `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
@@ -412,6 +416,8 @@ per MTDS consolidation ruling.)**
       pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
       schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
       **(MIGRATED FROM: `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      Fixed `unified-api-contracts@ca0a18c4` ("fix(test): pin schema-version-matrix test clock to reference date (kill
+      time-bomb)"), committed the same day this item was flagged — verified the commit exists on LDR.
 
 - [ ] ❌ [DATA] P1. ~~NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
       live `MASSIVE_API_KEY`). With the adapter shipped (above), run IS instrument capture with `--source massive` to
@@ -429,16 +435,25 @@ per MTDS consolidation ruling.)**
 
 ### From `macro_econ_adapter_scaffolds_2026_06_09.md` (archived 2026-07-13 -- Macro/alt-data free adapter scaffolds (fear_greed / CFTC COT / Baker Hughes / EIA))
 
-- [ ] [BLOCKED-CREDENTIALS] P1. EIA live fetch + cassette recording — needs the free EIA API key. CREDENTIAL APPROVAL
+- [x] ✅ [BLOCKED-CREDENTIALS] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — credential ask DECLINED, no longer
+      pending.** EIA live fetch + cassette recording — needs the free EIA API key. CREDENTIAL APPROVAL
       REQUEST filed in `ikenna_orchestrator/pings/slot_3.md` (vendor=EIA, free tier). Unblocks the live integration test
       (`tests/integration/test_macro_adapters_integration.py::test_eia_live`) + EIA backfill RUN. **(MIGRATED FROM:
       `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      `plans/active/data_pipeline_check_mdps_features_2026_07_20.md:981` — "RULED 2026-07-28: ... the sibling EIA
+      credential ask was explicitly DECLINED by the operator — do not register an EIA key." Not a code fix, not a
+      pending ask — a closed decision not to pursue this integration.
 
-- [ ] [OPERATOR-DECISION] P1. `altdata` home — revive `altdata` as a real `asset_group` vs model macro as a SHARED
-      cross-asset axis. **DEFERRED** — gates the GCS-shard write + manifest `record_captured` + bucket
+- [x] ✅ [OPERATOR-DECISION] P1. **CLOSED 2026-07-29 (na-eligibility-audit) — decision rendered.** `altdata` home —
+      revive `altdata` as a real `asset_group` vs model macro as a SHARED
+      cross-asset axis. ~~**DEFERRED**~~ — gates the GCS-shard write + manifest `record_captured` + bucket
       (`resolve_bucket_name`) wiring for all four sources (adapters today return `CanonicalOnChainMetric` lists; they do
       NOT yet write GCS shards because the asset_group/bucket/data_type is undecided). Provenance: audit Open Question
       #1. **(MIGRATED FROM: `macro_econ_adapter_scaffolds_2026_06_09.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      Ruled `plans/active/june_2026_vintage_audit_findings_2026_07_27.md:779` (interactive operator-gate session
+      2026-07-27, item 38): "altdata home = **shared cross-asset axis**, no new asset_group." The DECISION is closed;
+      the downstream GCS-shard/bucket wiring implementation is separate follow-up work, not re-opened by this checkbox
+      closure (see the next P2 item, still correctly open, gated on this decision — which has now landed).
 
 - [ ] [OPERATOR-DECISION] P2. Honest-coverage-gate registration — add the macro key to `expected_coverage.py` +
       `coverage_start` dates so macro can no longer be silently empty. **DEFERRED** — audit Phase 5. Depends on the
@@ -735,3 +750,12 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       ohlcv_15m/24h rows (any status) for 2026-07-13 through 07-15, consistent with this gap. Repo:
       market-data-processing-service + unified-api-contracts/instruments-service (seeding). Provenance: this Progress
       Log.
+
+- **na-eligibility-audit 2026-07-29 (RE-AUDIT)**: KEEP_NA_STALE_ITEMS. Re-audited past this doc's own stale 2026-07-27
+  marker per Phase 0's incremental-diff finding (substantively edited same-day 21:05 UTC, after the marker). Closed 4
+  stale items with evidence: R1 RUNBOOK `--also-legacy` (operator accepted the loss, issue doc resolved+archived);
+  PRE-EXISTING UAC QG RED (fixed same-day flagged, `unified-api-contracts@ca0a18c4`); BLOCKED-CREDENTIALS EIA
+  (operator explicitly DECLINED the credential ask, no longer pending); OPERATOR-DECISION altdata-home (ruled
+  2026-07-27, shared cross-asset axis). Remaining ~9 open items genuinely still open (gate-b Massive→Databento
+  re-feed gap, phantom-reconcile conflict-gated against a competing claim, ohlcv_15m/24h conversion design work) — not
+  reclassified, correctly stay NA pending real backfill/design work.

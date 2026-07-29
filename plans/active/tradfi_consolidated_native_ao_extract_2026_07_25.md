@@ -142,11 +142,12 @@ drift_direction: advance-code
 
 - [ ] [REVIEW] P2. **Verify the KRX equities intraday registry-vs-adapter mismatch fix still holds live, and separately
       confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap — audit-only.**
-      Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is
-      a genuine DESIGN call, already independently tracked as its own doc
-      (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` already classified "0 AO-eligible candidates... genuinely
-      operator-gated" — NOT included here, stays with that classification. The "IBKR `_SEC_TYPE_MAP`/Databento
+      Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo
+      was a DESIGN call, tracked as its own doc — **CORRECTED 2026-07-29 (na-eligibility-audit): now
+      `plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, RESOLVED + ARCHIVED**
+      (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s "0 AO-eligible... genuinely operator-gated" classification
+      is now stale) — still correctly excluded from THIS todo's scope (verify-only, not a reason to re-include it). The
+      "IBKR `_SEC_TYPE_MAP`/Databento
       `_resolve_product_root`/combo-leg" sub-clause is already DONE per the native todo's own text (single-leg todo
       `[x]` in `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) — nothing to re-verify there. What's
       left: (a) live-confirm the fix in the (now-archived, `status: resolved`)
@@ -302,9 +303,11 @@ See "Why 3 of the 13 native todos are NOT here" above for the full reasoning per
 
 Also excluded (embedded judgment/design calls, narrowed OUT of the 3 native todos that got drafted above but were
 originally bundled with real audit-eligible work): the `vix_features` 15m/24h-aggregation-writer DESIGN decision (stays
-in `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`) and the `mvp_mode` dead-gate
+in `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`) and ~~the `mvp_mode` dead-gate
 DESIGN decision (stays in `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, already classified "genuinely
-operator-gated" by batch2).
+operator-gated" by batch2)~~ — **CORRECTED 2026-07-29 (na-eligibility-audit): RESOLVED + ARCHIVED**, not a live design
+call — `plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, direction (a) shipped
+`market-tick-data-service@e7581b8b`+`@6bc9d676`.
 
 ## Reconciliation
 

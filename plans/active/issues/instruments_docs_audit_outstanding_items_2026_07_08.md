@@ -629,3 +629,15 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
   catalogue row + 2,373 manifest rows removed, backed up first, per-VM shards confirmed clean). Verified 0 remaining + a
   live post-backfill catalogue rebuild via the patched code mints 0 new phantom rows. Regression tests added in
   `instruments-service/tests/unit/scripts/`. Full evidence: `sports_manifest_unknown_league_id_2026_07_08.md`.
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID (manually classified — the automated hunter for this doc exhausted
+  its structured-output retry cap; classified directly instead). The doc's single open checkbox is a non-actionable
+  meta-pointer ("track the remaining corpus-wide outstanding items — see sections B-F") to dozens of items in prose
+  form across 5 asset groups, not a bounded dispatchable unit — the same "digest checkbox" trap task_template.md
+  finding H warns against. **Flagging one item for operator/main visibility, not fixed in this pass**: section D7
+  (sports-odds-ready publisher, P0, bumped from P1 TODAY 2026-07-29 after the blocking odds-api-key credential was
+  rotated) is a real, bounded, unowned fix (repoint FSS's subscriber default to the real persist-sports-odds topic
+  MTDS already publishes -- 4 files, no new MTDS code) currently invisible to AO dispatch because it's prose, not a
+  checkbox. Recommend forking it into its own dedicated tracked issue doc (mirroring this doc's own established
+  pattern for B1/B2/B4/B5/B6/C1) in a follow-up pass -- out of scope for this NA-classification audit to author
+  unilaterally. Doc correctly stays NA otherwise (genuine mix of operator-DECISION items, already-tracked-elsewhere
+  items, and prose-only remaining work).

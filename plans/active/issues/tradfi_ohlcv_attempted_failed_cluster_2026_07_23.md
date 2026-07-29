@@ -247,3 +247,10 @@ actions are different (see Todos).
       added yet — each needs its own narrowing-date + zero-new-activity verification before joining (noted as the
       follow-up in the registry module's own docstring). 10 tests (3 integration + 7 unit); `quality-gates.sh` green.
       Source: `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 8.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. The sole open checkbox ("Purge or reclassify the 1,242 dead CBOE
+  ohlcv_15m rows") is a genuine, already-flagged operator-gated judgment call, not a defaulted-to-NA oversight —
+  cross-checked against the 2 most recent tradfi ag-closeout-audit passes, which explicitly evaluated this exact
+  candidate and left it gated. Correctly stays NA.

@@ -26,7 +26,7 @@ related:
     /plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md,
     /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
-    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/task_template.md,
     /plans/PLAN_FORMAT.md,

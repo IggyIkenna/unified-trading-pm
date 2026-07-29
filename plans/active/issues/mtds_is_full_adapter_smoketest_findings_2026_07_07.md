@@ -643,3 +643,9 @@ the todos already promised.
         respectively — correctly not duplicated here (per this doc's own existing cross-reference).
     12. `TardisAdapter.download_csv()` crash outside full `ServiceBootstrap` — **already assessed** in this doc as
         "likely a test-harness artifact, not verified further (out of scope)" — not reopened.
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. Read the full 646-line doc end-to-end (not just the checkbox
+  count) — a well-maintained master smoke-test record with 8 dated Progress Log entries that re-verify prior claims
+  against live code/data before crediting them. Of the original 59 bugs + several decision items, all but 3 are closed
+  with real commit citations; the 3 remaining are genuine pending operator decisions / needs-repo-identification items,
+  not defaulted-to-NA oversights. Correctly stays NA.

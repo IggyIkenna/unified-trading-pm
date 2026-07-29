@@ -272,15 +272,37 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
       `partitioned_writer.py:291-293` populates `quote_asset`/`margin_type` for tradfi only, so W1 emits bare
       `underlying={U}/ticks.parquet` while W2 (`tardis_shared.py:861-870`) emits the canonical v6 tail. Include the
       `:198` vs `:201` casing divergence. Provenance: this audit § 3a.
-- [ ] 3. [DOCS] P2. instruments-service + market-tick-data-service: correct the three in-repo comments that assert the
-      IS live writer emits the hive layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
-      `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). Provenance: this audit § 3b.
+- [x] 3. ✅ [DOCS] P2. **CLOSED 2026-07-29 (na-eligibility-audit) — no longer stale.** instructions-service +
+      market-tick-data-service: correct the three in-repo comments that assert the IS live writer emits the hive
+      layout (`instrument_availability_paths.py:1-23`, `DEFI_INSTRUMENTS.md:642`,
+      `repair_tradfi_instrument_type_counts_2026_07_17.py:21`). `instrument_availability_hive_canonicalisation_2026_07_21.md`
+      todos 4/5 (both `[x]`) shipped the full-hive PREFIX fix `instruments-service@a9be6ce9` — the live writer now
+      genuinely emits the hive layout going forward, so the cited comments' claim is no longer false; the contradiction
+      closed via the code catching up to the docs, not a doc edit. Residual nuance (not this todo's scope): historical
+      flat objects are still `migration_pending` per that sibling plan's own still-open todos. Provenance: this audit §
+      3b.
 - [ ] 4. [SCRIPT] P2. unified-trading-pm: add a Phase-0 `-test-` assertion on the resolved WRITE bucket to
       `data-pipeline-check-mdps` and `data-pipeline-check-features`, closing their fail-open `--output-bucket` /
-      `--sink-bucket` mechanism. Provenance: this audit § 1.
+      `--sink-bucket` mechanism. Provenance: this audit § 1. **Tracked in
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`** (status: active, assigned_vm: planning, its
+      own todo citing "Source: backfill_smoke_write_path_canonical_audit_2026_07_20.md #4") — not yet executed as of
+      2026-07-29; its gated finalize plan reconciles this checkbox once that batch lands. Do not duplicate.
 - [ ] 5. [DOCS] P2. unified-trading-pm: add an explicit "never pass `--allow-live-prod-writes`" prohibition to
-      `data-pipeline-check-mtds/SKILL.md`. Provenance: this audit § 1a.
-- [ ] 6. [DATA] P3. instruments-service: decide whether `market_lifecycle` (`writers.py:495-501`,
-      `partition={"group","day","venue"}` → `group=/day=/venue=`) and `futures_contracts` (`writers.py:377-383`, flat
-      `day=/venue=`) are in the canonical shard grammar's scope; if so they inherit todo 1's fix. Provenance: this audit
-      § 2 rows 9-10.
+      `data-pipeline-check-mtds/SKILL.md`. Provenance: this audit § 1a. **Tracked in
+      `plans/active/infra_satellite_ao_dispatch_batch2_2026_07_27.md`** (status: active, assigned_vm: planning, its
+      own todo citing "Source: backfill_smoke_write_path_canonical_audit_2026_07_20.md #5") — not yet executed as of
+      2026-07-29; its gated finalize plan reconciles this checkbox once that batch lands. Do not duplicate.
+- [x] 6. ✅ [DATA] P3. **CLOSED 2026-07-29 (na-eligibility-audit) — resolved.** instruments-service: `market_lifecycle`
+      (`writers.py:495-501`) and `futures_contracts` (`writers.py:377-383`) ARE in the canonical shard grammar's
+      scope — `instrument_availability_hive_canonicalisation_2026_07_21.md` todos 4/5 shipped the full-hive PREFIX fix
+      for BOTH in the same commit as the `instrument_availability` fix, `instruments-service@a9be6ce9` (confirmed live
+      in `writers.py`'s `_instrument_availability_sink_for`/`_market_lifecycle_sink_for` helpers, "operator HARD RULE
+      R2, 2026-07-21"). Provenance: this audit § 2 rows 9-10.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_ITEMS/DUPLICATE (mixed). Closed todos 3 and 6 with commit
+  evidence (`instruments-service@a9be6ce9`) — both independently confirmed resolved. Fixed the citation on todos 4 and
+  5 — both verbatim-extracted into the active `infra_satellite_ao_dispatch_batch2_2026_07_27.md` (not yet executed;
+  its gated finalize plan owns reconciling these checkboxes) — left open, not duplicated. Doc stays `active`/NA;
+  not yet archivable (2 real open items remain, tracked elsewhere).

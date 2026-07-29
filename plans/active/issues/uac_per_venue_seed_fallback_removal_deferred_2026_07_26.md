@@ -32,11 +32,12 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
 created: 2026-07-26
-last_updated: "2026-07-26"
+last_updated: "2026-07-29"
 parent_epic: cefi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
+assigned_role: backend_engineer
 resolved_by:
 source: >-
   Operator ruling 2026-07-26 on the `[OPERATOR]` blast-radius-audit todo in `cefi_misc_audits_and_hygiene_2026_07_25.md`
@@ -110,3 +111,21 @@ Three real production call sites, deduped across worktree/branch clones:
 
 No code change ships from this doc. It exists so the deferred decision has a durable, re-discoverable home instead of
 dangling inside a closed plan todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-29**: RECLASSIFY, conflict-cleared — `assigned_vm: NA → planning`,
+  `execution_scope: local-only → orchestrator-agent`; added missing `assigned_role: backend_engineer` (field was absent
+  on this doc). The doc's sole open todo (wire live catalogue providers for DEFI/TRADFI/PREDICTION into
+  `deployment-api/venue_resolution.py`, mirroring the existing CEFI branch) is bounded, mechanical prerequisite code
+  work with a checkable done-when (provider wired + tests green + QG green) — the catalogue schema, bucket-naming
+  convention, and id-normalization logic already treat defi/tradfi/prediction uniformly with cefi, and the existing
+  `build_cefi_is_instruments_provider` is fail-open so a not-yet-populated catalog degrades safely. This is
+  independent of (not gated by) revisit-trigger items 2-3 (the CEFI/TRADFI G1-G5 gate closures) and independent of the
+  actual fallback-removal decision itself, which **stays parked as a genuine operator-gated judgment call** — this
+  doc remains its durable home even after the one todo dispatches; only the prerequisite wiring todo is reclassified.
+  No GCS delete/`--apply`/VM launch is involved. Conflict-check cleared against `cefi_master`'s active
+  `assigned_vm: planning` docs: `cefi_misc_audits_and_hygiene_2026_07_25.md` carries the BIGGER `[OPERATOR]` removal
+  decision (a different, still-correctly-parked item — not this prerequisite todo);
+  `cefi_consolidated_native_ao_extract_2026_07_25.md`'s matching todo is the blast-radius AUDIT that produced this doc
+  and is already `[x]` done, not a competing claim on the wiring work itself.

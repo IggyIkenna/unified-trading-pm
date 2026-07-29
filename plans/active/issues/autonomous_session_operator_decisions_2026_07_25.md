@@ -16,7 +16,7 @@ repos: [unified-trading-pm]
 scope: [engineer]
 tags: [autonomous, operator-decision, ag-closeout-audit]
 related:
-  - /plans/active/ag_closeout_audit_rollout_2026_07_25.md
+  - /plans/archive/2026_07/ag_closeout_audit_rollout_2026_07_25.md
 created: "2026-07-25"
 last_updated: "2026-07-26"
 parent_epic: agent_operating_framework_master

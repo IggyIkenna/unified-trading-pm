@@ -244,3 +244,8 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   with zero canonical structure across 6,180 rows/13 protocols; PERP-vs-PERPETUAL key/field mismatch across all 5
   on-chain-perp venues; PERPETUAL-gets-cleaned-but-FUTURE-doesn't on the same CeFi venue; an AAVE_V3-OPTIMISM
   misspelled-venue-token duplicate fragmenting 4 real rows). New P2 decision todo added; not actioned, just scoped.
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID. A genuine, still-live, operator-explicitly-staged
+  ("fixing will be in stages") 3-layer reconciliation gap. Of the originally-tracked todos, 2 are done with real
+  evidence; the remaining open items are decision/investigation-shaped, not bounded mechanical fixes. Correctly stays
+  NA.

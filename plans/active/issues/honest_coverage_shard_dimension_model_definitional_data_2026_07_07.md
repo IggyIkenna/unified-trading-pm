@@ -567,3 +567,14 @@ longer has its own download button.
 - **2026-07-07** — Filed from an operator design discussion following the ASTER/CEFI audit. Verified DERIBIT,
   DERIBIT-COMBO, and PREDICTION's `market_metadata` behavior against the live production API before writing this up —
   not asserted from code reading alone. No files edited.
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_STALE_DUPLICATE, citation confirmed correct — no edit needed. Re-read
+  this 570-line doc end-to-end (full re-read, correcting a prior sonnet hunter's 2026-07-27 under-read that found only
+  6 of the 14 open items on first pass). Of 13 currently-open items, 8 are genuinely judgment/operator-gated NA (design
+  calls, mockup-review-paced re-verify, unscoped consumer-impact audits); 5 are verbatim-duplicated in the ACTIVE
+  `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` (assigned_vm: planning), each citing this doc as Source —
+  4/5 already done there with cited commits, 1/5 still open. Reconciliation back onto this doc's checkboxes is
+  intentionally machine-gated via `instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md`
+  (`depends_on`+`gate_on_depends: true`) to fire atomically once all 5 land — correctly still dormant, the designed
+  mechanism working as intended, not an oversight. No premature partial-close applied. checkbox_count=13,
+  addressed_count=13, zero unaccounted.

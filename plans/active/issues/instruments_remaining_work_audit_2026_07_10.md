@@ -204,9 +204,11 @@ Real code fixes / features needed (not backfills, not pure doc drift).
     `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived 2026-07-28, resolved
     instruments-service@f7e64c54) 3 todos unchecked at the time of this audit: decide direction, implement, ship.
 
-12. **TradFi's mvp_mode fetch-time filter is unreachable dead code**
-    `plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
-    (operator decision wire-live-vs-delete, implement, ship).
+12. **TradFi's mvp_mode fetch-time filter is unreachable dead code** — **RESOLVED, see this doc's own §"What this
+    session DID" / Progress Log below (line ~946) — this headline entry was never back-corrected after the fix
+    landed.**
+    `plans/archive/2026_07/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` ~~Zero callers workspace-wide; 3 todos
+    (operator decision wire-live-vs-delete, implement, ship).~~ Fixed + archived 2026-07-29 (na-eligibility-audit).
 
 13. **Crypto-venue single-stock perps + tokenized stocks — equity basis/dispersion arb** (CODE_PATH primary; also
     strategy-design/execution-service scope) `plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md`
@@ -977,3 +979,18 @@ Script:
       monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
       Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
       `wf_60ecfd13-752` Progress Log entry).
+
+## Progress Log (continued)
+
+- **na-eligibility-audit 2026-07-29**: KEEP_NA_VALID (manually classified — the automated hunter for this doc returned
+  a malformed placeholder result, `{"path":"test","summary":"test"}`, caught by this audit's own completeness check and
+  discarded). This is a `doc_type: issue` discoverability index (own banner: "HISTORICAL SNAPSHOT as of 2026-07-10...
+  does not self-update... confirm current state against the cited source doc before acting on anything here"), not a
+  live tracker. Its sole checkbox ("Close the 6 remaining Headline P0s...") is a digest/meta-pointer to 6 SEPARATE,
+  already-independently-tracked source docs (Turbo API bug, CeFi monotonicity alerting, is-daily-enum crash, the
+  59-bug smoketest master record, the Instruments Completion Tracker, and TradFi's `tradfi_v9_stage1_finish` block),
+  not itself a single bounded/dispatchable unit — dispatching it as-is would hand a worker 6 unrelated pieces of real
+  work bundled under one title, the same "digest checkbox" trap `task_template.md` finding H warns against for
+  cross-doc references. The real work, if still open, lives in and should be assessed via each of those 6 source docs
+  individually (one, `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`, is independently in this same tradfi-
+  tranche audit run and was separately verdicted KEEP_NA_VALID). Correctly stays NA.
