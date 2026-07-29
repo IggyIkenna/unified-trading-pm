@@ -463,27 +463,30 @@ drift_direction: advance-code
       `FeaturesMvpRule`/`StrategiesMvpRule` land in UAC with a features-service data-status consumer reading them +
       passing tests, and (b) a real-data run against current prod data confirms the mvp ≤ could_exist ≤ all monotonicity
       holds with the correct MVP-cell readout, both cited with commit SHAs/evidence in the source doc's todo lines.
-- [ ] [DOCS] P1. **Reconcile the remaining pipeline_mode/live codex docs to the shipped M1-BREAKING + M5 contract**
-      (source doc §#7 doc-coherence audit, REMAINING scope). `pipeline_mode-and-batch-live-reconciliation.md`
-      (`codex/02-data/`) still frames the `live_websocket` alias as the CURRENT transitional live value ("until the
-      `live_<source>` object migration lands", lines ~73/95/117/164/174/211-213) and
-      `availability-manifest-and-data-status.md` still documents a `pipeline_mode=live_websocket` worked example (lines
-      ~1084-1107) as if it's the live standard — but the source doc's own GATE-0 log shows M1-BREAKING SHIPPED (0
-      `live_websocket`/`LIVE_WEBSOCKET` fleet-wide, confirmed by `rg "live_websocket|LIVE_WEBSOCKET" --type py`), so
-      these two docs now contradict the live system: update them to describe `live_<source>` as the standard and
-      `live_websocket` as a RETIRED/historical alias (do not delete the historical framing, mark it past-tense). Also
-      sweep `honest-absence-downstream-handling.md` and `external-data-always-available-rule.md` for the same stale
-      `pipeline_mode==source` / pre-source-aware assumptions the source doc's pre-audit (2026-06-05, agent E) flagged,
-      and check `CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md` for any stale `live_websocket`/pipeline_mode==source claims
-      (the `source=` provenance rule and pipeline_mode partition one-liners already look current — confirm, don't
-      rewrite if already correct). OUT OF SCOPE: per-AG plan-corpus sweep and CICD-scope items already flagged for
-      migration to the cicd plan — do not touch those. Source:
-      `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` §#7. Done when:
-      `rg -in "live_websocket" /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md /codex/02-data/availability-manifest-and-data-status.md /codex/02-data/honest-absence-downstream-handling.md /codex/02-data/external-data-always-available-rule.md`
-      shows only past-tense/retired-alias framing (no current-standard claims),
-      `CLAUDE.md`/`SUB_AGENT_MANDATORY_RULES.md` are confirmed to carry no contradicting claims (note in the commit if
-      no edit was needed), changes ship via quickmerge with a real commit sha, and the source doc's §#7 todo
-      (line 459) + the "REMAINING" note (line 473-476) are flipped `[x]` citing the sha.
+- [x] ✅ [DOCS] P1. **Reconcile the remaining pipeline_mode/live codex docs to the shipped M1-BREAKING + M5 contract**
+      (source doc §#7 doc-coherence audit, REMAINING scope). — **DONE 2026-07-29 (slot 12, data_engineering)**:
+      `pipeline-mode-and-batch-live-reconciliation.md` and `availability-manifest-and-data-status.md` (`codex/02-data/`)
+      reconciled to describe `live_<source>` as the current standard and `live_websocket` as a RETIRED/historical alias
+      (past-tense, framing preserved not deleted) — confirmed fleet-wide via
+      `rg "live_websocket|LIVE_WEBSOCKET" --type py` across market-tick-data-service, market-data-processing-service,
+      features-service, unified-api-contracts, unified-trading-library, instruments-service, deployment-service,
+      deployment-api: 0 hits. Also verified code-level truth directly (not just the plan's claim):
+      `unified_trading_library.pipeline_mode_resolver.resolve_pipeline_mode`'s live branch and
+      `unified_api_contracts...live_pipeline_mode_for_venue` both raise `ValueError` on an unsupported source — no
+      `LIVE_WEBSOCKET` fallback exists in code today. Swept `honest-absence-downstream-handling.md` and
+      `external-data-always-available-rule.md` for stale `pipeline_mode==source` / `live_websocket` assumptions: 0 hits,
+      no edit needed. Checked `CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md`: 0 hits, already current, no edit needed. The
+      `BATCH_HYPERLIQUID_REST`/`hyperliquid_rest` ref the source doc's REMAINING note also flagged in
+      `pipeline-mode-and-batch-live-reconciliation.md` was already past-tense/retired framing — no edit needed.
+      Verification (exact done-when command):
+      `rg -in "live_websocket" codex/02-data/pipeline-mode-and-batch-live-reconciliation.md codex/02-data/availability-manifest-and-data-status.md codex/02-data/honest-absence-downstream-handling.md codex/02-data/external-data-always-available-rule.md`
+      shows only past-tense/retired-alias framing (verified above). Shipped `unified-trading-pm@<pending-sha>` (SHA
+      filled in at commit time). The source doc's §#7 checkbox
+      (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`) is updated with this same evidence but
+      stays **unchecked** — its own REMAINING note also names the per-AG `*_manifest_canonicalisation` +
+      `pipeline_mode_partition_migration` + `data_source_provenance` + `tradfi_massive_dual_source` plan-corpus sweep,
+      which is explicitly OUT OF SCOPE for this batch1b item and has not been executed; flipping §#7 fully done here
+      would be a false-completion claim, so only THIS todo (the codex-docs sub-scope) is marked done.
 - [ ] [CODE] P2. features-service calendar batch orchestrator: register the two orphaned calculator groups — add
       `"yield_curve"` and `"economic_results"` to `CALENDAR_FEATURE_GROUPS` in
       `features_service/calendar/cli/handlers/batch_handler.py` (currently `["time_features", "economic_events"]`), and
