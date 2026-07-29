@@ -278,3 +278,66 @@ class TestBaselineRatchet:
         # Same workspace, one NEW synthetic orphan dispatch added — must fail.
         workspace2 = self._fixture(tmp_path / "v2", extra_orphan=True)
         assert self._run(monkeypatch, workspace2, baseline_path) == 1
+
+    # ── GHA ${{ }} expression handling ──────────────────────────────
+
+    def test_gha_expression_in_dispatch_url_is_captured(self, tmp_path: Path) -> None:
+        """A dispatch URL whose owner/repo are GHA ``${{ }}`` expressions
+        is matched (not silently excluded) and reported as unresolved."""
+        source = _make_repo(tmp_path, "source-repo")
+        _write_workflow(
+            source,
+            "dispatch.yml",
+            "on: {push: {branches: [main]}}\n"
+            "jobs:\n"
+            "  dispatch:\n"
+            "    steps:\n"
+            "      - run: |\n"
+            "          gh api repos/${{ github.repository_owner }}/${{ github.repository }}/dispatches \\\n"
+            "            -f event_type=schema-changed\n",
+        )
+        sites = MOD.scan_dispatch_sites(tmp_path)
+        gha_sites = [s for s in sites if s.owner is not None and "${{" in s.owner]
+        assert len(gha_sites) == 1, f"Expected 1 GHA-expression site, got {len(gha_sites)}"
+        assert gha_sites[0].owner == "${{ github.repository_owner }}"
+        assert gha_sites[0].repo == "${{ github.repository }}"
+        assert gha_sites[0].event_type == "schema-changed"
+
+    def test_gha_expression_owner_with_literal_repo(self, tmp_path: Path) -> None:
+        """Mixed GHA-expression owner + literal repo is handled."""
+        source = _make_repo(tmp_path, "source-repo")
+        _write_workflow(
+            source,
+            "dispatch.yml",
+            "on: {push: {branches: [main]}}\n"
+            "jobs:\n"
+            "  dispatch:\n"
+            "    steps:\n"
+            "      - run: |\n"
+            "          gh api repos/${{ github.repository_owner }}/deployment-service/dispatches \\\n"
+            "            -f event_type=service-deployed\n",
+        )
+        sites = MOD.scan_dispatch_sites(tmp_path)
+        gha_sites = [s for s in sites if s.owner is not None and "${{" in (s.owner or "")]
+        assert len(gha_sites) == 1
+        assert gha_sites[0].owner == "${{ github.repository_owner }}"
+        assert gha_sites[0].repo == "deployment-service"
+
+    def test_pure_literal_dispatch_still_works(self, tmp_path: Path) -> None:
+        """Literal owner/repo dispatch URLs still work (no regression)."""
+        source = _make_repo(tmp_path, "source-repo")
+        _write_workflow(
+            source,
+            "dispatch.yml",
+            "on: {push: {branches: [main]}}\n"
+            "jobs:\n"
+            "  dispatch:\n"
+            "    steps:\n"
+            "      - run: |\n"
+            "          gh api repos/IggyIkenna/deployment-service/dispatches \\\n"
+            "            -f event_type=service-deployed\n",
+        )
+        sites = MOD.scan_dispatch_sites(tmp_path)
+        literal_sites = [s for s in sites if s.owner == "IggyIkenna"]
+        assert len(literal_sites) == 1
+        assert literal_sites[0].repo == "deployment-service"
