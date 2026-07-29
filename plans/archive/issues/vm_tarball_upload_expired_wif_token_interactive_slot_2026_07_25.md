@@ -32,7 +32,7 @@ tags:
 related:
   [
     /codex/05-infrastructure/vm-tarball-deployment.md,
-    /plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md,
+    /plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md,
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-25

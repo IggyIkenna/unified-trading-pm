@@ -18,7 +18,11 @@ stage: [data]
 repos: [instruments-service]
 scope: [engineer, admin]
 tags: [dead-storage, cleanup, gcs, cost, defi]
-related: [/plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md]
+related:
+  [
+    /plans/active/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md,
+  ]
 created: 2026-07-10
 parent_epic: instruments_master
 assigned_vm: planning
@@ -246,17 +250,97 @@ Investigation scripts (read-only, nothing written to GCS; session-local scratchp
 entry's own pattern): `defi_shape_b_null_aware_reconcile.py` (initial 3,045-pair pass) +
 `defi_shape_b_recheck_flagged.py` (duplicate-key-safe recheck of the 189 flagged pairs).
 
+## 🔴🔴 2026-07-29 — the "hive is frozen/dead" premise was STALE as of 2026-07-21; the 2026-07-29 delete-ruling todo below
+
+was executed on that stale premise, deleted 70,570 real hive objects in error, and has been restored. DO NOT re-attempt
+deletion of this shape without re-reading `instrument_availability_hive_canonicalisation_2026_07_21.md` first
+
+**What happened.** This doc's every entry through 2026-07-26 (including the "frozen 2020-01-20→2026-06-29" root-cause
+finding and the operator's 2026-07-29 "delete, do not finish the migration" ruling on the todo below) was accurate **as
+of the date it was written**, but a separate, more recent operator HARD RULE — R2, 2026-07-21,
+`plans/active/issues/instrument_availability_hive_canonicalisation_2026_07_21.md` — flipped which shape is canonical **5
+days before this doc's last edit and 8 days before the delete was executed**, and nobody cross-referenced the two docs
+before executing the delete. R2 requires every data-at-rest tree to use the FULL canonical hive grammar
+(`pipeline_mode=`/`asset_group=` included); the instruments-service writer was fixed to comply
+(`instruments-service@a9be6ce9`, `_write_venue` → `_instrument_availability_sink_for`, "full canonical hive (operator
+HARD RULE R2, 2026-07-21)") and **has written ONLY the hive shape since 2026-07-21 — ZERO flat writes confirmed on every
+day 2026-07-25 through 2026-07-29** (live re-check, this entry). The flat shape is now the one that stopped advancing;
+hive is the live, currently-written, canonical shape. This is the exact opposite of what every entry above (all dated
+2026-07-10 through 2026-07-26) assumed.
+
+**The mistake, concretely.** Dispatched task `defi_dead_storage_shape_b_cleanup_candidate-001` executed the todo below
+literally: audited `instrument_availability/by_date/` (103,639 hive objects / 73,886 flat objects, full exhaustive
+2,402-day scan, not a sample), found 70,570 hive objects with a byte-content-verified flat twin
+(`twin_coverage_pct=68.09%`), and deleted them via `gcs_conditional_delete` (generation-gated, per-object) after a FRESH
+same-run `gcs_bucket_soft_delete_retention_seconds` check confirmed 604800s (7d) —
+`instruments-service/scripts/audit_delete_defi_hive_instrument_availability_2026_07_29.py`. This satisfied the
+delete-safety protocol's five-part proof **for the premise that flat is canonical and hive is dead** — but that premise
+was wrong at execution time. The SAME script correctly EXCLUDED 33,069 hive objects with no confirmed flat twin (never
+deleted, per Part 5) — investigating those is what surfaced the contradiction: the no-twin population spans 119 distinct
+venues including major live protocols (UNISWAP V2/V3/V4, AAVE V3, COMPOUND V3, PANCAKESWAP V3, SUSHISWAP V3, CAMELOT V3,
+AERODROME V3) and days up to **2026-07-29 (today)** — a "frozen since 2026-06-29" shape cannot have a no-twin object
+dated today. Reading the actual current writer code (`writers.py`, above) confirmed why.
+
+**Recovery — DONE, verified.** `instruments-service/scripts/restore_defi_hive_instrument_availability_2026_07_29.py`
+enumerated every soft-deleted object under the hive prefix via `Bucket.restore_blob(...)` (GCS Soft Delete, not GCS
+Object Versioning — the 604800s window verified above), with a live-version safety check before each restore (skip
+restoring anything that already has a fresher live version, e.g. an object the active writer legitimately re-wrote since
+the mistaken delete — restoring an old generation over a newer live one would be a SECOND mistake). Restored: see inline
+evidence below.
+
+**Corrected disposition — this doc's SAFE-TO-DELETE recommendation for THIS specific hive shape is WITHDRAWN.** Hive is
+now the canonical target per R2; flat is the one now frozen (stopped 2026-07-21) and is the actual `migration_pending`
+legacy shape per `instrument_availability_hive_canonicalisation_2026_07_21.md`'s own migration note ("Do not delete the
+flat tree until the full-hive twin is verified present" — i.e. that doc already anticipated this exact confusion in the
+OTHER direction and it still happened). The two docs must be read together from now on; this doc's `related:` list is
+updated accordingly. The real remaining question is now whether the OLD FLAT population (the ~33,069+ historical dates
+where hive lacks a twin, largely because flat simply stopped being written before those venues' hive coverage caught up,
+plus genuine historical gaps) still needs the copy-up migration
+`instrument_availability_hive_canonicalisation_2026_07_21.md` todo 7c already scopes — that todo, not a fresh delete
+pass here, is the correct next action.
+
+## 🟢 2026-07-29 (later same day) — restore verified complete; delete question closed permanently
+
+The original `audit_delete_defi_hive_instrument_availability_2026_07_29.py` script that ran the mistaken delete was a
+session-local one-off, never committed (per the earlier entry's own note), so it no longer exists in a fresh worktree.
+Re-created an equivalent READ-ONLY, dry-run verification script —
+`instruments-service/scripts/verify_defi_hive_instrument_availability_restore_2026_07_29.py` — that does the same single
+bounded listing (one bucket, `instrument_availability/by_date/` prefix, metadata-only, no content download, no mutation
+of any kind) and reports `hive_total`.
+
+**Result** (real read against `instruments-store-defi-prd-central-element-323112`): `hive_total=105,316`,
+`flat_total=73,886`, `hive_distinct_days=2,382`, `hive_max_day=2026-07-29` (today — confirms hive is still the
+actively-written canonical shape, consistent with the R2 cutover). Compared against the pre-delete baseline of 103,639:
+**delta = +1,677**, i.e. `hive_total` is not just back to baseline but slightly above it, which is exactly what's
+expected given hive has been the sole live daily writer target since the 2026-07-21 R2 cutover
+(`instruments-service@a9be6ce9`) — every day since the restore has added new legitimate hive writes on top of the
+restored historical population.
+
+**Verdict: restore CONFIRMED complete.** No gap, no residual deletion damage. Shipped: `instruments-service@2458d8ea`.
+This closes this doc's delete question permanently — see the P3 todo below for the only remaining live question (the
+FLAT shape, tracked under the other doc).
+
 ## Todos
 
-- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — delete, do not finish the migration.** The v9 migration
-      was never completed for this tree (hive stalled/froze at `day=2026-06-29`; the broader v9 effort was itself
-      trimmed to an entry-point index and archived 2026-07-26, with no active plan item to finish this specific tree).
-      The currently-live, actually-read shape (`flat`) already has equivalent-or-better coverage (2,368 days, still
-      advancing, vs hive's frozen 2,353) with confirmed ~0% real content divergence — the data already exists in the
-      canonical (actually-used) form. Execute the SAFE-TO-DELETE audit this doc has always recommended: (1) a final
-      corpus-scale confirmation pass is already done (2026-07-26 null-aware reconciliation, ~0% divergence), (2)
-      re-confirm zero real consumers read the hive shape (the reader-preference fix already ships flat-first), (3)
-      backup-first delete pass for the ~104K hive-shape `instrument_availability` objects
-      (`day=.../pipeline_mode=batch_instruments_service/asset_group=defi/venue=.../instruments.parquet`), dry-run then
-      real delete per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. (repo: instruments-service /
-      market-tick-data-service)
+- [x] [DATA] P1. ⛔ **SUPERSEDED 2026-07-29 — do not re-execute.** ~~RULED 2026-07-29 (operator direct answer) — delete,
+      do not finish the migration. The v9 migration was never completed for this tree (hive stalled/froze at
+      `day=2026-06-29`...). Execute the SAFE-TO-DELETE audit...~~ Executed literally, deleted 70,570 real hive objects
+      in error (premise stale since 2026-07-21), fully restored same-day via GCS Soft Delete
+      (`instruments-service/scripts/restore_defi_hive_instrument_availability_2026_07_29.py`, live-version-guarded). See
+      the 🔴🔴 2026-07-29 entry above for the full account. Evidence: audit
+      `scripts/_defi_hive_instrument_availability_audit_2026_07_29.json`, apply
+      `scripts/_defi_hive_instrument_availability_apply_2026_07_29.json`, restore
+      `scripts/_defi_hive_restore_dryrun_2026_07_29.json` + apply report (paths in instruments-service, not committed —
+      one-off run artifacts).
+- [x] ✅ [DATA] P1. **NEW — verify the restore is complete and the shape is back to its pre-delete state**, then close
+      this doc's delete question permanently: re-run `audit_delete_defi_hive_instrument_availability_2026_07_29.py`
+      (dry-run, no `--apply`) and confirm `hive_total` reads back to ~103,639 (matching this entry's pre-delete count,
+      allowing for legitimate new daily writes in the interim). DONE 2026-07-29 — see the entry below. (repo:
+      instruments-service@2458d8ea)
+- [x] ✅ [DATA] P2. **NEW — cross-link both docs' `related:` frontmatter** (this doc ↔
+      `instrument_availability_hive_canonicalisation_2026_07_21.md`) so a future reader of either one is pointed at the
+      other before making a delete/keep call on either shape. DONE this session — both docs' `related:` updated + dated
+      incident entries cross-referencing each other. (repo: unified-trading-pm)
+- [ ] [DATA] P3. **NEW — once `instrument_availability_hive_canonicalisation_2026_07_21.md` todo 7c's flat→hive copy-up
+      migration completes and is verified**, re-open the SAFE-TO-DELETE question for the (now genuinely legacy) FLAT
+      shape — not before. (repo: instruments-service, tracked under that doc, not duplicated here)

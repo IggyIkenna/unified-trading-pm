@@ -8,7 +8,14 @@ status: open
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, market-data-processing-service, market-tick-data-service]
+repos:
+  [
+    deployment-service,
+    market-data-processing-service,
+    market-tick-data-service,
+    unified-trading-library,
+    alerting-service,
+  ]
 scope: [engineer, admin]
 tags: [live-trading, observability, mtds, mdps, self-healing, infrastructure]
 related:
@@ -32,7 +39,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-29
 ---
 
 # Live-mode event sink → missing `{service_name}-events` Pub/Sub topics (all AGs)
@@ -88,10 +95,63 @@ Interim: `market-tick-data-service-events` created via gcloud (unmanaged by terr
 If Option B is chosen, add it (and the other `{service}-events`) to `pubsub_topic_names`; if Option A, delete it after
 the UTL fix lands.
 
+## Follow-up finding (2026-07-29) — the fix's own destination topic has no real subscriber
+
+While shipping the Option-A fix below, found that `service-lifecycle-events` (the topic every `ServiceBootstrap`-based
+live-mode service now publishes STARTED/STOPPED/FAILED to) has **zero subscribers today** — confirmed no code anywhere
+pulls `service-lifecycle-events-sub`. The one real, live lifecycle-event consumer, `alerting-service`'s
+`AlertSubscriber` (`alerting_service/subscribers/alert_subscriber.py:107-131`, `_ALERT_SUBSCRIPTIONS`), is wired to a
+**different, similarly-named legacy topic**: `lifecycle-events` (no "service-" prefix, subscription
+`lifecycle-events-sub`) — the same topic five other places already hardcode directly instead of going through
+`_sink_factory.py` (`e2e-testing/scripts/audit/_dp_common.py`,
+`deployment-service/deployment_service/data_pipeline_monitors/cli.py`,
+`unified-trading-library/unified_trading_library/manifest_consolidator.py`,
+`unified-trading-library/unified_trading_library/monitors/consolidator_liveness.py`,
+`unified-trading-library/unified_trading_library/cloud_interface/factory.py` `_build_event_sink`'s own
+`topic or "lifecycle-events"` default, `deployment-api/deployment_api/routes/deployment_digest.py`).
+
+Net effect: this fix achieves its stated goal (live-mode services stop crashing at startup) but the STARTED/STOPPED/
+FAILED events they now successfully publish sit unread in `service-lifecycle-events-sub` — they will NOT reach
+`#data-pipeline-alerts`/PagerDuty/Telegram the way `CONSOLIDATOR_DOWN` etc. already do on `lifecycle-events`. This is a
+genuine two-topic split (`service-lifecycle-events` vs `lifecycle-events`) that predates this fix but is now newly
+consequential once live services actually start publishing. Deciding which way to reconcile it (see options below) is a
+judgment call outside this todo's scope, not something to silently absorb into the code fix.
+
+Options:
+
+- **Option 1:** Add `service-lifecycle-events-sub` to `alerting-service`'s `_ALERT_SUBSCRIPTIONS` alongside
+  `lifecycle-events-sub` — cheapest, keeps both topics alive, no publisher changes.
+- **Option 2:** Point `_sink_factory.py`'s pubsub branch at the ALREADY-consumed `lifecycle-events` topic instead of
+  `service-lifecycle-events` — one shared topic, matches the live consumer today, but diverges from the
+  terraform/`InternalPubSubTopic.SERVICE_EVENTS` canonical name (would need its own terraform reconciliation). Both
+  `InternalPubSubTopic.SERVICE_EVENTS` (UAC enum, canonical) and the ad-hoc `lifecycle-events` string (5 hardcoded call
+  sites) currently coexist — this option requires picking one as the real SSOT and migrating the other's callers.
+- **Option 3:** Accept the gap for now (live STARTED/STOPPED/FAILED telemetry reaching Slack was never this fix's stated
+  goal — only "don't crash on startup" was) and revisit when/if live-mode lifecycle alerting is actually needed.
+
+- [ ] [OPERATOR] P2. Decide + apply the reconciliation between `service-lifecycle-events` (canonical,
+      `InternalPubSubTopic.SERVICE_EVENTS`, terraform-provisioned, zero subscribers) and `lifecycle-events` (legacy,
+      unmanaged, the one real `alerting-service` consumer + 5 hardcoded publishers) per one of the 3 options above.
+      (repos: alerting-service, unified-trading-library, deployment-service)
+
 ## Todos
 
-- [ ] [CODE] P2. **RULED 2026-07-29 (operator direct answer) — Option A.** Fix UTL `_sink_factory.py` to publish
+- [x] [CODE] P2. **RULED 2026-07-29 (operator direct answer) — Option A.** Fix UTL `_sink_factory.py` to publish
       lifecycle events to the existing shared `service-lifecycle-events` topic instead of `f"{service_name}-events"`.
       One UTL change unblocks all services' live mode; no per-service terraform topics needed. Once landed, delete the
       interim unmanaged `market-tick-data-service-events` gcloud topic (created before the convention was decided).
-      (repo: unified-trading-library)
+      (repo: unified-trading-library) — ✅ unified-trading-library@9bdcf7a2. `build_event_sink()`'s pubsub branch now
+      publishes to `InternalPubSubTopic.SERVICE_EVENTS` ("service-lifecycle-events") instead of
+      `f"{service_name}-events"`; new `tests/unit/test_sink_factory.py` (4 tests) pins the exact topic value + confirms
+      it's identical across services. Full `quality-gates.sh` green (185s). See the follow-up finding above for the
+      interim-topic-deletion + alerting-service-subscription gap this surfaced — NOT done in this commit, tracked as a
+      separate todo pending an operator decision.
+
+- [ ] [INFRA] P3. Once the Option-A fix above has been verified running (a live-mode service actually restarted with it
+      and published without a 404/crash — check via
+      `gcloud pubsub topics list-subscriptions     service-lifecycle-events` showing message throughput, or absence of a
+      fresh crash in deployment logs), delete the interim unmanaged `market-tick-data-service-events` Pub/Sub topic
+      (gcloud, not terraform-managed) AND remove the now-dangling
+      `google_pubsub_topic_iam_member.t1_batch_market_tick_events_publisher` Terraform resource
+      (`deployment-service/terraform/gcp/qg_snapshot_scheduler.tf:53-58`) that grants IAM on it (a `terraform apply`
+      after the topic is gone will otherwise 404 on that resource). (repos: deployment-service)

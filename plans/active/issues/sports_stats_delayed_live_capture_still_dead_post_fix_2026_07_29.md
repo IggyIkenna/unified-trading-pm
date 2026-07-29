@@ -37,6 +37,7 @@ related:
   [
     /plans/archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-29
 priority: P0
@@ -270,7 +271,14 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: once item-2 lands AND a day-plus has elapsed since
       ITS redeploy (not item-1's), re-run Step 3 for the real verdict; if item-2 is deprioritized/not attempted, wait
       out the day-plus from item-1's `01:30:49Z` cutoff instead (i.e. not before `2026-07-30T01:31Z`) before
-      re-checking.
+      re-checking. — **Checked 2026-07-29T05:02Z (slot 10, data_engineering): still premature, both gates open, no full
+      re-verification attempted (would be redundant with the 03:50Z-04:00Z checkpoint above)**. Confirmed item-2 has NOT
+      landed: `git log --since="2026-07-29T00:00:00Z" -- '*urdi_reference_provider*' '*active_venues*'` in
+      instruments-service returns zero commits. Current time (`05:02Z`) is well before the day-plus fallback gate
+      (`2026-07-30T01:31Z`). Releasing via `/skip-current-task {"reason_code": "GATED"}` without re-running Step 3 — the
+      checkpoint 65min ago already established "unchanged, as expected this early" and neither gate condition has moved
+      since. Next dispatch: same condition as above (item-2 lands, or `2026-07-30T01:31Z` passes) — until then, a bare
+      item-2-landed check (no manifest re-query) is enough to confirm still-gated.
 - [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real

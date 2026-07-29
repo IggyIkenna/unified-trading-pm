@@ -395,6 +395,16 @@ unresolved operator decision.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide whether `phase=="pipeline"` venues count toward the `defi` `completeness_pct` denominator,
-      and run the 90-day backfill for the 6 shipped venues** — doc stays open pending the operator ruling on the
-      denominator question and the not-yet-run 90-day backfill for ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER.
+- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — both: count them AND build out the real IS universe.**
+      Count `phase=="pipeline"` venues with confirmed real capture toward the `defi` `completeness_pct` denominator
+      (data-availability standard) — flip `DEFI_VENUE_PHASE` for the qualifying venues to `"live"`, wire
+      `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED`'s 6 venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER) into
+      `VENUES_BY_ASSET_GROUP["defi"]`, and re-measure `completeness_pct` before/after (report the delta). This is not
+      just a metric-counting flip — it requires the venues to actually earn "live" status: (1) an IS adapter/universe
+      entry for each (not just the MTDS-side capture that exists today), (2) confirm the daily production cron writes
+      real per-day shards going forward (not the one-off manual-invocation samples this doc's investigation found), (3)
+      run the 90-day historical backfill for the 6 shipped venues once the cron is confirmed healthy, (4) register each
+      in the instruments catalogue so downstream consumers see a complete universe, not just a manifest-side capture
+      stream. Full completion — no partial rollout (count-only without the underlying IS/cron/catalogue work would
+      re-create the same false-"already working" premise this doc's adversarial verify caught earlier). (repos:
+      unified-api-contracts, instruments-service, market-tick-data-service)

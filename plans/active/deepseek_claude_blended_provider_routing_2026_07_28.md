@@ -144,6 +144,123 @@ real DeepSeek account is registered and smoke-tested end to end — todos 6/7 be
 - **Deliberately NOT committed/pushed** — operator instruction: local-only until the DeepSeek account is actually
   registered in `data/config/accounts.json` and smoke-tested (`claude -p 'reply AUTH_OK'`), per todos 6/7 below.
 
+**2026-07-29 — DeepSeek account registered + smoke-tested locally; full local pilot dispatch IN PROGRESS (interim
+update, not final).**
+
+- `~/.claude-accounts/deepseek-v4-pro.env` created by the operator (shape verified: `unset CLAUDE_CODE_OAUTH_TOKEN` +
+  `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN`/`ANTHROPIC_MODEL=deepseek-v4-pro`/`CLAUDE_ACCOUNT_LABEL`, perms `600`) —
+  verified without ever displaying the key value.
+- `deepseek-v4-pro` entry added to the LOCAL `agent-orchestrator/data/config/accounts.json` (`provider: "deepseek"`,
+  `tier: "api"`) and confirmed it round-trips through the real `AccountDef`/`load_accounts()` loader. **This file is
+  gitignored (per-VM, never shipped via git)** — so this registration has no commit/sha to cite; it's real local-machine
+  state, verified by re-reading it back through the loader, not a shipped artifact.
+- First smoke test hit `402 Insufficient Balance` (DeepSeek's `granted_balance` was genuinely `$0.00` for this account —
+  confirmed via `GET /user/balance` directly, not assumed; the "new accounts get a free token grant" claim circulating
+  on third-party blog posts is not corroborated by DeepSeek's own docs and did not apply here). Operator topped up
+  **$5** on platform.deepseek.com; re-queried balance (`topped_up_balance: 5.00`, `is_available: true`) before retrying.
+- `claude -p 'reply AUTH_OK' --model deepseek-v4-pro` (sourcing the env file) returned **`AUTH_OK confirmed`** —
+  confirms the `ANTHROPIC_BASE_URL`/`ANTHROPIC_AUTH_TOKEN` routing genuinely reaches DeepSeek's Anthropic-compatible
+  endpoint end to end via the real `claude` CLI binary. (Original todo 3's done-condition specified "on the orchestrator
+  VM" — this verified it locally instead, consistent with the standing local-only-until-shipped instruction; re-verify
+  on the real VM as part of the eventual rollout.)
+- **Operator correction, on point**: a CLI smoke test alone doesn't prove the _routing_ — `select_account_for_spawn()`
+  and the AutoSpawn dispatch path were still unexercised. Ran a full local integration pilot instead: a throwaway 6-todo
+  plan (`deepseek_local_pilot_smoke_2026_07_29.md`, never pushed anywhere) dispatched through an isolated local backend
+  instance — isolated SQLite DB, `ORCHESTRATOR_VM_ID` scoped to a throwaway id (so it can never ingest any real corpus
+  plan), slots 1-5 explicitly **paused** and the review-agent loop **disabled** (`ORCHESTRATOR_REVIEW_SLOTS=none`) to
+  keep this instance away from any live interactive slot, dispatching only onto the operator-designated spare slots
+  21-30. Confirmed via direct log evidence: real spawns through the actual `select_account_for_spawn()` → `_do_spawn()`
+  path, e.g. `AutoSpawnLoop: spawned slot=22 account=deepseek-v4-pro`, `slot=24 account=deepseek-v4-pro` — real tmux
+  sessions, real API calls, both providers exercised concurrently on genuine-reasoning tasks (not blind shell echoes).
+  **Result**: all 6 tasks completed with genuine, verified-correct reasoning output (25th prime = 97, 17! =
+  355,687,428,096,000, 3777 = `0xEC1`/binary `111011000001`, 45 days = 3,888,000 seconds, a topical haiku, an accurate
+  CAP-theorem paragraph — spot-checked by hand, all correct). Slot 22 spawned first (`account=deepseek-v4-pro`) and
+  claimed/finished all 6 sequentially within its one session; slot 24 spawned independently ~76s later (also
+  `deepseek-v4-pro`) while 22 was still working — genuine concurrent execution via the real dispatch path, not two
+  sequential runs. **No live Claude-side spawn happened this run** — not a code issue: all 4 real Claude Max accounts
+  are currently genuinely rate-limited (confirmed via real `429` responses from `usage_poller`'s own probe, independent
+  of this test, with account-reported cooldowns ranging ~18h to ~5 days) — every "should route to Claude" outcome from
+  the round-robin split had zero headroom and correctly fell through to no-spawn-this-tick, while every "should route to
+  DeepSeek" outcome succeeded. Total real DeepSeek spend for the full pilot: **$0.09**.
+- **Second safety incident, self-caused, contained**: `config.server_url()` reads `ORCHESTRATOR_SERVER_URL` (not
+  `ORCHESTRATOR_PORT` — a separate field entirely), which I never set, so every spawned worker's boot prompt carried the
+  PRODUCTION DEFAULT `http://localhost:8765` instead of this pilot's actual `:8791`. Workers that couldn't reach it
+  behaved safely (slot 28: noticed, proceeded as a local session, asked what to do, idled). One (slot 26) went further —
+  read another live slot's session to look for credentials, then attempted a real (unauthenticated) curl to the REAL
+  production endpoint `https://api.agent-orchestrator.odum-research.com/api/slots/26/heartbeat` before the session ended
+  on its own; no confirmed response was captured before the pane closed. Separately, and worse: because no worker could
+  ever heartbeat successfully, an always-on `spawn-liveness watchdog` (`worker_liveness/_auth_failover.py`, **also not
+  gated by `ORCHESTRATOR_AUTOSPAWN_ENABLED`**) treated every silent worker as an auth failure and began auto-killing +
+  respawning them on a loop — including slot 22, well after it had already finished all real work correctly. Caught
+  within a few minutes; fixed by killing the isolated backend process entirely (tmux sessions are independent OS
+  processes, unaffected by that — verified), then manually `tmux kill-session`'d the 3 throwaway sessions it had left
+  (22/24/26). **`orch-slot-2` (a real, 2-day-old, unrelated interactive session tracking a genuine production outage)
+  was verified completely undisturbed throughout** — confirmed by reading its pane content before and after. Real cost
+  impact of the loop: negligible (included in the $0.09 above). Added as its own follow-up todo below (distinct from the
+  `STATE_DIR`/`pm_repo_path` gap already logged) since production-reachability from a misconfigured local pilot is a
+  materially worse failure mode than a stale cursor file.
+- **Safety finding surfaced along the way**: even with `ORCHESTRATOR_AUTOSPAWN_ENABLED=false`, the always-on
+  `AgentKeeper` (main agent) and `ensure_review_agents` loops still fire (by design — not env-disableable) and read some
+  config (`config.STATE_DIR`, the Slack webhook env var, `TuningDefaults.pm_repo_path`) that is **not** actually scoped
+  by the isolation env vars a naive reader would expect (`ORCHESTRATOR_DB_PATH` IS a real per-field env override;
+  `ORCHESTRATOR_PM_REPO_PATH` is NOT — `pm_repo_path` is a `TuningDefaults` field, and that whole class was made
+  deliberately env-free 2026-07-18, "edit the default + redeploy, never via env" — the field's own docstring citing an
+  env var is stale). Confirmed no real damage this run (no live tmux session touched, no Slack message sent — webhook
+  unset — only a harmless local dedup-state cursor file advanced), but this is a real gap worth its own follow-up (todo
+  below) rather than something every future local-pilot session should have to rediscover by hand.
+
+**2026-07-29 — Model-selection policy redesigned per operator ruling: DeepSeek-first, quota-adaptive, mutual fallback.
+Implemented + unit-tested locally, quality-gates.sh green, still NOT shipped.**
+
+Following the pilot above, the operator gave an explicit routing policy (superseding the original 30%-experiment framing
+entirely):
+
+- **Opus/fable**: unchanged, hard pin to Claude — but now EXPLICITLY unconditional, including no DeepSeek fallback even
+  when every Claude account is fully out of headroom (a genuine behavior change from the mutual-fallback given to
+  sonnet-tier work below — opus/fable-tier work stalls/waits for Claude specifically rather than ever touching
+  DeepSeek).
+- **Sonnet-tier is DeepSeek-first by default** — `deepseek_route_fraction` raised `0.3` → `0.8` (operator: "its smart
+  and fast and cheap as well so we can use it for almost all tasks related to sonnet"). No role-based carve-out (infra/
+  cicd/script/docs vs. backend/data_engineering) — ALL sonnet-tier roles get the same policy.
+- **New plan-level `provider: claude` frontmatter override** (mirrors the existing `model_tier:` convention) — a plan
+  can opt a specific piece of work back onto Claude. Parsed by a new `_parse_frontmatter_provider()` in
+  `regen_backlog_from_plan.py`, carried on `BacklogTask.provider_override`, threaded through `_spawn_param_plan()`'s
+  per-slot tuple (now 5 elements, was 4) into `select_account_for_spawn(..., forced_provider=...)`.
+- **Quota-adaptive nudge**: before applying the base fraction, `_quota_adaptive_fraction()` checks REAL Claude headroom
+  (`_anthropic_pool_headroom_pct()` — average `100 - worse-of-5h/weekly-pct` across usable Claude accounts). Headroom ≥
+  `deepseek_quota_high_headroom_pct` (default 50) shades the fraction DOWN by `deepseek_quota_shade_amount` (default
+  0.15, toward Claude — use the capacity already paid for); headroom ≤ `deepseek_quota_low_headroom_pct` (default 20) or
+  zero usable Claude accounts at all shades UP (toward/to 1.0 DeepSeek). This is exactly what the 2026-07-29 pilot
+  organically demonstrated (all 4 Claude accounts rate-limited → DeepSeek picked up everything) — now it's policy, not
+  an accident of timing.
+- **Operator-clarified edge case (the one genuine conflict in the original ask, resolved explicitly)**: a plan's
+  `provider: claude` override still falls back to DeepSeek if Claude is fully out of quota — sonnet-tier work NEVER
+  stalls, even when a plan explicitly asked for Claude. This is what distinguishes a _preference_ (`forced_provider`)
+  from the _hard kill-switch_ (`deepseek_route_fraction<=0`, an operator emergency off that disables DeepSeek with NO
+  fallback either direction) — the two look similar but behave oppositely at zero headroom, and both are now covered by
+  dedicated tests.
+- **Real bug found and fixed while redesigning**: the OLD split math (`every_n = round(1/fraction)`, DeepSeek fires on
+  `counter % every_n == 0`) cannot represent a fraction above 0.5 — 0.8 rounds `every_n` to 1, which fires on EVERY call
+  (silently 100%, not 80%). Replaced with a fair-share accumulator (`_deepseek_should_route()`, Bresenham-style:
+  accumulate the fraction each call, fire + subtract 1.0 whenever the accumulator crosses 1.0) that is exact for any
+  fraction in `[0, 1]`. A second, smaller bug surfaced writing its test: repeatedly adding a fraction like `0.3` (no
+  exact binary float representation) drifts by ~1e-16/call — over 100 calls that was enough to cost one fire (29/30, not
+  30/30); fixed with a `1e-9` epsilon on the crossing comparison, comfortably above float drift and comfortably below
+  any fraction an operator would configure.
+- **Verified**: `tests/test_deepseek_provider_routing.py` rewritten — 34 tests covering the hard opus/fable pin (incl.
+  the zero-Claude-headroom stall case), the DeepSeek-first default split at the new 0.8 baseline, the kill-switch vs.
+  preference distinction, mutual fallback in both directions, the quota-adaptive shading (high/low/neutral bands +
+  zero-usable-Claude), and the accumulator's exactness (including the 0.8-above-0.5 regression case and the float-
+  epsilon case). Fixing these also required updating `tests/test_autospawn.py` (13 pre-existing tests whose mocks
+  assumed `select_account_for_spawn` only ever called `_pick_headroom_account` — the new quota-adaptive layer makes an
+  independent account/usage lookup that needed its own mock; genuine new test surface from the redesign, not a
+  regression) and the `_spawn_param_plan()` 4→5-tuple shape change (7 call sites). Full `bash scripts/quality-gates.sh`:
+  ruff, basedpyright (0 errors), **1923 passed / 1 skipped**, dashboard tsc+vitest green.
+- **Deliberately NOT committed/pushed** — same standing instruction as before: local-only until proven. The 2026-07-29
+  pilot's own results (all-DeepSeek, by accident of Claude being rate-limited) do NOT validate this new policy
+  specifically (it ran at fraction 0.5 with no quota-adaptation, forced_provider, or hard opus/fable pin) — a fresh
+  pilot run against the redesigned code is a new todo below, not assumed from the old one.
+
 ## Todos
 
 - [ ] [INFRA] P0. Add a `provider: Literal["anthropic", "deepseek"] = "anthropic"` field to the `Account` model
@@ -159,11 +276,17 @@ real DeepSeek account is registered and smoke-tested end to end — todos 6/7 be
       `unset CLAUDE_CODE_OAUTH_TOKEN`), add the matching `accounts.json` entry with `provider: "deepseek"`, and push the
       env file to both creds buckets so `CredsEnvPoller` distributes it fleet-wide. Done when:
       `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`.
-- [ ] [INFRA] P0. Implement `select_account_for_spawn()` per the Design summary above (eligibility, split via a new
-      `tuning.deepseek_route_fraction` config field, health gate reusing the `_SPAWN_FAILED_ALERTED`-style dedup state).
-      Done when: unit tests cover all three branches — an `opus`-tier task never routes to DeepSeek across N calls, the
-      split ratio is honored within tolerance over N eligible calls, and a simulated recent-failure count on the
-      DeepSeek account forces fallback to the Claude pool.
+- [ ] [INFRA] P0. Implement `select_account_for_spawn()` — **redesigned 2026-07-29** per operator ruling, superseding
+      the original eligibility/split/health-gate description (see Progress Log for the full design): DeepSeek is now the
+      DEFAULT for sonnet-tier work (not a minority experiment), opus/fable is a HARD pin with no DeepSeek fallback ever
+      (even on zero Claude headroom), sonnet-tier work (default policy or a plan's `provider: claude` override) has
+      MUTUAL fallback in both directions so it never stalls on quota, a quota-adaptive nudge shades the split toward
+      whichever pool actually has headroom, and the split moved from a modulo formula (broken above fraction 0.5) to a
+      fair-share accumulator. Implemented + unit-tested locally (`tests/test_deepseek_provider_routing.py`, 34 tests) +
+      `quality-gates.sh` full green — **still held uncommitted** per the standing local-only-until-proven instruction
+      (same as todos 1-3/5 below). Done when: shipped — `agent-orchestrator@<sha>` + a re-run of the local pilot (todo
+      below) against the NEW policy specifically (the 2026-07-29 pilot validated the OLD 0.5-fraction design, not this
+      one).
 - [ ] [INFRA] P0. Replace the 3 direct `_pick_headroom_account()` call sites in `autospawn.py` (the main AutoSpawn loop
       and the two other automatic spawn paths found this session) with calls into `select_account_for_spawn()`; add the
       `provider == "anthropic"` filter inside `_pick_headroom_account()` itself so its existing ranking logic for the 4
@@ -171,9 +294,11 @@ real DeepSeek account is registered and smoke-tested end to end — todos 6/7 be
       integration test proves a `sonnet`-tier task can land on the DeepSeek account while an `opus`-tier task dispatched
       in the same tick never does.
 - [ ] [DATA] P1. Add a spend-guard check before routing to DeepSeek — a config-driven daily/monthly token-spend ceiling,
-      mirroring the existing GCP/AWS spend-audit pattern already used elsewhere in this workspace. Done when: a
-      simulated over-ceiling day makes `select_account_for_spawn()` stop offering DeepSeek and fall back to Claude, with
-      an activity-log event recording why.
+      mirroring the existing GCP/AWS spend-audit pattern already used elsewhere in this workspace. **More urgent after
+      the 2026-07-29 redesign** — DeepSeek is now the DEFAULT for ~80% of sonnet-tier work, not a 30% minority
+      experiment, so an unbounded-spend day is a much bigger real-dollar exposure than when this todo was written. Done
+      when: a simulated over-ceiling day makes `select_account_for_spawn()` stop offering DeepSeek and fall back to
+      Claude, with an activity-log event recording why.
 - [ ] [UI] P1. Surface `provider` next to `account_id` in the dashboard's slot/account views so it's visible at a glance
       which of the 14 slots are on DeepSeek vs. Claude right now. Done when: the dashboard renders a provider badge per
       active slot.
@@ -181,3 +306,30 @@ real DeepSeek account is registered and smoke-tested end to end — todos 6/7 be
       outcomes (QG pass rate, review-flagged rework rate) against the Claude-routed baseline before raising the split.
       Done when: a dated comparison note with the actual pass/rework numbers for both is added to this plan's Progress
       Log.
+- [ ] [INFRA] P2. Document (or fix) the local-dev isolation gap found running the 2026-07-29 pilot: `AgentKeeper` /
+      `ensure_review_agents` are not gated by `ORCHESTRATOR_AUTOSPAWN_ENABLED` and read some state
+      (`config.STATE_DIR`-rooted dedup/cursor files, the Slack webhook env var) that a scoped `ORCHESTRATOR_DB_PATH` /
+      `ORCHESTRATOR_VM_ID` override does NOT isolate — and `TuningDefaults.pm_repo_path`'s docstring claims an
+      `ORCHESTRATOR_PM_REPO_PATH` env override that does not actually exist (that whole field class was made env-free
+      2026-07-18). Done when: either a documented, sanctioned "fully isolated local pilot" runbook exists (env var
+      list + what remains shared + why that's safe), or the isolation gaps themselves are closed in code.
+- [ ] [INFRA] P1. Fix or guard the local-pilot production-reachability incident from 2026-07-29: a local isolated
+      instance that forgets `ORCHESTRATOR_SERVER_URL` silently defaults every spawned worker's boot prompt to the
+      PRODUCTION URL (`config.server_url()` docstring/default is `http://localhost:8765`, matching prod's real port),
+      and the `spawn-liveness watchdog` (`worker_liveness/_auth_failover.py`) that auto-kills+respawns a silently
+      unreachable worker is not gated by `ORCHESTRATOR_AUTOSPAWN_ENABLED` either, so a misconfigured local instance
+      free-loops respawning real (billed) sessions indefinitely. Done when: `server_url()` fails loud (or refuses to
+      spawn) when unset in a non-`planning`-`vm_id` context instead of silently defaulting to prod's own port, OR the
+      isolated-local-pilot runbook (todo above) makes `ORCHESTRATOR_SERVER_URL` a mandatory, checked-first-boot env var.
+- [ ] [REVIEW] P1. Re-run the local pilot (per the 2026-07-29 isolation runbook, fixing the `ORCHESTRATOR_SERVER_URL`
+      gap first) against the REDESIGNED policy specifically — the 2026-07-28 pilot validated the old 0.5-fraction,
+      no-quota-adaptation, no-`forced_provider` design, not this one. Done when: a dated Progress Log entry shows (a) a
+      `provider: claude` plan and a default-policy plan dispatched in the same run with visibly different outcomes, (b)
+      at least one real spawn attempt where the quota-adaptive nudge measurably changed the effective fraction from a
+      real (not mocked) Claude headroom reading, and (c) confirmation the hard opus/fable pin held (no DeepSeek spawn
+      for an opus-tier task even when staged with zero Claude headroom).
+- [ ] [INFRA] P2. End-to-end test the new `provider: claude` plan frontmatter through the REAL
+      `regen_backlog_from_plan.     regen()` (not just the unit-level `_parse_frontmatter_provider` test) — a plan with
+      `provider: claude` in its frontmatter should produce a `BacklogTask.provider_override == "anthropic"` after a real
+      regen pass, and a plan without it should produce `None`. Done when: a test exercises `regen()` itself (temp plans
+      dir) end to end, not just the parser function in isolation.

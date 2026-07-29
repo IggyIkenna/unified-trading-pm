@@ -56,6 +56,14 @@ _UNCHECKED_OR_CHECKED_RE = re.compile(r"^\s*-\s*\[[ xX]\]\s")
 # A structured Evidence ref carrying one or more cloudbuild ids.
 _EVIDENCE_LINE_RE = re.compile(r"Evidence:\s*(?P<body>.+)", re.IGNORECASE)
 _CLOUDBUILD_TOKEN_RE = re.compile(r"cloudbuild=\s*([0-9a-fA-F][0-9a-fA-F-]{7,39})")
+# A REAL Cloud Build id is a UUID (36 chars, dashes at 8-4-4-4-12). An 8-char git short-hash
+# also matches _CLOUDBUILD_TOKEN_RE's looser capture group, which is the actual defect this gate
+# closes (cloud_build_evidence_citation_short_hash_unresolvable_2026_07_27.md) — distinguishing
+# the two matters because a well-formed UUID that fails to resolve is usually just a build whose
+# record aged out of Cloud Build's retention window (not the citer's fault, shouldn't retroactively
+# fail an already-shipped claim), whereas a malformed (non-UUID) citation could never have resolved
+# and is a structurally bogus citation from the moment it was written.
+_UUID_SHAPE_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
 
 # A runtime INFRA build/deploy/promote "went green" claim (sub-rule B trigger). Scoped tightly to
 # the over-claim class this gate exists for — a Cloud Build / image build / cloud deploy / LDR→main
@@ -133,9 +141,20 @@ def _iter_todo_blocks(text: str, path: Path) -> list[TodoBlock]:
     return blocks
 
 
-def _describe_build_status(build_id: str, region: str, project: str) -> str | None:
-    """Return the OVERALL Cloud Build status string, or None if unresolvable (no gcloud / no auth /
-    NOT_FOUND / network). Never raises."""
+def _describe_build_status(build_id: str, region: str, project: str) -> tuple[str | None, bool]:
+    """Return (status_or_None, environment_available).
+
+    environment_available=False means gcloud itself could not run at all (missing binary,
+    timeout, OS error) — a genuine "cannot check from here" case, soft-skipped by default.
+    environment_available=True with status=None means gcloud DID run and returned a non-zero
+    result (e.g. NOT_FOUND) — the environment could check and the citation simply does not
+    resolve to a real build. That is a structurally-unresolvable citation (a malformed id, e.g.
+    an 8-char git short-hash instead of a Cloud Build UUID) and must always be a violation,
+    independent of --require-verification, or the gate's whole "run it, don't read it" purpose
+    is defeated whenever the checking environment happens to have gcloud/auth (see
+    cloud_build_evidence_citation_short_hash_unresolvable_2026_07_27.md — the original design
+    conflated these two cases, so a bogus short-hash citation silently passed even when gcloud
+    was available and confirmed it did not exist)."""
     try:
         proc = subprocess.run(  # fixed argv, no shell=True
             [
@@ -153,11 +172,11 @@ def _describe_build_status(build_id: str, region: str, project: str) -> str | No
             check=False,
         )
     except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
-        return None
+        return None, False
     if proc.returncode != 0:
-        return None
+        return None, True
     status = proc.stdout.strip()
-    return status or None
+    return (status or None), True
 
 
 def _check_builds(
@@ -168,20 +187,51 @@ def _check_builds(
 ) -> list[EvidenceViolation]:
     """Sub-rule A: every cited cloudbuild id must resolve SUCCESS."""
     out: list[EvidenceViolation] = []
-    cache: dict[str, str | None] = {}
+    cache: dict[str, tuple[str | None, bool]] = {}
     for b in blocks:
         for bid in b.cloudbuild_ids:
             if bid not in cache:
                 cache[bid] = _describe_build_status(bid, region, project)
-            status = cache[bid]
+            status, environment_available = cache[bid]
             if status is None:
-                if require_verification:
+                if not environment_available:
+                    # gcloud itself couldn't run here (no binary/auth/network) — a genuine
+                    # can't-check case, soft-skipped unless the caller opts into strict mode.
+                    if require_verification:
+                        out.append(
+                            EvidenceViolation(
+                                rule="A-unverifiable",
+                                path=b.path,
+                                line_no=b.line_no,
+                                detail=f"cited cloudbuild={bid} could not be checked (no gcloud/auth/network here)",
+                            )
+                        )
+                elif not _UUID_SHAPE_RE.match(bid):
+                    # gcloud ran and this id doesn't resolve, AND it isn't even UUID-shaped — a
+                    # structurally bogus citation (e.g. a git short-hash) that could never have
+                    # been a real Cloud Build id. Always a violation, independent of
+                    # --require-verification.
+                    out.append(
+                        EvidenceViolation(
+                            rule="A-cited-build-not-found",
+                            path=b.path,
+                            line_no=b.line_no,
+                            detail=f"cited cloudbuild={bid} is not a Cloud Build id (not UUID-shaped) "
+                            "and does not resolve",
+                        )
+                    )
+                elif require_verification:
+                    # Well-formed UUID that doesn't resolve — most likely a genuine build whose
+                    # Cloud Build record aged out of the API's retention window, not a bogus
+                    # citation. Not the citer's fault and not a violation by default; only flagged
+                    # under strict verify (same tier as the environment-unavailable case above).
                     out.append(
                         EvidenceViolation(
                             rule="A-unverifiable",
                             path=b.path,
                             line_no=b.line_no,
-                            detail=f"cited cloudbuild={bid} could not be resolved (no gcloud/auth or NOT_FOUND)",
+                            detail=f"cited cloudbuild={bid} is UUID-shaped but NOT_FOUND (likely aged out "
+                            "of Cloud Build retention)",
                         )
                     )
                 continue

@@ -388,7 +388,7 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     else
         _PYTEST_N="1"
     fi
-    PARGS="-n ${_PYTEST_N} --timeout=60 -q -r a --tb=short --no-header"
+    PARGS="-n ${_PYTEST_N} --timeout=60 -q -r a --tb=short --no-header --durations=25"
 
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").

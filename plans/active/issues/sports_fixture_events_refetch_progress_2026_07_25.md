@@ -397,4 +397,17 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date fixture-fetch advance
       both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM self-deleted/TERMINATED), re-run
       `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox +
-      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo.
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-011` todo. —
+      **Health-checked 2026-07-29T05:00Z (slot 10, data_engineering), RUNNING, confirms this same slot's 03:53Z-03:55Z
+      check**: `gcloud compute instances list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob `updateTime`
+      `05:00:12Z` (~25s old at check time). Progress-metric check vs. the 03:55Z read: run.log grew 196,432→211,257
+      lines (+14,825) over ~65min; `date=` boundary advanced `2024-10-01→2025-01-17` (~3.5 months forward progress),
+      live per-fixture `Fetched N events for fixture=X` writes + normal rate-limit sleep/retry cycling, no error/stall
+      signature; `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 (no terminal marker). Genuine forward progress, no
+      stall. Not completable this turn (~1.5 years of the `2020-06-06→2026-07-25` range remain, currently at
+      `2025-01-17`). Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch:
+      repeat this health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date fixture-fetch
+      advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
+      self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
+      flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
+      `sports_satellite_ao_dispatch_batch2-011` todo.

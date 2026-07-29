@@ -41,7 +41,7 @@ related:
   [
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
-    /plans/active/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
+    /plans/archive/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
@@ -64,7 +64,7 @@ resolved_by:
 source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 ---
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
@@ -316,12 +316,18 @@ and the residual-KeyError defense-in-depth path.
 - [ ] [DATA] P3. Small residual tails (~262 rows: `UNCLASSIFIED:404 GET https` on BINANCE-FUTURES/BYBIT/DERIBIT,
       `UNCLASSIFIED:UpstreamTimestampBiasError` on ASTER) -- not investigated in either session, left open per both
       sessions' scope discipline (small share of the fresh batch, ordinary-transient-looking).
-- [ ] [DOCS] P3. `codex/05-infrastructure/data-pipeline-alerts.registry.yaml` / `.md` stop at `DP-FETCH-008`, but this
-      alert's own context payload (both escalations) and
-      `deployment_service/data_pipeline_monitors/     attempted_failed_staleness.py`'s module docstring both name
-      `DP-FETCH-009` as the ATTEMPTED_FAILED-ratio variant of `DP_RUN_MOSTLY_EMPTY` (distinct from `DP-FETCH-007`'s
-      EMPTY_CONFIRMED-ratio detector, same event name, both emit `DP_RUN_MOSTLY_EMPTY`) -- a registry gap, append the
-      `DP-FETCH-009` row so the SSOT matches what's already shipped and referenced.
+- [x] ✅ [DOCS] P3. **DONE 2026-07-29 (data_pipeline_failure escalation, agt-0df274) — `unified-trading-pm` (this
+      commit).** Appended the missing `DP-FETCH-009` row to `codex/05-infrastructure/data-pipeline-alerts.registry.yaml`
+      and `.md` so the SSOT matches what both prior escalations already shipped/referenced.
+- [ ] [PROCESS] P2. **New finding (agt-0df274, 2026-07-29):** a THIRD escalation worker (agt-0df274) was dispatched for
+      this byte-identical static condition (158,085 attempted_failed unchanged; only `captured` grew, dropping the ratio
+      11.2%→10.9%) — see Progress Log below. `dp_run_mostly_empty_no_recurring_dedup_2026_07_15.md` (archived, all 3
+      todos done) fixed the _Slack_ re-page cadence (cooldown-map + persisted re-nag interval), but nothing checks
+      whether an OPEN, already-diagnosed issue doc already covers the exact `(asset_group, data_type, event)` tuple
+      before the escalation fast path (`repository_dispatch escalate-to-orchestrator`) spawns another full
+      `data_pipeline_failure` worker. Filed
+      `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` to track a real fix
+      (agent-orchestrator/deployment-service, out of this doc's `market-tick-data-service` scope) — not fixed here.
 
 ## Progress Log
 
@@ -345,3 +351,19 @@ and the residual-KeyError defense-in-depth path.
   `git merge-base --is-ancestor`). Also flagged (not fixed, out of `derivative_ticker` scope) a hypothesis that the same
   uppercased-`coin` bug may silently affect `book_snapshot_5`'s `fetch_l2_book` S3-key construction for the same 6
   symbols -- see Open Questions.
+- **2026-07-29 (data_pipeline_failure escalation worker, escalation agt-0df274):** Same alert re-fired a THIRD time
+  (asset_group=cefi, data_type=derivative_ticker, 158,085/1,450,501 attempted_failed, 10.9%). Confirmed via this doc's
+  own numbers that the `attempted_failed` NUMERATOR is byte-identical to the 2026-07-28 reading (158,085 == 158,085) --
+  only `captured` grew (+39,899), which is exactly what a STATIC backlog + ongoing forward-progress looks like, not a
+  new regression. Did not re-run the live bounded manifest read this session (the exact-numerator match across two
+  independent readings a day apart is already strong evidence of zero new activity); if a future escalation on this same
+  doc sees the numerator move, that reopens the investigation for real. Verified both prior code fixes
+  (`market-tick-data-service@6a067cf1`, `@6c6fab03`) are ancestors of `origin/live-defi-rollout` -- nothing to re-ship.
+  Closed the DOCS P3 (appended `DP-FETCH-009` to the registry SSOT). Investigated why the alert still labels this "Fresh
+  -- 0d ago" despite being static: `attempted_failed_staleness.py`'s `STATIC_BACKLOG_STALE_DAYS_THRESHOLD=1` buckets by
+  WHOLE days since the last write, so any re-fire within 24h of the last write timestamp reads "Fresh" even though it's
+  the same 2026-07-28T09:03:12Z data -- a labeling-precision quirk, not a bug worth fixing (the module's own docstring
+  already disclaims it only labels, never gates paging cadence). The real, worth-fixing gap is that a THIRD full
+  escalation-worker session got spent re-confirming a condition two prior sessions already fully diagnosed -- filed as
+  its own process issue (see new P2 todo above) since the fix belongs in agent-orchestrator/ deployment-service's
+  escalation dispatch, not this repo.

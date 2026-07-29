@@ -712,7 +712,7 @@ picture.
     - **[CODE] P2.** Add a collision-resistant component (8-hex slug of `hash(venue, data_type)`) to
       `pipeline_e2e_check.py::_vm_name()`, under GCE's 63-char limit, + a regression test asserting two same-second
       same-asset_group shard launches produce distinct VM names.
-  - [`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
+  - [`plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`](/plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md`](/plans/archive/issues/uac_build_instrument_id_colon_strictness_mtds_ripple_2026_07_21.md)
     (5 open)

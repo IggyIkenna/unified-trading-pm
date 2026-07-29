@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 251 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 250 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -589,7 +589,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (39)
+### prediction (37)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -704,13 +704,6 @@ by hand._
 - [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
   **[draft]** — Finalize/gate plan for `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. Runs ONLY after batch4's
   dispatched todos land (`gate_on_depends: true`): flips the corresponding checkboxes back in the 2 sibling source docs…
-- [`prediction_satellite_ao_dispatch_batch5_2026_07_26`](./prediction_satellite_ao_dispatch_batch5_2026_07_26.md) —
-  Fifth AO-dispatch batch for prediction, produced by a second `/ag-closeout-audit prediction` run on 2026-07-26
-  (autonomous). Phase 0-2 re-classified 27 prediction AG-primary docs against the full covering set (consolidated
-  closeout + its 4…
-- [`prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize`](./prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize.md)
-  **[draft]** — Finalize/gate plan for `prediction_satellite_ao_dispatch_batch5_2026_07_26.md`. Runs ONLY after batch5's
-  three dispatched todos land (`gate_on_depends: true`): flips the corresponding items in the 2 source docs…
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A
   walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
   sports_predictions_e2e milestone.
@@ -734,7 +727,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (66)
+### cross-cutting (67)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -948,6 +941,9 @@ by hand._
 - [`scenario_library_completion_13_16_2026_07_27`](./scenario_library_completion_13_16_2026_07_27.md) — Implement the 2
   orphaned Day-1 scenario designs (plans/active/scratch_scenarios_day1/13 and 16) into the UAC ScenarioOverlay
   registry + UTL applier, per operator decision (2026-07-27 pre-June-1 stale-plans audit) — the other 16 of 18 Day-1…
+- [`self_hosted_runner_pm_core_workflows_2026_07_28`](./self_hosted_runner_pm_core_workflows_2026_07_28.md) — Follow-up
+  to the Wave-2 self-hosted-runner migration's "NEW FINDING" — unified-trading-pm's OWN `.github/workflows/` had never
+  been run through `scripts/self-hosted-runners/classify-glue-workflows.sh` as a directed audit. Re-running it…
 - [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md)
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on

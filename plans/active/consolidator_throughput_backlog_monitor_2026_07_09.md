@@ -396,13 +396,14 @@ drift_direction: advance-code
   the UTL base image by digest, and Cloud Run JOBS pin the image digest at deploy time — codex `ci-cd-flow.md` "Image
   deploy-hygiene"). Then executed the pipeline-aligned path: the UTL LDR-trigger had already built the base image with
   `@111592eb` (`:latest`=`dcb489…`); bumped MTDS `BASE_IMAGE_DIGEST`→`dcb489` (`market-tick-data-service@96ce4311`),
-  MTDS trigger rebuilt (`cloudbuild=de50eace…` SUCCESS, `:latest`=`ccbc8462…`). Scoped strictly to the **24 LIVE jobs**
-  (ENABLED `*/1` crons) per operator "only the ones running now"; the 9 PAUSED (`gas-fees` + 8 `-legacy`) untouched.
-  Canary `market-data-cefi` → SUCCESS + `latest.json` written; fanned out `gcloud run jobs update` to the other 23
-  (23/23 OK); verified **24/24 live buckets carry a fresh `latest.json`** (08:43–08:45Z), no breakage. One incidental
-  finding handled with operator approval: a fresh transitive **click CVE PYSEC-2026-2132** (command-injection in
-  `click.edit()`, which MTDS never calls) was blocking the MTDS gate → baselined via `--ignore-vuln` (the repo's
-  existing "awaiting upstream fix" pattern). AWS Batch mirror stays dormant → same-shape when it comes alive.
+  MTDS trigger rebuilt (build de50eace (full id at line 263) SUCCESS, `:latest`=`ccbc8462…`). Scoped strictly to the
+  **24 LIVE jobs** (ENABLED `*/1` crons) per operator "only the ones running now"; the 9 PAUSED (`gas-fees` + 8
+  `-legacy`) untouched. Canary `market-data-cefi` → SUCCESS + `latest.json` written; fanned out `gcloud run jobs update`
+  to the other 23 (23/23 OK); verified **24/24 live buckets carry a fresh `latest.json`** (08:43–08:45Z), no breakage.
+  One incidental finding handled with operator approval: a fresh transitive **click CVE PYSEC-2026-2132**
+  (command-injection in `click.edit()`, which MTDS never calls) was blocking the MTDS gate → baselined via
+  `--ignore-vuln` (the repo's existing "awaiting upstream fix" pattern). AWS Batch mirror stays dormant → same-shape
+  when it comes alive.
 
 - 2026-07-11 — **#4 REDIRECTED + SHIPPED: consolidator self-reported `latest.json` run summary.** Operator clarified #4
   is NOT phantom/reprobe (separate) but consolidator liveness: not all ~25 are live now; have the live ones publish a

@@ -233,10 +233,23 @@ item holdings-only-done and drop the UTL/MTDS market-level migration.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Authorize the migration phase (A8) + rule on the 4 parked C2 items** — A8 asks "authorize the
-      migration phase to begin, and confirm the snapshot-first GCS-delete batch (A6)?", never answered; C2b (cefi
-      Track-2 reopen-50.79%), C2c (DeFi expected_unattempted denominator), C2d (GCS lifecycle codex), and C2e
-      (sports_odds_bookmaker locked) remain parked "OPERATOR RULINGS needed."
+- [x] ✅ [DATA] P1. **RULED 2026-07-29 (operator direct answer) — A8 authorized, C2b resume.** (1) A8: authorize
+      starting the ordered migration phase A1→A2/A4→A3→A5→A6(remaining legs)→A7. The `dex_pools`/`lending_indices` leg
+      of A6 is already complete (folded, repointed, deleted, verified 2026-07-21); the remaining A6 legs (culled-venue
+      DRIFT/PACIFICA data, the C0f legacy lending-indices bucket) still need the snapshot-first GCS-delete care this doc
+      always specified. (2) C2b: resume the cefi Track-2 backfill — restore the operator's original 50.79% coverage
+      acceptance; the autonomous reopen/reversal in `cefi_consolidated_closeout:119` is overridden. (repos:
+      instruments-service, market-tick-data-service)
+- [ ] [DOCS] P2. **C2c/C2d/C2e — lower-stakes, docs-only follow-ups, still need action** (not covered by the A8/C2b
+      ruling above, which addressed only the two consequential forks): C2c — add a correction note to
+      `instruments_completion_tracker:242` that its 1.38M/62.06% figure is the retired v1 grain, the real v2 backlog is
+      63.9M (open, tracked under Track-3); C2d — align `/codex/05-infrastructure/gcs-lifecycle-policies.md` with the
+      operator's 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store) and confirm the exact ladder;
+      C2e — checked 2026-07-29: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` is still `status: active`,
+      `locked_by: live-defi-rollout` since 2026-06-20, and is NOT referenced anywhere under
+      `plans/epics/sports_master.md` or its closeout docs — the 28-unmapped-league-tier work has not migrated elsewhere,
+      this doc remains its genuine live home. No unlock/archive action needed; this item is resolved as "confirmed still
+      live," not parked.
 
 ## Progress Log
 

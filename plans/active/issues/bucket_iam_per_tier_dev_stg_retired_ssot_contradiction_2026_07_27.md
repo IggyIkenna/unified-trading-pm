@@ -124,21 +124,32 @@ that is mid-execution against a **live production GCP project**. Two consequence
       `features-calendar-*`) + broad `objectViewer` for all 5 SAs are DECLARED in
       `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` clean, targeted `tofu plan` showed 8
       adds/2 changes/0 destroys) but **NOT YET APPLIED** — see new todo below (credential blocker).
-- [ ] [TERRAFORM] P0. **NEW 2026-07-27 — BLOCKED-CREDENTIALS.** `tofu apply` of the 8 declared IAM-binding resources
-      failed: this session's active credential (`github-actions-deploy@central-element-323112.iam.gserviceaccount.com`)
-      lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy` on `central-element-323112` entirely — confirmed
-      directly, `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity (not scoped to
-      my new resources; the SAME error class hit ~15 unrelated pre-existing `google_project_iam_member`/
-      `google_secret_manager_secret_iam_member` resources in a full untargeted `tofu plan`, confirming this is a
-      whole-project IAM-policy permission gap, not something wrong with the new resources). **Done when**: someone with
-      a credential holding `resourcemanager.projects.setIamPolicy` on `central-element-323112` (e.g.
-      `unified-trading-sa`, or an operator's own ADC — matches how P1.1's SA-creation step and other project-level
-      grants in this terraform were evidently applied historically) runs
-      `ENV=prod TMPDIR=<short-path> TF_DATA_DIR=<short-path>/.terraform ./tofu.sh apply` from
-      `deployment-service/terraform/gcp/` (a short `TMPDIR` avoids a known unix-socket-handshake break on the plugin
-      install step with long paths — see P1.1's own note above) and confirms
-      `Plan: 8 to add, 2 to change, 0 to     destroy` before applying (re-run `tofu plan` fresh first — the docs above
-      are not a substitute for a live re-check).
+- [x] ✅ [TERRAFORM] P0. **DONE 2026-07-29 (operator's own ADC, `ikenna@odum-research.com` — confirmed
+      `resourcemanager.projects.getIamPolicy` works for this identity, unlike the prior session's
+      `github-actions-deploy` SA).** Applied via
+      `ENV=prod TMPDIR=/tmp/tf-short TF_DATA_DIR=/tmp/tf-short/.terraform     ./tofu.sh apply` — but a scoped,
+      `-target`-ed plan was required first: an untargeted `tofu plan` showed **19 to add / 70 to change / 2 to destroy**
+      (unrelated live-state drift accumulated since 2026-07-27, not this todo's resources), a materially different shape
+      than the doc's stated 8/2/0 expectation, so the full plan was NOT applied blind. Targeting exactly this file's 14
+      resources (5 SAs + 9 `google_project_iam_member` bindings) gave a clean, additive-only plan (9 to add, 0 to
+      change, 0 to destroy — the 5 SAs already existed unchanged). Applying that surfaced a **real, independent,
+      pre-existing bug**: the 4 conditional `objectAdmin` bindings (group_a/group_b × prd/test) used
+      `resource.name.contains("-prd-")` in their IAM Condition CEL expression — `contains` is NOT a declared function in
+      GCP's IAM Condition CEL environment (confirmed live:
+      `400 Condition expression compilation     failed... undeclared reference to 'contains'`), never caught by
+      `tofu validate`/`plan` since GCP only compiles CEL server-side at `apply`. Tried `matches()` (regex) next — ALSO
+      undeclared; GCP's `resource.name` condition attribute supports only `startsWith`/`endsWith`. Fixed by
+      restructuring to a single `startsWith("projects/_/buckets/{prefix}{tier}-")` per bucket-name prefix (exact, not an
+      approximation — confirmed live that `{tier}` immediately follows the group prefix in every real bucket name, e.g.
+      `features-cefi-prd-central-element-323112`), eliminating the second function entirely. All 9 bindings now live and
+      verified via `gcloud projects get-iam-policy central-element-323112` (4 conditional objectAdmin + 5 unconditioned
+      objectViewer, all present with the expected condition titles). Shipped via quickmerge:
+      `deployment-service@44002342`.
+- [ ] [DOCS] P3. **Document GCP IAM Condition CEL's real function support** — confirmed live 2026-07-29: `resource.name`
+      conditions support only `startsWith`/`endsWith`; both `contains()` and `matches()` are undeclared references,
+      rejected only at real `apply` time (never caught by `tofu validate`/`plan`, which don't compile CEL server-side).
+      Not documented anywhere in this workspace yet. Add to `/codex/05-infrastructure/bucket-isolation-model.md` or a
+      dedicated IAM-conditions note, so the next per-tier/ per-env condition doesn't rediscover this the hard way.
 - [x] ✅ [DOCS] P2. **DONE 2026-07-28** — Cross-referenced `bucket_iam_write_protection_per_tier_2026_06_09.md` and the
       (now-archived) `bucket_estate_consolidation_to_sub100_2026_07_13.md`: this issue doc's own `related:` already
       carried both (added 2026-07-27); fixed `bucket_iam_write_protection_per_tier_2026_06_09.md`'s `related:` entry for

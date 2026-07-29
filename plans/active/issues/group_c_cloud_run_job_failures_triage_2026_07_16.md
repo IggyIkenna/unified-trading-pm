@@ -312,10 +312,11 @@ Two independent judgment calls neither this triage nor a single ≤30min fix sho
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule on the cefi/defi lifecycle-catalogue duplicate-merge-key policy** — Decision A above
-      (legitimate corrective dedup via `--allow-catalogue-shrink` vs a proper `_merge_incremental` duplicate-key-aware
-      rewrite) is still unresolved; the `dp-manifest-hygiene-changed`/`lifecycle-catalogue-full-{defi,tradfi}` failures
-      noted under "Not deep-dived this session" also remain uninvestigated.
+- [ ] [CODE] P1. **RULED 2026-07-29 (operator direct answer) — proper rewrite, not a shrink-allowance flag.**
+      `_merge_incremental` needs a real duplicate-key-aware rewrite rather than flipping on `--allow-catalogue-shrink` —
+      do not paper over a possible real merge bug with a permissive flag. The
+      `dp-manifest-hygiene-changed`/`lifecycle-catalogue-full-{defi,tradfi}` failures noted under "Not deep-dived this
+      session" still need investigation as part of this work.
 
 ## Evidence log
 

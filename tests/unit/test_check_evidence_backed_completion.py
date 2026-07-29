@@ -100,3 +100,81 @@ class TestGenuineClaimsStillFlagged:
     def test_evidence_ref_suppresses_even_same_clause(self) -> None:
         block = "- [x] Redeployed to Cloud Run, build went green. Evidence: cloudbuild=abcdef1234567890\n"
         assert _violations(block) == []
+
+
+class _FakeCompletedProcess:
+    def __init__(self, returncode: int, stdout: str = "") -> None:
+        self.returncode = returncode
+        self.stdout = stdout
+
+
+class TestNotFoundVsUnavailable:
+    """Regression for cloud_build_evidence_citation_short_hash_unresolvable_2026_07_27.md:
+    _describe_build_status must distinguish "gcloud couldn't run at all here" (soft-skip by
+    default) from "gcloud ran and confirmed this id does not resolve" (always a violation) --
+    the original code conflated both into a single None, so a bogus 8-char git short-hash
+    citation silently passed the gate even when gcloud/auth WAS available and confirmed the
+    id was NOT_FOUND."""
+
+    def _blocks_with_citation(self, build_id: str) -> list[object]:
+        text = f"- [x] Deployed. Evidence: cloudbuild={build_id}\n"
+        return MOD._iter_todo_blocks(text, Path("x.md"))
+
+    def test_gcloud_not_found_is_always_a_violation(self, monkeypatch) -> None:
+        monkeypatch.setattr(MOD.subprocess, "run", lambda *a, **k: _FakeCompletedProcess(returncode=1, stdout=""))
+        blocks = self._blocks_with_citation("de50eace")  # a short git hash, not a real build id
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=False)
+        assert len(violations) == 1
+        assert violations[0].rule == "A-cited-build-not-found"
+
+    def test_gcloud_unavailable_soft_skips_by_default(self, monkeypatch) -> None:
+        def _raise(*a, **k):
+            raise FileNotFoundError("gcloud not installed")
+
+        monkeypatch.setattr(MOD.subprocess, "run", _raise)
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=False)
+        assert violations == []
+
+    def test_gcloud_unavailable_is_a_violation_under_require_verification(self, monkeypatch) -> None:
+        def _raise(*a, **k):
+            raise FileNotFoundError("gcloud not installed")
+
+        monkeypatch.setattr(MOD.subprocess, "run", _raise)
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=True)
+        assert len(violations) == 1
+        assert violations[0].rule == "A-unverifiable"
+
+    def test_resolved_success_is_not_a_violation(self, monkeypatch) -> None:
+        monkeypatch.setattr(
+            MOD.subprocess, "run", lambda *a, **k: _FakeCompletedProcess(returncode=0, stdout="SUCCESS\n")
+        )
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=False)
+        assert violations == []
+
+    def test_resolved_failure_is_always_a_violation(self, monkeypatch) -> None:
+        monkeypatch.setattr(
+            MOD.subprocess, "run", lambda *a, **k: _FakeCompletedProcess(returncode=0, stdout="FAILURE\n")
+        )
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=False)
+        assert len(violations) == 1
+        assert violations[0].rule == "A-cited-build-not-success"
+
+    def test_uuid_shaped_not_found_is_not_a_violation_by_default(self, monkeypatch) -> None:
+        # A well-formed Cloud Build UUID that no longer resolves is most likely aged out of
+        # GCP's retention window, not a bogus citation -- must NOT retroactively fail an
+        # already-shipped claim.
+        monkeypatch.setattr(MOD.subprocess, "run", lambda *a, **k: _FakeCompletedProcess(returncode=1, stdout=""))
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=False)
+        assert violations == []
+
+    def test_uuid_shaped_not_found_is_a_violation_under_require_verification(self, monkeypatch) -> None:
+        monkeypatch.setattr(MOD.subprocess, "run", lambda *a, **k: _FakeCompletedProcess(returncode=1, stdout=""))
+        blocks = self._blocks_with_citation("2ea305e9-1234-4abc-9def-0123456789ab")
+        violations = MOD._check_builds(blocks, region="us-central1", project="p", require_verification=True)
+        assert len(violations) == 1
+        assert violations[0].rule == "A-unverifiable"

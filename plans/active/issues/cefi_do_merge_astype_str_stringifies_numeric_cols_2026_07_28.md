@@ -16,7 +16,11 @@ stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service]
 scope: [engineer]
 tags: [dtype, pandas, astype, do_merge, cefi, migration, robustness, footgun, latent]
-related: [/plans/active/issues/solana_address_primitives_duplicated_across_mtds_handlers_2026_07_28.md]
+related:
+  [
+    /plans/archive/issues/solana_address_primitives_duplicated_across_mtds_handlers_2026_07_28.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 created: 2026-07-28
 last_updated: 2026-07-28
 parent_epic: infrastructure_master

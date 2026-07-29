@@ -756,10 +756,15 @@ code.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule on the ETH-underlying-units semantics (A vs B) and the two competing `ShareClass` enums** —
-      the E2 investigation's "Needs an explicit operator ruling" section above leaves both design questions open: (1)
-      whether "ETH-underlying units" means a currency-preference view (A) or a genuinely different FX-noise-isolated
-      native-return metric (B); (2) whether `canonical.crosscutting.share_class.ShareClass` and
-      `internal.architecture_v2.enums.ShareClass` should converge to one enum. The reporting-layer dual-unit viewing
-      work (wiring `ShareClassFxMatrix`, un-orphaning `convert_settlement_to_share_class`) is blocked on this
-      ruling.</content>
+- [ ] [CODE] P1. **RULED 2026-07-29 (operator direct answer) — (1) Option B, (2) converge to one enum.** (1)
+      "ETH-underlying units" means a genuinely different, FX-noise-isolated "true native staking return" metric matching
+      Hard Rule #5's literal `holding`-based formula — NOT a currency-preference view of the already-computed USD PnL.
+      This needs the one new per-position entry-price anchor identified in item 4 of "Smallest correct increment" above;
+      it disagrees with the already-shipped `convert_settlement_to_share_class` view over any multi-day window where
+      ETH/SOL's own USD price moves, so building it is real new work, not a wiring exercise. (2) Converge
+      `unified_api_contracts.canonical.crosscutting.share_class.ShareClass` (`{USDT,ETH,BTC}`) and
+      `unified_api_contracts.internal.architecture_v2.enums.ShareClass` (9 values) to ONE canonical enum — pick the
+      superset shape (architecture_v2's 9 values, since it already covers the `canonical` one's 3), migrate the
+      `canonical` module's consumers (`client_reporting.py`, `registry/client_share_classes.py`) to import the unified
+      enum, delete the duplicate. Full completion, no partial migration leaving both alive. (repo:
+      unified-api-contracts, strategy-service)
