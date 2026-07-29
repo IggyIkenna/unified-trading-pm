@@ -516,8 +516,21 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       of "(no reason recorded)") — left their checkboxes un-flipped since they weren't this todo's scope; a future pass
       on those should find real reasons already populated once regenerated. (auto-emitted by
       generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (data_pipeline_failure escalation worker, agt-79063c, resumed as
+      capability_wizard_gap_discovery-020) — already fixed by the sibling `venue:cboe` todo above, no new code needed.**
+      That todo's root-cause fix (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`) explicitly predicted it
+      would also resolve this todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from
+      the already-committed, already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py --output-dir /tmp/cap-unlock-check`, scratch dir — no repo files mutated)
+      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme` edge now carries
+      `reason="IBKR smart-router absorbs most intra-TradFi spot arb."` (from the `(TRADFI, spot)` cell's `notes` in
+      `archetype_capability_manifest.json` — status stays `partial`, correctly, since IBKR-routed spot arb is a real,
+      narrower capability than full cross-venue price dispersion). Same pre-existing classifier-keyword quirk noted on
+      the `venue:cboe` todo applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of
+      `needs-config` once a real reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as
+      that todo's own note. No code changed this pass; this is a checkbox-only verification flip.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit** (distance 1, status partial) —
       missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr** (distance 1, status partial) —
