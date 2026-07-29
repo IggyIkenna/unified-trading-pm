@@ -101,8 +101,8 @@ source:
       `plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md` v1_archive gate checkbox is corrected +
       re-pointed at its real resolution mechanism, and the union-vs-v2-fixtures-ALONE claim is fixed. **Residual**
       (`migrate_sports_canonical_v9.py` cluster + ~14 unverified/active/permanent `instruments-service/scripts/**`
-      files) tracked as follow-up todos in `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` —
-      not silently dropped. **Correction to this todo's own final Gate**: `rg -c 'sports-central-element-323112'`
+      files) tracked as follow-up todos in `/plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md`
+      — not silently dropped. **Correction to this todo's own final Gate**: `rg -c 'sports-central-element-323112'`
       workspace-wide is NOT 0 and structurally cannot be — many remaining hits are legitimate (permanent-lifecycle
       tools, docs, epics, archived plans); the gate as written was an overbroad heuristic, not an achievable
       done-condition. _ABORT_: none.

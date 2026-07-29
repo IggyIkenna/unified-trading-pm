@@ -46,6 +46,8 @@ source:
 
 # Phase-3 apply: operator hold vs reclassification contradiction
 
+> **🟢 RESOLVED 2026-07-28 — archived.**
+
 > **STATUS: RESOLVED 2026-07-28 (operator gate-clearance pass).** Ruling: **Option A** — the FIX-STALE-only hold is
 > **LIFTED** (the deliberate 2026-07-27 `NA→planning` reclassification is treated as the authorization signal that was
 > intended), AND the plan-sanctioned **opus** sub-agent fan-out is authorized/required for the redirect/slim editorial

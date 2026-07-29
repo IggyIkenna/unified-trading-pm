@@ -52,6 +52,9 @@ source: >-
 depends_on: []
 ---
 
+> **🟢 RESOLVED 2026-07-28** — all 6 parked items answered (operator general theme applied per-item — see each item's
+> "Status" line and the "## Todos" section). Archived.
+
 # Infra `/plan-reconcile` 2026-07-26 — parked operator decisions
 
 > **Why parked, not asked**: the operator was away and unreachable for the whole run. Per the skill's ASK > PARK rule,
