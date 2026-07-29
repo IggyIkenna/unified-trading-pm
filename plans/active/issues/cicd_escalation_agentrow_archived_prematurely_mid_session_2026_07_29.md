@@ -189,3 +189,19 @@ caught up). No open `repo-blockers` needed fast-pathing (this was a `plan_health
 formally signal `/done` due to the gap documented above; ending this turn with this issue doc instead of retrying a call
 whose immediate cause (a vanished `AgentRow`) is already confirmed and outside this worker's control, per both
 precedents' own closing-move precedent.
+
+## Recurrence corroboration (slot 13, escalation agt-068e39, same day)
+
+A fifth instance of the identical symptom, same day: escalation `agt-068e39` (`wall_type=plan_health`, `repo`
+`unified-trading-pm`, `PR#1788`). This session's `CONTEXT` named exactly 1 hard failure (`AG-closeout linkage`, 1 orphan
+vs baseline 0). On investigation the wall was **already resolved before this session started** —
+`origin/live-defi-rollout` had advanced past a `[plan-health-autofix]` auto-fix commit (`6816ec1d6`) and PR#1788 was
+already `MERGED` by the time this worker ran a fresh `git pull --ff-only` + re-ran
+`bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci`: 0 hard failures, AG-closeout linkage 0/0. No code change was
+needed or made (working tree left clean, `git rev-list --count HEAD ^origin/live-defi-rollout` = 0).
+`POST /api/slots/13/done {"task_id": "", ..., "one_shot_complete": true}` and a retry with `task_id: "agt-068e39"` both
+400d with the byte-identical message this doc already documents:
+`"one_shot_complete on slot 13 but no active agent owns its session 'orch-slot-13' — a Class-A worker must /done with a task_id."`
+Same shape as the `agt-a14109` case above (task genuinely complete/no-op-verified, `/done` unreachable) — adds no new
+diagnostic surface, just another data point that this is a recurring, not one-off, failure mode. Not retrying `/done`
+further per the precedent set above; ending this turn here.
