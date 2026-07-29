@@ -649,11 +649,13 @@ file, not here.
 - [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path — duplicate of the Track 5 item above**
       (same 4 upload sites, same design sketch, same 2026-07-24 correction re: the knobs NOT being a safe standalone
       step — see that item for full evidence). (repo: market-tick-data-service)
-- [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — cite finding W (ambient self-service
-      IAM identity; no different-identity credential requirement) plus the already-decided Q3 ruling: "ship code + I run
-      the canary" was the operator resolving the judgment call as "yes, run the canary", not a standing human-only
-      execution requirement. **2-VM TheGraph canary** — code is already shipped; launch the 2-VM canary via the standard
-      SPOT VM launcher process (monitored, no fire-and-forget) as a normal AO-dispatchable VM-launch todo.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-5) — duplicate of `defi_mvp_backfill_optimization_ready_2026_07_20.md`'s
+      canary todo, resolved there with full evidence.** Summary: SATISFIED by existing production evidence rather than a
+      fresh launch — `mtds-dex-swaps-backfill-1`/`-2` have been running concurrently against TheGraph for 6 days (since
+      2026-07-23) with 0 genuine HTTP 429s and 0 `attempted_failed` shard corruption across 92,317+43,913 run.log lines,
+      proving the shared TheGraph key pool holds at N=2. Full evidence + the companion pagination-fix re-backfill
+      validation (which also surfaced an unrelated COMPOUND_V3 regression, filed separately) in
+      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`'s corresponding todo.
 - [ ] [DATA] P1. **Resume paused DeFi crons NOT scoped to `dex_pool_state`** + fix the honest-coverage-nightly
       right-size + codex-drift doc — gated on Track 1 (LENDING migration + canon walk above) + Track 2 (path-shape-pin
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live
