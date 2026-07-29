@@ -480,13 +480,13 @@ drift_direction: advance-code
       `pipeline-mode-and-batch-live-reconciliation.md` was already past-tense/retired framing — no edit needed.
       Verification (exact done-when command):
       `rg -in "live_websocket" codex/02-data/pipeline-mode-and-batch-live-reconciliation.md codex/02-data/availability-manifest-and-data-status.md codex/02-data/honest-absence-downstream-handling.md codex/02-data/external-data-always-available-rule.md`
-      shows only past-tense/retired-alias framing (verified above). Shipped `unified-trading-pm@<pending-sha>` (SHA
-      filled in at commit time). The source doc's §#7 checkbox
-      (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`) is updated with this same evidence but
-      stays **unchecked** — its own REMAINING note also names the per-AG `*_manifest_canonicalisation` +
-      `pipeline_mode_partition_migration` + `data_source_provenance` + `tradfi_massive_dual_source` plan-corpus sweep,
-      which is explicitly OUT OF SCOPE for this batch1b item and has not been executed; flipping §#7 fully done here
-      would be a false-completion claim, so only THIS todo (the codex-docs sub-scope) is marked done.
+      shows only past-tense/retired-alias framing (verified above). Shipped `unified-trading-pm@93fbdea35`. The source
+      doc's §#7 checkbox (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`) is updated with this
+      same evidence but stays **unchecked** — its own REMAINING note also names the per-AG
+      `*_manifest_canonicalisation` + `pipeline_mode_partition_migration` + `data_source_provenance` +
+      `tradfi_massive_dual_source` plan-corpus sweep, which is explicitly OUT OF SCOPE for this batch1b item and has not
+      been executed; flipping §#7 fully done here would be a false-completion claim, so only THIS todo (the codex-docs
+      sub-scope) is marked done.
 - [ ] [CODE] P2. features-service calendar batch orchestrator: register the two orphaned calculator groups — add
       `"yield_curve"` and `"economic_results"` to `CALENDAR_FEATURE_GROUPS` in
       `features_service/calendar/cli/handlers/batch_handler.py` (currently `["time_features", "economic_events"]`), and
