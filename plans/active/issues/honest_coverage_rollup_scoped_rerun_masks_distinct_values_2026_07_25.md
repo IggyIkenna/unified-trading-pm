@@ -114,6 +114,9 @@ call -- not guessed past here.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide reader-side vs writer-side guard (Option A/B) for the scoped-rerun rollup overwrite** —
-      neither remediation has been implemented; a scoped `--asset-group` re-run still silently masks other asset_groups'
-      distinct-values as false-clean 0/0.
+- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — Option B, writer-side guard.**
+      `measure_honest_coverage.py` must never overwrite a wider existing `coverage.json` with a narrower one for the
+      same date — merge the new asset_group's section into the existing payload (read-modify-write), or write scoped
+      runs to a per-asset_group path (e.g. `{date}/coverage.{asset_group}.json`) and have
+      `_read_honest_coverage_rollup()` union across same-day files. Fixes the data loss at the source rather than
+      routing around observed gaps. (repos: instruments-service, deployment-api)

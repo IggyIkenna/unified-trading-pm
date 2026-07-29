@@ -368,17 +368,16 @@ Policy shape) assumed it would need to enumerate.
 
 ### Phase D — Apply + verify (human-gated, irreversible)
 
-- [ ] 8. [OPERATOR] P2. Flip `unified-trading-system`'s policy live — human-only, permanent, no AR soft-delete/undelete;
-      same human-gate discipline as
-      [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md).
-      **Note (2026-07-27): that doc's §3a reversibility carve-out does NOT apply here** — §3a's fresh-check
-      (`gcs_bucket_soft_delete_retention_seconds`) is specific to GCS bucket objects; Artifact Registry Docker images
-      have no equivalent soft-delete/undelete mechanism at all, which is exactly why this todo already states the
-      correct AR-specific reason (irreversible, no undo) rather than the GCS reversibility question §3a addresses.
-      Done-when: `gcloud artifacts repositories describe unified-trading-system --format="yaml(cleanupPolicies)"` shows
-      the live policy. **Reviewed 2026-07-28 (operator gate-cleanup pass) — confirmed remains a PERMANENT hard-stop**,
-      same reasoning as todo 7: zero-soft-delete + irreversible legacy-object-delete-after-copy is never covered by the
-      reversibility carve-out. Not retagged.
+- [x] ✅ 8. [OPERATOR] P2. Flip `unified-trading-system`'s policy live — human-only, permanent, no AR
+      soft-delete/undelete. **DONE 2026-07-29 (operator direct approval, interactive session)** — evidence reviewed
+      in-thread (dry-run clean, zero-intersection PASSES against every deployed digest, 3,509 stale versions / ~4,492GB
+      logical flagged, no offenders). Executed:
+      `gcloud artifacts repositories set-cleanup-policies unified-trading-system --location=asia-northeast1 --policy=plans/active/docker_artifact_registry_cleanup_policy_unified_trading_system.json --no-dry-run`
+      (plain `--policy` without `--no-dry-run` left dry-run ON — gcloud does not implicitly disable it by omission).
+      Verified via
+      `gcloud artifacts repositories describe unified-trading-system --location=asia-northeast1     --format="yaml(cleanupPolicies,cleanupPolicyDryRun)"`:
+      all 3 policies live, `cleanupPolicyDryRun` field absent (confirmed real/non-dry-run). Todo 9's T+2-day re-audit is
+      the next verification step.
 - [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
       actual GB/$ drop vs the dry-run projection AND that no `ImagePullBackOff` / failed-deploy / failed-scale incident
       fired in the window. Done-when: a re-audit CSV shows the reduction and the incident check is clean.

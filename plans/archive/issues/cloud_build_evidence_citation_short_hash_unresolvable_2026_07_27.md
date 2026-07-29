@@ -17,9 +17,9 @@ summary: >-
   presence rather than truly resolving it. Either way a build-backed completion can pass without the cited build ever
   being confirmed. This is an evidence-integrity item, not a single bad checkbox: it undermines the "run it, don't read
   it" contract corpus-wide wherever short hashes were cited.
-status: open
+status: resolved
 assigned_vm:
-resolved_by:
+resolved_by: "interactive operator decision session, 2026-07-29"
 locked_by:
 nature: issue
 asset_group: [ci]
@@ -77,7 +77,25 @@ gate's actual resolve-vs-match behavior and (2) an operator decision on the cita
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rule on the Cloud Build evidence-citation format** — confirm whether
-      `check_evidence_backed_completion.py` actually resolves `cloudbuild=<id>` via `gcloud builds describe` or only
-      pattern-matches the field's presence, then decide the accepted citation format (reject a bare short hash) and
-      whether existing short-hash citations need back-filling (see "Open questions for the owner / operator" above).
+- [x] ✅ [SCRIPT] P1. **RESOLVED 2026-07-29.** Verified: the checker DOES call `gcloud builds describe` on every cited
+      id, but only fails on an unresolvable citation when `--require-verification` is passed — the real
+      `quality-gates.sh` invocation does NOT pass that flag, so a bogus short-hash citation silently passed by design
+      (the "unresolvable" case originally covered both "no gcloud/auth here" and "gcloud ran, NOT_FOUND" with the same
+      soft-skip). Operator direct answer: turn on `--require-verification` — but a corpus sweep first (84 `cloudbuild=`
+      citations across `plans/` + `codex/`) found only 1 currently-in-scope (top-level `plans/active/*.md`, per the
+      checker's own default non-recursive scan) affected string, and it was an ellipsis-truncated informal reference to
+      an already-cited build, not a genuine bogus citation — fixed
+      (`consolidator_throughput_backlog_monitor_2026_07_09.md`). Running the checker for real against the live corpus
+      surfaced a sharper problem: 8 properly UUID-shaped citations no longer resolve — not bogus, just aged out of Cloud
+      Build's retention window — so blindly turning on `--require-verification` would newly fail the standard QG on
+      legitimate historical claims for no safety benefit. **Shipped the more precise fix instead** (same substance,
+      better mechanism): `_describe_build_status` now distinguishes "gcloud couldn't run at all" (soft-skip, unchanged)
+      from "gcloud ran and reported NOT_FOUND"; the latter is split further by citation shape — a non-UUID-shaped
+      citation (the actual short-hash bug) is now an **unconditional** violation independent of
+      `--require-verification`, while a well-formed UUID that's aged out stays soft-skipped by default (only flagged
+      under `--require-verification`, for a stricter reviewer context). Closes the reported gap without breaking the QG
+      on the 8 legitimate old citations. `Evidence: cloudbuild=` back-fill for the pre-existing short-hash citations:
+      none needed in the active, in-scope corpus (all resolved to full UUID + short-form was cosmetic; archived docs are
+      out of the checker's scan scope by design). (repo: unified-trading-pm —
+      `scripts/quality_gates/check_evidence_backed_completion.py` +
+      `tests/unit/test_check_evidence_backed_completion.py`, 5 new regression tests)
