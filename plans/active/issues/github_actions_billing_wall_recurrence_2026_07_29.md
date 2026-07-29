@@ -190,3 +190,19 @@ return to a normal (non-zero-job) run.
   a fresh `/blocked` (same standing `BLK-21d55fb1` condition; avoiding the escalation-spam pattern the P3 todo above
   already flags). Pinged the authoring slot with the outcome. No code or workflow change made or needed; slot left clean
   on `live-defi-rollout`.
+
+- **2026-07-29T21:23Z (cicd escalation `agt-d970e3`, slot 4)**: this session's own dispatch — `alerting-service`
+  `ldr_qg_failure` (`#0`, no PR). Confirms the `agt-49fba5` entry above (same repo, same slot number, earlier session):
+  local `bash scripts/quality-gates.sh` at HEAD `86ca026` passed clean via content-sentinel hit (14s,
+  `ALL QUALITY GATES PASSED`) — no code/test defect to diagnose. Re-dispatched fresh (`workflow_dispatch` on
+  `live-defi-rollout`, `30492162920`, 21:23:13Z) → still `startup_failure`, 0 jobs, 1s — wall has not self-cleared, now
+  confirmed active ~3h+ past this doc's original onset estimate. Also independently reproduced fleet-wide via
+  `gh run list` across `market-tick-data-service`, `instruments-service`, `unified-api-contracts` (all `startup_failure`
+  at 21:10-21:17Z) — same signature, not repo-specific. Ran `actionlint` v1.7.12 against both the caller
+  (`alerting-service/.github/ workflows/quality-gates-v2.yml`) and the reusable
+  (`unified-trading-pm/.github/workflows/python-quality-gates-v2.yml`) — both clean (the only finding, "glue" runner
+  label unknown, is expected/false-positive for an unregistered custom self-hosted label, not a real defect) — rules out
+  a workflow-content regression as an independent check beyond the YAML-parse check already on record above. Not
+  re-filing `/blocked` (same standing `BLK` condition, already covered by the `[OPERATOR] P0` todo). Pinged the
+  authoring slot with the outcome. No code or workflow change made or needed; `alerting-service` left clean on
+  `live-defi-rollout`.
