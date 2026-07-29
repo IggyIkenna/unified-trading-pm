@@ -311,7 +311,13 @@ drift_direction: advance-code
       doc + module docstring if a future strategy needs one. Issue doc flipped to `status: resolved`.
       `unified-api-contracts@14f0aff5`. **(c) remains the sole open leg — still genuinely blocked on the operator's
       3-way genesis-date call in `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`;
-      checkbox correctly stays unchecked.**
+      checkbox correctly stays unchecked.** — **Status 2026-07-29T15:3xZ (slot 15, data_engineering)**: attempted to
+      resolve leg (c)'s genesis-date ambiguity via external research (Aster/Astherus's real-world launch history) —
+      deepened rather than resolved it (real Aster/Astherus history postdates all 3 candidate dates by over a year, so
+      this is an internal/methodological decision, not a discoverable fact). Filed `BLK-a94f446d` with 3 options
+      (consult the original operator decision / default to the earliest-real-captured-row date / default to the
+      launcher's current default). Full detail in the issue doc's Progress Log (`unified-trading-pm@263739b7c`).
+      Checkbox stays unchecked pending the answer.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
       versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from
