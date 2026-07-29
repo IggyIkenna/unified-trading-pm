@@ -218,11 +218,40 @@ investigated further here, out of scope for this doc.
       to provision additional Claude accounts into the scheduled-jobs headroom-check rotation pool, given 5/6 are
       currently exhausted through 2026-08-02 in the worst case — a real subscription-cost decision, not something to
       action without operator sign-off.
-- [ ] [BACKEND] P2. Investigate the `features-service` dirty-worktree quarantine blocking 5/9 `ag_closeout_auditor` +
+- [x] [BACKEND] P2. Investigate the `features-service` dirty-worktree quarantine blocking 5/9 `ag_closeout_auditor` +
       9/9 `na_eligibility_auditor` tranches (see finding above, run window 2026-07-29T05:00-05:18 UTC). Identify which
       slot worktree(s) have the stuck `features-service` checkout (stale `.git/index.lock`, or a local commit sitting
       ahead of `origin/live-defi-rollout` past the 900s age guard) and clear it. The hourly retry means no work is lost
-      while this is open, but it won't self-resolve.
+      while this is open, but it won't self-resolve. — **Done 2026-07-29, root-caused and fixed, not just cleared.**
+      Live SSM inspection (read-only, all 16 slot worktrees' `features-service` checkouts) found the actual quarantined
+      state had ALREADY self-cleared by the time of investigation (slots checked twice ~10 min apart: first pass showed
+      slot 13 one commit ahead of `origin/live-defi-rollout` (age 2881s, `7f2e4f64`) + slot 15 with one dirty file;
+      second pass showed both fully clean) — this framing's own "won't self-resolve" was **wrong**: it does self-resolve
+      once the age guard clears AND something re-attempts a spawn on that specific slot. Cross-checked against
+      `/api/scheduled-jobs/recent`'s full history (123 rows) for the exact quarantine signature: it fired exactly TWICE
+      today — 2026-07-29T05:00:01Z (4 `ag_closeout_auditor` tranches: infra/cross-cutting/sports/tradfi) and
+      2026-07-29T08:45:49Z (4 `na_eligibility_auditor` tranches) — both times as one batch of SAME-SECOND concurrent
+      dispatch attempts cascading through DIFFERENT symptoms of the identical race on one shared slot (`.tabs/4/`
+      confirmed in the index.lock error text): a fresh 0s/2s-old ahead-commit age-guard trip, a `.git/index.lock`
+      collision, a "nothing to commit (race)" post-stage-clean, and a "session already exists" collision. **Root
+      cause**: `install-ag-closeout-auditor-timer.sh` / `install-na-eligibility-auditor-timer.sh` fire all pending
+      tranches CONCURRENTLY (backgrounded `curl` + `wait`, by design, for real cross-slot parallelism) — each tranche is
+      its own independent `agent-orchestrator`'s `plan_health.dispatch()` call with its OWN local `quarantined_slot_ids`
+      set (`ao_scheduled_job_branch_quarantine_friction_2026_07_28`'s fix), so that set only protects a call's OWN retry
+      loop, not a SIBLING concurrent call that hits the same slot's quarantine moments earlier. `server/escalation.py`
+      already solved this exact class of problem (a module-level, TTL'd `_recently_quarantined` registry, shared across
+      ALL calls in this single-process/no-`--workers` server) but `plan_health.py`'s later (2026-07-26/27)
+      sharded-tranche dispatch never inherited that pattern. **Fix shipped**: ported escalation.py's
+      `_recently_quarantined`/`_mark_slot_quarantined`/`_is_recently_quarantined` TTL-registry pattern into
+      `plan_health.py` (`agent-orchestrator@f2b6d73`, `server/plan_health.py`) — `_pick_free_slot` now also skips any
+      slot marked quarantined by ANY concurrent `dispatch()` call within the last 10 minutes, and the retry loop's
+      existing per-call `quarantined_slot_ids.add()` now also calls the new module-level `_mark_slot_quarantined()`. New
+      regression test (`test_dispatch_quarantine_shared_across_concurrent_sibling_calls`) proves a second, independent
+      `dispatch()` call (simulating a sibling tranche) skips a slot the first call just quarantined, without ever
+      invoking `do_spawn` on it. Full `quality-gates.sh` green, 69/69 `test_plan_health.py` tests pass. Live-verified
+      post-fix: both jobs' `/api/scheduled-jobs/recent` history shows all 9 tranches of each job reaching
+      `status: "dispatched"` at least once today; the CURRENT recurring blocker for both jobs (since ~09:30 UTC) is the
+      separate, already-tracked account-pool exhaustion above, not this quarantine race.
 
 ## Codex SSOTs
 
