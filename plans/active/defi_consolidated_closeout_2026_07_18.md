@@ -106,9 +106,9 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
+last_updated:
   2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27
-  "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -377,9 +377,10 @@ Discriminator = **does a manifest row exist**.
       (`canonical_path_violations`, `_ID_FORM_CHECKED_ASSET_GROUPS={cefi,defi}`); `canonical-cutover-register.md` §5 +
       `defi-canonical-naming-ssot.md`'s WRITE-MODEL banner both incorrectly state capture is fully stopped — measured
       new objects with `time_created=2026-07-24` (same day as probe). Full evidence + repro:
-      `/plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`. **Done
-      when** a fresh `canonical_path_violations()` id-form sample against `write_defi_rows()` output across a multi-day
-      window returns 0 violations. (repos: market-tick-data-service, unified-api-contracts, unified-trading-pm)
+      `/plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
+      **Done when** a fresh `canonical_path_violations()` id-form sample against `write_defi_rows()` output across a
+      multi-day window returns 0 violations. (repos: market-tick-data-service, unified-api-contracts,
+      unified-trading-pm)
 
 ## Track 3 — DENOM: empty_confirmed / denominator honesty · P1
 

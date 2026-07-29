@@ -40,7 +40,7 @@ parent_epic: defi_master
 
 **Purpose**: measure the scale of `pipeline_mode=batch_*` DeFi objects written under the bare-symbol filename-leaf shape
 since 2026-07-20 (the `canonical-cutover-register.md` §5 "capture stopped" reference point), per
-`plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`'s "[DIAG]
+`plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`'s "[DIAG]
 Measure the scale" todo, executed via `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding
 todo.
 
@@ -124,7 +124,7 @@ listing failure.
 ## Codex / doc cross-links
 
 - Source issue:
-  `plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`
+  `plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`
 - Dispatching plan: `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`
 - Oracle SSOT: `/codex/02-data/four-surface-reconciliation-procedure.md`, `/codex/02-data/canonical-cutover-register.md`
   §5

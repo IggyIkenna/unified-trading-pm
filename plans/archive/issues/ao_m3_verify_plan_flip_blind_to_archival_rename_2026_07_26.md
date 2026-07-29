@@ -20,7 +20,7 @@ tags: [agent-orchestrator, m3, plan-flip, verify, archival, gate-gap]
 related:
   [
     /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md,
-    /plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md,
+    /plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md,
   ]
 created: 2026-07-26
 source:
@@ -39,7 +39,8 @@ depends_on: []
 locked_by:
 ---
 
-> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule. Fixed in the same commit as the companion doc
+> **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Fixed in the same commit as the companion doc
 > `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`
 > (`agent-orchestrator@587c8db`, same root function `check_plan_flip`).
 
@@ -117,8 +118,9 @@ own independently-scoped follow-up.
       same commit ADDED (or that git DID detect as a rename via `-M`) sharing the old path's basename, and
       `_flips_at_path_or_rename()`/`_cancels_at_path_or_rename()`/`_defers_at_path_or_rename()` wrap the existing
       `_diff_flips_checkbox`/etc. checks to retry at that resolved path when the literal old-path diff shows no flip
-      (the pure-deletion case this doc diagnosed). Regression tests: `test_done_gate_plan_flip_hard_reject.py::
-      test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv` (cross-repo, the exact scenario
-      this doc reproduces) + `::test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv`
-      (mode-1 sibling). Full `quality-gates.sh` green (1915 passed). Companion fix (the fallback path, a related but
-      distinct gap) shipped in the same commit — see `ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`.
+      (the pure-deletion case this doc diagnosed). Regression tests:
+      `test_done_gate_plan_flip_hard_reject.py::     test_done_accepts_cross_repo_when_checkbox_flip_bundled_with_archival_git_mv`
+      (cross-repo, the exact scenario this doc reproduces) +
+      `::test_done_accepts_single_repo_when_checkbox_flip_bundled_with_archival_git_mv` (mode-1 sibling). Full
+      `quality-gates.sh` green (1915 passed). Companion fix (the fallback path, a related but distinct gap) shipped in
+      the same commit — see `ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md`.

@@ -673,10 +673,10 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     `ldr-to-main-promote-fleet.yml`'s `process_repo()` (creation + both re-arm paths, closing the exact UAC #544 class);
     new hermetic regression test `scripts/quality-gates-base/tests/test-ldr-promote-provenance-rearm-gate.sh`, 8/8
     passing. 20c: same commit `unified-trading-pm@105cebfde` —
-    `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA`); live-state verification
-    found execution-service's leg already shipped (`execution-service@7454c81a`, only the codex doc was stale — fixed in
-    the same commit), deployment-api held at its standing 2026-06-24 operator ruling. Full per-decision detail +
-    evidence: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Operator decisions / notes"
+    `/plans/archive/2026_07/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA`); live-state
+    verification found execution-service's leg already shipped (`execution-service@7454c81a`, only the codex doc was
+    stale — fixed in the same commit), deployment-api held at its standing 2026-06-24 operator ruling. Full per-decision
+    detail + evidence: `cicd_mvp_ldr_to_main_pipeline_2026_06_30.md` § "Operator decisions / notes"
     (`unified-trading-pm@ac866246b` flipped the checkboxes there).
 18. aws_codebuild_pr_approval_status_noise — **CONFIRMED ALREADY RESOLVED**: verified live via `gh pr view` — the "AWS
     CodeBuild" status check shows `SKIPPED` (not the red `FAILURE` the finding described) on unified-api-contracts#776

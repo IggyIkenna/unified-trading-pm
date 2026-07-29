@@ -377,7 +377,7 @@ exact doc anyway** — no `[unlock-plan]` in the commit message, no block, and t
 skipped).
 
 Root-caused and filed as
-[`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md):
+[`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md):
 the gate is real (`scripts/quality-gates.sh:406-422`) but lives ONLY in `quality-gates.sh`, and CLAUDE.md's own batching
 rule routes "pure doc/plan-flip → prek only" — so the gate never executes on the one commit class that archives plans.
 (The obvious `git mv`-shows-as-a-rename hypothesis was tested and **refuted**: `git diff --name-status` reports those
@@ -398,7 +398,7 @@ the doc to `plans/active/issues/` pending a real `[unlock-plan]`, then do A. Mos
 re-fixes referrer paths corpus-wide. Other: operator can type a custom answer
 
 **Status**: resolved — option A. Confirmed via
-[`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md):
+[`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md):
 that doc's own todo #1 records **RULED (a) 2026-07-26 — mandatory**; its P1/P2 mechanism-fix todos shipped
 (`check-locked-plan-deletion.sh`, commit-msg stage, end-to-end verified; the dead `quality-gates.sh:406-422` block
 removed); and its P2 retro-clean todo is marked done, citing `unified-trading-pm@2c61a8dc4` for clearing

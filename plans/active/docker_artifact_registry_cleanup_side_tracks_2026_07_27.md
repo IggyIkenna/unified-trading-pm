@@ -31,7 +31,7 @@ repos:
   ]
 scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd, gcs-lifecycle]
-related: [/plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md]
+related: [/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md]
 created: 2026-07-27
 last_updated: 2026-07-28
 parent_epic: infrastructure_master
@@ -60,7 +60,7 @@ source:
 # Artifact Registry / ECR cleanup — side-tracks
 
 > **Split plan, not standalone** — the diagnosis, policy shape, and safety rules all live in the parent,
-> [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md)
+> [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md)
 > (§ Diagnosis, § Why audit-first, § Policy shape, § Operator decisions — all still apply here, this doc does not repeat
 > them). **`sequential: true`** — todos 15-17 are a real chain (16 needs 15's referenced-tarball-set output; 17 needs
 > 16's drafted rule); todos 10-13 don't depend on each other or on 15-17, but are kept in the same top-to-bottom order

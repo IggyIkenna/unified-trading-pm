@@ -129,7 +129,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (ahead-push sentinel stale after amend, no rejected-push retry) ·
 [issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md](/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)
 (per-slot git-health reporter goes silent on token expiry) ·
-[issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md](/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md)
+[issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md](/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md)
 (git-health reporter races the FF-pull cron, phantom-dirty flicker) ·
 [issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·

@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [verification-methodology, ci-cd, promote, squash-merge, review-process]
 related:
   - /plans/active/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md
-  - /plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md
 created: 2026-07-25
 priority: P2
 parent_epic: observability_master

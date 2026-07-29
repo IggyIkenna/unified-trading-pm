@@ -17,7 +17,7 @@ repos: [deployment-api, unified-trading-library, deployment-ui, deployment-servi
 scope: [engineer]
 tags: [firestore, dynamodb, deployment-registry, observability, migration, scale, cloud-interface]
 related:
-  - /plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - /plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md
   - /plans/archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md
   - /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md

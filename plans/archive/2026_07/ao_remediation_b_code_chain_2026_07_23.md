@@ -18,7 +18,7 @@ related:
   [
     /plans/active/ao_issue_docs_consolidated_remediation_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
-    /plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
+    /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
   ]
@@ -142,8 +142,8 @@ source:
       confirmed phantom fingerprint in the issue doc (always nonzero-count + EMPTY sample), on the operator's own
       interactive human-planning VM where genuine WIP is unremarkable. Full writeup + caveats (the literal "2172" figure
       is not retroactively recoverable — item 1's fix now caps reported `dirty_files` at 5) in
-      `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
-      3)".
+      `/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24
+      (slot 3)".
 - [x] ✅ [BACKEND] P2. Add a periodic dirty-resolution sweep to the worker-liveness watchdog that runs independently of
       any spawn attempt. Every caller of `resolve_dirty_state`/`commit_and_push_dirty_repos` today is spawn or respawn
       time (`spawn_slot`, `_do_spawn`, the `slots_ops` pre-spawn gate, `_respawn`), so a dirty slot nobody tries to
@@ -341,7 +341,7 @@ source:
   5, which extends the identical signal to a different consumer.
 
 - **2026-07-24 (slot 3)**: Item 6 resolved (issue doc:
-  `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
+  `/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` § "7. RESOLVED 2026-07-24 (slot
   3)"). Slot 2 had already independently discovered the same task was blocked on interactive-box access and filed
   `/blocked BLK-c83c6bdd` + skipped; that blocker still holds (re-verified live: same `ikenna-worker` SSM
   `AccessDeniedException`, same host resolution to the human-planning VM `i-0dd9812a96cdda5dc`). Rather than re-file the

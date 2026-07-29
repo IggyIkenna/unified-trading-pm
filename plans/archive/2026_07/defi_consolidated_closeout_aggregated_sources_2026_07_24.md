@@ -169,7 +169,7 @@ picture.
       DRIFT-SOLANA/FRAX/MORPHO/FLUID" framing is stale — DRIFT-SOLANA's absence is correct-by-design (removed
       2026-07-16) and FRAX-ETHEREUM was never in scope (its UAC capability is `vault_share_price`, not lst/lending).
       Deeper finding: DeFi has no `expected_unattempted` seeder at all, gated on an operator/architecture decision — see
-      `plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`.
+      `plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`.
     - **[DATA] P1.** C9 — legacy DeFi bucket object paths are pre-canonical (`category=` not `asset_group=`, no
       `pipeline_mode=`); normalise in the same single-walk as C2-C4.
     - **[DATA] P1.** D2 — MDPS swaps_ohlcv reprocess for the stale chain-column `attempted_failed` rows (28,634
@@ -399,7 +399,7 @@ picture.
       (`lending_indices_handler`, `risk_params_handler`, `lst_rates_handler`, `evm_defi_collectors`).
     - **[DATA] P2.** Check whether affected (venue, chain) pairs are in UAC `DEFI_INSTRUMENTS_NOT_YET_COLLECTED` or
       `PROTOCOL_PAUSE_WINDOWS` — superseded by the enumerator's priority ordering, may no longer be decision-relevant.
-  - [`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`](/plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md)
+  - [`plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`](/plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`](/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md)
     (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos" entry only accounted for

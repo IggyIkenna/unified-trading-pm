@@ -20,7 +20,7 @@ stage: [data]
 repos: [unified-trading-library]
 scope: [engineer]
 tags: [data-correctness, silent-placeholder, manifest, read-path, error-handling]
-related: [plans/active/is_daily_enum_capture_heal_2026_07_07.md]
+related: [plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md]
 created: 2026-07-27
 priority: P2
 parent_epic: infrastructure_master

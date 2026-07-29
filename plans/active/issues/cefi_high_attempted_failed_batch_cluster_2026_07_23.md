@@ -503,7 +503,7 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   shipped**: quickmerge's ancestor cascade hit a genuine, pre-existing, unrelated cross-repo blocker —
   `unified-trading-library@3b99d19d` bumped `fastapi>=0.137.0` while `canonical-dependency-manifest.json` +
   `deployment-service`'s own pyproject.toml still cap `<0.137.0` (SSOT contradiction, already filed as P0
-  `plans/active/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` by another agent; I added one
+  `plans/archive/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` by another agent; I added one
   corroborating finding there re: `deployment-api`'s route-ordering test). Verified this is NOT my diff's fault
   (reproduced on a clean tree) and did NOT attempt a unilateral partial fix (tried it, found it silently drops 140 test
   items via `deployment-api`'s broken peer install, reverted). Declared repo-blocker `RB-18e1c305` on

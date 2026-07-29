@@ -31,7 +31,7 @@ tags: [gcs, path-resolution, pipeline-mode, silent-failure, canonical-paths, cen
 related:
   [
     /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
-    /plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md,
+    /plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md,
     /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-28
@@ -113,7 +113,7 @@ bespoke prefix-builder, which is structurally why this bug class keeps recurring
    `validate_lookback_candles()` (line 486) whenever `instruments=None`. Because `LookbackValidationReport.valid`
    defaults `True` and only flips `False` via `add_insufficient()`, an empty discovery list produces a **VACUOUS PASS**
    (0/0 "validated") — the validator silently reports success while validating nothing. This is a **known-open gap**:
-   `/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4 already asked
+   `/plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4 already asked
    for exactly this audit and this call site wasn't caught then. Reachability of `instruments=None` in the common bulk
    CLI path traced but not fully proven end-to-end.
 
@@ -573,7 +573,7 @@ going forward. Still open, tracked as a todo below.
       `_discover_instruments()` needed the same `pipeline_mode=`-aware prefix enumeration MDPS's
       `_candidate_pipeline_mode_values()` pattern uses. Fixed, plus extracted `_list_instrument_ids_for_prefix()` to
       keep the method under the 50-line QG limit. This closes
-      `/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4. Evidence:
+      `/plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4. Evidence:
       `features-service@be36b42b`. (repo: features-service)
 
 - [x] [DESIGN] P1. **Rule on the remaining MTDS finding** — RULED + FIXED + SHIPPED 2026-07-29,

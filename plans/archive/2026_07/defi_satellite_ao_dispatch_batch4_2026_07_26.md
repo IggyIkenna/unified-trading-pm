@@ -124,7 +124,7 @@ drift_direction: advance-code
 Three candidates this run had drafted were dropped once batch3 was discovered on origin. Recorded so a future run does
 not re-derive them:
 
-- **The three read-only audits in `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`** —
+- **The three read-only audits in `/plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`** —
   batch3's `[DATA] P3` at its "Two read-only reconciliation checks" todo already claims sub-items (a) the three
   `_DEFAULT_PROTOCOLS` lists versus `SUBGRAPH_IDS`, and (b) the FRAX-ETHEREUM `vault_share_price` scheduling check, with
   the same read-only and no-`fluid`-without-a-collector guardrails. Sub-item (c), the MORPHO-ARBITRUM/OPTIMISM/POLYGON

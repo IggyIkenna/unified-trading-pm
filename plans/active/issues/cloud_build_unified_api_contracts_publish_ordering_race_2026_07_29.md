@@ -51,7 +51,7 @@ scope: [engineer, admin]
 tags: [ci-cd, cloud-build, publish-ordering, artifact-registry, unified-api-contracts, race-condition, monitoring]
 related:
   [
-    /plans/active/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md,
+    /plans/archive/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md,
     /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]

@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, finalize-plan-coverage]
 related:
   [
-    /plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md,
+    /plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"

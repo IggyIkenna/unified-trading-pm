@@ -128,7 +128,7 @@ for the live picture.
   - NEW todo. **[SCRIPT] P1.** Implement R1: bounded-concurrent `_run_date_as_subprocess` dispatch (the 2-week
     throughput)
   - +6 more (P2) — see file for the rest
-- [`plans/active/is_daily_enum_capture_heal_2026_07_07.md`](/plans/active/is_daily_enum_capture_heal_2026_07_07.md)
+- [`plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md`](/plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md)
   (`status: draft`)
   - **[CODE] P0.** Add `exc_info=True` to the UTL shard-isolation catch (`service_framework/_adapter.py`)
   - **[CODE] P0.** With the real traceback now visible, re-run `is-daily-enum-{prediction,sports}` and read the ACTUAL

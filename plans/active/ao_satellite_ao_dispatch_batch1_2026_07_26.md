@@ -145,7 +145,7 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       dirty-polls case) and `unified-trading-pm@dd172d6b7` (`ff_one()`'s per-repo `dirty_consecutive_ticks>=2`
       confirm-gate in `slot-cron-ff-pull.sh` + `tests/test_slot_cron_ff_pull_dirty_gate.bats`, incl. the one-tick-
       phantom-does-not-skip case and cross-repo isolation). Both trees clean at HEAD on this repo/slot. Source:
-      `/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` (both remaining INFRA P2 todos
+      `/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md` (both remaining INFRA P2 todos
       — combined because they are one gate applied at two sites, both now flipped too). Per that doc's own 2026-07-23
       narrowing, do NOT re-hunt a reporter-internal race unless a post-`agent-orchestrator@529b0dc` recurrence is
       observed.
@@ -245,18 +245,18 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
-                          NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
-                          `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
-                          not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
-                          `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
-                          downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
-                          logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
-                          resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
-                          defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
-                          the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
-                          primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
-                          unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
-                          decision this session didn't make.
+                                      NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+                                      `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+                                      not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+                                      `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+                                      downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+                                      logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+                                      resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+                                      defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+                                      the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+                                      primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+                                      unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+                                      decision this session didn't make.
 
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`

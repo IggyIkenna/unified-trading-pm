@@ -31,7 +31,7 @@ code_refs:
 
 > **SSOT for the Docker-image retention policy applied to all GCP Artifact Registry and AWS ECR repos.** Implementation
 > plans:
-> [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md)
+> [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md)
 > (parent),
 > [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
 > (satellite).
