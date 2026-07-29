@@ -17,7 +17,7 @@ summary: |
   UNRESOLVED_TEAM_NAME status rather than silently mismatching or guessing). Not fixed as part of the join-key task
   because the correct alias additions need per-team verification against API-Football's own official names (a
   guessed rewrite risks new, differently-wrong aliases — same caution as the sibling league_id="UNKNOWN" issue doc).
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -32,7 +32,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-09
-last_updated: 2026-07-09
+last_updated: 2026-07-29
 parent_epic: sports_master
 priority: P2
 source:
@@ -44,8 +44,12 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-api-contracts@96d15ba7
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-INTO-CODE.** `unified-api-contracts@96d15ba7` (2026-07-27) already closed the one
+> remaining todo — verified live 2026-07-29 (`validate_team_resolution()` resolves all 4 originally-cited names, zero
+> `TeamResolutionError`).
 
 # PRIMERA_DIVISION (Chile) Odds-API team names miss the team_mappings.py alias dict
 
@@ -83,10 +87,15 @@ Sample real unresolved (home, away) pairs seen across the 4-day window:
 
 ## Todos
 
-- [ ] [DATA] P2. **Add the missing Chilean club aliases to `team_mappings.py`** — per the 2026-07-23 RE-TRIAGE, all 3
-      originally-cited fixtures are still unresolved today (now for the other side of each pairing:
-      `Coquimbo Unido`/`Deportes Concepción`/`Deportes Limache`/`Universidad de Concepción` all still raise
-      `TeamResolutionError`); requires a full pull of API-Football's official Chile Primera team list before adding.
+- [x] ✅ [DATA] P2. **ALREADY DONE — found already-shipped 2026-07-29 while triaging this doc.**
+      `unified-api-contracts@96d15ba7` ("fix(sports): close PRIMERA_DIVISION (Chile) Odds-API team-name alias gap",
+      2026-07-27) added `COQUIMBO_UNIDO`, `CONCEPCION` (covers `Deportes Concepción`), `DEPORTES_LIMACHE`, and
+      `UNIVERSIDAD_DE_CONCEPCION` to `team_mappings.py`'s `CHILE_PRIMERA_TEAM_ALIASES` — verified live against the
+      current `.venv`: `validate_team_resolution()` now resolves all 4 originally-cited names (`Coquimbo Unido` →
+      `COQUIMBO_UNIDO`, `Deportes Concepción` → `CONCEPCION`, `Deportes Limache` → `DEPORTES_LIMACHE`,
+      `Universidad de Concepción` → `UNIVERSIDAD_DE_CONCEPCION`) plus the earlier-fixed counterpart names (`O'Higgins`,
+      `Universidad Católica (CHI)`) with zero `TeamResolutionError`s. No new code shipped by this session — the fix
+      predates it; this todo is closed on that evidence.
 
 (Not exhaustive — re-run the measurement script against a fuller date range to get the complete unresolved-team roster
 before doing the alias-dict fix, since only ~5 real Chile Primera fixtures were captured in this 4-day sample.)
