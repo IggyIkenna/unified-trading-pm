@@ -26,12 +26,13 @@ as the config SSOT, while THIS check enforces them fleet-wide today as a
 per-repo shrinking baseline (`ruff_rule_ratchet_baseline.yaml`): a NEW
 violation fails the PR; the grandfathered set only shrinks.
 
-Mechanics: runs ``ruff check --isolated`` with an explicit ``--select`` per
-rule group (so it works uniformly regardless of each repo's own pyproject
-state) and, for TID251, a SINGLE combined ``--config`` banned-api override
-(NOTE: ruff replaces — does not merge — the banned-api table across multiple
-``--config`` flags, so the two bans MUST ride one flag). tests/ excluded
-(matches the Phase-1 audit scope).
+Mechanics: runs ``ruff check --isolated`` ONCE per repo with every rule
+group's ``--select`` combined (so it works uniformly regardless of each
+repo's own pyproject state) and a SINGLE combined ``--config`` carrying both
+the TID251 banned-api override and the cloud_interface TID251-only exemption
+(NOTE: ruff replaces — does not merge — a table across multiple ``--config``
+flags, so all of this MUST ride one flag). tests/ excluded (matches the
+Phase-1 audit scope).
 
 Per-line opt-out: standard ruff ``# noqa: DTZ005`` / ``# noqa: TID251`` with a
 one-line reason.
@@ -205,40 +206,65 @@ def _ruff_cmd() -> list[str]:
     raise FileNotFoundError("ruff not found (neither `python -m ruff` nor a PATH binary)")
 
 
-def run_ruff_count(scan_root: Path, group: str) -> list[tuple[str, int, str]]:
-    """Run ruff for one rule group; return [(file, line, code)] violations."""
-    cmd = [*_ruff_cmd(), "check", "--isolated", "--exit-zero", "--output-format", "json", "--no-cache"]
+def run_ruff_count_all(scan_root: Path) -> dict[str, list[tuple[str, int, str]]]:
+    """Run ruff ONCE for every rule group combined; return ``{group: [(file, line, code)]}``.
+
+    Was 2 separate full-source-tree ``ruff check`` invocations (one per group in
+    ``RULE_GROUPS``) on top of the primary ``[2/6] LINT`` pass that already runs
+    ``ruff check`` once with caching — merged into one invocation selecting every
+    group's codes at once, then partitioned by code prefix. ``--isolated`` stays
+    (load-bearing: it's what makes this uniform regardless of each repo's own
+    ``pyproject.toml``/``ruff.toml`` — see module docstring). ``--no-cache``
+    dropped: no correctness reasoning for it was ever documented here, and
+    `base-service.sh`/`base-library.sh` already repoint `RUFF_CACHE_DIR` to a
+    host-shared dir specifically so ruff invocations (incl. this one) reuse
+    cache across worktrees/slots — ruff's cache is keyed by (file content,
+    effective settings), and `--isolated` pins the effective settings to
+    exactly this invocation's CLI flags, so cache reuse is correctness-safe.
+
+    The TID251 banned-api override and the cloud_interface exemption both must
+    ride the single ``--config`` flag ruff allows per rule table (ruff REPLACES,
+    not merges, a table across multiple ``--config`` flags). The exemption is
+    expressed as a TID251-only ``per-file-ignores`` entry (not
+    ``--extend-exclude``) so the exempt path stays IN-SCOPE for DTZ scanning —
+    an ``--extend-exclude`` would have silently dropped it from the merged DTZ
+    scan too, a real (if currently zero-violation) behavior change from the
+    pre-merge two-invocation scan.
+    """
+    # Ruff anchors RELATIVE multi-segment exclude/per-file-ignore globs to the
+    # CWD (the "project root"), NOT the scanned path — so pass ABSOLUTE paths
+    # (verified ruff 0.15.0). Cover both shapes: scan_root == repo root
+    # (…/unified_trading_library/cloud_interface) and scan_root == the package
+    # dir itself (…/cloud_interface). Non-existent paths are inert.
+    exempt_globs = [str((scan_root / TID251_EXEMPT_PATH).resolve()), str((scan_root / "cloud_interface").resolve())]
+    per_file_ignores = ", ".join(f'"{g}/**" = ["TID251"]' for g in exempt_globs)
+    config = f"{TID251_BANNED_API_CONFIG}\nlint.per-file-ignores = {{{per_file_ignores}}}\n"
+
+    cmd = [*_ruff_cmd(), "check", "--isolated", "--exit-zero", "--output-format", "json", "--config", config]
     for pattern in EXTEND_EXCLUDES:
         cmd += ["--extend-exclude", pattern]
-    if group == "dtz":
-        for code in DTZ_CODES:
-            cmd += ["--select", code]
-    elif group == "tid251":
-        cmd += ["--select", "TID251", "--config", TID251_BANNED_API_CONFIG]
-        # Ruff anchors RELATIVE multi-segment exclude globs to the CWD (the
-        # "project root"), NOT the scanned path — so pass ABSOLUTE paths
-        # (verified ruff 0.15.0). Cover both shapes: scan_root == repo root
-        # (…/unified_trading_library/cloud_interface) and scan_root == the
-        # package dir itself (…/cloud_interface). Non-existent paths are inert.
-        cmd += ["--extend-exclude", str(scan_root / TID251_EXEMPT_PATH)]
-        cmd += ["--extend-exclude", str(scan_root / "cloud_interface")]
-    else:  # pragma: no cover — closed set
-        raise ValueError(f"unknown rule group: {group}")
+    for code in DTZ_CODES:
+        cmd += ["--select", code]
+    cmd += ["--select", "TID251"]
     cmd.append(str(scan_root))
 
     result = subprocess.run(cmd, capture_output=True, text=True, check=False)
     if result.returncode != 0:
-        raise RuntimeError(f"ruff failed for {scan_root} ({group}): {result.stderr.strip()[:500]}")
+        raise RuntimeError(f"ruff failed for {scan_root}: {result.stderr.strip()[:500]}")
     rows = json.loads(result.stdout or "[]")
-    out: list[tuple[str, int, str]] = []
+    out: dict[str, list[tuple[str, int, str]]] = {g: [] for g in RULE_GROUPS}
     for row in rows:
         if not isinstance(row, dict):
             continue
         filename = str(row.get("filename", "?"))
         location = row.get("location")
         line = int(location.get("row", 0)) if isinstance(location, dict) else 0
-        out.append((filename, line, str(row.get("code", "?"))))
-    return sorted(out)
+        code = str(row.get("code", "?"))
+        group = "tid251" if code == "TID251" else "dtz"
+        out[group].append((filename, line, code))
+    for group in out:
+        out[group].sort()
+    return out
 
 
 # ── Scope resolution (mirrors check_no_fallback_imports.py) ──────────────────
@@ -299,12 +325,13 @@ def main(argv: Iterable[str] | None = None) -> int:
     info_lines: list[str] = []
     for repo_name, scan_root in scopes:
         observed[repo_name] = {}
+        try:
+            sites_by_group = run_ruff_count_all(scan_root)
+        except (RuntimeError, FileNotFoundError, json.JSONDecodeError) as err:
+            print(f"[check_ruff_rule_ratchet] ERROR {repo_name}: {err}", file=sys.stderr)
+            return 2
         for group in RULE_GROUPS:
-            try:
-                sites = run_ruff_count(scan_root, group)
-            except (RuntimeError, FileNotFoundError, json.JSONDecodeError) as err:
-                print(f"[check_ruff_rule_ratchet] ERROR {repo_name}/{group}: {err}", file=sys.stderr)
-                return 2
+            sites = sites_by_group[group]
             count = len(sites)
             observed[repo_name][group] = count
             allowed = baseline.allowed(repo_name, group)

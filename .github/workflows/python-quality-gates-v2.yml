@@ -369,6 +369,30 @@ jobs:
         # SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
         run: pip install "uv==0.10.8"
 
+      - name: Cache uv package cache
+        # Sized before shipping (ci_test_content_and_tooling_speed_findings_2026_07_28.md
+        # pm-2): a genuinely cold `~/.cache/uv` (empty cache dir + fresh venv target) took
+        # 2m07s for this repo's ~200-400 packages; the SAME sync with a warm cache dir (fresh
+        # venv, cache populated from a prior run) took 9s — a ~118s/run win where it applies.
+        # It does NOT apply everywhere: repos on `self_hosted_runner_labels` run on a
+        # persistent host whose default `~/.cache/uv` already survives between jobs
+        # incidentally (actions/checkout's `clean: true` only wipes the repo checkout dir, not
+        # $HOME) — self-hosted-qg-repos.txt covers 22 of 24 Python repos today, so this step's
+        # real payoff is concentrated on whichever repos are still GitHub-hosted (ubuntu-latest)
+        # at any given time — e.g. unified-trading-library, reverted off self-hosted 2026-07-28
+        # pending host-contention headroom (see self-hosted-qg-repos.txt's own note). Left
+        # UNCONDITIONAL (runs for self-hosted legs too) rather than gated on
+        # `self_hosted_runner_labels == ''`: GH-side cache restore/save costs only a few
+        # seconds and gives a fallback if a self-hosted host is ever rebuilt/rotated, so the
+        # small always-on cost is worth not having to keep this step in sync with that list.
+        if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ inputs.python-version }}-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            uv-${{ runner.os }}-${{ inputs.python-version }}-
+
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
         if: steps.vcheck.outputs.skip_slice != 'true' && env.QG_CONTENT_HIT != 'true'
