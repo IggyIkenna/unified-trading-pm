@@ -479,7 +479,7 @@ drift_direction: advance-code
       `BATCH_HYPERLIQUID_REST`/`hyperliquid_rest` ref the source doc's REMAINING note also flagged in
       `pipeline-mode-and-batch-live-reconciliation.md` was already past-tense/retired framing — no edit needed.
       Verification (exact done-when command):
-      `rg -in "live_websocket" codex/02-data/pipeline-mode-and-batch-live-reconciliation.md codex/02-data/availability-manifest-and-data-status.md codex/02-data/honest-absence-downstream-handling.md codex/02-data/external-data-always-available-rule.md`
+      `rg -in "live_websocket" /codex/02-data/pipeline-mode-and-batch-live-reconciliation.md /codex/02-data/availability-manifest-and-data-status.md /codex/02-data/honest-absence-downstream-handling.md /codex/02-data/external-data-always-available-rule.md`
       shows only past-tense/retired-alias framing (verified above). Shipped `unified-trading-pm@93fbdea35`. The source
       doc's §#7 checkbox (`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`) is updated with this
       same evidence but stays **unchecked** — its own REMAINING note also names the per-AG

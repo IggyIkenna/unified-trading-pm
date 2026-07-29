@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [plan-hygiene, frontmatter, scripts, quality-gates, ssot-audit, runbook]
-related: [/plans/epics/agent_operating_framework_master.md, README.md]
+related: [/plans/epics/agent_operating_framework_master.md, /plans/epics/README.md]
 created: 2026-05-21
 name: plan_hygiene_master
 tier: L5
@@ -104,8 +104,8 @@ removes the manual cost and catches regressions before they compound.
 - [x] ✅ [SCRIPT] P2. Added as `deployment-service/terraform/gcp/hygiene_sweep_scheduler.tf` (adjacent to
       `orphan_ping_audit_scheduler.tf`). Entrypoint: `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`. Reuses
       `t1_batch_sa` + `GH_PAT` IAM binding. (deployment-service@5f4eb6b) **RETIRED 2026-07-28** (RULE-11
-      prove-then-retire, operator approval `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21): the
-      Cloud Run job + Cloud Scheduler deleted live, `hygiene_sweep_scheduler.tf` + both repos' copies of
+      prove-then-retire, operator approval `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #21): the Cloud
+      Run job + Cloud Scheduler deleted live, `hygiene_sweep_scheduler.tf` + both repos' copies of
       `cron_hygiene_sweep_entrypoint.sh` deleted, superseded by the daily deep `plan-reconciler` agent (01:00 UTC,
       central orchestrator VM). Full record: `/codex/11-project-management/plan-hygiene.md` § "Daily deep reconciler".
 
