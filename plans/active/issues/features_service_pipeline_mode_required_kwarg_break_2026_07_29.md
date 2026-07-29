@@ -19,7 +19,7 @@ summary: >-
   `build_cefi_partition_path` with no `pipeline_mode`). This blocks `quickmerge --agent` for EVERY features-service
   commit right now (the `.qg_last_passed_sha` sentinel never gets written on a red full-suite run), not just onchain
   work — filed as a repo-blocker per `unified-trading-pm/agents/RULES.md` § 4b.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi, tradfi, cefi]
 stage: [data]
@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: features-service@d7da0ec7
 ---
 
 # `pipeline_mode` required-kwarg break in features-service — found while shipping an unrelated onchain change
@@ -108,15 +108,29 @@ session's task is onchain DeFi LST backfill, not calendar/volatility TradFi/CeFi
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `features_service/calendar/adapters/mtds_fred_reader.py:120` — thread the correct
+- [x] [BACKEND] P1. Fix `features_service/calendar/adapters/mtds_fred_reader.py:120` — thread the correct
       `pipeline_mode` value into the `build_tradfi_partition_path(...)` call (confirm against the FRED writer's actual
       partition scheme; likely `batch`, but verify — don't guess). Repo: features-service. **Done when**: all 8 tests in
-      `tests/calendar/unit/test_mtds_fred_reader.py` pass.
-- [ ] [BACKEND] P1. Fix `features_service/volatility/engine/orchestrator.py:314` — thread the correct `pipeline_mode`
+      `tests/calendar/unit/test_mtds_fred_reader.py` pass. — ✅ features-service@d7da0ec7. Confirmed (not guessed): FRED
+      has no `_VENUE_OVERRIDES` entry in UTL's `pipeline_mode_resolver.py` and no `("tradfi","yield_curve"/"ohlcv_1d")`
+      `SOURCE_PRIORITY` entry, so `derive_pipeline_mode_for_row` resolves it to `BATCH_DATABENTO` (`batch_databento`),
+      NOT a literal `"batch"`/`"batch_fred"` — verified empirically by calling the resolver directly. This confirms
+      hardcoding a pipeline_mode value would have been WRONG; the reader's own mode-agnostic bare-prefix design (list
+      once, filter by accepted `batch_*`/`live_*` family) was already correct and just needed the bare prefix restored
+      via a probe-and-strip (pipeline_mode is now a required kwarg on `build_tradfi_partition_path`, so `None` no longer
+      produces it directly). All 13 tests in `tests/calendar/unit/test_mtds_fred_reader.py` pass (8 required + 5 more).
+- [x] [BACKEND] P1. Fix `features_service/volatility/engine/orchestrator.py:314` — thread the correct `pipeline_mode`
       value into the `build_cefi_partition_path(...)` call (confirm against the CeFi volatility writer's actual
       partition scheme). Repo: features-service. **Done when**: all 4 tests in
       `tests/volatility/unit/test_orchestrator_gcs.py::TestListChainFiles` pass and full `bash scripts/quality-gates.sh`
-      is green on features-service.
+      is green on features-service. — ✅ features-service@d7da0ec7. Same probe-and-strip fix mirroring the FRED reader
+      (the surrounding code already threads the real per-row `derive_pipeline_mode_for_row(...)` value into the
+      canonical path when known; only the bare-path derivation at line 314 needed the required-kwarg fix). All 4 tests
+      in `TestListChainFiles` pass; full `bash scripts/quality-gates.sh` on features-service is green (17976 passed, 209
+      skipped, 0 failed). Also found + fixed an unrelated pre-existing regression blocking the same full-suite gate
+      (accidentally-deleted `calendar_features` PATH_REGISTRY row) —
+      `/plans/active/issues/utl_path_registry_calendar_features_accidental_deletion_2026_07_29.md` (resolved,
+      unified-trading-library@52161ee7).
 
 ## Evidence
 

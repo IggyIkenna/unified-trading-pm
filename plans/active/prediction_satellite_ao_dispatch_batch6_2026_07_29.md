@@ -271,10 +271,10 @@ sports-tranche-owned).
 
 ## Deferred — claimed by a different existing plan (not a prediction-tranche gap)
 
-- **`plans/active/prediction_cqg_residual_2026_07_24.md`'s remaining leg** (delete dead `None`-branch handling + stale
-  docstrings in MTDS `rebuild_prediction_manifest.py` / `kalshi_adapter.py`) is already tracked and "in flight as part
-  of the MTDS CODE_QUICK backlog pass" per `plans/active/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md`
-  (`asset_group: [meta]`, outside this tranche). Not re-drafted here to avoid a duplicate claim on the same fix.
+- **`/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md`'s remaining leg** (delete dead `None`-branch handling
+  - stale docstrings in MTDS `rebuild_prediction_manifest.py` / `kalshi_adapter.py`) was shipped and archived as part of
+    the MTDS CODE_QUICK backlog pass, `/plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md` (both docs
+    now archived, both closed — this note is historical, kept to avoid a duplicate claim on the same fix if re-read).
 
 ## Deferred — too large for a batch todo (needs its own dedicated plan)
 
