@@ -116,10 +116,17 @@ not just noting.
       over the incident's full 2026-07-27→present window (not just the 6h sample here) and estimate GH-Actions-minute
       waste from cancelled/timed-out/retried runs vs. the self-hosted migration's original projected savings — the
       operator asked for this audit's numbers to be real, not assumed.
-- [ ] [OPERATOR] P1. Revisit the 2026-07-28 "protected-6 stay self-hosted, accept recurring reds, resolve via retrigger"
-      posture now that it has run into a second day with a 46-attempt and a 78-attempt case — the original doc's own
-      Progress Log flagged this exact question ("worth an urgent re-look... rather than treating each new instance as
-      just another routine corroboration") before hitting its line cap; it was never answered.
+- [x] ✅ [OPERATOR] P1. **Operator-ruled 2026-07-29 (interactive decision session)**: keep protected-6 on self-hosted,
+      relying on the just-applied host fix (instance resize + added swap) to cut retry-storm frequency, re-measured
+      before any further change. Revisit the 2026-07-28 "protected-6 stay self-hosted, accept recurring reds, resolve
+      via retrigger" posture now that it has run into a second day with a 46-attempt and a 78-attempt case — the
+      original doc's own Progress Log flagged this exact question ("worth an urgent re-look... rather than treating each
+      new instance as just another routine corroboration") before hitting its line cap; it was never answered.
+
+- [ ] [BACKEND] P2. **Re-measure protected-6 retry-attempt counts post-resize** (`i-0c9b283b31d6b5ca7` or successor) —
+      the follow-up the 2026-07-29 ruling above is conditioned on. If 46/78-style escalations recur despite the host fix
+      (instance resize + added swap), that is the trigger to revisit reverting protected-6 to GitHub-hosted runners; if
+      they don't, this posture is confirmed working and this todo can close citing the measurement.
 - [ ] [BACKEND] P2. Diagnose whether PM's `plan_health` escalation queue (44 active, growing, none resolving) shares the
       `ldr_qg_failure` box-contention root cause or has an independent bottleneck — check whether a `plan_health` worker
       type is actually being spawned/claiming slots at all, vs. queuing indefinitely for lack of a matching worker (a

@@ -1256,7 +1256,7 @@ jobs:
       always() &&
       needs.route-build.outputs.repo == 'unified-trading-library' &&
       needs.route-build.outputs.repo_type != 'library'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, glue]
     timeout-minutes: 3
     outputs:
       recovered: ${{ steps.decide.outputs.recovered }}

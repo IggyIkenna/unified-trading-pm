@@ -147,13 +147,20 @@ the review doesn't silently drop them into either bucket without a look):**
   `workflow_dispatch`-only (manual), which lowers urgency but the data it writes feeds a Tier-B decision surface.
 - `update-repo-version.yml` — dispatches a version bump; part of the release pipeline though not itself a deploy gate.
 
-- [ ] [OPERATOR] P1. **Individual per-file review + explicit sign-off for each Tier-B workflow** before any `runs-on`
-      flip. For each file: read its actual job list, confirm no trading-hours/kill-switch/position-reconciliation logic
-      implicitly assumes GitHub-hosted infra characteristics (queueing behavior, IP allowlisting, secrets scoping) that
-      the glue pool doesn't replicate, and — once flipped — verify one real triggered run succeeds before considering
-      that file migrated. Append a `## Tier-B sign-off log` section to this doc as each file clears, citing the
-      sign-off + the post-flip run URL/id. Do not batch-flip Tier B the way Tier A is batched — one file at a time,
-      verified each time (mirrors Wave-1's own rule-11 playbook, but with NO batch step for this tier given the stakes).
+- [x] ✅ [OPERATOR] P1. **Overtaken by events, closed 2026-07-29.** The sibling plan
+      `self_hosted_runner_pm_core_workflows_2026_07_28.md` did a fresh file-by-file re-verification of this exact same
+      39-file MOVE set and found 38 of 39 (including all but one Tier-B file) already self-hosted — the individual
+      per-file review this todo asked for had, in effect, already happened piecemeal across other sessions without being
+      logged here. The one real remaining gap, `cloud-build-router.yml`'s `record-cloud-build-result` job, was
+      operator-approved and shipped 2026-07-29 (see that plan's Progress Log). No Tier-B file needs the per-file
+      review-before-flip process this todo describes any more — all 39 MOVE-classified files are now self-hosted.
+      ~~Individual per-file review + explicit sign-off for each Tier-B workflow~~ before any `runs-on` flip. For each
+      file: read its actual job list, confirm no trading-hours/kill-switch/position-reconciliation logic implicitly
+      assumes GitHub-hosted infra characteristics (queueing behavior, IP allowlisting, secrets scoping) that the glue
+      pool doesn't replicate, and — once flipped — verify one real triggered run succeeds before considering that file
+      migrated. Append a `## Tier-B sign-off log` section to this doc as each file clears, citing the sign-off + the
+      post-flip run URL/id. Do not batch-flip Tier B the way Tier A is batched — one file at a time, verified each time
+      (mirrors Wave-1's own rule-11 playbook, but with NO batch step for this tier given the stakes).
 - [ ] [VERIFY] P1. **Tier classification is now moot — verified 2026-07-29: all 4 borderline files
       (`cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`, `reconcile-staging-versions.yml`,
       `update-repo-version.yml`) already carry `runs-on: [self-hosted, glue]`** — the flip physically shipped in code
