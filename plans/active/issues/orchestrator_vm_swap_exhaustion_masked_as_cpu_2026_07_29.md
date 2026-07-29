@@ -96,6 +96,29 @@ normal). Manually dispatched `deploy-dashboard.yml` against `live-defi-rollout` 
 get this live without waiting on the stuck LDR→main promotion the crisis doc itself is about. Full backend + dashboard
 test coverage, full `quality-gates.sh` green.
 
+## Mitigation applied (2026-07-29, same session)
+
+Added a second 32GB swapfile (`/swapfile2`) alongside the existing 16GB `/swapfile` — additive only, the original was
+never disabled, so there was no window with reduced swap coverage during the change. Total swap: 16GB → 48GB. Persisted
+via `/etc/fstab` (survives reboot). Verified: `swapon --show` shows both files active; `free -m` showed memory pressure
+had already eased naturally by the time of the change (10.8GB/31.5GB used vs the 27.8GB/31.5GB measured earlier the same
+session) — confirming the pressure is wave-like, not constant, consistent with concurrent runner/agent process churn
+rather than a single leaking process. Disk headroom used: 32GB of 202GB free on `/` (170GB+ remains).
+
+**This is a stopgap, not a fix** — more swap headroom means fewer hard OOM-kill events under a given load, but does not
+reduce how much memory pressure the host generates. The root cause (too many concurrent runner + agent processes on one
+host) is unchanged and is what the standing crisis doc's recommended remedy (reduce runner count / real RAM increase via
+instance resize) actually addresses.
+
+**IOPS/throughput ceiling checked and found already maxed**: the backing EBS volume (`vol-0b4f0237fa0f5cd0f`, gp3,
+700GB) is provisioned at 16,000 IOPS / 1,000 MB/s — gp3's per-volume maximum. There is no free lever to raise disk
+throughput further on this volume without a real cost decision: switch to io2 Block Express (materially higher
+$/IOPS), or add a second, dedicated EBS volume just for swap so swap I/O stops
+competing with git/docker/pytest I/O on the root volume (isolation, not more raw capacity, but likely the
+better $/benefit
+move given swap and general filesystem I/O are currently forced to share one already- maxed queue). Neither done in this
+pass — flagged as an operator cost decision, not executed unilaterally.
+
 ## Todos
 
 - [ ] [BACKEND] P3. Once the runner-capacity crisis's remedy (whatever the standing doc's owners land on — reduced
