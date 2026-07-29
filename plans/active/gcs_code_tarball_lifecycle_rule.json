@@ -8,8 +8,7 @@
         "condition": {
           "age": 30,
           "matchesPrefix": ["code/"],
-          "matchesSuffix": [".tar.gz", ".manifest.json"],
-          "matchesPattern": ["code/.*@.*"]
+          "matchesPattern": ["**@*.tar.gz", "**@*.manifest.json"]
         }
       }
     ]

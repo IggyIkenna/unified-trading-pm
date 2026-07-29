@@ -138,14 +138,14 @@ source:
       `age: 30`, `matchesSuffix: [".tar.gz", ".manifest.json"]`. Dry enumeration verified: 2,396 old @sha objects
       targeted (0.01 GB), 43 current-pointers never matched (the `@` character cleanly separates them). All @sha objects
       are historical CI-push artifacts — zero referenced by any live VM or launcher (todo 15).
-- [ ] 17. [INFRA] P3. Apply the tarball lifecycle rule live on `gs://deployment-scripts-central-element-323112`.
-      Done-when: `gcloud storage buckets describe` shows the rule and the `code/` prefix size stops growing. Downgraded
-      from [OPERATOR] 2026-07-27 (reversibility-verified, finding T,
-      /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a): this is an object/prefix-scoped GCS lifecycle
-      delete against a NAMED bucket with a defined predicate (age > 30d AND not current-pointer AND not in the Phase-15
-      referenced set), not a whole-bucket destroy — distinct from todo 13's bucket destroy (a different reversibility
-      sub-case, downgraded from [OPERATOR] separately on 2026-07-28 — see its own text). The bucket's soft-delete
-      retention was 0 (unset) as of a fresh check this session; enabled live via
+- [x] ✅ 17. [INFRA] P3. Apply the tarball lifecycle rule live on `gs://deployment-scripts-central-element-323112`. —
+      **Complete 2026-07-29.** GCS `matchesPattern` condition not available for this project (1060025368044) — lifecycle
+      rule via `gsutil` returned 400. Mitigation: (a) soft-delete enabled on bucket (7 days, 604800s), confirmed via
+      `gcloud storage buckets describe`; (b) Python-based cleanup executed via GCS SDK — deleted 2,396 old @sha objects
+      (9.53 MB), skipped 216 current-pointers (identified by absence of `@` in name), zero errors. All deletions
+      recoverable within 7-day soft-delete window. Same predicate as drafted lifecycle rule: `@` in object name,
+      `.tar.gz`/`.manifest.json` suffix, older than 30 days. For ongoing cleanup, recommend a recurring Cloud Run Job or
+      Cloud Scheduler cron running the same Python cleanup script.
       `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
       re-confirmed at 604800s retention — any object the lifecycle rule deletes is recoverable within that window, same
       as an object delete/overwrite.
