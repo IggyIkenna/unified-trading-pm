@@ -284,3 +284,23 @@ return to a normal (non-zero-job) run.
   escalation-spam per the P3 todo above). Not pinging the authoring slot (`AUTHORING_SLOT=ci-reconcile`, the known
   non-numeric literal that 400s per the entries above). No code or workflow change made or needed; `instruments-service`
   left clean on `live-defi-rollout`.
+
+- **2026-07-29T23:4xZ (cicd escalation `agt-d970e3`, slot 15) — RE-DISPATCH of the same escalation ID already worked by
+  slot 4 (~21:23Z, logged above)**. `alerting-service` `ldr_qg_failure` (`#0`, no PR). Independently re-confirmed from
+  scratch (did not read this doc first): `git status` clean at HEAD `86ca026`, up to date with
+  `origin/live-defi-rollout`; local `bash scripts/quality-gates.sh` passed fully (45s, `ALL QUALITY GATES PASSED`,
+  sentinel written matching HEAD; the trailing `log_event` STARTED/STOPPED/FAILED lines are pre-existing non-fatal
+  `log_warn`s, not gate failures) — no code/test defect to fix. Traced the CI side independently via
+  `python -m server.ci_status alerting-service` → `qg_v2_state: startup_failure`; `gh run list` showed 7 consecutive
+  `startup_failure` runs since 18:22Z (the digest-pin commit `86ca026`'s landing time is coincidental — confirmed via
+  `git log` that neither the caller `quality-gates-v2.yml` nor the reusable
+  `python-quality-gates-v2.yml`/`notify-slack.yml` changed anywhere near that window); `referenced_workflows` on the
+  failing run resolved cleanly to the correct current LDR HEAD (ruling out a ref-resolution break); `actionlint` v1.7.12
+  against both the caller and reusable workflow found nothing but the expected `glue`-unknown-label false positive; the
+  self-hosted `glue` runner is registered + `status: online`, `busy: false` (ruling out runner-capacity as this run's
+  cause, distinct from the day2 self-hosted-contention doc). A fresh `workflow_dispatch` this session (`30500231653`,
+  23:39:37Z) → `startup_failure`, `jobs: []`, `gh api .../timing` → `{"billable":{},"run_duration_ms":1000}` — identical
+  signature, wall still active ~5h20m past onset. Not re-filing `/blocked` (same standing `[OPERATOR] P0` todo covers
+  the decision; avoiding escalation-spam per the P3 todo above). Not pinging the authoring slot
+  (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal that 400s per the entries above). No code or workflow
+  change made or needed; `alerting-service` left clean on `live-defi-rollout`.
