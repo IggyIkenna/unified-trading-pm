@@ -261,24 +261,19 @@ concurrent workers do not collide on this file.
       (`python3 -c "import yaml; yaml.safe_load(...)"`) and prettier-clean. Full PM `quality-gates.sh` green, shipped
       via `quickmerge --agent --files` — `unified-trading-pm@cb5e944f0`. Source:
       `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3).
-- [ ] [INFRA] P3. **`check_dispatch_listeners.py`'s dispatch-URL regex cannot resolve inline GHA `${{ }}` expressions,
-      silently excluding those dispatch sites from the scan.** Found 2026-07-28 while verifying the todo above's fix
-      wouldn't regress the checker delivered by this plan's earlier todo. `_DISPATCH_URL_RE`
-      (`repos/([^/\s"']+)/([^/\s"']+)/dispatches`) requires no whitespace inside a captured segment, but a
-      `${{ github.xxx }}` expression written inline in a `run:` block (as opposed to first assigned to a shell `env:`
-      var, e.g. `OWNER: ${{ github.repository_owner }}`) contains spaces — so the regex fails to match the line at all,
-      and the dispatch site never enters `scan_dispatch_sites()`'s results. Confirmed both the pre-fix
-      `repos/${{ github.repository }}/dispatches` line and the post-fix
-      `repos/${{ github.repository_owner }}/unified-trading-pm/dispatches` line in `agent-runner.yml`/`sit-gate.yml` are
-      equally invisible to the scan (not a regression from this todo's fix — this blind spot pre-dates it and likely
-      affects other inline-`${{ }}`-shaped dispatch sites fleet-wide, undercounting the shrinking-ratchet baseline).
-      **Done when**: the regex/extraction handles an inline `${{ github.repository }}`/`${{ github.repository_owner }}`
-      segment (either by resolving the GHA context expression the same way `_OWNER_ALIASES` resolves shell vars, or by
-      stripping `${{ ... }}` whitespace before matching), a regression test proves both `agent-runner.yml` shapes are
-      now scanned, and the baseline is re-measured (expected to rise, since previously-invisible sites become visible —
-      a one-time step up in the ratchet, not a new orphan). Source: this plan's own todo 2
-      (`check_dispatch_listeners.py`, delivered `unified-trading-pm@613f79960`) +
-      `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3, discovered while closing it).
+- [x] ✅ [INFRA] P3. **`check_dispatch_listeners.py`'s dispatch-URL regex cannot resolve inline GHA `${{ }}`
+      expressions, silently excluding those dispatch sites from the scan.** — unified-trading-pm@cbd511a. **Fixed
+      2026-07-29.** `_DISPATCH_URL_RE` now accepts `${{ }}` expressions as an alternative to literal tokens within
+      owner/repo capture groups via `_GHA_EXPR_PAT`. `_resolve_token` returns GHA expressions as-is so the dispatch site
+      is tracked as unresolved rather than silently excluded. Added `_GHA_EXPR_RE` for token classification. 3 new test
+      cases: GHA expression capture, mixed GHA+literal, literal regression. Result: 350 sites scanned (was 344), 17
+      unresolved (was 13), orphans unchanged at 63 (at baseline). segment (either by resolving the GHA context
+      expression the same way `_OWNER_ALIASES` resolves shell vars, or by stripping `${{ ... }}` whitespace before
+      matching), a regression test proves both `agent-runner.yml` shapes are now scanned, and the baseline is
+      re-measured (expected to rise, since previously-invisible sites become visible — a one-time step up in the
+      ratchet, not a new orphan). Source: this plan's own todo 2 (`check_dispatch_listeners.py`, delivered
+      `unified-trading-pm@613f79960`) + `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3,
+      discovered while closing it).
 - [ ] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
       sites so a permanently-empty input renders as unknown/not-applicable, never as a pass — starting with the two the
       doc names first: `_repo_ci_manifest.py:285-289`'s `deployed_versions.get(repo)` shape mismatch (the writer at
