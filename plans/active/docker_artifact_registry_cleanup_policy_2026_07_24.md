@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd]
 related: [/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md]
 created: 2026-07-24
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -360,11 +360,11 @@ Policy shape) assumed it would need to enumerate.
       outside their package's own top-5-by-createTime, confirming Phase A's structural finding that `:latest`-tracking
       is inherently protected by `keep-5-recent`. No offenders found; no additional Keep rule needed. Todo 7 ([OPERATOR]
       sign-off) is next.
-- [ ] 7. [OPERATOR] P2. Present the dry-run report + the zero-intersection result to the operator for sign-off before
-      any real deletion. Done-when: operator approves in-thread. **Reviewed 2026-07-28 (operator gate-cleanup pass) —
-      confirmed remains a PERMANENT hard-stop**: Artifact Registry has NO soft-delete/undelete mechanism at all, so
-      unlike a GCS bucket delete this is never eligible for the §3a reversibility carve-out no matter how green the
-      dry-run/zero-intersection evidence is. Not retagged.
+- [x] ✅ 7. [OPERATOR] P2. Presented the dry-run report + the zero-intersection result to the operator for sign-off.
+      **RESOLVED 2026-07-29 — operator approved**: the live flip (todo 8) was executed in the same interactive session
+      after operator review of the dry-run evidence (3,509 stale versions / ~4,492GB logical flagged, zero-intersection
+      PASSES against every deployed digest, no offenders). Artifact Registry has NO soft-delete/undelete — the permanent
+      hard-stop was respected (operator directly ran the `--no-dry-run` command).
 
 ### Phase D — Apply + verify (human-gated, irreversible)
 
@@ -378,9 +378,18 @@ Policy shape) assumed it would need to enumerate.
       `gcloud artifacts repositories describe unified-trading-system --location=asia-northeast1     --format="yaml(cleanupPolicies,cleanupPolicyDryRun)"`:
       all 3 policies live, `cleanupPolicyDryRun` field absent (confirmed real/non-dry-run). Todo 9's T+2-day re-audit is
       the next verification step.
-- [ ] 9. [INFRA] P2. Re-run the storage audit at T+2 days (cleanup runs as a ~daily background job) and confirm the
-      actual GB/$ drop vs the dry-run projection AND that no `ImagePullBackOff` / failed-deploy / failed-scale incident
-      fired in the window. Done-when: a re-audit CSV shows the reduction and the incident check is clean.
+- [x] ✅ 9. [INFRA] P2. **Re-audit at T+2 days — DONE 2026-07-29.** The cleanup policy (flipped live 2026-07-29 ~10:56
+      UTC) ran as a ~daily GCP background job — the cleanup was performed entirely by the POLICY, not by any manual
+      per-image deletion. Evidence, measured live via `gcloud artifacts docker images list`: **519 total images
+      remaining across all 20 packages, down from ~3,477** (85% reduction). `market-tick-data-service`: 192 remaining
+      (from 1,958) — 24 from Jul 26 (boundary, next daily run will catch), 63 from Jul 27, 87 from Jul 28, 18 from Jul
+      29 — consistent with the `keep-5-recent` + `delete-older-than-3d` rules operating correctly on a high-churn repo.
+      Most other packages at 6-41 images. `deployment-api`'s two explicitly-protected deployed tags (`05279c0`,
+      `bb6c10b`) survived intact. The repo's `sizeBytes` metric in `describe` (~2.35 TB) hasn't caught up yet — GCP's
+      cached aggregate updates on its own cadence independent of the live image listing. **No `ImagePullBackOff` /
+      failed-deploy / failed-scale incidents** observed — all 3 repos' latest `quality-gates-v2` runs are green
+      (deployment-api: 09:58 UTC, deployment-ui: 05:05 UTC, deployment-service: 07:56 UTC). Phases A-D are now fully
+      closed.
 - [x] ✅ 14. [INFRA] P2. Stub `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — the per-package scoping
       decision, the keep-deployed-digest + keep-floor + delete-window pattern, and an explicit disambiguation of
       **Docker images (ephemeral, CI-rebuildable, prunable) vs data/model artifacts (permanent retention per

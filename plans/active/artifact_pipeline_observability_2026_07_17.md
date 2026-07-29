@@ -658,8 +658,12 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       issue doc.
 - [ ] [BACKEND] P3. _(stretch, optional)_ "Built but never deployed" + build→deploy latency (join build digest to the
       first revision that ran it).
-- [ ] [INFRA] P3. _(stretch, optional)_ Image vulnerability-scan status (AR + ECR native scanning) + orphaned-image GC
-      candidates (no matching build AND not running) — ties to the 1.5 TB and the cost page.
+- [x] [INFRA] P3. _(stretch, optional)_ ~~orphaned-image GC candidates (no matching build AND not running)~~ —
+      **RESOLVED 2026-07-29** by `docker_artifact_registry_cleanup_policy_2026_07_24.md` Phases A-D: the 3-rule cleanup
+      policy (`keep-5-recent` + `keep-deployed-digests` + `delete-older-than-3d`) was applied live (no dry-run) on
+      2026-07-29; the ~daily GCP background job removed ~2,958 images (85% reduction, 519 remaining from ~3,477)
+      entirely via the policy — no manual per-image deletion. All 20 package counts are now consistent with the policy
+      window. **Still open**: image vulnerability-scan status (AR + ECR native scanning).
 - [ ] [INFRA] P3. _(stretch, optional)_ Deploy-churn / crash-loop signal (e.g. uts-shared-deployment-api redeployed ~14×
       in hours; ~40% config-only) surfaced as a health condition.
 
