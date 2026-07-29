@@ -46,6 +46,7 @@ locked_by:
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
+depends_on: []
 ---
 
 # `_NON_DISPATCHABLE_RE` swallows already-ruled todos that restate the old `BLOCKED-*` marker in past tense
