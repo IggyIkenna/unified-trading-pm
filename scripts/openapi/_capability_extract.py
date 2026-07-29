@@ -168,6 +168,7 @@ def extract_archetypes_and_families() -> tuple[list[CapabilityNode], list[Capabi
                         relation=REL_SUPPORTS,
                         status=cell_status,
                         gap_type=gap,
+                        reason=(cell.notes or None) if cell.notes else None,
                     )
                 )
 
