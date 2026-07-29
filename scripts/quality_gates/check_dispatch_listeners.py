@@ -86,7 +86,15 @@ _OWNER_ALIASES: Final[frozenset[str]] = frozenset({"GITHUB_REPOSITORY_OWNER", "O
 _LITERAL_RE: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z0-9_.-]+$")
 _VAR_REF_RE: Final[re.Pattern[str]] = re.compile(r"^\$?\{?\s*([A-Za-z_][A-Za-z0-9_]*)\s*\}?$")
 
-_DISPATCH_URL_RE: Final[re.Pattern[str]] = re.compile(r"repos/([^/\s\"']+)/([^/\s\"']+)/dispatches")
+# Captures owner/repo as either a literal token (no slashes/quotes/whitespace) or a
+# GHA `${{ <expression> }}` block (which may contain whitespace, e.g.
+# `${{ github.repository_owner }}`).  Without the GHA branch these dispatch sites are
+# silently excluded from the scan — the `${{ }}` contains spaces that `\s` rejects.
+_GHA_EXPR_PAT: Final[str] = r"\$\{\{[^}]+\}\}"
+_DISPATCH_URL_RE: Final[re.Pattern[str]] = re.compile(
+    rf"repos/((?:{_GHA_EXPR_PAT}|[^/\s\"'])+)/((?:{_GHA_EXPR_PAT}|[^/\s\"'])+)/dispatches"
+)
+_GHA_EXPR_RE: Final[re.Pattern[str]] = re.compile(rf"^{_GHA_EXPR_PAT}$")
 # `\\?` tolerates a JSON payload embedded in a shell string with escaped quotes
 # (`-d "{\"event_type\":\"service-deployed\", ...}"`), which cloudbuild.yaml /
 # buildspec.aws.yaml both use — a plain `["']?` would silently miss every hit there.
@@ -126,8 +134,17 @@ class Orphan:
 
 
 def _resolve_token(token: str, var_map: dict[str, str]) -> str | None:
-    """Resolve a URL path token to a literal string, or None if unresolved."""
+    """Resolve a URL path token to a literal string, or None if unresolved.
+
+    GHA ``${{ }}`` expressions (e.g. ``${{ github.repository_owner }}``) are
+    returned as-is so the dispatch site is tracked (as unresolved) rather than
+    silently excluded from the scan.
+    """
     if _LITERAL_RE.match(token):
+        return token
+    if _GHA_EXPR_RE.match(token):
+        # GHA expression — cannot resolve to a literal, but surface it so the
+        # dispatch site is counted as unresolved rather than silently dropped.
         return token
     m = _VAR_REF_RE.match(token)
     if not m:
