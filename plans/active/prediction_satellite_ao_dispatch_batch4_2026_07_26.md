@@ -476,3 +476,24 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   **Lesson for future resumers of this todo**: this host's shared `gcloud config` account is NOT stable across a
   long-running poll loop — always pin `--account=` explicitly on every gcloud CLI call in a long-lived watcher, never
   rely on the ambient active account. Still waiting — see next entry for the outcome.
+- 2026-07-29 (slot 13, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-020`, resumed):
+  slot-8's session ended without a closing entry. Re-verified cron `uts-prod-manifest-consolidator-market-data-
+  prediction-cron` is still `PAUSED` (runs `*/1 * * * *`, `lastAttemptTime` 2026-07-29T01:05:03Z — hasn't fired since
+  the pause) and reproduced the exact `ManifestConsolidatorStaleError` on a fresh 1-day dry-run. Recovered + verified
+  the authoritative checkpoint: found 6 stranded `prediction_trades_migration_report.jsonl` copies across slots
+  6/7/8(x2)/13/15's scratchpads; the 157-day files from slots 6/15/8 are byte-identical and dominate every older/smaller
+  checkpoint (slot-7's 140, old slot-13's 45, old slot-8's 21 — every entry in each of those is present in the 157-set
+  at an equal-or-higher `canonical_enriched` count, verified programmatically). Adopted the 157/348 checkpoint.
+  **Separately**: this task's own true blocker — `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s Apply todo
+  (`rebuild_prediction_manifest.py`, which pauses/resumes this same cron) — is currently UNWORKED, not just slow: a
+  prior slot-13 session (evidenced by a stranded `prediction_rebuild_apply.log`) ran that Apply script in the
+  background, hit a burst of transient host-level DNS-resolution failures reading GCS objects
+  (`Failed to resolve 'storage.googleapis.com'`), and the process went silent with no completion marker — log mtime
+  frozen ~43 min before this entry, no matching process alive. Not in this task's scope to fix (out-of-scope precedent
+  already set by slot-4/5/6/8/9 on this same doc — touching the sibling plan's cron/Apply/Resume todos races their
+  protocol); flagging so main/operator knows "wait for the automatic background retry" (BLK-c6fa4f95's standing answer)
+  currently has nothing actively retrying it — the sibling plan's Apply todo needs a fresh dispatch to actually unblock
+  this one. Re-armed a watcher (`resume_4bi_watcher_v2.sh`, harness `run_in_background`, not `nohup`) applying every
+  fix from the entries above (pinned `--account=`, self-heartbeat every ~3 polls independent of my own turn cadence,
+  90s settle + a 1-day dry-run probe after the cron flips `ENABLED` before committing to the full `--apply`, per-poll
+  timestamped logging for diagnosability). Waiting — see next entry for the outcome.
