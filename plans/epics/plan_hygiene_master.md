@@ -70,7 +70,12 @@ removes the manual cost and catches regressions before they compound.
       resolve relative to workspace root; report broken refs (file moved, renamed, or deleted). (PM@a85f151e9)
 - [x] ✅ [SCRIPT] P1. `scripts/plan-hygiene/check_archive_candidates.sh` — find plans where `^- \[ \]` count == 0 AND
       all `^- \[x\]` > 0; print candidates with todo counts. Does not archive — outputs a list for operator review.
-      (PM@a85f151e9)
+      (PM@a85f151e9) — **UPGRADED 2026-07-29**: was purely informational and missed `plans/active/issues/` + used
+      non-portable `grep -P` (silently blind outside an interactive PCRE-aliased shell — every non-interactive run,
+      incl. CI/prek/cron, saw ~0 candidates regardless of the real corpus). Now scans both dirs with portable POSIX ERE
+      and is a real shrinking-ratchet hard gate (`archive_candidates_baseline.yaml`), same shape as
+      `check_terminal_status_archived.py`. See `/plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md`'s
+      Progress Log for the investigation.
 - [x] ✅ [SCRIPT] P2. `scripts/plan-hygiene/check_estimate_sanity.sh` — verify `estimate_calibrated_ai_days` ≈
       `estimate_baseline_ai_days × multiplier` for the declared `estimate_class` (refactor 0.4×, design 0.6×, infra
       0.8×, brand-new 1.0×, research 1.2×). Flag >20% drift as typos. (PM@a85f151e9)

@@ -4,7 +4,10 @@
 # Delete-when: NA
 # Plan hygiene sweep — run by Ikenna and Harsh on the planning VM as a morning step.
 # Runs all checks in sequence; prints a PASS/FAIL table.
-# Hard checks: todo regression, frontmatter. Soft checks: line caps, archive candidates.
+# Hard (ratchet-baselined) checks: todo regression, frontmatter, line caps, terminal-status-
+# archived, archive candidates, NA corpus size, reference paths. Soft/advisory checks: estimate
+# sanity, superseded-in-active, codex refs, parent-epic alignment, CLAUDE/sub-agent parity,
+# delete/VM-launch tagging, priority-vs-tier policy, model-tier coverage.
 # Usage: bash scripts/plan-hygiene/run_hygiene_sweep.sh [--ci] [--no-regen] [--precommit]
 #   --ci:        exit 1 on any hard failure (for cron/CI); default is interactive (always exits 0)
 #   --no-regen:  skip the active-plan inventory regeneration step. Use when the sweep is called
@@ -223,10 +226,13 @@ run_check "Delete/VM-launch todo tagging (AO plans, candidate signal)" soft "$SC
 # a keyword heuristic can only surface a re-triage candidate, never decide the judgment call itself.
 run_check "Priority vs. asset-group tier policy (candidate signal)" soft python3 "$SCRIPT_DIR/check_priority_tier_policy.py"
 
-# Archive candidates is informational — always "passes"
-echo ""
-echo "--- Archive candidates ---"
-bash "$SCRIPT_DIR/check_archive_candidates.sh" || true
+# Archive candidates (operator finding 2026-07-29) — a done-but-unarchived plan/issue doc (0 open
+# todos, unlocked, status never flipped to terminal) is DISTINCT from check_terminal_status_
+# archived.py above (which only catches a doc whose status ALREADY says resolved/complete). This
+# was purely informational (`|| true`) until now — the recurring gap CLAUDE.md's archival rule
+# calls out ("MUST be archived immediately (HARD RULE, recurring gap)") had nothing actually
+# enforcing it. Same shrinking-ratchet shape as the checks above (archive_candidates_baseline.yaml).
+run_check "Archive candidates (0 open todos, unlocked -> plans/archive/, ratchet)" hard "$SCRIPT_DIR/check_archive_candidates.sh"
 
 # Model-tier coverage is informational — surfaces opus-candidates + plans on the
 # silent Sonnet default for human review (SSOT: codex/06-coding-standards/model-tier-selection.md).

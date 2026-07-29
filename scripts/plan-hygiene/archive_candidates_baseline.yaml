@@ -1,0 +1,14 @@
+# Baseline for check_archive_candidates.sh — no plan/issue doc with 0 open todos and >0 done
+# todos (and not locked_by someone) may sit in plans/active/ or plans/active/issues/ indefinitely
+# without being archived (operator finding 2026-07-29 — see
+# plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md's Progress Log for the
+# investigation: three real gaps — advisory-only (`|| true`), never scanned
+# plans/active/issues/, and non-portable `grep -P` that silently failed outside an interactive
+# PCRE-aliased shell).
+#
+# This is a SHRINKING ratchet (same shape as terminal_status_archived_baseline.yaml /
+# line_caps_baseline.yaml / na_corpus_baseline.yaml). candidate_count is the number of
+# pre-existing done-but-unarchived docs the gate tolerates. A live count EXCEEDING this fails the
+# check — a NEW one landed without being archived, fix it (archive it), don't raise the number.
+# LOWER it (re-run --update-baseline) as candidates get archived. NEVER hand-raise it.
+candidate_count: 11
