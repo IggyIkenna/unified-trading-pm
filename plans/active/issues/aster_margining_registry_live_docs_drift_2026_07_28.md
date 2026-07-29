@@ -9,7 +9,7 @@ summary: >-
   set (BTC/ETH/BNB/SOL and more, with real haircuts) than the currently-registered USDC/USDT-only UAC
   venue_collateral.py rows — but WHICH Aster product corresponds to our fapi.asterdex.com REST integration is genuinely
   ambiguous from the docs alone, so no registry edit was made.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -32,7 +32,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "cross_cutting_satellite_ao_dispatch_batch1b-006, slot 9, 2026-07-29"
 source: ["cross_cutting_satellite_ao_dispatch_batch1b-006, slot 14, 2026-07-28"]
 drift_direction: advance-code
 ---
@@ -85,9 +85,22 @@ applicable, correcting haircuts, and confirming/dropping the USDC row depending 
 
 ## Todos
 
-- [ ] [VERIFY] P2. **Retagged 2026-07-29 (operator: not sure, needs live verification)** — hit the live
+- [x] ✅ [VERIFY] P2. **Retagged 2026-07-29 (operator: not sure, needs live verification)** — hit the live
       `fapi.asterdex.com` endpoints (`/fapi/v1/fundingRate`, `/fapi/v1/depth`, etc.) and compare the response
       shape/fields against both candidate tables in "What I found" above to determine which Aster product this actually
       is — general "Aster Perps" (multi-chain) vs "AstherusEX" (orderbook) vs a 3rd surface. Once determined, correct
       the `venue_collateral.py` ASTER rows against the right live table. (repo: unified-api-contracts, registry
-      verification only — no code change until the product is confirmed).
+      verification only — no code change until the product is confirmed). — **RESOLVED 2026-07-29**: hit
+      `GET /fapi/v1/exchangeInfo` live — its `assets[].marginAvailable` list (39 assets: USDT, BTC, BNB, ETH, SOL, USDC,
+      SLISBNB, LISUSD, WBETH, STONE, LISTA, USD1, USDF, CAKE, ASBNB, RSETH, JLP, TSLAB, CRCLB, SNDKB, NVDAB, TWT, ASTER,
+      etc.) matches `docs.asterdex.com`'s Multi-Asset Mode collateral table (general "Aster Perps", Page 1) across all 4
+      documented chains (BNB Chain/Ethereum/Arbitrum/Solana) near-exactly — critically, USDC IS present with
+      `marginAvailable:true`, which rules out "AstherusEX" (Page 2), whose docs explicitly list NO USDC on either of its
+      2 chains. Conclusion: `fapi.asterdex.com` = "Aster Perps" Multi-Asset Mode (Page 1), not AstherusEX. Corrected
+      `venue_collateral.py` against Page 1's documented ratios: USDC/USDT haircut fixed from the placeholder 0%/1% to
+      the real 99.99%-ratio 0.01% haircut; BTC/ETH added as accepted (95% ratio -> 5% haircut), previously
+      untracked/effectively-rejected. Did NOT add the remaining ~15 multi-chain-specific tokens (LISTA/CAKE/TSLAB/etc.)
+      — none are tracked as collateral for any other venue in this registry (the registry's real scope is
+      BTC/ETH/USDC/USDT + the LST family), so adding them would be speculative registry bloat with no current consumer;
+      the full live ratio table is preserved above and in `venue_collateral.py`'s module docstring if a future strategy
+      needs one of those tokens. `unified-api-contracts@14f0aff5`.

@@ -295,7 +295,23 @@ drift_direction: advance-code
       Backed off with jitter (not a tight retry loop) per main's guidance; a subsequent attempt passed clean (494s),
       committed, re-ran QG once more so the sentinel matched the new commit SHA exactly, then shipped via
       `quickmerge.sh --agent --files`. Landed on `live-defi-rollout`; `quality-gates-v2` fires on the eventual
-      LDR→staging promote PR (Tier-C drain, ~15min), not on this raw push — nothing further to verify from this slot.
+      LDR→staging promote PR (Tier-C drain, ~15min), not on this raw push — nothing further to verify from this slot. —
+      **Status 2026-07-29 (slot 9, data_engineering) — leg (e) now FULLY resolved (registry corrected, not just
+      filed).** The operator retagged `issues/aster_margining_registry_live_docs_drift_2026_07_28.md`'s todo 2026-07-29
+      from `[OPERATOR]` to `[VERIFY]` ("not sure, needs live verification") — delegating the product- identity question
+      to a live-API check rather than requiring a human product-knowledge answer. Hit
+      `GET fapi.asterdex.com/fapi/v1/exchangeInfo` live: its `assets[].marginAvailable` list (39 assets incl. USDC)
+      matches `docs.asterdex.com`'s Multi-Asset Mode ("Aster Perps", Page 1) table, not "AstherusEX" (Page 2, whose docs
+      explicitly exclude USDC on both its chains) — USDC's presence with `marginAvailable:true` is the decisive signal.
+      Corrected `unified_api_contracts/registry/venue_collateral.py`: USDC/USDT haircut fixed from the placeholder 0%/1%
+      to the real Multi-Asset-Mode 99.99%-ratio (0.01% haircut); BTC/ETH added as accepted (95% ratio, 5% haircut),
+      previously untracked. New test `test_aster_multi_asset_mode_live_verified_2026_07_29` pins the corrected rows. Did
+      not add the remaining ~15 multi-chain-specific tokens (LISTA/CAKE/TSLAB/etc.) — none are tracked as collateral for
+      any other venue in this registry, so adding them now would be speculative bloat; ratios are preserved in the issue
+      doc + module docstring if a future strategy needs one. Issue doc flipped to `status: resolved`.
+      `unified-api-contracts@14f0aff5`. **(c) remains the sole open leg — still genuinely blocked on the operator's
+      3-way genesis-date call in `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`;
+      checkbox correctly stays unchecked.**
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
       versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from
