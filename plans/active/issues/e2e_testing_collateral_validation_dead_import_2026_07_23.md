@@ -103,9 +103,11 @@ severity (exploratory script, not a gated test) — noted here for visibility, n
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Rewrite or retire `test_collateral_validation.py`** — pick approach A/B/C from the Recommendation
-      section above (rewrite against the v2 mechanism, delete, or make the e2e-testing QG lint block on a dead import);
-      none has been actioned yet.
+- [ ] [TEST] P1. **RULED 2026-07-29 (operator direct answer) — Option A.** Rewrite `test_collateral_validation.py`
+      against the current v2 mechanism (drive `catalog_staked_basis.py`'s `build_carry_staked_basis()` +
+      `staked_basis.py`'s `_BANNED_LST_PERP_COMBOS` directly, the way `test_csb_paper_e2e_smoke.py` and
+      `test_failure_modes_e2e_smoke.py` already correctly do for other CSB properties) — restores real coverage of the
+      property the file was meant to protect. (repo: e2e-testing)
 
 ## Evidence / files read (2026-07-23 audit)
 
