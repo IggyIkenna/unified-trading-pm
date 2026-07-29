@@ -331,11 +331,25 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       `docs/sports/ROADMAP.md` is forward-looking sports planning content (expired trial windows now annotated
       historical) that belongs in a sports epic, not an e2e-testing repo doc. Migrate the roadmap content into the
       sports epic, then slim/redirect the repo copy. (repo: e2e-testing, unified-trading-pm)
-- [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **REOPENED
-      2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification predates the
-      single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when it isn't).
-      Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22 pass
-      reconciled no longer exist under those names —
+- [x] ✅ [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **RE-CLOSED
+      2026-07-29 (slot-11, fresh audit against current single-VM/Path-B code) — agent-orchestrator@`3abe56c`**
+      (FIX-STALE apply, shipped via `quickmerge --agent` by slot-12; this session ground-truth-verified the applied
+      fixes are correct + complete, then flipped). The REOPENED fresh audit found the Appendix-B classification HOLDS:
+      only 2 FIX-STALE docs, no DELETE/REDIRECT/MIGRATE. **`dashboard/API_REFERENCE.md`** — all retired `tab/<op>/N`
+      branch literals repointed to `live-defi-rollout` (SlotView `branch` comment L53; the `/bootstrap` endpoint desc
+      now describes Path-B `git clone --reference`-on-LDR clones, no tab branch; stdout/stderr examples + the
+      branch-name convention note). **`docs/AUTH_INVENTORY.md`** — bare `agents/{worker,main}.md` →
+      `unified-trading-pm/agents/…` (L161) + a re-verify banner on the 2026-05-19 prod-cutover/URL status (predates the
+      2026-06-27 single-VM pivot; points to `/codex/04-architecture/runtime-deployment-topology.md`). Final sweep of
+      both docs: **zero** un-annotated tab-branch literals, **zero** port-8026 refs, **zero** bare `agents/` paths,
+      **zero** archived-mirror `unified-trading-codex/` refs, **zero** multi-vm refs. KEEP the rest (README rewritten
+      2026-07-24 single-VM-aligned;
+      ENV_VARS/REPO_PROVENANCE/SLOTS_AGENTS_AND_FLEET/WORKER_SPAWN_PREREQUISITES/BACKLOG_RELATIONS/DESIGN_* = repo-local
+      impl SSOT cited BY `/codex/04-architecture/agent-orchestrator-overview.md`, fix-in-place not redirect). —
+      **REOPENED 2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification
+      predates the single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when
+      it isn't). Concrete drift found on re-check: the "multi-vm-topology" doc + "multi-vm auth diagram" the 2026-06-22
+      pass reconciled no longer exist under those names —
       `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` and
       `/codex/04-architecture/runtime-deployment-topology.md` are the current SSOTs (multi-VM dispatch deprecated
       2026-06-27; single central orchestrator VM + role-based dispatch replaced it). The "backlog-model / base-branch
