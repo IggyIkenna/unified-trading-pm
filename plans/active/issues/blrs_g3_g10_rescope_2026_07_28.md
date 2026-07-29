@@ -127,7 +127,7 @@ silently skip them again, which is how this sat unaddressed since 2026-05-27.
   todo. Per the plan-authoring hard rule (an open-ended design call is a human decision, not a todo), this needs its own
   scoped LOCAL design plan before any code is written.
 
-- [ ] [DESIGN] P1. **Author a scoped design plan for the daily cross-cutting LLM trading-analysis job** (per the
+- [x] ✅ [DESIGN] P1. **Author a scoped design plan for the daily cross-cutting LLM trading-analysis job** (per the
       2026-07-29 ruling above) — define: (1) the exact daily trigger/schedule and which planning-VM AO account/rotation
       slot it draws from (mirroring the existing reconciler-job headroom pattern); (2) the concrete data sources per
       category (trades, PnL/positions, ML signals, strategy execution decisions, data-quality gaps) and confirm they
@@ -138,6 +138,26 @@ silently skip them again, which is how this sat unaddressed since 2026-05-27.
       terminal-artifact output — is this job BLRS's actual G3 consumer, a superset of it, or a separate parallel system
       that BLRS's report becomes one input to? Answer that scoping question explicitly in the new plan's own opening
       section. `assigned_vm: NA` (a design plan, not yet AO-dispatchable) per the plan-destination default.
+
+      **DONE 2026-07-29 (slot 16)** — `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
+          (unified-trading-pm@b30848f1c). All 4 points answered, each grounded in a dedicated research pass rather than
+          assumed: (1) traced the 4 live systemd-timer reconciler jobs end-to-end (dispatch script → `plan_health.py` →
+          `agents/<role>.md`) for the exact scheduling/account/slot mechanics — no new slot config needed, inherits the
+          shared headroom pool + scheduled-task reserve automatically; also found the referenced codex table
+          (`agent-orchestrator-single-vm-architecture.md`) is stale (says opus/daily; live reality is sonnet/hourly-retry)
+          and filed that as a follow-up. (2) The `pipeline_mode`-uniformity assumption is **VERIFIED FALSE** — 5 distinct,
+          mutually-inconsistent mode-differentiation mechanisms exist across trades/PnL/positions/ML/strategy datasets
+          (several with a dead no-op `mode=` kwarg the path template silently drops), with code:line citations for each;
+          the design routes around this by reusing BLRS's own already-working per-stage adapters rather than building a
+          uniform reader. (3) Prompt contract + dedup mechanism specified, reusing this workspace's own
+          pre-task-plan-conflict-check discipline for the dedup step. (4) Scoping question answered in the new plan's own
+          §0: this job completes BLRS Stage 4's never-built LLM-dispatch leg (confirmed via full code read that Stage 4
+          today only builds a markdown prompt and never calls an LLM) — not a superset (BLRS's batch-vs-live symmetry
+          engine stays necessary) and not fully separate (consumes BLRS's `summary_{date}.json` as one input). 6 scoped
+          follow-up build-phase todos filed in the new plan's §5 (skill/role-file build, scheduling wire-up, Stage 4
+          artifact removal, the dead-mode-kwarg bug, the stale codex table, 2 operator policy calls) — none bundled into
+          this design todo's own scope.
+
 - [ ] [CODE] P3. Build the BLRS resolution-API gateway proxy — `GET /api/reporting/reconciliation/breaks`,
       `POST /api/reporting/reconciliation/resolve`, `POST /api/reporting/reconciliation/book-correction` in
       `unified_trading_api/routes/reporting.py`, proxying to BLRS's `/t1-recon/{breaks,resolve,book-correction}`
