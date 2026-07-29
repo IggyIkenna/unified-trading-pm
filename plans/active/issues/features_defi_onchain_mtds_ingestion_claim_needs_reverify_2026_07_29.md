@@ -89,16 +89,45 @@ trap" note below) and was killed before reaching a conclusion, to avoid burning 
 
 ## Recommended fix path
 
-- [ ] [DATA] P2. Determine whether `DEFI:onchain`'s dependency-check failure (2026-07-27) was a single-day freshness-lag
-      false negative or a genuine structural gap: pick a benchmark day from within a window `data_completion_defi` shows
-      as densely captured for `lending_indices`/`lst_rates`/`perp_funding`/`oracle_prices` (e.g. within the 2023-2026
-      range, cross-check against that doc's own census dates) and re-run
-      `features-service/scripts/pipeline_e2e_check.py --day <chosen-day> --asset-group DEFI --family onchain --legs force --require-captured --auto-day`
-      (or a lighter direct call to `check_dependencies("DEFI", <day>)`) to see if the dependency check now passes. If it
-      passes: `data_pipeline_check_mdps_features_2026_07_20.md`'s gating note for `DEFI:onchain` is STALE and should be
-      corrected (the real gap is day-selection, not an MTDS ingestion gap) and the throughput-measurement todo un-gated
-      for DEFI. If it still fails on a densely-captured day: the "never ingested" framing is confirmed and the gate
-      stands as-is — just note the specific evidence. Repo: features-service.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-6, data_engineering).** Determined whether `DEFI:onchain`'s dependency-check
+      failure (2026-07-27) was a single-day freshness-lag false negative or a genuine structural gap, via direct
+      `DependencyChecker(project_id="central-element-323112").check_dependencies("DEFI", <day>)` calls (not a VM launch
+      — the repo's own `.venv` bootstrapped via `uv sync`, avoiding the measurement trap below) across **12 distinct
+      days spanning 2026-05-01 through 2026-07-28** (2026-05-01, 06-01, 06-14, 07-01, 07-05, 07-20, 07-22, 07-24, 07-25,
+      07-26, 07-27, 07-28). **Split verdict, both halves now resolved with hard evidence:** -
+      **`vault_share_price`/`lst_rates`/`lending_indices`/`oracle_prices` — the "never ingested" framing WAS WRONG/STALE
+      for these 4.** Each shows real captured manifest rows on MOST tested days (e.g. 2026-06-14: vault_share_price=8,
+      lst_rates=60, lending_indices=260, oracle_prices=106 rows, all `available=True`) — genuine day-to-day coverage
+      gaps exist (lending_indices failed on 07-20; oracle_prices failed on 07-25/07-27; lst_rates failed on 07-27,
+      `lending_indices` even hit 6 `attempted_failed` shards on 07-27) but these are intermittent freshness gaps, not
+      "never ingested." A day exists (2026-06-14, 2026-07-05) where all 4 pass simultaneously. - **`perp_funding` — the
+      gate is GENUINE, not a false negative.** Zero MTDS manifest rows for `perp_funding` on **every single one of the
+      12 tested days**
+      (`no MTDS manifest in market-data-tick-defi-prd-central-element-323112       — MTDS has not run for perp_funding`,
+      byte-identical message on all 12) — a real, currently-active structural gap distinct from the other 4. This
+      directly conflicts with `data_completion_defi_2026_07_15.md`'s claim of `perp_funding=12,500 captured`
+      historically and a live daily Cloud Scheduler job (`collect-perp-funding`, 01:15 UTC, per that doc's own audit)
+      writing via `perp_funding_handler.py` → `get_write_bucket_name("market_data",       "defi")` (the same canonical
+      bucket the dependency check reads) — i.e. the scheduler appears to run daily but produces no visible manifest rows
+      for perp_funding across a ~3-month window. New follow-up todo below captures this as its own scoped investigation
+      (out of scope for this todo — root-causing the scheduler/handler/manifest gap needs its own session). **Net effect
+      on the gating todo**: `DEFI:onchain`'s dependency check will NOT pass on ANY day right now — it requires ALL 5
+      deps (`required: True` on all 4 MTDS on-chain deps per `UPSTREAM_DEPS_DEFI`), and `perp_funding` is confirmed
+      absent on every tested day. So `data_pipeline_check_mdps_features_2026_07_20.md`'s gate correctly STAYS closed for
+      DEFI — but the "MTDS has never ingested vault_share_price/lst_rates/lending_indices/ oracle_prices/perp_funding"
+      framing is now corrected to name `perp_funding` specifically as the sole live blocker (see that plan's updated
+      line, same commit). Repo: features-service.
+- [ ] [DATA] P2. **NEW 2026-07-29 (slot-6), follow-up split off the finding above.** Root-cause why the live daily
+      `collect-perp-funding` Cloud Scheduler job (`market-tick-data-service`, `defi_collection_scheduler.tf:112`, 01:15
+      UTC) produces zero MTDS manifest rows for `perp_funding` across every one of 12 tested days spanning 2026-05-01 to
+      2026-07-28, despite `perp_funding_handler.py:225` resolving to the same canonical bucket
+      (`get_write_bucket_name("market_data", "defi")`) the dependency check reads and a historical
+      `perp_funding=12,500 captured` count in `data_completion_defi_2026_07_15.md`. Candidates to rule in/out: (a) the
+      scheduler job is failing/erroring silently (check Cloud Scheduler execution logs + handler logs for the actual run
+      window); (b) the handler writes real objects but something downstream (manifest consolidator / `record_captured`
+      call) never registers them for the `perp_funding` data_type key specifically; (c) the historical 12,500-row count
+      predates a since-broken code path and nothing has captured successfully since. Repo: market-tick-data-service
+      (scheduler config + handler), possibly unified-trading-library (manifest consolidator) depending on root cause.
 
 ## Measurement trap (for whoever picks up P2 above, or anyone else needing to call into `unified_trading_library`
 
@@ -125,3 +154,14 @@ census docs as this session ultimately did instead).
   has NOT been granted as of this session (no matching approval text found anywhere in `plans/active/`).
   TRADFI:volatility's options/futures raw-tick backfill status was not independently re-checked this session beyond what
   the plan already documents.
+- 2026-07-29 (slot-6, data_engineering, re-dispatched to `data_pipeline_check_mdps_features-056` — the same gated parent
+  todo): Resolved the P2 todo above. Re-checked all 3 gates fresh first: CEFI operator go-ahead still not granted
+  (re-grepped `plans/active/`, no new approval text); TRADFI:volatility's raw-tick backfill status unchanged (no new
+  evidence found). Then ran the 12-day `DependencyChecker` sweep documented in the now-flipped todo — confirmed
+  `perp_funding` (not all 5 data_types) is the sole live blocker for `DEFI:onchain`. Corrected
+  `data_pipeline_check_mdps_features_2026_07_20.md`'s gating note to name `perp_funding` specifically (same commit).
+  Filed the new perp_funding-scheduler follow-up todo above. **Net: all 3 upstream gates (CEFI/TRADFI/DEFI) for the
+  parent throughput-measurement todo remain genuinely closed** — the parent checkbox (line ~906 of that plan) stays
+  `[ ]`; declining the dispatch again via `skip-current-task` (`reason_code: GATED`) rather than false-completing it,
+  per the plans-run-to-actual-completion HARD RULE. This session's real, verifiable output is the corrected gate
+  framing + the newly-scoped perp_funding follow-up, not the (still-blocked) throughput numbers themselves.
