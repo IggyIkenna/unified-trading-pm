@@ -201,8 +201,30 @@ from scope).
       README doc-index links. **✅ Same gate-clearance as Phase 3 — DELETE-class apply is cleared to execute (2026-07-28
       operator ruling, see the Phase-3 note + issue doc above).** Full-completion mandate applies here too: every
       DELETE-class doc identified in Appendix A/B, not a partial sweep.
-- [ ] [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
+- [x] ✅ [DOCS] P2. **Phase 5 — verify + enforce.** Run S5.7 audit per repo; add a QG/CI check that flags repo docs
       duplicating a codex table/contract (or hardcoding a resolver-owned literal); confirm all redirect links resolve.
+      **DONE 2026-07-29 (slot-10) — unified-trading-pm@4558bcff8.** (1) **ENFORCE**: shipped
+      `scripts/quality_gates/check_repo_docs_ssot.py` (+ unit test + `repo_docs_ssot_baseline.yaml`, 32 pre-existing
+      seeded), wired into `scripts/quality-gates.sh` post-gates as a baselined shrinking ratchet (blocks on NEW drift
+      only; needs `WORKSPACE_ROOT`, CI-noop when siblings absent — same shape as the codex-freshness gate). It walks
+      every sibling repo's living docs (`docs/**/*.md` + root `README.md`; `unified-trading-pm` excluded — it IS the
+      codex SSOT; `docs/archive/**` + vendored `.cursor/`/`.venv`/`node_modules` excluded) and flags the two
+      deterministic drift classes the audit found dominant: `mirror-ref` (a repo doc pointing at the ARCHIVED
+      `unified-trading-codex/` mirror instead of live PM `/codex/`, Appendix B's #1 remediation) and `hardcoded-literal`
+      (a resolver-owned literal S5.6 bans — the real GCP project id, use `{project_id}`). The fuzzier "semantic
+      codex-table duplication" detection is a follow-up (P3 todo below) — the S5.11/S5.6 literal+mirror-ref clause is
+      what's deterministically enforceable without false positives. (2) **VERIFY — redirect links**: all S5.11 redirect
+      docs' `../../unified-trading-pm/codex/…` links resolve (scanned every `Canonical SSOT`-bearing repo doc; zero
+      broken). (3) **VERIFY — S5.7 required-docs audit**: ran per repo; 9/17 miss ≥1 required doc, but the gaps are
+      mostly legitimately-absent (non-data-writing repos have no GCS/schema) — captured as a scoping finding in
+      `/plans/active/issues/s5_7_required_docs_gaps_2026_07_29.md` (out of this dedup plan's scope; operator/main
+      tiering decision).
+- [ ] [DOCS] P3. **Phase 5 follow-up — semantic codex-table-duplication detector.** `check_repo_docs_ssot.py` (Phase 5)
+      enforces the deterministic clauses (archived-mirror refs + hardcoded resolver-owned literals) but does NOT yet
+      detect a repo doc that reproduces a codex TABLE/contract verbatim (S5.11's core "no duplication" rule) — a
+      verbatim-block detector is false-positive-prone (codex tables get legitimately quoted/referenced) and needs a
+      calibrated heuristic. Design + add it as a third rule to `check_repo_docs_ssot.py`, baselined. (repo:
+      unified-trading-pm)
 
 ## Phase 2 progress (2026-07-27)
 
