@@ -208,16 +208,16 @@ execution-service/strategy-service are both confirmed clean by absence (no DeFi-
 - [x] [SCRIPT] P1. **Round 4 (SPORTS-scoped) audit** — DONE 2026-07-28, findings documented above. No CRITICAL
       live-firing bug; execution-service confirmed clean by absence. New follow-up todos logged below.
 
-- [ ] [SCRIPT] P0. **URGENT 2026-07-29 — Fix MTDS's live-mode sports odds writer shape mismatch BEFORE the live
+- [x] [SCRIPT] P0. **URGENT 2026-07-29 — Fix MTDS's live-mode sports odds writer shape mismatch BEFORE the live
       connector runs.** `market_tick_data_service/live/websocket_runner.py::live_tick_blob_path` (non-CeFi branch) +
-      `live/connectors/odds_api_ws.py::_parse_fixture_response` need to write one shard per (bookmaker, league, fixture)
-      — matching the batch `venue_fetch.py::_build_sports_shard_path` shape — instead of one nested-JSON-bundled file
-      per sport. **No longer dormant**: the operator rotated `odds-api-key` (Secret Manager, project
+      `live/connectors/odds_api_ws.py::_parse_fixture_response` now write one shard per (bookmaker, league, fixture) —
+      matching the batch `venue_fetch.py::_build_sports_shard_path` shape — instead of one nested-JSON-bundled file per
+      sport. **No longer dormant**: the operator rotated `odds-api-key` (Secret Manager, project
       `central-element-323112`) to a new working key on 2026-07-29 (5,000,000-credits/month subscription, live-verified)
-      — the same secret `odds_api_ws.py` resolves via `cfg.odds_api_secret_name`. The live connector can now actually
-      authenticate and write, so this shape mismatch is no longer theoretical — bumped from P2 to P0 and flagged to the
-      operator; fix before the live sports-odds WS connector is enabled/dispatched against production, not after a
-      silent-corruption incident. (repo: market-tick-data-service)
+      — the same secret `odds_api_ws.py` resolves via `cfg.odds_api_secret_name`. Fixed before the live sports-odds WS
+      connector could be enabled/dispatched against production. Evidence: `market-tick-data-service@d6d539a8`. New
+      parity test proves the round-trip: fixture response -> ticks -> blob path matches the batch builder's output for
+      the same fixture. (repo: market-tick-data-service)
 
 - [x] [SCRIPT] P2. **Delete the 5 confirmed wrong-and-dead `sports_*` PATH_REGISTRY rows + their dead
       `SportsXDomainClient` consumers** — `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/

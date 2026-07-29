@@ -454,15 +454,12 @@ going forward. Still open, tracked as a todo below.
       `utils/io/loader.py` (byte-identical dead duplicates) and `data/loaders/__init__.py`'s never-imported
       `UCSDataLoader`. Evidence: `execution-service@8039c3e5f`.
 
-- [ ] [SCRIPT] P1. **Fix `market_tick_data_service/reader.py:367-373`'s DeFi chain/venue segment-order bug** —
-      `CanonicalParquetReader._build_shard_bases` builds `asset_group=defi/chain={C}/venue={V}/...`, reversed vs. the
+- [x] [SCRIPT] P1. **Fix `market_tick_data_service/reader.py:367-373`'s DeFi chain/venue segment-order bug** —
+      `CanonicalParquetReader._build_shard_bases` built `asset_group=defi/chain={C}/venue={V}/...`, reversed vs. the
       real write shape `asset_group=defi/venue={V}/chain={C}/...`. Dormant today (no live caller passes `chain=`), but a
-      landmine on a public method. Fix the segment order in `_make_base`, update the matching docstring
-      (`reader.py:26-28`) and unit-test contract
-      (`tests/market_interface/unit/test_canonical_parquet_reader.py:702-763`, currently asserting the WRONG order).
-      Also add a follow-up note to `/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8 — it documents the identical
-      bug's fix in the live WRITER (`mtds@0fcfa803`) but never flagged this second, independent reader-side occurrence.
-      (repo: market-tick-data-service, unified-trading-pm for the codex note)
+      landmine on a public method. Fixed the segment order in `_make_base`, the matching docstring, and the unit-test
+      contract. Companion codex note added to `/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8. Evidence:
+      `market-tick-data-service@b7b79b14`, `unified-trading-pm@62918201e`.
 
 - [x] [SCRIPT] P1. **Delete MDPS's dead live-mode async-persistence adapter chain** — `AsyncGCSDataSink`/`GCSDataSink`
       (`app/core/data_sink.py`), `LiveDataSource`/`GCSDataSource` (`app/core/data_source.py`), and the
@@ -472,13 +469,12 @@ going forward. Still open, tracked as a todo below.
       batch uses. Deleted rather than fixed-forward. Also removed the tests that exercised `_persistence_worker`
       directly and the other dead-code-adjacent test surface area. Evidence: `market-data-processing-service@c9f7d9f`.
 
-- [ ] [SCRIPT] P1. **Fix the two features-service missing-`pipeline_mode=`/wrong-prefix bugs found in round 2** — (a)
-      `onchain/app/calculators/eigen_rewards_calculator.py:51-55`'s `_mtds_eigen_rewards_blob_candidates` omits
-      `pipeline_mode=` from both exact-path guesses (batch, currently silently falls through to the DefiLlama vendor
-      API); (b) `onchain/collectors/parquet_dust_loader.py:132-136`'s list prefix is missing the registry's `onchain/`
-      root segment vs. what the writer actually writes (currently dormant/unwired — `Phase6Driver`'s `dust_loader=` has
-      zero real production callers, so this is a landmine for whenever it IS wired up). Add regression tests for both
-      (fail pre-fix, pass post-fix). (repo: features-service)
+- [x] [SCRIPT] P1. **Fix the two features-service missing-`pipeline_mode=`/wrong-prefix bugs found in round 2** — (a)
+      `onchain/app/calculators/eigen_rewards_calculator.py:51-55`'s `_mtds_eigen_rewards_blob_candidates` omitted
+      `pipeline_mode=` from both exact-path guesses — fixed with a proper day-prefix + shard-suffix probe pattern,
+      tracing the real MTDS writer (`eigenlayer_rewards_handler.py`) to derive the actual shard suffix; (b)
+      `onchain/collectors/parquet_dust_loader.py:132-136`'s list prefix was missing the registry's `onchain/` root
+      segment — fixed. Regression tests added for both. Evidence: `features-service@95b8233b`.
 
 - [ ] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** — PARTIALLY SHIPPED
       2026-07-29. DONE: `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
@@ -636,13 +632,13 @@ going forward. Still open, tracked as a todo below.
       already-verified-correct). Tracked for deletion in the dead-code-cleanup todo below. (repo:
       unified-trading-library, market-data-processing-service)
 
-- [ ] [SCRIPT] P2. **Delete or fix the 6 confirmed dead/duplicate path-construction sites** listed above
-      (`OrchestrationSchedulingMixin._check_existing_outputs`, `get_raw_tick_path()`, `GCSDataSource`,
-      `build_processed_candle_path()`, `adv.py::_candidate_paths`, `execution-service`'s duplicate
-      `MarketDataLoader.build_path()` files) — CLAUDE.md's "delete deprecated code, no shims" rule; each is either truly
-      dead (delete) or a landmine waiting for its first real caller (fix to match canonical shape first, or delete if
-      genuinely superseded). Low individual risk, real hygiene value, cheap to batch together. (repo:
-      market-data-processing-service, features-service, execution-service)
+- [x] [SCRIPT] P2. **Delete or fix the 6 confirmed dead/duplicate path-construction sites** listed above — all 6
+      confirmed addressed (verified via grep, zero remaining matches for the 5 deleted ones):
+      `OrchestrationSchedulingMixin._check_existing_outputs`, `get_raw_tick_path()`, `GCSDataSource`,
+      `build_processed_candle_path()` all deleted as part of `market-data-processing-service@c9f7d9f`'s dead-code sweep;
+      `adv.py::_candidate_paths` FIXED (not deleted — it's the canonical builder, just had wrong tokens) as part of
+      `features-service@95b8233b`; `execution-service`'s duplicate `MarketDataLoader.build_path()` files
+      (`utils/loader.py`, `utils/io/loader.py`) deleted as part of `execution-service@8039c3e5f`.
 
 - [x] [SCRIPT] P1. **Round 2 (DEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above (5 confirmed
       bugs incl. 1 CRITICAL-live, 4 confirmed dead/duplicate sites, 4 structural gaps flagged). New follow-up todos
