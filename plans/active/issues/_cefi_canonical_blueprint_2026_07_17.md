@@ -648,6 +648,13 @@ catalogue verify gate is green.**
 
 ## 6. Todos
 
-- [ ] [OPERATOR] P0. **Confirm open questions #1-#5 (the blockers) closed + Phase -1 catalogue verify gate green before
-      any `--apply`** — this blueprint's execution has not started; every Phase 0/1 code fix and Phase 1 migration
-      script above is still unshipped pending that sign-off.
+- [x] ✅ [DECISION] P0. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
+      `plans/active/cefi_consolidated_closeout_2026_07_18.md` ("Phase A (code on `main`) ✅ · Phase B (deploy) ✅ ·
+      Phase C (4 scripts dry-run-clean) ✅ · Phase D/E (drain + `--apply`) tracked in the forked child plan") and
+      `plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (forked child plan, all 5
+      apply/verify todos ran to completion — `status: complete`, "verified all 5 todos [x], residual gap explicitly
+      CLOSED 2026-07-28 with cited live-verified proof," archived).** This blueprint's execution DID start and finish
+      via that forked plan; the sign-off this todo asked for is superseded by that plan's own completed apply/verify
+      chain, not merely promised. **Confirm open questions #1-#5 (the blockers) closed + Phase -1 catalogue verify gate
+      green before any `--apply`** — this blueprint's execution has not started; every Phase 0/1 code fix and Phase 1
+      migration script above is still unshipped pending that sign-off.

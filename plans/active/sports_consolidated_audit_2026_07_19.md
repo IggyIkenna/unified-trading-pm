@@ -288,10 +288,16 @@ ask.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve §U's in-window league-registry gap** — 489 (league,season) pairs / 10,869 blank-round
-      rows sit in leagues absent from the UAC registry; extend the registry or stop capturing them, and root-cause
-      §2.3's cross-AG manifest bleed + §2.5's `attempted_failed` triplet, before "sports backfilled 100%" can be
-      asserted.
+- [x] ✅ [DECISION] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
+      `plans/active/sports_consolidated_closeout_2026_07_19.md` (~line 705, retagged 2026-07-28 as "already answered +
+      executed"). §U's decision was ANSWERED 2026-07-20 (decision 2): stop capturing non-registry leagues, exclude the
+      489-pair/10,869-row population from the denominator — executed (manifest COPY+SWAP `mtds@b2a49317`, re-verified
+      stable across 5 consolidator cycles). Note (not re-opened here): the 2 bundled sub-asks — §2.3's cross-AG manifest
+      bleed and §2.5's `attempted_failed` triplet — remain genuinely open, already tracked as separate [DIAG]
+      engineering work in the closeout doc's own list.** Resolve §U's in-window league-registry gap — 489
+      (league,season) pairs / 10,869 blank-round rows sit in leagues absent from the UAC registry; extend the registry
+      or stop capturing them, and root-cause §2.3's cross-AG manifest bleed + §2.5's `attempted_failed` triplet, before
+      "sports backfilled 100%" can be asserted.
 
 ## Verification notes (adversarial cross-checks during synthesis)
 

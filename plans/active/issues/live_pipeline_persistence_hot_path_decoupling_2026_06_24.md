@@ -45,6 +45,20 @@ depends_on: []
 > data. The remaining build is the operator-decided warm-GCS-parts path tracked in `mtds_plan_reconciliation_2026_06_29`
 > **§ Section F M-C7**. Verified in live code by the consolidation pass.
 
+> **🟢 Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
+> `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 17 ("M-C7 warm-GCS-parts durable sink
+> -- APPROVED to build real code").** The operator build-greenlight this doc's banner above was awaiting is granted —
+> the gate itself is resolved, so the todo asking for it is closed below. **Live-verified 2026-07-29 (not assumed) that
+> the actual build is still partial**: the warm tier is real (Terraform-applied `deployment-service@c540cd03`
+> 2026-06-29, 52 `warm-sink-persist-*` Cloud Storage subscriptions; `gcloud pubsub subscriptions list` confirms all 52
+> live; `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms real data
+> landing) — but the daily cold-compaction Cloud Run Job (`live-event-log-compactor`) has never once run successfully:
+> `gcloud run jobs describe` shows `Ready: False` / `ContainerMissing`
+> (`gcr.io/central-element-323112/live-event-log-compactor:latest` was never built/pushed — no `cloudbuild.yaml` step
+> references it), `gcloud run jobs executions list` returns zero executions since the job's creation (2026-06-29), and
+> `live-events/cold/` is empty in GCS. So `paper(W)==batch-rerun(W)` is still NOT provable for live data. The real
+> remaining work is tracked in the new `[CODE]` todo below.
+
 ## What I found
 
 The live data pipeline today (verified in code, all asset_groups — surfaced via the prediction Kalshi↔Polymarket book
@@ -168,7 +182,28 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Build the durable warm-tier (Pub/Sub → Cloud-Storage subscription → GCS parts → daily cron
-      aggregate)** — currently `BLOCKED-CREDENTIALS` / awaiting build greenlight; without it `paper(W)==batch-rerun(W)`
-      is not yet provable for live data. Executable SSOT:
-      `plans/active/live_data_persistence_central_event_log_2026_06_25.md`.
+- [x] ✅ [DECISION] P2. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
+      `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 17 ("M-C7 warm-GCS-parts durable
+      sink -- APPROVED to build real code").** Build the durable warm-tier (Pub/Sub → Cloud-Storage subscription → GCS
+      parts → daily cron aggregate) — previously gated on an operator build-greenlight decision, now granted
+      (2026-07-27); without the actual build landing end-to-end, `paper(W)==batch-rerun(W)` is not yet provable for live
+      data. Executable SSOT: `plans/active/live_data_persistence_central_event_log_2026_06_25.md` (archived,
+      `plans/archive/2026_06/`). **The ask this todo raised — permission to build — is resolved.** The real remaining
+      implementation gap is tracked in the new todo below (verified NOT fully landed as of 2026-07-29).
+- [ ] [CODE] P2. **Finish the warm-GCS-parts durable sink — the compaction leg never landed.** Verified live 2026-07-29:
+      the warm tier is real and receiving data (Terraform-applied `deployment-service@c540cd03` 2026-06-29 — 52
+      `warm-sink-persist-*` Cloud Storage subscriptions, confirmed live via `gcloud pubsub     subscriptions list`;
+      `gs://central-element-323112-events/live-events/warm/prediction/{book_snapshot_5,trades}/` confirms real data
+      landing) — but the daily cold-compaction Cloud Run Job (`live-event-log-compactor`,
+      `deployment-service/deployment_service/jobs/live_event_log_compactor.py` +
+      `deployment-service/terraform/gcp/live_event_log/compaction_job.tf`) has been non-functional since its creation
+      (2026-06-29): its image `gcr.io/central-element-323112/live-event-log-compactor:latest` was never built/pushed (no
+      `cloudbuild.yaml` step references it), so the Job sits `Ready: False` / `ContainerMissing` with ZERO executions
+      ever (`gcloud run jobs describe` + `executions list`, confirmed 2026-07-29), and `live-events/cold/` is empty in
+      GCS. Scope: (1) add a build step (Dockerfile/cloudbuild) for `live_event_log_compactor.py` and push the image; (2)
+      manually trigger the Cloud Run Job once and verify a full successful daily compaction producing
+      `live-events/cold/<asset_group>/<data_type>/date=.../` parquet; (3) confirm the existing Cloud Scheduler trigger
+      (`live-event-log-compactor-daily`, 2 AM UTC) fires it going forward; (4) re-run the `paper(W)==batch-rerun(W)`
+      determinism test now that the full three-tier pipeline (Pub/Sub → warm GCS → cold compaction) actually executes
+      end-to-end. Repos: deployment-service (job + terraform), market-tick-data-service / market-data-processing-service
+      (determinism re-test).

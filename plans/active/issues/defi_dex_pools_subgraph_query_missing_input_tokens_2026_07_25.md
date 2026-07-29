@@ -130,7 +130,8 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide + fix the `messari_basic` subgraph query missing `inputTokens { symbol }`** --
-      curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve tier-2 symbol resolution; needs an operator call on
-      whether to fix the query (add `inputTokens`, switch to `_parse_messari_dex`) before DeFi live capture resumes, or
-      deprioritize.
+- [x] ✅ [DECISION] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — see
+      `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`.** Decide + fix the `messari_basic` subgraph
+      query missing `inputTokens { symbol }` -- curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve tier-2 symbol
+      resolution; needs an operator call on whether to fix the query (add `inputTokens`, switch to `_parse_messari_dex`)
+      before DeFi live capture resumes, or deprioritize.
