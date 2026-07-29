@@ -89,6 +89,23 @@ def _cited_basenames(path: Path) -> set[str]:
     return set(CITE_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
 
 
+def _find_closeout_doc(tranche: str) -> Path | None:
+    """Locate a tranche's own consolidated-closeout doc, active or archived.
+
+    A tranche's closeout digest can be archived once its own todos are done (its archival
+    banner explicitly does not mean the tranche's underlying work is done -- see
+    ci_consolidated_closeout_2026_07_25.md, archived 2026-07-28) while still being the only
+    citation source for that tranche's membership. Falling back to plans/archive/*/ keeps
+    membership derivation working after that archival instead of silently reporting 0.
+    """
+    name = f"{tranche}_consolidated_closeout_2026_07_25.md"
+    active = PM / "plans" / "active" / name
+    if active.exists():
+        return active
+    archived = sorted(PM.glob(f"plans/archive/*/{name}"))
+    return archived[0] if archived else None
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tranche", choices=[*ALL_TRANCHES, "all"], default="all")
@@ -96,9 +113,7 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # non-AG tranche membership: citation-grep on that tranche's own consolidated-closeout doc
-    non_ag_cited = {
-        t: _cited_basenames(PM / f"plans/active/{t}_consolidated_closeout_2026_07_25.md") for t in NON_AG_TRANCHES
-    }
+    non_ag_cited = {t: _cited_basenames(_find_closeout_doc(t) or Path("/nonexistent")) for t in NON_AG_TRANCHES}
     peer_cited: set[str] = set()
     for s in non_ag_cited.values():
         peer_cited |= s
