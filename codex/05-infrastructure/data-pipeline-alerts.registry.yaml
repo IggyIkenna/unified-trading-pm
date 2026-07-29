@@ -103,6 +103,19 @@ failure_modes:
       status: verbose,
       fires: "catalog-freshness always-False masks zero capture",
     }
+  - {
+      id: DP-FETCH-009,
+      category: FETCH,
+      severity: CRITICAL,
+      event: DP_RUN_MOSTLY_EMPTY,
+      detector: check_high_attempted_failed,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "attempted_failed cell high: abs>=500 or (count>=min AND ratio>=10%) -- ATTEMPTED_FAILED-ratio variant, distinct
+        from DP-FETCH-007's empty_confirmed-ratio detector (same event name, both DP_RUN_MOSTLY_EMPTY)",
+    }
 
   # --- DP-COVERAGE (class C2) ---
   - {
