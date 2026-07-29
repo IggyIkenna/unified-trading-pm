@@ -17,7 +17,7 @@ asset_group: [sports]
 stage: [data]
 repos: [market-tick-data-service, deployment-service]
 scope: [engineer, admin]
-tags: [sports, odds-api, credentials, outage, data-pipeline-correctness, blocked-credentials]
+tags: [sports, odds-api, credentials, outage, data-pipeline-correctness]
 related: [sports_satellite_ao_dispatch_batch5_2026_07_26, sports_golden_window_attempted_failed_remediation_2026_06_24]
 created: 2026-07-26
 parent_epic: sports_master
@@ -33,16 +33,24 @@ locked_by:
 
 # odds-api key deactivated — blocks all sports odds-api capture
 
-> **🔴 OPERATOR RULING 2026-07-28 — reactivation DECLINED, do not re-open.** Operator's own words: _"NOT needed for now.
-> We can use the odds API keys we already have for live+batch odds. This was a one-off investigation into another
-> provider -- do not reactivate or rotate the key."_ The `[OPERATOR]` credential-fix todo below is closed **DECLINED**
-> on this basis — do not re-verify this key, do not attempt reactivation/rotation, do not re-ask. **Flag, not resolved
-> by this ruling alone**: every re-verification in this doc's own Progress Log through 2026-07-28 (slot-7) independently
-> confirmed `error_code=DEACTIVATED_KEY` still live and 0 `odds_api` rows captured since 2026-07-25 — i.e. the doc's own
-> evidence is that the-odds-api.com IS the canonical, previously-275k-rows/day vendor, not a side investigation into
-> "another provider". This ruling is applied here verbatim and not second-guessed, but the apparent tension with the
-> doc's own evidence is left visible (not silently reconciled) for a human to sanity-check — see the retagged P2 todo
-> below for the concrete downstream effect.
+> **🟢 RESOLVED 2026-07-29 — key rotated, credential blocker CLEARED, supersedes the 2026-07-28 decline below.**
+> Operator provisioned a new the-odds-api.com key on a 5,000,000-credits/month subscription and rotated GCP Secret
+> Manager `odds-api-key` (project `central-element-323112`) to it — `gcloud secrets versions add` created version 3,
+> live-verified via direct curl against `https://api.the-odds-api.com/v4/sports?apiKey=...`: **HTTP 200**,
+> `x-requests-remaining: 5000000`. The key is no longer `DEACTIVATED_KEY`. Every `BLOCKED-CREDENTIALS` gate in this doc
+> and in downstream docs pointing here for this specific credential is now cleared — see the retagged todos below. **Not
+> yet done**: the deferred backfill (P2 todo below) — credential-fixed ≠ backfill-rerun, don't conflate the two.
+>
+> **🔴 OPERATOR RULING 2026-07-28 (historical — superseded by the rotation above, kept for the audit trail) —
+> reactivation DECLINED, do not re-open.** Operator's own words: _"NOT needed for now. We can use the odds API keys we
+> already have for live+batch odds. This was a one-off investigation into another provider -- do not reactivate or
+> rotate the key."_ The `[OPERATOR]` credential-fix todo below was closed **DECLINED** on this basis. **Flag, not
+> resolved by this ruling alone**: every re-verification in this doc's own Progress Log through 2026-07-28 (slot-7)
+> independently confirmed `error_code=DEACTIVATED_KEY` still live and 0 `odds_api` rows captured since 2026-07-25 — i.e.
+> the doc's own evidence is that the-odds-api.com IS the canonical, previously-275k-rows/day vendor, not a side
+> investigation into "another provider". That tension is exactly why the operator's 2026-07-29 instruction to rotate the
+> key (this time with a fresh paid subscription) reads as a deliberate reversal of the 2026-07-28 decline, not a
+> contradiction to reconcile away.
 
 ## What I found
 
@@ -115,19 +123,17 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
 
 ## Follow-up todos
 
-- [x] [OPERATOR] P0. ~~Fix the-odds-api.com account billing/subscription...~~ **CLOSED — DECLINED, operator ruling
-      2026-07-28** (see banner above). Reactivation/rotation of this key is not needed; operator confirmed another
-      already-working odds-api key path covers live+batch odds. No further reactivation attempts, no further live
-      re-verification of `odds-api-key` against the-odds-api.com. (repo: N/A, GCP Secret Manager + the-odds-api.com
-      account)
-- [ ] [DATA] P2. **PERMANENTLY BLOCKED via this key path, per the 2026-07-28 operator decline above — do not re-verify
-      this specific key going forward.** (odds-api key was `DEACTIVATED_KEY` on every check through 2026-07-28, and the
-      operator has now declined to fix it, so this stays closed rather than pending.) **PREREQUISITE UPDATED (see new P1
-      todo below) — do NOT re-run blind even if some other key becomes available.** If the 3-league golden-window gap
-      (UCL/CHINA_SUPER_LEAGUE/RUSSIA_PREMIER_LEAGUE) still needs closing, it must go through whichever odds-api
-      key/mechanism the operator says is already live for batch odds (not identified in this doc — flag to the operator
-      which key/secret to point at before attempting any re-run). Once a working key path is confirmed, re-run the
-      3-league golden-window backfill using the now-shipped `--league` flag:
+- [x] [DATA] P0. **DONE 2026-07-29** — Fixed the-odds-api.com account: operator provisioned a new key on a
+      5,000,000-credits/month subscription and rotated GCP Secret Manager `odds-api-key` (project
+      `central-element-323112`, new version 3 via `gcloud secrets versions add`), live-verified via direct curl
+      (`https://api.the-odds-api.com/v4/sports?apiKey=...` → HTTP 200, `x-requests-remaining: 5000000`). Supersedes the
+      2026-07-28 DECLINED closure (see banner above). No longer `[OPERATOR]` — credential path is genuinely fixed, not a
+      still-open ask. (repo: N/A, GCP Secret Manager + the-odds-api.com account)
+- [ ] [DATA] P1. **UNBLOCKED 2026-07-29 — odds-api key rotated + live-verified (see banner + P0 todo above), no longer
+      `BLOCKED-CREDENTIALS`.** (odds-api key was `DEACTIVATED_KEY` on every check through 2026-07-28; the operator has
+      now rotated the same canonical `odds-api-key` Secret Manager secret this doc has tracked throughout — no alternate
+      key/vendor identification needed, it's the one and only secret the-odds-api.com path reads.) Re-run the 3-league
+      golden-window backfill using the now-shipped `--league` flag:
       `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-ucl-gap --league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE --start 2025-09-01 --end     2025-11-30 --force`.
       Verify `_index/availability_index.parquet` shows 0 `attempted_failed` for these 3 leagues across the golden window
       afterward (baseline before this fix: only 11/91 days per league captured, all via non-`--league`-scoped organic
@@ -143,9 +149,10 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       operational re-run blocked on the scoping bug too)
 
       **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-                                                          correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-                                                          This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-                                                          is needed first. Still blocked only on the operator's credential fix (todo above).
+                                                                      correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
+                                                                      This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
+                                                                      is needed first. **UNBLOCKED further 2026-07-29**: the operator's credential fix (todo above) is also now done
+                                                                      — this todo is fully dispatchable, no remaining blocker.
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`
@@ -273,3 +280,19 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
   (`gcloud secrets versions access latest --secret=odds-api-key --project=central-element-323112`) and curled
   `the-odds-api.com/v4/sports` directly — still `error_code=DEACTIVATED_KEY`, unchanged from every prior check since
   2026-07-26. No new information; not running the backfill. Skipping the dependent task (`reason_code: GATED`).
+- 2026-07-29: **Operator instructed rotation** (a deliberate reversal of the 2026-07-28 decline, given a fresh
+  5,000,000-credits/month subscription now in hand), explicitly to unblock this doc and the downstream
+  `BLOCKED-CREDENTIALS` gates it feeds. Rotated GCP Secret Manager `odds-api-key` (project `central-element-323112`) via
+  `gcloud secrets versions add odds-api-key --data-file=-` → created version 3. Live-verified per this doc's own
+  discipline BEFORE editing any status text: `curl https://api.the-odds-api.com/v4/sports?apiKey=...` → **HTTP 200**
+  (not `DEACTIVATED_KEY`), response headers show `x-requests-remaining: 5000000` confirming the new subscription tier.
+  Updated the banner + P0/P1 todos above to reflect the credential is genuinely fixed, not just declared fixed. Did NOT
+  re-run the deferred 3-league backfill in this pass — that's the P1 todo above, now unblocked but not yet executed.
+  Also swept and updated the downstream docs that cite this outage as a live blocker:
+  `sports_satellite_ao_dispatch_ batch5_2026_07_26.md`, its `_finalize.md`,
+  `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`,
+  `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`,
+  `sports_closeout_track_s2_foldin_2026_07_25.md`, and
+  `gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — plus the stale `secrets-management.md`
+  inventory entry that had this secret marked "not in Secret Manager" (it was; it was vendor-deactivated, a different
+  fact).

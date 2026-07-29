@@ -17,7 +17,7 @@ tags: [prediction, ao-dispatch, close-out, batch-5, satellite-docs, archival]
 related:
   [
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/active/prediction_cqg_residual_2026_07_24.md,
+    /plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md,
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

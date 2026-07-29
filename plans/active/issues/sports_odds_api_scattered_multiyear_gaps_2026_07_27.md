@@ -151,15 +151,17 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [DATA] P1. BLOCKED-CREDENTIALS — the-odds-api.com key is `DEACTIVATED_KEY` (re-verified live 2026-07-28: still
-      deactivated, see `sports_odds_api_key_deactivated_2026_07_26.md`, key restoration is [OPERATOR]-gated there). Once
-      the key is restored, backfill all 635 missing days via
-      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>` per
-      contiguous range (idempotent/manifest-skip by default, no `--force` needed — will not re-fetch the 1,608
+- [ ] [DATA] P1. UNBLOCKED 2026-07-29 — the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has
+      since rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a
+      5,000,000-credits/month subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) —
+      see `sports_odds_api_key_deactivated_2026_07_26.md`. No longer `[OPERATOR]`-gated. Backfill all 635 missing days
+      via `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>`
+      per contiguous range (idempotent/manifest-skip by default, no `--force` needed — will not re-fetch the 1,608
       already-present days). (repo: deployment-service)
-- [ ] [VERIFY] P2. BLOCKED-CREDENTIALS — depends on the P1 backfill above, which is itself credential-gated (same
-      blocker). Once the backfill lands, re-run this same census (single manifest read, filter `source == "odds_api"`,
-      `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days, then close this doc.
+- [ ] [VERIFY] P2. UNBLOCKED 2026-07-29 — depends on the P1 backfill above, which is now credential-unblocked (same key
+      fix) but not yet executed. Once the backfill lands, re-run this same census (single manifest read, filter
+      `source == "odds_api"`, `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days,
+      then close this doc.
 
 ## Progress Log
 

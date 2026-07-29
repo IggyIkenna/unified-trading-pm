@@ -31,7 +31,7 @@ related:
     /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -94,9 +94,11 @@ exists to fix). Findings are one real dormant landmine and 5 confirmed dead-and-
    (`live/connectors/odds_api_ws.py`) sets `instrument_id` to one-per-SPORT (not per-fixture) while bundling every
    bookmaker's odds as nested JSON inside a single tick payload. A real live capture would be structurally
    invisible/unparseable to every batch-shaped downstream consumer (MDPS's sports adapters, `dependency_checker.py`'s
-   bookmaker-venue matching). **Not proven live-firing**: the connector's own docstring says `BLOCKED-CREDENTIALS`, and
-   zero `pipeline_mode=live_odds_api` objects exist anywhere in the sports bucket across 5 sampled dates. A landmine for
-   whenever live odds_api credentials land, not an active incident.
+   bookmaker-venue matching). **UPDATE 2026-07-29 — the landmine is now live-armed, not proven-live-firing-yet**: the
+   connector's own docstring said `BLOCKED-CREDENTIALS`, and as of the last sample zero `pipeline_mode=live_odds_api`
+   objects existed anywhere in the sports bucket — but the operator rotated `odds-api-key` to a working key the same
+   day, and this connector resolves that exact secret. The credential half of "whenever live odds_api credentials land"
+   has now landed; see the P0 todo below (bumped from P2).
 2. **5 CONFIRMED WRONG-AND-DEAD `sports_*` PATH_REGISTRY rows** (`registry.py:268-302`) —
    `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/`sports_tick_data`. Every one is BOTH
    wrong-shaped (live-verified against the real writer's actual output) AND dead (zero callers anywhere outside their
@@ -206,12 +208,16 @@ execution-service/strategy-service are both confirmed clean by absence (no DeFi-
 - [x] [SCRIPT] P1. **Round 4 (SPORTS-scoped) audit** — DONE 2026-07-28, findings documented above. No CRITICAL
       live-firing bug; execution-service confirmed clean by absence. New follow-up todos logged below.
 
-- [ ] [SCRIPT] P2. **Fix MTDS's live-mode sports odds writer shape mismatch** —
-      `market_tick_data_service/live/websocket_runner.py::live_tick_blob_path` (non-CeFi branch) +
+- [ ] [SCRIPT] P0. **URGENT 2026-07-29 — Fix MTDS's live-mode sports odds writer shape mismatch BEFORE the live
+      connector runs.** `market_tick_data_service/live/websocket_runner.py::live_tick_blob_path` (non-CeFi branch) +
       `live/connectors/odds_api_ws.py::_parse_fixture_response` need to write one shard per (bookmaker, league, fixture)
       — matching the batch `venue_fetch.py::_build_sports_shard_path` shape — instead of one nested-JSON-bundled file
-      per sport. Currently dormant (connector is `BLOCKED-CREDENTIALS`) — fix before live odds_api credentials are
-      provisioned, not after a silent-corruption incident. (repo: market-tick-data-service)
+      per sport. **No longer dormant**: the operator rotated `odds-api-key` (Secret Manager, project
+      `central-element-323112`) to a new working key on 2026-07-29 (5,000,000-credits/month subscription, live-verified)
+      — the same secret `odds_api_ws.py` resolves via `cfg.odds_api_secret_name`. The live connector can now actually
+      authenticate and write, so this shape mismatch is no longer theoretical — bumped from P2 to P0 and flagged to the
+      operator; fix before the live sports-odds WS connector is enabled/dispatched against production, not after a
+      silent-corruption incident. (repo: market-tick-data-service)
 
 - [ ] [SCRIPT] P2. **Delete the 5 confirmed wrong-and-dead `sports_*` PATH_REGISTRY rows + their dead
       `SportsXDomainClient` consumers** — `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/

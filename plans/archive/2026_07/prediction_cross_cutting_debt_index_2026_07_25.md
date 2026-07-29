@@ -247,7 +247,7 @@ for the live picture.
   - **[VERIFY] P1.** NEW (2026-07-14) — FLUID lending_indices silently returns 0 rows for ~18 months of its own declared
   - **[VERIFY] P1.** Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session
   - **[CODE] P2.** Update both drilldown mockups — not attempted this session (out of dispatched scope)
-- [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
+- [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
   (1 open — **corrected 2026-07-26, `/plan-reconcile` prediction shard**; was wrongly digested as "0 open todos
   (closed/archived/record-only)")
   - **[CODE] P2.** Add a collision-resistant component (e.g. an 8-hex slug of `hash(venue, data_type)`) to the

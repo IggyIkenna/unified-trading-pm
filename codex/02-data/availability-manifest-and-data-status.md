@@ -1098,22 +1098,23 @@ identical whether the source was silent or the pipeline had never run. `write_wi
   `reconcile_phantom_manifest_rows.py` is sports-only) is the inverse process: scans canonical GCS paths, compares vs
   `captured` rows, flips drift to `attempted_failed`.
 
-#### Live-pipeline 4-state taxonomy examples (pipeline_mode=live_websocket)
+#### Live-pipeline 4-state taxonomy examples (pipeline_mode=live_&lt;source&gt;)
 
 The same 4-state taxonomy applies to live-pipeline writes. The discriminator is the `pipeline_mode` column (v8 schema):
-batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live writes use the **transitional
-`live_websocket` alias** (the `live_rest` member never shipped; under the ratified source-aware M1 standard live values
-are `live_<source>` and consumers PREFIX-MATCH `live_*` — never an exact alias literal; the alias migration is the gated
-`M1-BREAKING` tranche, SSOT [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET design").
-Per-state semantics in live mode:
+batch writes use `pipeline_mode in {batch_databento, batch_tardis, ...}`; live writes use the **source-aware
+`live_<source>` standard** (M1, e.g. `live_databento`, `live_hyperliquid`; consumers PREFIX-MATCH `live_*` — never an
+exact literal). The `live_websocket` alias was the pre-`M1-BREAKING` transitional value — that migration SHIPPED (0
+`live_websocket`/`LIVE_WEBSOCKET` references fleet-wide), so `live_websocket` is now a RETIRED historical alias, not a
+live value any current writer emits. SSOT [`pipeline-mode-partition.md`](pipeline-mode-partition.md) § "Ratified TARGET
+design". Per-state semantics in live mode (worked example uses `live_databento`; substitute the resolved source):
 
-| State                | `pipeline_mode`  | `capture_status`   | Live-mode trigger                                                                                                                                                                                          |
-| -------------------- | ---------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Ingested**         | `live_websocket` | `captured`         | MTDS WS adapter received trades for the window → MDPS aggregated → wrote candle parquet + `record_captured`.                                                                                               |
-| **Zero-activity**    | `live_websocket` | `captured`         | WS connected, catalog says instrument alive, zero trades in window → `O=H=L=C=prior_LTP, vol=0, trade_count=0` (per 4-category empty-output decision D). Manifest row carries real bar count.              |
-| **Expected-empty**   | `live_websocket` | `empty_confirmed`  | WS connected, catalog says instrument delisted/non-trading on this day → no candle row; `error_reason ∈ EMPTY_CONFIRMED_REASONS` (e.g. `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PAUSED_LEAGUE`).          |
-| **Attempted-failed** | `live_websocket` | `attempted_failed` | WS disconnected mid-window beyond grace OR WS-dead-cascade exceeded N consecutive windows → `data_freshness=STALE` candle written + `error_reason=LIVE_WS_DEAD` (or similar typed reason).                 |
-| **Missing**          | (no row)         | —                  | Live VM crashed / restarted mid-day → gap window has no manifest row. Replay subsystem fills the gap (see [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)). |
+| State                | `pipeline_mode` | `capture_status`   | Live-mode trigger                                                                                                                                                                                          |
+| -------------------- | --------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Ingested**         | `live_<source>` | `captured`         | MTDS WS adapter received trades for the window → MDPS aggregated → wrote candle parquet + `record_captured`.                                                                                               |
+| **Zero-activity**    | `live_<source>` | `captured`         | WS connected, catalog says instrument alive, zero trades in window → `O=H=L=C=prior_LTP, vol=0, trade_count=0` (per 4-category empty-output decision D). Manifest row carries real bar count.              |
+| **Expected-empty**   | `live_<source>` | `empty_confirmed`  | WS connected, catalog says instrument delisted/non-trading on this day → no candle row; `error_reason ∈ EMPTY_CONFIRMED_REASONS` (e.g. `EXPECTED_INSTRUMENT_DELISTED`, `EXPECTED_PAUSED_LEAGUE`).          |
+| **Attempted-failed** | `live_<source>` | `attempted_failed` | WS disconnected mid-window beyond grace OR WS-dead-cascade exceeded N consecutive windows → `data_freshness=STALE` candle written + `error_reason=LIVE_WS_DEAD` (or similar typed reason).                 |
+| **Missing**          | (no row)        | —                  | Live VM crashed / restarted mid-day → gap window has no manifest row. Replay subsystem fills the gap (see [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)). |
 
 **Pipeline-mode partition is canonical** for separating batch vs live shard accounting. Coverage % per
 `(asset_group, data_type, day)` is computed per pipeline_mode slice — batch coverage and live coverage are reported
@@ -1121,9 +1122,9 @@ separately to avoid masking a live gap with batch backfill (or vice versa). See
 [`pipeline-mode-partition.md`](pipeline-mode-partition.md) for the partition column SSOT.
 
 **Drilldown UI reads pipeline_mode**: `GET /api/data-status/live` pivots manifest rows on the live stratum (prefix-match
-`live_*` — the transitional `live_websocket` alias plus the source-aware `live_<source>` members; the top-level
-data-status view stays the mode-AGNOSTIC union per M5, shipped `deployment-api@4dd2575`) and joins per-shard
-`StreamingHealthSnapshot` via the deployment- api Health-API HTTP join (see
+`live_*` — the source-aware `live_<source>` members; the historical `live_websocket` alias is retired and no longer
+written; the top-level data-status view stays the mode-AGNOSTIC union per M5, shipped `deployment-api@4dd2575`) and
+joins per-shard `StreamingHealthSnapshot` via the deployment- api Health-API HTTP join (see
 [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md) §
 "Health-API + alerting integration"). The deployment-ui `<LiveDataStatusTab/>` (since deployment-ui@`5738237`) renders
 the resulting rows with per-row `capture_status` badges + per-row staleness badges (WARN ≥ 30s, CRIT ≥ 60s).

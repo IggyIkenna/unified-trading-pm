@@ -427,4 +427,32 @@ check ~4h ago) — `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 at both reads
 this turn. Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next dispatch: repeat
 this health-check soon — at the observed pace this VM may reach terminal within the next few checks; once terminal,
 re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox +
-`sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002` todo.
+`sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002` todo. — **Health-checked
+2026-07-29T14:14Z-14:17Z (slot 6, data_engineering), RUNNING but a NEW finding — genuine stall in useful progress,
+different in kind from every prior check above**: `gcloud compute instances list` (via the ambient
+`github-actions-deploy` account, which worked fine this check) confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob
+fresh at both reads (`14:14:58Z` and (epoch) `1785334620` ≈ `14:17:00Z`, ~2min apart matching the poll gap). 2-read
+progress-metric check over ~3min: run.log grew 444,341→447,410 lines (+3,069), but **`date=` boundary UNCHANGED at
+`2026-07-12` since `13:45:03Z` (~32min before my first read, ~35min total by my second)** — unlike the 09:01Z check's
+"no new date but genuine in-date advance" caveat, here the growth is **100%
+`ADAPTER_FETCH_FAILED venue=api_football ... You have reached the request limit for the day` pairs** (47,604 occurrences
+at my second read, up from 44,562 at the first) — **zero** successful `Fetched N events for fixture=X` lines since
+`13:14:43Z` (confirmed via `grep` on both log snapshots), i.e. a full **~1h+ of zero real forward progress**, not the
+slow-but-genuine advance every prior check documented. This is the account's DAILY quota being hit (not the per-minute
+429 rate-limit sleep/retry cycling seen in every earlier check) — the loop is NOT sleeping/backing off, it is spinning
+through the 16,765-fixture recovery list for `date=2026-07-12` at full speed with every single call failing.
+**Reassurance this is NOT a repeat of the 2026-07-25T08:12Z incident**: that incident's bug (hard failures silently
+swallowed as `empty_confirmed`) is the one `instruments-service@f31fb2e9` fixed — here every failure surfaces as a
+genuine `ERROR ... recovery=fail_fast` (the fixed code path), so no false-positive `capture_status` should be getting
+written for `date=2026-07-12`; it simply isn't advancing until the vendor's daily quota resets.
+`grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 (no terminal marker; process has not crashed/exited, it is looping).
+**Did NOT stop the VM** — SPOT VM billing is time-based regardless of call volume, so spinning vs. idling costs the
+same, and GCS recovery-mode re-derives remaining fixture-ids from `date=` state on any restart, so a stop+relaunch buys
+nothing until the vendor quota clears anyway; stopping is a judgment call better made by whoever next confirms this has
+run for many more hours with zero recovery. Only ~13 days (`2026-07-12`→`2026-07-25`) remain in the whole
+`2020-06-06`→`2026-07-25` range. Not completable this turn. Releasing via `/skip-current-task {"reason_code": "GATED"}`,
+not duplicate-launched, not stopped. **Next dispatch: check whether the quota has reset and `date=` has advanced past
+`2026-07-12` with fresh `Fetched N events` lines resuming — if STILL stuck at `2026-07-12` with zero successful fetches
+many hours from now (i.e., this finding persists past a plausible quota-reset window), that is worth a `/blocked` to the
+operator/main about whether to stop-and-wait-for-reset vs. let it keep spinning, since at that point it stops being
+'nearly done, just waiting' and starts being a genuine multi-day stall.**

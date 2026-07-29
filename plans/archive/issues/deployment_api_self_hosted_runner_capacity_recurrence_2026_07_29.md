@@ -51,6 +51,10 @@ locked_by:
 locked_since:
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos (the 2 that were open migrated to
+> `/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` § "Follow-up"). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # deployment-api self-hosted-runner capacity recurrence (2nd instance)
 
 ## Why a new doc instead of appending to the master crisis doc
@@ -117,11 +121,7 @@ accounting) is verified durable under real fleet load.
 
 ## Follow-up
 
-- [ ] [REVIEW] P2. When the master crisis doc's `[SCRIPT] P0 allowlist-cleanup todo` (referenced in its
-      `market-data-processing-service` progress-log entry) is eventually actioned, cross-check whether `deployment-api`
-      should be REMOVED from `scripts/workflow-templates/self-hosted-qg-repos.txt` entirely (not just hand-reverted in
-      its own copy) so a future template rollout doesn't silently re-flip it a 3rd time the same way `a63f255` did — the
-      per-repo hand-edit fixes the symptom but the shared allowlist is still the source-of-truth a rollout would read
-      from.
-- [ ] [REVIEW] P3. `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` is at its 1000-line hard cap — due a
-      split (hoist `## Progress Log` history to a dated sub-doc) at the next PM hygiene/reconciliation pass.
+Both items below migrated 2026-07-29 to
+`/plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` § "Follow-up" (this doc's
+`status: resolved` archives it per issue-doc-lifecycle.md; the archival ritual requires deferred items land as real
+tracked todos elsewhere, not evaporate with the archive) — see that doc, not here, for their live status.

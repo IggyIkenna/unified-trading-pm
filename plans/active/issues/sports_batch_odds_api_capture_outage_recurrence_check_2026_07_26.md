@@ -72,25 +72,19 @@ source:
 
 # batch_odds_api capture outage recurrence check — live bug found + fixed, backfill decision needed
 
-> # 🔴 BLOCKED-CREDENTIALS 2026-07-28 (slot 6) — item 1's backfill-launch todo conflicts with a same-day operator ruling elsewhere; NOT launched.
+> # 🟢 RESOLVED 2026-07-29 — the credential gate is CLEARED; both gates now agree, item 1 is launchable.
 >
-> This doc's item 1 todo cites an operator ruling ("Yes, do it — launch the ~1-month sports odds gap backfill,
-> scope+spend approved") dated 2026-07-28. But `sports_odds_api_key_deactivated_2026_07_26.md` carries a SEPARATE
-> operator ruling, ALSO dated 2026-07-28: reactivation of the `odds-api-key` Secret Manager secret is **DECLINED** ("we
-> can use the odds API keys we already have for live+batch odds... do not reactivate or rotate the key"). I
-> live-verified just now (via `unified-trading-sa`, direct `curl https://api.the-odds-api.com/v4/sports?apiKey=...`)
-> that this exact secret — the ONLY `secret_name` hardcoded in `odds_api_adapter.py:229`, used for BOTH the live
-> `/sports/{sport}/odds` endpoint AND the `/historical/sports/{sport}/odds` endpoint this backfill needs — still returns
-> `error_code=DEACTIVATED_KEY`, unchanged since 2026-07-26 (matches every prior re-check through today, including that
-> doc's own slot-7 entry dated 2026-07-28). I also grepped every other sports adapter
-> (odds_engine/metabet/opticodds/polymarket/betfair) and the 5 other odds-adjacent GCP secrets
-> (`odds-api-io-key`/`oddsjam-api-key`/`oddspapi-api-key(s)`/`opticodds-api-key`) — none are wired to any code path for
-> `batch_odds_api` (corpus-wide zero code hits, per that doc's own 2026-07-27 audit). **There is no alternate
-> already-working odds-api mechanism in this codebase.** Launching this backfill right now would 401 every request and
-> burn VM spend for zero rows. Filed `BLK-e9c1c362` to the operator to reconcile the two same-day rulings — **not
-> launching until answered.** Item 1's todo is retagged `BLOCKED-CREDENTIALS` above (on the checkbox's own line, per the
-> `blocked_marker_continuation_line_not_scanned_2026_07_26.md` lesson) so `regen_backlog_from_plan.py` excludes it from
-> re-dispatch until this is resolved.
+> The 2026-07-28 `BLOCKED-CREDENTIALS` finding below (kept for history) was correct at the time: this doc's item 1 cited
+> an approved operator LAUNCH-DECISION ("Yes, do it — launch the ~1-month sports odds gap backfill, scope+spend
+> approved"), while a SEPARATE operator ruling on `sports_odds_api_key_deactivated_2026_07_26.md` had declined to rotate
+> the deactivated `odds-api-key` credential — two same-day rulings that genuinely conflicted, correctly flagged via
+> `BLK-e9c1c362` rather than silently reconciled. **That conflict is now resolved from the credential side**: the
+> operator has rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a
+> 5,000,000-credits/month subscription. Live-verified directly (not inferred from the doc trail) —
+> `curl https://api.the-odds-api.com/v4/sports?apiKey=...` → **HTTP 200**, `x-requests-remaining: 5000000` — no longer
+> `error_code=DEACTIVATED_KEY`. Both gates now point the same direction: launch-decision APPROVED (2026-07-28) +
+> credential WORKING (2026-07-29). Item 1's checkbox below is retagged off `BLOCKED-CREDENTIALS` accordingly — the
+> backfill has NOT been launched yet as part of this edit, only unblocked; launching it is the remaining work.
 
 > # 🟡 CORRECTED IN PART 2026-07-26 (same session, follow-up task) — the § (b) DENSITY MEASUREMENT checked the WRONG
 >
@@ -270,32 +264,31 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [DATA] P0 — BLOCKED-CREDENTIALS (still true 2026-07-29 — a 2026-07-29 mechanical rephrase pass, commit
-      `6edd4486a`, incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker to "credential gate cleared",
-      conflating the operator's LAUNCH-DECISION ruling below with the separate, still-unfixed CREDENTIAL gate — restored
-      here after a fresh live re-check; see Progress Log). Confirm deploy (DONE, see banner) is unaffected by this
-      correction; the backfill launch remains not executable. Deploy confirmation: DEPLOY CONFIRMED (2026-07-26,
-      directly verified, not inferred) — see the dated correction banner above, image `f6ea001`/`410d756` digests + a
-      log-inspected post-deploy execution with zero `DATA_NOT_AVAILABLE`. **Backfill DECISION: RULED 2026-07-28 —
-      OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month sports odds gap backfill (scope + spend approved)."**
-      Retagged from `[OPERATOR]` to `[DATA]` (decision approved) — but this is a DIFFERENT gate than the CREDENTIAL: the
-      sole wired credential path (`odds-api-key` Secret Manager secret, `sports_odds_api_key_deactivated_2026_07_26.md`)
-      still returns `error_code=DEACTIVATED_KEY` on direct live verification (re-confirmed 2026-07-29, this task), and
-      that same doc's own 2026-07-28 operator ruling explicitly DECLINES to reactivate/rotate it, while asserting an
-      alternate already-working key covers live+batch odds — no such alternate mechanism has been found wired anywhere
-      in the codebase across 4+ independent audits (slot 6, slot 7, 2026-07-27 classification pass, this task). **Do NOT
-      launch** until an operator names the actual working key/secret to point at (`BLK-e9c1c362` asked exactly this
-      2026-07-28; no resolution has landed in this doc's corpus since). Per the reframed two-sub-question scope from the
-      correction banner above, once unblocked, launch BOTH windows via the Odds-API historical endpoint, in full (no
-      partial-window shortcut — per the operator's general "do not allow anything to partially complete" + "full
-      backfills... DO IT" theme): 1. **The 2026-06-27…2026-07-15 total-gap window (~19 days, zero data)** — genuinely
-      missing days; backfill every league's odds via the historical endpoint for this exact range. 2. **The
-      2026-07-16…2026-07-25 granularity-loss window (~10 days, one late T+1 snapshot instead of the intended 8-point
-      pre-match horizon grid: T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at the correct historical T-minus
-      offsets for each fixture in this range to recover the lost odds-trajectory signal (CLV, drift, steam-move
-      features), not just the single already-captured daily snapshot. **Done when**: both windows show full historical
-      coverage in the manifest (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no
-      GCS walk) at the intended granularity, and this todo cites the launcher/dispatch evidence.
+- [ ] [DATA] P0 — UNBLOCKED 2026-07-29 (was `BLOCKED-CREDENTIALS` through 2026-07-28 — a 2026-07-29 mechanical rephrase
+      pass, commit `6edd4486a`, had once already incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker to
+      "credential gate cleared" with no real fix behind it, conflating the operator's LAUNCH-DECISION ruling below with
+      the separate CREDENTIAL gate — that rephrase was reverted the same day. This time the credential is genuinely
+      fixed, see banner above and Progress Log). Confirm deploy (DONE, see banner) is unaffected by this correction; the
+      backfill is now launchable but has not been launched as part of this edit. Deploy confirmation: DEPLOY CONFIRMED
+      (2026-07-26, directly verified, not inferred) — see the dated correction banner above, image `f6ea001`/`410d756`
+      digests + a log-inspected post-deploy execution with zero `DATA_NOT_AVAILABLE`. **Backfill DECISION: RULED
+      2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month sports odds gap backfill (scope + spend
+      approved)."** Retagged from `[OPERATOR]` to `[DATA]` (decision approved) — and as of 2026-07-29 the CREDENTIAL
+      gate agrees: the sole wired credential path (`odds-api-key` Secret Manager secret,
+      `sports_odds_api_key_deactivated_2026_07_26.md`) now returns HTTP 200 (`x-requests-remaining: 5000000`) on direct
+      live verification, not `error_code=DEACTIVATED_KEY` — the operator rotated it to a new key on a
+      5,000,000-credits/month subscription, superseding that same doc's 2026-07-28 decline. Both gates now agree:
+      launch-decision approved + credential working. Per the reframed two-sub-question scope from the correction banner
+      above, once unblocked, launch BOTH windows via the Odds-API historical endpoint, in full (no partial-window
+      shortcut — per the operator's general "do not allow anything to partially complete" + "full backfills... DO IT"
+      theme): 1. **The 2026-06-27…2026-07-15 total-gap window (~19 days, zero data)** — genuinely missing days; backfill
+      every league's odds via the historical endpoint for this exact range. 2. **The 2026-07-16…2026-07-25
+      granularity-loss window (~10 days, one late T+1 snapshot instead of the intended 8-point pre-match horizon grid:
+      T-24h/T-12h/T-6h/T-4h/T-2h/T-1h/T-10m/T-0)** — re-fetch at the correct historical T-minus offsets for each fixture
+      in this range to recover the lost odds-trajectory signal (CLV, drift, steam-move features), not just the single
+      already-captured daily snapshot. **Done when**: both windows show full historical coverage in the manifest
+      (verified via `read_capture_status_counts`/`read_availability_index`, manifest-only, no GCS walk) at the intended
+      granularity, and this todo cites the launcher/dispatch evidence.
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should
@@ -411,3 +404,15 @@ actually done beyond what the correction banner already establishes. Flagging ba
 `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`'s Progress Log that its source rephrase pass had at
 least one false positive (this item) — its "24 already-resolved" premise should not be trusted uncritically for the
 other files it touched without a similar per-item live-fact check, not just a text-pattern read.
+
+- 2026-07-29 (later same day): Operator instructed a real rotation of `odds-api-key` (new key, 5,000,000-credits/month
+  subscription), explicitly to unblock this doc and the sibling docs it's cross-linked with. Rotated GCP Secret Manager
+  `odds-api-key` (project `central-element-323112`) via `gcloud secrets versions add` → version 3. Before touching this
+  checkbox or the top banner, live-verified directly per this doc's own established discipline (the exact discipline the
+  2026-07-29-morning entry above insisted on): `curl https://api.the-odds-api.com/v4/sports?apiKey=...` → **HTTP 200**,
+  `x-requests-remaining: 5000000` — genuinely not `error_code=DEACTIVATED_KEY`, the first non-dead read across 9
+  independent checks since 2026-07-26. This is NOT the same failure mode as the earlier `6edd4486a` false positive: that
+  pass changed the text without changing the underlying fact; this pass changed the underlying fact (rotated +
+  live-verified) before changing the text. Updated the top banner and this checkbox to reflect both gates (launch
+  decision + credential) now agreeing. Did not launch the backfill VM as part of this edit — that remains the actual
+  next action, tracked by the now-unblocked checkbox above.

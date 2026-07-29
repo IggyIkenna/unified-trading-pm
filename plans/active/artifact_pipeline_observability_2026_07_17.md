@@ -30,7 +30,7 @@ related:
   [
     /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
     /plans/archive/2026_07/cost_observability_ui_2026_07_08.md,
-    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/archive/artifact_pipeline_observability_history_2026_07_24.md,
     /plans/archive/artifact_pipeline_observability_history_2026_07_27.md,

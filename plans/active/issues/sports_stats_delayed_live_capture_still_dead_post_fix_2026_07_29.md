@@ -228,7 +228,7 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       `test_every_uac_adapter_key_resolves_to_a_class` + `test_adapter_data_sources_covers_all_adapters` gates — both
       now pass with the sentinel correction). `unified-api-contracts@6186be5a`, full `quality-gates.sh` green (335s),
       shipped via quickmerge to `live-defi-rollout`.
-- [ ] [INFRA] P1. **NEW, opened by the correction above.** Trace why `FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/
+- [x] ✅ [INFRA] P1. **NEW, opened by the correction above.** Trace why `FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/
       `SOCCER_FOOTBALL_INFO`/`OPEN_METEO` appear in the `venues` argument passed to
       `urdi_reference_provider.fetch_instruments_for_all_venues()` for a live sports dispatch at all, given they are NOT
       in `VENUES_BY_ASSET_GROUP["sports"]` — find the call site that builds `active_venues` for sports (likely a "core
@@ -237,11 +237,54 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       URDI-fetchable "venues") or confirm there's a reason they're intentionally included that this pass didn't surface.
       **Done when**: a fresh day-plus of live Cloud Run Job logs for `uts-prod-instruments-service-sports-fixtures`
       shows zero `URDI fetch: N venue(s) failed with PERMANENT errors` lines mentioning any of these 5. Repo:
-      instruments-service.
+      instruments-service. — **Root cause traced + fixed 2026-07-29 (slot 7, infra).** Found the exact call site:
+      `instruments_service/engine/orchestrator/venue_core.py`'s `get_venues_for_asset_groups()` DELIBERATELY appends all
+      5 enrichment-provider names into the sports venue list it returns (lines ~488-497, own docstring: "IS owns
+      reference-data providers API_FOOTBALL/FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO...
+      Decision C (operator 2026-06-29): two separate registries") — this is `process.py::process_instruments`'s
+      `active_venues`, confirmed by its own pre-existing `_fixtures_fetch_failed()` docstring
+      (`api_football_fixtures_fetch_failed_false_positive_2026_07_13`): "`active_venues` for a sports run also carries
+      the ENRICHMENT-ONLY pseudo-venues ... these are fetched later, in stage 7 enrichment, and are NEVER part of this
+      stage-4 URDI instruments fetch." **So the inclusion in `active_venues` itself is intentional** (stage-7
+      `process_enrichment.py` and stage-4 `process_zero_records.py` both do `"UNDERSTAT" in active_venues_set`-style
+      membership checks against it, and `process_completeness.py` independently already excludes these same 5 names from
+      its own `expected_venues` for an analogous reason — root-cause-fixed
+      `api_football_write_path_blank_data_type_2026_07_13`). **The actual bug**: `process_fetch.py::_fetch_urdi_records`
+      — the function that builds the `defi_active`/`non_defi_active` split and calls
+      `fetch_instruments_for_all_venues()` — never filtered these 5 names out before splitting/fetching, so on every
+      dispatch where `skip_urdi=False` (any sports entity NOT in `_ENRICHMENT_ONLY_ENTITIES`/`_PER_FIXTURE_ENTITIES` —
+      e.g. `TEAMS`/`STANDINGS`/`INJURIES`/`TRANSFERS`/`FIXTURES` itself), all 5 names flowed straight into
+      `fetch_instruments_for_all_venues(venues=...)`, which correctly flags them `unsupported` (their
+      `VENUE_TO_ADAPTER_KEY` entries are `NO_ADAPTER_YET` sentinels, per this doc's item-1 fix) and logs the
+      `No URDI adapter for N venue(s)` WARNING + `URDI fetch: N venue(s) failed with PERMANENT errors` ERROR every time.
+      **Fix**: excluded the existing, already-canonical `_ENRICHMENT_PROVIDERS` frozenset (defined in
+      `process_preflight.py` — exactly these 5 names, used elsewhere for the `--sports-provider` short-circuit) from
+      `active_venues` inside `_fetch_urdi_records`, before the defi/non-defi split — `API_FOOTBALL` (the one real
+      URDI-fetchable sports venue) is untouched since it's not in that set. `non_error_venues`/completeness behaviour is
+      UNCHANGED (these 5 venues were never in `non_error_venues` before either, since they were always classified
+      `failed`/`unsupported` — verified by reading
+      `_non_error_venues.update(... if v not in {e.venue for e in     ...failed_venues}...)`). Added a focused
+      regression test (`tests/unit/test_process_fetch_enrichment_venue_exclusion.py`) asserting
+      `fetch_instruments_for_all_venues` is called with exactly `["API_FOOTBALL"]` when `active_venues` includes all 5
+      enrichment names, plus a control case for `skip_urdi=True`. Ran the full related unit suites
+      (`test_orchestrator_process.py`, `test_orchestrator_gaps.py`, `test_orchestrator_coverage.py`,
+      `test_new_orchestrator.py`, `test_urdi_reference_provider.py`) green (218 passed), then full `quality-gates.sh`
+      green (100s, `.qg_last_passed_sha=fcabadd1`). Shipped: `instruments-service@12c176f8` via quickmerge to
+      `live-defi-rollout`. **Residual — this todo's own literal done-when (a day-plus of clean prod logs) is NOT yet
+      verified** (the fix only just landed) — that observation naturally falls out of the `[VERIFY] P1` todo directly
+      below once its own day-plus gate is reached; no separate todo needed since it already re-checks this exact issue
+      chain on the same cadence. If, once verified, the `No URDI adapter`/`URDI fetch...failed` lines for these 5 venues
+      persist despite this fix, that would mean a THIRD, still-undiagnosed emission path — escalate rather than assume
+      this fix alone closes the doc.
 - [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a full
       day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
       `capture_status=captured`, `written_at` > the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a
-      fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). Repo:
+      fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). **Also
+      confirms item-2's own done-when** (added 2026-07-29 alongside item-2's fix, `instruments-service@12c176f8`): over
+      that same day-plus window, `gcloud logging read` for `uts-prod-instruments-service-sports-fixtures` should show
+      ZERO `No URDI adapter for N venue(s)` / `URDI fetch: N venue(s) failed with PERMANENT errors` lines mentioning
+      `FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/ `SOCCER_FOOTBALL_INFO`/`OPEN_METEO` — if any persist post-`12c176f8`,
+      that is a THIRD, separate emission path (escalate, don't assume item-2's fix alone explains a residual). Repo:
       instruments-service / market-tick-data-service (read-only). — **Checked 2026-07-29T03:50Z-04:00Z (slot 5,
       data_engineering): premature, both this todo's own gates are still open, not the "confirming no fix is needed"
       escape hatch.** (1) Item-2 (the `active_venues` trace above) has NOT landed — grepped `instruments-service` for

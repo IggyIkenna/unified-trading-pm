@@ -327,17 +327,17 @@ These are **market data** read keys, not execution keys. Binance and Deribit hav
 
 #### Sports Betting / Prediction Markets
 
-| Secret Name         | Env Var Fallback    | Purpose                                                    | Key in SM?                               | VCR Status                                   |
-| ------------------- | ------------------- | ---------------------------------------------------------- | ---------------------------------------- | -------------------------------------------- |
-| `pinnacle-api-key`  | `PINNACLE_API_KEY`  | Pinnacle sports odds API                                   | ❌ No                                    | `KEY_NOT_IN_SM`                              |
-| `odds-api-key`      | `ODDS_API_KEY`      | The Odds API (sports odds aggregator)                      | ❌ No                                    | `KEY_NOT_IN_SM`                              |
-| `betfair-api-key`   | `BETFAIR_API_KEY`   | Betfair exchange (Application Key) — sports odds/execution | ✅ Provision via `setup_secret.sh`       | `KEY_IN_SM` once provisioned                 |
-| `kalshi-api-key`    | `KALSHI_API_KEY`    | Kalshi prediction market portfolio                         | ❌ No                                    | `KEY_NOT_IN_SM`                              |
-| `smarkets-api-key`  | `SMARKETS_API_KEY`  | Smarkets sports betting exchange                           | ❌ No                                    | `KEY_NOT_IN_SM`                              |
-| `betdaq-api-key`    | `BETDAQ_API_KEY`    | Betdaq betting exchange                                    | ❌ No                                    | `KEY_NOT_IN_SM`                              |
-| `matchbook-api-key` | `MATCHBOOK_API_KEY` | Matchbook betting exchange                                 | ❌ No (cassette exists, public endpoint) | `VALIDATED` (cassette at `matchbook/mocks/`) |
-| `oddspapi-api-key`  | `ODDSPAPI_API_KEY`  | OddsPapi odds aggregator (single key)                      | ✅ Yes                                   | `KEY_IN_SM`                                  |
-| `oddspapi-api-keys` | `ODDSPAPI_API_KEYS` | OddsPapi key pool (JSON array, 17 keys, 4,250 req/mo)      | ✅ Yes                                   | `KEY_IN_SM`                                  |
+| Secret Name         | Env Var Fallback    | Purpose                                                    | Key in SM?                                 | VCR Status                                   |
+| ------------------- | ------------------- | ---------------------------------------------------------- | ------------------------------------------ | -------------------------------------------- |
+| `pinnacle-api-key`  | `PINNACLE_API_KEY`  | Pinnacle sports odds API                                   | ❌ No                                      | `KEY_NOT_IN_SM`                              |
+| `odds-api-key`      | `ODDS_API_KEY`      | The Odds API (sports odds aggregator)                      | ✅ Yes (rotated 2026-07-29, 5M-credits/mo) | `KEY_IN_SM`                                  |
+| `betfair-api-key`   | `BETFAIR_API_KEY`   | Betfair exchange (Application Key) — sports odds/execution | ✅ Provision via `setup_secret.sh`         | `KEY_IN_SM` once provisioned                 |
+| `kalshi-api-key`    | `KALSHI_API_KEY`    | Kalshi prediction market portfolio                         | ❌ No                                      | `KEY_NOT_IN_SM`                              |
+| `smarkets-api-key`  | `SMARKETS_API_KEY`  | Smarkets sports betting exchange                           | ❌ No                                      | `KEY_NOT_IN_SM`                              |
+| `betdaq-api-key`    | `BETDAQ_API_KEY`    | Betdaq betting exchange                                    | ❌ No                                      | `KEY_NOT_IN_SM`                              |
+| `matchbook-api-key` | `MATCHBOOK_API_KEY` | Matchbook betting exchange                                 | ❌ No (cassette exists, public endpoint)   | `VALIDATED` (cassette at `matchbook/mocks/`) |
+| `oddspapi-api-key`  | `ODDSPAPI_API_KEY`  | OddsPapi odds aggregator (single key)                      | ✅ Yes                                     | `KEY_IN_SM`                                  |
+| `oddspapi-api-keys` | `ODDSPAPI_API_KEYS` | OddsPapi key pool (JSON array, 17 keys, 4,250 req/mo)      | ✅ Yes                                     | `KEY_IN_SM`                                  |
 
 > **⚠️ endpoint_registry.py correction needed:** The notes for `pinnacle`, `odds_api`, `betfair`, `kalshi` claim
 > "confirmed in Secret Manager" — this is **incorrect**. None of these keys exist in SM. Status should be

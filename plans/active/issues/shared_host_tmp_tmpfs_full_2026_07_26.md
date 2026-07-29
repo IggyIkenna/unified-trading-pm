@@ -153,7 +153,7 @@ rather than deciding unilaterally:
       same host hitting the same STEP simultaneously) no longer races. **Note (2026-07-27): slot-11 appears to already
       be working a fix touching `base-service.sh` and a similarly-named issue doc
       (`qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md`) — check that doc before duplicating work.**
-- [ ] [INFRA] P1. Investigate this VM's sustained oversubscription (2026-07-27 sample: `nproc=8`,
+- [x] ✅ [INFRA] P1. Investigate this VM's sustained oversubscription (2026-07-27 sample: `nproc=8`,
       `load average: 23.66, 36.79, 35.16`, active swap-in up to 5276 KB/s, a dozen-plus concurrent full-CPU processes
       across 6+ slots; corroborated 2026-07-27T22:28Z at a higher core count, `nproc=16`,
       `load average: 86.26, 138.88, 218.93`, see Progress Log — proportionally MORE oversubscribed, not less) —
@@ -166,9 +166,68 @@ rather than deciding unilaterally:
       the audit concludes the fix requires paying for additional VM capacity (a narrower, separable ask than this
       bundled todo). Repo: agent-orchestrator (or infra runbook). **Done when**: a root cause (burst vs. structural) is
       recorded and either a documented concurrency-limiting mechanism exists, or a decision to accept the current
-      oversubscription is recorded.
+      oversubscription is recorded. — **CLOSED 2026-07-29T14:xxZ (slot-10, `infra` role)**: see 2026-07-29 Progress Log
+      entry — root cause is STRUCTURAL (recurring across 2026-07-27/28/29, not a one-off), and a concurrency-limiting
+      mechanism for this todo's own named convention ("≤2 full QGs at once") is confirmed LIVE + ENFORCED, not advisory
+      (`qg_host_adaptive_resource_governor_2026_07_14.md`, verified with a fresh live `--status` read this session). No
+      new build needed under this todo.
 
 ## Progress Log
+
+- 2026-07-29T14:xxZ (slot-10, `infra` role, dispatched to todo 3): closing todo 3 by synthesizing existing evidence
+  rather than re-running an audit that has already been done exhaustively by other slots over the past 3 days — a fresh
+  literature check found this exact question already answered piecemeal across several docs; the gap was that nobody had
+  closed this specific todo against that evidence.
+
+  **Root cause: STRUCTURAL, not a one-off burst.** The 2026-07-27 sample this todo cites (nproc=8→16, load 23-36→86-218)
+  is one of at least 4 distinct recurrence events on the SAME host (`i-0c9b283b31d6b5ca7`) across 2026-07-27/28/29, each
+  with a different proximate trigger but the same underlying cause (too many concurrent tenants — interactive/autonomous
+  slot workers PLUS 20+ GitHub Actions self-hosted-runner pools — for the host's provisioned capacity at the time):
+  1. 2026-07-27: registering 23 self-hosted-runner pools (46 processes) at once, concurrent with 22 repos' real
+     quickmerge/QG runs, drove 66-93% iowait (`orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`).
+  2. 2026-07-28 (~18:40-20:45 UTC): recurred on `deployment-ui`'s CI, this time with genuine CPU load (34-15-10%
+     us/sy/ni) + 39.7% wa + swap at 97.8% — worse than the first episode, same doc.
+  3. 2026-07-29 (~01:00 UTC): swap fully exhausted (0/16GB free, 65.9% iowait) while CPU sat at a moderate 26-31%
+     (`orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md`) — a THIRD recurrence, different dominant resource
+     (memory/swap, not CPU or disk-queue this time). Each recurrence was mitigated with an escalating, real fix (glue-2
+     runner disable → EBS IOPS bump 8000→16000 → instance resize DOWN to `c7i.4xlarge`/32GB (right-sizing) → instance
+     resize UP to `m8i.4xlarge`/64GB + swap 16GB→48GB after the pattern proved the smaller box wasn't enough) — the fact
+     that fixes keep being needed roughly every 24h as the fleet/runner-pool count grows is itself the structural
+     signature; a true one-off burst would not recur 3+ times with escalating remedies. The still-open
+     `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (status: open, actively worked) is the
+     correctly-scoped owner of the runner-pool axis of this — not duplicated here.
+
+  **Concurrency-cap convention — for THIS todo's own named mechanism ("≤2 full QGs at once" / `max(2, floor(cores/4))`),
+  CONFIRMED ENFORCED, not advisory.** That fixed-K convention has been SUPERSEDED (not just supplemented) by the
+  host-adaptive RAM+CPU dual-gate reservation governor shipped and validated in
+  `plans/active/qg_host_adaptive_resource_governor_2026_07_14.md` (codex `quality-gates.md` carries a 🟢 LIVE +
+  VALIDATED banner). Verified LIVE on this session's own host via a fresh
+  `bash scripts/quality-gates-base/qg-host-governor.sh --status` call (not trusting the plan's claim second-hand):
+
+  ```
+  qg-host-governor: MODE=reservation  ledger=/tmp/.benchmarks/qg-governor/reservations  flock=yes
+    host: MemTotal=61GiB  MemAvailable=50GiB  physical_cores=8
+    RAM budget (70%): 44278MB  reserved: 0MB  free: 44278MB  (live avail 52155MB)
+    CPU slots (80% x 8): 6  running heavy phases: 0  (K runaway-backstop=6)
+  ```
+
+  `MODE=reservation` (not the legacy `token` bucket) confirms real, atomic, flock-protected admission is active — this
+  is an enforced mechanism, not documentation-only. This governor gates INTERACTIVE slot-worker `quality-gates.sh` runs
+  specifically (the exact axis this todo's cited convention describes); it does not (and was never meant to) gate GitHub
+  Actions self-hosted-runner CI job concurrency, which is the separate axis the still-open crisis doc above owns.
+
+  **Current live host state (this session, 2026-07-29T14:17Z)**: load average 6.73/4.20/2.58 (16 logical/8 physical
+  cores), 0.0% iowait, 0 processes in D-state, swap 8.2/47GiB used (not exhausted), governor idle (0MB reserved) —
+  healthy right now, consistent with the swap-exhaustion doc's own observation that pressure here is "wave-like, not
+  constant."
+
+  **Disposition**: both halves of this todo's "done when" bar are met — (1) root cause recorded (structural, recurring,
+  driven primarily by self-hosted-runner-pool growth outpacing host sizing, evidenced by 3+ independent recurrences over
+  3 days each needing a real fix) and (2) a documented, verified-live concurrency-limiting mechanism exists for the
+  specific convention this todo named (the QG governor). No new build was needed under this todo's scope — the
+  runner-pool-capacity axis is a distinct, already-open, actively-worked issue
+  (`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), correctly left there rather than folded in here to
+  avoid duplicating ownership. Closing todo 3.
 
 - 2026-07-27T09:40Z (slot-4, laptop, corroborating from a different vantage point — read-only AWS SSM, not from an
   interactive slot session): filing `/plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md` surfaced a

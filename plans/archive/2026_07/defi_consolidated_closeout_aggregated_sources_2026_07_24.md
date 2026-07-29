@@ -706,7 +706,7 @@ picture.
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`](/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
+  - [`plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md`](/plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md)
     (1 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
     (closed/archived/record-only)" entry was wrong, the doc's single `- [ ]` sits at `:118`)
     - **[CODE] P2.** Add a collision-resistant component (8-hex slug of `hash(venue, data_type)`) to

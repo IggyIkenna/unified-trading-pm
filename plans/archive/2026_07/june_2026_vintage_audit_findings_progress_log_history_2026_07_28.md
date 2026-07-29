@@ -187,7 +187,7 @@ drift_direction: none
   (410/423 passed) — the plan's previously-cited `prediction_v9_breakdown.spec.ts` blocker is independently confirmed
   fixed (deployment-ui@`687d4ce`), but a NEW unrelated 13-failure Fleet Git-Health nav regression (2026-07-27) now
   blocks the same `pw:L2` gate, filed as
-  `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`; the 3 UI todos in the source plan
+  `plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`; the 3 UI todos in the source plan
   stay open (genuinely blocked, not stale — updated with full evidence). The HTTP-500 finding already had a resolved +
   archived successor doc from 2026-07-20 (`data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`,
   deployment-api@`65f5593`) that this session's original 2026-07-18 finding-author never cross-linked — the source

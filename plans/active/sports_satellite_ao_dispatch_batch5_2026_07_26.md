@@ -39,7 +39,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-28"
+last_updated: "2026-07-29"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -76,7 +76,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [DATA] P2. BLOCKED-CREDENTIALS (Secret Manager `odds-api-key` deactivated — see
+- [ ] [DATA] P1. UNBLOCKED 2026-07-29 (Secret Manager `odds-api-key` rotated + live-verified — see
       `issues/sports_odds_api_key_deactivated_2026_07_26.md`) — Backfill the 3 odds-api league gaps surfaced by the
       api_football wipe — `soccer_uefa_champs_league`, `soccer_china_superleague`, `soccer_russia_premier_league`
       (2025-H2 golden window + any in-scope gap-dates behind the former 112,653 api_football failures) — via odds-api
@@ -86,7 +86,7 @@ drift_direction: advance-code
       rows for all 3 leagues show 0 `attempted_failed`/gap-days across the golden window (2025-09-01..2025-11-30) and
       any other in-scope 2025-H2 gap-dates, verified against the `_index` manifest (not a re-derived count).
 
-      **BLOCKED-CREDENTIALS 2026-07-26 (slot-4)** — the actual backfill cannot run: the odds-api key is DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This blocks the ENTIRE sports odds-api surface, not just these 3 leagues — see `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis + operator follow-up todos. Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped, full-population backfills). Also found + worked around a separate pre-existing bug in `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox stays unchecked (real done-criterion unmet) per the BLOCKED-CREDENTIALS defer carve-out; re-run once the operator fixes the key (exact command in the issue doc's follow-up todos).
+      **BLOCKED-CREDENTIALS 2026-07-26 (slot-4), RESOLVED 2026-07-29** — the backfill originally could not run: the odds-api key was DEACTIVATED (`error_code=DEACTIVATED_KEY`, "cancelation or a failed payment" — confirmed by direct curl against the live API), a fresh outage (275,136 `odds_api` rows captured 2026-07-25, zero 2026-07-26). This blocked the ENTIRE sports odds-api surface, not just these 3 leagues — see `issues/sports_odds_api_key_deactivated_2026_07_26.md` for the full diagnosis. **2026-07-29: operator rotated `odds-api-key` to a new key on a 5,000,000-credits/month subscription; live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`), no longer `DEACTIVATED_KEY`.** Real prerequisite work DID ship: `deployment-service@281426e7` adds `--league` scoping to `launch-mtds-sports-odds-backfill-vm.sh` (wires the already-built `VM_LEAGUE` metadata support in `setup-data-pipeline-vm.sh` through to a CLI flag — previously this launcher could only run unscoped, full-population backfills). Also found + worked around a separate pre-existing bug in `tick_data_handler.py`'s `_apply_freshness_skip`: it checks freshness at (date, venue) granularity, blind to `--league` scope, so a scoped run silently SKIPPED every date (odds_api already had some row for every date from routine Prediction-tier captures) unless `--force` is also passed. Stopped the backfill VM (`mtds-backfill-odds-ucl-gap2`) once the 401 pattern was confirmed — no data lost, idempotent. Checkbox stays unchecked (the actual backfill has not yet been re-run — credential-fixed ≠ backfill-done); re-run now that the key works (exact command in the issue doc's follow-up todos).
 
 - [ ] [DATA] P2. **market-tick-data-service + market-data-processing-service + features-service: execute the zombie-tick
       purge/re-derive + close out ML-readiness verification, using batch4's sweep report as input.** Once

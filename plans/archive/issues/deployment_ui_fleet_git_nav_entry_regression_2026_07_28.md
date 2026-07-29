@@ -46,6 +46,9 @@ resolved_by: "deployment-ui@067f7cd"
 locked_by:
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # deployment-ui — Fleet Git-Health nav entry regression (13 pw:L2 smoke failures)
 
 ## What I found (2026-07-28, full smoke run)

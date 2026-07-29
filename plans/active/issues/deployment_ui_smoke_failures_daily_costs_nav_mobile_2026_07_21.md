@@ -13,7 +13,7 @@ stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, smoke-tests, playwright, regression, daily-costs, nav]
-related: [/plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md]
+related: [/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md]
 created: "2026-07-21"
 parent_epic: deployment_and_user_management_master
 source: discovered running `npx playwright test tests/smoke/` while verifying mtds_data_status_page_parity_2026_07_21.md
@@ -72,7 +72,7 @@ or their MTDS-related constants).
       `fleet` nav item/route/testid appears to have been dropped), alongside 3 sibling specs (`fleet-git-tab.spec.ts`,
       `cockpit.spec.ts`, `repos-tab.spec.ts` — 13 failures total, confirmed via a fresh full `tests/smoke/` run this
       session). This is now root-caused in detail and gated on an explicit `[OPERATOR]` regression-vs-intentional-fold
-      decision in `/plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` — resolve THERE
+      decision in `/plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` — resolve THERE
       (this item's narrower "5→6" framing is stale; do not re-diagnose from scratch here).
 
 ## Progress Log

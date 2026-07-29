@@ -397,15 +397,30 @@ drift_direction: advance-code
       market-data-processing-service / market-tick-data-service, read-only). **Done when**: a written finding either
       confirms the bug class is absent elsewhere, or names the affected buckets/rows. Source:
       `sports_consolidated_closeout_2026_07_19.md:847-852`.
-- [ ] [DATA] P1. **Track S2 — Sports P2a sub-item (c) ONLY: re-run the 40,041 FIXTURES `attempted_failed` rows for
+- [x] ✅ [DATA] P1. **Track S2 — Sports P2a sub-item (c) ONLY: re-run the 40,041 FIXTURES `attempted_failed` rows for
       2018/2021/2023.** **EXCLUDES** sub-items (a) G1 non-canonical-league NOISE wipe (~1,437 leagues/~106k rows — a
       purge with an unconfirmed relationship to the already-answered §U non-registry-league decision; needs an explicit
       check whether it's the SAME population as that decision's already-approved 489-pair/10,869-row purge before
       executing, since the scale differs by ~10x) and (b) G2 2015-2017 zero-captured diagnosis (bundles an undecided
       "then fix" after diagnosis, subscription-tier-limit-vs-backfill-bug is an open question) — both stay human,
       flagged separately below. Self-justified, not `[OPERATOR]`-gated: standard skip-aware re-run/backfill pattern, not
-      a delete. (repo: instruments-service). **Done when**: the re-run completes for the 3 named years, with a fresh
-      census of remaining `attempted_failed` cells cited. Source: `sports_consolidated_closeout_2026_07_19.md:863-868`.
+      a delete. (repo: instruments-service). **RESOLVED 2026-07-29 — already complete, no new re-run needed (this todo
+      was a stale duplicate of work done a month earlier).** Pre-task conflict check (grep-then-READ) found the
+      identical re-run already shipped 2026-06-27:
+      `plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md:144-150` — instruments-service
+      `recover_fixtures_from_truthset.py` (run_ts=20260627-183721): 423/423 (league,season) pairs, 34,564 days written,
+      111,817 fixtures captured, 0 failed pairs; UTL fix unified-trading-library@b76b18ac. Fresh census this session
+      (manifest `_index/availability_index.parquet` for `instruments-store-sports-prd-…`, dedup on shard atom, +
+      targeted GCS prefix probes, both read-only/single-walk-safe): FIXTURES `attempted_failed` for calendar years 2021
+      (6,722 shards) and 2023 (6,619 shards) = **0** — both fully `captured`. Calendar year 2018 has **0 FIXTURES shards
+      at all** (index AND GCS prefix descent both confirm zero `day=2018*` objects) — this is CORRECT, not a gap: the
+      2018/2019 rows the 2026-06-27 recovery wrote were subsequently WIPED under the 2026-07-21 operator-ruled sports
+      data floor (`/codex/02-data/sports-2020-06-data-floor.md` — everything dated before 2020-06-06 is
+      fabrication-by-construction, delete-do-not-backfill). Re-running/backfilling 2018 would violate that floor ruling,
+      so 0-shards-for-2018 is the correct terminal state, not outstanding work. Repo-wide FIXTURES `attempted_failed`
+      today = 730, entirely in calendar-2026 (current-year live captures) — outside this todo's 2018/2021/2023 scope.
+      **Done when**: the re-run completes for the 3 named years, with a fresh census of remaining `attempted_failed`
+      cells cited. Source: `sports_consolidated_closeout_2026_07_19.md:863-868`.
 - [ ] [DATA] P2. **Track S2 — TEAMS full-history backfill.** **REQUIRED FIRST STEP (live-probe)**: verify whether
       `sports_data_sources_canonical_completion_2026_07_13.md`'s consolidator NULL/empty-string dedup-key fix has
       actually shipped (check its plan status + cited commit) — the source todo states this fix "must land first"; if

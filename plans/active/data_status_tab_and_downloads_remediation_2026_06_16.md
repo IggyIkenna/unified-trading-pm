@@ -110,7 +110,7 @@ drift_direction: advance-code
 > this plan). None reference `DataStatusTab.tsx`, venue-filter, de-dupe-panel, or pagination code. Filed as its own
 > issue rather than fixed inline (ambiguous fold-vs-regression call + risk of colliding with whoever is actively in that
 > nav territory — task_template.md finding S, don't guess a scope-unclear fix):
-> `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. Per this doc's own established
+> `plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. Per this doc's own established
 > precedent (the 2026-06-16 banner above) and the `pw:L2` SSOT definition
 > (`codex/06-coding-standards/ ui-testing-layers.md`: full `tests/smoke/` exits 0), the 3 UI items below stay formally
 > unticked pending that separate doc's resolution — this is evidence-backed "genuinely still blocked," not a stale
