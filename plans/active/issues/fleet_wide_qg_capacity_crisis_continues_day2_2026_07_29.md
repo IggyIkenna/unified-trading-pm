@@ -190,3 +190,19 @@ not just noting.
   spending limit vs. migrate the remaining ubuntu-latest jobs to the already-oversubscribed self-hosted pool) rather
   than attempting a code "fix" for a gate that was never actually exercised. No code changed on `instruments-service`;
   slot left clean on `live-defi-rollout`.
+
+- **2026-07-29 ~20:56Z (cicd escalation `agt-0cd704`, slot 9) — corroboration, pins down onset + one more affected PR**:
+  dispatched to fix `ldr_qg_failure` on `unified-api-contracts` promotion PR #796. The ORIGINAL wall (`QG slice (tests)`
+  failing a `uv` build-isolation step, "No such file or directory (os error 2)") was transient host contention, already
+  refuted as a code issue by a same-commit `workflow_dispatch` success 8 min later (16:31:50Z, zero commits in between).
+  Attempting to re-gate the PR head hit the SAME full run-level `startup_failure` (0 jobs) this doc's prior entry
+  describes — 3 separate `workflow_dispatch` attempts on `unified-api-contracts`, plus one on `unified-trading-pm`'s
+  `ldr-to-main-promote-fleet.yml`, all `startup_failure`/0 jobs. Swept `unified-trading-pm`'s run history back through
+  100+ runs to pin the exact onset: **last success `2026-07-29T18:25:50Z` (`repository_dispatch`) → first failure
+  `2026-07-29T18:27:24Z` (`schedule`)** — a hard transition, not a gradual degradation, and every run of every trigger
+  type has failed continuously since. Runners confirmed `online`/idle (not busy) on `unified-trading-pm`,
+  `agent-orchestrator`, `unified-api-contracts` — rules out runner-side unavailability as the mechanism for the
+  full-run-level failures. Not re-filing `BLK-21d55fb1` (same standing condition, already escalated by `agt-eda323`) —
+  adding this only as corroboration + the precise onset timestamp, which the prior entry didn't have. `#796` stays
+  blocked on this fleet-wide incident clearing; no code fix applies. Pinged the authoring slot with this outcome; slot
+  left clean on `live-defi-rollout`, no repo touched beyond this doc.
