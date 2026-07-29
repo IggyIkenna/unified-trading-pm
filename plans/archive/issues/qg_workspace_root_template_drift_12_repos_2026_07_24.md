@@ -14,7 +14,7 @@ summary: >-
   copies still carry the OLDER vulnerable `${WORKSPACE_ROOT:-...}` pattern, meaning their own template must have been
   fixed at some point AFTER these repos' copies were last rolled out, and the fix never propagated. This is a
   template-drift gap, not a template defect.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -41,6 +41,9 @@ created: "2026-07-24"
 parent_epic: infrastructure_master
 assigned_vm: planning
 resolved_by:
+  "unified-trading-pm@6e791d478 (template) + 12 per-repo shas (see todos), completed 2026-07-29 once
+  market-tick-data-service's live conflict cleared (market-tick-data-service@dc82b08d). Fresh grep confirms zero
+  remaining vulnerable-pattern matches across all 12 repos."
 source:
   "found scoping the fix for qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md,
   2026-07-24"
@@ -53,6 +56,10 @@ locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, both todos done (11/12 repos 2026-07-28, market-tick-data-service
+> 2026-07-29 once its live concurrent conflict cleared). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
 
 # 12 repos' quality-gates.sh drifted from their own already-fixed templates
 
@@ -109,14 +116,15 @@ don't reintroduce this.
 
 ## Todos
 
-- [ ] [CODE] P3. Fix `codex/06-coding-standards/quality-gates-ui-template.sh`'s `WORKSPACE_ROOT=` line to the safe
+- [x] [CODE] P3. Fix `codex/06-coding-standards/quality-gates-ui-template.sh`'s `WORKSPACE_ROOT=` line to the safe
       fresh-derivation form (matching `quality-gates-service-template.sh`/`quality-gates-library-template.sh`
-      already-correct pattern) — no `${WORKSPACE_ROOT:-...}` inheritance. **Done when**: the UI template's line matches
-      the service/library templates' pattern. (repo: unified-trading-pm)
-- [ ] [CODE] P3. Surgically fix the top-level `WORKSPACE_ROOT=` line in each of the 12 named repos'
-      `scripts/quality-gates.sh` to match their own already-correct source template (one-line replacement, not a
-      wholesale template re-copy) — `client-reporting-api`, `deployment-api`, `deployment-service`, `deployment-ui`,
-      `features-service`, `fund-administration-service`, `greeks-service`, `market-data-processing-service`,
-      `market-tick-data-service`, `ml-service`, `trading-agent-service`, `unified-trading-system-ui`. **Done when**: a
-      fresh grep for `${WORKSPACE_ROOT:-` in each repo's `scripts/quality-gates.sh` returns zero matches, and each
-      repo's `quality-gates.sh` still passes its own full QG suite unchanged otherwise. (repos: as listed)
+      already-correct pattern) — no `${WORKSPACE_ROOT:-...}` inheritance. — unified-trading-pm@6e791d478. Verified:
+      `codex/06-coding-standards/quality-gates-ui-template.sh:17` now reads the safe fresh-derivation form.
+- [x] [CODE] P3. Surgically fix the top-level `WORKSPACE_ROOT=` line in each of the 12 named repos'
+      `scripts/quality-gates.sh` to match their own already-correct source template. — 11/12 shipped 2026-07-28
+      (`client-reporting-api@5f73511`, `deployment-api@7273844`, `deployment-service@ae767cb`, `deployment-ui@c8c3f90`,
+      `features-service@9b3a55e6`, `fund-administration-service@0018391`, `greeks-service@65c5841`,
+      `market-data-processing-service@0c8d98f`, `ml-service@a43ea4e`, `trading-agent-service@b09e4d2`,
+      `unified-trading-system-ui@14c434a3`); `market-tick-data-service` was blocked at the time by live concurrent WIP
+      in that repo, completed 2026-07-29 once clear (`market-tick-data-service@dc82b08d`). Verified: fresh grep for
+      `WORKSPACE_ROOT:-` across all 12 repos' `scripts/quality-gates.sh` returns zero matches.
