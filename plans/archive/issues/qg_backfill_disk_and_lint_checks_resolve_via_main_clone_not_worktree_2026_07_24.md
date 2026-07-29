@@ -27,7 +27,7 @@ related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md,
-    /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
+    /plans/archive/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
   ]
 created: "2026-07-24"
 parent_epic: infrastructure_master
@@ -211,4 +211,4 @@ instance of the same class of bug, not necessarily limited to the two steps caug
       `ml-service`, `trading-agent-service`, `unified-trading-system-ui`) still carry the OLDER, vulnerable
       `${WORKSPACE_ROOT:-...}` inheritance pattern — filed as a follow-up issue doc + todo since bringing 12 repos'
       copies back in sync with their own already-correct templates is out of this todo's named-repo scope:
-      `/plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`.
+      `/plans/archive/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`.

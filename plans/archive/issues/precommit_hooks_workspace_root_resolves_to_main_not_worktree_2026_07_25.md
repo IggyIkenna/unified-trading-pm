@@ -31,7 +31,7 @@ tags:
 related:
   [
     /plans/archive/issues/qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md,
-    /plans/active/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
+    /plans/archive/issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md,
     /plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md,
     /plans/archive/issues/precommit_plan_hygiene_hook_worktree_workspace_root_misresolution_2026_07_25.md,
   ]
