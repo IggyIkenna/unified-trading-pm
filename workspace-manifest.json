@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 84.3,
-        "large_file_count": 0,
         "qg_red_reason": null,
-        "warn_file_count": 21
+        "warn_file_count": 21,
+        "large_file_count": 0,
+        "coverage_pct": null
       }
     },
     "features-service": {
@@ -1212,9 +1212,9 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "large_file_count": 27,
+        "qg_red_reason": "pytest",
         "warn_file_count": 34,
+        "large_file_count": 27,
         "coverage_pct": null
       }
     },
