@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 10,
         "large_file_count": 9,
@@ -819,7 +819,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 7,
         "qg_red_reason": "pytest",
@@ -952,7 +952,7 @@
         "coverage_pct": 82.62,
         "warn_file_count": 6
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1479,7 +1479,7 @@
         "large_file_count": 0,
         "warn_file_count": 0
       },
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
     },
     "agent-orchestrator": {
