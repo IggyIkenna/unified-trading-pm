@@ -11,7 +11,10 @@ summary:
   phase-plans below are the dispatched work.
 status: active
 nature: design
-asset_group: [meta]
+asset_group:
+  [infrastructure] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [meta]. Classified `infra`-home by
+  # issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md's 2026-07-28 Classification record (Group B) but never
+  # actually retagged until now.
 stage: [meta]
 repos: [deployment-api, unified-trading-library, deployment-ui, deployment-service, unified-trading-pm]
 scope: [engineer]

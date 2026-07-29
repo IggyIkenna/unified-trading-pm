@@ -15,7 +15,10 @@ summary: >-
   ruleset is just missing the rule the SSOT file claims is in effect.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [infrastructure] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [meta]. Classified `infra`-home by
+  # issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md's 2026-07-28 Classification record (Group A) but never
+  # actually retagged until now.
 stage: [meta]
 repos: [unified-trading-system-ui, deployment-ui, unified-trading-pm]
 scope: [engineer]

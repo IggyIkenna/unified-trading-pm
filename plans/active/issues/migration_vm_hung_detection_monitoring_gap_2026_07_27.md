@@ -21,7 +21,13 @@ summary: >-
   agent-orchestrator-dispatched, for now.
 status: open
 nature: issue
-asset_group: [infrastructure, cefi]
+asset_group:
+  [infrastructure] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [infrastructure, cefi]. Discovered
+  # during a cefi campaign, but every gap + shipped fix is in generic fleet-wide infra (deployment-api alert-state set,
+  # the generic in-VM stall watchdog, heartbeat_stall_watcher.py's naming heuristic, RelaunchStalledVm) -- the doc's own
+  # text says "this affects every VM _is_backfill_vm() matches, not just canonical-migration ones," and the one
+  # remaining open todo audits OTHER, non-cefi launchers -- orthogonality HARD CHECK per
+  # cursor-configs/skills/ag-closeout-audit/SKILL.md.
 stage: [data, meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer]

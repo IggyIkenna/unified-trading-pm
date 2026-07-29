@@ -16,7 +16,10 @@ summary: >-
   issue remains open and needs a cicd/infra-scoped investigation.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group:
+  [ci] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [infrastructure]. Content is CI/CD-pipeline
+  # mechanics (unified-trading-system-ui's ci.yml registry-drift job, hatch-vcs tag-ancestry, pip resolution) -- the
+  # dedicated `ci` tranche's territory, not generic infra hygiene.
 stage: [meta]
 repos: [unified-trading-system-ui, unified-api-contracts, unified-trading-library]
 scope: [engineer]

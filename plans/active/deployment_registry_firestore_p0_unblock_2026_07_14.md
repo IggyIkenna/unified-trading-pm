@@ -9,7 +9,10 @@ summary:
   instead of becoming ghosts. GCS-only, partly throwaway once Firestore lands, but prod is broken today.
 status: active
 nature: process
-asset_group: [meta]
+asset_group:
+  [infrastructure] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [meta]. Classified `infra`-home by
+  # issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md's 2026-07-28 Classification record (Group B) but never
+  # actually retagged until now.
 stage: [meta]
 repos: [deployment-api, unified-trading-library]
 scope: [engineer]

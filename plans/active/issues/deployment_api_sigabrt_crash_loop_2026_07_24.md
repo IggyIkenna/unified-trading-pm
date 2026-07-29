@@ -16,7 +16,10 @@ summary: >-
   this session (out of scope for the 1h reaper-drain P0 todo that surfaced it) — needs its own focused investigation.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [infrastructure] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [meta]. Classified `infra`-home by
+  # issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md's 2026-07-28 Classification record (Group B) but never
+  # actually retagged until now.
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer]

@@ -10,7 +10,10 @@ summary: >-
   owns finishing this rollout.
 status: open
 nature: issue
-asset_group: [cefi, infrastructure]
+asset_group:
+  [cefi] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [cefi, infrastructure]. Content is
+  # cefi-venue-specific credential provisioning (Bybit/OKX/Hyperliquid/Aster/Upbit/Kraken/Bitfinex/Bitget), not generic
+  # reusable infra -- orthogonality HARD CHECK per cursor-configs/skills/ag-closeout-audit/SKILL.md.
 stage: [meta]
 repos: [execution-service, unified-trading-pm]
 scope: [engineer, admin]

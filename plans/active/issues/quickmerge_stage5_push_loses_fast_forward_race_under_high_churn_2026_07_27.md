@@ -13,7 +13,10 @@ summary: >-
   "What I found" #1), which reduced but did not eliminate the race.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group:
+  [ci] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [infrastructure]. Content is pure CI/CD
+  # shipping-pipeline mechanics (quickmerge.sh Stage 5 push-race, Stage 0.4 rebase, trailer-stamp-at-amend) -- the
+  # dedicated `ci` tranche's territory, not generic infra hygiene.
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

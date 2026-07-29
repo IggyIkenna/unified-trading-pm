@@ -13,7 +13,11 @@ summary: >-
   actually went dirty.
 status: open
 nature: issue
-asset_group: [infrastructure, meta]
+asset_group:
+  [ao] # corrected 2026-07-29 (ag-closeout-audit infra-tranche run) -- was [infrastructure, meta]. Content is
+  # agent-orchestrator-internal fleet/worktree monitoring (GET /api/fleet/git-health, server/routes/git_health.py,
+  # SlotGitStatusRow) -- repos:[agent-orchestrator] + parent_epic:orchestrator_master confirm the `ao` tranche is the
+  # real home, not generic infra.
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
