@@ -119,15 +119,75 @@ better $/benefit
 move given swap and general filesystem I/O are currently forced to share one already- maxed queue). Neither done in this
 pass — flagged as an operator cost decision, not executed unilaterally.
 
+## Real remedy applied (2026-07-29, same session, later) — instance resize
+
+**Factual correction to the standing crisis doc + this session's own earlier framing**: the orchestrator host's actual
+instance type was `c7i.4xlarge` (16 vCPU / **32GB** RAM) — NOT `m8i.4xlarge` / 64GB as the crisis doc's "What I found"
+section states and as this session initially assumed when proposing a resize target. Confirmed via
+`aws ec2 describe-instances`. This means every host-pressure measurement in both docs happened against a box with
+**half** the RAM believed — a real, material error in the shared understanding of this incident, not a rounding
+difference. Left uncorrected in the crisis doc itself (still at its 1000-line cap, actively written to by other slots) —
+noted here for anyone cross-referencing.
+
+Given real on-demand pricing pulled live (Tokyo region) and that every measurement all session showed CPU was never the
+bottleneck (peaked at 62%, RAM/swap is what hit zero headroom), resized to **`m8i.4xlarge`** (16 vCPU / 64GB,
+$1.09/hr, +22% vs the $0.90/hr baseline) rather than the originally-discussed `m8i.8xlarge` (32 vCPU/128GB, +143%, based
+on the incorrect 64GB-baseline assumption) — operator chose this after being shown both options with real numbers.
+
+**Execution**: graceful `aws ec2 stop-instances` (no `--force` — lets the orchestrator's existing SIGTERM handler take
+its pre-restart state snapshot, the same mechanism its own service restarts already rely on) → waited for `stopped` →
+`modify-instance-attribute --instance-type m8i.4xlarge` → `start-instances` → waited for `running` + `status-ok`. Same
+public/Elastic IP retained throughout (`13.113.200.22`).
+
+**Verified working**: `free -h` post-boot shows `61Gi` total RAM (was `31Gi`) with `54Gi` available; the 48GB swap added
+earlier in this session survived the reboot (`/etc/fstab` persistence confirmed); `orchestrator.service` came back
+`active (running)`, auto-started (`enabled`), `/api/mode` responding normally. Fleet recovery: the existing dead-worker
+resume mechanism (`resume_lifecycle.classify_dead_worker` + AutoSpawn) correctly detected the killed tmux sessions and
+began re-booting workers onto slots with intact in-flight WIP (`slot 11` resumed
+`data_pipeline_check_mdps_features-054`, `slot 15` resumed `capability_wizard_gap_discovery-019`) without any manual
+intervention — confirming that resume path (built for exactly this class of event) works as designed. ~2.5 minutes after
+boot: 2 slots actively working fresh tasks, 14 of 16 slots genuinely **idle with real capacity available** (status
+changed from "no capacity" to idle-and-waiting-on-dispatchable-work — a materially different, healthier state). No data
+loss: `state.db` lives on the persistent root EBS volume, which a stop/start never touches.
+
+**Separately surfaced, not fixed here (different problem)**: post-resize, the visible bottleneck for most idle slots is
+now a plan-dependency gate (52 queued tasks all blocked on one upstream task, `sports_satellite_ao_dispatch_batch2-0*`),
+not resource capacity — flagged for whoever owns that plan, out of scope for this doc.
+
+## Also found this session (2026-07-29, escalation/scheduled-job investigation)
+
+- **Account pool genuinely exhausted, not a selection bug.** `_pick_headroom_account()` in `server/autospawn.py`
+  correctly iterates and ranks every account in the rotation pool — confirmed by reading the loop, not assumed. Live
+  check found 5 of 6 accounts at `weekly_pct: 100` (fully exhausted), with `rate_limited_until` windows ranging from
+  later the same day to **2026-08-02** for one account. The `docs_reconciler` "no headroom" failure at 03:03 UTC was a
+  real, whole-pool exhaustion event, not a code defect. Fixing this for real means provisioning more accounts into the
+  rotation (a subscription-cost decision, same class as the EBS/IOPS one above) — not attempted here.
+- **The 4 daily reconciler jobs' "wait until tomorrow on no-capacity" is a documented, deliberate design choice**, not
+  an oversight: `scripts/install-plan-reconciler-timer.sh`'s own header states _"No-capacity at fire time → the dispatch
+  503s; the timer's next-day run retries. (Deliberate: a daily reconcile skipped for a day is fine; queueing semantics
+  belong to CI escalations, not housekeeping.)"_ Given this session confirmed the fleet is genuinely
+  capacity-constrained, this design reads as more correct than ever (housekeeping shouldn't out-compete real CI fixes
+  for scarce slots) — flagged to the operator rather than silently changed, since reversing it is a priority judgment
+  call, not a bug fix.
+- **The escalation queue was checked and found genuinely busy, not stuck.** High retry-attempt counts on some
+  escalations (72, 50 attempts over 3+ hours) reflect real, sustained capacity scarcity (verified: 14 of 17 slots had
+  fresh <1min-old pings on real in-flight work at the time of checking), not a broken retry loop — and it was observed
+  actively draining (5 long-queued escalations dispatched within a 15-minute window as slots freed naturally). No
+  override/force-dispatch was applied — doing so would have meant killing someone else's real in-progress work, which
+  needs explicit operator sign-off on a per-case basis, not a blanket policy.
+
 ## Todos
 
-- [ ] [BACKEND] P3. Once the runner-capacity crisis's remedy (whatever the standing doc's owners land on — reduced
-      runner count, more RAM, per-runner memory limits/cgroups) ships, spot-check swap% on the dashboard to confirm it
-      actually returns to near-0% and stays there — the metric now exists to make that verification trivial instead of
-      another manual SSM session.
+- [x] [BACKEND] P3. Once the runner-capacity crisis's remedy ships, spot-check swap% on the dashboard. — **Done
+      2026-07-29**: post-resize `free -h` shows 54GB available (vs 269MB before); the dashboard's Swap tile is live and
+      will reflect this on the next `/ws/vm-resources` push.
 - [ ] [REVIEW] P3. Consider whether the crisis doc's "What I found" section is worth a one-line correction the next time
-      someone touches that file for other reasons (swap/memory, not just CPU/disk) — not worth a dedicated edit on its
-      own given the line cap, but cheap to fold in opportunistically.
+      someone touches that file for other reasons (swap/memory, not just CPU/disk — **also now the instance-type
+      correction above**, c7i.4xlarge not m8i.4xlarge) — not worth a dedicated edit on its own given the line cap, but
+      cheap to fold in opportunistically.
+- [ ] [OPERATOR] P3. Decide whether to provision additional Claude accounts into the scheduled-jobs headroom-check
+      rotation pool, given 5/6 are currently exhausted through 2026-08-02 in the worst case — a real subscription-cost
+      decision, not something to action without operator sign-off.
 
 ## Codex SSOTs
 
