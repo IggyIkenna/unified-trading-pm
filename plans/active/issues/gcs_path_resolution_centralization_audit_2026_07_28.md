@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [gcs, path-resolution, pipeline-mode, silent-failure, canonical-paths, centralization]
 related:
   [
-    /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md,
     /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
@@ -62,7 +62,7 @@ depends_on: []
 ## Origin
 
 Found while root-causing the MDPS `subprocess-per-date` 30-min-timeout bug
-(`/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 13, 2026-07-28):
+(`/plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 13, 2026-07-28):
 `market_data_processing_service/app/core/orchestration_scanner.py::_check_existing_outputs` built its GCS
 existence-check prefix as `processed_candles/by_date/day={date}/timeframe={tf}/data_type={dt}/`, omitting the
 `pipeline_mode=` hive segment the 2026-07-20 LOCKED canonical shape requires. Because GCS prefix listing is a literal

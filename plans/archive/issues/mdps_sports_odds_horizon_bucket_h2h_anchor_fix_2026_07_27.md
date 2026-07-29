@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [sports, odds, mdps, honest-absence, data-correctness, pivot, schema-design]
 related:
   [
-    /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-27

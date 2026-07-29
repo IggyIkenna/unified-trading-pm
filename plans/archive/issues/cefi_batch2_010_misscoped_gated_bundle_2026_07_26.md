@@ -239,14 +239,14 @@ trail. A duplicate issue doc slot-3 filed before this ruling landed
   column-pruned, exactly matching the timing of both observed OOM spikes. Fixed by adding
   `filters=[("date", "==", date)]`, matching the row-group pushdown `check_shard_freshness` already applies for the same
   single-day check — `market-data-processing-service@6b44226`. Full writeup:
-  `/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`. This fix has NOT yet been verified against
+  `/plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md`. This fix has NOT yet been verified against
   a fresh production job run (needs the GCP Cloud Build trigger, which fires on push:main, to pick it up after LDR→main
   promotion — the fix currently sits on `live-defi-rollout` only) — flagged as the one piece of Track B still open.
 
   **⛔ CORRECTED 2026-07-27**: this is now stale — the fix has since been verified against real production runs multiple
   times over, and the OOM job's investigation continued well past this one fix (a second, distinct OOM in
   `ManifestWriter`'s legacy write path was found + fixed too). See
-  `/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Updates 3-10 for the full chain (execution
+  `/plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Updates 3-10 for the full chain (execution
   `uts-prod-market-data-processing-service-t1-recon-p46vw` reached `Completed=True` for the exact OOM-crash shard/date,
   19m9.03s, 0 failures) — nothing further needed here.
 

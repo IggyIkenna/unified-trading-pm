@@ -32,7 +32,7 @@ tags: [gcs, path-resolution, pipeline-mode, silent-failure, canonical-paths, cen
 related:
   [
     /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
-    /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-29
@@ -68,7 +68,7 @@ parent under its line cap while continuing the same audit for the two remaining 
 and PREDICTION.
 
 **SPORTS-specific context worth knowing before auditing**: this asset group already had a real, resolved investigation
-this same day — `/plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 13 found and fixed a
+this same day — `/plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 13 found and fixed a
 `pipeline_mode=`-omission bug in MDPS's `_check_existing_outputs` (the bug that KICKED OFF this entire audit) and
 reclassified/backfilled 1,944+3,055 sports odds-horizon-bucket manifest rows for the exact same root cause. Any
 SPORTS-round agent should read that doc first so it doesn't re-discover the same ground — the question for this round is
