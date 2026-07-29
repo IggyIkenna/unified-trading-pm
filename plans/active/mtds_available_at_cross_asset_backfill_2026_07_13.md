@@ -336,6 +336,15 @@ enforce). Filed `issues/mtds_backfill_sequential_true_dispatch_order_violated_20
 root-cause why `sequential: true`'s prereq-wiring didn't hold for this specific pair (out of data_engineering craft
 scope). No production writes made; no cron touched; task released via `/skip-current-task {"reason_code": "GATED"}`.
 
+**Dispatch-order finding #3 — 2026-07-29T15:2xZ (slot 15, data_engineering)**: dispatched `-006` again (same task as
+finding #2 above), same result: the "Apply `rebuild_prediction_manifest.py`" todo (line ~157, `-006`'s direct
+prerequisite) is STILL unchecked — confirmed by reading this plan's current content, no apply/force-consolidate run
+recorded anywhere in the Progress Log since finding #2.
+`issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` is still `status: open` / `resolved_by:`
+blank — the root-cause fix has not landed yet. Declined to execute (nothing to resume). No production writes made; no
+cron touched; task released via `/skip-current-task {"reason_code": "GATED"}` citing this entry + the open issue doc —
+not re-filing a duplicate issue for the same still-open bug.
+
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
 `uts-prod-manifest-consolidator-market-data-tradfi-cron` paused 2026-07-14T11:06:16Z → resumed 11:12:43Z; first
