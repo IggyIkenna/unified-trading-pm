@@ -35,7 +35,7 @@ related: [/plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md]
 created: 2026-07-27
 last_updated: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: planning
+assigned_vm: harsh_pc
 execution_scope: orchestrator-agent
 sequential: true
 priority: P3
