@@ -140,3 +140,10 @@ HARD RULE this needs an interactive/operator-directed session, not autonomous AO
       `assigned_vm: NA`/LOCAL-only designation still matches how it's actually being executed (real cross-repo migration
       code keeps landing against it) — remains a genuine judgment call for the doc owner/operator, not resolved by this
       reconciliation pass; left open below.
+
+- [x] ✅ [OPERATOR] P2. **Operator-ruled 2026-07-29 (interactive decision session): formalize via the satellite
+      AO-dispatch-batch pattern already in use (e.g. batch5/batch6)**, rather than reclassifying to
+      `assigned_vm: planning` outright or trying to enforce a hard stop on an already-repeatedly-bypassed review gate.
+      Matches how the remaining bounded todos (UAC field rename, ml-service loader validation, strategy-service
+      migrations) are already de facto landing, while keeping a reconciliation checkpoint per batch instead of fully
+      surrendering the plan's original review-gate intent.
