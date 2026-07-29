@@ -224,6 +224,46 @@ bigger machine, so the global OOM path is never entered at all).
       deeper, durable fix for the underlying unboundedness, same relationship as tradfi's own P2 memray follow-up to its
       machine-type-bump unblock.
 
+## 2026-07-29 second recurrence — sports/odds_api launcher (slot-16, `data_engineering`, task `sports_odds_api_scattered_multiyear_gaps-001`)
+
+**Same bug class, different launcher.** While running a live gap-fill backfill
+(`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end 2026-07-29`, VM `mtds-backfill-odds-gapfill-20260729`,
+`--asset-group SPORTS`) to close 595 scattered missing odds_api calendar days, chunk 9/9 (`2025-11-27→2026-07-29`, the
+most-recent-history chunk containing several of the real gaps) OOM-killed:
+
+```
+mtds_chunk_loop.sh: line 56: 12932 Killed  ... python -m market_tick_data_service --operation download ...
+CHUNK_FAILED: chunk=9/9 range=2025-11-27→2026-07-29 exit=137 reason=OOM_KILLED
+```
+
+`RESOURCE_SAMPLE` lines show the same climbing-RSS signature as the original CEFI incident, just slower (across one real
+fetch day's write-out rather than within 32 seconds): mem=52.2%→66.0%→85.0%→90.2% (rss
+6558MiB→9557MiB→12586MiB→13468MiB) on `e2-standard-4` (16GB), immediately after a real odds_api fetch day (2026-04-15)
+that fanned out over 63 distinct `(bookmaker, league, fixture)` shards for a single date. This is the identical root
+cause already diagnosed above for CEFI Tardis (no aggregate byte-budget cap, only task-count caps) — the odds_api
+adapter's per-date fan-out over many bookmaker/league/fixture combinations is the sports-side equivalent of CEFI's
+per-symbol fan-out. **Confirms this is a general `mtds_chunk_loop.sh`-family risk, not CEFI/Tardis-specific**, exactly
+as the root-cause section above already suspected but had not yet observed recur on a different asset_group/venue.
+
+**Why the CEFI fix didn't cover this**: the 2026-07-26 fix bumped `MACHINE_TYPE` in `launch-mtds-backfill-vm.sh`
+specifically for `--asset-group CEFI` (other asset groups explicitly kept `e2-standard-4`). The sports odds backfill
+uses a SEPARATE, dedicated launcher (`launch-mtds-sports-odds-backfill-vm.sh`) that was never touched by that fix and
+still defaulted to `e2-standard-4`.
+
+**Fix applied (same precedent, this launcher)**: `deployment-service@bbce1b6` bumps
+`launch-mtds-sports-odds-backfill-vm.sh`'s `MACHINE_TYPE` default to `e2-highmem-4` (32GB), same ~2.2x headroom margin
+over the observed peak that the CEFI fix validated. The `mtds_chunk_loop.sh` fail-loud `CHUNK_FAILED` logging (part 2 of
+the original fix) is shared infrastructure and already worked correctly here — it's what surfaced this recurrence
+immediately instead of a silent short-fall. Relaunching the same range on the bumped machine type to close the remaining
+tail (chunk 9's unprocessed dates).
+
+- [ ] [DATA] P2. **Audit every OTHER `deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh` launcher for the same
+      `e2-standard-4` default** — the CEFI fix and this sports fix were both reactive (applied only after an actual
+      OOM-kill was observed). Given the shared `mtds_chunk_loop.sh` fan-out-with-no-byte-budget root cause is
+      demonstrably NOT asset-group-specific, a proactive sweep of every sports/tradfi/defi MTDS backfill launcher's
+      default machine type (vs. its typical per-chunk fan-out width) would catch the next recurrence before it burns a
+      VM launch, instead of after. Repo: deployment-service.
+
 ## 2026-07-27 recent-CEFI-backfill claimed-vs-actual completion audit (slot-5, `data_engineering`, task `cefi_satellite_ao_dispatch_batch1-026`)
 
 **Scope**: every `mtds-backfill-cefi-*` VM launch, cross-checked two ways — (a)
