@@ -202,9 +202,16 @@ DP-CATALOG-001/`CATALOGUE_SHRINK_BLOCKED` for sports without any `--allow-catalo
 post-fix in this session (the fix landed at 10:50 local, ahead of the next 01:00 UTC scheduled run) — flagged as a
 follow-up verification, not left as an open todo requiring further code work.
 
-- [ ] [OPS] P2. Verify the next scheduled `lifecycle-catalogue-regen-sports` run (next `0 1 * * *` UTC after
+- [x] ✅ [OPS] P2. Verify the next scheduled `lifecycle-catalogue-regen-sports` run (next `0 1 * * *` UTC after
       instruments-service@24f84e86 lands on the deployed image) promotes successfully (no `CATALOGUE_SHRINK_BLOCKED`)
-      and `prod/catalog.parquet` row count is `>= 27,216`. Repo: instruments-service.
+      and `prod/catalog.parquet` row count is `>= 27,216`. **Verified 2026-07-29** — live-checked today's scheduled run
+      (execution `catalogue-rollup-sports-20260729T010152Z`, `gcloud logging read`):
+      `Monotonic guard: new=179871     current=179761 decision=ACCEPT (monotonic_ok)` → `CATALOGUE_PROMOTED` at
+      `2026-07-29T01:07:26Z`, row count 179,871 (well above the 27,216 floor — the catalogue has grown substantially
+      since the 07-15 fix as expected). No `CATALOGUE_SHRINK_BLOCKED`.
+      `gs://instruments-store-sports-prd-.../prod/catalog.parquet` `Update Time:     2026-07-29T01:07:26Z` confirms the
+      promote-write landed. Consistent with the RE-TRIAGE (2026-07-23) finding that the fix has been holding daily
+      without incident. Repo: instruments-service (verification only, no code change).
 
 ## Not previously tracked
 
@@ -455,6 +462,15 @@ and touching the cefi monotonic-guard/dedup interaction for real (making the gua
 reference-data policy decision, not a diagnostic fact — filed as a new `[OPERATOR]` P3 todo above rather than decided
 unilaterally, consistent with this doc's own standing instruction ("operator should decide … before anyone runs
 `--allow-catalogue-shrink` on production reference data").
+
+## 2026-07-29 update — P2 sports-verification todo closed
+
+Dispatched against the last-remaining non-P3 open todo. Live-checked the current scheduled
+`lifecycle-catalogue-regen-sports` execution via `gcloud logging read` + `gcloud storage ls -L`:
+`catalogue-rollup-sports-20260729T010152Z` promoted cleanly (`decision=ACCEPT (monotonic_ok)`, 179,871 rows,
+`CATALOGUE_PROMOTED` at 01:07:26Z UTC, no `CATALOGUE_SHRINK_BLOCKED`). Flipped the P2 todo to done with this evidence.
+Remaining open work: the P3 IAM-403 events-sink grant and the P3 cefi dedup-aware-guard implementation (both already
+tracked above).
 
 ## 2026-07-28 (gated-decision retag sweep)
 

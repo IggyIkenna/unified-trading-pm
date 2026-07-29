@@ -185,7 +185,7 @@ leverage (fleet-wide-template fixes first — one change, ~22 repos benefit) the
   concurrent `quality-gates.sh` processes fleet-wide observed at peak) before its full-suite run finally got a token and
   passed clean.
 
-- [ ] [SCRIPT] P3. `unified-trading-library`: 4 tests in `tests/unit/test_manifest_freshness.py` each `sleep(1.1)`
+- [x] [SCRIPT] P3. `unified-trading-library`: 4 tests in `tests/unit/test_manifest_freshness.py` each `sleep(1.1)`
       (~4.4s total, lines 324/468/515/570); `tests/unit/recovery/test_agent_action.py` sleeps 1.5s
       (`test_loop_detector_window_expires`); `tests/events/test_pipeline_heartbeat_timer.py` sums to ~5.75s across 7
       tests (one single test alone is 3.5s, line 180). All read the clock via a directly-patchable
@@ -237,7 +237,7 @@ leverage (fleet-wide-template fixes first — one change, ~22 repos benefit) the
 
 ## Orphaned/dead test code (not a current CI-speed cost — these aren't gated — but real maintenance debt)
 
-- [ ] [SCRIPT] P3. `execution-service`: ~40 files / ~10,082 lines across `tests/live/`, `tests/context7/`,
+- [x] [SCRIPT] P3. `execution-service`: ~40 files / ~10,082 lines across `tests/live/`, `tests/context7/`,
       `tests/validation/`, `tests/scripts/` import a pre-refactor module path (`execution_service.live.*` —
       oms/orchestrator/positions/risk/router/trading_node/factory/order_converter/config/persistence.*,
       `execution_service.venues.cefi`, `execution_service.catalog_manager`) that no longer exists. Confirmed not

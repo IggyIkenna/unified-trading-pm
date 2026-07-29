@@ -495,13 +495,41 @@ going forward. Still open, tracked as a todo below.
       same-named class — see the P0 fix's naming-collision note). (repo: unified-trading-library, features-service,
       instruments-service, execution-service)
 
-- [ ] [SCRIPT] P2. **Fix the FRED/ECB/OFR `pipeline_mode` provenance-fallback mis-stamp** —
-      `unified_trading_library/pipeline_mode_resolver.py` has no venue-override for `FRED`/`ECB`/`OFR`/`IBKR`/`OpenBB`,
-      and UAC `SOURCE_PRIORITY` has no `yield_curve`/`ohlcv_1d` entries, so resolution silently falls through to
-      `_ASSET_GROUP_FALLBACKS["tradfi"]=BATCH_DATABENTO` — mis-stamping real FRED/ECB/OFR data as Databento-sourced.
-      Code-confirmed, not proven live-firing (zero real objects found for these venues on the sampled date — may never
-      have run in prod). Add the missing venue-overrides/source-priority entries. (repo: unified-trading-library,
-      unified-api-contracts)
+- [x] [SCRIPT] P2. **Fix the FRED/ECB/OFR `pipeline_mode` provenance-fallback mis-stamp** — DONE 2026-07-29,
+      `unified-api-contracts@62d3aa03` + `unified-trading-library@f2945749`. UAC: added `BATCH_FRED`/`BATCH_ECB`/
+      `BATCH_OFR` to `PipelineMode`; registered `SOURCE_PRIORITY[("tradfi","yield_curve")]=["fred","ecb"]`,
+      `[("tradfi","ohlcv_1d")]=["fred","ecb"]`, `[("tradfi","cds_spread")]=["ofr"]` (confirmed via grepping
+      `fred_adapter.py`/`ecb_adapter.py`/`ofr_adapter.py::write_canonical_shard` in market-tick-data-service — OFR
+      actually stamps `data_type="cds_spread"`, not `yield_curve`/`ohlcv_1d` as the finding's shorthand implied);
+      matching `SOURCE_MODE_CAPABILITY`/`EMISSION_LATENCY_MS_BY_SOURCE`/`AVAILABILITY_AT_SEMANTICS` entries (the 4th
+      closed-set registry the original finding didn't mention —
+      `test_every_source_priority_pair_has_availability_semantic` caught the gap); a new
+      `TRADFI_VENDOR_DATA_TYPE_NOT_IN_VALIDITY_MATRIX` exclusion-list reason in `test_validity_matrix_completeness.py`
+      (yield_curve/ohlcv_1d/cds_spread aren't yet in `DATA_TYPES_BY_ASSET_GROUP["tradfi"]`'s validity matrix — a
+      separate, out-of-scope widening decision); and bumped `test_extra_live_probe_sources_do_not_leak_cross_ag`'s
+      pinned tradfi prefix count 9→12. UTL: added `"FRED"`/`"ECB"`/`"OFR"` to `_VENUE_OVERRIDES`. Regression tests (fail
+      pre-fix, pass post-fix): `test_pipeline_mode_resolver.py`'s
+      `test_fred_yield_curve_resolves_to_batch_fred_not_databento`/
+      `test_ecb_yield_curve_resolves_to_batch_ecb_not_databento`/`test_ofr_cds_spread_resolves_to_batch_ofr_not_databento`
+      (+ `ohlcv_1d` + venue-blind-SOURCE_PRIORITY variants). Both repos' full `quality-gates.sh` green. **Scope
+      decision**: IBKR/OpenBB deliberately NOT included in this pass — see new P3 todo below. (repo:
+      unified-trading-library, unified-api-contracts)
+
+- [ ] [SCRIPT] P3. **Add IBKR/OpenBB `pipeline_mode` venue-overrides + registration (deferred from the FRED/ECB/OFR fix
+      above)** — the round-3 finding's `_VENUE_OVERRIDES` gap also named `IBKR`/`OpenBB`, but they were deliberately
+      excluded from the fix above: both are genuinely unwired dead code today (grepped `IBKRAdapter`/`OpenBBAdapter`
+      workspace-wide — zero callers outside their own definition + `factory.py` registration; `write_canonical_shard` is
+      never invoked). IBKR's `data_type` is caller-supplied with no real caller to inspect (could be
+      `trades`/`ohlcv_*`/bond quotes — `ibkr_adapter.py` imports `IBKRBar`/
+      `IBKRHistoricalTick(BidAsk/Last)`/`IBKRBondMarketData`, all plausible), so registering a SOURCE_PRIORITY entry
+      would be a guess, not a confirmed fact (unlike FRED/ECB/OFR, where the exact data_type was grep-confirmed in each
+      adapter). OpenBB is more concrete (`write_canonical_shard` always stamps `data_type="quotes"`,
+      `InstrumentType.BOND`) but `"quotes"` isn't yet a `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` data_type either. Add
+      `BATCH_IBKR`/`BATCH_OPENBB` to UAC `PipelineMode`, the `_VENUE_OVERRIDES["IBKR"]`/`["OpenBB"]` entries in UTL, and
+      the SOURCE_PRIORITY/SOURCE_MODE_CAPABILITY/EMISSION_LATENCY_MS_BY_SOURCE/AVAILABILITY_AT_SEMANTICS closed-set
+      entries (mirroring the pattern this todo's fix just established) — first confirm IBKR's real data_type once it has
+      an actual caller (or register a best-effort blanket entry if the operator prefers not to wait). (repo:
+      unified-trading-library, unified-api-contracts)
 
 - [ ] [SCRIPT] P2. **Fix execution-service's TradFi INDEX category mapping (2 independently-wrong mappings)** —
       `execution_service/data/loader.py:127-128`'s `_resolve_trades_category` maps `INDEX`→`"indices"` (plural; real

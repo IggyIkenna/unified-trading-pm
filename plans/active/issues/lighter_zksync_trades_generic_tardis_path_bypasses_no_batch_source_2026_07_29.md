@@ -150,9 +150,10 @@ so the fix scope was fully bounded.
       `unified-api-contracts@d4045838` (4 new tests in `TestGetExpectedDataTypesForVenueForBatch`, full
       `quality-gates.sh` green — 6 pre-existing failures in that run are unrelated, from a concurrent session's
       in-flight FRED/ECB/OFR source-priority work, confirmed via standalone re-run showing they reference
-      `("tradfi", "yield_curve"/"ohlcv_1d"/"cds_spread")`, not this change). `market-tick-data-service` commit pending
-      in the same session (file is at the repo's 900-line `MAX_FILE_LINES` cap; the fix was scoped to a net-zero-line
-      edit of the 2 existing call sites to stay under it).
+      `("tradfi", "yield_curve"/"ohlcv_1d"/"cds_spread")`, not this change). `market-tick-data-service@6365f05f` (full
+      `quality-gates.sh` green, 2109s — resource-drift warning only, from shared-host QG-governor queue contention, not
+      a regression; sentinel written). File is at the repo's 900-line `MAX_FILE_LINES` cap; the fix was scoped to a
+      net-zero-line edit of the 2 existing call sites to stay under it.
 - [x] [DATA] P3. Check whether the same generic-path bypass affects `(LIGHTER-ZKSYNC, book_snapshot_5)` or
       `(EXTENDED-STARKNET, book_snapshot_5)` via the same live-manifest cross-reference method used here. Repos:
       market-tick-data-service, unified-api-contracts. **CONFIRMED both affected, both resolved by the same fix** — live
