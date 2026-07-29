@@ -41,7 +41,7 @@ related:
   [
     /plans/active/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md,
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
-    /plans/active/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
+    /plans/archive/issues/cefi_threaded_resolver_dns_starvation_risk_2026_07_26.md,
     /plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]

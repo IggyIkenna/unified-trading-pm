@@ -10,8 +10,8 @@ summary: >-
   implicit-resolver to explicit `AsyncResolver()`. Two CEFI-only live-venue clients were found to hardcode the identical
   `ThreadedResolver()` pattern and were explicitly left untouched as out-of-scope for that tradfi-scoped todo —
   `aster_base_client.py` and `hyperliquid_base_client.py`. Same bug class, same fix shape, unapplied here.
-status: open
-resolved_by:
+status: resolved
+resolved_by: market-tick-data-service@cc4c92a6
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -57,11 +57,16 @@ that same starvation class wedged the CeFi Tardis backfill at cpu=0% (`market-ti
 
 ## Todos
 
-- [ ] [CODE] P3. Switch `aster_base_client.py` and `hyperliquid_base_client.py` from `ThreadedResolver()` to explicit
-      `AsyncResolver()`, mirroring the exact change already landed on the Tardis clients
-      (`market-tick-data-service@889ff829`). Add the same regression-test shape (assert the `TCPConnector` receives an
-      `AsyncResolver` instance) for both clients. Repo: market-tick-data-service. **Done when**: both clients construct
-      their connector with `AsyncResolver()`, both have a regression test asserting it, and `quality-gates.sh` is green.
+- [x] ✅ [CODE] P3. **DONE 2026-07-29** — Switch `aster_base_client.py` and `hyperliquid_base_client.py` from
+      `ThreadedResolver()` to explicit `AsyncResolver()`. Shipped via the shared `make_resilient_connector` helper
+      (`market_tick_data_service/_http_resolver.py`, already established for the Tardis clients,
+      `market-tick-data-service@6a067cf1`) rather than a bare `TCPConnector(resolver=AsyncResolver())` — prefers
+      aiodns-backed `AsyncResolver`, degrades gracefully instead of raising when `aiodns` isn't importable on a deployed
+      VM (a stricter version of the requested fix, same mechanism). New
+      `tests/unit/test_aster_hyperliquid_resolver_wiring.py` asserts both clients request the resilient connector with
+      the right kwargs and no raw `resolver=` construction remains; `test_hyperliquid_adapter_http_only.py` updated to
+      patch `make_resilient_connector` instead of `ThreadedResolver`/`TCPConnector`. `quality-gates.sh` green. —
+      market-tick-data-service@cc4c92a6.
 
 ## Progress Log (append-only)
 
