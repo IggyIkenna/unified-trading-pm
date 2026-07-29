@@ -249,3 +249,24 @@ not just noting.
   fleet-wide `startup_failure` incident this doc already tracks (`BLK-21d55fb1`), not re-filing it. Pinged
   `AUTHORING_SLOT=ci-reconcile` with the outcome. Slot left clean on `live-defi-rollout`, no branch changes beyond the
   (already-shipped) fix confirmed.
+
+- **2026-07-29 ~23:38Z (cicd escalation `agt-28375c`, slot 1) — 3rd independent confirmation for `instruments-service`:
+  the `agt-614695` test-regression fix holds, residual red is pure infra**. Re-dispatched against the same standing
+  `instruments-service` `ldr_qg_failure` wall (`#0`, no PR; this escalation alone was already at `attempts: 4` per
+  `GET /api/escalations/active` before this run — one of several duplicate concurrent escalations for this repo,
+  `agt-4b4ba8`/`agt-614695`/`agt-d04227`/`agt-28375c`, all `still_red_reescalated` from prior rounds). Reproduced
+  locally FIRST per the boot contract, backgrounded per the mandatory non-blocking pattern (never foreground — 15-min
+  heartbeat-silence kill risk): `bash scripts/quality-gates.sh` at HEAD `7f272911` (the exact fix commit `agt-614695`
+  already verified) — `5044 passed, 7 skipped`, coverage `88.77% ≥ 88.0%` floor, `ALL QUALITY GATES PASSED (99s)`,
+  sentinel written matching HEAD. Zero failures; nothing left to fix on the code/test side. Fresh CI check: 3 most
+  recent `live-defi-rollout` runs (23:35:55Z, 22:14:38Z, 22:01:22Z) all `startup_failure`; confirmed `jobs: []` +
+  `timing.billable: {}` + `run_duration_ms: 1000` on the newest (`30500040561`) — identical zero-job signature to every
+  other repo this doc and `github_actions_billing_wall_recurrence_2026_07_29.md` track. Also checked the PUSH-triggered
+  run for the fix commit itself (`30492395057`, `headSha=7f272911...`, 21:26:43Z, 0s): same `startup_failure`/`jobs:[]`
+  signature — the fix commit was never able to prove itself green on CI because the wall was already up by the time it
+  landed, not because the fix is incomplete. **No code or workflow change made or needed.** `GET /api/repo-blockers` →
+  `open: []` (none registered for this repo, nothing to fast-path). Not re-filing `/blocked` (same standing
+  `BLK-21d55fb1` condition; the `[OPERATOR] P0` in `github_actions_billing_wall_recurrence_2026_07_29.md` already covers
+  the decision — avoiding the escalation-spam pattern that doc's own P3 todo flags). Not pinging the authoring slot
+  (`AUTHORING_SLOT=ci-reconcile`, the confirmed non-numeric literal that 400s per the entries above and the sibling
+  doc's evidence log). Slot left clean on `live-defi-rollout`, working tree clean, no branch changes.
