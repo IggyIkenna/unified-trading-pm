@@ -359,11 +359,21 @@ and the residual-KeyError defense-in-depth path.
   independent readings a day apart is already strong evidence of zero new activity); if a future escalation on this same
   doc sees the numerator move, that reopens the investigation for real. Verified both prior code fixes
   (`market-tick-data-service@6a067cf1`, `@6c6fab03`) are ancestors of `origin/live-defi-rollout` -- nothing to re-ship.
-  Closed the DOCS P3 (appended `DP-FETCH-009` to the registry SSOT). Investigated why the alert still labels this "Fresh
-  -- 0d ago" despite being static: `attempted_failed_staleness.py`'s `STATIC_BACKLOG_STALE_DAYS_THRESHOLD=1` buckets by
-  WHOLE days since the last write, so any re-fire within 24h of the last write timestamp reads "Fresh" even though it's
-  the same 2026-07-28T09:03:12Z data -- a labeling-precision quirk, not a bug worth fixing (the module's own docstring
-  already disclaims it only labels, never gates paging cadence). The real, worth-fixing gap is that a THIRD full
-  escalation-worker session got spent re-confirming a condition two prior sessions already fully diagnosed -- filed as
-  its own process issue (see new P2 todo above) since the fix belongs in agent-orchestrator/ deployment-service's
-  escalation dispatch, not this repo.
+- **2026-07-29 (separate audit, not an escalation — verifying `derivative_ticker` is the sole canonical funding-rate
+  route across all 14 cefi perp venues):** Arrived at this doc from the OTHER direction — per-venue, not aggregate.
+  Fresh `read_availability_index` breakdown confirms this doc's static-backlog finding at venue granularity: DERIBIT's
+  113,814 attempted_failed are 100% the SEPARATE, already-resolved `tardis_concurrent_ip_lockout_2026_07_12.md` 403
+  debris (not aiodns); COINBASE-FUTURES's 429 attempted_failed are 98% (421/429) the aiodns signature this doc already
+  fixed, all `written_at` predating `@6a067cf1`; bare-OKX's 20 attempted_failed are 100% the same aiodns signature, also
+  pre-dating the fix. No new post-fix aiodns/403 rows for any of these 3 venues — corroborates the "static, not
+  regressing" conclusion above from a venue-scoped angle instead of the aggregate one. Also confirmed (separately, out
+  of this doc's scope) that no `perp_funding`/ohlcv-embedded funding-rate leak exists for any of the 14 venues —
+  `derivative_ticker` is the sole live route. No code or todo changes needed; the existing P3 "retry historical aiodns
+  rows" todo above already covers the COINBASE-FUTURES/OKX-bare cleanup. Closed the DOCS P3 (appended `DP-FETCH-009` to
+  the registry SSOT). Investigated why the alert still labels this "Fresh -- 0d ago" despite being static:
+  `attempted_failed_staleness.py`'s `STATIC_BACKLOG_STALE_DAYS_THRESHOLD=1` buckets by WHOLE days since the last write,
+  so any re-fire within 24h of the last write timestamp reads "Fresh" even though it's the same 2026-07-28T09:03:12Z
+  data -- a labeling-precision quirk, not a bug worth fixing (the module's own docstring already disclaims it only
+  labels, never gates paging cadence). The real, worth-fixing gap is that a THIRD full escalation-worker session got
+  spent re-confirming a condition two prior sessions already fully diagnosed -- filed as its own process issue (see new
+  P2 todo above) since the fix belongs in agent-orchestrator/ deployment-service's escalation dispatch, not this repo.

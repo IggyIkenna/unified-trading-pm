@@ -119,26 +119,55 @@ for a structurally-impossible combo can never transition to `captured`, so any c
 percentage sees a permanent, unclosable gap that isn't really a gap at all (per the operator's own 2026-07-15 ruling,
 this cell shouldn't even be IN the denominator).
 
-## Not yet determined
+## Root cause (confirmed 2026-07-29)
 
-- The EXACT code path/file that's still calling Tardis for `(LIGHTER-ZKSYNC, trades)` — I traced it to "the generic
-  `--operation download` orchestrator" per the sibling handler's own docstring reference, but did not read that
-  orchestrator's source directly to confirm the missing check.
-- Whether the SAME gap affects `(LIGHTER-ZKSYNC, book_snapshot_5)` or `(EXTENDED-STARKNET, book_snapshot_5)` — not
-  checked in this pass, worth the same live-manifest cross-reference.
-- Whether the 1 `captured` row (from `market-data-processing-service`, not MTDS) for this combo is a benign anomaly
-  (e.g. a different valid symbol/edge case) or itself a symptom worth tracing.
+The generic path is `market_tick_data_service/engine/orchestrator/venue_fetch.py::_process_venue`, which resolves a
+venue's per-run data_types via UAC's `get_expected_data_types_for_venue(venue)`. That function reads
+`VENUE_DATA_TYPE_CAPABILITIES` (the venue's full declared capability list, any transport) and — prior to this fix —
+never cross-checked `VENUE_DATA_TYPE_NO_BATCH_SOURCE`/`venue_data_type_has_batch_source()` at all. That check existed in
+the codebase (used correctly by the specific `_onchain_perp_batch_live_only.py` handler), but
+`get_expected_data_types_for_venue()` had no way to know a caller wanted the batch-reachable subset only — it always
+returned the full capability list. A corpus-wide grep confirmed 13 real call sites (5 MTDS, 6 deployment-api, 2
+internal-to-UAC) and zero in
+agent-orchestrator/deployment-service/execution-service/strategy-service/unified-trading-library/features-sports-service,
+so the fix scope was fully bounded.
+
+- Whether the 1 `captured` row (from `market-data-processing-service`, not MTDS) for this combo is a benign anomaly —
+  not re-investigated; MDPS candle-aggregates from whatever raw ticks exist regardless of whether the combo is
+  batch-sourced, so a single stray captured row from an MDPS re-aggregation pass is not evidence of a live batch fetch
+  succeeding, and isn't concerning enough to block this fix.
 
 ## Todos
 
-- [ ] [FIX] P2. Find the generic `--operation download` Tardis orchestrator (per `_onchain_perp_batch_lighter.py`'s own
-      docstring reference) and add a `venue_data_type_has_batch_source()` (or equivalent UAC registry) check before it
-      attempts `(LIGHTER-ZKSYNC, trades)` — matching the exclusion the venue-specific handlers already correctly apply.
-      Repo: market-tick-data-service.
-- [ ] [DATA] P3. Check whether the same generic-path bypass affects `(LIGHTER-ZKSYNC, book_snapshot_5)` or
+- [x] [FIX] P2. Find the generic `--operation download` Tardis orchestrator and add a
+      `venue_data_type_has_batch_source()` (or equivalent UAC registry) check before it attempts
+      `(LIGHTER-ZKSYNC, trades)` — matching the exclusion the venue-specific handlers already correctly apply. Repo:
+      market-tick-data-service. **DONE** — added a keyword-only `for_batch: bool = False` parameter to UAC's
+      `get_expected_data_types_for_venue()` (default `False` preserves byte-identical behavior for the other 11 call
+      sites); when `True`, filters the returned list through the existing `venue_data_type_has_batch_source()`. Wired
+      `for_batch=True` into the 2 confirmed-buggy call sites inside `venue_fetch.py::_process_venue` (both the
+      CLI-filter-absent default-resolution branch and the CLI-filter-present UAC-validation branch).
+      `unified-api-contracts@d4045838` (4 new tests in `TestGetExpectedDataTypesForVenueForBatch`, full
+      `quality-gates.sh` green — 6 pre-existing failures in that run are unrelated, from a concurrent session's
+      in-flight FRED/ECB/OFR source-priority work, confirmed via standalone re-run showing they reference
+      `("tradfi", "yield_curve"/"ohlcv_1d"/"cds_spread")`, not this change). `market-tick-data-service` commit pending
+      in the same session (file is at the repo's 900-line `MAX_FILE_LINES` cap; the fix was scoped to a net-zero-line
+      edit of the 2 existing call sites to stay under it).
+- [x] [DATA] P3. Check whether the same generic-path bypass affects `(LIGHTER-ZKSYNC, book_snapshot_5)` or
       `(EXTENDED-STARKNET, book_snapshot_5)` via the same live-manifest cross-reference method used here. Repos:
-      market-tick-data-service, unified-api-contracts.
-- [ ] [DATA] P3. Once the writer is fixed, the existing 24,559 polluting rows for `(LIGHTER-ZKSYNC, trades)` need a
-      cleanup pass (delete or re-classify) so the honest-coverage denominator stops carrying a permanently-unclosable
-      cell — attended real-infra step, not autonomous (manifest row deletes need the same care as GCS object deletes).
-      Repo: market-tick-data-service.
+      market-tick-data-service, unified-api-contracts. **CONFIRMED both affected, both resolved by the same fix** — live
+      manifest read (2026-07-29): `(LIGHTER-ZKSYNC, book_snapshot_5)`: 24,558 rows (22,871 expected_unattempted, 1,661
+      empty_confirmed, 26 attempted_failed), 59 written today (50 empty_confirmed + 9 attempted_failed, both
+      `pipeline_mode=batch_tardis`/ `market-tick-data-service`). `(EXTENDED-STARKNET, book_snapshot_5)`: 19,956 rows
+      (18,408 expected_unattempted, 1,548 empty_confirmed), 50 written today (all empty_confirmed,
+      `pipeline_mode=batch_extended`/ `market-tick-data-service`). Both venues declare `book_snapshot_5` in
+      `VENUE_DATA_TYPE_NO_BATCH_SOURCE`, so both are excluded once `for_batch=True` is honored by the same 2 call sites
+      fixed above — no separate code change needed.
+- [ ] [DATA] P3. Once the writer is fixed, the existing ~69,000 polluting rows across the 3 affected combos
+      (`LIGHTER-ZKSYNC` trades: 24,559 + book_snapshot_5: 24,558; `EXTENDED-STARKNET` book_snapshot_5: 19,956) need a
+      cleanup pass (delete or re-classify the `expected_unattempted`/`empty_confirmed`/`attempted_failed` rows written
+      under this now-fixed bug) so the honest-coverage denominator stops carrying permanently-unclosable cells —
+      attended real-infra step, not autonomous (manifest row deletes need the same care as GCS object deletes per the
+      delete-safety protocol). Repo: market-tick-data-service. **Not started** — deliberately deferred pending an
+      explicit decision on delete-vs-reclassify and the delete-safety-protocol proof gates, since the writer fix only
+      stops NEW pollution; the historical rows are unaffected by it.
