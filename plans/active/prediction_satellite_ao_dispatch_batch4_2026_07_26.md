@@ -448,3 +448,20 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   to `ENABLED`. Filed `BLK-c6fa4f95` so the operator/main agent can optionally bump the other plan's priority if this
   drags. Checkpoint file (merged, 157/348) now lives at this slot's scratchpad — see next entry for the outcome once the
   cron resumes and the run completes or re-blocks.
+- 2026-07-29 (slot 8, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-020`): resumed from
+  slot-15's hand-off. Confirmed via `/api/backlog` + activity feed: slot-15 was killed (`slot_wedged_killed_for_resume`)
+  at 01:37Z, tmux lost 01:38Z, BLK-c6fa4f95 already answered "A — wait for the automatic background retry" (verified the
+  blocking plan `mtds_available_at_cross_asset_backfill_2026_07_13.md` is genuinely in-flight, not stalled: its Apply
+  todo (`-001`) is `dispatched` to slot 13 as of 03:50:48Z). Re-verified cron
+  `uts-prod-manifest-consolidator-market- data-prediction-cron` is still `PAUSED` (`gcloud scheduler jobs list`) and
+  reproduced the exact `ManifestConsolidatorStaleError` on a 1-day dry-run — confirms nothing has changed since
+  slot-15's block. Recovered slot-15's 157/348-day checkpoint from its scratchpad
+  (`/home/ubuntu/.claude-configs/orch-slot-15/.../scratchpad/ prediction_trades_migration_report.jsonl` — the tmux
+  session died but the file survived on disk; not committed to git by slot-15, so this recovery step will be needed
+  again by any future resumer unless a durable location is adopted). Armed a self-heartbeating watcher
+  (`resume_4bi_watcher.sh`, harness-tracked `run_in_background`, NOT `nohup`/`setsid` — avoiding the exact
+  orphan_reap/kill_session collateral-kill this doc's own slot-7/slot-8/slot-15 entries already hit) that polls the cron
+  state every 3 min, self-heartbeats to `/api/slots/8/progress` every poll-cycle-3 (~9 min) while waiting and every ~5
+  min while the enrichment runs, and auto-launches `--apply --report <checkpoint>` the instant the cron flips `ENABLED`.
+  Not touching the blocking plan's cron/Apply/Resume todos myself (out of scope, would race its protocol — same call
+  slot-15 made). Still waiting — see next entry for the outcome.
