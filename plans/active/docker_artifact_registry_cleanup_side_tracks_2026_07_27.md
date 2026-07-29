@@ -95,7 +95,7 @@ source:
       `docker_artifact_registry_cleanup_policy_dryrun_report_unified_trading_library_2026_07_29.json`.
 - [x] ✅ 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
       `docker_artifact_storage_audit_2026_07_24.csv`) and apply the same pattern to any showing the
-      unbounded-CI-retention shape. — unified-trading-pm@<SHA> (classification + 5 policy files + 18 repos policied).
+      unbounded-CI-retention shape. — unified-trading-pm@d836194 (classification + 5 policy files + 18 repos policied).
       **Complete 2026-07-29.** Classification report: `docker_artifact_registry_repo_classification_2026_07_29.json`.
       **Policies applied (dry-run) to 18 repos:** (a) 4 priority repos with live consumers — `deployment-dashboard` (720
       imgs, 112 GB, SHA-pinned service needs keep-deployed-digests), `market-data-tick-handler` (6 imgs, 6 live
