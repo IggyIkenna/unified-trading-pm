@@ -93,12 +93,19 @@ source:
       non-dry-run) is operator-gated — same as parent plan's todo 8, AR has no soft-delete. Policy file:
       `docker_artifact_registry_cleanup_policy_unified_trading_library.json`; dry-run report:
       `docker_artifact_registry_cleanup_policy_dryrun_report_unified_trading_library_2026_07_29.json`.
-- [ ] 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
+- [x] ✅ 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
       `docker_artifact_storage_audit_2026_07_24.csv`) and apply the same pattern to any showing the
-      unbounded-CI-retention shape. Done-when: each remaining repo is either policied or explicitly marked out-of-scope
-      with a reason. Note from the parent plan's Phase A audit: at least `deployment-dashboard`, `quota-broker`,
-      `market-data-handler`, and `market-data-tick-handler` have confirmed live consumers (not idle) — prioritize
-      profiling those before assuming any repo is safe to skip.
+      unbounded-CI-retention shape. — unified-trading-pm@<SHA> (classification + 5 policy files + 18 repos policied).
+      **Complete 2026-07-29.** Classification report: `docker_artifact_registry_repo_classification_2026_07_29.json`.
+      **Policies applied (dry-run) to 18 repos:** (a) 4 priority repos with live consumers — `deployment-dashboard` (720
+      imgs, 112 GB, SHA-pinned service needs keep-deployed-digests), `market-data-tick-handler` (6 imgs, 6 live
+      `:latest` jobs), `quota-broker` (3 imgs, SHA-pinned service), `market-data-handler` (0 imgs per CSV, `:v2` job);
+      (b) 14 remaining service repos — standard 2-rule policy applied. **Out-of-scope:** GCP-managed repos
+      (cloud-run-source-deploy×5, gcf-artifacts×3, firebaseapphosting-images×2, container-registry, gae-standard,
+      gcr.io×3 — cannot apply custom policies); `unified-libraries` (PYTHON format, not Docker); 20 zero-artifact repos
+      (policy unnecessary but available). AWS ECR (18 repos) → todo 12. Legacy GCR bucket → todo 13. Policy files
+      committed: `deployment_dashboard.json` (3-rule), `quota_broker.json` (3-rule), `market_data_handler.json`
+      (3-rule), `standard_2rule.json` (reusable template).
 - [ ] 12. [INFRA] P3. Design the AWS ECR lifecycle policy for the 20 ECR repos — ECR syntax differs (JSON rule-priority
       list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
       `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. Done-when: a previewed ECR policy

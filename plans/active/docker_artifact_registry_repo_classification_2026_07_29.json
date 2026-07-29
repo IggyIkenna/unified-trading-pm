@@ -1,0 +1,191 @@
+{
+  "task": "todo 11 \u2014 profile remaining ~73 GCP AR repos",
+  "date": "2026-07-29",
+  "summary": "Classification of all 75 repos from docker_artifact_storage_audit_2026_07_24.csv (excluding unified-trading-system and unified-trading-library already handled)",
+  "categories": {
+    "priority_live_consumers": {
+      "deployment-dashboard": {
+        "location": "asia-northeast1",
+        "packages": ["deployment-dashboard", "sports-scheduler"],
+        "live_consumers": [
+          "deployment-dashboard Cloud Run Service \u2192 deployment-dashboard:68a3ffc07a... (SHA-pinned, NOT :latest \u2014 NEEDS keep-deployed-digests)",
+          "uts-prod-sports-scheduler Cloud Run Job \u2192 sports-scheduler:latest"
+        ],
+        "non_latest_pins": [
+          {
+            "package": "deployment-dashboard",
+            "tag": "68a3ffc07a4287fd31f6a54b0ccd37737b04ded0"
+          }
+        ],
+        "size_gb": 111.9,
+        "images": 720,
+        "policy_applied": false
+      },
+      "market-data-tick-handler": {
+        "location": "asia-northeast1",
+        "packages": ["market-tick-data-handler", "market-tick-handler"],
+        "live_consumers": [
+          "6x market-tick-cefi-* Cloud Run Jobs \u2192 market-tick-data-handler:latest",
+          "1x job \u2192 market-tick-handler:latest"
+        ],
+        "non_latest_pins": [],
+        "size_gb": 4.0,
+        "images": 6,
+        "policy_applied": false
+      },
+      "quota-broker": {
+        "location": "asia-northeast1",
+        "packages": ["quota-broker"],
+        "live_consumers": [
+          "quota-broker Cloud Run Service \u2192 quota-broker:6f9f2570... (SHA-pinned, NOT :latest \u2014 NEEDS keep-deployed-digests)"
+        ],
+        "non_latest_pins": [
+          {
+            "package": "quota-broker",
+            "tag": "6f9f2570d2d53adb76e219ec9a46b2a0d1542b84"
+          }
+        ],
+        "size_gb": 0.2,
+        "images": 3,
+        "policy_applied": false
+      },
+      "market-data-handler": {
+        "location": "asia-northeast1",
+        "packages": ["market-data-query-service", "market-data-downloader"],
+        "live_consumers": [
+          "market-data-query-service Cloud Run Service \u2192 :latest",
+          "market-data-download-job Cloud Run Job \u2192 market-data-downloader:v2 (pinned :v2, not :latest \u2014 NEEDS keep-deployed-digests IF :v2 tag exists)"
+        ],
+        "non_latest_pins": [
+          {
+            "package": "market-data-downloader",
+            "tag": "v2"
+          }
+        ],
+        "size_gb": 0.0,
+        "images": 0,
+        "note": "CSV shows 0 images \u2014 :v2 tag may not exist (image not found via describe). Apply policy as safety net.",
+        "policy_applied": false
+      }
+    },
+    "gcp_managed": [
+      "cloud-run-source-deploy (5 locations: europe-west4, us-central1, asia-northeast1, europe-west1, africa-south1)",
+      "gcf-artifacts (3 locations: europe-west3, asia-northeast1, europe-west1)",
+      "firebaseapphosting-images (2 locations: us-central1, asia-southeast1)",
+      "container-registry (europe-west1)",
+      "gae-standard (europe-west1)",
+      "gcr.io (us, asia, eu \u2014 legacy GCR domains)"
+    ],
+    "non_docker": ["unified-libraries (PYTHON format, 758 artifacts, 1 GB) \u2014 not Docker, AR cleanup policy N/A"],
+    "zero_artifact": [
+      "alerting-service",
+      "backtesting",
+      "execution-results-api",
+      "execution-service",
+      "instruments-service",
+      "market-data-api",
+      "market-data-processing-service",
+      "market-tick-data-service",
+      "market-tick-handler",
+      "pnl-attribution-service",
+      "position-balance-monitor-service",
+      "risk-and-exposure-service",
+      "strategy-validation-service",
+      "eu.gcr.io",
+      "odum-python",
+      "gcf-artifacts (europe-west2)",
+      "firebaseapphosting-images (europe-west4)",
+      "us.gcr.io",
+      "gcf-artifacts (us-central1)",
+      "asia.gcr.io"
+    ],
+    "remaining_service_repos": [
+      {
+        "repo": "execution",
+        "location": "asia-northeast1",
+        "images": 53,
+        "size_gb": 32.0
+      },
+      {
+        "repo": "strategy-service",
+        "location": "asia-northeast1",
+        "images": 29,
+        "size_gb": 26.1
+      },
+      {
+        "repo": "ml-training-service",
+        "location": "asia-northeast1",
+        "images": 46,
+        "size_gb": 22.6
+      },
+      {
+        "repo": "features-volatility-service",
+        "location": "asia-northeast1",
+        "images": 35,
+        "size_gb": 17.3
+      },
+      {
+        "repo": "ml-inference-service",
+        "location": "asia-northeast1",
+        "images": 32,
+        "size_gb": 16.2
+      },
+      {
+        "repo": "features-calendar-service",
+        "location": "asia-northeast1",
+        "images": 36,
+        "size_gb": 12.9
+      },
+      {
+        "repo": "features-delta-one-service",
+        "location": "asia-northeast1",
+        "images": 23,
+        "size_gb": 11.9
+      },
+      {
+        "repo": "unified-cloud-services",
+        "location": "asia-northeast1",
+        "images": 39,
+        "size_gb": 8.9
+      },
+      {
+        "repo": "market-data",
+        "location": "asia-northeast1",
+        "images": 19,
+        "size_gb": 7.9
+      },
+      {
+        "repo": "instruments",
+        "location": "asia-northeast1",
+        "images": 19,
+        "size_gb": 5.9
+      },
+      {
+        "repo": "features",
+        "location": "asia-northeast1",
+        "images": 16,
+        "size_gb": 2.8
+      },
+      {
+        "repo": "multi-repo-agent",
+        "location": "europe-west1",
+        "images": 36,
+        "size_gb": 2.7
+      },
+      {
+        "repo": "market-data-processing",
+        "location": "asia-northeast1",
+        "images": 4,
+        "size_gb": 2.1
+      },
+      {
+        "repo": "client-reporting-api",
+        "location": "asia-northeast1",
+        "images": 2,
+        "size_gb": 2.0
+      }
+    ]
+  },
+  "total_actionable_cost_monthly": 28.740000000000002,
+  "total_gcp_managed_unactionable_cost_monthly": 29.430000000000007
+}
