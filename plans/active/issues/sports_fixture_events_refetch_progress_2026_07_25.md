@@ -484,3 +484,18 @@ expected on that cadence; no VM launched (none needed for this check). Not a new
 changed since the last entry. Releasing via `/skip-current-task {"reason_code": "GATED"}`, respecting the established
 hourly probe cadence rather than re-checking again immediately. Next dispatch: re-probe once ~1h has elapsed since the
 15:09Z check (i.e. not before ~16:09Z), or sooner only if there's reason to think the vendor's reset window is closer.
+
+**Checked 2026-07-29T20:14Z (slot 4, data_engineering)**: ran the same VM-free `/status` probe (well past the 16:09Z
+next-check window, ~5h05m since the 15:09Z probe) — still exhausted, identical `errors.requests` payload. Also
+independently confirmed via `gcloud compute operations list` (before finding this doc) that
+`af-backfill-20260728-141821` was `stop`ped at `07:47:44-07:00` (=`14:47:44Z`) then `delete`d at `07:48:59-07:00`
+(=`14:48:59Z`), both by the ambient compute default SA — consistent with this doc's own 15:00Z-15:10Z note that the
+interactive operator session did the stop+delete (not a watchdog reap or a code bug); no new information there, just
+independent corroboration of an already-documented action. **Sharpening the reset estimate**: the launcher's own comment
+(`launch-api-football-backfill-vm.sh:88-89`) documents the daily quota as resetting `00:00 UTC` — so the real earliest
+useful re-probe time is **`2026-07-30T00:00Z`** (~3h45m from this check), not just "another hourly probe" which will
+predictably still read exhausted until then. No VM launched (none needed/useful pre-reset). Releasing via
+`/skip-current-task {"reason_code": "GATED"}`. Next dispatch: do not bother re-probing before `2026-07-30T00:00Z`; once
+past that time, re-probe once, and on a clean (non-`errors`) response relaunch WITHOUT `--force` per the 15:00Z-15:10Z
+note (plain skip-if-fresh re-run — the fixed adapter code already correctly recorded `2026-07-12`'s failures as
+`attempted_failed`, so a normal run retries them naturally; only ~13 days of the `2020-06-06→2026-07-25` range remain).
