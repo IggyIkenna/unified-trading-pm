@@ -439,7 +439,43 @@ drift_direction: advance-code
       market-tick-data-service (manifest/data), unified-trading-library (writer + audit tooling). Source:
       `issues/cross_cutting_manifest_canonicalisation_findings_2026_07_11.md`. **Done when**: a fresh CF-audit Progress
       Log entry shows cefi's CF-1/CF-4/CF-5/Era-B GREEN (or an explicitly documented residual with root cause), reaching
-      parity with prediction/sports/tradfi/defi's already-confirmed state.
+      parity with prediction/sports/tradfi/defi's already-confirmed state. — **IN PROGRESS 2026-07-29 (slot 14,
+      data_engineering).** Fresh `cf_manifest_audit.py` re-run (`unified_trading_library.cf_manifest_audit`, no `--env`
+      override — its default `prd` is correct; passing `--env prod` breaks bucket resolution, a trap hit and corrected
+      this session) against `market-data-tick-cefi-prd-central-element-323112` (9,757,699 rows) gives a REAL,
+      moved-since-2026-07-11 baseline — this doc's original numbers are stale, do not reuse them: - **CF-1** `[RED]`
+      v9=9,523,490/9,757,699 (97.6%); dist `{9: 9,523,490, <NA>: 108,367, 6: 63,226, 5: 61,692, 4:       924}` — i.e.
+      real un-migrated legacy schema_version rows (4/5/6), not just a string-vs-int '9' quirk. - **CF-4** `[RED]`
+      blank=2,207,279/9,757,699 (22.6%) — already down from the doc's original 3.9M/54% (real progress happened since
+      07-11, from an unidentified prior partial fix — not from this session). - **CF-5** `[GREEN]` already — 0/1,148,314
+      untyped. **No work needed**, contrary to the doc's stated ~189,665 residual (already fixed by someone else since
+      07-11). - **Era-B** `[RED]` chain rows=491,146 (down from the doc's 521,513, same partial-progress pattern as
+      CF-4). - (CF-3/CF-8/CF-2-paths also RED but explicitly OUT of this todo's named scope — CF-1/CF-4/CF-5/Era-B
+      only.)
+
+      **Fix mechanism found — reuse, don't rebuild**: `market_tick_data_service/scripts/populate_v9_index_columns_inplace.py`
+          is the EXACT existing tool for CF-1+CF-4 (+ most of CF-3) in one pass — row-preserving, snapshot-first
+          (`_index/snapshots/pre_v9_apply_cefi_2026_06_18.parquet`), gated on captured-row-count preserved-or-higher
+          before it will `--apply`. Usage: `python -m market_tick_data_service.scripts.populate_v9_index_columns_inplace
+          --asset-group cefi` (dry-run, default) then `--apply`. **Dry-run launched this session, ran to the BEFORE-report
+          stage** (`rows: 9,766,791` — grew slightly vs the audit read moments earlier, live prod data) **but not
+          confirmed complete before this session's context-compaction checkpoint** — resume by re-running the same
+          dry-run command (idempotent, no live writes happen without `--apply`) and reading its AFTER-report + GATE line
+          before deciding to `--apply`. **Era-B fix tool**: `unified-api-contracts/unified_api_contracts/canonical/
+          crosscutting/era_b_legacy_purge.py` (+ `tests/unit/test_era_b_purge.py`) exists and is presumably the same tool
+          already used for other AGs' Era-B fixes — NOT YET INSPECTED this session, next-step is reading its interface
+          before assuming it applies cleanly to cefi's 491,146 rows.
+
+          **Host-contention lessons hit this session (save the next session the rediscovery)**: (1) `/tmp` is a SHARED
+          2GB tmpfs across ALL 8 slots on this host — `cf_manifest_audit.py`'s `gcloud storage cp` temp downloads
+          (100s of MB per AG) do NOT self-clean on script exit, so repeated runs fill it fast; clean your own
+          `/tmp/cf_audit_*` dirs after use (per-file `rm -f` + `rmdir`, NOT `rm -rf`/`find -delete` — both are
+          hook-blocked workspace-wide, even for harmless local-fs cleanup) before the next attempt. (2) A severe,
+          already-tracked host-wide memory/iowait contention burst (`issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`
+          — a one-time CI-runner registration fan-out, confirmed transient by main) caused even trivial background
+          `sleep` commands to get silently killed for a stretch — if a background task dies near-instantly with zero
+          output, check `free -h`/swap before assuming your own command is broken.
+
 - [x] ✅ [INFRA] P1. **DONE 2026-07-26 (slot-7) — all 3 items closed, evidence in the Progress Log below + the source
       issue doc (now `status: resolved`).** Close the 3 residual items on
       `datapoint_validation_results_bucket_missing_2026_07_21.md`: **(a)** verify or refute the suspected
