@@ -342,9 +342,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
         "warn_file_count": 16,
-        "coverage_pct": 82.68,
-        "large_file_count": 6,
-        "qg_red_reason": null
+        "qg_red_reason": null,
+        "coverage_pct": null,
+        "large_file_count": 6
       }
     },
     "deployment-service": {
