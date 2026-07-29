@@ -260,3 +260,14 @@ return to a normal (non-zero-job) run.
   above). No code or workflow change made or needed; `client-reporting-api` left clean on `live-defi-rollout`. Root
   cause of this re-dispatch is presumably the same escalation being handed to a fresh worker before the standing wall
   clears — flagged under the existing P3 todo above (escalation spam on an unfixable wall), not a new finding.
+
+- **2026-07-29T23:3xZ (cicd escalation `agt-2450f6`, slot 13)** — this session's own dispatch, already named as a
+  known-queued duplicate in this doc's line 185. `alerting-service` `ldr_qg_failure` (`#0`, no PR). Local
+  `bash scripts/quality-gates.sh` at HEAD `86ca026` (clean tree, up to date with `origin/live-defi-rollout`) passed
+  fully (49s, 907 passed, coverage 79.80% ≥ 76% floor, `ALL QUALITY GATES PASSED`, sentinel written matching HEAD) — no
+  code/test defect exists to fix, confirming the `agt-49fba5`/`agt-d970e3` entries above for this same repo. Fresh
+  `workflow_dispatch` (`30499970965`, 23:34:36Z) → `startup_failure`, `jobs: []`, `timing.billable: {}` — wall still
+  active, now confirmed past 23:34Z (~5h+ since this doc's original onset estimate, no self-recovery). Not re-filing
+  `/blocked` (same standing `[OPERATOR] P0` todo covers the decision; avoiding escalation-spam per the P3 todo above).
+  Not pinging the authoring slot (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal that 400s per the entries
+  above). No code or workflow change made or needed; `alerting-service` left clean on `live-defi-rollout`.
