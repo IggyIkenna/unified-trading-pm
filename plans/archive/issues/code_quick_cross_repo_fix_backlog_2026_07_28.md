@@ -1,19 +1,17 @@
 ---
 doc_type: issue
-title:
-  Cross-repo CODE_QUICK fix backlog — 53 of 55 items shipped across 10 repos; market-tick-data-service (~15 items) + its
-  coordinated cqg-wiring item remain, blocked on live concurrent WIP in that repo
+title: Cross-repo CODE_QUICK fix backlog — all 55 items shipped across 11 repos, fully complete
 summary: >-
   Follow-up to the checkbox-honesty pass (prose-trap fix batch + 22-doc archival). Of 420 docs with 1-2 open todos, a
   keyword pre-filter narrowed to 281 "plausibly quick" candidates, which a 9-way parallel read-only classification pass
   split into 22 DOC_ONLY_QUICK (done, landed inline), 55 CODE_QUICK (touch real service code, need per-repo
   quality-gates.sh + commit — this doc), and 204 NOT_QUICK (correctly left untouched). Operator explicitly chose
   "implement them all now" over drafting an AO plan (2026-07-28), then "do all /autonomous" to drive the remainder to
-  completion. Round 1 shipped unified-api-contracts's 2 items same-day; Round 2 (9 parallel sub-agents, one per repo)
-  shipped the other 51 non-MTDS items same-day. Only market-tick-data-service + the cqg-wiring item coordinated with it
-  remain, deferred because that repo has shown live, actively-mtime-moving concurrent WIP from another session on both
-  checks made (88s-old conflict resolution, then 6s-old file edits) — re-check before dispatching, don't collide.
-status: open
+  completion. Round 1 shipped unified-api-contracts's 2 items (2026-07-28); Round 2 (9 parallel sub-agents, one per
+  repo) shipped 51 non-MTDS items (2026-07-28); Round 3 (single agent, dispatched only once MTDS's live concurrent WIP
+  finally cleared on a 3rd liveness recheck) shipped the final market-tick-data-service batch + the 3-repo cqg-wiring
+  item (2026-07-29). All 55 items done.
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -46,11 +44,18 @@ estimate_class: refactor
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "All 55 items shipped across 11 repos over 2026-07-28/29 (see per-repo Status section + Progress Log for full sha
+  evidence). market-tick-data-service (~15 items) + the cqg-wiring item were the last to land, on 2026-07-29 once that
+  repo's live concurrent WIP cleared."
 locked_by:
 locked_since:
 ---
 
-# Cross-repo CODE_QUICK fix backlog — 53/55 shipped, MTDS + its cqg-wiring item remain
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, all 55 items shipped, 0 open todos, moved to
+> `/plans/archive/issues/code_quick_cross_repo_fix_backlog_2026_07_28.md`. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
+# Cross-repo CODE_QUICK fix backlog — all 55 items shipped, complete
 
 ## Status per repo
 
@@ -58,25 +63,33 @@ locked_since:
       `service_emission_policy.py` deleted; 7 lending protocols' `instrument_types` retrofitted to
       `[A_TOKEN, DEBT_TOKEN]`. Both source docs archived.
 
-- [ ] [CODE] P1. **market-tick-data-service (~15 items) — STILL BLOCKED, deferred a second time (2026-07-28 21:44).**
-      Checked twice this session: first found an unresolved `UU` conflict with an 88s-old mtime + a live PID scoped to
-      this repo (protected, did not touch); rechecked later — conflict was gone but the SAME ~32 files were being
-      actively edited with a 6-SECOND-old mtime (another concurrent session mid-flight on exactly this backlog: the 26
-      files match `mtds_my_files.txt`'s disambiguation list almost exactly — dead-code cleanup, base_defi_adapter
-      success-key fix, Tardis epoch-unit fix, `_solana_pda.py` extraction, CAS DNS-resolver swap, etc.). Per the
-      liveness-gating rule (mtime <120s = PROTECT), did not dispatch an agent here either time — would have collided
-      file-for-file with live work. **quality-gates.sh's 2 real violations are still real** if that concurrent session
-      doesn't already fix them: `rebuild_prediction_manifest.py` 909L / `engine/orchestrator/__init__.py` 912L over the
-      900-line file-size gate; `base_defi_adapter.py::_download_all_instruments()` 56L over the function-size cap.
-      **Next check**: re-run the same liveness check (`git status --porcelain | grep UU`, mtime of recently-modified
-      files, `ps aux | grep market-tick-data-service`) — if finally clear, dispatch the batch fresh (the concurrent
-      session may have already finished it; verify via `git log` before redoing anything).
+- [x] **market-tick-data-service (~15 items) — DONE 2026-07-29** once the repo's live concurrent WIP finally cleared
+      (dispatched on the 3rd liveness recheck; the agent hit the session's API session-limit 3 times mid-task and was
+      resumed each time from its transcript, not restarted). Real fixes shipped: `df3d55dd` (base_defi_adapter
+      success-key), `f2f89fad` (`_solana_pda.py` address-primitives extraction), `cc4c92a6` (CAS DNS-resolver swap,
+      stricter than the doc's literal ask), `45924760` (Tardis epoch-unit fix), `d797df2e` (do_merge dtype-coercion
+      narrowing), `5bf8a3c7` (batched: kalshi/rebuild_prediction_manifest dead-code, data_manifest_handler dead-code,
+      lst_rates_handler empty-marker fix, pool chain-collision MTDS half, VM-name-collision regression test), `a6e0a788`
+      (unrelated dep re-pin needed to unblock QG), `dc82b08d` (the 12th/final repo for
+      `qg_workspace_root_template_drift_12_repos_2026_07_24`, now separately archived). 3 items STALE-SKIPPED after
+      verification (progress-checkpoint and VM-name-collision fixes already shipped by a predecessor slot;
+      sports-timeout flaky-test fix superseded by a concurrent session's better version, conflict resolved in their
+      favor). 2 items genuinely out-of-scope (autouse-fixture pattern + wallclock field-derivation both trace to source
+      docs whose target files are outside the confirmed 26-file disambiguation list — untouched, not silently dropped,
+      their own source docs remain open). **File-size/function-size QG violations resolved via real extraction,
+      verified**: `rebuild_prediction_manifest.py` 909L→708L (extracted `_rebuild_prediction_emit.py`),
+      `orchestrator/__init__.py` 912L→813L (moved a function into `preflight.py`), `_download_all_instruments()`
+      56L→48L. Full quality-gates.sh green at final HEAD, confirmed via 2 independent fresh runs. One operator-worth
+      flag surfaced (not auto-fixed): `lst_rates_handler.py`'s source doc carries an invalid
+      `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` artifact (impossible date, non-agent locker) — left
+      as-is for operator attention, not auto-unlocked.
 
-- [ ] [CODE] P2. **unified-api-contracts + instruments-service cqg-wiring half of
-      prediction_satellite_ao_dispatch_batch5_2026_07_26 — deferred with MTDS.** Explicitly reserved for a coordinated
-      fix once MTDS is clear (its dead-code half may already be done there); the instruments-service agent was told to
-      skip it and did (confirmed no scope creep — its `unified-api-contracts` wait was an unrelated golden-fixture
-      issue, resolved separately).
+- [x] **unified-api-contracts + instruments-service cqg-wiring half of
+      prediction_satellite_ao_dispatch_batch5_2026_07_26 — DONE 2026-07-29.** `unified-api-contracts@283d7449` (additive
+      `InstrumentRecord.canonical_question_group` field + schema entry), `instruments-service@38e393de`
+      (Polymarket/Kalshi adapters write `group.value` back; catalogue builder reads it per-row instead of the
+      always-empty path-level value), market-tick-data-service dead-code half already covered by `5bf8a3c7` above. The
+      batch5 plan + its finalize plan both fully executed and archived to `plans/archive/2026_07/`.
 
 - [x] **unified-trading-pm scripts (13 items) — DONE.** 10 shipped fresh, 3 verified already-fixed by concurrent
       sessions (not assumed — re-verified live). Shas: `b4f418bb4` (RLIMIT_AS hardening), `91324d0b1` (frozen tmp_path,
@@ -174,3 +187,17 @@ delete-half of the move) — completed via `unified-trading-pm@e2f568370`. **Rem
 items) + its coordinated cqg-wiring item, both blocked purely on that repo's live concurrent activity, not on any
 decision or credential. Recheck liveness before dispatching; if another session already finished it, verify via
 `git log` rather than redoing the work.
+
+**2026-07-29, Round 3 (closeout)** — Rechecked market-tick-data-service a 3rd time: mtime finally 5+ minutes stale, no
+unmerged conflicts — dispatched a single agent for the full remaining scope (~15 MTDS items + the 3-repo cqg-wiring
+item). The agent's own session hit the API's session-limit 3 separate times mid-task (a hard external resource
+constraint, not a bug); each time it was resumed from its transcript via `SendMessage` rather than restarted, and it
+picked back up correctly each time with no lost work. Finished cleanly: real fixes for all live items, 3 correctly
+identified as already-shipped by a predecessor slot (stale-skipped, verified via git log rather than assumed), 2
+correctly left out-of-scope (target files outside the confirmed file list), the 2 file-size + 1 function-size QG
+violations resolved via genuine code extraction (not reformatting), full quality-gates.sh green. Separately completed
+`qg_workspace_root_template_drift_12_repos_2026_07_24`'s last remaining repo (MTDS was the 12th/final, blocked earlier
+by the same live-WIP conflict) — archived that doc too (`unified-trading-pm@8f5460af4`). **All 55 CODE_QUICK items are
+now shipped; this tracking doc is archived alongside them.** Verified via the repo's own hygiene scripts, not just
+self-reports: `check_archive_candidates.sh` → "No archive candidates found", `check_terminal_status_archived.py` → 0
+violations — every doc that reached 0 open todos this session was actually archived, not just checkbox-flipped.
