@@ -323,7 +323,22 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       FINDING (determinable FIX-STALE, not operator-gated) captured in the registry: README front-door contradicts its
       two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
-- [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
+- [x] ✅ [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs. **DONE 2026-07-29 (slot-9, opus
+      sub-agent for editorial apply) — unified-trading-library@2737844b.** Ground-truth refresh REQUIRED and applied —
+      the pass-1 Appendix-A registry OVER-classified (matches the e2e-testing/instruments-service refresh pattern): the
+      4 "REDIRECT" docs `ERROR_HANDLING`/`PATTERNS`/`ID_NAMING_CONVENTIONS`/`CONFIGURATION` were ALREADY proper S5.11
+      redirects (no-op). Net remediation: **9 FIX-STALE** — the dominant finding is a repo-rename drift
+      (`unified-cloud-services`→`unified-trading-library`; package `unified_cloud_services`→`unified_trading_library`,
+      verified against live pyproject/exports; `UnifiedCloudServicesConfig` kept as intentional legacy alias) across
+      root `README`,
+      `docs/{README,ARCHITECTURE,DEPENDENCIES,data-sink-validation,CLOUD_API_PATTERNS,TESTING,CLOUD_BUILD_TRIGGER_SETUP}`;
+      plus removed 2026-05-06 `POST_PLAN` banners (10 docs), repointed/dropped archived-mirror `unified-trading-codex/`
+      refs (README/ARCHITECTURE/TESTING), bare `pip`→`uv pip`; `CloudTarget` import corrected to verified path
+      `unified_trading_library.domain_client`; dead Aster/Hyperliquid perps section removed (0 live defs); `DEV_SETUP`
+      converted to S5.11 redirect. **2 DELETE**: `docs/specs/{README,PLANS_ALIGNMENT}.md` (dead plan-alignment dumps
+      citing 5 archived plans — `PLANS_ALIGNMENT` was Appendix-A KEEP but reclassified DELETE to match the Appendix-B
+      deployment-api/alerting-service treatment; `docs/specs/` dir removed). QG-green sentinel==HEAD (140s); quickmerge
+      --agent. Reviewer caught + fixed 2 stray sub-agent artifact tags pre-ship.
 - [x] ✅ [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
       **DONE 2026-07-29 (slot-12, opus) — e2e-testing@7af2dd3** (+ PAPER_LIVE_CONVERGENCE redirect already landed
       @e00ee80, slot-10). **Ground-truth refresh REQUIRED and applied** — the pass-1 Appendix-A registry OVER-classified
