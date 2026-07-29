@@ -743,18 +743,32 @@ VM-hrs / $13.98 total. CSV written to `/tmp/vm_costs_7d.csv`. Shipped: deploymen
 
 ```bash
 python deployment-service/scripts/vm/cleanup_old_tarballs.py \
-    [--keep-n N] [--noncurrent-days D] [--dry-run] [--project PROJECT_ID]
+    [--keep N] [--noncurrent --max-age-days D] [--dry-run] [--project PROJECT_ID] [--reap-orphan-manifests]
 ```
 
 Two cleanup modes:
 
-- `--keep-n N` (default 5): for name-versioned tarball naming (`<repo>@<sha>.tar.gz`), keeps the N most-recent per
-  service and deletes the rest.
-- `--noncurrent-days D` (GCS object versioning): deletes noncurrent GCS object versions older than D days.
+- `--keep N` (default 5, name-versioned mode): for SHA-versioned tarball naming (`<repo>@<sha>.tar.gz` /
+  `<repo>-code-<sha>.tar.gz`), keeps the N most-recent per service and deletes the rest — **but only among tarballs NOT
+  currently in use** (see below). This is the mode the daily `uts-prod-tarball-cleanup` Cloud Run Job runs (`--keep 5`,
+  no `--dry-run`).
+- `--noncurrent --max-age-days D` (GCS object versioning): deletes noncurrent GCS object versions older than D days.
 
-**Note**: current production naming uses simple per-service files without SHA accumulation; `--noncurrent-days` is the
-active path until SHA-versioned naming (see § "Tarball naming + manifest" above) is adopted. Dry-run smoke confirmed 0
-deletions on the live bucket. Shipped: deployment-service@3c42df5.
+**Pin-aware + fail-closed (2026-07-20, hardened through 2026-07-29 — Option C, both legs shipped)**: name-versioned mode
+NEVER deletes a `@sha` tarball that a RUNNING or still relaunch-eligible VM is pinned to, no matter how far it has aged
+down the mtime ranking, and it deletes a tarball together with its sibling `.manifest.json` as an atomic pair (manifest
+first, checked, then the tarball — never the reverse) so an **orphan manifest** (a pin that still resolves but whose
+code is gone) can no longer be minted. The in-use pin set is the UNION of two legs — **Leg A**, live GCE instance
+metadata (`aggregated_list_instances` carries `metadata` since UTL@`52ee4056`), and **Leg B**, the durable
+`vm-logs/{vm}/TARBALL_PINS.json` registry written by `lc_write_tarball_pin_record` at launch (all five pinning
+launchers call it) — Leg B is what survives the VM's own deletion/preemption, which is exactly the window
+`RelaunchPreemptedVm` needs to recover through. If the pin set cannot be determined (compute-API failure, registry
+listing failure, or any RUNNING VM with no observable pin via either leg) the run **FAILS CLOSED and deletes nothing**
+rather than guessing. `--reap-orphan-manifests` additionally deletes `@sha` manifests whose tarball is provably absent
+(the residue every pre-fix sweep minted), never touching one still claimed by the pin set. Full design + the 2026-07-20
+cefi-migration-fleet incident this closes: `deployment_service/vm/tarball_pins.py` docstring,
+`plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md` (RESOLVED). Shipped:
+deployment-service@dfd7608, @4c6cef9, @e978f32; unified-trading-library@52ee4056.
 
 > **WARNING — SHA-pin fan-out race (2026-06-01 incident)**: if you upload `<repo>@<sha>.tar.gz` files and then
 > immediately launch a large fan-out (e.g. 20 shards), `cleanup_old_tarballs.py` can prune the just-uploaded SHA-pinned
