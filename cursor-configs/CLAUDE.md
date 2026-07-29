@@ -258,8 +258,8 @@ architecture (L0–L4)".
   min; ambiguous → diagnose both sides; audit-scope → wrapper plan → epic VM; outside every plan →
   `plans/active/issues/<slug>_<date>.md` — issue resolves to folded-in-plan/AO-scope/operator-gated, never passive.
   **The moment an `[OPERATOR]`/`BLOCKED-OPERATOR` tag resolves, retag to the reflecting tag in the SAME edit — never
-  leave it stale** (2026-07-28 audit: 65 of 214 gated files were already-resolved tags nobody removed). **big finding**
-  (data-correctness / May-23 critical path / cross-repo / SSOT contradiction) → NOTIFY OPERATOR + issue doc.
+  leave it stale** (07-28: 65/214 stale; don't write "was BLOCKED-X" — ao_non_dispatchable_regex_2026_07_29). **big
+  finding** (data-correctness / May-23 critical path / cross-repo / SSOT contradiction) → NOTIFY OPERATOR + issue doc.
   "Pre-existing" is NOT a triage criterion. **Priority**: CI/audit > tier (cross-cutting>cefi>defi>sports>tradfi +
   carve-out) > pipeline stage. SSOT: `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md`.
 - **Version graduation**: `feat!` on 0.x = MINOR; NEVER bump manually (semver-agent); graduate via

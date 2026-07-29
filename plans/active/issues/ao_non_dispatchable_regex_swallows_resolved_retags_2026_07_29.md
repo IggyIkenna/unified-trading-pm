@@ -106,17 +106,22 @@ past tense rather than deleting it outright.
       immediately dispatchable. Safe, mechanical, no design judgment — confirm each is genuinely resolved (not a false
       positive from this heuristic) before editing. File list: this doc's Evidence section has 3; re-run the corpus-wide
       script above for the full 27/21-file list.
-- [ ] [OPERATOR] P1. **Decide the structural fix for `agent-orchestrator/server/regen_backlog_from_plan.py`'s
-      `_NON_DISPATCHABLE_RE`** — pick between: (a) add a resolution-language exclusion (negative lookbehind/context
-      check for "was", "no longer", "retagged from", "auto-resolved... retagged from" immediately around the marker —
-      mirrors the existing `_OPERATOR_TAG_PREFIX_RE` guard, but prose-heuristic regexes on free text risk false
-      negatives the other way); (b) codify a hard convention instead — retag workflows/agents MUST NEVER restate the
-      literal `BLOCKED-*` token in a resolved todo, full stop (simpler, zero regex risk, but relies on discipline
-      instead of enforcement); (c) both — convention as the primary fix, regex guard as defense-in-depth. Needs a design
-      call + `agent-orchestrator` QG/tests if (a)/(c) chosen — not a mechanical todo.
-- [ ] [DOCS] P2. _*If (b) or (c) above is chosen, add the "never restate the literal BLOCKED-* token past-tense" rule to
-      CLAUDE.md's existing resolve-and-retag hard rule_* (Governance + safety HARD RULES § Findings triage) so future
-      retag passes don't reintroduce this.
+- [x] ✅ [OPERATOR] P1. **Operator-ruled (interactive session): (c) both.** Decide the structural fix for
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` — pick between: (a) add a
+      resolution-language exclusion (negative lookbehind/context check for "was", "no longer", "retagged from",
+      "auto-resolved... retagged from" immediately around the marker — mirrors the existing `_OPERATOR_TAG_PREFIX_RE`
+      guard, but prose-heuristic regexes on free text risk false negatives the other way); (b) codify a hard convention
+      instead — retag workflows/agents MUST NEVER restate the literal `BLOCKED-*` token in a resolved todo, full stop
+      (simpler, zero regex risk, but relies on discipline instead of enforcement); (c) both — convention as the primary
+      fix, regex guard as defense-in-depth. **Shipped**: regex guard — `agent-orchestrator@8fdc302`
+      (`_has_live_blocked_token()` + `_STALE_MARKER_PREFIX_RE`, 3 new tests, 150 total passing). Convention — see the
+      `[DOCS]` todo below.
+- [x] ✅ [DOCS] P2. **Shipped 2026-07-29** — added the "never restate the literal `BLOCKED-*` token past-tense" rule to
+      CLAUDE.md's existing resolve-and-retag hard rule (Governance + safety HARD RULES § Findings triage), citing this
+      issue doc by slug (`unified-trading-pm`, `cursor-configs/CLAUDE.md`, within the file's tight size-cap headroom — 3
+      bytes to spare). If (b) or (c) above is chosen, add the "never restate the literal BLOCKED-* token past-tense"
+      rule to CLAUDE.md's existing resolve-and-retag hard rule (Governance + safety HARD RULES § Findings triage) so
+      future retag passes don't reintroduce this.
 - [ ] [DATA] P1. **Spot-check the other 23 of the 24 mentions rephrased by `unified-trading-pm@6edd4486a`** for the same
       false-positive class found in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1
       (2026-07-29, this doc's own Progress Log): that commit rephrased a todo whose credential block was NOT actually
