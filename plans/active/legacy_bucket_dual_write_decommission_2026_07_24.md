@@ -64,7 +64,7 @@ drift_direction: advance-code
       passes `"market_data"`, `"instruments"`, or `"features_sports"` — all three are covered `_DOMAIN_TO_YAML_KIND`
       keys, so zero call sites hit the legacy no-env-shape fallback on the GCP production path. No redirect needed;
       codified the "new writers call `resolve_bucket_name()` directly, not `get_bucket_name()`" rule in
-      `codex/05-infrastructure/bucket-isolation-model.md` so this doesn't silently regress.
+      `/codex/05-infrastructure/bucket-isolation-model.md` so this doesn't silently regress.
 
 - [x] ✅ [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
       (`_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` all use `get_bucket_name`
@@ -188,7 +188,7 @@ drift_direction: advance-code
       **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)** — **DONE 2026-07-29**: added a `🔁 REOPEN-NOTE` banner to
       `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` pointing here. Updated
-      `codex/05-infrastructure/bucket-isolation-model.md`'s opening "Stale pointer removed" note to also disambiguate
+      `/codex/05-infrastructure/bucket-isolation-model.md`'s opening "Stale pointer removed" note to also disambiguate
       the live `unified_trading_library.core.cloud_constants.get_bucket_name()` (same name, different module, still in
       use) from the retired `unified-cloud-interface` one, and codified the "new writers call `resolve_bucket_name()`
       directly, never `get_bucket_name()` or hand-rolled string-concat" rule there.

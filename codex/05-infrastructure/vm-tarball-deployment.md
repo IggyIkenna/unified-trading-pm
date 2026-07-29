@@ -771,7 +771,7 @@ deletions on the live bucket. Shipped: deployment-service@3c42df5.
 > 3. Verify the tarball is present before firing launchers: `gsutil stat gs://.../code/<repo>@<sha>.tar.gz`.
 
 > **Pin-aware retention (fixes the 2026-07-20 outage,
-> `plans/active/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`)**: the sweep no longer ranks purely by GCS
+> `plans/archive/issues/tarball_rotation_breaks_vm_recovery_2026_07_20.md`)**: the sweep no longer ranks purely by GCS
 > mtime. `deployment_service/vm/tarball_pins.collect_in_use_pins()` computes the protected set as a UNION of two sources
 > — **Leg A** live GCE instance metadata (the five-then-eight pinning launchers write `*_TARBALL_SHA` there;
 > `unified_trading_library` carries `metadata` through `aggregated_list_instances` as of

@@ -317,7 +317,7 @@ drift_direction: advance-code
       implemented 2026-06-16 (`unified-api-contracts@d4523602`, the OTHER-catch-all change) and independently
       re-confirmed 2026-07-26/27 (`autonomous_session_operator_decisions_2026_07_25.md` entry #14;
       `/plans/active/prediction_cqg_residual_2026_07_24.md` todo 1;
-      `/plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` "Why this batch exists") —
+      `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` "Why this batch exists") —
       `ClassifierConfidenceLow` measured 0.0000% for BOTH venues, so there is no remaining open operator fork on cqg
       coverage. **Confirmed via the SAME resolution already applied to the identical registry-copy of this todo** in
       `/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "Deferred work — migrated to:"

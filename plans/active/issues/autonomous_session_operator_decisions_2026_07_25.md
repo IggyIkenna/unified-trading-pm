@@ -509,7 +509,7 @@ classifier cannot map, and a fourth doc's shipped-and-ticked todo asserts the op
 Consequence today: prediction's honest-coverage numbers depend on which contract you believe, and the two venues take
 different paths. Note this is a semantics question only — decision 338's _registry-extension_ half is provably already
 ruled and implemented (2026-06-16, 10 in-code citations), which is why the dependent wiring is drafted as dispatchable
-in `/plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` (`status: draft`) todo 2.
+in `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` (`status: draft`) todo 2.
 
 A: Ratify `OTHER` as the single contract for BOTH venues — fix the stale module docstring (1), route KALSHI unmatched to
 `OTHER` too (3), and re-base cqg_residual todo 1's premise. [WORKER REC] — it is the only contract with shipped consumer

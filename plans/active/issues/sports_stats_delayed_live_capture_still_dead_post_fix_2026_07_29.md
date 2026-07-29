@@ -37,6 +37,7 @@ related:
   [
     /plans/archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: 2026-07-29
 priority: P0

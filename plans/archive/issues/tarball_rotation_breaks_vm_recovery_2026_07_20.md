@@ -189,4 +189,4 @@ until the fix lands — storage cost is negligible against a silently bricked fl
       `vm-logs/{vm}/TARBALL_PINS.json` durable registry, fail-closed `InUsePinsUnavailableError`, atomic
       `_delete_tarball_pair`, loud re-pin actuator `DP_VM_TARBALL_REPINNED` in `relaunch_backfill_vm.py`,
       `lc_write_tarball_pin_record` called from all 8 pinning launchers, tests exercise real launcher output shape per
-      `tests/unit/test_tarball_pins.py`). Codex SSOT updated at `codex/05-infrastructure/vm-tarball-deployment.md`.
+      `tests/unit/test_tarball_pins.py`). Codex SSOT updated at `/codex/05-infrastructure/vm-tarball-deployment.md`.
