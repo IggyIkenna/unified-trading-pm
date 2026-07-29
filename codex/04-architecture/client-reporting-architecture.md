@@ -17,6 +17,7 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
     /codex/04-architecture/batch-live-architecture.md,
     /codex/04-architecture/backtest-groups.md,
+    /codex/14-customer-journeys/commercial-model/client-roster-and-fee-model.md,
   ]
 created: 2026-05-12
 authoritative_for: [per-client reporting pipeline (NAV/PnL/attribution parquet + decomposition invariants)]
@@ -122,6 +123,10 @@ The May-23 demo client is seeded from UAC `unified_api_contracts.registry.client
 
 ## Cross-references
 
+- Commercial facts (client roster + org hierarchy + per-client Odum/trader/introducer fee %s + HWM/invoicing model +
+  committed invoice/refund history):
+  [`/codex/14-customer-journeys/commercial-model/client-roster-and-fee-model.md`](/codex/14-customer-journeys/commercial-model/client-roster-and-fee-model.md)
+  (this architecture doc owns the reporting PIPELINE; the roster/fee doc owns the committed commercial NUMBERS)
 - Factor × layer dual axis (Hard Rule #7 + PnLFactor closed set + Decomposition Invariants):
   [pnl-attribution.md](/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md)
 - Batch = live (benchmark-fills contract that isolates strategy_alpha from execution_alpha):

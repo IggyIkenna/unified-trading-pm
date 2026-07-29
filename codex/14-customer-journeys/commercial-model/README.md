@@ -27,14 +27,20 @@ Exclusivity (block 12) and custom-solution premium (block 13) attach only to Tie
 
 ## Contents
 
-| File                                                                 | Purpose                                                                |
-| -------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [dart-entry-points.md](dart-entry-points.md)                         | Three practical DART commercial paths + who buys what                  |
-| [im-vs-reg-reporting-logic.md](im-vs-reg-reporting-logic.md)         | Same UI, two commercial framings (IM vs Reg Umbrella)                  |
-| [building-block-packaging.md](building-block-packaging.md)           | 13 blocks × 6 package matrix                                           |
-| [pricing-building-blocks.md](pricing-building-blocks.md)             | 3 cols × 13 rows pricing structure (TBD stubs; Odum finance populates) |
-| [fixed-vs-variable-commercials.md](fixed-vs-variable-commercials.md) | Tier A vs Tier B decision tree                                         |
-| [exclusivity-and-noncompete.md](exclusivity-and-noncompete.md)       | What exclusivity means, who gets it, legal framing                     |
+| File                                                                 | Purpose                                                                                      |
+| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| [dart-entry-points.md](dart-entry-points.md)                         | Three practical DART commercial paths + who buys what                                        |
+| [im-vs-reg-reporting-logic.md](im-vs-reg-reporting-logic.md)         | Same UI, two commercial framings (IM vs Reg Umbrella)                                        |
+| [building-block-packaging.md](building-block-packaging.md)           | 13 blocks × 6 package matrix                                                                 |
+| [pricing-building-blocks.md](pricing-building-blocks.md)             | 3 cols × 13 rows pricing structure (TBD stubs; Odum finance populates)                       |
+| [fixed-vs-variable-commercials.md](fixed-vs-variable-commercials.md) | Tier A vs Tier B decision tree                                                               |
+| [exclusivity-and-noncompete.md](exclusivity-and-noncompete.md)       | What exclusivity means, who gets it, legal framing                                           |
+| [client-roster-and-fee-model.md](client-roster-and-fee-model.md)     | Live managed-account roster + per-client fees + HWM/invoicing model (committed numbers SSOT) |
+
+> [`client-roster-and-fee-model.md`](client-roster-and-fee-model.md) is orthogonal to the DART blocks-to-tiers model
+> above: it is the committed SSOT for Odum's **live managed-account book** (the per-client Odum/trader/introducer fee
+> arrangements + HWM invoicing model), the human-readable counterpart to
+> `execution-service/configs/credentials-registry.yaml`.
 
 ## Stage 3 relationship
 
