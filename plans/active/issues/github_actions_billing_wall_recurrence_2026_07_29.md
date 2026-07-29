@@ -23,6 +23,7 @@ repos:
     agent-orchestrator,
     deployment-service,
     features-service,
+    alerting-service,
   ]
 scope: [engineer, admin]
 tags: [ci-cd, github-actions, billing, startup_failure, incident, cross-repo, escalation]
@@ -153,3 +154,18 @@ return to a normal (non-zero-job) run.
 - `gh api users/IggyIkenna/settings/billing/actions` → 403 (token cannot read billing, matching archived precedent).
 - `curl https://www.githubstatus.com/api/v2/incidents/unresolved.json` → only an unrelated Copilot-model-provider
   incident (20:07Z onset, different component) — no GitHub Actions-component incident posted.
+- **2026-07-29T21:08Z (cicd escalation `agt-49fba5`, slot 4)**: corroborating data point, still active ~30-45min after
+  this doc's last sample. Dispatched for `alerting-service` `ldr_qg_failure` (no PR, `#0`). Local
+  `bash scripts/quality-gates.sh` on the exact escalation-cited HEAD (`86ca026`) passed clean (47s, all gates green,
+  sentinel written) — no code/test defect exists to fix. The CI run at that same SHA (`30479581235`, workflow_dispatch,
+  18:22Z) showed the earlier _partial_ signature (content-gate + both real QG slices — tests, checks — succeeded; only
+  the lightweight `quality-gates-v2` aggregator job failed in 11s with logs since expired, `BlobNotFound`). Re-running
+  it (`gh run rerun --failed`) now returns full-run `startup_failure` with zero jobs; a brand-new `workflow_dispatch`
+  (`30491173482`) also `startup_failure` in ~1s, `gh api .../timing` → `{"billable":{},"run_duration_ms":1000}` — the
+  same 0-billable-ms / `jobs:[]` signature as every other repo in the table above. Confirms the fleet-wide wall has
+  escalated from partial (aggregator-only) to full startup_failure on `alerting-service` too, and that it was already
+  mid-escalation (partial form) as early as 18:22Z — earlier than this doc's ~19:12-19:44Z mass-onset estimate for the
+  repos it sampled. No code changed; `alerting-service` left clean on `live-defi-rollout`. Not re-filing a fresh
+  `/blocked` — the standing `[OPERATOR] P0` todo above already covers this decision and multiple duplicate
+  `alerting-service` `ldr_qg_failure` escalations are already queued/dispatched (`agt-9132b2`, `agt-d970e3`,
+  `agt-2450f6` at query time) against the same unfixable wall.
