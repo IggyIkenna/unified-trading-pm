@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [playwright, multi-agent, per-slot-worktrees, false-negative, test-isolation, ui-testing-layers]
 related:
   [
-    plans/active/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md,
+    plans/archive/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md,
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-28"

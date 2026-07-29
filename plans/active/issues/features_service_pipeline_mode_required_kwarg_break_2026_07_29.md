@@ -129,7 +129,7 @@ session's task is onchain DeFi LST backfill, not calendar/volatility TradFi/CeFi
       in `TestListChainFiles` pass; full `bash scripts/quality-gates.sh` on features-service is green (17976 passed, 209
       skipped, 0 failed). Also found + fixed an unrelated pre-existing regression blocking the same full-suite gate
       (accidentally-deleted `calendar_features` PATH_REGISTRY row) —
-      `/plans/active/issues/utl_path_registry_calendar_features_accidental_deletion_2026_07_29.md` (resolved,
+      `/plans/archive/issues/utl_path_registry_calendar_features_accidental_deletion_2026_07_29.md` (resolved,
       unified-trading-library@52161ee7).
 
 ## Evidence

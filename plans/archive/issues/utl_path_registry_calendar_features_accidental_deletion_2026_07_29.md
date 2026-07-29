@@ -53,6 +53,10 @@ superseded_by:
 resolved_by: unified-trading-library@52161ee7
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, row restored + full quality-gates.sh green
+> (`unified-trading-library@52161ee7`). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> archive-on-resolve rule.
+
 # `calendar_features` PATH_REGISTRY row accidentally deleted by an unrelated dead-code cleanup commit
 
 ## What I found

@@ -166,12 +166,12 @@ because `combo` bundle candidates never reach the present-set comparison at all 
 confirmed live: `is_mvp("tradfi","CME","OPTION",base_ccy="CME:COMBO:ESU4")` → `False` vs.
 `is_mvp("tradfi","CME","OPTION",base_ccy="ES")` → `True`). Filed as its own issue (P1, since it's a genuine
 data-correctness denominator gap on the MVP-scoped ES/S&P-500 combo complex):
-`plans/active/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md`.
+`plans/archive/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md`.
 
 The 1.3M-row `COMBO`-uppercase manifest-index casing residual (real census: 1,314,705 uppercase vs. 23,428 lowercase,
 mixed `capture_status`) was investigated but judged bigger than a bounded add-on (mixed capture_status population + no
 ready-made script targets the manifest-INDEX column, only the GCS-object-PATH casing class) — filed as
-`plans/active/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` (P3, not a correctness blocker —
+`plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md` (P3, not a correctness blocker —
 both casings already read correctly via case-insensitive normalisation).
 
 Evidence: `instruments-service@<SHIPPED-SHA>`, `unified-api-contracts@<SHIPPED-SHA>` (see the dispatching task's final
