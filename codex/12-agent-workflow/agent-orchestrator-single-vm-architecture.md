@@ -157,10 +157,19 @@ and most are one-shot or scheduled.
 | **plan_reconciler**       | scheduled                           | systemd timer, daily 01:00 UTC                      | Deep plan reconciliation (opus/max, server-forced). `install-plan-reconciler-timer.sh` → `plan-reconciler-dispatch.sh` → `POST /api/plan-health/dispatch {"mode":"reconcile"}`.                                                      |
 | **monitor**               | standing                            | standing                                            | Fleet/observability monitor.                                                                                                                                                                                                         |
 
-**Free-slot semantics are shared** (`escalation._pick_free_slot` == `plan_health._pick_free_slot`): a slot is "free"
-when it is configured (worktree+branch+operator), not `paused`/`killed`, and has no live tmux session. So Class-B agents
-and Class-A workers compete for the same physical slots — a busy backlog can starve escalators of a slot and vice-versa,
-which is why capacity, not just dispatch, is a first-class concern.
+**Free-slot semantics are shared but no longer symmetric** (`escalation._pick_free_slot` /
+`plan_health._pick_free_slot`): a slot is "free" when it is configured (worktree+branch+operator), not
+`paused`/`killed`, and has no live tmux session. Class-A backlog, CI-escalation (`escalation.py`), and scheduled
+dispatch (`plan_health.py`) all compete for the same physical slots, so capacity, not just dispatch, is a first-class
+concern. **Structural capacity split (2026-07-29)**: `config.ci_escalation_slot_reserve()` (default 3) +
+`config.scheduled_task_slot_reserve()` (default 2) are held back from Class-A's effective `fleet_worker_cap()`
+(default 10) via `_apply_fleet_cap`'s combined clamp — on top of that, `config.ci_escalation_reserved_slot_ids()` (the
+top-N non-review slot ids) is EXCLUDED from `plan_health._pick_free_slot`'s own search, so a scheduled-task burst (e.g.
+a 9-tranche ag-closeout-audit firing 9 concurrent dispatches) can never claim the CI-only reserve. CI escalation itself
+is NOT symmetrically restricted and may overflow into the scheduled-task reserve, since its never-block guarantee
+outranks a scheduled task's capacity floor. See `server/config.py`'s reserve/partition function docstrings for the exact
+mechanics; SSOT for the historical single-combined-reserve incident this replaces:
+`plans/archive/issues/ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27.md`.
 
 ## Behaviour domains
 

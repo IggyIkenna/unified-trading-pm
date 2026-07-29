@@ -164,19 +164,35 @@ applied to every repo this grep surfaces, not just instruments-service.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **instruments-service Cloud Build is STILL broken** (confirmed 2026-07-29T14:35-14:50Z, see update
-      above) — fix the real root cause: `uv pip install --system --no-sources -e .` cannot reach the private
-      `unified-libraries` GAR python index (falls back to pypi.org only, since it doesn't read `/etc/pip.conf`).
-      `UV_EXTRA_INDEX_URL` + `UV_KEYRING_PROVIDER=subprocess` (attempted, reverted `instruments-service@8df0e94e`) makes
-      uv correctly QUERY the index but the keyring-subprocess auth itself 401s in the real Cloud Build container, and
-      because uv aborts on an unauthenticated configured index, this also broke resolving plain-PyPI build deps
-      (`hatchling`/`hatch-vcs`) that worked fine before. Needs container-level debugging (local `docker build` with real
-      GAR credentials, or an interactive Cloud Build debug step) to find why `uv`'s keyring invocation differs from
-      `pip`'s (same `keyrings.google-artifactregistry-auth` package, proven working for `pip` in this exact image).
-      **Done when**: `gcloud builds triggers run instruments-service-prod --branch=main` succeeds end-to-end (build +
-      push + operability probe), confirmed via a fresh build id, not just `git diff` matching a known-good state. Repo:
-      instruments-service. Blocks the daily `expected-universe-v2-{cefi,defi,tradfi,prediction,sports}` Cloud Run Jobs
-      (all 5 share this one image) — real production data-correctness impact, not cosmetic.
+- [x] ✅ [SCRIPT] P1. **FIXED 2026-07-29 ~17:30-17:50Z (slot 1, interactive)**. Root cause confirmed exactly as
+      diagnosed above (uv doesn't read pip.conf's extra-index-url; keyring-subprocess 401s). Real fix: instead of
+      `UV_KEYRING_PROVIDER=subprocess` (which forces uv to auth-or-abort against the configured index for EVERY package,
+      breaking plain-PyPI build-system deps too), mount a freshly-minted `gcloud auth print-access-token` as a BuildKit
+      secret (`RUN --mount=type=secret,id=gar_token`) scoped to ONLY the one `uv pip install` RUN layer, embedded as
+      `UV_EXTRA_INDEX_URL=https://oauth2accesstoken:<token>@...` — same auth mechanism the `auth-precheck` step already
+      proves works against this exact index, never baked into an image layer/history. Two bugs found + fixed in the
+      first attempt (`instruments-service@76eba912`, self-caught via direct `gcloud logging read` scoped to the build
+      ID, not trusting the top-level step-status alone): (1) the token was minted inside the "build" step, but that
+      step's own image (`gcr.io/cloud-builders/docker`) has no `gcloud` CLI — token file came out empty; (2) a trailing
+      cleanup command became the script's last line with no `set -e`, so `docker build`'s real exit code got masked and
+      Cloud Build reported the step SUCCESS despite it actually failing with a 401. Corrected
+      (`instruments-service@4c05f2d3`): `auth-precheck` (which already has `gcloud`) now mints + persists the token to
+      `/workspace/.gar_token` for `build` to consume; `build` has `set -e` and no longer ends on a maskable command.
+      **Verified via a REAL Cloud Build**, not just local:
+      `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` → build
+      `bf19495c-def6-45fe-99c4-3a61211990a7`, `status: SUCCESS` on every step including `operability-probe` (image
+      imports + `--help` runs) and `push` — confirmed `:latest` genuinely re-pointed to a fresh digest
+      (`sha256:3e8feb10425d...`), not just a step-status claim. Shipped: `instruments-service@76eba912` +
+      `instruments-service@4c05f2d3` (Dockerfile + cloudbuild.yaml).
+- [ ] [SCRIPT] P2. **Fleet-wide rollout of the same fix, proactively** — a grep across every repo's `Dockerfile` for
+      `COPY pip.conf` + `uv pip install ... --no-sources` with NO `UV_EXTRA_INDEX_URL`/`UV_INDEX` anywhere confirms the
+      SAME latent bug in 5 more repos (none currently broken — no floor-bump has exposed them yet, but the next one will
+      hit the identical failure): `alerting-service`, `market-data-processing-service`, `market-tick-data-service`,
+      `ml-service`, `strategy-service`. A dispatched sub-agent started this rollout 2026-07-29 but hit the session's API
+      rate limit mid-way (before shipping any of the 5) — re-dispatch using `instruments-service@4c05f2d3`'s
+      Dockerfile + cloudbuild.yaml as the exact reference implementation, with the same per-repo verification discipline
+      (local docker build with a real token, then a real `gcloud builds triggers run` + `gcloud logging read` scoped to
+      the build id — do not trust step-status alone, per the two masking bugs found above).
 - [ ] [DATA] P2. Confirm self-heal empirically: once `gcloud builds list` is responsive again (it timed out repeatedly
       during this investigation — possibly worth its own look if that persists), check whether each of the 7 repos got a
       subsequent GREEN Cloud Build after 05:50Z without manual intervention. **instruments-service confirmed did NOT
