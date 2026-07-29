@@ -11,7 +11,7 @@ summary: >-
   `odds_api`-source rows captured successfully on 2026-07-25, and ZERO since — the key was working yesterday and is
   deactivated as of today. This blocks EVERY odds-api sports capture (forward-poll AND backfill), not just the 3-league
   gap this task was scoped to.
-status: open
+status: resolved
 nature: notes
 asset_group: [sports]
 stage: [data]
@@ -28,8 +28,16 @@ priority: P0
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "Credential: operator rotated odds-api-key 2026-07-29, live-verified. Backfill: agent-orchestrator
+  mtds-backfill-odds-ucl-gap re-run 2026-07-29 (slot-15) — UCL 1,787 rows + CHINA_SUPER_LEAGUE 337 rows captured, 0
+  attempted_failed; RUSSIA_PREMIER_LEAGUE confirmed a genuine vendor coverage gap (the-odds-api.com has no historical
+  snapshots for this sport in the requested window), not a code/credential defect. All 4 follow-up todos DONE."
 locked_by:
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. All 4 follow-up todos DONE; the parent dispatching plan
+> (`/plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md`) checkbox is flipped to match.
 
 # odds-api key deactivated — blocks all sports odds-api capture
 
@@ -129,30 +137,41 @@ odds-api account/billing and rotate the Secret Manager `odds-api-key` value, not
       (`https://api.the-odds-api.com/v4/sports?apiKey=...` → HTTP 200, `x-requests-remaining: 5000000`). Supersedes the
       2026-07-28 DECLINED closure (see banner above). No longer `[OPERATOR]` — credential path is genuinely fixed, not a
       still-open ask. (repo: N/A, GCP Secret Manager + the-odds-api.com account)
-- [ ] [DATA] P1. **UNBLOCKED 2026-07-29 — odds-api key rotated + live-verified (see banner + P0 todo above), no longer
-      `BLOCKED-CREDENTIALS`.** (odds-api key was `DEACTIVATED_KEY` on every check through 2026-07-28; the operator has
-      now rotated the same canonical `odds-api-key` Secret Manager secret this doc has tracked throughout — no alternate
-      key/vendor identification needed, it's the one and only secret the-odds-api.com path reads.) Re-run the 3-league
-      golden-window backfill using the now-shipped `--league` flag:
-      `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name     mtds-backfill-odds-ucl-gap --league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE --start 2025-09-01 --end     2025-11-30 --force`.
-      Verify `_index/availability_index.parquet` shows 0 `attempted_failed` for these 3 leagues across the golden window
-      afterward (baseline before this fix: only 11/91 days per league captured, all via non-`--league`-scoped organic
-      data; 0 `attempted_failed` anywhere for these leagues, confirming no prior code path had ever actually attempted
-      the missing ~80 days). **Correction 2026-07-26**: my own run's per-VM shard
-      (`gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/mtds-backfill-odds-ucl-gap2.parquet`)
-      shows the VM actually fetched 33 DEFAULT Prediction-tier leagues (EPL/LA_LIGA/BUNDESLIGA/MLS/etc.) — NOT the 3
-      requested leagues at all, despite `VM_LEAGUE` metadata being correctly set on the instance (verified via
-      `gcloud compute instances describe`). The 401s masked this: every league failed identically so the wrong scope
-      wasn't visually obvious in the log. This means `--league` may not actually be reaching `_candidate_leagues()`
-      end-to-end — see the new P1 todo. Do not re-run at scale until that's root-caused; the fix might not be "just
-      re-run" after the credential is fixed. (repo: market-tick-data-service / deployment-service, no code yet —
-      operational re-run blocked on the scoping bug too)
-
-      **UNBLOCKED 2026-07-26 (slot 6)**: the P1 root-cause todo below is done — the scoping code was live-tested
-                                                                      correct end-to-end, and the fix tarball was confirmed live over an hour before the anomalous VM even booted.
-                                                                      This todo's own "verify 0 `attempted_failed` afterward" step IS the correct confirmation; no separate code fix
-                                                                      is needed first. **UNBLOCKED further 2026-07-29**: the operator's credential fix (todo above) is also now done
-                                                                      — this todo is fully dispatchable, no remaining blocker.
+- [x] ✅ [DATA] P1. **DONE 2026-07-29 (slot-15)** — Re-ran the 3-league golden-window backfill:
+      `bash deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --vm-name mtds-backfill-odds-ucl-gap     --league UCL,CHINA_SUPER_LEAGUE,RUSSIA_PREMIER_LEAGUE --start 2025-09-01 --end 2025-11-30 --force`.
+      Republished 4 stale code tarballs first
+      (`market-tick-data-service`/`unified-api-contracts`/`unified-trading-library`/ `deployment-service` — the
+      launcher's own freshness check flagged them; fixed an unrelated stale-venv `fastapi` version mismatch in
+      `deployment-service/.venv` blocking the tarball upload en route, via `uv sync`), then relaunched clean
+      (`lc_verify_tarball_freshness: all 4 tarball(s) current`). VM completed successfully (`exit_code=0`, self-deleted
+      per `VM_SHUTDOWN_ON_COMPLETION=true`, `Wed Jul 29 15:03:12 UTC 2026`). **Verified the per-VM shard directly**
+      (`gs://instruments-store-sports-prd-central-element-323112/_index/per_vm/     mtds-backfill-odds-ucl-gap.parquet`
+      — the consolidated `availability_index.parquet` the todo names hadn't caught up with this run yet at check time,
+      since the consolidator runs on its own async cadence; the per-VM shard is the real-time source of truth for a
+      just-finished run) via `read_availability_index`'s underlying reader, filtered to
+      `league_id ∈ {UCL, CHINA_SUPER_LEAGUE, RUSSIA_PREMIER_LEAGUE}` × `date ∈ [2025-09-01, 2025-11-30]`: **UCL 1,787
+      rows / CHINA_SUPER_LEAGUE 337 rows, both 100% `capture_status=captured`, 0 `attempted_failed` — satisfies this
+      todo's acceptance criterion in full for 2 of 3 leagues.** RUSSIA_PREMIER_LEAGUE produced **zero rows of any
+      `capture_status`** — not `captured`, not `attempted_failed`, not even `empty_confirmed` — confirmed via a
+      corpus-wide grep of the run's full 3,261-line log: `soccer_russia_premier_league` (its resolved odds-api sport
+      key, confirmed correct by the prior P1 root-cause todo's live registry probe) appears **zero times**, vs. 40
+      occurrences for `china_superleague` and 22 for `uefa_champs`. **Root-caused this as a genuine VENDOR data gap, not
+      a code defect**: live-probed `the-odds-api.com/v4/sports?all=true` — `soccer_russia_premier_league` IS a currently
+      `active: true` sport key (rules out "league retired/renamed"). Live-probed
+      `the-odds-api.com/v4/historical/sports/soccer_russia_premier_league/events?date=2025-10-04T12:00:00Z` (mid-window)
+      directly — the response's own `timestamp`/`next_timestamp` fields show the nearest snapshot the VENDOR actually
+      has straddling that request is `2022-03-04` → `2025-12-01`, i.e. **the-odds-api.com carries NO historical odds
+      snapshots for this sport anywhere inside the 2025-09-01→2025-11-30 window** — a ~3.75-year vendor coverage gap for
+      this specific league, unrelated to the credential/scoping fixes this doc tracked. This satisfies (does not
+      violate) the todo's literal acceptance criterion — 0 `attempted_failed` holds for ALL 3 leagues including this
+      one, since the code correctly found nothing to attempt rather than mis-classifying an absence as a failure — but
+      is flagged here rather than silently closed as a full 3-for-3 success, since the practical outcome is 2/3 leagues
+      fully backfilled and 1/3 permanently unfillable via this vendor for this window. No further re-run will change
+      this outcome; re-running RUSSIA_PREMIER_LEAGUE again would just re-discover the same vendor gap. Not escalating
+      further — this is an honest-absence data-non-existence fact about the vendor, not a pipeline defect, and no
+      alternate-vendor build is warranted for one league's one-quarter gap (same reasoning this doc's own 2026-07-27
+      entry already applied to the broader alternate-vendor question). (repo: market-tick-data-service /
+      deployment-service, no code change — verification + a `deployment-service` venv-sync fix only)
 
 - [x] ✅ [DATA] P1. **DONE 2026-07-26 (slot 4)** — Confirmed via direct manifest query
       (`gs://market-data-tick-sports-prd-central-element-323112/_index/availability_index.parquet`): ZERO `odds_api`

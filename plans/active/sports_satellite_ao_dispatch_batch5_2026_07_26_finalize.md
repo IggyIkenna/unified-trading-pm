@@ -167,8 +167,12 @@ drift_direction: advance-code
       the still-OPEN `/plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md` — **UPDATE 2026-07-29: the
       credential itself is now fixed** (operator rotated `odds-api-key` to a new 5,000,000-credits/month-subscription
       key, live-verified HTTP 200) — line 79 is no longer `BLOCKED-CREDENTIALS`/operator-gated, it's a genuinely
-      dispatchable P1 backfill re-run that just hasn't executed yet; and (line 91) `[DATA] P2` zombie-tick
-      purge/re-derive + ML-readiness gate-semantics fix — **active-not-started**, gated on
+      dispatchable P1 backfill re-run that just hasn't executed yet. **FURTHER UPDATE 2026-07-29 (slot-15): line 79 IS
+      now done** — backfill re-run executed and verified (UCL + CHINA_SUPER_LEAGUE fully captured, 0 `attempted_failed`;
+      RUSSIA_PREMIER_LEAGUE confirmed a permanent vendor coverage gap, not a defect — see
+      `/plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md`). Only line 91 remains open now — still
+      gated on batch4's sweep report, so this BLOCKED verdict (batch5 not yet archivable) still stands; and (line 91)
+      `[DATA] P2` zombie-tick purge/re-derive + ML-readiness gate-semantics fix — **active-not-started**, gated on
       `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s read-only P1 sweep report (batch4 still `status: active`, 1
       open todo, so line 91 cannot even start). Neither qualifies for the 6-step ritual's DEFERRED-migration (line 91 is
       active-not-started; line 79 is now dispatchable-but-not-yet-run) — do NOT archive, do NOT migrate-to-pass (Option
