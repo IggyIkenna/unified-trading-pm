@@ -2,7 +2,7 @@
 doc_type: issue
 title: Phantom captures — prediction manifest (2026-06-28)
 summary: "Manifest: `gcp://market-data-tick-pred-prd-central-element-323112/_index/availability_index.parquet`"
-status: open
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,17 +14,27 @@ created: 2026-06-28
 parent_epic: observability_master
 priority: P2
 source: [reconcile_phantom_manifest_rows_all.py, mvp_catalogue_finalization_v10_2026_06_27.md (G3 phantom audit task)]
-assigned_vm: planning
+assigned_vm: NA
 resolved_by:
-locked_by: live-defi-rollout
+superseded_by: [prediction_phase_d_formal_smoke_and_backfill_2026_07_24, data_completion_prediction_2026_07_15]
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
-locked_since: 2026-05-21
+last_updated: 2026-07-29
+locked_since:
 ---
 
 # Phantom captures — prediction manifest (2026-06-28)
+
+> **🗄️ SUPERSEDED 2026-07-29 (BLK-eb3f4765, main Option A — SUPERSEDE/EXTRACT).** The 3 diagnostic/reconciliation/
+> writer-fix todos below are DONE. The final open todo (re-run the 15-month KALSHI/POLYMARKET fetcher to classify +
+> backfill the 19,675 reconciled shards) is **EXTRACTED** to the newer operator-driven (`assigned_vm: NA`), gated plans
+> that already own this work: `/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` (its P0
+> "MVP-backfill-readiness gate" — POLYMARKET+KALSHI × trades+book_snapshot_5, gated _only after A–D smoke-green_) and
+> `/plans/active/data_completion_prediction_2026_07_15.md` (P0 canonicalisation + backfill). Classification here is not
+> a cheap read — it requires a live-API re-fetch of each shard, i.e. it **is** the backfill — so it must run only after
+> the canonical-migration + formal-smoke-green foundation gate, through those plans. Nothing was launched. Archived.
 
 > Auto-filed by the G3 phantom-manifest audit
 > (`reconcile_phantom_manifest_rows_all.py --asset-group prediction --dry-run`) run during Phase-0 catalogue
@@ -132,11 +142,18 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
       isn't silently dropped: see `## Deferred work after 2026-07-28` below. - Tracked home cross-reference unchanged:
       `plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` Track 22 already cites this doc.
 
-- [ ] [SCRIPT] P2. Re-run the KALSHI/POLYMARKET daily fetcher across 2025-03-14→2026-06-27 (the 19,675 rows reconciled
-      to `attempted_failed` by the P1 todo above) to classify each shard as a TRUE data gap (fetch returns real
-      trade/book data — needs explicit backfill) vs. correctly-empty (0-activity contract — now writer-honest, no
-      backfill needed) now that the writer fix (this doc's P2 todo, verified 2026-07-28) prevents new phantoms. Backfill
-      any TRUE gaps found via `launch-mtds-prediction-backfill-vm.sh` (POLYMARKET, repo: `deployment-service`) and
+- [x] ✅ [SCRIPT] P2. **SUPERSEDED 2026-07-29 (BLK-eb3f4765, main Option A) → EXTRACTED** to
+      `/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md` (P0 MVP-backfill-readiness gate, gated
+      on A–D smoke-green) + `/plans/active/data_completion_prediction_2026_07_15.md` (P0 canonicalisation+backfill) —
+      both `assigned_vm: NA` (operator-driven). NOT executed here: the classification requires a live-API re-fetch of
+      each shard (≡ the backfill), which must run only after the canonical-migration + formal-smoke-green foundation
+      gate; running it now would be layer-N+1 work ahead of a not-green foundation, duplicate NA-owned work, and an
+      operator-scale VM launch (no `[OPERATOR]` self-grant). No VM launched. Original text preserved below. — Re-run the
+      KALSHI/POLYMARKET daily fetcher across 2025-03-14→2026-06-27 (the 19,675 rows reconciled to `attempted_failed` by
+      the P1 todo above) to classify each shard as a TRUE data gap (fetch returns real trade/book data — needs explicit
+      backfill) vs. correctly-empty (0-activity contract — now writer-honest, no backfill needed) now that the writer
+      fix (this doc's P2 todo, verified 2026-07-28) prevents new phantoms. Backfill any TRUE gaps found via
+      `launch-mtds-prediction-backfill-vm.sh` (POLYMARKET, repo: `deployment-service`) and
       `launch-kalshi-bulk-seed-vm.sh` (KALSHI, repo: `deployment-service`) — SPOT provisioning per the backfill-VM
       default, idempotent re-run safe. Repo: `market-tick-data-service` (fetch) + `deployment-service` (launchers).
       Descoped from the writer-fix todo above because it is a 15-month live-API re-fetch + operator-scale VM backfill,

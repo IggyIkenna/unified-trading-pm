@@ -631,7 +631,7 @@ the cron launcher-SSOT reconcile, the missing `{service_name}-events` topic crea
 [issues/manifest_hygiene_red_2026_06_27.md](/plans/archive/issues/manifest_hygiene_red_2026_06_27.md) (defi instance) +
 [issues/manifest_hygiene_red_2026_06_29.md](/plans/archive/issues/manifest_hygiene_red_2026_06_29.md) (cefi instance) —
 both from `manifest_hygiene_daily.py`;
-[issues/phantom_captures_prediction_2026_06_28.md](/plans/active/issues/phantom_captures_prediction_2026_06_28.md)
+[issues/phantom_captures_prediction_2026_06_28.md](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
 
 - [issues/phantom_captures_tradfi_2026_06_28.md](/plans/archive/issues/phantom_captures_tradfi_2026_06_28.md) — both
   from the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py`).
@@ -647,9 +647,12 @@ mid-rollout while other agents concurrently audit those same AG tranches is the 
 this tranche's Sources mid-audit vs. reappearing in another tranche's is exactly the kind of race this rollout has
 repeatedly hit). `phantom_captures_tradfi_2026_06_28.md` is double-claimed (also named in tradfi's own batch2 Deferred
 section) — that duplication is intentional pending a real merge, not a bug.
-`phantom_captures_prediction_2026_06_28.md`'s 1 open todo has no dispatch owner anywhere except this Track's own digest
-citation — it is now added to this Track explicitly (it already was, via the Sources list above) as its tracked home
-until reconciled.
+`phantom_captures_prediction_2026_06_28.md`'s 1 remaining open todo (the 15-month re-fetch/backfill) was **SUPERSEDED
+2026-07-29 (BLK-eb3f4765, main Option A) and the doc archived** — extracted into the operator-driven
+(`assigned_vm: NA`), gated plans that own it: `/plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
+(P0 MVP-backfill-readiness gate, only after A–D smoke-green) + `/plans/active/data_completion_prediction_2026_07_15.md`.
+No open todo remains under this Track for it; nothing was launched (running it ahead of the canonical-migration +
+smoke-green foundation gate would be premature).
 
 ## Track 23 — Manifest schema bump: write-time MVP precompute · P2
 
