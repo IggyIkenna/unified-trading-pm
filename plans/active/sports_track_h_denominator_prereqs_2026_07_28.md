@@ -70,7 +70,41 @@ drift_direction: advance-code
       `batch_mdps_odds_horizon_bucket` rows carrying a non-registry `league_id`, and a features read for a migrated day
       returns a single non-doubled row set (no old+new `bucketed.parquet` double-count). Source:
       `issues/sports_league_id_namespace_migration_2026_07_20.md` STATUS 2026-07-25 + RE-DISPATCH CHECK 2026-07-28
-      (slot-7/slot-10).
+      (slot-7/slot-10). — **STOP condition fired 2026-07-29 (slot-6, data_engineering) — todo's own premise
+      (`raw content is already canonical`) does NOT hold; done-when bar is unreachable by a plain re-run.** Bootstrapped
+      `market-data-processing-service`'s `.venv`, ran a real (`--force`, non-dry-run) apply on a small 2-day test window
+      (`2023-01-01`..`2023-01-02`, chosen at random from well within the migrated historical range) to verify the script
+      before committing to the full ~2,246-day historical range. Result: `2023-01-01`'s OUTPUT shards under
+      `processed/.../data_type=odds_horizon_bucket/` show **BOTH** `league_id=CHAMPIONSHIP` (raw, non-canonical) **AND**
+      `league_id=ENG_CHAMPIONSHIP` (canonical) — likewise both `PREMIER_LEAGUE` and `EPL` — coexisting for the SAME
+      date. Root-caused via direct code read (`bucket_assignment_adapter.py::_get_dedup_columns` — dedup grain is
+      `["fixture_id", "bookmaker_key", "market_type"] + horizon_idx`, deliberately **excludes `league_id`**) + a direct
+      GCS listing confirming the RAW `batch_odds_api` bucket for this exact date/venue still carries **BOTH** the old
+      (`league_id=CHAMPIONSHIP`/`PREMIER_LEAGUE`) and new canonical (`league_id=ENG_CHAMPIONSHIP`/`EPL`) path+content
+      copies — the raw migration's own documented sequence is COPY-then-later-gated-DELETE
+      (`sports_league_id_namespace_migration_2026_07_20.md` § "Where the IRREVERSIBLE line is"), and that delete is
+      still outstanding (STATUS 2026-07-25 confirms it, nothing since closes it). Because `_read_raw_odds` lists +
+      concatenates every raw blob for the date (both old and new copies) and the adapter's
+      `drop_duplicates(..., keep="first")` doesn't key on `league_id`, each real fixture observation collapses to
+      exactly ONE row (not literally double-counted) but **which copy survives — and therefore whether its `league_id`
+      label is canonical or not — depends on GCS blob-listing order, not on canonicalness**. Re-running Step 7 now would
+      non-deterministically leave a MIX of canonical/non-canonical labels per date (verified: both labels' shards are
+      genuinely non-empty for the same date), never reaching "0 non-registry `league_id` rows," while still costing real
+      time (2-day test: 566s total, ~541s of which was the single end-of-run `ManifestWriter.write()` call for only
+      1,357 shard entries — extrapolating to the plan's own cited ~109,312-object scope this would be many hours,
+      dominated by manifest-write cost, not per-day processing). **Did NOT launch the full-range job** — it cannot meet
+      its own done-when bar as currently written, and would burn substantial GCS + consolidator time to prove that.
+      **Two real fix paths, needs a decision (filed `/blocked`)**: (A) teach `reprocess_sports_odds.py` to canonicalize
+      `league_id` (via the same `sportkey_canon_final.json`/`classification.json` maps the raw migration already built
+      and verified, keyed by `sport_key` for the 6 collision leagues) on `raw_df` immediately after `_read_raw_odds`,
+      BEFORE the adapter's dedup/groupby — so duplicate raw copies collapse deterministically to the canonical label
+      regardless of read order; requires sourcing those maps across repos (currently committed only in
+      `market-tick-data-service`, not `market-data-processing-service`) — a design decision on HOW (vendor a copy, read
+      from a shared GCS artifact, or something else), or (B) wait for the raw `batch_odds_api` old-object delete to land
+      first (it drains the duplicate-source problem structurally), then re-run Step 7 against a raw corpus with no
+      duplicate copies left to non-deterministically pick from. Neither is a same-turn fix for a
+      `data_engineering`-scoped worker — (A) needs a design decision on cross-repo map-sourcing, (B) is gated on the
+      separately-tracked, human-gated final delete. No code changed this session (investigation only).
 
 - [ ] [CODE] P1. **Build + execute the `batch_footystats` copy+swap pass** (footystats legacy-bundle shape, 16,970
       objects per the 2026-07-20 sizing) — canonicalise its `league_id`, mirroring the already-shipped, adversarially-
