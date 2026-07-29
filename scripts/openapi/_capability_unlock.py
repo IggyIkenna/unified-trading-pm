@@ -95,7 +95,9 @@ _REASON_CLASSIFIER: list[tuple[str, tuple[str, ...]]] = [
         (
             "news-feed",
             "news feed",
-            "calendar",
+            "event calendar",
+            "calendar gap",
+            "calendar source",
             "price-feed",
             "price feed",
             "liquidity",
