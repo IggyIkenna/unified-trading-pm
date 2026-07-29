@@ -256,18 +256,18 @@ MTDS consolidation ruling.)**
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
 
       **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
-                                                                      (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
-                                                                      `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
-                                                                      other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
-                                                                      evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
-                                                                      dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
-                                                                      (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
-                                                                      Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-                                                                      then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-                                                                      then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-                                                                      legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-                                                                      chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-                                                                      2026-07-13 per MTDS consolidation ruling.)**
+                                                                              (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+                                                                              `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+                                                                              other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+                                                                              evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+                                                                              dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+                                                                              (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+                                                                              Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+                                                                              then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+                                                                              then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+                                                                              legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+                                                                              chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+                                                                              2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -326,10 +326,10 @@ MTDS consolidation ruling.)**
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-                                                                          (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-                                                                          when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-                                                                          completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-                                                                          No checkbox flip — criteria still unmet pending that re-run's result.
+                                                                                  (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                                                                                  when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                                                                                  completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                                                                                  No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
@@ -586,6 +586,20 @@ MTDS consolidation ruling.)**
       `bash launch-expected-universe-v2-vm.sh cefi --apply-write 1500000`) once approved. **Not completable this turn**
       — do NOT re-launch without that review. Next session: check for the operator's answer first; if approved, relaunch
       with the raised cap and monitor to completion before flipping this checkbox.
+
+      **`BLK-708e678d` ANSWERED (2026-07-29, main agent) — Option B: investigate before raising the cap.** Do NOT
+              raise `--max-writes-per-run` and write 1,000,001 rows on a plausibility hunch — a wrong `expected_unattempted`
+              seed corrupts ALL downstream coverage math. Three checks required before any re-launch: (1) confirm whether
+              1,000,001 is the TRUE candidate total or just `cap+1` (many launchers stop counting AT the brake — the real
+              total could be far larger than what was reported); (2) sample candidate rows to confirm they are genuinely
+              DISTINCT could-exist cells (instrument×data_type×date), not duplicates or a join/cross-product bug; (3)
+              reconcile against the expected math (429,518 catalog × ~7 data_types × the multi-year date axis, minus the
+              8.77M present-set) — if the validated total is much larger than 1M, seed via date-windowed batches
+              (`ENUM_START_DATE`/`ENUM_END_DATE`) with a per-window count that can be verified, NOT one giant cap raise. Only
+              once the count is validated-correct does raising the cap become a clean call. **Not yet done this session**
+              (context checkpoint hit before this investigation could run) — next session picks up here: run the 3 checks
+              above against `enum-universe-cefi-20260729-150106` (the run_id from the halted VM's own
+              `ENUMERATOR_FAILED` event) before touching `--max-writes-per-run` at all.
 
 - [ ] [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk** (CF-1/3/4/8 RED + 40% null `capture_status` +
       blank `data_type` + ~~23 legacy-only cells~~; cf-audit ① above). **[2026-07-13 CORRECTION — stale number, real
