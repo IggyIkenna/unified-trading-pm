@@ -299,6 +299,27 @@ plus genuine historical gaps) still needs the copy-up migration
 `instrument_availability_hive_canonicalisation_2026_07_21.md` todo 7c already scopes — that todo, not a fresh delete
 pass here, is the correct next action.
 
+## 🟢 2026-07-29 (later same day) — restore verified complete; delete question closed permanently
+
+The original `audit_delete_defi_hive_instrument_availability_2026_07_29.py` script that ran the mistaken delete was a
+session-local one-off, never committed (per the earlier entry's own note), so it no longer exists in a fresh worktree.
+Re-created an equivalent READ-ONLY, dry-run verification script —
+`instruments-service/scripts/verify_defi_hive_instrument_availability_restore_2026_07_29.py` — that does the same single
+bounded listing (one bucket, `instrument_availability/by_date/` prefix, metadata-only, no content download, no mutation
+of any kind) and reports `hive_total`.
+
+**Result** (real read against `instruments-store-defi-prd-central-element-323112`): `hive_total=105,316`,
+`flat_total=73,886`, `hive_distinct_days=2,382`, `hive_max_day=2026-07-29` (today — confirms hive is still the
+actively-written canonical shape, consistent with the R2 cutover). Compared against the pre-delete baseline of 103,639:
+**delta = +1,677**, i.e. `hive_total` is not just back to baseline but slightly above it, which is exactly what's
+expected given hive has been the sole live daily writer target since the 2026-07-21 R2 cutover
+(`instruments-service@a9be6ce9`) — every day since the restore has added new legitimate hive writes on top of the
+restored historical population.
+
+**Verdict: restore CONFIRMED complete.** No gap, no residual deletion damage. Shipped: `instruments-service@2458d8ea`.
+This closes this doc's delete question permanently — see the P3 todo below for the only remaining live question (the
+FLAT shape, tracked under the other doc).
+
 ## Todos
 
 - [x] [DATA] P1. ⛔ **SUPERSEDED 2026-07-29 — do not re-execute.** ~~RULED 2026-07-29 (operator direct answer) — delete,
@@ -311,10 +332,11 @@ pass here, is the correct next action.
       `scripts/_defi_hive_instrument_availability_apply_2026_07_29.json`, restore
       `scripts/_defi_hive_restore_dryrun_2026_07_29.json` + apply report (paths in instruments-service, not committed —
       one-off run artifacts).
-- [ ] [DATA] P1. **NEW — verify the restore is complete and the shape is back to its pre-delete state**, then close this
-      doc's delete question permanently: re-run `audit_delete_defi_hive_instrument_availability_2026_07_29.py` (dry-run,
-      no `--apply`) and confirm `hive_total` reads back to ~103,639 (matching this entry's pre-delete count, allowing
-      for legitimate new daily writes in the interim). (repo: instruments-service)
+- [x] ✅ [DATA] P1. **NEW — verify the restore is complete and the shape is back to its pre-delete state**, then close
+      this doc's delete question permanently: re-run `audit_delete_defi_hive_instrument_availability_2026_07_29.py`
+      (dry-run, no `--apply`) and confirm `hive_total` reads back to ~103,639 (matching this entry's pre-delete count,
+      allowing for legitimate new daily writes in the interim). DONE 2026-07-29 — see the entry below. (repo:
+      instruments-service@2458d8ea)
 - [x] ✅ [DATA] P2. **NEW — cross-link both docs' `related:` frontmatter** (this doc ↔
       `instrument_availability_hive_canonicalisation_2026_07_21.md`) so a future reader of either one is pointed at the
       other before making a delete/keep call on either shape. DONE this session — both docs' `related:` updated + dated
