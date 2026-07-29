@@ -126,3 +126,19 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
 - 2026-07-29 (slot 14, data_engineering): found + filed. Declined to execute `-006` as dispatched (documented in the
   parent plan's own Progress Log). Not yet root-caused in AO code — out of data_engineering craft scope; needs a
   backend_engineer pass per the Recommended decision above.
+- 2026-07-29T15:2xZ (slot 15, data_engineering): **compounding-impact update, raises urgency.** Re-confirmed `-001`
+  still `queued`/unassigned via `GET /api/backlog` (unchanged since the finding above) and the
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` still `PAUSED` (`gcloud scheduler jobs describe`). This
+  same stall is now confirmed to ALSO block a SECOND, independent in-flight plan:
+  `plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s 4b-i migration-resume todo
+  (`prediction_satellite_ao_dispatch_batch4-023`) — its enrichment run hit `ManifestConsolidatorStaleError` on this same
+  paused cron and has been stuck since 2026-07-29T01:37Z (per that plan's own Progress Log), with at least 3 separate
+  slots (7/8/14 there, plus this slot on the mtds side) burning cycles on the same root cause across ~14+ hours total.
+  Since `-001`'s own prerequisites (dry-run, snapshot, cron-pause) are ALL already checked done in the parent plan, the
+  ONLY missing step is the actual apply run — a bounded, mechanically-determinable data_engineering action once
+  dispatched correctly. Did not execute `-001` myself from this task (out of scope for this issue-doc-only touch, and
+  `-001` belongs to a different plan/task than either of my two assigned tasks this session) — flagging for
+  main/operator attention given the now-confirmed cross-plan blast radius: either (a) fast-track the backend_engineer
+  root-cause fix above, or (b) as a pragmatic unblock, have any data_engineering worker directly execute
+  `mtds_available_at_cross_asset_backfill-001` (apply + guardrail-verify) since its prerequisites are already satisfied,
+  which would unblock both stalled plans in one move.

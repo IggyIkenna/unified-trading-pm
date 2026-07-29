@@ -499,3 +499,11 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   checked done) to unblock this cron and this todo's resume in one move. Copied the 157/348 checkpoint to this slot's
   scratchpad for continuity. Released via `/skip-current-task {"reason_code": "GATED"}` — not completable this turn, and
   arming yet another blind watcher is lower value than surfacing the real blocker to a decision-maker.
+- 2026-07-29T15:2xZ (slot 15, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`):
+  re-dispatched to this same 4b-i resume. Re-verified: `uts-prod-manifest-consolidator-market-data-prediction-cron`
+  still `PAUSED`; `mtds_available_at_cross_asset_backfill-001` still `queued`/unassigned (`GET /api/backlog`) — no
+  change since slot-14's entry. Added a compounding-impact update to
+  `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` (unified-trading-pm, this commit)
+  flagging that this stall now confirmed blocks TWO independent plans. Not arming another watcher (same reasoning as
+  slot-14: the checkpoint is durable, nothing is lost by waiting; the real fix is a dispatcher/priority decision, not
+  something more polling resolves). Released via `/skip-current-task {"reason_code": "GATED"}`.
