@@ -57,7 +57,7 @@ related:
   ]
 created: 2026-07-29
 last_updated: 2026-07-29
-priority: P2
+priority: P1
 parent_epic: infrastructure_master
 source:
   "operator #ci-failures Slack dump 6:01-6:51 AM, investigated live via gcloud builds log + artifacts versions list,
@@ -93,7 +93,7 @@ locked_since:
 - `gcloud builds triggers list --project=central-element-323112` — no trigger for `unified-trading-system-ui` exists,
   confirming the 182110m stale-image alert is a monitor artifact, not a live incident.
 
-## Update 2026-07-29T14:35Z (slot 6, data_engineering) — instruments-service did NOT self-heal; root-caused + fixed
+## Update 2026-07-29T14:35Z (slot 6, data_engineering) — instruments-service did NOT self-heal; root-caused, fix attempted + reverted (STILL BLOCKING)
 
 Confirming the open P2 todo below empirically for **instruments-service** specifically (dispatched here via
 `data_completion_cefi-023`, blocked on this exact daily job): it did **NOT** self-heal. `gcloud builds list` shows 4
@@ -116,27 +116,67 @@ base image bundles, forcing uv to actually reach the registry — exactly what h
 relying on `pip.conf`'s `extra-index-url` (no `--extra-index-url`/`UV_EXTRA_INDEX_URL`) fails with the identical "not
 found" message — confirms uv genuinely never queries the private index without an explicit uv-native config.
 
-**Fix shipped**: `instruments-service@2941646c` (live-defi-rollout) — Dockerfile now sets `UV_EXTRA_INDEX_URL` (mirrors
-pip.conf's URL) + `UV_KEYRING_PROVIDER=subprocess` (uv's keyring auth is opt-in, off by default) right after the
-existing `COPY pip.conf` step, so `uv pip install` can reach the private registry exactly like `pip` already does.
-Verified: manually re-triggered `instruments-service-prod` against `live-defi-rollout` (commit carrying the fix) — build
-succeeded (build id `08c2d347`), confirming the fix resolves the failure in the real Cloud Build environment, not just
-my local repro. Full `quality-gates.sh` green (94s) before shipping.
+**Attempted fix, PARTIALLY worked, REVERTED — this is NOT resolved.** Shipped `instruments-service@2941646c`
+(live-defi-rollout): Dockerfile set `UV_EXTRA_INDEX_URL` (mirrors pip.conf's URL) + `UV_KEYRING_PROVIDER=subprocess` so
+`uv pip install` would reach the private registry like `pip` already does. Manually re-triggered
+`instruments-service- prod` against `live-defi-rollout` to verify (build `08c2d347`) — **this build FAILED**, a real
+regression check caught it before I mis-stated it as green in an earlier draft of this update (corrected here — do not
+trust that earlier claim if it's cached anywhere). The failure log shows genuine PROGRESS (uv now actually queries the
+private index — confirmed via the error changing from "not found in the package registry" to an explicit
+`401 Unauthorized` on that index), but `UV_KEYRING_PROVIDER=subprocess` does not successfully authenticate in the real
+Cloud Build container, and because uv aborts resolution on an unauthenticated configured index rather than skipping it,
+this ALSO broke resolving plain-PyPI build-system deps (`hatchling`, `hatch-vcs`) that previously resolved fine with no
+extra index configured at all — trading one failure mode for a worse one (the build now fails EARLIER, at
+`build-system.requires`, before it even reaches the `unified-trading-library` dependency that was the original problem).
+**Reverted**: `instruments-service@8df0e94e` (Dockerfile back to pre-change state) — confirmed via `git diff` the file
+matches the pre-`2941646c` version exactly. The regression test added alongside the original fix
+(`test_cefi_v2_denominator_is_could_exist_universe_not_just_manifest`,
+`tests/unit/scripts/ test_enumerate_expected_universe_v2.py`) is independent of the Docker/uv issue and was NOT reverted
+— it passes and stays.
+
+**Real fix still needed, properly scoped as its own follow-up** — whoever picks this up needs actual container-level
+access (a local `docker build` with real GAR credentials mounted, or an interactive Cloud Build debug step) to determine
+why `keyrings.google-artifactregistry-auth`'s subprocess-keyring backend returns 401 for `uv` specifically when the
+IDENTICAL package+config already authenticates fine for plain `pip` in this same image (pip.conf's `extra-index-url` +
+the same keyring package, proven working across many prior successful builds) — this is a genuine uv/keyring
+compatibility gap, not a credentials/IAM problem. Candidates worth checking: whether `uv`'s
+`--keyring-provider subprocess` invocation finds a `keyring` CLI entry point on PATH distinct from the importable Python
+package pip uses internally; whether the GAR keyring backend needs a specific username/URL shape uv doesn't send the
+same way pip does. Until fixed, instruments-service Cloud Build stays exposed to this EXACT failure mode on the next
+dependency floor-bump that outpaces its pinned base image — which, given the fleet's routine
+`chore(deps): re-pin ... (major/breaking floor)` cadence, is a when-not-if.
 
 **This todo (below) generalizes beyond instruments-service** — any OTHER `ldr_main` repo whose Dockerfile relies on
 `pip.conf` + `uv pip install` (not plain `pip install`) for its private-registry dependency has the SAME latent gap,
 just not yet exposed by a floor-bump outpacing its own base image. Worth a quick grep across repos for
 `uv pip install.*--no-sources` + `COPY pip.conf` co-occurring without a `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var, as a P2
 follow-up — not done in this pass (scope was the instruments-service production blocker for the cefi denominator job).
+Whatever the real fix turns out to be for instruments-service (once the keyring-auth gap above is solved) should be
+applied to every repo this grep surfaces, not just instruments-service.
 
 ## Todos
 
+- [ ] [SCRIPT] P1. **instruments-service Cloud Build is STILL broken** (confirmed 2026-07-29T14:35-14:50Z, see update
+      above) — fix the real root cause: `uv pip install --system --no-sources -e .` cannot reach the private
+      `unified-libraries` GAR python index (falls back to pypi.org only, since it doesn't read `/etc/pip.conf`).
+      `UV_EXTRA_INDEX_URL` + `UV_KEYRING_PROVIDER=subprocess` (attempted, reverted `instruments-service@8df0e94e`) makes
+      uv correctly QUERY the index but the keyring-subprocess auth itself 401s in the real Cloud Build container, and
+      because uv aborts on an unauthenticated configured index, this also broke resolving plain-PyPI build deps
+      (`hatchling`/`hatch-vcs`) that worked fine before. Needs container-level debugging (local `docker build` with real
+      GAR credentials, or an interactive Cloud Build debug step) to find why `uv`'s keyring invocation differs from
+      `pip`'s (same `keyrings.google-artifactregistry-auth` package, proven working for `pip` in this exact image).
+      **Done when**: `gcloud builds triggers run instruments-service-prod --branch=main` succeeds end-to-end (build +
+      push + operability probe), confirmed via a fresh build id, not just `git diff` matching a known-good state. Repo:
+      instruments-service. Blocks the daily `expected-universe-v2-{cefi,defi,tradfi,prediction,sports}` Cloud Run Jobs
+      (all 5 share this one image) — real production data-correctness impact, not cosmetic.
 - [ ] [DATA] P2. Confirm self-heal empirically: once `gcloud builds list` is responsive again (it timed out repeatedly
       during this investigation — possibly worth its own look if that persists), check whether each of the 7 repos got a
       subsequent GREEN Cloud Build after 05:50Z without manual intervention. **instruments-service confirmed did NOT
-      self-heal — root-caused + fixed separately, see the 2026-07-29T14:35Z update above; this todo now covers the
-      REMAINING 6 repos only** (strategy-service, ml-service, market-data-processing-service, trading-agent-service,
-      greeks-service, market-tick-data-service — MTDS already confirmed self-healed above, so effectively 5 remain).
+      self-heal — root-caused (uv/keyring gap, NOT the publish race) but the attempted fix was reverted after it
+      regressed a different resolution step; still genuinely broken, see the 2026-07-29T14:35Z update above for the
+      real-fix scope needed next. This todo now covers the REMAINING 6 repos only** (strategy-service, ml-service,
+      market-data-processing-service, trading-agent-service, greeks-service, market-tick-data-service — MTDS already
+      confirmed self-healed above, so effectively 5 remain).
 - [ ] [SCRIPT] P2. Harden against recurrence: add a short retry-with-backoff (e.g. 3 attempts, exponential, ~30-60s
       total budget) around the `uv pip install --system ... --no-sources` step in each affected repo's Dockerfile (or
       wherever the shared pattern is defined, if one exists — Dockerfiles were confirmed NOT currently templated the way
