@@ -287,14 +287,15 @@ drift_direction: advance-code
       distinct `funding_timestamp` settlements/day per shard, mirroring
       `e2e-testing/scripts/defi/       staked_basis_funding_scan.py`'s `n_settlements` logic, lifted into a proper MTDS
       script that writes a dated audit object to GCS) was NOT built this session** — descoped once the QG blocker made
-      it clear the canonical half alone would already exceed a single turn's shippable budget; a follow-up todo is
-      warranted, not silently dropped, see below. **Shipping blocker**: `unified-api-contracts` `quality-gates.sh` was
-      SIGTERM-killed by the qg-host-governor 5 consecutive times (~20min span) at the `[3/6] TESTS` phase while host
-      swap sat at 12-15Gi/15Gi used and 14-17 concurrent `quality-gates.sh` processes ran fleet-wide (vs the documented
-      `max(2, floor(cores/4))` cap) — filed `BLK-af1211b4` rather than keep silently retrying. The code sits
-      committed-locally-only in the `.tabs/14/unified-api-contracts` worktree pending a clean QG pass; NOT pushed
-      (shipping via quickmerge requires the fresh-SHA sentinel a green run writes, so it genuinely cannot ship until QG
-      completes once, not a discretionary choice).
+      it clear the canonical half alone would already exceed a single turn's shippable budget; tracked as its own
+      follow-up todo below, not silently dropped. **SHIPPED — `unified-api-contracts@e8b45af4`.** `quality-gates.sh` was
+      SIGTERM-killed by the qg-host-governor 6 consecutive times (~25min span) at `[3/6] TESTS` during a real,
+      already-tracked host-wide contention burst (`issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`
+      — confirmed by main via `BLK-af1211b4` as the SAME transient incident, not a new one; no fresh issue doc filed).
+      Backed off with jitter (not a tight retry loop) per main's guidance; a subsequent attempt passed clean (494s),
+      committed, re-ran QG once more so the sentinel matched the new commit SHA exactly, then shipped via
+      `quickmerge.sh --agent --files`. Landed on `live-defi-rollout`; `quality-gates-v2` fires on the eventual
+      LDR→staging promote PR (Tier-C drain, ~15min), not on this raw push — nothing further to verify from this slot.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
       versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from

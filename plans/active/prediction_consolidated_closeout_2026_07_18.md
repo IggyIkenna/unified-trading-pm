@@ -356,8 +356,9 @@ fixture-linked before MVP backfill.
       decision above.
   - [`plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`](/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/phantom_captures_prediction_2026_06_28.md`](/plans/active/issues/phantom_captures_prediction_2026_06_28.md)
-    - **[CODE] P2.** Fix MTDS prediction writer to use `empty_confirmed` for 0-activity contracts (pre-event future)
+  - [`plans/archive/issues/phantom_captures_prediction_2026_06_28.md`](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
+    — 0 open todos (writer-fix done; final re-fetch/backfill todo SUPERSEDED 2026-07-29 into Phase-D MVP-backfill gate +
+    data_completion_prediction; archived)
   - [`plans/archive/issues/mtds_prediction_migration_connection_pool_hardening_2026_07_10.md`](/plans/archive/issues/mtds_prediction_migration_connection_pool_hardening_2026_07_10.md)
     (resolved residual; archived location) — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md`](/plans/archive/issues/mdps_prediction_tick_bucket_uac_ssot_404_2026_07_14.md)

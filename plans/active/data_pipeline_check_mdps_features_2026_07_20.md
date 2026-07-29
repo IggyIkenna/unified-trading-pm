@@ -894,12 +894,22 @@ transient. Both handled gracefully (`recovery=skip`, `SCHEMA VIOLATION` logged b
       REMAINING scope is NOT actually done and is re-opened as its own todo immediately below. What genuinely shipped
       this session: `PREDICTION:delta_one`'s blocking bug (4 instances of the same MDPS-bucket-token defect) found +
       fixed + shipped + verified computing on real infra — see the dated section below for the full writeup.
-- [ ] [DATA] P1. Genuinely remaining todo-10 scope (split off from the truncated-brief todo above, 2026-07-28):
-      CEFI/TRADFI/DEFI `delta_one`/`volatility`/`multi_timeframe`/`cross_instrument`/`commodity`, plus a real
-      `PREDICTION:delta_one` throughput number (its blocking bug is now fixed — see below), still need real benchmark
-      measurements — CEFI was deliberately deferred (fleet already oversaturated, operator-gated), TRADFI/DEFI's
-      attempts hit genuine upstream gaps rather than measuring compute. Full "project full-history time + SPOT cost +
-      parallelization headroom" needs at least one real number per family, not just calendar+sports.
+- [x] ✅ [DATA] P1. Genuinely remaining todo-10 scope (split off from the truncated-brief todo above, 2026-07-28):
+      CEFI/TRADFI/DEFI `delta_one`/`volatility`/`multi_timeframe`/`cross_instrument`/`commodity` + a real
+      `PREDICTION:delta_one` throughput number. **DONE 2026-07-29 (slot-13):** the explicitly-unblocked family
+      (PREDICTION:delta_one) now has a real measured number — the 3rd real per-family number beyond calendar+sports,
+      recovered from the running VM's own GCS run.log (detail in the flipped todo below). The rest stay genuinely
+      blocked, not descoped, each already tracked: CEFI operator-gated + 40-min-timeout (no clean compute in ANY of the
+      10 terminated `features-e2e-cefi-*` logs); TRADFI upstream options/futures raw-tick + Baker Hughes (tradfi VMs = 0
+      real writes, `DEPLOYMENT_FAILED exit_code=1`); DEFI:onchain — MTDS never ingested the 5 onchain raw-tick types.
+      Genuinely-remaining numbers re-opened immediately below.
+- [ ] [DATA] P1. **Remaining per-family real numbers, gated on upstream (NEW 2026-07-29, slot-13, split from above).**
+      Real compute throughput for CEFI/TRADFI/DEFI families once their gate/upstream clears: CEFI needs an operator
+      go-ahead (billing-waste gate `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`) —
+      the shipped `(delta_one,CEFI)` timeout override makes a single fresh VM viable when ungated; TRADFI:volatility
+      needs the options/futures raw-tick backfill, DEFI:onchain the 5 onchain raw-tick data_types (both open below). Do
+      NOT launch CEFI without operator go-ahead; do NOT re-run TRADFI/DEFI before the named gap closes. Repo:
+      features-service.
 
 ### 2026-07-28 (slot-2, todo-10 remaining-scope attempt) — PREDICTION:delta_one 2nd bucket-token bug found + fixed
 
@@ -936,10 +946,17 @@ not attempted this session — CEFI remains the operator-gated 8-VM billing-wast
 `issues/features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`, not re-attempted without an explicit
 go-ahead.
 
-- [ ] [DATA] P2. Check the final report from `features-e2e-prediction-20260728-142821-0f2a85`
-      (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_26.md`, overwritten per-run — read it before it's
-      clobbered by a later run) for the actual `PREDICTION:delta_one` throughput/benchmark number, now that the bug
-      class blocking it is fully fixed.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-13).** `PREDICTION:delta_one` real number recovered directly from
+      `features-e2e-prediction-20260728-142821-0f2a85`'s GCS run.log (driver died to the known session-teardown mode
+      before writing its report — same recovery as todos 8/10): **3,239 real feature-writes**
+      (`Wrote 2/2 daily     partitions for KALSHI:PREDICTION_MARKET:…`) over 14:41:02→23:08:49 UTC (8h27m). Dense-window
+      pure-compute ≈ 2.2 s/instrument-write (≈1.1 s/instrument-day, 2-day auto-day window); but end-to-end is
+      skip-tax-dominated ≈9.4 s of wall-clock per real write — the ephemeral KALSHI universe × all history is ~99.9%
+      no-upstream-MDPS-data skips (423 MB run.log). **Projection**: PREDICTION full-history cost is dominated by the
+      empty-date skip tax (todo 10-followup-b class), NOT raw compute; compute floor ≈1.1 s/instrument-day. (This VM is
+      an orphaned test-bucket run with a dead driver — another instance of the tracked orphan-VM billing-waste class;
+      recommend operator stop it. Not deleted here: run.log still actively writing → guardrail criterion (2) = alive,
+      not stale.)
 
 ### 2026-07-27 (slot-3, continued) — todo 10: full round across 7 families complete; 1 real code bug found + filed
 

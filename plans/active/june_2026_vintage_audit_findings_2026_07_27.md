@@ -210,7 +210,7 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       dual-track/not archivable — the full-corpus reprocessing todo remains open pending the running VMs' completion +
       the EXTENDED-STARKNET blocker's resolution.
 - [x] ✅ [PLAN] P2. **STATUS CHECK 2026-07-28 (unified-trading-pm)** —
-      `plans/active/issues/phantom_captures_prediction_2026_06_28.md`: Track 22 in
+      `plans/archive/issues/phantom_captures_prediction_2026_06_28.md`: Track 22 in
       `cross_cutting_consolidated_closeout_2026_07_25.md` already cites this doc by name with real content (not a bare
       mention) — the "migrate" half of this task was already done in an earlier pass. **New finding while verifying**:
       the writer-fix half of the remaining P2 todo may already be substantially implemented — both `kalshi_adapter.py`
