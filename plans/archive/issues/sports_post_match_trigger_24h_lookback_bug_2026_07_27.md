@@ -22,7 +22,7 @@ summary: >-
   `features_post_match` computes REAL derived post-match features (`features-service-sports-job --tables
   derived_features`) — if this bug is confirmed to be live-impacting (see Open questions), sports XG/advanced-stats and
   derived post-match features may never be computed via the live scheduler path at all, only via manual/batch backfill.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -33,6 +33,7 @@ related:
   [
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
     /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
+    /plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md,
   ]
 created: 2026-07-27
 priority: P0
@@ -47,9 +48,19 @@ execution_scope: orchestrator-agent
 estimate_class: infra
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: deployment-service@5b5d227
 locked_by:
 ---
+
+> **RESOLVED 2026-07-29 (slot-2).** This doc's own scope — the fixture-lookback window structurally preventing
+> post-match triggers beyond ~2h from ever firing — is fixed and verified deployed (`deployment-service@5b5d227`,
+> confirmed content-identical on `origin/main`, running in the deployed Cloud Run Job since 2026-07-28T22:37:45Z; the
+> `stats_delayed` trigger now fires live, 1382 observations vs. 0 historically). Archiving with all 4 todos complete.
+> **The follow-on question — is live Understat/XG capture actually landing end-to-end — is NOT yet resolved** and
+> continues in the successor doc:
+> `/plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md` (two further, independent
+> root causes found: a missing `venue_adapter_keys.py` registration for UNDERSTAT + 4 sibling venues, and an in-memory
+> `FirstSuccessPoller` state-loss bug across `--one-shot` invocations).
 
 # SportsTriggerScheduler post-match fixture-lookback bug
 
@@ -263,8 +274,8 @@ same conclusion, plus two provenance details worth keeping on record:
       separately-escalation-worthy failure. **This "first check" sub-scope is done**; the manifest-verification
       sub-scope cannot run yet (nothing has redeployed) — split out as its own follow-up todo below rather than left
       unresolved here.
-- [ ] [VERIFY] P1. Once `deployment-service@5b5d227` is confirmed on `origin/main` AND the sports-trigger-scheduler is
-      confirmed redeployed past that point (re-run `git merge-base --is-ancestor 5b5d227 origin/main`, then check the
+- [x] ✅ [VERIFY] P1. Once `deployment-service@5b5d227` is confirmed on `origin/main` AND the sports-trigger-scheduler
+      is confirmed redeployed past that point (re-run `git merge-base --is-ancestor 5b5d227 origin/main`, then check the
       scheduler's deployed-revision timestamp), query the live sports manifest for a FRESH `data_type=XG` `captured` row
       with `pipeline_mode` != `batch_understat` (i.e. NOT the 2026-07-13..22 one-shot backfill) or a fresh
       `_index/latency_observations/` row with `trigger_name=stats_delayed`, dated after the redeploy. Repo:
@@ -296,3 +307,34 @@ same conclusion, plus two provenance details worth keeping on record:
       still a genuine external wait (a fresh SIT run needs to land green and the promoter needs to re-post the gate) —
       no action a worker slot can take beyond what's already tracked in that sibling issue doc. Manifest query still
       correctly withheld pending the ancestor check reading YES.
+
+      **Check 4 (2026-07-29, slot-2) — MERGED + DEPLOYED, trigger now fires live, but manifest query is
+              NEGATIVE — escalating per this todo's own done-when.** `git merge-base --is-ancestor 5b5d227 origin/main` still
+              reads NO (the LDR→main promote flow squash/rebases, losing the exact SHA) — but a direct content diff proves the
+              fix landed anyway: `origin/live-defi-rollout`'s and `origin/main`'s current `sports_trigger_scheduler.py` /
+              `sports_trigger_state.py` are byte-identical, and the commit that actually carried `5b5d227`'s content into
+              `main` (`c988d1c`, 2026-07-27T20:40:55Z) IS an ancestor of `main` HEAD `252792f`. Resolved the deployed Cloud Run
+              Job's `sports-scheduler:latest` image digest to SHA-tagged image `252792f...` (= main HEAD), built
+              **2026-07-28T22:37:45Z**; the job's `latestCreatedExecution` at query time (`2026-07-29T00:40:01Z`) confirms
+              it's running that image. **Redeploy cutoff: 2026-07-28T22:37:45Z.**
+
+              Queried `_index/latency_observations/`: `stats_delayed` now has **1382** lifetime rows (was 0), first at
+              **2026-07-27T20:46:17Z** — the lookback-window fix demonstrably works, the trigger fires live now. **But**: ALL
+              1382 rows have `first_success=False` / `fetched_rows=-1` (never once flipped to a genuine success in 28+ hours),
+              and the manifest's `data_type=XG` `captured` rows remain 100% `pipeline_mode=batch_understat` (the same
+              2026-07-13..22 one-shot backfill as before) — **zero fresh, non-backfill XG captures post-redeploy.** This meets
+              the "escalate — second, still-undiagnosed issue" criterion this todo's done-when called for.
+
+              Traced two further, independent causes (full evidence + recommended fixes in the new issue doc below): (A)
+              `FirstSuccessPoller`'s retry state (`deployment_service/sports_latency_observation.py`) is a plain in-memory
+              dict with no persistence, while the deployed job runs `--one-shot` (fresh container every 5-min Cloud Scheduler
+              tick) — any registered retry is discarded before it can ever be polled, so `first_success` can structurally
+              never become `True` in this deployment model, independent of whether the real fetch succeeds. (B) `UNDERSTAT`
+              (+ 4 sibling enrichment venues) has **zero** entry in `unified_api_contracts/registry/venue_adapter_keys.py` —
+              confirmed via direct grep — despite a working `UnderstatAdapter` already registered in instruments-service's own
+              factory; live logs repeatedly show `ERROR URDI fetch: 5 venue(s) failed with PERMANENT errors: [...,
+              ('UNDERSTAT', 'UNSUPPORTED'), ...]` roughly every 5 minutes in production. (B) looks like the more likely
+              explanation for the zero-XG-captures residual and is NOT fully isolated to the XG entity-scoped path
+              specifically (see the new doc's caveat) but is an objective, confirmed, independently-worth-fixing code gap
+              either way. New issue doc with full evidence + 3 scoped follow-up todos:
+              `plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`.

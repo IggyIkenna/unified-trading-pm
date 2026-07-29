@@ -151,7 +151,7 @@ forces an operator/main manual DB patch outside the normal flow.
   skipped/redispatched, checkbox NOT flipped.
 - 2026-07-28 (worker, slot 12, second occurrence, different task): Hit the SAME
   `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` 409 on `sports_post_match_trigger_24h_lookback_bug-005`
-  (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) -- a `[VERIFY] P1` todo genuinely
+  (`plans/archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) -- a `[VERIFY] P1` todo genuinely
   still open because its completion condition (`deployment-service@5b5d227` confirmed on `origin/main`) is not yet true
   (verified: still not merged -- successor PR594 blocked on the fleet-wide `sit-gate/fleet-green` flake). Pushed an
   evidence-only "Check 3" doc update (`unified-trading-pm@6ef574cc2`) mirroring the existing "Check 1"/"Check 2" entries

@@ -1,0 +1,208 @@
+---
+doc_type: issue
+title:
+  Post-match trigger lookback fix IS deployed and firing, but live Understat XG capture is STILL zero — two further,
+  independent root causes found (venue-adapter-key registry gap + in-memory poller state loss)
+summary: >-
+  Follow-up to sports_post_match_trigger_24h_lookback_bug_2026_07_27.md's Check 4 (live re-verification todo). Confirmed
+  the `deployment-service@5b5d227` lookback-window fix reached production (content-identical on `origin/main`, built
+  into the `sports-scheduler:latest` Cloud Run Job image 2026-07-28T22:37:45Z, running since) and the `stats_delayed`
+  trigger now genuinely fires live (1382 lifetime / 85 post-redeploy `latency_observations` rows, vs. 0 historically) —
+  the original lookback bug IS fixed. But 28+ hours and 1382 real trigger fires later, the manifest still shows ZERO
+  fresh (non-`batch_understat`) `data_type=XG` captures, and ZERO `first_success=True` latency confirmations (0/1382,
+  all-time). Traced two independent, further causes: (1) `FirstSuccessPoller`'s pending retry state is a plain in-memory
+  dict with no persistence, while the scheduler runs as a `--one-shot` Cloud Run Job re-invoked fresh every 5 minutes —
+  any registered retry entry is discarded before it can ever be polled, so `first_success` can structurally never become
+  `True` regardless of whether the real fetch eventually succeeds (an observability/confirmation gap, not necessarily a
+  capture-blocking one). (2) `UNDERSTAT` (and 4 sibling enrichment venues: FOOTYSTATS, TRANSFERMARKT,
+  SOCCER_FOOTBALL_INFO, OPEN_METEO) have ZERO entry in `unified_api_contracts/registry/venue_adapter_keys.py`, so live
+  production logs repeatedly show `ERROR URDI fetch: 5 venue(s) failed with PERMANENT errors: [..., ('UNDERSTAT',
+  'UNSUPPORTED'), ...]` — despite a working `UnderstatAdapter` class already registered in instruments-service's OWN
+  factory (`reference_data/adapters/sports/factory.py`, key `"understat"`) and already proven capable of capturing real
+  XG data (the 7,714 all-time-captured `batch_understat` rows came from a manual backfill script that presumably
+  bypassed the URDI registry path). This looks like a pure missing-registration gap, not a missing-implementation gap.
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+repos: [deployment-service, unified-api-contracts, instruments-service]
+scope: [engineer]
+tags:
+  [sports, scheduler, post-match-trigger, understat, xg, urdi, adapter-registry, data-completeness, bug, live-pipeline]
+related:
+  [
+    /plans/archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md,
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+  ]
+created: 2026-07-29
+priority: P0
+parent_epic: sports_master
+source:
+  "worker, slot 2, running the Check 4 live re-verification todo in
+  sports_post_match_trigger_24h_lookback_bug_2026_07_27.md (VERIFY P1) — confirmed the lookback fix deployed and firing,
+  then found the manifest still shows zero fresh XG despite that, and traced two further, independent causes"
+assigned_vm: planning
+execution_scope: orchestrator-agent
+estimate_class: infra
+drift_direction: advance-code
+depends_on: []
+resolved_by:
+locked_by:
+---
+
+# Sports `stats_delayed`/XG live capture still dead after the lookback fix — two further root causes
+
+## What I found
+
+### Step 1 — confirmed the lookback fix (`5b5d227`) IS live-deployed
+
+`git merge-base --is-ancestor 5b5d227 origin/main` reads NO (the LDR→main promote flow squash/rebases, so the exact SHA
+isn't preserved) — but a direct content diff proves the fix landed anyway: `origin/live-defi-rollout`'s and
+`origin/main`'s current `deployment_service/sports_trigger_scheduler.py` + `sports_trigger_state.py` are byte-identical,
+and `git merge-base --is-ancestor c988d1c origin/main` (the commit that carried `5b5d227`'s content into `main`,
+2026-07-27T20:40:55Z) → YES against main HEAD `252792f`.
+
+The deployed Cloud Run Job `uts-prod-sports-scheduler` runs image `sports-scheduler:latest`. Resolved that tag's digest
+(`sha256:317ac71...`) to the SHA-tagged image `252792fcfbeb13805c5a5e0d8d7cf7eecf96525c` — exactly `main` HEAD —
+built/pushed **2026-07-28T22:37:45Z**. The job's `latestCreatedExecution` at query time was `2026-07-29T00:40:01Z`, i.e.
+running that image. **Redeploy cutoff for all checks below: `2026-07-28T22:37:45Z`.**
+
+### Step 2 — the trigger now genuinely fires live (lookback bug confirmed fixed)
+
+Queried `instruments-store-sports-prd-central-element-323112/_index/latency_observations/` (columns `trigger_name`,
+`recorded_at_utc`, `first_success`, `fetched_rows`, `source`):
+
+- `stats_delayed` total (all-time): **1382** rows, first at **2026-07-27T20:46:17Z** (44 min after the fix commit was
+  authored) — this trigger had **ZERO** observations ever before the fix (per the parent doc's original finding).
+- Post-redeploy-cutoff (`>2026-07-28T22:37:45Z`): **85** fresh rows, most recent `2026-07-29T00:41:15Z`.
+- Day-by-day count: 710 (07-27) / 618 (07-28) / 54 (07-29, partial day at query time).
+
+This structurally confirms the lookback-window fix works: the trigger's fire window (`kickoff+25.25h..26.25h`) is no
+longer being missed by `get_upcoming_fixtures()`'s old `<=2h` cutoff.
+
+### Step 3 — but ZERO genuine success confirmations, ever, and ZERO fresh XG manifest captures
+
+- `first_success` value_counts on ALL 1382 `stats_delayed` rows: `{False: 1382}` — **not one `True`, ever**, in 28+
+  hours of live firing.
+- `fetched_rows` on all 1382 rows: constant `-1` (the "first-attempt sentinel" per `sports_latency_observation.py`'s
+  `build_observations_for_fire` docstring — never a real fetched-row count).
+- `source` on all 1382 rows: `understat` (100%) — consistent, not a data-quality issue.
+- Manifest `data_type=XG`, `capture_status=captured`, filtered to `written_at > 2026-07-28T22:37:45Z` AND
+  `pipeline_mode != batch_understat` (i.e. excluding the known 2026-07-13..22 one-shot historical backfill): **0 rows**.
+  All 7,714 all-time-captured XG rows remain 100% `pipeline_mode=batch_understat` from that same backfill window —
+  unchanged since the parent doc's original finding.
+
+Per the parent doc's Check-4 todo's own done-when: "if none appears after a full day-plus of live operation
+post-redeploy, escalate — that would mean a second, still-undiagnosed issue." That condition is met. Traced two
+independent candidate causes below.
+
+### Root cause A (confirmed structural, code-level) — `FirstSuccessPoller._pending` cannot survive `--one-shot`
+
+`deployment_service/sports_latency_observation.py`'s `FirstSuccessPoller` (lines ~382-570) maintains its retry state in
+a plain in-process `dict` (`self._pending: dict[str, FirstSuccessPendingEntry] = {}`, line 402) with **no persistence
+mechanism** — no read/write to the state bucket that `PeriodicTierState`/`last_run[tier]` DOES use
+(`resolve_state_bucket()`, `sports_trigger_scheduler.py:126-165`).
+
+`register_from_event()` is called on trigger fire (`sports_trigger_scheduler.py:422`), setting `next_poll_utc` 15
+minutes in the future (`next_poll_utc_for_attempt(0, now)`, `FIRST_SUCCESS_EARLY_INTERVAL_MIN=15`). `poll()` is called
+once per invocation (`sports_trigger_scheduler.py:844`) to retry any DUE pending entries and write the confirming
+`first_success=True` row on `rc==0`.
+
+But the deployed Cloud Run Job runs `--one-shot` (confirmed: terraform `sports_scheduler_cron.tf` args
+`["python", "-m", "deployment_service", "sports-trigger", "run", "--one-shot", ...]`, invoked by a 5-minute Cloud
+Scheduler cron) — **a fresh container/process per invocation**, exiting almost immediately after its one pass. Any entry
+`register_from_event()` creates is gone the moment that process exits; the NEXT invocation 5 minutes later starts with
+an empty `_pending` dict. `poll()` therefore can never see an entry that was registered in a PRIOR invocation, and the
+entry registered THIS invocation isn't due for 15 more minutes — so it's structurally impossible for `poll()` to ever
+confirm a `first_success=True` row in this deployment model, independent of whether the underlying Understat fetch would
+have succeeded. This is the same class of design/deployment mismatch as the original lookback bug (a mechanism designed
+assuming a long-lived process, deployed as a stateless one-shot job).
+
+**This explains finding #1 (0/1382 first_success=True) but does NOT by itself explain finding #2 (0 fresh XG captures)**
+— the real production dispatch (`_dispatch_services`, `sports_trigger_scheduler.py:412`) fires independently of
+`FirstSuccessPoller` and does NOT depend on it for the actual fetch attempt.
+
+### Root cause B (confirmed code-level, likely the real blocker) — `UNDERSTAT` has no registered URDI adapter key
+
+Live Cloud Run Job logs (`uts-prod-instruments-service-sports-fixtures`, `gcloud logging read`, last 24h) repeatedly
+show, on the order of every ~5 minutes:
+
+```
+WARNING No URDI adapter for 5 venue(s) — register a key (or NO_ADAPTER_YET sentinel) in
+         unified_api_contracts/registry/venue_adapter_keys.py: ['FOOTYSTATS', 'UNDERSTAT', 'TRANSFERMARKT',
+         'SOCCER_FOOTBALL_INFO', 'OPEN_METEO']
+ERROR   URDI fetch: 5 venue(s) failed with PERMANENT errors: [('FOOTYSTATS', 'UNSUPPORTED'), ('UNDERSTAT',
+         'UNSUPPORTED'), ('TRANSFERMARKT', 'UNSUPPORTED'), ('SOCCER_FOOTBALL_INFO', 'UNSUPPORTED'), ('OPEN_METEO',
+         'UNSUPPORTED')]
+```
+
+Confirmed via direct grep: `unified_api_contracts/registry/venue_adapter_keys.py` has **zero** entries for any of these
+5 venues (neither a real key nor the explicit `NO_ADAPTER_YET` sentinel the file's own docstring says every
+canonical-but-adapterless venue MUST carry). Yet `instruments_service/reference_data/adapters/sports/factory.py` (the
+`_ADAPTERS` table) **already has a working `"understat": UnderstatAdapter` entry** — and the 7,714 all-time XG
+`captured` manifest rows (100% `pipeline_mode=batch_understat`, all written in the 2026-07-13T23:48..2026-07-22T05:23
+window) prove that adapter genuinely works when invoked directly (presumably by
+`scripts/backfill_understat_xg_epl_2025_2026_06_29.py`, which does not appear to go through the URDI registry path).
+
+**Not fully isolated**: the one full execution log I read end-to-end for an XG-entity dispatch
+(`uts-prod-instruments-service-sports-fixtures-r5jz5`, 2026-07-29T00:47Z) showed
+`Per-fixture enrichment: 46 fixtures x 0 entities = 0 calls queued` — i.e. it never even reached a fetch attempt,
+because none of that date's fixtures were in Understat's covered-league set (`_UNDERSTAT_LEAGUE_COVERAGE` in
+`unified_api_contracts/canonical/domain/sports/provider_league_ids.py` — 5 European top flights; this filtering is BY
+DESIGN, not a bug). The specific "URDI fetch: 5 venue(s) failed" error I traced to one execution
+(`uts-prod-instruments-service-sports-fixtures-tbb2z`) was itself entity-scoped to `LINEUPS`, not `XG` — so it may be a
+shared, entity-agnostic "venue universe" completeness check (`Date filter <date>: N instruments active`) rather than
+something that fires ONLY on (or blocks) the XG-specific dispatch path. **I did not confirm whether an XG-entity-scoped
+execution, on a date/league that DOES fall inside Understat's coverage, also hits this exact adapter-key error** — that
+would require watching live executions across enough days to catch a top-5-league fixture inside the `stats_delayed`
+window, which is out of scope for this read-only verification pass.
+
+Regardless of that gap, the missing registry entries are an objective, confirmed code fact and a real live-production
+error recurring every ~5 minutes — independently worth fixing, and the most likely explanation for why Understat/XG (and
+FootyStats/Transfermarkt/SFI/open-meteo) enrichment has never worked via ANY live/URDI-mediated path, only via one-off
+manual backfill scripts that bypass the registry.
+
+## Why it matters
+
+Sports XG/advanced-stats (Understat/FootyStats) and 4 other enrichment sources have apparently NEVER been captured via
+any live/URDI-registry-mediated dispatch path, only via manual backfill scripts — a live-pipeline data-completeness gap
+on real production sports data, same severity class as the original lookback bug this doc follows up on.
+
+## Recommended decision
+
+Two independently scoped, mechanically-determinable fixes (neither is a design call — do NOT bundle):
+
+1. **Register the 5 missing venue keys** in `unified_api_contracts/registry/venue_adapter_keys.py`
+   (FOOTYSTATS/UNDERSTAT/TRANSFERMARKT/SOCCER_FOOTBALL_INFO/OPEN_METEO), mapping each to its existing
+   `instruments_service/reference_data/adapters/sports/factory.py` `_ADAPTERS` key (confirmed `"understat"` exists;
+   verify the other 4 factory keys before registering). Add a regression test asserting `venue_adapter_keys.py` declares
+   an entry (real key or `NO_ADAPTER_YET`) for every venue that ALSO has a live `_ADAPTERS` factory registration, so
+   this class of drift can't silently recur. Then re-run the manifest query (Step 3 above) after a full day-plus of live
+   operation post-fix to confirm the registration alone closes the gap, or surfaces a further residual.
+2. **Persist `FirstSuccessPoller._pending`** across `--one-shot` invocations (e.g. alongside `PeriodicTierState` in the
+   same state bucket) so `first_success=True` confirmations become structurally possible again — this is
+   observability/confirmation only, does not gate the real dispatch, so it can ship independently and at lower urgency
+   than #1.
+
+## Todos
+
+- [ ] [INFRA] P0. Register `FOOTYSTATS` / `UNDERSTAT` / `TRANSFERMARKT` / `SOCCER_FOOTBALL_INFO` / `OPEN_METEO` in
+      `unified_api_contracts/registry/venue_adapter_keys.py`, mapping each to its existing factory key in
+      `instruments-service/instruments_service/reference_data/adapters/sports/factory.py`'s `_ADAPTERS` table (verify
+      each key name matches before mapping — only `"understat"` was confirmed in this pass). Add a regression test that
+      fails if any venue with a live `_ADAPTERS` factory entry lacks a `venue_adapter_keys.py` entry (real key or
+      `NO_ADAPTER_YET`). Repo: unified-api-contracts (+ instruments-service if the factory key names need reconciling).
+      **Done when**: the fix ships, the regression test passes, and `gcloud logging read` against
+      `uts-prod-instruments-service-sports-fixtures` shows the `URDI fetch: N venue(s) failed with PERMANENT errors`
+      line no longer includes these 5 venues.
+- [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying.** After a full day-plus of live operation
+      post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`, `capture_status=captured`, `written_at` >
+      the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a fresh row appears (closes this issue) or,
+      if still zero, escalate further (a THIRD cause would remain). Repo: instruments-service / market-tick-data-service
+      (read-only).
+- [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
+      pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
+      possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
+      dispatch). Add a regression test proving a pending entry registered in one `SportsTriggerScheduler` instance is
+      picked up and resolved by a FRESH instance reading the same persisted state (simulating the one-shot restart).
+      Repo: deployment-service.
