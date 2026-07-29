@@ -105,7 +105,7 @@ todos of its own**. The plans that actually work these docs' open items:
 (orphan-reaper kills an in-flight detached quickmerge, marks false-done) ·
 [issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md](/plans/active/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md)
 (worker completes with no clean-exit signal, watchdog needlessly rekicks) ·
-[issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md](/plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md)
+[issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md](/plans/archive/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md)
 (`auto_park.py` doesn't mechanically enforce its own "no park without flipper" rule).
 
 **Close-out criterion**: each dispatch-correctness bug fixed + a regression test added proving the specific race/gap

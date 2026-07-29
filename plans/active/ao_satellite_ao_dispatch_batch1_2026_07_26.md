@@ -214,11 +214,12 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       either confirmed to generalise or scoped. Read the skip handler in `agent-orchestrator/server/routes/slots_ops.py`
       and `server/auto_park.py::maybe_auto_park` (plus `_ESCALATING_REASON_CODES`) rather than grepping a symbol.
       **AUDIT-ONLY — do not change `auto_park.py` in this todo**: if the audit finds an uncovered code, file it as a NEW
-      tracked todo in the source doc instead, because `auto_park.py`'s other open item
-      (`/plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md`) is an undecided
-      operator-gated design question and must not be pre-empted. **Done when**: the source doc carries a
-      per-`reason_code` table with the code-read evidence for each row. Source:
-      `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md` (BACKEND P3).
+      tracked todo in the source doc instead. (Note 2026-07-29: `auto_park.py`'s other open item,
+      `/plans/archive/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md`, is now RESOLVED — decided
+      (c) explicitly-decline-to-build, no code shipped; it is no longer a live design question, but this todo's own
+      audit-only scoping stands regardless.) **Done when**: the source doc carries a per-`reason_code` table with the
+      code-read evidence for each row. Source: `/plans/archive/issues/gated_skip_park_no_slack_page_2026_07_25.md`
+      (BACKEND P3).
 - [ ] [REVIEW] P2. **Read-only: is each of the 7 rootm commit-sets' functionality on LDR today?** For every commit-set
       the rootm-branch doc named, record present-or-absent on `origin/live-defi-rollout`. The 7 `tab/rootm/*` branches
       it says are "LEFT IN PLACE" are **measurably GONE** (verified 2026-07-26 via the GitHub branches API across all
@@ -245,18 +246,18 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
-                                      NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
-                                      `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
-                                      not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
-                                      `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
-                                      downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
-                                      logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
-                                      resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
-                                      defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
-                                      the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
-                                      primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
-                                      unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
-                                      decision this session didn't make.
+                                          NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+                                          `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+                                          not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+                                          `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+                                          downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+                                          logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+                                          resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+                                          defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+                                          the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+                                          primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+                                          unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+                                          decision this session didn't make.
 
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
@@ -350,8 +351,10 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 - `/plans/active/issues/escalation_backlog_repo_collision_blind_spot_2026_07_25.md` — its Todos heading literally reads
   "NOT for autonomous dispatch as-is"; the first todo is `[OPERATOR-DECISION]` on directionality (a)/(b)/(c) and the
   second is explicitly blocked on it.
-- `/plans/active/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md` — a three-way fork whose option
-  (c) is "explicitly rule this is not worth building".
+- ~~`/plans/archive/issues/auto_park_no_flipper_rule_not_mechanism_enforced_2026_07_20.md` — a three-way fork whose
+  option (c) is "explicitly rule this is not worth building".~~ **RESOLVED 2026-07-29** (batch closeout pass) — decided
+  option (c), explicitly declined to build mechanism-level enforcement (reasoning in the issue doc's own todo); no code
+  shipped, doc archived. No longer a live design fork.
 - ~~`/plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md` — `[OPERATOR]` shape
   decision gating the `[SCRIPT]` implementation.~~ **RULED 2026-07-28** (operator gated-decision closeout pass — this
   decision is the standing theme's own named example: "Things should recover FULLY if they die or restart (e.g. CI
