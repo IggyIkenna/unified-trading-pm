@@ -85,7 +85,7 @@ between "3 for CI" and "2 for scheduled" — a scheduled-task burst (a 9-tranche
       implementation, same verification discipline (local build with a real token, then a real Cloud Build trigger +
       `gcloud logging read` scoped to the build id).
 
-### 2. The 3/2/10 slot-reserve split (code, ready to ship)
+### 2. The 3/2/10 slot-reserve split (code — SHIPPED)
 
 Replaced the single `escalation_slot_reserve()` with two independent, structurally-enforced reserves:
 
@@ -108,10 +108,10 @@ Replaced the single `escalation_slot_reserve()` with two independent, structural
 - `bash scripts/quality-gates.sh` green (ruff/basedpyright/pytest 1981+ passed/dashboard) after separating out unrelated
   pre-existing WIP (see below).
 
-- [ ] [SCRIPT] P0. Ship `server/config.py` + `server/autospawn.py` + `server/plan_health.py` +
-      `tests/test_autospawn.py` + `tests/test_plan_health.py` via
-      `quickmerge --agent --files 'server/config.py server/autospawn.py server/plan_health.py tests/test_autospawn.py tests/test_plan_health.py'`
-      (scoped explicitly — do NOT include `server/dedup_state.py`, see the WIP note below). Verify CI green post-push.
+- [x] ✅ **DONE 2026-07-29** — `agent-orchestrator@64365ad`. Shipped `server/config.py` + `server/autospawn.py` +
+      `server/plan_health.py` + `tests/test_autospawn.py` + `tests/test_plan_health.py` (scoped, `server/dedup_state.py`
+      deliberately excluded, see the WIP note below). `bash scripts/quality-gates.sh` green pre-ship;
+      `git rev-list --count     origin/live-defi-rollout..HEAD` == 0 post-push.
 
 ### 3. ⚠️ Found + preserved: unrelated pre-existing uncommitted work in this checkout
 
