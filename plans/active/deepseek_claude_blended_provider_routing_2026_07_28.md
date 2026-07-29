@@ -289,11 +289,22 @@ entirely):
 
 ## Recommended rollout sequence (2026-07-29)
 
-1. **(done)** `~/.claude-accounts/deepseek-v4-pro.env` wired + smoke-tested + `$5` prepaid balance added.
-2. Push the env file to both creds buckets (GCS via `push_creds_to_gcs.sh`, S3 manual mirroring) — harmless ahead of
-   registration, unblocks later steps.
-3. Fix the `ORCHESTRATOR_SERVER_URL` local-pilot production-reachability gap (todo below) — small, prevents repeating
-   the 2026-07-29 respawn-loop incident.
+- **2026-07-29 (continued) — steps 2+3 of the rollout sequence executed**:
+  - **Step 2 (creds buckets)**: `deepseek-v4-pro.env` pushed to both GCS
+    (`gs://central-element-323112-orchestrator-creds/accounts/deepseek-v4-pro.env`) and S3
+    (`s3://uts-orchestrator-creds-427895769566/accounts/deepseek-v4-pro.env`). GCS via manual `gsutil cp` (the
+    sanctioned `push_creds_to_gcs.sh` script validates `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-` and would reject a
+    DeepSeek env file that deliberately unsets it — that script needs a `--provider deepseek` flag for non-Anthropic
+    accounts, noted as a follow-up gap). S3 via manual `aws s3 cp` (no S3-push script exists in the repo for ANY
+    account). **Also found**: there are 6 Claude accounts in both buckets (sub-a through sub-f), not the 4 the codex doc
+    states — codex drift, out of scope here, noted.
+  - **Step 3 (server_url fix)**: `config.server_url()` fixed to derive its default from `ORCHESTRATOR_PORT` env when
+    that's set to a non-8765 value, instead of always returning the hardcoded `http://localhost:8765` default. A local
+    pilot on port 8791 now correctly generates worker boot prompts pointing at `http://localhost:8791` without needing a
+    separate `ORCHESTRATOR_SERVER_URL` env var. Backward-compatible: the production VM's `ORCHESTRATOR_SERVER_URL` is
+    explicitly set, so this code path is never reached there (explicit override always wins). Quality gates green on all
+    3 layers. Held uncommitted with the rest of the batch.
+
 4. Re-run the local pilot against the redesigned policy specifically (todo below) — exercises the real spawn plumbing
    under real concurrent dispatch with the new accumulator/quota-adaptive/mutual-fallback logic; the 2026-07-29 pilot
    ran the OLD code (fraction 0.5, modulo split, no quota-adaptation), not this one.
