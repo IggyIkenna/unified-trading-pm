@@ -123,17 +123,24 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **PARTIALLY RULED 2026-07-28** (operator general theme applied to the part it determines; the
-      remainder is a genuine business-fact gap — see below). **Process topology: RULED — option (a)**: MDPS runs one
-      process per live shard (`ASSET_GROUP:VENUE:DATA_TYPE`) discovered from the instruments universe, with
-      features-service running one process per applicable `--feature-family`, both subscribing to the same asset_group's
-      `candle_computed` stream. Reasoning: this is the theme's "relaxed/broader" default — the most granular,
-      fully-decomposed shape (per-shard MDPS + per-family features-service) rather than a monolithic co-located
-      consumer, consistent with "opt for full completions, no shortcuts" and the standing preference for broader
-      coverage over a narrower, cheaper architecture; it's also the only shape offered in this issue with no viable
-      named alternative, so there's nothing to adjudicate between. **Still genuinely OPEN (not resolved by the theme —
-      flagging why, per this task's own instructions)**: which of the 9 `--feature-family` sub-packages apply to which
-      `asset_group` is a real product/strategy decision, not a lookup — a quick code check
+- [x] ✅ [OPERATOR] P2. **FULLY RULED 2026-07-29 (interactive decision session) — the family↔asset_group mapping
+      supplied directly by the operator.** Shipped as `FEATURE_FAMILY_ASSET_GROUPS` in
+      `features-service/features_service/common/live_runner.py` (`features-service@ebd43939`, 2 regression tests):
+      `onchain={defi}`, `sports={sports}`, `calendar`+`cross_instrument`={cefi,defi,tradfi,sports,prediction} (global),
+      `delta_one`/`multi_timeframe`/`volatility`/`performance_features`={cefi,tradfi}, `commodity`={tradfi}. Also added
+      `performance_features` to `ASSET_SCOPED_FAMILIES` (it was missing entirely — an unwired scaffold with no
+      `config.py` until now covered by the mapping). Both halves of this todo (topology + family mapping) are now
+      resolved — the `[SCRIPT]` todos below are unblocked. **PARTIALLY RULED 2026-07-28** (operator general theme
+      applied to the part it remainder is a genuine business-fact gap — see below). **Process topology: RULED — option
+      (a)**: MDPS runs one process per live shard (`ASSET_GROUP:VENUE:DATA_TYPE`) discovered from the instruments
+      universe, with features-service running one process per applicable `--feature-family`, both subscribing to the
+      same asset_group's `candle_computed` stream. Reasoning: this is the theme's "relaxed/broader" default — the most
+      granular, fully-decomposed shape (per-shard MDPS + per-family features-service) rather than a monolithic
+      co-located consumer, consistent with "opt for full completions, no shortcuts" and the standing preference for
+      broader coverage over a narrower, cheaper architecture; it's also the only shape offered in this issue with no
+      viable named alternative, so there's nothing to adjudicate between. **Still genuinely OPEN (not resolved by the
+      theme — flagging why, per this task's own instructions)**: which of the 9 `--feature-family` sub-packages apply to
+      which `asset_group` is a real product/strategy decision, not a lookup — a quick code check
       (`features_service/*/config.py`) only proves 2 of 9 unambiguously by construction (`onchain` hardcodes
       `asset_group="defi"` regardless of caller input; `calendar` has NO asset_group axis at all — it's a shared/global
       family, not per-domain), and confirms `sports` is sports-only by naming — but the remaining 6 (`delta_one`,

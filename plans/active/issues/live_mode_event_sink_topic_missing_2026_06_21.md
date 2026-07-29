@@ -129,10 +129,16 @@ Options:
 - **Option 3:** Accept the gap for now (live STARTED/STOPPED/FAILED telemetry reaching Slack was never this fix's stated
   goal — only "don't crash on startup" was) and revisit when/if live-mode lifecycle alerting is actually needed.
 
-- [ ] [OPERATOR] P2. Decide + apply the reconciliation between `service-lifecycle-events` (canonical,
-      `InternalPubSubTopic.SERVICE_EVENTS`, terraform-provisioned, zero subscribers) and `lifecycle-events` (legacy,
-      unmanaged, the one real `alerting-service` consumer + 5 hardcoded publishers) per one of the 3 options above.
-      (repos: alerting-service, unified-trading-library, deployment-service)
+- [x] ✅ [OPERATOR] P2. **Operator-ruled 2026-07-29 (interactive decision session) — Option 1.** Decide + apply the
+      reconciliation between `service-lifecycle-events` (canonical, `InternalPubSubTopic.SERVICE_EVENTS`,
+      terraform-provisioned, zero subscribers) and `lifecycle-events` (legacy, unmanaged, the one real
+      `alerting-service` consumer + 5 hardcoded publishers) per one of the 3 options above. **Shipped**: subscribed
+      `alerting-service`'s `AlertSubscriber` to `service-lifecycle-events-sub` alongside the existing
+      `lifecycle-events-sub` (no publisher changes) — `alerting-service@47890b3` (`_ALERT_SUBSCRIPTIONS` tuple +
+      regression test), `deployment-service@dd9eac6c` (the missing `google_pubsub_subscription_iam_member` IAM grant on
+      the already-terraform-provisioned `service-lifecycle-events-sub`, `tofu apply -target=...` verified live via
+      `tofu state show`). Topic-name reconciliation (Option 2 in the analysis above) deferred — both topics coexist for
+      now. (repos: alerting-service, deployment-service)
 
 ## Todos
 
