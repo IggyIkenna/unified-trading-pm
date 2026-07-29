@@ -205,3 +205,19 @@ needed or made (working tree left clean, `git rev-list --count HEAD ^origin/live
 Same shape as the `agt-a14109` case above (task genuinely complete/no-op-verified, `/done` unreachable) — adds no new
 diagnostic surface, just another data point that this is a recurring, not one-off, failure mode. Not retrying `/done`
 further per the precedent set above; ending this turn here.
+
+## Recurrence corroboration (slot 11, escalation agt-0773cd, same day)
+
+A sixth instance, same day: escalation `agt-0773cd` (`wall_type=plan_health`, `repo` `unified-trading-pm`, `PR#1789`,
+already `MERGED` by the time this worker checked). This session's `CONTEXT` named exactly 1 hard failure
+(`AG-closeout linkage`, 1 orphan vs baseline 0) — already independently fixed by a concurrent commit before this worker
+pulled, verified identical. The full `run_hygiene_sweep.sh --ci` also surfaced a second, unnamed hard failure
+(`check_archive_candidates.sh` false-flagging 3 `depends_on`/`gate_on_depends`-gated satellite-batch plans as
+done-but-unarchived — archiving each is literally its own gated finalize-plan's own todo) — root-caused and fixed
+(`unified-trading-pm@2f5a9d966`, baseline ratcheted 10→7), independently verified (not a duplicate of the concurrent
+commit above, which only bumped the baseline to 10 rather than fixing the false-positive).
+`git rev-list --count HEAD ^origin/live-defi-rollout` = 0 on the pushed HEAD.
+`POST /api/slots/11/done {"task_id": "", ..., "one_shot_complete": true}` and a retry with `task_id: "agt-0773cd"` both
+400d with the byte-identical message this doc already documents:
+`"one_shot_complete on slot 11 but no active agent owns its session 'orch-slot-11' — a Class-A worker must /done with a task_id."`
+Not retrying `/done` further per the precedent set above; ending this turn here.
