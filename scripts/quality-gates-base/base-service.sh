@@ -181,6 +181,9 @@ fi
 # EXIT trap — bash exits with the original status unless the trap calls `exit`).
 _qg_exit_handler() {
     local rc=$?
+    # Drop this run's self-kill PID-file handle (defined below). Pid-guarded so a
+    # newer run in the same worktree never has its handle clobbered by our exit.
+    if command -v _qg_remove_run_pidfile >/dev/null 2>&1; then _qg_remove_run_pidfile 2>/dev/null || true; fi
     if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
     return 0
@@ -220,6 +223,65 @@ _qg_signal_handler() {
 trap '_qg_signal_handler TERM' TERM
 trap '_qg_signal_handler INT' INT
 trap '_qg_signal_handler HUP' HUP
+
+# ── RUN PID-FILE: a precise, worktree-scoped self-kill handle ─────────────────
+# pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md: a worker that needs to stop
+# ITS OWN stuck/detached quality-gates.sh run must have an EXACT handle, so it never
+# reaches for a host-wide `pkill -f quality-gates.sh` — that pattern matches every
+# slot's identical invocation and has twice killed a DIFFERENT slot's live QG run. The
+# shipped pkill-guard.sh REFUSES the bad pattern; THIS is the complementary "give the
+# worker the right handle so they don't need pkill at all" half.
+#
+# The handle is a PID file, and its two design constraints are BOTH load-bearing:
+#   (1) OUT-OF-REPO. An in-repo untracked artifact was the exact 2026-06-10 `.qg_cache`
+#       incident (qg-common.sh L199): it dirtied every post-QG tree + tripped quickmerge's
+#       dirty-deps pre-flight for every downstream consumer, until a fleet-wide gitignore
+#       rollout caught up. Out-of-repo = no dirt, no gitignore-rollout dependency, ship
+#       pre-flight clean by construction. So this lives under ${QG_CACHE_ROOT:-~/.cache/qg},
+#       never in ${PROJECT_ROOT}.
+#   (2) Keyed by the ABSOLUTE WORKTREE PATH, not the repo basename. Two slots each hold a
+#       clone of the same repo (.tabs/9/features-service vs .tabs/2/features-service) —
+#       SAME basename, DIFFERENT absolute path. A basename key would collide across slots
+#       and recreate the very cross-slot ambiguity this whole issue is about; the abs-path
+#       hash is slot-unique.
+# Removed by the EXIT trap (which also fires on the caught TERM/INT/HUP path, since those
+# handlers `exit`). An uncatchable SIGKILL (the OOM-killer, per the signal-handler note
+# above) skips the trap and leaves a stale file — so the writer is stale-safe: it simply
+# overwrites, and a reader is expected to `kill -0` the recorded pid before trusting it.
+# Local-dev only (the worker self-kill scenario is the shared dev host); CI runners cancel
+# via the workflow, so CI behaviour stays byte-identical.
+if [ -z "${CI:-}" ] && [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${QG_SLICE:-}" ]; then
+    _qg_runlock_slug="$(printf '%s' "${PROJECT_ROOT}" | _qg_hash 2>/dev/null | cut -c1-32)"
+    if [ -n "${_qg_runlock_slug}" ]; then
+        _QG_RUN_PIDFILE="${QG_CACHE_ROOT:-${HOME}/.cache/qg}/_runlocks/${_qg_runlock_slug}.pid"
+        _QG_RUN_ARGV="$*"
+        _qg_write_run_pidfile() {
+            mkdir -p "${_QG_RUN_PIDFILE%/*}" 2>/dev/null || return 0
+            {
+                echo "pid=$$"
+                echo "pgid=$(ps -o pgid= -p $$ 2>/dev/null | tr -d ' ')"
+                echo "repo=${SERVICE_NAME:-unknown}"
+                echo "worktree=${PROJECT_ROOT}"
+                echo "started_epoch=$(date +%s 2>/dev/null || echo 0)"
+                echo "argv=${_QG_RUN_ARGV}"
+            } > "${_QG_RUN_PIDFILE}" 2>/dev/null || :
+        }
+        # Pid-guarded removal: only clear the file if it still records OUR pid, so a newer
+        # same-worktree run's handle survives this run's exit.
+        _qg_remove_run_pidfile() {
+            [ -f "${_QG_RUN_PIDFILE}" ] || return 0
+            if grep -qx "pid=$$" "${_QG_RUN_PIDFILE}" 2>/dev/null; then
+                rm -f "${_QG_RUN_PIDFILE}" 2>/dev/null || :
+            fi
+        }
+        _qg_write_run_pidfile
+        # One loud, greppable startup line so a human watching the run sees the exact handle.
+        # A worker can also locate it from cwd alone:
+        #   grep -rl "worktree=$(pwd)" ${QG_CACHE_ROOT:-~/.cache/qg}/_runlocks/ | xargs -r sed -n 's/^pid=//p'
+        echo "🔒 [quality-gates] run pid=$$ worktree=${PROJECT_ROOT}"
+        echo "   self-kill handle: ${_QG_RUN_PIDFILE}  (stop this run: kill \"\$(sed -n 's/^pid=//p' '${_QG_RUN_PIDFILE}')\")"
+    fi
+fi
 
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 # Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES

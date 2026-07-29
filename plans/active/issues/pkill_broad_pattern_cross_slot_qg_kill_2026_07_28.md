@@ -144,10 +144,27 @@ compute on the victim slot, which must re-run to green before it can ship regard
       `pkill -f quality-gates.sh` / similar, since every slot invokes shared scripts with identical argv and such a
       pattern is host-wide, not slot-scoped. Cite this incident doc. — unified-trading-pm@`agents/RULES.md` (new bullet
       under § 1 "Your worktree", the section closest to CLAUDE.md's "Multi-agent safety").
-- [ ] [SCRIPT] P2. Consider whether `scripts/quality-gates.sh` (or its base library) should tag its own process title /
-      write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
-      a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional
-      hardening, not required if the RULES.md addendum alone is judged sufficient.
+- [x] ✅ [SCRIPT] P2. **DONE — QG now writes a precise, worktree-scoped self-kill PID-file handle** (the complement to
+      the P1 `pkill-guard.sh`: the guard REFUSES the host-wide pattern, this gives the worker the exact handle so they
+      never need `pkill` at all). Implemented once in the SSOT `scripts/quality-gates-base/base-service.sh` (sourced by
+      every repo's `quality-gates.sh`), right after the signal traps. **Two design constraints, both deliberately
+      departing from the todo's literal `.qg_run.pid`-in-the-worktree suggestion:** (1) **out-of-repo**
+      (`${QG_CACHE_ROOT:-~/.cache/qg}/_runlocks/<slug>.pid`), because an in-repo untracked artifact is the exact
+      2026-06-10 `.qg_cache` incident (`qg-common.sh` L194-205: dirtied every post-QG tree + tripped quickmerge's
+      dirty-deps pre-flight for every downstream consumer until a fleet gitignore rollout caught up) — out-of-repo means
+      no dirt, no gitignore-rollout dependency, ship pre-flight clean by construction, and no green-sentinel
+      self-reference; (2) **keyed by the ABSOLUTE worktree path** (32-char sha of `PROJECT_ROOT`), not the repo
+      basename, because two slots' clones of one repo (`.tabs/9/features-service` vs `.tabs/2/features-service`) share a
+      basename but not an abs-path — a basename key would recreate the very cross-slot collision this whole issue is
+      about. Writes `pid=/pgid=/repo=/worktree=/started_epoch=/argv=`; prints one loud greppable startup line
+      (`🔒 [quality-gates] run pid=… self-kill handle: …`); removed by the EXIT trap (also covers the caught
+      TERM/INT/HUP path since those handlers `exit`), stale-safe on the uncatchable-SIGKILL case (overwrite + reader is
+      expected to `kill -0` first), pid-guarded removal so a newer same-worktree run's handle is never clobbered.
+      Local-dev only (guarded `-z CI && -z GITHUB_ACTIONS && -z QG_SLICE`) → CI behaviour byte-identical. Worker lookup
+      from cwd alone: `grep -rl "worktree=$(pwd)" ~/.cache/qg/_runlocks/ | xargs -r sed -n 's/^pid=//p'`. Verified: 7/7
+      logic unit tests (pid roundtrip, cwd discovery, slot-uniqueness, pid-guarded no-clobber, own-removal, no in-repo
+      artifact) + an end-to-end `greeks-service/scripts/quality-gates.sh --help` real run (🔒 line printed, pidfile
+      cleaned by EXIT trap, zero leak). — unified-trading-pm@`base-service.sh` L206-263.
 - [x] ✅ [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient —
       build a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a
       `pkill`/`pgrep` wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up
