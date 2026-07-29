@@ -1,0 +1,26 @@
+[
+  {
+    "name": "keep-deployed-digests",
+    "action": { "type": "Keep" },
+    "condition": {
+      "tagState": "tagged",
+      "packageNamePrefixes": ["deployment-dashboard"],
+      "tagPrefixes": ["68a3ffc07a4287fd31f6a54b0ccd37737b04ded0"]
+    }
+  },
+  {
+    "name": "keep-5-recent",
+    "action": { "type": "Keep" },
+    "mostRecentVersions": {
+      "keepCount": 5
+    }
+  },
+  {
+    "name": "delete-older-than-3d",
+    "action": { "type": "Delete" },
+    "condition": {
+      "tagState": "any",
+      "olderThan": "259200s"
+    }
+  }
+]
