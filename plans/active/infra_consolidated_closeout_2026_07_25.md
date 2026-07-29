@@ -203,7 +203,7 @@ phases ship.
   residual "confirmed double-fetch" references the same doc already retracted · 3 stale INDEX.md facts incl. a moved
   AUTO-INVENTORY host · a retired `>200k ctx` opus trigger · and 2 separate zero-checkbox issue docs each given real
   todos). **6 items parked** as `BLOCKED-OPERATOR-DECISION` — see
-  `/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`. Exit gate re-run after rebasing onto
+  `/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md`. Exit gate re-run after rebasing onto
   current origin: `run_hygiene_sweep.sh --ci` = **0 hard / 1 soft** (the soft warning is the same pre-existing
   delete/VM-launch candidate signal, all of it outside this tranche). Shipped `unified-trading-pm@79f892f40`.
 - **2026-07-26** — First `/ag-closeout-audit` run **scoped to this tranche** (autonomous mode, operator away), directly
@@ -216,7 +216,7 @@ phases ship.
   docs were read end-to-end (32 Sources + 2 members not yet listed here:
   [issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md](/plans/active/issues/session_bound_vm_monitoring_reliability_gap_2026_07_26.md),
   found unclaimed by ANY of the 4 non-AG tranche closeouts, and
-  [issues/infra_plan_reconcile_parked_decisions_2026_07_26.md](/plans/active/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md)):
+  [issues/infra_plan_reconcile_parked_decisions_2026_07_26.md](/plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md)):
   **29 orphaned** (28 `orphaned_never_touched` + 1 `orphaned_partial_coverage`), 5 not orphaned (the generated inventory
   dashboard, `task_template.md`, the self-referential rollout meta-plan, and the two operator-decision registers). Phase
   3 drafted

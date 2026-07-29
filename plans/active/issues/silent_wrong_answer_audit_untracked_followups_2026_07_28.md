@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [silent-failure, gas-fees, pnl-correctness, 4-pillar, schema-contract, follow-up]
 related:
   [
-    /plans/active/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
   ]

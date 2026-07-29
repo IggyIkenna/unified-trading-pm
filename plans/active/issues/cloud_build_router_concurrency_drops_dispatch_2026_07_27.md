@@ -102,12 +102,18 @@ affects the LAST mile (does the fix actually run in prod) with zero observabilit
       shares this footgun (grepped for `group:.*github.workflow.*github.ref` + `workflow_call:` co-occurrence — only
       this file matched with multiple distinct callers). Same-repo dispatches still serialize via
       `cloud-build-router.yml`'s own per-repo group, unaffected by this change.
-- [ ] [INFRA] P2. Add a loud failure signal for a cancelled/dropped dispatch — e.g. a scheduled reconciliation check
-      that compares each `ldr_main` repo's main-branch HEAD commit timestamp against its `:latest` image's push
-      timestamp in Artifact Registry, and pages if an image is stale by more than the expected build+dispatch latency
-      (repo: unified-trading-pm or deployment-service, wherever fleet observability jobs live). This is the same "silent
-      failure with no alert" pattern as the SIT gate issue — the fleet has no independent "did the thing I expect to
-      have happened, actually happen" check for deploys.
+- [x] [INFRA] P2. ✅ — unified-trading-pm@9d28120e0. Added `scripts/cicd/stale_build_monitor.py` +
+      `.github/workflows/stale-build-watcher.yml` (hourly `schedule:` + `workflow_dispatch`): for every
+      `promotion_model: ldr_main` repo in `workspace-manifest.json`, resolves the `:latest`-tagged image(s) from that
+      repo's own `cloudbuild.yaml` `images:`/`substitutions:` blocks (handles every observed shape in the fleet — shared
+      `_REGISTRY_REPO`, per-repo dedicated AR repo, hardcoded literals, multi-image services — verified against the real
+      instruments-service/deployment-service/unified-trading-library/market-tick-data-service files), compares each
+      image's AR push time (`gcloud artifacts docker images list --include-tags`) against `main` HEAD's commit time
+      (`gh api .../commits/main`), and pages CRITICAL (dedup `stale-build-image`, 90m cooldown, paired
+      recovery/all-clear) if any gap exceeds `--threshold-min` (default 45). Fail-open by construction: a repo with no
+      resolvable `:latest` image (library/test-harness — e.g. UAC, e2e-testing) or an unmeasurable AR/gh query is
+      SKIPPED, never falsely paged. 15 unit tests (`tests/unit/test_stale_build_monitor.py`) cover the parsing/decision
+      logic against real fleet cloudbuild.yaml shapes; full `quality-gates.sh` green.
 
 ## Codex SSOTs
 

@@ -578,7 +578,7 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   one non-sports AG where the instruments-store object path never got the `asset_group=`/`pipeline_mode=` retrofit
   cefi/defi/tradfi already have — needs an architect pick (A/B/C) on whether/how to fold the segment into prediction's
   two existing path shapes. See
-  [`instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`](/plans/active/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md).
+  [`instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md`](/plans/archive/issues/instruments_store_prediction_path_scheme_not_asset_group_pipeline_mode_2026_07_26.md).
 
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~917-line tick-by-tick log)
 

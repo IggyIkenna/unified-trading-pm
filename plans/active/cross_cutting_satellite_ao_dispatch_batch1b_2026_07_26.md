@@ -241,7 +241,73 @@ drift_direction: advance-code
       verified above); (b) lands as code + tests in mtds/uac with `quality-gates.sh` green; (c)'s VM run reaches STOPPED
       with new Aster `derivative_ticker` shards visible in the manifest for the backfill range; (d) lands with a unit
       test asserting the 5-level book write + manifest record at `pipeline_mode=live_aster`; (e) is recorded as a
-      Progress Log finding (confirmed unchanged, or a new dated issue doc if Aster's collateral rules changed).
+      Progress Log finding (confirmed unchanged, or a new dated issue doc if Aster's collateral rules changed). —
+      **Status 2026-07-28 (slot 14, data_engineering) — 2 of 4 legs resolved, 1 coded-but-unshipped (host contention), 1
+      findings-filed pending operator input. Checkbox correctly stays unchecked.** - **(d) live Aster `book_snapshot_5`
+      WS connector — ALREADY SHIPPED, no action needed.** Live code check found the plan's premise stale: the file it
+      names (`live/connectors/aster_ws.py`) was already renamed/consolidated into
+      `market_tick_data_service/live/connectors/aster_book_liq_ws.py`, which already implements
+      `AsterBookWSConnector(BinanceFuturesBookWSConnector)` (5-level `bid_px_0X`/`bid_sz_0X`/`ask_px_0X`/`ask_sz_0X`
+      shape via the shared `_build_book_levels()`), registered via `_aster_factory()` →
+      `register_ws_feed_connector(venue="ASTER", ...)`, with real test coverage (`tests/unit/test_aster_ws_connector.py`
+      `TestAsterBook`, incl. `test_aster_registered_for_all_data_types`). No commit made — nothing to change. - **(e)
+      Aster margining re-verify — DONE, filed as a finding (not silently reconciled).** Live-fetched
+      `docs.asterdex.com`: two DIFFERENT collateral tables exist (general "Aster Perps" multi-chain vs "AstherusEX"
+      orderbook) that disagree with each other AND with the currently-registered UAC `venue_collateral.py` USDC/USDT-
+      only rows (both live tables show BTC/ETH accepted at a real 95% ratio, contrary to nothing registered for BTC/ETH
+      today) — and which Aster product our `fapi.asterdex.com` integration actually trades against is genuinely
+      ambiguous from the docs alone. Filed `issues/aster_margining_registry_live_docs_drift_2026_07_28.md` (`[OPERATOR]`
+      todo to confirm the product mapping before any registry edit — a wrong haircut here mis-sizes real cash-and-carry
+      positions). No code touched pending that confirmation. - **(c) Aster perp-funding backfill VM — NOT launched;
+      stale-launcher + genesis-conflict finding filed instead of guessing.** The plan's named launcher
+      (`launch-mtds-perp-funding-backfill-vm.sh --perp-protocols aster`) targets `PerpFundingHandler`, which RETIRED
+      Aster from standalone `perp_funding` capture 2026-07-08 (its own module docstring) — running the plan-literal
+      command would hit the unknown-protocol branch and write false `attempted_failed` manifest rows, not silently
+      no-op. Separately, a live manifest census (`market-data-tick-cefi-prd-central-element-323112`) found ASTER
+      `derivative_ticker`'s real captured coverage starts 2023-11-01 with ZERO manifest rows of any kind in
+      2023-07-22→2023-10-31 — disagreeing with BOTH the plan's stated 2023-07-22 genesis AND the CORRECT current
+      launcher's (`launch-cefi-hl-aster-historical-backfill.sh`) own hardcoded 2024-01-01 default. 3-way genesis
+      disagreement is a genuine judgment call, not a mechanical fact — did not guess-launch a VM. Filed
+      `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md` with the correct
+      (non-retired) launcher command + exact scoping flags (`VENUES=ASTER DATA_TYPES=derivative_ticker` +
+      `OVERRIDE_START_DATE`/`OVERRIDE_END_DATE`) ready to run once the genesis date is confirmed. - **(b) historical
+      funding-cadence tracker — CODE + TESTS WRITTEN, BLOCKED FROM SHIPPING by severe host QG contention, not by
+      anything wrong with the change.** Implemented in `unified_api_contracts/registry/perp_funding_cadence.py`:
+      `FundingCadenceEra` NamedTuple + a `FUNDING_CADENCE_HISTORY: dict[str, tuple[FundingCadenceEra, ...]]` seeded 1:1
+      from `FUNDING_CADENCE_SECONDS` (every venue gets one open-started era at today's value — no venue has ever changed
+      cadence yet), plus `cadence_seconds_as_of()`/`fundings_per_day_as_of()`/`annualise_funding_rate_bps_as_of()`
+      date-aware lookups (walk the venue's eras, return the cadence whose `effective_from` last applies on-or-before the
+      query date) — this is the CANONICAL/docs-sourced half of Finding 3's "canonical-from-docs or inferred from
+      observed settlement frequency" ask; the mechanism is designed so a future real cadence change is a 2nd-era
+      addition, not a silent edit-in-place. 16 new tests added to `tests/unit/test_perp_funding_cadence.py`
+      (`TestFundingCadenceHistory`) incl. a consistency guard that the LATEST era always matches
+      `FUNDING_CADENCE_SECONDS` (mirrors the existing `FUNDING_ACCRUAL_MODEL` consistency test's pattern) and a
+      synthetic 2-era multi-era-walk test (no real venue has 2 eras yet, so this proves the walk logic rather than a
+      live fact). **The GCS-persisted OBSERVED/inferred half (Finding 3's other named sourcing mode — counting real
+      distinct `funding_timestamp` settlements/day per shard, mirroring
+      `e2e-testing/scripts/defi/       staked_basis_funding_scan.py`'s `n_settlements` logic, lifted into a proper MTDS
+      script that writes a dated audit object to GCS) was NOT built this session** — descoped once the QG blocker made
+      it clear the canonical half alone would already exceed a single turn's shippable budget; a follow-up todo is
+      warranted, not silently dropped, see below. **Shipping blocker**: `unified-api-contracts` `quality-gates.sh` was
+      SIGTERM-killed by the qg-host-governor 5 consecutive times (~20min span) at the `[3/6] TESTS` phase while host
+      swap sat at 12-15Gi/15Gi used and 14-17 concurrent `quality-gates.sh` processes ran fleet-wide (vs the documented
+      `max(2, floor(cores/4))` cap) — filed `BLK-af1211b4` rather than keep silently retrying. The code sits
+      committed-locally-only in the `.tabs/14/unified-api-contracts` worktree pending a clean QG pass; NOT pushed
+      (shipping via quickmerge requires the fresh-SHA sentinel a green run writes, so it genuinely cannot ship until QG
+      completes once, not a discretionary choice).
+- [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
+      (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
+      versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from
+      `e2e-testing/scripts/defi/staked_basis_funding_scan.py` (`fr["funding_timestamp"].nunique()` per shard) into a
+      proper committed MTDS script/CLI that, for a given venue+day, reads the real `derivative_ticker` shard, computes
+      the observed settlement count, compares it against `cadence_seconds_as_of(venue, day)` (UAC
+      `perp_funding_cadence.py`), and writes a small dated audit JSON to GCS (via UTL's `get_storage_client()`, never
+      inline `gs://`) flagging any day where observed cadence disagrees with the registered value — the "a venue cadence
+      change nobody documented in the canonical history still gets caught" half of the original ask. (repo:
+      market-tick-data-service + unified-api-contracts). Depends on the `FUNDING_CADENCE_HISTORY` todo above having
+      shipped (calls its `cadence_seconds_as_of` API). **Done when**: the script runs against a real venue+day and
+      writes a real audit object to GCS; unit tests cover both the agree and disagree cases with a mocked storage
+      client; `quality-gates.sh` green.
 - [x] ✅ [BUG] P0. **DONE 2026-07-28 (part 1) / re-scoped (part 2).** (1) Stash recovery: the original stash
       (`features-safe-survivor-fixes-2026-07-20-DEFERRED-peer-contention-on-smoke_matrix-allhandlers`) was confirmed
       unrecoverable from the features-service clone (`git stash list` empty, no matching dangling commit in

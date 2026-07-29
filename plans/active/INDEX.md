@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 251 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -173,7 +173,7 @@ by hand._
   data-capture pipeline for PREDICTION Kalshi + Polymarket YES/NO markets — WS connectors, transport/ sink correctness,
   message-shape fixes, live producer VM operations, source/pipeline-mode registration; split out of…
 
-### defi (43)
+### defi (44)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -236,6 +236,10 @@ by hand._
 - [`defi_expected_unattempted_seeder_design_2026_07_26`](./defi_expected_unattempted_seeder_design_2026_07_26.md) —
   Design track for the real DeFi expected_unattempted seeder ruled for on BLK-7c950d06 (Option A) — DeFi currently has
   NO expected_unattempted signal at all (MTDS orchestrator excludes every defi venue from the sentinel fan-out;…
+- [`defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28`](./defi_expected_unattempted_seeder_design_2026_07_26_finalize_2026_07_28.md)
+  **[draft]** — Gated closeout for defi_expected_unattempted_seeder_design_2026_07_26.md — machine-held via depends_on +
+  gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
+  its AO-dispatched…
 - [`defi_pipeline_e2e_and_coverage_validation_2026_06_20`](./defi_pipeline_e2e_and_coverage_validation_2026_06_20.md) —
   End-to-end validation of the DeFi pipeline (features-onchain → strategy → execution) before the live cutover gate: run
   the full batch, verify each of the 11 registered DEFI handlers produces real (non-NaN) GCS coverage, confirm the
@@ -730,7 +734,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (65)
+### cross-cutting (66)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -937,6 +941,10 @@ by hand._
 - [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md)
   — Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply
   runs on Phase 0 completion.
+- [`pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28`](./pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md)
+  — Forked from the [REVIEW] P1 todo in
+  /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
+  unified-trading-pm's OWN `.github/workflows/` had never been run through…
 - [`scenario_library_completion_13_16_2026_07_27`](./scenario_library_completion_13_16_2026_07_27.md) — Implement the 2
   orphaned Day-1 scenario designs (plans/active/scratch_scenarios_day1/13 and 16) into the UAC ScenarioOverlay
   registry + UTL applier, per operator decision (2026-07-27 pre-June-1 stale-plans audit) — the other 16 of 18 Day-1…

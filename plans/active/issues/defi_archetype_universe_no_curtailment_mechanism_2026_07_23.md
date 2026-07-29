@@ -650,6 +650,38 @@ run SEQUENTIALLY, not in parallel:
       cases) PLUS a real-corpus regression test (`test_real_corpus_is_currently_contained`) that is now the ongoing CI
       gate catching this class of drift automatically going forward. Both repos' `quality-gates.sh --no-fix` green;
       pushed + verified reachable on `origin/live-defi-rollout` (`git merge-base --is-ancestor` both shas).
+- [ ] [BACKEND] P2. **NEW finding 2026-07-28, redirected here from `mvp_scope_resolver_code_read_2026_07_24.md`'s P2
+      todo — MVP_SCOPE catalog enforcement is blocked on a MISSING catalog-identity precondition, not just a missing
+      filter.** That doc's own audit (2026-07-26) found strategy-service's catalog never restricts itself to UAC's
+      canonical `MVP_SCOPE` (`unified_api_contracts.canonical.crosscutting._mvp_scope_predicate.is_mvp`) and asked for
+      an `is_mvp(...)` post-filter inside/after `catalog.py`'s `specs_for_archetype()` — the SAME shape as this doc's
+      own Layer-2 design sketch (Finding 1) and Layer-3 `_curtailment_reason_for_spec`/`_VENUE_IDENTITY_KEYS` mechanism.
+      **Verified blocker (2026-07-28, this session)**: `is_mvp()`'s `instrument_type` parameter is REQUIRED with no
+      default and no "unbound" convention (unlike `data_type`, which explicitly treats blank as "any MVP data_type" —
+      `_data_type_in_rule`'s docstring) — passing an empty/guessed `instrument_type` fails the CeFi/DeFi/TradFi
+      membership check outright (`if instrument_type not in rule.instrument_types: return False`). Grepped every catalog
+      builder for a literal `"instrument_type"` key: only 3 rows declare it (`catalog_trading.py`'s
+      `MARKET_MAKING_CONTINUOUS`, and even those use non-canonical lowercase values `"spot"`/`"perp"`/`"options"`
+      instead of UAC's canonical `SPOT_PAIR`/`PERPETUAL`/`OPTION` enum strings) — every CARRY/YIELD/ARBITRAGE/
+      DIRECTIONAL builder (~26 of ~29 archetypes) has NO instrument_type identity in `initial_config` at all; it's
+      implicit in the engine's `on_tick()` logic, never surfaced as catalog data. `asset_group` (cefi/defi/tradfi/
+      sports/prediction) is similarly not a stored field, and is NOT even a per-archetype constant — e.g.
+      `CARRY_BASIS_PERP`'s venue bundles mix CeFi (`deribit`/`binance`/`bybit`) and DeFi (`gmx`/`hyperliquid`) venues in
+      the SAME archetype (per this doc's own Addendum 2026-07-24), so it must be derived per-VENUE via a UAC
+      venue→asset_group classifier that doesn't currently exist as a single ready function (would need composing
+      `unified_api_contracts.registry.defi_venues.ALL_DEFI_VENUES` + a CeFi venue set + a TradFi venue set). **Real,
+      scoped follow-on (NOT actioned — needs an operator scoping decision, same as this doc's own Recommendation
+      section)**: (1) extend the per-archetype catalog builders with a canonical `instrument_type`/`asset_group`
+      identity per row (mirroring how `_VENUE_IDENTITY_KEYS`/`_CURRENCY_IDENTITY_KEYS` reconcile each archetype's own
+      literal config-key names for the venue/currency axes) — this is genuinely per-archetype, per-engine domain work
+      (same "fiddly part" this doc's own Finding-1/A-recommendation already flagged for the venue-containment check, at
+      comparable or greater size given ~26 archetypes vs. the venue check's already-built subset), NOT a small
+      filter-function task; (2) only once that identity exists can a real `is_mvp()`-backed curtailment reason
+      (`not_mvp_scope`, alongside the existing `curtailed_by_operator_constraint`) be added safely to
+      `_resolve_drivable()`. Do NOT guess `instrument_type`/`asset_group` values to unblock this faster — a wrong guess
+      silently mis-filters the LIVE/paper production strategy universe (drops MVP specs or keeps non-MVP ones), worse
+      than leaving the gap open. Scope/sequencing decision needed before dispatch: build this for all ~29 archetypes vs.
+      the already-`_ENGINE_DRIVABLE_ARCHETYPES` subset first (mirrors this doc's own Layer-3 phasing).
 
 **Lesson recorded**: an audit that maps only the PRODUCTION side of a question ("what does the catalog declare") can
 miss a real gap that only shows up by diffing against the EXPLORATORY/backtest side ("what did we already prove out that
