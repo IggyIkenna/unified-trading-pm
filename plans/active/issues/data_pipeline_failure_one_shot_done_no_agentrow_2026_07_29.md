@@ -1,0 +1,139 @@
+---
+doc_type: issue
+title:
+  "`data_pipeline_failure` one-shot escalation worker cannot signal `/done` (`one_shot_complete: true`) — 400 'no active
+  agent owns its session' despite a code path that should have registered the AgentRow"
+summary: >-
+  Escalation worker agt-79063c (slot 10, role=data_pipeline_failure) finished its assigned DP-FETCH-009 fix and tried to
+  signal completion via `POST /api/slots/10/done {task_id, sha, evidence, one_shot_complete: true}` per its boot
+  contract. The call 400'd with "one_shot_complete on slot 10 but no active agent owns its session 'orch-slot-10' — a
+  Class-A worker must /done with a task_id" on two separate attempts (different task_id values, same error, minutes
+  apart, with a heartbeat call succeeding normally in between). Code reading in `agent-orchestrator` shows
+  `server/escalation.py`'s `escalate()` success path DOES register an AgentRow (`lifecycle="one_shot"`,
+  `tmux_session=tmux_spawn.session_name(slot_id)`, `agent_id=escalation_id`) for exactly this role
+  (`data_pipeline_failure` IS in `_AGENT_KIND_BY_PROMPT_TEMPLATE`), so the registration SHOULD have happened at dispatch
+  time — yet `find_active_agent_for_session` (which requires `AgentRow.status IN (active, stale)` matched to
+  `tmux_session`) finds nothing at `/done` time. Not root-caused to the exact failure point (no live DB access from a
+  worker slot) — flagging with the diagnostic head-start for whoever has orchestrator-DB access.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer, admin]
+tags: [agent-orchestrator, one-shot-lifecycle, escalation, data_pipeline_failure, done-endpoint, agentrow]
+related:
+  [
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+  ]
+created: 2026-07-29
+parent_epic: agent_operating_framework_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: research
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.4
+assigned_role: data_engineering
+drift_direction: advance-code
+depends_on: []
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+source: "data_pipeline_failure escalation worker, slot 10, escalation_id agt-79063c"
+last_updated: 2026-07-29
+---
+
+# `data_pipeline_failure` one-shot worker's `/done {one_shot_complete: true}` 400s despite a registration path that should cover it
+
+## What I found
+
+Slot 10 was booted as a one-shot `data_pipeline_failure` escalation worker (`escalation_id=agt-79063c`,
+`repo=market-tick-data-service`, `pr_number=0`). After completing its assigned DP-FETCH-009 fix (see the sibling
+`cefi_high_attempted_failed_batch_cluster_2026_07_23.md` / `deribit_options_chain_af_g4_blocker_2026_07_03.md` Progress
+Log entries for that work), it followed its boot contract's exit step:
+
+```
+POST http://localhost:8765/api/slots/10/done
+{"task_id": "agt-79063c", "sha": "d6dcb97", "evidence": "...", "one_shot_complete": true}
+```
+
+Response (400), reproduced twice (different `task_id` values tried — `""` and `"agt-79063c"` — same error both times,
+with a successful `POST /api/slots/10/heartbeat` call in between that returned `{"ok": true, "status": "working", ...}`
+normally):
+
+```
+{"detail":"one_shot_complete on slot 10 but no active agent owns its session 'orch-slot-10' — a Class-A worker must /done with a task_id."}
+```
+
+### Code path traced (read-only, `agent-orchestrator` repo checked out in this slot)
+
+- `server/routes/slots_worker.py::_done_one_off` (the `one_shot_complete` handler) computes
+  `tmux_session = slot.tmux_session or tmux_spawn.session_name(slot_id)`, then calls
+  `ss.find_active_agent_for_session(session, tmux_session)`; a `None` result raises exactly the 400 seen.
+- `server/state_store/agents.py::find_active_agent_for_session` requires
+  `AgentRow.tmux_session == tmux_session AND AgentRow.status IN ("active", "stale")`.
+- `server/escalation.py`'s `escalate()` success branch (the path that should have spawned slot 10 for this
+  `wall_type=data_pipeline_failure` dispatch) DOES call
+  `_register_agent(... agent_id=escalation_id, tmux_session=tmux_session_name, lifecycle="one_shot", ...)` where
+  `tmux_session_name = tmux_spawn.session_name(slot_id)` — i.e. `"orch-slot-10"`, matching the `/done` error's own
+  session name. `data_pipeline_failure` IS a registered key in `_AGENT_KIND_BY_PROMPT_TEMPLATE`
+  (`server/escalation.py:134-137`), so this is not the already-fixed `ag_closeout_auditor`-family "never routed through
+  the right dispatch endpoint" bug class (that fix — lazy AgentRow creation in `boot_slot` — is scoped to
+  `_plan_health.PLAN_HEALTH_FAMILY_ROLES` only, per `tests/test_boot_typed_role_gate.py`'s
+  `test_direct_boot_of_plan_health_family_role_lazily_creates_agentrow` /
+  `test_direct_boot_lazy_agentrow_then_one_shot_complete_succeeds` — a DIFFERENT family, but worth noting as the
+  precedent bug shape and possibly the same fix pattern applies).
+
+### Not established (needs live DB access this worker slot does not have)
+
+- Whether the AgentRow for `agt-79063c` was ever actually created (i.e. whether `escalate()`'s success branch is truly
+  what spawned this session, vs. some other path this investigation didn't find).
+- If it WAS created: whether its `status` had already transitioned away from `active`/`stale` (e.g. an intervening
+  `HealthMonitor` sweep, a slot-reclaim, or a second dispatch reusing slot 10) before this worker's own `/done` call —
+  the gap between dispatch and this worker's `/done` call spanned a long diagnostic session (the worker also did
+  substantive DP-FETCH-009 work + a self-caught mistake + revert in between, so real wall-clock time elapsed).
+- If it was NEVER created: why `escalate()`'s registration code, which reads as unconditional on the success branch,
+  didn't run for this dispatch — a spawn-failure branch that skipped straight to the
+  `if err and not _is_no_capacity_error(err)` path without the `else` ever executing would explain it, but this worker
+  has no way to see which branch fired for its own dispatch.
+
+## Why this matters
+
+Per `ao_uniform_agent_liveness_contract_2026_07_20` (referenced in `_done_one_off`'s own docstring), a one-shot agent
+that cannot cleanly signal `/done` leaves its tmux session to be reaped only via the idle-lingering-reclaim path instead
+of the intended `lifecycle-complete` archive — the exact "finished-immortal" failure mode that contract was built to
+close. This worker's session ended by simply stopping tool calls after logging the blocker via `/progress`, not via a
+clean `/done`.
+
+## Recommended next step
+
+Whoever has orchestrator-DB access (or a review/main agent with dashboard JWT) should: (1) query the `AgentRow` table
+for `agent_id='agt-79063c'` to see whether it exists at all, and if so its current `status`/`tmux_session`; (2) if it
+never existed, trace `escalate()`'s actual branch taken for this dispatch (server logs / `escalation_dispatched`
+activity event, which per the code IS logged on the success branch — check whether that event fired for this
+escalation_id); (3) if it existed but flipped to a non-active/stale status, find what transitioned it and whether
+`_done_one_off`'s status filter should be widened or the transition should be blocked while a one-shot worker's task is
+still in flight.
+
+## Todos
+
+- [ ] [DATA] P2. Query the live `AgentRow` for `agent_id='agt-79063c'` (or the `escalation_dispatched` activity log
+      entry with that `escalation_id`) to determine whether the registration ever happened, and if so what changed its
+      status before this worker's `/done` call.
+- [ ] [CODE] P2. Once root-caused: fix the gap (either the registration path for `data_pipeline_failure` dispatches, or
+      widen/guard `_done_one_off`'s active-agent lookup), and add a regression test mirroring
+      `test_direct_boot_lazy_agentrow_then_one_shot_complete_succeeds` but for the `escalation.py` dispatch path rather
+      than the `plan_health` boot path.
+
+## Progress Log
+
+- **2026-07-29 (data_pipeline_failure escalation worker, agt-79063c):** Filed after two failed `/done` attempts blocked
+  a clean session exit for an otherwise-complete DP-FETCH-009 escalation (see
+  `cefi_high_attempted_failed_batch_cluster_2026_07_23.md` for that work). Traced the code path as far as possible
+  without live DB/dashboard access; left the remaining root-cause step (which branch fired / what changed the AgentRow's
+  status) as the first todo for whoever picks this up. Did not attempt a blind code fix without confirming which of the
+  two failure hypotheses (never-registered vs. registered-then-status-changed) is correct.
