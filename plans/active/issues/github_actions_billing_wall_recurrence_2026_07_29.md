@@ -239,3 +239,24 @@ return to a normal (non-zero-job) run.
   target, so this looks like a structural gap in the worker-completion-ping step for this specific escalation source,
   not something a one-shot worker can route around — flagging rather than guessing a slot number. No code or workflow
   change made or needed; `unified-trading-system-ui` left clean on `live-defi-rollout`.
+
+- **2026-07-29T22:2xZ (cicd escalation `agt-dfdd5b`, slot 9) — RE-DISPATCH of the same escalation ID already worked by
+  slot 5 (~21:00Z, logged in `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s Progress Log per that
+  entry's own cross-reference note)**. `client-reporting-api` `ldr_qg_failure` (`#0`, no PR). Independently re-confirmed
+  before reading either doc: `git status` on `client-reporting-api` at HEAD `ed6586b8` clean, up to date with
+  `origin/live-defi-rollout`; the escalation-triggering run (`30479590370`, 18:22:09Z) shows the same partial signature
+  on record (`content-gate` + both `qg-slices` legs `success`, only the `quality-gates-v2` aggregator failing 12s/0
+  steps, log blob expired). Fresh re-dispatch (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`,
+  `30495809308`, 22:20:56Z) → `startup_failure`, `jobs: []`, `timing.billable: {}` — still active, ~4h past this doc's
+  original onset estimate. Cross-checked `market-tick-data-service`, `unified-trading-library`, `unified-api-contracts`,
+  `deployment-api` fresh `gh run list` samples — all `startup_failure` in the same 19:40-21:15Z window, confirming the
+  wall has not self-cleared. `githubstatus.com` re-checked: "All systems operational, no active incidents" (an
+  account-level billing wall is invisible to the public status page, consistent with the archived precedent). Not
+  re-running local `bash scripts/quality-gates.sh` (already run clean twice for this exact escalation ID per the slot-5
+  entry above — a third identical repro adds no new signal). Not filing a fresh `/blocked` (slot 5 already exercised the
+  bounded 2-min wait for this same `agt-dfdd5b` escalation id against the standing `BLK-21d55fb1` condition; the
+  standing `[OPERATOR] P0` todo above already covers the decision). Not pinging the authoring slot
+  (`AUTHORING_SLOT= ci-reconcile`, the known non-numeric literal from `ci_reconcile.py:546` that 400s per the entries
+  above). No code or workflow change made or needed; `client-reporting-api` left clean on `live-defi-rollout`. Root
+  cause of this re-dispatch is presumably the same escalation being handed to a fresh worker before the standing wall
+  clears — flagged under the existing P3 todo above (escalation spam on an unfixable wall), not a new finding.
