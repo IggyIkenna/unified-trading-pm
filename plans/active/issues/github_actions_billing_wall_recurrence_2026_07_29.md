@@ -1,0 +1,155 @@
+---
+doc_type: issue
+title: GitHub Actions billing wall recurrence (2026-07-29) — fleet-wide 0-step startup_failure, NOT a code/test defect
+summary:
+  "Escalated as an ldr_qg_failure wall for deployment-api (escalation agt-913803); reproduction shows this is NOT a
+  deployment-api code/test/workflow-content bug. Every sampled repo (8+) shows the identical 0-step `startup_failure`
+  (jobs:[]) signature on BOTH push and workflow_dispatch triggers, ongoing live as of 2026-07-29T20:58Z (a fresh
+  workflow_dispatch retriggered during this session still failed in 1s). This exactly matches the archived
+  github_actions_billing_wall_2026_06_11.md signature (GitHub account-level: recent payment failure / spending limit),
+  which recurred again 2026-06-23 and self-recovered both times without any code change. Operator-only fix: check
+  github.com/settings/billing. No workflow file, test, or code change can resolve this class."
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos:
+  [
+    deployment-api,
+    market-tick-data-service,
+    unified-api-contracts,
+    unified-trading-library,
+    instruments-service,
+    agent-orchestrator,
+    deployment-service,
+    features-service,
+  ]
+scope: [engineer, admin]
+tags: [ci-cd, github-actions, billing, startup_failure, incident, cross-repo, escalation]
+related:
+  [
+    /plans/archive/issues/github_actions_billing_wall_2026_06_11.md,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
+    /plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md,
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
+  ]
+created: 2026-07-29
+last_updated: 2026-07-29
+priority: P0
+parent_epic: infrastructure_master
+source: "cicd escalation agt-913803 (slot 12), dispatched for deployment-api ldr_qg_failure wall_type"
+execution_scope: orchestrator-agent
+drift_direction: none
+depends_on: []
+assigned_vm: NA
+resolved_by:
+locked_by:
+locked_since:
+---
+
+# GitHub Actions billing wall recurrence (2026-07-29)
+
+## Why this is a separate doc, not a fold into an existing one
+
+Not the same mechanism as `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` /
+`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`: those describe **slow/contended** self-hosted-runner
+box symptoms (typecheck timeouts, pytest-xdist worker crashes, 46-78 retry attempts before eventually going green — real
+job execution that is merely slow). This incident's signature is **zero job execution** (`jobs: []`, 0-2 second
+completion, both `ubuntu-latest`-targeted AND self-hosted-targeted workflows affected identically) — that is the
+distinct **account-level billing wall** signature already fully diagnosed and root-caused in the archived
+`github_actions_billing_wall_2026_06_11.md` (and its 2026-06-23 recurrence note at the bottom of that doc). This doc is
+a fresh dated recurrence record, not a new investigation — the archived doc's diagnosis, evidence method, and
+recommended fix all still apply verbatim.
+
+## What triggered this
+
+Dispatched as a `ldr_qg_failure` escalation (`agt-913803`, slot 12) with instructions to reproduce `deployment-api`'s
+`quality-gates-v2` failure locally, diagnose code-vs-test, fix the wrong side, ship. Reproduction instead showed the CI
+job never executes at all (no code/test to diagnose).
+
+## Evidence (collected 2026-07-29T20:04-20:58Z)
+
+**`gh run view <id> --json jobs` returns `jobs: []`** for every failing run — GitHub rejected the run before
+instantiating any job. Runtimes shrink toward zero across repeated attempts (41s → 13s → 2s → 1s → 0s), the same
+signature as the archived incident's "0-step kill."
+
+**Fleet-wide, not deployment-api-specific** (sampled 2026-07-29T20:50-20:58Z):
+
+| repo                     | trigger                                     | conclusion            | when (UTC)                           |
+| ------------------------ | ------------------------------------------- | --------------------- | ------------------------------------ |
+| deployment-api           | workflow_dispatch (fresh test THIS session) | `startup_failure`, 1s | 20:58:01                             |
+| deployment-api           | workflow_dispatch                           | `startup_failure`, 1s | 19:43:45                             |
+| deployment-api           | push                                        | `startup_failure`, 0s | 20:04:19                             |
+| unified-api-contracts    | workflow_dispatch                           | `startup_failure`, —  | 20:50:44, 20:49:24                   |
+| instruments-service      | workflow_dispatch                           | `startup_failure`, —  | 20:50:57                             |
+| deployment-service       | push                                        | `startup_failure`, 0s | 20:45:21                             |
+| market-tick-data-service | push                                        | `startup_failure`, 0s | 20:34:35 (and 4 more since 19:12:37) |
+| agent-orchestrator       | push                                        | `startup_failure`, 0s | 20:04:33 (and 2 more since 19:25:09) |
+| unified-trading-library  | push                                        | `startup_failure`, 0s | 19:34:04                             |
+| features-service         | push                                        | `startup_failure`, 0s | 19:23:46                             |
+
+**Onset window**: last confirmed real success across the fleet was ~16:31Z (unified-trading-library,
+unified-api-contracts via workflow_dispatch). First real (non-startup) failure: deployment-api 18:22:13 (13s, genuine
+early exit). Mass `startup_failure` onset: ~19:12-19:44Z. **Still active at time of filing** (20:58Z re-test, live, this
+session) — an ongoing window of at least ~2.5-4.5h so far.
+
+**Ruled out** (each independently checked this session):
+
+- Workflow YAML content: `deployment-api/.github/workflows/quality-gates-v2.yml` + the reusable
+  `unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` it calls — both parse cleanly,
+  both unchanged across the entire failure window (last touch 09:00Z / 05:10Z respectively, well before onset).
+- The coincident fleet-wide `main-backmerge-to-ldr.yml` template rollout (21/22 repos synced 15:49-20:07Z, same commit
+  message per repo): timing correlation is coincidental, not causal — `unified-api-contracts` received its sync at
+  15:52Z and then ran a clean **success** at 16:31Z, 40 minutes later, on the already-synced tree. A content-caused
+  break would not produce a later clean success on the same (already-updated) content.
+- Repo Actions permissions (`enabled: true, allowed_actions: all`), API rate limit (4732/5000 remaining), GitHub public
+  status page (only an unrelated Copilot-model-provider incident, started 20:07Z, separate component) — all clean.
+- Self-hosted runner contention: `deployment-api`'s caller passes `self_hosted_runner_labels: ""` (targets
+  `ubuntu-latest`, GitHub-hosted) — box contention on the workspace's own self-hosted fleet cannot explain a
+  GitHub-hosted-runner job failing to even schedule.
+- My own token cannot read GH Actions billing (`GET users/IggyIkenna/settings/billing/actions` → 403 "Resource not
+  accessible by personal access token") — **exact match** to the archived doc's finding that this class of check needs
+  the account owner's own credentials; no worker-held token can confirm or clear this state.
+
+## Why it matters
+
+Every `quality-gates-v2`-gated promotion PR fleet-wide is blocked (LDR→staging, LDR→main, any PR-triggered gate) for as
+long as the wall holds — this is a full fleet CI outage, not a single-repo issue. Per the archived doc's history, this
+class has recurred at least 3 times before (2026-06-11, continuing 2026-06-12, recurring 2026-06-23) and both prior
+recurrences self-recovered without any code change once the account-side condition cleared.
+
+## Recommended decision
+
+**Operator-only** (payment/account action, same as the archived precedent): check `github.com/settings/billing` → fix
+the failed payment method or raise the Actions spending limit. No code change exists to apply from a repo-scoped worker.
+Re-test after: `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-api --ref live-defi-rollout` should
+return to a normal (non-zero-job) run.
+
+## Todos
+
+- [ ] [OPERATOR] P0. Check `github.com/settings/billing` (payment method / Actions spending limit) and clear the block.
+      Re-test via `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-api --ref live-defi-rollout` after.
+- [ ] [BACKEND] P2. This is the 3rd+ recurrence of this exact class (2026-06-11, 2026-06-23, 2026-07-29) — the archived
+      doc's own P3 remediation item (spend telemetry / 50-80-95% budget alert, `BLOCKED-ON-DECISION` pending an
+      operator-minted `Plan: read` billing-scoped token) was never unblocked. Worth revisiting now that it has recurred
+      a third time: either mint that token so the workspace can self-detect this before it walls CI, or accept recurring
+      manual operator intervention as the standing posture.
+- [ ] [BACKEND] P3. `python-quality-gates-v2.yml`'s "Record CI status" step (`if: always()`) still dispatches a normal
+      FAILING status on a 0-step billing-kill, per the archived doc's still-open P1 "outage-aware v2 status dispatch"
+      remediation item — confirm whether that item shipped since 2026-06-11; if not, this wall is currently also
+      generating `ldr_qg_failure` escalation spam (like this one) fleet-wide for every affected repo, which is wasted
+      escalation-worker dispatch on a wall no worker can fix. Not actioned in this session (out of scope for a
+      single-repo one-shot escalation worker) — flagging for the next fleet-wide CI hygiene pass.
+
+## Evidence log
+
+- `gh run view <id> --json jobs,conclusion,status` on deployment-api runs 30485690624 / 30490502075: `jobs: []`,
+  `conclusion: startup_failure`.
+- `python -m server.ci_status deployment-api` (agent-orchestrator venv):
+  `{"blocked": true, "conclusion": "startup_failure", "qg_v2_state": "startup_failure", ...}`, reconfirmed live 20:58Z
+  after a fresh dispatch.
+- Cross-repo sample via `gh run list --repo IggyIkenna/<repo> --limit 3-15` across 8 repos (table above).
+- `gh api users/IggyIkenna/settings/billing/actions` → 403 (token cannot read billing, matching archived precedent).
+- `curl https://www.githubstatus.com/api/v2/incidents/unresolved.json` → only an unrelated Copilot-model-provider
+  incident (20:07Z onset, different component) — no GitHub Actions-component incident posted.
