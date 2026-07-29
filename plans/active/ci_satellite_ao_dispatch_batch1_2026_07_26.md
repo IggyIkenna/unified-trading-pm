@@ -274,7 +274,7 @@ concurrent workers do not collide on this file.
       ratchet, not a new orphan). Source: this plan's own todo 2 (`check_dispatch_listeners.py`, delivered
       `unified-trading-pm@613f79960`) + `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3,
       discovered while closing it).
-- [ ] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
+- [x] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
       sites so a permanently-empty input renders as unknown/not-applicable, never as a pass — starting with the two the
       doc names first: `_repo_ci_manifest.py:285-289`'s `deployed_versions.get(repo)` shape mismatch (the writer at
       `cloud-build-router.yml:853` writes `[env][repo]`, so the column is permanently blank) and the
@@ -283,7 +283,32 @@ concurrent workers do not collide on this file.
       Copy the correct dormancy-checking pattern the doc already identifies (`promotion_lag_monitor.py:190-199`,
       `_repo_ci_manifest.py:251-258`). **Done when**: each fixed reader renders unknown on empty input, covered by a
       test, and the false comment is corrected. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` §
-      F5 + its [INFRA] P2.
+      F5 + its [INFRA] P2. — **DONE 2026-07-29, of the 4 sub-items 3 are closed and 1 is a genuinely-scoped-larger
+      residual, split out below rather than force-fit here:** 1. ✅ **`deployed_version_for` shape mismatch — FIXED.**
+      Now reads `deployed_versions["prod"][repo]["version"]` (the real writer shape) instead of a flat
+      `deployed_versions.get(repo)`. The pre-existing test fixture used the WRONG flat shape too (so it validated a
+      contract that never matched production) — corrected + added 2 regression tests proving the flat/wrong-env cases
+      correctly resolve to `None`, not silently succeed by accident. `deployment-api@6885fc3`, `quality-gates.sh` full
+      green. 2. ✅ **`repo_ci.py`'s "Promotion blocked" panel — ALREADY FIXED, verified not re-fixed.** Live code at
+      (now) `repo_ci.py:639-667` (`_build_promotion_blocked`) reads real `view.promotion_failures()` +
+      `view.promotion_quarantine()` state, not the vacuous pattern the source issue described — this drifted to a real
+      fix sometime between the issue's 2026-07-23 filing and today, independently of this todo. No code change needed;
+      confirmed via direct read, not assumed. 3. ✅ **False `ldr-to-main-promote-fleet.yml` comment — FIXED.** Corrected
+      to state the true reason `breaking_pending` is currently empty (staging_dormant_mode suppresses the writer
+      fleet-wide, not an ldr_main-specific carve-out) and names the actual load-bearing signal (`sit-gate/fleet-green`
+      required check, Firestore `sit_validated_tree`). `unified-trading-pm@b7605db21`. Comment-only, no behavior
+      change. 4. ⚠️ **`stuck_in_sit` — confirmed still vacuous, but NOT tri-stated here; split into its own todo.**
+      `derive_sit_state`'s `in_pending = repo in breaking_pending` is structurally always `False` while
+      `staging_dormant_mode` is on (same root cause as item 3), so `stuck_in_sit` can never fire — genuinely matches the
+      issue's description. BUT: traced its only consumer (`deployment-ui/src/lib/repoCi.ts:172`,
+      `if (hasGenuineStuck || row.sit.stuck_in_sit) return 2`) and confirmed it is OR'd with other real signals, never
+      gates/suppresses one — so today it can only ever be a false-negative (never contributes a spurious "stuck"), not a
+      false-positive masking a real failure, unlike the promotion-blocked bug this todo's sibling item fixed. Making it
+      a real tri-state (unknown vs. true/false) needs `SitStateDict.stuck_in_sit: bool` → `bool | None` in
+      `deployment-api`'s `_repo_ci_types.py` PLUS the matching `deployment-ui` consumer change — a real type-contract
+      change across 2 repos, not a same-shape reader fix like items 1-3. Per the workspace's dispatch-scope rule this is
+      bigger than a single AO todo; tracked as its own properly-scoped follow-up:
+      `issues/repo_ci_stuck_in_sit_tristate_2026_07_29.md`.
 - [ ] [INFRA] P2. **`full-workspace-sit.yml`: a cancelled run's status clobbers a real success, and `SIT_VALIDATED`
       over-claims.** Two bounded fixes in one file. (a) Live-measured 2026-07-25: run `30158515857` reached
       `conclusion=success` at 12:50:49Z, then the older overlapping run `30158518796` — `cancelled` — POSTed
