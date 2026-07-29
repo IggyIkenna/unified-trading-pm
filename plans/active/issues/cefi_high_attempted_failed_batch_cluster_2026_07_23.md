@@ -65,7 +65,7 @@ resolved_by:
 source:
   "6 CRITICAL DP_RUN_MOSTLY_EMPTY alerts, `data-pipeline-alerts` Slack channel, fired
   2026-07-22T23:16Z-2026-07-23T00:02Z, asset_group=cefi, bucket=market-data-tick-cefi-prd-central-element-323112"
-last_updated: 2026-07-23
+last_updated: 2026-07-29
 ---
 
 # CeFi `DP_RUN_MOSTLY_EMPTY` alert cluster (2026-07-22/23) -- root-cause + why it's not a new incident
@@ -469,6 +469,18 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
 
 ## Progress Log
 
+- **2026-07-29 (data_pipeline_failure escalation worker, agt-79063c):** A DP-FETCH-009 re-page for
+  `(cefi, futures_chain)` dispatched this worker with no issue doc pre-linked; it initially mis-fixed the finding
+  (removed `futures_chain` from the cefi Tardis launchers + re-ran the banned
+  `reclass_cefi_futures_chain_no_tardis_source.py` against prod) before finding this doc +
+  `deribit_options_chain_af_g4_blocker_2026_07_03.md`'s 2026-07-18 correction banner, which rules that exact fix out.
+  Reverted both actions same session (full account in that doc's 2026-07-29 entry) — net effect on this cluster is zero,
+  the backlog is exactly as this doc already describes it (still gated on Track-2). Also corroborates: `futures_chain`'s
+  DERIBIT population is still ~112,700+ attempted_failed (403-storm core) plus small ~2,442-row 404 tail plus a
+  newly-observed small daily trickle (2026-07-26 through 07-29, ~124 rows/day across
+  BINANCE-DELIVERY/BINANCE-FUTURES/BYBIT/DERIBIT) — i.e. the launcher IS still periodically retrying and re-failing
+  futures_chain daily, consistent with Track-2 not having run yet. Cross-linked from
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`.
 - **2026-07-28 (gated-decision retag sweep)** — Applied a ruling to the outstanding `[OPERATOR]` paging-cadence
   decision: stop the 30-min `DP_RUN_MOSTLY_EMPTY` CRITICAL re-page once a cell is labeled STATIC BACKLOG, downgrading to
   a lower-severity periodic reminder rather than full silence — reasoning drawn from the workspace's own existing "dedup
