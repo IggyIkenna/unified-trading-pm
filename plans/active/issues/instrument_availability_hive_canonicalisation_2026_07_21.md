@@ -32,6 +32,7 @@ tags:
   ]
 related:
   [
+    /plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md,
     /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md,
     /codex/02-data/cross-asset-canonical-target-ssot.md,
     /codex/02-data/canonical-cutover-register.md,
@@ -139,6 +140,24 @@ UP into the full-hive tree, THEN re-sync the manifest / data-status so all four 
 the flat tree until the full-hive twin is verified present. The instruments-service reader / manifest-consolidator that
 consume these paths must be updated in lockstep with the writer.
 
+## 🔴 2026-07-29 — near-miss: a SEPARATE, older issue doc's stale "hive is dead storage" premise nearly undid this
+
+migration's target shape; caught + reverted same-day
+
+`plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md` (last edited 2026-07-26, i.e. AFTER this
+doc's 2026-07-21 writer cutover but never cross-checked against it) carried an operator ruling to delete the DeFi
+`instrument_availability` hive shape as "frozen dead storage." A worker executed that ruling literally and deleted
+70,570 real hive objects — the CANONICAL shape this doc's writer fix (`instruments-service@a9be6ce9`) has been writing
+exclusively since 2026-07-21 (confirmed via a fresh live check: zero flat writes on any of 2026-07-25 through
+2026-07-29). Caught because the delete script's own no-twin-exclusion set (Part 5 of the delete-safety protocol)
+contained objects dated as recent as the day of execution — impossible if hive were genuinely frozen. Fully restored
+same-day via GCS Soft Delete (`instruments-service/scripts/restore_defi_hive_instrument_availability_2026_07_29.py`,
+72,514 objects restored, live-version-guarded to avoid clobbering anything the active writer had re-written since the
+mistaken delete; 1,438 candidates correctly skipped for exactly that reason). Full account, both docs cross-linked, in
+the other doc's own 2026-07-29 entry — read it before touching either shape of this tree again. **No action needed on
+THIS doc's todos** (7c/7d's copy-then-gated-purge sequence below is unaffected and remains the correct path for the FLAT
+shape, which is the one now actually stale).
+
 ## Todos
 
 - [x] 1. ✅ [DATA] P1. RULED — no `instrument_type=`, key set is `day/pipeline_mode/asset_group/venue` (an availability
@@ -181,17 +200,17 @@ consume these paths must be updated in lockstep with the writer.
       separate top-level prefix) + `market_lifecycle/by_canonical_group/` (prediction only):
 
       | asset_group | instrument_availability (+ futures_contracts) | market_lifecycle |
-                                                      |---|---|---|
-                                                      | cefi | 53,419 | 0 |
-                                                      | defi | 177,346 | 0 |
-                                                      | tradfi | 50,700 | 0 |
-                                                      | sports | 148,691 | 0 |
-                                                      | prediction | 22,637 | 12,582 |
-                                                      | **TOTAL** | **452,793** | **12,582** |
+                                                          |---|---|---|
+                                                          | cefi | 53,419 | 0 |
+                                                          | defi | 177,346 | 0 |
+                                                          | tradfi | 50,700 | 0 |
+                                                          | sports | 148,691 | 0 |
+                                                          | prediction | 22,637 | 12,582 |
+                                                          | **TOTAL** | **452,793** | **12,582** |
 
-                                                      **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
-                                                      this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
-                                                      in-session action. Sizing now available to scope todo 7c.
+                                                          **465,375 flat objects total** need copy-up to full hive. Confirms the doc's own "likely VM-scale" assessment —
+                                                          this is a dedicated migration-VM job (copy → verify → human-only purge per the delete-safety protocol), not an
+                                                          in-session action. Sizing now available to scope todo 7c.
 
 - [ ] 7c. [DATA] P2. **Split from the original 7c 2026-07-28, per its own recommendation below — copy-and-verify half,
       no `[OPERATOR]` tag needed.** Copy the 465,375 flat objects UP into the full-hive tree (VM-only, never in-session,
