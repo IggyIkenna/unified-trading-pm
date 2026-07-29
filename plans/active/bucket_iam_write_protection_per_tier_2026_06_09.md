@@ -238,18 +238,27 @@ Two independent gates because Group A and Group B are at different stages:
       SAs + CI/CD + developer identities → objectViewer broadly" from the original text: the CI/CD + developer-identity
       half is NOT addressed (no such identity is terraform-managed in this repo today — out of scope for a mechanical
       implementation, flagged as its own todo in the SSOT-contradiction issue doc).
-- [ ] [TERRAFORM] P1.2b. **BLOCKED-CREDENTIALS 2026-07-27 (slot-12).** Ping filed: `ikenna_orchestrator/pings/slot_5.md`
-      (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). `objectAdmin` on `*-prd-*`/`*-test-*` for
-      `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly for all 5 SAs are DECLARED in
-      `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` + `tofu fmt` clean, targeted
-      `tofu plan` showed exactly 8 adds/2 changes/0 destroys) but NOT YET APPLIED — this session's active credential
-      (`github-actions-deploy` SA) lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy` entirely (confirmed:
-      `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity; the same error class hit
-      ~15 unrelated pre-existing resources in a full untargeted plan too, confirming a whole-project permission gap, not
-      something wrong with the new resources). **Remaining work**: run `ENV=prod ./tofu.sh apply` with a credential that
-      holds `resourcemanager.projects.setIamPolicy` on `central-element-323112` (e.g. `unified-trading-sa` or an
-      operator's own ADC) to actually apply the 8 declared-but-pending resources — see the SSOT-contradiction issue
-      doc's matching todo for the exact recipe (short-`TMPDIR` gotcha included).
+- [x] ✅ [TERRAFORM] P1.2b. **DONE — self-serviced 2026-07-29 (interactive session, credential re-triage pass).** The
+      credential gap this todo cited is resolved: this session's ADC identity (`ikenna@odum-research.com`) holds
+      `resourcemanager.projects.setIamPolicy` on `central-element-323112` (live-confirmed via
+      `cloudresourcemanager.projects.testIamPermissions`), and all 9 declared resources — `uts_prd_objectadmin_group_a`,
+      `uts_test_objectadmin_group_a`, `uts_prd_objectadmin_group_b`, `uts_test_objectadmin_group_b`,
+      `uts_dev_objectviewer`, `uts_stg_objectviewer`, `uts_prd_objectviewer`, `uts_test_objectviewer`,
+      `uts_migration_objectviewer` — are confirmed LIVE in terraform state (`tofu state list`) and a scoped
+      `tofu plan -target=...` across all 9 returns **"No changes. Your infrastructure matches the configuration."**
+      (verified 2026-07-29). This was actually applied earlier the same session as part of the
+      `bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md` fix (which found and fixed the 4 broken GCP
+      IAM Condition CEL expressions — `contains()`/`matches()` are undeclared references, only `startsWith`/ `endsWith`
+      work — blocking `deployment-service@44002342`'s original apply); this doc's own copy of the ask just never got the
+      matching retag. Ping `ikenna_orchestrator/pings/slot_5.md` can be closed as resolved. ~~BLOCKED-CREDENTIALS
+      2026-07-27 (slot-12). Ping filed: `ikenna_orchestrator/pings/slot_5.md` (2026-07-27, slot-5, CREDENTIAL APPROVAL
+      REQUEST). `objectAdmin` on `*-prd-*`/`*-test-*` for `uts-prd-sa`/`uts-test-sa` + `objectViewer` broadly for all 5
+      SAs are DECLARED in `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf` (`tofu validate` + `tofu fmt`
+      clean, targeted `tofu plan` showed exactly 8 adds/2 changes/0 destroys) but NOT YET APPLIED — this session's
+      active credential (`github-actions-deploy` SA) lacks `resourcemanager.projects.getIamPolicy`/`setIamPolicy`
+      entirely (confirmed: `gcloud projects get-iam-policy central-element-323112` 403s outright for this identity; the
+      same error class hit ~15 unrelated pre-existing resources in a full untargeted plan too, confirming a
+      whole-project permission gap, not something wrong with the new resources).~~
 - [ ] [TERRAFORM] P1.3. Verify dev/stg workloads read everything, write their own tier, and are **IAM-denied** a `-prd-`
       write (negative test). No prod write-grant removal until P2.
 
