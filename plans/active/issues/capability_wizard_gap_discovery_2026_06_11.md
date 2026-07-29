@@ -552,8 +552,25 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       contains the substring "gap #", which `_REASON_CLASSIFIER` matches to `PIECE_REGISTRY` before any config-shaped
       needle) — not a new bug, not fixed here, same as those todos' own notes. No code changed this pass; this is a
       checkbox-only verification flip.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr** (distance 1, status partial) —
-      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (slot-16, capability_wizard_gap_discovery-022) — already fixed by the
+      sibling `venue:cboe`/`venue:cme`/`venue:deribit` todos above, no new code needed.** That todo's root-cause fix
+      (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`, confirmed ancestor of
+      current UAC HEAD `f909e112` via `git merge-base --is-ancestor`) explicitly predicted it would also resolve this
+      todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from the already-committed,
+      already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py --output-dir <scratch>     --dry-run`, scratch dir — no repo files mutated)
+      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports-->     venue:ibkr` edge now carries
+      `reason="IBKR smart-router absorbs most intra-TradFi spot arb."` (status stays `partial`, correctly — IBKR is a
+      real, narrower smart-router capability, not a missing venue integration). Traced to source:
+      `archetype_capability_manifest.json`'s single `(TRADFI, spot)` cell lists BOTH `ibkr` and `cme` as `venue_ids`
+      sharing this one `notes` string — the identical reason text on the sibling `venue:cme` todo above is not a
+      coincidence, it is literally the same cell (IBKR is the smart-router venue that also routes CME-listed
+      instruments). Same pre-existing classifier-keyword quirk noted on the `venue:cboe`/`venue:cme`/`venue:deribit`
+      todos applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of `needs-config` once a real
+      reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as those todos' own notes. No
+      code changed this pass; this is a checkbox-only verification flip.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) — missing:
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance
