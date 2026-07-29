@@ -11,4 +11,4 @@
 # pre-existing done-but-unarchived docs the gate tolerates. A live count EXCEEDING this fails the
 # check — a NEW one landed without being archived, fix it (archive it), don't raise the number.
 # LOWER it (re-run --update-baseline) as candidates get archived. NEVER hand-raise it.
-candidate_count: 11
+candidate_count: 10

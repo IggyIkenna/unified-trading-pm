@@ -19,7 +19,7 @@ summary: >-
   Tardis-CeFi venues) appears to not check `venue_data_type_has_batch_source()` before attempting LIGHTER-ZKSYNC trades
   via Tardis, so it keeps trying and failing (or writing a typed empty row) every day, forever, for a combo that can
   never succeed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -64,8 +64,14 @@ resolved_by:
 
 # Generic Tardis batch path still attempts LIGHTER-ZKSYNC trades despite the declared no-batch-source exclusion
 
-> Investigation-only record (this doc). No code was changed while authoring this doc — `assigned_vm: NA`, a human
-> decides when to pick this up.
+> **🗄️ ARCHIVED 2026-07-29** — status=resolved, 0 open todos (all 3 fixed + shipped: the `for_batch` UAC fix, the
+> book_snapshot_5 confirmation, and the 69,223-row manifest cleanup). Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md. The follow-up derivative_ticker schema bug found
+> during this work is tracked in its own doc, not lost by this archival:
+> /plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md.
+>
+> Investigation-only record (this doc, stale banner kept for history). No code was changed while authoring this doc —
+> `assigned_vm: NA`, a human decides when to pick this up.
 
 ## What I found
 

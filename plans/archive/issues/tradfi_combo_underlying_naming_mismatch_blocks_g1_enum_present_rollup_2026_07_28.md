@@ -23,7 +23,7 @@ summary: >-
   like `"CME:COMBO:ESU4-ESH5"` (a calendar-spread pair code, not a clean root) — `_derive_underlying()`'s hyphen-split
   heuristic mis-parses this into `"CME:COMBO:ESU4"`, which is also wrong. Both are separate, real mismatches from the
   grain-symmetry bug the shipped fix addresses.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -54,6 +54,12 @@ locked_since:
 ---
 
 # TradFi COMBO underlying-naming mismatch blocks the G1-ENUM present-set rollup from closing tradfi phantom cells
+
+> **🗄️ ARCHIVED 2026-07-29** — status=resolved, 0 open todos. `resolve_tradfi_underlying_to_root` shipped (direction 2).
+> The two follow-ups this work surfaced are tracked in their own archived docs, not lost by this archival:
+> /plans/archive/issues/tradfi_combo_composite_id_misparse_mvp_gate_false_exclusion_2026_07_28.md (P1, the real
+> production-impact root cause) and /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md
+> (P3, the legacy casing residual). Archived per /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
 
 ## What I found
 

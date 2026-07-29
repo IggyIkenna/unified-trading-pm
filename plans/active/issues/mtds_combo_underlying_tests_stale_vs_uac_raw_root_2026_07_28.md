@@ -24,7 +24,7 @@ tags: [tradfi, combo, underlying, test-drift, cross-repo, databento]
 related:
   [
     /plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md,
-    /plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
+    /plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
   ]
 created: "2026-07-28"
 parent_epic: tradfi_master

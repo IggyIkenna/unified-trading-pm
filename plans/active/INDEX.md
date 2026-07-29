@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 253 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (42)
+### cefi (41)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -146,9 +146,6 @@ by hand._
   — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
   corresponding checkbox…
-- [`is_daily_enum_capture_heal_2026_07_07`](./is_daily_enum_capture_heal_2026_07_07.md) — is-daily-enum-prediction (dead
-  07-01→) and is-daily-enum-sports (dead 06-28→, longer, previously undetected) both still exit(1) in the cloud even
-  though the deployed image now carries the UTL write-side dtype coercion — a SECOND, different…
 - [`is_daily_enum_capture_heal_2026_07_07_finalize_2026_07_27`](./is_daily_enum_capture_heal_2026_07_07_finalize_2026_07_27.md)
   **[draft]** — Gated closeout for is_daily_enum_capture_heal_2026_07_07.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -330,7 +327,7 @@ by hand._
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todo…
 
-### tradfi (31)
+### tradfi (33)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -440,11 +437,19 @@ by hand._
   **[draft]** — Gated closeout for tradfi_satellite_ao_dispatch_batch4_2026_07_26.md — machine-held via depends_on plus
   gate_on_depends: true until all 8 of that plan's todos are done. Mirrors the batch1/batch2/batch3-finalize pattern:
   reconcile each…
+- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29.md) **[draft]** —
+  Fifth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-07-29 (autonomous
+  mode, scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against
+  the…
+- [`tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md)
+  **[draft]** — Gated closeout for tradfi_satellite_ao_dispatch_batch5_2026_07_29.md — machine-held via depends_on plus
+  gate_on_depends: true until all 15 of that plan's todos are done. Mirrors the batch1/batch2/batch3/batch4-finalize
+  pattern: reconcile…
 - [`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20`](./tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md)
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (40)
+### sports (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -503,10 +508,6 @@ by hand._
   **[draft]** — Gated closeout for sports_closeout_track_x_hygiene_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 4 of that plan's todos are done. Reconciles evidence back into
   sports_consolidated_closeout_2026_07_19.md's…
-- [`sports_consolidated_audit_2026_07_19`](./sports_consolidated_audit_2026_07_19.md) — A measured, read-only audit of
-  the full sports data path (instruments-service reference, market-tick-data-service odds,
-  market-data-processing-service bucketing, features-service) plus SSOT/codex alignment and plan reconciliation.
-  Produced…
 - [`sports_consolidated_closeout_2026_07_19`](./sports_consolidated_closeout_2026_07_19.md) — The single actionable plan
   that takes the sports asset_group all the way to ML-ready: canonical SSOT + naming, right buckets, codex migration,
   no-regression guards, honest-coverage backfill across instruments-service /…
@@ -586,7 +587,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (39)
+### prediction (38)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -621,9 +622,6 @@ by hand._
   — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
   (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
   corresponding checkbox…
-- [`is_daily_enum_capture_heal_2026_07_07`](./is_daily_enum_capture_heal_2026_07_07.md) — is-daily-enum-prediction (dead
-  07-01→) and is-daily-enum-sports (dead 06-28→, longer, previously undetected) both still exit(1) in the cloud even
-  though the deployed image now carries the UTL write-side dtype coercion — a SECOND, different…
 - [`is_daily_enum_capture_heal_2026_07_07_finalize_2026_07_27`](./is_daily_enum_capture_heal_2026_07_07_finalize_2026_07_27.md)
   **[draft]** — Gated closeout for is_daily_enum_capture_heal_2026_07_07.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
@@ -732,7 +730,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (64)
+### cross-cutting (62)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -937,19 +935,12 @@ by hand._
   — Forked from the [REVIEW] P1 todo in
   /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
   unified-trading-pm's OWN `.github/workflows/` had never been run through…
-- [`self_hosted_runner_pm_core_workflows_2026_07_28`](./self_hosted_runner_pm_core_workflows_2026_07_28.md) — Follow-up
-  to the Wave-2 self-hosted-runner migration's "NEW FINDING" — unified-trading-pm's OWN `.github/workflows/` had never
-  been run through `scripts/self-hosted-runners/classify-glue-workflows.sh` as a directed audit. Re-running it…
 - [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md)
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,
   2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on
   UTL's…
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
-- [`ws_i_service_to_service_auth_migration_2026_07_28`](./ws_i_service_to_service_auth_migration_2026_07_28.md) —
-  "Re-homes WS-I (the service-to-service-auth migration onto the UTL create_s2s_auth_dependency factory) out of the
-  archived cicd_consolidated_remaining_2026_06_24.md, per operator decision 2026-07-27 — WS-I specifically is still
-  wanted; the…
 
 ### ao (4)
 
@@ -1000,7 +991,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (15)
+### infrastructure (13)
 
 - [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) — A new /ops/artifacts
   page that shows the deployment estate's FINAL stage end-to-end — every Docker image and VM tarball built, where it
@@ -1014,16 +1005,10 @@ by hand._
   **[draft]** — Gated closeout for codex_vs_repo_docs_ssot_audit_2026_06_01.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todos…
-- [`docker_artifact_registry_cleanup_policy_2026_07_24`](./docker_artifact_registry_cleanup_policy_2026_07_24.md) —
-  Executable, human-driven fix for the unbounded Docker-image retention issue (4.01 TB, ~$400/mo, no cleanup policy on
-  any of 75 GCP AR repos + 20 AWS ECR repos). Audit-first — enumerate which image digests are ACTUALLY deployed in prod…
 - [`docker_artifact_registry_cleanup_policy_2026_07_24_finalize_2026_07_27`](./docker_artifact_registry_cleanup_policy_2026_07_24_finalize_2026_07_27.md)
   **[draft]** — Gated closeout for docker_artifact_registry_cleanup_policy_2026_07_24.md -- machine-held via
   depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own
   checkboxes/prose once its…
-- [`docker_artifact_registry_cleanup_side_tracks_2026_07_27`](./docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
-  — Satellite plan split out of docker_artifact_registry_cleanup_policy_2026_07_24.md on 2026-07-27 so this work can run
-  IN PARALLEL with that plan's Phase B-D `unified-trading-system` spine instead of being serialized behind it by the…
 - [`e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27`](./e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md)
   — Three services have no genuine end-to-end test coverage, surfaced by the 2026-07-27 pre-June-1 stale-plans audit
   while archiving the old plans/active/end-to-end-testing/ per-service checklist. alerting-service and
@@ -1051,7 +1036,7 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (10)
+### meta (9)
 
 - [`ao_open_issues_consolidated_close_out_2026_07_17`](./ao_open_issues_consolidated_close_out_2026_07_17.md) —
   2026-07-17 operator-session sweep of the 10 open AO issue docs — every doc's claims re-verified against the current
@@ -1068,10 +1053,6 @@ by hand._
   Design overview + phase index for migrating the deployment registry (heartbeat + lifecycle state, one JSON blob per VM
   under deployments/active/ in GCS) to Firestore. The GCS-object-per-VM read pattern does not scale — the inventory
   census…
-- [`deployment_registry_firestore_p0_unblock_2026_07_14`](./deployment_registry_firestore_p0_unblock_2026_07_14.md) —
-  Restore the prod Deployments tab NOW, before the multi-week Firestore migration. The inventory census times out and
-  renders empty because ~3k stale registry entries must be downloaded within a 45s bound. Fix it two ways — schedule
-  the…
 - [`deployment_registry_firestore_p0_unblock_2026_07_14_finalize_2026_07_27`](./deployment_registry_firestore_p0_unblock_2026_07_14_finalize_2026_07_27.md)
   **[draft]** — Gated closeout for deployment_registry_firestore_p0_unblock_2026_07_14.md -- machine-held via
   depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own

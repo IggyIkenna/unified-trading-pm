@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [sports, canonical, honest-coverage, data-completion, ml-readiness, leakage, codex, close-out]
 related:
   [
-    /plans/active/sports_consolidated_audit_2026_07_19.md,
+    /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,

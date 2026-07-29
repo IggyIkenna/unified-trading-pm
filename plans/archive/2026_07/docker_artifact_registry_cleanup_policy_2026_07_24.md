@@ -30,7 +30,7 @@ repos:
   ]
 scope: [engineer]
 tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd]
-related: [/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md]
+related: [/plans/archive/2026_07/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md]
 created: 2026-07-24
 last_updated: 2026-07-29
 parent_epic: infrastructure_master
@@ -63,7 +63,7 @@ source:
 > supersedes the original issue doc. **Scope as of 2026-07-27: Phases A-D only** (todos 1-9, 14) — the
 > genuinely-independent side-tracks (extend-to-other-repos, ECR, legacy GCR bucket, the GCS tarball bucket) were split
 > out to
-> [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
+> [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
 > so they run **in parallel** with this plan's spine instead of serialized behind it (see Progress log).
 > **AO-dispatched** (`assigned_vm: planning`) — **the operator still gates every actual deletion**, via the
 > `[OPERATOR]`-tagged todos only (7, 8, and, in the satellite plan, 13/17). No AR soft-delete/undelete exists — deletion
@@ -502,7 +502,7 @@ The original audit output lives at the **workspace root, outside any git repo** 
   corroborated); (e) one already-broken, unrelated Job found (`live-event-log-compactor`, referencing a GCR image that's
   never existed) — doesn't block the satellite plan's GCR-bucket-delete todo, just noted for its owner. **Then split the
   plan**: Phase E (todos 10-13) and Phase F (todos 15-17) moved to
-  [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
+  [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
   — genuinely independent of this plan's Phase B-D spine (different repos/cloud/bucket), so splitting them out lets them
   run **in parallel** with this plan under AO instead of serialized behind it by `sequential: true`. This plan now
   scopes to Phases A (done) through D + todo 14 (the codex stub); `assigned_vm` flipped back to `planning` /

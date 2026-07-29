@@ -33,7 +33,7 @@ code_refs:
 > plans:
 > [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md)
 > (parent),
-> [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
+> [docker_artifact_registry_cleanup_side_tracks_2026_07_27.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md)
 > (satellite).
 
 ## Scope — Docker images only, never data artifacts
@@ -45,7 +45,7 @@ images are gate-passed CI outputs that can be rebuilt from source at any time. T
   [/codex/04-architecture/artifact-versioning.md](/codex/04-architecture/artifact-versioning.md).
 - **Code tarballs** in `gs://deployment-scripts-central-element-323112/code/` — these are a different artifact class
   governed by a separate GCS lifecycle rule (see
-  [the satellite plan](/plans/active/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md) Phase F).
+  [the satellite plan](/plans/archive/2026_07/docker_artifact_registry_cleanup_side_tracks_2026_07_27.md) Phase F).
 
 A lifecycle or cleanup policy scoped to an AR/ECR Docker repo MUST use a `Delete` action rule and MUST NOT be applied to
 any GCS bucket containing data artifacts.

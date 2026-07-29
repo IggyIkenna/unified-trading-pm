@@ -30,7 +30,7 @@ tags: [gcs, path-resolution, pipeline-mode, in-flight, batch-fix, quickmerge-blo
 related:
   [
     /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
-    /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-29
 last_updated: 2026-07-29
@@ -265,7 +265,7 @@ markers). Already promoted LDR→main (`55bd0ebd9`).
 4. Fold every fix's evidence (repo@sha) into the parent audit doc's todos (they're already written, just need the `[x]`
    flip + sha citation once shipped — the todo text for each of these 10 items already exists verbatim in
    `/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md` and
-   `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`).
+   `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`).
 5. Once all 10 are shipped and flipped, this doc's job is done — archive it (all todos below will be `[x]`).
 
 ## Todos

@@ -12,7 +12,7 @@ summary:
   2026-07-28 §3a extension); the legacy GCR bucket delete is a whole-bucket destroy that IS now reversibility-qualified
   (2026-07-28 ruling, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
   soft-delete-retention check clears.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -58,6 +58,12 @@ source:
 ---
 
 # Artifact Registry / ECR cleanup — side-tracks
+
+> **🗄️ ARCHIVED 2026-07-29** — status=complete, 0 open todos (7 of 7 Phase E/F items done, incl. the executed legacy GCR
+> bucket delete and the applied tarball lifecycle cleanup). Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md. Todo 12's AWS ECR lifecycle policy DESIGN is done
+> and presented for operator sign-off; the live-apply step is a separate, not-yet-created follow-up, not part of this
+> plan's scope.
 
 > **Split plan, not standalone** — the diagnosis, policy shape, and safety rules all live in the parent,
 > [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md)
