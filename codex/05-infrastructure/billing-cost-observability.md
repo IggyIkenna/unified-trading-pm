@@ -17,7 +17,7 @@ related:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     /codex/05-infrastructure/aws-cloudtrail-cost-optimization-2026-06-20.md,
     /codex/05-infrastructure/aws-iam-matrix.md,
-    /plans/active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
+    /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
   ]
 created: 2026-06-27
 authoritative_for:

@@ -24,7 +24,7 @@ tags: [plan-hygiene, ag-closeout-audit, frontmatter, asset-group, discovery, orp
 related:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
-    /plans/active/prediction_cqg_residual_2026_07_24.md,
+    /plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md,
     /plans/active/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
@@ -43,10 +43,10 @@ source:
     prediction_cqg_residual_2026_07_24.md had ZERO coverage in any batch/native/phase plan despite being correctly
     asset_group-tagged.",
   ]
-resolved_by:
+resolved_by: >-
   unified-trading-pm cursor-configs/skills/ag-closeout-audit/SKILL.md Phase 0.3 amended 2026-07-28 (frontmatter-block-
   aware, comment-stripping parse requirement added, per this doc's own sole todo). Scope note (not silently claimed
-  done): only next-step (1) of the 4 suggested next-steps is actioned; (2) Progress-Log retag convention, (3) the
+  done) -- only next-step (1) of the 4 suggested next-steps is actioned; (2) Progress-Log retag convention, (3) the
   corpus-wide divergence guard script, and (4) re-running discovery for the other 8 tranches remain unactioned,
   documented in this doc's own "Suggested next steps" section as future follow-on work, not tracked as separate todos.
 locked_by:

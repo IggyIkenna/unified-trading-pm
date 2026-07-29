@@ -53,6 +53,9 @@ superseded_by:
 resolved_by: features-service@d7da0ec7
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # `pipeline_mode` required-kwarg break in features-service — found while shipping an unrelated onchain change
 
 ## What I found

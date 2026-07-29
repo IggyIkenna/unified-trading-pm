@@ -143,7 +143,7 @@ confidence.
 
 **Also needs**: a companion note added to `unified-trading-pm/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8 —
 **this note is ALREADY WRITTEN AND SITTING UNCOMMITTED** in this repo (`unified-trading-pm`'s
-`codex/02-data/defi-canonical-naming-ssot.md` shows modified in `git status`). Ship it together with or right after the
+`/codex/02-data/defi-canonical-naming-ssot.md` shows modified in `git status`). Ship it together with or right after the
 MTDS reader.py fix (separate commit, separate repo).
 
 ### 5. `market-tick-data-service` — live-mode sports odds writer shape fix

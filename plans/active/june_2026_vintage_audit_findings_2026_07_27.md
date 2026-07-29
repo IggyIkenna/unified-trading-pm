@@ -827,7 +827,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
       (deployment-ui@`687d4ce`, 2026-06-16). But 13 NEW, unrelated failures (Fleet Git-Health nav entry apparently
       dropped 2026-07-27) now keep the full-suite exit non-zero, so the `pw:L2` SSOT bar (full `tests/smoke/` exits 0)
       isn't met — filed as its own issue rather than ticking on a partial pass:
-      `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. The 3 items stay open in the
+      `plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`. The 3 items stay open in the
       source plan, now with full evidence instead of a stale "pending" note. **HTTP-500 finding**: a successor doc
       ALREADY existed and was ALREADY resolved+archived before this session —
       `plans/archive/issues/data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md` (resolved 2026-07-20,

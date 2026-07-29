@@ -38,7 +38,7 @@ source:
   [
     unified-trading-pm/codex/06-coding-standards/documentation-standards.md,
     unified-trading-pm/codex/00-SSOT-INDEX.md,
-    unified-trading-pm/plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
+    unified-trading-pm/plans/archive/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md,
   ]
 assigned_role: review
 drift_direction: correct-codex

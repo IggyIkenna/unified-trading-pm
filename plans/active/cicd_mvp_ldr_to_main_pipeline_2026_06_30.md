@@ -532,7 +532,7 @@ Phase 1:
   violation in another agent's mid-flight edit to `scripts/migration/verify_env_tiered_buckets_provisioned.py`, then a
   transient `unified_api_contracts` import failure from another agent's concurrent dependency operation) before
   succeeding on the third retry — also fixed a genuinely blocking (corpus-wide-gating) broken-YAML-frontmatter bug in an
-  unrelated foreign doc (`plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`, an unquoted
+  unrelated foreign doc (`plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`, an unquoted
   colon-space in its `summary:` field) that was failing `check_frontmatter_schema` for every slot's ship, not just this
   one. **Deferred (not this session)**: `plans/active/june_2026_vintage_audit_findings_2026_07_27.md` items 20a/20b/20c
   were named in the dispatch as needing an evidence update, but that file had live, actively-changing concurrent-agent

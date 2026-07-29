@@ -25,7 +25,7 @@ tags: [migration, orphan-safety, manifest, verification, harness, audit, data-qu
 related:
   [
     /plans/audit/results/migration_orphan_safety_goalpost_verification_2026_06_10.md,
-    /plans/active/prediction_cqg_residual_2026_07_24.md,
+    /plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md,
     /plans/active/sports_prelaunch_cf5_verify_residual_2026_07_24.md,
     /plans/active/defi_venue_lst_rates_residual_2026_07_24.md,
     /plans/active/infra_ops_residual_migration_verification_2026_07_24.md,

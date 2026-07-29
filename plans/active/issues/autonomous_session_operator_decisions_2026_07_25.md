@@ -502,9 +502,9 @@ classifier cannot map, and a fourth doc's shipped-and-ticked todo asserts the op
 4. `/plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md:51-56` + its 4 shipped `[x]` todos
    (`unified-api-contracts@306923a`): "The classifier MUST map every Polymarket `conditionId` (and Kalshi ticker) to
    SOME canonical question group … Treating `OTHER` as a known catch-all is honest absence".
-5. `/plans/active/prediction_cqg_residual_2026_07_24.md:69-76` (open `[DATA] P1`) rests on the opposite premise — "94.5%
-   route to `attempted_failed[ClassifierConfidenceLow]` under the operator-corrected contract (None → NOT bundled, no
-   'OTHER' fallback)" — measured 2026-06-11, i.e. five days before decision 338 landed.
+5. `/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md:69-76` (open `[DATA] P1`) rests on the opposite premise
+   — "94.5% route to `attempted_failed[ClassifierConfidenceLow]` under the operator-corrected contract (None → NOT
+   bundled, no 'OTHER' fallback)" — measured 2026-06-11, i.e. five days before decision 338 landed.
 
 Consequence today: prediction's honest-coverage numbers depend on which contract you believe, and the two venues take
 different paths. Note this is a semantics question only — decision 338's _registry-extension_ half is provably already

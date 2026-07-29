@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 250 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 253 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -173,7 +173,7 @@ by hand._
   data-capture pipeline for PREDICTION Kalshi + Polymarket YES/NO markets — WS connectors, transport/ sink correctness,
   message-shape fixes, live producer VM operations, source/pipeline-mode registration; split out of…
 
-### defi (44)
+### defi (43)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -329,9 +329,6 @@ by hand._
   **[draft]** — Gated closeout for mvp_backfill_defi_onchain_v10_2026_06_27.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todo…
-- [`scenario_library_completion_13_16_2026_07_27`](./scenario_library_completion_13_16_2026_07_27.md) — Implement the 2
-  orphaned Day-1 scenario designs (plans/active/scratch_scenarios_day1/13 and 16) into the UAC ScenarioOverlay
-  registry + UTL applier, per operator decision (2026-07-27 pre-June-1 stale-plans audit) — the other 16 of 18 Day-1…
 
 ### tradfi (31)
 
@@ -589,7 +586,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (37)
+### prediction (39)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -704,6 +701,14 @@ by hand._
 - [`prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
   **[draft]** — Finalize/gate plan for `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`. Runs ONLY after batch4's
   dispatched todos land (`gate_on_depends: true`): flips the corresponding checkboxes back in the 2 sibling source docs…
+- [`prediction_satellite_ao_dispatch_batch6_2026_07_29`](./prediction_satellite_ao_dispatch_batch6_2026_07_29.md)
+  **[draft]** — Sixth AO-dispatch batch for prediction, produced by the `/ag-closeout-audit prediction` scheduled run
+  2026-07-29 (ag_closeout_auditor, slot 14). Phase 1 classified 22 prediction-primary/dual-legit AG candidate docs (of
+  61…
+- [`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`](./prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md)
+  **[draft]** — Gated closeout for prediction_satellite_ao_dispatch_batch6_2026_07_29.md — machine-held via depends_on +
+  gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
+  of the 9…
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A
   walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the
   sports_predictions_e2e milestone.
@@ -727,14 +732,11 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (67)
+### cross-cutting (64)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
-- [`ao_consolidated_closeout_2026_07_25`](./ao_consolidated_closeout_2026_07_25.md) — New "topic tranche" umbrella
-  (sibling to the 5 asset groups + cross-cutting) for agent-orchestrator-internal work: backlog/dispatch scheduling,
-  worker/slot lifecycle + multi-agent git-safety, orchestrator VM/auth infra, AO…
 - [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md) — Rename the
   DOMAIN-level unified_api_contracts.AssetClass (crypto/equity/fx/commodity/fixed_income) to AssetGroup across UAC + 7
   downstream consumer repos + the UI, in one coordinated atomic landing per repo (no backward-compat shims…
@@ -870,9 +872,6 @@ by hand._
   — Gated closeout for infra_capture_and_devops_leftovers_2026_07_06.md ("AO Plan 6" of the instruments-completion set),
   added per the finalize-plan-coverage gate (task_template.md §4, operator ruling 2026-07-24 — every
   `assigned_vm: planning`…
-- [`infra_consolidated_closeout_2026_07_25`](./infra_consolidated_closeout_2026_07_25.md) — New "topic tranche" umbrella
-  (sibling to the 5 asset groups + cross-cutting + ao + ci) for generic infrastructure/hygiene work that isn't
-  agent-orchestrator-internal or CI/CD-pipeline-specific: repo/script governance, dependency/CVE…
 - [`infra_ops_residual_migration_verification_2026_07_24`](./infra_ops_residual_migration_verification_2026_07_24.md) —
   9 residual todos forked verbatim out of the archived migration-verification/orphan-safety harness plan (2026-07-24
   plan line-cap remediation split) — the catch-all infra/ops/audit tail that didn't fit the other 3 named residual
@@ -938,9 +937,6 @@ by hand._
   — Forked from the [REVIEW] P1 todo in
   /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
   unified-trading-pm's OWN `.github/workflows/` had never been run through…
-- [`scenario_library_completion_13_16_2026_07_27`](./scenario_library_completion_13_16_2026_07_27.md) — Implement the 2
-  orphaned Day-1 scenario designs (plans/active/scratch_scenarios_day1/13 and 16) into the UAC ScenarioOverlay
-  registry + UTL applier, per operator decision (2026-07-27 pre-June-1 stale-plans audit) — the other 16 of 18 Day-1…
 - [`self_hosted_runner_pm_core_workflows_2026_07_28`](./self_hosted_runner_pm_core_workflows_2026_07_28.md) — Follow-up
   to the Wave-2 self-hosted-runner migration's "NEW FINDING" — unified-trading-pm's OWN `.github/workflows/` had never
   been run through `scripts/self-hosted-runners/classify-glue-workflows.sh` as a directed audit. Re-running it…
@@ -972,7 +968,7 @@ by hand._
   monitoring_control_plane_master_2026_06_10.md as a file-disjoint scope-creep section (agent-orchestrator internals,
   not the…
 
-### ci (7)
+### ci (9)
 
 - [`capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`](./capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md)
   — Small follow-up plan forking the 2 residual items left open when `capability_wizard_and_manifest_2026_06_11.md`
@@ -985,6 +981,13 @@ by hand._
   **[draft]** — Gated closeout for ci_satellite_ao_dispatch_batch1_2026_07_26.md — machine-held via depends_on +
   gate_on_depends: true until all 29 of that plan's todos are done. Carries the ONE piece of work the batch deliberately
   could not contain: the…
+- [`ci_satellite_ao_dispatch_batch2_2026_07_29`](./ci_satellite_ao_dispatch_batch2_2026_07_29.md) **[draft]** — Second
+  AO-dispatch batch for the `ci` topic tranche, produced by `/ag-closeout-audit ci` (autonomous mode, 2026-07-29)
+  re-running against `ci_satellite_ao_dispatch_batch1_2026_07_26.md` (still `status: active`, 14/30 todos done at audit…
+- [`ci_satellite_ao_dispatch_batch2_finalize_2026_07_29`](./ci_satellite_ao_dispatch_batch2_finalize_2026_07_29.md)
+  **[draft]** — Gated closeout for ci_satellite_ao_dispatch_batch2_2026_07_29.md — machine-held via depends_on +
+  gate_on_depends: true until all 14 of that plan's todos are done. Reconciles each distinct source doc's
+  checkboxes/prose independently,…
 - [`cicd_mvp_ldr_to_main_pipeline_2026_06_30`](./cicd_mvp_ldr_to_main_pipeline_2026_06_30.md) — "OPERATOR DECISION
   (Harsh + Ikenna, reaffirmed 2026-06-30): we do NOT need the complex CI/CD pipeline. The MVP is: commits reach LDR via
   local-green quality-gates + quickmerge (already enforced) → SIT validates → merge LDR→main. Staging is…
