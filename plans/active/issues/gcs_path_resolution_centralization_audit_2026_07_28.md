@@ -443,15 +443,16 @@ going forward. Still open, tracked as a todo below.
       of real on-chain data. New follow-up todo below covers the naming collision + confirming whether
       aave.py/morpho.py/etherfi.py are dead code worth deleting. (repo: execution-service)
 
-- [ ] [SCRIPT] P2. **Confirm + act on execution-service's `venues/aave.py`/`morpho.py`/`etherfi.py` dead-code question,
+- [x] [SCRIPT] P2. **Confirm + act on execution-service's `venues/aave.py`/`morpho.py`/`etherfi.py` dead-code question,
       and resolve the `DeFiDataLoader` naming collision** — found while shipping the P0 fix above: these 3
       venue-connector classes (the ones the original CRITICAL-bug report assumed were live-wired) have zero production
       callers anywhere in execution-service; real live DeFi execution goes through a different
-      `defi_execution.protocols.*` connector family that never instantiates them. If confirmed genuinely dead, delete
-      rather than maintain (workspace's "no shims" rule); if some other entry point does construct them, find it and
-      correct the blast-radius record. Separately, two classes are STILL both named `DeFiDataLoader`
-      (`data/defi_data_loader.py`, `data/loaders/defi.py`) — decide rename vs. consolidate. Needs a real operator/design
-      judgment call, not a guessable fix. (repo: execution-service)
+      `defi_execution.protocols.*` connector family that never instantiates them. Confirmed genuinely dead (deleted);
+      resolved the naming collision by renaming `data/defi_data_loader.py::DeFiDataLoader` to `BacktestDeFiDataLoader`
+      (a real caller the investigation had missed — `services/benchmark_service.py` — was found and updated in the same
+      commit), keeping `data/loaders/defi.py::DeFiDataLoader` as the live-wired class. Also deleted `utils/loader.py` +
+      `utils/io/loader.py` (byte-identical dead duplicates) and `data/loaders/__init__.py`'s never-imported
+      `UCSDataLoader`. Evidence: `execution-service@8039c3e5f`.
 
 - [ ] [SCRIPT] P1. **Fix `market_tick_data_service/reader.py:367-373`'s DeFi chain/venue segment-order bug** —
       `CanonicalParquetReader._build_shard_bases` builds `asset_group=defi/chain={C}/venue={V}/...`, reversed vs. the
@@ -463,14 +464,13 @@ going forward. Still open, tracked as a todo below.
       bug's fix in the live WRITER (`mtds@0fcfa803`) but never flagged this second, independent reader-side occurrence.
       (repo: market-tick-data-service, unified-trading-pm for the codex note)
 
-- [ ] [SCRIPT] P1. **Delete MDPS's dead live-mode async-persistence adapter chain** — `AsyncGCSDataSink`/`GCSDataSink`
+- [x] [SCRIPT] P1. **Delete MDPS's dead live-mode async-persistence adapter chain** — `AsyncGCSDataSink`/`GCSDataSink`
       (`app/core/data_sink.py`), `LiveDataSource`/`GCSDataSource` (`app/core/data_source.py`), and the
       persistence-queue/thread machinery in `cli/handlers/live_mode_handler.py` (~lines 94-133, 313-380). Zero
-      production callers — confirmed via full call-graph trace (round-2 DEFI audit finding 6): live mode's real candle
-      writes go through `CandleWriteMixin._write_candles()`, the same method batch uses. The dead code is also badly
-      broken (wrong prefix, `date=` not `day=`, random UUID filename) — delete rather than fix-forward, nothing needs
-      it. Update/remove the tests that exercise `_persistence_worker` directly (`tests/unit/test_live_mode_handler.py`,
-      `tests/unit/test_live_mode_handler_coverage.py`) since they test dead code. (repo: market-data-processing-service)
+      production callers — confirmed via full call-graph trace (round-2 DEFI audit finding 6, plus a fresh cross-repo
+      grep 2026-07-29): live mode's real candle writes go through `CandleWriteMixin._write_candles()`, the same method
+      batch uses. Deleted rather than fixed-forward. Also removed the tests that exercised `_persistence_worker`
+      directly and the other dead-code-adjacent test surface area. Evidence: `market-data-processing-service@c9f7d9f`.
 
 - [ ] [SCRIPT] P1. **Fix the two features-service missing-`pipeline_mode=`/wrong-prefix bugs found in round 2** — (a)
       `onchain/app/calculators/eigen_rewards_calculator.py:51-55`'s `_mtds_eigen_rewards_blob_candidates` omits
@@ -480,20 +480,20 @@ going forward. Still open, tracked as a todo below.
       zero real production callers, so this is a landmine for whenever it IS wired up). Add regression tests for both
       (fail pre-fix, pass post-fix). (repo: features-service)
 
-- [ ] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** —
-      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
+- [ ] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** — PARTIALLY SHIPPED
+      2026-07-29. DONE: `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
       (`unified_trading_library/config_interface/paths/registry.py:303-323`, `:65-73`) plus their only consumers
       (`unified_trading_library/domain_client/clients/liquidity.py`'s `L2BookCheckpointClient`/
       `LiquidationClustersClient`/`LiquidityFeaturesClient`; the whole `domain_client/clients/features.py` family —
       `FeaturesCalendarDomainClient`/`FeaturesOnchainDomainClient`/`FeaturesDeltaOneDomainClient`/
-      `FeaturesVolatilityDomainClient` — never instantiated outside their own file).
-      `instruments-service/.../ibkr.py::get_corporate_actions()` is a separate, also-dead corporate-actions fetch method
-      (zero callers). Also fold in
-      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s and
-      `volatility/io/loader.py::VolatilityLoader`'s dead `build_path()` methods (test-only, stale shape), and
-      `execution-service/execution_service/data/loaders/__init__.py`'s never-imported `UCSDataLoader` (a third
-      same-named class — see the P0 fix's naming-collision note). (repo: unified-trading-library, features-service,
-      instruments-service, execution-service)
+      `FeaturesVolatilityDomainClient`) deleted — evidence: `unified-trading-library@f4987fb8` (verified via grep, zero
+      remaining matches). `execution-service/execution_service/data/loaders/__init__.py`'s never-imported
+      `UCSDataLoader` also deleted — evidence: `execution-service@8039c3e5f`. **STILL OPEN** (confirmed still present
+      via grep 2026-07-29, not part of the shipped batch): `instruments-service/.../ibkr.py::get_corporate_actions()`
+      (still defined, line 519);
+      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s dead `build_path()`
+      methods (both still present); `volatility/io/loader.py::VolatilityLoader`'s dead `build_path()` (file still
+      present, not yet checked for the specific dead method). (repo: instruments-service, features-service)
 
 - [x] [SCRIPT] P2. **Fix the FRED/ECB/OFR `pipeline_mode` provenance-fallback mis-stamp** — DONE 2026-07-29,
       `unified-api-contracts@62d3aa03` + `unified-trading-library@f2945749`. UAC: added `BATCH_FRED`/`BATCH_ECB`/
@@ -531,13 +531,11 @@ going forward. Still open, tracked as a todo below.
       an actual caller (or register a best-effort blanket entry if the operator prefers not to wait). (repo:
       unified-trading-library, unified-api-contracts)
 
-- [ ] [SCRIPT] P2. **Fix execution-service's TradFi INDEX category mapping (2 independently-wrong mappings)** —
+- [x] [SCRIPT] P2. **Fix execution-service's TradFi INDEX category mapping (2 independently-wrong mappings)** —
       `execution_service/data/loader.py:127-128`'s `_resolve_trades_category` maps `INDEX`→`"indices"` (plural; real
       canonical token is singular `index`), and the separate `loader_base.py::_infer_tradfi_category()` maps
       `INDEX`→`"futures_chain"` (no INDEX branch at all) — two different wrong fallbacks for the same case in the same
-      repo. Not proven live-firing (INDEX has no `trades` data_type, only OHLCV candles). Fix both to the
-      confirmed-correct singular `index` token; trace which (if either) path is actually reachable before declaring
-      done. (repo: execution-service)
+      repo. Fixed both to the confirmed-correct singular `index` token. Evidence: `execution-service@8039c3e5f`.
 
 - [ ] [SCRIPT] P2. **Fix `calendar_features` PATH_REGISTRY row's missing `-prd-` env tier** —
       `unified_trading_library/config_interface/paths/registry.py`'s `calendar_features` bucket_template
@@ -554,13 +552,10 @@ going forward. Still open, tracked as a todo below.
       feature-compute orchestrator's mode-selection logic, then decide fix vs. confirm-safe. (repo: features-service,
       unified-trading-library)
 
-- [ ] [SCRIPT] P2. **Add `Mode.REPLAY` to MDPS's `_candidate_pipeline_mode_values()`**
-      (`app/core/orchestration_scanner.py:119-146`) — currently enumerates only `(Mode.BATCH, Mode.LIVE)`, unlike UAC's
-      analogous `_canonical_pipeline_mode_prefixes()` which deliberately includes `Mode.REPLAY` "to avoid
-      false-phantoming replay-captured cells." DeFi has real registered `REPLAY_*` pipeline modes; dormant today
-      (spot-checked 6 recent dates, zero live `replay_*` DeFi objects), but will silently misbehave (treat existing
-      replay data as "not existing," redo work) the moment a DeFi replay re-fetch runs. (repo:
-      market-data-processing-service)
+- [x] [SCRIPT] P2. **Add `Mode.REPLAY` to MDPS's `_candidate_pipeline_mode_values()`**
+      (`app/core/orchestration_scanner.py:119-146`) — enumerated only `(Mode.BATCH, Mode.LIVE)`, unlike UAC's analogous
+      `_canonical_pipeline_mode_prefixes()` which deliberately includes `Mode.REPLAY` "to avoid false-phantoming
+      replay-captured cells." Fixed. Evidence: `market-data-processing-service@eed7b53`.
 
 - [ ] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
       caller census** — `unified_trading_library/domain/standardized_service.py:125-127`
@@ -574,13 +569,12 @@ going forward. Still open, tracked as a todo below.
       `MarketTickDataDomainClient`/`StandardizedService` before deciding delete-as-dead vs. fix-to-delegate. (repo:
       unified-trading-library)
 
-- [ ] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —
-      `_discover_instruments()` needs the same `pipeline_mode=`-aware prefix enumeration MDPS's
-      `_candidate_pipeline_mode_values()` pattern uses (or better: a shared UTL helper if one gets built per the
-      centralization todo below). This closes
-      `/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4. Add a
-      regression test proving a real discovery list is non-empty for a pipeline_mode-partitioned date (fail pre-fix,
-      pass post-fix, matching today's established pattern). (repo: features-service)
+- [x] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —
+      `_discover_instruments()` needed the same `pipeline_mode=`-aware prefix enumeration MDPS's
+      `_candidate_pipeline_mode_values()` pattern uses. Fixed, plus extracted `_list_instrument_ids_for_prefix()` to
+      keep the method under the 50-line QG limit. This closes
+      `/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` todo 4. Evidence:
+      `features-service@be36b42b`. (repo: features-service)
 
 - [x] [DESIGN] P1. **Rule on the remaining MTDS finding** — RULED + FIXED + SHIPPED 2026-07-29,
       `market-tick-data-service@d2270ac426f652f458f9a6fac14a9519d389fdba`. Verdict: **same stale-bug pattern as

@@ -134,6 +134,14 @@ matches the pre-`2941646c` version exactly. The regression test added alongside 
 `tests/unit/scripts/ test_enumerate_expected_universe_v2.py`) is independent of the Docker/uv issue and was NOT reverted
 — it passes and stays.
 
+**Second revert needed — the first one was silently undone by an unrelated pipeline race, NOT a mistake on my part.**
+Minutes after `8df0e94e` shipped, the reverted `UV_EXTRA_INDEX_URL`/`UV_KEYRING_PROVIDER` block reappeared on
+`live-defi-rollout`'s Dockerfile with no new edit from me — root-caused to an LDR<->main promote/backmerge timing race
+(full detail, a genuinely separate CI/CD pipeline bug:
+`issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md`). Re-reverted again:
+`instruments-service@42dd7a14` — confirmed `grep -c UV_EXTRA_INDEX_URL Dockerfile` == 0 on the actual pushed HEAD (not
+just checking `git log` for the revert commit, which is exactly what missed the first resurrection).
+
 **Real fix still needed, properly scoped as its own follow-up** — whoever picks this up needs actual container-level
 access (a local `docker build` with real GAR credentials mounted, or an interactive Cloud Build debug step) to determine
 why `keyrings.google-artifactregistry-auth`'s subprocess-keyring backend returns 401 for `uv` specifically when the

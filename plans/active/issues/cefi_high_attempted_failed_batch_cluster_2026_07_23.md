@@ -443,10 +443,11 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       This closes the determinable half of the original todo (can an on-call reader tell static-backlog from
       fresh-failure at a glance) — split into its own checkbox since it is a normal shippable-unit fix, distinct from
       the judgment call below.
-- [ ] [BACKEND] P2. **RULED 2026-07-28 (previously gated on an operator decision, retagged 2026-07-28 slot-10 → now
-      retagged again with a ruling applied) — stop the 30-min CRITICAL re-page once a cell is labeled "STATIC BACKLOG";
-      downgrade to a lower-severity periodic reminder, do NOT go fully silent.** Ruling + reasoning: none of the
-      operator's 8 general-theme bullets (backfill/migration completion, full-functionality-no-shortcuts, cost,
+- [x] ✅ [BACKEND] P2. **SHIPPED 2026-07-29 (slot-9, `alerting-service@bb76cae`) — verified 2026-07-29 (slot-13,
+      `backend_engineer`).** RULED 2026-07-28 (previously gated on an operator decision, retagged 2026-07-28 slot-10 →
+      then retagged again with a ruling applied) — stop the 30-min CRITICAL re-page once a cell is labeled "STATIC
+      BACKLOG"; downgrade to a lower-severity periodic reminder, do NOT go fully silent.** Ruling + reasoning: none of
+      the operator's 8 general-theme bullets (backfill/migration completion, full-functionality-no-shortcuts, cost,
       Databento, manifest version, pause/unpause, auto-recovery, live-probing-scope, adaptor completion) speaks to
       alerting/paging cadence directly, but the workspace already has a codified, applicable precedent for exactly this
       class of decision: CLAUDE.md's own "AO alerts / Slack notifications" rule — "standing conditions dedup by
@@ -518,3 +519,22 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
   standing to decide it — this is the second worker in a row (slot-8, then this session) to correctly decline the
   unilateral call per CLAUDE.md's dispatch-scope-eligibility rule. No GCS/manifest write, no VM launch, no code shipped
   this session (PM plan-doc edit only).
+- **2026-07-29 (slot-13, `backend_engineer`, task `cefi_high_attempted_failed_batch_cluster-009`):** Dispatched onto the
+  final `[BACKEND]` P2 paging-cadence todo; found it already implemented and shipped moments earlier by a concurrent
+  session (`alerting-service@bb76cae`, slot-9, `git merge-base --is-ancestor bb76cae origin/live-defi-rollout` = true)
+  but the checkbox was not yet flipped. Verified the implementation end-to-end rather than re-doing the work: (1) new
+  sibling module `alerting_service/notifiers/dp_run_mostly_empty_static_backlog.py` implements `effective_severity()`
+  (downgrades `CRITICAL`→`WARN` for a `DP_RUN_MOSTLY_EMPTY` cell carrying `details["is_static_backlog"] is True`) and
+  `dedup_window_override()` (widens the dedup cooldown from 1800s to 86400s for the same condition, `default`
+  passthrough otherwise); (2) `router.py`'s `_route_data_pipeline_event` applies `effective_severity` BEFORE the
+  `severity is AlertSeverity.CRITICAL` paging-channel check, so a STATIC BACKLOG cell still mirrors to
+  `#data-pipeline-alerts` (per the "never fully silent" requirement) but skips the PagerDuty/Telegram page; (3)
+  confirmed the field-name contract end-to-end — `deployment-service`'s `meta_watchers.py:651` stamps
+  `"is_static_backlog": is_static_backlog` (from `attempted_failed_staleness.py`'s `stale_backlog_annotation()`) onto
+  the same details payload `router.py` reads; (4) the shipped
+  `tests/unit/notifiers/test_router_dp_run_mostly_empty_static_backlog.py` covers all four required cases (static cell
+  suppresses PagerDuty but still Slack-mirrors at WARN severity; fresh cell pages CRITICAL unchanged; missing
+  `is_static_backlog` field back-compat defaults to paging, not silent suppression). Implementation matches the ruling's
+  concrete spec exactly. No code change needed this session — flipped the checkbox with the shipped SHA as evidence.
+  Both remaining todos in this doc (`[DATA] P3` and the always-open Progress Log) are unaffected. No GCS/manifest write,
+  no VM launch; PM plan-doc edit only.
