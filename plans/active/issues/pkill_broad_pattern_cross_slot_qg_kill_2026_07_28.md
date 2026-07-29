@@ -24,7 +24,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 ---
 
 # pkill broad-pattern cross-slot QG kill — 2026-07-28 incident
@@ -144,10 +144,21 @@ compute on the victim slot, which must re-run to green before it can ship regard
       `pkill -f quality-gates.sh` / similar, since every slot invokes shared scripts with identical argv and such a
       pattern is host-wide, not slot-scoped. Cite this incident doc. — unified-trading-pm@`agents/RULES.md` (new bullet
       under § 1 "Your worktree", the section closest to CLAUDE.md's "Multi-agent safety").
-- [ ] [SCRIPT] P2. Consider whether `scripts/quality-gates.sh` (or its base library) should tag its own process title /
-      write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
-      a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional
-      hardening, not required if the RULES.md addendum alone is judged sufficient.
+- [x] ✅ [SCRIPT] P2. **Judgment: build the lightweight version, not the `.qg_run.pid`-in-worktree version.** A
+      repo-root PID file would need a `.gitignore` entry added in every one of the ~24 repos that source
+      `base-service.sh` — too much cross-repo footprint for optional hardening whose primary risk is already closed by
+      the shipped mechanical `pkill-guard.sh` (P1, above). Instead, `base-service.sh` now writes a `running.$$` marker
+      (pid=/repo=/cwd=/ started_at_epoch= fields) into the SAME shared, gitignore-free ledger dir already used by the
+      existing `killed.$$`/`aborted.$$` markers (`_qg_ledger_dir`, outside every git worktree — zero per-repo
+      `.gitignore` changes needed) — removed by `_qg_exit_handler` on every exit path. A worker who needs to self-kill
+      their OWN stuck run can now find the exact PID via `grep -l "cwd=$(pwd)" .benchmarks/qg-governor/running.*` and
+      `kill` that PID, instead of ever reaching for a name-based `pkill`. Defense-in-depth on top of the P1 guard, not a
+      replacement for it. Verified via a new standalone test script (byte-identical block copies run in fresh
+      subprocesses, mirroring `test-trap-release.sh`'s convention — sourcing `base-service.sh` directly would run the
+      full gate as a side effect): `bash scripts/quality-gates-base/tests/test-qg-running-marker.sh` — 7/7 PASS (marker
+      written with correct pid=/repo=/cwd= while running; removed on both PASS and FAIL exit; two concurrent runs get
+      distinct non-colliding PID-scoped markers). — unified-trading-pm@`scripts/quality-gates-base/base-service.sh` +
+      `scripts/quality-gates-base/tests/test-qg-running-marker.sh`.
 - [x] ✅ [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient —
       build a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a
       `pkill`/`pgrep` wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up

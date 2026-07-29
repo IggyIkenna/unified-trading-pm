@@ -183,6 +183,7 @@ _qg_exit_handler() {
     local rc=$?
     if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
+    [ -n "${_QG_RUNNING_MARKER:-}" ] && rm -f "$_QG_RUNNING_MARKER" 2>/dev/null || true
     return 0
 }
 trap '_qg_exit_handler' EXIT
@@ -220,6 +221,33 @@ _qg_signal_handler() {
 trap '_qg_signal_handler TERM' TERM
 trap '_qg_signal_handler INT' INT
 trap '_qg_signal_handler HUP' HUP
+
+# ── RUNNING-PID MARKER — a precise, repo-scoped self-kill handle ─────────────
+# pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md (P2, "optional hardening"):
+# a worker that needs to kill its OWN stuck quality-gates.sh run has, until now, had
+# to already be holding the exact PID (e.g. captured via `$!` at background-start
+# time per RULES.md) — under time pressure the natural-but-BANNED reach is a
+# name-based `pkill -f quality-gates.sh`, which matches every slot's identical
+# invocation host-wide (two confirmed cross-slot kills of a DIFFERENT slot's live
+# run, same day). This marker gives an exact, cwd-scoped alternative: find the file
+# whose cwd= line matches your own $(pwd), then `kill` the PID in its filename —
+# never a name-based pattern. Lives in the same shared, gitignore-free ledger dir
+# as the existing killed.$$/aborted.$$ markers (outside every git worktree — see
+# _qg_ledger_dir above — so no per-repo .gitignore entry is needed) and is removed
+# by _qg_exit_handler on every exit path, so a stale marker never outlives its
+# process. Superseded-in-practice by scripts/hooks/pkill-guard.sh (P1, shipped
+# unified-trading-pm@18ecbffb1) which mechanically refuses the dangerous pattern
+# regardless of whether this marker exists — this is defense-in-depth, not the
+# primary mitigation.
+_QG_RUNNING_MARKER_DIR="$(command -v _qg_ledger_dir >/dev/null 2>&1 && _qg_ledger_dir || echo "${WORKSPACE_ROOT:-.}/.benchmarks/qg-governor")"
+mkdir -p "$_QG_RUNNING_MARKER_DIR" 2>/dev/null || true
+_QG_RUNNING_MARKER="${_QG_RUNNING_MARKER_DIR}/running.$$"
+{
+    echo "pid=$$"
+    echo "repo=${SERVICE_NAME:-unknown}"
+    echo "cwd=${PROJECT_ROOT:-$(pwd)}"
+    echo "started_at_epoch=$(date +%s 2>/dev/null || echo 0)"
+} > "$_QG_RUNNING_MARKER" 2>/dev/null || true
 
 # ── SIZE LIMITS (per coding standards) ────────────────────────────────────────
 # Per-repo overrides: set MAX_FILE_LINES / MAX_FUNCTION_LINES / MAX_METHOD_LINES
