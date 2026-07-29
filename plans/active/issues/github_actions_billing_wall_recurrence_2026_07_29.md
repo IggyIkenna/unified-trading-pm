@@ -171,3 +171,22 @@ return to a normal (non-zero-job) run.
   `/blocked` — the standing `[OPERATOR] P0` todo above already covers this decision and multiple duplicate
   `alerting-service` `ldr_qg_failure` escalations are already queued/dispatched (`agt-9132b2`, `agt-d970e3`,
   `agt-2450f6` at query time) against the same unfixable wall.
+
+- **2026-07-29T21:15Z (cicd escalation `agt-0518b0`, slot 12)**: corroborating data point for `client-reporting-api`
+  `ldr_qg_failure` (`#0`, no PR). Local `bash scripts/quality-gates.sh` at HEAD `ed6586b8` run twice independently (once
+  bare, once with explicit `$?` capture) — both clean, `exit=0`, 665 passed/4 skipped/71.56% coverage,
+  `ALL QUALITY GATES PASSED`. The CI run that fired this escalation (`30479590370`, 18:22:09Z) shows the same _partial_
+  signature already on record above: `content-gate` + both `qg-slices` (`checks`, `tests`) `success`, only the
+  `quality-gates-v2` aggregator job failing in 12s with 0 recorded steps and an expired log blob. Re-dispatched fresh at
+  21:15:33Z (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`) → still `startup_failure`, 0 jobs — the
+  wall has not self-cleared, extending the confirmed-active window past every prior sample in this doc. Widened
+  independently to `market-tick-data-service` and `deployment-service`: same signature across multiple recent commits
+  each (not re-tabulated here — same conclusion as the table above). Note for corpus hygiene: a same-repo prior
+  diagnosis (`agt-dfdd5b`, slot 5, ~21:00Z) exists but was logged into the sibling
+  `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md`'s Progress Log instead of here — its content (0-job
+  `startup_failure`, billing-wall signature) matches this doc's mechanism, not that doc's self-hosted-contention
+  mechanism, so a future reconciliation pass should probably relocate it; not doing that migration myself (out of scope
+  for a one-shot escalation worker, and `check_line_caps.sh` / cross-doc migrations warrant their own pass). Not filing
+  a fresh `/blocked` (same standing `BLK-21d55fb1` condition; avoiding the escalation-spam pattern the P3 todo above
+  already flags). Pinged the authoring slot with the outcome. No code or workflow change made or needed; slot left clean
+  on `live-defi-rollout`.
