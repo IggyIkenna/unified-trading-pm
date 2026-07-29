@@ -16,7 +16,7 @@ summary: >-
   `build_bucket`/`build_path` calls, and `scripts/pipeline_e2e_check.py`'s manifest-source citation). This reads as
   collateral damage from the dead-row cleanup sweep (adjacent-entry mis-scoping), not an intentional removal — the
   commit's own stated scope never mentions it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -50,7 +50,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-library@52161ee7
 ---
 
 # `calendar_features` PATH_REGISTRY row accidentally deleted by an unrelated dead-code cleanup commit
@@ -120,12 +120,13 @@ the onchain FOLD-A comment block):
 
 ## Todos
 
-- [ ] [BACKEND] P1. Restore the `calendar_features` `DataSetSpec` row to
+- [x] [BACKEND] P1. Restore the `calendar_features` `DataSetSpec` row to
       `unified_trading_library/config_interface/paths/registry.py` (unified-trading-library repo), verbatim as recovered
       above. **Done when**:
       `tests/calendar/unit/test_library_deps_integration.py::TestUnifiedTradingLibrary::test_build_path_for_calendar_features`
       and `tests/calendar/integration/test_unified_domain_client_integration.py` pass, and full
-      `bash scripts/quality-gates.sh` is green on unified-trading-library.
+      `bash scripts/quality-gates.sh` is green on unified-trading-library. — ✅ unified-trading-library@52161ee7, full
+      `quality-gates.sh` green (135s), sentinel written.
 
 ## Evidence
 
