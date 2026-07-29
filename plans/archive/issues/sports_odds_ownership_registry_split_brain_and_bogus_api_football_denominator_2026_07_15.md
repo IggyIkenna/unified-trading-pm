@@ -25,7 +25,7 @@ summary:
   codex to state 'odds=MTDS-domain (the footystats exception in IS is PREDICTIONS, not ODDS)' — the exact decision the
   operator REVERSED on 2026-06-27. Its two sibling todos were correctly cancelled; this one was missed. If executed it
   writes the reversed (wrong) rule into codex, contradicting sports-data-types-catalog.md:48-52."
-status: open
+status: resolved
 priority: P1
 resolution_progress:
   "2026-07-15 remediation pass (all three defects addressed; 2 follow-ups + 1 new finding remain OPEN). C: the stale
@@ -87,10 +87,16 @@ source:
   (manifest_consolidator.py:522 _BASE_DEDUP_COLS + _OPTIONAL_DEDUP_COLS, null-sentinel normalised)."
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: unified-api-contracts@57bcc7c5, unified-api-contracts@f66a3dea, instruments-service@c7d97b5d
 locked_by:
-last_updated: 2026-07-15
+last_updated: 2026-07-29
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-INTO-CODE.** Every real todo in this doc is `[x]` (re-verified 2026-07-28 per the
+> doc's own note; the one remaining raw `- [ ]` in the body is a deliberately-preserved historical quote inside a fenced
+> code block, not a live todo — see the "Historical quote, not a live todo in THIS doc" callout above it). Section D's
+> post-07-13 rebuild-delta reconcile is covered by `sports_consolidated_native_ao_extract_2026_07_25.md` (already noted
+> inline). No open work remains here.
 
 # Sports ODDS ownership — registry split-brain + bogus api_football denominator + a stale-decision DOCS landmine
 
