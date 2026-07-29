@@ -105,14 +105,30 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
 
 ## Todos
 
-- [ ] [BACKEND] P2. Query the `slot_done_verified` activity-log events (via `/api/activity` or a direct state.db read on
-      the orchestrator VM, read-only SSM) over a representative recent window (e.g. the last 7-14 days) and compute the
-      `on_origin=False` rate. Report the number and a handful of example task_ids/timestamps.
-- [ ] [BACKEND] P2. Based on that rate: **if rare**, set `done_require_origin=true` in the orchestrator's `.env.local`
-      (or promote it to the systemd unit template if it should apply fleet-wide) and ship. **If common**, investigate
-      the actual failure pattern from the sampled examples first, fix the root cause (likely a timing/race issue between
-      `/done` and the async quickmerge push, or a sentinel-SHA gap), THEN enable the flag — do not enable enforcement
-      before understanding why it would currently reject a nontrivial fraction of real completions.
+- [x] [BACKEND] P2. Query the `slot_done_verified` activity-log events over the last 14 days and compute the
+      `on_origin=False` rate. — **Done 2026-07-29**: 1137 events, 1103 `true` / 26 `false` (2.29%) / 8 `none`. Sampled 3
+      of the 26 false examples' actual cited SHAs and checked them directly against the real repos: `54850f6`
+      (`ao_worker_context_lifecycle_gap-005`) was **already present on `origin/live-defi-rollout`** at check time — a
+      confirmed false negative, not a failed push (the other 2 samples belong to repos this session didn't have cloned
+      locally, inconclusive either way, not needed given the first result already answers the question).
+- [x] [BACKEND] P2. Based on that rate: investigate before enabling. — **Done 2026-07-29, root-caused and fixed rather
+      than just flipping the flag.** The false rate wasn't random noise — it's a real race: `verify_done` only reaches
+      `_sha_on_origin` after `git show` already succeeded (the commit object is known locally), so a LOCAL-only
+      `origin/*` miss is genuinely ambiguous between "never pushed" and "pushed, but this worktree's own remote-tracking
+      ref cache hasn't caught up yet" (confirmed via the `54850f6` sample). Fixed by falling back to one
+      `git fetch origin --quiet` + re-check, but ONLY on that rare (~2.3%) local-miss path, so the common (~98%) case
+      stays exactly as fast as before (no fetch added to the hot path). Shipped: `agent-orchestrator@25d497f`
+      (`server/verify.py::_sha_on_origin`), 2 new tests reproducing the exact stale-ref race deterministically + the
+      genuinely-never-pushed case staying `False` (`tests/test_e2e_findings_remediation.py`). Full suite green (1917
+      passed), `quality-gates.sh` green. **`done_require_origin` was deliberately NOT flipped to `true` in this same
+      pass** — the false rate should be re-measured post-fix before deciding; flipping blind before this fix would have
+      started rejecting real legitimate completions on exactly this race.
+- [ ] [BACKEND] P2. Re-measure the `on_origin=False` rate over a window AFTER `25d497f` has been live for a few days
+      (the fallback-fetch fix should collapse most/all of the 2.29% down to genuine failures only). If the rate is now
+      at/near 0%, set `done_require_origin=true` in the orchestrator's `.env.local` (or the systemd unit template if it
+      should apply fleet-wide) and ship. If a nonzero rate persists, sample those specific examples the same way this
+      session did (check the cited SHA against the real repo) before deciding whether it's a genuine failure class or a
+      different race this fix didn't cover.
 - [ ] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
       landing behavior, but worth a deliberate yes/no rather than leaving it implicit.
