@@ -16,7 +16,7 @@ tags: [pnl-attribution, strategy, defi, features, reconciliation, uac, execution
 related:
   [
     /codex/09-strategy/architecture-v2/cross-cutting/restaking-reward-economics.md,
-    reward-lifecycle.md,
+    /codex/09-strategy/architecture-v2/cross-cutting/reward-lifecycle.md,
     ../../../04-architecture/global-ledger-architecture.md,
     ../../../04-architecture/batch-live-architecture.md,
   ]

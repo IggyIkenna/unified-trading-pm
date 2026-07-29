@@ -56,6 +56,8 @@ locked_by:
 
 # instruments-store prediction bucket — CF-2/CF-3 path-scheme gap needs an architect call
 
+> **🟢 RESOLVED — resolved_by `instrument_availability_hive_canonicalisation_2026_07_21.md`. Archived.**
+
 ## 1. What I found
 
 Ran the read-only `cf_manifest_audit_2026_06_01.py` (no whole-corpus walk -- pulls the single `_index`

@@ -493,8 +493,8 @@ Measured drift in `market-data-tick-sports-prd` (1,974,679 rows): `ODDS`/`odds` 
       "ALREADY DONE 2026-07-22" via market-tick-data-service@2f3fb7cc; see that doc for evidence).
 - [x] [CLEANUP] P2. Delete `migrate_sports_canonical_v9.py` per its own Delete-when marker (E8 is complete). — ⛔
       SUPERSEDED 2026-07-23 (lowercase revert) — already covered by
-      `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (tracks this exact deletion's residual
-      status; see that doc for execution).
+      `/plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md` (tracks this exact deletion's
+      residual status; see that doc for execution).
 
 ### K3. Phase 3 — prove it
 

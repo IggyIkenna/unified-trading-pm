@@ -485,7 +485,7 @@ source: >-
       independently-verified `instruments-service/scripts/**` one-offs shipped same-day (instruments-service@269440d7);
       v1_archive gate un-tick/correction already done (unified-trading-pm@3aff7f716). Residual (v9-cluster + ~14
       unverified one-offs) tracked, not dropped:
-      `plans/active/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md`. The todo's own literal final gate
+      `/plans/archive/issues/sports_t6_8_oneoff_retirement_residual_2026_07_25.md`. The todo's own literal final gate
       (`rg -c 'sports-central-element-323112'` → 0) is corrected as unachievable — many remaining hits are legitimate
       permanent-lifecycle/doc references; see the source doc for full detail. Source:
       `sports_legacy_cutover_closeout_tasks_2026_07_24.md`.

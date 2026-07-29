@@ -50,6 +50,8 @@ superseded_by:
 
 # T6.8 one-off retirement — what shipped vs. what's residual
 
+> **🟢 RESOLVED — all tracked todos shipped. Archived.**
+
 ## What I found
 
 T6.8's mechanism claim was: "per each file's own `Delete-when` (all satisfied once T5.4 landed + orphan-sweep = 0 — both
