@@ -45,7 +45,7 @@ related:
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-29"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -221,22 +221,22 @@ drift_direction: advance-code
       subscription-tier-limit-vs-backfill-bug fork this todo exists to resolve is answered: **subscription-tier limit**
       — any future fix-path decision (e.g., whether to upgrade the API-Football plan) should proceed on that basis. No
       fix implemented; no code changed. (repo: instruments-service, read-only — verified.)
-- [ ] [DATA] P1. BLOCKED-PREREQUISITES — **Sports P2b — reference sources + odds history, 5 of 6 sources VERIFIED DONE
-      2026-07-27, odds_api genuinely NOT done (real gap, root-cause + fix both gated).** **Scope correction applied
-      first**: this todo's own title says "2015→present," but that framing is stale — the 2026-07-21 operator ruling
-      (`/codex/02-data/sports-2020-06-data-floor.md`) clamped every sports source's `coverage_start` to **2020-06-06**
-      and ruled "any plan/track that backfills sports history before 2020-06 is moot." So "extend to `coverage_start`"
-      today means 2020-06-06→present, not 2015→present; measured against the live `SOURCE_COVERAGE_START` floor.
-      **Method**: single read of `instruments-store-sports-prd-central-element-323112`'s
-      `_index/availability_index.parquet` (6,871,468 rows, one download, bounded columns — no whole-corpus GCS walk),
-      filtered `date >= 2020-06-06`, grouped by `source`. **5/6 sources — open_meteo (weather), soccer_football_info,
-      transfermarkt, understat, footystats — genuinely extended**: each has a manifest row for effectively every
-      calendar day since the floor (2243-2248 of 2243 calendar days), **0 blank/un-typed `error_reason`** on any
-      `empty_confirmed`/`attempted_failed` row across all 5. **odds_api — NOT extended**: 635 of 2243 calendar days
-      since the floor have **ZERO manifest row of any capture_status** (a true absence, not a typed skip — IS has no
-      `odds_api` adapter/expected-universe seeder, confirmed by sub-agent trace, so no denominator cell was ever
-      materialized for these days). Of the 635, only 19 fall inside the already-documented + already-fixed
-      2026-06-27..07-15 scheduler-dormancy window
+- [ ] [DATA] P1. UNBLOCKED 2026-07-29 — **Sports P2b — reference sources + odds history, 5 of 6 sources VERIFIED DONE
+      2026-07-27, odds_api genuinely NOT done yet (real gap; root-cause closed-exhausted, credential now fixed, only the
+      actual backfill run remains).** **Scope correction applied first**: this todo's own title says "2015→present," but
+      that framing is stale — the 2026-07-21 operator ruling (`/codex/02-data/sports-2020-06-data-floor.md`) clamped
+      every sports source's `coverage_start` to **2020-06-06** and ruled "any plan/track that backfills sports history
+      before 2020-06 is moot." So "extend to `coverage_start`" today means 2020-06-06→present, not 2015→present;
+      measured against the live `SOURCE_COVERAGE_START` floor. **Method**: single read of
+      `instruments-store-sports-prd-central-element-323112`'s `_index/availability_index.parquet` (6,871,468 rows, one
+      download, bounded columns — no whole-corpus GCS walk), filtered `date >= 2020-06-06`, grouped by `source`. **5/6
+      sources — open_meteo (weather), soccer_football_info, transfermarkt, understat, footystats — genuinely extended**:
+      each has a manifest row for effectively every calendar day since the floor (2243-2248 of 2243 calendar days), **0
+      blank/un-typed `error_reason`** on any `empty_confirmed`/`attempted_failed` row across all 5. **odds_api — NOT
+      extended**: 635 of 2243 calendar days since the floor have **ZERO manifest row of any capture_status** (a true
+      absence, not a typed skip — IS has no `odds_api` adapter/expected-universe seeder, confirmed by sub-agent trace,
+      so no denominator cell was ever materialized for these days). Of the 635, only 19 fall inside the
+      already-documented + already-fixed 2026-06-27..07-15 scheduler-dormancy window
       (`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`, fixed
       `market-tick-data-service@410d7569`), and part of one range overlaps the already-documented 2022-09 canonical
       under-capture outage (`mdt_legacy_canonical_row_gap_2026_07_16.md`, superseded). **616 days are newly found,
@@ -244,24 +244,25 @@ drift_direction: advance-code
       [48d], 2022-03-06..04-18 [44d], 2023-07-01..10-06 [98d], 2024-11-19..12-31 [43d], 2025-03-11..04-11 [32d],
       2026-02-22..03-28 [35d]) plus 120 isolated single-day gaps, roughly even day-of-week distribution (no weekly-cron
       signature). Filed as a new finding, with root-cause + backfill todos:
-      `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **No backfill attempted**: the
-      odds-api.com key is currently `DEACTIVATED_KEY` (`sports_odds_api_key_deactivated_2026_07_26.md`, `status: open`,
-      independently re-verified live by 3 slots against the vendor directly) — any fetch attempt right now would just
-      401 and add `attempted_failed` noise, so the fix is doubly gated (root-cause first, then the [OPERATOR]-credential
-      restore, then the actual gap-fill). (repo: instruments-service, market-tick-data-service). **Done when**: the new
-      issue doc's root-cause + backfill todos land AND a fresh census shows odds_api at 0 missing days too (the other 5
-      sources' portion of this done-when is already satisfied). **UPDATE 2026-07-28 (slot 14) — BLOCKED-CREDENTIALS,
-      root-cause avenue now closed too.** Picked up the issue doc's root-cause todo (the 6 undocumented multi-week
-      gaps): checked GCP Cloud Logging bucket retention (`_Default`=2 days, `_Required`=400 days but audit-log-only),
-      the `vm-logs/` GCS archive (earliest entry 2026-07-14, postdates even the most recent of the 6 windows), and Cloud
-      Scheduler job wiring — all three are categorically insufficient for every one of the 6 windows, so the root-cause
-      todo is now closed as UNABLE TO ROOT-CAUSE (exhausted, not deferred; see the issue doc's Progress Log).
-      Re-verified the odds-api key live: still `error_code=DEACTIVATED_KEY`, unchanged. This item is now genuinely fully
-      investigated end-to-end — the ONLY remaining action is the `[OPERATOR]`-gated credential restore in
-      `sports_odds_api_key_deactivated_2026_07_26.md`, then the backfill. Re-tagging `BLOCKED-CREDENTIALS` (in addition
-      to the existing `BLOCKED-PREREQUISITES`) so `regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` actually
-      excludes this checkbox from re-dispatch (it does not match on `BLOCKED-PREREQUISITES` alone) instead of burning
-      another worker cycle re-deriving the same closed investigation.
+      `plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`. **No backfill attempted yet**: the
+      odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28 (`sports_odds_api_key_deactivated_2026_07_26.md`,
+      independently re-verified live by 3 slots against the vendor directly) — any fetch attempt then would have just
+      401'd and added `attempted_failed` noise. **UPDATE 2026-07-29: the operator rotated `odds-api-key` to a new key on
+      a 5,000,000-credits/month subscription, live-verified (HTTP 200, `x-requests-remaining: 5000000`) — no longer
+      deactivated.** Only the actual gap-fill backfill remains, no further gate. (repo: instruments-service,
+      market-tick-data-service). **Done when**: the new issue doc's root-cause + backfill todos land AND a fresh census
+      shows odds_api at 0 missing days too (the other 5 sources' portion of this done-when is already satisfied).
+      **UPDATE 2026-07-28 (slot 14) — root-cause avenue now closed too.** Picked up the issue doc's root-cause todo (the
+      6 undocumented multi-week gaps): checked GCP Cloud Logging bucket retention (`_Default`=2 days, `_Required`=400
+      days but audit-log-only), the `vm-logs/` GCS archive (earliest entry 2026-07-14, postdates even the most recent of
+      the 6 windows), and Cloud Scheduler job wiring — all three are categorically insufficient for every one of the 6
+      windows, so the root-cause todo is now closed as UNABLE TO ROOT-CAUSE (exhausted, not deferred; see the issue
+      doc's Progress Log). Re-verified the odds-api key live at the time: still `error_code=DEACTIVATED_KEY`, unchanged.
+      **UPDATE 2026-07-29: the operator rotated `odds-api-key` (new 5,000,000-credits/month-subscription key),
+      live-verified HTTP 200 — no longer `DEACTIVATED_KEY`.** This item is now genuinely fully investigated end-to-end
+      and credential-unblocked — the ONLY remaining action is the actual backfill run itself, no operator gate left. Not
+      re-tagging `BLOCKED-CREDENTIALS` (the credential is fixed); `BLOCKED-PREREQUISITES` above has been changed to
+      `UNBLOCKED` to match so `regen_backlog_from_plan.py` picks this back up as dispatchable.
 - [ ] [DATA] P2. BLOCKED-PREREQUISITES — **Sports P2c — features history backfill to ML-ready, blocked on the P2a and
       P2b todos above landing first.** Extend the features-service sports feature matrix from the golden window
       (2025-09-01..11-30) to 2015→present once P2a/P2b land. (repo: features-service). **Done when**: P2a/P2b are both

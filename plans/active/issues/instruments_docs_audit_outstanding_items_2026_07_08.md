@@ -57,7 +57,7 @@ related:
     plans/active/prediction_canonical_identity_migration_2026_07_08.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-07-29
 parent_epic: instruments_master
 priority: P1
 source:
@@ -387,7 +387,7 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
 - **Fix options:** **A (recommended)** create the ml-service Cloud Run Job and set `cloud_run_job_name`. **B:** remove
   the tier entry if pre-match inference isn't launching yet (don't leave a silently-skipped entry).
 
-### D7. `sports-odds-ready` publisher not located — `P1` — NEW
+### D7. `sports-odds-ready` publisher not located — `P0` (bumped from P1, 2026-07-29 — see impact note below) — NEW
 
 - **What:** the sports odds→downstream trigger references a `sports-odds-ready` topic whose consumer exists but whose
   publisher could not be found; MTDS publishes to `persist-{asset_group}-{data_type}` instead.
@@ -409,9 +409,12 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
     elsewhere (`features-service/.../multi_timeframe/engine/orchestrator.py:599` publishes `features-mtf-ready`) —
     sports-odds was simply never finished on the MTDS side.
 - **Impact:** live-mode sports feature computation never fires — the subscriber idles with **no crash/error/alert**, so
-  it would go undetected in prod. **Latent, not yet triggered:** the live Odds API connector
-  (`market_tick_data_service/live/connectors/odds_api_ws.py:154`) is itself `BLOCKED-CREDENTIALS`, so live sports odds
-  has never actually run. Batch mode is unaffected. Same bug class as
+  it would go undetected in prod. **UPDATE 2026-07-29 — no longer latent, now live-armed:** the live Odds API connector
+  (`market_tick_data_service/live/connectors/odds_api_ws.py:154`) was `BLOCKED-CREDENTIALS`, so live sports odds had
+  never actually run — but the operator rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a
+  new working key on 2026-07-29 (this connector resolves that exact secret), so live sports odds capture can now
+  actually start. Once it does, this dead-trigger bug means live sports feature computation will silently never fire,
+  with no crash/error/alert to surface it. Bumped P1→P0 accordingly. Batch mode is unaffected. Same bug class as
   `plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md` (topic-naming drift between a service sink and
   terraform-provisioned topics) — worth flagging as systemic.
 - **Fix options:**
@@ -423,8 +426,9 @@ tracking: `instrument_id_format_canonicalization_2026_07_08.md` +
   - **B:** implement the originally-designed publisher — add a real `sports-odds-ready` publish in MTDS's odds
     snapshot-flush path (per `LIVE_PUBSUB_README.md`), keeping subscriber + terraform topic as-is. More code; preserves
     a semantically distinct "odds ready" signal.
-  - **C:** doc-only defer — since live sports odds is `BLOCKED-CREDENTIALS` (no impact yet), just correct the docs to
-    the real wiring and defer A/B until the credential unblock lands.
+  - **C (no longer viable, 2026-07-29):** doc-only defer — this option's premise was that live sports odds was
+    `BLOCKED-CREDENTIALS` with no impact yet; that credential is now fixed (see impact note above), so a doc-only defer
+    would leave a genuinely live-triggerable dead-trigger bug unaddressed. Prefer **A**.
   - **Residual uncertainty:** did not exhaustively rule out a console-created (non-terraform) Eventarc/GCS-finalize
     trigger bridging `persist-sports-odds` → `sports-odds-ready`; grep of `deployment-service/terraform` found none.
 

@@ -21,7 +21,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-29"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -164,16 +164,19 @@ drift_direction: advance-code
       genuinely-open active `[ ]` todos** in its `## Todos` section (NOT the Deferred sections todo 3 re-confirmed), so
       archiving it now would violate the plans-run-to-actual-completion HARD RULE ("not smoke-test green"): (line 79)
       `[DATA] P2` **BLOCKED-CREDENTIALS** odds-api backfill of 3 leagues — odds-api key deactivated, fully tracked in
-      the still-OPEN `/plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md`; and (line 91) `[DATA] P2`
-      zombie-tick purge/re-derive + ML-readiness gate-semantics fix — **active-not-started**, gated on
+      the still-OPEN `/plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md` — **UPDATE 2026-07-29: the
+      credential itself is now fixed** (operator rotated `odds-api-key` to a new 5,000,000-credits/month-subscription
+      key, live-verified HTTP 200) — line 79 is no longer `BLOCKED-CREDENTIALS`/operator-gated, it's a genuinely
+      dispatchable P1 backfill re-run that just hasn't executed yet; and (line 91) `[DATA] P2` zombie-tick
+      purge/re-derive + ML-readiness gate-semantics fix — **active-not-started**, gated on
       `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s read-only P1 sweep report (batch4 still `status: active`, 1
       open todo, so line 91 cannot even start). Neither qualifies for the 6-step ritual's DEFERRED-migration (line 91 is
-      active-not-started; line 79 is operator-gated) — do NOT archive, do NOT migrate-to-pass (Option B rejected as the
-      smoke-test-green anti-pattern). **Depends on `sports_satellite_ao_dispatch_batch5_2026_07_26` reaching 0 open
-      todos** (lines 79 + 91 closed). Structural note: this todo was dispatched prematurely because `gate_on_depends`
-      gates ARCHIVAL + documents ordering but does NOT block DISPATCH — expected to self-heal via the auto-park
-      machinery (`server/auto_park.py`, threshold=3 BLOCKED/GATED declines). Checkbox stays `[ ]`. Original task
-      follows. **Archive `sports_satellite_ao_dispatch_batch5_2026_07_26.md`** via the standard 6-step ritual (per
+      active-not-started; line 79 is now dispatchable-but-not-yet-run) — do NOT archive, do NOT migrate-to-pass (Option
+      B rejected as the smoke-test-green anti-pattern). **Depends on `sports_satellite_ao_dispatch_batch5_2026_07_26`
+      reaching 0 open todos** (lines 79 + 91 closed). Structural note: this todo was dispatched prematurely because
+      `gate_on_depends` gates ARCHIVAL + documents ordering but does NOT block DISPATCH — expected to self-heal via the
+      auto-park machinery (`server/auto_park.py`, threshold=3 BLOCKED/GATED declines). Checkbox stays `[ ]`. Original
+      task follows. **Archive `sports_satellite_ao_dispatch_batch5_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
       should have already resolved or re-confirmed all 16 — verify none silently vanish) → add the archive banner → run
       the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for
