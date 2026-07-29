@@ -482,11 +482,17 @@ jobs:
             # ── SIT gate part 1 (LDR→main): breaking_pending block ──────────────────────
             # WS-L Phase-1 SIT-gate relocation. Unlike staging→main (TRIGGERED by SIT's
             # staging-validated dispatch), this cron bot needs an EXPLICIT SIT gate.
-            # breaking_pending is the SIT-green signal: SET by update-repo-version.yml (off the
-            # semver dispatch on staging) and CLEARED by sit-unlock.yml on SIT pass — BOTH stay
-            # live for ldr_main repos (the LDR→staging drain + SIT cascade are untouched), so
-            # this releases when SIT goes green. No deadlock. (Part 2 below closes the race
-            # window BEFORE breaking_pending is set.)
+            # breaking_pending is SET by update-repo-version.yml off the semver dispatch on
+            # STAGING and CLEARED by sit-unlock.yml on SIT pass. CORRECTED 2026-07-29 (post-cutover
+            # sweep F5) — the prior comment here ("BOTH stay live for ldr_main repos") is FALSE:
+            # while `staging_dormant_mode` is on (the current default), NO repo pushes to staging,
+            # so the writer never fires and breaking_pending stays structurally empty fleet-wide —
+            # this block is a genuine no-op during dormancy, not a live SIT-green gate. The
+            # load-bearing SIT check for ldr_main repos today is the `sit-gate/fleet-green` required
+            # check (Firestore `sit_validated_tree`, fed nightly by full-workspace-sit.yml's cron),
+            # not this part-1 block. Reversible: if staging_dormant_mode flips off, this block
+            # becomes live again for whichever repos resume routing through staging. (Part 2 below
+            # closes the race window BEFORE breaking_pending is set, for the repos it IS live for.)
             if echo " $BREAKING_PENDING " | grep -q " $REPO "; then
               echo "SIT GATE BLOCK $REPO: in breaking_pending — awaiting SIT-green on staging before LDR→main"
               _done BLOCKED; return 0
