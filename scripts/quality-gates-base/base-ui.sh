@@ -133,8 +133,9 @@ _qg_write_killed_marker() {
 }
 
 # ── UI TRAP OVERRIDES (add _qg_kill_children to EXIT, handle INT/TERM/HUP) ──
-# Overrides the default _qg_record_failure-only trap from qg-common.sh
-trap '_qg_record_failure; _qg_kill_children' EXIT
+# Overrides the default _qg_record_failure-only trap from qg-common.sh. Chains
+# _qg_pid_file_cleanup (qg-common.sh) — an override must re-chain it or it never fires.
+trap '_qg_pid_file_cleanup; _qg_record_failure; _qg_kill_children' EXIT
 trap '_qg_write_killed_marker INT; _qg_kill_children; exit 130' INT
 trap '_qg_write_killed_marker TERM; _qg_kill_children; exit 130' TERM
 trap '_qg_write_killed_marker HUP; _qg_kill_children; exit 130' HUP

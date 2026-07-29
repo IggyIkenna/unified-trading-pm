@@ -138,6 +138,26 @@ if [[ -z "${QG_BANNER_SUPPRESS:-}" ]]; then
 fi
 unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 
+# ── PID FILE (repo-scoped self-kill handle) ───────────────────────────────────
+# pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md P2: a worker who needs to
+# self-kill a stuck QG run should never reach for a name-based `pkill -f
+# quality-gates.sh` — every slot invokes the identical script with identical argv, so
+# that pattern is host-wide, not slot-scoped (confirmed incident: it killed a DIFFERENT
+# slot's live run twice in one day). The shell-level pkill-guard (same issue doc, P1,
+# already shipped) now refuses that bare pattern outright — but this PID file gives an
+# exact, repo-scoped handle as the positive alternative, not just a blocked negative:
+#   kill $(cat .qg_run.pid)        # the quality-gates.sh script itself
+#   pkill -P $(cat .qg_run.pid)    # its direct children (pytest/basedpyright)
+# Both are numeric-target invocations the pkill-guard already allows through
+# unconditionally. Overwritten every run — only one quality-gates.sh runs per repo
+# worktree at a time in practice, so last-writer-wins is fine. A stale entry after an
+# UNCATCHABLE SIGKILL is harmless as long as the reader `kill -0`s it before trusting it
+# live (standard pidfile hygiene) — cleanup on every CATCHABLE exit is via
+# _qg_pid_file_cleanup, chained into each base-*.sh's own EXIT trap below. Gitignored.
+_QG_PID_FILE="${PROJECT_ROOT}/.qg_run.pid"
+echo "$$" >"$_QG_PID_FILE" 2>/dev/null || true
+_qg_pid_file_cleanup() { [[ -n "${_QG_PID_FILE:-}" ]] && rm -f "$_QG_PID_FILE" 2>/dev/null; return 0; }
+
 # ── FLEET-WIDE PIP-AUDIT IGNORE LIST (single control point; item 252) ────────
 # Add to base-service.sh _pa_extra / base-library.sh _pa_extra via ${QG_PIP_AUDIT_COMMON_IGNORES}.
 # NEVER duplicate this list inline in a base script — update HERE ONLY.
@@ -177,8 +197,10 @@ _qg_record_failure() {
     _qg_update_ci_status_failing
     return $exit_code
 }
-# Default trap — base scripts may override (e.g. base-ui.sh adds _qg_kill_children)
-trap _qg_record_failure EXIT
+# Default trap — base scripts may override (e.g. base-ui.sh adds _qg_kill_children).
+# Any override MUST keep chaining _qg_pid_file_cleanup so the PID file above never
+# outlives the run it was written for.
+trap '_qg_pid_file_cleanup; _qg_record_failure' EXIT
 
 # ── PORTABLE TIMEOUT ─────────────────────────────────────────────────────────
 # Wraps a command with a wall-clock timeout. Tries GNU timeout, gtimeout (macOS

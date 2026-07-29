@@ -58,7 +58,7 @@ _qg_content_hash() {
         git rev-parse HEAD 2>/dev/null || echo no-head
         git diff HEAD 2>/dev/null
         git ls-files --others --exclude-standard 2>/dev/null \
-            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_run\.pid|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
             | sort | while IFS= read -r _f; do [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null; done
         sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null
         "${RUFF_CMD:-ruff}" --version 2>/dev/null
@@ -70,7 +70,9 @@ _qg_content_hash() {
 
 # ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
 _qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
-trap '_qg_exit_handler' EXIT
+# Chains _qg_pid_file_cleanup (qg-common.sh) — this trap overrides qg-common.sh's
+# default, so the PID-file cleanup must be re-chained here or it never fires.
+trap '_qg_pid_file_cleanup; _qg_exit_handler' EXIT
 
 # ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──
 # Mirror of base-service.sh's own signal trap (see that file for the full rationale) —

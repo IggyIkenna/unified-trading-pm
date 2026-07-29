@@ -90,7 +90,7 @@ _qg_content_hash() {
         # untracked files — but EXCLUDE QG artifacts that change every run (else the
         # hash self-references and the sentinel can never hit).
         git ls-files --others --exclude-standard 2>/dev/null \
-            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_run\.pid|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
             | LC_ALL=C sort | while IFS= read -r _f; do
                 # _qg_hash (qg-common.sh) = sha256sum-or-shasum — stock macOS has NO
                 # sha256sum, so a direct call left the sentinel permanently dead there
@@ -185,7 +185,9 @@ _qg_exit_handler() {
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
     return 0
 }
-trap '_qg_exit_handler' EXIT
+# Chains _qg_pid_file_cleanup (qg-common.sh) — this trap overrides qg-common.sh's
+# default, so the PID-file cleanup must be re-chained here or it never fires.
+trap '_qg_pid_file_cleanup; _qg_exit_handler' EXIT
 
 # ── SIGNAL TRAP: loud "killed" marker on a genuinely-CAUGHT kill signal ──
 # shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md: a killed (not just

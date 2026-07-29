@@ -89,6 +89,10 @@ coverage.xml
 htmlcov/
 nosetests.xml
 
+# --- QG run PID file (repo-scoped self-kill handle; overwritten every run;
+#     pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md P2) ---
+/.qg_run.pid
+
 # --- Data / logs (repo-local, not for git) ---
 data/
 logs/

@@ -144,10 +144,30 @@ compute on the victim slot, which must re-run to green before it can ship regard
       `pkill -f quality-gates.sh` / similar, since every slot invokes shared scripts with identical argv and such a
       pattern is host-wide, not slot-scoped. Cite this incident doc. — unified-trading-pm@`agents/RULES.md` (new bullet
       under § 1 "Your worktree", the section closest to CLAUDE.md's "Multi-agent safety").
-- [ ] [SCRIPT] P2. Consider whether `scripts/quality-gates.sh` (or its base library) should tag its own process title /
-      write a PID file scoped to `$(pwd)` (e.g. `.qg_run.pid` in the repo worktree) so a worker that needs to self-kill
-      a stuck run has a precise, repo-scoped handle instead of ever reaching for a name-based `pkill`. Optional
-      hardening, not required if the RULES.md addendum alone is judged sufficient.
+- [x] ✅ [SCRIPT] P2. **Judgment: implement it.** The already-shipped pkill-guard (P1 above) explicitly ALLOWS a
+      numeric-target `pkill -P <pid>` through unconditionally — a PID file gives the exact anchor that recipe needs,
+      turning "never do X" into a concrete safe alternative, not just a blocked negative. Added a repo-scoped
+      `.qg_run.pid` (contains `$$`, the running `quality-gates.sh`'s own PID) written once `PROJECT_ROOT` is resolved
+      in `qg-common.sh` (sourced by all four base-*.sh — service/library/ui/codex — so this covers every repo type
+      from one control point), overwritten every run, cleaned up via `_qg_pid_file_cleanup` chained into every
+      base-*.sh's own EXIT-trap override (qg-common.sh's default trap, plus base-service.sh/base-library.sh's
+      `_qg_exit_handler` trap and base-ui.sh's `_qg_kill_children` trap all now chain it — base-codex.sh has no
+      override so it inherits qg-common.sh's default). Self-kill recipe: `kill $(cat .qg_run.pid)` for the script
+      itself, `pkill -P $(cat .qg_run.pid)` for its pytest/basedpyright children — both numeric-target forms the
+      pkill-guard already allows through. Verified live: a 3-level BASH_SOURCE caller→base→qg-common chain against a
+      scratch git repo confirmed the PID file is written with the exact PID and removed on normal exit; `pkill -P
+      <numeric>` passes the guard through to the real binary while a bare `pkill -f "quality-gates.sh"` still
+      REFUSES. **Found + fixed in the same pass**: the untracked `.qg_run.pid` would otherwise change content every
+      run and (a) permanently defeat the green-sentinel skip-cache in `_qg_content_hash()` (base-service.sh,
+      base-library.sh — the existing comment there literally warns "EXCLUDE QG artifacts that change every run else
+      the hash self-references and the sentinel can never hit") and (b) force the docs-only-tier fast path off on
+      every run fleet-wide once this change propagates — fixed via `/.qg_run.pid` in `.gitignore` +
+      `scripts/templates/.gitignore.central` (so `--exclude-standard` filters it) AND an explicit-name exclusion
+      added to both `_qg_content_hash()` `grep -vE` filters (defense-in-depth, self-contained even before a given
+      repo's `.gitignore` sync catches up — matches the existing pattern for `.qg_last_passed_sha`/
+      `.qg_content_sentinel`). Syntax-checked all four edited base-*.sh with `bash -n`. — unified-trading-pm
+      `scripts/quality-gates-base/qg-common.sh` + `base-service.sh` + `base-library.sh` + `base-ui.sh` + `.gitignore`
+      + `scripts/templates/.gitignore.central`.
 - [x] ✅ [SCRIPT] P1. **Recurrence #2 (2026-07-28, slot-5) proved the RULES.md prose addendum alone is insufficient —
       build a MECHANICAL guard, not just more documentation.** Add a shell-level guard on the shared host (a
       `pkill`/`pgrep` wrapper function or shim earlier in `PATH`, sourced by the same per-slot shell init that sets up

@@ -40,6 +40,9 @@ central-element-323112-*.json
 /.qg_content_sentinel
 /.qg_ci_green_marker
 
+# --- QG run PID file (repo-scoped self-kill handle; overwritten every run) ---
+/.qg_run.pid
+
 # --- QG profiler output (opt-in QG_PROFILE=1; local-only, share explicitly via --outdir) ---
 .qg_profile/
 
