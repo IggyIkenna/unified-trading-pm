@@ -211,7 +211,7 @@ pure explanatory comment, not the deleted local classes.
 ### 8. `features-service` — `dependency_checker.py` vacuous-pass fix — ✅ SHIPPED
 
 Evidence: `features-service@be36b42b`. Companion PM-repo todo flip also done: `unified-trading-pm@9a045e620` (todo 4 in
-`/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md`).
+`/plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md`).
 
 ### 9. `features-service` — onchain fixes + adv.py + a discovered pipeline_mode companion-fix conflict — ✅ SHIPPED
 

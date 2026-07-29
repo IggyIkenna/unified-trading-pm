@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [mdps, oom, cloud-run-job, candle-derivation, production-incident]
 related: [/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch2_2026_07_26.md]
 created: 2026-07-26
-last_updated: 2026-07-27 (Update 10)
+last_updated: 2026-07-29 (operator ruling on Update 13's backfill scope)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -87,8 +87,8 @@ paths, since "exit code 0 but OOM-killed" is exactly the kind of ambiguous signa
 
 ## Recommended next step
 
-Operator/engineer judgment call on the fix direction (memory bump vs. per-asset-group split vs. leak fix) — flagging
-rather than resolving unilaterally, per this being a genuine design decision, not a scoped todo.
+~~Operator/engineer judgment call on the fix direction~~ — superseded by the resolution below and the 13 Updates that
+follow; root-caused and fixed the same day this was filed.
 
 ## Resolution update (2026-07-26, interactive session)
 
@@ -113,47 +113,23 @@ not just theoretically fixed. That's the one remaining step — see Todos.
 
 ## Update 3 (2026-07-26/27, interactive session) — original fix CONFIRMED, but job still fails via a SECOND, distinct OOM
 
-`market-data-processing-service@6b44226` promoted to `main` (verified: git content-diff, not SHA-ancestor — LDR→main
-promotion squashes/rewrites, so `git merge-base --is-ancestor` is unreliable here; the actual
-`filters=[("date", "==", date)]` line was confirmed present in `git show origin/main:.../dependency_checker.py`). Fresh
-Cloud Build `dbfbf45a-09ba-496b-8463-7d5102aaff0c` (tag `14617c1`, 2026-07-26T22:59:10Z) matches that content exactly.
+**Condensed 2026-07-29** (full narrative in git history of this doc — the facts below are the ones later Updates
+reference). `market-data-processing-service@6b44226` (the Resolution-update fix above) confirmed live via a re-run
+(execution `...-7q78v`, correct fix-containing image `14617c1`). **The original bug IS fixed**: `RESOURCE_SAMPLE` rss
+peaked ~6.3GB (23:15:43), reset to <1GB at the next asset_group/date_type boundary (23:16:47), then climbed again to
+~3.5GB (23:21:51) — categorically different from the pre-fix unbroken climb to 14.86GiB, no evidence of that call site
+reappearing.
 
-Re-ran the job: execution `uts-prod-market-data-processing-service-t1-recon-7q78v`, confirmed via
-`gcloud artifacts docker images list --include-tags` to have used image `sha256:4ab492d3...` tagged `14617c1` — the
-correct, fix-containing image, not stale.
+**But the job still failed** — `Completed=False`, OOM at 23:23:00Z, ~13min elapsed (earlier than the ~22min pre-fix),
+container limit unchanged at 32Gi. A genuinely different, second OOM path — NOT a regression — likely tied to
+`defi`/`dex_pool_swaps`'s high per-day file count (704 for one asset_group/data_type/date) or whatever runs right after
+that data_type's `ThreadPoolExecutor` batch (this turned out to be a READ-path unfiltered manifest read, fixed in Update
+4 below).
 
-**The original bug IS fixed** — `RESOURCE_SAMPLE` trend for this execution shows rss peaking at ~6.3GB (23:15:43) then
-resetting to <1GB (23:16:47, next asset_group/date_type boundary) and climbing again to ~3.5GB (23:21:51). This is
-categorically different from the pre-fix pattern (a gradual, unbroken climb to 14.86 GiB from the single unfiltered
-27.4M-row DEFI manifest read) — no evidence of that call site reappearing.
-
-**But the job still failed** — `Completed=False`, "The configured memory limit was reached", at 2026-07-26T23:23:00Z,
-this time at ~13 min elapsed (vs ~22 min pre-fix — earlier, not later). Container limit confirmed unchanged at 32Gi
-(`gcloud run jobs describe ... resources.limits` = `memory=32Gi`). Logs show:
-
-- Last RESOURCE_SAMPLE before death: 23:21:51, rss=3516MiB (13.6%) — nowhere near the limit.
-- Last app log line: 23:21:29, finishing `POLARS AGGREGATED` candle work for DEFI `dex_pool_swaps`/2026-07-25 (704
-  files, 0 skipped, just-listed from `market-data-tick-defi-prd-central-element-323112`).
-- **Zero log lines of any kind between 23:21:51 and the `WARNING Container terminated on signal 9` at 23:22:58** — a
-  67-89s gap where >28GB was allocated with no intermediate log output at all (confirmed via direct
-  `gcloud logging read` on the execution, not the truncated default 2000-line pull which only covered the first 34s of
-  the run).
-
-**A genuinely different, not-yet-root-caused bug** — this is NOT a regression of the fix; it's a second OOM path, likely
-specific to `defi`/`dex_pool_swaps`'s unusually high per-day file count (704 for one asset_group/data_type/date) or
-whatever runs immediately after that data_type's `ThreadPoolExecutor` batch completes (the trailing
-`MEMORY_HIGH_WATER_MARK` `log_event()` call, or the transition to the next data_type/asset_group). Ruled out during this
-session: `ProcessingResult` (lightweight dataclass, no embedded DataFrames — not the accumulator);
-`ManifestFreshnessCache._refresh_locked` / `check_shard_freshness` (already date-filtered per the 2026-07-14
-`mtds_backfill_vm_startup_oom_rc137` fix, and called once per category/date, not per data_type, so not in the hot path
-here).
-
-**Also fixed in this session, unrelated**: the interactive-session watcher script used to monitor this execution had its
-own bug — it parsed `gcloud run jobs executions describe` output via a Python `print(status, '|', msg)` call, which
-inserts a space before the `|`; the bash `${var%%|*}` split then left a trailing space on the status value, so
-`[ "$cond_status" = "False" ]` never matched and the watcher polled uselessly for the full 45-minute timeout instead of
-exiting the moment the real terminal `Completed=False` appeared at the 12-minute mark. Caught by manually re-deriving
-state from `gcloud run jobs executions describe` directly, not from the watcher's own output.
+**Also fixed, unrelated**: the interactive-session watcher script had its own bug — a `print(status, '|', msg)` call
+inserted a space before `|`, so the bash `${var%%|*}` split left a trailing space that never matched
+`[ "$cond_status" = "False" ]`, polling uselessly for the full 45-min timeout instead of exiting at the real 12-min
+terminal state. Caught by re-deriving state directly from `gcloud run jobs executions describe`.
 
 ## Update 4 (2026-07-27, autonomous session) — second OOM ROOT-CAUSED, FIXED, and verified against the exact crash shard; job still doesn't reach Completed=True end-to-end because of a SEPARATE, pre-existing, unrelated bug
 
@@ -992,8 +968,12 @@ yet scoped (shard existence unchecked); 543 of those (50%) sit in 2022 alone —
       independently re-verified; 8 now-resolvable rows correctly left untouched. (repo: market-data-processing-service,
       deployment-service)
 
-- [ ] [OPERATOR] P2. **Decide + launch the real `odds_horizon_bucket` backfill for the 1,944 `SHARD_FILE_MISSING` rows**
-      (scoped in Update 13, not launched — operator asked to review scope first). 1,832 (date, league_id) pairs / 625
-      dates / 38 league_ids, 2020-06-26..2026-05-22; root cause understood, raw ticks present. The separate 1,080-row
-      `ROW_COUNT_NAN_UNVERIFIABLE` population is NOT yet scoped (unknown shard existence). (repo:
-      market-data-processing-service)
+- [ ] [DATA] P0. **Operator-ruled 2026-07-29: approved as scoped (Update 13) — retagged from `[OPERATOR]`, launch now.**
+      1,832 (date, league_id) `SHARD_FILE_MISSING` pairs / 625 dates / 38 league_ids, 2020-06-26..2026-05-22 (root cause
+      understood, raw ticks present; the separate 1,080-row `ROW_COUNT_NAN_UNVERIFIABLE` population stays unscoped).
+      Safe/idempotent, no further gate: write-only, resume-safe, SPOT-default. Use
+      `deployment-service/scripts/vm/launch-mdps-sports-bucket-vm.sh` (wraps `reprocess_sports_odds.py`):
+      `bash launch-mdps-sports-bucket-vm.sh 2020-06-26 2026-05-22 force` — **`force`**, not `full` (the manifest
+      pre-flight key is coarse per-day, so `full` would skip already-`captured` days despite the missing shards being
+      per-league). Done when: manifest re-check of the 1,832 pairs shows `captured`/explained residual, logged below.
+      Repo: market-data-processing-service, deployment-service.

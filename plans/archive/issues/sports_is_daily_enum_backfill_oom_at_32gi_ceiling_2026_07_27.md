@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [manifest, capture, oom, memory, is-daily-enum, cloud-run, backfill, sports, durable-fix]
 related:
   [
-    /plans/active/is_daily_enum_capture_heal_2026_07_07.md,
+    /plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md,
     /plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
@@ -50,7 +50,7 @@ resolved_by: instruments-service@5134a5f0, is-daily-enum-sports-b2sq8 (backfill 
 > all 5 gap dates re-verified against the corrected per-`data_type` baseline); (3) Cloud Run Job resources reverted to
 > Terraform's declared `cpu=4/memory=8Gi` default via `tofu apply` (was drifted to `cpu=8, memory=32Gi` from this doc's
 > own debugging attempts). This closes the genuine remainder that
-> `/plans/active/is_daily_enum_capture_heal_2026_07_07.md`'s last todo pointed here.
+> `/plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md`'s last todo pointed here.
 
 ## 1. What was attempted
 

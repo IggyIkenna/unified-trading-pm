@@ -106,8 +106,38 @@ silently skip them again, which is how this sat unaddressed since 2026-05-27.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide G3's dispatch mechanism (a/b/c above) for `trading_agent_service` Stage-4 consumption; once
+- [x] ✅ [OPERATOR] P2. **Operator-ruled 2026-07-29 (interactive decision session) — a 4th option, not (a)/(b)/(c)
+      above.** Decide G3's dispatch mechanism (a/b/c above) for `trading_agent_service` Stage-4 consumption; once
       decided, file the build as a scoped todo naming the exact endpoint/topic shape. Repo: trading-agent-service.
+
+  **The operator's actual ruling (verbatim intent, preserved in full — this is new design content, not a pick from the 3
+  listed options):** a **daily-scheduled LLM analysis job**, run as a script on the planning VM (AO) — mirroring the
+  existing daily reconciler/auditor scheduled-job pattern (`plan_reconciler`/`docs_reconciler`/`ag_closeout_auditor`/
+  `na_eligibility_auditor`), not an endpoint inside trading-agent-service (option a) and not a PubSub consumer loop
+  (option b). The job compares, across a scheduled daily run: **trades, PnL/positions, ML signals, strategy execution
+  decisions, and data-quality gaps.** Operator's key structural insight: since `pipeline_mode` is the only thing
+  separating storage across batch/live/paper, the SAME analysis logic/scripts should work uniformly across all three
+  modes — same features, same data shape, just a different `pipeline_mode` partition; this should NOT need mode-specific
+  analysis code. **The LLM's specific job**: explain WHY things happened (diagnosis, not just detection) and **create
+  issues** (i.e. file `plans/active/issues/*.md` docs, matching this workspace's own findings-triage convention) when it
+  finds problems — not just a metrics dashboard or a passive report.
+
+  This is a genuinely new, substantial system component (a daily cross-cutting LLM trading-analyst job spanning
+  trades/PnL/ML/strategy/data-quality across all pipeline_modes) — NOT mechanical enough to dispatch as a single bounded
+  todo. Per the plan-authoring hard rule (an open-ended design call is a human decision, not a todo), this needs its own
+  scoped LOCAL design plan before any code is written.
+
+- [ ] [DESIGN] P1. **Author a scoped design plan for the daily cross-cutting LLM trading-analysis job** (per the
+      2026-07-29 ruling above) — define: (1) the exact daily trigger/schedule and which planning-VM AO account/rotation
+      slot it draws from (mirroring the existing reconciler-job headroom pattern); (2) the concrete data sources per
+      category (trades, PnL/positions, ML signals, strategy execution decisions, data-quality gaps) and confirm they
+      really do share one `pipeline_mode`-partitioned shape across batch/live/paper as the operator expects — this is an
+      assumption to verify, not just assume; (3) the LLM prompt/analysis contract (what "diagnosis" output looks like)
+      and the issue-doc-creation mechanism (frontmatter, naming, dedup against already-filed issues so it doesn't
+      re-file the same finding daily); (4) how this relates to (doesn't duplicate) BLRS's own `agent_report_{date}.md`
+      terminal-artifact output — is this job BLRS's actual G3 consumer, a superset of it, or a separate parallel system
+      that BLRS's report becomes one input to? Answer that scoping question explicitly in the new plan's own opening
+      section. `assigned_vm: NA` (a design plan, not yet AO-dispatchable) per the plan-destination default.
 - [ ] [CODE] P3. Build the BLRS resolution-API gateway proxy — `GET /api/reporting/reconciliation/breaks`,
       `POST /api/reporting/reconciliation/resolve`, `POST /api/reporting/reconciliation/book-correction` in
       `unified_trading_api/routes/reporting.py`, proxying to BLRS's `/t1-recon/{breaks,resolve,book-correction}`

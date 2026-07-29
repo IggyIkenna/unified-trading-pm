@@ -36,9 +36,13 @@ related:
     /codex/04-architecture/promote-workflow-architecture.md,
     /codex/04-architecture/backtest-groups.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
+    /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
+    /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
+    /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-25"
+last_updated: "2026-07-29"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only
@@ -80,6 +84,14 @@ drift_direction: advance-code
 > the 2026-07-24 re-triage + decision-record sections) for the latest state before treating either doc's status as
 > final.
 
+> **🟡 Operator ruling 2026-07-29:** continue to hold the live go-ahead (readiness ladder incomplete — Todo 6 below
+> stays open/held), but ensure concrete build specs exist and are linked for every missing piece — see the 4 corrected
+> references below (live-odds MTDS connector, live launchers, FSS live handler, Group-C harness) and their linked docs
+> in `related:` (`sports_live_availability_and_source_latency_2026_07_24.md`,
+> `gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`,
+> `data_completion_sports_history_2026_07_24.md`,
+> `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`).
+
 ## Why this plan exists, and what it is NOT
 
 This is a **readiness/scoping plan**, not an activation plan. Per the operator's own asset-group readiness ladder
@@ -95,6 +107,14 @@ and sequenced** so that when an operator eventually decides to pursue live mode 
 checklist, not a fresh investigation.
 
 ## The structural blocker this plan does NOT try to solve
+
+> **UPDATE 2026-07-29: this section's premise is now PARTIALLY superseded — see the corrected Todos 2-4 below.** A live
+> sports-odds source IS now integrated and running (`odds_api_ws.py` + the `mtds-live-sports-odds-api-trades` VM,
+> `LIVE_ODDS_API` is a declared `SOURCE_MODE_CAPABILITY` member), and the FSS live handler is shipped/CLI-wired. What
+> remains is NOT "wire it up" from scratch — it's landing the P0 live-writer shape-mismatch fix, confirming resumed
+> production polling + the api_football second source, and the cross-cutting MDPS+features launcher exec-dispatch gap
+> (see Todos 2-4). The paragraph below is left as originally written (2026-07-21) for historical context on why this
+> plan differs from the cefi/defi precedent; do not treat it as the current state.
 
 Unlike cefi/defi (which had a real live venue feed to wire up), **sports has no in-play live odds source integrated
 today** — confirmed in `/codex/04-architecture/sports-batch-live.md` §1: every current sports source
@@ -119,17 +139,19 @@ The precedent — `plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_0
 per-asset_group launcher scripts (`launch-mtds-live-{asset_group}.sh`, `launch-mdps-features-live-{asset_group}.sh`),
 gated by the 7-group/23-item per-service readiness checklist (Groups A Code health, B Data correctness, C Runtime
 parity, D Coverage & shard, E Operability, F Trading prerequisites, G Operator UX, H per-client isolation) in
-`master_to_live_defi_2026_05_23.md`. For sports/prediction, the SAME shape applies once each layer is ready:
+`master_to_live_defi_2026_05_23.md`. For sports/prediction, the SAME shape applies once each layer is ready (**UPDATE
+2026-07-29 — items 1 and 3 below are DONE, not still-to-build; see the corrected Todos 2-4**):
 
-1. **Data layer (MTDS)** — a live sports-odds ingestion path must exist first (the structural blocker above).
-   `market-tick-data-service` gets a `launch-mtds-live-sports.sh` analogous to the cefi/defi launchers, once
-   `live_odds_api` (or whichever source) is a declared `SOURCE_MODE_CAPABILITY` member.
+1. **Data layer (MTDS)** — **DONE**: the live sports-odds ingestion path exists and runs today via the generic
+   `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades` (VM
+   `mtds-live-sports-odds-api-trades`); `live_odds_api` is a declared `SOURCE_MODE_CAPABILITY` member. Remaining gap:
+   the P0 shape-mismatch fix + quota/second-source confirmation (Todo 2).
 2. **Processing layer (MDPS)** — already has `LiveModeHandler` (per `batch-live-architecture.md` §4's service audit
-   matrix, MDPS supports `--mode batch|live` today) — the gap is a sports-specific live config, not new code
-   architecture. `launch-mdps-features-live-sports.sh` per the same precedent.
-3. **Features layer (FSS)** — currently `batch`-only for the sports family; "Live handler is post-cutover" per the same
-   service-audit matrix — FSS needs its live handler built for sports before this layer can activate. Depends on
-   MTDS/MDPS above landing first (features can't compute live signals from data that isn't arriving live).
+   matrix, MDPS supports `--mode batch|live` today) — remaining gap is the cross-cutting `launch-mdps-features-live.sh`
+   exec-dispatch wiring (Todo 3), not a sports-specific launcher.
+3. **Features layer (FSS)** — **DONE**: the live handler is already shipped + CLI-wired
+   (`features_service/sports/cli/handlers/live_handler.py`, Todo 4) — not "post-cutover"/unbuilt as originally written
+   here. Remaining gap is production deployment, the same launcher-wiring dependency as item 2 above.
 4. **Strategy/execution layer** — the CLI-primary promote workflow
    (`/codex/04-architecture/promote-workflow-architecture.md`) already exists and is asset-group-agnostic:
    `run-paper.sh` → `preflight-cutover.sh` → `launch-strategy-paper-vm.sh` (paper), then after ≥7 days passing,
@@ -176,18 +198,58 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       un-liftable `[OPERATOR]` hard-stop below regardless of this ruling, so saying "yes, scope it" only unblocks
       READINESS/plumbing work, not capital risk. This does NOT cancel the plan; it converts Todo 1 into "yes" and folds
       directly into Todo 2 below (no separate action needed — Todo 2 already reads "Once Todo 1 is a yes: scope...").
-- [ ] [INFRA] P3. Todo 1 is now a yes (ruled 2026-07-28 above): scope the MTDS live-odds connector (which source —
-      `odds_api` aggregator is the only currently-viable live-ish path per `sports-live-odds-connectivity.md` — REST
-      poll, near-real-time, no login) + the UAC `SOURCE_MODE_CAPABILITY`/`SOURCE_PRIORITY` entries it needs, as its own
-      follow-up plan (this plan only names it — building it is real, separately-estimated work). (repo:
-      market-tick-data-service, unified-api-contracts)
-- [ ] [INFRA] P3. Once the MTDS connector lands: build `launch-mtds-live-sports.sh` +
-      `launch-mdps-features-live-sports.sh`, mirroring the cefi/defi precedent
-      (`plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`); MDPS's `LiveModeHandler` already exists,
-      so this is primarily a sports-specific config + launcher, not new MDPS architecture. (repo:
-      market-tick-data-service, market-data-processing-service, deployment-service)
-- [ ] [DATA] P3. Build the FSS live handler for the sports feature family (currently batch-only, "post-cutover" per
-      `batch-live-architecture.md` §4) — depends on the MDPS live feed above actually arriving. (repo: features-service)
+- [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "scope the MTDS live-odds connector ... as its own follow-up plan")** —
+      the connector already exists and is shipped, not merely scoped: `odds_api_ws.py`'s `WSFeedConnector`
+      (market-tick-data-service) + the `LIVE_ODDS_API` `SOURCE_MODE_CAPABILITY`/`SOURCE_PRIORITY` UAC entries are live
+      in code, and a real VM is running it (`mtds-live-sports-odds-api-trades`, launched via
+      `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades` —
+      `/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`). No follow-up scoping plan is needed. The
+      genuinely remaining work is tracked in 2 other docs, not here: **(a)** the P0 todo in
+      `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — "Fix MTDS's
+      live-mode sports odds writer shape mismatch BEFORE the live connector runs" (`live/websocket_runner.py`'s non-CeFi
+      `live_tick_blob_path` + `live/connectors/odds_api_ws.py::_parse_fixture_response` must write one shard per
+      (bookmaker, league, fixture) matching the batch `venue_fetch.py::_build_sports_shard_path` shape, instead of one
+      nested-JSON-bundled file per sport — bumped P2→P0 now that the rotated `odds-api-key` lets the connector actually
+      authenticate and write); **(b)** the open P2 todo in
+      `/plans/active/sports_live_availability_and_source_latency_2026_07_24.md` — "Live ODDS quota decision + cheap
+      second source" — done when the api_football `/odds` in-play second source is wired as a fallback/supplement AND
+      the live sports-odds ingestion is confirmed resumed (a fresh poll cycle succeeding against the live key in
+      production, not just a direct-API-call verification). (repo: market-tick-data-service, unified-api-contracts)
+- [ ] [INFRA] P3. **CORRECTED 2026-07-29 (was: "build `launch-mtds-live-sports.sh` +
+      `launch-mdps-features-live-sports.sh`" — 2 new per-asset-group scripts from scratch)** — `launch-mtds-live.sh`
+      already works for sports today: it's the SAME generic (not per-asset-group) launcher used across every asset
+      group, invoked as `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades`, and it is the
+      launcher behind the running `mtds-live-sports-odds-api-trades` VM (see the corrected connector todo above /
+      `/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`) — no new per-asset-group MTDS launcher
+      needs building. The remaining launcher work is the OTHER half — `launch-mdps-features-live.sh` — which is
+      cross-cutting, not sports-specific: its exec-dispatch was never wired up at all (`setup-data-pipeline-vm.sh` has
+      no branch for `VM_TASK=mdps-features-live`, so it falls through to the invalid literal
+      `python -m market_data_processing_service+features_service` module path), tracked in
+      `/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md`. Process topology is
+      PARTIALLY operator-ruled 2026-07-28 there (option (a): per-shard MDPS processes + per-family features-service
+      processes, both subscribing to the same asset_group's `candle_computed` stream) — that issue doc's own
+      `[SCRIPT] P2` todo ("add a `VM_TASK == "mdps-features-live"` ... branch to `setup-data-pipeline-vm.sh`'s
+      exec-dispatch section") is the actual remaining build spec, not a fresh sports-specific launcher; its
+      `[OPERATOR] P2` todo (family↔asset_group mapping for the other 6 feature families) is cross-cutting and does not
+      block sports specifically. (repo: market-tick-data-service confirmed working; market-data-processing-service,
+      features-service, deployment-service remaining, tracked in the linked issue)
+- [x] ✅ [DATA] P3. **CORRECTED 2026-07-29 (code-verified, not an operator ruling — was: "Build the FSS live handler ...
+      currently batch-only")**: the FSS live handler for the sports feature family is NOT missing — it is already
+      shipped, CLI-wired, and unit-tested. `features_service/sports/cli/handlers/live_handler.py`'s `LiveHandler`
+      (PubSub source `persist-sports-odds-features-reader` + PubSub sink, same `process_sports_record()` engine path as
+      batch) is dispatched via `features-sports-service --operation compute --mode live`
+      (`cli/main.py::get_handler_for_mode`), tested in `tests/sports/unit/test_live_handler.py`, and shipped since
+      2026-05-08 (features-service@b144552d, maintained through @1b0d1703 2026-07-27). This todo's own premise cited
+      `batch-live-architecture.md` §4, which was STALE/WRONG on this point — the correct, already-existing SSOT is
+      `/codex/04-architecture/features-service-architecture.md`'s "Live handler status per family" table (2026-05-14):
+      sports `live_handler.py` shipped ✅, production deployment ⏳ post-cutover. §4's row + its broken cross-reference
+      (pointed at a nonexistent `plans/epics/features_and_ml_master.md` p1-todo-10 — that todo ID does not exist
+      anywhere in that epic) are corrected in the same pass. The genuinely remaining gap is NOT building the handler —
+      it's production deployment, which is the exact same cross-cutting launcher/exec-dispatch gap the corrected Todo 3
+      above already tracks (`/plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` —
+      nothing invokes `features-sports-service --mode live` from a real launcher yet). No separate FSS-specific design
+      doc is needed; tracking the deployment gap twice (here and in Todo 3) would duplicate the same open work. (repo:
+      features-service — done; deployment-service — remaining, tracked in Todo 3's linked issue)
 - [ ] [REVIEW] P3. Run a sports archetype through the existing CLI-primary promote workflow (`run-paper.sh` →
       `preflight-cutover.sh` → `launch-strategy-paper-vm.sh`, ≥7 days, then `run-live.sh` →
       `launch-strategy-live-vm.sh`) once it reaches `CANDIDATE` phase via a passing Group-B backtest AND the Group-C
@@ -211,6 +273,24 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
 
 ## Progress Log
 
+- 2026-07-29: **Corrected the 4 prerequisite-piece references per operator ruling (see banner above)** — added
+  `sports_live_availability_and_source_latency_2026_07_24.md`,
+  `gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`,
+  `data_completion_sports_history_2026_07_24.md`, and
+  `mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md` to `related:`. Rewrote the MTDS live-odds
+  connector todo (connector already shipped + VM running, remaining work is the P0 shape-mismatch fix +
+  quota/second-source confirmation, both cited from their owning docs). Rewrote the live launchers todo
+  (`launch-mtds-live.sh` already works for sports; remaining work is the cross-cutting `launch-mdps-features-live.sh`
+  exec-dispatch bug, not 2 new per-asset-group scripts). **Major finding**: the "FSS live handler" todo's premise was
+  factually wrong — `features_service/sports/cli/handlers/live_handler.py` is already shipped, CLI-wired, and
+  unit-tested (confirmed by direct code read + git history back to 2026-05-08), and
+  `codex/04-architecture/features-service-architecture.md` already documents this correctly; only
+  `batch-live-architecture.md` §4's row + its broken `p1-todo-10` cross-reference were stale. Did NOT file the requested
+  new "scope a LiveHandler" design doc (its premise — that no handler exists — is false; filing it would have introduced
+  a new incorrect claim into the corpus) — instead corrected §4's row/pointer and flipped this todo to done, since the
+  actual remaining gap (production deployment) is already tracked by the corrected launchers todo above. Confirmed the
+  Group-C execution-alpha harness piece (`sports_group_c_execution_backtest_harness_2026_07_21.md`) is already fully
+  spec'd and linked — no change made there.
 - 2026-07-21 (slot 7): Plan authored per operator ruling BLK-9d3a208c on
   `sports_predictions_live_mode_and_backtest_execution_orphaned_2026_07_21.md`'s last open todo. LOCAL/human track
   (`assigned_vm: NA`) — the operator explicitly ruled this class of work (terminal action = human go/no-go on live

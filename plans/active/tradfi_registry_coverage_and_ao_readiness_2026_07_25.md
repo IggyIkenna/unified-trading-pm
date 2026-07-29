@@ -45,7 +45,7 @@ related:
     /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-29"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -139,11 +139,12 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       (`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`, single-leg todo already `[x]`; nothing to
       re-verify here). Gate: KRX-equities mismatch re-verified still resolved, and the FX KRW cell separately confirmed
       to have no registry-vs-adapter gap. (repos: instruments-service, market-tick-data-service)
-- **[DECISION] P2.** The `mvp_mode` dead-gate decision (wire a real caller, or remove the dead path) is a SEPARATE,
-  still-open design call, tracked in its own doc
-  (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) — genuinely operator-gated (already
-  classified "0 AO-eligible candidates" by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s own re-triage).
-  Non-dispatchable pointer, not a real checkbox (finding H) — not resolved by the verify todo above.
+- **[DECISION] P2.** The `mvp_mode` dead-gate decision (wire a real caller, or remove the dead path) was a SEPARATE
+  design call, tracked in its own doc (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) —
+  previously genuinely operator-gated (classified "0 AO-eligible candidates" by
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s own re-triage). **RULED 2026-07-29: wire via forward-poll opt-in
+  flag, see the issue doc** (the issue doc now carries a concrete [CODE] P1 implementation todo, AO-eligible on the next
+  triage pass). Non-dispatchable pointer, not a real checkbox (finding H) — not resolved by the verify todo above.
 - [ ] [BACKEND] P2. **Full MTDS+IS adapter smoke findings** — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`,
       `instruments_remaining_work_audit_2026_07_10.md` (tradfi slice),
       `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`. Gate: every open finding in the 3 cited docs
@@ -156,21 +157,50 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition-of-done: a filed finding (or a
       stated "clean" verdict) per adapter directory, cited with file paths, recorded in this plan's Progress Log or a
       new `plans/active/issues/` doc. (repos: instruments-service, market-tick-data-service, execution-service)
-- **[BACKEND] P1.** NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's 3rd run: (1) ICE/KRX/FX
-  (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real values, wrong provenance
-  stamp, root cause not yet found — hypothesis: the 2026-06-24 DATABENTO-FIRST change missing a per-venue
-  `_VENUE_SOURCE_EXCLUSIONS` guard); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0% well-formed across its entire
-  2020-2026 captured history (the GCS object + content are fine — this is a pure manifest-copy defect). Positive
-  counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up from the 07-21 report's
-  30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong evidence the Phase-B migration
-  in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially landed (**that plan's Surface-B
-  manifest-migration todo is now confirmed `[x]` "RE-VERIFIED LIVE 2026-07-25"** — verified live 2026-07-25 during this
-  fork; the evidence-reconciliation action is done). **Not a real checkbox** (finding H, applied 2026-07-25) — this
-  doc's own "Suggested next steps" are explicitly marked "not executed"/undecided, so no bounded action is stated yet; a
-  future pass should scope a bounded first investigative step once the root-cause hypothesis is confirmed, rather than
-  this fork guessing one. Full evidence + the `_quarantine/` register going stale (146K→400K+ objects in 3-4 days,
-  register still says "deleted"): `/plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`.
-  (repos: market-tick-data-service, unified-api-contracts, unified-trading-pm)
+- [x] ✅ [BACKEND] P1. **Operator-ruled 2026-07-29 (interactive decision session): treat this finding as DONE and
+      correct the stale closeout digest below — the ICE/KRX/FX source-mislabeling root-cause was fully fixed 2026-07-26
+      (`unified-trading-library@f237b75a`, with regression tests + green `quality-gates.sh`), and the remaining
+      billing-guard question was explicitly closed by a 2026-07-28 operator ruling (downgraded P0→P3: "leave
+      deprioritized/blocked, do not re-ask").** NEW 2026-07-24 — two live defects found by the raw-tick reconciliation's
+      3rd run: (1) ICE/KRX/FX (all Yahoo-exclusive per SSOT) captured under `source=databento` since ~2026-07-18 (real
+      values, wrong provenance stamp — **root-caused + fixed 2026-07-26**: `derive_pipeline_mode_for_row`'s
+      explicit-source branch trusted a caller-supplied `--source` unconditionally instead of re-validating
+      venue/data_type capability, so a shared run-level `--source databento` (legitimate for CME/CBOE in the same VM
+      run) fabricated a `batch_databento` stamp for the Yahoo-only ICE/KRX/FX `ohlcv_24h` cells; the fix now
+      re-validates via `is_source_capable_for_venue(...)` before trusting an explicit source, closing the write path for
+      all current + future callers, not just this occurrence); (2) FX `SPOT_PAIR` manifest `instrument_id` is 0%
+      well-formed across its entire 2020-2026 captured history (the GCS object + content are fine — this is a pure
+      manifest-copy defect; the write path for NEW captures was already fixed as of `market-tick-data-service@020b703e`,
+      2026-07-25). Positive counter-finding same run: captured-row id-form canonicality measured ~99.3% corpus-wide (up
+      from the 07-21 report's 30.8%), independently corroborated by a 99.95%-clean reconstructed-path check — strong
+      evidence the Phase-B migration in `tradfi_manifest_content_recovery_completion_2026_07_24.md` has substantially
+      landed (**that plan's Surface-B manifest-migration todo is now confirmed `[x]` "RE-VERIFIED LIVE 2026-07-25"** —
+      verified live 2026-07-25 during this fork; the evidence-reconciliation action is done). **Resolved, not a stale
+      pointer**: this bullet was reformatted 2026-07-25 into a non-checkbox digest pointer (finding H) on the premise
+      that "this doc's own 'Suggested next steps' are explicitly marked not executed/undecided, so no bounded action is
+      stated yet" — that premise no longer holds. Root-cause is fixed and regression-tested at the code level, and the
+      one open question (an actual Databento billing-guard gap) was explicitly operator-closed 2026-07-28, not left
+      pending. The only genuinely remaining work is the historical-row backfill — a bounded, non-operator-gated
+      execution step, now tracked as its own todo below, not a fresh investigation. Full evidence + Progress Log (incl.
+      the `_quarantine/` register going stale — 146K→400K+ objects in 3-4 days, register still says "deleted"):
+      `/plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`. (repos:
+      market-tick-data-service, unified-api-contracts, unified-trading-pm)
+- [ ] [DATA] P2. **NEW 2026-07-29 — execute the two historical backfills the now-fixed write paths left behind**: (1)
+      re-stamp the 1,141 mis-stamped ICE/KRX/FX `ohlcv_24h` manifest rows (5 ICE + 12 KRX + 1,124 FX, corpus-wide census
+      already done 2026-07-26) from their fabricated `batch_databento`/`source=databento` stamp to the correct
+      Yahoo-sourced stamp; (2) backfill the ~4,310 pre-2026-07-25 FX `SPOT_PAIR` manifest `instrument_id` rows (blank
+      2,812 / literal `"ticks"` 983 / bare-pair-no-prefix 501 / near-correct 13) to the canonical `FX:SPOT_PAIR:XXX-USD`
+      form. Both are manifest-only repairs (NOT a GCS content rewrite — the underlying parquet files are already
+      correctly formed) and both are already re-tagged `[DATA]`/`[DATA] P2` (no longer `[OPERATOR]`-gated) in
+      `tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`'s own Deferred-work table + Todos section, which
+      carries the full execution procedure (fresh delete-safety retention check, snapshot-first, CAS-apply, post-apply
+      verification). **RE-AFFIRMED, not stale**: the FX `instrument_id` half already carries an operator-ruled
+      (2026-07-28) explicit 6-step plan (fresh retention check, snapshot, manifest-only re-stamp script, CAS-apply,
+      verify, resume cron), and the operator RE-CONFIRMED 2026-07-29 "execute the ruled backfill now per the 6-step
+      plan" — no further sign-off needed for either backfill. Done when: both backfills are applied and verified
+      (rows-in == rows-out, 0 duplicate row_keys, 0 mis-stamped ICE/KRX/FX `ohlcv_24h` rows post-apply, 100%
+      `FX:SPOT_PAIR:` prefix on FX captured rows post-apply) and recorded in that issue doc's Progress Log. (repos:
+      market-tick-data-service, unified-api-contracts)
 
 ## Phase C — data-status + honest-coverage (still-open residue only — closed verdicts live in the history companion)
 
@@ -204,6 +234,21 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s. Gate: each of the 3 cited
       findings re-verified against live tradfi state (counts re-measured or explained as stale) and recorded.
+- [ ] [DATA] P2. **NEW 2026-07-29 (operator ruling, interactive decision session: "run the dry-run now, feed result into
+      Phase C") — execute the tradfi phantom-manifest dry-run re-run and feed the result into the todo above.** Run
+      `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`
+      (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) — the tradfi v9 object `--apply`
+      (`migrate_tradfi_to_v9_canonical.py --apply`, completed 2026-07-06) that gated this re-run has already landed, so
+      the dry-run is runnable now. This resolves `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo (now `[x]` ✅,
+      flipped 2026-07-29 citing this same ruling), which originally tracked this exact re-run pending the apply.
+      **Explicitly distinct from `phantom_captures_tradfi_2026_06_28.md`** (an archived, already-closed phantom-
+      manifest-rows finding for a different, unrelated issue — cited only as one of the 3 findings the "Denominator /
+      catalogue-completeness" todo above re-verifies; this todo is the FRESH reconciler dry-run, not a re-open of that
+      archived doc). Scope: confirm 0 false phantoms across all 5 source pipeline_modes — batch_databento/yahoo/eia
+      live, batch_massive/batch_barchart legacy-only per this plan's Massive/Barchart-removal context (Phase A2 above).
+      Done when: the dry-run's per-pipeline_mode false-phantom counts are recorded either directly in the "Denominator /
+      catalogue-completeness" todo above or in this plan's Progress Log, confirming 0 false phantoms (or explaining any
+      non-zero count). (repo: instruments-service)
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —
       instruments-service@6780f10e, uac@f7e0301d, deployment-api@65f5593, deployment-ui@2ff1e61; ship gate 4712 passed/0
@@ -220,14 +265,39 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       residual DeFi coverage-honesty finding):
       `/plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md`. Repos: instruments-service,
       market-tick-data-service, deployment-api.
+- [ ] [DATA] P0. **NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to completion (now-mandatory
+      precondition ahead of the "Certify tradfi Layer-1" todo + its catalogue rebuild+promote step, immediately
+      below).** Operator-ruled 2026-07-29 (interactive decision session): run the full Databento re-feed chain to
+      completion FIRST — tradfi's `by_date` capture is confirmed still degraded (~10-15 writes/day vs the historical
+      16-18K/day baseline) since Massive removal (root cause + measurement already corroborated in
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s "Folded-in tradfi residuals" section and
+      `data_completion_tradfi_2026_07_15.md`'s G1.run gate-(b)) — the pending catalogue rebuild+promote alone is not
+      sufficient to certify Layer-1 while the underlying `by_date` capture stays this degraded. Sub-steps, in order: (1)
+      re-feed tradfi `by_date/` to completion via the Databento IS reference-data adapter
+      (`instruments_service/reference_data/router.py::_route_databento`, `DatabentoReferenceDataAdapter`,
+      `--source databento`) — confirm the write-rate recovers toward the historical 16-18K/day range, not merely
+      non-zero; (2) regenerate the tradfi instrument catalogue from the re-fed corpus; (3) re-check tradfi
+      catalogue/data-status liveness (confirm the rebuilt catalogue reflects the re-fed data, not the stale
+      ~651K-delisted snapshot) — only THEN does the existing catalogue rebuild+promote "FINAL STEP"
+      (`tradfi_backfill_throughput_followups_2026_07_24.md`) and the "Certify tradfi Layer-1" todo below become
+      unblockable. Done when: steps (1)-(3) all complete with recorded evidence (measured write-rate, catalogue-regen
+      run id/date, liveness-check result). (repos: instruments-service, market-tick-data-service, deployment-api)
+
 - [ ] [VERIFY] P0. 🚧 BLOCKED-INFRA — **Certify tradfi Layer-1** — post the v9 migration + rebuild + IS catalogue (Plan
       2), record the fresh tradfi denominator + %. Gate: tradfi number recorded; all 5 AGs now canonical-and-measured.
-      **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9 manifest migration/rebuild are done (task 10,
-      2026-07-16), but the served catalogue has not yet been rebuilt/promoted for the +409 MVP expansion
-      (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this todo must record is not yet final. Gated on the
-      pending catalogue rebuild + promote (see `tradfi_backfill_throughput_followups_2026_07_24.md` "FINAL STEP"), not
-      cleanly runnable yet. (FOLDED IN from layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6
-      operator ruling)
+      **Operator-ruled 2026-07-29 (interactive decision session): run the full Databento re-feed chain to completion
+      first (re-feed IS `by_date` via the Databento adapter → regenerate catalogue → re-check liveness → THEN unblock
+      Certify-Layer-1), because tradfi's `by_date` capture is confirmed still degraded (~10-15 writes/day vs historical
+      16-18K) since Massive removal.** See the new re-feed-chain todo immediately above — it is now the mandatory
+      precondition ahead of the catalogue-promote gate already cited below. Not flipped done here: the underlying work
+      (re-feed + catalogue regen + liveness re-check + the promote itself) has not happened yet — only the
+      ordering/precondition is ruled as of this edit. **STILL BLOCKED 2026-07-21 (only PARTIALLY unblocked)**: the v9
+      manifest migration/rebuild are done (task 10, 2026-07-16), but the served catalogue has not yet been
+      rebuilt/promoted for the +409 MVP expansion (`uac@afa2dd64`→`22e6a534`) — so the fresh tradfi denominator this
+      todo must record is not yet final. Gated on the pending catalogue rebuild + promote (see
+      `tradfi_backfill_throughput_followups_2026_07_24.md` "FINAL STEP"), not cleanly runnable yet — AND now, per the
+      2026-07-29 ruling above, additionally and firstly gated on the re-feed chain landing. (FOLDED IN from
+      layer1_remeasure_and_certify_2026_07_06, 2026-07-15, plan-reconcile §6 operator ruling)
 
   **Note (2026-07-24)**: relocated verbatim from `tradfi_v9_stage1_finish_2026_07_06.md`'s "Folded-in scope 2026-07-15"
   section during the plan-hygiene line-cap remediation (that plan is now archived, 0 remaining open todos). The "FINAL

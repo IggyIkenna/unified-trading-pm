@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [git-health, monitoring, reporter, token-expiry, loopback, false-positive, per-tab-worktrees, agent-orchestrator]
 related:
   [
-    /plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
+    /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
   ]
@@ -113,4 +113,4 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 
 - Non-blocking / no-page disposition confirmed with review (agt-af7186, msg 1867) and main on 2026-07-24.
 - Sibling reporter issue (different failure mode — mid-FF-pull dirty flicker):
-  /plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md.
+  /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md.

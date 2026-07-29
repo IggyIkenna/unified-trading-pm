@@ -156,7 +156,7 @@ drift_direction: none
     `opentelemetry-instrumentation-fastapi==0.63b0`, which needs a fastapi symbol only present >=0.137). Root cause:
     `unified-trading-library@3b99d19d` had bumped its own fastapi/starlette floor to `>=0.137.0`/`>=1.3.1`,
     contradicting `canonical-dependency-manifest.json` (still `<0.137.0`) — a genuine cross-repo SSOT contradiction,
-    already tracked P0 in `/plans/active/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (filed
+    already tracked P0 in `/plans/archive/issues/fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md` (filed
     by slot-3). The self-hosted runner's PERSISTENT cached venv had been masking this fleet-wide for ml-service
     specifically — a completely fresh `ubuntu-latest` runner's `uv sync --frozen` was the first thing to actually
     exercise the stale lock against UTL's new floor. While I was locally verifying my own lock-refresh fix for this, a

@@ -486,15 +486,15 @@ Phase 1:
   migration, D13 version-out-of-source, misc P2/P3 hygiene). Per the operator's original "everything else out of scope
   for now" directive these stayed DEFERRED in the archived plan as their record. **WS-I specifically is still wanted**
   (the other ~50 stay deferred/archived, unchanged) — re-homed into a fresh focused plan:
-  `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA` — LOCAL track; no interactive
-  operator confirmation was available at authoring time, so the plan defaults to the stated CLAUDE.md default and notes
-  this explicitly, and it's also the substantively correct choice since the one open item is a standing human judgment
-  call, not bounded AO work). **Live-state verification found execution-service's leg of WS-I was ALREADY fully
-  shipped** (`execution-service@7454c81a` — source + test rewrite both landed; the archived plan's own checkbox had
-  recorded this but two downstream docs still described it as pending) — only deployment-api remains un-migrated, held
-  at the standing 2026-06-24 "LEAVE AS-IS" operator ruling (re-affirmed, not re-litigated). Fixed the stale
-  `/codex/07-security/service-to-service-auth.md` (Enrolled Services table + 3 cross-references, all repointed off the
-  archived plan onto the new one) in the same pass. **Shipped**: `unified-trading-pm@105cebfde` (same commit as the
+  `/plans/archive/2026_07/ws_i_service_to_service_auth_migration_2026_07_28.md` (`assigned_vm: NA` — LOCAL track; no
+  interactive operator confirmation was available at authoring time, so the plan defaults to the stated CLAUDE.md
+  default and notes this explicitly, and it's also the substantively correct choice since the one open item is a
+  standing human judgment call, not bounded AO work). **Live-state verification found execution-service's leg of WS-I
+  was ALREADY fully shipped** (`execution-service@7454c81a` — source + test rewrite both landed; the archived plan's own
+  checkbox had recorded this but two downstream docs still described it as pending) — only deployment-api remains
+  un-migrated, held at the standing 2026-06-24 "LEAVE AS-IS" operator ruling (re-affirmed, not re-litigated). Fixed the
+  stale `/codex/07-security/service-to-service-auth.md` (Enrolled Services table + 3 cross-references, all repointed off
+  the archived plan onto the new one) in the same pass. **Shipped**: `unified-trading-pm@105cebfde` (same commit as the
   provenance-leak fix above, quickmerge, landed LDR → origin/live-defi-rollout).
 
 ## Codex SSOTs
@@ -524,7 +524,7 @@ Phase 1:
   Actions runs (`30342345004`, `30342346846`). (2) **Provenance re-arm leak** — closed via a shared
   `provenance_check_ok()` helper gating all 3 arm/re-arm sites in `ldr-to-main-promote-fleet.yml`, with a new hermetic
   regression test (8/8 passing), `unified-trading-pm@105cebfde`. (3) **WS-I re-homing** — re-homed into
-  `/plans/active/ws_i_service_to_service_auth_migration_2026_07_28.md`; live-state verification found
+  `/plans/archive/2026_07/ws_i_service_to_service_auth_migration_2026_07_28.md`; live-state verification found
   execution-service's migration already shipped (only the codex doc was stale, now fixed), deployment-api stays held at
   its 2026-06-24 operator ruling. Same commit, `unified-trading-pm@105cebfde`. See the "Operator decisions / notes"
   section above for full per-decision detail + evidence. **Shared-tree hazard encountered while shipping**: the Task-2/3

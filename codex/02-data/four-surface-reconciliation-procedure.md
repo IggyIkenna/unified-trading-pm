@@ -250,7 +250,7 @@ review-blocking — that re-implementation is exactly the drift class the functi
 > not a false-clean. **`sports`/`prediction` are NOT in `_ID_FORM_CHECKED_ASSET_GROUPS` and remain filename-blind — §
 > 4.3's "Surface-A id-form must be checked separately" guidance still applies to those two asset_groups.** SSOT:
 > `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (history),
-> `plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
+> `plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
 > correction).
 
 ```python

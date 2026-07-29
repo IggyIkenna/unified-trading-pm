@@ -86,7 +86,7 @@ drift_direction: advance-code
   `expected_unattempted` seeder exists at all (DeFi is explicitly excluded from the sentinel fan-out every other
   asset_group uses); there is no seeding pass to "re-run or extend," and the original done-criterion requiring
   DRIFT-SOLANA present is unsatisfiable-by-design (deliberately removed 2026-07-16). Full re-diagnosis:
-  `/plans/active/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. **RULED 2026-07-26 (slot-2)**:
+  `/plans/archive/issues/defi_manifest_no_expected_unattempted_seeder_2026_07_26.md`. **RULED 2026-07-26 (slot-2)**:
   Option A (build a real seeder) — the actual work is tracked as human plan
   `/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md` (assigned_vm: NA, gated on an operator
   capability-reconciliation decision). This entry is intentionally NOT a `- [ ]`/`- [x]` checkbox — it must never be
@@ -682,7 +682,7 @@ drift_direction: advance-code
   target doc's 4 open todos split as (1) VERIFY completeness_pct impact and (4) VERIFY the swaps_ohlcv_4h timeframe
   discrepancy — both explicitly covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 341-355
   (verbatim-matching "Source:" citations, confirmed by batch1_finalize.md...
-- **`plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`**:
+- **`plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`**:
   Conflict check: grepped the consolidated closeout plan's own todos plus every
   batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for overlap on this
   doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1...
@@ -720,7 +720,7 @@ drift_direction: advance-code
 
 ## Deferred — too-large-or-risky (needs its own dedicated plan, not a batch todo)
 
-- **`plans/active/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`**: Confirmed via Read: Item 2
+- **`plans/archive/issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md`**: Confirmed via Read: Item 2
   (4 zero-capture protocols) is closed per the doc's own 2026-07-25 update (wired 2026-07-14, verified 2026-07-24,
   residual TRADER_JOE_V2/VELODROME_V2 gaps already dispatched in defi_satellite_ao_dispatch_batch1_2026_07_25.md). Item
   1 (batch_onchain_subgraph bare-0x-address.parquet second...

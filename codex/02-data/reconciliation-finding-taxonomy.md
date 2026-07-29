@@ -247,7 +247,7 @@ emits.
   instrument-id FORM are still orthogonal in general (a structurally-perfect path can carry a bad stem and vice versa)
   even where both are now machine-checked. SSOT:
   `plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (history),
-  `plans/active/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
+  `plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md` (this
   correction).
 - **Safe remediation** — migrate (copy) to the canonical path. Never in this reconciliation's own process.
 - **Delete-eligible** — **NO, not on this finding alone.** Non-canonical location is not evidence of duplication. It

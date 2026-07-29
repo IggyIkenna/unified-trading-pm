@@ -32,7 +32,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-26"
+last_updated: "2026-07-29"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -129,7 +129,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (ahead-push sentinel stale after amend, no rejected-push retry) ·
 [issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md](/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)
 (per-slot git-health reporter goes silent on token expiry) ·
-[issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md](/plans/active/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md)
+[issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md](/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md)
 (git-health reporter races the FF-pull cron, phantom-dirty flicker) ·
 [issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·
@@ -196,10 +196,33 @@ missing from Sources entirely).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Resolve the worker-liveness/watchdog kick+escalation direction contradiction** — six docs claim
-      this mechanism and two of them prescribe OPPOSITE directions; the 2026-07-26 `/ag-closeout-audit ao` run escalated
-      this as the largest single blocker and separately found 32 of this tranche's 35 Sources orphaned (no covering
-      plan) with only a `status: draft` satellite batch1 (+ finalize) drafted against 10 of them.
+- [x] ✅ [DECISION] P1. **Operator-ruled 2026-07-29 (interactive decision session), retagged from `[OPERATOR]` now
+      resolved: fix false-positive detection first, then escalation speed — land
+      `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-consecutive-stale-verify-windows
+      fix first, then `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s faster hard-kill
+      escalation on top of it, in that sequence — this matches both docs' own already-recorded 2026-07-26 gating
+      (`autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A), now formalized as the resolution of
+      this tranche's direction contradiction. See the two sequenced implementation todos below.** Resolve the
+      worker-liveness/watchdog kick+escalation direction contradiction — six docs claim this mechanism and two of them
+      prescribe OPPOSITE directions; the 2026-07-26 `/ag-closeout-audit ao` run escalated this as the largest single
+      blocker and separately found 32 of this tranche's 35 Sources orphaned (no covering plan) with only a
+      `status: draft` satellite batch1 (+ finalize) drafted against 10 of them.
+- [ ] [BACKEND] P1. **Land FIRST (sequenced ahead of the hard-kill-escalation todo directly below — do not start that
+      one until this todo is done; per the 2026-07-29 operator sequencing ruling above).** Make the liveness kick
+      host-load-aware / require two-window confirmation, per
+      `/plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own spec: before
+      firing `worker_kicked`, require the ping/pane to be stale across TWO consecutive verify windows (not one), OR
+      widen `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a progress
+      marker (don't kick a pane whose progress advanced within the last N seconds even if the latest read is stale).
+      Done when: a regression test simulating pane-read latency > `verify_window_s` while progress markers keep
+      advancing produces ZERO `worker_kicked` events. Repo: agent-orchestrator.
+- [ ] [INFRA] P2. **Land ONLY AFTER the host-load-aware two-window todo directly above is done — per the 2026-07-29
+      operator sequencing ruling above; do not start this todo first.** Escalate the watchdog from soft-kick to
+      hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
+      instead of soft-kicking indefinitely, per
+      `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec; the
+      daily hard-kill budget (50) is ample. Re-scope N/timing against the CORRECTED classifier from the todo above, not
+      before landing it. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`. Repo: agent-orchestrator.
 
 ## Codex SSOTs (read before touching a track)
 
@@ -243,3 +266,13 @@ missing from Sources entirely).
   `plan_health_tests_leak…`'s "blocks every PM code quickmerge" claim no longer holds). **The largest single blocker is
   not a missing batch** — six docs claim the worker-liveness/watchdog kick+escalation mechanism and two of them
   prescribe OPPOSITE directions on it; that ordering is an operator decision, escalated by this run.
+- **2026-07-29** (interactive decision session) — **Operator resolved the worker-liveness/watchdog kick+escalation
+  direction contradiction escalated above.** Ruling: fix false-positive detection first, then escalation speed — land
+  `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-consecutive-stale-verify-windows fix
+  first, then `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s faster hard-kill escalation on
+  top of it. This formalizes the sequencing both issue docs had already independently recorded on 2026-07-26
+  (`autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A) as the tranche-level resolution. The
+  blocking todo was flipped `[x]` and retagged `[DECISION]` (was `[OPERATOR]`, now resolved), and two concrete
+  `[BACKEND]`/`[INFRA]` implementation todos were added in explicit sequence (first the two-window fix, then — gated on
+  it landing — the faster hard-kill escalation), each citing its source issue doc's own spec verbatim rather than
+  re-deriving it.

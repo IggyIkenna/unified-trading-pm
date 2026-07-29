@@ -500,7 +500,7 @@ designed+implemented+wired.
   is supposed to require, and the archived copy still carries that lock (ritual step 6 skipped).** This pass had
   deliberately parked the archival for exactly that approval; a concurrent escalation-driven remediation archived it
   anyway. Root cause filed as
-  [`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/active/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)
+  [`issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md`](/plans/archive/issues/locked_plan_deletion_gate_never_runs_on_docs_plans_commits_2026_07_26.md)
   — the gate lives only in `quality-gates.sh`, which `docs(plans):` commits are explicitly routed away from.
 - `issues/empty_reprobe_ disagreement_2026_06_22.md` (stale — auto-filed over a month ago, `locked_by` looks like an
   abandoned lock; likely much of its scope superseded by Track 12's audits; recommend a fresh re-probe or archive rather

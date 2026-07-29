@@ -721,10 +721,11 @@ flipping the checkbox.
       CPU-throttling/stdout-silence investigation earlier in this doc was not wasted — it definitively proved the
       leader-election and background-task-creation path was healthy, which correctly narrowed the remaining search space
       down to the reap tick's OWN logic, where the real bug actually was. No further action needed on this todo. The
-      sibling plan's `[REVIEW] P0` checkbox (`/plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md`) was
-      already flipped with a "not fully met, see follow-up doc" caveat — that caveat is now resolved; leaving its
-      checkbox as-is (already `[x]`) per the workspace convention of not re-touching an already-flipped checkbox, this
-      doc is the authoritative record of the final convergence proof.
+      sibling plan's `[REVIEW] P0` checkbox
+      (`/plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md`) was already flipped with a "not
+      fully met, see follow-up doc" caveat — that caveat is now resolved; leaving its checkbox as-is (already `[x]`) per
+      the workspace convention of not re-touching an already-flipped checkbox, this doc is the authoritative record of
+      the final convergence proof.
 
   **Why no code was shipped this session despite having the design**: this is genuinely NEW, security-sensitive
   auth-path code (a wrong audience/email check either locks out the real Cloud Scheduler job OR — worse — accepts an

@@ -212,3 +212,32 @@ confirm-fix-shape only.
 - [ ] [SCRIPT] P3. Once the root cause + fix shape is confirmed, document the invariant in
       `/codex/08-workflows/ci-cd-flow.md` (or wherever the promote/backmerge mechanics are the SSOT) so this class of
       race is a known, named risk rather than something each agent has to rediscover.
+
+## Progress Log
+
+**2026-07-29T16:2xZ (slot 15).** Core fix + regression test shipped: `unified-trading-pm@d3a47773a` (root fix —
+`Promoted-From-LDR` trailer stamp on all 3 squash-merge sites in `.github/workflows/ldr-to-main-promote-fleet.yml`;
+explicit-base `git merge-tree --merge-base=<sha>` + `check_no_silent_revert_loss()` defense-in-depth safety net in
+`scripts/workflow-templates/main-backmerge-to-ldr.yml` + PM's own `.github/workflows/` copy, preserving its pre-existing
+`runs-on: ubuntu-latest` deliberately — never touched). New test
+`scripts/quality-gates-base/tests/test-backmerge-silent-revert-loss-guard.sh` reproduces the CONFIRMED
+instruments-service graph shape with real git operations (control: default merge-base reintroduces the revert; fix:
+explicit-base preserves it; the extracted real `check_no_silent_revert_loss()` flags the buggy result and not the fixed
+one) — 7/7 assertions pass, verified by running it directly. Scope note: `ldr-to-main-promote.yml` (PM-only, uses
+`--merge` not `--squash`) intentionally NOT touched — it keeps real ancestry and is not vulnerable to this bug class.
+
+**Fleet rollout status (in progress at write time — check `git status`/`ahead` per repo directly for current truth, do
+not trust this snapshot after time has passed).** `rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml`
+synced the canonical template into all 24 sibling repos' local working trees (verified: `unified-trading-pm` itself is
+excluded by that script by design — its own copy was hand-patched separately, above). Each of the 24 then needs its own
+commit + Pass-1 `quality-gates.sh` + Pass-2 `quickmerge --agent --files` to actually land the file on
+`live-defi-rollout` — this must run in TOPOLOGICAL (dependency) ORDER (`unified-api-contracts`/`unified-trading-library`
+first; quickmerge's pre-flight audit fails a dependent repo whose OWN path deps still carry uncommitted changes).
+Confirmed SHIPPED so far (git-verified, not log-inferred): `unified-api-contracts`, `unified-trading-library`,
+`alerting-service`. A driver script processing the remaining repos in the correct order was running in the background at
+write time (slot-15 scratchpad, `ship_backmerge_rollout.sh` — ephemeral, not promoted to the repo; regenerate by
+re-running `rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml` then, per repo with a dirty/ahead
+`.github/workflows/main-backmerge-to-ldr.yml`, commit → `quality-gates.sh` → `quickmerge --agent --files`, in the
+manifest's topological order). **To resume/verify**: for each of the 24 repos, `git status --porcelain` and
+`git rev-list --count HEAD ^origin/live-defi-rollout` — clean + ahead=0 means shipped; anything else still needs the
+commit/QG/quickmerge cycle. **Do not mark this todo `[x]` until all 24 read shipped.**

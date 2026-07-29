@@ -63,7 +63,7 @@ Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize p
 Plans missing a gated finalize plan (add depends_on: [<this-slug>] + gate_on_depends: true to a new/existing
 companion plan — see task_template.md §4):
   - unified-trading-pm/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md
-  - unified-trading-pm/plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - unified-trading-pm/plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md
 
 ❌ Regression: 2 > baseline 1. New AO plan(s) shipped without a gated finalize plan — author one before merging
 (task_template.md §4).

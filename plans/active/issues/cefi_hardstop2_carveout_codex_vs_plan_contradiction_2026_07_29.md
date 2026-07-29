@@ -32,7 +32,7 @@ related:
   [
     /plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md,
     /plans/active/cefi_track7_candle_namespace_residual_2026_07_25.md,
-    /plans/active/docker_artifact_registry_cleanup_policy_2026_07_24.md,
+    /plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md,
   ]
 created: 2026-07-29
 priority: P1

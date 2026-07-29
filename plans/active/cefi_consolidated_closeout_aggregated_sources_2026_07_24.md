@@ -436,7 +436,7 @@ drift_direction: advance-code
   - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI (needs an owner
       decision on which repo).
-  - [`plans/active/is_daily_enum_capture_heal_2026_07_07.md`](/plans/active/is_daily_enum_capture_heal_2026_07_07.md)
+  - [`plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md`](/plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md)
     (status: draft)
     - **[CODE] P0.** Add `exc_info=True` to the UTL shard-isolation catch so the swallowed exception surfaces in logs.
     - **[CODE] P0.** With the real traceback now visible, re-run `is-daily-enum-{prediction,sports}` and fix the real

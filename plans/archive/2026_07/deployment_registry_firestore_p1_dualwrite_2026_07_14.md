@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [firestore, deployment-registry, dual-write, cloud-interface, migration]
 related:
   - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
-  - /plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md
   - /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md
 created: "2026-07-14"
 last_updated: "2026-07-14"
@@ -111,8 +111,8 @@ UTC datetimes only. QG-green per repo before commit.
       Firestore 2.27.0 with a synthetic deployment — real `FieldFilter` query + real transaction CAS + field-parity
       (Firestore doc `to_json()` == GCS blob shape, exact), see Progress Log. Enabling the flag on live VMs needs the
       deployment-api Cloud Run deploy (operator-driven); deferred with the P0 deploy. — **FOLDED OUT** to
-      plans/active/deployment_registry_firestore_p0_unblock_2026_07_14.md (2026-07-15, plan-reconcile §6 operator
-      ruling); tracked there, not here.
+      plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md (2026-07-15, plan-reconcile §6
+      operator ruling); tracked there, not here.
 - [x] ✅ [INFRA] P1. Ship (commit + push, cite shas) and flip this plan's items (`docs(plans):`). THEN hand off —
       activate BOTH downstream branches (they depend only on this phase and run in parallel): set
       `deployment_registry_firestore_p2_readers_2026_07_14.md` AND
