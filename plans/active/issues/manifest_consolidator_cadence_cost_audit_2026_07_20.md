@@ -193,7 +193,10 @@ with a post-change cost verification showing the expected reduction and zero new
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Decide whether to proceed with the coupled cadence-reduction fix** — per "Suggested path
-      forward," none of the 4 steps (widen the sports staleness budget, cron + watchdog cadence change, re-verify,
-      correct the codex SSOT) has been executed; this issue closes only once the operator explicitly proceeds or
-      declines per "Resolution criteria."
+- [ ] [INFRA] P2. **RULED 2026-07-29 (operator direct answer) — proceed.** Ship the coupled cadence-reduction fix per
+      "Suggested path forward": (1) extend `AG_STALENESS_BUDGET_SEC` for sports' read path first, (2) widen the cron
+      schedule for the 12 low-risk jobs together with a matching liveness-watchdog `--cycle-sec`/`--cycles-grace` update
+      (fast-tier/slow-tier split), (3) re-verify via the existing recipe in
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` + a follow-up cost check after one full billing cycle,
+      (4) correct the codex SSOT's stale "every other consolidator = 86400s" claim. ~$3,270/mo confirmed addressable
+      savings. (repo: market-tick-data-service + terraform)

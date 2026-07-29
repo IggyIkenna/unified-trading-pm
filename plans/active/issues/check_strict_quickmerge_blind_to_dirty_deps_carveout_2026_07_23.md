@@ -100,9 +100,11 @@ repo/commit that legitimately uses the dirty-deps carve-out, not about unblockin
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Sign off on a fix for the dirty-deps carve-out blind spot** — pick between recognizing a
-      commit-body marker (Option 1) or extending the `Quickmerge:` trailer's accepted values (Option 2, recommended); no
-      fix has been implemented yet.
+- [ ] [SCRIPT] P2. **RULED 2026-07-29 (operator direct answer) — Option 2.** Extend the `Quickmerge:` commit trailer's
+      accepted values with a third, structured value (e.g. `Quickmerge: direct-carveout-dirty-deps`) alongside today's
+      `agent`/`human`, and update the dirty-deps direct-push recipe (SUB_AGENT_MANDATORY_RULES.md / the git-safety
+      codex) to stamp it — reuses the existing trusted trailer-presence mechanism, no new free-text/spoofable heuristic.
+      (repo: unified-trading-pm — `check_strict_quickmerge.py`)
 
 ## Codex SSOTs
 
