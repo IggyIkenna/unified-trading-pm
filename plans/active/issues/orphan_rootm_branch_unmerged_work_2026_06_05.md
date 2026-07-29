@@ -100,9 +100,13 @@ divergence monitor's signal meaningfully (7 vs the prior 41), and the naming-col
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Review + inherit-or-delete the 7 remaining `tab/rootm/*` branches** — per commit, per repo
-      (agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts×2,
-      unified-trading-library×2): confirm superseded-in-spirit work vs. genuinely valuable unmerged work, then delete or
-      cherry-pick+quickmerge accordingly. Blocked on `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s read-only
-      presence-check todo (still `- [ ]`) landing a dated verdict here first — do not archive this doc until that
-      verdict exists.
+- [ ] [OPERATOR] P2. **Note (2026-07-29, corpus hygiene pass): branches confirmed absent per the 2026-07-27 correction;
+      full archival still pending the finalize plan's dated verdict** (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      presence-check todo is still `- [ ]` and `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` is still
+      `status: draft`, gated, none of its todos run yet — so the specific dated verdict this doc's own process requires
+      does not exist yet; checkbox intentionally left unflipped). **Review + inherit-or-delete the 7 remaining
+      `tab/rootm/*` branches** — per commit, per repo (agent-orchestrator, deployment-service, market-tick-data-service,
+      strategy-service, unified-api-contracts×2, unified-trading-library×2): confirm superseded-in-spirit work vs.
+      genuinely valuable unmerged work, then delete or cherry-pick+quickmerge accordingly. Blocked on
+      `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s read-only presence-check todo (still `- [ ]`) landing a dated
+      verdict here first — do not archive this doc until that verdict exists.
