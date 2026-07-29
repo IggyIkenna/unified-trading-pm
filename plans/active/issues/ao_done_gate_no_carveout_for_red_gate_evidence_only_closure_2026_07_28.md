@@ -173,3 +173,15 @@ forces an operator/main manual DB patch outside the normal flow.
   failure mode recurring — see the new [BACKEND] P2 self-archival recommendation below. Durable work fully shipped +
   pushed (ahead=0); main is separately parking -002 (priority 999 + false condition) so it will not redispatch. Per the
   established precedent: task LEFT in-progress, NOT skipped/redispatched; escalated to main for a server-side close.
+- 2026-07-29 (worker, slot 2, FOURTH occurrence — same self-archival variant): Hit
+  `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` on `sports_post_match_trigger_24h_lookback_bug-007`
+  (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) after flipping its Check-4 `[VERIFY]`
+  todo to `- [x] ✅` AND `git mv`-archiving the doc to `plans/archive/issues/` in the SAME commit
+  (`unified-trading-pm@450e32392`) — identical shape to the THIRD occurrence above (flip correctly performed, hidden by
+  the archival rename; `git show 450e32392 -- plans/active/issues/…` shows only a 298-line deletion to `/dev/null`, even
+  though plain `git log --since -- <old-path>` DOES find the commit). Durable work fully shipped + pushed (ahead=0
+  across every repo in the slot); new escalation issue doc filed + pushed alongside
+  (`plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`). Per the established
+  precedent: task LEFT in-progress, NOT skipped/redispatched, checkbox flip NOT re-attempted. This is now the SECOND
+  confirmed self-archival-variant recurrence (after the phantom_captures_prediction-002 case above) — reinforces the
+  [BACKEND] P2 fix below is worth prioritizing (rename-following in `_pm_log_commits_touching_plan_ref`).
