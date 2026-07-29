@@ -164,11 +164,37 @@ so the fix scope was fully bounded.
       `pipeline_mode=batch_extended`/ `market-tick-data-service`). Both venues declare `book_snapshot_5` in
       `VENUE_DATA_TYPE_NO_BATCH_SOURCE`, so both are excluded once `for_batch=True` is honored by the same 2 call sites
       fixed above — no separate code change needed.
-- [ ] [DATA] P3. Once the writer is fixed, the existing ~69,000 polluting rows across the 3 affected combos
+- [x] [DATA] P3. Once the writer is fixed, the existing ~69,000 polluting rows across the 3 affected combos
       (`LIGHTER-ZKSYNC` trades: 24,559 + book_snapshot_5: 24,558; `EXTENDED-STARKNET` book_snapshot_5: 19,956) need a
       cleanup pass (delete or re-classify the `expected_unattempted`/`empty_confirmed`/`attempted_failed` rows written
-      under this now-fixed bug) so the honest-coverage denominator stops carrying permanently-unclosable cells —
-      attended real-infra step, not autonomous (manifest row deletes need the same care as GCS object deletes per the
-      delete-safety protocol). Repo: market-tick-data-service. **Not started** — deliberately deferred pending an
-      explicit decision on delete-vs-reclassify and the delete-safety-protocol proof gates, since the writer fix only
-      stops NEW pollution; the historical rows are unaffected by it.
+      under this now-fixed bug) so the honest-coverage denominator stops carrying permanently-unclosable cells. **DONE
+      2026-07-29** — chose DELETE over reclassify: unlike
+      `reclass_cefi_tardis_impossible_combinations_400_2026_07_27.py`'s precedent (a legitimate per-cell confirmed-
+      absence finding worth preserving as `empty_confirmed`), these rows represent an entire (venue, data_type) AXIS
+      that should never have been in the batch-expected universe at all — the 2026-07-15 ruling's own language ("no
+      expected_unattempted, no empty_confirmed row, full stop") makes deletion the semantically correct target state.
+      Wrote `market-tick-data-service/scripts/reclass_cefi_no_batch_source_phantom_rows_2026_07_29.py` mirroring the
+      Tardis-400 script's safety mechanics (dry-run default, snapshot-before-write, gate checks on row-count
+      arithmetic + `captured` preservation). Confirmed via a fresh manifest read of both writers
+      (`instruments-service`'s stale pre-2026-07-15-fix `expected_unattempted` seeding + `market-tick-data-service`'s
+      now-fixed `attempted_failed`/`empty_confirmed`) that the full 69,223-row scope belonged to this bug, with exactly
+      1 legitimate exception preserved untouched:
+      `(LIGHTER-ZKSYNC, trades, 2026-05-01, BTC-USDC@LIN,     captured, service=market-data-processing-service)` — a
+      different service's candle-reaggregation artifact, out of scope. Snapshot taken first
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/     pre_no_batch_source_phantom_removal_20260729T154127Z.parquet`),
+      then applied: 69,223 rows removed (9,951,022 → 9,881,799), gate checks passed. Post-apply independent verification
+      read confirms the exact target end-state: `(LIGHTER-ZKSYNC, trades)` 1 row (the preserved captured row),
+      `(LIGHTER-ZKSYNC, book_snapshot_5)` 0 rows, `(EXTENDED-STARKNET, book_snapshot_5)` 0 rows.
+
+## Follow-up: LIGHTER-ZKSYNC derivative_ticker real backfill attempted, hit a SEPARATE bug
+
+Per this doc's earlier note that `(LIGHTER-ZKSYNC, derivative_ticker)` — unlike the 3 no-batch-source combos above —
+genuinely IS batch-reachable via Tardis (confirmed by the 2026-07-07 manual verification) but had never actually been
+backfilled in production (0 captured), I attempted a real production backfill (2026-04-17 through today, 179
+instruments) as a direct follow-up. The Tardis fetch itself succeeded (confirming real data exists), but every write
+failed a schema-contract check due to a SEPARATE, previously-undiscovered bug: Tardis's numeric `market_id` leaks into
+the written `symbol` column/filename instead of the original ticker. Full root cause, evidence, and a scoped
+(not-yet-implemented) fix approach are tracked in the new companion doc:
+`/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+No manifest cleanup was needed from this attempt — verified the brief VM run only wrote honest `empty_confirmed` rows
+for genuinely pre-coverage dates, no false `attempted_failed`/`captured`.
