@@ -9,7 +9,7 @@ summary: >-
   do_merge is reusable, so a FUTURE venue group where a numeric MEASUREMENT column disagrees in dtype (e.g.
   int64-vs-float64 from a NaN in one shard) would silently stringify that measurement column, corrupting the merged
   output. P3 robustness/DRY follow-up: narrow the stringify to the key columns.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [meta]
@@ -37,7 +37,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: market-tick-data-service@d797df2e
 source: >-
   REVIEW-craft finding 2026-07-28 (msg 2500, non-blocking P3 LATENT) reviewing slot-5 cefi_native-010 (mtds@feeb8a6e).
   Reviewer verified the shipped run on PROD (0 rows dropped, canonical target gcs-confirmed); this is a reusability
@@ -73,9 +73,11 @@ disagrees in dtype, so a real data problem surfaces instead of being papered ove
 
 ## Todos
 
-- [ ] [DATA] P3. **Narrow `do_merge()`'s dtype-coercion to key columns only** — the suggested fix (whitelist the join/id
-      key columns, up-cast numeric columns instead of stringifying, or fail loud on non-key disagreement) has not been
-      applied; only bites on a future re-use of this migration script against a different venue group.
+- [x] ✅ [DATA] P3. **DONE 2026-07-29 — Narrow `do_merge()`'s dtype-coercion to key columns only.** Implemented all 3
+      suggested options together: (a) `_MERGE_KEY_COLUMNS` whitelist (currently `{"symbol"}`) stringified as before; (b)
+      any other disagreeing column that's all-numeric dtypes up-cast to `float64` instead of stringified; (c) anything
+      else (non-key, non-numeric-coercible) raises `ValueError` loud instead of silently corrupting the column.
+      `quality-gates.sh` green. — market-tick-data-service@d797df2e.
 
 ## Progress Log
 

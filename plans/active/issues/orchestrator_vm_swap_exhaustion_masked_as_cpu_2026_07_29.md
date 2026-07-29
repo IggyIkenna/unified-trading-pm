@@ -152,7 +152,10 @@ loss: `state.db` lives on the persistent root EBS volume, which a stop/start nev
 
 **Separately surfaced, not fixed here (different problem)**: post-resize, the visible bottleneck for most idle slots is
 now a plan-dependency gate (52 queued tasks all blocked on one upstream task, `sports_satellite_ao_dispatch_batch2-0*`),
-not resource capacity — flagged for whoever owns that plan, out of scope for this doc.
+not resource capacity. Tracked as its own todo below rather than left as prose — see
+`plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` /
+`plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`, the existing plans this task belongs to; not
+investigated further here, out of scope for this doc.
 
 ## Also found this session (2026-07-29, escalation/scheduled-job investigation)
 
@@ -198,6 +201,11 @@ not resource capacity — flagged for whoever owns that plan, out of scope for t
 
 ## Todos
 
+- [ ] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
+      `sports_satellite_ao_dispatch_batch2-0*` — real work, not a resource issue, so out of scope for this doc, but not
+      yet investigated by anyone. Whoever picks this up: check
+      `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` and its `_finalize` sibling for the specific
+      blocking task and why it's gating 52 downstream items.
 - [x] [BACKEND] P3. Once the runner-capacity crisis's remedy ships, spot-check swap% on the dashboard. — **Done
       2026-07-29**: post-resize `free -h` shows 54GB available (vs 269MB before); the dashboard's Swap tile is live and
       will reflect this on the next `/ws/vm-resources` push.

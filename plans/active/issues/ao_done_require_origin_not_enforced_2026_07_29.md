@@ -124,11 +124,15 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
       pass** — the false rate should be re-measured post-fix before deciding; flipping blind before this fix would have
       started rejecting real legitimate completions on exactly this race.
 - [ ] [BACKEND] P2. Re-measure the `on_origin=False` rate over a window AFTER `25d497f` has been live for a few days
-      (the fallback-fetch fix should collapse most/all of the 2.29% down to genuine failures only). If the rate is now
-      at/near 0%, set `done_require_origin=true` in the orchestrator's `.env.local` (or the systemd unit template if it
-      should apply fleet-wide) and ship. If a nonzero rate persists, sample those specific examples the same way this
-      session did (check the cited SHA against the real repo) before deciding whether it's a genuine failure class or a
-      different race this fix didn't cover.
+      (the fallback-fetch fix should collapse most/all of the 2.29% down to genuine failures only). **Tool now exists**:
+      `bash agent-orchestrator/scripts/orchestrator/check-on-origin-rate.sh --days N` (promoted 2026-07-29 from the
+      one-off script that produced the original 2.29% figure — same read-only SSM pattern as
+      `check-ao-backlog-status.sh`). A `--days 1` spot-check on 2026-07-29 already shows an encouraging early signal
+      (0/151 false in the last 24h) but that's too short a window to act on — wait for the "a few days" this todo asks
+      for. If the rate is now at/near 0%, set `done_require_origin=true` in the orchestrator's `.env.local` (or the
+      systemd unit template if it should apply fleet-wide) and ship. If a nonzero rate persists, sample those specific
+      examples the same way this session did (check the cited SHA against the real repo) before deciding whether it's a
+      genuine failure class or a different race this fix didn't cover.
 - [ ] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
       landing behavior, but worth a deliberate yes/no rather than leaving it implicit.

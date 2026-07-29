@@ -318,3 +318,12 @@ touching defi MTDS capture / honest-cov.
    an unrelated pre-existing QG gate as of 2026-07-22 — see `plans/active/defi_consolidated_closeout_2026_07_18.md`
    Track 2). DeFi live crons are currently PAUSED, so no bad data is known to have landed in prod from this — a pure
    code-path divergence, not a manifested capture defect.
+
+   **Second, independent occurrence found 2026-07-28 (READER side, not the writer above):**
+   `market_tick_data_service.reader.CanonicalParquetReader._build_shard_bases` (`_make_base`, ~`reader.py:367-373`) had
+   the SAME reversed order on the READ path — `asset_group=defi/chain={C}/venue={V}/...` vs. the canonical
+   `venue={V}/chain={C}/...`. Dormant (no live caller passes `chain=` for a DeFi read), but a landmine on a public
+   method. Fixed segment order in `_make_base` + the module docstring (`reader.py:26-28`) + the `TestDefiChainAxis`
+   unit-test contract's hardcoded mock paths (`tests/market_interface/unit/test_canonical_parquet_reader.py`,
+   `TestDefiChainAxis` class), which had asserted the wrong order and would otherwise have locked in the bug. See
+   `/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md`.
