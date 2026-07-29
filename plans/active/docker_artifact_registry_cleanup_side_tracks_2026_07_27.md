@@ -116,24 +116,12 @@ source:
       0 affected — existing keep-30 policy already trimmed). All 20 ECR repos currently have identical keep-30/7-day
       policy; this design tightens to keep-5/3-day matching GCP AR. **Presented for operator sign-off** per parent
       plan's Phase C gate before any live application.
-- [ ] 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR is
-      shut down). **Downgraded from [OPERATOR] 2026-07-28** — operator ruling 2026-07-28
-      (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
-      reversibility-qualified the same way object/version deletes already were, PROVIDED a fresh same-run
-      `gcs_bucket_soft_delete_retention_seconds(bucket)` check on THIS bucket clears (>=604800s) immediately before the
-      delete. A 2026-07-27 check found `soft_delete_policy.retentionDurationSeconds=604800` on this bucket — that
-      confirms the mechanism exists but is NOT itself the fresh check; re-run the check in the SAME session as the
-      delete and cite the actual returned value. If it clears, execute the bucket delete via the sanctioned UTL storage
-      helpers (`get_storage_client()` — never subprocess `gcloud`/`gsutil`) with no operator step. If the fresh check
-      errors or returns <604800s, it stays gated — fall back to §3a's approve-executes flow (stage the exact delete
-      command, open a structured BLOCKED question recommending "approve — execute now"; a FINAL operator answer
-      authorizes the SAME worker session to run it immediately) rather than assuming clearance. **Also confirmed live
-      2026-07-27 (parent plan's Phase A audit)**: one Cloud Run Job (`live-event-log-compactor`) references a
-      `gcr.io/central-element-323112/...` image, but that image has never existed since the Job's creation
-      (`ContainerMissing`, confirmed via `gcloud run jobs describe`) — so this does NOT block the delete, there is
-      nothing real in that path to lose; note it for the Job's owner separately, it's been silently broken for a month
-      regardless of this bucket. Done-when: the bucket is gone and the re-audit no longer lists it, with the fresh
-      retention-check value cited in this plan (or the approve-executes fallback was used, cited here).
+- [x] ✅ 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR
+      is shut down). — **EXECUTED 2026-07-29** (slot 1). Fresh same-run retention check:
+      `soft_delete_policy.retentionDurationSeconds=604800` (>=604800s, reversibility-qualified per §3a extended). All
+      307 objects (9.53 GB) deleted via Python GCS SDK (`bucket.delete_blobs()`), then bucket deleted via
+      `bucket.delete()`. Verified gone: `gcloud storage buckets describe` returns 404. Soft-delete window: 7 days from
+      `effectiveTime=2024-06-29` — the bucket is recoverable within that window if needed.
 
 ### Phase F — Code-tarball bucket retention (GCS lifecycle, human-gated)
 
