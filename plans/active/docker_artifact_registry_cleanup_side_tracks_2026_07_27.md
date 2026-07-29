@@ -79,12 +79,20 @@ source:
 
 ### Phase E — Extend to the rest of the estate
 
-- [ ] 10. [INFRA] P3. Repeat Phases A-D (of the parent plan) for `unified-trading-library` (928 GB) — profile it
-      sub-path-by-sub-path first, then apply the same deployed-digest-keep + floor + 3-day pattern. Useful head start
-      from the parent plan's Phase A audit (2026-07-27): live `:latest`-tracking Jobs already confirmed for
-      `paper-signal-engine`, `paper-trading-engine`, and the `e2e-audit` sub-package — those are inherently
-      keep-5-protected like everything else found there; still need a full sub-path profile for anything pinned to a
-      non-`:latest` tag. Done-when: `unified-trading-library` carries a live policy verified via `describe`.
+- [x] ✅ 10. [INFRA] P3. Repeat Phases A-D (of the parent plan) for `unified-trading-library` (928 GB) — profile it
+      sub-path-by-sub-path first, then apply the same deployed-digest-keep + floor + 3-day pattern. —
+      unified-trading-pm@75e21803 (policy + dry-run report). **Phases A-C complete 2026-07-29.** Phase A: 4 packages
+      (e2e-audit=4, paper-signal-engine=9, paper-trading-engine=12, unified-trading-library=1,241), 1,266 images, ~1,024
+      GB. All 6 live Cloud Run Jobs use `:latest` tags → inherently protected by keep-5-recent (confirmed: each
+      `:latest` digest is at position #1 in its package). Zero non-`:latest` pinned consumers → no explicit
+      keep-deployed-digests entries needed. `vm-serial-capture-prd` references `deployment-service:latest` under this
+      repo — that package doesn't exist (broken job, not blocking). Phase B: 2-rule policy committed (keep-5-recent +
+      delete-older-than-3d/259200s). Phase C: dry-run applied live + verified via `describe`
+      (`cleanupPolicyDryRun: true`); replicated logic against 1,266 live images → 19 kept, 1,247 flagged;
+      zero-intersection PASSES (all :latest digests at position #1, inherently within keep-5). Phase D (flip
+      non-dry-run) is operator-gated — same as parent plan's todo 8, AR has no soft-delete. Policy file:
+      `docker_artifact_registry_cleanup_policy_unified_trading_library.json`; dry-run report:
+      `docker_artifact_registry_cleanup_policy_dryrun_report_unified_trading_library_2026_07_29.json`.
 - [ ] 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
       `docker_artifact_storage_audit_2026_07_24.csv`) and apply the same pattern to any showing the
       unbounded-CI-retention shape. Done-when: each remaining repo is either policied or explicitly marked out-of-scope
