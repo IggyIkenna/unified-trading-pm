@@ -518,6 +518,13 @@ sports IS canonical, reopening the L6/E8 data-loss gate
   one-off maintenance rewrites opt out via `ManifestWriter(allow_index_shrink=True)` — never a standing service. The
   consolidator's own `_ROW_COUNT_REGRESSION_ALERT_THRESHOLD` (0.1%, observability-only) is the sibling check on the
   merge side.
+- **The per-VM shard flush is ALREADY debounced — do not re-derive an "O(n²) flush" hypothesis.**
+  `unified-trading-library@6b6d53bd` (2026-06-21, "serialize per-VM shard write + coalesce per-call final into the
+  debounce") added a count+time write-debounce specifically for the per-VM shard path: `_state.py`'s
+  `manifest_per_vm_flush_entries` (default 50) and `manifest_per_vm_flush_interval_sec` (default 5.0s) gate how often a
+  shard is actually re-uploaded, independent of the legacy CAS path's own throttle. A reader who sees frequent
+  per-record `flush()` calls and suspects an unbounded per-call GCS rewrite should check these two config knobs first —
+  the debounce already bounds it to at most one shard upload per 50 entries or 5.0s, whichever comes first.
 
 ## Surgical ROW REMOVAL from the canonical — a paused-consolidator CAS drop, never a force-rebuild (2026-07-20)
 
