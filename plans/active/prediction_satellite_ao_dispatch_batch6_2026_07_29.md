@@ -326,7 +326,7 @@ tranche, excluded here to avoid duplicate dispatch." Re-confirmed by this run, n
   running' yet"), and `parent_epic: sports_master` confirms it.
 
 **Also surfaced, dual-tagged `[sports, prediction]` but content is 100% sports-side**:
-`plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — 2 open `[SCRIPT] P2`
+`plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — 2 open `[SCRIPT] P2`
 todos (fix the live-mode sports-odds writer shape mismatch; delete 5 dead `sports_*` PATH_REGISTRY rows + their dead
 consumer classes), genuinely uncovered by anything in this tranche's covering set, but both items are
 sports-odds/sports-registry content with zero prediction-market-specific work — recommend the sports tranche's own

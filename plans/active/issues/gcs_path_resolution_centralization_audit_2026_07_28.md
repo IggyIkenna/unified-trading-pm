@@ -32,7 +32,7 @@ related:
   [
     /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /plans/archive/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md,
-    /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-28
 last_updated: 2026-07-29
@@ -376,7 +376,7 @@ for the centralization design this whole audit is ultimately building toward.
 ## What's NOT done yet (the operator's expanded scope)
 
 **All 5 audit rounds are complete** — CEFI/DEFI/TRADFI here, SPORTS/PREDICTION (rounds 4-5) in the split-off
-continuation doc `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (this
+continuation doc `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (this
 parent doc hit 586+ lines — split rather than grow past the plan line cap). What remains is the accumulated per-finding
 fix todos across both docs (1 CRITICAL already shipped, several P1/P2 dormant bugs + dead-code cleanups still open) and
 the operator's third ask — **a genuine centralization design**, not just point-fixes (does a true "resolve me the
@@ -651,7 +651,7 @@ going forward. Still open, tracked as a todo below.
       centralization design todo). New follow-up todos logged for every finding.
 
 - [x] [SCRIPT] P1. **Extend the audit to SPORTS + PREDICTION** — MOVED 2026-07-28 to
-      `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (a split-off
+      `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` (a split-off
       continuation doc, created once this parent doc reached 586 lines) rather than growing this doc past the plan line
       cap. Track rounds 4-5 there, not here.
 

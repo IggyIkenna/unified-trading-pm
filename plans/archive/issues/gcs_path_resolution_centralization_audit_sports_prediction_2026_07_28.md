@@ -3,12 +3,16 @@ doc_type: issue
 title:
   GCS path resolution centralization audit — SPORTS + PREDICTION rounds (continuation of the CEFI/DEFI/TRADFI audit)
 summary: >-
-  Continuation doc for /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md (the parent doc, now
-  at 586 lines — split here to stay clear of the plan line cap rather than grow the parent past it). Same recurring bug
-  class (hand-rolled GCS prefixes silently drifting from the canonical `pipeline_mode=`/`asset_group=` hive-partitioned
-  shape), same 4-round audit methodology, scoped to SPORTS and PREDICTION per the operator's original expanded directive
-  (CEFI/DEFI/TRADFI/SPORTS/PREDICTION, batch+paper+live, under /autonomous).
-status: open
+  RESOLVED 2026-07-29. Continuation doc for /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md
+  (the parent doc, now at 586 lines — split here to stay clear of the plan line cap rather than grow the parent past
+  it). Same recurring bug class (hand-rolled GCS prefixes silently drifting from the canonical
+  `pipeline_mode=`/`asset_group=` hive-partitioned shape), same 4-round audit methodology, scoped to SPORTS and
+  PREDICTION per the operator's original expanded directive (CEFI/DEFI/TRADFI/SPORTS/PREDICTION, batch+paper+live, under
+  /autonomous). All 4 todos done: rounds 4-5 audits complete, the P0 live-mode sports odds writer shape fix shipped
+  (market-tick-data-service@d6d539a8), the 5 dead sports_* PATH_REGISTRY rows deleted (folded into
+  unified-trading-library@f4987fb8). Archived — parent doc stays active (5 unrelated deferred items remain there,
+  outside this doc's SPORTS+PREDICTION scope).
+status: resolved
 nature: issue
 asset_group: [sports, prediction]
 stage: [meta]
@@ -49,7 +53,8 @@ source: >-
   split off /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md (parent doc) once it reached 586
   lines after rounds 1-3 (CEFI/DEFI/TRADFI); continues the operator's original expanded-scope directive for SPORTS +
   PREDICTION under /autonomous.
-resolved_by:
+resolved_by: >-
+  All 4 todos shipped 2026-07-29 — see summary for the commit list.
 depends_on: []
 ---
 
