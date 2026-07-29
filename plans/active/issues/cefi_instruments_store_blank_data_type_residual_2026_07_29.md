@@ -30,7 +30,6 @@ depends_on:
 assigned_role: data_engineering
 source: [data_completion_cefi_2026_07_15.md, cf_manifest_audit live re-run 2026-07-29]
 drift_direction: advance-code
-author: slot-4 (data_engineering)
 ---
 
 ## What I found
