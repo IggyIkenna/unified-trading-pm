@@ -67,19 +67,19 @@ source:
 
 ## Capture wiring (dispatchable)
 
-- [ ] [DATA] P1. **RETAGGED 2026-07-28 (was `🚧 BLOCKED-OPERATOR-DECISION`) — RULED, see the 2026-07-28 note appended at
-      the end of this task's history below.** Register + launch the ASTER live connector — `aster_book_liq_ws.py` into
-      `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi template). **PREREQ: Plan 1's
-      enumerator `start_date` support + the UAC capability flip for ASTER book5/liquidations have landed** (else you
-      re-create the 17,282-row over-seed). Verify `live_aster` rows land (per-VM shard spot-check at T+10-15min). **This
-      gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT: `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG
-      #4. Gate: `live_aster` book5/liquidations rows landing daily. **STATUS 2026-07-07 06:31 UTC —
-      BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001 pickup, slot-9): both hard prereqs unmet on
-      LDR — (a) `instruments-service/scripts/expected_universe.py` has zero `get_venue_data_type_start_date` awareness
-      on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT been quickmerged yet); (b) UAC
-      `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only lists
-      trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10 UTC —
-      corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
+- [ ] [DATA] P1. **RETAGGED 2026-07-28 (previously gated on an operator decision) — RULED, see the 2026-07-28 note
+      appended at the end of this task's history below.** Register + launch the ASTER live connector —
+      `aster_book_liq_ws.py` into `live/connector_registry.py` + a live VM (the KALSHI-PERP book5 VM is the in-cefi
+      template). **PREREQ: Plan 1's enumerator `start_date` support + the UAC capability flip for ASTER
+      book5/liquidations have landed** (else you re-create the 17,282-row over-seed). Verify `live_aster` rows land
+      (per-VM shard spot-check at T+10-15min). **This gates Plan 1's ASTER re-measure (2c/2f).** Connector SSOT:
+      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22` BUG #4. Gate: `live_aster` book5/liquidations rows landing
+      daily. **STATUS 2026-07-07 06:31 UTC — BLOCKED-PREREQUISITES** (main-agent answer to `BLK-26ed6571`, task 001
+      pickup, slot-9): both hard prereqs unmet on LDR — (a) `instruments-service/scripts/expected_universe.py` has zero
+      `get_venue_data_type_start_date` awareness on LDR (cefi-007 impl is done on slot 5, 126/126 green, but has NOT
+      been quickmerged yet); (b) UAC `market_data_categories.py` `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` still only
+      lists trades/derivative_ticker/perp_funding — NO book_snapshot_5, NO liquidations (**stale as of 2026-07-07 08:10
+      UTC — corrected 2026-07-12, finding id 114, §A2 B-queue ruling**: `unified-api-contracts@3652f99f`, verified via
       `git log`/`git show` on `live-defi-rollout`, added `book_snapshot_5` + `liquidations` to
       `VENUE_DATA_TYPE_CAPABILITIES["ASTER"]` (`start_date=2026-06-23`), landing ~2h after this 06:31 UTC status check.
       Current tree confirms both keys present. The (a) prereq — `enumerate_expected_universe.py` per-(venue,dt)

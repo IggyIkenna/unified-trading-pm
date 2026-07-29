@@ -117,7 +117,7 @@ rows) is real but small and not urgent.
       execution]** Update `data_completion_cefi_2026_07_15.md`'s bare E6 CF-7 line item to strike the stale "~50%
       (1.33M)" figure and point at this doc for the current 11.61%/1,060,613 measurement + attribution.
 - [ ] [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no longer
-      a cross-tranche BLOCKED-OPERATOR-DECISION conflict with
+      a cross-tranche operator-decision-gated conflict with
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
       two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,736 rows) ALREADY
       market-type-suffixed venues (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/HYPERLIQUID/DERIBIT/BINANCE-SPOT/

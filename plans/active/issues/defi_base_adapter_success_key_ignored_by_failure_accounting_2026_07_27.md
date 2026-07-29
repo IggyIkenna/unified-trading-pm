@@ -131,13 +131,17 @@ adapters' venues.
 
 ## Recommended decision
 
-- [ ] [SERVICE] P2. **Wire `_download_all_instruments`'s failure accounting to read the `success` key.** When
-      `download_market_data()` returns a dict with `"success": False`, route it into the `failed` counter (not
-      `succeeded`) and surface the `"error"` value in the per-instrument warning log (mirroring the existing `except`
-      branches' `logger.warning("%s: failed for %s: %s", ...)` shape) instead of silently discarding it via
-      `_flatten_instrument_result`'s skip. **Done when**: a new unit test asserts a `{"success": False, "error": "..."}`
-      result increments `failed`, not `succeeded`, and the error string reaches the log; `quality-gates.sh` green. Repo:
-      market-tick-data-service.
+- [x] ✅ [SERVICE] P2. **DONE 2026-07-29** — Wired `_download_all_instruments`'s failure accounting to read the
+      `success` key. `download_market_data()` returning `{"success": False, "error": ...}` now routes into the `failed`
+      counter (not `succeeded`) and surfaces the error in the per-instrument warning log, instead of being silently
+      discarded via `_flatten_instrument_result`'s skip. New unit test
+      (`test_download_all_instruments_routes_success_false_to_failed_not_succeeded`) asserts the routing + log content;
+      `quality-gates.sh` green. — market-tick-data-service@df3d55dd.
+- [ ] [SERVICE] P3. **Audit the 12 named adapters for how often they actually hit their `success: False` path in
+      production** (grep logs / manifest for the affected venues over a real window) to gauge whether this has been
+      silently dropping real rows, before/alongside shipping the fix above — the fix changes behavior (failures start
+      counting as failures), so knowing the current blast radius avoids a surprise jump in `failed` counts once wired.
+      Repo: market-tick-data-service.
 - [ ] [SERVICE] P3. **Audit the 12 named adapters for how often they actually hit their `success: False` path in
       production** (grep logs / manifest for the affected venues over a real window) to gauge whether this has been
       silently dropping real rows, before/alongside shipping the fix above — the fix changes behavior (failures start

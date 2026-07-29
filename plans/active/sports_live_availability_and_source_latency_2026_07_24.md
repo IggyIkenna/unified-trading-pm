@@ -143,7 +143,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       as the concrete tier selection: **The Odds API Starter tier
       (~$10/mo, 50k credits)** sized for the current live
       league set, **+ api_football `/odds` in-play as the free second source** (already-subscribed key, no extra
-      cost). No longer BLOCKED-OPERATOR-DECISION — the direction (proceed) is ruled; the one remaining concrete step is
+      cost). No longer gated on an operator decision — the direction (proceed) is ruled; the one remaining concrete step is
       confirming the Starter-tier subscription/quota is actually active on the live Odds-API key (Secret Manager
       `odds-api-key` — a credential/account-state check, not a design call) before resuming the connector at full
       cadence. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —
@@ -214,8 +214,8 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       is retained **unchanged** — a CONFIRM, not a re-pin. **sfi/understat/footystats/open_meteo all read n=0
       (UNDER-SAMPLED)**, each for a distinct, now-diagnosed structural reason (see Step 2 table below) — one of which
       (`understat`'s `stats_delayed` trigger) is a genuine live-scheduler bug, not a thin-accrual-window issue, filed as
-      `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0, NOTIFIED — a potential live-pipeline
-      data-completeness gap beyond this todo's scope). All 5 constants documented in place
+      `archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0, NOTIFIED — a potential
+      live-pipeline data-completeness gap beyond this todo's scope). All 5 constants documented in place
       (unified-api-contracts@37611070) with per-source empirical-review docstrings citing sample counts + root causes;
       no numeric value changed this cycle. `quality-gates.sh` green (no tests reference this module). Source-latency
       Step-2 verdict table below updated from UNVALIDATABLE-FROM-BACKFILL to the empirical per-source verdict (NOT a
@@ -302,7 +302,7 @@ The other 4 sources remain genuinely un-validated:
   root-caused to `get_upcoming_fixtures()`'s ~2h-post-kickoff fixture-visibility cutoff, which closes long before a
   24h-offset trigger becomes due. This is a real scheduler bug with potential live data-completeness impact beyond
   latency observation (the same trigger dispatches the REAL Understat/FootyStats XG capture). Filed as
-  `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0).
+  `archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md` (P0).
 - `footystats` / `open_meteo`: neither is mapped in `ENTITY_TO_OBSERVATION_TARGET` — never instrumented by this
   mechanism at all, independent of accrual time or trigger-firing correctness.
 

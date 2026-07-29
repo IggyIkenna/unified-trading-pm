@@ -19,7 +19,7 @@ summary: >-
   orphan is non-batchable (operator-gated / upstream-blocked / time-gated / human-only / UI-slot-gated) and is cited in
   the Deferred sections, not re-litigated. `status: draft` — a skill-drafted AO batch is never auto-shipped; flipping to
   `active` to dispatch is an operator decision (CLAUDE.md "Plan destination — ASK BEFORE CREATING").
-status: active
+status: complete # (was: active) 2026-07-29 — all 4 todos done, finalize archived alongside
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -164,13 +164,13 @@ parked conflicts).
       2026-04-14. Full method + numbers recorded in `prediction_cqg_residual_2026_07_24.md`'s Progress Log
       (2026-07-27T15:25:50Z entry).
 
-- [ ] [CODE] P2. **Wire the canonical-question-group into the instruments-service catalogue-rollup loader so
-      `prediction_canonical_question_group` cqg-grain rows emit — the gate on this provably cleared 2026-06-16.**
-      `prediction_cqg_residual_2026_07_24.md` todo 2 ("249-b") states the rollup ALREADY materialises the cqg grain
-      whenever `cqg_str` is non-empty, and that the loader yields `cqg=""` today; the only thing holding it was operator
-      decision 338, which this batch's "Why this batch exists" section proves was ruled + implemented in UAC on
-      2026-06-16. Wire the cqg through (from the classifier, or from a `_canonical_group` write-back, whichever the
-      loader's existing shape supports) so the grain populates. Repos: instruments-service, unified-api-contracts.
+- [x] ✅ [CODE] P2. **DONE 2026-07-29 — Wire the canonical-question-group into the instruments-service catalogue-rollup
+      loader so `prediction_canonical_question_group` cqg-grain rows emit — the gate on this provably cleared
+      2026-06-16.** `prediction_cqg_residual_2026_07_24.md` todo 2 ("249-b") states the rollup ALREADY materialises the
+      cqg grain whenever `cqg_str` is non-empty, and that the loader yields `cqg=""` today; the only thing holding it
+      was operator decision 338, which this batch's "Why this batch exists" section proves was ruled + implemented in
+      UAC on 2026-06-16. Wire the cqg through (from the classifier, or from a `_canonical_group` write-back, whichever
+      the loader's existing shape supports) so the grain populates. Repos: instruments-service, unified-api-contracts.
       **Scope boundary — do NOT run the prod `prod/catalog.parquet` promotion as part of this todo.**
       `prediction_phase_ab_residuals_2026_07_24.md`:132-152 holds an open P0 for the full
       `build_instrument_catalogue.py --asset-group prediction` prod regen and states it is "intentionally NOT executed
@@ -183,7 +183,15 @@ parked conflicts).
       integration test proves the loader now yields a non-empty `cqg_str` for a fixture prediction record and that the
       rollup consequently materialises `prediction_canonical_question_group` cqg-grain rows (previously zero);
       `quality-gates.sh` is green in every touched repo; the prod promotion is explicitly recorded as NOT run, with a
-      pointer to `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen todo as its carrier.
+      pointer to `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen todo as its carrier. **Shipped**:
+      `unified-api-contracts@283d7449` (additive `InstrumentRecord.canonical_question_group` field, aligned in
+      `INSTRUMENTS_PARQUET_SCHEMA`) + `instruments-service@38e393de` (Polymarket/Kalshi adapters write back the
+      already-computed `group.value` onto the new field instead of dropping it after deriving `underlying`;
+      `build_prediction_catalogue_dataframe` now reads `canonical_question_group` PER-ROW — not the blob-level path
+      value, since one `instruments.parquet` spans many cqg groups — falling back to the legacy path-derived value for
+      historical pre-fix snapshots; new/extended unit tests in both repos, incl. a rollup test proving two markets
+      sharing one group fold into one bundle row). `quality-gates.sh` green in both repos. Prod `catalog.parquet`
+      promotion explicitly NOT run — carried by `prediction_phase_ab_residuals_2026_07_24.md`'s gated regen todo.
 
 - [x] ✅ [DIAG] P1. **Confirm or deny the prediction live-capture stall at `day=2026-06-28` (read-only).**
       `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s "Suggested next step" item 1 has never been

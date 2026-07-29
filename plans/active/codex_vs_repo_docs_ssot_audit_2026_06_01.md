@@ -317,7 +317,20 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
 - [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
-- [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
+- [x] ✅ [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
+      **DONE 2026-07-29 (slot-12, opus) — e2e-testing@7af2dd3** (+ PAPER_LIVE_CONVERGENCE redirect already landed
+      @e00ee80, slot-10). **Ground-truth refresh REQUIRED and applied** — the pass-1 Appendix-A registry OVER-classified
+      (see "e2e-testing refreshed registry (2026-07-29)" below): net remediation = 1 REDIRECT (PAPER_LIVE_CONVERGENCE,
+      done) + light FIX-STALE/cross-links on 4 docs (E2E_PIPELINE_GUIDE `{category}`→`{asset_group}`;
+      VM_BACKFILL_GUIDE + architecture gain codex cross-links, KEEP not REDIRECT; sports/ROADMAP expired-trial-dates
+      annotated historical); **UI_DEMO_WALKTHROUGH reclassified DELETE→KEEP** (pass-1 "removed-provider creds" rationale
+      was wrong: `demo`/`demo` creds + Elysium = the client POD, not the removed data provider). Dominant finding
+      matches Appendix-B: e2e-testing docs are legitimately service-local, near-zero codex duplication. QG-green
+      sentinel==HEAD; quickmerge --agent.
+- [ ] [DOCS] P3. **e2e-testing sports/ROADMAP epic-migration follow-up (from the 2026-07-29 refresh)**:
+      `docs/sports/ROADMAP.md` is forward-looking sports planning content (expired trial windows now annotated
+      historical) that belongs in a sports epic, not an e2e-testing repo doc. Migrate the roadmap content into the
+      sports epic, then slim/redirect the repo copy. (repo: e2e-testing, unified-trading-pm)
 - [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`. — **REOPENED
       2026-07-24** (was marked SHIPPED `unified-trading-pm@c6b2d9eb1` 2026-06-22, but that verification predates the
       single-VM architecture pivot 2026-06-27 — a `[x]` from before a pivot reads as current coverage when it isn't).
@@ -722,3 +735,24 @@ Verification notes (all cited targets ground-truthed):
   `unified-sports-reference-interface` — none of which exist in the workspace (actual editable siblings = UTL + UAC
   only). A reader following README would import nonexistent packages. The Phase-3 README rewrite must cite
   `SETUP_GUIDE`/`ADAPTER_ARCHITECTURE` as the reconciliation ground truth.
+
+### e2e-testing refreshed registry (2026-07-29) — supersedes the stale Appendix-A `(21)` entry
+
+> Ground-truth re-audit (slot-12, opus) of the actionable docs the Appendix-A pass-1 entry named. Applied + shipped:
+> **e2e-testing@7af2dd3** (PAPER_LIVE_CONVERGENCE redirect already landed @e00ee80, slot-10). Headline matches
+> Appendix-B: e2e-testing docs are **legitimately service-local — near-zero codex duplication**; the pass-1
+> DELETE/REDIRECT calls OVER-classified genuine operational content. All cited codex targets VERIFIED-EXIST.
+
+**e2e-testing (21)** — REDIRECT: `docs/defi/PAPER_LIVE_CONVERGENCE.md` (→ S5.11 redirect to
+`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`, keeps DeFi-specific seams; DONE @e00ee80).
+FIX-STALE / cross-link (KEEP content): `docs/E2E_PIPELINE_GUIDE.md` (`{category}`→`{asset_group}` log-path literal;
+otherwise repo-specific run-guide, edited 2026-07-16), `docs/VM_BACKFILL_GUIDE.md` (cross-link →
+`/codex/05-infrastructure/vm-launcher-runbook.md` + `spot-vms-for-backfill.md`; buckets already tiered-canonical, gsutil
+lines are human-inspection only), `docs/architecture.md` (cross-link → the batch=live determinism-spine SSOT; the rest
+is e2e-specific "laptop is the cloud" local-run topology — KEEP not REDIRECT), `docs/sports/ROADMAP.md` (expired
+`~2026-04-03` trial dates annotated historical + STALE banner; epic-migration tracked as a P3 follow-up todo).
+**RECLASSIFIED DELETE→KEEP**: `docs/defi/UI_DEMO_WALKTHROUGH.md` — pass-1 "Elysium/removed-provider creds" rationale is
+ground-truth WRONG (`demo`/`demo` login + `patrick@bankelysium.com` = the Elysium **client POD**, not the removed data
+provider; it is a genuine 846-line DeFi UI UAT walkthrough). KEEP (unchanged): the rest (`*/progress`, `*/issues`,
+`coverage-matrix`, `*/per-strategy-acceptance`, `*/smoke-test-baseline`, `LIVE_ODDS_PROVIDERS`, scripts READMEs). No
+MIGRATE-TO-CODEX; no codex target needs creating.

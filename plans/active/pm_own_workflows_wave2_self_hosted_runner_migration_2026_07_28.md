@@ -154,10 +154,13 @@ the review doesn't silently drop them into either bucket without a look):**
       that file migrated. Append a `## Tier-B sign-off log` section to this doc as each file clears, citing the
       sign-off + the post-flip run URL/id. Do not batch-flip Tier B the way Tier A is batched — one file at a time,
       verified each time (mirrors Wave-1's own rule-11 playbook, but with NO batch step for this tier given the stakes).
-- [ ] [OPERATOR] P1. **Resolve the 4 borderline files** during the Tier-B review pass — for each of
-      `cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`, `reconcile-staging-versions.yml`,
-      `update-repo-version.yml`, record an explicit Tier A/Tier B verdict (not just leave them in the provisional Tier-B
-      bucket) with one line of reasoning, then execute per whichever tier's process it lands in.
+- [ ] [VERIFY] P1. **Tier classification is now moot — verified 2026-07-29: all 4 borderline files
+      (`cascade-qg-ordering.yml`, `freeze-deferred-build-replay.yml`, `reconcile-staging-versions.yml`,
+      `update-repo-version.yml`) already carry `runs-on: [self-hosted, glue]`** — the flip physically shipped in code
+      independent of this plan doc catching up. No operator classification call remains; what's left is the done-when
+      this plan's own Tier-B process requires: confirm one real post-flip triggered run succeeded for each of the 4 (not
+      just that the YAML was edited) and append the sign-off + run URL/id per file, same as the other Tier-B files
+      above.
 
 ## Resolved: plan destination
 

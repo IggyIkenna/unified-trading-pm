@@ -151,7 +151,7 @@ forces an operator/main manual DB patch outside the normal flow.
   skipped/redispatched, checkbox NOT flipped.
 - 2026-07-28 (worker, slot 12, second occurrence, different task): Hit the SAME
   `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` 409 on `sports_post_match_trigger_24h_lookback_bug-005`
-  (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) -- a `[VERIFY] P1` todo genuinely
+  (`plans/archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) -- a `[VERIFY] P1` todo genuinely
   still open because its completion condition (`deployment-service@5b5d227` confirmed on `origin/main`) is not yet true
   (verified: still not merged -- successor PR594 blocked on the fleet-wide `sit-gate/fleet-green` flake). Pushed an
   evidence-only "Check 3" doc update (`unified-trading-pm@6ef574cc2`) mirroring the existing "Check 1"/"Check 2" entries
@@ -173,3 +173,15 @@ forces an operator/main manual DB patch outside the normal flow.
   failure mode recurring — see the new [BACKEND] P2 self-archival recommendation below. Durable work fully shipped +
   pushed (ahead=0); main is separately parking -002 (priority 999 + false condition) so it will not redispatch. Per the
   established precedent: task LEFT in-progress, NOT skipped/redispatched; escalated to main for a server-side close.
+- 2026-07-29 (worker, slot 2, FOURTH occurrence — same self-archival variant): Hit
+  `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` on `sports_post_match_trigger_24h_lookback_bug-007`
+  (`plans/active/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) after flipping its Check-4 `[VERIFY]`
+  todo to `- [x] ✅` AND `git mv`-archiving the doc to `plans/archive/issues/` in the SAME commit
+  (`unified-trading-pm@450e32392`) — identical shape to the THIRD occurrence above (flip correctly performed, hidden by
+  the archival rename; `git show 450e32392 -- plans/active/issues/…` shows only a 298-line deletion to `/dev/null`, even
+  though plain `git log --since -- <old-path>` DOES find the commit). Durable work fully shipped + pushed (ahead=0
+  across every repo in the slot); new escalation issue doc filed + pushed alongside
+  (`plans/active/issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md`). Per the established
+  precedent: task LEFT in-progress, NOT skipped/redispatched, checkbox flip NOT re-attempted. This is now the SECOND
+  confirmed self-archival-variant recurrence (after the phantom_captures_prediction-002 case above) — reinforces the
+  [BACKEND] P2 fix below is worth prioritizing (rename-following in `_pm_log_commits_touching_plan_ref`).

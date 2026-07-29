@@ -89,16 +89,39 @@ terminated/idle, not re-kicked.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Give a one-shot worker a **clean completion exit path** the watchdog recognises: on task completion
-      the agent should signal done (exit its tmux session or post a terminal completion state) and the liveness kicker
-      should treat a completed-and-declared one-shot pane as **terminated/idle, not frozen** — so it is not re-kicked.
-      **Done when**: a one-shot worker that finishes its task and declares completion is transitioned to
-      terminated/idle-free and receives zero further liveness kicks (verified by a lifecycle test simulating "one-shot
-      task done, pane still alive").
-- [ ] [BACKEND] P3. Have the watchdog **recognise the "task is complete" / "stop nudging" self-declaration** (or a
-      structured completion marker) as a completion signal rather than kick-fodder — at minimum, stop re-kicking a pane
-      whose own last output declares completion, and instead route it to the completion/redispatch check. **Done when**:
-      a pane emitting a completion declaration is not re-kicked on the next liveness tick.
+- [x] ✅ **DONE 2026-07-29 — `agent-orchestrator` (uncommitted at investigation time, shipping same session).**
+      Root-cause investigation found TWO distinct, real gaps (not one) feeding the observed churn, both fixed: 1.
+      **`server/routes/slots_worker.py` `_done_one_off`**: a one-shot worker that DID correctly call
+      `POST /api/slots/{id}/done` had its `last_msg` set to a string that did NOT start with `"idle:"` — `health.py`'s
+      existing "correctly-idle-with-explanation" carve-out (added for a near-identical prior incident,
+      `ao_dispatch_health_2026_07_26`) only protects a task-less idle slot from being flipped back to `"stale"`
+      (re-entering the kickable pool) when `last_msg.startswith("idle:")`. Fixed: the message now reads
+      `f"idle: {kind} complete (lifecycle-complete)"`, closing the gap so a correctly-`/done`'d slot can no longer
+      silently lose its protection and get re-kicked. 2. **`server/worker_liveness/__init__.py`**: the observed
+      incident's root cause was actually the OTHER half — `/done` was likely never called at all (the agent typed a chat
+      reply instead), and `current_task` stays `None` for a typed one-shot worker's ENTIRE life (not just
+      post-completion), so the kicker's only existing carve-out (`status=="idle" and current_task is None`) can never
+      fire without a successful `/done` call — the slot stays permanently kickable. Rather than trusting free-form pane
+      text as ground truth (a wrong or confused self-report must never silently terminate real work), added
+      `_SELF_DECLARED_COMPLETE_RE` pattern detection on a FROZEN pane's pending input — when it matches ("stop nudging",
+      "task is complete", etc.), the kick still fires (status/task state untouched) but the nudge TEXT is swapped for a
+      corrective reminder pointing the worker at the actual `/done` contract (`{slot_id}` and both one-off/task-worker
+      call shapes inlined), instead of the generic "— proceed now" that a worker who already believes it's done cannot
+      act on. Logged as `self_declared_complete: true/false` on the existing kick activity event for observability.
+      **Done-when evidence**: 4 new tests (`tests/test_worker_liveness.py`:
+      `test_frozen_self_declared_complete_gets_corrective_nudge`,
+      `test_frozen_without_completion_phrase_gets_default_nudge`, `test_text_override_replaces_default_frozen_nudge`,
+      `test_no_override_keeps_default_frozen_nudge`; plus `tests/test_done_one_off.py`'s existing archive test extended
+      to assert `last_msg.startswith("idle:")`), all passing alongside the full existing 49-test suite (4 pre-existing
+      exact-call assertions updated for the new `text_override` kwarg, behavior unchanged for every case that isn't the
+      new one). `quality-gates.sh` green before ship.
+- [ ] [REVIEW] P3. **Not fixed this pass, flagged as a real residual risk found during investigation**: if a stuck
+      one-shot slot crosses `kick_escalation_threshold` (default 3 consecutive non-recovered kicks — including a
+      corrective one, per this fix), `_maybe_auto_respawn_stuck_slot`/`_respawn.py` has zero lifecycle/one-shot
+      awareness and will force kill+respawn it — for an already-one-shot-complete slot this could spin up a DUPLICATE
+      worker for a task that's already done. Not observed in the original incident (kicks self-healed before reaching
+      escalation) and the two fixes above should make that less likely (the corrective nudge converges faster), but it's
+      a real gap, not a hypothetical — worth its own scoped fix if it's ever observed live.
 
 ## Triage / charter note
 

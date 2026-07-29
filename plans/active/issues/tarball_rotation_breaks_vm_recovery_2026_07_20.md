@@ -177,6 +177,10 @@ until the fix lands — storage cost is negligible against a silently bricked fl
 
 ## Todos
 
-- [ ] [OPERATOR] P0. **Decide the tarball pin-source fix (Option A/B/C)** — the fix is not shipped; choose between an
-      additive UTL change (A), a launcher-written durable pin registry (B), or both (C) before the retention sweep can
-      safely protect in-use pins.
+- [ ] [CODE] P0. **RULED 2026-07-29 (operator direct answer) — Option C, both A and B.** (A) Add `metadata` to the
+      `aggregated_list_instances` result dict in `gcp_compute.py:172-179` (plus the abstraction docstring) — purely
+      additive, UTL tree is clean, covers already-running VMs on day one. (B) Add `lc_write_tarball_pin_record` to
+      `lib/launcher_common.sh`, call it from all five pinning launchers, write `vm-logs/{vm}/TARBALL_PINS.json` at
+      launch — covers the deleted/preempted window A alone can't. Union both sources for the retention sweep; remaining
+      requirements unchanged (fail-closed on lister/registry error, atomic pair semantics, a real re-pin actuator, the
+      ambient-env gate observable, non-vacuous tests). (repos: unified-trading-library, deployment-service)

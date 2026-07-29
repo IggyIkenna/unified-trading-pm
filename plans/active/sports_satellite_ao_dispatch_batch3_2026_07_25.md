@@ -136,7 +136,7 @@ drift_direction: advance-code
       — `first_success` is 0/2504); observed p95=673s < assumed 1800s, so per the aggregator's fail-safe the constant is
       retained unchanged (CONFIRM, not a re-pin). The other 4 sources read n=0 (UNDER-SAMPLED), each for a distinct root
       cause now diagnosed and documented (no live trigger for SFI; a confirmed scheduler bug for Understat's
-      `stats_delayed` trigger — filed `issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`, P0;
+      `stats_delayed` trigger — filed `archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`, P0;
       FootyStats/Open-Meteo never instrumented in `ENTITY_TO_OBSERVATION_TARGET`). All 5 constants in
       `source_data_latency.py` now carry per-source empirical-review docstrings citing sample counts + root causes
       (unified-api-contracts@37611070); no numeric value changed this cycle — that is the correct, evidence-based
@@ -400,8 +400,8 @@ dedicated pass.
   fixture-visibility cutoff (`sports_trigger_state.py:44-176`) closing long before a 24h-offset trigger becomes due.
   Since that same trigger dispatches the REAL Understat/FootyStats XG capture (not just the latency proxy), this is a
   potential live data-completeness gap beyond this todo's scope — filed as a P0 issue doc
-  (`issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) with two follow-up todos (confirm whether real
-  XG/derived-features capture is also dead; design+ship the scheduler fix) rather than attempting the fix inline
+  (`archive/issues/sports_post_match_trigger_24h_lookback_bug_2026_07_27.md`) with two follow-up todos (confirm whether
+  real XG/derived-features capture is also dead; design+ship the scheduler fix) rather than attempting the fix inline
   (different repo focus/testing surface than a constants re-pin). Updated `source_data_latency.py` with per-source
   empirical-review docstrings (no numeric value changed — api_football's ceiling p95 floors at the existing constant per
   the aggregator's own fail-safe; the other 4 remain UNDER-SAMPLED). Deliberately did NOT flip the source doc's Step-2

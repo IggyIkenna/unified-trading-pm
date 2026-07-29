@@ -429,3 +429,22 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   handing the same todo to a second slot. Filed as
   `plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`. Still running — see this task's
   next Progress Log entry for the outcome.
+- 2026-07-29 (slot 15, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-017`): slot-8's
+  in-flight run from the prior entry never wrote a closing entry either (same class of session-death-without-report as
+  slot-7's). Found its ephemeral report file plus 3 OTHER stranded checkpoints nobody had reconciled — slots 6, 7, 8
+  (both its original + its merged file), and 13 all had `prediction_trades_migration_report.jsonl` files sitting under
+  `/home/ubuntu/.claude-configs/orch-slot-*/cc-tmpdir/**/scratchpad/`. Merged all 5 by day (dedup, preferring the entry
+  with the higher `canonical_enriched` count per the same recipe slot-8 used) — **157/348 dates, 0 anomalies, 0 errors,
+  71,370 canonical objects / 9,244,580 rows enriched, 0 legacy deletes yet**. This is real, previously-undocumented
+  progress that would otherwise have been silently lost the next time a scratchpad got cleaned up — confirms the
+  concurrent-dispatch issue doc's "silent under-reporting" risk is not hypothetical. Resumed `--apply` from this merged
+  checkpoint via the harness's tracked `run_in_background` (not `nohup`) with disciplined `/progress` heartbeats armed.
+  **Hit a NEW, different blocker on the very first day processed**: `ManifestConsolidatorStaleError` —
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` is PAUSED (verified via `gcloud scheduler jobs list`),
+  owned by a DIFFERENT in-flight plan (`mtds_available_at_cross_asset_backfill_2026_07_13.md`, paused
+  2026-07-29T01:06:53Z as part of its own snapshot→apply→resume protocol; its Apply/Resume todos `-004`/`-005` are still
+  queued). Did NOT touch that plan's cron (out of scope, would break its protocol) — instead armed a bounded (60 min)
+  background poller that watches the cron's scheduler state and auto-retries the enrichment run the moment it flips back
+  to `ENABLED`. Filed `BLK-c6fa4f95` so the operator/main agent can optionally bump the other plan's priority if this
+  drags. Checkpoint file (merged, 157/348) now lives at this slot's scratchpad — see next entry for the outcome once the
+  cron resumes and the run completes or re-blocks.

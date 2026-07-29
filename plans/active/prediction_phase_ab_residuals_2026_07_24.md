@@ -202,15 +202,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                          see its own Progress Log.
+                                                                                                                                                                              `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                              **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                              `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                              2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                              either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                              launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                              operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                              availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                              see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -327,8 +327,8 @@ source: >-
       where unresolved; the match-rate summary line logged per (league, day). (repos: market-tick-data-service,
       instruments-service)
 - [ ] [DATA] P1. **RULED 2026-07-28 — apply the standing canonicalization precedent by default; escalate only a genuine
-      residual.** This was previously `[DECISION] P1 BLOCKED-OPERATOR-DECISION` pending a fresh enumeration of the A0
-      ambiguous set. Ruling (general theme — canonicalization work should be done properly, not left as an open-ended
+      residual.** This was previously `[DECISION] P1`, gated on an operator decision, pending a fresh enumeration of the
+      A0 ambiguous set. Ruling (general theme — canonicalization work should be done properly, not left as an open-ended
       standing gate): (1) enumerate the FULL A0-ambiguous set live (this is itself a bounded, checkable task — the
       enumeration script already exists, `enumerate_prediction_dimensions.py`), listing each value's candidate canonical
       readings; (2) resolve each one by applying the SAME precedent this exact migration already established for
@@ -340,7 +340,7 @@ source: >-
       precedent to break the tie — not merely "not obviously spelled one way" — escalate that SPECIFIC residual value**
       (not the whole todo) as a narrow, options+recommendation operator question, mirroring the format already used
       elsewhere in this corpus (see `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s per-item
-      BLOCKED-OPERATOR-DECISION bullets for the pattern). Done when: the full ambiguous set is enumerated with a
+      operator-decision-gate bullets for the pattern). Done when: the full ambiguous set is enumerated with a
       disposition (resolved-by-precedent or escalated-as-residual) recorded per value in this doc's Progress Log.
 - [ ] [DATA] P0. **Re-verify + close the `instrument_type` casing/canonicalisation gap to literal 100% (operator,
       2026-07-24) — the historical numbers in this doc DISAGREE and need reconciling, not just re-citing.** The tick-18

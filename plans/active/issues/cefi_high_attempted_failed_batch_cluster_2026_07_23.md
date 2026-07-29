@@ -443,7 +443,7 @@ is expected re-fire behavior for a genuinely-still-bad, unremediated condition -
       This closes the determinable half of the original todo (can an on-call reader tell static-backlog from
       fresh-failure at a glance) — split into its own checkbox since it is a normal shippable-unit fix, distinct from
       the judgment call below.
-- [ ] [BACKEND] P2. **RULED 2026-07-28 (was `[OPERATOR]`/`BLOCKED-OPERATOR-DECISION`, retagged 2026-07-28 slot-10 → now
+- [ ] [BACKEND] P2. **RULED 2026-07-28 (previously gated on an operator decision, retagged 2026-07-28 slot-10 → now
       retagged again with a ruling applied) — stop the 30-min CRITICAL re-page once a cell is labeled "STATIC BACKLOG";
       downgrade to a lower-severity periodic reminder, do NOT go fully silent.** Ruling + reasoning: none of the
       operator's 8 general-theme bullets (backfill/migration completion, full-functionality-no-shortcuts, cost,

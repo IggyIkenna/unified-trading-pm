@@ -85,7 +85,9 @@ applicable, correcting haircuts, and confirming/dropping the USDC row depending 
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Confirm which Aster product (`fapi.asterdex.com`) our REST integration actually trades against —
-      general "Aster Perps" (multi-chain) vs "AstherusEX" (orderbook) vs a 3rd surface — so the `venue_collateral.py`
-      ASTER rows can be corrected against the RIGHT live table (see "What I found" above for both candidate tables).
-      (repo: unified-api-contracts, registry verification only — no code change until this is resolved).
+- [ ] [VERIFY] P2. **Retagged 2026-07-29 (operator: not sure, needs live verification)** — hit the live
+      `fapi.asterdex.com` endpoints (`/fapi/v1/fundingRate`, `/fapi/v1/depth`, etc.) and compare the response
+      shape/fields against both candidate tables in "What I found" above to determine which Aster product this actually
+      is — general "Aster Perps" (multi-chain) vs "AstherusEX" (orderbook) vs a 3rd surface. Once determined, correct
+      the `venue_collateral.py` ASTER rows against the right live table. (repo: unified-api-contracts, registry
+      verification only — no code change until the product is confirmed).

@@ -148,7 +148,7 @@ drift_direction: advance-code
       and zero code/GCS/manifest mutations occurred.
 - [ ] [DATA] P2. **Blank-`data_type` cefi manifest rows — backfill the resolved-venue majority, reclassify the
       bare-venue residual.** **RULED 2026-07-28 (operator gate-cleanup pass)** — resolves the cross-tranche conflict
-      previously parked below as `BLOCKED-OPERATOR-DECISION`: no specific answer was on file, so the operator's general
+      previously parked below pending an operator decision: no specific answer was on file, so the operator's general
       design-choice theme was applied (full completions/backfills where determinable, no shortcuts; never fabricate a
       value when honest-absence/reclassify is the correct call). The apparent conflict between
       `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` (9,750 blank-`data_type`

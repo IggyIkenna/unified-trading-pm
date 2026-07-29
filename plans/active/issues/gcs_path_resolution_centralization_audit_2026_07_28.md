@@ -35,7 +35,7 @@ related:
     /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -554,9 +554,40 @@ going forward. Still open, tracked as a todo below.
       regression test proving a real discovery list is non-empty for a pipeline_mode-partitioned date (fail pre-fix,
       pass post-fix, matching today's established pattern). (repo: features-service)
 
-- [ ] [DESIGN] P1. **Rule on the remaining MTDS finding** — `deribit_options_chain_handler.py::_write_shard` missing
-      `pipeline_mode=` insertion (path≠manifest divergence, data_type currently appears dormant). Needs a real judgment
-      call, not a guessable fix. (repo: market-tick-data-service)
+- [x] [DESIGN] P1. **Rule on the remaining MTDS finding** — RULED + FIXED + SHIPPED 2026-07-29,
+      `market-tick-data-service@d2270ac426f652f458f9a6fac14a9519d389fdba`. Verdict: **same stale-bug pattern as
+      KALSHI_PERP/POLYMARKET_PERP**, not a genuine carve-out. `_write_shard` called UAC `build_cefi_partition_path(...)`
+      and used the result directly for the GCS read/write with no post-hoc `pipeline_mode=` insertion, while the
+      manifest record (`recorder.record_captured`/`record_zero_rows`/`record_failed`) already carried
+      `pipeline_mode=PipelineMode.LIVE_DERIBIT` — a genuine path≠manifest divergence, structurally identical to the
+      Kalshi finding, just not yet independently verified. History check found this is actually a REGRESSION: an earlier
+      fix (`deribit_live_options_chain_path_noncanonical_2026_07_21.md` todo 2, `mtds@ec0df878`, 2026-07-26) correctly
+      rewrote the path from a totally-broken THIRD shape to the v6 canonical chain-bundle shape, but in doing so DROPPED
+      the (mis-positioned) legacy `pipeline_mode=` segment entirely instead of re-inserting a correctly-positioned one —
+      so the path has been missing `pipeline_mode=` since that rewrite, not from day one. **Confirmed genuinely
+      dormant** (not merely "currently appears dormant"): (a) GCS-verified zero objects at either shape across 9 sampled
+      days (2026-07-20 through 2026-07-28) in
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=.../`; (b) zero
+      `deribit-opts-fwd-*` (the handler's own launcher VM prefix) or `cefi-fwd-daily-cron-*` (the cron host meant to
+      fire it daily at 09:15 UTC) VM instances exist now or in `gs://deployment-scripts-central-element-323112/vm-logs/`
+      ever; (c) `plans/active/infra_capture_and_devops_leftovers_2026_07_06.md`'s own 2026-07-07 entry documents the
+      cron wiring shipped but its required follow-on ("re-launch the existing `cefi-fwd-daily-cron-*` VM ... Follow-on
+      (operator action, NOT this task)") was never executed — the crontab that would fire this operation has never
+      actually been installed on a live host. So `--operation deribit-options-chain` has never fired in prod, at any
+      shape, ever. **Fix** (mirrors `book_microstructure_handler.py`'s pattern, the closest sibling): `_write_shard` now
+      takes a required `pipeline_mode: PipelineMode` param, `.replace()`-inserts it directly after `day={D}/` (same
+      position as every other CeFi writer — `symbol_rules.py`, `websocket_runner.py`, `book_microstructure_handler.py`),
+      and calls `enforce_structural_and_observe_id_form(require_pipeline_mode=True, ...)` as a write-time canonicality
+      guard (this file had none before). The 3 callers (`_collect_currency`/`_collect_expiry_shard`) already pass
+      `PipelineMode.LIVE_DERIBIT` to the manifest calls unchanged — `_write_shard`'s one call site now passes the SAME
+      enum value, so path and manifest are guaranteed identical by construction. Regression tests updated/added in
+      `tests/unit/test_deribit_options_chain_handler.py`: flipped the 3 pre-existing `_write_shard` unit tests (which
+      had asserted `pipeline_mode=live_deribit` NOT in path — the exact stale assumption this fix corrects) to assert it
+      IS present in the correct position, plus a new end-to-end assertion in
+      `test_collect_expiry_shard_records_options_chain_instrument_type` proving the real call chain
+      (`_collect_expiry_shard` → `_write_shard`) threads the pipeline_mode through, not just the isolated unit. Fixing
+      this now (before the first real fire, once the operator re-launches the cron host) avoids a repeat of the Kalshi
+      incident (~5 weeks of wrong-shape prod objects before being caught). (repo: market-tick-data-service)
 
 - [x] [SCRIPT] P0. **Fix `_perp_funding_kalshi_polymarket.py`'s missing `pipeline_mode=` insertion** — RULED 2026-07-28
       by round 5, FIXED + SHIPPED 2026-07-29, `market-tick-data-service@52e8f256e6a314b38b3baeeaced919b040a985aa`.
@@ -606,30 +637,99 @@ going forward. Still open, tracked as a todo below.
       continuation doc, created once this parent doc reached 586 lines) rather than growing this doc past the plan line
       cap. Track rounds 4-5 there, not here.
 
-- [ ] [DESIGN] P1. **Design + build genuine centralization** — the real fix the operator is asking for, beyond
-      individual bug patches: a single canonical "resolve the read/write path for dataset X given these partition keys,
-      INCLUDING the correct pipeline_mode" function (or confirm `build_path()` + a completed/corrected registry already
-      IS this, once the P0 registry fix lands, and the remaining work is migrating callers onto it rather than building
-      something new). Cover explicitly: batch, paper, and live code paths for every asset group, both read and write.
-      This is the todo that actually closes the recurring-bug-class problem — everything else in this doc is finding and
-      patching individual instances of a pattern this todo is meant to make structurally impossible going forward.
-      (repo: unified-trading-library, and every consumer once the mechanism is chosen)
+## Centralization design (the operator's capstone ask) — RULED 2026-07-29
+
+**The mechanism already exists in two layers — the bug class was never "no centralized function exists," it was (a)
+callers bypassing it and (b) one structural footgun inside the mechanism itself. No new function needs building; the
+remaining work is closing the footgun + finishing the migration.**
+
+Evidence from all 5 rounds: every single "confirmed-safe" pattern found — dozens of them, across CEFI/DEFI/TRADFI/
+SPORTS/PREDICTION, batch/paper/live, read AND write — funneled through exactly one of two existing layers:
+
+1. **UTL's `PATH_REGISTRY` + `build_path()`/`build_bucket()`/`build_full_uri()`**
+   (`unified-trading-library/unified_trading_library/config_interface/paths/registry.py`) — the dataset-name-keyed
+   generic layer (`raw_tick_data`, `processed_candles`, `instruments`, `onchain_features`, `delta_one_features`, …). Now
+   that the P0 registry fix landed (`raw_tick_data`'s stale template), every entry actually consumed live is confirmed
+   correct across all 5 asset groups.
+2. **UAC's asset-group-specific partition-path builders** (`build_cefi_partition_path()`/`build_defi_partition_path()`/
+   `build_tradfi_partition_path()`/`candidate_parquet_paths()`,
+   `unified-api-contracts/unified_api_contracts/canonical/`) — the write-path-specific layer, paired with
+   `execution-service`'s `canonical_paths.py::build_candidate_raw_tick_paths()` wrapper for the
+   canonical-first/legacy-fallback READ side. This is what every confirmed-safe writer (MTDS's
+   `symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
+   `book_microstructure_handler.py`) and reader (execution-service's `data/loader.py::UCSDataLoader`, features-service's
+   `gcs_reader.py`/`mtds_canonical_reader.py`/`raw_data_loader.py`, MDPS's `canonical_writer_shaping.py`) ultimately
+   builds on.
+
+**The structural footgun**: layer 2's CeFi/TradFi builders
+(`build_cefi_partition_path()`/`build_tradfi_partition_path()`) do NOT accept `pipeline_mode` as a parameter — by
+design, since UAC's own partition-path module predates the `pipeline_mode=` hive-segment convention. Every correct
+writer compensates with a **manual, easy-to-forget post-hoc `.replace(f"day={D}/", f"day={D}/pipeline_mode={pm}/", 1)`
+insertion** immediately after calling the builder. This is NOT a documented contract enforced by the type system or a
+runtime check at the builder level — it's a convention every new writer has to independently remember and correctly
+implement. **This is exactly why the same bug (skipping the insertion) recurred 3 INDEPENDENT times this audit found and
+fixed** (KALSHI_PERP/POLYMARKET_PERP in `_perp_funding_kalshi_polymarket.py`, Deribit in
+`deribit_options_chain_handler.py`, plus the original `_check_existing_outputs` bug that started this whole audit) — not
+random bad luck, a structural gap in the mechanism itself.
+
+**The actual design fix** (scoped, bounded, SCRIPT-eligible — not a fresh design question): make the `pipeline_mode`
+insertion impossible to skip, by EITHER (a) adding `pipeline_mode: str` as a required parameter directly to
+`build_cefi_partition_path()`/`build_tradfi_partition_path()` in UAC so the builder inserts it itself (mirrors how
+`build_defi_partition_path()` already requires it), or (b) providing one shared MTDS-side wrapper
+(`write_cefi_shard(...)`-style) that does builder-call + insertion + the write-time `canonical_path_violations()`/
+`enforce_structural_and_observe_id_form()` guard in a single call, and migrating every CeFi/TradFi writer onto it so a
+new writer literally cannot ship without going through all three steps. Option (a) is the more durable fix (closes the
+gap at the source for every current AND future caller); option (b) is faster but requires everyone to "remember" to call
+the wrapper.
+
+**Read side is already closed**: `build_candidate_raw_tick_paths()` (execution-service) and the equivalent
+canonical-first/legacy-fallback probing pattern (features-service's various readers, MDPS's
+`_candidate_pipeline_mode_values()`-driven scanner) already make omitting `pipeline_mode=` structurally self-correcting
+on reads — a caller that doesn't know the exact `pipeline_mode` still finds the right object via the candidate-list
+probe. The footgun is write-side only.
+
+**Remaining work is migration, not invention**: the ~16 P1/P2 SCRIPT todos already logged across this doc and the
+sports_prediction continuation doc ARE the migration work — every confirmed bug found this audit is a caller that needs
+to move onto (or be brought into compliance with) one of the two existing layers. No new todo needed here beyond the one
+below for the footgun fix itself.
+
+- [x] [DESIGN] P1. **Design + build genuine centralization** — RULED 2026-07-29 (see the section directly above for the
+      full evidence-based writeup): the mechanism already exists (UTL `PATH_REGISTRY`/`build_path()` for dataset-generic
+      paths, UAC's per-asset-group partition builders + execution-service's `build_candidate_raw_tick_paths()` for the
+      write/read-specific layer) — confirmed by every single one of the dozens of "confirmed-safe" patterns found across
+      all 5 rounds. The recurring bug class was never "no centralized function," it was (a) callers bypassing both
+      layers (the ~16 already-logged SCRIPT fixes) and (b) one structural footgun:
+      `build_cefi_partition_path()`/`build_tradfi_partition_path()` don't accept `pipeline_mode` as a parameter, forcing
+      every writer to manually `.replace()`-insert it post-hoc — the exact gap that let the SAME bug recur 3 independent
+      times (Kalshi, Deribit, the original `_check_existing_outputs` bug) this audit alone found and fixed. New
+      follow-up SCRIPT todo below closes that footgun at the source; everything else needed is already tracked. (repo:
+      unified-api-contracts, market-tick-data-service)
+
+- [ ] [SCRIPT] P1. **Close the CeFi/TradFi `pipeline_mode` write-side footgun** — add `pipeline_mode: str` as a required
+      parameter to UAC's `build_cefi_partition_path()`/`build_tradfi_partition_path()`
+      (`unified-api-contracts/unified_api_contracts/canonical/partition_paths.py`), mirroring
+      `build_defi_partition_path()`'s existing contract, so the builder inserts the segment itself instead of every
+      caller needing to remember a manual post-hoc `.replace()`. Migrate MTDS's 3 confirmed call sites
+      (`symbol_rules.py::_build_partition_path_for_asset_group`, `live/websocket_runner.py::live_tick_blob_path`,
+      `book_microstructure_handler.py`, plus the now-fixed `_perp_funding_kalshi_polymarket.py`/
+      `deribit_options_chain_handler.py`) onto the new required-param contract, deleting the now-redundant `.replace()`
+      calls. This is the todo that makes the "insert pipeline_mode after `.build_*_partition_path()`" bug class
+      structurally impossible going forward, closing the recurring-bug-class problem the whole audit was about. (repo:
+      unified-api-contracts, market-tick-data-service)
 
 - [x] [SCRIPT] P1. **Round 1 (CEFI-scoped) 4-agent audit** — DONE 2026-07-28, findings documented above.
 
 ## Deferred work after 2026-07-29
 
-Both confirmed-live-firing bugs found across all 5 rounds (execution-service's DeFi loader, MTDS's KALSHI_PERP writer)
-are fixed and shipped — the operator's directive is functionally satisfied on the "find and fix what's actively broken"
-axis. What remains is real work, not blocked on anyone:
+Every confirmed-live-firing bug found across all 5 rounds (execution-service's DeFi loader, MTDS's KALSHI_PERP writer,
+MTDS's Deribit writer) is fixed and shipped, and the centralization design question is RULED (see the section above) —
+**zero open `[DESIGN]` judgment calls remain in the whole audit.** What's left is entirely bounded, independent SCRIPT
+execution work, not blocked on anyone:
 
-| Item                                                                                                               | State    | Blocked on                                                                                                                                                                                                                          |
-| ------------------------------------------------------------------------------------------------------------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ~16 P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other                                                                                                                                                                                     |
-| Deribit `_write_shard` missing `pipeline_mode=` ruling                                                             | Not done | nobody — the Kalshi/Polymarket sibling question (same doc, same day) was resolved by direct investigation this session; the same approach applies here, just not yet run                                                            |
-| Genuine centralization design (the operator's original capstone ask)                                               | Not done | nobody, but it's real design work — needs someone to actually read every confirmed-safe pattern found across 5 rounds and decide whether `build_path()` + the now-fixed registry already IS the answer, or something more is needed |
+| Item                                                                                                                     | State    | Blocked on                                                                                         |
+| ------------------------------------------------------------------------------------------------------------------------ | -------- | -------------------------------------------------------------------------------------------------- |
+| Close the CeFi/TradFi `pipeline_mode` write-side footgun (new todo above)                                                | Not done | nobody — the highest-leverage remaining item, closes the recurring-bug-class problem at the source |
+| ~16 other P1/P2 SCRIPT fixes (dormant bugs, dead-code cleanup) — see this doc's + the sports_prediction doc's open todos | Not done | nobody — pick up any, independent of each other                                                    |
 
-**Recommended next item**: the Deribit ruling — it's the same shape of question as the Kalshi one just resolved (a
-`[DESIGN]` judgment call that turned out to be answerable by direct live-GCS investigation rather than requiring an
-actual human decision), and closing it would leave the centralization design as the only remaining open judgment call in
-the whole audit.
+**Recommended next item**: the write-side footgun fix — it's the one todo that actually stops this bug class from
+recurring a 4th time, versus the other ~16 items which are each independent point-fixes for already-found instances.

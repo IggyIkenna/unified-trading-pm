@@ -123,21 +123,22 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (editable path source, both commits ancestors of LDR HEAD, no floor bump needed) and concluded no action needed;
       slot 8 additionally found the **production Docker digest pin** was stale (missed by that check) and shipped the
       fix — `market-tick-data-service@4d84268b`. Full evidence in Progress Log below.
-- [ ] [DATA] P0. **Retagged 2026-07-28 (was `[OPERATOR]` BLOCKED-OPERATOR-DECISION)** — pause the prediction + tradfi
+- [x] ✅ [DATA] P0. **Retagged 2026-07-28 (previously gated on an operator decision)** — pause the prediction + tradfi
       consolidator crons for the backfill window below (per the sports Finding 1 cron-collision incident, still respect
       the dry-run/snapshot/pause/guardrail-verify/resume protocol). Operator ruling 2026-07-28 (CLAUDE.md Governance
       section: maintenance-window restarts/pauses of shared infra no longer need operator scheduling while
       pre-live-trading, brief downtime is acceptable) removes the "coordinate a window with the operator first" gate —
       dispatch directly: group prediction + tradfi's cron-pauses together (avoid the sports-precedent collision by
       pausing both explicitly and verifying each is actually paused, not by getting a human go-ahead), execute now, and
-      verify each cron resumes healthy afterward per the todos below. (repo: NA)
+      verify each cron resumes healthy afterward per the todos below. (repo: NA) — ✅ 2026-07-29 (data_engineering
+      slot-10): both paused together, see Progress Log for full evidence.
 - [x] [DATA] P1. Dry-run `rebuild_prediction_manifest.py --dry-run` (no `--force` flag exists — see correction above)
       against `market-data-tick-pred-prd-central-element-323112`; spot-check the previewed `available_at_envelope`
       values against a handful of known-good rows before applying anything live. (repo: market-tick-data-service) — ✅
       2026-07-14 (slot 9): see Progress Log for full evidence (correction: the script has no `--force` flag — ran
       `--dry-run` instead, which is the actual no-writes preview mode).
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling as the P0 todo above)** —
-      Snapshot the prediction canonical manifest index (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and
+- [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling as the P0 todo above)**
+      — Snapshot the prediction canonical manifest index (`_index/snapshots/pre_available_at_backfill_<ts>.parquet`) and
       pause its consolidator cron. (repo: market-tick-data-service) — PARTIAL 2026-07-14 (slot 4): snapshot half DONE +
       verified —
       `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260714T000100Z.parquet`
@@ -146,13 +147,19 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       Cron-pause half was deliberately NOT done at the time (slot 5 `BLK-f3cdf442`, slot 9) because it was gated on the
       P0 maintenance-window todo above — that gate is resolved 2026-07-28 (pre-live-trading maintenance windows no
       longer need operator scheduling); pause the cron directly now and flip this checkbox once both halves are verified
-      complete.
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Apply
+      complete. **COMPLETE 2026-07-29 (data_engineering slot-10)**: cron paused (verified `PAUSED` state); the 07-14
+      snapshot was 15 days stale by the time the pause actually happened (canonical grew 47,908,172 → 83,839,684 bytes
+      in the interim, plus schema/content drift from ongoing captures) so it is NOT a safe rollback point for a backfill
+      applied now — re-ran the existing snapshot script to take a FRESH one at the actual pause point:
+      `gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010653Z.parquet`
+      (83,839,684 bytes, byte-identical to the live index at snapshot time). Both halves now genuinely complete. See
+      Progress Log for full evidence.
+- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
       `rebuild_prediction_manifest.py` (full date range, omit `--dry-run` — no such flag as `--force`/`--no-dry-run`),
       force-consolidate, then re-run `available_at_fill_rate_audit_2026_07_13.py` (or its successor) to confirm fill
       rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is
       unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Resume the prediction
+- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the prediction
       consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. (repo:
       market-tick-data-service)
 - [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
@@ -250,8 +257,8 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `writer.record_captured_from_counts()`. Full `tests/unit/scripts/test_rebuild_tradfi_manifest_coverage.py` green
       (21/21, was 20). Shipped `market-tick-data-service@c8c01855` via quickmerge. No production writes made — code +
       tests only. (repo: market-tick-data-service)
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling as the P0 todo above)** —
-      Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo: market-tick-data-service) —
+- [x] ✅ [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling as the P0 todo above)**
+      — Snapshot the tradfi canonical manifest index and pause its consolidator cron. (repo: market-tick-data-service) —
       PARTIAL 2026-07-14 (data_engineering slot-2, task `mtds_available_at_cross_asset_backfill-007`): snapshot half
       DONE + verified, mirroring the prediction precedent's split (slot 4's "Snapshot (safe half only)" entry above) —
       shipped `scripts/mtds_available_at_backfill_snapshot_tradfi_2026_07_14.py` (`market-tick-data-service@8f131104`,
@@ -261,8 +268,16 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       `blob.reload()` read). Cron-pause half was deliberately NOT done at the time (`BLK-272f061b`/`1e6326c7`/
       `f3cdf442`/`aa40e2b6`/`b484ff7a`) because it was gated on the P0 maintenance-window todo above — that gate is
       resolved 2026-07-28 (pre-live-trading maintenance windows no longer need operator scheduling); pause the cron
-      directly now and flip this checkbox once both halves are verified complete.
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Apply
+      directly now and flip this checkbox once both halves are verified complete. **COMPLETE 2026-07-29
+      (data_engineering slot-10)**: cron paused (verified `PAUSED` state); the 07-14 snapshot was 15 days stale — the
+      canonical actually SHRANK in the interim (162,825,635 → 98,958,709 bytes, consistent with the 2026-07-20 surgical
+      `batch_massive`/phantom-row removal + the dead-bundled-branch code fix recorded above), so the old snapshot no
+      longer even matches current schema/content and would be an unsafe rollback point — re-ran the existing snapshot
+      script to take a FRESH one at the actual pause point:
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010709Z.parquet`
+      (98,958,709 bytes, byte-identical to the live index at snapshot time). Both halves now genuinely complete. See
+      Progress Log for full evidence.
+- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Apply
       `rebuild_tradfi_manifest.py` (full date range, omit `--dry-run` — no `--force`/`--no-dry-run` flag exists),
       force-consolidate, then verify fill rate + guardrail + row count via the audit script, same protocol as
       prediction. **Do not declare tradfi's backlog fully resolved from this alone** — confirm the resulting fill rate
@@ -271,7 +286,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       expect the post-apply fill rate to approach ~100% (not ~85%) since the bundled branch appears dead code — a rate
       near 85% instead would mean the dead-code theory is wrong and needs re-investigation before declaring success.
       (repo: market-tick-data-service, unified-trading-library)
-- [ ] [DATA] P1. **No longer BLOCKED-OPERATOR-DECISION (retagged 2026-07-28, same ruling)** — Resume the tradfi
+- [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
       consolidator cron; record evidence in the Progress Log. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
       (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
@@ -283,7 +298,7 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       (`DefiManifestRecorder` in `_defi_manifest.py`) that never threads `available_at` at all (blanket `""` for all of
       them, not a per-data_type formula gap). A handful of non-defi files living in the same directory (cefi/tradfi) use
       different, unrelated write paths.
-- [ ] [DATA] P2. **RULED 2026-07-28 — GO. Retagged from `[OPERATOR]` BLOCKED-OPERATOR-DECISION** (no specific operator
+- [ ] [DATA] P2. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate** (no specific operator
       answer was given for this go/no-go; applying the standing workspace theme instead: full backfills/migrations get
       done — as long as not superseded by newer work — and this one isn't; cost is a one-time manifest-only compute
       pass, nowhere near the pre-approved $100 threshold; "audit-and-decide" was the only gate, not a real blocker).
@@ -896,3 +911,70 @@ todo is still unchecked" were accurate at the time they were written and are lef
 predate this ruling. The separate `[OPERATOR] P2` defi design-decision gate (present the defi audit + scoped design
 option for a go/no-go) is UNAFFECTED — it is a design ruling, not a maintenance-window schedule, and stays gated. No
 cron paused, no backfill applied, as part of this pass — retag/dispatch-shape only.
+
+### 2026-07-29 — crons paused, fresh snapshots taken (data_engineering slot-10, task `mtds_available_at_cross_asset_backfill-002`)
+
+Dispatched to the P0 cron-pause todo (the retag from 2026-07-28 made it directly dispatchable). Fresh-pulled
+`market-tick-data-service` to `origin/live-defi-rollout` (clean FF, HEAD `f2f89fad`). Verified pre-state: both
+`uts-prod-manifest-consolidator-market-data-prediction-cron` and
+`uts-prod-manifest-consolidator-market-data-tradfi-cron` were `ENABLED`, both had a `_index/consolidator.lock` object
+updated <90s prior (i.e. mid-normal-cycle, not stuck — Cloud Scheduler pause only stops FUTURE triggers, it does not
+kill an in-flight execution, so this was not a blocker).
+
+**Paused both together** (per the todo's instruction to avoid the sports-precedent cron-collision by pausing both
+explicitly rather than sequencing them apart):
+
+```
+$ gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-prediction-cron --location asia-northeast1
+Job has been paused.
+$ gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-tradfi-cron --location asia-northeast1
+Job has been paused.
+```
+
+Verified both `PAUSED` via `gcloud scheduler jobs describe … --format="value(name,state)"` immediately after. Also
+confirmed no legacy flat variant of either market-data consolidator cron exists
+(`gcloud scheduler jobs list … --filter "name~consolidator"` shows only the 5 env-tiered
+`market-data-{cefi,defi,tradfi,sports,prediction}` crons, zero `-legacy` market-data crons) — nothing else needed
+pausing.
+
+**Correctness finding — the existing 07-14 snapshots were stale rollback points, not just "already done".** Both
+downstream snapshot+pause todos (prediction, tradfi) were left PARTIAL specifically because their cron-pause half was
+gated on this P0 todo; their snapshot half had been taken 2026-07-14, 15 days before this pause actually happened, with
+the crons live and writing the whole time. Re-checking rather than trusting the old byte counts:
+
+- Prediction canonical: 47,908,172 bytes (07-14 snapshot) → 83,839,684 bytes (live, just before this pause) — grew ~75%,
+  i.e. real content drift.
+- Tradfi canonical: 162,825,635 bytes (07-14 snapshot) → 98,958,709 bytes (live, just before this pause) — actually
+  SHRANK, consistent with the 2026-07-20 surgical `batch_massive`/phantom-row removal (recorded in the manifest
+  consolidator SSOT) and this plan's own dead-bundled-branch removal (`market-tick-data-service@c8c01855`) landing in
+  between.
+
+A 15-day-stale snapshot is not a safe restore point for a backfill applying now — using it as the declared rollback
+target would silently discard 15 days of legitimate production writes/corrections if a rollback were ever needed. Since
+the existing one-off snapshot scripts (`scripts/mtds_available_at_backfill_snapshot_{prediction,tradfi}_2026_07_14.py`)
+are additive/idempotent (single GCS download → copy-write to `_index/snapshots/` → byte-verify, no mutation of the live
+canonical, already QG-green and shipped) and their own `Delete-when:` marker says they're valid until this backfill has
+"applied + verified", re-ran both AS-IS (no code change) right after pausing, to snapshot at the actual pause point:
+
+```
+$ .venv/bin/python scripts/mtds_available_at_backfill_snapshot_prediction_2026_07_14.py
+Downloaded 83839684 bytes
+Snapshotted to gs://market-data-tick-pred-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010653Z.parquet
+Snapshot verified: 83839684 bytes match source.
+
+$ .venv/bin/python scripts/mtds_available_at_backfill_snapshot_tradfi_2026_07_14.py
+Downloaded 98958709 bytes
+Snapshotted to gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_available_at_backfill_20260729T010709Z.parquet
+Snapshot verified: 98958709 bytes match source.
+```
+
+Re-verified both crons still `PAUSED` after the snapshot runs (no auto-resume, no other agent touched them mid-touch).
+Flipped the P0 todo + both downstream snapshot+pause todos (prediction, tradfi) to `[x]` — their full scope (snapshot +
+pause, both halves) is now genuinely complete, using the FRESH 07-29 snapshots as the operative rollback point, not the
+stale 07-14 ones (both still retained in `_index/snapshots/` for history, just superseded as the active restore point).
+
+**What I did NOT do**: did not run either `rebuild_{prediction,tradfi}_manifest.py` apply, did not force-consolidate,
+did not resume either cron (that is explicitly the scope of the separate downstream apply/resume todos, still open
+below), did not touch defi (its own `[OPERATOR] P2` design gate is unaffected by this touch). No code shipped this touch
+— pure infra action (`gcloud scheduler jobs pause` ×2) + re-running an existing, already-shipped one-off script ×2 (no
+new commits to `market-tick-data-service`) + this plan-doc update (`docs(plans):` carve-out).

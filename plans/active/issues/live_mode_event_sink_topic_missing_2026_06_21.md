@@ -90,6 +90,8 @@ the UTL fix lands.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Pick the canonical lifecycle-event topic convention** — Option A (fix UTL `_sink_factory.py` to
-      publish to the existing shared `service-lifecycle-events` topic) vs Option B (add every service's own
-      `{service_name}-events` topic to terraform) is still undecided; no progress logged since filing.
+- [ ] [CODE] P2. **RULED 2026-07-29 (operator direct answer) — Option A.** Fix UTL `_sink_factory.py` to publish
+      lifecycle events to the existing shared `service-lifecycle-events` topic instead of `f"{service_name}-events"`.
+      One UTL change unblocks all services' live mode; no per-service terraform topics needed. Once landed, delete the
+      interim unmanaged `market-tick-data-service-events` gcloud topic (created before the convention was decided).
+      (repo: unified-trading-library)

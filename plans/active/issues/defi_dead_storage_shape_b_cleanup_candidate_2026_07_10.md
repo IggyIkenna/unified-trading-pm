@@ -248,7 +248,15 @@ entry's own pattern): `defi_shape_b_null_aware_reconcile.py` (initial 3,045-pair
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Decide: finish the v9 migration vs. delete the stale hive shape** — the SAFE-TO-DELETE audit for
-      the ~104K dead hive-shape `instrument_availability` objects this doc has always recommended was never actioned;
-      this doc stays open pending an explicit operator ruling on migration-completion vs. deletion (per the 2026-07-14
-      NO-GO stance, reaffirmed 2026-07-26).
+- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — delete, do not finish the migration.** The v9 migration
+      was never completed for this tree (hive stalled/froze at `day=2026-06-29`; the broader v9 effort was itself
+      trimmed to an entry-point index and archived 2026-07-26, with no active plan item to finish this specific tree).
+      The currently-live, actually-read shape (`flat`) already has equivalent-or-better coverage (2,368 days, still
+      advancing, vs hive's frozen 2,353) with confirmed ~0% real content divergence — the data already exists in the
+      canonical (actually-used) form. Execute the SAFE-TO-DELETE audit this doc has always recommended: (1) a final
+      corpus-scale confirmation pass is already done (2026-07-26 null-aware reconciliation, ~0% divergence), (2)
+      re-confirm zero real consumers read the hive shape (the reader-preference fix already ships flat-first), (3)
+      backup-first delete pass for the ~104K hive-shape `instrument_availability` objects
+      (`day=.../pipeline_mode=batch_instruments_service/asset_group=defi/venue=.../instruments.parquet`), dry-run then
+      real delete per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. (repo: instruments-service /
+      market-tick-data-service)

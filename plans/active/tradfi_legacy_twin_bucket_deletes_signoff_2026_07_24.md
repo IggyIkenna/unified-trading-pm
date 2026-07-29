@@ -95,8 +95,8 @@ restated here.
       `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 2nd todo (`status: active`, `assigned_vm: planning`) — still
       open there too as of this audit. Not reclassified independently; this checkbox stays open until that batch's todo
       lands and its finalize twin flips it here.
-- [ ] [DATA] P1. **legacy-twin bucket DELETES (defi / tradfi / pred). Retagged 2026-07-28 — no longer
-      BLOCKED-OPERATOR-DECISION**, per the operator ruling in the banner above
+- [ ] [DATA] P1. **legacy-twin bucket DELETES (defi / tradfi / pred). Retagged 2026-07-28 — no longer gated on an
+      operator decision**, per the operator ruling in the banner above
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a extended, 2026-07-28): hard-stop #2
       (legacy-object-delete-after-copy) is reversibility-qualifiable once Part 5's twin-coverage proof independently
       confirms 100% canonical-twin coverage (content-verified). After the tradfi apply + orphan-sweep E=0 + a

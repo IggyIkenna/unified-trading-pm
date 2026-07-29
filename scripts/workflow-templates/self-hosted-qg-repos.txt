@@ -43,6 +43,16 @@
 # from other concurrent load (co-resident AO agent slot-worker sessions + other self-hosted runner jobs). Reverted
 # to ubuntu-latest per the doc's own precedented per-repo fix (10 prior instances); re-adding needs either the host
 # load easing durably or a tighter admission cap, not just re-flipping this line.
+#
+# e2e-testing REVERTED AGAIN 2026-07-29 (cicd agent slot-8, escalation agt-ce0e18, ldr_qg_failure at 3ec5c1c0,
+# ldr-ci-monitor-detected): `QG slice (tests)` failed on a `pytest-timeout` (>60s) SIGALRM inside an in-memory,
+# fixture-only test (test_smoke_runner.py::TestGreenOnRunnableForEachAg::test_one_runnable_shard_per_ag_smokes_green
+# — no subprocess/IO, no code touching that file in the preceding 4 commits) that passes clean in 10.24s standalone
+# locally. Same signature as every other corroboration in fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md
+# — the reservation-mode governor prevents oversized ADMISSION from crashing the host, it does not stop an already-
+# admitted job's SIGALRM budget being blown by whole-host contention. Reverted to ubuntu-latest per the doc's
+# precedented per-repo fix; e2e-testing is NOT one of the operator's 6 explicitly-protected repos, so no ruling
+# conflict.
 agent-orchestrator
 unified-trading-pm
 strategy-service
@@ -60,7 +70,6 @@ execution-service
 batch-live-reconciliation-service
 alerting-service
 client-reporting-api
-e2e-testing
 ml-service
 deployment-api
 market-data-processing-service

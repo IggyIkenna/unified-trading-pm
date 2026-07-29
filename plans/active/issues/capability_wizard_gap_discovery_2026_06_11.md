@@ -457,10 +457,32 @@ context; recommended owner strategy-service PBM):
 _Auto-emitted by `scripts/openapi/generate_capability_unlock_report.py --emit-todos`._ _The N blocked edges closest to
 available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. Dedup-idempotent on re-run._
 
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_MEV_SANDWICH --has_leg:legs--> ARBITRAGE_MEV_SANDWICH** (distance 1, status
-      not_registered) — missing: needs-leg-spec. Why blocked: ARBITRAGE_MEV_SANDWICH has no leg structure in
-      ARCHETYPE_LEG_STRUCTURES yet — structural per-leg restrictions not modelled (F22 leg-truth gap). (auto-emitted by
-      generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **INVESTIGATED 2026-07-29 (slot-3) — genuinely not unlockable via a leg-spec write; correctly
+      stays `not_registered`.** **unlock ARBITRAGE_MEV_SANDWICH --has_leg:legs--> ARBITRAGE_MEV_SANDWICH** (distance 1,
+      status not_registered) — missing: needs-leg-spec. Why blocked: ARBITRAGE_MEV_SANDWICH has no leg structure in
+      ARCHETYPE_LEG_STRUCTURES yet — structural per-leg restrictions not modelled (F22 leg-truth gap). Confirmed via
+      direct code read: `ARBITRAGE_MEV_SANDWICH` is absent from `ARCHETYPE_ENGINE_REGISTRY`
+      (`strategy-service/strategy_service/engine/strategies/v2/factory.py`) — there is no `BaseArchetypeEngineV2` for
+      it. Its only code, `sandwich_theoretical.py`, is an explicitly-documented backtest-only profit tracer ("This
+      module computes the theoretical-upper-bound profit... it is _not_ an executable engine"; sandwich requires mempool
+      pending-tx visibility, and the Bloxroute mempool feed was removed) — it emits `SandwichTheoreticalProfit`
+      dataclasses, never an `AtomicLeg`/instruction structure a leg spec could cite. `archetype_leg_spec_seeds.py`'s own
+      LOGIC FREEZE rule ("every leg is a citation of the shipped engine structure... NEVER invented") therefore forbids
+      writing a real leg spec here — there is no engine structure to cite, so any leg spec would be invented, not
+      transcribed. **This is why `_not_registered_structure()` seeded it explicitly** (not an oversight). Also confirmed
+      the `missing_registry` gap-type labeling (vs `logical_dead_end`) is this workspace's deliberate, already-tested
+      design, not a mislabel to fix:
+      `tests/unit/test_capability_verdict_matrix.py::test_not_registered_archetypes_are_explicit_blocks` pins "the
+      genuinely-underivable archetypes (no leg structure) → missing_registry" for this exact archetype —
+      `missing_registry` correctly signals "not derivable YET" (conditionally blocked pending upstream data) rather than
+      `logical_dead_end`'s "permanently, structurally impossible" (e.g. options on a sports venue), so reclassifying
+      would be a regression, not a fix. **The real unlock path**: the archived, `status: paused`
+      `/plans/archive/mempool_feed_integration_2026_06_01.plan.md` — reintroducing mempool data would let a real
+      sandwich engine (and thus a real, citable leg spec) get built; per this workspace's own removed-provider rule
+      (CLAUDE.md DeFi-execution section), Bloxroute is NOT to be reintegrated without explicit operator direction, so
+      that plan stays paused pending an operator call, not agent action. No code changed — writing a leg spec now would
+      violate LOGIC FREEZE; the `not_registered` structure + `missing_registry` gap type are both already correct.
+      (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cboe** (distance 1, status partial) —
       missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:

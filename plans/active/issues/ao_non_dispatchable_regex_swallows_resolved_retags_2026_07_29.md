@@ -117,9 +117,33 @@ past tense rather than deleting it outright.
 - [ ] [DOCS] P2. _*If (b) or (c) above is chosen, add the "never restate the literal BLOCKED-* token past-tense" rule to
       CLAUDE.md's existing resolve-and-retag hard rule_* (Governance + safety HARD RULES § Findings triage) so future
       retag passes don't reintroduce this.
+- [ ] [DATA] P1. **Spot-check the other 23 of the 24 mentions rephrased by `unified-trading-pm@6edd4486a`** for the same
+      false-positive class found in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1
+      (2026-07-29, this doc's own Progress Log): that commit rephrased a todo whose credential block was NOT actually
+      resolved — only a separate launch-decision ruling on the same todo was, and the text-pattern heuristic
+      ("RETAGGED/RULED/RESOLVED language in the same block") didn't distinguish the two gates. For each of the other 14
+      files `6edd4486a` touched (see its diff stat), re-verify the underlying fact the old `BLOCKED-*` marker described
+      (not just re-read the prose) is actually resolved — if any operator-decision ruling was conflated with a
+      still-open technical/credential/data block the same way, restore that item's marker the same way this one was
+      restored. (repo: unified-trading-pm)
 
 ## Progress Log
 
 - 2026-07-29: Filed. Verified via direct regex replication against the live `regen_backlog_from_plan.py` source (not
   assumed) — see Evidence. Corpus-wide count is a point-in-time measurement on a fast-moving branch; re-run before
   treating the 27/21 figures as current beyond this session.
+- 2026-07-29 (slot 9, data_engineering): **False-positive found in the first todo's already-executed rephrase pass**
+  (`unified-trading-pm@6edd4486a`). `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`'s item 1
+  checkbox was rephrased from `BLOCKED-CREDENTIALS` to "credential gate cleared 2026-07-28 (slot 6)" — but live
+  re-verification (fresh `gcloud secrets versions access` + direct `the-odds-api.com` curl, this session) confirmed the
+  underlying `odds-api-key` credential is still `DEACTIVATED_KEY`, unchanged since 2026-07-26, and the operator's
+  2026-07-28 ruling on that separate doc explicitly declines to fix it. The rephrase conflated two distinct gates on the
+  same todo: an operator's LAUNCH-DECISION ruling (genuinely resolved — "yes, do it") and a CREDENTIAL gate (never
+  resolved). Text-pattern matching on "RETAGGED/RULED/RESOLVED language in the same block" caught the decision-ruling
+  language but didn't verify the credential fact underneath it. Restored the marker on that file
+  (`unified-trading-pm@<pending>`, see that doc's own Progress Log for detail). **Implication for this doc's own P1 todo
+  #1** ("confirm each is genuinely resolved... before editing"): that check was evidently not applied live/fact-checked
+  for at least this 1 of the 24 originally-touched mentions — the other 23 in the 15 already-edited files should get the
+  same live-fact spot-check before being trusted as correctly rephrased, not just re-read for prose plausibility. Not
+  re-auditing the other 23 myself (outside this task's scope); flagging here so whoever owns this doc's remaining todos
+  knows the first pass already shipped had a proven-live gap.
