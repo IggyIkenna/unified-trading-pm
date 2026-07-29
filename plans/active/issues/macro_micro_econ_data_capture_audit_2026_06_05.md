@@ -34,7 +34,7 @@ locked_since: 2026-05-21
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-29
 ---
 
 # Macro + micro economic data capture — coverage audit (2026-06-05)
@@ -305,27 +305,55 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
       `market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/     fred_adapter.py`'s
       `FredAdapter` remains, nothing left to delete.
 
-- [ ] [DESIGN] P1. **Scope + build the actual FRED backfill invocation — no runnable entry point exists today, confirmed
-      2026-07-29.** `FredAdapter` is registered in `market_interface/factory.py`'s venue registry (29 `KEY_SERIES`,
-      writes via `write_tradfi_shard`) but is instantiated NOWHERE outside its own module + tests — not wired into
-      `get_venues_for_asset_groups("TRADFI")` (only `_VENUE_MAPPING.all_databento_venues` is added there), no CLI
-      handler, no seed-instrument list. This is architecturally DIFFERENT from the working Yahoo-Finance precedent
-      (FX/KRX/ICE/CBOE-treasury — see `adapters/_umi_yahoo.py::route_yahoo_tradfi`): Yahoo serves ALTERNATE data for
-      venues Databento already lists (FX/KRX/ICE are themselves members of `all_databento_venues`, and
-      `route_yahoo_tradfi` intercepts specific `data_types` for those venues before falling through to Databento). FRED
-      has no Databento-venue analog to piggyback on — it needs its OWN venue-list entry and either a
-      `route_fred_tradfi`-style dispatch function (mirroring `_umi_yahoo.py`'s shape) or a small dedicated driver
-      script, PLUS: (a) a decision on how the 29 `KEY_SERIES` map to synthetic `instrument_id`s (FRED series aren't
-      exchange-listed instruments), (b) a fix for the `data_type` mismatch already found (`market_data_categories.py`
-      declares FRED's type as `macro_result`, but the adapter itself writes `yield_curve`/`ohlcv_1d`), (c) an
-      `expected_coverage` registry entry (`registry/expected_coverage.py`'s `_TRADFI` dict has no FRED key yet — Phase 5
-      of this doc) — `coverage_starts.py` already has `"FRED": date(1962,1,2)` and Secret Manager already holds
-      `fred-api-key`, so credentials aren't the blocker. **Do this BEFORE running any backfill** — running against an
-      unwired adapter will not populate rows. Repo: market-tick-data-service, unified-api-contracts.
+- [x] ✅ [DESIGN] P1. **Scope + build the actual FRED backfill invocation — no runnable entry point exists today,
+      confirmed 2026-07-29.** DONE — `unified-api-contracts@0c0f6953` + `market-tick-data-service@407f69f1`.
+      `venue_mapping.all_databento_venues` + `VENUES_BY_ASSET_GROUP["tradfi"]` now include `"FRED"`; new
+      `market_tick_data_service/adapters/_umi_fred.py::route_fred_tradfi` (mirrors `_umi_yahoo.py`'s shape, no Databento
+      fallthrough — FRED has none) is wired into `fetch_tick_data_for_venue`'s dispatch chain ahead of the
+      Yahoo/Databento branches; `tick_data_handler.py`'s `_VENUE_FIXED_SOURCE_VENUES` gained `"FRED"` (else the
+      `--source databento` required-gate would raise on the first FRED-targeted run — same 2026-06-23 FX incident class,
+      pre-empted this time). (a) instrument_id: `derive_tradfi_row_instrument_id(venue="FRED",     instrument_type)` →
+      `build_instrument_id("FRED", BOND|INDEX, series_id)` — already correctly implemented by
+      `FredAdapter.write_canonical_shard`, just never invoked; reused as-is. (b) data_type mismatch: NOT a bug in the
+      adapter — `market_data_categories.py`'s `"macro_result"` declaration for FRED was simply wrong/stale;
+      `yield_curve`/`ohlcv_1d` is the real, already-correct wire contract (confirmed: features-service's
+      `mtds_fred_reader.py`, shipped 2026-07-27, already reads exactly this shape). Corrected
+      `VENUE_DATA_TYPE_CAPABILITIES["FRED"]` to declare it (this is the dict `get_expected_data_types_for_venue` reads
+      to build the live pre-flight `data_types` filter in `venue_fetch.py` — without the fix a real capture run would
+      only ever request `"macro_result"`, which the adapter never emits, and honest-empty every day). Added
+      `"yield_curve"`/`"ohlcv_1d"` to `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` (both were missing entirely, despite being
+      legal in MTDS's own local `tradfi_shared.TRADFI_DATA_TYPES` — `validate_data_type_for_venue(strict=True)` gates on
+      the UAC list, not the MTDS-local one). (c) expected_coverage: added `"FRED": ["yield_curve", "ohlcv_1d"]` to
+      `_TRADFI` in `expected_coverage.py`. Discovered + fixed 2 more registry gaps the full QG surfaced (not in the
+      original scoping): `venue_to_data_provider["FRED"]="fred"` and `VENUE_TO_ADAPTER_KEY["FRED"]=NO_ADAPTER_YET`
+      (sentineled, reasoned comment — FRED has no instruments-service URDI reference-data adapter yet, see the new P3
+      todo below) — both are hard parity gates (`test_venue_source_adapter_parity.py`, `test_venue_adapter_keys.py`)
+      that fail on ANY tradfi venue with no data-source/adapter-key entry. Updated 2 test-ratchet counts (tradfi
+      shard-enumeration 12→14 cells, `test_pipeline_e2e_tradfi_canonical.py` +
+      `test_pipeline_e2e_prediction_canonical.py`). **Verified end-to-end against the LIVE FRED API** (operator's Secret
+      Manager credential) for 2024-01-16: 27/29 series returned real observations with correct
+      venue/instrument_type/data_type/instrument_id shape (2 absent — ICSA weekly has no release that exact day, an
+      honest empty). **Finding for the next todo**: FRED does NOT strictly filter a monthly/quarterly series to the
+      exact requested day — querying ANY day within a given month/quarter (e.g. FEDFUNDS on 2024-01-02, -01-20, -01-31)
+      returns the SAME period-start-dated observation; a naive day-by-day backfill will therefore write that series'
+      identical value into every day-partition of the period (harmless/idempotent — `mtds_fred_reader.py`'s reader
+      already dedups by the observation's own `date` column — but worth knowing before sizing the backfill's write
+      volume).
 - [ ] [DATA] P1. **Run the FRED backfill** once the driver above exists — operator confirmed they already hold the
       `fred-api-key` credential (Secret Manager); this becomes a normal backfill VM launch (SPOT per the hard rule) once
       a real invocation path exists. Register the `expected_coverage` entry in the SAME change so honest-coverage never
-      reads a false gap for the newly-populated rows.
+      reads a false gap for the newly-populated rows. **Driver now exists** (see the DESIGN todo above, DONE 2026-07-29)
+      — the `expected_coverage` entry is ALSO already registered (same todo). Low-frequency series will write duplicate
+      identical values across every day-partition of their release period (see the finding noted on the DESIGN todo
+      above) — a real but low-cost/idempotent characteristic to be aware of when sizing/monitoring the run, not a
+      blocker.
+- [ ] [BACKEND] P3. **Build the instruments-service "fred" URDI reference-data adapter** — `FredAdapter.KEY_SERIES` (the
+      29-series catalogue) lives only in market-tick-data-service today; `unified-api-contracts`'s
+      `VENUE_TO_ADAPTER_KEY["FRED"]` is sentineled `NO_ADAPTER_YET` (2026-07-29) rather than resolving to a real
+      instruments-service adapter. Mirror the FX precedent (`instruments-service/reference_data/adapters/tradfi/fx.py` —
+      a small static-list adapter, no vendor call) to emit the 29 `KEY_SERIES` as instrument-catalogue rows. Not a
+      blocker for the tick-data capture path (fully wired independent of this); closes the reference-data side for
+      parity with every other tradfi venue. Repo: instruments-service.
 
 ## Audit method + provenance
 
