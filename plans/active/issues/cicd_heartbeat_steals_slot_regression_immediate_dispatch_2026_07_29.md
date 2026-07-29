@@ -200,3 +200,23 @@ visible to the very next read, at least for this `wall_type=ldr_qg_failure` esca
   fleet-wide GitHub Actions billing-wall recurrence (see `github_actions_billing_wall_recurrence_2026_07_29.md`) — no
   code fix applicable there either. Ending session without a clean `/done` (same 400 as the sibling docs); relying on
   the idle-lingering-reclaim reaper path.
+
+- 2026-07-29 (same session, later): the slot got re-nudged (heartbeat) 3 more times, and **every single heartbeat bound
+  a DIFFERENT fresh foreign Class-A task** (`canonical_id_builder_retrofit_checklist-010` →
+  `cicd_heartbeat_steals_slot_regression_immediate_dispatch-001` — the P1 todo from THIS very doc, once the plan-regen
+  loop ingested it → `ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head-001`), confirming this is a genuine
+  per-heartbeat-repeating loop, not a one-time fluke: `spawn_base_role` never gets restored, so every subsequent
+  heartbeat re-runs the same `"stale"`-verdict → idle-dispatch path and binds a fresh task. Used
+  `POST /api/slots/6/skip-current-task` (`reason_code: "OTHER"`, a scope-mismatch skip per its own docstring) to release
+  each stray binding back to the queue for a properly-scoped worker rather than let it sit stuck/starved on this cicd
+  slot or work it outside role. Confirmed the release + re-dispatch cycle would repeat indefinitely on every future
+  heartbeat, so as a bounded, reversible, self-scoped mitigation: `POST /api/slots/6/skip-current-task` once more, then
+  `POST /api/slots/6/pause`. Verified via a follow-up heartbeat that this holds:
+  `{"new_task":null,"dispatch_reason":"paused","status":"paused"}` — the heartbeat handler's `slot.status == "paused"`
+  branch (`server/routes/slots_worker.py:621`) short-circuits before ever reaching `_typed_occupant_liveness`'s
+  idle-dispatch fall-through, so pausing is a clean way to stop the loop without needing the broken
+  `find_active_agent_for_session` lookup at all. **Slot 6 is left `paused` at end of session** — an operator or the
+  backend fix landing should `POST /api/slots/6/resume` once ready (this only clears `slot.status`; it does not itself
+  re-trigger the foreign-task-steal bug, since `slot.current_task` is `None` and `spawn_base_role` is already cleared,
+  so a resume without the underlying fix would still eventually re-loop on the next heartbeat — the fix above remains
+  the real remediation).
