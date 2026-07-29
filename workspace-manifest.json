@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "coverage_pct": 91.01,
         "warn_file_count": 10,
-        "qg_red_reason": null,
-        "large_file_count": 9
+        "coverage_pct": null,
+        "large_file_count": 9,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1301,9 +1301,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 0,
-        "coverage_pct": 72.7,
-        "qg_red_reason": null,
-        "large_file_count": 0
+        "coverage_pct": null,
+        "large_file_count": 0,
+        "qg_red_reason": null
       }
     },
     "unified-trading-api": {
@@ -1418,9 +1418,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 6,
-        "coverage_pct": 74.35,
-        "qg_red_reason": null,
-        "large_file_count": 16
+        "coverage_pct": 74.49,
+        "large_file_count": 16,
+        "qg_red_reason": null
       },
       "breaking_scan_dir": "none"
     },
