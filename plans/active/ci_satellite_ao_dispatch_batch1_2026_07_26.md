@@ -309,15 +309,27 @@ concurrent workers do not collide on this file.
       change across 2 repos, not a same-shape reader fix like items 1-3. Per the workspace's dispatch-scope rule this is
       bigger than a single AO todo; tracked as its own properly-scoped follow-up:
       `issues/repo_ci_stuck_in_sit_tristate_2026_07_29.md`.
-- [ ] [INFRA] P2. **`full-workspace-sit.yml`: a cancelled run's status clobbers a real success, and `SIT_VALIDATED`
-      over-claims.** Two bounded fixes in one file. (a) Live-measured 2026-07-25: run `30158515857` reached
-      `conclusion=success` at 12:50:49Z, then the older overlapping run `30158518796` — `cancelled` — POSTed
-      `state=failure` to the SAME commit at 12:51:02Z and became authoritative. Fix per the source doc's first stated
-      direction: a cancelled run has no informative verdict, so its status-post step must no-op. (b) Correct the
-      messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved cross-repo combination was executed" — it is
-      an API-surface check (it installs only UAC and never collects a dependent's tests). **Done when**: an overlapping
-      cancelled dispatch cannot overwrite a fresher success (evidenced by a real overlapping pair or a faithful
-      simulation), and the status string/docs state what SIT actually proves. Sources:
+- [x] ✅ [INFRA] P2. **DONE 2026-07-29 (slot-2, infra)** — `full-workspace-sit.yml`: a cancelled run's status clobbers a
+      real success, and `SIT_VALIDATED` over-claims. **The live-measured incident's actual clobber path was
+      `sit-gate/fleet-green` in `unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml`** (its
+      `SIT_FLEET_LINE` derivation reads `gh run list` — ordered by run CREATION time, newest first — and picked
+      `completed[0]`, which is also true for `conclusion=cancelled`; a run created after a real success but cancelled
+      almost immediately could outrank it, exactly reproducing the cited 30158515857/30158518796 incident). Fixed both
+      real instances of the same bug class, in scope per this plan's own repo list: (a1) `ldr-to-main-promote-fleet.yml`
+      — `unified-trading-pm@2f9646585` + `@466c7621e` (the actual edit landed in a companion commit after prek's
+      stash/restore dropped it from the first) — filters cancelled runs out of the informative candidate set before
+      selecting `[0]`. (a2) `full-workspace-sit.yml`'s own "Report SIT result to PM" step had the identical defect
+      (`job.status != success` → `sit-failed`, so a cancelled job dispatched a false failure to `sit-unlock`) —
+      `system-integration-tests@33cf6f0` — now no-ops on `job.status=cancelled`. (b) Corrected the
+      `full-workspace-sit.yml` header comment (same commit) so `SIT_VALIDATED` cannot be read as "the resolved
+      cross-repo combination was executed" — states plainly it's an API-surface check (installs only UAC, never collects
+      a dependent's tests; a value-only config change can pass while breaking a consumer at runtime). **Evidence**: both
+      fixes proven via regression tests extracting the REAL shipped code (not replicas) —
+      `unified-trading-pm/scripts/quality-gates-base/tests/test-sit-fleet-green-cancelled-run-clobber.sh` (5/5 pass
+      post-fix, 2/5 pass pre-fix — reproduces the exact incident JSON) and
+      `system-integration-tests/tests/abbreviated/test_full_workspace_sit_cancelled_run_noop.py` (cancelled→no-op,
+      success→sit-passed, failure→sit-failed; confirmed dispatching `sit-failed` pre-fix). Full `quality-gates.sh` green
+      on both repos, shipped via `quickmerge --agent --files`. Sources:
       `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P2 sub-finding,
       2026-07-25) + `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2 messaging).
 - [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
