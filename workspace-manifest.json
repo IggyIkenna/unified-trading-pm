@@ -534,7 +534,7 @@
         "qg_red_reason": "pytest",
         "coverage_pct": null
       },
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -758,7 +758,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 10,
         "coverage_pct": null,
