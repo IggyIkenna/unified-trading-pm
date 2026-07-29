@@ -483,8 +483,39 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       that plan stays paused pending an operator call, not agent action. No code changed — writing a leg spec now would
       violate LOGIC FREEZE; the `not_registered` structure + `missing_registry` gap type are both already correct.
       (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cboe** (distance 1, status partial) —
-      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-29 (slot-16) — root-cause bug found + patched; edge correctly stays `partial`.**
+      **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cboe** (distance 1, status partial) — missing:
+      needs-config. Why blocked: (no reason recorded). Root cause: `_capability_extract.py`'s
+      `extract_archetypes_and_families()` built the `archetype --supports--> venue` edge WITHOUT ever passing `reason=`,
+      unlike the sibling `trades_instrument` edge from the same cell 3 lines earlier (which already does
+      `reason=(cell.notes or None) if cell.notes else None`) — so every partial `supports` edge fell through the
+      unlock-report classifier's empty-reason default (`needs-config`/"(no reason recorded)") even when the underlying
+      `ArchetypeCapabilityCell.notes` already documented a real, specific caveat. For this cell specifically
+      (`archetype_capability_manifest.json`, TRADFI/option), `notes` = "Same-surface no-arb (butterfly / calendar /
+      parity) on CBOE via IBKR." — CBOE is a fully live, already-integrated venue (`CBOEAdapter` routes via IBKR,
+      `readiness: live-proven`, prod slot `cboe-spy-surface-noarb-usd-prod`); the PARTIAL status is real and correct,
+      not a venue-integration gap: the cell's declared `signal_variants` is `iv_dispersion` (full vol-surface
+      dispersion) but only same-surface no-arb signals are actually built — full cross-strike/cross-expiry iv dispersion
+      needs the multi-leg vol-arb algo the sibling `trades_instrument --> instrument_type:option` todo already documents
+      as pending, which is a real build item, not a config fix, and out of scope for this todo. Fixed the propagation
+      bug (one line, matches the existing `trades_instrument` pattern exactly) — unified-trading-pm@1e97a608f. Verified
+      via regenerated `capability-unlock-report.json`: this edge now carries
+      `reason="Same-surface no-arb (butterfly / calendar / parity) on CBOE via IBKR."` (status stays `partial`,
+      correctly — no evidence justifies promoting to `available`). Note the new reason text contains the substring
+      "calendar" (as in _calendar spread_), which the unlock-report's keyword classifier (`_capability_unlock.py`
+      `_REASON_CLASSIFIER`) matches against its `needs-data-feed` family (intended for economic-calendar feeds) — so the
+      piece label is now `needs-data-feed` instead of `needs-config`; this is a pre-existing classifier blunt-instrument
+      quirk (documented as "deterministic, ordered match... first matching family wins"), not a new bug, and out of
+      scope to refine here. **Independently converged with slot-10**: `unified-api-contracts@c4f42fbc` already
+      regenerated + shipped the manifest/report artifacts under this exact fix (citing this same cboe example in its
+      commit body) before I finished investigating — verified their committed `capability-unlock-report.json`
+      byte-matches my own regen for this edge; no UAC-side action was needed from this todo, only the PM-side source fix
+      their commit depended on (which had not yet landed — this commit lands it). `check_capability_regression.py`
+      unaffected (no edge `status` changed, only `reason`). This same root-cause fix also resolves the 4 sibling
+      `--supports--> venue:{cme,deribit,ibkr,ice}` todos below (each now carries its real cell `notes` as reason instead
+      of "(no reason recorded)") — left their checkboxes un-flipped since they weren't this todo's scope; a future pass
+      on those should find real reasons already populated once regenerated. (auto-emitted by
+      generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit** (distance 1, status partial) —

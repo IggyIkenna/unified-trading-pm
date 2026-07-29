@@ -323,7 +323,22 @@ either already-satisfied or stale. This session (Phase-2 worker) executed the **
       FINDING (determinable FIX-STALE, not operator-gated) captured in the registry: README front-door contradicts its
       two newer authoritative docs on the dependency graph.
 - [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
-- [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
+- [x] ✅ [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs. **DONE 2026-07-29 (slot-9, opus
+      sub-agent for editorial apply) — unified-trading-library@2737844b.** Ground-truth refresh REQUIRED and applied —
+      the pass-1 Appendix-A registry OVER-classified (matches the e2e-testing/instruments-service refresh pattern): the
+      4 "REDIRECT" docs `ERROR_HANDLING`/`PATTERNS`/`ID_NAMING_CONVENTIONS`/`CONFIGURATION` were ALREADY proper S5.11
+      redirects (no-op). Net remediation: **9 FIX-STALE** — the dominant finding is a repo-rename drift
+      (`unified-cloud-services`→`unified-trading-library`; package `unified_cloud_services`→`unified_trading_library`,
+      verified against live pyproject/exports; `UnifiedCloudServicesConfig` kept as intentional legacy alias) across
+      root `README`,
+      `docs/{README,ARCHITECTURE,DEPENDENCIES,data-sink-validation,CLOUD_API_PATTERNS,TESTING,CLOUD_BUILD_TRIGGER_SETUP}`;
+      plus removed 2026-05-06 `POST_PLAN` banners (10 docs), repointed/dropped archived-mirror `unified-trading-codex/`
+      refs (README/ARCHITECTURE/TESTING), bare `pip`→`uv pip`; `CloudTarget` import corrected to verified path
+      `unified_trading_library.domain_client`; dead Aster/Hyperliquid perps section removed (0 live defs); `DEV_SETUP`
+      converted to S5.11 redirect. **2 DELETE**: `docs/specs/{README,PLANS_ALIGNMENT}.md` (dead plan-alignment dumps
+      citing 5 archived plans — `PLANS_ALIGNMENT` was Appendix-A KEEP but reclassified DELETE to match the Appendix-B
+      deployment-api/alerting-service treatment; `docs/specs/` dir removed). QG-green sentinel==HEAD (140s); quickmerge
+      --agent. Reviewer caught + fixed 2 stray sub-agent artifact tags pre-ship.
 - [x] ✅ [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
       **DONE 2026-07-29 (slot-12, opus) — e2e-testing@7af2dd3** (+ PAPER_LIVE_CONVERGENCE redirect already landed
       @e00ee80, slot-10). **Ground-truth refresh REQUIRED and applied** — the pass-1 Appendix-A registry OVER-classified
@@ -596,7 +611,7 @@ genuine-UI, out of scope.
       `agent-orchestrator/AUTH_INVENTORY.md`'s staleness (retired `agents/worker.md`/`main.md` PATHS — now under
       `unified-trading-pm/agents/`) is a **separate non-archived-mirror FIX-STALE** tracked in the Appendix-B
       agent-orchestrator entry, NOT this `unified-trading-codex/`-repoint todo's scope.
-- [ ] [DOCS] P1. **client-reporting-api commercial-facts migration into codex — RULED, cleared to execute (operator
+- [x] ✅ [DOCS] P1. **client-reporting-api commercial-facts migration into codex — RULED, cleared to execute (operator
       confirmed 2026-07-28: "Yes, the client roster/fee numbers ARE still current. Confirmed, no re-check needed.").**
       The committed client roster + org hierarchy + per-client trader/Odum/introducer fee %s + three-HWM invoicing model
       live ONLY in `client-reporting-api/docs/{CLIENT_OPERATIONS_GUIDE,PNL_AND_INVOICING_GUIDE}.md`, NOT in
@@ -608,7 +623,17 @@ genuine-UI, out of scope.
       placeholder violation to fix on migration. Full-completion mandate: migrate the commercial facts into codex FIRST
       (this plan's own Principle 2 — never lose the delta), then convert the repo docs to S5.11 redirects; no partial
       migration that leaves half the commercial facts still repo-local-only. (repo: client-reporting-api,
-      unified-trading-pm)
+      unified-trading-pm) — **DONE 2026-07-29.** Migrated ALL commercial facts (roster + orgs + tranches + pooled IK
+      weights + per-client Odum/trader/introducer fee %s + four-tier HWM model + three HWM methods + per-client HWM
+      seeds/GP-pnl_based/nuances + committed Apr-9 invoice + refund history) into the new codex SSOT
+      `/codex/14-customer-journeys/commercial-model/client-roster-and-fee-model.md` FIRST (never-lose-the-delta),
+      verified against the live machine SSOT `execution-service/configs/credentials-registry.yaml` (all fee %s + pool
+      weights + underwater flags match). Cross-referenced from `client-reporting-architecture.md` (pipeline-vs-numbers
+      split) + listed in the commercial-model README. THEN converted both repo docs to S5.11 redirect form keeping only
+      the repo-local ops runbook + code-file map, added `owner/cadence/verifier/last_executed` runbook frontmatter, and
+      replaced hardcoded `central-element-323112` with `{project_id}`. unified-trading-pm@codex-doc-commit +
+      client-reporting-api@77b2d54 (quickmerge, landed LDR). Doc gates: prettier-clean, doc-body-links clean, my refs
+      add 0 danglers.
 - [ ] [DOCS] P2. **[OPERATOR-DECISION] ibkr-gateway-infra internal contradictions (⚠️ ground-truth needed)**: the repo
       contradicts itself on (a) archived-vs-live status (`QUALITY_GATE_BYPASS_AUDIT.md` says archived;
       README/docs/coverage-floor treat it as live) and (b) 2FA automation (README/ARCHITECTURE claim IBGA+TOTP "no human
