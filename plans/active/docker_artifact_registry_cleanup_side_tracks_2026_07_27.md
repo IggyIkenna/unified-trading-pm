@@ -106,10 +106,16 @@ source:
       (policy unnecessary but available). AWS ECR (18 repos) → todo 12. Legacy GCR bucket → todo 13. Policy files
       committed: `deployment_dashboard.json` (3-rule), `quota_broker.json` (3-rule), `market_data_handler.json`
       (3-rule), `standard_2rule.json` (reusable template).
-- [ ] 12. [INFRA] P3. Design the AWS ECR lifecycle policy for the 20 ECR repos — ECR syntax differs (JSON rule-priority
-      list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
-      `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. Done-when: a previewed ECR policy
-      is presented to the operator for the same sign-off gate as the parent plan's Phase C.
+- [x] ✅ 12. [INFRA] P3. Design the AWS ECR lifecycle policy for the 20 ECR repos — ECR syntax differs (JSON
+      rule-priority list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
+      `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. — unified-trading-pm@<SHA> (policy
+      JSON + design doc). **Complete 2026-07-29.** Designed 2-rule ECR policy (`ecr_lifecycle_policy_keep5_3day.json`):
+      (1) expire untagged images older than 3 days, (2) keep-5 most recent tagged images per repo. Policy design
+      documented with GCP AR→ECR mapping, key differences (per-repo not per-package, no explicit Keep action, no
+      keep-deployed-digests equivalent), and operator sign-off checklist. Preview run on `execution-service` (COMPLETE,
+      0 affected — existing keep-30 policy already trimmed). All 20 ECR repos currently have identical keep-30/7-day
+      policy; this design tightens to keep-5/3-day matching GCP AR. **Presented for operator sign-off** per parent
+      plan's Phase C gate before any live application.
 - [ ] 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR is
       shut down). **Downgraded from [OPERATOR] 2026-07-28** — operator ruling 2026-07-28
       (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended): whole-bucket destroys are now
