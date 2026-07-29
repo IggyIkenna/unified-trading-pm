@@ -10,7 +10,7 @@ summary:
   process_ticks-calling sports unit-test suite in mtds was never audited for the same dependency. Orphaned when its
   original home (pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md) was rehomed during the 2026-07-27
   vintage audit — filed as its own issue doc per that audit's disposition.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -36,9 +36,22 @@ source:
 assigned_vm: NA
 execution_scope: local-only
 resolved_by:
+  "2026-07-29 batch closeout pass — audit found no remaining gap: every process_ticks-calling sports test file already
+  carries the scoped autouse fixture (or an equivalent inline patch), and test_league_partitioning.py had already
+  independently picked up the same fixture beyond the original 3 GATE-0 files"
 locked_by:
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). Audit performed: grepped every
+> test file calling `process_ticks(` (17 files) and every file referencing `_check_sports_v9_columns` (7 files).
+> `test_sports_v9_canonical_path.py`, `test_league_partitioning.py`, `test_orchestrator_per_data_type_sentinel.py`, and
+> `test_sports_odds_available_at.py` all already carry the scoped `autouse` no-op fixture (the 2nd file was NOT one of
+> the original 3 GATE-0-blocking files — it picked up the same pattern independently in the interim);
+> `test_sports_live_writer_gaps.py` patches the guard inline per-test; `test_sports_v9_preflight_guard.py` is the
+> guard's own dedicated test (out of scope by design, per this doc's own text). Ran all 17 `process_ticks(`-calling test
+> files locally (no CI, no emulator injection): `276 passed in 18.70s`, zero failures. Done-when condition ("a full
+> local run of the sports unit suite in mtds is green") is satisfied — no fixture gap remains to fix.
 
 # Sports `process_ticks` unit tests depend on a CI-seeded GCS emulator (hermeticity gap)
 
@@ -60,12 +73,9 @@ The fix above was scoped to unblock the 3 files that were actually failing at th
 audit. Audit the broader `process_ticks`-calling sports unit-test suite in `market-tick-data-service` for the same
 `_check_sports_v9_columns` seeded-emulator dependency, and apply the same scoped-fixture fix wherever it recurs.
 
-- [ ] [TEST] P2. Audit every `process_ticks`-calling sports unit test in `market-tick-data-service` for the
-      `_check_sports_v9_columns` seeded-GCS-emulator dependency (the same class of hermeticity gap fixed in the 3
-      GATE-0-blocking files). Apply the same scoped `autouse` no-op fixture pattern wherever found. **Done when**: a
-      full local (non-CI, no emulator injection) run of the sports unit suite in mtds is green, or every remaining
-      emulator-dependent test is explicitly justified (e.g. genuinely testing emulator-backed integration behavior, not
-      incidental preflight-guard collateral).
+- [x] ✅ [TEST] P2. **DONE 2026-07-29 (batch closeout pass).** Audited every `process_ticks`-calling sports unit test —
+      see the archival banner above for the full file-by-file breakdown. No gap found; `276 passed` locally with no
+      emulator. Done-when condition satisfied.
 
 ## Progress Log
 

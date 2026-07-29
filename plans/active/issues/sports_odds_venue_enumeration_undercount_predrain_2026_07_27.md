@@ -215,25 +215,44 @@ now has a concrete, checkable hypothesis to confirm rather than an open judgment
 
 ## Todos
 
-- [ ] [DATA] P0. **Confirm the ~19 unmapped odds venues are the already-tracked MDPS-derived product line, not orphaned
-      raw trades data, before legacy retirement.** Per the corpus investigation above: query the live sports manifest
-      (`read_availability_index`, manifest-only, no new whole-corpus walk) for each of the 19 venues (BETONLINEAG,
-      UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER, DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON,
-      FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY, UNIBET_EU), filtered to
-      `instrument_type` in `{odds,ODDS}` AND `data_type=trades` specifically. **If zero rows** for all 19 (expected, per
-      the investigation above): these venues have no raw sportsbook trades data under `odds` at all — their
-      `instrument_type=odds` footprint is exclusively the MDPS-derived `odds_movement_15m`/`odds_snapshot_15m`/
-      `odds_horizon_bucket`/`arbitrage_opportunity_15m` family, already out of scope for
-      `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s `data_type=trades`-only Move todos and already owned by
-      `mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` — close this doc as resolved (false alarm on orphaning, real
-      data-scope conflation in the original undercount query), noting the fork plan's LAST todo (retire the legacy
-      `odds` UAC contract entry) must still separately account for `_candle_contracts.py`'s generic
-      `("sports","odds",data_type)` fallback registration these 4 MDPS products depend on before that retirement is
-      safe. **If any nonzero** rows exist under `data_type=trades` for one or more of the 19: those specific venues
-      genuinely need a venue→class mapping added before the fork's legacy-contract retirement proceeds — escalate only
-      those venues (not the whole list) with the measured row counts. Repo: market-tick-data-service /
-      unified-trading-pm (doc-only close-out either way). **Done when**: the per-venue `data_type=trades` check is run
-      and one of the two dispositions above is recorded with the measured counts.
+- [x] ✅ [DATA] P0. **DONE 2026-07-29 (batch closeout pass) — DISPOSITION B: nonzero, real orphan risk confirmed for ALL
+      19 venues, NOT a false alarm.** Ran the exact per-venue check this todo specifies (`read_availability_index`,
+      `market-data-tick-sports-prd-central-element-323112`, columns=[date,venue,instrument_type,data_type,row_count,
+      capture_status], no new whole-corpus walk — the same single-object manifest read this doc's own investigation
+      already used), filtered to the 19 named venues + `instrument_type.str.lower()=="odds"` +
+      `data_type.str.lower()=="trades"`:
+
+      ```
+          rows matching (19 venues, instrument_type in {odds,ODDS}, data_type=trades): 292,117
+          summed row_count: 51,291,778
+          capture_status: 100% captured (0 empty_confirmed)
+          data_type on-disk casing: 100% lowercase "trades" (0 "TRADES")
+          per-venue breakdown (rows): PADDYPOWER 21879, UNIBET 21722, DRAFTKINGS 20286, SKYBET 19917, SPORT888 18882,
+            FANDUEL 18025, BETONLINEAG 17806, BETRIVERS 17477, CORAL 17134, WILLIAMHILL 16962, BETVICTOR 16937,
+            VIRGINBET 15358, LIVESCOREBET 14607, CASUMO 14222, BETSSON 14160, UNIBET_UK 12685, LADBROKES_UK 12164,
+            BOVADA 1006, BETWAY 864, UNIBET_EU 24
+          ```
+
+          This directly contradicts the 2026-07-28 corpus-only investigation's hypothesis (that the 19 venues' `odds`
+          footprint is exclusively the MDPS-derived 15m-product family) — every one of the 19 venues has real, substantial,
+          100%-captured raw sportsbook `data_type=trades` rows under `instrument_type=odds` TODAY, not zero. **Per this
+          todo's own disposition-B branch: escalating, not closing.** All 19 venues (not a subset) genuinely need a
+          venue→class mapping added to `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md` before that plan's legacy
+          `odds` UAC contract retirement can safely proceed — retiring the contract with these 51.3M rows still unmapped
+          would silently orphan them. **BIG FINDING — operator-notify per the data-correctness hard rule** (this reverses a
+          prior investigation's conclusion and blocks a legacy-contract retirement in an active plan); flagged in this
+          session's final report. Follow-up tracked as a fresh todo below (never left as prose per the
+          todos-not-prose rule). Repos: market-tick-data-service (verification only) / unified-trading-pm (doc).
+
+- [ ] [DATA] P0. **Extend `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`'s venue→class mapping to cover all 19
+      previously-"unmapped" venues** (BETONLINEAG, UNIBET, BETRIVERS, WILLIAMHILL, CASUMO, SPORT888, CORAL, PADDYPOWER,
+      DRAFTKINGS, UNIBET_UK, SKYBET, BETSSON, FANDUEL, VIRGINBET, LIVESCOREBET, BETVICTOR, LADBROKES_UK, BOVADA, BETWAY,
+      UNIBET_EU — 292,117 real `data_type=trades` shards / 51,291,778 rows, measured 2026-07-29, see the todo above) —
+      classify each as EXCHANGE_ODDS or FIXED_ODDS (mirroring the already-executed 9-venue precedent), move the GCS
+      objects, and only then let the fork plan's legacy-contract-retirement todo proceed. This is an operator/
+      data-engineering decision (which class each bookmaker belongs to), not a mechanical fact — genuinely needs the
+      same `[OPERATOR]`-adjacent mapping-ruling pattern the fork plan's own todo 1 already used for the first 9 venues.
+      Repos: market-tick-data-service, unified-api-contracts, unified-trading-pm.
 
 ## Secondary, smaller finding (not this doc's main subject)
 

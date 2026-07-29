@@ -13,7 +13,7 @@ summary: >-
   compute_bar_close_boundary) is also correct. But 2 smaller/newer cefi BATCH handlers have the SAME defect: a
   deterministic timestamp is computed/available in the row but `available_at` uses wall-clock `attempted_at` instead —
   breaking the batch==live ε=0 determinism contract on re-run/replay, same as the resolved DeFi issue.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -46,7 +46,16 @@ source:
     executed 2026-07-24, this doc is its output",
   ]
 resolved_by:
+  "market-tick-data-service@34b86778 (deribit_volatility_index_handler.py) + @5b9ff8d2 (book_microstructure_handler.py)
+  — already shipped by another session; re-verified 2026-07-29 batch closeout pass, 28 tests green"
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). Both confirmed handlers already
+> fixed exactly per this doc's own recommendation: `deribit_volatility_index_handler.py` derives `available_at` from
+> each row's own `ts_ms` (`market-tick-data-service@34b86778`); `book_microstructure_handler.py` uses the
+> already-computed `as_of` instead of `attempted_at` (`@5b9ff8d2`). Re-verified:
+> `tests/unit/test_deribit_volatility_index_handler.py tests/unit/test_book_microstructure_handler.py` →
+> `28 passed in 0.86s`.
 
 # cefi `available_at` wall-clock despite an available deterministic row timestamp
 
@@ -158,7 +167,9 @@ and the "Recommended fix" section above).
 
 ## Todos
 
-- [ ] [DATA] P2. **Fix the 2 confirmed cefi `available_at` wall-clock handlers** — `deribit_volatility_index_handler.py`
-      (derive `available_at` from each row's own `ts_ms`/`timestamp` instead of `attempted_at`) and
-      `book_microstructure_handler.py` (use the already-computed `as_of` instead of `attempted_at`); both break the
-      batch==live ε=0 determinism contract on re-run, mirroring the resolved DeFi `available_at` bug.
+- [x] ✅ [DATA] P2. **DONE — already shipped, verified 2026-07-29.** `deribit_volatility_index_handler.py`:
+      `market-tick-data-service@34b86778` derives `available_at` from each row's own `ts_ms` (line ~166:
+      `row_ts = datetime.fromtimestamp(ts_ms / 1000.0, tz=UTC)`, stamped at line ~177).
+      `book_microstructure_handler.py`: `market-tick-data-service@5b9ff8d2` uses the already-computed `as_of`
+      (`df.assign(available_at=as_of.isoformat(), source=_SOURCE)`) instead of `attempted_at`. Both mirror the resolved
+      DeFi `available_at` fix exactly. Re-ran both handlers' unit suites: `28 passed in 0.86s`.

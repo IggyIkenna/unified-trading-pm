@@ -87,4 +87,14 @@ the MDPS-side hypothesis is more plausible for that data_type specifically.
       data_type — `trades`, `trades_inplay`, `odds_horizon_bucket`, `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (both casings) — to
       determine whether the instrument_id's bookmaker segment is genuinely blank at the source or lost in
       manifest-recording). **Done when**: a written root-cause finding for each affected data_type is recorded, with a
-      recommendation (re-stampable / needs writer fix / accept-as-is) for each.
+      recommendation (re-stampable / needs writer fix / accept-as-is) for each. **PARTIAL PROGRESS 2026-07-29 (batch
+      closeout pass), NOT closing — done-when not yet met.** Live manifest sample (`read_availability_index`,
+      `market-data-tick-sports-prd-central-element-323112`,
+      columns=[date,venue,data_type,instrument_id,capture_status]): for all 3 populated affected data_types
+      (`trades`=1273, `odds_horizon_bucket`=1106, `trades_inplay`=111 — the `ODDS_MOVEMENT`/`ODDS_SNAPSHOT` casings are
+      too small, 2 rows each, to sample meaningfully), **`instrument_id` is ALSO `None`/null on every sampled row**, not
+      just `venue`. This narrows the hypothesis space (both the venue token AND the instrument_id are blank together,
+      not a venue-only parsing gap) but does not itself distinguish "genuinely blank at the source" from "lost in
+      manifest-recording" per the todo's own done-when — that needs a read of the actual RAW parquet content (not just
+      the manifest row) for one of these shard atoms, which was not attempted this pass (would need locating the exact
+      GCS object per sampled row, out of this session's time-box). Left `- [ ]` — root cause still open.

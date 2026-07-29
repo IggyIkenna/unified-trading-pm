@@ -8,7 +8,7 @@ summary: >-
   EXIT_STATUS and no PROGRESS.json checkpoint, forcing a full restart-from-object-0 on relaunch. Not a correctness bug
   (the script's idempotent design makes this safe) but a real efficiency/wall-clock cost, unlike the PROGRESS-checkpoint
   contract other migration executors in this same family already implement.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -29,9 +29,15 @@ source:
   ]
 related: [/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md]
 resolved_by:
+  "2026-07-29 batch closeout pass — P3 census done, 0 of 3 sampled sibling migration scripts carry the checkpoint
+  pattern (finding recorded, not a fresh fix scope); main P2 checkpoint fix already shipped mtds@261f9abd/@5bf8a3c7"
 locked_by:
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). Main checkpoint fix already
+> shipped (`market-tick-data-service@261f9abd` + `@5bf8a3c7`, see the todo below). The remaining P3 audit ("worth a
+> quick census") is now done — see the census finding on that todo. All todos `[x]`.
 
 # rewrite_tradfi_chain_bundle_content_id_2026_07_25.py has no PROGRESS.json checkpoint
 
@@ -86,7 +92,12 @@ times, and is exactly the class of waste `/vm-preemption-billing-waste-audit` lo
       the `ChainBundleCheckpoint` mechanism above — complementary (different consumer, different GCS path), not
       redundant. 2 new tests (`test_run_apply_reports_progress_only_once_per_completed_date`,
       `test_run_dry_run_never_reports_progress`). — market-tick-data-service@5bf8a3c7.
-- [ ] [DATA] P3. Audit the OTHER tradfi/cefi/defi canonical-migration executors in this family
-      (`market-tick-data-service/scripts/migrate_*_2026_07*.py`) for the same gap — the two known-compliant scripts
-      cited above suggest this is inconsistent across the family rather than a universal pattern, worth a quick census
-      before assuming any specific untested script has (or lacks) the checkpoint.
+- [x] ✅ [DATA] P3. **DONE 2026-07-29 (batch closeout pass).** Census of the
+      `market-tick-data-service/scripts/migrate_*_2026_07*.py` family for the `PROGRESS.json`/checkpoint pattern: **3
+      scripts found, 0/3 carry a checkpoint** — `migrate_cme_monolith_trades_2026_07_26.py`,
+      `migrate_prediction_instrument_id_wrap_2026_07_09.py`, `migrate_tradfi_canonical_2026_07.py` (grepped each for
+      `PROGRESS\.json|record_vm_progress|Checkpoint`, 0 hits in all 3). Confirms the doc's own hypothesis ("this is
+      inconsistent across the family") — census only, adding checkpointing to these 3 is a separate, unscoped follow-up
+      (not filed as a new todo here: none of the 3 is currently an active multi-hour SPOT campaign the way the
+      chain-bundle script was, so there is no live wall-clock cost to size a fix against yet; revisit if/when one of
+      them runs at fleet scale on SPOT).

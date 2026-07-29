@@ -124,3 +124,11 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
       genesis) and STARGATE rows starting at or after 2022-03-17, with no `UPSTREAM_INSTRUMENTS_CATALOG_STALE` failures
       on historical dates. Repo: market-tick-data-service. Genesis dates per the source issue doc
       (`plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md`), not independently re-derived here.
+      **PRECONDITION CONFIRMED SHIPPED 2026-07-29 (batch closeout pass)**: `bridge_events_handler.py:265` now calls
+      `assert_defi_catalog_fresh(..., mode=("live" if _run_tag == "live" else "batch"))` —
+      `market-tick-data-service@c38e1b3f` ("fix: thread mode= into assert_defi_catalog_fresh for 9 remaining DeFi
+      handlers") already landed this exact fix, `bridge_events_handler.py` included. **Still open**: the actual
+      verification run (`--start-date 2021-11-11 --end-date <today>`) is a real multi-year production capture backfill
+      against live GCS/instruments-catalog — not attempted this session (out of a bounded doc-closeout pass's scope;
+      genesis-to-present is a real data-capture operation, not a code check). Left `- [ ]` for whoever schedules the
+      actual backfill run.

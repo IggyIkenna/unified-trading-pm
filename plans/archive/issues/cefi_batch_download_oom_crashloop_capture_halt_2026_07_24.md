@@ -22,7 +22,7 @@ summary: >-
   infrastructure from this isolated, 8Gi-limited Cloud Run Job). Filed per the workspace's data-pipeline-correctness
   HARD RULE (a live production capture outage is a BIG finding requiring operator notification, which this run also did
   in its final chat response).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -45,6 +45,9 @@ source: >-
   anomaly this run's own Phase-0 manifest read surfaced (not something it was dispatched to look for), followed up with
   a read-only, targeted GCP infra check per the skill's own "grep-then-READ, not grep-then-conclude" discipline.
 resolved_by:
+  "2026-07-29 batch closeout pass — steady-state recovery confirmed live across 4 consecutive scheduled-run days
+  (07-25..07-28, all captured/attempted_failed-healthy), Cloud Run memory reverted 16Gi->8Gi (gcloud run jobs update),
+  cefi-fwd-daily-cron-* VM pattern reconfirmed absent with no live-trigger coverage gap"
 locked_by:
 assigned_vm: planning
 code_refs:
@@ -58,6 +61,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). Both remaining todos closed via
+> live verification this session — see the Todos section for full evidence. Steady-state confirmed across 4 consecutive
+> scheduled-run days; Cloud Run memory reverted 16Gi->8Gi per the doc's own pre-authorized, non-operator-gated
+> instruction; `cefi-fwd-daily-cron-*` VM pattern reconfirmed absent with the two live triggers still fully covering
+> capture.
 
 # CeFi raw-tick batch capture appears HALTED since >=2026-07-21 -- Cloud Run job crash-looping on signal 9
 
@@ -363,14 +372,16 @@ not a shared root cause** — rules out the "(2) Whether this is causally relate
 
 ### Todos
 
-- [ ] [DATA] P3. **Confirm whether the `cefi-fwd-daily-cron-*` VM cron-host pattern (documented in
-      `deployment-service/scripts/vm/launch-cefi-fwd-daily-cron-vm.sh` as the replacement for the now-deleted
-      `market-tick-cefi-daily-download` scheduler job) is actually running in prod.** A 2026-07-27 check found zero
-      matching instances in `gcloud compute instances list` and zero `compute.instances.insert` audit-log hits for that
-      name prefix in the last 30 days. If it was never launched (or was launched once, then torn down without a
-      recurring re-launch), determine whether the 09:00 UTC cefi coverage it was meant to provide is already fully
-      subsumed by the two confirmed-live triggers (`uts-prod-market-tick-data-cefi-t1-schedule` @ 06:00,
-      `market-tick-daily-trigger` @ 09:00) or whether a real gap exists. Repo: deployment-service.
+- [x] ✅ [DATA] P3. **DONE 2026-07-29 (batch closeout pass).** Re-confirmed live: `gcloud compute instances list`
+      (project `central-element-323112`) still shows zero `cefi-fwd-daily-cron-*` instances; a fresh 30-day
+      `compute.instances.insert` audit-log search for that name prefix also returns zero hits — unchanged from the
+      2026-07-27 finding. **Verdict: already fully subsumed, no real gap.** Directly verified the two live triggers'
+      recent execution history (`gcloud run jobs executions list --job=uts-prod-market-tick-data-service-cefi-t1-recon`)
+      — the last 5 executions (2026-07-27 through 2026-07-29, both 06:00 and 09:00 UTC) are ALL `1/1 COMPLETE`, and the
+      manifest's per-day `captured` counts for 07-25..07-28 (2950/1370/1391/2007) sit at-or-above the pre-incident
+      ~1,000-1,200/day baseline (see the sibling todo below) — i.e. the two confirmed-live triggers are demonstrably
+      providing full, healthy coverage on their own; the never-launched VM pattern left no operational gap. Repo:
+      deployment-service (verification only, no code change).
 - [x] ✅ [BACKEND] P1. Confirm (via a memory profile / Cloud Monitoring container-memory graph of an actual execution,
       not just code-reading) whether the OOM's proximate cause is insufficient memory — **CONFIRMED via the service's
       own `peak_rss=8646.5MB` resource-profiler log line, 2026-07-25T01:44Z execution** (exceeds the old 8Gi/8192MiB
@@ -391,8 +402,12 @@ not a shared root cause** — rules out the "(2) Whether this is causally relate
       (`market-tick-data-service@31958a05`, 300s bound) has only ONE confirmed manual-execution repro; the sibling todo
       below explicitly notes steady-state health across multiple SCHEDULED runs is not yet observed. Revert to 8Gi only
       once that todo confirms steady-state recovery — tracked there, not as a separate decision.
-- [ ] [DATA] P2. Once the regular 06:00/09:00 UTC crons have run a few times on the new 16Gi limit, re-verify
-      `capture_status` by `date` returns to the ~1,000-1,200/day baseline (this session only confirmed ONE manual
-      execution recovered; the steady-state pattern across multiple scheduled runs is not yet observed). **Once
-      confirmed, revert Cloud Run to 8Gi** (closes the prior todo's deferred revert decision) — autonomous, no operator
-      gate: this is a one-line Cloud Run memory-limit config change, instantly reversible either way.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 (batch closeout pass).** Steady-state confirmed via a live manifest read
+      (`read_availability_index`, `market-data-tick-cefi-prd-central-element-323112`, columns=[date,capture_status]):
+      `captured` per day for 2026-07-25/26/27/28 = 2950/1370/1391/2007 — at-or-above the ~1,000-1,200/day pre-incident
+      baseline across 4 consecutive scheduled-run days (07-29 shows only `empty_confirmed=179` so far because the day is
+      still in progress at read time, not a regression). Cross-checked `attempted_failed` stayed proportionate (no OOM
+      spike) for the same window. **Reverted Cloud Run memory 16Gi -> 8Gi**
+      (`gcloud run jobs update uts-prod-market-tick-data-service-cefi-t1-recon --region=asia-northeast1     --project=central-element-323112 --memory=8Gi`),
+      verified live via `gcloud run jobs describe` → `resources.limits.memory: "8Gi"`. Per this todo's own explicit
+      pre-authorization ("autonomous, no operator gate").

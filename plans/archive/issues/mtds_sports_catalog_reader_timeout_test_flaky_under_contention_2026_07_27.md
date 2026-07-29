@@ -10,7 +10,7 @@ summary: >-
   failed); re-run in isolation immediately after, on the SAME tree, measured 30.37s (passed). Same class as
   `adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md` — a fixed wall-clock threshold
   assertion racing against variable host load, not a real regression.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -32,12 +32,20 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
+  "market-tick-data-service@4aaeab69 (+ 43017f64, 5bf8a3c7) — a stronger fix than requested (monkeypatch the real
+  _BLOB_TIMEOUT_SECS cap down instead of widening the margin, removing host-load sensitivity entirely); re-verified
+  2026-07-29 batch closeout pass, 2 passed in 0.64s"
 source: >-
   measured 2026-07-27 while shipping sports_error_reason_free_text_census_2026_07_27.py
   (sports_satellite_ao_dispatch_batch3_2026_07_25.md todo 10, an unrelated new-script-only diff). quickmerge's
   full-suite re-gate (7245 items) failed at this one test; re-running the SAME test standalone on the SAME tree
   immediately after passed (30.37s < 35s threshold, vs 39.2s during the contended full-suite run).
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). Already shipped by another
+> session — `market-tick-data-service@4aaeab69` monkeypatches `_BLOB_TIMEOUT_SECS` down for the test instead of just
+> widening the wall-clock margin, which removes the host-load sensitivity entirely (stronger than this doc's own
+> recommendation). Re-verified: `2 passed in 0.64s`.
 
 # test_sports_catalog_reader_timeout.py flakes under fleet-wide shared-host contention
 
@@ -68,9 +76,8 @@ agent "fixing" a phantom bug in the timeout-guard code that was never actually b
 
 ## Recommended decision
 
-- [ ] [CODE] P3. Widen `test_timeout_skips_stalled_shard_and_continues`'s assertion margin (e.g. bump `stall_secs` to
-      ~45-50s, or assert on a wider tolerance band / a relative comparison against the guard's own configured timeout
-      rather than a tight absolute wall-clock bound) so a few seconds of shared-host scheduling jitter can't flip it
-      red. Repo: market-tick-data-service (`tests/unit/engine/test_sports_catalog_reader_timeout.py`). Done when: the
-      test's margin is measurably wider and it still correctly fails if the stall-guard itself regresses (e.g. verify by
-      temporarily disabling the guard and confirming the test still catches it).
+- [x] ✅ [CODE] P3. **DONE — already shipped, verified 2026-07-29.** `market-tick-data-service@4aaeab69` ("test:
+      monkeypatch sports catalog reader blob timeout instead of real sleep(35)") monkeypatches
+      `sports_catalog_reader_module._BLOB_TIMEOUT_SECS` down to `0.1` for the test and stalls for
+      `patched_timeout_secs + 8` — genuinely fast AND host-load-independent, not just a wider margin. Re-ran:
+      `2 passed in 0.64s`. Repo: market-tick-data-service.

@@ -14,7 +14,7 @@ summary: >-
   (tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md — the catalog/seed side uses
   short root codes, not spelled-out names). That fix's own commit never updated this MTDS test file, which still asserts
   the OLD (now-wrong) human-name expectations.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -39,7 +39,16 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "market-tick-data-service@4fdbcb0d (+ d24437e4) — already shipped by another session; re-verified 2026-07-29 batch
+  closeout pass, all 4 tests in test_databento_enrichment_combo_underlying.py green"
 ---
+
+> **✅ ARCHIVED 2026-07-29** (batch closeout pass, market-tick-data-service docs batch). The exact fix this doc
+> recommended (raw short-root assertions `"CL-BZ"`/`"ZN"` + docstring update) was already shipped by another session as
+> `market-tick-data-service@4fdbcb0d` ("fix(tests): update combo-underlying test assertions to match UAC short-root
+> convention"), landed before this doc was picked up. Re-verified live:
+> `.venv/bin/python -m pytest tests/unit/test_databento_enrichment_combo_underlying.py -q` → `4 passed`. No code change
+> needed this session.
 
 # MTDS combo-underlying tests stale vs. UAC's now-intentional raw-root behavior
 
@@ -88,9 +97,7 @@ could ship it; the diff is not preserved anywhere else, so redo it fresh rather 
 
 ## Todos
 
-- [ ] [DATA] P2. Update `market-tick-data-service/tests/unit/test_databento_enrichment_combo_underlying.py`: change
-      `test_named_spread_combo_kept_with_resolved_underlying`'s expected `underlying` from `"WTI-BZ"` to `"CL-BZ"`;
-      `test_root_qualified_ud_combo_recovers_real_root`'s expected `underlying` from `"UST-10Y"` to `"ZN"`;
-      `test_mixed_batch_drops_only_opaque_combo`'s expected set from `{"WTI-BZ", "UST-10Y"}` to `{"CL-BZ", "ZN"}`; and
-      the module docstring's 2 examples to match. Run `market-tick-data-service`'s `quality-gates.sh` to confirm green.
-      (repo: market-tick-data-service)
+- [x] ✅ [DATA] P2. **DONE — already shipped, verified 2026-07-29.** `market-tick-data-service@4fdbcb0d` (+ `d24437e4`)
+      updated `test_named_spread_combo_kept_with_resolved_underlying`/`test_root_qualified_ud_combo_recovers_real_root`/
+      `test_mixed_batch_drops_only_opaque_combo` to the raw short-root form (`"CL-BZ"`/`"ZN"`) + the module docstring,
+      exactly as recommended. Re-ran: `4 passed in 0.33s`. (repo: market-tick-data-service)
