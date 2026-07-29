@@ -130,6 +130,17 @@ forces an operator/main manual DB patch outside the normal flow.
 - [ ] [DOC] P3. Once either fix above ships, add the accepted BLOCKED-marker convention to `task_template.md`'s
       "remove/re-state a todo" section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions)
       so future RED-gate todos use a consistent, machine-recognized marker from the start.
+- [ ] [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
+      the `plan_ref` out of `plans/active/` (an in-same-commit archival closure) AND the moved content carries an
+      accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker reads
+      the old active path with rename-detection effectively off (`git show` of `plans/active/...` shows only a deletion
+      to `/dev/null`), so a legitimate supersede-and-archive closure 409s `cross_repo_pm_file_touched_no_checkbox_flip`.
+      Fix: in `_pm_log_commits_touching_plan_ref` / `_mode2_disposition`, follow the rename (`git log --follow` or
+      `--find-renames`) so the flip/marker on the destination path is seen; accept a
+      `rename plans/active/... ->     plans/archive/...` whose new blob carries the marker as
+      `reason="plan_ref_self_archived_with_marker"`. This is the previously-seen
+      `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md` failure mode,
+      recurring. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -150,3 +161,15 @@ forces an operator/main manual DB patch outside the normal flow.
   proposed 4th disposition (`BLOCKED-ON:<ref>` marker, recommendation below) should be worded generically for "condition
   not yet met" rather than RED-gate-specific. Per the same precedent: task LEFT in-progress, NOT skipped/redispatched,
   checkbox NOT flipped.
+- 2026-07-29 (worker, slot 12, THIRD occurrence — self-archival variant): Hit
+  `reason: "cross_repo_pm_file_touched_no_checkbox_flip"` on `phantom_captures_prediction-002`
+  (`plans/active/issues/phantom_captures_prediction_2026_06_28.md`) after main's BLOCKED-Q answer (BLK-eb3f4765, Option
+  A) directed a supersede-and-ARCHIVE closure. Here the checkbox WAS legitimately flipped to
+  `- [x] ✅ … SUPERSEDED/EXTRACTED`, but in the SAME `docs(plans):` commit (`unified-trading-pm@9da2e4270`) the doc was
+  `git mv`'d to `plans/archive/issues/`. The M3 checker inspects the old active path with rename-detection off, so
+  `git show 9da2e4270 -- plans/active/issues/…` shows only a deletion to `/dev/null` — the `+- [x]` flip lives on the
+  archive path and is invisible. Distinct from the two cases above (there the flip was correctly forbidden; here it was
+  correctly PERFORMED but hidden by the archival rename). This is the `…_blind_to_self_archived_plan_ref_2026_07_26`
+  failure mode recurring — see the new [BACKEND] P2 self-archival recommendation below. Durable work fully shipped +
+  pushed (ahead=0); main is separately parking -002 (priority 999 + false condition) so it will not redispatch. Per the
+  established precedent: task LEFT in-progress, NOT skipped/redispatched; escalated to main for a server-side close.
