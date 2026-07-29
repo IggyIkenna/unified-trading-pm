@@ -80,16 +80,18 @@ drift_direction: advance-code
       (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
       `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
       `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`, `tradfi_multisource_backfill_2026_06_22.md`, plus
-      `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`): re-read the specific conflicting todo in
-      `tradfi_consolidated_closeout_2026_07_18.md` to check if it has since shipped (resolving the conflict by making
-      the item redundant/already-covered) or if an operator ruling clarified which side should execute — if either,
-      extract the item as a new tracked todo in a follow-up batch3. If still genuinely unresolved, leave it explicitly
-      deferred. Also separately re-review `tradfi_manifest_content_recovery_completion_2026_07_24.md` (still flagged
-      too-large/risky, excluded from both batch1 and batch2) and recommend whether it warrants its own dedicated batch3
-      triage pass yet, or whether its in-flight migration state still makes that premature. **Done when**: each of the 8
-      conflict-gated items + the 1 operator-gated item has either (a) a new tracked todo/plan created because a conflict
-      cleared or a ruling landed, or (b) an explicit re-verified confirmation the conflict/decision is still open; and a
-      fresh recommendation is recorded for the large/risky doc.
+      `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (**RULED 2026-07-29: wire via forward-poll opt-in
+      flag, see the issue doc — this one of the 6 is now pre-resolved, the other 5 still need the live re-check
+      below**): re-read the specific conflicting todo in `tradfi_consolidated_closeout_2026_07_18.md` to check if it has
+      since shipped (resolving the conflict by making the item redundant/already-covered) or if an operator ruling
+      clarified which side should execute — if either, extract the item as a new tracked todo in a follow-up batch3. If
+      still genuinely unresolved, leave it explicitly deferred. Also separately re-review
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md` (still flagged too-large/risky, excluded from both
+      batch1 and batch2) and recommend whether it warrants its own dedicated batch3 triage pass yet, or whether its
+      in-flight migration state still makes that premature. **Done when**: each of the 8 conflict-gated items + the 1
+      operator-gated item has either (a) a new tracked todo/plan created because a conflict cleared or a ruling landed,
+      or (b) an explicit re-verified confirmation the conflict/decision is still open; and a fresh recommendation is
+      recorded for the large/risky doc.
 - [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved all resolvable ones — verify none remain unaccounted-for) → add the archive banner →

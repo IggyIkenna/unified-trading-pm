@@ -161,7 +161,8 @@ items), `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (1),
 `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (1),
 `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` (2),
 `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (0 AO-eligible but 1 conflict logged against the doc
-generally), `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (2),
+generally — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc**),
+`issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (2),
 `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (1),
 `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md` (1),
 `tradfi_backfill_throughput_followups_2026_07_24.md` (7), `tradfi_multisource_backfill_2026_06_22.md` (2).

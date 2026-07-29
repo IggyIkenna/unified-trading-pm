@@ -132,9 +132,20 @@ become its own plan — this issue doc is the durable record of the finding and 
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **Pick a fix direction for the per-object GCS read pattern** — reader-side concurrent/batched fetch
-      vs writer-side batching into one JSONL-per-day object (see "Recommended next steps" above); the root cause is
-      still unfixed and `_MAX_DAYS=30` would still reproduce the original OOM if a user requests it.
+- [x] ✅ [OPERATOR] P1. **Operator-ruled 2026-07-29 (interactive decision session): do both** — reader-side
+      concurrency/batching now, writer-side batching next. Pick a fix direction for the per-object GCS read pattern —
+      reader-side concurrent/batched fetch vs writer-side batching into one JSONL-per-day object (see "Recommended next
+      steps" above); the root cause is still unfixed and `_MAX_DAYS=30` would still reproduce the original OOM if a user
+      requests it.
+
+- [ ] [CODE] P1. **Ship reader-side concurrent/batched GCS fetch** in `deployment-api`'s `_read_alerting_service_sync` —
+      durable stopgap that bounds the OOM risk for any date range, independent of the writer-side fix below. Done when:
+      a request for the full `_MAX_DAYS` range completes without the memory/latency profile that caused the 2026-07-22
+      incident.
+- [ ] [CODE] P2. **Batch alerting-service's writes into one JSONL-per-day object**, matching the already-proven
+      cicd-events pattern, as the real root-cause fix — needs either migrating the ~277k existing per-event objects or
+      the reader supporting both shapes during a transition. Sequenced after the reader-side fix (todo above), not
+      blocking on it.
 
 ## Codex SSOTs
 

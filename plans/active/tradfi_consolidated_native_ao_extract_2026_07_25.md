@@ -145,11 +145,13 @@ drift_direction: advance-code
       Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is
       a genuine DESIGN call, already independently tracked as its own doc
       (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
-      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` already classified "0 AO-eligible candidates... genuinely
-      operator-gated" — NOT included here, stays with that classification. The "IBKR `_SEC_TYPE_MAP`/Databento
-      `_resolve_product_root`/combo-leg" sub-clause is already DONE per the native todo's own text (single-leg todo
-      `[x]` in `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) — nothing to re-verify there. What's
-      left: (a) live-confirm the fix in the (now-archived, `status: resolved`)
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` had classified "0 AO-eligible candidates... genuinely
+      operator-gated" — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc** — NOT included here,
+      stays with that classification (the issue doc's own new [CODE] P1 implementation todo is the fresh AO-eligible
+      candidate now). The "IBKR `_SEC_TYPE_MAP`/Databento `_resolve_product_root`/combo-leg" sub-clause is already DONE
+      per the native todo's own text (single-leg todo `[x]` in
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`) — nothing to re-verify there. What's left: (a)
+      live-confirm the fix in the (now-archived, `status: resolved`)
       `krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` still holds for KRX equities
       `ohlcv_1m`/`ohlcv_15m` (do not reopen/edit the archived doc — cite it, don't rewrite it); (b) confirm FX KRW's own
       capability declaration + adapter fetch path agree (same class of check, different venue/instrument_type — this is
@@ -303,8 +305,8 @@ See "Why 3 of the 13 native todos are NOT here" above for the full reasoning per
 Also excluded (embedded judgment/design calls, narrowed OUT of the 3 native todos that got drafted above but were
 originally bundled with real audit-eligible work): the `vix_features` 15m/24h-aggregation-writer DESIGN decision (stays
 in `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`) and the `mvp_mode` dead-gate
-DESIGN decision (stays in `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, already classified "genuinely
-operator-gated" by batch2).
+DESIGN decision (stays in `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`, previously classified "genuinely
+operator-gated" by batch2 — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc**).
 
 ## Reconciliation
 

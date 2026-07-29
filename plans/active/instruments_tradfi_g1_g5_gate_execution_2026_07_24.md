@@ -101,23 +101,57 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 - [x] [INFRA] P0. ✅ **tradfi instrument-definition backfill LAUNCHED** — `launch-tradfi-is-defs-sharded.sh` 9-shard
       fleet RUNNING (`instr-backfill-tradfi-{cboe,nasdaq,…}-*`), covers CME + all tradfi venue defs (current: 14,192
       captured, CME 3,532 rows 2020→06-24).
-- [ ] [DATA] P0. **ES CME futures ohlcv 1s+1m — fleet FINISHED, manifest-verify still owed** (launcher lib defaults to
-      BOTH `ohlcv_1m;ohlcv_1s`). **MEASURED 2026-07-26 (plan-reconcile, tradfi tranche)** —
-      `gcloud compute operations list` on project `central-element-323112`, filtered
-      `targetLink~tradfi-bf-cme-ohlcv-1m-es`: **all 7 year-shards `es-{2020,2021,2022,2023,2024,2025,2026}` were
-      inserted 2026-07-21T03:42:58Z–03:44:47Z and all 7 self-deleted by 2026-07-21T09:48:13Z, with ZERO
-      `compute.instances.preempted` operations on any `es-` shard.** This SUPERSEDES the earlier "IN FLIGHT … RUNNING;
-      only 2020/25/26 VMs seen — verify 2021-24 done or launch" note: 2021-2024 WERE launched (insert ops at 03:43:24Z /
-      03:43:42Z / 03:43:58Z / 03:44:15Z) and completed without preemption, so there is nothing left to launch.
-      REMAINING: manifest-verify per-year only (VM completion is not row-capture proof — per
+- [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): run the manifest-verify now and log it
+      as partial evidence — a manifest-COUNT check only, NOT the closeout's heavier fresh-pipeline-check, mirroring the
+      already-established NASDAQ/NYSE precedent in `data_completion_tradfi_2026_07_15.md`.** ES CME futures ohlcv 1s+1m
+      — fleet FINISHED, manifest-verify still owed (launcher lib defaults to BOTH `ohlcv_1m;ohlcv_1s`). **MEASURED
+      2026-07-26 (plan-reconcile, tradfi tranche)** — `gcloud compute operations list` on project
+      `central-element-323112`, filtered `targetLink~tradfi-bf-cme-ohlcv-1m-es`: **all 7 year-shards
+      `es-{2020,2021,2022,2023,2024,2025,2026}` were inserted 2026-07-21T03:42:58Z–03:44:47Z and all 7 self-deleted by
+      2026-07-21T09:48:13Z, with ZERO `compute.instances.preempted` operations on any `es-` shard.** This SUPERSEDES the
+      earlier "IN FLIGHT … RUNNING; only 2020/25/26 VMs seen — verify 2021-24 done or launch" note: 2021-2024 WERE
+      launched (insert ops at 03:43:24Z / 03:43:42Z / 03:43:58Z / 03:44:15Z) and completed without preemption, so there
+      is nothing left to launch. REMAINING: manifest-verify per-year only (VM completion is not row-capture proof — per
       `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`, count TARGET artifacts, not activity).
       Billing-fail-closed (Databento PAYG, shared singleton lock).
-- [ ] [DATA] P0. **ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated blocker has CLEARED.** The
-      singleton Databento lock was held by the ES futures fleet — **MEASURED 2026-07-26 (plan-reconcile): that fleet is
-      gone** (all 7 `tradfi-bf-cme-ohlcv-1m-es-*` VMs deleted by 2026-07-21T09:48:13Z; zero `tradfi-bf-*` instances
-      exist in `central-element-323112` in ANY state as of 2026-07-26T02:20Z), so "once the lock frees" is satisfied.
-      Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` (11-cluster ES_OPT_PARENTS set) — SPOT per the
-      backfill-VM HARD RULE.
+- [ ] [DATA] P0. **Run the manifest-count check for ES CME ohlcv_1s/1m (per the 2026-07-29 operator ruling above) and
+      record the result in `tradfi_consolidated_closeout_2026_07_18.md`.** Single live read of the
+      `market-data-tick-tradfi-prd` `_index` (`availability_index.parquet`), scoped to venue=CME × root=ES ×
+      data_type∈{ohlcv_1m,ohlcv_1s} × year 2020-2026 — mirrors the manifest-count-only method already used for the
+      NASDAQ/NYSE precedent in `data_completion_tradfi_2026_07_15.md` (per-year `capture_status` breakdown, no bucket
+      walk). Record the resulting per-year breakdown in `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s
+      MVP-cell table, "S&P index futures (ES)" row — **explicitly note the result satisfies the interim count-check
+      only**, NOT the closeout's heavier fresh-pipeline-check (`data-pipeline-check-mtds`/`data-pipeline-check-is`).
+      Done when: that row's "Backfill proven" cell cites the live query + counts and carries the interim-only caveat
+      verbatim.
+- [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): launch ES_OPT now AND wire its
+      manifest-verify into Phase-D gate tracking — the singleton Databento lock blocker cleared (confirmed 2026-07-26,
+      zero `tradfi-bf-*` instances in any state).** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated
+      blocker has CLEARED. The singleton Databento lock was held by the ES futures fleet — **MEASURED 2026-07-26
+      (plan-reconcile): that fleet is gone** (all 7 `tradfi-bf-cme-ohlcv-1m-es-*` VMs deleted by 2026-07-21T09:48:13Z;
+      zero `tradfi-bf-*` instances exist in `central-element-323112` in ANY state as of 2026-07-26T02:20Z), so "once the
+      lock frees" is satisfied. Launch `launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES_OPT` (11-cluster ES_OPT_PARENTS
+      set) — SPOT per the backfill-VM HARD RULE. **CORRECTION (2026-07-29, verified live against
+      `deployment-service/scripts/vm/`): the launcher cited above is WRONG** — `launch-tradfi-bf-cme-ohlcv-1m.sh`'s
+      `CME_ROOTS` has no `ES_OPT` entry; its own `--only-root` error text states "ES root covers ES.FUT and ES.OPT —
+      there is no separate ES_OPT root key". The real ES_OPT launcher is
+      `deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (the 11-cluster `ES_OPT_PARENTS`
+      set lives in that script's sourced `cme-expiry-calendars.sh`) — see the corrected invocation in the new todo
+      below.
+- [ ] [DATA] P0. **Launch the ES_OPT backfill** — run
+      `bash deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh --root-symbol ES_OPT` (defaults: SPOT
+      provisioning per the backfill-VM-defaults-to-SPOT HARD RULE — `ON_DEMAND=false` unless `--on-demand` is passed;
+      year-shards 2022-2026 per `cme-expiry-calendars.sh`'s `default_years_for_root`; `data_types=ohlcv_1m` only per the
+      script's own ES_OPT branch — options-chain trades/tbbo across thousands of strikes × 11 chains stays a separate
+      dedicated run). Re-verify the singleton lock is still clear immediately before launch
+      (`gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING'`). Done when: the VM(s) are
+      STARTED (<60s) + confirmed RUNNING at T+10min, per async-wait-and-poll-discipline (no fire-and-forget).
+- [ ] [DATA] P1. **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator
+      ruling above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES
+      futures (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
+      root∈{ES,EW,EW1,EW2,EW4,E1A,E2A,E3A,E4A,E5A,EOM} × data_type=ohlcv_1m, and record the result as a line item in
+      `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell table, "S&P index options" row — so the
+      post-completion manifest-verify isn't missed. Done when: that row cites the live query + counts.
 - [x] [DATA] P1. ✅ **Yahoo FX / Treasuries / DXY instruments — universe COMPLETE.** Treasuries (all 5 tenors:
       US3M/US2Y/US5Y/US10Y/US30Y → ^IRX/2YY=F/^FVX/^TNX/^TYX) + DXY (DX-Y.NYB) were ALREADY enumerated in UAC
       `YAHOO_INDICES`. Gap was FX (only KRW/USD) → added the **10 G10 FX majors** (EUR/GBP/JPY/AUD/CAD/CHF/NZD crosses +

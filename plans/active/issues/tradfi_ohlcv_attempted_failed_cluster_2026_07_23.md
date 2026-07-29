@@ -230,11 +230,45 @@ actions are different (see Todos).
       echoed request args against the 2026-07-13 working diagnostic in
       `tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md`. Repo: `market-tick-data-service`. — already covered by
       plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md (see that doc for execution).
-- [ ] [DATA] P2. Purge or reclassify the 1,242 dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07, already narrowed out
-      of expected coverage) — mirrors the deferred cleanup recommendation already on record in
+- [x] ✅ [DATA] P2. **Operator-ruled 2026-07-29 (interactive decision session): execute the purge/reclassify now as
+      planned data hygiene (reclassify — convert `capture_status` from `attempted_failed` to `empty_confirmed` — not a
+      bare delete), NOT the alternative "fold into Phase C as a read-only re-verify/explain" option that was left as an
+      unresolved verify-vs-fix ambiguity elsewhere (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s "Deferred —
+      still genuinely conflict-gated" section). Flip in understanding: the DP_RUN_MOSTLY_EMPTY alert-noise symptom that
+      originally motivated this todo is ALREADY solved independently — `known_dead_cells_registry.py`
+      (`deployment-service@01414fc`, shipped 2026-07-26, tracked in the `[DESIGN] P2` todo immediately below) suppresses
+      the re-nag for this exact dead cell — but the operator still wants the underlying 1,242 manifest rows actually
+      corrected, not just the alert silenced. This todo is now a closed decision record; the concrete script invocation
+      that executes the decision is tracked as its own fresh todo immediately below.** Purge or reclassify the 1,242
+      dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07, already narrowed out of expected coverage) — mirrors the
+      deferred cleanup recommendation already on record in
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Snapshot-before-write,
       dry-run default, matching the established `reclass_*`/`purge_*` precedent scripts. Repo:
       `market-tick-data-service`.
+- [ ] [DATA] P2. **NEW 2026-07-29 (executes the operator ruling above) — build + run the concrete CBOE `ohlcv_15m`
+      dead-cell reclassification script, converting the 1,242 rows `attempted_failed` → `empty_confirmed`.** No existing
+      `reclass_*`/`purge_*` script in `market-tick-data-service/scripts/` or
+      `market-tick-data-service/market_tick_data_service/scripts/` already covers this exact predicate — checked live:
+      this doc has no dedicated `## Progress Log` section naming one, and the closest precedent,
+      `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`, only handles rows whose `error_reason` carries an
+      `EXPECTED_*` prefix — this cell's rows carry `error_reason=WithinBoundsTradfiSourceZero` instead (per Finding 2
+      above), a different predicate that script does not match. Build a new one-off script following the same naming
+      convention as the precedent family (e.g.
+      `market-tick-data-service/scripts/reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py`), targeting the exact
+      Finding-2 predicate (`venue=CBOE`, `data_type=ohlcv_15m`, `capture_status=attempted_failed`,
+      `error_reason=WithinBoundsTradfiSourceZero`, `attempted_at` inside the frozen
+      `2026-07-07T06:40:00.845783Z`-`07:29:16.510922Z` window) and rewrite `capture_status` → `empty_confirmed` (not a
+      row delete — the operator's ruling above specifies reclassify, and this preserves the historical record). Follow
+      this doc's own established snapshot-first / dry-run-default pattern, matching the sibling
+      corporate_action/earnings-orphan and FX/ICE/KRX cleanups already run elsewhere in this plan family: (1) dry-run is
+      the default invocation (count-only, no write; `--apply` opts in); (2) snapshot `_index/availability_index.parquet`
+      before any write; (3) a fresh `gcs_bucket_soft_delete_retention_seconds()` check on
+      `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed per finding
+      T / delete-safety §3a); (4) pause the tradfi manifest-consolidator cron before the write, resume it after; (5)
+      CAS-apply. Done when: the dry-run count matches the 1,242-row Finding-2 population exactly, `--apply` converts all
+      1,242 rows from `attempted_failed` to `empty_confirmed` with 0 residual `attempted_failed` rows left matching this
+      exact predicate, and the result holds across at least 1 real consolidator merge cycle post-resume (no
+      resurrection). Repo: `market-tick-data-service`.
 - [x] [DESIGN] P2. ✅ **DONE 2026-07-26 (batch-3 todo 8) — `deployment-service@01414fc`.** New
       `known_dead_cells_registry.py` — a
       `(asset_group, data_type) -> KnownDeadCell(narrowed_at, venue, narrowed_by,     note)` registry, consulted
