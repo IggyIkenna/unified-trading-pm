@@ -125,3 +125,12 @@ census docs as this session ultimately did instead).
   has NOT been granted as of this session (no matching approval text found anywhere in `plans/active/`).
   TRADFI:volatility's options/futures raw-tick backfill status was not independently re-checked this session beyond what
   the plan already documents.
+- 2026-07-29 (slot-11, data_engineering, todo-054): Picked up the P2 fix-path recommendation above (re-verify via a
+  direct `check_dependencies("DEFI", <day>)` call, no VM). Hit a NEW, more fundamental blocker before reaching a
+  day-selection answer: the manifest read itself did not complete — root-caused to a missing `defi` entry in
+  `AG_STALENESS_BUDGET_SEC`, filed + fixed as
+  `issues/defi_manifest_consolidator_staleness_budget_missing_2026_07_29.md` (shipped
+  `unified-trading-library@13d3daef` + `deployment-api@9b3e35e`). This doc's own P2 todo (pick a densely-captured day
+  and re-run the dependency check) is now UNBLOCKED but still NOT executed — the fast consolidated-index read path
+  should work now, but the actual re-verify call itself was not re-attempted this session (scope/time; see the sibling
+  doc's own P2 followup, which restates this exact next step). Leaving this doc open until that call is actually made.
