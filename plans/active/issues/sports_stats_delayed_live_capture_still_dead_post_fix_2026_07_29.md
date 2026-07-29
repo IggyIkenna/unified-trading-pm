@@ -20,7 +20,11 @@ summary: >-
   'UNSUPPORTED'), ...]` — despite a working `UnderstatAdapter` class already registered in instruments-service's OWN
   factory (`reference_data/adapters/sports/factory.py`, key `"understat"`) and already proven capable of capturing real
   XG data (the 7,714 all-time-captured `batch_understat` rows came from a manual backfill script that presumably
-  bypassed the URDI registry path). This looks like a pure missing-registration gap, not a missing-implementation gap.
+  bypassed the URDI registry path). CORRECTED same-day: the working adapter class lives in a separate, architecturally
+  distinct sports-only sub-factory (`BaseSportsReferenceAdapter`) than the generic URDI/master factory
+  (`BaseReferenceDataAdapter`) these venues would resolve through as real keys — fixed as `NO_ADAPTER_YET` sentinels
+  instead (the honest declaration), which does NOT by itself silence the recurring warning or explain the zero-XG
+  residual; a new follow-up todo traces why these venues appear in the URDI fetch list at all.
 status: open
 nature: issue
 asset_group: [sports]
@@ -162,6 +166,31 @@ error recurring every ~5 minutes — independently worth fixing, and the most li
 FootyStats/Transfermarkt/SFI/open-meteo) enrichment has never worked via ANY live/URDI-mediated path, only via one-off
 manual backfill scripts that bypass the registry.
 
+**Correction (2026-07-29, same-day, slot-2): the initial fix (real adapter keys) was WRONG — corrected to
+`NO_ADAPTER_YET` sentinels.** `instruments_service/reference_data/adapters/sports/factory.py`'s `_ADAPTERS`
+(`BaseSportsReferenceAdapter` — fixture/league/team/odds-shaped methods) is a SEPARATE, architecturally-distinct factory
+from THIS registry's actual consumer, `instruments_service/reference_data/factory.py`'s `_ADAPTERS`
+(`BaseReferenceDataAdapter` — generic `get_instruments()`), which is what `get_adapter_for_canonical_venue()` (what a
+real `VENUE_TO_ADAPTER_KEY` entry resolves through) actually knows about. A real key pointing at `"understat"` etc.
+would raise `ValueError` (unresolvable class) the moment `urdi_reference_provider._fetch_one_venue` tried to instantiate
+it — caught live by the PRE-EXISTING `test_every_uac_adapter_key_resolves_to_a_class` regression test in
+instruments-service, which is exactly the "key→class closure" gate it exists for. Registered these 5 as `NO_ADAPTER_YET`
+instead (honest declaration: these venues are never meant to flow through the generic URDI/master- factory path at all —
+real capture is entirely the sports orchestrator's own per-fixture entity-scoped dispatch, `sports_fixtures.py`, which
+calls the sports sub-factory directly, not `get_adapter_for_canonical_venue`).
+
+**Important residual: this does NOT silence the "No URDI adapter for N venue(s)" warning in production.** Both a missing
+key and an explicit `NO_ADAPTER_YET` land in the same `unsupported` bucket in
+`urdi_reference_provider.fetch_instruments_for_all_venues` (`adapter_key is None or adapter_key == NO_ADAPTER_YET`) — so
+the warning/error will keep firing exactly as before. The sentinel fixes the REGISTRY's honesty (declared vs.
+silently-missing) and unblocks the `VENUES_BY_ASSET_GROUP`/factory-closure test invariants, but does NOT stop the noisy
+log line, and (per the league-coverage finding above) was likely never the actual reason XG captures are zero either.
+**The real open question — why do these 5 enrichment-provider names appear in `fetch_instruments_for_all_venues`'s
+`venues` argument at all, when they aren't even in `VENUES_BY_ASSET_GROUP["sports"]`** — is unresolved; tracing
+`active_venues`'s construction for a sports dispatch is the next step, tracked as a new todo below rather than solved
+here (this pass already went one level deeper than its original mechanical scope; that trace is a genuinely separate
+investigation).
+
 ## Why it matters
 
 Sports XG/advanced-stats (Understat/FootyStats) and 4 other enrichment sources have apparently NEVER been captured via
@@ -186,20 +215,33 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
 
 ## Todos
 
-- [ ] [INFRA] P0. Register `FOOTYSTATS` / `UNDERSTAT` / `TRANSFERMARKT` / `SOCCER_FOOTBALL_INFO` / `OPEN_METEO` in
-      `unified_api_contracts/registry/venue_adapter_keys.py`, mapping each to its existing factory key in
-      `instruments-service/instruments_service/reference_data/adapters/sports/factory.py`'s `_ADAPTERS` table (verify
-      each key name matches before mapping — only `"understat"` was confirmed in this pass). Add a regression test that
-      fails if any venue with a live `_ADAPTERS` factory entry lacks a `venue_adapter_keys.py` entry (real key or
-      `NO_ADAPTER_YET`). Repo: unified-api-contracts (+ instruments-service if the factory key names need reconciling).
-      **Done when**: the fix ships, the regression test passes, and `gcloud logging read` against
-      `uts-prod-instruments-service-sports-fixtures` shows the `URDI fetch: N venue(s) failed with PERMANENT errors`
-      line no longer includes these 5 venues.
-- [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying.** After a full day-plus of live operation
-      post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`, `capture_status=captured`, `written_at` >
-      the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a fresh row appears (closes this issue) or,
-      if still zero, escalate further (a THIRD cause would remain). Repo: instruments-service / market-tick-data-service
-      (read-only).
+- [x] ✅ [INFRA] P0. Register `FOOTYSTATS` / `UNDERSTAT` / `TRANSFERMARKT` / `SOCCER_FOOTBALL_INFO` / `OPEN_METEO` in
+      `unified_api_contracts/registry/venue_adapter_keys.py` as `NO_ADAPTER_YET` sentinels (NOT real keys — see the
+      2026-07-29 correction above: they resolve through a DIFFERENT, architecturally-incompatible factory than their
+      working `_ADAPTERS` entry lives in). Added to `EXPECTED_SENTINEL_VENUES` in
+      `unified-api-contracts/tests/unit/test_venue_adapter_keys.py`'s `test_sentinel_set_is_exactly_the_declared_one`
+      (the pre-existing regression guard already covers "don't let this venue silently drop out of the registry" going
+      forward — no new cross-repo test needed; an initial attempt at one incorrectly targeted the wrong (`master`, not
+      `sports`) factory dict and was reverted). **Done when**: the fix ships and instruments-service's full
+      `quality-gates.sh` is green (was RED on the initial real-key attempt via the pre-existing
+      `test_every_uac_adapter_key_resolves_to_a_class` + `test_adapter_data_sources_covers_all_adapters` gates — both
+      now pass with the sentinel correction). `unified-api-contracts@6186be5a`, full `quality-gates.sh` green (335s),
+      shipped via quickmerge to `live-defi-rollout`.
+- [ ] [INFRA] P1. **NEW, opened by the correction above.** Trace why `FOOTYSTATS`/`UNDERSTAT`/`TRANSFERMARKT`/
+      `SOCCER_FOOTBALL_INFO`/`OPEN_METEO` appear in the `venues` argument passed to
+      `urdi_reference_provider.fetch_instruments_for_all_venues()` for a live sports dispatch at all, given they are NOT
+      in `VENUES_BY_ASSET_GROUP["sports"]` — find the call site that builds `active_venues` for sports (likely a "core
+      entity"/"Date filter" completeness pass, given the one execution log I traced this to was entity-scoped to
+      `LINEUPS`) and either exclude these 5 enrichment-provider names from that list (they were never meant to be
+      URDI-fetchable "venues") or confirm there's a reason they're intentionally included that this pass didn't surface.
+      **Done when**: a fresh day-plus of live Cloud Run Job logs for `uts-prod-instruments-service-sports-fixtures`
+      shows zero `URDI fetch: N venue(s) failed with PERMANENT errors` lines mentioning any of these 5. Repo:
+      instruments-service.
+- [ ] [VERIFY] P1. **Depends on the todo above landing + redeploying (or on confirming no fix is needed).** After a full
+      day-plus of live operation post-that-fix, re-run this doc's Step 3 manifest query (`data_type=XG`,
+      `capture_status=captured`, `written_at` > the new redeploy cutoff, `pipeline_mode != batch_understat`) — confirm a
+      fresh row appears (closes this issue) or, if still zero, escalate further (a fourth cause would remain). Repo:
+      instruments-service / market-tick-data-service (read-only).
 - [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
