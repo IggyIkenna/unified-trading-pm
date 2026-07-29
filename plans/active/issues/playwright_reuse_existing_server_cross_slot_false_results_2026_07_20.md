@@ -8,7 +8,7 @@ summary:
   silently ATTACHES to whichever slot got there first and runs its specs against THAT slot's code. Measured 2026-07-20:
   a run on 5199 attached to tab-3's server and produced a FALSE failure; re-running on PLAYWRIGHT_PORT=5210 passed.
   Failure is silent — Playwright reports a normal pass/fail with no indication the code under test was not yours."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -25,7 +25,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 assigned_vm: planning
-resolved_by:
+resolved_by: "deployment-ui@5663aa0, unified-trading-system-ui@369eea0"
 ---
 
 # Playwright `reuseExistingServer` crosses slot boundaries
@@ -105,7 +105,7 @@ run output rather than invisible.
 
 ## Todos
 
-- [ ] [UI] P2. Implement per-slot Playwright port derivation (Recommended fix, Option A) in
+- [x] ✅ [UI] P2. Implement per-slot Playwright port derivation (Recommended fix, Option A) in
       `deployment-ui/playwright.config.ts` and all three `unified-trading-system-ui/playwright.config.ts` webServer
       blocks — derive `PORT` from the slot number extracted from the checkout path (`.tabs/<N>/`), falling back to the
       existing fixed-port default when not in a slot clone (pattern given above), keeping `reuseExistingServer: true`.
@@ -113,7 +113,8 @@ run output rather than invisible.
       so a foreign attach is visible instead of silent. Done-when: two slots running Playwright concurrently on default
       ports (no `PLAYWRIGHT_PORT` override) never collide — verified by launching concurrent runs from two different
       `.tabs/<N>` clones and confirming each attaches only to its own dev server, with the resolved port/reuse status
-      printed in each run's output.
+      printed in each run's output. — deployment-ui@5663aa0 + unified-trading-system-ui@369eea0 (all three webServer
+      blocks: uvicorn backend + both Next dev-server variants; port/reuse status logged via `logDevServerStatus`).
 
 ## Interim guidance for agents
 
