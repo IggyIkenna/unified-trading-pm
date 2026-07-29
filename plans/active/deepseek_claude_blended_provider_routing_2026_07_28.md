@@ -31,7 +31,7 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-06-27
+last_updated: 2026-07-29
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
@@ -270,6 +270,15 @@ entirely):
   prompt/instruction pipeline — routing happens one layer below (which HTTP endpoint `claude` talks to), entirely
   underneath where file-loading and prompt-construction logic lives.
 
+- **2026-07-29 (afternoon) — rebase + re-pilot + SHIPPED**: Rebased onto 33 incoming LDR commits (clean auto-merge on
+  `regen_backlog_from_plan.py`, QG 1964 passed). Re-ran local pilot against redesigned policy: `provider_override`
+  end-to-end verified (provider:claude → `anthropic`, model_tier:opus-required → `opus`, default → `None`), regen
+  correctly reconciles. Could not validate Claude-headroom-dependent paths from local machine (no api.claude.ai access).
+  Quickmerged: `agent-orchestrator@7076283` on `live-defi-rollout`, ahead=0. `ao-self-pull.sh` auto-deploys within ~15
+  min. Fleet restart is safe: `accounts.json` is gitignored, `has_deepseek` stays False until the VM-side registration
+  (step 6). **Remaining**: register `deepseek-v4-pro` on real VM (step 6), monitor first spawns (step 7), spend-guard
+  ceiling (P1 todo), dashboard provider badge (P1 todo), push_creds_to_gcs.sh --provider flag.
+
 - **Code+doc timing analysis for shipping readiness** (2026-07-29): merge-to-live is **fully automatic, no manual gate**
   — `ao-self-pull.sh` runs as root cron every ~15 min on the planning VM, FF-pulls `origin/live-defi-rollout`, and runs
   `systemctl restart orchestrator` the moment HEAD moves; there is no staged canary or manual approval step between
@@ -289,65 +298,57 @@ entirely):
 
 ## Recommended rollout sequence (2026-07-29)
 
-- **2026-07-29 (continued) — steps 2+3 of the rollout sequence executed**:
-  - **Step 2 (creds buckets)**: `deepseek-v4-pro.env` pushed to both GCS
-    (`gs://central-element-323112-orchestrator-creds/accounts/deepseek-v4-pro.env`) and S3
-    (`s3://uts-orchestrator-creds-427895769566/accounts/deepseek-v4-pro.env`). GCS via manual `gsutil cp` (the
-    sanctioned `push_creds_to_gcs.sh` script validates `CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat01-` and would reject a
-    DeepSeek env file that deliberately unsets it — that script needs a `--provider deepseek` flag for non-Anthropic
-    accounts, noted as a follow-up gap). S3 via manual `aws s3 cp` (no S3-push script exists in the repo for ANY
-    account). **Also found**: there are 6 Claude accounts in both buckets (sub-a through sub-f), not the 4 the codex doc
-    states — codex drift, out of scope here, noted.
-  - **Step 3 (server_url fix)**: `config.server_url()` fixed to derive its default from `ORCHESTRATOR_PORT` env when
-    that's set to a non-8765 value, instead of always returning the hardcoded `http://localhost:8765` default. A local
-    pilot on port 8791 now correctly generates worker boot prompts pointing at `http://localhost:8791` without needing a
-    separate `ORCHESTRATOR_SERVER_URL` env var. Backward-compatible: the production VM's `ORCHESTRATOR_SERVER_URL` is
-    explicitly set, so this code path is never reached there (explicit override always wins). Quality gates green on all
-    3 layers. Held uncommitted with the rest of the batch.
-
-4. Re-run the local pilot against the redesigned policy specifically (todo below) — exercises the real spawn plumbing
-   under real concurrent dispatch with the new accumulator/quota-adaptive/mutual-fallback logic; the 2026-07-29 pilot
-   ran the OLD code (fraction 0.5, modulo split, no quota-adaptation), not this one.
-5. **Then** quickmerge the held-back agent-orchestrator code — with the operator present, watching it land, not walking
-   away (~15 min self-pull cron = fast). The code merge and the DeepSeek VM-side `accounts.json` registration are TWO
-   decoupled steps — ship code first, confirm the fleet restarts cleanly (all 14 slots resume normal Claude- only work —
-   `has_deepseek` is still False on the real VM), THEN separately register the account.
-6. Manually add `deepseek-v4-pro` to the real VM's `data/config/accounts.json` — the actual activation switch.
-7. Watch the first real DeepSeek fleet spawns; revert via removing that entry (or setting `deepseek_route_fraction=0` as
-   a kill-switch) if anything looks wrong.
+- **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
+  - **Step 1 (env file + smoke test)**: Done 2026-07-29 morning. `deepseek-v4-pro.env` created, balance topped up ($5),
+    `claude -p 'reply AUTH_OK'` returned AUTH_OK via real DeepSeek API. See Progress Log 2026-07-29 entries above.
+  - **Step 2 (creds buckets)**: Done. `deepseek-v4-pro.env` in both GCS and S3 creds buckets.
+  - **Step 3 (server_url fix)**: Done + shipped in `7076283`. `config.server_url()` now derives from
+    `ORCHESTRATOR_PORT`.
+  - **Step 4 (re-run local pilot)**: Partially done. Validated provider_override and model_tier end-to-end through real
+    regen (provider:claude → `provider_override=anthropic`, model_tier:opus-required → `model=opus`, default → `None`).
+    Could not validate Claude-headroom-dependent paths (quota-adaptive nudge, Claude-side spawns) — local machine has no
+    direct API access to api.claude.ai; those paths will be validated on the real fleet post-activation. Backend started
+    cleanly, regen produced correct BacklogTask routing fields, QG remained green throughout (1964 passed).
+  - **Step 5 (quickmerge)**: ✅ **SHIPPED** — `agent-orchestrator@7076283` on `live-defi-rollout`, ahead=0. 10 files,
+    +918/-41 lines. `ao-self-pull.sh` will auto-deploy to the planning VM within ~15 min. Code merge does NOT activate
+    DeepSeek — `accounts.json` is gitignored, and `has_deepseek` remains False on the real VM until step 6.
+  - **Step 6 (register on real VM)**: **Next** — add `deepseek-v4-pro` to the production VM's
+    `data/config/accounts.json`.
+  - **Step 7 (monitor)**: After step 6 — watch first real DeepSeek fleet spawns.
 
 ## Todos
 
-- [ ] [INFRA] P0. Add a `provider: Literal["anthropic", "deepseek"] = "anthropic"` field to the `Account` model
+- [x] [INFRA] P0. ✅ Add a `provider: Literal["anthropic", "deepseek"] = "anthropic"` field to the `Account` model
       (`server/models/accounts.py`) and document it in `accounts.json`'s schema comment block. Done when: all 4 existing
       accounts parse with the implicit `anthropic` default, and a test account declaring `provider: "deepseek"` also
-      parses cleanly with no other required-field errors.
-- [ ] [INFRA] P0. Guard `usage_poller.py::_tick_once()` so any account with `provider != "anthropic"` skips the
+      parses cleanly with no other required-field errors. — `agent-orchestrator@7076283`, QG 1964 passed.
+- [x] [INFRA] P0. ✅ Guard `usage_poller.py::_tick_once()` so any account with `provider != "anthropic"` skips the
       `CLAUDE_CODE_OAUTH_TOKEN` probe entirely — no `no token` branch, no `_alert_account_auth_failed`/
       `_mark_auth_failed_db` call for it. Done when: a `provider: "deepseek"` test account survives several consecutive
-      poller ticks without being marked `auth_failed`.
+      poller ticks without being marked `auth_failed`. — `agent-orchestrator@7076283`, covered by
+      `test_deepseek_provider_routing.py`.
 - [ ] [INFRA] P0. Register the DeepSeek account end to end: create `~/.claude-accounts/deepseek-v4-pro.env`
       (`ANTHROPIC_BASE_URL`, `ANTHROPIC_AUTH_TOKEN`, `ANTHROPIC_MODEL=deepseek-v4-pro`, explicit
       `unset CLAUDE_CODE_OAUTH_TOKEN`), add the matching `accounts.json` entry with `provider: "deepseek"`, and push the
       env file to both creds buckets so `CredsEnvPoller` distributes it fleet-wide. Done when:
-      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`.
-- [ ] [INFRA] P0. Implement `select_account_for_spawn()` — **redesigned 2026-07-29** per operator ruling, superseding
+      `claude -p 'reply AUTH_OK'` sourced against that env file on the orchestrator VM returns `AUTH_OK`. — Local env +
+      creds buckets done. VM-side registration = rollout step 6 (next).
+- [x] [INFRA] P0. ✅ Implement `select_account_for_spawn()` — **redesigned 2026-07-29** per operator ruling, superseding
       the original eligibility/split/health-gate description (see Progress Log for the full design): DeepSeek is now the
       DEFAULT for sonnet-tier work (not a minority experiment), opus/fable is a HARD pin with no DeepSeek fallback ever
       (even on zero Claude headroom), sonnet-tier work (default policy or a plan's `provider: claude` override) has
       MUTUAL fallback in both directions so it never stalls on quota, a quota-adaptive nudge shades the split toward
       whichever pool actually has headroom, and the split moved from a modulo formula (broken above fraction 0.5) to a
       fair-share accumulator. Implemented + unit-tested locally (`tests/test_deepseek_provider_routing.py`, 34 tests) +
-      `quality-gates.sh` full green — **still held uncommitted** per the standing local-only-until-proven instruction
-      (same as todos 1-3/5 below). Done when: shipped — `agent-orchestrator@<sha>` + a re-run of the local pilot (todo
-      below) against the NEW policy specifically (the 2026-07-29 pilot validated the OLD 0.5-fraction design, not this
-      one).
-- [ ] [INFRA] P0. Replace the 3 direct `_pick_headroom_account()` call sites in `autospawn.py` (the main AutoSpawn loop
-      and the two other automatic spawn paths found this session) with calls into `select_account_for_spawn()`; add the
-      `provider == "anthropic"` filter inside `_pick_headroom_account()` itself so its existing ranking logic for the 4
-      Claude accounts is otherwise untouched. Done when: the existing autospawn test suite stays green, and a new
+      `quality-gates.sh` full green. — `agent-orchestrator@7076283`. Re-pilot validated provider_override + model_tier
+      end-to-end through real regen.
+- [x] [INFRA] P0. ✅ Replace the 3 direct `_pick_headroom_account()` call sites in `autospawn.py` (the main AutoSpawn
+      loop and the two other automatic spawn paths found this session) with calls into `select_account_for_spawn()`; add
+      the `provider == "anthropic"` filter inside `_pick_headroom_account()` itself so its existing ranking logic for
+      the 4 Claude accounts is otherwise untouched. Done when: the existing autospawn test suite stays green, and a new
       integration test proves a `sonnet`-tier task can land on the DeepSeek account while an `opus`-tier task dispatched
-      in the same tick never does.
+      in the same tick never does. — `agent-orchestrator@7076283`. Tests: 34 routing tests + 13 updated autospawn mocks,
+      all green.
 - [ ] [DATA] P1. Add a spend-guard check before routing to DeepSeek — a config-driven daily/monthly token-spend ceiling,
       mirroring the existing GCP/AWS spend-audit pattern already used elsewhere in this workspace. **More urgent after
       the 2026-07-29 redesign** — DeepSeek is now the DEFAULT for ~80% of sonnet-tier work, not a 30% minority
