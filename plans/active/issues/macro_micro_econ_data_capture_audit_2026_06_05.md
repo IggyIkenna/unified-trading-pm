@@ -347,6 +347,48 @@ Phased, foundation-first; parallel-up _within_ a layer, not across:
       identical values across every day-partition of their release period (see the finding noted on the DESIGN todo
       above) — a real but low-cost/idempotent characteristic to be aware of when sizing/monitoring the run, not a
       blocker.
+
+      **IN PROGRESS 2026-07-29 (slot 8) — 2 real bugs found + fixed before any row could be captured, launch pending
+              re-verification:**
+              1. **`market-tick-data-service@886a4e23`** — `_umi_fred.py::fetch_fred_series` constructed `FredAdapter()` with NO
+                 `project_id`, so `BaseTradfiAdapter.get_api_key()`'s `if not self.project_id: raise` guard fired on EVERY
+                 series on EVERY day (masked as a generic "FRED API key not found" that looked exactly like a missing/bad
+                 secret). Fixed: pass `project_id=get_project_id()`.
+              2. **`market-tick-data-service@9bc844f4`** (QG in flight, not yet quickmerged as of this checkpoint) — even with
+                 (1) fixed, `BaseTradfiAdapter.get_api_key()` itself called
+                 `self.secret_client.access_secret_version(project_id=, secret_id=, version_id=)` — **that method does not
+                 exist** on `unified_trading_library.cloud_interface`'s `SecretClient`/`CachingSecretClient` (the real
+                 interface is `get_secret(secret_name)`); every call raised `AttributeError`, masked by the same broad
+                 except-and-reraise. Same byte-identical bug found + fixed in the DeFi and on-chain-perp sibling base adapters
+                 (`base_defi_adapter.py`, `base_onchain_perp_adapter.py`) in the SAME commit — a copy-pasted defect across all
+                 3 TradFi/DeFi/onchain-perp adapter families, only surfaced now because FRED was apparently the first live
+                 caller of this code path. Verified via a local repro script (not committed — scratchpad only): 27/29 real
+                 FRED rows captured for 2024-01-02 (2 honest-empty, no release that exact day) once both fixes landed.
+              3. Neither bug was `--dry-run`-catchable or QG-catchable — existing `get_api_key` unit tests
+                 (`tests/market_interface/unit/test_defi_live_tradfi_adapters.py`) only cover the `project_id`-missing guard
+                 path and the lazy-init `secret_client` property, never a full success-path call through to
+                 `secret_client.<method>(...)` with an assertion on which method/args were used — an un-spec'd `MagicMock()`
+                 silently accepts a call to a nonexistent method instead of raising `AttributeError` like the real client
+                 would. **Follow-up P3 todo added below** to close this coverage gap so the SAME defect class can't hide again.
+              4. Also fixed live (unrelated but blocking): the TradFi + prediction manifest-consolidator Cloud Scheduler crons
+                 were stuck `PAUSED` ~20h (since 2026-07-29T01:05Z) — see
+                 `plans/active/issues/tradfi_pred_manifest_consolidator_cron_stuck_paused_2026_07_29.md` for the full writeup;
+                 resumed both, TradFi catch-up merge processed 130 shards / 6.2M rows.
+              5. **Next steps (resume here)**: once `market-tick-data-service@9bc844f4` clears QG, quickmerge it, rebuild
+                 TRADFI code tarballs (`deployment-service/scripts/vm/create-code-tarballs.sh --asset-group TRADFI`), relaunch
+                 a `--year 2024` smoke VM via `launch-tradfi-bf-fred.sh` and **verify real captured rows** (not just
+                 chunk-progress log lines — that false-positived once already this session), then launch the full
+                 `1962-01-02..today` production backfill (no `--year` flag; single VM by design, see the launcher's header
+                 comment for why NOT year-sharded), verify its early progress the same way, THEN flip this checkbox with the
+                 VM name + verified evidence.
+
+- [ ] [TEST] P3. **Close the `get_api_key()` success-path test-coverage gap that let the `access_secret_version` defect
+      ship undetected.** Add a unit test (or extend the existing `test_defi_live_tradfi_adapters.py` / TradFi-adapter
+      test files) that mocks `secret_client` with `MagicMock(spec=SecretClient)` (or an equivalent spec'd fake) and
+      asserts `get_api_key()` calls `get_secret(secret_name)` — a spec'd mock would have raised `AttributeError` on the
+      old `access_secret_version(...)` call and caught this in CI. Apply to all 3 affected base adapters
+      (`base_tradfi_adapter.py`, `base_defi_adapter.py`, `base_onchain_perp_adapter.py`) since they share the identical
+      pattern. Repo: market-tick-data-service.
 - [ ] [BACKEND] P3. **Build the instruments-service "fred" URDI reference-data adapter** — `FredAdapter.KEY_SERIES` (the
       29-series catalogue) lives only in market-tick-data-service today; `unified-api-contracts`'s
       `VENUE_TO_ADAPTER_KEY["FRED"]` is sentineled `NO_ADAPTER_YET` (2026-07-29) rather than resolving to a real
