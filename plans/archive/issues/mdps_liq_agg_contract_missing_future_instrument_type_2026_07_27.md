@@ -9,7 +9,7 @@ summary: >-
   data_type='liq_agg_1d' venue='BINANCE-FUTURES'". Distinct bug class from the original derivative_ticker
   missing-columns issue — this is a missing CONTRACT REGISTRATION entirely for one instrument_type dimension of the
   aggregated liquidation-candle data_type.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -22,6 +22,7 @@ related:
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
   ]
 created: 2026-07-27
+last_updated: 2026-07-29
 parent_epic: infrastructure_master
 priority: P1
 source:
@@ -38,10 +39,16 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: unified-api-contracts@bf1ecdb7, unified-api-contracts@f909e112
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-INTO-CODE.** Both todos done: `liq_agg_{tf}` for `(cefi, future)` registered
+> (`unified-api-contracts@bf1ecdb7`), and the follow-up audit found + fixed one more real gap (`book_snapshot_5`) plus
+> shipped a generalized class-of-bug regression test (`unified-api-contracts@f909e112`). See
+> `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` (also archived) for the sibling finding this
+> same commit closed.
 
 # MDPS liquidation candles — no SchemaContract for `instrument_type=FUTURE`
 
@@ -90,7 +97,18 @@ liquidations but never registered the equivalent for `instrument_type=FUTURE`.
       (parametrised over every CeFi timeframe) asserting `lookup_contract` resolves — full `quality-gates.sh` green.
       Real-VM `/data-pipeline-check-mdps` 489/489 re-confirmation is a follow-on VM run, not performed in this code-fix
       session.
-- [ ] [SCRIPT] P2. Audit whether the SAME `instrument_type=FUTURE` gap exists for OTHER candle data_types beyond
-      `liquidations` (the derivative_ticker fix + this proof-sweep only checked `book_snapshot_5`/`liquidations` on
-      CEFI:BINANCE-FUTURES) — grep `CONTRACT_REGISTRY` for `instrument_type=FUTURE` entries across all registered
-      data_types and compare against `instrument_type=PERPETUAL`'s coverage.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-29 — unified-api-contracts@f909e112.** Audited `CONTRACT_REGISTRY` for
+      `instrument_type=FUTURE` vs `PERPETUAL` coverage across CEFI: `perpetual` registers trades/book5/deriv/liq;
+      pre-fix `future` registered only trades + liq_agg (this doc's own fix) — **book5 was the real, live gap**. Live
+      GCS sampling (not assumed from the registry alone) — `market-data-tick-cefi-prd-central-element-323112`,
+      `instrument_type=future/data_type=book_snapshot_5`, DERIBIT + OKX-FUTURES, 4 sample days
+      (2026-06-15/07-01/07-10/07-19) — confirmed real, substantial, ongoing capture (33-104 shards/day per venue/day),
+      i.e. the exact "No SchemaContract registered ... instrument_type='FUTURE' data_type='book5_ohlcv_...'" crash this
+      doc's todo 1 fixed for `liq_agg_1d` was one VM run away from recurring for book5. `derivative_ticker` checked and
+      confirmed genuinely absent (0 real objects, same 4-day/2-venue sample) — not a gap, so not added. Registered
+      `book5_ohlcv_{tf}` for `(cefi, future)`, mirroring `perpetual`; new regression test
+      `test_cefi_future_book5_candles` plus a generalized class-of-bug sweep
+      `test_cefi_every_capturable_instrument_type_has_candle_contract` (cross-checks every CEFI leaf instrument_type's
+      raw-tick-capturable data_types against `CONTRACT_REGISTRY`) so this audit doesn't need re-running by hand next
+      time. Same commit also closes `cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md` todo 3.
+      `quality-gates.sh --no-fix` green (398s), shipped via `quickmerge --agent`.
