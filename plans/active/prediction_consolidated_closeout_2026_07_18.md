@@ -299,11 +299,11 @@ fixture-linked before MVP backfill.
 > evidence/prose dropped). Docs with 0 open todos say so explicitly. >8-open docs list every P0/P1 in full and cap P2/P3
 > with a `+N more` marker — nothing is silently dropped. Re-verified 2026-07-24 against the live corpus.
 
-- **Retagged into prediction scope 2026-07-25** (orthogonality mistag found scoping the new cross-cutting AG layer — see
-  `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s Orthogonality HARD CHECK):
-  [`prediction_cqg_residual_2026_07_24.md`](/plans/active/prediction_cqg_residual_2026_07_24.md) — 2 open
-  (cqg-classifier coverage decision + downstream cqg-grain catalogue wiring, forked from
-  `migration_verification_orphan_safety_2026_06_10`).
+- **`prediction_cqg_residual_2026_07_24.md`** — ARCHIVED 2026-07-29 (0 open todos:
+  [`/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md`](/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md)),
+  via `prediction_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`'s reconciliation + the MTDS CODE_QUICK backlog
+  pass — cqg grain wired (`unified-api-contracts@283d7449` + `instruments-service@38e393de`), dead-code cleanup shipped
+  (`market-tick-data-service@5bf8a3c7`).
 
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
@@ -347,13 +347,9 @@ fixture-linked before MVP backfill.
     (resolved, 1 residual — cross-link; note: archived location, not `plans/active/issues/`)
     - **[CODE] P2.** Durable fix: bound memory in the prediction CLOB universe scan (chunked pagination → incremental)
 - **Manifest / CQG / phantom**:
-  - [`plans/active/prediction_cqg_residual_2026_07_24.md`](/plans/active/prediction_cqg_residual_2026_07_24.md) (2 open
-    — linked here 2026-07-25 ag-closeout-linkage fix, forked verbatim off the archived
-    migration-verification/orphan-safety harness):
-    - **[DATA] P1.** Operator-gated cqg-classifier registry coverage decision BEFORE the pred G4 apply (94.5% of objects
-      route to `ClassifierConfidenceLow` under the corrected no-fallback contract).
-    - **[DATA] P2.** Wire `prediction_canonical_question_group` cqg-grain rows into the catalogue rollup — GATED on the
-      decision above.
+  - [`plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md`](/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md)
+    — 0 open todos (ARCHIVED 2026-07-29; both re-based via decision 338 and shipped — `unified-api-contracts@283d7449` +
+    `instruments-service@38e393de` + `market-tick-data-service@5bf8a3c7`).
   - [`plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`](/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/phantom_captures_prediction_2026_06_28.md`](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)

@@ -174,11 +174,17 @@ venue-vs-`VENUE_TO_ADAPTER_KEY` membership check is added to the canonicality or
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Ship the fix + decide on the marker-write architecture** — the venue-hardcoding fix (4-real-venue
-      loop, no fallback venue) passed `quality-gates.sh` 2026-07-27 but is not yet committed/shipped, pending an
-      explicit shipping decision; separately, whether to remove the physical zero-row marker write entirely (per
-      `/codex/02-data/honest-absence-downstream-handling.md:101-102`) in favor of manifest-only absence recording
-      remains a separate, open architectural question.
+- [x] ✅ [BACKEND] P2. **DONE 2026-07-29 — Shipped the fix.** The venue-hardcoding fix (4-real-venue loop, no fallback
+      venue) is now committed — market-tick-data-service@5bf8a3c7. The separate architectural question (whether to
+      remove the physical zero-row marker write entirely per
+      `/codex/02-data/honest-absence-downstream-handling.md:101-102` in favor of manifest-only absence recording)
+      remains genuinely open and out of this shipping todo's scope — not resolved here, left for a future decision.
+
+**Note on `locked_by`**: this doc's frontmatter carries `locked_by: live-defi-rollout` / `locked_since: 2026-05-21` —
+both look like a stale/invalid artifact (a branch name is not a valid locker identity, and the lock date predates this
+doc's own `created: 2026-07-27`). Not cleared autonomously (never auto-unlock); flagged here for operator review. This
+does not block the checkbox flip above, only this doc's own archival (which isn't due yet regardless — the
+architectural-question sub-item stays open).
 
 ## Provenance
 

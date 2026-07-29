@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [plan-quality, issue-docs, todo-format, hygiene-sweep]
 related:
   [
-    /plans/active/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md,
+    /plans/archive/issues/pipeline_e2e_check_vm_name_collision_2026_07_12.md,
     /plans/active/issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md,
     /plans/active/task_template.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
