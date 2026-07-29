@@ -33,7 +33,7 @@ tags: [sports, odds-api, data-pipeline-correctness, honest-coverage, gap, manife
 related:
   [
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
-    /plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md,
+    /plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md,
     /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
     /plans/active/issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md,
     /plans/archive/issues/mdt_legacy_canonical_row_gap_2026_07_16.md,

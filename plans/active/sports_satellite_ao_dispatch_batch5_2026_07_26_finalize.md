@@ -164,7 +164,7 @@ drift_direction: advance-code
       genuinely-open active `[ ]` todos** in its `## Todos` section (NOT the Deferred sections todo 3 re-confirmed), so
       archiving it now would violate the plans-run-to-actual-completion HARD RULE ("not smoke-test green"): (line 79)
       `[DATA] P2` **BLOCKED-CREDENTIALS** odds-api backfill of 3 leagues — odds-api key deactivated, fully tracked in
-      the still-OPEN `/plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md` — **UPDATE 2026-07-29: the
+      the now-`/plans/archive/issues/sports_odds_api_key_deactivated_2026_07_26.md` — **UPDATE 2026-07-29: the
       credential itself is now fixed** (operator rotated `odds-api-key` to a new 5,000,000-credits/month-subscription
       key, live-verified HTTP 200) — line 79 is no longer `BLOCKED-CREDENTIALS`/operator-gated, it's a genuinely
       dispatchable P1 backfill re-run that just hasn't executed yet. **FURTHER UPDATE 2026-07-29 (slot-15): line 79 IS
