@@ -156,20 +156,22 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
 **🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):** **(MIGRATED FROM:
 `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
-      f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
-      reads (`instruments-store-{pid}/instruments/latest/manifest.json`, `features-store-{pid}/health/latest.json`,
-      `ml-store-{pid}/training/latest/metrics.json`, `execution-store-{pid}/t1_recon/latest/summary.json`) are NON-AG
-      **pipeline-health summary** buckets carrying `# CORRECT-LOCAL` markers (a deliberate QG STEP-5.69 allowlist), NOT
-      the AG-scoped market-data stores. The canonical `resolve_bucket_name(kind="instruments-store", asset_group=…)`
-      everywhere else resolves a PER-AG bucket (`instruments-store-cefi-…`) with a different path shape — there is no
-      single non-AG `instruments-store-{pid}` in that registry, so swapping these would point the health reads at
-      wrong/nonexistent buckets (they already `try/except`→None-degrade gracefully today). REMAINING for the
-      deployment-api/downstream owner: decide the UAT health-summary bucket MODEL (keep the `# CORRECT-LOCAL` aggregate
-      form, or migrate the health summaries into per-AG/env-tiered buckets) — a model decision, not a slot-3 mechanical
-      edit. `deployment_api_config.py` store buckets already use typed `effective_*` config (FLAG-3-compliant).
-      Cross-ref downstream plan FLAG-3. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per
-      MTDS consolidation ruling.)**
+- [x] ✅ [CODE] P1. **deployment-api FLAG-3 — RESOLVED/NO-ACTION (main ruling 2026-07-28).** RE-SCOPED (slot-3
+      evaluation 2026-06-05): NOT a mechanical f-string→`resolve_bucket_name` swap; a blind swap would BREAK working
+      code. The `commentary/pipeline_uat.py` reads (`instruments-store-{pid}/instruments/latest/manifest.json`,
+      `features-store-{pid}/health/latest.json`, `ml-store-{pid}/training/latest/metrics.json`,
+      `execution-store-{pid}/t1_recon/latest/summary.json`) are NON-AG **pipeline-health summary** buckets carrying
+      `# CORRECT-LOCAL` markers (a deliberate QG STEP-5.69 allowlist), NOT the AG-scoped market-data stores. The
+      canonical `resolve_bucket_name(kind="instruments-store", asset_group=…)` everywhere else resolves a PER-AG bucket
+      (`instruments-store-cefi-…`) with a different path shape — there is no single non-AG `instruments-store-{pid}` in
+      that registry, so swapping these would point the health reads at wrong/nonexistent buckets (they already
+      `try/except`→None-degrade gracefully today). **Main's ruling on the model-decision this item asked for**: keep the
+      aggregate non-AG `# CORRECT-LOCAL` summary-bucket form AS-IS — these are deliberately system-wide pipeline-health
+      summaries, not AG-scoped market-data stores (grounded in this plan's own 2026-06-05 re-scope at line 154 above);
+      migrating them to per-AG buckets would be an unjustified cross-service bucket-contract change with no correctness
+      gap, not a bug fix. No code change. `deployment_api_config.py` store buckets already use typed `effective_*`
+      config (FLAG-3-compliant) — that part was already done. Cross-ref downstream plan FLAG-3. **(MIGRATED FROM:
+      `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter — VERIFIED ALREADY SHIPPED 2026-07-28
       (slot-16).** Both remaining sub-parts from the 2026-06-03 read-only confirmation were found already landed by
@@ -254,18 +256,18 @@ MTDS consolidation ruling.)**
       issue's fix lands + a clean re-run confirms `phantom_to_failed` drops to a small DERIBIT-chain-style residual.
 
       **✅ 2026-07-28 (slot-2) — the blocking issue is RESOLVED**: 4 confirmed root causes fixed
-                                                  (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
-                                                  `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
-                                                  other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
-                                                  evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
-                                                  dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
-                                                  (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
-                                                  Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
-                                                  then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
-                                                  then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
-                                                  legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
-                                                  chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
-                                                  2026-07-13 per MTDS consolidation ruling.)**
+                                                              (market-tick-data-service@dcbed674, @42a2fd9f, @9a2927ad, @9c19c48b) across 4 full-corpus dry-run iterations;
+                                                              `phantom_to_failed` 490,639 (8.6%) → 17,255 (0.3%), DERIBIT now the single largest venue (32.4%) with every
+                                                              other significant residual individually diagnosed as non-bug (see the issue doc's final todo for full
+                                                              evidence). This todo stays checkbox-unchecked per its own retag rationale above (dead/superseded, never
+                                                              dispatched from HERE) — the actual `--apply` execution is Phase D of the successor plan
+                                                              (`cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md`), now marked ready-to-dispatch there.
+                                                              Original scope once unblocked: run the 8 year-sharded `--also-legacy --apply` gap-fill (5,233 legacy-only cells),
+                                                              then the irreversible orphan-sweep (with the mandatory pre-delete idempotent-`--apply`-over-full-range guarantee),
+                                                              then E5 manifest rebuild (now CF-11-canonical + false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8
+                                                              legacy-bucket delete. NOT this session (irreversible) — this exact reasoning is why the successor plan phases the
+                                                              chain instead of bundling it into one dispatch. **(MIGRATED FROM: `cefi_manifest_canonicalisation_2026_06_01.md`,
+                                                              2026-07-13 per MTDS consolidation ruling.)**
 
 - [x] ✅ [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi) — **VERIFIED ALREADY SHIPPED 2026-07-28 (slot-10), +
@@ -324,10 +326,10 @@ MTDS consolidation ruling.)**
       `cefi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
       **2026-07-28 (slot-12) re-check**: still correctly BLOCKED — the predecessor issue doc's re-diagnosis re-run
-                                                      (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
-                                                      when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
-                                                      completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
-                                                      No checkbox flip — criteria still unmet pending that re-run's result.
+                                                                  (on the now-gated `market-tick-data-service@42a2fd9f`) was already running concurrently in slot-2 and slot-15
+                                                                  when this session picked up this todo; a redundant 3rd copy this session had launched was killed before
+                                                                  completion to avoid a third full-corpus GCS scan. See the issue doc's 2026-07-28 (slot-12) addendum for detail.
+                                                                  No checkbox flip — criteria still unmet pending that re-run's result.
 
 - [ ] [OPERATOR] P0. **RETAGGED [DATA]→[OPERATOR] 2026-07-28 (slot-9)**: same reclassification as its sibling todo above
       — the action lives entirely in the successor plan's `[OPERATOR]` phases, so this retag stops the backlog regen
