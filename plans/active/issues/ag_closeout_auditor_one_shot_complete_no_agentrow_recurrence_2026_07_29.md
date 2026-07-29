@@ -118,6 +118,17 @@ prior legitimate dispatch" from "typed only because THIS session's own boot call
 
 ## Recommended decision
 
+> **⚡ Recovery available (2026-07-29, main + review):** a now-dead slot-11 worker already implemented +
+> regression-tested this fix as `agent-orchestrator@b1fa85d` ("fix(orchestrator): release stray Class-A task on
+> plan_health-family boot correction"; `server/routes/slots_worker.py` +52, `tests/test_boot_typed_role_gate.py` +110)
+> but it NEVER shipped (no Quickmerge trailer; content confirmed not on LDR). The commit is PRESERVED on
+> `origin/wip-preserve/orchestrator-slot-11-b1fa85d` (the branch-state gate quarantined slot-11's diverged clone at
+> 14:16:24Z and reset it to LDR head — the commit is safe, not lost). **Fast-path both P2 todos below by RECOVERING it,
+> not reimplementing:** cherry-pick `b1fa85d` onto a clean LDR-head `agent-orchestrator` clone, confirm the diff
+> actually satisfies both todos, run `bash scripts/quality-gates.sh`, ship via
+> `quickmerge --agent --files server/routes/slots_worker.py tests/test_boot_typed_role_gate.py`, then flip both todos
+> with the shipped SHA.
+
 - [ ] [BACKEND] P2. Investigate whether `boot_slot()`'s lazy `AgentRow` construction (from `agent-orchestrator@a01aeae`)
       should ALSO fire when `spawn_base_role` is typed but was stamped by THIS SAME BOOT CALL's own request (i.e. a
       `/boot` with no `slot_role` defaults to a generic `worker` classification, then a LATER `/boot` on the SAME
