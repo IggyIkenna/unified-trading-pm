@@ -88,21 +88,49 @@ File as its own AO-dispatchable fix todo (below) rather than folding into
 validation, which this issue's discovery does NOT block — the pagination fix itself is independently confirmed via
 AAVE_V3's >1000-row days in the same run).
 
-- [ ] [DATA] P1. **Root-cause + fix COMPOUND_V3's `market_count_map()` empty-collapse.** Read
-      `_parse_compound_v3_custom`/`_parse_compound_v3_flat` in
-      `market-tick-data-service/market_tick_data_service/cli/handlers/lending_indices_handler.py` and confirm which
-      column(s) the parsed DataFrame actually populates per row; compare against `LENDING_ADDR_COLUMNS` in
-      `_lending_grain.py:66-75` (`market_address`/`underlying_asset`/`reserve`/`market_id`/`market_key`/
-      `collateral_asset`/`principal_token`/`collateral_token`/`asset_address`) + the `symbol` fallback. Either (a) the
-      parser needs to populate one of those recognized columns, or (b) `market_count_map`/`LENDING_ADDR_COLUMNS` needs a
-      compound_v3-specific column added. Add a unit test asserting a parsed compound_v3 row survives
-      `market_count_map()` with a non-empty key. Bisect the candidate commits named in the summary if the root cause
-      isn't obvious from a direct read. (repo: market-tick-data-service)
+- [x] ✅ [DATA] P1. **DONE 2026-07-29 (slot-13/cicd, agt-068e39, pivoted to data_engineering).**
+      `market-tick-data-service@d36e2498`. **The original hypothesis (`market_count_map()` empty-collapse) was
+      DISPROVEN** — pulled the real VM log
+      (`gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260729-193529/run.log`)
+      and confirmed `market_count_map()` worked correctly:
+      `compound_v3/ETHEREUM: compound_v3_custom schema succeeded (4     rows)` immediately followed by
+      `Wrote 4 rows across 4 instrument shard(s)` — 4/4 distinct markets parsed + written per chain, every day sampled.
+      **Real root cause**: the 2026-07-26 catalogue-residual wiring (`market-tick-data-service@eae703b0`, from
+      `defi_nonpool_per_instrument_eu_has_no_reconciliation_path_2026_07_20.md`) diffs two DIFFERENT id spaces.
+      `market_count_map()` keys captured markets by raw on-chain ADDRESS (the correct IS-seeded EU atom
+      `record_market_captures` reconciles), but the IS catalogue's own `instrument_id` column for
+      `instrument_type="lending"` is the canonical `VENUE-CHAIN:TYPE:SYMBOL` glued form built by `build_instrument_id`
+      (confirmed in instruments-service's `scripts/build_instrument_catalogue.py` + the log's own error `row_key`:
+      `instrument_id='compound_v3-ethereum:supply:cusdt'` — a symbol, not an address). These two id spaces never
+      intersect, so `record_catalogue_residual_empty_typed`'s `residual = catalogue_ids - captured_ids_lower` always
+      evaluated to the FULL catalogue, wrongly emitting `record_empty(reason=SOURCE_RETURNED_ZERO)` per catalogued
+      reserve even though real markets were captured — the honest-absence gate then correctly rejected the
+      unsubstantiated empty claim, raising and routing the whole shard through `record_shard_failure` despite the write
+      having already succeeded. Confirmed the SAME bug hits MORPHO in the identical run
+      (`morpho-ethereum:lending_market:wbtc-eurcv:0x2ff84b`). The prior test for this wiring
+      (`test_catalogue_residual_emits_source_returned_zero_per_instrument`) encoded the same wrong assumption — it
+      mocked the catalogue's `instrument_id` as a raw address, which is not how the real catalogue is built. **Fix**:
+      removed the structurally-invalid `record_catalogue_residual()` call (and its now-unused `_lending_grain.py`
+      wrapper) from `lending_indices_handler.py` — `record_market_captures()` already correctly reconciles the
+      address-keyed EU cells per its own docstring, so nothing is lost; corrected the wrong test to use the real
+      canonical instrument_id form and assert no false failure; added the originally-requested `market_count_map()`
+      regression test proving a parsed compound_v3 row (either schema variant) survives with a non-empty key (a valid
+      guard against a different future regression class, even though it wasn't this incident's cause).
+      `quality-gates.sh`: ALL QUALITY GATES PASSED (204s). (repo: market-tick-data-service)
 - [ ] [DATA] P2. **Verify `mtds-lending-indices-20260729-193529` reaches a terminal state cleanly** (it was still
       RUNNING, ~day 2/30 processed, when this doc was filed — SPOT + `VM_SHUTDOWN_ON_COMPLETION=true`, self-
       terminating, not fire-and-forget-risked) and confirm AAVE_V3/RADIANT/EULER_V2 final captured counts stay
       consistently >1000-per-busy-day across the full window (this doc's own validation only sampled the first ~2 days).
       `gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-lending-indices-20260729-193529/run.log`.
+- [ ] [DATA] P2. **Check `risk_params_handler.py` for the SAME id-form mismatch class fixed in todo 1.** It wires the
+      identical `record_catalogue_residual_empty_typed` pattern
+      (`market-tick-data-service/market_tick_data_service/     cli/handlers/risk_params_handler.py:617`) off its own
+      address-keyed `build_market_count_map()` output (`:707`) — unverified whether its IS catalogue population for the
+      relevant `instrument_type` actually uses a matching address form (in which case it's fine) or the same canonical
+      symbol form that broke lending_indices (in which case it silently discards real risk_params captures the same
+      way). Confirm against a real catalogue sample + a live run log before concluding either way; fix identically if
+      confirmed broken. `lst_rates_handler.py` and `evm_defi_handler.py`'s own wiring (same 2026-07-20 follow-on family)
+      may warrant the same check. (repo: market-tick-data-service)
 
 ## Codex SSOTs
 
