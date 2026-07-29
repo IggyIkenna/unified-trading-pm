@@ -206,3 +206,24 @@ not just noting.
   adding this only as corroboration + the precise onset timestamp, which the prior entry didn't have. `#796` stays
   blocked on this fleet-wide incident clearing; no code fix applies. Pinged the authoring slot with this outcome; slot
   left clean on `live-defi-rollout`, no repo touched beyond this doc.
+
+- **2026-07-29 ~21:00Z (cicd escalation `agt-dfdd5b`, slot 5)**: independent corroboration, escalated for
+  `client-reporting-api` `ldr_qg_failure` (`#0`, no PR — a plain LDR-direct wall). Reproduced locally FIRST per the boot
+  instructions: `bash scripts/quality-gates.sh` at HEAD `ed6586b8` — 665 passed, 4 skipped, 71.56% coverage,
+  `ALL QUALITY GATES PASSED (59s)`, zero failures. The code and tests are clean; the wall is CI-only. Checked the actual
+  failing CI run (`30479590370`, 18:22:09Z, the one that fired this escalation): `content-gate` + both `qg-slices` legs
+  (`checks`, `tests`) all `success`, but the `quality-gates-v2` aggregation job itself failed in 12s despite its
+  `needs.qg-slices.result` being `success` — logs for that job already 404'd (expired) by the time I looked.
+  Re-dispatched fresh (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`) three times across a ~10min
+  window: all `startup_failure`, 1s, zero jobs. Widened the check myself (independently of `agt-eda323`'s own fleet
+  check above, before finding this doc): `market-tick-data-service` and `instruments-service` fresh dispatches both
+  `startup_failure` identically — and critically, `unified-trading-library` (NOT on the self-hosted-runner allowlist,
+  `self_hosted_runner_labels: ""` i.e. `ubuntu-latest`-only, whose own dispatch succeeded cleanly at 16:31:54Z earlier
+  today) now ALSO fails `startup_failure` on a fresh dispatch — ruling out "self-hosted pool contention" as sufficient
+  explanation on its own (a pure-`ubuntu-latest` repo is affected too) and confirming this is the account-wide
+  GH-hosted-runner spending-limit block `agt-eda323` already diagnosed, not something self-hosted-specific. Checked
+  githubstatus.com independently: Actions component "Operational" (only a Copilot model-provider degradation listed) —
+  platform-side incident ruled out again. **No code or workflow change made or needed on `client-reporting-api`** —
+  filing my own bounded `/blocked` for escalation `agt-dfdd5b` referencing this doc + `BLK-21d55fb1` rather than
+  duplicating the operator page; if unanswered within the 2-min bound, stopping per the one-shot contract. Slot left
+  clean on `live-defi-rollout` (no branch changes made).
