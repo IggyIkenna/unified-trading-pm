@@ -789,7 +789,10 @@ source: >-
       health-check; once terminal, re-run `scripts/census_fixture_events_schema_variants_2026_07_25.py` (full, no
       `--limit`) per the issue doc's "Next action" before flipping this checkbox — also re-verify the `08:12Z`-stop-time
       suspect window from the prior (2026-07-25) VM run was excluded/re-fetched (issue doc item 3), not trusted at face
-      value.
+      value. — **Health-checked 2026-07-29T08:59Z-09:01Z (slot 14, data_engineering)**: still RUNNING, `date=` boundary
+      at `2026-05-15` — only ~2 months of the `2020-06-06→2026-07-25` range remain (down from ~1.5yr at the prior 05:00Z
+      check). Full detail + both reads in `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not completable
+      this turn; genuinely close now. Released via `/skip-current-task {"reason_code": "GATED"}`.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop

@@ -410,4 +410,17 @@ No new durable contract. Executes the OR-1 fixture_events re-fetch campaign alre
       advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
       self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
       flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
-      `sports_satellite_ao_dispatch_batch2-011` todo.
+      `sports_satellite_ao_dispatch_batch2-011` todo. — **Health-checked 2026-07-29T08:59Z-09:01Z (slot 14,
+      data_engineering), RUNNING, confirms slot 10's 05:00Z check — substantial progress**:
+      `gcloud compute instances     list` confirms `RUNNING` in `asia-northeast1-c`; heartbeat blob `updateTime` fresh
+      at both reads (`08:59:01Z` and `09:01:05Z`, ~2min apart matching the poll gap). 2-read progress-metric check:
+      run.log grew 290,437→291,522 lines (+1,085) over ~2min; `date=` boundary unchanged at `2026-05-15` across both
+      reads (no new date boundary crossed in this short window, but genuine in-date fixture-fetch advance — live
+      per-fixture `Fetched N events for fixture=X` lines at both reads, same pattern as every prior live check, not a
+      stall). **Notably close to done now**: only ~2 months of the `2020-06-06→2026-07-25` range remain (down from ~1.5
+      years at the 05:00Z check ~4h ago) — `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 at both reads (no terminal
+      marker yet). Not completable this turn. Releasing via `/skip-current-task {"reason_code": "GATED"}`, not
+      duplicate-launched. Next dispatch: repeat this health-check soon — at the observed pace this VM may reach terminal
+      within the next few checks; once terminal, re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no
+      `--limit`) before flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s
+      `sports_satellite_ao_dispatch_batch2-002` todo.
