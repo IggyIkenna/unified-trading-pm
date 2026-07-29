@@ -306,3 +306,32 @@ signal here (it doesn't lag the way a 15-min load average does), so treated this
 Resumed the dry-run from the 14,538 checkpoint (harness `run_in_background`, no `nohup`, same 8/8 workers, no limit) —
 confirmed running (PID 694347) immediately after launch. Monitoring for whether it now runs to completion or hits the
 same wall again.
+
+## Update 2026-07-29 (slot-15) — same script, same exit code 144, same clean-kill signature — but this time under a
+
+## demonstrably HEALTHY host (low load, ample free swap): the resource-exhaustion theory does not explain every kill
+
+Resumed the SAME category-1 marker-purge dry-run (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from
+its resume-log (5,819/23,588 at start of this session), via the harness's own tracked `run_in_background` mechanism, no
+`nohup` — `--discover-workers 16 --verify-workers 16`. Progress was confirmed healthy across 4 separate check-ins over
+~11 minutes (5,819 → 6,220 → 6,599 → 6,956 → 7,208, process alive, CPU climbing normally each time). Then the harness's
+own task-notification reported `status: "failed"`, **exit code 144** — the exact same code cited in this doc's earlier
+🔴 ESCALATION section — with no traceback, no error, no `SUMMARY` block in the script's own log (identical clean-kill
+signature to every prior incident here).
+
+**New data point, not just a repeat**: checked host state immediately after discovering the kill — `cat /proc/loadavg` →
+`1.39 2.05 3.09` (a 16-core host, so this is LOW, not oversubscribed) and `free -h` → RAM **12Gi free / 55Gi available**
+(of 61Gi total), swap **3.1Gi/47Gi used (only ~7%)** — the healthiest reading of any check-in across this entire
+incident history. Every prior entry in this doc attributed the kill to load/swap pressure (loads of 22-325, swap
+52-100%); this kill happened with essentially none of that pressure present. This does not contradict that resource
+exhaustion CAN cause this class of kill (the swap-exhaustion incidents above are still the most direct evidence for that
+mechanism) — but it does show resource exhaustion is not the ONLY trigger: something else (a session/cgroup-boundary
+reap independent of load, or a targeted external kill this session has no visibility into) can produce the identical
+clean-kill/exit-144 signature even on an otherwise-idle host. No stronger conclusion is possible from this session (no
+root/journalctl/auditd access, same gap as every earlier entry).
+
+**No data lost, resumed via the documented mitigation**: resume-log intact at 7,652 entries. Rather than manually
+re-launching after each future kill, switched to the self-restarting supervisor-loop pattern this doc already recommends
+(bash `for`-loop relaunching the same command against the same `--resume-log` path on any non-zero exit, capped retries,
+itself run under the harness's tracked `run_in_background` so a single kill doesn't require a fresh agent turn to notice
+and relaunch).
