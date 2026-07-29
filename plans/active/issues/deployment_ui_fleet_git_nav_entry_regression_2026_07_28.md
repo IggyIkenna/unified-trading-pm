@@ -13,7 +13,7 @@ summary: >-
   Confirmed unrelated to the 3 data-status items (none reference venue-filter/de-dupe-panel/pagination code). Filed per
   "pre-existing is not a triage criterion" rather than silently ignored; NOT fixed here to avoid scope creep / collision
   with whoever is actively in the Cockpit/nav territory (very recent related commits, 2026-07-27).
-status: open
+status: resolved
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -28,7 +28,7 @@ related:
     /codex/06-coding-standards/ui-testing-layers.md,
   ]
 created: "2026-07-28"
-last_updated: "2026-07-28"
+last_updated: "2026-07-29"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -42,7 +42,7 @@ source:
   "discovered running `npx playwright test --project=chromium tests/smoke/` (deployment-ui, slot .tabs/4, HEAD dfa5d0e)
   while verifying data_status_tab_and_downloads_remediation_2026_06_16.md's 3 open [UI] todos"
 depends_on: []
-resolved_by:
+resolved_by: "deployment-ui@067f7cd"
 locked_by:
 ---
 
@@ -116,24 +116,32 @@ still-fresh commits — fixing it blind risks colliding with whoever is currentl
 
 ## Todos
 
-- [ ] [UI] P2. **(a) vs (b) resolved 2026-07-28 — [OPERATOR] tag dropped, path (b) confirmed**: `deployment-ui@9e692ca`
-      ("refactor(fleet): remove /fleet page — git-health's only home is now agent-orchestrator's own dashboard",
-      2026-07-27 16:19:59 UTC — landed BEFORE `af3e756`/`fb1da34`/`74c0a7d`/`d78de0b` per verified commit timestamps,
-      not after) plus `/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md` (status: resolved,
-      operator-directed: "Delete it anyway, port snapshot-age into AO's popover first") together confirm this was a
-      **deliberate, operator-directed removal**, not an accidental drop during the reorg — `9e692ca` itself deleted
-      `FleetGit.tsx`, the `/fleet` route, the `NavMenu.tsx` nav entry, and the API-client types, and updated the unit
-      tests (`NavMenu.test.tsx`/`TopNavBar.test.tsx`/`Cockpit.test.tsx`) accordingly, but did not touch the
-      `tests/smoke/` Playwright specs — that's the actual source of these 13 failures. **Land path (b)**: update the 13
-      failing specs (`cockpit.spec.ts`, `fleet-git-tab.spec.ts`, `nav-menu-dedup.spec.ts`, `repos-tab.spec.ts`) to
-      assert the new surface (no standalone Fleet nav entry; fleet git-health lives only on agent-orchestrator's own
-      per-VM dashboard) + add a `/fleet` compat redirect (to the external AO dashboard link, matching `RepoCi.tsx`'s
+- [x] [UI] P2. **✅ DONE 2026-07-29 — `deployment-ui@067f7cd`**: `cockpit.spec.ts` already fixed by
+      `deployment-ui@258986d` (2026-07-28). Remaining 3 specs fixed 2026-07-29: deleted `fleet-git-tab.spec.ts` (0-test
+      stub), fixed `nav-menu-dedup.spec.ts` (CANONICAL, tab count 10→9, /infra→/repos redirect test), fixed
+      `repos-tab.spec.ts` (fleet cross-link href → AO external URL). 89/89 Playwright smoke tests pass. No compat
+      redirect needed (operator direction). ("refactor(fleet): remove /fleet page — git-health's only home is now
+      agent-orchestrator's own dashboard", 2026-07-27 16:19:59 UTC — landed BEFORE
+      `af3e756`/`fb1da34`/`74c0a7d`/`d78de0b` per verified commit timestamps, not after) plus
+      `/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md` (status: resolved, operator-directed:
+      "Delete it anyway, port snapshot-age into AO's popover first") together confirm this was a **deliberate,
+      operator-directed removal**, not an accidental drop during the reorg — `9e692ca` itself deleted `FleetGit.tsx`,
+      the `/fleet` route, the `NavMenu.tsx` nav entry, and the API-client types, and updated the unit tests
+      (`NavMenu.test.tsx`/`TopNavBar.test.tsx`/`Cockpit.test.tsx`) accordingly, but did not touch the `tests/smoke/`
+      Playwright specs — that's the actual source of these 13 failures. **Land path (b)**: update the 13 failing specs
+      (`cockpit.spec.ts`, `fleet-git-tab.spec.ts`, `nav-menu-dedup.spec.ts`, `repos-tab.spec.ts`) to assert the new
+      surface (no standalone Fleet nav entry; fleet git-health lives only on agent-orchestrator's own per-VM
+      dashboard) + add a `/fleet` compat redirect (to the external AO dashboard link, matching `RepoCi.tsx`'s
       already-repointed cross-link) if one doesn't already exist, mirroring
       `deployment_ui_nav_consolidation_2026_07_17.md`'s LandingTabs-deletion precedent. Done-when:
       `npx playwright test --project=chromium tests/smoke/` exits 0 (`pw:L2 ✓`).
 
 ## Progress Log
 
+- **2026-07-29** — **RESOLVED**. `cockpit.spec.ts` already fixed by `deployment-ui@258986d` (2026-07-28). Remaining 3
+  specs fixed: deleted `fleet-git-tab.spec.ts` (0-test stub), fixed `nav-menu-dedup.spec.ts` (CANONICAL, tab count 10→9,
+  /infra→/repos redirect), fixed `repos-tab.spec.ts` (fleet cross-link → AO external URL). 89/89 Playwright smoke tests
+  pass at `deployment-ui@067f7cd`. No compat redirect (operator: fleet git-health's only home is AO dashboard).
 - **2026-07-28** — Filed while verifying `data_status_tab_and_downloads_remediation_2026_06_16.md`'s 3 open `[UI]` todos
   via a fresh full `pw:L2` run. Confirmed unrelated to those 3 items and confirmed the plan's previously-cited
   `prediction_v9_breakdown.spec.ts` blocker is independently already fixed (deployment-ui@687d4ce, 2026-06-16) — this is
