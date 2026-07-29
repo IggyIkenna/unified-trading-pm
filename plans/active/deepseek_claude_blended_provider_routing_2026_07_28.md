@@ -260,6 +260,32 @@ entirely):
   pilot's own results (all-DeepSeek, by accident of Claude being rate-limited) do NOT validate this new policy
   specifically (it ran at fraction 0.5 with no quota-adaptation, forced_provider, or hard opus/fable pin) — a fresh
   pilot run against the redesigned code is a new todo below, not assumed from the old one.
+- **Confirmed positive finding from the 2026-07-29 pilot, worth recording**: CLAUDE.md and `agents/*.md` need NO
+  special-casing for a DeepSeek-routed worker. CLAUDE.md auto-load is a Claude Code CLI harness behavior (happens before
+  any prompt reaches whichever backend `ANTHROPIC_BASE_URL` points at) — directly observed firing identically in a
+  `deepseek-v4-pro` session (slot 28's boot showed the CLI's own "CLAUDE.md is over the 40.0k-char limit" warning).
+  `agents/*.md` reading is not a CLI built-in at all — it's this repo's own boot-prompt engineering (`_do_spawn`'s "STEP
+  1 — READ your instruction files"), executed via ordinary `Read` tool calls, which DeepSeek handled correctly and
+  summarized accurately. No filename convention or provider-conditional logic is needed anywhere in the
+  prompt/instruction pipeline — routing happens one layer below (which HTTP endpoint `claude` talks to), entirely
+  underneath where file-loading and prompt-construction logic lives.
+
+## Deferred work after 2026-07-29
+
+| Item                                                                     | State / why deferred                                                        | Blocked on                                                        |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Ship the held-back code (todos 1-5)                                      | Not done — implemented, tested, quality-gates green, deliberately unshipped | Operator go-ahead (standing instruction: local-only until proven) |
+| Re-run local pilot against the redesigned policy                         | Not done — real work, next logical step                                     | Nobody — pick up next                                             |
+| Isolated-local-pilot runbook / fix `AgentKeeper`+watchdog isolation gaps | Not done — real work                                                        | Nobody                                                            |
+| Fix/guard the `ORCHESTRATOR_SERVER_URL` production-reachability gap      | Not done — real work, should land BEFORE the next pilot re-run              | Nobody                                                            |
+| End-to-end test `provider:` frontmatter through real `regen()`           | Not done — real work, small                                                 | Nobody                                                            |
+| Spend-guard ceiling before routing to DeepSeek                           | Not done — real work, now more urgent (0.8 default, not 0.3)                | Nobody                                                            |
+| Dashboard provider badge (UI)                                            | Not done — real work, not started this session                              | Nobody                                                            |
+
+**Recommended next**: fix the `ORCHESTRATOR_SERVER_URL` gap first (small, prevents repeating the 2026-07-29 respawn-
+loop incident), then re-run the local pilot against the redesigned policy — that pilot run is what actually clears todos
+4/5 for shipping. The operator's last question in-session ("re-run the pilot now, or hold?") was still open when this
+checkpoint was written.
 
 ## Todos
 
@@ -328,8 +354,8 @@ entirely):
       at least one real spawn attempt where the quota-adaptive nudge measurably changed the effective fraction from a
       real (not mocked) Claude headroom reading, and (c) confirmation the hard opus/fable pin held (no DeepSeek spawn
       for an opus-tier task even when staged with zero Claude headroom).
-- [ ] [INFRA] P2. End-to-end test the new `provider: claude` plan frontmatter through the REAL
-      `regen_backlog_from_plan.     regen()` (not just the unit-level `_parse_frontmatter_provider` test) — a plan with
+- [ ] [INFRA] P2. End-to-end test the new `provider: claude` plan frontmatter through the REAL `regen()` function
+      (`server/regen_backlog_from_plan.py`) — not just the unit-level `_parse_frontmatter_provider` test. A plan with
       `provider: claude` in its frontmatter should produce a `BacklogTask.provider_override == "anthropic"` after a real
       regen pass, and a plan without it should produce `None`. Done when: a test exercises `regen()` itself (temp plans
       dir) end to end, not just the parser function in isolation.
