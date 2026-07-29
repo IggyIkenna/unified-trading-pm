@@ -40,6 +40,7 @@ source: >-
   surfaced this unrelated pre-existing failure, confirmed by reproducing it against a clean HEAD.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 ## Problem
