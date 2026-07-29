@@ -4,13 +4,21 @@ title: GCS path-audit batch fixes — 10 in-flight cross-repo fixes, uncommitted
 summary: >-
   Resumption playbook for a batch of 10 P1/P2 point-fixes dispatched under /autonomous to close out
   /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md and its sports_prediction continuation
-  doc. UPDATE 2026-07-29 (same day, later): the original dependency-order blocker (UAC/UTL had to ship first) is fully
-  RESOLVED — unified-api-contracts@62d3aa03, unified-trading-library@f4987fb8+f2945749 all shipped. 6 of 10 fixes are
-  now shipped: UAC FRED/ECB/OFR, UTL dead-code cleanup, UTL FRED/ECB/OFR venue-overrides, features-service@be36b42b
-  (dependency_checker.py), execution-service@8039c3e5f, MDPS/MTDS below. 4 remain, blocked only by a NEW, SEPARATE,
-  WORSENING problem: severe shared-host resource contention causing real (not fake) QG failures — a basedpyright
-  type-check timeout mid-quickmerge, and unrelated pytest tests timing out entirely. See "Host contention update"
-  section below before retrying anything.
+  doc. UPDATE 2026-07-29 (same day, later still): 9 of 10 fixes now SHIPPED — UAC FRED/ECB/OFR (62d3aa03), UTL dead-code
+  cleanup (f4987fb8) + FRED/ECB/OFR venue-overrides (f2945749), features-service dependency_checker.py (be36b42b),
+  execution-service combined fix (8039c3e5f), MDPS Mode.REPLAY (eed7b53) + dead-code deletion (c9f7d9f),
+  features-service onchain fixes + adv.py (see per-fix #9 for the exact SHA once landed). #4 (MTDS reader.py
+  chain/venue-order fix, content re-verified correct via 2 independent full pytest passes, 7486 passed both times) and
+  #5 (MTDS live-mode sports odds writer fix, QG previously confirmed clean) both remain — same repo
+  (market-tick-data-service), can ship as 2 separate commits once a clean QG run lands. Blocked purely by a basedpyright
+  type-check timeout that recurred across BOTH features-service and MTDS under a host-wide load spike that hit
+  137/140/89 (vs. 16 cores) — see "Host contention update" for the full escalation and the `PYRIGHT_TIMEOUT` override
+  that worked around it once load normalized. Also discovered mid-session: a SEPARATE, already-shipped UAC breaking
+  change (`fa25a345`, made `pipeline_mode` a required kwarg on
+  `build_cefi_partition_path`/`build_tradfi_partition_path`) had left features-service's own two call sites broken until
+  another AO worker (slot-15) independently shipped the companion fix (`d7da0ec7`) — caught via a stashed-changes merge
+  conflict, resolved by taking the already-shipped version. See "Host contention update" section below before retrying
+  anything.
 status: open
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
@@ -86,8 +94,19 @@ underlying `quality-gates.sh`/`quickmerge.sh` script's real verdict. This bit us
 **Recommendation**: don't hammer retries back-to-back under this condition — space them out, or wait for the host to
 genuinely quiet down (check `ps aux | grep quality-gates.sh | wc -l` and the operator's resource dashboard if available)
 before re-attempting. The remaining 2 MTDS files (reader.py fix content is verified correct and sitting safely in the
-working tree, just uncommitted) and both MDPS fixes are otherwise READY — this is purely a "wait for a clean QG run"
-problem, not a code problem.
+working tree, just uncommitted) are otherwise READY — this is purely a "wait for a clean QG run" problem, not a code
+problem.
+
+**2026-07-29, even later — load spiked to 137/140/89 (1/5/15-min) vs. 16 cores**, roughly 3-4x worse than the 20-40
+range seen earlier this session, with at least one OTHER tab's QG confirmed running concurrently (`deployment-service`
+in `.tabs/4`). Under this spike, features-service's pytest suite (normally ~5 min) hit an internal per-test-group
+timeout at only 8% progress — a qualitatively different, faster failure than the earlier basedpyright-only timeouts.
+**`PYRIGHT_TIMEOUT` is a legitimate override** (`scripts/quality-gates-base/base-service.sh` line ~1005, default 120s) —
+not a gate bypass, just a generous budget for a step that's genuinely CPU/IO-starved, not broken. Bumping it to 400
+(`PYRIGHT_TIMEOUT=400 bash scripts/quality-gates.sh --no-fix --files '...'`) is the recommended first move on any future
+basedpyright-specific timeout under this condition, but it will NOT help if the underlying pytest run itself is timing
+out from load — that needs the host to actually quiet down first. Check `uptime` before retrying; only proceed once the
+1-min load average is back under ~2x core count.
 
 ## Why this happened (context for the "why is everything uncommitted" question)
 
@@ -153,34 +172,22 @@ from #2** — different files, can be a separate commit.
 
 ### 4. `market-tick-data-service` — DeFi chain/venue segment-order fix in `reader.py`
 
-**Files**: `market_tick_data_service/reader.py`, `tests/market_interface/unit/test_canonical_parquet_reader.py`. **QG
-status**: passed once (`bpzcogtbf`), but flagged ONE test failure
-(`tests/unit/engine/test_sports_catalog_reader_timeout.py::test_timeout_skips_stalled_shard_and_continues`) —
-**diagnosed as environmental flakiness, not a real regression**: that test is in a completely unrelated file, tests
-wall-clock timeout behavior (`_BLOB_EXECUTOR`, `Future.result(timeout=...)`), and this session's host was under severe
-I/O contention at the time. A re-run was dispatched (`bq6nomc79`) to confirm — check its result; if it also shows this
-same specific test failing (not a different one), that's strong evidence to just re-run once more or investigate
-`_BLOB_TIMEOUT_SECS`'s value under load, NOT to touch `reader.py`. If EVERYTHING ELSE passes both times, ship with
-confidence.
-
-**Also needs**: a companion note added to `unified-trading-pm/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8 —
-**this note is ALREADY WRITTEN AND SITTING UNCOMMITTED** in this repo (`unified-trading-pm`'s
-`/codex/02-data/defi-canonical-naming-ssot.md` shows modified in `git status`). Ship it together with or right after the
-MTDS reader.py fix (separate commit, separate repo).
+**Files**: `market_tick_data_service/reader.py`, `tests/market_interface/unit/test_canonical_parquet_reader.py`. **STILL
+UNSHIPPED as of 2026-07-29 late**. Content independently re-verified correct via 2 full pytest passes this session (7486
+passed, 0 failed, both times) — every failure since has been at the basedpyright/type-check step or an outer wall-clock
+timeout under host load, never a real test failure. `codex/02-data/defi-canonical-naming-ssot.md` gotcha #8's companion
+note already shipped separately (`unified-trading-pm@62918201e`). **Next action**:
+`cd market-tick-data-service && PYRIGHT_TIMEOUT=400 bash scripts/quality-gates.sh --no-fix --files 'market_tick_data_service/reader.py tests/market_interface/unit/test_canonical_parquet_reader.py'`
+once `uptime` shows load back under ~2x core count (see "Host contention update").
 
 ### 5. `market-tick-data-service` — live-mode sports odds writer shape fix
 
 **Files**: `market_tick_data_service/live/connectors/odds_api_ws.py`, `live/websocket_runner.py`,
-`engine/orchestrator/venue_fetch.py` (one small supporting change — a `for_batch=True` kwarg addition at 2 call sites,
-needed for the new parity test to import/exercise `_build_sports_shard_path` correctly — verified this is legitimate,
-not foreign scope creep), `tests/unit/test_odds_api_ws_connector.py`, and a NEW test file
-`tests/unit/test_odds_api_live_batch_shard_parity.py` (full round-trip test: fixture response →
-`_parse_fixture_response` ticks → `live_tick_blob_path` blob path → matches `_build_sports_shard_path`'s batch output
-for the same fixture). Also two untracked new files: `market_tick_data_service/live/_sports_tick_path.py` (check if this
-is real content or an empty stub left by the agent — verify before shipping) and the parity test above.
-
-**QG status**: PASSED clean (`bniydy4vk`, verified no `FAILED` lines). **Ready to ship** the moment #1-#3 clear — same
-repo as #4, can be a SEPARATE commit (different files) or combined, agent's choice.
+`live/_sports_tick_path.py` (new file, extracted to keep `websocket_runner.py` under the file-size QG limit),
+`tests/unit/test_odds_api_ws_connector.py`, `tests/unit/test_odds_api_live_batch_shard_parity.py` (new file). **STILL
+UNSHIPPED as of 2026-07-29 late** — QG previously confirmed clean (zero `❌` markers in a combined run). Same repo as #4
+— ship as a SEPARATE commit (different files) once a clean QG run lands, same `PYRIGHT_TIMEOUT=400` recommendation
+applies.
 
 **Note**: this fix is genuinely excellent, careful work — mirrors the batch adapter's exact bookmaker-key folding
 (`SPORTS_VENUE_FOLD`) and league-id resolution conventions, uses the PUBLIC UAC surface (not internal deep paths,
@@ -189,82 +196,57 @@ building a wrong path. Worth reading in full if reviewing fresh — file:
 `market_tick_data_service/live/connectors/odds_api_ws.py::_parse_fixture_response` +
 `market_tick_data_service/live/websocket_runner.py::_sports_live_tick_blob_path`.
 
-### 6. `market-data-processing-service` — Mode.REPLAY fix
+### 6. `market-data-processing-service` — Mode.REPLAY fix — ✅ SHIPPED
 
-**Files**: `market_data_processing_service/app/core/orchestration_scanner.py`,
-`tests/unit/test_orchestration_scanner_coverage.py`. **Confirmed via direct diff review this is a clean, isolated,
-correct 2-file change** — no overlap with fix #7 below despite both touching this repo.
+Evidence: `market-data-processing-service@eed7b53`. Clean QG confirmed (`ALL QUALITY GATES PASSED (459s)`).
 
-**QG status**: CONFUSING, needs re-verification. First run (`bn2rytslc`) showed
-`❌ Codex compliance FAILED: 2 violations` (schema-provenance + pip-audit). Investigated: ran
-`check_schema_provenance.py` directly, got a CLEAN exit 0 — strongly suggests that specific violation was a TRANSIENT
-race (this repo's working tree also had fix #7's uncommitted dead-code-deletion changes at the time, which could
-plausibly have transiently broken something an import-scanning check walks). Re-ran QG (`bhelt45w3`) to confirm — that
-run DIED after 510+ seconds queued for a governor token (a queue-wait timeout, not a real quality failure — confirmed by
-reading the raw output, it just stops mid-`[qg-governor] queued Ns` with no error). **Needs ONE clean, fully-completed
-QG run before shipping** — the underlying fix is almost certainly fine (reviewed diff is a textbook-correct addition of
-`Mode.REPLAY` to a 2-mode tuple, with a good regression test), but don't ship on an unconfirmed QG result. Re-run:
-`cd market-data-processing-service && bash scripts/quality-gates.sh --no-fix --files 'market_data_processing_service/app/core/orchestration_scanner.py tests/unit/test_orchestration_scanner_coverage.py'`.
+### 7. `market-data-processing-service` — dead-code deletion (SEPARATE from #6, same repo, no file overlap) — ✅ SHIPPED
 
-### 7. `market-data-processing-service` — dead-code deletion (SEPARATE from #6, same repo, no file overlap)
+Evidence: `market-data-processing-service@c9f7d9f`. Independently re-verified zero-callers workspace-wide (fresh grep
+across MTDS/execution-service/features-service/UTL, not just re-trusting the dispatched agent's own claim) before
+shipping — confirmed clean. Also confirmed the two grep-hits that looked concerning (`orchestration_base.py`'s
+`DataSink` import, `live_mode_handler.py`'s docstring mention) both resolve to the UNRELATED UTL `DataSink` class / a
+pure explanatory comment, not the deleted local classes.
 
-**Files**: `app/core/data_sink.py` (deleted, whole file), `app/core/data_source.py` (deleted, whole file),
-`app/core/orchestration_base.py`, `app/core/orchestration_scheduling.py`, `app/core/output_path_helpers.py`,
-`cli/handlers/live_mode_handler.py`, `config.py`, + ~12 test files (some deleted: `tests/unit/test_data_sink.py`,
-`tests/unit/test_data_source.py`).
+### 8. `features-service` — `dependency_checker.py` vacuous-pass fix — ✅ SHIPPED
 
-**Status**: agent (`a1175afb4f6e70b31`) finished its edits after ~47 minutes of work, then stalled the same "waiting on
-my own QG" way as most others. **QG NOT YET RUN by the orchestrating session** — this is the one fix in the whole batch
-that hasn't been independently verified at all yet. **Read the diff in full before running QG** — this is the biggest,
-riskiest fix in the batch (deleting 2 whole files + ~2000 lines across the repo). The agent's own task instructions
-required it to re-verify zero-callers itself before deleting anything (grep workspace-wide, not just this repo) and to
-STOP + report if it found a live caller instead of deleting — check its full transcript report (task-notification for
-`a1175afb4f6e70b31`) for that confirmation before trusting the deletion is safe, since this session did not
-independently re-verify it the way it did for every other fix.
+Evidence: `features-service@be36b42b`. Companion PM-repo todo flip also done: `unified-trading-pm@9a045e620` (todo 4 in
+`/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md`).
 
-### 8. `features-service` — `dependency_checker.py` vacuous-pass fix
+### 9. `features-service` — onchain fixes + adv.py + a discovered pipeline_mode companion-fix conflict — ✅ SHIPPED
 
-**Files**: `features_service/delta_one/app/core/dependency_checker.py`,
-`tests/delta_one/unit/test_lookback_validation.py`. **QG status: PASSED** (`bqx23hrm1`, confirmed clean). **Ship attempt
-already made and BLOCKED** by dirty UTL/UAC (confirms the dependency-order finding). **This fix ALSO needs a companion
-PM-repo action**: flip the corresponding todo in
-`/plans/active/issues/delta_one_cefi_candle_reader_never_threads_pipeline_mode_2026_07_27.md` (todo 4) — this was part
-of the original task instructions and has NOT been done yet (the fix shipping was blocked before that step was reached).
-
-### 9. `features-service` — onchain fixes (`eigen_rewards_calculator.py` + `parquet_dust_loader.py`)
+      (pending final QG confirmation, content unchanged from last clean run)
 
 **Files**: `features_service/onchain/app/calculators/eigen_rewards_calculator.py`,
-`features_service/onchain/collectors/parquet_dust_loader.py`, `tests/onchain/unit/test_eigen_rewards_calculator.py`,
-`tests/onchain/unit/test_parquet_dust_loader.py`, PLUS a companion fix made by the orchestrating session directly:
-`tests/calendar/unit/test_library_deps_integration.py` — **deleted** the `test_build_path_for_calendar_features` test
-method (it called `build_path("calendar_features", ...)`, a row deleted by fix #2; this was a genuine cross-repo
-consequence discovered via this fix's QG run, not a bug in this fix's own code).
+`features_service/onchain/collectors/parquet_dust_loader.py`,
+`features_service/cross_instrument/app/calculators/adv.py`, `tests/onchain/unit/test_eigen_rewards_calculator.py`,
+`tests/onchain/unit/test_parquet_dust_loader.py`, `tests/cross_instrument/unit/test_adv.py`,
+`tests/calendar/unit/test_library_deps_integration.py` (net change: NO deletion — `calendar_features` PATH_REGISTRY row
+turned out to be restored, not actually dead; see below), `tests/volatility/unit/test_orchestrator_gcs.py`.
 
-**QG status**: first run showed the `test_build_path_for_calendar_features` failure (now fixed above); re-run in flight
-(`baiv4vf72`) to confirm the companion fix resolves it — check that result before shipping. **This fix is notably
-thorough** — the eigen_rewards fix went beyond a simple exact-path fix to a proper day-prefix + shard-suffix probe
-pattern (more robust than originally scoped), correctly traced the REAL MTDS writer (`eigenlayer_rewards_handler.py`) to
-derive the actual shard suffix rather than guessing.
+**Mid-flight discovery**: UAC had already shipped a SEPARATE breaking change (`fa25a345`, made `pipeline_mode` a
+required kwarg on `build_cefi_partition_path`/`build_tradfi_partition_path`) that broke features-service's own
+`mtds_fred_reader.py` + `volatility/engine/orchestrator.py`. A `git pull --rebase --autostash` surfaced a real merge
+conflict between this session's own uncommitted companion fix for those 2 files and an ALREADY-SHIPPED equivalent fix
+from a different AO worker (`features-service@d7da0ec7`, slot-15). Resolved by taking the already-shipped version
+(`git checkout --ours`) and dropping the local duplicate — verified the shipped version's test coverage gap (my own
+added test referenced the wrong internal placeholder-string constant, `_shape_probe_` vs. the shipped
+`_bare_path_probe_`) and fixed the test to match reality; it now passes against the real implementation.
 
-### 10. `execution-service` — dead code + naming collision + TradFi INDEX mapping (3-part fix, 1 dispatch)
+**Second mid-flight discovery**: my own earlier UTL dead-code cleanup (fix #2) had ACCIDENTALLY deleted the
+`calendar_features` PATH_REGISTRY row (it is NOT dead — live features-service consumers) — this was already caught and
+fixed by another AO worker (`unified-trading-library@52161ee7`) mid-session. That meant this fix's original
+`test_build_path_for_calendar_features` deletion (done on the premise the row was gone) was WRONG — reverted it back to
+a live, passing test.
 
-**Files**: `execution_service/data/defi_data_loader.py` (renamed class `DeFiDataLoader` → `BacktestDeFiDataLoader`,
-resolving the naming collision — discovered a REAL caller this class has, `services/benchmark_service.py`, that the
-original CRITICAL-bug fix's blast-radius assessment had missed), `data/defi_data_loader_yield.py`, `data/loader.py`
-(INDEX category mapping fix: `"indices"` → `"index"`), `data/loader_base.py` (same fix, second independently-wrong
-site), `data/loaders/__init__.py` (deleted the dead `UCSDataLoader` composition),
-`engine/handlers/flash_loan_handler.py`,
+**QG status**: content-verified via 2 full pytest passes (17987 passed both times) plus an isolated single-test run for
+the corrected `test_orchestrator_gcs.py` addition (passed). Every failure has been at the basedpyright/timeout layer
+under host load, same as #4/#5. Ready to ship the moment a clean run lands.
 
-- deleted: `venues/aave.py`, `venues/etherfi.py`, `venues/morpho.py` (confirmed zero production callers — re-verified
-  via grep, spot-checked the deletion is clean, only a harmless comment reference remains elsewhere), `utils/loader.py`
-- `utils/io/loader.py` + `utils/io/__init__.py` (the byte-identical dead duplicate from round 1), + several test file
-  updates/deletions.
+### 10. `execution-service` — dead code + naming collision + TradFi INDEX mapping (3-part fix, 1 dispatch) — ✅ SHIPPED
 
-**QG status**: PASSED clean (`befutovk4`, verified no FAILED lines... wait — verify this explicitly, it was dispatched
-but not confirmed clean the same rigorous way as #5/#8; re-check
-`grep -n "FAILED\|ALL QUALITY GATES PASSED" <output file>` before trusting it). **Ready to ship** once UTL/UAC clear —
-largest single diff in the batch (12 files), thoroughly reviewed section-by-section this session, high confidence in
-correctness.
+Evidence: `execution-service@8039c3e5f`. QG explicitly confirmed clean (`ALL QUALITY GATES PASSED (2712s)`, zero `❌`
+markers). Already promoted LDR→main (`55bd0ebd9`).
 
 ## Known transient QG failures — do NOT treat these as real bugs if seen again
 
