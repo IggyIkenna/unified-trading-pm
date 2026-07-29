@@ -125,10 +125,12 @@ source:
 
 ### Phase F — Code-tarball bucket retention (GCS lifecycle, human-gated)
 
-- [ ] 15. [DATA] P3. Determine which `@sha` tarballs in `gs://deployment-scripts-central-element-323112/code/` are still
-      referenced — by a live VM (`gcloud compute instances list`), a launcher default, or a `deployments/active/*.json`
-      registry entry — so the lifecycle rule never deletes a referenced copy. Done-when: the referenced-`@sha` set (or
-      "only current-pointers referenced") is listed.
+- [x] ✅ 15. [DATA] P3. Determine which `@sha` tarballs in `gs://deployment-scripts-central-element-323112/code/` are
+      still referenced — by a live VM (`gcloud compute instances list`), a launcher default, or a
+      `deployments/active/*.json` registry entry. **Complete 2026-07-29.** Result: **zero @sha tarballs actively
+      referenced.** All 30 live VMs use `vm/setup-data-pipeline-vm.sh` which downloads the current-pointer
+      `<repo>-code.tar.gz`. No VM has any `*_TARBALL_SHA` metadata pin set. No launcher scripts reference @sha tarballs.
+      1,189 @sha tarballs across ~20 repos — all are safe to age out. Only current-pointers are referenced.
 - [ ] 16. [INFRA] P3. Draft a GCS lifecycle rule on the `code/` prefix that ages out old `@sha` tarballs + manifests
       (e.g. `age > 30d` AND not the current-pointer AND not in the Phase-15 referenced set); the per-repo
       `<repo>-code.tar.gz` current-pointer is always kept. Done-when: the lifecycle JSON is committed and a dry
