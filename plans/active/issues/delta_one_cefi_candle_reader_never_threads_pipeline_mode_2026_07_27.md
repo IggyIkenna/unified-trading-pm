@@ -159,34 +159,40 @@ handler's setup code not yet grepped). The fix-todo below should trace and fix B
       TradFi/CME fallbacks still work. Full `quality-gates.sh` green, sentinel-verified. features-service@615abbaa.
 
       **Real-day proof, END-TO-END, against real prod GCS data** (via the `-test-` sink bucket, no prod mutation):
-                      `HYPERLIQUID:PERPETUAL:BTC-USD@LIN`, day=2026-07-19, `candlestick_patterns` feature_group (the only real
-                      pipeline_mode-partitioned 1h candle data currently backfilled for CEFI — see "real-data caveat" below) —
-                      lookback validation PASSED (was: hard-fail 0/68), 24 real candles loaded via the pipeline_mode-threaded reader,
-                      features computed, and a real partition WRITTEN to the canonical
-                      `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/`
-                      tree (confirming `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`'s writer canonicalization is correct on
-                      real data, not just unit tests). Re-ran the identical command a second time to confirm skip/re-run stability
-                      (idempotent, consistent `Completed 1/1 instruments` both times).
+                          `HYPERLIQUID:PERPETUAL:BTC-USD@LIN`, day=2026-07-19, `candlestick_patterns` feature_group (the only real
+                          pipeline_mode-partitioned 1h candle data currently backfilled for CEFI — see "real-data caveat" below) —
+                          lookback validation PASSED (was: hard-fail 0/68), 24 real candles loaded via the pipeline_mode-threaded reader,
+                          features computed, and a real partition WRITTEN to the canonical
+                          `gs://features-cefi-test-central-element-323112/delta_one/by_date/day=2026-07-19/feature_group=candlestick_patterns/`
+                          tree (confirming `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`'s writer canonicalization is correct on
+                          real data, not just unit tests). Re-ran the identical command a second time to confirm skip/re-run stability
+                          (idempotent, consistent `Completed 1/1 instruments` both times).
 
-                      **Real-data caveat (a genuine, separate data-availability gap — NOT a code bug, out of scope for this fix)**:
-                      only `day=2026-07-19` currently has real `processed_candles/.../pipeline_mode=batch_hyperliquid/timeframe=1h/`
-                      objects for this instrument (verified via direct GCS listing across 2026-07-18 through 2026-07-26 — every other
-                      day 404s). Raw MTDS `trades` capture IS continuous 2026-06-01..2026-07-20 per the manifest, but MDPS candle
-                      DERIVATION hasn't backfilled most of those days yet — so `technical_indicators` (needs 50 candles) and other
-                      higher-lookback feature_groups still correctly report "insufficient data" (24 real candles available, not a
-                      bug). `candlestick_patterns` (lookback=10) was the smallest-lookback group that could be proven green against
-                      the currently-available real data. This means `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6's
-                      broader claim ("PROVE ... green on one real day") is now proven for delta_one/CEFI at the code level (the
-                      by_date writer + candle reader chain both work end-to-end on real data), but a full production run across all
-                      feature_groups still needs MDPS to backfill more candle-derivation days — separate, pre-existing scope, not
-                      re-opened here. Volatility's real-day leg remains separately blocked on missing `options_chain` input near this
-                      window, as already noted in that issue's todo 6 (untouched by this fix).
+                          **Real-data caveat (a genuine, separate data-availability gap — NOT a code bug, out of scope for this fix)**:
+                          only `day=2026-07-19` currently has real `processed_candles/.../pipeline_mode=batch_hyperliquid/timeframe=1h/`
+                          objects for this instrument (verified via direct GCS listing across 2026-07-18 through 2026-07-26 — every other
+                          day 404s). Raw MTDS `trades` capture IS continuous 2026-06-01..2026-07-20 per the manifest, but MDPS candle
+                          DERIVATION hasn't backfilled most of those days yet — so `technical_indicators` (needs 50 candles) and other
+                          higher-lookback feature_groups still correctly report "insufficient data" (24 real candles available, not a
+                          bug). `candlestick_patterns` (lookback=10) was the smallest-lookback group that could be proven green against
+                          the currently-available real data. This means `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6's
+                          broader claim ("PROVE ... green on one real day") is now proven for delta_one/CEFI at the code level (the
+                          by_date writer + candle reader chain both work end-to-end on real data), but a full production run across all
+                          feature_groups still needs MDPS to backfill more candle-derivation days — separate, pre-existing scope, not
+                          re-opened here. Volatility's real-day leg remains separately blocked on missing `options_chain` input near this
+                          window, as already noted in that issue's todo 6 (untouched by this fix).
 
-                      Updated `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6 to reflect this real-day proof result.
+                          Updated `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md` todo 6 to reflect this real-day proof result.
 
-- [ ] 4. [DATA] P2. Check whether the SAME `pipeline_mode=None` gap affects other CEFI-reading call sites in
+- [x] ✅ 4. [DATA] P2. Check whether the SAME `pipeline_mode=None` gap affects other CEFI-reading call sites in
       features-service (cross_instrument, multi_timeframe) or other asset groups where MDPS candle writes have also
-      fully migrated to pipeline_mode-partitioned shapes.
+      fully migrated to pipeline_mode-partitioned shapes. Found a matching vacuous-pass bug in
+      `delta_one/app/core/dependency_checker.py`'s `LookbackValidator._discover_instruments()` — it only probed the bare
+      (no-`pipeline_mode`) prefix, silently returning zero instruments once MDPS finished migrating a shard to
+      pipeline_mode-partitioned paths. Fixed to probe every candidate `pipeline_mode` value alongside the bare prefix
+      (same `_candidate_pipeline_mode_values` pattern as the sibling MDPS fix), and extracted
+      `_list_instrument_ids_for_prefix()` to keep the method under the 50-line QG limit. Evidence:
+      `features-service@be36b42b`.
 
 ## Progress Log
 

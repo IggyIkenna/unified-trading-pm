@@ -32,7 +32,7 @@ related:
     ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
     /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
     /plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md,
-    features_repo_consolidation_2026_05_08.md,
+    /plans/archive/features_repo_consolidation_2026_05_08.plan.md,
     /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
     /plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
     /plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md,

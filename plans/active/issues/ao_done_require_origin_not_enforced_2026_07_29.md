@@ -129,10 +129,19 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
       one-off script that produced the original 2.29% figure — same read-only SSM pattern as
       `check-ao-backlog-status.sh`). A `--days 1` spot-check on 2026-07-29 already shows an encouraging early signal
       (0/151 false in the last 24h) but that's too short a window to act on — wait for the "a few days" this todo asks
-      for. If the rate is now at/near 0%, set `done_require_origin=true` in the orchestrator's `.env.local` (or the
-      systemd unit template if it should apply fleet-wide) and ship. If a nonzero rate persists, sample those specific
-      examples the same way this session did (check the cited SHA against the real repo) before deciding whether it's a
-      genuine failure class or a different race this fix didn't cover.
+      for. **Second spot-check, same day 2026-07-29 (~13.3h after `25d497f` shipped at 2026-07-29T00:45:14Z)**:
+      `--days 1` now shows 0/52 false (0.0%) — encouraging, but still NOT the "a few days" window this todo asks for
+      (the fix has only been live ~half a day, not days), and the event count is noticeably lower than the ~81/day
+      pre-fix average (52 vs ~81) because of the SAME-DAY account-pool exhaustion
+      (`orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md`) suppressing normal scheduled-job/worker volume — a
+      thin, possibly-unrepresentative sample. **Deliberately still NOT flipping `done_require_origin=true` on this
+      data** — two spot-checks both at 0% is a good early trend, not yet the sustained multi-day, normal-volume signal
+      this todo's own gate requires. Re-run `check-on-origin-rate.sh --days 3` (or more) once normal dispatch volume
+      resumes (account pool headroom clears; some accounts are rate-limited through 2026-08-02 per the swap-exhaustion
+      doc) — if it holds at/near 0% over that longer, fuller-volume window, set `done_require_origin=true` in the
+      orchestrator's `.env.local` (or the systemd unit template if it should apply fleet-wide) and ship. If a nonzero
+      rate persists, sample those specific examples the same way this session did (check the cited SHA against the real
+      repo) before deciding whether it's a genuine failure class or a different race this fix didn't cover.
 - [ ] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
       landing behavior, but worth a deliberate yes/no rather than leaving it implicit.
