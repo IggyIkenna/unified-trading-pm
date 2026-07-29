@@ -13,7 +13,12 @@ summary: >-
   scoped follow-up rather than absorbing it into the single P1 dispatch todo.
 status: open
 nature: issue
-asset_group: [defi, cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-29 (/ag-closeout-audit defi, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [defi, cross-cutting], a genuine mistag: this doc forked out of cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md
+  # as a scoping correction but its content (25+ call sites, all named handlers under market-tick-data-service's DeFi
+  # handler tree -- evm_defi_collectors.py, aave_oracle, solana_defi_handler.py, etc.) is 100% DeFi-specific, not a
+  # generic cross-AG pattern; classic "fork inherits parent's cross-cutting tag verbatim" bug class per the skill.
 stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer]
@@ -22,6 +27,7 @@ related:
   [
     ../cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md,
     ../data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-07-28"
 source: sports_consolidated_native_ao_extract-010/cross_cutting_satellite_ao_dispatch_batch2-011 dispatch (slot-11)

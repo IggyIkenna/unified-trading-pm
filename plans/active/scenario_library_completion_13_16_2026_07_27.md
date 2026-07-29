@@ -8,12 +8,17 @@ summary:
   anywhere.
 status: active
 nature: process
-asset_group: [defi, cross-cutting]
+asset_group:
+  [defi] # corrected 2026-07-29 (/ag-closeout-audit defi, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [defi, cross-cutting], a genuine mistag: parent_epic is defi_master (not one of the 5 cross-cutting DATA_EPICS), and
+  # 1 of 2 implementation todos (lst_unstake_queue_blowup, an LST/restaking concept) is unambiguously DeFi-only; the tag
+  # never functionally registered as cross-cutting membership anyway (parent_epic gate fails, doc was never cited by the
+  # cross-cutting closeout), so this was vestigial, not a real dual-scope marker.
 stage: [meta]
 repos: [unified-api-contracts, unified-trading-library]
 scope: [engineer]
 tags: [scenario-injection, uac, defi, execution, lst, game-day]
-related: []
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-27
 parent_epic: defi_master
 assigned_vm: NA
