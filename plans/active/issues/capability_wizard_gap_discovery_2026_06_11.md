@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-29
 ---
 
 # Capability wizard — gap discovery tracker
@@ -531,8 +531,27 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       the `venue:cboe` todo applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of
       `needs-config` once a real reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as
       that todo's own note. No code changed this pass; this is a checkbox-only verification flip.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit** (distance 1, status partial) —
-      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (slot-12, capability_wizard_gap_discovery-021) — already fixed by the
+      sibling `venue:cboe`/`venue:cme` todos above, no new code needed.** That todo's root-cause fix
+      (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`) explicitly predicted it
+      would also resolve this todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from
+      the already-committed, already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py     --output-dir <scratch>`, scratch dir — no repo files mutated) and
+      confirmed the `ARBITRAGE_PRICE_DISPERSION     --supports--> venue:deribit` edge now carries
+      `reason="UAC lacks funding_arb flag distinct from price-arb (gap     #2)."` (status stays `partial`, correctly — a
+      real, narrower capability gap, not a venue-integration gap). Deribit sits in TWO `ARBITRAGE_PRICE_DISPERSION`
+      cells in `archetype_capability_manifest.json` — CEFI/perp (this reason) and CEFI/option
+      (`"vol_arb not a separate capability; multi-leg vol-arb algo pending."`), both PARTIAL;
+      `compute_unlock_entries()`'s edge-key dedup (`_capability_unlock.py` — keeps first-encountered on a status tie,
+      only overwrites on a strictly more-available status) deterministically resolves to the CEFI/perp cell's reason
+      because it's iterated first in the manifest's cell order — the documented, pre-existing, already-tested dedup
+      rule, not a new bug. Same pre-existing classifier-keyword quirk noted on the `venue:cboe`/`venue:cme` todos
+      applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of `needs-config` — the reason text
+      contains the substring "gap #", which `_REASON_CLASSIFIER` matches to `PIECE_REGISTRY` before any config-shaped
+      needle) — not a new bug, not fixed here, same as those todos' own notes. No code changed this pass; this is a
+      checkbox-only verification flip.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr** (distance 1, status partial) —
       missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) — missing:
