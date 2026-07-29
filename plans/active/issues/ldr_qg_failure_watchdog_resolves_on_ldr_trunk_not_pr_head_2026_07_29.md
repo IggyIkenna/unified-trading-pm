@@ -155,11 +155,17 @@ mechanisms; it's simply a fourth, distinct, now-confirmed trigger specific to PR
 
 ## Recommended fix
 
-- [ ] [BACKEND] P1. In `_poll_wall_resolution`, when `wall_type == "ldr_qg_failure"` AND `pr_number > 0`: check the **PR
+- [x] [BACKEND] P1. In `_poll_wall_resolution`, when `wall_type == "ldr_qg_failure"` AND `pr_number > 0`: check the **PR
       head's own** `quality-gates-v2` conclusion (e.g. `gh pr checks <pr_number>` or
       `gh api     repos/<owner>/<repo>/commits/<pr_head_sha>/check-runs` filtered to the `quality-gates-v2` context),
       not `ci_reconcile.repo_ldr_qg_conclusion(repo)` (LDR trunk). Only fall back to the LDR-trunk check when
-      `pr_number == 0` (the bare-LDR-red case the current code correctly handles). (repo: agent-orchestrator)
+      `pr_number == 0` (the bare-LDR-red case the current code correctly handles). (repo: agent-orchestrator) — ✅
+      agent-orchestrator@270e50b (already shipped to `live-defi-rollout` before this task's dispatch, verified by a
+      second agent 2026-07-29: adds `_pr_head_branch()` via `gh pr view --json headRefName`, resolves PR-scoped
+      `ldr_qg_failure` via `ci_reconcile.repo_ldr_qg_conclusion(repo, branch=<pr head branch>)`, returns `None` — never
+      falls back to trunk — when the head branch can't be resolved; falls back to the bare trunk check only for
+      `pr_number == 0`. Includes `tests/test_escalation.py` coverage. Confirmed HEAD == origin/live-defi-rollout,
+      working tree clean.)
 - [ ] [BACKEND] P2. Once fixed, audit currently-`resolved: qg_v2_green` `ldr_qg_failure` escalations with
       `pr_number >     0` from the trailing 24-48h for the same false-positive pattern (any whose PR is still open +
       unmerged + its own head check never went green) — this session only confirms one instance (`agt-0cd704`/#796);
@@ -193,3 +199,10 @@ mechanisms; it's simply a fourth, distinct, now-confirmed trigger specific to PR
   path; no fix attempted (backend-engineer-scoped, outside a one-shot cicd worker's remit). Not re-attempting `/done`
   again — the escalation is already `status: resolved` server-side regardless of whether that resolution is correct, so
   no further `/done` call will succeed or is needed; ending this turn here.
+- 2026-07-29 ~22:05Z (slot 9): shipped `agent-orchestrator@270e50b` — the P1 fix (`_pr_head_branch()` + PR-head-scoped
+  `ldr_qg_failure` resolution). Pushed to `live-defi-rollout` before this task's dispatch.
+- 2026-07-29 (slot 7, backend_engineer craft, task `ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head-001`):
+  dispatched to implement the P1 todo; on inspection the fix was already shipped (270e50b, verified HEAD ==
+  origin/live-defi-rollout, clean tree, code inspected line by line and matches the todo's spec exactly, test coverage
+  present). No new code needed — flipped the P1 checkbox citing the existing commit. P2 (backfill audit of other
+  falsely-resolved escalations) and P3 (re-open PR #796) remain open, not in this task's scope.
