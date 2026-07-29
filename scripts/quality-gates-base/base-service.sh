@@ -66,6 +66,26 @@ cd "$PROJECT_ROOT"
 #     concurrently across ALL slots. Sourced here so qg_governor_acquire/release
 #     bracket the heavy phases below.
 source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+# ── SELF-PID FILE (repo+slot-scoped self-kill handle) ─────────────────────────
+# pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md todo 2: the mechanical
+# pkill/pgrep guard (scripts/hooks/pkill-guard.sh) already REFUSES a bare
+# name-pattern kill host-wide, but its fallback still asks the worker to either
+# recall the exact PID it recorded at background-start time or hand-build a
+# cwd-scoped -f pattern. This removes even that manual step: the running
+# quality-gates.sh process ($$) writes its OWN pid to a file keyed by slot+repo
+# in the shared ledger dir — a WORKSPACE_ROOT sibling of .tabs/, outside every
+# repo's git worktree, so no per-repo .gitignore churn is needed — so a worker
+# that needs to self-kill a stuck run just reads this file instead of ever
+# reaching for a name-based pkill. Removed in _qg_exit_handler on every exit
+# path (normal, error, caught signal); a stale file only outlives a SIGKILL,
+# which is uncatchable everywhere in this script (see the SIGNAL TRAP below).
+_qg_self_pid_file() {
+    local root="${PROJECT_ROOT:-$PWD}" slot
+    slot="$(printf '%s' "$root" | sed -nE 's#.*/\.tabs/([0-9]+)/.*#\1#p')"
+    echo "$(_qg_ledger_dir)/run.${slot:-noslot}.${SERVICE_NAME:-unknown}.pid"
+}
+mkdir -p "$(_qg_ledger_dir)" 2>/dev/null || true
+echo "$$" >"$(_qg_self_pid_file)" 2>/dev/null || true
 # (2) Thread-pool caps — stop one repo's native BLAS/OMP pools (numpy/sklearn/
 #     lightgbm/xgboost) from fanning out across every core under multi-slot load
 #     (measured: ml-service spawned 100+ threads). With the governor's K-cap this
@@ -182,6 +202,7 @@ fi
 _qg_exit_handler() {
     local rc=$?
     if command -v qg_governor_release >/dev/null 2>&1; then qg_governor_release 2>/dev/null || true; fi
+    rm -f "$(_qg_self_pid_file)" 2>/dev/null || true
     [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true
     return 0
 }
