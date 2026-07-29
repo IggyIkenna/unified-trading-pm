@@ -13,10 +13,10 @@ scope: [engineer, admin]
 tags: [tradfi, sp500, ml, backtest, features, es, vix, arb]
 related:
   [
-    ../epics/tradfi_master.md,
-    ./data_completion_tradfi_2026_07_15.md,
-    ./tradfi_v9_stage1_finish_2026_07_06.md,
-    ../archive/2026_07/master_to_live_defi_2026_05_23.md,
+    /plans/epics/tradfi_master.md,
+    /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/archive/2026_07/tradfi_v9_stage1_finish_2026_07_06.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
   ]
 created: "2026-06-12"
 parent_epic: tradfi_master
@@ -81,7 +81,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       every date — features-service expects MDPS processed-candle layer (trades→ohlcv aggregation) but tradfi MTDS
       stores raw ohlcv_1s/ohlcv_1m directly. Either (a) the features-service needs a tradfi-specific ohlcv read path
       bypassing the MDPS trades→candle step, OR (b) an MDPS run is required first to build the candle layer from MTDS
-      ohlcv_1s. Issue doc: `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. Also
+      ohlcv_1s. Issue doc: `/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. Also
       found: MTDS manifest stores `instrument_id=''` (blank) for CME rows → lookback validation never matches
       `("CME", "ES")` key (dependency_checker.py bug, same issue doc). — features-service@259569d9 | Fix A (bypass
       \_acquire_candles for TRADFI roll-sensitive groups) + Fix B (root extraction via rsplit colon) + Fix C
@@ -110,7 +110,7 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       implement a definitive Option A/B call), THEN run MDPS `--operation build-continuous --root ES` and confirm output
       actually lands at
       `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`.
-      Follow-up: `plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
+      Follow-up: `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
 - [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-26)** Run `features-delta-one-service` for **tradfi/ES**
       across its calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic).
       Confirm feature parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row
@@ -118,19 +118,28 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       underlying pipeline is still unverified working — gated on the SAME mismatches (2)+(4) fix + build-continuous run
       above landing real `continuous_future` parquets for `underlying=ES` before this can run (and succeed rather than
       repeat the 3 prior failed VM attempts).
-- [ ] [AGENT] P0. Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
+- [ ] [AGENT] P0. **BLOCKED-UPSTREAM (re-diagnosed 2026-07-29, was stale BLOCKED-UPSTREAM citing an unresolved MDPS
+      gap).** Run `features-volatility-service` for **tradfi/ES + tradfi/CBOE-VIX** (realized-vol + skew;
       `compute_vix_features()` calculator already shipped per epic — level, contango proxy, momentum, vol-of-vol).
-      Confirm feature parquets land clean. (Epic L247.) **BLOCKED-UPSTREAM**: features-volatility-service reads
-      `futures_chain` + `options_chain` data_types from the MDPS processed-candle layer (data_loader.py:51–55). TRADFI
-      MTDS bucket has only `ohlcv_1s`/`ohlcv_1m` — confirmed identical blocker as delta-one (slot-23, 2026-06-24). VM
-      launch deferred until MDPS gap resolved. Issue:
-      `plans/active/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md`. **VIX sourcing — see the
-      already-RESOLVED ruling below**: VIX cash index was DELETED 2026-06-23; VIX exposure = VX futures via XCBF.PITCH
-      (CFE), and VIX FUTURE is now an MVP instrument (`uac@22e6a534`, MVP +409 expansion). Route
-      `compute_vix_features()` off the existing VX futures OHLCV per the P2 items below. Barchart is a retired tradfi
-      source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED"). **Additionally**: `realized_vol` + `vix`
-      calculators exist in features-service but are NOT wired into `FEATURE_GROUPS` or the CLI dispatch — wiring gap
-      todo below.
+      Confirm feature parquets land clean. (Epic L247.) The MDPS dependency-gap fork this item originally cited is
+      RESOLVED (`market-data-processing-service@cc63d1b` + `features-service@34a5d4ff` +
+      `market-data-processing-service@7d630a3`, 2026-06-29) — same as the delta-one item above — but that does NOT
+      unblock this VM either:
+      `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` (the SAME live
+      tracker the delta-one item above points at) confirms zero tradfi features-volatility captures have ever landed,
+      for the identical reason — mismatch (2) filename format and mismatch (4)
+      `_DERIVATIVE_DATA_TYPES = {"options_chain", "futures_chain"}` (still no `continuous_future` entry,
+      `data_loader.py:650`) are both confirmed still unfixed by direct code read. **Real current precondition**: same as
+      the delta-one item — fix mismatches (2)+(4) and get a real `build-continuous` output landing for
+      `continuous_future`/`underlying=ES` first; no separate features-volatility-specific fix is needed beyond that.
+      Issue: `/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md` (resolved fork; kept
+      for history) + `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`
+      (the live tracker). **VIX sourcing — see the already-RESOLVED ruling below**: VIX cash index was DELETED
+      2026-06-23; VIX exposure = VX futures via XCBF.PITCH (CFE), and VIX FUTURE is now an MVP instrument
+      (`uac@22e6a534`, MVP +409 expansion). Route `compute_vix_features()` off the existing VX futures OHLCV per the P2
+      items below. Barchart is a retired tradfi source (`CLAUDE.md`: "VIX=VX-futures via XCBF.PITCH, Barchart RETIRED").
+      **Additionally**: `realized_vol` + `vix` calculators exist in features-service but are NOT wired into
+      `FEATURE_GROUPS` or the CLI dispatch — wiring gap todo below.
 
 - [ ] [AGENT] P2. **DEFERRED: Wire `realized_vol` feature group into features-volatility CLI dispatch** —
       `compute_realized_vol_features()` in `calculators/realized_vol_calculator.py` exists but is NOT in
