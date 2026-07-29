@@ -24,6 +24,7 @@ repos:
     deployment-service,
     features-service,
     alerting-service,
+    unified-trading-system-ui,
   ]
 scope: [engineer, admin]
 tags: [ci-cd, github-actions, billing, startup_failure, incident, cross-repo, escalation]
@@ -206,3 +207,18 @@ return to a normal (non-zero-job) run.
   re-filing `/blocked` (same standing `BLK` condition, already covered by the `[OPERATOR] P0` todo). Pinged the
   authoring slot with the outcome. No code or workflow change made or needed; `alerting-service` left clean on
   `live-defi-rollout`.
+
+- **2026-07-29T22:02Z (cicd escalation `agt-69e9e4`, slot 14)**: corroborating data point for
+  `unified-trading-system-ui` `ldr_qg_failure` (`#0`, no PR). Fresh slot clone had no `node_modules` (first
+  `bash scripts/quality-gates.sh` failed at `[0/6] ENVIRONMENT`/`[1/6] TYPE CHECK` with `tsc: not found` — an
+  environment-setup artifact, not the reported CI defect); `pnpm install --frozen-lockfile` (21.4s) resolved it. With
+  deps installed, local `bash scripts/quality-gates.sh` at HEAD `baf995ff` passed clean (186s, 286 tests passed,
+  coverage 50.93% ≥ 40%, build passed, sentinel `.qg_last_passed_sha=baf995fff61000513c8910d68ed5cf6c0b623027` written
+  matching HEAD) — no code/test defect exists to fix. `gh run view` on the escalation-triggering run (`30492984669`,
+  workflow_dispatch, 21:35:57Z) and a fresh re-dispatch (`30494688036`, workflow_dispatch, 22:02:59Z, failed in 15s)
+  both show the identical annotation: `"The job was not started because your account is locked due to a billing issue."`
+  — exact match to this doc's signature, still active ~40min past the last sample above. Added
+  `unified-trading-system-ui` to this doc's `repos:` frontmatter (newly-confirmed affected repo, not in the original
+  sampled table). Not filing a fresh `/blocked` (same standing `[OPERATOR] P0` todo already covers this decision;
+  avoiding the escalation-spam pattern the P3 todo above flags). Pinged the authoring slot with the outcome. No code or
+  workflow change made or needed; `unified-trading-system-ui` left clean on `live-defi-rollout`.
