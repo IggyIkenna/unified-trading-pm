@@ -299,7 +299,11 @@ readers still point at the dedicated buckets.
       bucket names tied to separate, already-completed earlier migrations — a lifecycle-marker audit pass, not urgent;
       (4) `strategy-service/strategy_service/cli/handlers/paper_run_handler.py:314,430` — stale comments say "kind
       `perp-funding`"/"kind `dex-pools`" describing classes that already correctly use `kind="tick-data"` — comment-only
-      fix.
+      fix. **Progress 2026-07-29 (MTDS CODE_QUICK backlog pass)**: sub-item (1) is moot — the file no longer exists in
+      the repo (already deleted by someone/something else). Sub-item (2) DONE — the dead `OPERATIONS` module-level
+      constant in `data_manifest_handler.py` was removed (the real `_build_operations_dict()` was already the sole
+      source of truth) — market-tick-data-service@5bf8a3c7. Sub-items (3) and (4) remain open (out of this pass's
+      MTDS-only scope; (4) is strategy-service).
 
 ## Progress Log
 
