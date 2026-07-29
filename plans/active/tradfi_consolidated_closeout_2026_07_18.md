@@ -651,7 +651,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor`
   - [`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`](/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - **[DATA] P0.** VERIFY the prod projection before sizing the win (is `_publish_emission_check` firing on prod MDPS
       backfills)
     - **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller for OOM

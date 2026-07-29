@@ -16,7 +16,7 @@ summary: >-
   is a best case on a 3,614x-smaller index than defi prod. Fix is read-path only - filter to the candidate rows before
   building the map, memoize, and thread the already-existing manifest_index= kwarg - so durability, honest-absence
   semantics and the on-disk layout are all untouched.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [data]
@@ -29,7 +29,8 @@ related:
     /plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-20
+last_updated: 2026-07-29
+resolved_by: unified-trading-library@be1bfc22, unified-trading-pm@3d22958cf
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,11 +45,15 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
 source: >-
   measured 2026-07-20 while profiling the MDPS candle path for a backfill ETA; prod index sizes verified independently
   by direct `gcloud storage ls -l`.
 ---
+
+> **RESOLVED 2026-07-29.** All 8 todos shipped (read-path filtering + memoization: `unified-trading-library@be1bfc22`
+> among others cited per-todo below; the last open item, todo 6's codex documentation note, landed
+> `unified-trading-pm@3d22958cf`). Archived per the todos-not-prose completion discipline — see the Progress Log /
+> per-todo evidence below for full detail.
 
 # P0 — a full-corpus map build to answer a one-element lookup
 
@@ -209,8 +214,11 @@ isolation, consolidator merge/dedup, stale-blob liveness and the `captured`-outr
       `pipeline_e2e_check.py` canonical-leg readers already do correctly — no on-disk migration needed. Follow-up fixes
       filed as todos 7-8 below (scoped per-file rather than bundled, since each caller's `columns=`/`filters=` set
       differs).
-- [ ] 6. [DOC] P2. Record in codex that the per-VM manifest flush is ALREADY debounced (50 entries/5.0s, `utl@6b6d53bd`)
-      so the "flush is O(n²)" hypothesis is not re-derived by the next reader.
+- [x] ✅ 6. [DOC] P2. **DONE 2026-07-29.** Recorded in codex that the per-VM manifest flush is ALREADY debounced (50
+      entries/5.0s, `utl@6b6d53bd`) so the "flush is O(n²)" hypothesis is not re-derived by the next reader. Added to
+      `/codex/05-infrastructure/manifest-consolidator-ssot.md` § "Writers: per-VM shard mode is the ONLY sanctioned
+      standing write path" (the section documenting the per-VM shard write invariants). —
+      `unified-trading-pm@3d22958cf`.
 - [x] ✅ 7. [SCRIPT] P1. **SHIPPED unified-trading-library@be1bfc22.** Added `columns=`/`filters=` projection to
       `manifest_completeness.py`'s `read_availability_index(bucket)` call: `columns=` is now the row-key columns +
       `capture_status` (not the full ~28-column schema), and a new `_window_read_filters` helper threads the

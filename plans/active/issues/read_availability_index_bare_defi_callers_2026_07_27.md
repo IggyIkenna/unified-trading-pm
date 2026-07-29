@@ -32,7 +32,7 @@ tags: [data-pipeline, manifest, oom, defi, performance, audit, read-availability
 related:
   [
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
+    /plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-07-27

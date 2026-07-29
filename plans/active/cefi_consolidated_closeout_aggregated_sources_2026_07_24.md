@@ -252,7 +252,7 @@ drift_direction: advance-code
     - **[BACKEND] P2.** Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
       item 1.
 - **Manifest / data-status / honest-coverage**:
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - 1. **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing
          on prod MDPS backfills.
     - 5. **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller on defi
