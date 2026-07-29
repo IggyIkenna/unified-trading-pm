@@ -464,4 +464,15 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   state every 3 min, self-heartbeats to `/api/slots/8/progress` every poll-cycle-3 (~9 min) while waiting and every ~5
   min while the enrichment runs, and auto-launches `--apply --report <checkpoint>` the instant the cron flips `ENABLED`.
   Not touching the blocking plan's cron/Apply/Resume todos myself (out of scope, would race its protocol — same call
-  slot-15 made). Still waiting — see next entry for the outcome.
+  slot-15 made). **Bug found + fixed at 04:08-04:21Z**: the shared host's `gcloud` active account silently flipped from
+  `unified-trading-sa` to `github-actions-deploy` (a DIFFERENT concurrent process/slot's global
+  `gcloud config set account` — not an IAM gap on my own identity; `unified-trading-sa` was already authenticated and
+  already proven to have `cloudscheduler.jobs.get`) — polls #4-7 (04:08-04:21Z) silently errored `PERMISSION_DENIED`
+  instead of reading state, which would have wedged the watcher forever (empty `cron=` string never matches `ENABLED`,
+  no loud failure). Fixed by pinning `--account=unified-trading-sa@central-element-323112.iam.gserviceaccount.com`
+  explicitly on the `gcloud scheduler jobs describe` call (deliberately NOT `gcloud config set account`, which would
+  just re-race whatever other slot/CI process needs `github-actions-deploy` active) — killed the exact watcher PID
+  (294765, my own, launched this session) and relaunched; poll #1 post-fix confirms clean `cron=PAUSED` reads again.
+  **Lesson for future resumers of this todo**: this host's shared `gcloud config` account is NOT stable across a
+  long-running poll loop — always pin `--account=` explicitly on every gcloud CLI call in a long-lived watcher, never
+  rely on the ambient active account. Still waiting — see next entry for the outcome.
