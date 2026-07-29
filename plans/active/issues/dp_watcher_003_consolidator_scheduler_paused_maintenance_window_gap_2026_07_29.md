@@ -37,6 +37,9 @@ source: >-
   DP_CONSOLIDATOR_SCHEDULER_PAUSED (DP-WATCHER-003) — manifest-consolidator scheduler
   'uts-prod-manifest-consolidator-market-data-prediction-cron' is PAUSED (not -legacy-)."
 resolved_by:
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # DP-WATCHER-003 maintenance-window gap
