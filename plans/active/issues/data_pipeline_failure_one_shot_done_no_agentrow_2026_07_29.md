@@ -144,3 +144,13 @@ still in flight.
   this is not `data_pipeline_failure`-specific (title should probably be read as the _discovering_ role, not the
   _affected_ role scope) and not sensitive to which `task_id` value is sent. Ending session without a clean `/done` per
   this doc's own precedent (no blind fix attempted); relying on the idle-lingering-reclaim reaper path.
+
+- **2026-07-29 (cicd escalation worker, slot 6, `agt-765e33`, role=`cicd`, wall_type=`ldr_qg_failure`,
+  repo=`instruments-service#1024`):** second `cicd`-role corroboration, different wall_type/repo than slot 9's. Same 400
+  on both `task_id: ""` and `task_id: "agt-765e33"` attempts (a heartbeat call to the same slot succeeded normally in
+  between, matching slot 10's observation that the slot itself is reachable — only the AgentRow lookup fails). Unrelated
+  to this session's actual assigned wall: that reproduced as the fleet-wide GitHub Actions billing-wall recurrence (see
+  `github_actions_billing_wall_recurrence_2026_07_29.md`) — a separate, already-tracked, operator-gated root cause with
+  no code fix available; noting this explicitly so a reader doesn't conflate the two blockers (one is GitHub's billing
+  API, the other is this orchestrator's own local `/done` endpoint — no causal link between them). Ending session
+  without a clean `/done` per the established precedent; relying on the idle-lingering-reclaim reaper path.
