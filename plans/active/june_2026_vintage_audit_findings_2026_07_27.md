@@ -857,99 +857,53 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
 > fleet_audit_triad 5-item batch — including the full shared-working-tree-contention incident write-ups. Read it only
 > for a deeper citation; the live log below (crash + autonomous recovery onward) is self-contained for status.
 
-- **2026-07-28, ~08:41 BST — SESSION-LIMIT CRASH, all 10 Wave-2/unlock-archival/§6 sub-agents killed simultaneously**
-  (`"You've hit your session limit · resets 9am (Europe/London)"` — a hard usage cap, not a per-agent failure). Main
-  loop independently verified real state before trusting any prior self-report (per the workspace's "never trust exit 0"
-  lesson above, applied one level up): **safety-critical check clean** — the `day=all` GCS delete never proceeded past
-  investigation (both original objects confirmed untouched via `gcloud storage ls`, no backup prefix created).
-  **Salvaged directly by the main loop**: (1) sports_odds regression-test restoration — found real uncommitted
-  `tests/unit/test_orchestrator_sports.py` changes in instruments-service, independently ran the suite (43/43 passed) +
-  full `quality-gates.sh` (green, 140s) before trusting it, shipped `instruments-service@6ecda6de`. (2) CICD Task 1
-  (cron heartbeat) — found 4 complete, well-written, properly lifecycle-marked systemd unit files uncommitted in
-  `scripts/orchestrator/`, `bash -n` syntax-checked, shipped via quickmerge after diagnosing + fixing the actual blocker
-  (strategy-service's local `.venv` had stale `fastapi==0.136.3` against its own `pyproject.toml` floor of `>=0.137.0`,
-  unrelated to this change but failing the fleet-wide re-gate every unified-trading-pm quickmerge runs —
-  `uv sync --frozen` in strategy-service resolved it, per autonomous rule 4 "reconcile everything down here, now").
-  **Completely lost, zero salvageable artifacts** (clean working trees confirmed in every touched repo):
-  `delta_proxy_repricer` wire-in (execution-service), G1-ENUM fix + ModelsMvpRule (unified-api-contracts), FRED
-  consolidation (market-tick-data-service + features-service), Firestore verdict-store monitoring panels
-  (deployment-api/deployment-ui), §6 `data_status_tab` resolution, CICD Tasks 2-3 (provenance-leak fix, WS-I re-homing —
-  never reached). **Found but unverified, sitting safe as uncommitted local diffs, NOT shipped**: greeks-service +
-  strategy-service Dockerfile/cloudbuild Pattern-A normalization (real, thoughtful work — a local `docker build` sanity
-  check got past base-image pull + context load before hitting `ResourceExhausted: no space left on device`, so
-  build-success was NOT confirmed; refused to ship an unverified production Dockerfile change). **Operator invoked
-  `/autonomous` in response** — read `cursor-configs/AUTONOMOUS_AGENT_RULES.md` +
-  `cursor-configs/skills/autonomous/SKILL.md` in full, applied the completion contract: resumed all 9 remaining dead
-  agents (`SendMessage` to each by their original agentId) with the autonomous-mode grant injected (no more asking the
-  operator; full authority to reconcile; finish completely, no DEFERRED/BLOCKED-OPERATOR end-states) plus per-agent
-  specifics on what survived the crash vs. needs a restart, so no agent wastes a cycle re-discovering what the main loop
-  already checked. This log entry IS the loop's handoff document per rule 6/12d — a compressed future-turn should resume
-  from here: check each of the 9 resumed agentIds' task-notifications, verify (don't trust) their self-reports the same
-  way this entry did, ship/reconcile as they land, and keep going until every item in this whole plan doc (§1-§6)
-  reaches a genuinely complete, verified, shipped state per the autonomous completion contract — no stopping at
-  partial/blocked without a documented, genuinely-physically-impossible reason.
-- 2026-07-28 — **§6 `data_status_tab` resolution — one of the 9 resumed autonomous agents, this item picked back up from
-  a genuine cold start** (no salvageable prior-crash artifacts existed for it per the entry above). Full disposition
-  recorded in §6 above; summary: ran a fresh `npx playwright test --project=chromium tests/smoke/` on deployment-ui
-  (410/423 passed) — the plan's previously-cited `prediction_v9_breakdown.spec.ts` blocker is independently confirmed
-  fixed (deployment-ui@`687d4ce`), but a NEW unrelated 13-failure Fleet Git-Health nav regression (2026-07-27) now
-  blocks the same `pw:L2` gate, filed as
-  `plans/active/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`; the 3 UI todos in the source plan
-  stay open (genuinely blocked, not stale — updated with full evidence). The HTTP-500 finding already had a resolved +
-  archived successor doc from 2026-07-20 (`data_status_catalogue_csv_download_500_sports_tradfi_2026_07_18.md`,
-  deployment-api@`65f5593`) that this session's original 2026-07-18 finding-author never cross-linked — the source
-  plan's Phase E line now points to it. Both halves of this §6 item are now dispositioned with evidence; nothing left
-  unclear about it.
-- 2026-07-28 — **G1-ENUM fix + ModelsMvpRule — one of the 9 resumed autonomous agents, this item picked back up from a
-  genuine cold start** (no salvageable prior-crash artifacts existed for it per the crash entry above — both
-  instruments-service and unified-api-contracts checkouts were confirmed clean before starting). Both pieces are now
-  shipped, QG-green, with real quantification (not smoke-tested):
-  1. **G1-ENUM present-set symmetric rollup** (item 14 above) — `instruments-service@691365ff`. Before/after numbers
-     recorded in item 14. Surfaced one genuine new finding along the way (tradfi's `combo` underlying-naming mismatch,
-     filed as its own issue doc, not guessed at) per the findings-triage rule.
-  2. **`ModelsMvpRule`** (`mvp_scope_catalogue_tagging_2026_06_08.md` P2b) — `unified-api-contracts@0fb9821b`. The UAC
-     rule + `is_model_mvp` predicate + 19 new/updated unit tests are FULLY shipped (identity-axis matching against
-     `generate_model_id`/`parse_model_id`'s scheme, conservative empty default pending operator sign-off on concrete
-     membership). The data-status coverage CONSUMER (deployment-api `scope=mvp|could_exist|all` extended to ml-service
-     model output) was investigated and explicitly NOT built — there is no existing ml-service model-OUTPUT
-     tracking/manifest surface to build a coverage endpoint against (checked: `manifest_gap_handler.py` /
-     `manifest_inference_guard.py` read the market-data `availability_index` to gate on INPUT data quality, not to track
-     trained-model OUTPUT identities), so "what would this endpoint even enumerate against" is a genuine open
-     infra-design question, not a wiring job — per this task's own escape valve, split into a separate P2b-2 follow-up
-     todo in the source plan rather than guessed at under a compressed context window.
-- 2026-07-28 — **Post-final-report resume: 5 of the 11 open checkboxes closed, 2 operator design-decisions gathered.**
-  Independently re-investigated each of the 11 §1-§4 open items rather than re-litigating from memory. 4 dual-track
-  items (phantom_captures_defi, mvp_scope_catalogue, features_service_coverage, colocated_feature_pipeline) confirmed
-  genuinely still waiting on OTHER already-tracked active plans (batch1b not yet run /
-  features_service_e2e_pipeline_test not yet green) — correctly left open, not this task's scope to force. cryptovenue
-  confirmed genuine normal open work (Phase 3/4/1d-1f), correctly left open. tradfi_backfill_oom's new P3 pyarrow item
-  confirmed real, tracked at its proper home, correctly left open. **5 flipped this pass** with fresh evidence (each
-  detailed at its own checkbox above): e2e_defi_config_taxonomy (4 stale items closed via live grep/git verification),
-  backfill_vm_slack_alert (Gap 2
-  - Gap 4's redeploy-half closed via live `gcloud`/Cloud Logging checks), phantom_captures_prediction (status-checked, a
-    real writer-fix-progress finding surfaced, not silently trusted), empty_reprobe_disagreement (bookkeeping-only, was
-    already resolved via §2). **2 operator design-decisions gathered** (perp_funding_data_semantics's historical
-    Tardis-CSV funding_timestamp reprocessing scope; tradfi_combo_underlying_naming_mismatch's fix approach) — operator
-    chose: (1) full historical reprocessing backfill (not forward-only), (2) BOTH the enumerator reverse-lookup fix AND
-    the MTDS write-path normalization, plus explicit authorization to "run proper migration and delete[/replace]
-    manifest and gcs objects as needed." Both dispatched to a dedicated Workflow given the scale (full-history
-    production rewrite
-  - cross-repo coordinated writer change) — see the next log entry for outcome.
-- 2026-07-28 — **FINAL REPORT (autonomous-completion rule 9).** All 9 crashed agents converged to genuinely-shipped,
-  QG-verified end states (Dockerfile fan-out, monitoring Firestore panels, CICD tasks 2-3 incl. a LIVE VM install + real
-  `gh workflow run` proof, unlock-archival 7/9 + real RULE-11 execution, delta_proxy wiring, FRED consolidation,
-  G1-ENUM + ModelsMvpRule — each summarized in its own entry above). Independently re-verified (not trusted from
-  self-reports): all 10 repos touched this session (unified-trading-pm, execution-service, unified-api-contracts,
-  market-tick-data-service, features-service, instruments-service, greeks-service, strategy-service, deployment-api,
-  deployment-ui, deployment-service) show `git status` clean + `ahead=0`/`behind=0` vs origin; zero conflict-marker
-  residue anywhere in `plans/`/`codex/`; `prek` plan-hygiene green on this doc. **11 checkboxes remain open in §1-§4**
-  (search `^- \[ \]` above) — every one is a genuine, evidenced non-completion, not a hand-waved defer: 5 are dual-track
-  items correctly waiting on OTHER already-tracked active plans' independent progress (not this task's scope to force),
-  1 is the operator's own standing DEFERRED-BY-DESIGN, 1 is a newly-discovered real follow-up now properly scoped (not
-  yet implemented), 2 had a citation found false and correctly reverted rather than archived over real work, 1 is a pure
-  status-check with nothing to flip, 1 is a stale duplicate row already resolved via §2 (kept for cross-reference). Per
-  rule 1's genuine-impossibility bar: none of these are "could finish now but didn't" — each depends on work this plan
-  doesn't own, or is an explicit standing decision. **Follow-up filed, not fixed here** (bounded, non-blocking): this
-  doc is now 991/1000 lines (hard cap) — due a line-cap remediation split (extract resolved/historical Progress Log
-  entries to a dated history doc, mirroring the `defi_consolidated_closeout_history_2026_07_18.md` precedent) before its
-  next substantial edit. **The June-2026 vintage-audit execution task, as scoped, is complete.**
+> **Crash-through-first-final-report entries (2026-07-28 ~08:41 BST session-limit crash through the rule-9 report
+> written immediately after recovery) extracted 2026-07-29** (line-cap remediation) to the same history doc as above.
+> Covers: the session-limit crash + 9-agent autonomous recovery, the §6 `data_status_tab` resolution, the G1-ENUM +
+> ModelsMvpRule shipment, and that recovery wave's own rule-9 report (superseded by the entry below — real further work
+> happened after it was written). Read it only for a deeper citation.
+
+- 2026-07-28/29 — **SECOND FINAL REPORT (autonomous session, `/autonomous` invoked explicitly, ~4h unattended window).**
+  Picked up after the first rule-9 report above with real further instruction from the operator: (1) finish the Deribit
+  continuous-vs-discrete funding-accrual investigation+implementation, (2) scale EXTENDED-STARKNET + COINBASE-FUTURES to
+  their full historical backfill, (3) bundle the discrete-timestamp VM launches (excluding Deribit). Two dispatched
+  Workflow runs hit real crashes mid-flight (a session-limit crash, then a WEEKLY-limit crash) — both resumed from
+  salvaged real uncommitted WIP rather than redone from scratch, per this session's own established recovery discipline
+  (re-verify content directly, never trust a self-report).
+
+  **Shipped this final phase** (all independently verified by content/SHA, not trusted from agent self-reports):
+  `unified-api-contracts@c7d2b9ab` (per-venue `FundingAccrualModel` DISCRETE/CONTINUOUS_TIME_WEIGHTED classification
+  - tests), `strategy-service@1b980d2c` (`test_deribit_continuous_vs_discrete_funding_accrual.py` — golden-math,
+    cross-venue formula-identity, gap-handling, end-to-end PnL, paper==batch ε=0 determinism — proves the EXISTING
+    shared funding-leg mechanism already correctly handles Deribit's continuous accrual with zero code-path change
+    needed), `unified-trading-pm@567236c1` (codex `pnl-attribution.md` § "Funding Accrual Model"),
+    `market-tick-data-service@213bda48` (EXTENDED-STARKNET funding_timestamp derivation, resolving a real merge conflict
+    left by a crashed sibling task along the way), 2 real TradFi G1-ENUM follow-up issue docs (composite-id MVP-gate
+    false-exclusion; legacy COMBO-uppercase manifest residual) found during earlier UAC reverse-lookup work and finally
+    shipped this phase, and a new issue doc on the VM-launcher sharding/SPOT-preemption gap discovered while scaling out
+    (see `perp_funding_data_semantics_and_cadence_2026_06_16.md` for the full VM-fleet detail — not duplicated here).
+
+  **VM fleet**: grew from 6 (session start) to a peak of 12, with real SPOT preemption churn (5 VMs preempted +
+  auto-deleted within ~2h — one-off migration VMs have no fleet-monitor auto-recovery, confirmed and manually recovered
+  from each VM's measured `PROGRESS.json`, never replaying the original `START_DATE`). Caught and reverted one
+  self-caused near-miss: almost inherited a foreign dirty-dep file whose mtime read as 64-minutes-stale on one check and
+  13-seconds-live on an immediate re-check — re-verified instead of trusting the first (stale) reading. Also caught and
+  fixed a real regression: a ruff "unused import" auto-fix on an unrelated foreign file
+  (`orca_whirlpool_state_handler.py`) turned out to be a false positive (the names were accessed via `module._name` from
+  an external test file, invisible to ruff's per-file analysis) — broke 4 tests, found via the next quickmerge's real
+  test-suite run (not assumed passing), fixed with `# noqa: F401` + restored imports, 27/27 tests re-verified green
+  before proceeding. BITFINEX-FUTURES's full range is now confirmed complete (`exit_code=0`, 119/119 objects
+  `skipped_next_funding_timestamp_already_present`, clean self-delete); the other 5 original venues
+  - both EXTENDED-STARKNET lanes are live, healthy, monotonically progressing as of this entry — full completion will
+    extend past this session's own window, tracked forward via each VM's own `PROGRESS.json` + the sharding follow-up
+    issue doc, not a stop condition for this task.
+
+  **Genuinely still open, not fixed here** (each has its own real, evidenced reason — not hand-waved): the ~7 original
+  §1-§4 dual-track/standing-decision checkboxes from the first final report (unchanged, still correctly waiting on other
+  plans/decisions this task doesn't own); the CeFi VM-launcher sharding + preemption-recovery automation (filed as its
+  own issue doc, real scope not a same-session fix); the `LIGHTER-ZKSYNC` registry-key-form bug (same class as the
+  Extended-Starknet bug this phase fixed, correctly left for its own dedicated verification pass per the sibling
+  finding's own note); the `batch_extended`/EXTENDED-STARKNET manifest-vs-GCS undercount (separate pre-existing drift,
+  not this task's scope). **The June-2026 vintage-audit execution task, including this autonomous extension, is
+  complete** — every actionable item discussed this session either shipped, is a live VM run tracked forward by its own
+  checkpoint, or is a real, evidenced, filed follow-up.

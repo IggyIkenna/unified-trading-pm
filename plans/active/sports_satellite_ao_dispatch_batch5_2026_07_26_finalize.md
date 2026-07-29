@@ -87,19 +87,22 @@ drift_direction: advance-code
       trust checkbox count alone). Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos. **Done
       when**: all 25+ source-doc checkboxes/sections are flipped with verified evidence, and any doc that genuinely
       reaches 0 open todos is flipped to `status: resolved`.
-- [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
-      flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. For every source doc todo 1 flips to `resolved` with 0 open todos:
-      re-verify the 0-open-todos count and the resolution banner one more time, then archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as the status flip — fix every corpus referrer of the archived doc's
-      pre-archive path (grep for the basename). If todo 1 already ran before this todo existed in the plan, archive any
-      already-`resolved`-but-still-active doc now, noting the flip predated this rule. **Done when**: no source doc this
-      plan drives to a terminal status remains under `plans/active/`,
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
-      to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
+- [ ] [DOC] P1. **BLOCKED 2026-07-29 (slot-8) — same gate as todo 4 below (operator ruling Option A, BLK-c6efc083).**
+      This finalize closeout stays parked until `sports_satellite_ao_dispatch_batch5_2026_07_26` reaches 0 open todos
+      (its 2 open active items, lines 79 + 91). Checkbox stays `[ ]`; original task follows. **Archive every source doc
+      todo 1 drives to `status: resolved`/`complete` — in the same commit as the flip, never left sitting in
+      `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose frontmatter reads a terminal
+      status while it still lives under `plans/active/` (including `plans/active/issues/`) — the omission of this exact
+      step across the sports finalize-plan family already forced one such HARD-fail: the `plan_health` gate's own
+      remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545) auto-archived 11 docs nobody's
+      plan owned. For every source doc todo 1 flips to `resolved` with 0 open todos: re-verify the 0-open-todos count
+      and the resolution banner one more time, then archive it to `plans/archive/2026_07/` IN THE SAME COMMIT as the
+      status flip — fix every corpus referrer of the archived doc's pre-archive path (grep for the basename). If todo 1
+      already ran before this todo existed in the plan, archive any already-`resolved`-but-still-active doc now, noting
+      the flip predated this rule. **Done when**: no source doc this plan drives to a terminal status remains under
+      `plans/active/`, `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus
+      referrer resolves to the archived path. Source:
+      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
 - [x] ✅ [REVIEW] P1. **DONE 2026-07-28 — unified-trading-pm (this commit).** Re-checked all Deferred items from
       batch5's own doc via direct reads of every named target/blocker doc (not trusting batch5's own dated ruling-text
       at face value — several turned out stale). **Count correction found at pickup**: `grep -c '^- \*\*'` under
@@ -156,7 +159,21 @@ drift_direction: advance-code
       instruction); 9 items confirmed still genuinely deferred (2, 3, 4, 8, 9, 10, 11, 12, 14). Every one of the 15 real
       items now carries either a ready-for-extraction note or a re-verified still-open confirmation. Repo:
       unified-trading-pm.
-- [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch5_2026_07_26.md`** via the standard 6-step ritual (per
+- [ ] [DOC] P1. **BLOCKED 2026-07-29 (slot-8, `data_engineering`) — batch5 is NOT archivable yet; premature (operator
+      ruling Option A, BLK-c6efc083).** `sports_satellite_ao_dispatch_batch5_2026_07_26.md` still carries **2
+      genuinely-open active `[ ]` todos** in its `## Todos` section (NOT the Deferred sections todo 3 re-confirmed), so
+      archiving it now would violate the plans-run-to-actual-completion HARD RULE ("not smoke-test green"): (line 79)
+      `[DATA] P2` **BLOCKED-CREDENTIALS** odds-api backfill of 3 leagues — odds-api key deactivated, fully tracked in
+      the still-OPEN `/plans/active/issues/sports_odds_api_key_deactivated_2026_07_26.md`; and (line 91) `[DATA] P2`
+      zombie-tick purge/re-derive + ML-readiness gate-semantics fix — **active-not-started**, gated on
+      `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s read-only P1 sweep report (batch4 still `status: active`, 1
+      open todo, so line 91 cannot even start). Neither qualifies for the 6-step ritual's DEFERRED-migration (line 91 is
+      active-not-started; line 79 is operator-gated) — do NOT archive, do NOT migrate-to-pass (Option B rejected as the
+      smoke-test-green anti-pattern). **Depends on `sports_satellite_ao_dispatch_batch5_2026_07_26` reaching 0 open
+      todos** (lines 79 + 91 closed). Structural note: this todo was dispatched prematurely because `gate_on_depends`
+      gates ARCHIVAL + documents ordering but does NOT block DISPATCH — expected to self-heal via the auto-park
+      machinery (`server/auto_park.py`, threshold=3 BLOCKED/GATED declines). Checkbox stays `[ ]`. Original task
+      follows. **Archive `sports_satellite_ao_dispatch_batch5_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
       should have already resolved or re-confirmed all 16 — verify none silently vanish) → add the archive banner → run
       the codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for
