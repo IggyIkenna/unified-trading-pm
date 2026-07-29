@@ -9,6 +9,16 @@
 # Rule: KEEP on hosted if it is a real test gate (quality-gates*) OR is pull_request-triggered
 # (CPU-heavy / dev-facing). MOVE if it is IO-bound automation glue (repository_dispatch / schedule /
 # push / workflow_dispatch only). Advisory — eyeball the output before flipping any runs-on.
+#
+# STATE column (added 2026-07-28, self_hosted_runner_pm_core_workflows_2026_07_28.md): the MOVE/MOVE-C
+# verdict is PURELY trigger-derived and NEVER re-checks a file's CURRENT `runs-on:` value — so a workflow
+# already migrated to `[self-hosted, glue]` keeps printing MOVE forever, on every future rerun, identically
+# to one still on `ubuntu-latest`. Found the hard way: the 2026-07-28 Wave-2 audit read this script's raw
+# "39 MOVE" count as "39 files still needing migration" without checking each file's actual current
+# `runs-on:` line — a real, separate re-verification found 38 of those 39 were ALREADY fully self-hosted
+# (only `cloud-build-router.yml`'s `record-cloud-build-result` job remained `ubuntu-latest`). The STATE
+# column below closes that gap so a future rerun distinguishes "pending" (still needs the flip) from
+# "done" (already migrated, MOVE is now a no-op verdict) without a manual per-file re-grep.
 set -euo pipefail
 
 WF_DIR="${WF_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.github/workflows" && pwd)}"
@@ -43,7 +53,13 @@ REUSABLE_CROSSREPO="image-build-validate.yml"
 #     list 2026-07-28 despite its own docstring's identical, incident-backed reasoning to the
 #     other five; the schedule/workflow_dispatch-only trigger shape made it fall through to a
 #     bare MOVE verdict, contradicting the file's own header.
-KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml glue-pool-starvation-monitor.yml"
+#   - stale-build-watcher: found live 2026-07-29 (new file, landed on the shared branch after the
+#     original six were audited) — same failure-independence shape as cloud-build-failure-watcher:
+#     it MEASURES whether a Cloud Build actually happened (via GCP/GH API calls) independent of the
+#     build pipeline itself. If the glue pool it would otherwise run on is the thing that's down or
+#     misbehaving, a self-hosted copy of this watcher goes dark at exactly the moment the "did the
+#     build actually happen" check is needed most — the identical reasoning as the other seven.
+KEEP_MONITORS="overnight-dead-man-switch.yml ci-health.yml cloud-build-failure-watcher.yml ldr-ci-monitor.yml branch-health.yml glue-pool-starvation-monitor.yml stale-build-watcher.yml"
 
 # HOSTED DEPENDENCIES (KEEP-D): a shared reusable on a KEEP workflow's CRITICAL path. A reusable's runs-on is
 # independent of its caller, so a self-hosted reusable would break its HOSTED caller during a VM outage even though the
@@ -61,9 +77,9 @@ KEEP_HOSTED_DEPS="notify-slack.yml"
 # win). "MOVE-C" = moves off hosted by CONVERSION, do NOT flip its runs-on; it leaves the workflow set once converted.
 CONVERT_TO_ACTION="persist-cicd-event.yml"
 
-printf '%-40s %-6s %s\n' "WORKFLOW" "VERDICT" "TRIGGERS (on:)"
-printf '%-40s %-6s %s\n' "--------" "------" "--------------"
-move=0 keep=0
+printf '%-40s %-6s %-8s %s\n' "WORKFLOW" "VERDICT" "STATE" "TRIGGERS (on:)"
+printf '%-40s %-6s %-8s %s\n' "--------" "------" "-----" "--------------"
+move=0 keep=0 move_pending=0 move_done=0
 for f in "${WF_DIR}"/*.yml; do
   base="$(basename "${f}")"
   # extract the `on:` block: from a line starting `on:` up to the next top-level key
@@ -126,13 +142,27 @@ for f in "${WF_DIR}"/*.yml; do
   else
     verdict="MOVE"; move=$((move+1))
   fi
-  printf '%-40s %-6s %s\n' "${base}" "${verdict}" "${trig}"
+
+  # STATE (MOVE/MOVE-C only): does this file actually still have a real (non-comment) `runs-on:
+  # ubuntu-latest` line, or was it already flipped to self-hosted in a prior pass? A MOVE verdict
+  # alone can't tell you which — see the header comment for why.
+  state="-"
+  if [ "${verdict}" = "MOVE" ] || [ "${verdict}" = "MOVE-C" ]; then
+    if grep -qE '^[[:space:]]*runs-on:[[:space:]]*ubuntu-latest\b' "${f}"; then
+      state="pending"; move_pending=$((move_pending+1))
+    else
+      state="done"; move_done=$((move_done+1))
+    fi
+  fi
+  printf '%-40s %-6s %-8s %s\n' "${base}" "${verdict}" "${state}" "${trig}"
 done
 echo
-printf 'MOVE (→ PM-local direct flip): %d   KEEP (→ GitHub-hosted): %d\n' "${move}" "${keep}"
+printf 'MOVE (→ PM-local direct flip): %d [%d pending / %d already self-hosted]   KEEP (→ GitHub-hosted): %d\n' \
+  "${move}" "${move_pending}" "${move_done}" "${keep}"
 echo '  KEEP* = local build/heavy compute · KEEP-T = fleet template (multi-repo; only PM has runners → keep hosted)'
 echo '  KEEP-R = cross-repo reusable (caller-runner-scoped; flip hangs callers) · KEEP-M = failure-independence monitor'
 echo '  KEEP-U = pure reusable CALLER — no runs-on of its own, so there is nothing to flip (the callee picks the runner)'
 echo '  KEEP-D = shared reusable on a KEEP workflow'"'"'s critical path (e.g. the notify-slack alert carrier) — stay hosted'
 echo '  MOVE-C = moves off hosted by CONVERTING the reusable to a composite action (runs as a step on the caller) — do NOT flip runs-on'
-echo 'Flip only MOVE workflows: runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'
+echo '  STATE pending = still runs-on: ubuntu-latest, needs the flip · STATE done = already runs-on: [self-hosted, glue] (no action)'
+echo 'Flip only MOVE workflows whose STATE is "pending": runs-on: ubuntu-latest → runs-on: [self-hosted, glue]. Migrate one first.'
