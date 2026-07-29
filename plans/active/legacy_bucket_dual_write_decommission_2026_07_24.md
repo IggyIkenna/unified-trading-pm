@@ -51,12 +51,22 @@ drift_direction: advance-code
 
 ### From `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (archived 2026-07-13 -- Legacy tick-bucket dual-write remediation (drain -> code-fix -> migrate -> decommission))
 
-- [ ] [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
+- [x] ✅ [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
       redirect to `resolve_bucket_name` (kill the latent flat-`market_data` foot-gun). Confirm zero top-level importers
       first. **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** — **DONE 2026-07-29 (verified, not redeleted).** Confirmed the real file is
+      `unified_trading_library/core/cloud_constants.py::get_bucket_name` (already SSOT-delegating: for every domain
+      registered in `_DOMAIN_TO_YAML_KIND` it delegates straight to `resolve_bucket_name()` on GCP, and hard-raises
+      `BucketNamingError` on an unknown domain since the 2026-07-20 fix cited in its own docstring — not the
+      flat-`market_data` foot-gun this item names). Audited every importer across all 6 named repos
+      (strategy-service/features-service/deployment-service/market-tick-data-service/instruments-service/ml-service,
+      `rg -n 'get_bucket_name' --include='*.py'` then read each call site's `domain` arg): every current call site
+      passes `"market_data"`, `"instruments"`, or `"features_sports"` — all three are covered `_DOMAIN_TO_YAML_KIND`
+      keys, so zero call sites hit the legacy no-env-shape fallback on the GCP production path. No redirect needed;
+      codified the "new writers call `resolve_bucket_name()` directly, not `get_bucket_name()`" rule in
+      `codex/05-infrastructure/bucket-isolation-model.md` so this doesn't silently regress.
 
-- [ ] [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
+- [x] ✅ [SCRIPT] P1. MTDS remaining env-LESS instruments-store readers: `engine/orchestrator/__init__.py:445-451`
       (`_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` all use `get_bucket_name`
       → env-LESS) + `cli/handlers/_instruments_metadata.py:218,442,518` (`build_bucket("instruments", …, "defi")`).
       **DEFERRED** from the `assert_defi_catalog_fresh` durable fix (market-tick-data-service@ea33d38, 2026-06-21) which
@@ -65,7 +75,18 @@ drift_direction: advance-code
       `_instruments_metadata.py` reads/writes manifest for IS catalog; orchestrator uses the bucket for its per-shard IS
       availability check — both read the env-LESS bucket today; canonical `-prd-` indexes exist and are fresh for all 4
       AGs. **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** — **DONE 2026-07-29 (live-code re-verification).** `_instruments_metadata.py`: all 4
+      cited sites (now lines 295/505/585/666, code moved since the original line numbers) call
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="defi")`, each with an in-code comment
+      explaining the historical `build_bucket()` bug being avoided. `orchestrator/__init__.py`: the named
+      `_sports_instr_bucket`/`_cefi_instr_bucket`/`_defi_instr_bucket`/`_tradfi_instr_bucket` helpers no longer exist
+      (grep 0 hits); the module now imports + re-exports `resolve_bucket_name` directly (`__all__` includes it) and uses
+      it for the market-data bucket path. Swept the rest of the repo for residuals
+      (`rg -n 'build_bucket\(' --include='*.py'` and `get_bucket_name("instruments"` ) — every remaining hit is a code
+      COMMENT documenting the old bug for context (e.g. `catalog_registration.py:134`), not a live call; the repo also
+      already carries a dedicated QG regression script (`scripts/quality_gates/check_reader_writer_bucket_parity.py`)
+      guarding this exact reader/writer-bucket-parity class going forward. No residual env-LESS site found; nothing to
+      redirect.
 
 - [ ] [BLOCKED-INFRA] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
       failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a
@@ -153,15 +174,24 @@ drift_direction: advance-code
       tradfi (3.52M) / defi (1.15M) noncurrent versions remain untouched, out of scope for this pass. **(MIGRATED FROM:
       `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
-- [ ] [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check (legacy
-      bucket-name dual-write detection) — extends the pipeline_mode checks already landed 2026-06-01. **(MIGRATED FROM:
-      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+- [x] ✅ [SCRIPT] P1. Add this finding to the `batch_live_symmetry_master` audit instructions as a recurring check
+      (legacy bucket-name dual-write detection) — extends the pipeline_mode checks already landed 2026-06-01.
+      **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
+      consolidation ruling.)** — **DONE 2026-07-29**: added item (l) to
+      `plans/audit/instructions/batch_live_symmetry_master_audit_instructions.md`, following the existing (g)-(k)
+      pipeline_mode-check format — greps for uncovered-domain `get_bucket_name()` calls and hand-rolled bucket-name
+      string concatenation, cross-referencing this plan as the precedent incident.
 
-- [ ] [SCRIPT] P1. Reopen-note on archived `bucket_name_ssot_canonicalisation_2026_05_10.md`: add a
+- [x] ✅ [SCRIPT] P1. Reopen-note on archived `bucket_name_ssot_canonicalisation_2026_05_10.md`: add a
       residual-runtime-drift banner pointing here (the resolver was canonical but live writers bypassed it). Update
       `codex/05-infrastructure/` bucket-naming SSOT doc with the "writer must use resolver, not string-concat" rule.
       **(MIGRATED FROM: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** — **DONE 2026-07-29**: added a `🔁 REOPEN-NOTE` banner to
+      `plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md` pointing here. Updated
+      `codex/05-infrastructure/bucket-isolation-model.md`'s opening "Stale pointer removed" note to also disambiguate
+      the live `unified_trading_library.core.cloud_constants.get_bucket_name()` (same name, different module, still in
+      use) from the retired `unified-cloud-interface` one, and codified the "new writers call `resolve_bucket_name()`
+      directly, never `get_bucket_name()` or hand-rolled string-concat" rule there.
 
 - [ ] [INFRA] P2. **DEFERRED** Fix the 6 BQ `feature_external` external tables in
       `deployment-service/terraform/gcp/bigquery_feature_external_tables.tf` — point `source_uri_prefix` at each

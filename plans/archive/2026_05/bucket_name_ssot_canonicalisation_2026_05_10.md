@@ -55,6 +55,16 @@ Bucket SSOT canonicalisation shipped (resolve_bucket_name() + QG STEP 5.69). Rem
 
 # Bucket-name SSOT canonicalisation
 
+> **🔁 REOPEN-NOTE (2026-07-29): residual runtime drift found downstream of this plan — see
+> `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md`.** This plan canonicalised the RESOLVER (yaml SSOT
+>
+> - `resolve_bucket_name()`), but live writers/readers kept bypassing it via the legacy `get_bucket_name()` fallback
+>   path and hand-rolled env-LESS bucket construction — the resolver being canonical did not, by itself, stop callers
+>   from constructing bucket names outside it. That successor plan's two lead items (the `unified-trading-library`
+>   `get_bucket_name` foot-gun + MTDS's env-LESS instruments-store readers) are now confirmed fully resolved (both
+>   importer-audited clean, 2026-07-29); this doc stays archived — no reopen of ITS own scope, just a pointer for anyone
+>   who lands here searching bucket-naming history.
+
 > **Severity**: P1 — silent operational failure surface. The disagreement caused 7 of 55 deleted-but-needed empty
 > buckets in the 2026-05-10 features-bucket cleanup session (recovered by re-provisioning; zero data lost). Future
 > consolidated-service launches will fail first-write if any of the three layers drifts further.

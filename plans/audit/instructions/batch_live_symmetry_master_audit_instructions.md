@@ -142,6 +142,22 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       the accepted-divergence register with a named tracking plan; zero silent divergences. Cross-ref:
       `mtds_mdps_master` item (k) (per-venue acquisition-method registry), `defi_master`, `cefi_master`.
 
+- [ ] (l) **Legacy bucket-name dual-write detection (added 2026-07-29)**: a reader/writer resolving its bucket via the
+      legacy no-env-shape path (`unified_trading_library.get_bucket_name(domain, ...)` falling through to its
+      `BUCKET_PREFIXES`-based legacy fallback instead of the `_DOMAIN_TO_YAML_KIND` SSOT-yaml delegation, or any inline
+      `f"{prefix}-{asset_group}-{pid}"`/string-concat bucket build) silently reads/writes a DIFFERENT bucket than the
+      canonical `resolve_bucket_name(cloud=..., kind=..., asset_group=...)` writers use — a batch/live symmetry check
+      can pass on one side while the other side is dark. Grep for regressions:
+      `rg -n 'get_bucket_name\(' --glob '!*.venv*' --glob '!node_modules' --glob '!tests'` across every repo and confirm
+      each call's `domain` argument is a key in `unified_trading_library/core/cloud_constants.py`'s
+      `_DOMAIN_TO_YAML_KIND` (GCP production path) — an uncovered domain silently falls back to the legacy no-env shape.
+      Also grep for hand-rolled bucket-name string concatenation
+      (`rg -n '["\x27][a-z-]+-\{.*(asset_group|ag|_pid|project_id)' --glob '!*.venv*' --glob '!tests'`) bypassing both
+      resolvers entirely. GREEN = zero uncovered-domain `get_bucket_name` call sites on the GCP production path and zero
+      inline bucket-name string-concat writers/readers. Precedent incident:
+      `plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md` (MTDS env-LESS instruments-store readers + the
+      retired `unified-trading-library` `get_bucket_name` foot-gun).
+
 ### E2E Cross-Cutting Verification
 
 - (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row

@@ -337,7 +337,7 @@ drift_direction: advance-code
       in current `deployment-api`/`unified-api-contracts` trees, the issue doc's status is `resolved` (or archived) with
       cited evidence, and Track 13 of `cross_cutting_consolidated_closeout_2026_07_25.md` no longer needs this doc as an
       open dependency.
-- [ ] [SCRIPT] P1. Reconcile + close the stale-verbatim-carryover checkboxes in
+- [x] ✅ [SCRIPT] P1. Reconcile + close the stale-verbatim-carryover checkboxes in
       `legacy_bucket_dual_write_decommission_2026_07_24.md` and land 2 small non-gated hygiene fixes it still owns: (1)
       verify current code state of the two lead "still open" SCRIPT items —
       `unified-trading-library/unified_trading_library/core/cloud_constants.py::get_bucket_name` (confirmed live code:
@@ -358,7 +358,13 @@ drift_direction: advance-code
       string-concat" rule. Source: legacy_bucket_dual_write_decommission_2026_07_24.md (lines 54-68, 156-164). Done
       when: both lead checkboxes are flipped (closed-with-evidence or narrowed-to-real-residual-sites), the
       audit-instructions doc carries the new recurring check, and both the archived-doc banner + codex SSOT update are
-      committed.
+      committed. — **DONE 2026-07-29 (slot 5, data_engineering).** Both lead checkboxes closed-with-evidence (both
+      already fixed upstream, importer-audited clean — no residual sites found, nothing to redirect): (1)
+      `unified-trading-library` `get_bucket_name` confirmed SSOT-delegating for every covered domain across all 6 named
+      repos' importers; (2) MTDS's `_instruments_metadata.py` + `orchestrator/__init__.py` confirmed fully on
+      `resolve_bucket_name`, named legacy helpers gone. Both hygiene fixes landed: audit-instructions item (l) added,
+      archived-doc reopen-note banner + codex SSOT disambiguation added. All 4 doc changes shipped together in this same
+      `unified-trading-pm` commit (no code repo touched — read-only importer audit, no fix needed).
 - [x] ✅ [INFRA] P1. **Restore the manifest consolidator (R5-fix-5) for `instruments-store-*` (+ the defi data
       buckets)**, currently interim-mitigated by `MANIFEST_ALLOW_STALE_FALLBACK=true` while every IS CLI loud-fails on
       the stale index. Repo: deployment-service (Cloud Run Job + Scheduler). Restart/repair the scheduled consolidator

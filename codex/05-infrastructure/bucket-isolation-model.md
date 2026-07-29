@@ -49,6 +49,17 @@ SSOT: `unified-trading-library` `resolve_bucket_name()` (`unified_trading_librar
 > **Stale pointer removed**: the old SSOT was `unified-cloud-interface/unified_cloud_interface/constants.py`
 > (`get_bucket_environment`, `get_bucket_name`). That module is retired; all bucket resolution now routes through UTL
 > `resolve_bucket_name()` + the YAML.
+>
+> **Don't confuse that retired function with the live, same-named
+> `unified_trading_library.core.cloud_constants.get_bucket_name()`** (verified 2026-07-29) — a SEPARATE, currently-used
+> convenience wrapper (6+ importing repos) that delegates to `resolve_bucket_name()` for every domain registered in
+> `_DOMAIN_TO_YAML_KIND` (safe on GCP today), but falls through to a legacy no-env-shape name for AWS / an unmapped
+> domain / an explicit `project_id` override. **Rule for new writers: call
+> `resolve_bucket_name(cloud=..., kind=..., asset_group=...)` directly — never `get_bucket_name()`, and never
+> hand-rolled string concatenation (`f"{prefix}-{asset_group}-{project_id}"` or similar).** `get_bucket_name()` exists
+> for pre-migration call sites only; it is not a bucket-naming SSOT and carries the residual fallback foot-gun the
+> "legacy bucket-name dual-write" incident class comes from
+> (`plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md`, MTDS env-LESS instruments-store readers).
 
 > **⚠️ A SECOND bucket-name registry still exists and disagrees with this one.** UTL
 > `config_interface/paths/registry.py`'s `PATH_REGISTRY` / `build_bucket()` produces **un-tiered** names with no env
