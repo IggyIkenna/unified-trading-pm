@@ -456,3 +456,24 @@ not duplicate-launched, not stopped. **Next dispatch: check whether the quota ha
 many hours from now (i.e., this finding persists past a plausible quota-reset window), that is worth a `/blocked` to the
 operator/main about whether to stop-and-wait-for-reset vs. let it keep spinning, since at that point it stops being
 'nearly done, just waiting' and starts being a genuine multi-day stall.**
+
+**Update 2026-07-29T15:00Z-15:10Z (interactive session, operator-present) — VM stopped+deleted; NEW lightweight VM-free
+quota-check method found; confirmed still exhausted.** Independently reached the same "spinning uselessly" conclusion as
+slot 6's 14:14Z finding (date= stuck, 100% quota-failure growth) and stopped+deleted `af-backfill-20260728-141821`. Per
+this doc's own prior note, stop/restart doesn't save SPOT billing — but two probe relaunches
+(`af-backfill-20260729-155012` — errored before VM creation, harmless; `af-backfill-20260729-155246` — DID launch,
+confirmed `f31fb2e9` corruption-fix ancestor-present despite a stale-tarball warning for an unrelated CI commit, also
+hit the same quota wall within ~2min, stopped+deleted) established that even the base `/status` read and
+`entity=fixtures` ensure-call are now failing too — the exhaustion is total, not scoped to just `fixture_events` calls.
+**New finding, useful for all future checks**: the launcher's own live-quota read (lines ~324-349 of
+`launch-api-football-backfill-vm.sh`) is a standalone `gcloud secrets versions access --secret=api-football-api-key`
+
+- `curl .../status` call — no VM needed to check current quota state. Direct probe:
+  `curl -fsS -H "x-apisports-key: $(gcloud secrets versions access latest --secret=api-football-api-key --project=central-element-323112)" https://v3.football.api-sports.io/status`
+  — an `errors.requests` field in the response means still exhausted; a `response.requests.{limit_day,current}` pair
+  means reset (recompute remaining = limit_day - current). Confirmed still exhausted at 15:09Z via this method (zero VM
+  cost). No VM currently running; will relaunch WITHOUT `--force` (normal skip-if-fresh run — the fixed code correctly
+  recorded today's failures as `attempted_failed`, which a plain re-run will naturally retry, so a second `--force`
+  redo-all is unnecessary and wasteful) once this probe shows quota restored. Monitoring via the VM-free probe on an
+  hourly cadence rather than repeated VM launches. Releasing, not duplicate-launched, VM confirmed absent (not just
+  stopped — deleted, per the singleton lock's RUNNING-status check).
