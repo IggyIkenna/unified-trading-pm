@@ -213,9 +213,11 @@ investigated further here, out of scope for this doc.
       someone touches that file for other reasons (swap/memory, not just CPU/disk — **also now the instance-type
       correction above**, c7i.4xlarge not m8i.4xlarge) — not worth a dedicated edit on its own given the line cap, but
       cheap to fold in opportunistically.
-- [ ] [OPERATOR] P3. Decide whether to provision additional Claude accounts into the scheduled-jobs headroom-check
-      rotation pool, given 5/6 are currently exhausted through 2026-08-02 in the worst case — a real subscription-cost
-      decision, not something to action without operator sign-off.
+- [x] ✅ [OPERATOR] P3. **Operator-ruled 2026-07-29 (interactive decision session): keep the current 6-account pool,
+      rely on the already-shipped hourly-retry mitigation** — no additional subscription spend for now. Decide whether
+      to provision additional Claude accounts into the scheduled-jobs headroom-check rotation pool, given 5/6 are
+      currently exhausted through 2026-08-02 in the worst case — a real subscription-cost decision, not something to
+      action without operator sign-off.
 - [ ] [BACKEND] P2. Investigate the `features-service` dirty-worktree quarantine blocking 5/9 `ag_closeout_auditor` +
       9/9 `na_eligibility_auditor` tranches (see finding above, run window 2026-07-29T05:00-05:18 UTC). Identify which
       slot worktree(s) have the stuck `features-service` checkout (stale `.git/index.lock`, or a local commit sitting

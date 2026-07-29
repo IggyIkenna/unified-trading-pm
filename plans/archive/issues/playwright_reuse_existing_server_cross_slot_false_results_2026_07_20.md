@@ -28,6 +28,9 @@ assigned_vm: planning
 resolved_by: "deployment-ui@5663aa0, unified-trading-system-ui@369eea0"
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, 0 open todos. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+
 # Playwright `reuseExistingServer` crosses slot boundaries
 
 ## Symptom

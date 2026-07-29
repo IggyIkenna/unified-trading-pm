@@ -43,6 +43,10 @@ locked_by:
 locked_since:
 ---
 
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, migration applied + verified live against prod
+> (`instruments-service@f3cd7dd1`). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s
+> archive-on-resolve rule.
+
 # TradFi manifest `COMBO`-uppercase casing residual (1.3M rows) never reconciled to lowercase
 
 ## What I found

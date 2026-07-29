@@ -95,12 +95,26 @@ inconsistent state.
    kept dying, even fully session-detached). Migration completed successfully under this mitigation
    (`sports_track_h_denominator_prereqs_2026_07_28.md` todo 2, 2026-07-28).
 
-- [ ] [OPERATOR] P2. Check `auditd`/`journalctl -k` (needs root/sudo this session lacked) around the two kill timestamps
-      (~13:15-13:22 UTC 2026-07-28, exact window recoverable from `/tmp/footystats_shards/log_*.log` mtimes if still
-      present) for the actual signal source (SIGKILL vs SIGTERM, sender PID/command) — confirms whether this is the same
-      `pkill -f` broad-pattern class as `pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md` or a different mechanism
-      (session/cgroup boundary reaping, given both the python child AND its bash supervisor parent vanished together
-      with no error, which a narrow `pkill -f <python-script-name>` alone would not explain).
+- [x] ✅ [OPERATOR] P2. **Operator-ruled 2026-07-29: run the forensic check (chose this over the recommended skip-it
+      option).** Done, from a THIS session that has passwordless `sudo` on `ip-172-31-0-185` (identified as the same
+      shared slot host via matching `.tabs/1`/`.tabs/2` paths in its journal) — no confirmation, but no contrary signal
+      either. `sudo journalctl -k --since "2026-07-28 13:10:00" --until "2026-07-28 13:25:00"`: **no entries** (the boot
+      log covers this window fine, `journalctl --list-boots` shows boot 0 spanning 2026-07-14→2026-07-29). `auditd` is
+      not installed/active on this host (`systemctl is-active auditd` → `inactive`, no `ausearch` binary) — no audit
+      trail exists here at all, so that half of the ask is structurally unanswerable on this host. `earlyoom` IS active
+      and logged exactly once in-window, at 13:15:08 — but reporting HEALTHY memory (81.26% avail, 92.55% swap free),
+      not a kill action; no earlyoom kill-action log lines appear anywhere that day. **Net finding: no kernel-level
+      OOM-killer or audit signal for this window on this host** — a genuine negative result, not an absence-of-effort.
+      This corroborates (does not contradict) this doc's OWN later-reached conclusion (see "LIKELY MECHANISM IDENTIFIED"
+      below): the kill pattern (fixed ~1-3 min death regardless of load, survives 10x longer once de-nohup'd) fits
+      session/cgroup-boundary reaping of `nohup ... & disown`-detached processes, not a kernel OOM event — which is
+      exactly the kind of kill that would leave no kernel/audit trace. Check `auditd`/`journalctl -k` (needs root/sudo
+      this session lacked) around the two kill timestamps (~13:15-13:22 UTC 2026-07-28, exact window recoverable from
+      `/tmp/footystats_shards/log_*.log` mtimes if still present) for the actual signal source (SIGKILL vs SIGTERM,
+      sender PID/command) — confirms whether this is the same `pkill -f` broad-pattern class as
+      `pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md` or a different mechanism (session/cgroup boundary reaping,
+      given both the python child AND its bash supervisor parent vanished together with no error, which a narrow
+      `pkill -f <python-script-name>` alone would not explain).
 - [ ] [DOC] P3. Document the self-restarting-supervisor + harness-`run_in_background` pattern as the standard approach
       for any future multi-hour LOCAL (non-VM) background migration on a shared slot host, in
       `/codex/12-agent-workflow/async-wait-and-poll-discipline.md` or `/codex/05-infrastructure/per-tab-worktrees.md`

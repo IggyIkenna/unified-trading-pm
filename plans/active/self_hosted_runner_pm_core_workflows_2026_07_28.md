@@ -163,17 +163,18 @@ re-audit doesn't have to re-derive this risk read from scratch.
 
 ## Bucket (b) — core-pipeline, `[OPERATOR]`-gated, NOT executed by any agent without explicit sign-off
 
-- [ ] [OPERATOR] P2. **`cloud-build-router.yml:1259` — flip the `record-cloud-build-result` job's
-      `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`.** Reason gated: this file is the fleet's actual
-      production deployment orchestrator (tier-ordered T0→T1→T2→services prod deploy, a trading kill-switch, a
-      market-hours/trading-active deployment guard, a position-reconciliation gate) — the operator explicitly asked that
-      no MOVE-classified file inside this set be bulk/auto-flipped without individual review, given the blast radius of
-      a self-hosted-runner outage or misbehavior silently breaking the fleet's ability to ship code (or worse, a
-      subtly-wrong trading-safety gate). The specific job itself is low-risk on its own merits (a 3-minute,
-      `continue-on-error`, fail-open Firestore read+write with no build/deploy/trading logic — see "The load-bearing
-      finding" above) — this gate is about the FILE's blast radius and the operator's explicit ask, not a judgment that
-      this one job is actually risky in isolation. **Approve-executes**: once the operator confirms, any worker/session
-      can make this exact one-line change, run `bash scripts/quality-gates.sh --no-fix`, and ship via
+- [x] ✅ [OPERATOR] P2. **Operator-approved 2026-07-29 (interactive decision session).** `cloud-build-router.yml:1259` —
+      flipped the `record-cloud-build-result` job's `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]` (see
+      Progress Log for shipping evidence). Reason gated: this file is the fleet's actual production deployment
+      orchestrator (tier-ordered T0→T1→T2→services prod deploy, a trading kill-switch, a market-hours/trading-active
+      deployment guard, a position-reconciliation gate) — the operator explicitly asked that no MOVE-classified file
+      inside this set be bulk/auto-flipped without individual review, given the blast radius of a self-hosted-runner
+      outage or misbehavior silently breaking the fleet's ability to ship code (or worse, a subtly-wrong trading-safety
+      gate). The specific job itself is low-risk on its own merits (a 3-minute, `continue-on-error`, fail-open Firestore
+      read+write with no build/deploy/trading logic — see "The load-bearing finding" above) — this gate is about the
+      FILE's blast radius and the operator's explicit ask, not a judgment that this one job is actually risky in
+      isolation. **Approve-executes**: once the operator confirms, any worker/session can make this exact one-line
+      change, run `bash scripts/quality-gates.sh --no-fix`, and ship via
       `quickmerge --agent --files 'unified-trading-pm/.github/workflows/cloud-build-router.yml'` — no further
       investigation needed, the analysis above already stands.
 
@@ -202,3 +203,9 @@ re-audit doesn't have to re-derive this risk read from scratch.
   pipeline that would run it) — added it to `KEEP_MONITORS` rather than batch-flipping it, for the identical reason
   `glue-pool-starvation-monitor.yml` was added the day before. Classifier now prints the exact done-when string. Bucket
   (a) todo 1 flipped to done; shipping both files now.
+- **2026-07-29 (interactive decision session)**: Operator approved bucket (b)'s single gated flip. Shipped
+  `.github/workflows/cloud-build-router.yml:1259` `runs-on: ubuntu-latest` → `[self-hosted, glue]` directly (the
+  `.github/**` carve-out — quickmerge's re-gate hit the pre-existing, already-tracked
+  `test_capability_param_schema.py`/`test_capability_verdict_matrix.py` failures documented in
+  `fleet_fastapi_upper_bound_stale_vs_utl_floor_bump_2026_07_28.md`, confirmed stable across 2 identical runs, unrelated
+  to this 1-line YAML change). All 39 MOVE-classified files are now self-hosted.

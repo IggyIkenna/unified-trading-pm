@@ -36,7 +36,7 @@ tags: [g1-enum, expected-universe, tradfi, combo, mvp-gate, underlying-naming, d
 related:
   [
     /plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md,
-    /plans/active/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
+    /plans/archive/issues/tradfi_combo_uppercase_casing_manifest_residual_2026_07_28.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
@@ -57,6 +57,9 @@ resolved_by:
 locked_by:
 locked_since:
 ---
+
+> **🟢 ARCHIVED 2026-07-29** — status=resolved, fix shipped + production-verified (`instruments-service@5853635b`).
+> Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
 
 # TradFi COMBO bundle candidates never reach the expected-universe denominator — seed-side composite-id mis-parse feeds a garbage `base_ccy` into the MVP gate
 

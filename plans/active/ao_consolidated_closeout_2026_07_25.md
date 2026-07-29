@@ -171,7 +171,7 @@ pinned across the fleet; VM log backup wired; the e2e hardening suite green; the
 (`plan_health` test suite firing real Slack posts to the AO alerts channel) ·
 [issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md](/plans/archive/issues/ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md)
 (repo-docs cleanup deleted files still referenced in shipped AO server code) ·
-[issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md](/plans/active/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md)
+[issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md](/plans/archive/issues/playwright_reuse_existing_server_cross_slot_false_results_2026_07_20.md)
 (per-slot Playwright dev-server port collision producing false cross-slot test results) ·
 [issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md](/plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md)
 (AO blocked-question escalation UX/dashboard + dead-agent-context problem).

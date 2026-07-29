@@ -284,6 +284,12 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       `git log --since="2026-07-29T00:00:00Z" -- '*urdi_reference_provider*' '*active_venues*'` in instruments-service
       (HEAD `f3cd7dd11`) returns zero commits. Current time (`09:06Z`) still well before the day-plus fallback gate
       (`2026-07-30T01:31Z`, ~16h away). No change since the 05:02Z check. Releasing via
+      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above. — **Checked
+      2026-07-29T14:12Z (slot 6, data_engineering): still premature, both gates open, bare check only (no manifest
+      re-query, per the prior check's own guidance)**. Confirmed item-2 still NOT landed:
+      `git log --since="2026-07-29T00:00:00Z" --all -- '*urdi_reference_provider*' '*active_venues*'` in
+      instruments-service (HEAD `0dfe61e5`) returns zero commits. Current time (`14:12Z`) still well before the day-plus
+      fallback gate (`2026-07-30T01:31Z`, ~11h away). No change since the 09:06Z check. Releasing via
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above.
 - [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
