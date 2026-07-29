@@ -219,13 +219,13 @@ execution-service/strategy-service are both confirmed clean by absence (no DeFi-
       operator; fix before the live sports-odds WS connector is enabled/dispatched against production, not after a
       silent-corruption incident. (repo: market-tick-data-service)
 
-- [ ] [SCRIPT] P2. **Delete the 5 confirmed wrong-and-dead `sports_*` PATH_REGISTRY rows + their dead
+- [x] [SCRIPT] P2. **Delete the 5 confirmed wrong-and-dead `sports_*` PATH_REGISTRY rows + their dead
       `SportsXDomainClient` consumers** — `sports_features`/`sports_fixtures`/`sports_raw_odds`/`sports_mappings`/
       `sports_tick_data` (`unified_trading_library/config_interface/paths/registry.py:268-302`) plus
       `unified_trading_library/domain_client/sports/{features,fixtures,odds,mappings,tick_data}_client.py`. Zero callers
       anywhere in the workspace outside their own definition/export files; `sports_tick_data`'s bucket doesn't even
-      exist. Fold into the parent doc's existing dead-code-cleanup todo rather than duplicating a new one — same class
-      of finding. (repo: unified-trading-library)
+      exist. Folded into the parent doc's dead-code-cleanup todo — shipped together as a single sweep. Evidence:
+      `unified-trading-library@f4987fb8`. (repo: unified-trading-library)
 
 - [x] [SCRIPT] P1. **Round 5 (PREDICTION-scoped) audit** — DONE 2026-07-29, findings documented above. Resolved round
       1's open MTDS DESIGN question (stale bug, confirmed live-firing — see the parent doc's flipped todo for the full
