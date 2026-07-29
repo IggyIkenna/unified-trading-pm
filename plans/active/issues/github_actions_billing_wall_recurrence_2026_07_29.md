@@ -77,23 +77,25 @@ signature as the archived incident's "0-step kill."
 
 **Fleet-wide, not deployment-api-specific** (sampled 2026-07-29T20:50-20:58Z):
 
-| repo                     | trigger                                     | conclusion            | when (UTC)                           |
-| ------------------------ | ------------------------------------------- | --------------------- | ------------------------------------ |
-| deployment-api           | workflow_dispatch (fresh test THIS session) | `startup_failure`, 1s | 20:58:01                             |
-| deployment-api           | workflow_dispatch                           | `startup_failure`, 1s | 19:43:45                             |
-| deployment-api           | push                                        | `startup_failure`, 0s | 20:04:19                             |
-| unified-api-contracts    | workflow_dispatch                           | `startup_failure`, —  | 20:50:44, 20:49:24                   |
-| instruments-service      | workflow_dispatch                           | `startup_failure`, —  | 20:50:57                             |
-| deployment-service       | push                                        | `startup_failure`, 0s | 20:45:21                             |
-| market-tick-data-service | push                                        | `startup_failure`, 0s | 20:34:35 (and 4 more since 19:12:37) |
-| agent-orchestrator       | push                                        | `startup_failure`, 0s | 20:04:33 (and 2 more since 19:25:09) |
-| unified-trading-library  | push                                        | `startup_failure`, 0s | 19:34:04                             |
-| features-service         | push                                        | `startup_failure`, 0s | 19:23:46                             |
+| repo                     | trigger                                         | conclusion            | when (UTC)                           |
+| ------------------------ | ----------------------------------------------- | --------------------- | ------------------------------------ |
+| deployment-api           | workflow_dispatch (agt-6af63d, slot 5, re-test) | `startup_failure`, 0s | 21:15:53                             |
+| deployment-api           | workflow_dispatch (fresh test THIS session)     | `startup_failure`, 1s | 20:58:01                             |
+| deployment-api           | workflow_dispatch                               | `startup_failure`, 1s | 19:43:45                             |
+| deployment-api           | push                                            | `startup_failure`, 0s | 20:04:19                             |
+| unified-api-contracts    | workflow_dispatch                               | `startup_failure`, —  | 20:50:44, 20:49:24                   |
+| instruments-service      | workflow_dispatch                               | `startup_failure`, —  | 20:50:57                             |
+| deployment-service       | push                                            | `startup_failure`, 0s | 20:45:21                             |
+| market-tick-data-service | push                                            | `startup_failure`, 0s | 20:34:35 (and 4 more since 19:12:37) |
+| agent-orchestrator       | push                                            | `startup_failure`, 0s | 20:04:33 (and 2 more since 19:25:09) |
+| unified-trading-library  | push                                            | `startup_failure`, 0s | 19:34:04                             |
+| features-service         | push                                            | `startup_failure`, 0s | 19:23:46                             |
 
 **Onset window**: last confirmed real success across the fleet was ~16:31Z (unified-trading-library,
 unified-api-contracts via workflow_dispatch). First real (non-startup) failure: deployment-api 18:22:13 (13s, genuine
-early exit). Mass `startup_failure` onset: ~19:12-19:44Z. **Still active at time of filing** (20:58Z re-test, live, this
-session) — an ongoing window of at least ~2.5-4.5h so far.
+early exit). Mass `startup_failure` onset: ~19:12-19:44Z. **Still active** — re-confirmed 21:15:53Z (a fresh
+`workflow_dispatch` for deployment-api, escalation `agt-6af63d`/slot 5, identical `startup_failure`, 0s, `jobs: []`
+signature) — an ongoing window of at least ~3-5h so far, no self-recovery yet.
 
 **Ruled out** (each independently checked this session):
 
