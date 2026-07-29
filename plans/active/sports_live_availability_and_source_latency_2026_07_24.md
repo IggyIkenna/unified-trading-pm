@@ -143,7 +143,7 @@ exists relative to kickoff (KO) / full-time (FT); the post-match lags are the em
       as the concrete tier selection: **The Odds API Starter tier
       (~$10/mo, 50k credits)** sized for the current live
       league set, **+ api_football `/odds` in-play as the free second source** (already-subscribed key, no extra
-      cost). No longer BLOCKED-OPERATOR-DECISION — the direction (proceed) is ruled; the one remaining concrete step is
+      cost). No longer gated on an operator decision — the direction (proceed) is ruled; the one remaining concrete step is
       confirming the Starter-tier subscription/quota is actually active on the live Odds-API key (Secret Manager
       `odds-api-key` — a credential/account-state check, not a design call) before resuming the connector at full
       cadence. **Live ODDS quota decision + cheap second source** (market-tick-data-service + deployment-service) —

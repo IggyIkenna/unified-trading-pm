@@ -360,9 +360,9 @@ Two secondary findings:
       hardcode is the drift source; target bucket 404s; past its own `# Delete-when:`), so a re-run can never re-stamp
       DeFi HL/ASTER perp_funding. (Verify the `protocols` iterable no longer includes them before deleting.) — already
       covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
-- [ ] [INFRA] P3. **Auto-resolved 2026-07-28, retagged from BLOCKED-OPERATOR-DECISION.** Reconcile the 916 HL + 642
-      ASTER `defi/perp_funding` legacy rows (redundant with `cefi/derivative_ticker.funding_rate`) by executing option
-      (a) — DELETE the orphaned `defi/perp_funding` objects + manifest rows + rebuild the defi index (the
+- [ ] [INFRA] P3. **Auto-resolved 2026-07-28, retagged away from its prior operator-decision gate.** Reconcile the 916
+      HL + 642 ASTER `defi/perp_funding` legacy rows (redundant with `cefi/derivative_ticker.funding_rate`) by executing
+      option (a) — DELETE the orphaned `defi/perp_funding` objects + manifest rows + rebuild the defi index (the
       redundant/simpler default; option (b)'s re-stamp-and-move is not needed since the data is fully redundant with the
       cefi-side funding history). Reversibility cleared per finding T /
       `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a:
@@ -373,7 +373,7 @@ Two secondary findings:
       same run before the actual delete** (cheap, and keeps the finding-T check genuinely same-run for the destructive
       step itself) rather than treating this citation as a substitute for that — but no fresh operator ask is needed to
       START this dispatch.
-- [ ] [FIX] P3. **RULED 2026-07-28 (retagged from `[FIX] P3. BLOCKED-OPERATOR-DECISION`) — RELAX RULE 11 to cover cefi
+- [ ] [FIX] P3. **RULED 2026-07-28 (retagged away from its prior operator-decision gate) — RELAX RULE 11 to cover cefi
       CEX venues.** Ruling applies the operator's standing live-probing-scope theme directly: "live probing should be
       relaxed to cover all asset groups and shards wherever needed — err toward broader/more permissive scope, not
       narrower." That resolves this in favor of relaxing, not leaving it as a known gap. Concrete task: add

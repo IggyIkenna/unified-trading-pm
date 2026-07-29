@@ -248,18 +248,19 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       decision on Option A vs B". **Verified live this pass**: that doc now lives at
       `/plans/archive/issues/features_delta_one_tradfi_mdps_dependency_gap_2026_06_24.md` with `status: resolved` and
       `resolved_by: market-data-processing-service@cc63d1b + features-service@34a5d4ff +     market-data-processing-service@7d630a3 (2026-06-29)`
-      — Option A (a direct raw-MTDS read path in features-service) was adopted and shipped. So
-      "BLOCKED-OPERATOR-DECISION" is factually stale on the MDPS `build-continuous` item, the
-      `features-delta-one-service` ES item, and (as BLOCKED-UPSTREAM) the `features-volatility-service` item. Re-read
-      each of the three against the shipped Option-A code path, restate what is ACTUALLY still required to run each one
-      (a VM launch, a missing wiring step, or nothing), fix the dangling `plans/active/issues/...` reference to point at
-      the archived path, and correct the `related:` entries that still use bare relative form to the leading-slash
-      repo-root-relative convention per `/codex/11-project-management/cross-reference-path-convention.md`. **Explicitly
-      NOT in scope**: launching any features or ML VM, or running any backtest — this todo re-scopes the plan's premises
-      to the truth, it does not execute the work. The plan carries `locked_by: live-defi-rollout`, so do NOT archive it
-      or clear the lock. Repo: unified-trading-pm (doc-only). **Done when**: none of the three P0 items still asserts a
-      BLOCKED- state that the 2026-06-29 resolution disproves; each states its real current precondition; the
-      archived-doc reference resolves; and every relative `related:` entry is corrected. Source:
+      — Option A (a direct raw-MTDS read path in features-service) was adopted and shipped. So the
+      operator-decision-gate marker is factually stale on the MDPS `build-continuous` item, the
+      `features-delta-one-service` ES item, and (marked as an upstream-blocked item) the `features-volatility-service`
+      item. Re-read each of the three against the shipped Option-A code path, restate what is ACTUALLY still required to
+      run each one (a VM launch, a missing wiring step, or nothing), fix the dangling `plans/active/issues/...`
+      reference to point at the archived path, and correct the `related:` entries that still use bare relative form to
+      the leading-slash repo-root-relative convention per
+      `/codex/11-project-management/cross-reference-path-convention.md`. **Explicitly NOT in scope**: launching any
+      features or ML VM, or running any backtest — this todo re-scopes the plan's premises to the truth, it does not
+      execute the work. The plan carries `locked_by: live-defi-rollout`, so do NOT archive it or clear the lock. Repo:
+      unified-trading-pm (doc-only). **Done when**: none of the three P0 items still asserts a stale gate state that the
+      2026-06-29 resolution disproves; each states its real current precondition; the archived-doc reference resolves;
+      and every relative `related:` entry is corrected. Source:
       `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`.
 
 - [x] ✅ [DOC] P1. **Apply the 3 residual findings in
@@ -310,22 +311,22 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       `data_completion_tradfi_2026_07_15.md`.
 
       **Evidence**: (1) DONE — single-object read of the live `-prd` `_index`
-                                  (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
-                                  no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
-                                  `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
-                                  reader is separately known to return 0 rows on this bucket per
-                                  `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
-                                  data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
-                                  "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
-                                  **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
-                                  (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
-                                  combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
-                                  this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
-                                  `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
-                                  CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
-                                  Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
-                                  by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
-                                  no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
+                                      (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
+                                      no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
+                                      `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
+                                      reader is separately known to return 0 rows on this bucket per
+                                      `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
+                                      data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
+                                      "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
+                                      **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
+                                      (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
+                                      combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
+                                      this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
+                                      `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
+                                      CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
+                                      Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
+                                      by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
+                                      no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; parked for the operator)
 

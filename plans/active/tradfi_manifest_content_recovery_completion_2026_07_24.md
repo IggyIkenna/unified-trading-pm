@@ -230,8 +230,8 @@ source: >-
       self-deleted, not preempted). `assert_tradfi_derivative_ids_canonical` over the live manifest's chain-bundle
       scope: `checked=961 canonical=961 violations=0`; direct GCS content read confirms genuine canonical ids (e.g.
       `CME:FUTURE:CRUDE-USD@LIN-20200619`).
-- [ ] [DATA] P2. **RULED 2026-07-28 — Option A (normalize qualifier + map to base root), was
-      BLOCKED-OPERATOR-DECISION.** Canonicalisation-not-a-hack rules out Option B (relax the naming gate) and Option C
+- [ ] [DATA] P2. **RULED 2026-07-28 — Option A (normalize qualifier + map to base root), previously gated on an operator
+      decision.** Canonicalisation-not-a-hack rules out Option B (relax the naming gate) and Option C
       (quarantine/defer); Option A was already the team's own `[REC]`. Build: normalize the qualifier (`_Z`/`!`/`_MD1`)
       into the canonical id, map to the base product root, extend `EXCHANGE_CODE_TO_NAME`. Non-MVP, no rush, no longer
       operator-gated. **Done when**: all 269,520 ICE-qualifier rows + the 1,063-row quarantine bucket canonicalize, 0
@@ -325,8 +325,8 @@ source: >-
       `ohlcv_1m`(699)/`ohlcv_15m`(342)/ `trades`(178)/`tbbo`(108), spans 677/712 days — looks systemic, not isolated.**
       Handoff: not "genuinely tiny" — flag for BLOCKED-OPERATOR-DECISION in the next todo.
 - [ ] [DATA] P1. **RULED 2026-07-28 — do NOT write off the 1,328-cell (29.8%) unrecoverable population; check the live
-      vendor first.** Was BLOCKED-OPERATOR-DECISION (loss is systemic, 677/712 days, concentrated ICE/CME/CBOE) — but
-      per the theme + "external data is always available" + "Databento billing unblocked": the survey only proved
+      vendor first.** Was gated on an operator decision (loss is systemic, 677/712 days, concentrated ICE/CME/CBOE) —
+      but per the theme + "external data is always available" + "Databento billing unblocked": the survey only proved
       absence from OUR GCS, not from Databento's live API. Query Databento for the specific cells; full backfill
       wherever it has the data (cost no object); only what's PROVEN unobtainable after that → permanent loss, citing the
       fresh vendor query. Cells with intact raw ticks keep the original fix (delete quarantined + MDPS `--force`).

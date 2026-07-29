@@ -97,8 +97,8 @@ regenerate + commit the verdict matrix; (7) `split_scope_tokens` no longer raise
       (this todo's verdict-matrix scope) COMPLETE. **Live execution adapter = BLOCKED-CREDENTIALS** (no Smarkets order
       path today — only Betfair/Matchbook adapters exist) → tracked in the [ADAPTER] todo below + ping
       `ikenna_orchestrator/pings/slot_1.md`.
-- [ ] [ADAPTER] P2. **DECOMMISSIONED — BLOCKED-OPERATOR-DECISION (2026-07-13): operator ruled Smarkets not useful, do
-      not pursue.** ~~Build the **Smarkets** live execution adapter in execution-service~~
+- [ ] [ADAPTER] P2. **DECOMMISSIONED — DEFERRED-BY-DESIGN (2026-07-13): operator ruled Smarkets not useful, do not
+      pursue.** ~~Build the **Smarkets** live execution adapter in execution-service~~
       (`sports_execution/adapters/exchanges/smarkets.py` mirroring `matchbook.py` — OddsAdapter+BettingAdapter, session
       auth/retry, UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED`, add `smarkets_direct` to
       `SupportedDataSource` + `_build_smarkets` in `routing.py`) + UAC `external/smarkets/schemas.py` response models +

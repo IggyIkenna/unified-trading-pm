@@ -270,9 +270,9 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [DATA] P0 — BLOCKED-CREDENTIALS 2026-07-28 (slot 6) — confirm deploy (DONE, see banner) + backfill RULED, launch
-      it. Deploy confirmation: DEPLOY CONFIRMED (2026-07-26, directly verified, not inferred) — see the dated correction
-      banner above, image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
+- [ ] [DATA] P0 — credential gate cleared 2026-07-28 (slot 6) — confirm deploy (DONE, see banner) + backfill RULED,
+      launch it. Deploy confirmation: DEPLOY CONFIRMED (2026-07-26, directly verified, not inferred) — see the dated
+      correction banner above, image `f6ea001`/`410d756` digests + a log-inspected post-deploy execution with zero
       `DATA_NOT_AVAILABLE`. **Backfill: RULED 2026-07-28 — OPERATOR DIRECT ANSWER: "Yes, do it — launch the ~1-month
       sports odds gap backfill (scope + spend approved)."** Retagged from `[OPERATOR]` to `[DATA]` (approved,
       execution-ready). Per the reframed two-sub-question scope from the correction banner above, launch BOTH windows

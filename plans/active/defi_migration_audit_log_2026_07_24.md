@@ -269,7 +269,7 @@ unified-api-contracts.
       P2-Solana (`BATCH_DEFILLAMA`) orphan todos. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
       Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
 - [ ] [UAC] P2. **`SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
-      — RULED 2026-07-28 (retagged from `BLOCKED-OPERATOR-DECISION`): adopt the per-venue mapping below.**
+      — RULED 2026-07-28 (retagged away from its prior operator-decision gate): adopt the per-venue mapping below.**
       `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend lending via **Solana RPC / Helius
       / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` / `(defi,lending_indices)` resolve to
       `onchain_subgraph` for ALL chains → `derive_pipeline_mode_for_row(ORCA,defi,dex_pool_state)` =
