@@ -101,6 +101,15 @@ drift_direction: advance-code
 > **Confirmed to remain a permanent, human-only hard-stop** — delete-safety-protocol hard-stop #2 (any legacy-object
 > delete after copy) has no §3a reversibility carve-out, regardless of how completely the verify/backfill gate above is
 > satisfied. **Not retagged, not unlocked**: the todo stays `[OPERATOR]`.
+>
+> **Operator ruling, 2026-07-29 (interactive decision session).** Pre-authorized, conditional on the candidate-7 gate
+> (`cefi_consolidated_native_ao_extract_2026_07_25.md`) landing first — no separate sign-off needed once that lands, the
+> delete may proceed via the standard protocol (dry-run, canonical VM/migration script, soft-delete-retention pre-check,
+> apply, verify-against-expected). Same open question as the sibling E4-E8 orphan-sweep applies here too — whether this
+> specific hard-stop-#2 delete may be agent-executed once qualified, or needs literal human hands, is unresolved — see
+> `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (this doc was one of the 4
+> deletes that issue's "Hard-stop review" banner covers). Treated conservatively pending that ruling: human-execution
+> kept.
 
 ## Reconciliation
 

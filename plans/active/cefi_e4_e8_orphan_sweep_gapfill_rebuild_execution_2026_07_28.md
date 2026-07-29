@@ -71,6 +71,24 @@ source: [data_completion_cefi_2026_07_15.md — consolidated 2026-07-28 per main
 > carve-out, and Artifact Registry has no soft-delete at all — neither qualifies for autonomous execution regardless of
 > how thoroughly the pre-checks are verified. **Not retagged, not unlocked**: Phase B and Phase F stay `[OPERATOR]`; a
 > human must still execute or explicitly sign off on each at dispatch time.
+>
+> **Operator ruling, 2026-07-29 (interactive decision session).** Authorized: Phase A now, then Phase B once Phase A
+> confirms clean — conditional on the standard protocol (dry-run first, launched via the canonical
+> `launch-canonical-migration-vm.sh` deployment-service script — never an ad hoc script, actual apply run + checked
+> against expected post-delete counts, and a FRESH `gcs_bucket_soft_delete_retention_seconds()` check on
+> `market-data-tick-cefi-prd` confirmed sufficient before the apply). **Flagging an unresolved contradiction found while
+> recording this**: `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3 item 2 states hard-stop #2 became
+> §3a-reversibility-qualifiable (agent-executable) as of a 2026-07-28 15:51 UTC operator ruling, once Part 5's
+> twin-coverage proof clears 100%. THIS plan's own "Hard-stop review" banner above was written ~4h later (2026-07-28
+> 19:36 UTC, `unified-trading-pm@4b50207e5`) and explicitly reaffirms "no §3a carve-out... regardless of how thoroughly
+> the pre-checks are verified" for this exact delete — a same-day, later-timestamped, explicitly operator-reviewed
+> statement that contradicts the codex's general text. Given the stakes (~1.2M objects, the same class of action that
+> produced a real 70,570-object accidental-deletion incident earlier this cycle) and that this plan's own reaffirmation
+> is more specific and more recent, **Phase B's actual apply is being treated as still requiring literal human hands**,
+> not agent execution — the operator's 2026-07-29 answer authorized the protocol/steps but did not name "hard-stop #2"
+> as an override target in the same turn (the bar this workspace's hard-stop rule requires), so it is not read as
+> crossing it. Filed as `/plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` for an
+> explicit resolution. Phase A is unaffected — already `[DATA]` P0, dispatchable now.
 
 ## Already-shipped tooling (credit, not a flip)
 
@@ -104,7 +122,8 @@ step.
 
 ## Phase B — E4a(ii): orphan-sweep DELETE (irreversible, `[OPERATOR]`, hard-stop #2)
 
-- [ ] [OPERATOR] P0. **Only after Phase A is confirmed clean.** Launch the delete sweep on a dedicated SPOT VM:
+- [ ] [OPERATOR] P0. **Operator-authorized 2026-07-29** (see ruling above), pending a human to execute the apply —
+      **only after Phase A is confirmed clean.** Launch the delete sweep on a dedicated SPOT VM:
       `bash launch-canonical-migration-vm.sh cefi-drop-stale 2019-03-30 <today> full` — deletes the ~1.2M
       (`~474/day × ~2,613 days`) OLD `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide + the 9
       L-flat root orphans, via the twin-verify/backup/delete/verify-gone contract in `_migrate_drop_stale.py`. Cite

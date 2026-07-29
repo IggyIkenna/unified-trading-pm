@@ -463,10 +463,15 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       pull-in (a peer slot's `tardis_concurrency_lease.py` fix landed mid-session); the file-size ratchet forced a trim
       of the inline comment to stay under the 900-line cap for `venue_fetch.py` (908→898 lines).
 
-- [ ] [OPERATOR] P0. **Action the two operator-gated `--apply` runs** — todo (2)'s relabel script (3,133,117 candidates,
-      82.7% resolvable) and the P0 re-materialization todo's purge script (49,720 stale eu rows) are both dry-run-
-      verified but still awaiting explicit operator sign-off before running for real; per the final 2026-07-15 Progress
-      Log entry, this doc's `status: open` stays until both land.
+- [ ] [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): approve the purge now; defer the relabel.**
+      The P0 re-materialization purge script (49,720 stale eu rows, pure denominator debris) is approved to `--apply`
+      now — independent, low-risk, unaffected by the relabel's key-arity issue below. The relabel script (3,133,117
+      candidates, 82.7% resolvable via the original `(venue, raw_symbol)` 2-tuple key) is DEFERRED: a later, broader
+      redesign (`_cefi_canonical_blueprint_2026_07_17.md`, its "Script 3") found the 2-tuple key silently under-resolves
+      exactly the BYBIT/OKX/BINANCE-FUTURES majors, and forks this same relabel into a 3-tuple version — running the
+      2-tuple relabel now would mean redoing it for the majors once that ships. Retagged `[OPERATOR]` -> `[DATA]`: the
+      purge half is now a normal dispatchable `--apply` run (dry-run already verified); the relabel half stays parked
+      pending the 3-tuple blueprint, tracked there instead of re-blocking this doc.
 
 ## Progress Log
 
