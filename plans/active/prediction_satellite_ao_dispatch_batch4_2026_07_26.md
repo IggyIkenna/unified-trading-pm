@@ -507,3 +507,29 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   flagging that this stall now confirmed blocks TWO independent plans. Not arming another watcher (same reasoning as
   slot-14: the checkpoint is durable, nothing is lost by waiting; the real fix is a dispatcher/priority decision, not
   something more polling resolves). Released via `/skip-current-task {"reason_code": "GATED"}`.
+- 2026-07-30 (slot 12, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`): re-dispatched to
+  this same 4b-i resume. **Blocker CLEARED, root cause different from what was tracked**: verified fresh —
+  `uts-prod-manifest-consolidator-market-data-prediction-cron` is now `ENABLED` (`userUpdateTime: 2026-07-29T20:55:56Z`)
+  and genuinely healthy (`gcloud logging read` on the Cloud Run job shows real successful cycles, e.g.
+  `success=True shards=5 rows_out=1661021 latency_ms=136807.9` at 01:18:32Z, next cycle already running). The blocking
+  `mtds_available_at_cross_asset_backfill-001` Apply todo is STILL `queued`/undispatched (dispatch-order bug from
+  `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` unresolved) — so the cron's resume did
+  NOT come from that plan's tracked Apply/Resume todos; someone/something re-enabled it out-of-band and undocumented.
+  Not chasing who (no GCS Data Access audit logging enabled on this bucket to trace it; out of this todo's scope) —
+  practical effect is what matters: the `ManifestConsolidatorStaleError` this todo kept hitting no longer reproduces.
+  **Second finding, investigated before resuming writes**: recovered the byte-identical 157/348 checkpoint (verified
+  across 4 independent scratchpad copies from slots 6/8/13/15, all `md5=6a887be3...`), but ground-truth GCS showed the
+  earliest 3 processed days (2025-03-14, 04-07, 06-20) have **zero** legacy shape3/3b objects left, though the
+  checkpoint recorded them present when last processed. Confirmed via `gcloud storage ls --soft-deleted` these were
+  genuinely deleted (`soft_delete_time: 2026-07-29T00:09:47Z`, recoverable until 2026-08-05) — NOT a bucket lifecycle
+  rule (bucket only has a COLDLINE storage-class transition at age 60d, no delete rule). No progress-log entry from any
+  prior slot records running `--delete-legacy`, so this was an undocumented action (another instance of this doc's own
+  "silent under-reporting" pattern, not a new bug). **Verified no data loss before proceeding**: the canonical twin for
+  2025-03-14 (spot-checked) carries `title`/`slug`/`event_slug` 100% non-null (5/5 rows), matching the checkpoint's own
+  `canonical_already_enriched: 170` for that day — enrichment demonstrably landed before the legacy source vanished.
+  Later processed + all sampled unprocessed days still have their legacy objects intact. Re-launched
+  `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <checkpoint>` from
+  day 158/348 via the harness's tracked `run_in_background` (not `nohup`), with disciplined `/progress` heartbeats
+  armed. Per-day cost is genuinely substantial (hundreds of `gcs_describe_object` calls per day — 500-800 condition_ids
+  × 2 path candidates each), confirmed via a 90s dry-run probe that didn't finish one day — this is why the run takes
+  real wall-clock time, not a hang. Still running — see next entry for the outcome.
