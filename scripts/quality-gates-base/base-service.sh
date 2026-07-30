@@ -853,6 +853,12 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     # SSOT: plans/active/issues/features_service_cloud_build_quality_gates_hang_2026_07_15.md.
     _pytest_log="$(mktemp "${TMPDIR:-/tmp}/qg-pytest-out.XXXXXX")" || exit 1
     trap 'rm -f "${_pytest_log:-}"' EXIT INT HUP TERM
+    # Open OUR OWN read fd on the (still-empty) log file right now, before pytest starts
+    # writing to it. See the zero-test-silent-pass guard below for why: a run can take
+    # 10+ minutes, and a host-level tmp-cleanup cron can unlink the PATH mid-run (the file's
+    # DATA survives via any process's still-open fd; only the directory entry goes). Holding
+    # this fd from the start means our later read never depends on the path still resolving.
+    exec {_PYTEST_LOG_FD}<"$_pytest_log"
 
     # [OOM MITIGATION 2026-05-15] `"${MEM_WRAP[@]}"` prefix puts pytest in a
     # cgroup with hard memory cap on Linux (no-op + empty array on macOS).
@@ -880,16 +886,21 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_ok "Tests PASSED"
 
     # Zero-test silent pass guard (fix-zero-test-silent-pass): QG must not pass with no tests executed.
-    # Read + remove _pytest_log IMMEDIATELY after the run that wrote it — do not let an unrelated
-    # subprocess (the PM integration pytest invocation below) run in between. That gap previously let
-    # host-level tmp-scratch interference (e.g. a stale-tmp cleanup cron racing this run's TMPDIR-backed
-    # scratch file) delete the log before it was read, producing a FALSE "ZERO TESTS RAN" failure on a
-    # run that actually passed (observed: features-service CI run 30325671949, 2026-07-28 — main suite
-    # logged "17954 passed, 209 skipped" but the guard read an already-missing file). Narrowing the
-    # write-to-read window to zero intervening work closes that race without touching the TMPDIR
-    # redirect itself (shared_host_tmp_tmpfs_exhaustion_2026_07_08 still needs TMPDIR off small /tmp).
-    _TESTS_RAN=$(grep -oE '[0-9]+ passed' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
-    _SKIPPED=$(grep -oE '[0-9]+ skipped' "$_pytest_log" | grep -oE '[0-9]+' | head -1 || echo "0")
+    # Read via the fd opened at mktemp-time (see comment above), NOT by re-opening "$_pytest_log" by
+    # path. A 2026-07-28 fix narrowed the write-to-read window to zero intervening work, assuming the
+    # race was ONLY between end-of-write and this read — but the race can also happen DURING the (often
+    # 10+ minute) pytest run itself: a host-level tmp-cleanup cron unlinks the path while `tee` is still
+    # mid-write, and by the time we get here the path no longer resolves even though the data is intact
+    # (recurred on a run that actually passed: features-service CI run 30541840466, 2026-07-30 — main
+    # suite logged "17973 passed, 209 skipped" but a path-based `grep "$_pytest_log"` got ENOENT; same
+    # class as run 30325671949, 2026-07-28). Reading through our own long-held fd sidesteps the path
+    # lookup entirely, so an unlink at ANY point during the run is harmless. Single grep pass (not a
+    # `$(cat ...)` capture) keeps the original memory guarantee — never stuff the full (potentially huge)
+    # log into a bash variable, only the small set of "N passed"/"N skipped" matches.
+    _PASS_SKIP_MATCHES=$(grep -oE '[0-9]+ (passed|skipped)' <&"${_PYTEST_LOG_FD}" || echo "")
+    exec {_PYTEST_LOG_FD}<&-
+    _TESTS_RAN=$(printf '%s\n' "$_PASS_SKIP_MATCHES" | grep -oE '[0-9]+ passed' | grep -oE '[0-9]+' | head -1 || echo "0")
+    _SKIPPED=$(printf '%s\n' "$_PASS_SKIP_MATCHES" | grep -oE '[0-9]+ skipped' | grep -oE '[0-9]+' | head -1 || echo "0")
     rm -f "$_pytest_log"
     trap - EXIT INT HUP TERM
     if [ "${_TESTS_RAN:-0}" -eq 0 ]; then
