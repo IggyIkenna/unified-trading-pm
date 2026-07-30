@@ -100,11 +100,23 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       land). NOTIFY OPERATOR per CLAUDE.md's "big finding... SSOT contradiction" triage — this is exactly that class.
       Repo: N/A (process/governance decision). **Done when**: operator has reviewed and either confirms
       isolated-incident or directs a process fix.
-- [ ] [SCRIPT] P2. If a process fix is directed: add a QG or pre-commit check that any `resolved_by:` /
-      `- [x] ... — <repo>@<sha>` citation added in a `docs(plans):` commit resolves via `git cat-file -t <sha>` in the
-      cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s Cloud Build SHA verification
-      pattern, generalized to git commit citations). Repo: unified-trading-pm. **Done when**: a fabricated SHA citation
-      fails prek/QG the same way a non-SUCCESS Cloud Build citation does today.
+- [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
+      via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
+      Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@d7db4b089`:
+      `scripts/quality_gates/check_plan_commit_sha_evidence.py` (new), wired into `scripts/quality-gates.sh` as a
+      baselined-ratchet post-gate, documented at `plans/PLAN_FORMAT.md` § 8c. Scope is deliberately narrow: only
+      `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked (abbreviated forms like
+      `mtds@...`/`uac@...` are ambiguous and soft-skipped by construction). **Done when**: a fabricated SHA citation
+      fails QG the same way a non-SUCCESS Cloud Build citation does today — verified: re-running the checker against
+      this exact incident's original fabricated citation (`market-tick-data-service@6efb252b`) confirms it does NOT
+      resolve (`git cat-file -t` exits non-zero), so a repeat of this incident would regress the gate. Repo:
+      unified-trading-pm. - [x] ✅ [SCRIPT] P3. Findings-closure follow-up: the initial corpus scan (632 plan/issue
+      docs) found 18 PRE-EXISTING `<repo>@<sha>` citations that do not resolve locally either — unrelated pre-existing
+      drift (not today's incident, not newly introduced), baselined so the new gate doesn't fail the whole fleet on
+      rollout. Full list: `scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`. Each should eventually be
+      corrected to the real SHA (or annotated as historical/unverifiable) — this is real but low-urgency cleanup debt,
+      tracked here rather than fixed inline (would require per-doc archaeology of what the intended commit actually
+      was). Repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. Correct the record on the source doc — DONE (slot 6, this session):
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
