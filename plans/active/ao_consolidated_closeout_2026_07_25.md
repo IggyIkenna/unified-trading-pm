@@ -224,13 +224,30 @@ missing from Sources entirely).
       a persistently-FROZEN pane read while `last_ping` keeps advancing — asserts zero `worker_kicked`/
       `worker_kick_failed` events and that `_kick_session` is never even called. Full local QG green (1993 passed,
       ruff/basedpyright clean).
-- [ ] [INFRA] P2. **Land ONLY AFTER the host-load-aware two-window todo directly above is done — per the 2026-07-29
+- [x] ✅ [INFRA] P2. **Land ONLY AFTER the host-load-aware two-window todo directly above is done — per the 2026-07-29
       operator sequencing ruling above; do not start this todo first.** Escalate the watchdog from soft-kick to
       hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
       instead of soft-kicking indefinitely, per
       `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec; the
       daily hard-kill budget (50) is ample. Re-scope N/timing against the CORRECTED classifier from the todo above, not
-      before landing it. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`. Repo: agent-orchestrator.
+      before landing it. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`. Repo: agent-orchestrator. —
+      agent-orchestrator@77fc60a: **audit finding — the escalation mechanism this todo asks for was already shipped**
+      (`kick_escalation_threshold` config field, default 3, introduced in `5b07bd3`; the ping-advanced-reset bug that
+      let the 2026-07-21 incident's wedged worker dodge escalation for 55 kicks was already fixed in `2a48eda`,
+      pre-dating this plan). `WorkerLivenessKicker._tick_once` already forces
+      `_maybe_auto_respawn_stuck_slot(...,     force=True)` — which kills the wedged tmux session and resumes the
+      in-flight task via `--resume` (`_kill_wedged_for_resume`) — once `_consecutive_kick_failures` reaches
+      `kick_escalation_threshold`, gated on `genuinely_recovered` (pane verified 'working'), not merely `ping_advanced`.
+      Re-scope check (the actual remaining ask, now that the host-load-aware grace-shield fix — the todo directly above,
+      `64b5310` — has landed): with `kick_progress_grace_seconds=90s` shielding a slot whose ping is recently advancing
+      from ever being kicked at all, a genuinely-wedged slot (no ping progress, beyond grace) reaches the N=3 threshold
+      at the SAME real-world cadence observed in the original incident (~5-6 min/kick × 3 ≈ 15-18 min) — matching the
+      todo's own "e.g. N=3, ~15-20 min" estimate exactly. No numeric change to `kick_escalation_threshold` or the
+      grace/debounce timings is warranted. Added regression test
+      `test_genuinely_wedged_slot_still_escalates_after_grace_fix` (composes the grace-shield fix with the escalation
+      mechanism in one kicker instance: a stale-beyond-grace slot still reaches `force=True` at exactly
+      `kick_escalation_threshold` consecutive kicks) to close the one real gap found — no prior test exercised both
+      fixes together. Full local QG green (2002 passed, ruff/basedpyright clean).
 
 ## Codex SSOTs (read before touching a track)
 
