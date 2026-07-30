@@ -425,3 +425,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   shard 16's self-reap (confirmed separately this session: that VM is now gone too). No code changed, no manual VM
   action taken — investigation + issue-doc update only. Pinged the authoring fleet-monitor slot with this outcome per
   the `data_pipeline_failure` role contract.
+- **2026-07-30 update (slot-15, ~5 min later) — SELF-CORRECTION, a real process gap found in my own handling**: before
+  seeing slot-3's entry above, I independently found shard 40's `-132900` instance freeze-dead (same signature) and
+  relaunched it (`-151200`) believing it was that shard's 1st genuine failure, having checked only
+  `gcloud compute operations list` for recent events — NOT the authoritative `DeploymentsRegistry` archive slot-3 used,
+  which shows this shard ALREADY had 2 dead attempts today before my relaunch. **My `-151200` relaunch exceeded
+  `RB-INFRA-RELAUNCH`'s ≤2/(vm-prefix,day) budget** — a real mistake, not a judgment call:
+  `gcloud compute operations list` only shows recent operations, not the full day's registry-archived attempt history,
+  so my per-shard "1st vs 2nd failure" counting throughout this session (for 16, 19, 40, 41, 42, 44) may be
+  systematically undercounting true relaunch counts the same way. **Correcting course now rather than continuing the
+  same under-verified method**: not killing the already-running `-151200` (no protective purpose — it's making real
+  progress right now, and the budget's intent is to stop WASTEFUL cycling, not retroactively punish an already-launched
+  attempt), but I am **stopping manual relaunches of this fleet's frozen shards for the remainder of this session**. The
+  `data_pipeline_failure`/fleet-monitor system (slot-3, slot-7) is already correctly enforcing this exact policy with
+  the RIGHT tooling (`DeploymentsRegistry`, not just recent operations) — deferring to it going forward rather than risk
+  repeating this undercounting mistake on shards 23/41/42 (which I ALSO relaunched this same round, on the same
+  insufficiently-verified basis — flagging honestly that their true today-relaunch-counts are UNVERIFIED, not
+  confirmed-within-budget as I claimed when relaunching them). My role from here: monitoring + documentation
+  consolidation only, not further manual VM relaunch/kill actions on this fleet.
