@@ -100,13 +100,25 @@ to re-land). Filed as a P2 evidence-integrity / infra hygiene finding, not a dat
 
 ## Todos
 
-- [ ] [INFRA] P2. Root-cause whether prek/pre-commit's hook chain (or bare git) shares a mutable per-repo file
-      (`.git/COMMIT_EDITMSG`, an index lock, or a prek patch-stash tempfile keyed by repo path rather than PID) across
-      concurrent `git commit` invocations in the same working directory; if confirmed, either (a) document a "one commit
-      at a time per clone" discipline explicitly in `/codex/05-infrastructure/per-tab-worktrees.md` alongside the
-      existing multi-agent-safety rules, or (b) if a cheap technical mitigation exists (e.g. verifying
-      `git log -1 --format=%s` matches the intended message immediately after commit and re-committing with `--amend -m`
-      ONLY when the calling process's own staged tree is unambiguously still what's at HEAD), propose it.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30 — unified-trading-pm@71c55ed6a.** Root-caused via direct reproduction (scratch
+      repo + an artificial slow `prepare-commit-msg` hook): `.git/COMMIT_EDITMSG` is a single unlocked file per `.git`
+      directory. Every `git commit` invocation — including a non-interactive `-m` one, and including one that ultimately
+      FAILS (branch-drift rejection, prettier/plan-hygiene auto-fix re-stage) — writes its message to that file right
+      after the `pre-commit` hook and only reads it back (to build the commit object) after `prepare-commit-msg` +
+      `commit-msg` finish. No locking guards that window. By contrast, the index (`index.lock`) and `HEAD` (compare-
+      and-swap — a losing writer gets `fatal: cannot lock ref 'HEAD': is at ... but expected ...`, reproduced directly)
+      ARE properly guarded, ruling both out; prek's own patch-stash tempfiles are PID-namespaced (`<ts>-<pid>.patch`),
+      ruling that out too. Net: a second `git commit` racing in the same clone — even a losing/ failed one — can
+      overwrite `COMMIT_EDITMSG` while a first, slower invocation is still mid-hook-chain; the first invocation's commit
+      then lands with ITS OWN correct tree (from its own already-staged index) but the SECOND process's message —
+      exactly the observed symptom. Resolution: **(a)** documented the "one commit at a time per clone" discipline +
+      full mechanism explicitly in `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT
+      cover" (new item 3, alongside the existing shared-stash and shared-scratch-path rules). **(b)** a cheap technical
+      mitigation (WARN-on-mismatch, not auto-amend) was already shipped by the sibling P3 todo below
+      (`scripts/quickmerge.sh`) — verified still present and correctly scoped (content-only detection, never blind-
+      amends); no further code change needed on top of it, since full cross-entry-point serialization (a repo-wide git
+      wrapper/hook covering every raw `git commit` call, not just quickmerge's) is a materially larger, riskier lift
+      than this P2 finding's scope calls for.
 - [x] ✅ [INFRA] P3. **DONE 2026-07-30 — unified-trading-pm@b3abf1bd5.** Added the post-commit self-check to
       `scripts/quickmerge.sh`'s Commit+Push+Flip step (right after the commit-retry loop, before the push retry loop):
       compares `git log -1 --format=%s` against the subject line of `$_QM_COMMIT_MSG` (what this invocation intended to
