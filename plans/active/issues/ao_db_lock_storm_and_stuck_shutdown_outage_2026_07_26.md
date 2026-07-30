@@ -167,7 +167,7 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
         `test_tmux_pruner_agent_reap.py` suite fresh (`TMPDIR` routed to scratchpad around the unrelated,
         separately-tracked `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition): 5/5 passed. No new code
         change needed; checkbox was stale relative to already-shipped work.
-- [ ] [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
+- [x] ✅ [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
       SIGKILL. Check whether any of the orphaned processes found on the next start (`sh`, `node`, `npm exec prettier` —
       PIDs 2961831/2961834/2958093 at the time) correlate with a specific in-flight operation (a worker's own
       quickmerge/prettier run, dispatched from inside this same orchestrator process's tmux sessions) that the shutdown
@@ -176,7 +176,58 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       is interacting with the reload/shutdown sequence in a way that makes the PARENT uvicorn process wait on children
       it shouldn't be waiting on. Definition of done: either a concrete root cause + fix, or a documented conclusion
       that the shutdown hang is inherent to `KillMode=process`'s tradeoff (protects workers, costs shutdown latency) and
-      not worth changing.
+      not worth changing. — **agent-orchestrator@ee98ccb.** Caught a FRESH live recurrence
+      (`2026-07-30T01:00:06-01:01:36 UTC`, exactly the full 90s `TimeoutStopSec` before SIGKILL) via direct
+      `journalctl -u orchestrator.service` access on this VM (I'm running on it) and isolated the hang to a
+      previously-unexamined 15s window: the ASGI worker (`pid 246276`) fully completes its OWN shutdown at `01:01:21`
+      (connection-drain, 24s state-snapshot write + S3 upload — both accounted for, not the mystery), the reload
+      supervisor then logs its own `"Stopping reloader process [pid]"` (uvicorn's `BaseReload.shutdown()`,
+      `uvicorn/supervisors/basereload.py:103-115` — the function's LAST line), and then **zero further log output for
+      15s** until SIGKILL. Not the orphaned-process theory this todo named (no correlating in-flight quickmerge/prettier
+      process found this time) — the hang is specifically in Python/uvicorn's post-`shutdown()` interpreter-teardown
+      path for the RELOAD SUPERVISOR's `multiprocessing.get_context("spawn")` child (confirmed via
+      `uvicorn/_subprocess.py`: `get_subprocess()` uses `spawn.Process`, which starts a `resource_tracker` subprocess —
+      found one live, parented directly under the reloader PID, on this VM right now). **Fix**: removed
+      `--reload --reload-dir server` from `scripts/orchestrator.service`'s `ExecStart` entirely, rather than chasing the
+      exact interpreter-teardown mechanism further — confirmed via `scripts/ao-self-pull.sh:207,228`
+      (`systemctl restart orchestrator`) that the reload-cron already runs an EXPLICIT, strictly more complete restart
+      on every FF pull that changes HEAD (plus a stale-process self-heal branch `--reload` can't provide), making
+      `--reload`'s own file-watcher pure redundant overhead — it never added restart coverage, only a race (two
+      independent restart triggers on the same file-change event) and this extra process-supervision layer.
+      Corroborating evidence beyond the shutdown hang itself: `--reload`'s excess restart cadence ("every 15-70min in
+      prod", far more than any reasonable expectation) was already the CONFIRMED root cause of two prior, separately
+      fixed bugs — the SQLite-backup wall-clock-cadence gap and the daily-summary boot-fire dedup bug
+      (`tests/test_sqlite_backup_wallclock_cadence.py`, `tests/test_daily_summary.py`) — both fixed by making state
+      survive a restart rather than by addressing the restart frequency itself. `orchestrator-demo.service` (the sibling
+      unit) never used `--reload`; `scripts/dev.sh` keeps its OWN separate `--reload` for local dev, unaffected. Full
+      repo QG green (2003 passed, 1 skipped, 78.97s + dashboard 165 passed), shipped via quickmerge --agent. **Honest
+      caveat**: this does not 100%-prove the exact bytecode-level cause of the 15s interpreter-teardown stall — but
+      removing the entire redundant reload-supervisor layer is correct on its own architectural merits regardless, and
+      it eliminates the precise layer where the hang was isolated. **Also not yet live**: the fix is on
+      `live-defi-rollout` in the repo, but the DEPLOYED `/etc/systemd/system/orchestrator.service` on this VM is a
+      separately-installed copy (substituted paths/user at install time via `install-orchestrator-service.sh`) that does
+      not auto-sync from the repo — I do not have privileged access from this sandboxed session (`NoNewPrivileges=yes`
+      on the very unit I'd need to edit; confirmed via `sudo -n true` failing with "no new privileges flag is set").
+      **Applying it live needs an operator/infra action**: re-run `install-orchestrator-service.sh` (or manually update
+      the `ExecStart` line + `daemon-reload` + `restart`) — safe to do at any time per `KillMode=process` (confirmed:
+      kills only the uvicorn main PID, tmux/claude worker sessions survive). Added the `[REVIEW]` follow-up below to
+      verify the live deploy + confirm the hang stops recurring.
+- [ ] [OPERATOR] P2. **Apply `agent-orchestrator@ee98ccb`'s `--reload` removal to the LIVE deployed
+      `/etc/systemd/system/orchestrator.service`** on this VM — re-run `install-orchestrator-service.sh` (or manually
+      remove `--reload --reload-dir server` from the `ExecStart` line), then
+      `sudo systemctl daemon-reload && sudo     systemctl restart orchestrator`. Safe per `KillMode=process` (kills only
+      the uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
+      worker has privileged access to do this from a sandboxed slot session (`NoNewPrivileges=yes`). (repo:
+      agent-orchestrator, infra action)
+- [ ] [REVIEW] P2. **Once the live unit is updated (prior todo), confirm via `journalctl` that the
+      `"Started reloader process"` / `"Stopping reloader process"` log lines stop appearing on future restarts** (proves
+      `--reload` is actually off in the running process, not just the repo), then watch the next several
+      `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
+      `"State 'stop-sigterm' timed out.     Killing."` pattern — if it stops recurring across several restarts, close
+      this issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is
+      elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
+      becomes the next thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
+      agent-orchestrator)
 
 ## Recurrence + memory-footprint evidence — 2026-07-27 (main agt-498659)
 
@@ -229,3 +280,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   separately-owned `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition, not touched here). No code change
   needed — flipping both checkboxes as stale-relative-to-shipped-work. The P2 shutdown-hang todo remains open and
   untouched (out of this dispatch's scope).
+- **2026-07-30T05:00-05:25Z (slot 16, `backend_engineer`)**: dispatched the P2 shutdown-hang todo. Running directly on
+  the orchestrator VM gave direct `journalctl -u orchestrator.service` + live `systemctl status` access — caught a fresh
+  recurrence today (`01:00:06-01:01:36 UTC`) and, unlike prior sessions, had enough log detail this time to isolate the
+  ~15s unexplained gap to a SPECIFIC location: after uvicorn's reload supervisor (`BaseReload.shutdown()`) logs its own
+  final line and returns, with nothing further until SIGKILL — i.e. Python/uvicorn interpreter-teardown for the
+  reload-supervisor's `multiprocessing.get_context("spawn")` child, not app code. Traced this to `--reload` being
+  architecturally redundant (`ao-self-pull.sh` already does an explicit, more-complete `systemctl restart` on every
+  code-changing pull) and shipped its removal (`agent-orchestrator@ee98ccb`), also fixing the excess restart-cadence
+  root cause behind two OTHER previously-fixed bugs in this same repo. Full QG green, shipped via quickmerge. Could NOT
+  apply the fix to the LIVE deployed systemd unit myself (`NoNewPrivileges=yes` blocks `sudo` from this sandboxed
+  session) — filed a `[OPERATOR]` todo for that + a `[REVIEW]` todo to verify post-deploy that the hang actually stops.
