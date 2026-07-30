@@ -420,11 +420,11 @@ scale; requires a terminal-hosted `claude` CLI session — the Cursor/VS Code ex
 its built-in terminal tab is) → `/codex/05-infrastructure/local-tmux-precompact-watcher.md`. Analysis:
 `rg --glob '!.venv*' --glob '!build' --glob '!tests'`. **Workflow-capable `GH_TOKEN`**:
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
-proxy ES256 / accounts via GSM, never `.credentials.json`; API access → `agent-orchestrator/docs/ORCHESTRATOR_API_ACCESS.md`; backlog plan-driven
-(`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill
-(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux).
-**Orchestrator `tuning.*` knobs are env-free** (`TuningDefaults`) — change the code default + redeploy; `.env.local`
-silently no-ops. **Checking live backlog/dispatch status from a dev checkout** (no JWT, VM:8765 has no inbound rule):
-`/check-agent-orchestrator` skill or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only
-via AWS SSM, never a manual API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
+proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (`regen_backlog_from_plan.py`, never
+hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill (central + role registry); runtime
+self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Orchestrator `tuning.*` knobs are env-free**
+(`TuningDefaults`) — change the code default + redeploy; `.env.local` silently no-ops. **Checking live backlog/dispatch
+status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator` skill or
+`agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
+API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.
