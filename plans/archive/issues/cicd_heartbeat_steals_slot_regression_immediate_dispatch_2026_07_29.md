@@ -21,7 +21,7 @@ summary: >-
   FIRST-EVER heartbeat, immediately post-dispatch — not after a long session going stale, which the sibling docs' own
   theorizing assumed as the likely trigger. Did not accept/act on the foreign task; stayed scoped to the assigned cicd
   mandate throughout.
-status: open
+status: complete # (was: open) 2026-07-30 corpus-reduction sweep: all 3 todos (P1/P2/P3) shipped/closed, 0 open todos
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -68,6 +68,15 @@ resolved_by:
 ---
 
 # `_typed_occupant_liveness` "stale" branch fires on the FIRST-EVER heartbeat post-dispatch, reproducing the archived heartbeat-steals-slot bug
+
+> **ARCHIVED (2026-07-30) — all 3 todos shipped/closed, 0 open.** P1 (dispatch-ordering race, pre-stamp + 45s grace
+> window) — `agent-orchestrator@3d993fb`. P2 (fleet audit of live stolen-task bindings) — 0 unresolved steals found as
+> of 2026-07-30 05:35 UTC; the P1 fix confirmed holding since deploy-propagation completed 04:20:54. P3 (whether this
+> fix and the sibling `/done` 400 family should unify) — considered and declined: the two bug families are different
+> failure shapes (a never-yet-registered AgentRow at dispatch-time here vs. an already-archived AgentRow mid-session
+> there) that happen to share the same `find_active_agent_for_session` lookup, not a shared root cause a single fix
+> would close. See `/plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` for
+> the still-open sibling `/done` 400 work.
 
 ## What I found
 

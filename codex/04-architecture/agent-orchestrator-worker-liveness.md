@@ -202,6 +202,26 @@ still hits `force=True` at exactly `kick_escalation_threshold` kicks).
 
 ---
 
+## `_typed_occupant_liveness` dispatch-ordering race (2026-07-30) — a DIFFERENT gap, same lookup function
+
+A one-shot/typed escalation worker's mandated STEP-0 heartbeat could land in the window between `do_spawn()` returning
+(the boot prompt is pasted, worker executing) and `escalation.escalate()`/`plan_health.dispatch()` opening the
+`_register_agent`+`claim_slot_for_typed_agent` session — `do_spawn` runs deliberately OUTSIDE any DB session
+(`orchestrator_spawn_reliability_db_lock_2026_06_10`, so the multi-second boot wait never holds the SQLite write lock).
+In that window the slot looks fully unclaimed to `find_active_agent_for_session` (no AgentRow yet), so
+`_typed_occupant_liveness` resolves `"stale"` and the heartbeat handler falls through to the ordinary
+`pick_next_task`/`assign_task_to_slot` idle-dispatch path — silently binding a foreign Class-A backlog task to a slot
+that is actually mid-dispatch of a typed one-shot occupant. **This is NOT the same gap as the `/done` 400 family above**
+(an AgentRow that existed and was later archived out from under a live session) — here the row never existed yet at
+lookup time; the two share `find_active_agent_for_session`'s query shape but not a root cause, so a single fix does not
+close both. Fixed (`agent-orchestrator@3d993fb`): both dispatchers now pre-stamp `SlotRow.status="working"` +
+`last_spawned_at=now` in their PRE-spawn session (rolled back to `idle` on a failed spawn), and `heartbeat_slot` holds
+the slot for a bounded 45s grace window when it sees that pre-stamp with no live typed occupant resolved yet — self-
+healing to normal dispatch if the window elapses on a genuinely stuck/failed spawn. Full incident + fleet-audit detail:
+`/plans/archive/issues/cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29.md`.
+
+---
+
 ## Interaction with AutoSpawnLoop
 
 ```

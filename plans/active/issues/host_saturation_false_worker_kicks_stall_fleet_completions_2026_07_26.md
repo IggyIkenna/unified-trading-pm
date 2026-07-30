@@ -135,10 +135,13 @@ is known-wrong is actively dangerous.
       launching unconditionally. **Done when**: with N slots wanting QG simultaneously, at most `max(2, floor(cores/4))`
       run concurrently and the rest queue on the semaphore (verified by a launch test). Repo: agent-orchestrator (QG
       launcher) — coordinate with quality-gates.sh entry point.
-- [ ] [DOC] P2. Document the host-saturation → false-kick → completion-stall failure mode and the two-window /
+- [x] ✅ [DOC] P2. Document the host-saturation → false-kick → completion-stall failure mode and the two-window /
       load-aware kick contract in the orchestrator watchdog SSOT
       (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`), so future liveness tuning treats "stale
-      pane under host load" as distinct from "wedged agent."
+      pane under host load" as distinct from "wedged agent." — unified-trading-pm. Added a cross-referenced note under
+      the "Liveness" bullet describing the failure mode + the shipped `agent-orchestrator@64b5310` grace-shield fix, and
+      pointing to `worker-liveness.md`'s existing full-detail section (which already documented the fix itself; this
+      doc's own SSOT was the one still missing the cross-reference).
 
 ## Progress Log
 
@@ -187,3 +190,13 @@ is known-wrong is actively dangerous.
   asked for. Doc stays `assigned_vm: NA`: its `[DOC] P2` sibling edits
   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (never autonomous), and the `[DEVOPS] P1`
   host-level QG admission semaphore remains genuinely open.
+- **2026-07-30 (plans-corpus reduction marathon, wave 3)**: shipped `[DOC] P2` — added a cross-referenced note under the
+  "Liveness" bullet in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` describing this failure
+  mode + the shipped grace-shield fix, pointing to `worker-liveness.md`'s existing full-detail section
+  (unified-trading-pm only, no code/build). **`[DEVOPS] P1` (host-level QG admission semaphore) assessed and left open —
+  genuinely out of bounded scope for this pass**: it requires a real semaphore/lock around every full-suite
+  `quality-gates.sh` launch fleet-wide (not just agent-orchestrator's own QG), touching the shared `base-service.sh`/QG
+  entry point every repo in the fleet invokes — per this workspace's own rule-11 blast-radius discipline ("a gate change
+  is not done until proven across the fleet + all promotion branches"), this is exactly the kind of shared-infra change
+  that needs fleet-wide verification, not a single-repo bounded fix. Left for a dedicated DEVOPS pass with room to
+  verify across repos.

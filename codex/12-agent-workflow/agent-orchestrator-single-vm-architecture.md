@@ -185,7 +185,14 @@ dead worker's task or process stranded.
   account has headroom. Full gate contract: [autospawn.md](/codex/04-architecture/agent-orchestrator-autospawn.md).
 - **Liveness** (`WorkerLivenessWatchdog` + `WorkerLivenessKicker`): kicks a nudge-able worker; kills a genuinely
   stuck/silent/context-full one; AutoSpawn respawns. Full trigger contract + anti-thrash:
-  [worker-liveness.md](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
+  [worker-liveness.md](/codex/04-architecture/agent-orchestrator-worker-liveness.md). **Sustained host saturation (QG
+  churn + claude fleet + swap) is a distinct false-positive class, not "wedged agent"**: a busy host delays tmux pane
+  reads past `verify_window_s`, so a genuinely-progressing worker's pane sample reads frozen and gets kicked — each kick
+  interrupts real in-flight work, which can stall fleet-wide `slot_done` completions for over an hour even while
+  dispatch keeps flowing. Fixed (`agent-orchestrator@64b5310`) via a progress-marker grace shield —
+  `_progress_marker_shields_kick` suppresses `worker_kicked` whenever `slot.last_ping` advanced within
+  `kick_progress_grace_seconds` (default 90s), even when the pane read classifies frozen. Full detail:
+  [worker-liveness.md § "WorkerLivenessKicker — host-load-aware grace shield + hard-kill escalation"](/codex/04-architecture/agent-orchestrator-worker-liveness.md).
 - **Death**: a dead worker with in-flight dirty WIP RESUMES (`--resume`, bounded by `ORCHESTRATOR_RESUME_MAX_ATTEMPTS`);
   dead + clean requeues. A `paused` slot's task is NEVER released (operator intent). Governed by
   `server/resume_lifecycle.py` + `server/tmux_pruner.py`.
