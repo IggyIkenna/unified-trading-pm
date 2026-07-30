@@ -22,7 +22,7 @@ stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer]
 tags: [gcs, path-resolution, dead-code, domain-client]
-related: [/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md]
+related: [/plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md]
 created: 2026-07-30
 last_updated: 2026-07-30
 parent_epic: infrastructure_master
