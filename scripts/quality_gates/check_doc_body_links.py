@@ -18,7 +18,11 @@ corpus-relative doc links.
 
 Resolution mirrors validate_doc_references()'s three tiers: relative to the referencing doc's own
 directory, relative to the PM root, then a plans/archive/** basename fallback (a doc that graduated
-to archive is a normal lifecycle event, not breakage).
+to archive is a normal lifecycle event, not breakage). A fourth, final tier: a relative link that
+climbs out of the PM repo into a SIBLING repo directory not present in the current checkout (CI's
+narrow `dep_repos` fetch clones only unified-trading-library/unified-api-contracts alongside
+unified-trading-pm, never the full 25-repo fleet) is unverifiable, not broken — soft-skipped rather
+than flagged.
 
 Ratcheted against doc_body_link_baseline.yaml (same convention as doc_reference_baseline.yaml) so
 pre-existing rot found at seed time doesn't fail every run — only a NEW broken link (not already in
@@ -109,6 +113,30 @@ def _is_checkable(target: str) -> str | None:
     return t
 
 
+def _crosses_into_absent_sibling_repo(doc_dir: Path, pm_root: Path, target: str) -> bool:
+    """A relative link that climbs out of the PM repo into a sibling repo dir (e.g.
+    `../../../deployment-service/docs/X.md`) is genuinely unverifiable — not broken — when that
+    sibling repo simply isn't present in the current checkout. Full local dev clones every sibling
+    repo, so this never fires there; CI's narrow `dep_repos` fetch (only unified-trading-library /
+    unified-api-contracts get cloned alongside unified-trading-pm) is exactly the case this exists
+    for — same soft-skip philosophy as an absent sibling clone in check_plan_commit_sha_evidence.py."""
+    try:
+        resolved = (doc_dir / target).resolve()
+    except (OSError, ValueError):
+        return False
+    workspace_root = pm_root.parent
+    try:
+        rel_to_workspace = resolved.relative_to(workspace_root)
+    except ValueError:
+        return False  # not even under the workspace root — a genuinely broken link
+    if not rel_to_workspace.parts:
+        return False
+    sibling_repo = rel_to_workspace.parts[0]
+    if sibling_repo == pm_root.name:
+        return False  # stayed inside PM — a real broken link, not a cross-repo case
+    return not (workspace_root / sibling_repo).is_dir()
+
+
 def _resolve(doc_dir: Path, pm_root: Path, target: str) -> bool:
     if target.startswith("/"):
         # Repo-root-relative convention used throughout this corpus (e.g. "/codex/foo.md" meaning
@@ -123,7 +151,9 @@ def _resolve(doc_dir: Path, pm_root: Path, target: str) -> bool:
         return True
     if (pm_root / target).is_file():
         return True
-    return any((pm_root / "plans" / "archive").glob(f"**/{Path(target).name}"))
+    if any((pm_root / "plans" / "archive").glob(f"**/{Path(target).name}")):
+        return True
+    return _crosses_into_absent_sibling_repo(doc_dir, pm_root, target)
 
 
 def _load_baseline() -> set[str]:
