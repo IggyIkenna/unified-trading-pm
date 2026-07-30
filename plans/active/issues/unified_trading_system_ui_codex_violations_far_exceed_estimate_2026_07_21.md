@@ -199,34 +199,50 @@ This needs an operator/main call on sequencing + approach, not a unilateral pick
       Residual real-violation sweep filed as its own todo below (not fixed here — 501 hits across ~65 files with no
       Playwright coverage for most of them is not a same-session, same-todo fix).
 
-- [ ] [UI] P2. **2026-07-25 note: mostly done elsewhere, don't duplicate.** The sibling issue doc
-      (archived 2026-07-28, resolved unified-trading-system-ui@145bf5dd, now at
+- [x] ✅ [UI] P2. **2026-07-25 note: mostly done elsewhere, don't duplicate.** The sibling issue doc (archived
+      2026-07-28, resolved unified-trading-system-ui@145bf5dd, now at
       `/plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`) picked up from this same 501-hit
       baseline (`unified-trading-system-ui@2bb398c1c`) and drove it down via 5 shipped batches + a retroactive
       Playwright-evidence follow-up to a final combined count of **96** — this number is durably tracked live in
       `unified-trading-system-ui/codex_ui_violation_baseline.json` (the machine-checked ratchet `quality-gates.sh` reads
-      every run), not just the now-archived doc's prose. Before starting this todo, re-run the
-      breakdown below and diff against that doc's batches — most of the top offenders named here (`_home-client.tsx`,
-      `components/trading/sports/*.tsx`, `components/shared/status-badge.tsx`) are already covered there. The genuinely
-      residual scope (not touched by the sibling doc's batches, per its own file list) is at minimum `lib/taxonomy.ts`
-      (60) and `lib/reference-data.ts` (19) — this todo should be narrowed to that residual set rather than re-swept
-      whole. Sweep the (now much smaller) residual real hardcoded-colour hits across the remaining component/page files
-      (post-triage — excludes the two legitimate categories from todo 3 above) to CSS vars / Tailwind classes /
-      `chart-theme.ts` tokens. Get the current file-by-file breakdown fresh via
-      `rg '#[0-9a-fA-F]{6}\b|#[0-9a-fA-F]{3}\b|rgb\(|rgba\(' app components lib --glob "!**/*.test.*" --glob     "!**/chart-theme.*" --glob "!**/globals.css" --glob "!**/*.css" -c`
-      (plus the `CODEX_COLOUR_EXCLUDE_GLOBS` entries in `scripts/quality-gates.sh` to exclude the already-triaged
-      legitimate files) — the top offenders as of 2026-07-21 are `lib/taxonomy.ts` (60), `app/(public)/_home-client.tsx`
-      (32), `components/trading/sports/*.tsx` (several files, 9-27 each), `lib/reference-data.ts` (19),
-      `components/shared/status-badge.tsx` (21). Three files (`lib/design-tokens.ts`, `lib/taxonomy.ts`,
-      `lib/reference-data.ts`) are ambiguous — they look like they MAY be legitimate single-source token-definition
-      files (same role as the already-excluded `chart-theme.ts`), but that's a judgment call this todo should make
-      explicitly (verify no other file re-hardcodes the SAME hex values instead of importing from these) rather than
-      blindly including or excluding them. No blind mechanical find/replace — per-file, use this repo's actual
-      `--color-*` CSS vars from `app/globals.css` or Tailwind classes; **no change ships without pw:L2** per
-      `/codex/06-coding-standards/ui-testing-layers.md` (visual/theming changes are exactly the class of change that
-      rule exists for). Split across multiple sub-tasks if dispatched (e.g. by directory: `components/trading/sports/*`,
-      `components/marketing/*`, `components/widgets/*`, remainder) rather than one giant todo. (repo:
-      unified-trading-system-ui)
+      every run), not just the now-archived doc's prose. — `unified-trading-system-ui@44c66309`. Re-verified the live
+      gate count fresh (exact `[3.5/6]` rg invocation incl. all `CODEX_COLOUR_EXCLUDE_GLOBS`): still exactly 96,
+      breakdown `lib/taxonomy.ts` (60), `lib/reference-data.ts` (19), `lib/design-tokens.ts` (14),
+      `components/widgets/sports/sports-widgets.md` (2), `app/(ops)/seed-demo/page.tsx` (1) — confirming this todo's own
+      suspicion that taxonomy.ts/reference-data.ts are the dominant residual. Made the three-file judgment call this
+      todo asked for, evidenced not guessed: - **`lib/taxonomy.ts`** — EXCLUDED. Genuine SSOT: 6 real importers
+      (`app/(platform)/dashboard/page.tsx`, `components/services/ServiceTile.tsx`,
+      `components/promote/promote-flow-modal.tsx`, `lib/types/strategy-platform.ts`, 2 mock fixtures). `color` is a
+      per-category business-data field on `ASSET_GROUP_CONFIG` etc., same shape as the already-excluded fixture files.
+      Checked for the exemption's own anti-pattern (another file re-hardcoding the same hex instead of importing) — the
+      only other files reusing its hex values are already-excluded mock/email files; no real dedup violation. -
+      **`lib/reference-data.ts`** — EXCLUDED. Genuine SSOT: 14 real importers. `color` is a per-category business-data
+      field (strategy-archetype / cost-line-item), not theming. Two coincidental hex overlaps with taxonomy.ts
+      (`#22c55e`, `#ec4899`) checked by content — they label unrelated categories (asset-class vs.
+      strategy-archetype/cost-item), not a duplicated concept. - **`lib/design-tokens.ts`** — NOT excluded (real
+      residual, 14 hits). Unlike `chart-theme.ts` (which earned its exemption via a real wired consumer, see todo 1),
+      this file has **zero importers** even though its own palette values ARE independently hardcoded elsewhere (9-104
+      hits per value) — it reads as an aspirational token file never wired up, not a proven SSOT. Declining to exclude
+      it blindly; filed as its own narrower follow-up todo below rather than absorbed into this one (needs a
+      wire-vs-delete decision + Playwright coverage if wired, out of scope for a config-only exclude-glob change). Also
+      excluded 2 non-violations found during the same pass: `components/widgets/sports/sports-widgets.md` (a `.md`
+      design-notes doc, hex named in prose, not a rendered component) and `app/(ops)/seed-demo/page.tsx` (its 1 hit is
+      the `&#123;id&#125;` HTML entity for literal `{id}` text, not a colour — an `rg` pattern false positive). Result:
+      `codex_ui_violation_baseline.json` colour 96 → 14 (config-only change, no component/page code touched, so no pw:L2
+      needed — same class as todo 3's INFRA-tagged triage). Verified via full `quality-gates.sh`: `[3.5/6]` colour = 14
+      (at baseline, no new violations), sentinel `3dc827dff975f9de297620ee568ed54d6ce89c3f` → shipped at `44c66309`.
+- [ ] [UI] P3. Resolve `lib/design-tokens.ts`'s 14 remaining hardcoded-colour hits (identified + deliberately left
+      un-excluded by the todo above, 2026-07-30): the file defines a real design-token shape (`COLORS`/`RADIUS`/
+      `FONTS`/`SHADOWS`/`CARD`/`SPACING`) but has **zero current importers**, while its own palette values (e.g.
+      `#4ade80`, `#fbbf24`, `#f87171`, `#22d3ee`) are independently hardcoded 9-104 times elsewhere in the tree. Make
+      the wire-vs-delete call explicitly: (a) if genuinely load-bearing, wire at least one real consumer (mirroring how
+      todo 1 proved `chart-theme.ts` wasn't a dead stub by migrating `vol-surface-chart.tsx`'s `LINE_COLORS` to it),
+      earning the same `CODEX_COLOUR_EXCLUDE_GLOBS` exemption once a real import exists — **no change ships without
+      pw:L2** per `/codex/06-coding-standards/ui-testing-layers.md` if this touches any rendered component; (b) if
+      genuinely dead code with no realistic consumer, delete it instead of exempting a file nothing uses. Do not add it
+      to `CODEX_COLOUR_EXCLUDE_GLOBS` without doing (a) or (b) first — an unwired file doesn't meet this repo's own
+      exemption bar (see the excluded-vs-not rationale in `scripts/quality-gates.sh`'s `CODEX_COLOUR_EXCLUDE_GLOBS`
+      comment block). (repo: unified-trading-system-ui)
 - [x] ✅ [INFRA] P1. Decide interim shippability: temporary audited `CODEX_*_EXCLUDE_GLOBS` bypass (documented in
       `QUALITY_GATE_BYPASS_AUDIT.md`, citing this issue doc) vs. hard-block `quality-gates.sh` on this repo until the
       above 3 todos land — operator/main decision, not unilateral. (repo: unified-trading-pm) — Decision already made by
