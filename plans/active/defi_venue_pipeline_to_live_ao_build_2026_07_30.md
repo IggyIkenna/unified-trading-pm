@@ -94,6 +94,41 @@ splitting into two plans just to parallelize two todos.
       write a `capture_status=captured` manifest row for all 6 venues, verified via Cloud Run job execution history + a
       manifest query.
 
+      **2026-07-30 (slot-6) — ROOT CAUSE CONFIRMED + FIX SHIPPED, deployment/live-verify portion still pending
+          (blocked on a separate, already-tracked infra incident, not this fix).** Confirmed the SAME OOM/timeout root
+          cause the gas-fees fix already patched applies here too, via direct code read (not a guess):
+          `lst_rates_handler._check_freshness_skip()` called `ManifestFreshnessCache.bulk_load()` completely UNBOUNDED —
+          `bulk_load() -> read_availability_index()` can synchronously block for up to
+          `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]=4200s` when a defi consolidator merge is in flight
+          (`unified-trading-library/manifest_writer/_staleness_budget.py`), and this job's own Cloud Run timeout is
+          **1200s** (confirmed live in `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s "lst-rates"
+          entry) — exactly the `1800s < 4200s` shape that caused the gas-fees crash-loop, just with an even tighter
+          1200s budget here. Fixed the same way: reused the existing `_gas_fee_helpers.bounded_freshness_warmup()` helper
+          (90s bound, fail-open — never skip on an untrustworthy/timed-out cache) instead of hand-rolling a new one.
+          While validating via full `quality-gates.sh`, found ONE pre-existing unrelated failure blocking a green tree —
+          `test_vault_share_price_handler.py::test_process_writes_canonical_partition_per_protocol_chain` (confirmed
+          pre-existing via a clean-tree repro before touching it) — root-caused to a stale test assertion
+          (`pipeline_mode=batch_onchain_subgraph`) no longer matching this handler's actual, intended, RPC-only
+          `batch_onchain_rpc` behavior, now that `unified-api-contracts` corrected
+          `SOURCE_PRIORITY[("defi","vault_share_price")]` to `["onchain_rpc"]` today (2026-07-30) — the MTDS-side
+          companion fix `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` todo 4 was waiting on. Fixed
+          both (the handler's now-stale `_VAULT_SHARE_PRICE_SOURCE` constant + the test's stale path assertion). Full
+          `quality-gates.sh --no-fix`: green (exit 0), shipped via quickmerge: `market-tick-data-service@5b5caffa`.
+
+          **Cannot yet verify the done-when** (3 consecutive real cron-triggered runs against the FIXED code) —
+          `image-build-gate.yml` only rebuilds the deployed container on push to `main`, not `live-defi-rollout`, and the
+          LDR→main promotion for this repo (and the ENTIRE `promotion_model: ldr_main` fleet) is currently blocked by an
+          already-filed, actively-investigated, unrelated incident:
+          `plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (both
+          `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` have returned `startup_failure` on every tick
+          since 2026-07-29T18:30Z — confirmed live via `gh run list`, not stale). Once that incident resolves and this
+          commit promotes + rebuilds, re-run: trigger `gcloud scheduler jobs run` against the real `lst-rates` Cloud
+          Scheduler job 3x (this counts as "real cron-triggered" per this todo's own parenthetical — it invokes the
+          actual Scheduler entity, not a raw `gcloud run jobs execute`), then confirm via Cloud Run execution history +
+          a manifest query that all 6 venues get `capture_status=captured` rows on each run. Not flipping this checkbox
+          — the done-when genuinely isn't met yet, and this is NOT a code gap, it's an external, already-owned
+          deployment-pipeline outage.
+
 - [ ] [DATA] P1. Run the 90-day historical backfill for all 6 venues via direct local invocation — no VM launch needed
       per the source doc's own estimate (~2,340 lightweight RPC calls, well under a constrained rate limit) — now that
       the cron is confirmed healthy (prior todo). Done-when: the availability manifest shows ≥90 days of
@@ -156,3 +191,17 @@ splitting into two plans just to parallelize two todos.
   `git fetch <local-path> live-defi-rollout` and cherry-picked it into this session's worktree, preserving slot-15's
   original authorship. Shipped both together — `instruments-service@6c193a19` — full `quality-gates.sh` green (5093
   passed, 0 failed). Todo 1 above is now flipped. `RB-ecfc50de` resolved.
+- **2026-07-30 (slot-6) — Todo 2 (cron fix) code-complete + shipped, live-verify portion BLOCKED on a separate
+  fleet-wide incident.** Confirmed the `lst-rates` crash-loop is the exact same unbounded-`bulk_load()` root cause the
+  gas-fees cron already had fixed, via direct code read + the live Terraform timeout (1200s < defi's 4200s
+  consolidator-inflight horizon). Fixed by reusing the existing `bounded_freshness_warmup()` helper (no new primitive
+  invented). Also fixed an unrelated pre-existing QG-red (`vault_share_price_handler.py`'s `_VAULT_SHARE_PRICE_SOURCE`
+  stamping the now-superseded `onchain_subgraph` value + a stale test assertion) found blocking a clean
+  `quality-gates.sh` run — confirmed pre-existing before touching it, and confirmed the real fix (UAC now accepting
+  `onchain_rpc` for this cell, corrected 2026-07-30) had already landed, so this was the correct companion half, not
+  scope creep. Shipped: `market-tick-data-service@5b5caffa`, full QG green. Could not complete the "3 consecutive real
+  cron-triggered runs" verification — the container image only rebuilds on push to `main` (`image-build-gate.yml`), and
+  this repo's (and the entire `promotion_model: ldr_main` fleet's) LDR→main promotion is blocked by an already-filed,
+  actively-investigated incident (`issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` — both
+  promote workflows `startup_failure` on every tick since 2026-07-29T18:30Z). Left the checkbox unflipped (genuinely not
+  done) with a clear resume-point once that incident clears.
