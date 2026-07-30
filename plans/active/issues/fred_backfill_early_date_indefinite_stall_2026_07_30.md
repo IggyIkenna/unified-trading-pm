@@ -230,8 +230,15 @@ minute once actually applied.
   - **Relaunched** (correct launcher, no `--year` = production default `1962-01-02..2026-07-29`, matching `-064542`'s
     own window — idempotent/SPOT, resumes from the manifest's already-captured dates):
     `tradfi-bf-fred-full-20260730-110724`. Confirmed live via `gcloud compute instances describe`:
-    `STALL_TIMEOUT_SEC=3900` present in the launched VM's metadata (the headroom fix propagated). STARTED/PROGRESS
-    verification in flight — see the new todo below for the outcome once posted.
+    `STALL_TIMEOUT_SEC=3900` present in the launched VM's metadata (the headroom fix propagated). **STARTED@T+60s**:
+    `gcloud` status `RUNNING` (run.log not yet uploaded that early — expected, the uploader loop starts a few minutes
+    into boot). **PROGRESS@T+10min**: no crash/stall markers, heartbeating every 60s, chunk 1 started — and, expectedly
+    given the CURRENTLY-RUNNING concurrent `tradfi-bf-cme-ohlcv-1m-es-2020..2026-*` fleet (6 VMs, launched
+    ~10:41-10:43Z) generating heavy TRADFI write pressure, it hit the SAME documented consolidator-lock wait at
+    11:10:28Z (`age=156s, horizon=3600s`; live-checked the lock blob — still held, rotated at least once since). This is
+    the exact scenario the 3900s headroom fix exists for: NOT a repeat of the false-stall-kill, a correctly bounded wait
+    now with margin past its own horizon. Leaving it running unattended per the established pattern above — no further
+    action needed unless it re-fails past 3900s (would then indicate a NEW, different issue).
 
 ## Open follow-up: exit-code monitor mislabels a stall-kill as OOM
 
