@@ -61,6 +61,16 @@ The question text leads with the **full todo paragraph**, re-read fresh from the
 (the regen matching key for orphan detection / `brief_hash` / parking-state migration; never widen it to fix a display
 problem). The plan path and boilerplate explanation are demoted to a trailing line.
 
+**Seed-time checkout race, self-healed on later regen ticks.** This read hits `_pm_repo_path()`'s local PM checkout at
+the exact moment the row is first seeded, but that checkout is only refreshed by the external `pm-pull.timer` cron — a
+freshly-created `[OPERATOR]` todo (in a plan that itself just landed) can race the seed against the pull and fall back
+to `task.brief` alone. `get_full_todo_text()` is a thin wrapper over `get_full_todo_text_with_status()`, which also
+reports whether the full continuation block was actually located; `BlockedRow.question_text_incomplete` records a
+fallback at seed time, and `bootstrap._maybe_refresh_operator_gated_question_text()` retries the lookup on every later
+`sync_backlog_to_db()` tick for an already-existing `TaskRow` while the flag stays set and the row is unanswered —
+overwriting `question` and clearing the flag the moment a retry locates the full text. So a row that loses the seed-time
+race self-heals within a few regen ticks instead of staying truncated forever.
+
 ## Answering the row: three paths
 
 `POST /api/blocked/{blocked_id}/answer` (`server/routes/backlog.py`) branches on what the operator sent:

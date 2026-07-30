@@ -18,7 +18,7 @@ summary: >-
   carrying (full todo + operator instruction + target role), a new reclassify action with a role dropdown, free text
   routed to a worker that can read compound instructions, a rewritten question leading with the full todo, purple
   outlining for operator-gated cards, and explicitly NO delete/VM-launch refusal guard.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -44,9 +44,16 @@ depends_on: []
 assigned_vm: planning
 sequential: false
 resolved_by:
+  "All 9 todos done — D1-D5 shipped (agent-orchestrator@a83050b, @97a4864, @40fafaa), D5 follow-up race fix
+  (agent-orchestrator@09e5537), M3 --ruling brief-matching fix (agent-orchestrator@8809ee3), E2E-verified live
+  (unified-trading-pm@f236b64b9, @a27c2fae2), codex SSOT added (unified-trading-pm@ed9d02582)"
 locked_by:
 locked_since:
 ---
+
+> **🗄️ ARCHIVED 2026-07-30.** All 9 todos done, no lock. See `resolved_by` above for the shipping SHAs. Current behavior
+> is documented at `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md` (SSOT — read that, not this
+> historical doc, for how the mechanism works today).
 
 > **🟢 ARMED FOR DISPATCH (2026-07-30).** All design forks were ruled by the operator in an interactive session — see §
 > "Decisions — RULED 2026-07-30". `sequential: true` is set deliberately, not reflexively: D1, D2 and D3 all edit
@@ -304,13 +311,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                                                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                                                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                                                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                                                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                                                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                                                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                                                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                                                  this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                                                  a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                                                  `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                                                  load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                                                  authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                                                  own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                                                  deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [x] ✅ [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify
       and again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed,
