@@ -163,12 +163,28 @@ visible to the very next read, at least for this `wall_type=ldr_qg_failure` esca
 
 ## Recommended next step
 
-- [ ] [BACKEND] P1. Confirm whether `_register_agent`'s write and `find_active_agent_for_session`'s read run against the
-      same DB session/transaction inside `dispatch()`, or whether a commit boundary between them (e.g. a short-lived
+- [x] ✅ [BACKEND] P1. Confirm whether `_register_agent`'s write and `find_active_agent_for_session`'s read run against
+      the same DB session/transaction inside `dispatch()`, or whether a commit boundary between them (e.g. a short-lived
       session per call, connection pooling, or an intervening request) can make the just-written AgentRow briefly
       invisible to the very next read. If confirmed: widen the transaction scope, or make `_typed_occupant_liveness`'s
       "stale" verdict tolerant of an AgentRow written within the last few seconds (grace window) before concluding
-      "no_agentrow" and clearing `spawn_base_role`. (repo: agent-orchestrator)
+      "no_agentrow" and clearing `spawn_base_role`. (repo: agent-orchestrator) — agent-orchestrator@3d993fb.
+      **Confirmed, not a transaction-visibility quirk**: `_register_agent`'s write and `find_active_agent_for_session`'s
+      read never share a session by construction (separate HTTP requests). The real gap is ordering —
+      `escalation.escalate()`/`plan_health.dispatch()` call `do_spawn()` (pastes the boot prompt, starts the worker
+      executing) OUTSIDE any DB session (`orchestrator_spawn_reliability_db_lock_2026_06_10`'s own fix — the
+      multi-second boot wait must not hold the SQLite write lock), and only open the
+      `_register_agent`+`claim_slot_for_typed_agent` session AFTER `do_spawn` returns. A worker's mandated STEP-0
+      heartbeat can land in that gap and see the slot fully unclaimed (`spawn_base_role` unset, `current_task=None`),
+      regardless of whether `_typed_occupant_liveness` resolves "not_typed" or "stale" — both fall through to
+      `pick_next_task` identically, so the fix couldn't live in the "stale" branch alone (widening the transaction scope
+      isn't viable either — do_spawn must stay outside the session by design). Fix shipped: both dispatchers now
+      pre-stamp `SlotRow.status="working"` + `last_spawned_at=now` in their PRE-spawn session (rolled back to "idle" on
+      a failed spawn attempt), and `heartbeat_slot` holds the slot for a bounded 45s grace window when it sees that
+      pre-stamp with no live typed occupant resolved yet — self-healing to normal dispatch once the window elapses so a
+      genuinely stuck/failed spawn never strands a slot. Covered by 7 new unit tests (grace-window hold/expiry/
+      idle-slot-unaffected/ordering-vs-live-check in `tests/test_boot_typed_role_gate.py`, pre-stamp assertions in
+      `tests/test_escalation.py` + `tests/test_plan_health.py`); full `quality-gates.sh` green (2001 passed, 1 skipped).
 - [ ] [BACKEND] P2. Once root-caused, audit how many currently-bound `slot.current_task` values across the fleet are
       actually foreign Class-A tasks silently stolen from a typed one-shot occupant mid-escalation (this session found
       one; the fleet-wide billing-wall storm today dispatched many `cicd` workers in a short window, raising the odds
@@ -220,3 +236,20 @@ visible to the very next read, at least for this `wall_type=ldr_qg_failure` esca
   re-trigger the foreign-task-steal bug, since `slot.current_task` is `None` and `spawn_base_role` is already cleared,
   so a resume without the underlying fix would still eventually re-loop on the next heartbeat — the fix above remains
   the real remediation).
+
+- 2026-07-30 (slot 14, backend_engineer): shipped the P1 fix (agent-orchestrator@3d993fb). Root cause confirmed by
+  reading `do_spawn`'s own docstring + call sites: it deliberately runs OUTSIDE any DB session
+  (`orchestrator_spawn_reliability_db_lock_2026_06_10`) and returns as soon as the boot prompt is pasted — the
+  `_register_agent`/`claim_slot_for_typed_agent` transaction only opens AFTER that, in `escalation.escalate()` and the
+  structurally-identical `plan_health.dispatch()`. Fix: pre-stamp `status="working"`+`last_spawned_at=now` in the
+  PRE-spawn session (both dispatchers), reset to `idle` on a failed spawn attempt (`current_task is None` guard so a
+  genuinely-occupied slot is never touched), and a 45s grace window in `heartbeat_slot` that holds a slot showing that
+  pre-stamp with no live typed occupant resolved yet instead of falling through to `pick_next_task`. Residual known gap
+  (deferred to P2's fleet audit, not fixed here — narrow enough not to block shipping): if a slot gets "benignly" raced
+  away by another dispatcher AND that other dispatcher's own spawn also fails, the losing iteration's pre-stamp isn't
+  explicitly rolled back within `escalate()`/`dispatch()` (only the FINAL loop iteration's outcome resets it) — bounded
+  by the same 45s grace window either way, so it self-heals within 45s rather than hanging indefinitely; noted for P2 to
+  fold in if the fleet audit finds it firing in practice. Checked slot 6 (left `paused` at the end of the filing
+  session) — already resumed and back on normal dispatch (`e2e_coverage_gaps_alerting_deployment_trading_agent-003`), no
+  action needed. P2 (fleet audit of currently-bound stolen tasks) and P3 (shared-fix consideration with the `/done` 400
+  family) remain open, unassigned.
