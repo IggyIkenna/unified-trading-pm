@@ -796,7 +796,18 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     else
         _PYTEST_N="1"
     fi
-    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-60} -q -r a --tb=short --no-header --durations=25"
+    # Wall-clock per-test timeout. Explicit PYTEST_TIMEOUT wins; default raised 60->150
+    # to absorb GH-Actions-xdist + shared-host scheduling variance without meaningfully
+    # delaying detection of a genuinely hung test. This mirrors base-library.sh's own
+    # PYTEST_TIMEOUT_SECONDS fix (2026-07-30) for the identical bug class, which only
+    # covered library-repo callers — this is the separate, service-repo copy of the
+    # same PARGS line that the original fix missed (SERVICE repos source base-service.sh,
+    # not base-library.sh). SSOT: plans/active/issues/pytest_timeout_60s_flaky_under_contention_2026_07_29.md
+    # (todo 2: "grep for other hardcoded wall-clock literals lacking an env-var override" —
+    # this IS that recurrence, not a one-off). Kept the existing PYTEST_TIMEOUT name
+    # (not renamed to PYTEST_TIMEOUT_SECONDS) since it is already a live, documented
+    # override in real agent/operator use (e.g. plans/active/sports_consolidated_native_ao_extract_2026_07_25.md).
+    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT:-150} -q -r a --tb=short --no-header --durations=25"
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to point at a different layout (e.g. PYTEST_UNIT_DIR="tests/" for per-family layouts).
     PYTEST_UNIT_DIR="${PYTEST_UNIT_DIR:-tests/unit/}"
