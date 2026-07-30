@@ -1003,8 +1003,15 @@ rm = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
 repo = '${REPO_NAME}'
 deps = [d.get('name', d) if isinstance(d, dict) else d for d in lm.get('repositories', {}).get(repo, {}).get('dependencies', [])]
 lv = lm.get('versions', {}); rstag = rm.get('staging_versions', {}); rmain = rm.get('versions', {})
+# stale_staging_versions_manifest_2026_07_23.md (operator-ruled option 1, confirmed
+# autonomous_session_operator_decisions_2026_07_25.md #33): staging_versions is a frozen
+# mirror while staging_dormant_mode is true (its only writer reads dormant staging
+# pyprojects) -- trusting it over the live-advancing 'versions' key produces a spurious
+# 'staging-AHEAD' warning (WARN normally, hard BLOCK under --hotfix) for a version that
+# exists nowhere. Ignore it under dormancy; self-corrects the moment staging re-enters.
+dormant = bool(rm.get('staging_dormant_mode', False))
 for dep in deps:
-    l = lv.get(dep, ''); r = rstag.get(dep, '') or rmain.get(dep, '')
+    l = lv.get(dep, ''); r = ('' if dormant else rstag.get(dep, '')) or rmain.get(dep, '')
     if not l or not r or str(r).startswith('_'):
         continue
     pl, pr = pv(l), pv(r)
@@ -1751,6 +1758,25 @@ while true; do
   _qm_stage_0_4_not_behind_gate
   _qm_restage_target_files
 done
+
+# shared_clone_concurrent_commit_message_swap_2026_07_28: on a shared per-tab clone, two
+# concurrent `git commit` invocations in the SAME .git directory have been observed landing
+# a commit whose TREE is the committing process's own staged files but whose MESSAGE belongs
+# to a different, concurrent commit (root cause not yet isolated — candidate is a prek/hook
+# temp-patch or COMMIT_EDITMSG race). Content was never lost in the observed cases, but a
+# swapped subject line silently poisons any `- [x] ... — <repo>@<sha>` evidence citation and
+# any message-based audit (git log --grep, changelog generation). Cheap self-check, not a fix
+# for the race itself: compare HEAD's actual subject line against the one we just intended to
+# commit; WARN loudly (never silently pass) on a mismatch so the calling agent notices in its
+# own output instead of an operator finding a mismatched changelog entry later.
+_QM_INTENDED_SUBJECT="$(printf '%s' "$_QM_COMMIT_MSG" | head -1)"
+_QM_ACTUAL_SUBJECT="$(git log -1 --format=%s 2>/dev/null || echo "")"
+if [ -n "$_QM_ACTUAL_SUBJECT" ] && [ "$_QM_ACTUAL_SUBJECT" != "$_QM_INTENDED_SUBJECT" ]; then
+  echo "[$REPO_NAME] ⚠️  WARN: HEAD's commit subject does not match what this quickmerge invocation intended to commit — possible concurrent-commit message swap (shared_clone_concurrent_commit_message_swap_2026_07_28.md)." >&2
+  echo "[$REPO_NAME]     intended: ${_QM_INTENDED_SUBJECT}" >&2
+  echo "[$REPO_NAME]     actual:   ${_QM_ACTUAL_SUBJECT}" >&2
+  echo "[$REPO_NAME]     Tree content is verified separately (git show --stat HEAD) — this only flags the MESSAGE. If HEAD's diff matches your intended files, this is a message-only mismatch: do not blind-amend (another process may be relying on its own HEAD read); investigate before treating any '@<sha>' evidence citation from this run as trustworthy." >&2
+fi
 
 # quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27: under sustained
 # branch churn (commits landing every 20-90s), the remote can move again during the ~45-300s
