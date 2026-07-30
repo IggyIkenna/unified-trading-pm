@@ -17,7 +17,7 @@ summary: >-
   this task to fix, but evidence the pattern isn't a one-off.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; AO worktree_clean_check refs
 scope: [engineer]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-library, strategy-service]

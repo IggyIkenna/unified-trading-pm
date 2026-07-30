@@ -26,7 +26,7 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; per-slot AO crons, not multi-AG
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
