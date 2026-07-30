@@ -773,8 +773,15 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       records are marked resolved (kept as a permanent record, not deleted — the taxonomy split they document is itself
       durable). `execution-service/scripts/quality-gates.sh` + `unified-api-contracts/scripts/quality-gates.sh` both
       green.
-- [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** LOGIC-FREEZE. Target:
-      strategy-service.
+- [x] ✅ [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** DONE —
+      **strategy-service@31ee01ec** (2026-07-30). Root cause: two `ADAPTER_FETCH_FAILED` call sites
+      (`load_strategy_config`, `discover_instruments` in `strategy_config_loader.py`) passed
+      `service_name=`/`operation=`/`error_code=`/`venue=` as top-level `log_event()` kwargs, but UTL `log_event()` only
+      accepts `event_name`/`severity`/`details`/`client_id`/`correlation_id` — TypeError on the GCS-config error path.
+      Fixed by wrapping the extra fields into `details={}`, matching the already-correct `load_strategy_config_by_type`
+      call in the same file. Added regression tests (`TestAdapterFetchFailedLogging` in
+      `tests/unit/test_strategy_config_loader.py`) verified to fail against the pre-fix call shape and pass against the
+      fix; `quality-gates.sh` green on commit 31ee01ec.
 - [ ] [SPEC] P3. **F17 — expose kill-switch/stop-loss predicates for engine introspection** (currently runtime-fired
       only — invisible to the capability graph). Post-unfreeze enhancement. Target: strategy-service.
 
