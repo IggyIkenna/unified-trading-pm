@@ -119,3 +119,17 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
   not a one-off. Still not root-caused (third-party Rust binary, `prek 0.4.5` — reading its internal source is outside a
   bounded doc-hygiene task's scope); this entry exists purely to strengthen the evidence base for whoever picks up the
   actual root-cause investigation next.
+
+- **2026-07-30 (slot-1, harsh_pc)**: first confirmed occurrence where the corruption actually **landed on
+  `origin/live-defi-rollout`** rather than being caught pre-commit — a materially worse instance than the 4 above. While
+  repairing this exact same target file's already-garbled `last_updated:` field (a separate task, unrelated to this
+  issue), the intended clean single-line fix was verified correct locally (schema check passed, no conflict markers) and
+  staged, but the SHIPPED commit (`unified-trading-pm@33fcd528d`) contains a different, still-garbled value
+  (`last_updated: '2026-06-27 "2026-07-30"'` — parses as valid YAML, so `check_frontmatter_schema.py` did not catch it;
+  caught instead by directly diffing `git show origin/<branch>:<path>` against the intended content). Confirms the
+  replay can happen **during the quickmerge/prek run itself** (between `git add` and the final commit), not only as a
+  leftover unstaged diff a careless `git add -A` might sweep in — post-ship verification for any file this bug might
+  touch needs a real content diff against origin, not just "no conflict markers" / schema-pass. A second quickmerge run
+  moments later (unrelated file) re-corrupted the same field a THIRD time locally (reverted to a stale pre-fix value,
+  `last_updated: 2026-06-27`, caught before staging). Re-fixed properly this time; re-verified byte-for-byte against
+  `git show origin/<branch>:<path>` after shipping, not just schema/conflict-marker checks.
