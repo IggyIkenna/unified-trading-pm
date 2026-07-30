@@ -269,7 +269,7 @@
     },
     {
       "name": "prek",
-      "versionRange": "prek>=0.3.0,<1.0.0"
+      "versionRange": "prek>=0.4.4,<1.0.0"
     },
     {
       "name": "prometheus_client",
