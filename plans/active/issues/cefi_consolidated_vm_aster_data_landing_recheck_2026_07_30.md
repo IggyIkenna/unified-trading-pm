@@ -21,7 +21,7 @@ tags: [cefi, aster, live-capture, verification, follow-up]
 related:
   [
     /plans/active/infra_capture_and_devops_leftovers_2026_07_06.md,
-    /plans/active/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
+    /plans/archive/issues/cefi_live_ws_capture_dormant_since_2026_06_29_2026_07_14.md,
   ]
 created: 2026-07-30
 priority: P2

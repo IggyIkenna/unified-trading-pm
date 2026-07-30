@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 253 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -434,7 +434,7 @@ by hand._
   AO-dispatch batch for tradfi, produced by a second `/ag-closeout-audit tradfi` pass on 2026-07-26 (autonomous mode),
   run AFTER batch3 was activated and 5 of its 9 todos had already executed. Re-audited all 27 tradfi-primary…
 - [`tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
-  **[draft]** — Gated closeout for tradfi_satellite_ao_dispatch_batch4_2026_07_26.md — machine-held via depends_on plus
+  — Gated closeout for tradfi_satellite_ao_dispatch_batch4_2026_07_26.md — machine-held via depends_on plus
   gate_on_depends: true until all 8 of that plan's todos are done. Mirrors the batch1/batch2/batch3-finalize pattern:
   reconcile each…
 - [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29.md) **[draft]** —
@@ -681,7 +681,7 @@ by hand._
   2026-07-25 orphan-audit's 13 genuinely-orphaned prediction satellite docs (of 20 audited; 6 more were correctly
   deferred to the…
 - [`prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25`](./prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md)
-  **[draft]** — Gated closeout for prediction_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on +
+  — Gated closeout for prediction_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 7 of that plan's todos are done. Mirrors the sports/tradfi finalize-plan pattern
   (reconcile each of…
 - [`prediction_satellite_ao_dispatch_batch2_2026_07_25`](./prediction_satellite_ao_dispatch_batch2_2026_07_25.md) —
@@ -689,7 +689,7 @@ by hand._
   against `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s own Deferred section (12 fully-deferred orphaned
   docs…
 - [`prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25`](./prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md)
-  **[draft]** — Gated closeout for prediction_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on +
+  — Gated closeout for prediction_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 6 of that plan's todos are done. Mirrors the batch1 finalize-plan pattern (reconcile
   each of the 5…
 - [`prediction_satellite_ao_dispatch_batch4_2026_07_26`](./prediction_satellite_ao_dispatch_batch4_2026_07_26.md) —
@@ -730,11 +730,14 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (64)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
   cefi, defi, tradfi, prediction — each of which already carries its own…
+- [`ao_slot_capacity_policy_ci_scheduled_split_2026_07_29`](./ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md)
+  — Operator asked for the agent-orchestrator's worker-slot pool (~15 observed) to structurally guarantee 3 slots always
+  idle for CI/CD-failure escalation, 2 for scheduled/cron dispatch, and cap Class-A plan-worker backlog at 10 — so a CI…
 - [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md) — Rename the
   DOMAIN-level unified_api_contracts.AssetClass (crypto/equity/fx/commodity/fixed_income) to AssetGroup across UAC + 7
   downstream consumer repos + the UI, in one coordinated atomic landing per repo (no backward-compat shims…
@@ -812,6 +815,9 @@ by hand._
 - [`cross_venue_funding_reversion_research_2026_07_24`](./cross_venue_funding_reversion_research_2026_07_24.md) — Forked
   2026-07-24 (line-cap remediation) from carry_staked_basis_funding_scan_experiment_2026_06_16.md: a genuinely distinct
   strategy that only got journaled inside the carry-scan harness plan — cross-sectional / cross-venue funding-rank…
+- [`daily_trading_analyst_llm_job_design_2026_07_29`](./daily_trading_analyst_llm_job_design_2026_07_29.md) — Design for
+  a new daily-scheduled LLM job (operator ruling on /plans/active/issues/blrs_g3_g10_rescope_2026_07_28.md's G3) that
+  diagnoses WHY trades, PnL, ML signals, strategy decisions, and data-quality gaps happened the way they did…
 - [`data_completion_to_100_all_ag_2026_06_21`](./data_completion_to_100_all_ag_2026_06_21.md) — Drives MTDS
   market-data + IS reference-data to 100% honest-coverage across every asset group (cefi/defi/ tradfi/sports/pred),
   batch AND live, on manifest v9. Snapshot 2026-06-21: LIVE=0 rows on every AG (live pipeline never populated), low…
@@ -942,8 +948,11 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (4)
+### ao (5)
 
+- [`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30`](./ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md)
+  — Gated closeout for ao_consolidated_closeout_2026_07_25.md, reclassified `assigned_vm: NA -> planning` by the
+  na-eligibility-audit infra-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 - [`ao_fleet_observability_kpis_2026_07_20`](./ao_fleet_observability_kpis_2026_07_20.md) — Roughly four of five
   dispatches produce no completion and nothing surfaces it, 43% of CI escalations go unresolved after ~3.8 dispatches
   each, plan_health burns 55 haiku runs a day of which 13 return nothing, snapshot recency is…
@@ -991,7 +1000,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (13)
+### infrastructure (15)
 
 - [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) — A new /ops/artifacts
   page that shows the deployment estate's FINAL stage end-to-end — every Docker image and VM tarball built, where it
@@ -1005,6 +1014,9 @@ by hand._
   **[draft]** — Gated closeout for codex_vs_repo_docs_ssot_audit_2026_06_01.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todos…
+- [`deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30`](./deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md)
+  — Gated closeout for deployment_registry_firestore_migration_2026_07_14.md, reclassified `assigned_vm: NA -> planning`
+  by the na-eligibility-audit infra-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 - [`docker_artifact_registry_cleanup_policy_2026_07_24_finalize_2026_07_27`](./docker_artifact_registry_cleanup_policy_2026_07_24_finalize_2026_07_27.md)
   **[draft]** — Gated closeout for docker_artifact_registry_cleanup_policy_2026_07_24.md -- machine-held via
   depends_on + gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own
@@ -1013,6 +1025,10 @@ by hand._
   — Three services have no genuine end-to-end test coverage, surfaced by the 2026-07-27 pre-June-1 stale-plans audit
   while archiving the old plans/active/end-to-end-testing/ per-service checklist. alerting-service and
   deployment-service each…
+- [`e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30`](./e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30.md)
+  — Gated closeout for e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md, reclassified
+  `assigned_vm: NA -> planning` by the na-eligibility-audit infra-tranche run 2026-07-30 (retroactive-reclassification
+  shape, codex…
 - [`infra_satellite_ao_dispatch_batch1_2026_07_26`](./infra_satellite_ao_dispatch_batch1_2026_07_26.md) — The infra
   tranche's covering set is a ZERO-TODO digest. `infra_consolidated_closeout_2026_07_25.md` lists 32 Source docs for
   discoverability and carries no `- [ ]` of its own (verified: `grep -cE '^\s*-\s*\[[ xX]\]'` on it returns 0), and…

@@ -37,8 +37,8 @@ estimate_calibrated_ai_days: 0.12
 assigned_role: NA
 drift_direction: none
 source:
-  "/plan-reconcile autonomous whole-corpus run, 2026-07-30, slot-3 — Phase 4 routing produced 3 operator-gated items and
-  Phase 5 required one deferral migration"
+  "/plan-reconcile autonomous whole-corpus run, 2026-07-30, slot-3 — Phase 4 routing produced 4 live operator-gated
+  items (a 5th self-resolved mid-run) and Phase 5 required one deferral migration"
 depends_on: []
 resolved_by:
 locked_by:
@@ -62,10 +62,12 @@ superseded_by:
 
 ### P1-A. A codex SSOT carries a dangling reference introduced 2026-07-30; this run could not fix it
 
-`/codex/02-data/is-test-run-audit-2026-04-20.md:48` links to
-`/plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`. **That file does not exist.**
-The calendar doc is still live at `/plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`
-with 1 open todo; the doc that actually got archived that day is its SIBLING,
+`/codex/02-data/is-test-run-audit-2026-04-20.md:48` links to the ARCHIVE path of
+`features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` (written out in full there; deliberately NOT
+reproduced verbatim here, because a broken path quoted in prose is itself counted by `check_reference_paths.py` and
+would make this doc a source of the very violation it reports). **That archive path does not exist.** The calendar doc
+is still live at `/plans/active/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md` with 1 open
+todo; the doc that actually got archived that day is its SIBLING,
 `/plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`. The bad link landed
 in `unified-trading-pm@40edd70b4` ("archive fully-resolved features_sports_is_test_run issue + correct stale codex doc")
 — i.e. the archival ritual's step-5 referrer fix was applied to the wrong sibling's path. It is 1 of the 908 dangling
@@ -174,6 +176,40 @@ directly", first listed carve-out), stamping the `Quickmerge: direct-carveout-di
 - **C: fix the 6 docs in place** (repoint the mirror-ref at `unified-trading-pm/codex/…`, swap the literal for the
   `{project_id}` placeholder) — correct but pointless effort on a throwaway clone.
 - Other.
+
+### ~~P2-E~~ — SELF-RESOLVED before this run ended, kept as a record only (NOT an operator ask)
+
+**Resolved 2026-07-30, same run.** The first exit-gate regen reported `253 plans, 5 orphans`; the confirming re-run
+minutes later reported `253 plans, 0 orphans`. The 5 were all peer docs created during this run whose authors added
+their epic linkage while the sweep was in flight — exactly outcome **A** below, reached without anyone being asked.
+Recorded because it is a real, reproducible property of running this skill against a live corpus: **a Phase-0/exit-gate
+snapshot of freshly-created peer docs will show transient orphans that are not defects**, and a future run should
+re-measure before escalating rather than trusting the first reading. Nothing here needs an answer.
+
+Original finding (5 epic-orphan plans, all created by peers within the last hour):
+
+`regenerate_active_plan_inventory.py` (Phase-5 exit gate) reported `253 plans, 5 orphans`. CLAUDE.md calls an orphan
+count >0 review-blocking. All 5 are docs a concurrent peer created during this very run, none referenced by
+`master_to_live_defi` or any epic yet:
+
+| orphan plan                                                                          | note                                  |
+| ------------------------------------------------------------------------------------ | ------------------------------------- |
+| `ao_consolidated_closeout_2026_07_25_finalize_2026_07_30`                            | finalize plan, 0/1, created this hour |
+| `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30`             | finalize plan, 0/1, created this hour |
+| `e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30` | finalize plan, 0/1, created this hour |
+| `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29`                              | 7/8 done                              |
+| `daily_trading_analyst_llm_job_design_2026_07_29`                                    | 0 checkboxes (see gap 3 below)        |
+
+Not auto-fixed. The mechanical remedy is "add an epic reference", but every one of these files was written and pushed
+minutes before this gate ran, and the multi-agent safety rule is explicit about not editing recently-pushed files you do
+not own — an epic assignment landing on top of an in-flight author is exactly the collision that rule prevents. Three
+are `*_finalize_*` companions whose authoring peer plausibly still has the epic link queued.
+
+- **A: leave them for the authoring peer / the next reconcile pass [WORKER REC]** — the 3 finalize plans are minutes
+  old; if they are still orphaned at the next run, fix them then. **This is what happened: the peers linked them
+  themselves within minutes and the count went to 0.**
+- **B: assign each an epic now** from its obvious parent, accepting the write collision risk — not taken, and it turned
+  out to be unnecessary.
 
 ## Progress Log
 

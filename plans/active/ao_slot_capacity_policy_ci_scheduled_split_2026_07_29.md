@@ -221,8 +221,11 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
       GitHub Actions spending-limit cap, but the actual limit value isn't readable via the API this session has
       (`/users/{user}/settings/billing/actions` is deprecated, 410). Needs the operator to check
       https://github.com/settings/billing directly — full writeup + evidence:
-      `/plans/active/issues/github_actions_total_fleet_outage_startup_failure_2026_07_30.md`. Pushed a notification
-      given the operator is away ~6h and this is the one thing this session cannot fix itself.
+      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md` (repointed 2026-07-30 by
+      `/plan-reconcile`: the originally-cited `github_actions_total_fleet_outage_startup_failure_2026_07_30.md` filename
+      never existed anywhere in the corpus; this doc is the one carrying that fleet-wide 0-step `startup_failure`
+      writeup + the `settings/billing` evidence). Pushed a notification given the operator is away ~6h and this is the
+      one thing this session cannot fix itself.
 
 ## Codex SSOTs
 

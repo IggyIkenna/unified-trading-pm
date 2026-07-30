@@ -26,7 +26,7 @@ tags: [path-registry, unified-trading-library, calendar, regression, accidental-
 related:
   [
     /plans/archive/issues/features_service_pipeline_mode_required_kwarg_break_2026_07_29.md,
-    /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
   ]
 created: 2026-07-29
 parent_epic: infrastructure_master

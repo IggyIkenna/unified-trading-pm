@@ -3,8 +3,8 @@ doc_type: issue
 title: GCS path-audit batch fixes — 10 in-flight cross-repo fixes, uncommitted, blocked on dependency-ship order
 summary: >-
   RESOLVED 2026-07-29. Resumption playbook for a batch of 10 P1/P2 point-fixes dispatched under /autonomous to close out
-  /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md and its sports_prediction continuation doc
-  — ALL 10 SHIPPED: UAC FRED/ECB/OFR (62d3aa03), UTL dead-code cleanup (f4987fb8) + FRED/ECB/OFR venue-overrides
+  /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md and its sports_prediction continuation
+  doc — ALL 10 SHIPPED: UAC FRED/ECB/OFR (62d3aa03), UTL dead-code cleanup (f4987fb8) + FRED/ECB/OFR venue-overrides
   (f2945749), features-service dependency_checker.py (be36b42b) + onchain fixes (95b8233b), execution-service combined
   fix (8039c3e5f), MDPS Mode.REPLAY (eed7b53) + dead-code deletion (c9f7d9f), MTDS reader.py chain/venue fix (b7b79b14)
   + live-mode sports odds writer fix (d6d539a8). All evidence folded into both parent audit docs
@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [gcs, path-resolution, pipeline-mode, in-flight, batch-fix, quickmerge-blocked]
 related:
   [
-    /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
     /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
   ]
 created: 2026-07-29
@@ -264,7 +264,7 @@ markers). Already promoted LDR→main (`55bd0ebd9`).
    — #4/#5 both MTDS, #6/#7 both MDPS — ship those pairs as 2 sequential commits each, not simultaneously).
 4. Fold every fix's evidence (repo@sha) into the parent audit doc's todos (they're already written, just need the `[x]`
    flip + sha citation once shipped — the todo text for each of these 10 items already exists verbatim in
-   `/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md` and
+   `/plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md` and
    `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md`).
 5. Once all 10 are shipped and flipped, this doc's job is done — archive it (all todos below will be `[x]`).
 

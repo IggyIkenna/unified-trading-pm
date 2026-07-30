@@ -3,7 +3,7 @@ doc_type: issue
 title:
   GCS path resolution centralization audit — SPORTS + PREDICTION rounds (continuation of the CEFI/DEFI/TRADFI audit)
 summary: >-
-  RESOLVED 2026-07-29. Continuation doc for /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md
+  RESOLVED 2026-07-29. Continuation doc for /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md
   (the parent doc, now at 586 lines — split here to stay clear of the plan line cap rather than grow the parent past
   it). Same recurring bug class (hand-rolled GCS prefixes silently drifting from the canonical
   `pipeline_mode=`/`asset_group=` hive-partitioned shape), same 4-round audit methodology, scoped to SPORTS and
@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [gcs, path-resolution, pipeline-mode, silent-failure, canonical-paths, centralization]
 related:
   [
-    /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md,
     /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
   ]
 created: 2026-07-28
@@ -50,8 +50,8 @@ locked_since:
 supersedes:
 superseded_by:
 source: >-
-  split off /plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md (parent doc) once it reached 586
-  lines after rounds 1-3 (CEFI/DEFI/TRADFI); continues the operator's original expanded-scope directive for SPORTS +
+  split off /plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md (parent doc) once it reached
+  586 lines after rounds 1-3 (CEFI/DEFI/TRADFI); continues the operator's original expanded-scope directive for SPORTS +
   PREDICTION under /autonomous.
 resolved_by: >-
   All 4 todos shipped 2026-07-29 — see summary for the commit list.
@@ -62,7 +62,7 @@ depends_on: []
 
 ## Origin
 
-See the parent doc (`/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md`) for the full origin
+See the parent doc (`/plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md`) for the full origin
 story, the canonical SSOT description, and rounds 1-3 (CEFI/DEFI/TRADFI) findings. This doc exists ONLY to keep the
 parent under its line cap while continuing the same audit for the two remaining asset groups the operator named: SPORTS
 and PREDICTION.
