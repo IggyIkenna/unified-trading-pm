@@ -110,6 +110,7 @@ drift_direction: advance-code | correct-codex # which way this plan closes the c
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout | NA
 locked_since: YYYY-MM-DD
+context_scope: [/codex/path/to/ssot.md, plans/active/related-doc.md] # elective minimal reading-list; see doc-frontmatter-schema.md
 depends_on: [epic-slug, plan-slug-YYYY_MM_DD] # prerequisites; enables ordering + gates archival
 supersedes: [old-plan-slug] # list of plans made obsolete by this one
 superseded_by: [new-plan-slug] # list of plans that replaced this one

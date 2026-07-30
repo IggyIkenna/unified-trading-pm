@@ -26,6 +26,7 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 locked_by:
 locked_since:
+context_scope: # elective minimal reading-list — codex SSOTs, related docs, key source paths; see doc-frontmatter-schema.md
 supersedes:
 superseded_by:
 depends_on:

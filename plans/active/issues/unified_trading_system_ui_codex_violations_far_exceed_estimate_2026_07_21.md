@@ -39,6 +39,7 @@ drift_direction: advance-code
 source: [ui_codex_gate_blind_to_app_router_layout-002]
 resolved_by:
 locked_by:
+context_scope: [/codex/06-coding-standards/ui-testing-layers.md, /codex/06-coding-standards/quality-gates.md]
 depends_on: []
 ---
 

@@ -133,6 +133,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("depends_on", Req.O, "free_list"),
         FieldSpec("source", Req.O, "scalar"),
         FieldSpec("assigned_role", Req.E, "registry", registry="role"),
+        FieldSpec("context_scope", Req.E, "free_list"),
     ],
     "epic": [
         FieldSpec("name", Req.R, "scalar"),
@@ -156,6 +157,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("assigned_vm", Req.R, "registry_or_na", registry="vm"),
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
+        FieldSpec("context_scope", Req.E, "free_list"),
     ],
     "audit-result": [
         FieldSpec("audited_scope", Req.R, "scalar"),

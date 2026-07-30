@@ -45,6 +45,7 @@ def _valid_plan() -> dict:
         "estimate_class": "infra",
         "estimate_baseline_ai_days": 2,
         "estimate_calibrated_ai_days": 1,
+        "context_scope": ["/codex/04-architecture/defi-execution-overview.md"],
     }
 
 
