@@ -643,14 +643,23 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       re-derivation case. Updated the closed-set count (twenty → twenty-one) and the delete-eligibility table (eighteen
       → nineteen non-eligible) in the same doc. Gate: `grep -c "^#### \`" reconciliation-finding-taxonomy.md` == 21 ·
       delete-eligibility table sums to 21.
-- [ ] [DATA] P1. **Run the distinct-value census (G1, § 3f) for cefi/tradfi/sports/prediction** — the four AGs whose
-      census had never been measured (only defi's H6 existed). In progress: calling the real, unmodified
+- [x] 45. ✅ [DATA] P1. **Ran the distinct-value census (G1, § 3f) for cefi/tradfi/sports/prediction** — the four AGs
+      whose census had never been measured (only defi's H6 existed). Called the real, unmodified
       `get_axis_value_census()` + `_distinct_values._canonical_set`/`_is_accepted_exception` in-process
-      (deployment-api's venv now fixed per todo 46) — an earlier hand-rolled badging replica false-flagged cefi's
-      accepted `futures_chain`/`options_chain` chain-bundle instrument_type labels as non-canonical and never badged
-      `chain`/`source`/`pipeline_mode`; corrected to reuse the real production badging + accepted-exception list instead
-      of re-deriving it. Results to be recorded per-AG below + in the matching `reference-<ag>.md` sheet, mirroring H6's
-      format. Gate: a dated measurement entry (values + counts + non-canonical flags, real vocabulary badging) for all 4
+      (deployment-api's venv fixed per todo 46). Measured: cefi 9,492,020 rows / tradfi 5,894,343 / sports 628,349 /
+      prediction 1,661,267. Cross-checked every non-canonical finding against the existing corpus BEFORE writing
+      anything up (pre-task conflict check): tradfi's 4 findings (`BARCHART`/`YAHOO_FINANCE`/`ESM0`/`UD`/`UNKNOWN`/
+      `continuous_future`) and sports' 33-value `instrument_type` finding are BYTE-IDENTICAL to two already-open
+      2026-07-28 issue docs (`tradfi_distinct_values_net_new_clusters`, `sports_instrument_type_market_token_ssot_gap`)
+      — good independent re-confirmation, no new filing. Sports' `KALSHI` venue finding (20,785 rows) matches the
+      archived `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` todo 15 exactly
+      (`row_count=0` throughout, already tracked P2). Genuinely NEW small-scale residuals (cefi venue/instrument_type/
+      chain-column drift, 6 un-registered sports bookmaker venues, prediction instrument_type/data_type case drift) —
+      filed as `plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md` (P2, per
+      `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` — small-scale hygiene, not
+      backfill-critical, matches the P2 precedent of the two sibling census docs). Full per-AG results recorded in
+      `reference-cefi.md` H7-refinement + H8, `reference-tradfi.md` H7, `reference-sports.md` H11,
+      `reference-     prediction.md` H6 — `unified-trading-pm@a2a84b66c` (docs) + this commit (results + new issue doc).
       AGs, not just a "mechanism exists" claim.
 - [x] 46. ✅ [INFRA] P2. **Diagnosed + fixed a stale local venv, not a code bug** — `deployment_api.routes`/`.services`
       failed to import (pinned `fastapi==0.136.3`/`starlette==1.1.0` installed, lacking `iter_route_contexts` that
