@@ -4,18 +4,13 @@ title:
   unified-trading-library domain_client/clients/market_data.py — entire file appears dead (6 classes, zero callers, zero
   tests)
 summary: >-
-  Discovered while investigating the GCS path-resolution centralization audit's "duplicate raw_tick_data path builders"
-  todo (both originally-cited files are already resolved — see that todo's flip in
-  gcs_path_resolution_centralization_audit_2026_07_28.md). This is a NEW, separate finding: a different file,
-  unified_trading_library/domain_client/clients/market_data.py, contains 6 classes (MarketTickDomainClient,
-  MarketCandleDomainClient, MarketCandleDataDomainClient, MarketTickDataDomainClient, MarketDataDomainClient, plus
-  factory functions) — grep across unified-trading-library, market-tick-data-service, features-service,
-  execution-service, instruments-service, and market-data-processing-service found ZERO real production callers for ANY
-  of the 6 classes (checked class-by-class, not just the file as a whole), and ZERO test coverage anywhere. One of the
-  classes (MarketTickDataDomainClient._build_tick_gcs_path) also has the SAME missing-segments bug pattern this whole
-  audit has been finding elsewhere (hand-rolled f"raw_tick_data/by_date/day={date_str}/data_type=..." prefix, missing
-  pipeline_mode=/asset_group=/venue= — never delegates to the PATH_REGISTRY SSOT).
-status: open
+  RESOLVED 2026-07-30. Discovered while investigating the GCS path-resolution centralization audit's "duplicate
+  raw_tick_data path builders" todo (both originally-cited files were already resolved). This was a NEW, separate
+  finding: unified_trading_library/domain_client/clients/market_data.py contained 6 classes (MarketTickDomainClient,
+  MarketCandleDomainClient, MarketCandleDataDomainClient, MarketTickDataDomainClient, MarketDataDomainClient, plus 3
+  factory functions) with zero real production callers anywhere in the workspace and zero test coverage. Deleted
+  entirely. Evidence: unified-trading-library@035c6549.
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -44,7 +39,8 @@ source: >-
   resolved. This file was not part of that todo's original scope (which cited domain/standardized_service.py and
   domain/market_data_client.py — a DIFFERENT, already-deleted module) — it's a fresh discovery in a
   differently-named-but-confusingly-similar module (domain_client/clients/ vs the old domain/).
-resolved_by:
+resolved_by: >-
+  Deleted 2026-07-30, unified-trading-library@035c6549 — see the recommended-next-step todo for full detail.
 depends_on: []
 ---
 
@@ -93,9 +89,10 @@ differently-scoped commit.
 
 ## Recommended next step
 
-- [ ] [SCRIPT] P2. **Delete `unified_trading_library/domain_client/clients/market_data.py` in full** (all 6 classes + 3
-      factory functions) — re-verify the zero-callers finding above is still current (things move fast on this shared
-      branch), then delete the file and remove its exports from
-      `unified_trading_library/domain_client/clients/__init__.py` and
-      `unified_trading_library/domain_client/__init__.py`. No test files need updating (none reference this module). Run
-      `quality-gates.sh` to confirm nothing else breaks, then ship via quickmerge. (repo: unified-trading-library)
+- [x] [SCRIPT] P2. **Delete `unified_trading_library/domain_client/clients/market_data.py` in full** (all 6 classes + 3
+      factory functions) — DONE 2026-07-30. Re-verified zero-callers immediately before deleting (still current).
+      Deleted the file and removed its exports from both `__init__.py` lazy-import chains (`_LAZY_NAMES`,
+      `_load_clients`, `_load_factory_functions`, `_CLIENT_FACTORY_NAMES`, `__all__` in both files); updated the "10
+      typed clients" doc claim to "8" now that the 2 non-legacy Market* clients are also confirmed dead. No test files
+      needed updating. `ALL QUALITY GATES PASSED (146s)`. Evidence: `unified-trading-library@035c6549`. (repo:
+      unified-trading-library)
