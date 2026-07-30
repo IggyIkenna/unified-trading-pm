@@ -211,7 +211,7 @@
         "large_file_count": 0,
         "warn_file_count": 0,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 87.6
       }
     },
     "client-reporting-api": {
@@ -343,9 +343,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "large_file_count": 6,
-        "qg_red_reason": null,
         "warn_file_count": 16,
-        "coverage_pct": null
+        "qg_red_reason": null,
+        "coverage_pct": 82.68
       }
     },
     "deployment-service": {
@@ -393,10 +393,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
-        "warn_file_count": 8,
-        "qg_red_reason": null,
-        "large_file_count": 5,
-        "coverage_pct": 73.53
+        "large_file_count": 6,
+        "warn_file_count": 7,
+        "coverage_pct": 73.84,
+        "qg_red_reason": null
       }
     },
     "execution-service": {
@@ -735,7 +735,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -765,10 +765,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": "pytest",
-        "coverage_pct": 91.18,
         "large_file_count": 8,
-        "warn_file_count": 11
+        "warn_file_count": 11,
+        "coverage_pct": 91.18,
+        "qg_red_reason": null
       }
     },
     "market-data-processing-service": {
@@ -1198,7 +1198,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "SIT_VALIDATED",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1222,10 +1222,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "coverage_pct": 96.46,
         "large_file_count": 27,
-        "warn_file_count": 34
+        "warn_file_count": 34,
+        "coverage_pct": null,
+        "qg_red_reason": "qg"
       }
     },
     "unified-trading-library": {
