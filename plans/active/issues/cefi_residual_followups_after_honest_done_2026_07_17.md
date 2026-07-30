@@ -47,7 +47,7 @@ related:
     /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-25
+last_updated: 2026-07-30
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -702,3 +702,18 @@ pairs stay honest-unresolved (reported, never guessed).
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries an operator-gated corpus-wide
   (~4.5M file) content `--apply`, a features schema-shape gap the doc says needs a real decision, and a 586-row
   blast-radius call.
+
+- **2026-07-30 (finalize-plan reconciliation, `cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md`
+  todo 2)**: Reviewed this doc's own Phase-1/2 section end-to-end against the shipped work. **Every Phase-1/2 checkbox
+  that can be honestly closed already IS closed** — spot-verified a sample of the cited code commits as genuine
+  ancestors of `origin/live-defi-rollout` (`instruments-service@8166676465f1`, `@f06eba12989d`, `@b61f9bdd`;
+  `market-tick-data-service@d47609ec`, `@d302f07a`, `@ec04e8f5`, `@0388e1a9`; `unified-api-contracts@825878f7`,
+  `@11adf279`, `@dfecc787` — all confirmed via `git merge-base --is-ancestor`). The two Phase-1/2 items still `- [ ]`
+  are correctly left open, not missed reconciliation: (1) **Parquet CONTENT backfill (corpus-wide)** — genuinely
+  in-flight, tracked in exhaustive detail in `cefi_content_migration_fleet_half_incomplete_2026_07_26.md` (44-shard
+  fleet, multiple OOM/preemption/freeze failure classes diagnosed and fixed, still not corpus-complete as of the most
+  recent entry there); (2) **Progress Log at every gate** — the discipline itself has been followed for every apply gate
+  that HAS run (drain, filename rename, manifest dedup, eu-twin drop all cite measured before/after counts above), but
+  the item is tied to the still-incomplete Script-1 migration, so flipping it now would be a premature completion claim.
+  Both stay open until Script 1 finishes. **No reconciliation gap found** — this doc's Phase-1/2 state already
+  accurately reflects shipped work.

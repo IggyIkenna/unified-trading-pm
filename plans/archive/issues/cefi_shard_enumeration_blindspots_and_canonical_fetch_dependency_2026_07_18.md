@@ -38,7 +38,7 @@ estimate_calibrated_ai_days: 0.4
 parent_epic: cefi_master
 execution_scope: local-only
 drift_direction: advance-code
-last_updated: 2026-07-18
+last_updated: 2026-07-27
 depends_on: []
 locked_by:
 locked_since:

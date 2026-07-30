@@ -64,11 +64,19 @@ drift_direction: advance-code
       smoke-check/downloader flip (`market-tick-data-service@a4f90769`, live-refetch residual closed 2026-07-28); Track
       8's enumeration-audit terminal checkpoint (99.49% canonical `instrument_id`, 8,790,637/ 8,880,557). Repo:
       unified-trading-pm. Evidence: `unified-trading-pm@fde8fca09`.
-- [ ] [REVIEW] P1. **Reconcile the 2 true source docs.** (1) `cefi_residual_followups_after_honest_done_2026_07_17.md`'s
-      own Phase-1/2 todos (the cutover's real vehicle) — flip with the same cited evidence as todo 1 above. (2)
-      `cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` — confirm its findings are now
-      resolved by the POST-CUTOVER flip and update/close it accordingly. Repo: unified-trading-pm. **Done when**: both
-      source docs' checkboxes/status reflect the shipped work, cited with verified commits.
+- [x] ✅ [REVIEW] P1. **DONE — Reconciled the 2 true source docs.** (1)
+      `cefi_residual_followups_after_honest_done_2026_07_17.md`'s Phase-1/2 todos: reviewed end-to-end, spot-verified a
+      sample of cited commits as genuine `origin/live-defi-rollout` ancestors (`instruments-service@8166676465f1`,
+      `@f06eba12989d`, `@b61f9bdd`; `market-tick-data-service@d47609ec`, `@d302f07a`, `@ec04e8f5`, `@0388e1a9`;
+      `unified-api-contracts@825878f7`, `@11adf279`, `@dfecc787`) — every closeable checkbox was already correctly
+      flipped by prior slots as the cutover executed; the 2 remaining `- [ ]` items (Parquet CONTENT backfill
+      corpus-wide; Progress Log at every gate) are genuinely still open (Script 1 fleet migration in flight, tracked in
+      `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`) and correctly left unflipped — no reconciliation gap
+      found. (2) `cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` — confirmed already
+      `status: resolved` + archived with both findings closed (Finding 2 citing
+      `cefi_migration_cutover_and_track8_completion_2026_07_25.md` todo 4); fixed a stale `last_updated: 2026-07-18` →
+      `2026-07-27` to match its actual last edit. Repo: unified-trading-pm. Evidence: this commit (see git log for
+      `cefi_migration_cutover_and_track8_completion_finalize_2026_07_25.md`).
 - [ ] [DOC] P2. **Archive `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`** via the
       standard 6-step ritual (per CLAUDE.md's plan-archival rule): confirm no Deferred items remain untracked → add the
       archive banner → run the codex-alignment check → grep the corpus for every referrer of
