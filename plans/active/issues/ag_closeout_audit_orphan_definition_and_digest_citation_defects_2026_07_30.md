@@ -152,28 +152,43 @@ Other: operator can type a custom answer
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Exclude `*_aggregated_sources_*` from `_closeout_paths()` in
+- [x] ✅ [SCRIPT] P1. Exclude `*_aggregated_sources_*` from `_closeout_paths()` in
       `scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py` (move the existing `aggregated_sources` guard up,
       or filter in `_closeout_paths()` directly), and add a unit test asserting a doc cited ONLY in the digest is
       reported as `never_cited`. **Done when**: `--tranche cefi --json` no longer lists
       `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md` in `covering_paths`, and the new test fails against
-      the current code. Repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. Extend `_covering_paths()` to implement SKILL.md Phase 0.2 path (b) — resolve the consolidated
+      the current code. Repo: unified-trading-pm. — unified-trading-pm@369df5695. `_closeout_paths()` now filters
+      `"aggregated_sources" not in p.name`; `test_aggregated_sources_digest_is_not_a_covering_doc` added and passing.
+- [x] ✅ [SCRIPT] P2. Extend `_covering_paths()` to implement SKILL.md Phase 0.2 path (b) — resolve the consolidated
       closeout's frontmatter `depends_on:`/`related:` (and its `_native_ao_extract_*` siblings') to real files and union
       them into the covering set, instead of matching filenames against `(dispatch_batch|satellite|_finalize)` only.
       **Done when**: `--tranche cefi --json`'s `covering_paths` includes the four 2026-07-25 line-cap forks
       (`cefi_misc_audits_and_hygiene`, `cefi_track2_coverage_backfill_checkpoints`,
-      `cefi_track7_candle_namespace_residual`, `cefi_consolidated_native_ao_extract`). Repo: unified-trading-pm.
+      `cefi_track7_candle_namespace_residual`, `cefi_consolidated_native_ao_extract`). Repo: unified-trading-pm. —
+      unified-trading-pm@369df5695. Implemented via each discovered `_finalize` doc's `depends_on:` resolved to its
+      paired main-plan file path (more general than parsing the closeout's own `depends_on:`/`related:`, which are empty
+      for cefi — the finalize→main link is the actual mechanical relationship every line-cap fork uses corpus-wide, also
+      fixes the same gap independently found by the sports sibling run,
+      `ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`). Verified:
+      `--tranche cefi --json`'s `covering_paths` now includes all four named forks (16 covering docs, up from 12; 97
+      members, down from 102 with the 5 newly-covering main docs excluded).
+      `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` added and passing.
 - [ ] [OPERATOR] P1. **BLOCKED-OPERATOR-DECISION.** Rule on the Finding-2 escalation above (A/B/C), then reconcile
       whichever of SKILL.md / `generate_ag_closeout_audit_candidates.py` is wrong so the two agree. **Done when**: the
       skill text and the script's `self_dispatched` predicate encode the same definition, and this doc cites the ruling.
       Repo: unified-trading-pm.
-- [ ] [PM] P3. Archive `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (Finding 3 — all
-      todos done with commit evidence, nothing reopened) per the archival ritual, filling `resolved_by:` first. Repo:
-      unified-trading-pm.
-- [ ] [PM] P3. Flip the false-unchecked `derivative_ticker` `ts_event` todo in
+- [x] ✅ [PM] P3. Archive `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (Finding 3 —
+      all todos done with commit evidence, nothing reopened) per the archival ritual, filling `resolved_by:` first.
+      Repo: unified-trading-pm. — unified-trading-pm@a101de9f0. Moved to `/plans/archive/issues/`, `status: resolved`,
+      `resolved_by:` filled, banner added, 5 active corpus referrers fixed (2 also carried a stale "still open"
+      DESIGN-decision claim, corrected in the same edit); `locked_by: live-defi-rollout` was the known stale branch-name
+      artifact, cleared per the established same-pattern precedent
+      (`/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`).
+- [x] ✅ [PM] P3. Flip the false-unchecked `derivative_ticker` `ts_event` todo in
       `plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` (Finding 4),
-      citing `market-tick-data-service@6bf568ee`. Repo: unified-trading-pm.
+      citing `market-tick-data-service@6bf568ee`. Repo: unified-trading-pm. — unified-trading-pm@(this commit).
+      Independently re-verified live in `tardis_shared.py` (`"derivative_ticker": {}` present in `_WIRE_COLUMN_RENAMES`)
+      before flipping, not just trusting the citation.
 
 ## Progress Log
 
@@ -183,3 +198,9 @@ Other: operator can type a custom answer
   class was the Phase-0.3 orthogonality mistag only, and Finding 2 needs an operator ruling nobody was available to
   give. Phase 3 (drafting `cefi_satellite_ao_dispatch_batch4`) deliberately NOT run — SKILL.md requires explicit
   operator approval before shipping a drafted batch pair.
+- **2026-07-30 (slot-12, `ag_closeout_auditor` scheduled dispatch, tranche=cefi):** Fixed both script bugs (todos 1-2),
+  archived the Finding-3 doc and flipped the Finding-4 false-unchecked todo (todos 4-5). Todo 3 (Finding 2's
+  NA-orphan-definition ruling) stays open — genuinely operator-gated, not guessed. Adopted the same interim "tooling
+  reading" (A) as this doc's prior run for this session's own Phase 1 classification, labelled explicitly, not silently.
+  Proceeding to a fresh Phase 0-3 pass over the corrected candidate set (see
+  `/plans/active/cefi_satellite_ao_dispatch_batch4_2026_07_30.md` if drafted).

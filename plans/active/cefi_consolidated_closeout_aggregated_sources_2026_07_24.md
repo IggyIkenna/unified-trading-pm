@@ -406,9 +406,10 @@ drift_direction: advance-code
     - **[DOCS] P2.** Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md`.
     - **[VERIFY] P1.** Reproduce end-to-end: differ on `23fa3a99` returns `is_breaking: true` post-fix; the new SIT
       invariant goes RED.
-  - [`plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
-    - **[DESIGN] P1.** BLOCKED-OPERATOR-DECISION — confirm keeping Option B as shipped OR do the Option-A follow-up
-      (declare `OKX-SPOT` its own cefi venue).
+  - [`plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
+    — 0 open todos (Option A shipped `unified-api-contracts@0ab1074a` + `instruments-service@c0f5529c`, per
+    `instruments_remaining_work_audit_2026_07_10.md`'s 2026-07-10 decision-ledger entry #1; resolved + archived
+    2026-07-30).
   - [`plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)

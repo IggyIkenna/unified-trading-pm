@@ -504,9 +504,9 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
    D15 (HYPERLIQUID/ASTER phase-label reconciliation).
 
 6. **instruments-service quality-gates.sh RED on LDR HEAD — CEFI expected-universe drift**
-   `plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` P0 fix/verify done (reverted, QG
-   green). 1 DESIGN todo open: `BLOCKED-OPERATOR-DECISION` — keep the interim permanent 2-tuple bare-BYBIT phantom, vs.
-   declare `OKX-SPOT` its own venue and remove the `_CEFI_VENUE_FOLD` entry.
+   `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` — 0 open todos. P0 fix/verify done
+   (reverted, QG green); the DESIGN `BLOCKED-OPERATOR-DECISION` above (entry #1, Option A) was the resolution — shipped
+   `unified-api-contracts@0ab1074a` + `instruments-service@c0f5529c`. Resolved + archived 2026-07-30.
 
 7. **COINBASE bare-name UAC removal + downstream caller migration** (was: `status: draft`, not dispatched, all steps
    unchecked — corrected 2026-07-12, finding 105, §A2 B-queue ruling: this §3 entry was never back-edited after the

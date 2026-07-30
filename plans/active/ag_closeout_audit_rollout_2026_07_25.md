@@ -262,9 +262,10 @@ source: >-
   `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`,
   `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`,
   `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`,
-  `issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
   `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`,
   `/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` (resolved + archived 2026-07-27 — no
+  longer orphaned, listed here only for the historical snapshot count),
+  `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (resolved + archived 2026-07-30 — no
   longer orphaned, listed here only for the historical snapshot count),
   `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`,
   `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`,
