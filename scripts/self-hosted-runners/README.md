@@ -85,6 +85,36 @@ sudo GH_TOKEN_SECRET=GH_PAT GLUE_COUNT=5 WRITER_COUNT=3 ./setup-glue-runners.sh 
 ./setup-glue-runners.sh status         # expect 8 units active, both pools Online/idle, slot fresh
 ```
 
+`GLUE_COUNT=5` above is PM's own **original** (2026-07-16) bootstrap command, kept verbatim for the historical record —
+**do not copy it for a new repo's pool.** See the capacity policy directly below; the script's own default is now `1`,
+not `5`.
+
+### Runner-count capacity policy (ratified 2026-07-30, post-incident)
+
+Registering `GLUE_COUNT=5` pools per repo across a same-time bulk onboarding (23 repos at once, 2026-07-28) drove the
+shared orchestrator VM into sustained 66-93% iowait, swap pressure, and starved the operator's own interactive/
+autonomous AO slot-worker sessions (observed in `D`-state disk-wait alongside the new runner processes). Full incident:
+`/plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`. Live-reverified 2026-07-30: with
+every non-original pool running a single `glue-1` runner (no `glue-2`) and only the two original high-traffic pools
+(`unified-trading-pm`, `agent-orchestrator`) keeping a second runner, the host sits at load average 2.4-3.6 (16 vCPU),
+~5% iowait, 3.4/47GB swap — nowhere near the crisis reading (load 74-119, iowait 66-93%, swap 8-10.5GB). That reduced
+posture is the fix that actually cleared the incident, so it is now the **standing default**, not a one-off mitigation:
+
+- **New / low-traffic repo pool → `GLUE_COUNT=1`** (the script's own default since this ruling — no need to set it
+  explicitly unless overriding).
+- **High-traffic pool (PM, agent-orchestrator) → `GLUE_COUNT=2`**, set explicitly (the script's `POOL_TAG` header
+  comment documents registering a second repo's pool on this host; agent-orchestrator's own onboarding command is the
+  concrete precedent:
+  `setup-glue-runners.sh POOL_TAG=ao OWNER=IggyIkenna REPO=agent-orchestrator GLUE_COUNT=2 WRITER_COUNT=1 GH_TOKEN_SECRET=GH_PAT install`).
+  Re-evaluate upward only after confirming steady-state load stays low for the CURRENT tenant count — don't bump on a
+  hunch.
+- **Bulk onboarding (multiple repos in one session) MUST be staggered, not looped tightly.** The 2026-07-28 root cause
+  was concurrent registration handshakes landing at the same moment as real, concurrent `quality-gates.sh` runs — not
+  just the per-pool runner count. Register one repo, run `./setup-glue-runners.sh status` (or a live `uptime`/`iostat`
+  check) to confirm load is still sane, THEN register the next. There is no automated stagger in this script by design —
+  bulk onboarding is rare enough that an attended, one-repo-at-a-time loop is the safer choice over adding unexercised
+  rate-limiting logic to a script every single-repo `install` also runs through.
+
 ### The admin token — exactly one source
 
 `install` requires **exactly one** of these and refuses if both are set (they can disagree, and silently preferring one
