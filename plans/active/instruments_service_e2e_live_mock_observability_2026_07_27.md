@@ -57,32 +57,38 @@ before assuming any of the below is still accurate — 4+ months have passed.
       alignment): N/A, architecture doesn't implement it** — not a regression, this was never built for this service.
 
       **5.3/5.4 — actually run + verified** via `main_service_cli()` with `--operation instruments --mode live
-                  --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
-                  logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
-                  LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
-                  documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
-                  `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
-                  `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
-                  swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
-                  **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
-                  a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
-                  ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
-                  suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
-                  broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)` — instruments-service@`<pending>`.
-                  Re-verified: same repro now exits `SystemExit code=0` on SIGTERM mid-run, no traceback. **Cross-cutting root
-                  cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
-                  `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
-                  fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
-                  `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
-                  protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
-                  `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
-                  exposed to the identical crash. Filed:
-                  `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
+                      --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
+                      logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
+                      LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
+                      documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
+                      `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
+                      `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
+                      swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
+                      **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
+                      a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
+                      ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
+                      suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
+                      broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)`. **Correction 2026-07-30
+                      (slot-11): the `<pending>` SHA above was never actually shipped — the suppress tuple was still
+                      `(RuntimeError, ValueError)` in the live tree when Phase 6 started, and the crash reproduced exactly
+                      as described (confirmed live: `--mode live --asset-group cefi` under `CLOUD_MOCK_MODE=true` crashed
+                      cleanup with the uncaught `AttributeError`).** Actually fixed + verified now: instruments-service@
+                      `2cec0ab2` (committed; push pending a repo-blocker, see Phase 6 entry below) broadens both suppress
+                      tuples; re-verified live against BYBIT-SPOT (clean cleanup, no traceback) and again via a mid-run
+                      SIGTERM against HYPERLIQUID (`SystemExit code=0`, no traceback). **Cross-cutting root
+                      cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
+                      `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
+                      fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
+                      `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
+                      protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
+                      `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
+                      exposed to the identical crash. Filed:
+                      `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
 
-                  One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
-                  `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
-                  expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
-                  counter-based success signal is a legitimate design, just not what this todo assumed).
+                      One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
+                      `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
+                      expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
+                      counter-based success signal is a legitimate design, just not what this todo assumed).
 
 - [ ] [SCRIPT] P2. **Phase 6 — Mock-mode failure scenarios.** Run and verify: (6.1) `--scenario default` normal mock
       generation; (6.2) `--scenario stress` (10x cardinality) — memory + writes succeed; (6.3) `--scenario missing_data`
@@ -107,3 +113,60 @@ before assuming any of the below is still accurate — 4+ months have passed.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — all 4 todos are bounded verification RUNS with
   explicit per-item done-when checklists (Phase 5 clock-alignment 5.1-5.4, Phase 6 mock scenarios 6.1-6.7, Phase 7
   observability 7.1-7.6, the 6-bug re-verify) — determinable by a worker alone.
+
+- **slot-11 2026-07-30 — Phase 6 IN PROGRESS, blocked on repo-red before shipping.** Same premise-correction pattern as
+  Phase 5: a literal `--scenario default/stress/missing_data` CLI flag does NOT exist anywhere in this codebase
+  (confirmed via full-repo grep) — it's aspirational text carried over from the original March-2026 plan, never
+  implemented. `--scenario` DOES exist as a real `ServiceCLI` flag
+  (`choices=["default","stress","empty","normal", "heavy","light"]` — note `missing_data` isn't even a valid choice;
+  `empty` is closest), but instruments-service never reads `runtime.scenario` (0 grep hits) — it's a complete no-op
+  here. Per-item findings:
+  - **6.1 (normal mock generation): VERIFIED.**
+    `--operation instruments --mode live --asset-group cefi --venues BYBIT-SPOT` under `CLOUD_MOCK_MODE=true`: real
+    adapter fetch (`URDI[BYBIT-SPOT]: fetched 3314 instruments`), `LocalFsEventSink` local writes, no crash (see the
+    cleanup-crash fix below).
+  - **6.2 (stress/10x cardinality): NOT DIRECTLY TESTABLE.** No volume/cardinality knob exists anywhere (`--scenario` is
+    a no-op). Would require running all 5 asset-groups concurrently as a coarse proxy, or hand-writing a monkeypatch —
+    out of a 1-hour SCRIPT-tagged "run and verify" scope. Documented, not fabricated.
+  - **6.3 (missing_data mid-day): NOT DIRECTLY TESTABLE as a synthetic scenario** (no disappear-mid-run hook exists).
+    Attempted to reuse the plan's own already-known real "Hyperliquid 0-instruments" case as genuine evidence instead of
+    fabricating one, but a live `--venues HYPERLIQUID` run is network-bound + rate-limited (429s on the earliest-funding
+    probe) and didn't complete in a reasonable test window — inconclusive, not chased further. The dedicated P3
+    "re-verify the 6 bugs" todo below is the right place to actually re-confirm this case; not duplicated here.
+  - **6.4 (fake symbol injection): NOT DIRECTLY TESTABLE via CLI** — no `FAKE-EXCHANGE`/`NOSYMBOL` hook exists (0 grep
+    hits); would need a unit-level monkeypatch, out of this run-and-verify todo's scope.
+  - **6.5 (missing DEFI category, IS side): VERIFIED.** `get_venues_for_asset_groups` (`venue_core.py:442`) scopes venue
+    resolution strictly to the requested `asset_groups` list — the 6.1 run above (asset-group=cefi only) shows zero DEFI
+    references/errors anywhere in the log, confirming IS cleanly skips an entirely-excluded category. The MTDS
+    consumption side is out of this plan's `repos: [instruments-service]` scope (cross-repo boundary, same precedent as
+    Phase 5).
+  - **6.6 (corrupt expiry, `expiry="not-a-date"`): VERIFIED, with a premise correction.** All 3 real `_parse_expiry`
+    functions (`coinbase_cde.py:83`, `tardis/parsing.py:154`, `databento/adapter.py:732`) catch `ValueError`/
+    `TypeError` around `datetime.fromisoformat(...)` and return `None` (confirmed live: `_parse_expiry("not-a-date")` →
+    `None`) — "doesn't crash" is TRUE. "Parser warns" is FALSE: none of the 3 log a warning: the caller (e.g.
+    `coinbase_cde.py:181-183`) just treats `expiry is None` as a reason to skip the row via `continue`. Not treated as a
+    bug (silent-skip is a legitimate, if under-observable, design) — noted as a premise correction, matching Phase 5's
+    "5.3 doesn't match the shipped event taxonomy" pattern.
+  - **6.7 (`config_source=local`, no GCS reads): VERIFIED via code + the 6.1 run.** `ServiceRuntime.config_source`
+    (`service_runtime.py:246-248`) is a pure derived property: `"local" if self.is_mock else "gcs"`. The 6.1 run's
+    `data=mock` in the `ServiceRuntime:` STARTED log line proves `is_mock=True`, so `config_source="local"` follows
+    directly — no separate run needed (Phase 5 already exercised the same `is_mock=True` path end-to-end).
+  - **Real bug found + genuinely fixed (correcting Phase 5's stale claim above): the `cleanup()` AttributeError crash.**
+    Phase 5's Progress Log claimed this was fixed at `instruments-service@<pending>`, but the suppress tuple was still
+    unfixed in the live tree when Phase 6 started (verified: the 6.1-style live run crashed with the exact described
+    `AttributeError` before my fix). Actually fixed now: `instruments-service@2cec0ab2` broadens both
+    `contextlib.suppress(RuntimeError, ValueError)` tuples (`instruments_handler.py:399,415`) to include
+    `AttributeError`. Re-verified twice: (a) BYBIT-SPOT run above completes cleanup with no traceback; (b) a mid-run
+    SIGTERM against HYPERLIQUID (`timeout` sending SIGTERM) shuts down cleanly (`SystemExit code=0`, no traceback) — the
+    exact repro Phase 5 described.
+  - **Shipping BLOCKED on a repo-blocker, not yet pushed.** `bash scripts/quality-gates.sh` on `instruments-service`
+    failed 2 PRE-EXISTING tests unrelated to this fix (confirmed via `git checkout HEAD~1` on the one changed file —
+    byte-identical failures): `test_expected_universe_golden.py[sports]` (golden=27, actual=31) and
+    `test_sports_exempt_is_disjoint_from_uac_sports` (`overlap={'FOOTYSTATS'}`). Root cause:
+    `unified-api-contracts@26092ac8` (landed 2026-07-30 11:11:38Z, ~30 min before this QG run) added
+    `FOOTYSTATS`/`LADBROKES`/`BET888SPORT`/`SMARKETS` to `VENUES_BY_ASSET_GROUP["sports"]`, breaking the IS/UAC sports
+    two-registry disjoint invariant. Filed
+    `plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md` + declared repo-blocker
+    `RB-ecfc50de` (`repo-instruments-service-qg-green` condition). `instruments-service@2cec0ab2` is committed locally,
+    1 commit ahead of `origin/live-defi-rollout`, awaiting the green signal to ship via quickmerge. This todo will be
+    flipped `[x]` once shipped.
