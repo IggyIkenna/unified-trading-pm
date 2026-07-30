@@ -318,19 +318,19 @@ distinct plan pair.
 
 ## Todos
 
-- [x] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`** — ✅ agent-orchestrator@13a5dd8 (see "2026-07-30
-      root cause found + fixed" note below) (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a
-      `gate_on_depends: true` finalize plan's tasks reliably get the upstream plan's real task ids wired into
-      `prereqs.completed_tasks` on every regen tick, not just (maybe) at first-ingestion. Confirmed 9 times across ≥6
-      distinct plan pairs (defi_dex_pool, prediction_satellite_batch3, mdps_features 11c per-todo shape,
-      cross_cutting_satellite_batch1 dual-gate, cefi_track7_candle_namespace_residual, cefi_track2_coverage_backfill —
-      the last one bounced across at least 3 separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers`
-      reports `"ready (no blockers)"` while the real upstream tasks are still non-`done` in the live backlog. Repo:
-      agent-orchestrator. **Done when**: root cause identified (e.g. wiring only running once at ingestion vs. every
-      regen tick, or a `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a
-      `gate_on_depends:     true` plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a
-      regen tick that ingests both plans together (the same-tick-ingestion shape, not just the already-covered
-      empty-upstream cases).
+- [x] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`** — ✅ agent-orchestrator@13a5dd8 +
+      agent-orchestrator@bd522d0 (13a5dd8 alone was NOT sufficient — see "2026-07-30 correction" note below for the
+      actual primary root cause) (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a `gate_on_depends: true`
+      finalize plan's tasks reliably get the upstream plan's real task ids wired into `prereqs.completed_tasks` on every
+      regen tick, not just (maybe) at first-ingestion. Confirmed 9 times across ≥6 distinct plan pairs (defi_dex_pool,
+      prediction_satellite_batch3, mdps_features 11c per-todo shape, cross_cutting_satellite_batch1 dual-gate,
+      cefi_track7_candle_namespace_residual, cefi_track2_coverage_backfill — the last one bounced across at least 3
+      separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers` reports `"ready (no blockers)"` while
+      the real upstream tasks are still non-`done` in the live backlog. Repo: agent-orchestrator. **Done when**: root
+      cause identified (e.g. wiring only running once at ingestion vs. every regen tick, or a
+      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
+      plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
+      plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
 - [ ] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
       fix, `pick_next_task()` (or the `/blockers` endpoint) should independently verify a `gate_on_depends: true` task's
       cited upstream plan file's own on-disk `- [ ]`/`- [x]` checkbox count before dispatching it, refusing dispatch
@@ -487,6 +487,91 @@ tick still won't reach the live process until the redeploy lands.
 
 Todo 2 (the P2 dispatch-time defense-in-depth re-check) is intentionally left undone — untouched per this doc's own
 scoping note above; a separate backlog task.
+
+## 2026-07-30 correction — 13a5dd8 was necessary but NOT sufficient; actual primary root cause found + fixed (slot 2, todo 1 — agent-orchestrator@bd522d0)
+
+Independently re-verified live AFTER 13a5dd8 was already merged to `live-defi-rollout` AND the orchestrator server had
+already restarted (observed `systemctl restart orchestrator` running + confirmed via `/api/state` fleet status showing
+"SERVER RESTARTED... (maintenance)"), specifically to confirm slot 3's fix actually closed the gap end-to-end before
+trusting the checkbox:
+
+```
+GET /api/backlog/defi_dex_pool_symbol_fix_backfill_purge_finalize-001/blockers
+→ {"explanation":"ready (no blockers)"}          # STILL wrong — same symptom as before 13a5dd8
+
+GET /api/backlog/cefi_track2_coverage_backfill_checkpoints_finalize-001/blockers
+→ {"explanation":"ready (no blockers)"}          # a second, independent plan pair, also still wrong
+```
+
+This proves 13a5dd8's in-process-cache-staleness fix, while a genuine and correctly-diagnosed bug in its own right, was
+**not** the primary cause of the symptom this doc tracks — the gate was still unheld post-fix, post-restart, live.
+Traced further: `_wire_gate_on_depends_prereqs` itself is sound (confirmed by slot 3's own reading and by direct
+unit-level reproduction here), but it never receives a `gated_plans` entry for these plans at all, because
+`_parse_frontmatter_gate_on_depends(plan_path)` — the single-field frontmatter parser that decides whether a plan is
+even a `gate_on_depends` candidate — returns `False` for
+`defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` despite its real `gate_on_depends: true` frontmatter
+field.
+
+Root cause: every single-field frontmatter parser in `regen_backlog_from_plan.py` (13 of them —
+`_parse_frontmatter_gate_on_depends`, `_parse_frontmatter_depends_on`, `_parse_frontmatter_sequential`,
+`_parse_frontmatter_status`, `_parse_frontmatter_execution_scope`, `_parse_frontmatter_model_tier`,
+`_parse_frontmatter_provider`, `_parse_frontmatter_thinking_tier`, `_parse_frontmatter_effort`,
+`_parse_frontmatter_assigned_role`, `_parse_frontmatter_assigned_vm`, `parse_frontmatter_parent_epic`,
+`_frontmatter_has_value`) regex-matches every line between the `---` delimiters unconditionally, after only
+`.strip()`-ping it — with no awareness that an indented line inside a folded block scalar (`summary: >-`) is prose, not
+a new top-level key. This plan's own `summary:` field narrates its gating in prose, by the SAME convention used across
+essentially every gated finalize plan in the corpus:
+
+```yaml
+summary: >-
+  Gated closeout for defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md — machine-held via depends_on +
+  gate_on_depends: true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the ...
+depends_on: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
+gate_on_depends: true
+```
+
+The indented prose line (`  gate_on_depends: true until all 5 of that plan's todos are done, so this never...`), once
+`.strip()`-ped, matches `^gate_on_depends\s*:\s*(.+)$` — and since it appears BEFORE the real field a few lines down,
+the scanner matched it FIRST, extracted
+`"true until all 5 of that plan's todos are done, so this never dispatches early. Reconciles the"` as the value,
+correctly found it wasn't the literal string `"true"`, and returned `False` without ever reaching the real field. A
+corpus-wide sweep of every `plans/active/*.md` confirmed this is not plan-specific: **69 plans** declare
+`gate_on_depends: true` for real, and before this fix essentially none of them were being correctly detected (every one
+narrates its own gate in prose by the exact same authoring convention this doc's "Recommended decision" section itself
+uses). This — not the in-process cache staleness 13a5dd8 fixed — is why the symptom reproduced identically across every
+one of the 10+ bounces / 6+ distinct plan pairs recorded above: it was never "seemingly different proximate causes," it
+was one bug hitting every plan that documents its own machine-gating in human-readable prose (which is most of them,
+since that's the established, encouraged authoring style).
+
+A second, adjacent defect surfaced by the same corpus sweep:
+`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md` (the dual-upstream `depends_on: [a, b]` shape
+flagged in the "SIXTH distinct plan pair" note above) writes its `depends_on:` key bare, with the bracket list on the
+NEXT indented line:
+
+```yaml
+depends_on:
+  [cross_cutting_satellite_ao_dispatch_batch1_2026_07_26, cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26]
+```
+
+`_parse_frontmatter_depends_on`'s block-continuation handling only recognized `- item` bullet lines, not an inline
+bracket list on the continuation line, so this returned `deps=[]` — meaning even with `gate_on_depends` now parsing
+correctly, this specific plan's gate still wouldn't wire (no upstream ids to attach). Fixed alongside.
+
+Fix (agent-orchestrator@bd522d0): added `_is_frontmatter_key_line(raw)` — a column-0 check (this repo's frontmatter
+convention always writes top-level keys unindented; verified corpus-wide, zero legitimate indented top-level keys found)
+— and gated every single-field regex match across all 13 parser functions on it, so an indented prose/continuation line
+can never again be mistaken for a real key. Also extended `_parse_frontmatter_depends_on`'s block-continuation handling
+to recognize an inline bracket list on the line after a bare `depends_on:` key. Regression coverage:
+`test_is_frontmatter_key_line_rejects_indented_lines`, `test_parse_gate_on_depends_survives_prose_mention_in_summary`,
+`test_regen_gate_on_depends_wires_despite_prose_mention_in_summary` (end-to-end, same-tick dual-plan ingestion, exact
+done-when this todo specifies), `test_parse_depends_on_bracket_list_on_continuation_line`. Verified against the live PM
+corpus (not just synthetic fixtures): all 69 real `gate_on_depends: true` plans now resolve non-empty `depends_on`
+(previously effectively none did). Full `quality-gates.sh` green (2113 passed) before shipping.
+
+Same caveat as 13a5dd8: this is the CODE fix on `live-defi-rollout`; the live orchestrator server process still needs to
+pick it up via the normal redeploy/restart path before existing hand-parked/bounced finalize tasks self-heal in
+production. Todo 2 (the P2 dispatch-time defense-in-depth re-check) remains intentionally undone, unchanged from the
+scoping above.
 
 ## 2026-07-30 recurrence — NINTH distinct plan pair (cefi_satellite_ao_dispatch_batch1), mid-sequence variant
 
