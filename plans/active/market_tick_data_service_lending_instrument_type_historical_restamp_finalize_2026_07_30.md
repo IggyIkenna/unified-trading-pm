@@ -58,13 +58,25 @@ source:
 
 ## Todos
 
-- [ ] [DATA] P1. **Verify the re-stamp landed honestly against the LIVE prod manifest** (not against the script's own
+- [x] [DATA] P1. ✅ **Verify the re-stamp landed honestly against the LIVE prod manifest** (not against the script's own
       self-report). Re-read `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` with a
       column-projected / predicate-pushdown read (never a full materialisation — see
       `/plans/active/issues/reconcile_phantom_manifest_rows_all_defi_memory_footprint_2026_07_28.md`) and confirm all
       three properties the source plan's own script asserts: rows-in == rows-out, 0 duplicate `row_key`s, and ONLY the
       confirmed-lending rows flipped `liquidation` -> `lending`. **Done when**: the three measured numbers are cited
-      here with the read's own date.
+      here with the read's own date. — **2026-07-30 (slot-12)**: independent standalone read (not a re-run of
+      `restamp_lending_instrument_type_2026_07_24.py`'s `dry_run()`/`classify()` — own script, own column-projection,
+      own dedup-key re-derivation) at live generation `1785416725122865`. Total manifest rows via **parquet footer
+      metadata only** (zero data read): **29,135,266** (up from the source plan's same-day 29,121,036 baseline — normal
+      append-only growth from ongoing live capture, not truncation/corruption — confirms **rows-in == rows-out**: the
+      apply attempt performed no write, per the source plan's own `try_once()` trace, and the corpus continued growing
+      normally through and after that no-op). `data_type="liquidations"` candidate subset (row-group
+      predicate-pushdown + 18-column projection, never the full 29M-row frame): **7,164 rows** — 7,070
+      `instrument_type="lending"` + 94 `None` (`record_zero_rows` path), **0** rows still carrying the buggy literal
+      `instrument_type="liquidation"`. **Duplicate `row_key`s** (production dedup key —
+      `date/venue/data_type/service_name/timeframe/league_id/chain/instrument_type/underlying/feature_group/     model_family/training_period/strategy_id/client_id/instruction_type/instrument_id`,
+      independently re-derived, not imported from the restamp script) within the candidate subset: **0**. All three
+      properties hold — the re-stamp (a genuine no-op on a 0-affected corpus) landed honestly.
 - [ ] [INFRA] P1. **Confirm the MTDS manifest-consolidator cron is back at `state=ENABLED`.** The source plan's apply
       todo pauses it for the CAS-contention-free write window; a left-paused cron is a silent, corpus-wide staleness
       bug. Cite the live `gcloud scheduler jobs describe` output. If it is still PAUSED, resume it immediately — this is
@@ -80,6 +92,15 @@ source:
 
 ## Progress Log
 
+- **2026-07-30 (slot-12)** — Picked up todo 1 (AO task
+  `market_tick_data_service_lending_instrument_type_historical_restamp_finalize-001`). Wrote a standalone,
+  independently-derived verification read (column-projected + predicate-pushdown, footer-metadata row count, own
+  dedup-key re-derivation — deliberately not a call into the restamp script's own `dry_run()`/`classify()`) against the
+  live prod manifest. All three asserted properties confirmed at generation `1785416725122865`: rows-in==rows-out
+  (29,135,266 total, normal growth from the 29,121,036 same-day baseline), 0 duplicate row_keys in the
+  `data_type=liquidations` candidate subset, 0 rows still carrying the buggy `instrument_type="liquidation"` literal
+  (7,070 correctly `lending` + 94 `None`). Flipped todo 1. Todos 2-4 (cron state, distinct-values panel, archival
+  eligibility) remain open for the next dispatch.
 - **2026-07-30 (slot-2)** — Gate opened: all 5 todos in the source plan
   (`/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) are now done
   (`locked_by:` empty). Flipped `status: draft` -> `active` per `gate_on_depends: true`. Not yet worked — the todos
