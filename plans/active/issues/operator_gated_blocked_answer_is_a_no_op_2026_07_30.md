@@ -304,27 +304,32 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                          this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                          a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                          `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                          load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                          authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                          own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                          deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
       again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
       the plan doc updated (tag stripped / role set / checkbox flipped) — cite fresh evidence, do not reuse this doc's
       measurements (repo: agent-orchestrator / unified-trading-pm).
-- [ ] [DOC] P2. Once the above ship, add the codex SSOT for the operator-gated blocked-row lifecycle end-to-end under
-      `codex/12-agent-workflow/` — no doc currently describes it (repo: unified-trading-pm).
+- [x] ✅ [DOC] P2. Once the above ship, add the codex SSOT for the operator-gated blocked-row lifecycle end-to-end under
+      `codex/12-agent-workflow/` — no doc currently describes it (repo: unified-trading-pm). —
+      unified-trading-pm@ed9d02582. New `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`: seeding, the
+      three canned options + D2's auto-upgrade, the D3 ruling mechanism (endpoint stores → regen materializes → a real
+      dispatchable `--ruling` task, gated on `done_definition` requiring the plan edit in the same commit so both tasks
+      become ordinary orphans together), the dashboard's purple/reclassify/instruct UI, and a note on the
+      duplicate-`/api/roles` regression found while building it. `docspec.py --check --soft`: hard=0 soft=0.
 
 # Codex SSOTs
 
+`/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md` — the SSOT this issue's `[DOC]` todo added
+(unified-trading-pm@ed9d02582), describing the mechanism end-to-end as it now works.
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
 `/codex/04-architecture/agent-orchestrator-alerting.md` (actionable-only + ✅-close-bookend convention this gap silently
 violates — the bookend fires for an answer that did nothing), `/codex/06-coding-standards/ui-testing-layers.md` (the
 `[UI]` + `pw:L2` gate on the dashboard todo). Note `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` is
-deliberately NOT a constraint here — see D4, the operator ruled against a delete/VM-launch refusal guard. No codex doc
-currently describes the operator-gated blocked-row lifecycle end-to-end; the final todo adds one under
-`codex/12-agent-workflow/`.
+deliberately NOT a constraint here — see D4, the operator ruled against a delete/VM-launch refusal guard.

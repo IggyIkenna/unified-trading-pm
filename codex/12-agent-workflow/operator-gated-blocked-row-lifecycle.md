@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-07-30
 authoritative_for: [operator-gated-blocked-row-lifecycle, blk-op-ruling-mechanism, reclassify-instruct-ui]
-referenced_by: []
+referenced_by: [/plans/active/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
 owner:
 last_reviewed: 2026-07-30
 code_refs:
