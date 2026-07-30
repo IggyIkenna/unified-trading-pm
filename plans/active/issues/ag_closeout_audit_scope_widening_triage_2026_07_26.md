@@ -71,28 +71,28 @@ depends_on: []
       `infrastructure`/`meta` cannot silently re-accumulate outside every tranche's membership sweep.
 
       **MEASURED 2026-07-30 (`/ag-closeout-audit ao`, autonomous) — the gap is bigger and sharper than "does not
-          currently catch this class", and it is now a REAL regression rather than a latent one.**
-          `check_ag_closeout_linkage.py:REAL_AGS` is still literally `("cefi", "defi", "tradfi", "prediction", "sports")`,
-          and its main loop skips any doc whose single `asset_group` value is not in that tuple
-          (`if len(ag_values) != 1 or ag_values[0] not in REAL_AGS: continue`). Its module docstring additionally declares
-          `infrastructure` EXEMPT "by construction" — correct when that value was a generic marker, **wrong since the
-          2026-07-27 schema expansion** (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure` real dedicated
-          enum values and the `infra` tranche's own membership signal. Net effect: **the standing linkage gate that
-          `/ag-closeout-audit`'s SKILL.md cites as its safety net runs for only 5 of the 9 tranches** — `ao`, `ci` and
-          `infra` docs are silently skipped, so the check reporting `0 orphan(s)` says nothing at all about them. Measured
-          today by re-running the check's OWN functions with `REAL_AGS` widened (read-only, nothing shipped): `ao` 46
-          single-AG members / **15** would-be orphans; `infrastructure` 45 / **14**; `ci` 30 / **30**. The `ci` 30/30 is a
-          second, independent defect, not a backlog: `closeout_family_for("ci")` resolves to the EMPTY set because
-          `ci_consolidated_closeout_2026_07_25.md` now lives in `plans/archive/2026_07/` while the check only globs
-          `plans/active` — so even with `REAL_AGS` widened, every `ci` doc would fail both signals against a family that
-          does not exist. This is the same closeout-archival failure mode already recorded in
-          `generate_ag_closeout_audit_candidates.py`'s docstring (`…membership_stale_after_closeout_archival_2026_07_29`),
-          recurring in a sibling checker. **So this todo needs three things, not one**: (a) widen `REAL_AGS` to the real
-          enum and drop the now-wrong `infrastructure` exemption from the docstring, (b) make `closeout_family_for` resolve
-          an ARCHIVED closeout family (or fail loudly instead of silently returning an empty set — a family of zero must
-          never read as "nothing to check"), (c) only then re-baseline, using the honest measured counts above rather than
-          today's vacuous `0`. Do NOT simply widen `REAL_AGS` and re-baseline to 59 — that would ratchet in the `ci`
-          family-resolution bug as if it were legitimate pre-existing debt.
+              currently catch this class", and it is now a REAL regression rather than a latent one.**
+              `check_ag_closeout_linkage.py:REAL_AGS` is still literally `("cefi", "defi", "tradfi", "prediction", "sports")`,
+              and its main loop skips any doc whose single `asset_group` value is not in that tuple
+              (`if len(ag_values) != 1 or ag_values[0] not in REAL_AGS: continue`). Its module docstring additionally declares
+              `infrastructure` EXEMPT "by construction" — correct when that value was a generic marker, **wrong since the
+              2026-07-27 schema expansion** (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure` real dedicated
+              enum values and the `infra` tranche's own membership signal. Net effect: **the standing linkage gate that
+              `/ag-closeout-audit`'s SKILL.md cites as its safety net runs for only 5 of the 9 tranches** — `ao`, `ci` and
+              `infra` docs are silently skipped, so the check reporting `0 orphan(s)` says nothing at all about them. Measured
+              today by re-running the check's OWN functions with `REAL_AGS` widened (read-only, nothing shipped): `ao` 46
+              single-AG members / **15** would-be orphans; `infrastructure` 45 / **14**; `ci` 30 / **30**. The `ci` 30/30 is a
+              second, independent defect, not a backlog: `closeout_family_for("ci")` resolves to the EMPTY set because
+              `ci_consolidated_closeout_2026_07_25.md` now lives in `plans/archive/2026_07/` while the check only globs
+              `plans/active` — so even with `REAL_AGS` widened, every `ci` doc would fail both signals against a family that
+              does not exist. This is the same closeout-archival failure mode already recorded in
+              `generate_ag_closeout_audit_candidates.py`'s docstring (`…membership_stale_after_closeout_archival_2026_07_29`),
+              recurring in a sibling checker. **So this todo needs three things, not one**: (a) widen `REAL_AGS` to the real
+              enum and drop the now-wrong `infrastructure` exemption from the docstring, (b) make `closeout_family_for` resolve
+              an ARCHIVED closeout family (or fail loudly instead of silently returning an empty set — a family of zero must
+              never read as "nothing to check"), (c) only then re-baseline, using the honest measured counts above rather than
+              today's vacuous `0`. Do NOT simply widen `REAL_AGS` and re-baseline to 59 — that would ratchet in the `ci`
+              family-resolution bug as if it were legitimate pre-existing debt.
 
 ## Classification record — remaining delta (2026-07-28)
 
@@ -118,23 +118,23 @@ content, so none classify into a real AG tranche.
 own closeout-family docs — confirmed by exact-stem grep against each of `ao_*.md`/`ci_*.md`/`infra_*.md` listed as the
 citing file):
 
-| Doc                                                                                                     | Tranche | Cited in                                                                                                                               |
-| ------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                   | ao      | `ao_consolidated_closeout_2026_07_25.md`, `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `ao_fleet_observability_kpis_2026_07_20.md` |
-| `deployment_registry_firestore_p0_unblock_2026_07_14.md`                                                | infra   | `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`                                                                            |
-| `issues/ao_docs_reconciliation_2026_07_15.md`                                                           | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
-| `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`                                            | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
-| `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`                         | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`                                                  | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived, resolved) | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`                                        | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`                                 | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`                                     | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `ao_open_issues_consolidated_close_out_2026_07_17.md`                                 |
-| `/plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`                            | infra   | `infra_consolidated_closeout_2026_07_25.md` (ARCHIVED — resolved, unified-trading-system-ui@145bf5dd)                                  |
-| `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`               | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`                   | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
-| `issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`                         | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`                                                                                        |
-| `qg_host_adaptive_resource_governor_2026_07_14.md`                                                      | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
+| Doc                                                                                                      | Tranche | Cited in                                                                                                                               |
+| -------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                    | ao      | `ao_consolidated_closeout_2026_07_25.md`, `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `ao_fleet_observability_kpis_2026_07_20.md` |
+| `deployment_registry_firestore_p0_unblock_2026_07_14.md`                                                 | infra   | `infra_capture_and_devops_leftovers_finalize_2026_07_25.md`                                                                            |
+| `issues/ao_docs_reconciliation_2026_07_15.md`                                                            | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
+| `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md`                                             | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
+| `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`                          | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`                                                   | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md` (archived, resolved)  | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`                                         | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `archive/issues/quickmerge_agent_files_pure_deletion_gap_2026_07_26.md`                                  | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`                                      | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`, `ao_open_issues_consolidated_close_out_2026_07_17.md`                                 |
+| `/plans/archive/issues/ui_hardcoded_colour_and_localhost_debt_2026_07_21.md`                             | infra   | `infra_consolidated_closeout_2026_07_25.md` (ARCHIVED — resolved, unified-trading-system-ui@145bf5dd)                                  |
+| `/plans/archive/issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md` | infra   | `infra_consolidated_closeout_2026_07_25.md` (ARCHIVED — resolved, unified-trading-system-ui@ff811a8c)                                  |
+| `issues/unified_trading_system_ui_codex_violations_far_exceed_estimate_2026_07_21.md`                    | infra   | `infra_consolidated_closeout_2026_07_25.md`                                                                                            |
+| `issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md`                          | ao      | `ao_satellite_ao_dispatch_batch1_2026_07_26.md`                                                                                        |
+| `qg_host_adaptive_resource_governor_2026_07_14.md`                                                       | ao      | `ao_open_issues_consolidated_close_out_2026_07_17.md`                                                                                  |
 
 **B — freshly classified** (41 docs; genuinely had zero mention anywhere in the `ao`/`ci`/`infra`/`cross-cutting` family
 — this is the real "was invisible to all 9 tranches" population; each now has a home, one-line why):

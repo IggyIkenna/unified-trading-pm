@@ -265,7 +265,9 @@ phases ship.
   instruments-service@f7e64c54, now at
   `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md`),
   `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`,
-  `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`,
+  `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md` (archived — resolved,
+  unified-trading-system-ui@ff811a8c, now at
+  `/plans/archive/issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`),
   `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
   `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
   `assigned_vm: planning` and live in the AO backlog.

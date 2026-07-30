@@ -13,7 +13,7 @@ summary: >-
   hardcodes `no-explicit-any: "warn"` inline, also never referencing the base file. `bash scripts/quality-gates.sh`'s
   LINT step runs `npm run lint` (confirmed in `base-ui.sh`), so this is not a bypassed/skipped step — the actual active
   ruleset is just missing the rule the SSOT file claims is in effect.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -32,10 +32,15 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 source: [unified_trading_system_ui_codex_violations_far_exceed_estimate-001]
-resolved_by:
+resolved_by: unified-trading-system-ui@ff811a8c
 locked_by:
 depends_on: []
 ---
+
+> 🟢 **ARCHIVED — RESOLVED (2026-07-30).** All 4 todos done: `eslint.config.base.cjs` is now imported + spread by both
+> UI repos' live flat-configs (`deployment-ui@01e455f`, `unified-trading-system-ui@ff811a8c`), the base rules are the
+> repos' real active ruleset, `deployment-ui`'s drifted inline overrides are gone, and the stale ESLint-8
+> pre-commit-hook illusion-of-coverage is removed. Superseded-by: none — fully resolved.
 
 # What I found
 
