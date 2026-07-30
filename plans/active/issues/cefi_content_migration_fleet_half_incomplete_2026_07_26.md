@@ -132,3 +132,31 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   was NOT reached — script left in place (NOT deleted) per the batch2 todo's own instruction for this case. Full
   evidence above; log data fetched via `gcloud storage cat` against
   `gs://deployment-scripts-central-element-323112/vm-logs/`.
+- **2026-07-30 (slot-15, `cefi_content_migration_fleet_half_incomplete-002`)**: Was dispatched todo P2 (the
+  post-relaunch re-verify + delete), but P1 (relaunch) had never actually been dispatched/run — backlog showed it
+  `blocked`/undispatched. Verified live: only ONE relaunch attempt existed
+  (`canonical-migration-cefi-content-13-relaunch20260730-071533`, this morning) and it was **preempted 90s after
+  insert** (`compute.instances.preempted` at 00:17:12, insert at 00:15:42 UTC-7) with no auto-recovery and no `run.log`
+  ever written — a second, independent instance of the exact SPOT-preemption-with-no-resume gap this doc's todo 3
+  already flags. Also notable: that attempt's `RESUME_START_DATE`/`RESUME_END_DATE` (2024-02-05/2024-04-04) do NOT match
+  shard 13's own original date window (2026-01-16/2026-02-13, recovered below) — looks like a parameter mistake in
+  whoever triggered it, unrelated to my own relaunch. Executed P1 myself (todo's own text already resolved the
+  authorization question — "No `[OPERATOR]` gate needed… AO-dispatchable by default" — and it is the literal blocking
+  prerequisite for my assigned P2): recovered each of the 21 dead shards' EXACT original `--start-date`/`--end-date`
+  window from its own `run.log`'s `[vm-exec] starting:` command line (not re-derived/guessed), confirmed the critical
+  `54817bc1` PROGRESS.json-checkpoint fix (SPOT-resume gap) is already baked into the currently-published `mtds-code`
+  tarball (`d75e247079d1` is a descendant), then relaunched all 21 shards via
+  `launch-canonical-migration-vm.sh cefi-content-apply <start> <end> full` with
+  `VM_NAME_OVERRIDE=canonical-migration-cefi-content-<shard>-relaunch20260730-122417` (SPOT, default per HARD RULE),
+  verified each `RUNNING` via `gcloud compute instances list` (not fire-and-forget). Exact windows used:
+  13=2026-01-16..2026-02-13, 14=2026-02-14..2026-03-27, 15=2026-03-28..2026-07-19, 16=2024-08-20..2024-11-13,
+  17=2024-11-14..2025-01-09, 18=2025-01-10..2025-02-06, 19=2025-02-07..2025-03-17, 20=2025-03-18..2025-05-03,
+  21=2025-05-04..2025-06-26, 22=2025-06-27..2025-09-06, 23=2025-09-07..2026-01-01, 24=2026-01-02..2026-01-15,
+  25=2026-01-16..2026-02-01, 26=2026-02-02..2026-02-13, 28=2026-03-01..2026-03-27, 29=2026-03-28..2026-05-01,
+  40=2024-05-12..2024-06-11, 41=2024-09-30..2024-11-13, 42=2024-12-27..2025-01-09, 43=2025-01-23..2025-02-06,
+  44=2025-07-30..2025-09-06. **Status: relaunch STARTED, NOT complete** — these VMs will take hours (shard 14 alone
+  measured only 1.2% in its first attempt's unknown-duration run). My assigned P2 todo (corpus-wide re-verify +
+  delete-if-44/44) genuinely cannot complete until these finish; leaving it undone rather than falsely claiming
+  completion. A future pass/session should re-run the corpus-wide `run.log` grep once these shards have had time to
+  progress, and watch for further SPOT preemptions (now checkpoint-protected via the `54817bc1` fix, but still worth
+  monitoring per `/vm-preemption-billing-waste-audit`).
