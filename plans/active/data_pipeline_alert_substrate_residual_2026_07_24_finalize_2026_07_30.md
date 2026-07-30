@@ -64,13 +64,31 @@ This twin holds that verification plus the archival ritual.
 
 ## Todos
 
-- [ ] [DATA] P1. **Verify the new rate-limit/health events actually ROUTE, not just emit.** Once
+- [x] ✅ [DATA] P1. **Verify the new rate-limit/health events actually ROUTE, not just emit.** Once
       `SOURCE_RATE_LIMITED{source, venue, http_429_count}` + `SOURCE_KEY_POOL_EXHAUSTED` are emitted by MTDS, confirm
       each has a matching rule in the UAC `DATA_PIPELINE_ALERT_RULES` registry and lands in `#data-pipeline-alerts` —
       not the generic INCIDENT catch-all. This is the exact defect class already recorded on this plan's sibling (the
       `DP_FLEET_MONITOR_RUN_*` events that fell through to the catch-all because they were never registered, fixed
       `unified-api-contracts@92e068ea`). **Done when**: a real or injected 429-storm produces a routed
-      `#data-pipeline-alerts` post, with the rule ids cited. Repos: market-tick-data-service, unified-api-contracts.
+      `#data-pipeline-alerts` post, with the rule ids cited. Repos: market-tick-data-service, unified-api-contracts. —
+      **alerting-service@823b75d**. Confirmed both event names are already correctly registered in UAC
+      `DATA_PIPELINE_ALERT_RULES` (`unified_api_contracts/canonical/crosscutting/alerting/rules.py:1362-1363`):
+      `DP-RATE-001` → `DP_SOURCE_RATE_LIMITED` (WARN, AUTO_RECOVER) and `DP-RATE-002` → `DP_KEY_POOL_EXHAUSTED`
+      (CRITICAL, PAGE_OPERATOR) — these are the ACTUAL event names MTDS emits (`market-tick-data-service@7f42c557`'s
+      `ThegraphKeyPoolRotator`/`DatabentoIPRateLimiter`, confirmed via
+      `test_acquire_hit_limit_emits_dp_source_rate_limited` in
+      `market-tick-data-service/tests/market_interface/unit/test_databento_key_cache_and_config.py`), not the plan's
+      shorthand `SOURCE_RATE_LIMITED`/`SOURCE_KEY_POOL_EXHAUSTED`. Traced
+      `alerting_service.notifiers.router.route_event` (`router.py:679-690`): `data_pipeline_rule_for(event_name)`
+      exact-matches both against `DATA_PIPELINE_ALERT_RULES` and short-circuits to `_route_data_pipeline_event` — the
+      #data-pipeline-alerts mirror — BEFORE the generic catch-all can see them, i.e. the `DP_FLEET_MONITOR_RUN_*` defect
+      class does not recur here. Added an injected 429-storm regression test proving the routed post end-to-end (no
+      prior router-level test existed for these two events specifically):
+      `test_dp_source_rate_limited_injected_429_storm_routes_to_mirror_not_page` (WARN → mirror only, no page) and
+      `test_dp_key_pool_exhausted_injected_storm_routes_to_mirror_and_pages` (CRITICAL → mirror + PagerDuty/Telegram
+      page) in `alerting-service/tests/unit/rules/test_data_pipeline_rules.py`, plus a registry-lookup test asserting
+      the `DP-RATE-001`/`DP-RATE-002` registry ids. 16/16 tests green (5 new); full `quality-gates.sh` green, shipped
+      via `quickmerge --agent`.
 - [ ] [UI] P2. **Confirm the streaming-events pane renders a real VM event stream.** The source plan's `[UI] P0` ships
       the pane; this verifies it against live data rather than mock — per-AG/per-VM tail, honest empty-state when a VM
       has emitted nothing (never a fabricated row). `[UI]` gate applies: needs `pw:L2 ✓` plus a cited regression spec
@@ -102,3 +120,7 @@ This twin holds that verification plus the archival ritual.
 - **2026-07-30** — Authored by the `/na-eligibility-audit cross-cutting` tranche run as the paired finalize twin for the
   `NA → planning` reclassification of `data_pipeline_alert_substrate_residual_2026_07_24.md`. No work executed here;
   `status: draft` + `gate_on_depends: true` hold it until the source plan's todos land.
+- **2026-07-30 (slot-12)** — Shipped todo 1 (routing verification) — alerting-service@823b75d. Both events were already
+  correctly registered (DP-RATE-001/DP-RATE-002); added the missing router-level injected-429-storm regression tests
+  proving the routed mirror post. 2 todos remain open (streaming-events pane pw:L2 verification, source-plan archival) —
+  plan stays active.
