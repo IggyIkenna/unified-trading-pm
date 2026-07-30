@@ -3,8 +3,8 @@ doc_type: codex-ssot
 title: Contract Failure Handling
 summary:
   Adapter failure routing — pre-normalisation _safe_parse Pydantic failures go to the DLQ (DeadLetterRecord → GCS +
-  Pub/Sub DEAD_LETTER_VALIDATION, 0 retries) while mid-normalisation transient/data-quality errors use record_failed() /
-  record_empty() per the 4-state capture_status contract.
+  EventType.DEAD_LETTERED on the event spine, 0 retries) while mid-normalisation transient/data-quality errors use
+  record_failed() / record_empty() per the 4-state capture_status contract.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [adapter contract-failure DLQ routing (pre-normalisation validation failures)]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-14
 code_refs:
 last_updated: 2026-05-12
 ---
@@ -51,9 +51,9 @@ All adapters must validate raw API responses before normalisation. Validation fa
 
 ```
 RAW API RESPONSE
-  → _safe_parse() (unified-api-contracts Pydantic validation)
+  → _safe_parse() (market_tick_data_service.market_interface.base_adapter, UAC Pydantic validation)
   → ValidationError → EnhancedError(category=VALIDATION_ERROR, recovery_strategy=DEAD_LETTER)
-  → DeadLetterRecord written to GCS + published to Pub/Sub topic DEAD_LETTER_VALIDATION
+  → DeadLetterRecord written to GCS + EventType.DEAD_LETTERED published on the event spine
 ```
 
 ---
@@ -80,30 +80,41 @@ EnhancedError(
 
 ## DeadLetterRecord Fields
 
-| Field              | Type          | Purpose                            |
-| ------------------ | ------------- | ---------------------------------- |
-| `service`          | str           | Originating service                |
-| `venue`            | str           | Venue identifier                   |
-| `timestamp`        | datetime      | UTC timestamp                      |
-| `raw_payload`      | str           | JSON string of failed raw response |
-| `schema_attempted` | str           | e.g. "BinanceLiquidationMessage"   |
-| `error`            | EnhancedError | Full error with correlation_id     |
-| `correlation_id`   | str           | Cross-service trace                |
-| `retry_count`      | int           | 0 for validation failures          |
-| `dlq_topic`        | str           | "DEAD_LETTER_VALIDATION"           |
+SSOT: `unified_api_contracts/internal/schemas/errors.py` § `DeadLetterRecord` — read the model, not this table, when
+writing code. Reproduced here for orientation:
+
+| Field                                  | Type                    | Purpose                                              |
+| -------------------------------------- | ----------------------- | ---------------------------------------------------- |
+| `record_id`                            | str                     | DLQ record identity                                  |
+| `original_event`                       | str                     | Event name that failed                               |
+| `original_payload`                     | str \| None             | JSON string of the failed raw response               |
+| `error_category`                       | `ErrorCategory`         | `VALIDATION_ERROR` for pre-normalisation shape fails |
+| `error_message`                        | str                     | Human-readable failure detail                        |
+| `retry_count` / `max_retries`          | int                     | Retry accounting (0 attempts for validation fails)   |
+| `first_failure_at` / `last_failure_at` | datetime                | UTC failure window                                   |
+| `source_service`                       | str                     | Originating service                                  |
+| `dead_lettered_at`                     | datetime                | UTC dead-letter timestamp                            |
+| `correlation_id` / `trace_id`          | str \| None             | Cross-service trace                                  |
+| `venue`                                | str \| None             | Venue identifier                                     |
+| `recovery_strategy`                    | `ErrorRecoveryStrategy` | Defaults to `DEAD_LETTER`                            |
+| `metadata`                             | dict[str, str]          | Free-form context                                    |
+| `schema_version`                       | str                     | Contract version                                     |
 
 ---
 
 ## Storage and Publishing
 
-- **GCS bucket**: DeadLetterRecord written to configured DLQ bucket (partitioned by date/venue)
-- **Pub/Sub**: Published to topic `DEAD_LETTER_VALIDATION`
+- **GCS bucket**: DeadLetterRecord written to the configured DLQ bucket (partitioned by date/venue), resolved via
+  `resolve_bucket_name(...)` — never an inline `gs://`.
+- **Event spine**: `EventType.DEAD_LETTERED` (`unified_api_contracts/internal/events.py`) published via the UTL
+  `EventTransport` facade. There is no dedicated `DEAD_LETTER_VALIDATION` topic constant.
 
 ---
 
 ## Monitoring
 
-- **DLQ depth per venue**: Monitored in live-health-monitor-ui ContractHealth dashboard
+- **DLQ depth per venue**: surfaced in the consolidated portal `unified-trading-system-ui` (the split
+  `live-health-monitor-ui` was folded into it on 2026-05-08 — see `/codex/DEPRECATED_UIS_NOTICE.md`).
 - **Alert threshold**: Depth > 100 per venue per hour
 
 ---

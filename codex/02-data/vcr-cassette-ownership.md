@@ -39,11 +39,25 @@ referenced_by:
     /codex/06-coding-standards/vcr-cassette-pattern.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-16
 code_refs:
 ---
 
 # VCR Cassette Ownership and SSOT
+
+> **⚠️ Repo-name decoder (re-review 2026-07-30).** The ownership rule below is unchanged and still correct, but this
+> doc predates two consolidations and still uses retired interface abbreviations. Read them as:
+>
+> | Name used below                    | What it is today                                                             |
+> | ---------------------------------- | ---------------------------------------------------------------------------- |
+> | UMI                                | `market-tick-data-service` (`market_tick_data_service/market_interface/`)     |
+> | UTEI / USEI / UDEI                 | `execution-service` + `instruments-service`                                   |
+> | UPI / `position-balance-monitor-service` | folded into `strategy-service` (`strategy_service/position/`, 2026-05-20) — see `/codex/04-architecture/runtime-deployment-topology.md` |
+> | UCI / `unified-cloud-interface`    | the cloud surface now reached via `unified-trading-library` (`get_storage_client()` / `get_secret_client()`) |
+> | UCS / `unified-trading-services`   | retired; cross-cutting types folded into `unified-trading-library`            |
+>
+> "The repo that holds the API keys records the cassette; UAC holds it" is the durable rule — substitute the current
+> repo names above wherever an abbreviation appears.
 
 ## Rule
 
@@ -73,10 +87,14 @@ path — they do not duplicate them (HTTP only; WebSocket capture requires diffe
 **Legend:** `VALIDATED` = cassette recorded + tests pass. `PENDING_CASSETTE_AWAITING_AUTH` = key in Secret Manager,
 cassette not yet recorded. `BLACKLISTED_NO_ACCESS` = no key.
 
+> **Snapshot, not a live index (re-verified 2026-07-30).** This table is a point-in-time record; the live set is
+> whatever `unified_api_contracts/external/<venue>/mocks/` actually contains — enumerate it, don't trust this list.
+> One correction applied this pass: the **`barchart` row was removed** — Barchart is RETIRED as a TradFi source
+> (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) and `unified_api_contracts/external/barchart/` no longer exists.
+
 | Venue           | Cassette File                                    | Status                                                         |
 | --------------- | ------------------------------------------------ | -------------------------------------------------------------- |
 | `alchemy`       | `alchemy/mocks/alchemy_ws_eth_subscription.yaml` | `VALIDATED`                                                    |
-| `barchart`      | `barchart/mocks/get_quote_es1.yaml`              | `VALIDATED`                                                    |
 | `betdaq`        | `betdaq/mocks/betdaq_get_markets.yaml`           | `VALIDATED` (mock/public data)                                 |
 | `binance`       | `binance/mocks/ticker_24hr.yaml`                 | `VALIDATED`                                                    |
 | `binance`       | private WS (listen key endpoint)                 | `PENDING_CASSETTE_AWAITING_AUTH`                               |
@@ -111,8 +129,9 @@ cassette not yet recorded. `BLACKLISTED_NO_ACCESS` = no key.
 | `yahoo_finance` | `yahoo_finance/mocks/error_rate_limit.yaml`      | `VALIDATED`                                                    |
 | `yahoo_finance` | `yahoo_finance/mocks/splits_tsla.yaml`           | `VALIDATED`                                                    |
 
-**15 endpoints `PENDING_CASSETTE_AWAITING_AUTH`** — keys confirmed, cassettes not recorded. See
-`unified-trading-pm/plans/ai/VCR_CREDENTIAL_RECORDING_PLAN.md` for the recording checklist.
+**15 endpoints `PENDING_CASSETTE_AWAITING_AUTH`** — keys confirmed, cassettes not recorded. The recording checklist is
+[`/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md`](/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md) (archived — it
+used to be cited at the never-existing path `plans/ai/`).
 
 ---
 
@@ -178,7 +197,7 @@ used for replay (AC’s `tests/test_vcr_replay.py`) and by all consumers.
    path in AC.
 
 **Reference:** This section is the SSOT for the “contribute via PR” flow. See also
-`05-infrastructure/contracts-integration.md` (contracts integration) and unified-api-contracts `CONTRIBUTING.md`
+`/codex/05-infrastructure/contracts-integration.md` (contracts integration) and unified-api-contracts `CONTRIBUTING.md`
 (AC-side expectations).
 
 ---
@@ -315,7 +334,7 @@ def test_normalization_preserves_core_fields(venue):
 
 ## Circular Dependency Rules
 
-**Scope and layout SSOT:** [02-data/contracts-scope-and-layout.md](contracts-scope-and-layout.md). AC cannot import UIC;
+**Scope and layout SSOT:** [`/codex/02-data/contracts-scope-and-layout.md`](/codex/02-data/contracts-scope-and-layout.md). AC cannot import UIC;
 see that doc for dependency and layout rules.
 
 - **unified-api-contracts**: stdlib + pydantic only; no `unified-*` imports
@@ -334,7 +353,10 @@ See: `dep-enforcement` and `dep-enforcement-cloud-sdks` quality gates.
 
 ## References
 
-- Plan: `.cursor/plans/schema_ownership_three_tiers_267ab636.plan.md`
 - unified-api-contracts restructure: `unified_api_contracts/external/`, `unified_api_contracts/canonical/`
-- Testing standards: `06-coding-standards/testing.md`
-- Schema governance: `02-data/schema-governance.md`
+- Testing standards: `/codex/06-coding-standards/testing.md`
+- Schema governance: `/codex/02-data/schema-governance.md`
+- VCR cassette pattern: `/codex/06-coding-standards/vcr-cassette-pattern.md`
+
+(The old `.cursor/plans/schema_ownership_three_tiers_267ab636.plan.md` pointer was dropped 2026-07-30 — that file does
+not exist anywhere in the workspace.)
