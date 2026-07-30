@@ -596,3 +596,47 @@ not just noting.
   partitioned per wall_type. No code changed this session — read-only SQLite query + code read only; slot left clean on
   `live-defi-rollout`. blocked pending their completion. **No code or workflow change made or needed.** Slot left clean
   on `live-defi-rollout`, no branch changes. clean on `live-defi-rollout`, no branch changes.
+
+- **2026-07-30 ~22:36-23:17Z (cicd escalation `agt-5754dd`, slot 2, `wall_type=main_ci_red`) — 3rd same-day
+  `features-service` corroboration, and the WORST single instance recorded in this doc so far: 4 consecutive full-suite
+  `quality-gates-v2` attempts on the SAME unchanged commit, each failing at a DIFFERENT unrelated location, with host
+  load climbing (not fluctuating-and-easing) across the session**. Dispatched for `features-service` `quality-gates-v2`
+  RED on `main` (no PR -- a direct-push wall on the promotion merge commit itself, `13a23d8e`, "chore(promote): LDR ->
+  main (Option-B direct)"). Diagnosed BEFORE assuming a code issue, per this doc's own established discipline:
+  `git merge-base --is-ancestor origin/main origin/live-defi-rollout` -> main is a PURE ancestor of the reportedly-green
+  LDR HEAD (`8e62dc30`, 334 commits ahead, 0 commits the other way) -- and confirmed zero diff on the failing test paths
+  specifically (`base_calculator.py`, `test_regime_calculator.py`, `pyproject.toml`, `uv.lock` all byte-identical
+  between the two branches). Ruled out both this wall's own classification options (PROMOTION STUCK / MAIN-ONLY stale
+  workflow) -- this is neither; it is this doc's own already-tracked host-contention flake class, reproduced 4/4 times
+  in a row:
+  1. Original wall (run `30582695053`, first attempt): `QG slice (tests)` hung inside
+     `test_regime_calculator.py::test_regime_calculator_no_forward_looking` at a `polars.join_asof(...).collect()` ->
+     `get_engine_affinity()` call -- pytest-timeout thread-watchdog fired, faulthandler dump showed a live
+     application-code frame, not a crash.
+  2. 1st rerun: hung inside generic pytest fixture-resolution machinery (`_pytest/fixtures.py:_get_active_fixturedef` ->
+     `pluggy` hook dispatch) -- **no application code frame at all**, the strongest possible signature for pure
+     scheduling/descheduling starvation rather than a slow test.
+  3. 2nd rerun: hung inside `tests/delta_one/unit/test_feature_groups/test_oscillators.py`, a third, unrelated location;
+     progress through the suite was also visibly slower than the first attempt (16% reached after 6min vs. 56% after
+     3min in attempt 1).
+  4. 3rd rerun: hung inside `tests/delta_one/unit/test_feature_groups/test_momentum.py` -- a fourth unrelated location.
+     Host load read at the end of each attempt tells the real story: **11.02/12.87/13.21 -> 14.09/14.03/13.59 ->
+     17.23/16.18/14.77** (1/5/15-min, this box, presumably the same 16-vCPU host this doc already tracks) -- climbing
+     across the ~40min session, not easing, with the final reading's 1-min average ABOVE the vCPU count. This is a more
+     severe, actively-worsening instance than the two same-day `features-service` entries already in this doc
+     (`agt-7bcf55` 13:35Z, `agt-96bec9` 19:55Z), both of which needed only 1-2 extra attempts and read
+     "fluctuating-but-still-elevated, not resolved" rather than a climbing trend observed in real time. **No
+     `features-service` code or workflow change made or needed** -- 4 different unrelated hang locations across 4
+     identical-tree runs is conclusive against a code regression. Did NOT attempt a 5th manual retry: per this doc's own
+     established posture (retrigger is the sanctioned resolution path, but shared CI-firefighter slot time is not
+     unlimited, and load was rising, not easing, making a 5th attempt a poor-odds use of the same contended host).
+     `main`'s `ci_status` will read `FAILING` (Firestore-recorded, confirmed via the run's own
+     `Recording ci_status=FAILING for features-service` log line) until either a future manual re-verification during a
+     calmer window, or the next `live-defi-rollout`->`main` promotion (334 commits still unpromoted at investigation
+     time, so another promotion push -- and therefore a fresh `quality-gates-v2` attempt on a new commit -- is expected
+     soon via the standing `ldr-to-main-promote-fleet.yml` automation) naturally re-verifies it. Flagging the
+     climbing-load reading as fresh, real-time evidence for this doc's own still-open "revisit protected-6 self-hosted
+     posture" question (last touched 2026-07-30 ~06:20Z with a NEGATIVE post-resize verdict) -- not re-opening that
+     question myself, since it is already an explicit standing ask in this doc, not a new one. No code changed; slot
+     left clean on `live-defi-rollout` (only this doc touched, via the PM plan-flip carve-out). Pinged
+     `AUTHORING_SLOT=planning` with the outcome.
