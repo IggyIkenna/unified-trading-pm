@@ -116,6 +116,18 @@ checkbox covering both a genuinely-complete slice and a still-blocked slice left
 should be picked up next by an infra/backend worker; P2.1b should not be dispatched again until P2.2's own checkbox is
 flipped with live verification evidence.
 
+## Addendum (2026-07-30, slot-13)
+
+Same-day recurrence: backlog task `bucket_iam_write_protection_per_tier-008` (this plan's P2.1b) was dispatched to
+slot-13 hours after this issue was filed. Re-verified the gate is still live (P2.2 still 0 hits for
+`uts-prd-sa|uts_prd|uts-test-sa` outside `terraform/`, still only 5/165 launchers pass `--service-account=`) — did NOT
+apply any terraform change. Root cause confirmed: P2.1b's checkbox carries no structured `depends_on`/ `gate_on_depends`
+link to P2.2 (this workspace has no per-todo prereq syntax within a single plan — CLAUDE.md), so the backlog regenerator
+re-offers it to any idle worker regardless of the plan's own prose gate. Fixed by tagging P2.1b `[OPERATOR]` in the plan
+(`_OPERATOR_TAG_PREFIX_RE`-recognized — routes it to the operator's blocked-queue instead of worker dispatch) —
+mechanical, not just documentation, so a third same-day re-dispatch shouldn't recur. Retag back to plain `[TERRAFORM]`
+once P2.2 lands per the plan's own note.
+
 ## Todos
 
 - [ ] [CODE] P1. Complete `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2 — wire every deployment-service

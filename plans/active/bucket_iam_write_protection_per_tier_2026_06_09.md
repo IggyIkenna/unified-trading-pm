@@ -285,12 +285,21 @@ Two independent gates because Group A and Group B are at different stages:
       `uts_prd_objectadmin_group_b` bindings (`bucket_iam_per_tier_sa.tf`) were confirmed LIVE via `tofu state list` + a
       clean `tofu plan` on 2026-07-29 (P1.2b's own evidence trail). No new terraform state change made this pass —
       re-verified by reading `bucket_iam_per_tier_sa.tf` against that evidence. — slot-11, 2026-07-30.
-- [ ] [TERRAFORM] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in `main.tf:598-602`);
-      verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA); verify a dev/stg
-      credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on P2.2 completing +
-      being live-verified first** — do not remove the god-SA grant while any runtime still authenticates as
-      `unified-trading-sa` for writes. **Group B buckets join here only after the consolidation plan's Wave-3 folds
-      provision their `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
+- [ ] [TERRAFORM][OPERATOR] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in
+      `main.tf:598-602`); verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA);
+      verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on
+      P2.2 completing + being live-verified first** — do not remove the god-SA grant while any runtime still
+      authenticates as `unified-trading-sa` for writes. **Group B buckets join here only after the consolidation plan's
+      Wave-3 folds provision their `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
+      **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no structured `depends_on`/ `gate_on_depends` link
+      to P2.2 (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the backlog regenerator has
+      auto-dispatched this fleet-wide-blast-radius IAM removal to a worker TWICE in one day despite the HARD-GATED note
+      above (slot-11 earlier today, slot-13 this pass) — both independently declined per
+      `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`. `[OPERATOR]` routes this to the
+      operator's blocked-queue instead of re-offering it to workers who can only re-derive the same "not yet" verdict.
+      **Retag back to plain `[TERRAFORM]`** once P2.2 is done + live-verified (every write-path runtime confirmed
+      running as its tier SA, not `unified-trading-sa`) — do not leave this tag stale per CLAUDE.md's retag-on-resolve
+      rule.
 - [ ] [CODE] P2.2. Wire each runtime to its tier SA (deployment-service launchers / Cloud Run service identities);
       migration scripts opt into `uts-migration-sa` explicitly. **Do this BEFORE P2.1b** (see sequencing-hazard note
       above) — P2.1b is not safely executable until every write-path runtime is confirmed running as `uts-prd-sa` (or
