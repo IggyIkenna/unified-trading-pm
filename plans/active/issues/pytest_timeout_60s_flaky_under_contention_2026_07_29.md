@@ -189,7 +189,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       clean "confirms the fix" close) — a further raise or a per-runner contention fix is real remaining work, out of
       this pass's bounded scope; see the new todo 4 below for the tracked follow-up (never left as prose per the
       workspace's own follow-up-tracking rule).
-- [ ] 4. [INFRA] P3. **NEW 2026-07-30.** instruments-service's self-hosted `github-glue-runners-instruments-service`
+- [x] ✅ 4. [INFRA] P3. **NEW 2026-07-30.** instruments-service's self-hosted `github-glue-runners-instruments-service`
       runner has now shown 2 confirmed pytest-timeout flakes on fully-mocked, sub-2s-in-isolation tests even at the
       raised 150s budget (todo 3's finding). Investigate whether this ONE runner is systematically more contended than
       others (shared with other repos' jobs? under-provisioned vs instruments-service's ~5000-test suite + `-n auto`
@@ -197,7 +197,25 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       specifically, or address the contention at its source (fewer xdist workers, more runner capacity). **Done when**:
       a root cause is identified for why this specific runner recurs while unified-trading-pm/deployment-api do not, and
       either a fix lands or the finding is confirmed to need operator infra input (more runner capacity) and is retagged
-      accordingly.
+      accordingly. — **ROOT-CAUSED + FIXED 2026-07-30 (`cicd` escalation `agt-a1df9e`, promotion PR #1035, run
+      `30553126635`).** Both of this doc's confirmed post-raise recurrences (run `30526139426` AND this one) are the
+      SAME test:
+      `test_understat_adapter_coverage.py::TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count`. That
+      is not a coincidence pointing at general runner contention — it is a per-test anti-pattern: this test (+6 sibling
+      call sites in the same file) mocked only `aiohttp.ClientSession`, so the real `_get_with_retry` -> `_throttle()`
+      path still awaited real `asyncio.sleep()` per per-league request. The prior 2026-07-29/07-30 fixes closed the
+      "leaked class-state from an earlier test" mechanism; this is a distinct one — even with fully clean state, an
+      awaited real timer can be woken arbitrarily late under xdist/shared-runner scheduling contention, no leak
+      required, just enough host contention on that one wait. A test with zero awaited real timers doesn't have this
+      failure mode at all (CPU-bound work can only slow down proportionally to contention, not get "woken 100x late").
+      Fixed by mocking `_throttle` as a no-op at all 7 real-session-mock call sites in
+      `test_understat_adapter_coverage.py` — instruments-service@66c9f23c, `quality-gates.sh` verified green (see
+      Progress Log). **Narrows this todo's "Done when"**: root cause identified (a specific test's real-timer
+      dependency, not general runner under-provisioning) and fixed at the source. Whether
+      `github-glue-runners-instruments-service` is ALSO systematically more contended than other runners (independent of
+      this one test) remains genuinely open — but with the only 2 confirmed recurrences both explained by this one
+      now-fixed anti-pattern, there is no remaining evidence for that broader claim. Re-open with a NEW todo (do not
+      reuse this one) if a DIFFERENT test on this runner recurs post-fix.
 
 ## Progress Log
 
@@ -283,3 +301,31 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   deployment-api, instruments-service) to show a genuine post-both-fixes recurrence. No further raise applied in this
   pass (a 3rd raise without evidence it would actually help is exactly the "just move the threshold again" outcome this
   todo warned against — todo 4 asks for a root cause first).
+- **2026-07-30** — Todo 4 root-caused + closed: `cicd` escalation `agt-a1df9e`, instruments-service promotion PR #1035
+  (LDR→main), failing run `30553126635` (`QG slice (tests)`). Same signature as the two prior post-raise recurrences:
+  `test_understat_adapter_coverage.py::TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count` hit
+  `Failed: Timeout (>150.0s)` — `1 failed, 5093 passed, 7 skipped` in `600.74s`. By investigation time
+  `live-defi-rollout` was already green again (run `82594ef1` succeeded, PR #1035 already merged at `14:43:30Z`) — but
+  per this doc's own precedent, "already green on retry" isn't evidence the flake class is closed, so root-caused it
+  anyway rather than taking the free pass. Confirmed `e0f7aaad` (the failing run's head) already contained BOTH the
+  leaked-state fix (`57ff3fdc`, this morning) and the raised 150s timeout — the leak mechanism is fully closed, yet it
+  still failed. Read `_throttle()`/`_get_with_retry` in `base.py`: `_throttle()` awaits up to 2 real `asyncio.sleep()`
+  calls (spacer + window-boundary) and is called once per attempt inside `_get_with_retry` (line 496). Every test in
+  `test_understat_adapter_coverage.py` that mocks only `aiohttp.ClientSession` (not `_get_with_retry` wholesale) drives
+  this real path — 7 call sites, including the recurring test. Under clean state (`_min_request_interval=0.12s`, window
+  quotas disabled), the 6-per-league real sleep totals only ~0.6-0.7s normally (isolated baseline: 1.42s per todo 3's
+  own measurement) — but an AWAITED real timer, unlike CPU-bound work, can be woken arbitrarily late if the process is
+  descheduled by the OS/event-loop under xdist/shared-runner contention; a genuinely-clean, tiny sleep budget is still a
+  nonzero attack surface for a 150s (or any) wall-clock timeout, given enough contention. This is a DIFFERENT mechanism
+  from the leaked-state class both prior fixes closed — no amount of state-reset removes it, only removing the real
+  await does. Fixed: mocked `_throttle` as a no-op (`AsyncMock()`) at all 7 real-session-mock call sites in the file
+  (also updated the `_reset_understat_rate_limiter` fixture's docstring, which described only the now-superseded
+  leaked-state mechanism) — instruments-service@66c9f23c. Verified: all 54 tests in the file pass; 3x repeated isolated
+  runs of the previously-flaky test measured 1.66-1.72s each (stable, zero real sleep in the execution path — the
+  residual time is inherent mock/asyncio overhead, not a timer, so it cannot blow out under contention the way the
+  removed sleeps could). Full `quality-gates.sh` run + `quickmerge` in progress at time of this entry (see this
+  escalation's own outcome message to slot `ci` for final SHA/status). Both of todo 4's confirmed recurrences
+  (`30526139426` and this one) are this exact same test — closing todo 4 as root-caused-and-fixed rather than leaving it
+  as an open "investigate the runner" item; see todo 4's own text for the narrowed scope of what remains genuinely open
+  (a DIFFERENT test recurring on this runner post-fix, which would actually implicate the runner itself rather than this
+  one test's anti-pattern).
