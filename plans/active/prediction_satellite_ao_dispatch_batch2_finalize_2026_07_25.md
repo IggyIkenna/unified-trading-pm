@@ -63,7 +63,7 @@ drift_direction: advance-code
       self-reported "Result:" annotations); see this plan's own Progress Log for the full per-doc citation trail. **Done
       when**: all 6 source-doc updates are verified present with commit citations recorded in this plan's own Progress
       Log.
-- [ ] [DOC] P1. **Correct `prediction_consolidated_closeout_2026_07_18.md`'s stale claims discovered during batch2's
+- [x] ✅ [DOC] P1. **Correct `prediction_consolidated_closeout_2026_07_18.md`'s stale claims discovered during batch2's
       re-triage** (deferred here rather than into a batch2 todo, to avoid two same-priority todos editing the same
       target file concurrently): (a) the "Distinct Values / axis-value census" section's "C2a REFUSED — unruled axis, no
       migration proposed" framing (lines ~213-215, repeated in the Deferred-work section ~line 717) — replace with a
@@ -126,3 +126,36 @@ doesn't reduce the total below 6). Left as-is; doesn't affect the verification o
 
 All 6 source-doc updates verified present with commit citations. Todo 1's own checkbox flipped above. No code shipped —
 read-only cross-doc verification, as scoped. Repo: unified-trading-pm only.
+
+### 2026-07-30 (slot 8, data_engineering craft) — Todo 2 done: `prediction_consolidated_closeout_2026_07_18.md` corrected
+
+Picked up todo 2 via `/boot`. All 3 corrections made, each re-verified against live doc state (not blindly copying this
+finalize-plan's 2026-07-25 framing, since one item had since moved on further):
+
+(a) **C2a framing (2 occurrences, lines ~232 and ~571)** — replaced "**C2a REFUSED** — unruled axis, no migration
+proposed" / "C2a-REFUSED lowercase tail (no migration proposed)" with a citation to
+`/codex/02-data/reconciliation-finding-taxonomy.md` §5.1: C2a is RULED UPPERCASE-target (operator D1, 2026-07-20),
+`migration_pending`, compared case-insensitively (no casing finding emitted during the migration_pending window). Also
+noted the harness case-robustness gate
+(`honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md`) is itself `status: resolved`
+(verified via grep on the archived doc) — so the finalize-plan's "gated on the still-open honest-coverage-harness-fix
+issue" framing was itself already stale; did not carry that stale detail forward.
+
+(b) **Kalshi doc entry (`kalshi_live_capture_regression_and_drift_2026_07_13.md`, line 345)** — confirmed already
+accurate ("status: open, 3 live-side follow-ups outstanding") — no edit made, per this todo's own note.
+
+(c) **`prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`'s "0 open todos" entry** — confirmed genuinely
+wrong: read the doc, found `status: open` at the frontmatter and one real open `- [ ] [DATA] P2.` todo (the KALSHI-venue
+scaffold-row provenance mislabel, 129,227 rows). Corrected the index entry to "1 open" with the todo summarized inline.
+
+(d) **`prediction_arb_live_execution_bridge_2026_07_20.md`'s "0 open todos" entry** — confirmed genuinely wrong: the doc
+carries one open `- [ ] [BACKEND] P1.` todo (the paper-LIVE `AtomicInstruction`→`AtomicLegExecutor` routing seam).
+Diverged from this finalize todo's literal instruction here: the doc's own text shows the architecture question was
+**RULED by the operator on 2026-07-28** (after this finalize plan was authored 2026-07-25), so it is no longer "an
+unresolved operator-directed architectural decision" — it reads as build-ready work now. Flagged it accurately as 1 open
+build-ready todo, with the doc's genuinely-still-open OPERATOR-GATED items (paper-vs-live promotion, Betfair
+credentials) called out separately rather than conflating the two.
+
+Diff: `unified-trading-pm@<see commit below>` touches only `plans/active/prediction_consolidated_closeout_2026_07_18.md`
+(656 lines post-edit, under the 1000-line hard cap). Todo 2's own checkbox flipped above. No code shipped — doc-only
+correction, as scoped.
