@@ -176,7 +176,7 @@ citing file):
 | `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md (archived)`    | ci            | QG step 5.83 timeout root doc                                              |
 | `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`    | cross-cutting | same UTL-manifest-reader family as the above (resolved 2026-07-28)         |
 | `issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`                      | ao            | AO `RepoHealthWatcher` false-green recurrence                              |
-| `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                       |
+| `archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (archived, 2026-07-30)                | infra         | shared-host `/tmp` capacity incident (resolved, 0 open todos)              |
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                       |
 | `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                | ao            | AO slot-dispatcher stale-role bug                                          |
 | `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` | ci            | doc-index determinism test, same flake class                               |

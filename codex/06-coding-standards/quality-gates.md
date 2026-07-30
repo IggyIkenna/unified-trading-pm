@@ -1402,6 +1402,19 @@ mkdir -p "$BASEDPYRIGHT_CACHE_DIR"
 - Reduces type checking time from 60-120s to 10-30s on repeat runs
 - Automatically cleans up via TMPDIR on system restart
 
+### Checker-output capture paths — TMPDIR-aware AND PID-suffixed
+
+Every STEP checker in `base-service.sh`/`base-library.sh` that redirects a sub-checker's stdout/stderr to a file for a
+paired read-back (`>"$_X_LOG" 2>&1` ... `cat "$_X_LOG"` / `grep -q ... "$_X_LOG"`) MUST route through
+`${TMPDIR:-/tmp}/<name>_qg.log.$$` — both halves matter: `${TMPDIR:-/tmp}` avoids a false failure when `/tmp` itself is
+full (the redirect's own write fails with ENOSPC, which the `if` construct then misreports as the checker's exit code),
+and the `.$$` PID suffix avoids two slots' concurrent `quality-gates.sh` runs on the same shared host colliding on the
+identical fixed filename per STEP (one process's write racing another's read, producing a spurious gate failure with no
+real content issue). Reuse the same PID-suffixed variable for the write and every paired read-back site, and `rm -f` it
+after use. Fixed fleet-wide in `unified-trading-pm@f0c3d5209`/`68309de03` (28 sites in `base-service.sh`) — see
+`scripts/quality-gates-base/tests/test-qg-tmp-log-pid-collision.sh` for the concurrency regression proof. A new STEP
+checker added later that redirects output to a fixed non-PID-suffixed `/tmp` path reintroduces this exact bug class.
+
 ### run_timeout Helper
 
 `run_timeout` is available in two forms — both use identical logic:

@@ -877,7 +877,7 @@ drift_direction: advance-code
     doc's explicit sequencing, this MUST run only AFTER the writer fix ships (never before, or the still-live bug
     resurrects the rows) — do not run it until the 4 files above are committed+pushed.
   - **Root-caused, filed, and shipped a separate finding along the way**:
-    `issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared host's `/tmp`
+    `/plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared host's `/tmp`
     tmpfs was at 100% (accumulated since 2026-07-14 across many slots) AND `scripts/quality-gates-base/base-service.sh`
     has 25 `>/tmp/<name>_qg.log`-redirected QG steps sharing a FIXED (non-PID-unique) filename, so two slots' concurrent
     `quality-gates.sh` runs collide and produce spurious step failures — reproduced repeatedly (a step fails inline, the
