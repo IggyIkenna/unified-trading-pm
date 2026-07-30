@@ -97,17 +97,43 @@ drift_direction: advance-code
       longer hide work from a checkbox grep, the closeout's digest lines for them are corrected, and any doc that
       genuinely reaches 0 open items is flipped to `status: resolved`.
 
-- [ ] [REVIEW] P1. **Re-check batch4's own Deferred sections now that time has passed** — the 2 conflict-gated items
-      (the `_tradfi-ohlcv-launcher-lib.sh` fan-out collision between the throughput doc and batch2 todo 3; the
-      two-claimant `[CODE] P1` checkbox on the DNS-starvation issue doc) and the 1 too-large-or-risky item
-      (`tradfi_manifest_content_recovery_completion_2026_07_24.md`). For each: re-read the specific gating ground to
-      check whether it has since cleared — if the operator has ruled, or one side has shipped, or a dated section proves
-      one claim stale, extract it as a new tracked todo in a follow-up `batch5` (do NOT draft it directly here); if
-      still genuinely unresolved, leave it explicitly deferred and do NOT re-ask an already-asked operator question.
-      Also cross-reference `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own deferred re-check rather
-      than duplicating it. **Done when**: each of the 3 Deferred items has either (a) a note that it is ready for
-      `batch5` extraction because its gate cleared, or (b) an explicit re-verified confirmation the gate is still open,
-      with the evidence cited.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-12, review-craft).** Re-checked all 3 of batch4's own Deferred items with
+      today's date, notes added directly in `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`'s own Deferred sections
+      (mirroring batch3-finalize's pattern): (1) **Fan-out collision** (`_tradfi-ohlcv-launcher-lib.sh`, throughput doc
+      vs batch2 todo 3) — **GATE CLEARED**, one side shipped: `deployment-service@872ac2f` (batch2's date-slice change)
+      is live-verified scoped ONLY to the NASDAQ/NYSE equity launchers (`ohlcv_split_date_slices`); the CME launcher
+      still calls the original per-(venue,root,year) path with zero code overlap, confirmed by live grep of both
+      launcher scripts. Extracted the throughput doc's still-open "[INFRA] P1. Bundle roots into fewer larger VMs" item
+      as a NEW tracked todo (15th) in `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, plus its
+      file-collision-matrix row — not drafted directly in this finalize doc, per scope guard. (2) **DNS-starvation
+      two-claimant checkbox** — **FULLY RESOLVED**, nothing to extract: live-verified
+      `plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`'s `[CODE] P1` is already `[x]`
+      and the doc's `status` is already `resolved` — both flipped the SAME day batch4 was drafted (2026-07-26, slot-12 +
+      batch3-finalize's reconciliation), batch4's Deferred item simply predates that same-day closure. (3)
+      **Too-large-or-risky** (`tradfi_manifest_content_recovery_completion_2026_07_24.md`) — **re-verified STILL NOT
+      batch-eligible**, though its description was stale: live-read shows only 3 open todos (not 7), the "in-flight"
+      quarantine survey shipped 2026-07-27, and both operator-gates it named have been RULED 2026-07-28 (after this
+      batch4 pass). Verdict stays unchanged for two independent reasons: the remaining work is still `--apply`-at-scale
+      prod-manifest content migration (not a batch-todo-sized mutation), and the doc is already its own independent
+      `assigned_vm: planning` / `status: active` AO-dispatch plan whose 3 remaining todos already regen into the backlog
+      on their own — batch5 extraction would be duplicative. Independently corroborated:
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s own fresh 2026-07-29 audit re-lists this doc "unchanged...
+      still needs its own triage pass" in its own Deferred section, one day after this re-check's evidence was gathered.
+      **Cross-referenced** `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own Deferred re-check (todo 2,
+      archived) — its 4 items (FX-yahoo-drain conflict, chain-bundle-sampler root mismatch, mvp_mode, sp500 readiness)
+      are fully disjoint from this batch4's 3 items; no duplication. Repo: unified-trading-pm (doc-only, this commit:
+      edits to `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` and
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`). **Re-check batch4's own Deferred sections now that time has
+      passed** — the 2 conflict-gated items (the `_tradfi-ohlcv-launcher-lib.sh` fan-out collision between the
+      throughput doc and batch2 todo 3; the two-claimant `[CODE] P1` checkbox on the DNS-starvation issue doc) and the 1
+      too-large-or-risky item (`tradfi_manifest_content_recovery_completion_2026_07_24.md`). For each: re-read the
+      specific gating ground to check whether it has since cleared — if the operator has ruled, or one side has shipped,
+      or a dated section proves one claim stale, extract it as a new tracked todo in a follow-up `batch5` (do NOT draft
+      it directly here); if still genuinely unresolved, leave it explicitly deferred and do NOT re-ask an already-asked
+      operator question. Also cross-reference `tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own
+      deferred re-check rather than duplicating it. **Done when**: each of the 3 Deferred items has either (a) a note
+      that it is ready for `batch5` extraction because its gate cleared, or (b) an explicit re-verified confirmation the
+      gate is still open, with the evidence cited.
 
 - [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above

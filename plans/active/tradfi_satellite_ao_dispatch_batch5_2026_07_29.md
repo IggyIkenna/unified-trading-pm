@@ -253,6 +253,27 @@ ground to open up, and it did:
       responsible, and the fix (or a scoped follow-up todo if the fix is a larger build) is recorded. Source:
       `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
 
+- [ ] [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
+      `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s Deferred re-check (2026-07-30), now that the
+      conflict-gate has cleared.** `_tradfi-ohlcv-launcher-lib.sh` still spawns one VM per (venue,root,year) for the CME
+      root loop (confirmed live 2026-07-30: `launch-tradfi-bf-cme-ohlcv-1m.sh` uses the unchanged per-root-year shard
+      model, per the lib's own "CME shards 47 roots x 7 years (~329 VMs)" comment) — accumulate multiple roots'
+      symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard (a `SINGLE_VM_QUEUE`-analog), plus fold in the
+      pd-balanced 250GB `TRADFI_OHLCV_BOOT_TYPE` disk default (staged locally 2026-07-18, never wired). **Gate-clear
+      evidence**: this item was previously conflict-gated against `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
+      todo 3 sub-item (1), which changed the SAME shared file in a different direction (ticker-group fan-out →
+      DATE-range slicing, for the EQUITY launchers). That batch2 change SHIPPED `deployment-service@872ac2f` and is
+      confirmed live-scoped to `launch-tradfi-bf-{nasdaq,nyse}-ohlcv-1m.sh` only (`ohlcv_split_date_slices`,
+      `OHLCV_SHARD_MODE=date-range`) — the CME launcher still calls the original per-root-year path
+      (`ohlcv_split_ticker_groups`), confirmed by live grep of both launcher scripts, zero code overlap with the shipped
+      change. Repo: deployment-service. **Done when**: `_tradfi-ohlcv-launcher-lib.sh` accumulates multiple CME roots
+      per VM per year-shard (fewer, saturated VMs, not one-VM-per-root), the pd-balanced 250GB disk default is wired for
+      the CME launcher, a dry-run of `launch-tradfi-bf-cme-ohlcv-1m.sh` shows the new bundled fan-out with no root/date
+      lost or duplicated, and `tradfi_backfill_throughput_followups_2026_07_24.md`'s "[INFRA] P1. Bundle roots into
+      fewer larger VMs" checkbox (line ~299) is flipped citing the shipped commit. Source:
+      `tradfi_backfill_throughput_followups_2026_07_24.md`.
+
 ## Deferred — conflict-gated (do NOT draft a competing todo; unchanged, still genuinely unresolved)
 
 - **`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item** — unchanged since batch3. Running
@@ -320,22 +341,23 @@ items 1/3/6/8 yet).
 
 ## File-collision matrix (verified before finalizing — same-priority todos run concurrently by default)
 
-| Todo | Primary file(s) touched                                                                                                 |
-| ---- | ----------------------------------------------------------------------------------------------------------------------- |
-| 1    | `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, `launch-tradfi-forward-poll.sh`, mtds test files             |
-| 2    | `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` (execution only, no code edit)                               |
-| 3    | `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py`                                                              |
-| 4    | `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`'s underlying venue-specific manifest-writer adapters |
-| 5    | `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s chain-writer + `VENUES_BY_ASSET_GROUP` (UAC)           |
-| 6    | `yahoo_finance_adapter.py` (`write_canonical_shard`)                                                                    |
-| 7    | new register-phase script, `market-tick-data-service/scripts/`                                                          |
-| 8    | `market-tick-data-service` — `PartitionedTickWriter._get_writer()`                                                      |
-| 9    | `market-tick-data-service/scripts/migrate_*_2026_07*.py` (audit, read-only)                                             |
-| 10   | `market-tick-data-service/tests/unit/test_databento_enrichment_combo_underlying.py`                                     |
-| 11   | features-service (verification run only, no repo file written beyond the issue doc)                                     |
-| 12   | features-service (verification run only, no repo file written beyond the issue doc)                                     |
-| 13   | market-tick-data-service raw capture path (read-only trace, no file written beyond the issue doc)                       |
-| 14   | `market-data-processing-service` — `_streaming_filter_slice`                                                            |
+| Todo | Primary file(s) touched                                                                                                                   |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`, `launch-tradfi-forward-poll.sh`, mtds test files                               |
+| 2    | `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` (execution only, no code edit)                                                 |
+| 3    | `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py`                                                                                |
+| 4    | `issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`'s underlying venue-specific manifest-writer adapters                   |
+| 5    | `issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md`'s chain-writer + `VENUES_BY_ASSET_GROUP` (UAC)                             |
+| 6    | `yahoo_finance_adapter.py` (`write_canonical_shard`)                                                                                      |
+| 7    | new register-phase script, `market-tick-data-service/scripts/`                                                                            |
+| 8    | `market-tick-data-service` — `PartitionedTickWriter._get_writer()`                                                                        |
+| 9    | `market-tick-data-service/scripts/migrate_*_2026_07*.py` (audit, read-only)                                                               |
+| 10   | `market-tick-data-service/tests/unit/test_databento_enrichment_combo_underlying.py`                                                       |
+| 11   | features-service (verification run only, no repo file written beyond the issue doc)                                                       |
+| 12   | features-service (verification run only, no repo file written beyond the issue doc)                                                       |
+| 13   | market-tick-data-service raw capture path (read-only trace, no file written beyond the issue doc)                                         |
+| 14   | `market-data-processing-service` — `_streaming_filter_slice`                                                                              |
+| 15   | `deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh` (CME root-bundling path — distinct from the shipped date-slice equity path) |
 
 No file appears twice, with ONE deliberate exception: todos 4, 5, and 6 (manifest_writer_legacy_id_regression item 3,
 distinct_values_net_new_clusters item 2, and yahoo_venue_vendor_conflation) all touch the same FX/YAHOO_FINANCE
