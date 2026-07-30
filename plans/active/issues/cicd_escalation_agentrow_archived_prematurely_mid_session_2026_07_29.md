@@ -154,16 +154,26 @@ same silent-mid-session-archival pattern regardless of which of the two already-
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Read `reap_orphan_agents` (`server/state_store/agents.py`, referenced by the 2026-07-29
-      `ag_closeout_auditor` precedent doc at line ~372) and whatever calls it on a schedule — confirm or rule out
-      whether a staleness/orphan-reap heuristic (as opposed to a genuine `/done` call) is what stamped `agt-a14109`'s
-      `finished_at`/`exit_reason: "lifecycle-complete"` at `20:13:32Z`, ~24 minutes into a session that was still
-      actively working (no `/done` call logged before ~20:35Z). If confirmed, the reaper's staleness heuristic needs a
-      genuine-liveness check (e.g. actual tmux/process liveness, not just an elapsed-time threshold the reaper can't
-      distinguish from a stuck session) before archiving a one-shot `AgentRow`, OR the reap action itself should not
-      silently masquerade as `exit_reason: "lifecycle-complete"` (reserve that value for an actual successful `/done`
-      call; use a distinct `exit_reason` like `"reaped-stale"` so a worker's own later `/done` attempt — or a human
-      reading the row — isn't misled into thinking the worker itself already signaled done). (repo: agent-orchestrator)
+- [x] [BACKEND] P2. ✅ — agent-orchestrator@81f54a8 CONFIRMED: `reap_orphan_agents` (`server/state_store/agents.py`) is
+      NOT the only heuristic actor — `TmuxPruner` (`server/tmux_pruner.py:392`) independently stamps the SAME
+      `exit_reason: "lifecycle-complete"` string on a `has_session()`-heuristic dead-session verdict, with NO retry/
+      debounce around the underlying `tmux has-session` subprocess call (`tmux_spawn.has_session`, 2s timeout, no
+      liveness confirmation beyond a single exit-code check) — a transient false-negative on a busy shared host (this
+      workspace's own CLAUDE.md documents concurrent-QG shared-host contention) would archive a still-working one_shot
+      row exactly like this incident, and the row would be indistinguishable from a genuine `/done` afterward. Could not
+      forensically pin down, from code alone, which of the two daemons' four heuristic branches (reaper's
+      dead-tmux-session / session-reused / stale-no-session, or the pruner's dead-session-in-ACT-phase) fired for
+      `agt-a14109` specifically — that would need the 2026-07-29 DB/log state, which is no longer live. Shipped the
+      stated OR-fix instead (agent-orchestrator@81f54a8): every heuristic-driven archival of a terminal-lifecycle
+      (`one_shot`/`scheduled`) `AgentRow`, across BOTH `reap_orphan_agents`' three branches AND `TmuxPruner`'s
+      dead-session branch, now stamps `exit_reason: "reaped-stale"` instead of `"lifecycle-complete"` — that string is
+      now reserved exclusively for the two genuine `/done`/`one_shot_complete`-triggered archival call sites
+      (`server/routes/slots_worker.py:1193` and `:1640`). Updated the reap docstring + `docs/SLOTS_AGENTS_AND_FLEET.md`
+      to document the distinction, and updated the affected assertions in `tests/test_reap_orphan_agents.py` +
+      `tests/test_tmux_pruner_agent_reap.py` (the genuine-`/done` tests in `tests/test_done_one_off.py` and
+      `tests/test_task_lifecycle_done_gate_resume.py` were left asserting `"lifecycle-complete"`, unchanged — they
+      exercise the real API call, not a heuristic). 114 tests green across the four affected test files. (repo:
+      agent-orchestrator)
 - [ ] [BACKEND] P3. Investigate why `GET /api/agents?include_finished=true` omitted `agt-a14109` (only the direct by-id
       `GET /api/agents/agt-a14109` surfaced it) — confirm whether this is an intentional time-window/status-enum gap or
       a real bug in that endpoint's filter, since the two precedent docs' own diagnostic recipe (`GET /api/agents`)
