@@ -165,24 +165,44 @@ def get_output_bucket(self, asset_group: str) -> str:
       routing gap) is already fixed above, so this exact failure mode cannot recur.
 
       **DONE 2026-07-28 — provenance note recorded here** (mechanism check: the manifest `AvailabilityRecord` schema
-                  (v9, `/codex/02-data/availability-manifest-and-data-status.md`) has no freeform notes/provenance column — every
-                  field is a closed-set enum/dimension, and `source` is a closed-set VENDOR tag validated against
-                  `SOURCE_PRIORITY`, not a human-note field, so stamping it with a synthetic value would misuse the schema.
-                  Inventing a new unregistered GCS companion file next to `_index/per_vm/...parquet` has no prior art and risks
-                  confusing phantom-audit/reconciliation tooling that doesn't expect it, for zero durability gain over a
-                  git-tracked doc. The codebase's actual existing convention for this exact situation — a durable, git-tracked
-                  "Provenance note:" sentence living in the owning plan/issue doc, not in data/schema — is what this paragraph
-                  itself is: **Provenance note: `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/`
-                  (feature_group={fixtures,injuries,sfi_progressive,standings,teams,venues} + per-league fixture_features/
-                  derived_features, 51 fixtures) was first materialized on 2026-07-27T09:03:54Z via smoke-test VM
-                  `features-e2e-sports-20260727-085523-281e78` (`/data-pipeline-check-features --family sports --asset-group SPORTS`
-                  force leg, run under the since-fixed `IS_TEST_RUN` routing bug — features-service@48a255cd), NOT a dedicated
-                  tracked backfill; the per-VM manifest shard `_index/per_vm/features-e2e-sports-20260727-085523-281e78.parquet`
-                  (176 entries) is that run's manifest record. Content independently verified correct against real upstream inputs
-                  per the ruling above — no data change made by this todo, no GCS/parquet bytes touched, no new whole-corpus walk.**
-                  Nothing else to do — this closes the remaining action.
+                          (v9, `/codex/02-data/availability-manifest-and-data-status.md`) has no freeform notes/provenance column — every
+                          field is a closed-set enum/dimension, and `source` is a closed-set VENDOR tag validated against
+                          `SOURCE_PRIORITY`, not a human-note field, so stamping it with a synthetic value would misuse the schema.
+                          Inventing a new unregistered GCS companion file next to `_index/per_vm/...parquet` has no prior art and risks
+                          confusing phantom-audit/reconciliation tooling that doesn't expect it, for zero durability gain over a
+                          git-tracked doc. The codebase's actual existing convention for this exact situation — a durable, git-tracked
+                          "Provenance note:" sentence living in the owning plan/issue doc, not in data/schema — is what this paragraph
+                          itself is: **Provenance note: `gs://features-sports-prd-central-element-323112/sports_features/by_date/day=2026-07-05/`
+                          (feature_group={fixtures,injuries,sfi_progressive,standings,teams,venues} + per-league fixture_features/
+                          derived_features, 51 fixtures) was first materialized on 2026-07-27T09:03:54Z via smoke-test VM
+                          `features-e2e-sports-20260727-085523-281e78` (`/data-pipeline-check-features --family sports --asset-group SPORTS`
+                          force leg, run under the since-fixed `IS_TEST_RUN` routing bug — features-service@48a255cd), NOT a dedicated
+                          tracked backfill; the per-VM manifest shard `_index/per_vm/features-e2e-sports-20260727-085523-281e78.parquet`
+                          (176 entries) is that run's manifest record. Content independently verified correct against real upstream inputs
+                          per the ruling above — no data change made by this todo, no GCS/parquet bytes touched, no new whole-corpus walk.**
+                          Nothing else to do — this closes the remaining action.
 
-- [ ] [SCRIPT] P2. **features-service** — the remaining families the calendar issue's audit-todo named but this finding
-      hasn't reached yet: `volatility`, `onchain`, `cross_instrument`, `multi_timeframe`, `commodity` — check each one's
-      actual bucket-resolution call site (not just whether `is_test_run` is declared, the calendar finding's own
-      methodology gap) for the same unwired pattern.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30, features-service@710c1a72.** Audited each remaining family's ACTUAL
+      bucket-resolution call site (not just whether `is_test_run` is declared — the calendar finding's own methodology
+      gap): - **`volatility`** — CONFIRMED broken: `VolatilityServiceConfig.get_output_bucket()` called
+      `resolve_bucket(kind="features", ...)` directly, no override check. Fixed: routes through
+      `get_data_sink(routing_key=asset_group.lower())` first (mirrors `FeaturesDeltaOneConfig.get_output_bucket`). -
+      **`onchain`** — CONFIRMED broken: `OnchainFeaturesConfig.get_output_bucket()`/`get_io_output_bucket()` both called
+      `resolve_bucket(kind="features", asset_group="defi")` directly. Fixed: `get_output_bucket()` now checks
+      `get_data_sink(routing_key="defi")` first; `get_io_output_bucket()` delegates to it (was a duplicate direct
+      call). - **`cross_instrument`** — CONFIRMED broken at TWO sites:
+      `FeaturesCrossInstrumentConfig.get_output_bucket()` (fixed the same way) AND a separate bypass in
+      `cross_venue_arb_runner.py::write_arb_store` that called `resolve_bucket(kind="features", ...)` directly instead
+      of going through config at all (fixed to call `get_output_bucket(asset_group)`). - **`multi_timeframe`** —
+      AUDITED, NOT broken: `config.get_output_bucket()` itself has no override check, but the only real call site
+      (`engine/orchestrator.py::_resolve_sink_bucket`) already checks `get_data_sink(routing_key=asset_group.lower())`
+      FIRST and only falls back to `config.get_output_bucket()` when no override exists — the real write path was never
+      unwired. No code change needed for this family. - **`commodity`** — CONFIRMED broken: no `get_output_bucket()`
+      existed at all; both write call sites in `cli/handlers/batch_handler.py` (`_write_signal_to_gcs`,
+      `_build_manifest_writer`) called `resolve_bucket_name(cloud="gcp", kind="features-commodity")` directly. Added
+      `CommodityFeaturesConfig.get_output_bucket()` (routing_key="commodity", mirroring calendar's routing_key="global"
+      choice since commodity likewise has no asset_group axis on its flat, non-env-tiered
+      `commodity-signals-batch-{pid}` bucket) and repointed both call sites through it. 10 new regression tests added
+      (`tests/unit/test_config.py`, mirroring the existing calendar/sports override-honoured + SSOT-fallback pattern) +
+      1 existing `cross_venue_arb_runner` test updated to patch the new call site. Full `quality-gates.sh` green (17,998
+      passed, 0 new violations); sentinel verified == HEAD; shipped via quickmerge, landed on `live-defi-rollout`.

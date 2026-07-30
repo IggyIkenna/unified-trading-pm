@@ -100,9 +100,15 @@ parquet/manifest look sane, not just "some VM exited 0") until this is confirmed
       report row. 2 regression tests (`tests/unit/test_pipeline_e2e_check_duplicate_vm_warning.py`) assert the warning
       fires and the leg resolves to `skipped`/`duplicate_in_flight` for both leg runners — confirmed present in the
       current tree. — `features-service@dcf8a3d0`.
-- [ ] [DATA] P3. Once both VMs for this incident complete, spot-check the written TRADFI:volatility parquet/manifest for
-      the 2026-01-29..2026-01-30 window to confirm no partial-write corruption from the concurrent writes (the
-      determinism assumption above is unverified).
+- [x] ✅ [DATA] P3. **DONE 2026-07-30 — moot, nothing to spot-check.** Checked
+      `gs://features-tradfi-test-central-element-323112/` (the `-test-` sink both duplicate VMs wrote to, per the doc's
+      own env-var evidence) via `gcloud storage ls -r` — the bucket is now completely EMPTY (0 objects, confirmed via a
+      direct bucket-root listing, not a narrow prefix miss). The `volatility/by_date/day=2026-01-29`/`day=2026-01-30`
+      objects this incident wrote no longer exist to inspect for corruption — consistent with this workspace's own
+      documented `-test-`-tier behavior (ephemeral smoke-test buckets, no standing consolidator, periodically cleared;
+      see `deployment-service/scripts/vm/launch-features-vm.sh`'s own comment on why `-test-` buckets have no
+      persistence guarantee). No corruption risk remains because there is no data left to be corrupt — closing this todo
+      as verified-moot rather than leaving it open against artifacts that no longer exist.
 
 ## Progress Log
 
