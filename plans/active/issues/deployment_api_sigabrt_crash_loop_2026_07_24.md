@@ -253,7 +253,79 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       installed `pyarrow` package for `signal`/`sigaction`/`InstallFailureSignalHandler`-style calls). (repo:
       deployment-api)
 
+- [ ] [BACKEND] P2. **NEW, opened 2026-07-30T12:09Z (slot 8, review) — both named candidate mechanisms are now
+      REFUTED/weakened by direct evidence; investigate the sandbox-external-termination theory next.** The gen1 pin
+      (`acdd4c8`) did NOT stop the crash loop (2 fresh post-pin SIGABRTs: `00337-lrr@09:05:15Z`, `00338-4qv@11:17:37Z`)
+      and neither produced a faulthandler dump. This session empirically REFUTED the
+      pyarrow/Arrow-C++-signal-handler-override hypothesis with a faithful local repro (not just a grep): armed
+      `faulthandler.enable()` after resetting SIGABRT to `SIG_DFL` (mirroring `post_worker_init`'s exact ordering),
+      forked a child via `ProcessPoolExecutor(mp_context="fork")` (mirroring `build_category_in_subprocess`), imported
+      `pyarrow`+`pandas` for the FIRST TIME in that child (mirroring the lazy-import timing), then `os.abort()`ed — a
+      clean, correct `Fatal Python error: Aborted` dump was produced every time, with the exact fork/child stack trace.
+      The memory-limit-exceeded correlation (this doc's other standing lead) also does NOT hold for either new
+      occurrence — zero `"Memory limit"` log entries anywhere near `09:05:15Z` or `11:17:37Z` on their respective
+      revisions (nearest prior memory-limit event was `05:52:43Z` on a DIFFERENT revision, `00332-8gl`). New,
+      inconclusive-but-worth-tracking observation: `00338-4qv`'s crash landed only ~94s after that INSTANCE's own
+      `STARTUP TCP probe succeeded` log line (`11:16:03Z`→`11:17:37Z`) — a very-fresh-instance crash — but `00337-lrr`'s
+      crash landed ~53min after ITS instance's startup probe succeeded (`08:12:08Z`→`09:05:15Z`), so this doesn't (yet)
+      form a consistent pattern with only 2 data points; track cold-start-offset on future occurrences. **With both
+      named in-process hypotheses now ruled out/weakened, and faulthandler CONFIRMED working correctly in a faithful
+      repro of the exact production code path, the most evidence-consistent remaining explanation (by elimination, not
+      yet directly confirmed) is that these SIGABRTs are NOT genuine in-process signals at all** — i.e. the Cloud
+      Run/gVisor sandbox supervisor is terminating the container from OUTSIDE the process (for a reason not yet
+      identified — a liveness/health probe failure, a resource-limit enforcement path other than the log-visible
+      `"Memory limit exceeded"` threshold message, or a gVisor sentry-level fault) and gVisor's own `deliverSignal()`
+      logs this synthetic termination as `"Uncaught signal: 6"` without a real signal ever reaching the process's armed
+      handler (consistent with slot-9's 2026-07-30T04:15Z reading of gVisor's sentry source: the `UncaughtSignal` log
+      line is ONLY emitted when the tracked disposition is `SIG_DFL` at delivery — which is exactly the puzzle, since
+      the disposition should be armed by this point). **Concrete next steps** (none attempted this session — review
+      role, investigation only): (1) query Cloud Monitoring's raw per-instance CPU/memory time series via the Monitoring
+      API (`run.googleapis.com/container/memory/utilizations` + `.../cpu/utilizations`, per-instance not per-revision
+      aggregate) in a tight ±2min window around `09:05:15Z`/`11:17:37Z` — the log-based `"Memory limit exceeded"`
+      message may only fire on a specific threshold- crossing pattern that these 2 occurrences didn't hit, while the raw
+      time series could still show a spike; (2) check whether Cloud Run's Admin API or audit logs expose a per-instance
+      termination-reason field distinguishing a sandbox-initiated kill from a genuine in-process signal (search for
+      `container.terminationReason`-style fields or an OOM-kill audit event around these timestamps); (3) if evidence
+      supports the sandbox-kill theory, the `--execution-environment gen1` pin itself may need reconsidering (gen1 has a
+      DIFFERENT gVisor sandboxing profile than gen2 — this doc's earlier `cloudbuild.yaml` comment cited a
+      gen1-fixes-native-crashes precedent from `${_ROLLUP_JOB}`, but that precedent was never itself confirmed to be
+      sandbox-kill-related — worth re-examining whether gen1 helps, hurts, or is orthogonal to THIS specific failure
+      mode). (repo: deployment-api)
+
 ## Progress Log
+
+- **2026-07-30T12:09Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
+  todo, 11th+ dispatch). This time BOTH preconditions are met: (1) confirmed via DIRECT annotation inspection
+  (`gcloud run revisions describe ... --format=json`, not source-diff) that the gen1 pin IS live —
+  `run.googleapis.com/execution-environment=gen1` present on the current serving revision
+  `uts-shared-deployment-api-00339-dw7` (100% traffic, created `11:39:33Z`); traced back through the revision history to
+  find the pin first appeared on `00333-p62` (created `2026-07-30T06:26:01Z` — `00332-8gl` immediately prior has no
+  execution-environment annotation at all). So the gen1-pinned observation window is `06:26:01Z`→now, ~5h43m across 7
+  revisions (`00333`-`00339`). (2) `gcloud logging read` for `"Uncaught signal"` over that window found **2 fresh
+  occurrences**: `00337-lrr@2026-07-30T09:05:15Z` (pid=29) and `00338-4qv@2026-07-30T11:17:37Z` (pid=29) — **the gen1
+  pin did NOT fix it**, per this todo's own explicit decision branch. Checked stderr ±5min around both: zero
+  faulthandler dumps, same as every prior occurrence (12 total now cataloged across this doc's history). Per the todo's
+  own instruction ("do not re-guess — check whether [pyarrow hypothesis]"), investigated the named leading candidate
+  with a FAITHFUL LOCAL REPRO rather than more log archaeology: armed `faulthandler.enable()` after resetting SIGABRT to
+  `SIG_DFL` (exact `post_worker_init` ordering), forked a child via `ProcessPoolExecutor(mp_context="fork")` (mirroring
+  `build_category_in_subprocess`), imported `pyarrow`+`pandas` for the FIRST TIME in that child (mirroring the
+  lazy-import timing this hypothesis depends on), then `os.abort()`ed — produced a clean, correct dump every time, with
+  the fork/child stack trace intact. **This REFUTES the pyarrow/ Arrow-C++-signal-handler hypothesis** — the exact
+  production code path, faithfully reproduced on the same Python/ library versions, does not exhibit the failure. Also
+  re-checked the OTHER standing lead (memory-limit correlation): zero `"Memory limit"` log entries near either new
+  timestamp (nearest prior event was `05:52:43Z` on an unrelated revision) — that correlation doesn't hold for these 2
+  occurrences either. New but inconclusive lead: `00338-4qv`'s crash landed only ~94s after ITS instance's own
+  `STARTUP TCP probe succeeded` log line — a very-fresh-instance crash — while `00337-lrr`'s crash landed ~53min
+  post-startup-probe on its instance; not a consistent pattern with n=2, flagged for future tracking rather than
+  asserted. Filed a fresh `[BACKEND] P2` todo above with the full evidence chain and concrete next steps (Cloud
+  Monitoring raw per-instance metrics API, termination-reason audit fields) pointing toward the
+  sandbox-external-termination theory as the most evidence-consistent remaining explanation by elimination — not yet
+  directly confirmed. **Not flipping this `[REVIEW]` checkbox**: its original ask ("read the dump, report the stuck call
+  site") remains unanswerable — there is still no dump to read, and this session's new evidence argues that no dump ever
+  WILL appear via the current diagnostic approach, because the failure mode may not be a genuine in-process signal at
+  all. No code shipped (pure investigation + a local repro script, not committed — `/tmp/repro_fork_pyarrow_sigabrt.py`,
+  scratch only). Releasing this task via `/skip-current-task` since the actionable next step (Cloud Monitoring metrics
+  investigation) is BACKEND-scoped, not a REVIEW re-check — the fresh todo above is where that continues.
 
 - **2026-07-30T04:56Z (slot 16, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
   todo, 10th+ dispatch). Fresh-pulled all slot repos, then re-checked both precondition branches from scratch: (1)
