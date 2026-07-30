@@ -59,12 +59,22 @@ service's own code. That's worth fixing on its own, independent of building the 
       querying that persisted state; multi-service health aggregation via the real
       `core.system_health_aggregator.get_system_health()`. Only the true external boundary (Slack/health-check HTTP
       calls) stubbed via respx.
-- [ ] [CODE] P1. **deployment-service real E2E harness.** `deployment-service/tests/e2e/test_deployment_e2e.py` (129
-      lines, `@pytest.mark.e2e`) is import/config-existence smoke tests only (e.g. `test_catalog_module_import`) — not a
-      real deploy/launch flow. Build a real E2E test covering: (1) `DataCatalog` aggregation against a real
-      asset_group/venue producing the correct shard set; (2) dependency-graph _execution_, not just load; (3) VM
-      launch-config resolution (`VM_PREFIX_TO_BUCKET`/`lifecycle_class`) without actually launching a VM; (4) a CLI
-      invocation against a mocked backend asserting real side-effects into `services`.
+- [x] ✅ [CODE] P1. **deployment-service real E2E harness.** — deployment-service@0baf65c. Replaced
+      `deployment-service/tests/e2e/test_deployment_e2e.py`'s import/config-existence smoke tests with 4 test classes
+      exercising real production code against real configs (venues.yaml, dependencies.yaml,
+      sharding.instruments-service.yaml, configs/clusters/cefi.yaml, `VM_PREFIX_TO_BUCKET`) with only the GCS boundary /
+      process-launch backend faked: (1) `DataCatalog.catalog_service()` against real CEFI venues -> asserts the produced
+      shard set matches venues.yaml 1:1; (2) `DependencyGraph.check_dependencies()` executed (not just loaded) against
+      the real market-tick-data-service<-instruments-service edge, pass + fail cases via `MockCloudClient`; (3)
+      `classify_deployment_target`/`umbrella_for_vm_name` resolution against real `VM_PREFIX_TO_BUCKET` prefixes (no VM
+      launched, no silent-default on an unregistered prefix); (4) a `CliRunner` invocation of
+      `cluster bootstrap --cluster cefi` with only `_start_local_service` mocked, asserting real
+      `ClusterStatus.services` side-effects in real dependency order. Writing (4) surfaced every `log_event()` call in
+      `cluster.py` used a retired kwargs-passthrough signature — every real bootstrap/teardown/batch/schedule/service
+      call currently raised `TypeError` in production; migrated all 13 call sites to the current `details={...}`
+      signature in the same commit. Also added `MockCloudClient.file_exists()` (only `list_files` was overridden),
+      needed for a passing single-file dependency check without real GCS. Full repo QG green
+      (`.qg_last_passed_sha=5ec3eb9`, verified via quickmerge --agent sentinel).
 - [ ] [CODE] P2. **trading-agent-service E2E harness (new — none exists today).** No `tests/e2e/` directory;
       `tests/integration/` only covers generic UAC/UIC dependency-contract checks, never the trading loop itself. Build:
       (1) a mock-driven loop test — `engine/orchestrator.py` + `mock_data_provider.py` → a strategy decision → a ledger
