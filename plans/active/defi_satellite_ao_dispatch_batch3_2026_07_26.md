@@ -108,103 +108,177 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **BLOCKED 2026-07-26 (slot-8) — real bug found + fixed (unblocked the preflight check), but the actual
-                                                                                                                                                                                                      compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
+                                                                                                                                                                                                          compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
 
-                                                                                                                                                                                                      **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
-                                                                                                                                                                                                      app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
-                                                                                                                                                                                                      `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
-                                                                                                                                                                                                      `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
-                                                                                                                                                                                                      paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
-                                                                                                                                                                                                      exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
-                                                                                                                                                                                                      date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
-                                                                                                                                                                                                      `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
-                                                                                                                                                                                                      correctly logged `Upstream dependencies: []`.
+                                                                                                                                                                                                          **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
+                                                                                                                                                                                                          app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
+                                                                                                                                                                                                          `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
+                                                                                                                                                                                                          `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
+                                                                                                                                                                                                          paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
+                                                                                                                                                                                                          exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
+                                                                                                                                                                                                          date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
+                                                                                                                                                                                                          `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
+                                                                                                                                                                                                          correctly logged `Upstream dependencies: []`.
 
-                                                                                                                                                                                                      **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
-                                                                                                                                                                                                      feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
-                                                                                                                                                                                                      `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
-                                                                                                                                                                                                      fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
-                                                                                                                                                                                                      VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
-                                                                                                                                                                                                      currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
-                                                                                                                                                                                                      `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
-                                                                                                                                                                                                      proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
-                                                                                                                                                                                                      permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
-                                                                                                                                                                                                      or a local repro with a memory profiler, which is out of scope for a plain backfill session.
+                                                                                                                                                                                                          **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
+                                                                                                                                                                                                          feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
+                                                                                                                                                                                                          `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
+                                                                                                                                                                                                          fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
+                                                                                                                                                                                                          VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
+                                                                                                                                                                                                          currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
+                                                                                                                                                                                                          `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
+                                                                                                                                                                                                          proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
+                                                                                                                                                                                                          permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
+                                                                                                                                                                                                          or a local repro with a memory profiler, which is out of scope for a plain backfill session.
 
-                                                                                                                                                                                                      **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
-                                                                                                                                                                                                      SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
-                                                                                                                                                                                                      sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
-                                                                                                                                                                                                      (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
-                                                                                                                                                                                                      <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
-                                                                                                                                                                                                      issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
-                                                                                                                                                                                                      `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
-                                                                                                                                                                                                      `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
-                                                                                                                                                                                                      minimal regardless of whether the OOM issue turns out to be group-count-related.
+                                                                                                                                                                                                          **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
+                                                                                                                                                                                                          SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
+                                                                                                                                                                                                          sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
+                                                                                                                                                                                                          (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
+                                                                                                                                                                                                          <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
+                                                                                                                                                                                                          issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
+                                                                                                                                                                                                          `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
+                                                                                                                                                                                                          `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
+                                                                                                                                                                                                          minimal regardless of whether the OOM issue turns out to be group-count-related.
 
-                      **UNBLOCKED 2026-07-30 (slot-14)**: the OOM/hang issue is resolved — see
-                      `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md` (now `status: resolved`).
-                      Relaunched the exact repro (`features-onchain-defi-20260730-202653`, on-VM ps/free/dmesg monitor, all code
-                      tarballs freshly republished) with `unified-trading-library@06190d77` live: clean `exit_code=0` in ~2 min, flat
-                      ~603 MB RSS, zero dmesg oom/killed hits across the whole run — the bug does not reproduce. `[BLOCKED-INFRA]` tag
-                      removed; this todo's actual full-window compute (the D1 done-when above) has NOT been executed yet — that
-                      remains open, separate follow-on work, not done by this note.
+                          **UNBLOCKED 2026-07-30 (slot-14)**: the OOM/hang issue is resolved — see
+                          `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md` (now `status: resolved`).
+                          Relaunched the exact repro (`features-onchain-defi-20260730-202653`, on-VM ps/free/dmesg monitor, all code
+                          tarballs freshly republished) with `unified-trading-library@06190d77` live: clean `exit_code=0` in ~2 min, flat
+                          ~603 MB RSS, zero dmesg oom/killed hits across the whole run — the bug does not reproduce. `[BLOCKED-INFRA]` tag
+                          removed; this todo's actual full-window compute (the D1 done-when above) has NOT been executed yet — that
+                          remains open, separate follow-on work, not done by this note.
 
-                      **2026-07-30 (slot-3) — real full-window compute attempted; both legs hit NEW, real, previously-undiscovered
-                      bugs (distinct from the resolved OOM issue) — NOT flipping this checkbox, 2 follow-on issue docs filed:**
+                          **2026-07-30 (slot-3) — real full-window compute attempted; both legs hit NEW, real, previously-undiscovered
+                          bugs (distinct from the resolved OOM issue) — NOT flipping this checkbox, 2 follow-on issue docs filed:**
 
-                      **Onchain leg (`perp_funding_rates` → `funding_rate_apy_bps`)**: launched
-                      `features-onchain-defi-20260730-210912` (`2023-06-01..2023-06-07`, a clean dependency window verified via the
-                      live MTDS manifest — zero `attempted_failed` across all 5 `UPSTREAM_DEPS_DEFI` data_types). Found + FIXED a
-                      real bug: `features_service/onchain/calculators/perp_funding_rates_defi.py`'s hardcoded `_DEFI_SYMBOL =
-                      "ETH-PERP"` never matched ANY live row — the MTDS canonical `perp_funding` schema stores the bare ticker
-                      (`symbol="ETH"`, confirmed by downloading a live parquet), not an `"ETH-PERP"` suffix; the calculator always
-                      silently returned honest-absence (`empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)`), on every date,
-                      since some prior canonical-format migration changed the symbol shape and this constant was never updated.
-                      Fixed: `_DEFI_SYMBOL = "ETH"` + switched the substring `.str.contains()` match to an exact/suffix match (avoids
-                      a future false-positive collision, e.g. a hypothetical "STETH" row matching an "ETH" filter) —
-                      `features-service@faedd957`, 2 new regression tests added (13 total, all green).
-                      **Separately** (not fixed by me — filed as its own issue): the onchain batch_handler's
-                      `_emit_batch_completion` requires ALL 13 feature-groups in a run to succeed (`success_count == len(groups)`)
-                      for exit 0 — 4 unrelated groups (`rewards`/`flash_loan_availability`/`health_factor`/`liquidation_events`)
-                      wrote `attempted_failed(calculator_produced_base_columns_only)` on this window (their own calculators appear
-                      to have a different, unexamined gap), so the VM run still exited 1 overall even after my fix, despite
-                      `lending_rates` (~146k rows) and `lst_yields` (67 rows) writing real data successfully. See
-                      `/plans/active/issues/onchain_batch_all_groups_must_succeed_masks_partial_success_2026_07_30.md`.
-                      `features-onchain-defi` row count is trivially already `≫ 3` (pre-existing `lending_rates` alone is 14.6M rows
-                      per the live manifest) — that leg of the done-when was stale before this session even started.
+                          **Onchain leg (`perp_funding_rates` → `funding_rate_apy_bps`)**: launched
+                          `features-onchain-defi-20260730-210912` (`2023-06-01..2023-06-07`, a clean dependency window verified via the
+                          live MTDS manifest — zero `attempted_failed` across all 5 `UPSTREAM_DEPS_DEFI` data_types). Found + FIXED a
+                          real bug: `features_service/onchain/calculators/perp_funding_rates_defi.py`'s hardcoded `_DEFI_SYMBOL =
+                          "ETH-PERP"` never matched ANY live row — the MTDS canonical `perp_funding` schema stores the bare ticker
+                          (`symbol="ETH"`, confirmed by downloading a live parquet), not an `"ETH-PERP"` suffix; the calculator always
+                          silently returned honest-absence (`empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)`), on every date,
+                          since some prior canonical-format migration changed the symbol shape and this constant was never updated.
+                          Fixed: `_DEFI_SYMBOL = "ETH"` + switched the substring `.str.contains()` match to an exact/suffix match (avoids
+                          a future false-positive collision, e.g. a hypothetical "STETH" row matching an "ETH" filter) —
+                          `features-service@faedd957`, 2 new regression tests added (13 total, all green).
+                          **Separately** (not fixed by me — filed as its own issue): the onchain batch_handler's
+                          `_emit_batch_completion` requires ALL 13 feature-groups in a run to succeed (`success_count == len(groups)`)
+                          for exit 0 — 4 unrelated groups (`rewards`/`flash_loan_availability`/`health_factor`/`liquidation_events`)
+                          wrote `attempted_failed(calculator_produced_base_columns_only)` on this window (their own calculators appear
+                          to have a different, unexamined gap), so the VM run still exited 1 overall even after my fix, despite
+                          `lending_rates` (~146k rows) and `lst_yields` (67 rows) writing real data successfully. See
+                          `/plans/active/issues/onchain_batch_all_groups_must_succeed_masks_partial_success_2026_07_30.md`.
+                          `features-onchain-defi` row count is trivially already `≫ 3` (pre-existing `lending_rates` alone is 14.6M rows
+                          per the live manifest) — that leg of the done-when was stale before this session even started.
 
-                      **Delta_one leg (`funding_oi`+`returns`)**: NOT date-fixable — root-caused to a structural instrument-universe
-                      mismatch bug in `LookbackValidator._discover_instruments()` (shared CEFI/TRADFI/DEFI/PREDICTION code): for
-                      DEFI it always discovers instruments from the DEX-pool-swap candle universe regardless of which data_type the
-                      requested feature_group actually needs, so `funding_oi`/`returns` (both map to pass-through, never-candle-
-                      processed data_types for DEFI) always validate the WRONG instrument set and read 0 candles on every date.
-                      Verified across 2 separate windows/timeframes (both failed identically). Filed
-                      `/plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md`
-                      with the full repro + code trace + a recommended fix (source instrument discovery from the MTDS manifest for
-                      pass-through data types, not `processed_candles`) — this needs a cross-asset-group design decision, so I did
-                      NOT patch the shared `LookbackValidator` in this session (craft-scope discipline: don't absorb an
-                      open-ended design call mid-backfill). `features-delta-one-defi` still has **no index** — that leg of the
-                      done-when remains unmet until the LookbackValidator fix lands.
+                          **Delta_one leg (`funding_oi`+`returns`)**: NOT date-fixable — root-caused to a structural instrument-universe
+                          mismatch bug in `LookbackValidator._discover_instruments()` (shared CEFI/TRADFI/DEFI/PREDICTION code): for
+                          DEFI it always discovers instruments from the DEX-pool-swap candle universe regardless of which data_type the
+                          requested feature_group actually needs, so `funding_oi`/`returns` (both map to pass-through, never-candle-
+                          processed data_types for DEFI) always validate the WRONG instrument set and read 0 candles on every date.
+                          Verified across 2 separate windows/timeframes (both failed identically). Filed
+                          `/plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md`
+                          with the full repro + code trace + a recommended fix (source instrument discovery from the MTDS manifest for
+                          pass-through data types, not `processed_candles`) — this needs a cross-asset-group design decision, so I did
+                          NOT patch the shared `LookbackValidator` in this session (craft-scope discipline: don't absorb an
+                          open-ended design call mid-backfill). `features-delta-one-defi` still has **no index** — that leg of the
+                          done-when remains unmet until the LookbackValidator fix lands.
 
-                      **2026-07-30 (slot-4, DP-VM-001 relaunch escalation) — STOP: do NOT relaunch `funding_oi`/`returns`
-                      for DEFI delta_one, a NEW deterministic bug blocks the candle-load step even with the fix above
-                      live:** dispatched to relaunch `features-delta-one-defi-20260730-222034` (exit_code=1). Its
-                      instrument discovery now works correctly (412/25 real perp_funding/oracle_prices instruments, not the
-                      old DEX-pool universe) — `8e62dc30` is confirmed good. But the compute step's candle-loading path
-                      (`_tf_cluster_helper.py`'s `_load_base_candles`/`_load_range_candles_with_buffer`, calling
-                      `DataLoader.load_candles_with_buffer`) has no pass-through branch: for `perp_funding`/`oracle_prices`
-                      (`NEEDS_CANDLE_PROCESSING=False`), MDPS never writes `processed_candles`, so every instrument reads 0
-                      candles, 100% deterministically, on every date range. Confirmed identically across **10** VM launches
-                      today (6 with `exit_code=1` confirmed, more mid-flight showing the same live pattern as this note was
-                      written) — a 7-day window, and 2 separate multi-year full-history windows, both `funding_oi` and
-                      `returns`, all fail the same way. **Did NOT relaunch again** (deterministic failure + the runbook's
-                      own `≤2/(vm-prefix,day)` relaunch bound already far exceeded at 10). Filed
-                      `/plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md` with the full
-                      repro, code trace, and recommended fix (a pass-through raw-MTDS-read branch keyed on
-                      `needs_candle_processing()`, mirroring the manifest-based instrument-discovery fix). **This todo's
-                      delta_one leg cannot proceed further until that fix lands — any future dispatch of this todo should
-                      skip re-attempting funding_oi/returns for DEFI and consider parking it (see that issue doc's
-                      [OPERATOR] todo) instead of relaunching a VM.**
+                          **2026-07-30 (slot-4, DP-VM-001 relaunch escalation) — STOP: do NOT relaunch `funding_oi`/`returns`
+                          for DEFI delta_one, a NEW deterministic bug blocks the candle-load step even with the fix above
+                          live:** dispatched to relaunch `features-delta-one-defi-20260730-222034` (exit_code=1). Its
+                          instrument discovery now works correctly (412/25 real perp_funding/oracle_prices instruments, not the
+                          old DEX-pool universe) — `8e62dc30` is confirmed good. But the compute step's candle-loading path
+                          (`_tf_cluster_helper.py`'s `_load_base_candles`/`_load_range_candles_with_buffer`, calling
+                          `DataLoader.load_candles_with_buffer`) has no pass-through branch: for `perp_funding`/`oracle_prices`
+                          (`NEEDS_CANDLE_PROCESSING=False`), MDPS never writes `processed_candles`, so every instrument reads 0
+                          candles, 100% deterministically, on every date range. Confirmed identically across **10** VM launches
+                          today (6 with `exit_code=1` confirmed, more mid-flight showing the same live pattern as this note was
+                          written) — a 7-day window, and 2 separate multi-year full-history windows, both `funding_oi` and
+                          `returns`, all fail the same way. **Did NOT relaunch again** (deterministic failure + the runbook's
+                          own `≤2/(vm-prefix,day)` relaunch bound already far exceeded at 10). Filed
+                          `/plans/active/issues/delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md` with the full
+                          repro, code trace, and recommended fix (a pass-through raw-MTDS-read branch keyed on
+                          `needs_candle_processing()`, mirroring the manifest-based instrument-discovery fix). **This todo's
+                          delta_one leg cannot proceed further until that fix lands — any future dispatch of this todo should
+                          skip re-attempting funding_oi/returns for DEFI and consider parking it (see that issue doc's
+                          [OPERATOR] todo) instead of relaunching a VM.**
+
+                          **2026-07-30 (slot-14) — onchain leg's ACTUAL blocker found + fixed + confirmed working
+                          live; delta_one leg: 2 more relaunches burned before reading slot-4's STOP note above
+                          (my mistake — read the plan file ONCE at task start, slot-4's note landed mid-session
+                          and I never re-fetched it before relaunching). Net: onchain leg materially advanced;
+                          delta_one leg NOT further advanced beyond slot-4's already-standing blocker, 2 more
+                          wasted VM launches, one useful adjacent efficiency fix shipped anyway:**
+
+                          **Onchain leg — real, previously-undiscovered blocker found + fixed + LIVE-CONFIRMED
+                          WORKING:** independent of the delta_one investigation above, `perp_funding_rates`
+                          (→ `funding_rate_apy_bps`) had ANOTHER bug the earlier symbol fix (faedd957) didn't
+                          touch: a hardcoded 2026-05-30 "BATCH SKIP" in
+                          `OnChainOrchestrationService._process_perp_funding_rates` unconditionally treated
+                          EVERY historical (`start_date < today`) DEFI batch date as
+                          `empty_confirmed(EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE)` WITHOUT EVER attempting a
+                          real read — premised on "DeFi prd MDPS has no perp_funding shards for the 2026-01-25
+                          backfill window", which is now FALSE (live MTDS manifest: 12,500 real `captured`
+                          HYPERLIQUID perp_funding rows, 2023-05-12..2026-06-09, zero `attempted_failed`). This
+                          is why every prior attempt this session (including my own initial one) saw
+                          `empty_confirmed` for perp_funding_rates regardless of date or the symbol fix.
+                          Removed the stale skip, added regression tests (both a NEW integration test and a
+                          corrected pre-existing unit test that had asserted the OLD stale behavior) —
+                          `features-service@1309480a`, `quality-gates.sh` green (17996 tests). **Live-confirmed
+                          working**: relaunched `features-onchain-defi-20260730-225646` (`--feature-group
+                          perp_funding_rates`, full window `2023-05-12..2026-06-09`, `SKIP_DEPENDENCY_CHECK=1`
+                          after hitting an unrelated transient manifest-consolidator-staleness condition caused
+                          by my own concurrent VM launches — verified safe via the same independent manifest
+                          read cited above) — now writing real `funding_rate_apy_bps` rows per day
+                          (`hyperliquid/ETH/<date> → funding_rate=... apy_bps=...`, confirmed via live GCS
+                          `Wrote 1 rows to .../feature_group=perp_funding_rates/...` log lines), progressed to
+                          `2025-03-26` of `2026-06-09` (~61%) as this note was written, still `RUNNING`, no
+                          errors. `features-onchain-defi` row count criterion was already trivially met
+                          (pre-existing `lending_rates`); this fix means the SPECIFIC group the todo names
+                          (`funding_rate_apy_bps`) is now also genuinely populating, not just honestly-absent.
+                          **Not yet fully complete** — VM was still in-flight when this note was written; a
+                          future dispatch should verify it reached `DEPLOYMENT_COMPLETED exit_code=0` (VM
+                          self-deletes on completion, so its absence from `gcloud compute instances list` +
+                          `DEPLOYMENT_COMPLETED` in its archived `gs://deployment-scripts-.../deployments/archive/
+                          2026-07-30/` json is the completion signal) before treating the onchain leg's
+                          full-window compute as done.
+
+                          **Delta_one leg — shipped one real adjacent efficiency fix, but did NOT clear slot-4's
+                          blocker (mistakenly relaunched before reading the STOP note above):** shipped
+                          `features-service@f932908b` — `DataLoader.candle_data_types` was unioning over ALL
+                          `DEFAULT_FEATURE_GROUPS` for the asset_group regardless of the CLI's actual
+                          `--feature-group`, so a single-group launch (e.g. `funding_oi`) still walked the
+                          manifest for every OTHER group's data_type too (thousands of irrelevant `dex_pool_swaps`
+                          DEX-pool instrument checks). Scoped it to the requested group(s); regression tests
+                          added; `quality-gates.sh` green. This IS a real, live-confirmed fix (a relaunched
+                          `returns` VM correctly discovered real oracle-price instruments like
+                          `CHAINLINK:spot_asset:DAI_USD` afterward, not DEX pools) — but it does NOT unblock the
+                          leg: BOTH the `funding_oi` relaunch (`features-delta-one-defi-20260730-231206`) and the
+                          `returns` relaunch (`features-delta-one-defi-20260730-231230`) still hit the EXACT
+                          deterministic candle-loader gap slot-4 already found and filed
+                          (`delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`) — `funding_oi`
+                          failed cleanly (`No delta-one instruments available after filtering`, exit 1, see the
+                          NEW narrower finding `delta_one_get_captured_instruments_blank_id_perp_funding_2026_07_30.md`,
+                          downgraded to P2 after cross-checking slot-4's evidence contradicts a blanket claim);
+                          `returns` produced 23,260+ `No upstream MDPS data for <real-instrument> ... skipping
+                          date` warnings identical to slot-4's documented shape — killed it (SPOT, zero real
+                          output, confirmed no `delta_one/` prefix ever appeared in the bucket) rather than let
+                          it keep burning compute toward the same guaranteed outcome. **Reaffirming slot-4's
+                          standing guidance: do NOT relaunch funding_oi/returns for DEFI delta_one again until
+                          `delta_one_candle_loader_no_pass_through_path_defi_2026_07_30.md`'s todo 1 (pass-through
+                          candle-read branch) lands — my session is the 3rd consecutive one to independently
+                          confirm this exact deterministic failure. Its [OPERATOR] P1 todo (park this D1 todo via
+                          `priority: 999` + a false prerequisite) remains unactioned and still recommended.**
+
+                          **Lesson for future dispatches of this todo**: this plan file is being actively
+                          edited by concurrent slots mid-session (3 different slots touched D1 today alone) — a
+                          worker that reads it once at task start and doesn't re-fetch before a risky action
+                          (launching a VM, relaunching after a failure) can duplicate already-exhausted work or
+                          contradict an already-standing STOP. Re-read this todo's own text immediately before
+                          any VM launch, not just at task start.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5

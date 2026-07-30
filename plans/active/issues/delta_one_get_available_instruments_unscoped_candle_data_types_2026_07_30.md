@@ -1,0 +1,140 @@
+---
+doc_type: issue
+title: >-
+  delta_one DataLoader.get_available_instruments() unions candle_data_types across ALL DEFAULT_FEATURE_GROUPS instead of
+  scoping to the caller's requested --feature-group, so a single-group launch (e.g. funding_oi) churns through thousands
+  of irrelevant DEX-pool instruments before reaching the real target
+summary: >-
+  Working the D1 DeFi features backfill todo's delta_one leg (`defi_satellite_ao_dispatch_batch3_2026_07_26.md`),
+  launching `--feature-group funding_oi` (data_type=perp_funding, 1 real HYPERLIQUID instrument) or `--feature-group
+  returns` (data_type=oracle_prices, ~7 real venues) produces a flood of `No upstream MDPS data for UNISWAP_V3:pool:...
+  (data_type=perp_funding) — skipping date` / `...(data_type=oracle_prices)...` warnings for THOUSANDS of DEX-pool
+  instruments that have nothing to do with either data_type. Root cause: `DataLoader.__init__`
+  (`features_service/delta_one/app/core/data_loader.py:223-225`) computes `self.candle_data_types` as the UNION of
+  `resolve_data_type_for_feature_group(fg, asset_group)` over `DEFAULT_FEATURE_GROUPS` (ALL delta_one feature groups for
+  the asset_group), not scoped to the specific `--feature-group` the CLI invocation requested.
+  `get_available_instruments()` then iterates `for data_type in self.candle_data_types:
+  get_captured_instruments(data_type=data_type, ...)` and unions the result — so a `funding_oi`-only launch still walks
+  the manifest for `dex_pool_swaps` (thousands of pool instruments, from unrelated groups like `volume_analysis`/`vwap`)
+  as well as `perp_funding` (the 1 real instrument `funding_oi` actually needs. This is an EFFICIENCY defect, not (as
+  far as observed) a correctness one — the real target instrument(s) should still be in the unioned list and eventually
+  get processed — but every irrelevant pool instrument costs a real per-instrument lookback/upstream check that can
+  never produce data, at DEFI's instrument-count scale (a `dex_pool_swaps` corpus with reportedly 4000+ instruments per
+  the onchain IS catalogue count observed the same session: "IS DEFI catalogue: 4367 instruments").
+status: open
+nature: issue
+asset_group: [defi]
+stage: [data]
+repos: [features-service]
+scope: [engineer]
+tags: [defi, features-service, delta-one, data-loader, efficiency, instrument-discovery]
+related:
+  - /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md
+  - /plans/active/issues/delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md
+created: "2026-07-30"
+author: slot-14
+source: [defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
+parent_epic: defi_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P2
+estimate_class: research
+estimate_baseline_ai_days: 0.6
+estimate_calibrated_ai_days: 0.6
+assigned_role: backend_engineer
+drift_direction: advance-code
+depends_on: []
+locked_by:
+resolved_by:
+---
+
+# What I found
+
+Executing D1's delta_one leg after the SAME-DAY `LookbackValidator._discover_instruments()` fix
+(`features-service@8e62dc30`, the companion issue
+`delta_one_lookback_instrument_discovery_wrong_universe_for_passthrough_defi_2026_07_30.md`) landed, I launched two SPOT
+VMs:
+
+- `features-delta-one-defi-20260730-223654` (`--feature-group funding_oi`, `2023-05-12..2026-06-09`, `TIMEFRAME=15m`)
+- `features-delta-one-defi-20260730-224916` (`--feature-group returns`, `2023-01-01..2026-07-22`, `TIMEFRAME=15m`)
+
+Both correctly passed the lookback-validation preflight fixed earlier today ("Lookback validation PASSED: 1/1
+instruments OK" for the funding_oi launch — that fix works). But the ACTUAL per-instrument compute phase then produced a
+continuous stream of warnings for **DEX-pool instruments**, not the pass-through instrument(s) the requested
+feature_group actually needs:
+
+```
+No upstream MDPS data for UNISWAP_V3:pool:WETH-USDC-30 on 2024-08-26 (data_type=perp_funding) — skipping date
+No upstream MDPS data for UNISWAP_V3-OPTIMISM:POOL:0x782dcc2cd3a65405baeb794269703e9c29a175cc on 2026-02-25 (data_type=oracle_prices) — skipping date
+```
+
+Both messages tag `data_type=perp_funding` / `data_type=oracle_prices` (the CORRECT resolved data_type for the requested
+feature_group) against a DEX-POOL instrument id — the wrong instrument, checked against the right data_type. This traces
+to `DataLoader.__init__` unioning `candle_data_types` over **every** `DEFAULT_FEATURE_GROUPS` entry, not the single
+`--feature-group` the CLI call scoped to:
+
+```python
+# features_service/delta_one/app/core/data_loader.py:223-225
+self.candle_data_types: tuple[str, ...] = tuple(
+    sorted({resolve_data_type_for_feature_group(fg, self.asset_group) for fg in DEFAULT_FEATURE_GROUPS})
+)
+```
+
+`get_available_instruments()` (line 241) then iterates `self.candle_data_types` and unions
+`get_captured_instruments(data_type=data_type, ...)` per type — so a `--feature-group funding_oi` launch's instrument
+list is the union across ALL DEFI delta_one groups' data types (`dex_pool_swaps` from `volume_analysis`/`vwap`/ etc,
+PLUS `perp_funding`), not just `perp_funding` alone. `dex_pool_swaps` has thousands of DEX-pool instruments (same order
+of magnitude as the same-session onchain finding "IS DEFI catalogue: 4367 instruments" for one date) — every one of them
+gets a real per-instrument lookback/upstream check that can only ever resolve honest-absence for
+`perp_funding`/`oracle_prices`.
+
+# Why this matters
+
+Not (as far as observed in this session) a correctness bug — the real target instrument(s) (e.g. the single HYPERLIQUID
+`perp_funding` bundle) should still be present in the unioned list and eventually get processed, so the backfill should
+still converge to correct data. But it is a real EFFICIENCY defect matching this craft's own north-star ("SINGLE-WALK...
+any avoidable re-scan is a defect, not a detail"): a single-feature-group launch does thousands of pointless
+per-instrument checks that can never produce data, multiplying wall-clock time and GCS read cost for every DEFI
+delta_one backfill that scopes to one group via `--feature-group` (the launcher's own advice, per the SIBLING onchain
+exit-code issue doc, is to always scope narrow launches this way) — the scoping optimization is defeated by this
+unscoped instrument discovery.
+
+# What I did NOT do
+
+Did not modify `DataLoader.__init__`/`get_available_instruments()` — threading the CLI's requested `--feature-group` (or
+its resolved `candle_data_types` subset) down into `DataLoader.__init__` (currently constructed generically per
+`asset_group` only, before the CLI's per-invocation `feature_group` arg is known) is a real, scoped code change but
+touches shared initialization used by every delta_one caller (CEFI/TRADFI/PREDICTION too, not just this DEFI backfill) —
+a same-session patch mid-backfill risks an unreviewed blast-radius change, per this craft's "do not absorb unplanned
+scope" discipline. Did not kill the in-flight VMs — they are idempotent SPOT backfills; leaving them running should
+still converge to correct (if slow) results, and killing a live backfill VM destroys real in-progress work per the
+craft's own VM-delete guardrail.
+
+# Recommended decision
+
+Thread the actually-requested `feature_group` (or `--feature-group ALL`'s full group list) from the CLI/batch_handler
+into `DataLoader.__init__`, and scope `self.candle_data_types` to `resolve_data_type_for_feature_group(fg, asset_group)`
+for JUST the requested group(s) instead of the full `DEFAULT_FEATURE_GROUPS` union. Verify this doesn't regress the
+`--feature-group ALL` case (should still produce the same full union it does today). Add a regression test proving a
+single-group DEFI launch's `get_available_instruments()` excludes `dex_pool_swaps`-only instruments when the requested
+group doesn't consume that data_type.
+
+## Todos
+
+- [ ] [BACKEND] P2. Scope `DataLoader.candle_data_types` to the CLI's actual requested `--feature-group` (or the full
+      set for `ALL`) instead of always unioning over `DEFAULT_FEATURE_GROUPS`, threading the value through from
+      `batch_handler.py`'s CLI args into `DataLoader.__init__`. Repo: features-service. Done when: a DEFI
+      `--feature-group funding_oi` launch's `get_available_instruments()` no longer includes `dex_pool_swaps`-only
+      instruments, verified by a new unit test; `--feature-group ALL` still produces the same union as today (no
+      regression); `bash     scripts/quality-gates.sh` green.
+- [ ] [DATA] P3. Once the above lands, re-verify the D1 delta_one leg's real throughput improves materially (fewer log
+      lines / shorter wall-clock for the same date range) on a fresh relaunch. Repo: features-service /
+      deployment-service (VM launch only, no code change).
+
+# Progress Log
+
+- 2026-07-30 (slot-14): filed while executing D1's delta_one leg, immediately after landing the companion
+  `LookbackValidator` manifest-discovery fix (features-service@8e62dc30) — that fix's preflight check passes correctly,
+  this is a SEPARATE, downstream instrument-resolution path. VMs `features-delta-one-defi-20260730-223654` (funding_oi)
+  and `features-delta-one-defi-20260730-224916` (returns) left running (idempotent SPOT, should still converge) rather
+  than killed mid-backfill.
