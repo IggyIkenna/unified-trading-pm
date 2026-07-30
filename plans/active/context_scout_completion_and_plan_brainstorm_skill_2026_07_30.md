@@ -85,8 +85,11 @@ skill mapped to a genuine but lower-priority gap (a pre-authoring clarifying-que
 catches an underscoped todo post-hoc) — captured as `/plan-brainstorm` below.
 
 A separate, higher-stakes idea (Paperclip-style hard per-agent spend caps + a possible OmniRoute multi-provider
-LLM-gateway pilot) is intentionally NOT in this plan — it's a genuine judgment/security call, not bounded execution
-work, so it's its own design-only LOCAL plan: `/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`.
+LLM-gateway pilot) is intentionally NOT in this plan — it's its own LOCAL plan:
+`/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md`. Both of that doc's open objections were since ruled on
+(trust-boundary waived; model-tier-SSOT-conflict resolved via a structural guardrail rather than a standing gate), and
+the doc now carries build-grade implementation detail — but stays `assigned_vm: NA` by explicit operator choice
+(human-executed, not AO-dispatched).
 
 ## What shipped
 
@@ -96,33 +99,44 @@ work, so it's its own design-only LOCAL plan: `/plans/active/omniroute_llm_gatew
       `NEVER_SCOUTED` / `STALE` / `UP_TO_DATE` via a dated `context-scout YYYY-MM-DD` Progress Log marker vs. the doc's
       last-touched date. Ran it live against this checkout: 559 in-scope docs, 553 `NEVER_SCOUTED`, 6 `STALE`, 0
       `UP_TO_DATE` (expected — the field is brand new, nothing has ever been scouted). Evidence:
-      unified-trading-pm@`<pending-commit>`.
+      unified-trading-pm@26e0884a0.
 - [x] ✅ **Wrote `cursor-configs/skills/context-scout/SKILL.md`** — the full Phase 0-3 procedure (MVI
       minimal-reading-list principle, 2-6 entries/doc target, confirmed-real-path-only discipline, Workflow fan-out for
-      the corpus-scale backfill, incremental daily mode after that). Evidence: unified-trading-pm@`<pending-commit>`.
+      the corpus-scale backfill, incremental daily mode after that). Evidence: unified-trading-pm@26e0884a0.
 - [x] ✅ **Wrote `agents/context_scout_auditor.md`** — the scheduled-dispatch boot/completion wrapper role file,
       mirroring `na_eligibility_auditor.md`/`docs_reconciler.md`'s shape (thin wrapper, one- shot lifecycle contract,
       sonnet/max/thinking-on per `plan_health.py`'s existing smart-tier forcing for this mode). This is the file whose
-      absence was causing the daily timer to hard-fail. Evidence: unified-trading-pm@`<pending-commit>`.
+      absence was causing the daily timer to hard-fail. Evidence: unified-trading-pm@26e0884a0.
 - [x] ✅ **Fixed the doc-frontmatter-schema.md ↔ docspec.py drift** — added `context_scope` to both the `plan` and
       `issue` rows of §3's per-doc-type table, plus a Notes bullet explaining the field (mirroring the existing
-      `assigned_role` note's shape/detail level). Evidence: unified-trading-pm@`<pending-commit>`.
+      `assigned_role` note's shape/detail level). Evidence: unified-trading-pm@26e0884a0.
 - [x] ✅ **Wrote `cursor-configs/skills/plan-brainstorm/SKILL.md`** — the pre-authoring clarifying-questions gate:
       restate the goal, grep-first (reusing the pre-task-plan-conflict-check discipline) before asking anything, 1-2
       pointed questions max, classify the resolved scope against `task_template.md`'s dispatch-scope-eligibility bar,
       then run the existing "AO plan or human plan?" hard-rule question. Explicitly scoped as a complement to
       `/plan-reconcile`/`/na-eligibility-audit`'s post-hoc catch, not a replacement. Evidence:
-      unified-trading-pm@`<pending-commit>`.
-- [ ] [INFRA] P2. Add `agent-orchestrator` test coverage for `mode="context_scout"` in `plan_health.dispatch()`,
-      mirroring the dedicated test commit `na_eligibility` got
-      (`a935dcd test(plan-health): add na_eligibility mode dispatch coverage`) — assert the mode routes to
-      `context_scout_auditor`, forces the same smart-tier (sonnet/max/thinking-on) as its siblings, and is exempt from
-      the report-mode dispatch gate. Done-when: new test(s) pass under `bash scripts/quality-gates.sh` in
-      `agent-orchestrator`.
-- [ ] [INFRA] P2. Run `bash scripts/quality-gates.sh` in both `unified-trading-pm` and `agent-orchestrator` on the
-      touched files (`--no-fix`, own named files) and fix anything red before committing. Done-when: both gates green.
-- [ ] [INFRA] P2. Ship via `quickmerge.sh --agent --files '<paths>'` in each touched repo, then flip every `[x]` todo
-      above from `<pending-commit>` to the real `<repo>@<sha>`, per the commit-push-flip HARD RULE.
+      unified-trading-pm@26e0884a0.
+- [x] ✅ **Found + fixed a live AgentKind dashboard/observability parity gap** — `context_scout_auditor` had landed in
+      `server/models/_types.py`'s `AgentKind` Literal (agent-orchestrator@df5de14) but was missing from the same 3-file
+      registry this exact bug class has hit 3 times before (`agent_orchestrator_agent_kind_literal_gap_2026_07_28`):
+      dashboard `AGENT_KIND_LABEL` + `KINDS_ORDER` (`dashboard/src/layout.tsx`), the `AgentKind` TS union
+      (`dashboard/src/types.ts`), and the "N daily-scheduled jobs" doc comments (`scheduled_jobs.py`/`slack.py`/
+      `layout.tsx`, 4→5). Fixed all of it, verified via `dashboard`'s `tsc --noEmit` + `vitest run` (165 tests) both
+      clean. Evidence: agent-orchestrator@f0c4726.
+- [x] ✅ **Added `agent-orchestrator` test coverage for `mode="context_scout"`** in `plan_health.dispatch()`, mirroring
+      the dedicated test commit `na_eligibility` got (`a935dcd`) — asserts the mode routes to `context_scout_auditor`,
+      forces the same smart-tier (sonnet/max/thinking-on) as its siblings, and is exempt from the report-mode dispatch
+      gate. All 74 tests in `test_plan_health.py` pass (3 new + 71 pre-existing unaffected). Evidence:
+      agent-orchestrator@f0c4726.
+- [x] ✅ **Ran `bash scripts/quality-gates.sh` in both repos** on the touched files — `unified-trading-pm` full gate
+      green (2035 agent-orchestrator tests / 1534 PM tests passed across both runs), `agent-orchestrator` dashboard
+      `tsc`+`vitest` clean. Evidence: both gates green pre-commit, per the runs cited above.
+- [x] ✅ **Shipped via `quickmerge.sh --agent --files` in each touched repo** — `agent-orchestrator@f0c4726` (dashboard
+      parity + tests), `unified-trading-pm@26e0884a0` (skill/role-file/inventory-script/schema-fix/plan-brainstorm +
+      this doc). Hit a real concurrent-session hazard shipping the PM side (a second live `quickmerge.sh` process in
+      this same `.tabs/1/unified-trading-pm` checkout, from the operator's other open session, doing its own much larger
+      "backfill context_scope across active plans/issues" commit) — resolved by letting that session's pull/rebase land
+      first, then rebasing + pushing mine cleanly on top; no content was lost on either side.
 - [x] ✅ **Found + fixed a second layer of the same schema drift**: `plans/PLAN_FORMAT.md` and
       `plans/active/task_template.md` (the two other canonical-frontmatter-template docs, distinct from
       `doc-frontmatter-schema.md`) also never mentioned `context_scope` in their example frontmatter blocks — a
