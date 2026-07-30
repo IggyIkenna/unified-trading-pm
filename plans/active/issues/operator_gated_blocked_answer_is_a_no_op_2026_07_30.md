@@ -304,13 +304,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                  this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                  a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                  `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                  load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                  authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                  own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                  deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
       again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
@@ -350,8 +350,23 @@ mechanism. These two todos are deliberately bounded, judgment-free, safe-to-disp
 seed real `BLK-op-*` rows to drive through the live reclassify + compound-instruction answer paths. Both todos (and
 their materialized `--ruling` tasks) are removed from this doc once the [REVIEW] todo above cites their evidence.
 
-- [ ] [OPERATOR] P1. E2E fixture A (reclassify test, safe/no-judgment, temp): print `RULES.md`'s line count.
-- [ ] [OPERATOR] P1. E2E fixture B (free-text test, safe/no-judgment, temp): print `agent-orchestrator`'s short SHA.
+**Fixture A/B (original, 2026-07-30 11:16) superseded below — do not use for evidence.** Both were regen-wired under
+this plan's OWN `sequential: true` (in effect until this doc's later `eea7e1c06` flip to `false`), so their materialized
+`--ruling` tasks came out permanently prereq-chained to the `[REVIEW]` todo itself (a genuine, separate regen bug —
+same-plan `completed_tasks` links never get stripped when a plan flips `sequential` false, fixed at
+`agent-orchestrator@93862de`, filed as its own issue at
+`/plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` since the fix also turned out to
+be blocked from reaching the LIVE orchestrator by an unrelated ~7h deploy-currency wedge). Fixed or not, using A/B as
+this todo's evidence would be circular: their `--ruling` tasks cannot dispatch until the `[REVIEW]` todo itself is
+marked done. Fixture C/D below were added AFTER the `sequential: false` flip, so they regen with no same-plan chain at
+all, sequential-bug or not.
+
+- [ ] [OPERATOR] P1. E2E fixture A (reclassify test, safe/no-judgment, temp, SUPERSEDED — see note above): print
+      `RULES.md`'s line count.
+- [ ] [OPERATOR] P1. E2E fixture B (free-text test, safe/no-judgment, temp, SUPERSEDED — see note above): print
+      `agent-orchestrator`'s short SHA.
+- [ ] [OPERATOR] P1. E2E fixture C (reclassify test, safe/no-judgment, temp): print `worker.md`'s line count.
+- [ ] [OPERATOR] P1. E2E fixture D (free-text test, safe/no-judgment, temp): print the current UTC date via `date -u`.
 
 # Codex SSOTs
 
