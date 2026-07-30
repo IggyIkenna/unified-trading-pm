@@ -21,6 +21,8 @@ related:
     /plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
     /plans/archive/2026_07/macro_econ_adapter_scaffolds_2026_06_09.md,
     /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
+    /plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md,
+    /plans/archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 created: 2026-07-30
@@ -118,24 +120,48 @@ surfacing of this data (a separate, later consumer-side concern).
       next/last-week JSON URL is found and cited with a real HTTP 200, or the negative is confirmed (only `thisweek`
       exists) and the build-scraper todo's forward-poll design accounts for that (e.g. poll `thisweek` daily and diff
       against the prior capture, rather than relying on a `nextweek` pre-announcement). Repo: features-service.
-- [ ] [DATA] P1. **Extend the UAC schema with a consensus/forecast field, matching the precedented pattern.** Add
-      `consensus_value: float | None` to `EconomicResultItem`
-      (`unified_api_contracts/internal/domain/trading_api/calendar.py`) — mirroring `CorporateActionItem.estimated_eps`
-      on the same file. Register a new `EventCalendarSource` entry (`source_id="forexfactory_scrape"`,
-      `source_type=EventSourceType.MACRO_CONSENSUS`) in `event_calendar_source.py`'s registry, distinct from the
-      existing `bloomberg_macro`/`trading_economics_macro` placeholder entries (those name vendors this workspace does
-      not integrate; this is a genuinely different, free source and should be honestly labeled as such, not silently
-      folded into the Bloomberg/TradingEconomics entries). `quality-gates.sh` green in unified-api-contracts. Done when:
-      the new field + registry entry exist, are covered by a schema test, and every existing consumer of
-      `EconomicResultItem` still round-trips (no breaking change to the existing 6 fields).
-- [ ] [DATA] P1. **Build the scraper/adapter in features-service, mirroring fred_adapter.py's conventions.** Own HTTP
-      client with a real User-Agent string (not a browser-spoofing one — `robots.txt` itself is permissive, no Disallow
-      anywhere), bounded retry-with-backoff that honors `Retry-After` on 429 (measured 2026-07-30: the JSON host
-      returned HTTP 429 + `retry-after: 300` on a follow-up request only ~30s after a clean 200 — throttle to well under
-      that, e.g. one pull per several minutes, not per-few-seconds), and do not parallelize the historical walk across
-      multiple concurrent connections. Parses the JSON feed (rolling window — `forecast`/`previous`/`impact` only, no
-      `actual`) and the HTML calendar page (`calendar?week=<mon><day>.<year>`, historical — carries Actual too),
-      normalizes both into the same `EconomicResultItem` shape. **Premise CORRECTED per todo 1's finding**: the
+- [ ] [DATA] P1. **CORRECTED SCOPE 2026-07-30 (see Progress Log) — target `MacroResultRecord`, not `EconomicResultItem`,
+      as the primary schema change.** A dedicated investigation found `features_service/calendar/` IS the real,
+      already-built "features-calendar-service" `MacroResultRecord`'s docstring refers to — and `MacroResultRecord`
+      (`unified_api_contracts/internal/reference/economic_calendar.py`, fields: `event_type`, `series_id`,
+      `release_date`, `actual_value`, `previous_value`, `revision`, `unit`, `source`, `fetched_at`) is the schema its
+      REAL, GCS-writing production path (`economic_results_calculator.py`/`economic_results_handler.py`) actually uses
+      today for real FRED actuals — `EconomicResultItem`
+      (`unified_api_contracts/internal/domain/trading_api/calendar.py`) is only a mock-serving API-gateway DTO with no
+      live writer behind it yet (`unified-trading-api`'s `/calendar/economic-results` route is explicitly mock-only,
+      docstring states "Live mode (future)"). Add `consensus_value: Decimal | None` + update `to_dict()` on
+      `MacroResultRecord` (primary target — this is what actually lands in GCS); extending `EconomicResultItem` the same
+      way is a reasonable secondary/later step for eventual UI-serving, not the main target. Also register a new
+      `EventCalendarSource` entry (`source_id="forexfactory_scrape"`, `source_type=EventSourceType.MACRO_CONSENSUS`) in
+      `event_calendar_source.py`'s registry, distinct from the existing `bloomberg_macro`/`trading_economics_macro`
+      placeholder entries (both confirmed to have ZERO client code anywhere in the workspace — pure unused placeholders;
+      this is a genuinely different, free source and should be labeled as such, not folded into them).
+      `quality-gates.sh` green in unified-api-contracts. Done when: `MacroResultRecord` carries the new field and
+      round-trips in `to_dict()`, covered by a schema test, with no breaking change to its existing 8 fields.
+- [ ] [DATA] P1. **CORRECTED ARCHITECTURE 2026-07-30 (see Progress Log) — this is a new SIBLING data source inside the
+      EXISTING `features_service/calendar/` module, not new standalone orchestration.** A dedicated investigation found
+      this module already has a working, precedented pattern for adding exactly this kind of external source: the
+      archived plan `plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md` (2026-03-24) built
+      `corporate_actions_handler.py`/`polygon_corporate_actions_adapter.py` and `yfinance_earnings_adapter.py` as
+      siblings within this same module — new adapter in `calendar/adapters/`, new calculator in
+      `calendar/engine/calculators/`, new `--operation <name>` CLI handler, GCS path
+      `calendar/<name>/by_date/day={date}/*.parquet`. Follow that shape: a new
+      `calendar/adapters/forexfactory_adapter.py` + a new calculator + a new CLI handler (or a `source` discriminator
+      added to the existing `economic_results` handler), reusing
+      `CalendarOrchestrationService`/`CalendarFeaturesConfig`/`GCSCalendarStorage` (`ManifestWriter` wiring, dry-run/GCS
+      split, bucket resolution) rather than building parallel plumbing. **CRITICAL — do not repeat this module's own
+      most relevant cautionary precedent**: `economic_results_handler.py` was built the same way ~4 months ago and
+      captures REAL FRED actuals correctly, but was NEVER registered in `cli/main.py`'s
+      `ServiceBootstrap(operations={...})` dict, so nothing has ever actually run it in production (tracked as its own
+      todo now in `macro_micro_econ_data_capture_audit_2026_06_05.md`) — this plan's new operation MUST be registered
+      there in the SAME commit that builds it, not left as a second orphan. Own HTTP client with a real User-Agent
+      string (not a browser-spoofing one — `robots.txt` itself is permissive, no Disallow anywhere), bounded
+      retry-with-backoff that honors `Retry-After` on 429 (measured 2026-07-30: the JSON host returned HTTP 429 +
+      `retry-after: 300` on a follow-up request only ~30s after a clean 200 — throttle to well under that, e.g. one pull
+      per several minutes, not per-few-seconds), and do not parallelize the historical walk across multiple concurrent
+      connections. Parses the JSON feed (rolling window — `forecast`/`previous`/`impact` only, no `actual`) and the HTML
+      calendar page (`calendar?week=<mon><day>.<year>`, historical — carries Actual too), normalizes both into
+      `MacroResultRecord` (per the corrected schema todo above). **Premise CORRECTED per todo 1's finding**: the
       underlying HTML does NOT require JS rendering to parse (confirmed via a non-JS Wayback crawl showing full
       server-rendered markup) — but the LIVE site sits behind a Cloudflare Managed Challenge blocking every plain-HTTP
       path (curl/`requests`/WebFetch all hit a 403 JS-challenge shell on every path tried), so a
@@ -143,28 +169,38 @@ surfacing of this data (a separate, later consumer-side concern).
       JS-rendering being a non-issue; budget for a stealth/anti-detection headless browser (e.g. Playwright) OR a paid
       unblocking proxy to get past the challenge, then parse the resulting HTML with a plain parser (no JS execution
       needed once past the gate). Before marking this todo done, explicitly resolve how `actual_value` gets captured
-      given the JSON feed never carries it (HTML-only, and HTML is challenge-gated) and confirm/replace the 404ing
-      `ff_calendar_{next,last}week.json` names (see the dedicated follow-up todo above). Done when: a real invocation
-      against ForexFactory returns correctly typed, non-empty results — including a real `actual_value` — for both a
-      rolling-window and a historical-week request.
+      given the JSON feed never carries it (HTML-only, and HTML is challenge-gated), confirm/replace the 404ing
+      `ff_calendar_{next,last}week.json` names (see the dedicated follow-up todo above), and check
+      `features_calendar_pipeline_mode_gap_2026_05_12.md` for the still-open `pipeline_mode` tagging decision any new
+      calendar-family write needs. Done when: a real invocation against ForexFactory returns correctly typed, non-empty
+      `MacroResultRecord` results — including a real `actual_value` — for both a rolling-window and a historical-week
+      request, AND the new `--operation` is confirmed registered + reachable via `python -m features_service.calendar`.
 - [ ] [DATA] P2. **Wire the historical backfill launcher + forward-poll cron.** Mirror
       `deployment-service/scripts/vm/launch-tradfi-bf-fred.sh`'s single-VM, non-sharded pattern (rationale: a shared
       rate-limited external source, not a per-IP-scalable one — fanning out multiple VMs would just multiply request
       pressure against ForexFactory's server, the same reasoning FRED's launcher already documents for its own
-      shared-API-key limit). Explicitly clamp the backfill start floor to the REAL measured floor confirmed by todo 1 —
-      **2007-01-01** (never default to "as far back as possible" without that confirmed number — this plan exists partly
-      because FRED's launcher got exactly this wrong); the launcher's HTTP client needs the same Cloudflare-bypass
-      tooling as the build-scraper todo above, since the historical walk hits the identical challenge-gated HTML path.
-      Done when: `--dry-run` shows the correct 2007-01-01..today window, and a real `--year 2007` smoke-test capture
-      returns real events with `quality-gates.sh` green.
-- [ ] [DATA] P2. **Tests: HTML/JSON fixtures, no live network in CI.** Regression tests for the parser(s) using saved
-      real response fixtures (captured once during the research todo, not re-fetched on every test run) — asserts the
-      new `consensus_value` field parses correctly, `release_time_utc` is present and correctly timezone-normalized
-      (ForexFactory's calendar is ET-based; verify the conversion), and a malformed/missing-field event fails closed
-      (recorded as `empty_confirmed`/error, never silently dropped). Also fixture the pre-floor empty-state response
-      (the byte-identical ~13,904-byte "No results found." page confirmed 2026-07-30) so the floor-detection logic has
-      its own regression test, not just the happy-path parser. Done when: `quality-gates.sh` is green in
-      features-service and the new tests pass with zero live HTTP calls.
+      shared-API-key limit); check whether `runtime-topology.yaml`'s existing `calendar` family Cloud Scheduler cadence
+      (the corporate-actions/earnings precedent runs `time_throttled_medium`, ~15min) is the right cadence to extend,
+      rather than building a wholly separate cron. Explicitly clamp the backfill start floor to the REAL measured floor
+      confirmed by todo 1 — **2007-01-01** (never default to "as far back as possible" without that confirmed number —
+      this plan exists partly because FRED's launcher got exactly this wrong); the launcher's HTTP client needs the same
+      Cloudflare-bypass tooling as the build-scraper todo above, since the historical walk hits the identical
+      challenge-gated HTML path. Done when: `--dry-run` shows the correct 2007-01-01..today window, and a real
+      `--year 2007` smoke-test capture returns real events with `quality-gates.sh` green.
+- [ ] [DATA] P2. **Tests: HTML/JSON fixtures, no live network in CI.** Real response fixtures from the research pass are
+      ALREADY promoted into the repo — `features-service/tests/fixtures/forexfactory/` (README there documents
+      provenance): `json_feed_thisweek_sample_2026_07_30.json` (real 92-event feed),
+      `html_calendar_2007_01_01_floor_real_data.html` (real historical week at the floor, verified real event names),
+      `html_calendar_pre_floor_empty_state_2006_01_01.html` (the ~13,904-byte "No results found." signature),
+      `html_calendar_boundary_clamp_2006_12_31.html` (the clamp-forward edge case), and
+      `html_calendar_cloudflare_challenge_blocked.html` (the 403 challenge page) — use these rather than re-fetching
+      (re-fetching risks the same Cloudflare rate-limit the research hit). Regression tests: assert the new
+      `consensus_value` field parses correctly, `release_time_utc` is present and correctly timezone-normalized
+      (ForexFactory's calendar is ET-based; verify the conversion), a malformed/missing-field event fails closed
+      (recorded as `empty_confirmed`/error, never silently dropped), the pre-floor empty-state fixture is detected as
+      "before floor" (not a zero-event week), the boundary-clamp fixture is detected correctly, and the
+      Cloudflare-challenge fixture is detected as "blocked" (not misparsed as an empty calendar). Done when:
+      `quality-gates.sh` is green in features-service and the new tests pass with zero live HTTP calls.
 - [ ] [DATA] P3. Once the above ships and a real backfill has run, do a first honest-coverage check: what fraction of
       expected calendar events (per ForexFactory's own historical week count) actually landed with a real
       `consensus_value`, vs. how many are `actual`-only (older weeks where ForexFactory itself may not have retained the
@@ -249,3 +285,19 @@ generalizing (e.g. "how to safely integrate a scraped, rate-limited third-party 
     necessary" cost-saving premise in the build-scraper todo does not survive contact with the live site (Cloudflare
     gates every path regardless of JS-rendering need), so that todo should be estimated with that dependency weight
     included, not treated as a stretch fallback.
+- **2026-07-30 (architecture correction, this session)** — a dedicated investigation of `features_service/calendar/`
+  (triggered by noticing `economic_events` in a routine `quality-gates.sh` formula-hash-drift dump — not something this
+  plan's original authoring pass had looked for) found this module already IS the real, substantially-built
+  "features-calendar-service" `MacroResultRecord`'s docstring refers to, with a working precedent (the archived
+  `corporate_actions_+_earnings_to_calendar` plan) for adding exactly this kind of new external source as a sibling.
+  This significantly changes the shape of todos 3-5 above (now corrected in place, not left stale): the schema target
+  moves from the mock-only `EconomicResultItem` to the real, GCS-writing `MacroResultRecord`; the adapter/handler build
+  becomes "add a sibling within `features_service/calendar/`" rather than new standalone orchestration; the launcher
+  todo now cross-checks the existing `calendar` family's Cloud Scheduler cadence before assuming a new cron is needed.
+  Also found (and separately fixed, outside this plan's own scope) that `economic_results_handler.py` — this module's
+  closest existing sibling, already capturing real FRED actuals — was built ~4 months ago and never registered in the
+  CLI's dispatch table, so it has never actually run in production; added a real tracked todo for that gap to
+  `macro_micro_econ_data_capture_audit_2026_06_05.md` (it had only ever been prose in that doc's own "Recommended
+  decision" section, never a `- [ ]` item) rather than duplicating it here. Promoted the research fixtures from
+  scratchpad into `features-service/tests/fixtures/forexfactory/` in the same pass (real HTTP evidence is otherwise
+  session-ephemeral and expensive to re-capture given Cloudflare's rate limiting).

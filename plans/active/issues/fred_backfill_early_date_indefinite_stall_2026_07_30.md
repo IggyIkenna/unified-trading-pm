@@ -126,7 +126,9 @@ minute once actually applied.
 
 ## Recommended next steps
 
-- [ ] [DATA] P2. Add `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"] = <measured-cadence>` to
+- [ ] [DATA] P2. **Re-scope 2026-07-30 (see Progress Log below) — real cycle times are now much faster, lowering urgency
+      but not eliminating the value of an explicit measured horizon.** Add
+      `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"] = <measured-cadence>` to
       `unified_trading_library/manifest_writer/_staleness_budget.py`, sized the same way `defi`/`sports` were (measure
       TRADFI's real consolidation cadence from Cloud Logging/consolidator run history first, then set the horizon with
       margin — do NOT guess a number). Repo: unified-trading-library.
@@ -264,3 +266,23 @@ anywhere.
       tradfi launcher today (neither reads a `MACHINE_TYPE` env consistently per the note above) — if it is a silent
       no-op, either wire it through properly or drop the hint rather than leave a documented-but-dead auto-escalation
       path. Repo: deployment-service.
+
+- **2026-07-30 (separate session, closing this thread out) — the real root cause of the SLOW cycle times this whole doc
+  chases was found + fixed: the tradfi manifest consolidator's own chunk-count blowup, not anything specific to FRED's
+  fetch behavior.** Found `tradfi-bf-fred-full-20260730-110724` (the successor VM from the entry above) STILL running,
+  ~2 hours in, having only progressed from `1962-01-02` to `1962-02-21` — at that rate it would have taken 900+ hours to
+  reach 2020. Root-caused (full detail:
+  `/plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`): 522 genuinely-correct but
+  now-orphaned 1962-1970 FRED rows (this exact backfill's own earlier output) were stretching the consolidator's
+  merge-chunk-count planning to 787 chunks (a ~9x blowup vs. the ~85 a normal 2019-2026 tradfi span needs) — this is
+  what was actually inflating cycle times toward (and past) this doc's own documented horizon, not a `FredAdapter`
+  defect. Fixed the chunk-count cap (`unified-trading-library@59ed61c9`), stopped the now-doubly-obsolete VM (still on
+  the old 1962 floor AND hitting the artificially slow consolidator), fixed `launch-tradfi-bf-fred.sh`'s default floor
+  to `2020-01-01` to match the rest of tradfi's Databento group (`deployment-service@fee8860b`), and purged the orphaned
+  1962-1970 fragment (538 GCS objects, 642 manifest rows, snapshot-first, reversibility-verified). This achieves todo
+  `[x] [DATA] P1`'s underlying goal (a real, unstuck FRED production backfill) via a different path than originally
+  anticipated — STOPPING the VM and fixing its floor, rather than letting the original 1962-01-02..today run to
+  completion, since that original scope was itself the thing making the consolidator slow. Post-fix, consolidator cycles
+  measured at ~75s (vs. 6+ minutes pre-fix) — this substantially reduces (but doesn't eliminate) the value of todo P2's
+  explicit `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["tradfi"]` override above; left that todo open since a measured,
+  explicit value is still better than the current default regardless of how much healthier the consolidator now is.
