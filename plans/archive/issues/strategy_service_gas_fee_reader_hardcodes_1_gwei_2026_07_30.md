@@ -16,7 +16,7 @@ summary: >-
   whole aggregation. Split out of silent_wrong_answer_audit_untracked_followups_2026_07_28.md (operator ruling
   2026-07-30) so this bounded real-money fix is dispatchable without waiting on that doc's unrelated, undecided
   e2e-testing schema-contract question.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [strategy]
@@ -50,10 +50,21 @@ source: >-
   /plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md, whose P0 todo carried this fix
   alongside an unrelated undecided e2e-testing schema-contract question. Original lineage: P0 finding 2 of
   /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md.
-resolved_by:
+resolved_by: >-
+  strategy-service@f78d4ff9 (repointed _load_gas_fee_data onto the canonical per-day
+  venue=ALCHEMY/chain=<CHAIN>/data_type=gas_fees partition via UAC candidate_parquet_paths, parsed the
+  gas-fee timestamp column as tz-aware datetime, deleted the unreachable native_token_price_usd-from-parquet
+  fallback and the 1-gwei hardcode — both now raise instead of any silent default) +
+  strategy-service@2e409c47 (TestGasFeeReaderCanonicalPath regression coverage with prefix-discriminating GCS
+  mocks, so PASS genuinely depends on the fix; also fixed 3 pre-existing tests that had implicitly relied on the
+  old 1-gwei silent default). Full-suite quality-gates.sh green (5640 passed, 0 failed) at both SHAs, pushed to
+  live-defi-rollout 2026-07-30.
 locked_by:
 locked_since:
 ---
+
+> **✅ RESOLVED 2026-07-30** — both todos shipped (strategy-service@f78d4ff9, @2e409c47). Archived; see
+> `resolved_by` above for evidence.
 
 # strategy-service gas-fee reader hardcodes 1 gwei
 
@@ -167,3 +178,13 @@ path here — do not build a permanent dual-read into the reader; that migration
   in this session (reader, MTDS writer, UAC path builder, UAC chain registries) rather than carried over from the
   2026-07-20 audit's prose — the 1-gwei hardcode, the dead prefix, the missing `native_token_price_usd` column, and the
   datetime-vs-epoch mismatch are all confirmed present today. No code changed.
+- **2026-07-30 (shipped + archived)**: Both todos done. `_CHAIN_NATIVE_TOKENS` turned out to be dead/unreferenced code
+  on direct read (not actually used anywhere in the file) — deleted it and used `CHAIN_CONFIGS[chain_id].native_gas_token`
+  in the new raise message instead, which is the closest faithful reading of "replace the local dict with the SSOT"
+  given the dict had no live call site to replace. Fixing the reader broke 3 pre-existing `test_defi_pnl_static.py`
+  tests that had been implicitly depending on the 1-gwei silent default (no mocked GCS, no fill_timestamp — they only
+  passed because the old broad `except Exception` swallowed the real GCS/auth error); updated them to the new
+  fail-loud contract rather than weakening the fix to keep them passing unchanged. Archiving per
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` (every todo `[x]`, unlocked) — no codex SSOT
+  references the old dead prefix or the deleted `_CHAIN_NATIVE_TOKENS` dict, so no codex correction was needed; the 3
+  corpus referrers had their paths updated to this archive location in the same commit as the `git mv`.
