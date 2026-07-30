@@ -294,6 +294,22 @@ Prod buckets (`-prd-`) have IAM policies that restrict write access:
 development or testing. Staging (`stg`) uses its own IAM write-protection separate from prod. See
 `bucket_iam_write_protection_per_tier_2026_06_09.md` for the IAM rollout plan.
 
+### 8.1 GCP IAM Condition CEL — real function support (confirmed live 2026-07-29)
+
+When writing a conditional `google_storage_bucket_iam_member` / `google_project_iam_member` binding scoped by
+`resource.name` (e.g. a per-tier/per-suffix bucket-name match), **GCP's IAM Condition CEL environment supports only
+`startsWith()` / `endsWith()`** on `resource.name` — `contains()` and `matches()` (regex) are both **undeclared
+references**, rejected only at real `tofu apply` time
+(`400 Condition expression compilation failed... undeclared reference to 'contains'`). Neither `tofu validate` nor
+`tofu plan` catches this — GCP does not compile the CEL expression server-side until `apply`, so a broken condition
+looks clean through the whole plan/review cycle and only fails live.
+
+The safe pattern for a per-tier/per-suffix match is a single `startsWith("projects/_/buckets/{prefix}{tier}-")` per
+bucket-name prefix (exact, not an approximation) — confirmed live that the tier segment immediately follows the group
+prefix in every real bucket name (e.g. `features-cefi-prd-central-element-323112`), so `startsWith` alone is sufficient;
+no `contains`/regex is actually needed for this shape. Source:
+`bucket_iam_per_tier_dev_stg_retired_ssot_contradiction_2026_07_27.md`, `deployment-service@44002342`.
+
 ---
 
 ## 9. GCS Lifecycle Policies

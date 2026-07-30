@@ -17,7 +17,7 @@ tags: [runbook, agent-orchestrator, disaster-recovery, self-hosted-runners, ci-c
 related:
   [
     /codex/15-runbooks/agent-orchestrator-failover-re-enable-checklist.md,
-    /plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md,
+    /plans/archive/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md,
   ]
 created: "2026-07-30"
 owner: operator (ad-hoc — only exercised during a central-VM relaunch)
@@ -106,7 +106,7 @@ steps below.
 
 ## Cross-references
 
-- [`central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md`](/plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md)
+- [`central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md`](/plans/archive/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md)
   — the issue doc that surfaced this gap and tracks the durable auto-wired fix (SCRIPT todo: wire this install step into
   `launch-central-brain-aws.sh`'s own bootstrap sequence so no manual step is needed at all).
 - [`agent-orchestrator-failover-re-enable-checklist.md`](./agent-orchestrator-failover-re-enable-checklist.md) — the
