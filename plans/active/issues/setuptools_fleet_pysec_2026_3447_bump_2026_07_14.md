@@ -99,9 +99,9 @@ Bump setuptools 82.0.1 → 83.0.0 across the affected repos:
 
 > Added 2026-07-26 by `/plan-reconcile` (infra shard). This doc was `status: open` with **zero checkboxes** —
 > prose-only, so none of its work was visible to the hygiene/dispatch surface (the class
-> `/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3 exists to sweep). No decision was invented:
-> the todos below are the doc's own "The proper fix" 3 steps, with the current per-repo state MEASURED this turn so a
-> worker starts from facts rather than the 2026-07-14 snapshot.
+> `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3 exists to sweep). No decision was
+> invented: the todos below are the doc's own "The proper fix" 3 steps, with the current per-repo state MEASURED this
+> turn so a worker starts from facts rather than the 2026-07-14 snapshot.
 >
 > **Measured 2026-07-26** (`grep -A1 '^name = "setuptools"' <repo>/uv.lock`): e2e-testing → **83.0.0** (already fixed);
 > instruments-service → **82.0.1** (still vulnerable); market-tick-data-service → **82.0.1** (still vulnerable). And

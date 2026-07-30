@@ -268,7 +268,7 @@ fold-vs-migrate") presented as a step.
 
 - [x] [DOCS] P2. ✅ **DONE 2026-07-24 (both known instances fixed; full corpus sweep tracked as a todo)** — target:
       corpus-wide sweep, `plans/active/issues/`. Created
-      `plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` tracking this; the remaining full-corpus sweep
+      `plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` tracking this; the remaining full-corpus sweep
       (beyond the original 10-doc sample) is its own dispatchable todo there. `pm@<commit-pending>`.
 - [x] [DOCS] P2. ✅ **DONE 2026-07-24** — target: 3 named zero-checkbox issue docs. Both known instances converted:
       `pipeline_e2e_check_vm_name_collision_2026_07_12.md` (real `[CODE] P2` todo added) and

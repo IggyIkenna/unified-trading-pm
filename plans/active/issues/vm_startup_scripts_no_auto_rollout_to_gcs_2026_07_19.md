@@ -99,7 +99,7 @@ verified FRESH). So the fleet is currently in sync; the open work is the DURABLE
 > Added 2026-07-26 by `/plan-reconcile` (infra shard). This doc was `priority: P1`, `status: open`, with **zero
 > checkboxes** — its work existed only as prose under "Fix options (for operator decision)", so nothing here was visible
 > to the hygiene/dispatch surface (the sweep class is
-> `/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3). **No option was chosen** — picking
+> `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3). **No option was chosen** — picking
 > between the doc's own three fix shapes is an authority call with real blast-radius differences (ship-path change vs
 > per-launcher freshness check vs process-only), so it is captured below as an `[OPERATOR]`-gated decision exactly per
 > `task_template.md`'s bounded-outcome rule, and raised as a `/plan-reconcile` operator question in the same pass.

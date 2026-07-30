@@ -123,7 +123,7 @@ the billing-waste pre-flight gate designed + shipped.
 this whole `/ag-closeout-audit` rollout — self-referential, included for completeness) ·
 [issues/autonomous_session_operator_decisions_2026_07_25.md](/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md)
 (operator-decisions log companion to the rollout plan) ·
-[issues/issue_docs_zero_checkbox_sweep_2026_07_24.md](/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md)
+[issues/issue_docs_zero_checkbox_sweep_2026_07_24.md](/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md)
 (corpus-wide sweep for prose-only, zero-checkbox issue docs) ·
 [issues/plan_quality_four_line_defense_architecture_2026_07_23.md](/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md)
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
