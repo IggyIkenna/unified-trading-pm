@@ -166,6 +166,13 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 6 open,
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` on a still-open prerequisite (gate
+  verified by direct read). Independently, 3 of the 6 (the `-is`/`-mtds` 3x-cadence top-ups and the adversarial
+  AO-dispatch-readiness pass) are CONFLICT — already extracted into
+  `prediction_consolidated_native_ao_extract_2026_07_25.md` todos 2/3/5. Both P0 skill runs also require an
+  operator-given `--day`, which the skills refuse to invent.
+
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase D section verbatim (8 todos total: 5 done / 3 open at split time). See the parent's Progress Log
   (ticks 10, 15, and especially 19-25 — the smoke-RED triage, Class A/B/C fixes, and the IS 0/14→11/14 re-run) for the

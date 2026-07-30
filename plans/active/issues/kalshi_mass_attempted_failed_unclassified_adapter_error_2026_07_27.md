@@ -92,5 +92,10 @@ attempt volume further.
 
 ## Progress log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — all 3 open todos are CONFLICT:
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 6 claims the entire 3-step chain (recurrence check ->
+  exception reclassification -> contingent backoff fix) verbatim as one internally-sequential todo. Flipping this doc
+  would dispatch a duplicate.
+
 - 2026-07-27: Filed from `prediction_satellite_ao_dispatch_batch1-004`'s read-only re-measurement pass (slot 15). No
   code changed; no root cause investigated yet.

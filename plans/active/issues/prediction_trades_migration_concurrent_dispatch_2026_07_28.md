@@ -106,3 +106,13 @@ still actively consulting its own copy). The merged, corpus-shared checkpoint sl
 `<slot-8-scratchpad>/prediction_trades_migration_report_merged.jsonl` — itself still only per-slot-scratchpad, so this
 finding's own fix is not yet applied to this exact task; the merge was a one-time manual reconciliation, not a durable
 solution.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 0 checkboxes; the doc carries two PROSE
+  recommended fixes (a durable task-id-keyed checkpoint location for resumable AO scripts; a dispatcher-side
+  in-flight/live-heartbeat check) that its own author scoped as "a dispatcher/process change, out of a single todo's
+  scope" needing a design decision first. Not ARCHIVE — the finding is unresolved and, per
+  `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 4, has recurred at least twice more
+  since filing. Genuinely `ao`-tranche scope (`parent_epic: orchestrator_master`); flagged for adoption there, not
+  claimed here.

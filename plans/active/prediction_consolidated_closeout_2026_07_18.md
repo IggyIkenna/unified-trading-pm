@@ -593,6 +593,13 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
 
 ## Progress Log — condensed (2026-07-24, replaces the pre-split ~917-line tick-by-tick log)
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([DATA] P2, A4 fixture-match column
+  materialization), which is the shared cross-repo half of work whose prediction-side legs are tracked in the Phase A-B
+  residuals fork. Note for whoever picks up `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md`
+  Finding 3: that finding proposes adding 4 docs to THIS doc's aggregated-sources index, and
+  `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` todo 2 separately edits the same index section —
+  same-file adjacency, sequence them rather than running both blind.
+
 > **The full tick-by-tick history was NOT deleted** — it lives verbatim in
 > [`prediction_consolidated_closeout_history_2026_07_18.md`](/plans/archive/2026_07/prediction_consolidated_closeout_history_2026_07_18.md)
 > (autonomous ticks 1-31, 2026-07-18 through 2026-07-20). Every genuinely-open item that log surfaced was cross-checked

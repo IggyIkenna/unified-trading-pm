@@ -134,6 +134,11 @@ locked_since:
 
 ## Progress log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([INFRA] P1, the RULED-GO historical
+  prediction re-backfill). CONFLICT: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 4 claims it verbatim,
+  carrying the same SPOT + PROGRESS-checkpoint + post-run VERIFY mandate. Independently, a full-history multi-VM
+  backfill launch is the `[OPERATOR]`/safe-idempotent-justification class per `task_template.md` finding O.
+
 - 2026-07-14: Filed. Finding 1 verified read-only (file:line above); Finding 2's filter verified by direct read of
   `clob.py:335-341`, propagation deliberately left as the P0 VERIFY. Operator notified in the main session (big-finding
   rule: data-correctness class). No code changed.

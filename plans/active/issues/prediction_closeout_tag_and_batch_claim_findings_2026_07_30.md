@@ -189,3 +189,14 @@ candidate, not a batch todo.
 - `/codex/11-project-management/doc-frontmatter-schema.md` § 5 — the `asset_group` enum Finding 1 turns on.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility" — why Finding
   4's two prose fixes are not yet bounded todos.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 4 open. Filed EARLIER TODAY by the sibling
+  `/ag-closeout-audit prediction` run, whose own `source:` records that every item was deliberately PARKED with
+  options + a marked recommendation because no operator was reachable. That is an assessed NA, not a defaulted one, so
+  it fails this skill's RECLASSIFY bar ("simply defaulted to NA and never assessed") even though Findings 2/3/4 are
+  mechanically executable. Finding 1 is a genuine `[OPERATOR]` tag-scope ruling. Deliberately NOT flipped 6 hours after
+  a sibling skill parked it. Finding 2 (batch4 todo 3 and batch6 todo 7 both claiming the same cqg re-enumeration) is
+  independently re-confirmed by THIS run's conflict-check and escalated in its report — it is a live duplicate-dispatch
+  hazard the moment batch6 goes `active`.

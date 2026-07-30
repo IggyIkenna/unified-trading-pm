@@ -331,6 +331,14 @@ orchestrator-dispatched).
 
 ## Progress log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 9 open, none dispatchable from here. 7 are
+  explicitly `[DESCOPED-NOT-MVP 2026-07-14]` under a dated operator ruling (Kalshi/Polymarket perps are not MVP, no prod
+  access); 1 is self-labelled "operator/architect call, not a mechanical todo" (the historical `OTHER`-bucket reclassify
+  assessment). The one genuinely bounded item — Phase 6's one-line `prediction.py:95` CQG-bucketing fix — is CONFLICT
+  under the shared conflict-check: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1 already claims it
+  verbatim as its headline P0. Not flipped; see this run's report for the escalation that batch6 is still
+  `status: draft`.
+
 - **2026-07-14 — Operator ruling: Kalshi/Polymarket perps NOT MVP (Workstream B descoped).** Operator (chat, main
   session): "Kalshi/Polymarket perps prod access — not part of MVP, nothing we can do, we can't get perps on those yet;
   Polymarket is in beta mode and Kalshi requires some extra work." Effect: Phase 4's `BLOCKED-OPERATOR-DECISION` is

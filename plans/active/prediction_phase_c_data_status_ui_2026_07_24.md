@@ -97,6 +97,12 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 4 open, and the doc carries
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` against a prerequisite that is
+  still open (9 todos). Per this skill's own rule, a real `depends_on`+`gate_on_depends` gate on a still-open
+  prerequisite is KEEP-NA on that citation alone — gate confirmed real by direct read of both docs, not assumed. The P0
+  UI item additionally carries the workspace playwright gate.
+
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase C section verbatim (0 done / 4 open todos at split time). See the parent's Progress Log (ticks 1-31)
   for the full session-by-session history of the prediction close-out overall; none of those ticks closed a Phase C

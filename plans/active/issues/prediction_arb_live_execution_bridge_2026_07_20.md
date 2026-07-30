@@ -215,3 +215,11 @@ import both).
       reaches `AtomicLegExecutor.execute` end-to-end in a new test proving the full round trip (mirroring the existing
       `test_prediction_arb_3venue_paper_proof.py` benchmark-fill proof pattern), and `quality-gates.sh` is green across
       both repos.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([BACKEND] P1, the paper-LIVE
+  `AtomicInstruction` -> `AtomicLegExecutor` routing seam). CONFLICT:
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 2 claims it verbatim, including the same 2026-07-28
+  `EventTransport` ruling and the same round-trip-test done-when (its todo 3 additionally claims this doc's prose item
+  [5], two-sided Betfair odds).

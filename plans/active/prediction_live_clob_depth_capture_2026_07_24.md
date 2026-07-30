@@ -277,6 +277,11 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 2 open checkboxes, both P2, one explicitly
+  `DEFERRED-CROSS-DEP` on an instruments-service prerequisite. The doc's two PROSE items (BQ external tables, the
+  `roles/pubsub.publisher` grant) are CONFLICT — claimed by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  todos 12 and 13. Same `execution_scope`/`assigned_vm` note as its sibling fork: see this run's report.
+
 ### 2026-06-26 (autonomous /autonomous) — Plan04 InMemoryTransport bug fixed, DP-LIVE-002 alert shipped, VMs verified
 
 **Critical data loss RESOLVED.** Plan 04 commit `3b956b70` (LiveEventFacadeSink with `transport=None`) silently routed

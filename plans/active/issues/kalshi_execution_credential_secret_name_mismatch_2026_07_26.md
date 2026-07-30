@@ -122,3 +122,10 @@ Two directions, both viable, not adjudicated by this doc:
       logs/commit evidence it works — this is the ORIGINAL verification
       `kalshi_live_capture_regression_and_drift_2026_07_13.md` asked for, gated on the todo above. (repo:
       execution-service)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — both open todos are CONFLICT:
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 5 claims both the Secret Manager reshape (RULED
+  2026-07-28 as not wallet-key-class) and the gated live paper-order verify. Flipping this doc would dispatch a
+  duplicate against real credential material.

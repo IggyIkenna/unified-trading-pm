@@ -28,7 +28,7 @@ source:
     archival rule (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md § 2).",
   ]
 assigned_vm: planning
-assigned_role: ui_developer
+assigned_role: ui_developer # ⚠️ CONTESTED — prediction tranche argues `infra`; see Progress Log 2026-07-30
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -67,3 +67,36 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
   CLEAR against 231 active planning docs; no open todo elsewhere duplicates this claim) - single todo is a scripted
   regen + QG-green check + a bounded UAC-vs-UI enum grep — deterministic outcome, no design call. Reached independently
   of the cefi tranche above; both agree.
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: **RECLASSIFY — `assigned_vm: NA → planning`, conflict-check
+  CLEAR.** This doc already declared `execution_scope: orchestrator-agent` while carrying `assigned_vm: NA` — a
+  self-contradiction, and the classic "defaulted to NA and never assessed" shape the audit's RECLASSIFY verdict exists
+  for. Its sole open todo is bounded and worker-determinable: a named script invocation
+  (`sync-archetype-capability-to-ui.sh --write`), a machine-checkable done-when (the UI's `quality-gates.sh` green
+  against the regenerated `coverage.ts`), and a scoped grep with a stated fix pattern. No design or judgment call
+  remains — the parent issue already ruled the direction and steps 1/2/4 already shipped
+  (`unified-trading-system-ui@7900f560`). **Conflict-check**
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3): enumerated the real claim
+  (regenerate `coverage.ts` from `archetype_capability_manifest.json` + sweep for sibling drifted `architecture_v2`
+  exports), then checked all four currently-`assigned_vm: planning` docs that mention this ground —
+  `tradfi_manifest_content_recovery_completion_2026_07_24.md` (a Progress Log mention of the parity TEST, not the
+  regen), `defi_satellite_ao_dispatch_batch2_2026_07_26.md` (cites the manifest JSON only as a fix-pattern precedent for
+  unrelated files), `issues/capability_wizard_analysis_findings_2026_06_11.md` (F4 wants a parity drift-CHECK test — a
+  complementary deliverable, not this regen), and `issues/capability_wizard_gap_discovery_2026_06_11.md` (manifest CELL
+  content/venue_ids, different axis). Zero verbatim or near-verbatim duplicate claims → CLEAR, flipped.
+  `assigned_role: infra` filled from the live `agents/*.md` registry (the work's dominant leg is running a PM
+  propagation script + a UAC-side grep; `ui_developer` is a near-miss because its role card explicitly excludes running
+  Python tooling, and `backend_engineer` excludes UI repos). **Note for the executing worker, not a gate**: if the regen
+  turns out to change rendered UI behaviour rather than only generated constants, the workspace UI playwright gate
+  (`[UI]` + `pw:L2 ✓` + a cited regression spec, `/codex/06-coding-standards/ui-testing-layers.md`) applies and this
+  becomes a `ui_developer` hand-off — decide that from the actual diff, don't assume either way from this note.
+  **Finalize-plan coverage**: not required — `doc_type: issue` under `plans/active/issues/` is structurally exempt
+  (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
+- **⚠️ CONTESTED `assigned_role` — integrator note 2026-07-30.** All three tranches (cefi, defi, prediction) agree on
+  the RECLASSIFY verdict, so `assigned_vm: planning` is settled. They do NOT agree on the owning role: cefi and defi set
+  `assigned_role: ui_developer`; prediction set `assigned_role: infra`, reasoning that the work's dominant leg is
+  running a PM Python propagation script plus a UAC-side grep, and that the `ui_developer` role card explicitly excludes
+  running Python tooling. The merge would have produced a duplicate `assigned_role` key with conflicting values; the
+  integrator kept the already-committed `ui_developer` (status quo, minimal change) and did **not** adjudicate — the
+  prediction tranche's own note concedes the call depends on whether the regen changes rendered UI behaviour or only
+  generated constants, which is only knowable from the actual diff. **Operator/executing worker: pick the role from the
+  real diff before dispatch.**

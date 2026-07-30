@@ -62,6 +62,17 @@ drift_direction: advance-code
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 9 open. Three (fixture-pairing residual,
+  politics/geo canonicalization, cqg recent-window re-enumeration) are CONFLICT: claimed verbatim by
+  `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todos 7/8/9 (and the cqg one doubly, by `batch4` todo 3 — see
+  `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 2). The remaining six are genuinely
+  NA: the POLYMARKET instrument-lifecycle item is a self-declared BIG data-correctness finding spanning 3 repos plus a
+  UAC taxonomy judgment (does `EXPECTED_INSTRUMENT_NOT_LISTED` belong in `EMPTY_CONFIRMED_REASONS`?) plus a manifest
+  re-walk; the rest are a deployment-service tarball-race design question, a per-instrument pairing design call, and
+  NICE-TO-HAVE manifest polish riding the next single walk. Frontmatter note: this doc declares
+  `execution_scope: orchestrator-agent` with `assigned_vm: NA` — reported as part of a 7-doc contradiction class in this
+  run's summary, not silently flipped.
+
 ### 2026-06-24 (autonomous /autonomous) — FULL ARB-DETECTOR STACK SHIPPED (4 repos) + operational findings
 
 All four code units of the live cross-venue arb detector dispatch are SHIPPED to LDR:
@@ -316,13 +327,13 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
         `kalshi_event_ticker`/`polymarket_condition_id`/`api_football_fixture_id` join row).
 
         (3c) the arb-layer consumer (features/strategy) groups the two venues' instruments by
-                                `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
-                                Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
-                                extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
-                                REAL paired samples (no false pairs — operator). Repos:
-                                unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
-                                enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
-                                (residual after parser UAC@3effe2fc).
+                                    `SportsFixtureKey.pairing_key()` WITHIN the shared `SPORTS_{LEAGUE}_{BETTYPE}` cqg → the same-game arb pair.
+                                    Needs a cross-venue team-name canonicaliser (Kalshi "Seattle" ↔ Polymarket "Seattle Mariners"/"Mariners") —
+                                    extend the existing `get_canonical_team_for_polymarket` maps with Kalshi city/abbrev aliases, validated vs
+                                    REAL paired samples (no false pairs — operator). Repos:
+                                    unified-api-contracts (mapping populate + team canon) + instruments-service (sports-event link on prediction
+                                    enum) + features-service/strategy-service (arb grouping). Provenance: operator "parse fixture ids" 2026-06-23
+                                    (residual after parser UAC@3effe2fc).
 
 ### 2026-06-23 (autonomous) — P0 DATA-CORRECTNESS: 142k POLYMARKET empty_confirmed inflated by NULL instrument lifecycle (operator drill-down — CONFIRMED)
 

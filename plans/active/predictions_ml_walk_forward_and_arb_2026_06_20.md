@@ -115,6 +115,12 @@ downstream of the sports-half FSS feature production (the Group E gate).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 5 open. Four are explicitly BLOCKED-ON the
+  `sports_master` Group-E gate (FSS >=95% non-NULL features), a still-open cross-plan prerequisite carried in this doc's
+  own red banner; the doc is additionally `locked_by: live-defi-rollout`. The fifth (the `[DIAG] P2` on 8 registered
+  CQGs with zero manifest rows) is CONFLICT — claimed by `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`
+  todo 10.
+
 ### 2026-07-27 (slot-6) — Predictions MTDS `canonical_question_group` completion-% slice done, checkbox flipped
 
 Picked up via `/boot` (`prediction_satellite_ao_dispatch_batch2-003`). Read-only analysis, no code shipped, per the

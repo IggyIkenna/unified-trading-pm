@@ -152,6 +152,11 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 3 open,
+  `depends_on: [prediction_phase_ab_residuals_2026_07_24, prediction_phase_d_formal_smoke_and_backfill_2026_07_24]` +
+  `gate_on_depends: true`, both prerequisites still open (verified by direct read). KEEP-NA on the gate citation alone;
+  not re-derived.
+
 - **2026-07-24 (plan-hygiene split) — forked from `prediction_consolidated_closeout_2026_07_18.md`.** This plan carries
   forward the Phase E section verbatim (5 todos total: 2 done / 3 open at split time). See the parent's Progress Log
   (ticks 24-31 — the identity-wiring trace, the 3-venue Betfair signal build, the execution-bridge build, and the
