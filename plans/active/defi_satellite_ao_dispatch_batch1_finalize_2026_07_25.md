@@ -8,7 +8,7 @@ summary: >-
   source docs' checkboxes independently — 28 from the original 53 + 1 more for todo 54's source), plus 2 batch1-specific
   additions: re-check the 1 too-large-doc exclusion for whether it's now scoped enough for a batch2 pass, and re-verify
   the 1 operator-ruling item (Solana lending_indices path shape) has been answered before spinning it into a fresh todo.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

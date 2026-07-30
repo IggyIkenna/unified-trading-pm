@@ -9,7 +9,7 @@ summary: >-
   autonomous_session_operator_decisions_2026_07_25.md — some may become dispatchable as a batch5 once the operator
   confirms which side (the narrow batch-style fix vs. the master closeout's broader claim) should execute first, or how
   the ambiguous phantom-audit/decision-16 overlap should be sequenced.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

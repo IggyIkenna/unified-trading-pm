@@ -7,7 +7,7 @@ summary: >-
   batch3-finalize pattern: reconcile the two source docs, re-check batch4's dropped-by-conflict-check items in case
   batch3's competing claims changed, record an explicit stop-or-continue verdict for the defi tranche with its residual
   orphan count, then archive batch4. Also status: draft until the operator approves batch4 itself.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

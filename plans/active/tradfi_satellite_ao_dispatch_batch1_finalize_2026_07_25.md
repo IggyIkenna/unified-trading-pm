@@ -7,7 +7,7 @@ summary: >-
   each of the 4 distinct source docs' checkboxes independently), plus one batch1-specific addition: re-check the 38
   conflict-gated Deferred items once the operator has ruled on the queued decision in
   autonomous_session_operator_decisions_2026_07_25.md.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -21,7 +21,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

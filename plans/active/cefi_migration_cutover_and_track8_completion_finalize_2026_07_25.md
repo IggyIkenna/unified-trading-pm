@@ -8,7 +8,7 @@ summary: >-
   (cefi_residual_followups_after_honest_done_2026_07_17.md,
   cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md), then archives the now-fully-done
   cutover plan.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
