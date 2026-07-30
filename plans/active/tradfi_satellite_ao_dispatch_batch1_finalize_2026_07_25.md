@@ -51,16 +51,31 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 4 distinct source docs' checkboxes.** For each of
-      `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 5 now-done todos: flip the corresponding checkbox/ section
-      in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-1 commit(s) that
-      shipped it — verify the actual shipped commit exists before citing it. The 4 source docs:
-      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`,
-      `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`, `tradfi_phase_d_terminal_gate_2026_07_24.md` (2 todos),
-      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`. For each: after flipping, re-check whether it
-      now has 0 open todos remaining. Only flip a doc's `status` to `resolved` if it genuinely reaches 0 open todos
-      (checkbox AND prose-form). **Done when**: all 4 source docs' corresponding checkboxes/sections are flipped with
-      verified evidence, and any doc that genuinely reaches 0 open todos is flipped to `status: resolved`.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 — Reconciled all 4 distinct source docs' checkboxes.** Per-doc verdict (each
+      commit verified reachable via `git cat-file -e` before citing): -
+      `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (todo 1, the `EXCHANGE_CODE_TO_NAME` diff) —
+      **already reconciled**, no edit needed: `unified-trading-pm@67c4cab32` ("exhaustive EXCHANGE_CODE_TO_NAME diff —
+      flip tradfi_satellite_ao_dispatch_batch1-001") already appended the full diff table into this doc on 2026-07-26.
+      Doc keeps `status: open` — its sole checkbox (a P1-OPERATOR-DECISION re: CBOE/VX) is a genuinely different,
+      still-open item. - `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` (todo 2, the combined
+      cefi/sports-claim-verify + dry-run) — **already reconciled**, no edit needed: both applicable checkboxes already
+      read `[x]` (flipped 2026-07-25 and 2026-07-30 respectively, both citing their evidence in-doc). Doc keeps
+      `status: active` — its remaining DELETE checkbox is genuinely open (gated on a fresh Part-5 twin-coverage +
+      retention check, which the doc's own 2026-07-30 dry-run measured at 0%, not the required 100%). -
+      `tradfi_phase_d_terminal_gate_2026_07_24.md` (todos 3 + 4, the CBOE terminal-state DIAG + the VM-preemption
+      launcher-naming DOC addition) — todo 3's section ("2026-07-27 — CBOE terminal-state re-check") was **already
+      present verbatim**, no edit needed. Todo 4's backtick-wrapped VM-fleet-preemption note was **flipped to a real
+      `[x]`** this pass, citing `unified-trading-pm@3ebdd1a4e` (doc-scoping addition) + `deployment-service@db5d3c7`
+      (the launcher code fix, already cited in-doc). Doc keeps `status: active` — 2 genuinely open, operator-gated P0/P1
+      checkboxes remain (MVP backfill readiness gate; post-backfill reconciliation checkpoint). -
+      `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md` (todo 5, the Deribit 1-4 leg cap extension) —
+      its one remaining `[ ]` checkbox was **flipped to `[x]`** this pass, citing `instruments-service@9416be7d`. Doc
+      keeps `status: active` despite reaching 0 open checkboxes — genuine prose-form remaining work survives in the
+      "Scope migration mechanics" item (historical catalog `--apply` rewrite deferred pending operator confirmation,
+      non-durable against the self-refreshing `prod/catalog.parquet` roll-up until
+      `tradfi_canonical_path_migration_design_2026_07_19.md`'s upstream migration lands). **No doc genuinely reached 0
+      open todos (checkbox AND prose-form)**, so no `status: resolved` flips were made — each doc's remaining open item
+      (or prose-form caveat) is real and independently verified, not an oversight.
 - [ ] [REVIEW] P1. **Resolve the 38 conflict-gated Deferred items from batch1's own Deferred section**, now that the
       operator has (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`.
       For each of the 13 docs listed there: re-read the specific conflicting todo in

@@ -111,6 +111,12 @@ source:
 
 ## Progress Log
 
+- **2026-07-30 (tradfi_satellite_ao_dispatch_batch1_finalize reconciliation pass)** — Flipped the "VM fleet preemption
+  auto-recovery... coverage gap" backtick-wrapped note above to a real `[x]` checkbox, citing
+  `unified-trading-pm@3ebdd1a4e` (verified reachable) for the doc-scoping addition and the already-cited
+  `deployment-service@db5d3c7` for the launcher code fix. `status` stays `active` — this doc still carries 2 genuinely
+  open P0/P1 checkboxes (MVP backfill readiness gate; post-full-backfill reconciliation checkpoint), both operator-gated
+  per the na-eligibility-audit entry below, so it does not reach 0 open todos.
 - **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Both open todos read end-to-end and are
   explicitly gated. The P0 MVP-backfill-readiness gate says in its own text "**Still blocked** … do not start this until
   the chain-bundle follow-up is resolved **or the operator explicitly accepts the current evidence as sufficient**" — an
@@ -393,18 +399,21 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   `"FX": "fx"`) + `instruments-service@f9be7ec7` (new `FxReferenceDataAdapter`,
   `instruments_service/reference_data/adapters/tradfi/fx.py`, byte-identical canonical-id construction to MTDS's own
   `FX:SPOT_PAIR:{BASE}-{QUOTE}`, 5 new unit tests, all passing).
-- `- [ ] [DATA] P2. VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs`
-  (found investigating why Phase-D checker VMs kept hitting `vm_self_deleted_no_exit_status` with no auto-relaunch):
-  auto-detect + auto-relaunch (`exit_code_fleet_monitor.py` → `RelaunchPreemptedVm`) DOES cover
-  `mtds-backfill-*-pipelinecheck-*`/`instr-backfill-*-pipelinecheck-*` VMs by launcher-prefix registry match, but its
-  trigger (a `PREEMPTED` blob written by a systemd unit installed partway through `setup-data-pipeline-vm.sh`'s
+- [x] ✅ [DATA] P2. **VM fleet preemption auto-recovery has a real, already-tracked coverage gap for short-lived VMs —
+      DONE 2026-07-27 (slot-15), flipped by `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`'s
+      reconciliation pass.** (found investigating why Phase-D checker VMs kept hitting `vm_self_deleted_no_exit_status`
+      with no auto-relaunch): auto-detect + auto-relaunch (`exit_code_fleet_monitor.py` → `RelaunchPreemptedVm`) DOES
+      cover `mtds-backfill-*-pipelinecheck-*`/`instr-backfill-*-pipelinecheck-*` VMs by launcher-prefix registry match,
+      but its trigger (a `PREEMPTED` blob written by a systemd unit installed partway through
+      `setup-data-pipeline-vm.sh`'s
   > 1000-line startup) only reliably fires for multi-hour production backfills — a single-shard smoke-test VM is
   > disproportionately likely to be preempted in the early-boot blind window before the unit installs, exactly the
   > silent-miss case tracked in `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (archived
-  > 2026-07-30, all 9 todos done). Items 8-9 already named `launch-instruments-backfill-vm.sh` and
-  > `launch-mtds-backfill-vm.sh` (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*`
-  > VM names this note describes) as 2 of the 8 launchers the native-shutdown-script fix landed on, shipped
-  > `deployment-service@db5d3c7` — the gap this note flags is now closed at the launcher level.
+  > 2026-07-30, all 9 todos done). **Evidence: unified-trading-pm@3ebdd1a4e** named both
+  > `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates in that doc's item 8/9
+  > scoping list (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this
+  > note describes); the actual native-shutdown-script code fix shipped `deployment-service@db5d3c7` — the gap this note
+  > flags is now closed at both the doc-scoping and launcher levels.
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
