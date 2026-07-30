@@ -11,7 +11,11 @@ summary: >-
   corpus, per operator request. The Tracks' **Sources** lists below are the authoritative membership (they are what a
   topic-scoped `/plan-reconcile ao` / `/ag-closeout-audit ao` run resolves against) — count them, do not restate a count
   here.
-status: active
+status:
+  complete # (was: active) 2026-07-30 finalize sweep (ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md): both
+  # `## Todos` items re-verified against their own stated regression-test done-when (agent-orchestrator@64b5310 +
+  # @77fc60a both confirmed ancestors of live-defi-rollout HEAD, both named regression tests re-run live and PASS);
+  # zero `- [ ]` remain, `locked_by:` empty -- archival-eligible per plan-completion-and-archival-discipline.md.
 nature: process
 asset_group:
   [ao] # corrected 2026-07-29 (ag-closeout-audit cross-cutting-tranche run) -- was [cross-cutting]. This is the `ao`
@@ -53,6 +57,20 @@ source: >-
   `infrastructure_master` docs into this AO tranche, per operator request to make the 5-AG + cross-cutting + ao + ci +
   infra topic partition total (zero orphans) for sharded `/plan-reconcile` and `/ag-closeout-audit` runs.
 ---
+
+## Deferred work — migrated to:
+
+**N/A — this doc is a pure reachability digest, not a work-owning plan** (its own words: "this doc carries **zero todos
+of its own**" outside the 2 `## Todos` items just closed). Archiving it does NOT close the AO tranche's underlying work
+— the 2026-07-30 `/ag-closeout-audit ao` audit found 37/44 Sources still orphaned; that live picture is tracked in
+`ao_satellite_ao_dispatch_batch1_2026_07_26.md` (+ its gated finalize) and the still-open
+`ao_open_issues_consolidated_close_out_2026_07_17.md`, not here.
+
+> **🗄️ ARCHIVED 2026-07-30** (`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`'s own todo) — this doc's own
+> scope (its 2 `## Todos` items) is complete and `locked_by:` is empty; per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` a plan with every top-level todo `[x]` archives
+> immediately. Does not represent the `ao` topic tranche being done — see the still-active satellite/open-issues plans
+> named above for that.
 
 # AO consolidated close-out
 
@@ -340,3 +358,15 @@ missing from Sources entirely).
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
   Companion gated finalize plan authored: `ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`.
+- **2026-07-30 (finalize sweep)** — `ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`'s todo re-verified both
+  `## Todos` commits directly (not trusting this doc's own evidence copy): `agent-orchestrator@64b5310` and `@77fc60a`
+  both confirmed ancestors of `live-defi-rollout` HEAD, and their named regression tests
+  (`test_pane_read_latency_with_advancing_progress_markers_produces_zero_kicks`,
+  `test_genuinely_wedged_slot_still_escalates_after_grace_fix`) re-run live — **2 passed**. Zero `- [ ]` remain in this
+  doc's `## Todos` section and `locked_by:` is empty, so this doc is archival-eligible; archived per the 6-step ritual.
+  Migrated the composed grace-shield + escalation contract into
+  `/codex/04-architecture/agent-orchestrator-worker-liveness.md`'s new § "WorkerLivenessKicker — host-load-aware grace
+  shield + hard-kill escalation" (it previously described only the Watchdog kill layer, not the Kicker nudge layer where
+  this fix landed). Archiving this digest does not close the tranche: 37/44 Sources are still orphaned per the
+  2026-07-30 `/ag-closeout-audit ao` finding above — see `ao_satellite_ao_dispatch_batch1_2026_07_26.md` and
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` for the live picture.

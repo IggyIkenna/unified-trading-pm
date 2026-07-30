@@ -19,7 +19,7 @@ tags: [ci, cicd, close-out, consolidation, quickmerge, github-actions, cloud-bui
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]

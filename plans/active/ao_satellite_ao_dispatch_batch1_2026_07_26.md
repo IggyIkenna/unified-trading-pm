@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-1, satellite-docs]
 related:
   [
-    /plans/active/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -54,11 +54,11 @@ source: >-
 
 ## Why this plan exists (the coverage gap, measured)
 
-`/plans/active/ao_consolidated_closeout_2026_07_25.md` carries **zero todos** (`grep -c '^- \[ \]'` and
-`grep -c '^- \[x\]'` both return 0; `assigned_vm: NA`, `execution_scope: local-only`) — it is a Sources digest plus
-close-out criteria, exactly the "digest, not real dispatch" shape the `/ag-closeout-audit` skill describes. No
-`ao_*batch*` plan has ever existed for this tranche. So nothing was working the specific open items inside the 35
-satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of that work.
+`/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md` (archived 2026-07-30) carried **zero todos**
+(`grep -c '^- \[ \]'` and `grep -c '^- \[x\]'` both return 0; `assigned_vm: NA`, `execution_scope: local-only`) — it is
+a Sources digest plus close-out criteria, exactly the "digest, not real dispatch" shape the `/ag-closeout-audit` skill
+describes. No `ao_*batch*` plan has ever existed for this tranche. So nothing was working the specific open items inside
+the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of that work.
 
 ## Rules for every worker on this plan
 
@@ -246,18 +246,18 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
       that also names `bootstrap.py`/regen ids — do not touch task-id derivation here.
 
       **2026-07-28 update — the actual root cause is now found and fixed, this todo is no longer blocking, but is
-                                                                                                  NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
-                                                                                                  `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
-                                                                                                  not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
-                                                                                                  `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
-                                                                                                  downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
-                                                                                                  logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
-                                                                                                  resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
-                                                                                                  defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
-                                                                                                  the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
-                                                                                                  primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
-                                                                                                  unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
-                                                                                                  decision this session didn't make.
+                                                                                                          NOT fully redundant.** The source issue's real mechanism was confirmed to be an UPDATE (a status regression via
+                                                                                                          `state_store/tasks.py::release_task_to_queue()` being called with a stale slot pointer to an already-`done` task),
+                                                                                                          not a bare DELETE — by the time `_prune_stale` deletes the row, it has already legitimately regressed to
+                                                                                                          `queued`/undispatched, so a DELETE-trigger alone would never have caught the actual corruption in time, only its
+                                                                                                          downstream symptom. Fixed via an application-level guard directly inside `release_task_to_queue()` (refuses +
+                                                                                                          logs on an already-terminal row; the one legitimate caller,`/reopen`, opts in via `allow_terminal=True`) — see the
+                                                                                                          resolved issue doc for full detail. **This todo's original DELETE-trigger idea is still a legitimate, narrower
+                                                                                                          defense-in-depth item** if the team wants a backstop against a hypothetical raw out-of-band SQL delete bypassing
+                                                                                                          the ORM entirely (the one thing this fix, being Python-level, still cannot catch) — but it is no longer the
+                                                                                                          primary mitigation and is not blocking anything. Left open at the worker's/operator's discretion rather than
+                                                                                                          unilaterally closed, since scoping a DELETE-trigger specifically for the raw-SQL case is a real, separate design
+                                                                                                          decision this session didn't make.
 
 - [ ] [REVIEW] P3. **Redefine the ao tranche's membership rule from a hand-maintained Sources list to an epic-based
       rule, then triage the delta.** Added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md`
@@ -410,15 +410,15 @@ satellite docs. This plan extracts the conflict-clear, bounded-outcome subset of
 ## Progress Log
 
 - **2026-07-26** — Authored by `/ag-closeout-audit ao` (autonomous mode, operator away). Phase 0 resolved membership as
-  the 35 Sources of `/plans/active/ao_consolidated_closeout_2026_07_25.md` and found the closeout carries zero todos and
-  no `ao_*batch*` plan exists. Phase 1 read all 35 docs end to end (single-threaded — the run environment exposed no
-  Workflow/Agent tool, so the skill's per-doc fan-out could not be used); 2 docs are archivable now, 1 is covered by
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`, and 32 are orphaned. Phase 3 grepped every
-  candidate target file (`server/db.py`, `regen_backlog_from_plan`, `slot-git-status-report`, `routes/git_health`,
-  `slot-cron-ff-pull`, `playwright.config.ts`, `head_backward_canary`, `auto_park.py`, `server/bootstrap.py`,
-  `test_watchdog_unpushed_sweep`, `_ahead_push`, `stale_dispatch`, `slots_worker.py`) across the whole `plans/active`
-  corpus; two apparent collisions were refuted by reading the hits (the
-  `ao_dashboard_backlog_detail_queue_lag_e2e_flaky` playwright mention is a stashed-diff reproduction note about a
+  the 35 Sources of `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md` (archived 2026-07-30) and found the
+  closeout carries zero todos and no `ao_*batch*` plan exists. Phase 1 read all 35 docs end to end (single-threaded —
+  the run environment exposed no Workflow/Agent tool, so the skill's per-doc fan-out could not be used); 2 docs are
+  archivable now, 1 is covered by `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`, and 32 are
+  orphaned. Phase 3 grepped every candidate target file (`server/db.py`, `regen_backlog_from_plan`,
+  `slot-git-status-report`, `routes/git_health`, `slot-cron-ff-pull`, `playwright.config.ts`, `head_backward_canary`,
+  `auto_park.py`, `server/bootstrap.py`, `test_watchdog_unpushed_sweep`, `_ahead_push`, `stale_dispatch`,
+  `slots_worker.py`) across the whole `plans/active` corpus; two apparent collisions were refuted by reading the hits
+  (the `ao_dashboard_backlog_detail_queue_lag_e2e_flaky` playwright mention is a stashed-diff reproduction note about a
   DIFFERENT config file, and every `regen_backlog_from_plan` hit in `ao_open_issues_consolidated_close_out` is
   diagnostic prose, not a competing change), and the genuine ones are in the Deferred sections above. Four facts were
   measured rather than assumed while drafting and are recorded inline in the todos that depend on them: the DB-pool root

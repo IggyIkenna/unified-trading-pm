@@ -80,9 +80,9 @@ That was a correct reading on 2026-07-25. It is stale now: the 2026-07-27 corpus
 `ao`, `ci` and `infrastructure` **real dedicated `asset_group` enum values** (10 values now), and 3 of the 4 affected
 tranches have a real closeout family the glob would find today:
 
-| tranche          | closeout doc present?                                                          | in `REAL_AGS`? | gated? |
-| ---------------- | ------------------------------------------------------------------------------ | -------------- | ------ |
-| `ao`             | `/plans/active/ao_consolidated_closeout_2026_07_25.md`                          | no             | **no** |
+| tranche          | closeout doc present?                                                           | in `REAL_AGS`? | gated? |
+| ---------------- | ------------------------------------------------------------------------------- | -------------- | ------ |
+| `ao`             | archived only (`/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`) | no             | **no** |
 | `infrastructure` | `/plans/active/infra_consolidated_closeout_2026_07_25.md`                       | no             | **no** |
 | `cross-cutting`  | `/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md`               | no             | **no** |
 | `ci`             | archived only (`/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`) | no             | **no** |
@@ -105,7 +105,7 @@ Run this session against `plans/active/` + `plans/active/issues/` (643 docs pars
 - `check_ag_closeout_linkage.py` → **`✅ 0 orphan(s) (baseline 0)`**
 - Same corpus, cross-cutting tranche: **29 of 119** `asset_group: cross-cutting` docs (24%) have their basename appear
   **zero times** in ANY of the 7 cross-cutting covering plans (the consolidated closeout + batch1/1b/2 + both finalizes
-  + the determinism plan). 28 of those 29 carry genuinely-open remaining work.
+  - the determinism plan). 28 of those 29 carry genuinely-open remaining work.
 
 The gate's green is not wrong for what it measures; it is simply silent about 4 of the 9 tranches the
 `/ag-closeout-audit` skill invokes it for. SKILL.md's classification-mechanism section tells the operator to trust it
@@ -162,9 +162,9 @@ audited by nobody this cycle. Options:
   gate then holds the line automatically. Lowest risk, fixes cause and symptom together.
 - **B**: retag opportunistically, each tranche's audit retagging what it finds. Cheaper per cycle, but guarantees a
   window each cycle where a retagged doc is in nobody's snapshot.
-- **C**: accept `cross-cutting` as the de-facto home for fleet-wide CI/AO incidents and instead widen the
-  cross-cutting closeout's own Sources list. Rejects the 9-way partition's premise; only sensible if the operator judges
-  the `ci`/`ao` split isn't earning its keep.
+- **C**: accept `cross-cutting` as the de-facto home for fleet-wide CI/AO incidents and instead widen the cross-cutting
+  closeout's own Sources list. Rejects the 9-way partition's premise; only sensible if the operator judges the `ci`/`ao`
+  split isn't earning its keep.
 - **Other**: operator can specify a different split.
 
 ## Codex SSOTs

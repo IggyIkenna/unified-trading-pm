@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 241 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -877,11 +877,8 @@ by hand._
 - [`v2_engine_venue_buildout_2026_06_15`](./v2_engine_venue_buildout_2026_06_15.md) — Build out real strategy engines
   for 22 engineless archetypes and wire up 9 unwired venues in the v2 strategy framework.
 
-### ao (6)
+### ao (5)
 
-- [`ao_consolidated_closeout_2026_07_25_finalize_2026_07_30`](./ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md)
-  — Gated closeout for ao_consolidated_closeout_2026_07_25.md, reclassified `assigned_vm: NA -> planning` by the
-  na-eligibility-audit infra-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 - [`ao_fleet_observability_kpis_2026_07_20`](./ao_fleet_observability_kpis_2026_07_20.md) — Roughly four of five
   dispatches produce no completion and nothing surfaces it, 43% of CI escalations go unresolved after ~3.8 dispatches
   each, plan_health burns 55 haiku runs a day of which 13 return nothing, snapshot recency is…

@@ -22,10 +22,11 @@ referenced_by:
     plans/audit/instructions/orchestrator_master_audit_instructions.md,
   ]
 owner:
-last_reviewed: 2026-07-21
+last_reviewed: 2026-07-30
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
+    agent-orchestrator/server/worker_liveness/__init__.py,
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/tmux_pruner.py,
@@ -171,6 +172,33 @@ progressing and would have re-invoked the worker on its own completion. A worker
 synchronous, multi-minute foreground wait (rather than truly backgrounding it AND continuing to `/progress` every ~10min
 per the worker heartbeat HARD RULE) is exactly the scenario this reaps — confirmed root cause for
 `issues/worker_session_teardown_kills_long_running_pipeline_check_2026_07_27.md`'s ~19-minute reproduction.
+
+---
+
+## WorkerLivenessKicker — host-load-aware grace shield + hard-kill escalation (2026-07-29/30)
+
+The nudge layer (`server/worker_liveness/__init__.py`, `WorkerLivenessKicker._tick_once`) fires `worker_kicked` on a
+frozen/idle pane read. Under sustained host saturation, a single stale pane read can misclassify a worker that is
+genuinely still progressing (OS scheduler delays pane I/O past the read) — resolved by operator ruling 2026-07-29 (fix
+false-positive detection first, then escalation speed), per
+`plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`'s two sequenced todos:
+
+- **Progress-marker grace shield** (`agent-orchestrator@64b5310`) —
+  `_progress_marker_shields_kick(last_ping_ts, now, grace_seconds)` suppresses `worker_kicked` when `slot.last_ping`
+  advanced within `kick_progress_grace_seconds` (config default **90s**), even when the pane read classifies
+  frozen/idle. A worker demonstrably still progressing (recent heartbeat) is never kicked on a single bad pane sample.
+- **Hard-kill escalation is unchanged and already correct** (`agent-orchestrator@77fc60a` — audit finding, no new
+  mechanism needed): `kick_escalation_threshold` (default **3**) forces
+  `_maybe_auto_respawn_stuck_slot(..., force=True)` — kills the wedged tmux session and resumes the in-flight task via
+  `--resume` — once `_consecutive_kick_failures` reaches the threshold, gated on `genuinely_recovered` (pane verified
+  'working'). With the grace shield now in place, a genuinely-wedged slot (no ping progress, beyond grace) still reaches
+  N=3 at the same real-world cadence as the original incident spec (~5-6 min/kick × 3 ≈ 15-18 min) — no threshold/timing
+  re-scope was warranted.
+
+Composition regression coverage lives in `tests/test_worker_liveness.py`:
+`test_pane_read_latency_with_advancing_progress_markers_produces_zero_kicks` (grace shield alone) and
+`test_genuinely_wedged_slot_still_escalates_after_grace_fix` (grace shield + escalation together — a beyond-grace slot
+still hits `force=True` at exactly `kick_escalation_threshold` kicks).
 
 ---
 

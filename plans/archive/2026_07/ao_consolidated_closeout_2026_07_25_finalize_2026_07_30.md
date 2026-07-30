@@ -7,7 +7,9 @@ summary: >-
   ao-dispatch-batch-naming-and-conflict-check.md §1(b) — name unchanged, bolt-on finalize twin). Once the source doc's 2
   todos (liveness-kick host-load-awareness, soft-kick-to-hard-kill escalation) are done, verifies the fix against its
   own stated regression-test criteria and checks whether the source doc is now itself an archival candidate.
-status: active
+status:
+  complete # (was: active) 2026-07-30 -- own single todo done, zero remaining, locked_by empty -- archival-eligible
+  # per plan-completion-and-archival-discipline.md
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -16,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, reclassification, na-audit]
 related:
   [
-    /plans/active/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -43,6 +45,11 @@ source: >-
   already-owned assigned_vm:NA doc per the skill's Phase 2/3 (conflict-check cleared: the 2 todos were added 2026-07-29,
   after ao_satellite_ao_dispatch_batch1_2026_07_26.md was drafted, so no active planning doc claims this content).
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — this doc's own single todo is `[x]` and `locked_by:` is empty; per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` a plan with every top-level todo done archives
+> immediately. Its parent, `ao_consolidated_closeout_2026_07_25.md`, was archived in the same pass — see
+> `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`.
 
 # AO consolidated close-out — finalize
 
@@ -71,6 +78,9 @@ source: >-
       section grep-verified at **zero** remaining `- [ ]` items, `locked_by:` empty — archival-eligible. Per the 6-step
       ritual: migrated the composed grace-shield + escalation contract into
       `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (new § "WorkerLivenessKicker — host-load-aware
-      grace shield + hard-kill escalation"), added archived-banners, fixed corpus referrer paths, updated
-      `ag_closeout_audit_rollout_2026_07_25.md`'s tracker reference, and archived both this finalize plan and its parent
-      to `plans/archive/2026_07/`.
+      grace shield + hard-kill escalation"), added archived-banners, fixed corpus referrer paths (satellite batch1 + its
+      finalize twin, `infra_consolidated_closeout_2026_07_25.md`,
+      `ag_closeout_linkage_gate_blind_to_four_tranches_     2026_07_30.md`, `plans/epics/orchestrator_master.md`), and
+      archived both this finalize plan and its parent to `plans/archive/2026_07/`. Checked
+      `ag_closeout_audit_rollout_2026_07_25.md` for a "Finish applying" tracker entry naming this specific finalize doc
+      — none found (the phrase matches an unrelated mass-flip item); no edit made there.
