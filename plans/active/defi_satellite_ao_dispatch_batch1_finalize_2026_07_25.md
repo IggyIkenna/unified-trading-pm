@@ -8,7 +8,7 @@ summary: >-
   source docs' checkboxes independently — 28 from the original 53 + 1 more for todo 54's source), plus 2 batch1-specific
   additions: re-check the 1 too-large-doc exclusion for whether it's now scoped enough for a batch2 pass, and re-verify
   the 1 operator-ruling item (Solana lending_indices path shape) has been answered before spinning it into a fresh todo.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -46,6 +46,13 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 1 — finalize
 
+> **🟢 ARCHIVED 2026-07-30.** All 4 todos done: source-doc reconciliation (todo 1), the too-large-doc batch2 re-check
+> (todo 2), the operator-ruling re-check (todo 3), and this archival (todo 4) — parent moved to
+> `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`, corpus referrers updated (23 files with a
+> literal `plans/active/...` path to the parent + 4 files pointing at this finalize doc's own path). No new durable
+> contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided spec, per
+> the parent's own banner).
+>
 > **Machine-gated on `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until all 54 tasks in that plan are `done`. `sequential: true` because todo 2
 > needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
@@ -154,11 +161,21 @@ drift_direction: advance-code
       answered (not still-queued); the deferred candidate was already fully extracted, dispatched, executed, and
       verified through batch1 + its own follow-up issue doc — there is nothing left to spin into a fresh
       `defi_satellite_ao_dispatch_batch2` item for this conflict.
-- [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
-      above should have already resolved the too-large-doc and operator-ruling exclusions — verify none remain
-      untracked) → add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
-      `defi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location → clear
-      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-7).** **Archived `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the
+      standard 6-step ritual (per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): (1) verified
+      no untracked Deferred items remain — todos 2/3 above already confirmed the too-large-doc exclusion and the
+      operator-ruling item are both genuinely closed with nothing left to migrate; (2) added the 🟢 ARCHIVED banner to
+      both this doc and the parent, flipped both `status: complete`; (3) ran the codex-alignment check — this batch
+      executed already-decided specs only, nothing new to reflect in codex; (4) no new CLAUDE.md/codex contract shipped
+      by this finalize task itself (individual todos' own contracts, if any, were codex-aligned at their own ship time);
+      (5) grepped the whole `unified-trading-pm` corpus for every literal
+      `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md` /
+      `plans/active/defi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` path and repointed each to
+      `plans/archive/2026_07/...` — 23 files fixed for the parent's path, 4 files fixed for this finalize doc's own path
+      (bare-filename prose mentions with no path prefix were left as-is, consistent with the prediction/cefi/tradfi
+      sibling archivals); regenerated `plans/active/INDEX.md` via `scripts/plans/regenerate_active_plan_index.py`
+      (auto-generated file, never hand-edited) so both entries drop out of the active index; (6) `locked_by` confirmed
+      empty on both docs, both moved via `git mv` to `plans/archive/2026_07/` in the same commit as this finalize doc's
+      own archival. **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the
+      new path, and this finalize doc itself gets archived alongside it in the same commit. — unified-trading-pm (SHA
+      recorded at ship time below).
