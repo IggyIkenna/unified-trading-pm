@@ -276,5 +276,119 @@ def test_module_to_package_move_preserves_surface_is_not_breaking():
     assert not reasons, reasons
 
 
+def test_removed_registry_set_member_is_breaking():
+    """Contract-surface registry dict: removing a set-member is breaking.
+
+    breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md — the AST differ
+    used to see no change at all here (name stays exported, annotation stays
+    ``dict[str, set[str]]``) even though a real capability tuple disappeared.
+    """
+    base = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE", "OPTION"},
+    "BYBIT": {"PERPETUAL", "FUTURE"},
+}
+"""
+    new = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE"},
+    "BYBIT": {"PERPETUAL", "FUTURE"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("OPTION" in r and "OKX" in r for r in reasons)
+
+
+def test_added_registry_set_member_is_not_breaking():
+    """Contract-surface registry dict: adding a set-member is additive-OK."""
+    base = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE"},
+}
+"""
+    new = """
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE", "OPTION"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
+def test_untagged_registry_dict_change_is_not_breaking():
+    """A module-level annotated dict WITHOUT the ``# @contract-surface`` marker is
+    ordinary internal config — a mutation must not trip the gate (else every internal
+    constant dict edit in the workspace would suddenly need a differ allowlist entry)."""
+    base = """
+SOME_INTERNAL_MAP: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL", "FUTURE", "OPTION"},
+}
+"""
+    new = """
+SOME_INTERNAL_MAP: dict[str, set[str]] = {
+    "OKX": {"PERPETUAL"},
+}
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
+def test_regression_23fa3a99_okx_bybit_spot_pair_removal_is_breaking():
+    """Exact regression fixture: unified-api-contracts@23fa3a99 removed "SPOT_PAIR" from
+    the bare "OKX"/"BYBIT" set-values of INSTRUMENT_TYPES_BY_VENUE — instruments-service's
+    build_expected('cefi') silently dropped 4 real OKX-SPOT-captured tuples (75->71), and
+    the differ reported ``is_breaking: false`` (proven live at the time:
+    `old_export_count == new_export_count == 1153`). This must now report breaking.
+    Shape mirrors venue_constants.py's real dict (Name-keyed venue constants mixed with
+    bare string-literal legacy keys) so the module-constant resolution path is exercised
+    too, not just the literal-key path.
+    """
+    base = """
+BINANCE_SPOT = "BINANCE-SPOT"
+OKX_SPOT = "OKX-SPOT"
+BYBIT_SPOT = "BYBIT-SPOT"
+
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    BINANCE_SPOT: {"SPOT_PAIR"},
+    "COINBASE": {"SPOT_PAIR"},
+    OKX_SPOT: {"SPOT_PAIR"},
+    "OKX": {"SPOT_PAIR", "PERPETUAL", "FUTURE", "OPTION"},
+    BYBIT_SPOT: {"SPOT_PAIR"},
+    "BYBIT": {"SPOT_PAIR", "PERPETUAL", "FUTURE"},
+}
+"""
+    head = """
+BINANCE_SPOT = "BINANCE-SPOT"
+OKX_SPOT = "OKX-SPOT"
+BYBIT_SPOT = "BYBIT-SPOT"
+
+# @contract-surface
+INSTRUMENT_TYPES_BY_VENUE: dict[str, set[str]] = {
+    BINANCE_SPOT: {"SPOT_PAIR"},
+    "COINBASE": {"SPOT_PAIR"},
+    OKX_SPOT: {"SPOT_PAIR"},
+    "OKX": {"PERPETUAL", "FUTURE", "OPTION"},
+    BYBIT_SPOT: {"SPOT_PAIR"},
+    "BYBIT": {"PERPETUAL", "FUTURE"},
+}
+"""
+    old_surf = extract_surface(base, "venue_constants")
+    new_surf = extract_surface(head, "venue_constants")
+    # Regression-guard the false-negative itself: export surface is unchanged (matches the
+    # live 1153->1153 count observed on the real incident), so a pre-fix differ would have
+    # reported non-breaking purely on exports/fields/enums/routes.
+    assert old_surf.exports == new_surf.exports
+    reasons = diff_surfaces(old_surf, new_surf)
+    assert reasons, "23fa3a99-shape SPOT_PAIR removal from OKX/BYBIT must be flagged breaking"
+    assert any("SPOT_PAIR" in r and "OKX" in r for r in reasons)
+    assert any("SPOT_PAIR" in r and "BYBIT" in r for r in reasons)
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))

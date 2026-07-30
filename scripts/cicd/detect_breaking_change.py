@@ -144,6 +144,10 @@ class PublicSurface:
     methods: dict[str, Signature] = field(default_factory=dict)  # Class.method -> sig
     fields: dict[str, str] = field(default_factory=dict)  # Class.field -> annotation
     routes: set[str] = field(default_factory=set)  # "GET /path" decorators
+    # Module-level dict constants explicitly tagged `# @contract-surface` (the UAC
+    # registry-data-dict case — INSTRUMENT_TYPES_BY_VENUE et al.). name -> a snapshot
+    # tree built by `_registry_value` (see there for the shape).
+    registries: dict[str, dict[str, object]] = field(default_factory=dict)
 
 
 def _annotation_str(node: ast.AST | None) -> str:
@@ -180,13 +184,94 @@ def _route_decorators(node: ast.AST) -> set[str]:
     return routes
 
 
+_CONTRACT_SURFACE_MARKER = "@contract-surface"
+
+
+def _has_contract_surface_marker(lines: list[str], assign_lineno: int) -> bool:
+    """True if a comment block immediately above ``assign_lineno`` (1-indexed) tags the
+    constant it precedes as contract surface — ``# @contract-surface`` anywhere in a
+    run of ``#``-comment lines directly touching the assignment (no blank-line gap).
+    Lets a registry constant self-declare its contract status at the definition site
+    (module-owner-maintained) instead of a differ-side allowlist that drifts from the
+    registries it's meant to track.
+    """
+    i = assign_lineno - 2  # 0-indexed line directly above the assignment
+    while i >= 0:
+        stripped = lines[i].strip()
+        if not stripped.startswith("#"):
+            return False
+        if _CONTRACT_SURFACE_MARKER in stripped:
+            return True
+        i -= 1
+    return False
+
+
+def _module_str_constants(tree: ast.Module) -> dict[str, str]:
+    """Top-level ``NAME = "literal"`` bindings in this module.
+
+    A registry dict's keys are frequently module constants, not inline literals
+    (``{BINANCE_SPOT: {"SPOT_PAIR"}, ...}`` — venue_constants.py declares
+    ``BINANCE_SPOT = "BINANCE-SPOT"`` earlier in the same file). Resolving these is
+    required for ``_registry_key`` to see the real venue string instead of silently
+    dropping every Name-keyed entry (which, for INSTRUMENT_TYPES_BY_VENUE, is most of
+    the dict — including OKX_SPOT/BYBIT_SPOT, the exact venues the original
+    23fa3a99-class incident's SPOT_PAIR capability now lives under post-Option-A).
+    """
+    out: dict[str, str] = {}
+    for node in tree.body:
+        if not isinstance(node, ast.Assign):
+            continue
+        if not (isinstance(node.value, ast.Constant) and isinstance(node.value.value, str)):
+            continue
+        for tgt in node.targets:
+            if isinstance(tgt, ast.Name):
+                out[tgt.id] = node.value.value
+    return out
+
+
+def _registry_key(node: ast.expr, name_consts: dict[str, str]) -> str | None:
+    """Resolve one dict KEY node to its string value: a literal, or a Name bound to a
+    module-level string constant (see ``_module_str_constants``)."""
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return node.value
+    if isinstance(node, ast.Name):
+        return name_consts.get(node.id)
+    return None
+
+
+def _registry_value(node: ast.expr, name_consts: dict[str, str]) -> frozenset[str] | dict[str, object] | None:
+    """Snapshot one VALUE inside a tagged registry dict, recursively.
+
+    - a ``Set``/``List``/``Tuple`` of string constants -> its member set (a removed
+      member is the exact ``23fa3a99`` bug class: SPOT_PAIR dropped from OKX's set);
+    - a ``Dict`` -> a nested key->snapshot map (a removed KEY is breaking, e.g. a
+      removed ``data_type`` under ``VENUE_DATA_TYPE_CAPABILITIES[venue]``);
+    - anything else (a literal date string, a computed expression, ...) -> None,
+      "opaque" — we do not track VALUE mutations of a leaf, only key/member removal.
+    """
+    if isinstance(node, (ast.Set, ast.List, ast.Tuple)):
+        members = {e.value for e in node.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)}
+        return frozenset(members) if len(members) == len(node.elts) else None
+    if isinstance(node, ast.Dict):
+        out: dict[str, object] = {}
+        for key_node, val_node in zip(node.keys, node.values, strict=False):
+            key = _registry_key(key_node, name_consts)
+            if key is not None:
+                out[key] = _registry_value(val_node, name_consts)
+        return out
+    return None
+
+
 def extract_surface(source: str, module: str) -> PublicSurface:
     """Extract the public API surface of one module's source text."""
     surf = PublicSurface()
+    lines = source.splitlines()
     try:
         tree = ast.parse(source)
     except SyntaxError:
         return surf
+
+    name_consts = _module_str_constants(tree)
 
     # __all__ if declared
     declared_all: set[str] | None = None
@@ -243,6 +328,16 @@ def extract_surface(source: str, module: str) -> PublicSurface:
             for tgt in node.targets:
                 if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":
                     surf.exports.add(tgt.id)
+        elif isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name) and isinstance(node.value, ast.Dict):
+            # Module-level annotated dict constant (e.g. ``NAME: dict[str, set[str]] = {...}``)
+            # explicitly tagged ``# @contract-surface`` — a registry data-dict whose literal
+            # keys/collection-members ARE the contract (the UAC INSTRUMENT_TYPES_BY_VENUE case).
+            # Untagged AnnAssigns are left alone (not added to exports either) — this is an
+            # opt-in extension, not a change to the general export/field surface.
+            if _has_contract_surface_marker(lines, node.lineno):
+                snapshot = _registry_value(node.value, name_consts)
+                if isinstance(snapshot, dict):
+                    surf.registries[node.target.id] = snapshot
 
     # If __all__ is declared, the export surface is exactly it (the intentional public API) —
     # minus by-convention-private (underscore-prefixed) names. Listing a ``_name`` in __all__ is
@@ -262,6 +357,7 @@ def merge(a: PublicSurface, b: PublicSurface) -> PublicSurface:
     out.methods = {**a.methods, **b.methods}
     out.fields = {**a.fields, **b.fields}
     out.routes = a.routes | b.routes
+    out.registries = {**a.registries, **b.registries}
     return out
 
 
@@ -275,6 +371,33 @@ def surface_at(ref: str, paths: list[str]) -> PublicSurface:
         module = path.replace("/", ".").removesuffix(".py")
         surf = merge(surf, extract_surface(content, module))
     return surf
+
+
+def _diff_registry(label: str, old: dict[str, object], new: dict[str, object]) -> list[str]:
+    """Diff one ``# @contract-surface`` registry dict, recursing into nested dict values.
+
+    A removed top-level/nested KEY, or a removed SET/LIST MEMBER, is breaking — mirrors
+    the manifest ``schema_version`` precedent (a data registry's literal contents are the
+    contract, not just its Python type annotation). Additive changes (new key, new
+    member) and non-collection VALUE mutations (e.g. a ``VENUE_DATA_TYPE_CAPABILITIES``
+    inner date string changing) are intentionally NOT flagged — matches the "additive
+    stays non-breaking" rule and the todo's stated scope. See
+    breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md.
+    """
+    reasons: list[str] = []
+    removed_keys = sorted(set(old) - set(new))
+    if removed_keys:
+        reasons.append(f"removed registry key(s) {label}: {removed_keys}")
+    for key in sorted(set(old) & set(new)):
+        old_v, new_v = old[key], new[key]
+        if isinstance(old_v, frozenset) and isinstance(new_v, frozenset):
+            removed_members = sorted(old_v - new_v)
+            if removed_members:
+                reasons.append(f"removed registry member(s) {label}[{key!r}]: {removed_members}")
+        elif isinstance(old_v, dict) and isinstance(new_v, dict):
+            reasons.extend(_diff_registry(f"{label}[{key!r}]", old_v, new_v))
+        # type-changed (set<->dict<->opaque) or opaque-on-either-side: not tracked here.
+    return reasons
 
 
 def diff_surfaces(old: PublicSurface, new: PublicSurface) -> list[str]:
@@ -331,6 +454,16 @@ def diff_surfaces(old: PublicSurface, new: PublicSurface) -> list[str]:
     removed_routes = sorted(old.routes - new.routes)
     if removed_routes:
         reasons.append(f"removed HTTP route(s): {removed_routes}")
+
+    # 5) `# @contract-surface`-tagged registry data-dicts (the UAC INSTRUMENT_TYPES_BY_VENUE
+    #    case). A whole tagged registry disappearing is breaking too (strictly worse than
+    #    losing one key inside it).
+    removed_registries = sorted(set(old.registries) - set(new.registries))
+    if removed_registries:
+        noun = "registry" if len(removed_registries) == 1 else "registries"
+        reasons.append(f"removed contract-surface {noun}: {removed_registries}")
+    for name in sorted(set(old.registries) & set(new.registries)):
+        reasons.extend(_diff_registry(name, old.registries[name], new.registries[name]))
 
     return reasons
 
