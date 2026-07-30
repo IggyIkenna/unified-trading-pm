@@ -130,10 +130,14 @@ once P2.2 lands per the plan's own note.
 
 ## Todos
 
-- [ ] [CODE] P1. Complete `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.2 — wire every deployment-service
-      Cloud Run service + VM launcher that writes to a `-prd-`/`-test-` bucket to authenticate as the matching per-tier
-      SA (`uts-prd-sa`/`uts-test-sa`) instead of `unified-trading-sa`; migration scripts opt into `uts-migration-sa`
-      explicitly. (repo: deployment-service)
+- [x] ✅ [CODE] P1. **Investigated 2026-07-30 (slot-12) — mechanical completion is NOT safe today.** Attempting P2.2
+      literally surfaced 3 independently-blocking, live-verified findings (tier SAs are storage-only; VM launchers
+      actually run as the GCP default compute SA, not `unified-trading-sa`, and that SA is itself a bigger live security
+      exposure; a second, already-partially-live per-service SA scheme exists unreconciled with this plan). Filed
+      `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md` with full evidence + a
+      corrected, properly-gated todo breakdown, and split `bucket_iam_write_protection_per_tier_2026_06_09.md`'s P2.2
+      into P2.2a-P2.2d (mirroring this plan's own P1.2/P2.1 split precedent) — unified-trading-pm@HEAD. No terraform/IAM
+      state mutated.
 - [ ] [TERRAFORM] P2. Once P1 above is live-verified (every write-path runtime confirmed running as its tier SA, not
       `unified-trading-sa`), execute `bucket_iam_write_protection_per_tier_2026_06_09.md` P2.1b: remove
       `unified_trading_storage_admin` (`main.tf:598-602`), then verify live/batch prod workloads retain `-prd-` write

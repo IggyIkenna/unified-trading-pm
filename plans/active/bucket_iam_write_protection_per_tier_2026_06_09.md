@@ -288,22 +288,43 @@ Two independent gates because Group A and Group B are at different stages:
 - [ ] [TERRAFORM][OPERATOR] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in
       `main.tf:598-602`); verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA);
       verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on
-      P2.2 completing + being live-verified first** — do not remove the god-SA grant while any runtime still
-      authenticates as `unified-trading-sa` for writes. **Group B buckets join here only after the consolidation plan's
-      Wave-3 folds provision their `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
-      **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no structured `depends_on`/ `gate_on_depends` link
-      to P2.2 (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the backlog regenerator has
-      auto-dispatched this fleet-wide-blast-radius IAM removal to a worker TWICE in one day despite the HARD-GATED note
-      above (slot-11 earlier today, slot-13 this pass) — both independently declined per
+      P2.2c AND P2.2d (below) both completing + being live-verified first** — do not remove the god-SA grant while any
+      runtime still authenticates as `unified-trading-sa` OR the GCP default compute SA for writes. **Group B buckets
+      join here only after the consolidation plan's Wave-3 folds provision their `-{env}-` form (re-gated 2026-07-13;
+      env-split plan archived).** **`[OPERATOR]`-tagged 2026-07-30 (slot-13)**: this checkbox has no structured
+      `depends_on`/ `gate_on_depends` link to P2.2 (same-plan todos can't express a per-todo prereq — CLAUDE.md), so the
+      backlog regenerator has auto-dispatched this fleet-wide-blast-radius IAM removal to a worker TWICE in one day
+      despite the HARD-GATED note above (slot-11 earlier today, slot-13 this pass) — both independently declined per
       `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`. `[OPERATOR]` routes this to the
       operator's blocked-queue instead of re-offering it to workers who can only re-derive the same "not yet" verdict.
-      **Retag back to plain `[TERRAFORM]`** once P2.2 is done + live-verified (every write-path runtime confirmed
-      running as its tier SA, not `unified-trading-sa`) — do not leave this tag stale per CLAUDE.md's retag-on-resolve
-      rule.
-- [ ] [CODE] P2.2. Wire each runtime to its tier SA (deployment-service launchers / Cloud Run service identities);
-      migration scripts opt into `uts-migration-sa` explicitly. **Do this BEFORE P2.1b** (see sequencing-hazard note
-      above) — P2.1b is not safely executable until every write-path runtime is confirmed running as `uts-prd-sa` (or
-      the relevant tier SA), not `unified-trading-sa`.
+      **Retag back to plain `[TERRAFORM]`** once P2.2c and P2.2d are both done + live-verified (every write-path runtime
+      confirmed running as its tier SA, not `unified-trading-sa` or the default compute SA) — do not leave this tag
+      stale per CLAUDE.md's retag-on-resolve rule.
+
+> **🟥 P2.2 SCOPE GAP found 2026-07-30 (slot-12) — "wire each runtime to its tier SA" is not mechanically executable
+> today.** Investigation (live GCP IAM queries + static analysis, no state mutated) found 3 independently-blocking
+> findings: (1) `uts-prd-sa`/`uts-test-sa`/`uts-migration-sa` hold ONLY storage roles (live-verified via
+> `gcloud projects get-iam-policy` — zero secretmanager/pubsub/bigquery/run.invoker) — wiring any real runtime to them
+> today breaks its Secret Manager / Pub/Sub / BigQuery access immediately; (2) the "instead of `unified-trading-sa`"
+> framing above is itself wrong for VM launchers — 155/165 `launch-*.sh` scripts actually run as the GCP **default
+> compute SA** (`main.tf`'s own comment + a live IAM query confirm this), which live-verified holds 28 UNCONDITIONAL
+> project-wide roles incl. `roles/storage.admin` and `roles/iam.serviceAccountTokenCreator` — a BIGGER live security
+> exposure than the god-SA grant this plan exists to close; (3) a second, already-partially-live per-service SA scheme
+> (`deployment-service/configs/gcp_service_accounts.yaml`, `features-prod`/etc.) coexists unreconciled with this plan's
+> per-tier design. Full evidence + recommendation:
+> `issues/bucket_iam_p2_tier_sa_scope_gap_and_default_compute_sa_overprivilege_2026_07_30.md`. Split below mirrors this
+> plan's own P1.2→P1.2a/P1.2b precedent.
+
+- [ ] [OPERATOR] P2.2a. Rule on the competing bucket-write-protection SA strategies (per-tier vs per-service vs the
+      undocumented ad-hoc SA family) — see the linked issue doc's Todos P0. Unblocks P2.2b-P2.2d.
+- [ ] [TERRAFORM] P2.2b. Once P2.2a resolves, grant the winning SA(s) the non-storage roles real runtimes need
+      (secretmanager/pubsub/bigquery/run.invoker/serviceAccountUser+computeInstanceAdmin for self-impersonating VM
+      launches) — mirror `unified-trading-sa`'s current grant set, scoped. Gated on P2.2a.
+- [ ] [CODE] P2.2c. Wire Cloud Run service identities (start with `scripts/cloud-run/deploy-shared.sh` /
+      deployment-api), live-verifying Secret Manager/Pub/Sub/BigQuery access after each. Gated on P2.2b.
+- [ ] [CODE] P2.2d. Wire VM launchers (165 `scripts/vm/launch-*.sh`, only 4 via the shared `lc_gcloud_create()` helper)
+      — its own large effort needing a per-launcher tier classification pass, not a bulk mechanical edit. Gated on
+      P2.2a.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
