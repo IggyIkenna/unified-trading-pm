@@ -146,8 +146,8 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
   proceed). **Finish-to-DONE / `/autonomous`** = also apply `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + drive to
   completion on a self-paced loop (handoff doc = the plan's Progress Log; termination condition + climbing metric;
   inherits every safety rule).
-- **Rule-amnesia stop** — halt if an agent uses `os.getenv()` / `pip install` / direct `git push` / suggests skipping
-  tests. **No `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **Grep-then-READ, not
+- **Rule-amnesia stop** — halt on `os.getenv()`/`pip install`/direct `git push`/skip-test suggestions. **No
+  `python3 << EOF` for file analysis** (`re`-backtracking runaways) — use `rg`/`grep`. **Grep-then-READ, not
   grep-then-conclude** (0 hits ≠ missing — features are runtime-resolved; READ the candidate consumer; uncertain → ASK).
   **Inspect an agent's pane with depth** (`tmux capture-pane -S -50`).
 - **Async-wait / poll / background-task discipline (HARD RULE — recurring "found asleep" class)**: never report a
@@ -169,9 +169,9 @@ PROTECT). An interactive session IS slot N (long uncommitted WIP = stale-worker 
 ## Doc retrieval — retrieve less but right (L0→L4, grep-native)
 
 Finding any doc/rule/SSOT: **grep the L0 index FIRST** — `unified-trading-pm/DOC_INDEX.generated.md` (per-clone,
-gitignored; absent/stale → `.venv/bin/python scripts/docs/gen_doc_index.py`, ~1.4s; NEVER read it whole, ~200k tok —
-grep it). Narrow with L1 frontmatter facets: `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; compose
-axes for broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `tags`, e.g.
+gitignored; absent/stale → `.venv/bin/python scripts/docs/gen_doc_index.py`; NEVER read it whole, ~200k tok — grep it).
+Narrow with L1 frontmatter facets: `rg -l '^authoritative_for:.*<topic>' codex/` lands THE one SSOT; compose axes for
+broader cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `tags`, e.g.
 `rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
 before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). The
 domain index below is the shortcut for known domains; L0/L1 grep covers everything else. SSOT:
@@ -245,9 +245,10 @@ architecture (L0–L4)".
   manifest-verified rows (both cloud identities are IAM-self-service — grant a missing role yourself, don't pause).
   **Hard-stops (human-only)**: wallet keys, force-push main, 1.0.0 graduation. **Maintenance-window restarts (e.g.
   orchestrator) skip operator scheduling pre-live-trading (2026-07-28)** — group + do now, brief downtime OK; real
-  scheduled windows resume once live trading starts. **Kill-switch is direction+scope-aware**: protective arming always
-  autonomous; resume/un-kill autonomous only within the auto-recovery matrix (`manual_unkill` = human-only). SSOTs:
-  `/codex/04-architecture/autonomous-recovery-matrix.md`,
+  scheduled windows resume once live trading starts. **A confirmed runaway process endangering the host (`ps`/cgroup
+  stats) may be killed the same way (SIGTERM→SIGKILL)** — investigate + doc it, don't wait on approval (2026-07-30).
+  **Kill-switch is direction+scope-aware**: protective arming always autonomous; resume only within the auto-recovery
+  matrix (`manual_unkill`=human-only). SSOTs: `/codex/04-architecture/autonomous-recovery-matrix.md`,
   `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`.
 - **Data pipeline correctness is the heartbeat** — an audit's issues are fixed in FULL (no deadline deferrals, no
   asset_group skipped); only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/`-UPSTREAM-OUTAGE` defer; a RED
@@ -339,34 +340,32 @@ architecture (L0–L4)".
 - **Touching UI?** No Python tools (tsc/ESLint/Vitest/Playwright only); TS strict; **playwright gate** — no tick without
   `[UI]` + `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
 - **Launching VMs / infra?** **Heavy I/O never runs from the operator's local machine (HARD RULE, unconditional)** —
-  full-corpus GCS walks / manifest-index rewrites / >few-hundred-object renames go on a VM in-region, always, not only
-  when bandwidth is mentioned; does NOT apply to the human-planning or AO-orchestrator VMs (already cloud-hosted) →
+  full-corpus GCS walks / manifest-index rewrites / >few-hundred-object renames go on a VM in-region ALWAYS; does NOT
+  apply to the human-planning or AO-orchestrator VMs (already cloud-hosted) →
   `/codex/05-infrastructure/vm-launcher-runbook.md` § heavy-I/O rule. **That exemption is I/O-only** — an ad-hoc script
   materializing a whole corpus in-memory on the shared planning-vm still needs bounding
   (`scripts/dev/run-bounded-analysis.sh` mem-cap, or a dedicated VM) → same SSOT § heavy-compute-on-shared-host. **No
   fire-and-forget** (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED; verify T+10min); launchers in
   `deployment-service/scripts/vm/` (name MUST match a real `VM_PREFIX_TO_BUCKET` entry + `lifecycle_class` — **grep the
   registry FIRST, never hand-roll a name**: unregistered silently vanishes from deployment-ui/cockpit/Slack; prefer
-  extending an existing `launch-*.sh` (e.g. `launch-canonical-migration-vm.sh`) over a new one; zone
-  `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL
-  VMs both clouds, consolidate, snapshot before any GCS cutover); every compute unit is a classified DEPLOYMENT TARGET
-  (`classify_deployment_target`). **Backfill VMs default to SPOT (HARD RULE)**: every backfill/idempotent launcher
-  provisions `--provisioning-model=SPOT` (~60-91% cheaper; idempotent shards re-run on preemption) — `--on-demand` (env
-  `ON_DEMAND=true`) is the only opt-out; **preemption recovery MUST resume from measured PROGRESS, never replay
-  `START_DATE` (HARD RULE)** — `RelaunchPreemptedVm` replays the ORIGINAL params, which is right for skip-enabled runs
-  but restarts any `--force`/`redo_all` run at day one FOREVER (force disables the skip the resume relies on); now
-  auto-resumed by the shipped PROGRESS-checkpoint contract (VM writes `vm-logs/{vm}/PROGRESS.json`, monotonic-gated;
+  extending an existing `launch-*.sh` over a new one; zone `asia-northeast1-c`); per-VM shards `VM_NAME=<tag>` +
+  `MANIFEST_PER_VM_SHARDS=true`; **pre-migration drain** (stop ALL VMs both clouds, consolidate, snapshot before any GCS
+  cutover); every compute unit is a classified DEPLOYMENT TARGET (`classify_deployment_target`). **Backfill VMs default
+  to SPOT (HARD RULE)**: every backfill/idempotent launcher provisions `--provisioning-model=SPOT` (~60-91% cheaper;
+  idempotent shards re-run on preemption) — `--on-demand` (env `ON_DEMAND=true`) is the only opt-out; **preemption
+  recovery MUST resume from measured PROGRESS, never replay `START_DATE` (HARD RULE)** — `RelaunchPreemptedVm` replays
+  ORIGINAL params (fine for skip-enabled runs, but restarts any `--force`/`redo_all` run at day one FOREVER); now
+  auto-resumed via the PROGRESS-checkpoint contract (VM writes `vm-logs/{vm}/PROGRESS.json`, monotonic-gated;
   non-monotonic/no-checkpoint force still PAGEs); live/forward/cron/paper VMs + `--mode live` stay on-demand (preemption
-  loses live data); on-demand for backfill is a bug. **Manually checking in on a SPOT VM that looks stalled/gone: verify
-  `compute.instances.preempted` via `gcloud compute operations list` BEFORE diagnosing a bug/hang** — one-off migration
-  VMs aren't wired into the fleet monitor, check it yourself. **Tardis VMs: HARD cap 1 concurrent, both clouds** (lease
-  does NOT lift it — AMPLIFIES the storm; operator 2026-07-16, measured: N>1 mass 403s + false `attempted_failed` rows +
-  coverage regression, N=1 clean) — count the running fleet BEFORE launching (`tardis-concurrency-guard.sh`, wired into
-  cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` / `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE
-  IP, never more VMs. Non-Tardis venues (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every running VM
-  for preemption-without-auto- recovery and for silent `attempted_failed` billing-waste** (a non-retriable error
-  re-attempted forever costs real money every wave) — run `/vm-preemption-billing-waste-audit`; every agent watching VMs
-  should use it, not just when an incident is already suspected. SSOTs:
+  loses live data); on-demand for backfill is a bug. **Checking a stalled SPOT VM: verify `compute.instances.preempted`
+  via `gcloud compute operations list` FIRST** — one-off VMs aren't wired into the fleet monitor, check it yourself.
+  **Tardis VMs: HARD cap 1 concurrent, both clouds** (lease does NOT lift it — AMPLIFIES the storm (measured: N>1 mass
+  403s + false `attempted_failed` rows + coverage regression, N=1 clean) — count the running fleet BEFORE launching
+  (`tardis-concurrency-guard.sh`, wired into cefi/mtds launchers); scale via `TARDIS_MAX_CONCURRENT_DOWNLOADS` /
+  `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` on the ONE IP, never more VMs. Non-Tardis venues
+  (HYPERLIQUID/ASTER/LIGHTER/EXTENDED) exempt. **Regularly check every running VM for preemption-without-auto- recovery
+  and for silent `attempted_failed` billing-waste** (a non-retriable error re-attempted forever costs real money every
+  wave) — run `/vm-preemption-billing-waste-audit` proactively, not just when an incident is suspected. SSOTs:
   `/codex/05-infrastructure/vm-launcher-runbook.md` (§ Tardis cap), `…/spot-vms-for-backfill.md`,
   `…/vm-tarball-deployment.md`, `…/deployment-observability.md`, `…/vm-preemption-and-billing-waste-monitoring.md`.
   **VM/monitoring-tool escalation design** (auto-recover-before-page, file-issue-worthy classes) →
@@ -423,8 +422,9 @@ its built-in terminal tab is) → `/codex/05-infrastructure/local-tmux-precompac
 `source scripts/workspace/load-gh-token.sh`. **agent-orchestrator auth**: dashboard JWT HS256 (central only) / internal
 proxy ES256 / accounts via setup-token env files, never `.credentials.json`; backlog plan-driven
 (`regen_backlog_from_plan.py`, never hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill
-(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Checking
-live backlog/dispatch status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator`
-skill or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
-API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
+(central + role registry); runtime self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux).
+**Orchestrator `tuning.*` knobs are env-free** (`TuningDefaults`) — change the code default + redeploy; `.env.local`
+silently no-ops. **Checking live backlog/dispatch status from a dev checkout** (no JWT, VM:8765 has no inbound rule):
+`/check-agent-orchestrator` skill or `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only
+via AWS SSM, never a manual API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`, `…/agent-orchestrator-overview.md`.
