@@ -5,10 +5,10 @@ title:
   manifest underlying instead of the translated value baked into the physical GCS path — 98 of 248 first-prod-run rows
   mismatched (caught pre-consolidation, hand-patched + verified, root cause fixed)"
 summary:
-  "Executing tradfi_recovery_quarantine_registration_gap_2026_07_27.md item 2 (run the register script's dry-run then
-  --apply against prod), the --apply pass wrote 248 canonical manifest rows into a per-VM shard, but 98 of them (40%)
-  carried a manifest `underlying` value that did not match the `underlying=` segment of the row's own
-  physically-confirmed GCS path — because chain instrument_types (futures_chain/options_chain) translate a candidate
+  "RESOLVED 2026-07-30. Executing tradfi_recovery_quarantine_registration_gap_2026_07_27.md item 2 (run the register
+  script's dry-run then --apply against prod), the --apply pass wrote 248 canonical manifest rows into a per-VM shard,
+  but 98 of them (40%) carried a manifest `underlying` value that did not match the `underlying=` segment of the row's
+  own physically-confirmed GCS path — because chain instrument_types (futures_chain/options_chain) translate a candidate
   root through `_exchange_to_product_root` (e.g. MES->MICRO-SP500, EW1-4->SP500, RB->GASOLINE) when building the target
   path, but `apply_register` wrote the untranslated `cand.root` into the manifest instead of the translated value.
   Caught before the every-minute manifest-consolidator cron merged the per-VM shard into the main availability_index
@@ -17,8 +17,8 @@ summary:
   186 affected cells / 248 rows, then fixed the root cause in the script (added an `actual_underlying` field to
   `RegisterCandidate`, populated from the same translation already computed for the existing-key dedup, and used it in
   both `apply_register` write branches) plus added regression tests + a diagnostic `underlying` column to the dry-run
-  mapping TSV."
-status: open
+  mapping TSV. Post-consolidation verification (this doc's own recommended-decision todo) confirmed 0 dupes/drops."
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -38,8 +38,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by: ""
-locked_by: ""
+resolved_by: >-
+  Root cause fixed market-tick-data-service@35d1f328 (2026-07-30). Post-consolidation manifest merge verified
+  2026-07-30: per-VM shard consolidated, main index updateTime advanced past the write window, sample cell reads
+  underlying=MICRO-SP500/captured, and the isolated register-run population (written_at in the write window, chain/combo
+  instrument_types) is exactly 248 rows with 0 duplicate keys and 0 non-captured rows.
+locked_by:
 ---
 
 # TradFi register-script incident: untranslated root written as manifest underlying
