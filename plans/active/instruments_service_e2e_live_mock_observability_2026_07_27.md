@@ -57,32 +57,32 @@ before assuming any of the below is still accurate — 4+ months have passed.
       alignment): N/A, architecture doesn't implement it** — not a regression, this was never built for this service.
 
       **5.3/5.4 — actually run + verified** via `main_service_cli()` with `--operation instruments --mode live
-          --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
-          logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
-          LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
-          documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
-          `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
-          `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
-          swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
-          **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
-          a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
-          ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
-          suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
-          broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)` — instruments-service@`<pending>`.
-          Re-verified: same repro now exits `SystemExit code=0` on SIGTERM mid-run, no traceback. **Cross-cutting root
-          cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
-          `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
-          fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
-          `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
-          protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
-          `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
-          exposed to the identical crash. Filed:
-          `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
+                  --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
+                  logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
+                  LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
+                  documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
+                  `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
+                  `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
+                  swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
+                  **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
+                  a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
+                  ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
+                  suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
+                  broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)` — instruments-service@`<pending>`.
+                  Re-verified: same repro now exits `SystemExit code=0` on SIGTERM mid-run, no traceback. **Cross-cutting root
+                  cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
+                  `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
+                  fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
+                  `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
+                  protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
+                  `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
+                  exposed to the identical crash. Filed:
+                  `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
 
-          One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
-          `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
-          expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
-          counter-based success signal is a legitimate design, just not what this todo assumed).
+                  One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
+                  `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
+                  expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
+                  counter-based success signal is a legitimate design, just not what this todo assumed).
 
 - [ ] [SCRIPT] P2. **Phase 6 — Mock-mode failure scenarios.** Run and verify: (6.1) `--scenario default` normal mock
       generation; (6.2) `--scenario stress` (10x cardinality) — memory + writes succeed; (6.3) `--scenario missing_data`
