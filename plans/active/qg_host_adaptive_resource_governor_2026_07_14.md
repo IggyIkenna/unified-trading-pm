@@ -225,13 +225,16 @@ runaway backstop). QG is never run below 16 GB, so no host ever needs the oversi
 
 ### Phase 1 — Interim quick-win: raise K on 61 GB hosts (operator-approved 2026-07-14)
 
-- [ ] [INFRA] P0. **RESOLVED-BY-RULING — stale DEFERRED tag cleaned 2026-07-28 (stale-tag audit; this was never a live
-      `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14, "raise
-      K to 6 for now": the live load-repro is skipped; safety is instead established by analysis — 6×UTL worst-case = 33
-      GB < the 43 GB (70 %) ceiling, and each worker's QG is already capped in a per-worker 10 GB systemd scope
-      (`tmux_spawn` §6.2) + 16 GB host swap, so the 05-29 single-pytest OOM is contained per-worker and cannot recur at
-      K=6. The Phase-6 soak (no swap regression / no false 80 % aborts) is the empirical confirmation in lieu of the
-      live repro.
+- [x] ✅ [INFRA] P0. **RESOLVED-BY-RULING — stale DEFERRED tag cleaned 2026-07-28 (stale-tag audit; this was never a
+      live `[OPERATOR]` gate, just an inline label describing an already-made decision).** Operator ruling 2026-07-14,
+      "raise K to 6 for now": the live load-repro is skipped; safety is instead established by analysis — 6×UTL
+      worst-case = 33 GB < the 43 GB (70 %) ceiling, and each worker's QG is already capped in a per-worker 10 GB
+      systemd scope (`tmux_spawn` §6.2) + 16 GB host swap, so the 05-29 single-pytest OOM is contained per-worker and
+      cannot recur at K=6. The Phase-6 soak (no swap regression / no false 80 % aborts) is the empirical confirmation in
+      lieu of the live repro. **STALE-CLOSED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)** —
+      this is a narrative artifact describing an already-made decision, not a live gate; the decision it describes
+      (raise K to 6) was already executed in the very next checkbox below
+      (`[x] Raised QG_HOST_CONCURRENCY from 1 to 6`).
 - [x] [INFRA] P0. ✅ Raised `QG_HOST_CONCURRENCY` from 1 to **6** across all three layers — live tmux global env
       (`setenv -g`, new workers inherit as they cycle) + root `agent-orchestrator/.env.local` (survives restart) +
       `bootstrap_vm.sh` template (survives re-bootstrap). Evidence: AO@222369f (bootstrap) + `.env.local=6` +
@@ -612,11 +615,11 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 ### 2026-07-27 — Runtime abort-monitor shipped (self-scoped v1) — closes the P0 (slot 5, `infra`)
 
 - **Trigger**: dispatched to investigate
-  `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s P1 ("does the governor only gate
-  entry, with no ongoing enforcement..."). Confirmed by reading `_qg_admit_check`/`_qg_governor_acquire_reservation`
-  directly: YES — admission is a one-time check; nothing re-verifies an admitted run against live RAM pressure that
-  develops afterward. That confirmation IS this plan's own already-open P0 above; closing both from one fix rather than
-  tracking it twice.
+  `/plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md`'s P1 ("does the governor only
+  gate entry, with no ongoing enforcement..."). Confirmed by reading
+  `_qg_admit_check`/`_qg_governor_acquire_reservation` directly: YES — admission is a one-time check; nothing
+  re-verifies an admitted run against live RAM pressure that develops afterward. That confirmation IS this plan's own
+  already-open P0 above; closing both from one fix rather than tracking it twice.
 - **Shipped** `unified-trading-pm@<PENDING-SHA>` — `_qg_watchdog_start`/`_qg_watchdog_loop`/`_qg_watchdog_signal_tree`
   in `qg-host-governor.sh` (reservation-mode only, gated the same way as the rest of Phase 3/4). Design tradeoff vs the
   todo's original "abort the offending/newest run": **self-scoped** — each admitted run backgrounds its OWN watchdog,
@@ -644,3 +647,13 @@ there: the governor gates **RAM/CPU admission, not disk**, so it must not be cit
 - **Remaining** (documented, not done here): Slack alerting on abort (existing Phase-4 todo), single-offender
   arbitration via the ledger's currently-unused per-row timestamp, and a real multi-slot fleet soak under measured
   contention (this session's verification is unit-test + manual-repro level, not a live fleet soak).
+
+## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — closed 1 narrative-artifact
+  checkbox (Phase 1's "RESOLVED-BY-RULING" item, which described an already-made decision rather than gating live work —
+  the decision it describes was already executed in the very next checkbox). Doc stays NA overall — explicit dated
+  operator citation at the top of the doc ("LOCAL / operator-driven plan, not AO-ingested. Operator decision 2026-07-14:
+  human-driven...") governs the whole remaining scope; the other 8 open items are either explicitly
+  DEFERRED-with-stated-reactivation-condition or real unimplemented-but-well-specified engineering follow-ons under the
+  same human-driven ruling, not defaulted-and-never-assessed work.

@@ -127,7 +127,11 @@ depends_on: []
       out of conformance with the documented PROGRESS-checkpoint contract
       (`/codex/05-infrastructure/spot-vms-for-backfill.md`). Either wire this launcher to emit `PROGRESS.json` like the
       conforming launchers do, or confirm the per-VM-manifest-shard mechanism is an accepted equivalent and document
-      that exception in the codex SSOT. Repo: deployment-service.
+      that exception in the codex SSOT. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit,
+      infra tranche, dispatch agt-30721a)**: already extracted as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+      "Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap" todo (Source:
+      `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`). Not checked off here — tracked
+      there going forward.
 
 - **2026-07-25 (second session) — remaining 16 GCP launcher families traced; AWS re-confirmed blocked; Step 3 done.**
   Re-ran
@@ -309,6 +313,10 @@ depends_on: []
       implemented and working for the conformant launchers, e.g. `canonical-migration-defi-relabel`) actually engages
       instead of falling through to a blind START_DATE replay — still worth doing for defense-in-depth even though this
       run found no confirmed instance of it actually costing money. Repo: deployment-service, market-tick-data-service.
+      **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted as
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "wire `record_vm_progress`/`PROGRESS.json` emission into the
+      shared `mtds_chunk_loop.sh` family" todo (verified by local bash simulation per that todo). Not checked off here —
+      tracked there going forward.
 - [ ] [BACKEND] P2. **`af-backfill`'s `LAUNCH_PARAMS.json` was absent from `vm-logs/af-backfill-20260718-141638/`**
       despite `launch-api-football-backfill-vm.sh` calling `lc_write_launch_params` at create time and
       `exit_code_fleet_monitor.py` sourcing the SPOT-preemption relaunch actuator's `launch_env` from exactly that file
@@ -319,14 +327,20 @@ depends_on: []
       entity-level/manifest-derived resume specific to `instruments_service --operation instruments`), or whether
       `lc_write_launch_params`'s "best-effort, non-fatal" write is silently failing for this launcher and the observed
       advance was coincidental (e.g. an operator-adjusted manual relaunch, not the automated actuator). Repo:
-      deployment-service.
+      deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**:
+      already extracted as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Make the launcher's two best-effort GCS
+      writes reliable — `LAUNCH_PARAMS.json` at create time and the `PREEMPTED` marker at shutdown" todo. Not checked
+      off here — tracked there going forward.
 - [ ] [BACKEND] P3. **Verify `exit_code_fleet_monitor.py`'s `read_progress_checkpoint()` recognizes
       `canonical-migration-cefi-cdlap`'s non-standard checkpoint filename** (`MIGRATION_PROGRESS-shard{N}.json`, not
       literally `PROGRESS.json`) — the launcher writes a real, functionally-conformant checkpoint
       (`last_processed_line_index`/`shard_index`/`shard_of`), but if the generic actuator only globs for the standard
       filename, this checkpoint may exist on disk yet never actually be consulted on relaunch (silent, not loud). Either
       generalize the reader's filename pattern or document this as an accepted per-launcher naming exception in
-      `/codex/05-infrastructure/spot-vms-for-backfill.md`. Repo: deployment-service.
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30
+      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted (part a) as
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Close the two fleet-monitor blind spots on checkpoint
+      reading and preemption alert severity" todo. Not checked off here — tracked there going forward.
 - [ ] [BACKEND] P3. **Harden the preemption-relaunch alert to distinguish "resumed correctly" from "wastefully
       replayed"** — `relaunch_backfill_vm.py` emits the same quiet `DP_VM_PREEMPTED` (INFO, no page) for both a
       genuinely-successful checkpoint-resumed relaunch and a blind START_DATE replay that re-does already-captured work
@@ -336,13 +350,19 @@ depends_on: []
       future wave of such a replay would page just as silently. Candidate approach: compare the relaunched VM's per-VM
       manifest shard row-count growth against its wall-clock runtime/expected shard size, or downgrade `DP_VM_PREEMPTED`
       to WARN-and-flag whenever `launch_env` had no usable checkpoint AND the run was not `--force` (the exact
-      silent-gap condition). Repo: deployment-service.
+      silent-gap condition). Repo: deployment-service. **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra
+      tranche, dispatch agt-30721a)**: already extracted (part b) as the SAME
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` "Close the two fleet-monitor blind spots" todo above. Not
+      checked off here — tracked there going forward.
 - [ ] [BACKEND] P3. **`canonical-migration-defi-pi-range` and `canonical-migration-defi-per-instrument` write no
       checkpoint at all** (not even the manifest-shard-only pattern `canonical-migration-defi-rebuild` uses) and
       produced this audit's largest observed `run.log`s (731 MB / 79 MB) — fold into the P2 `PROGRESS.json` rollout
-      above rather than treating as a separate design. Repo: deployment-service.
-- [ ] [SCRIPT] P3. **Check whether CME BTC/ETH options (OPT atom) coverage is intentionally excluded or a silent gap** —
-      surfaced by the 2026-07-25 adversarial verification of the `tradfi-bf-*` finding above: the
+      above rather than treating as a separate design. Repo: deployment-service. **CROSS-REFERENCED 2026-07-30
+      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted as the SAME
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md` "Close the `defi-pi-range`/`defi-rebuild` PROGRESS.json gap"
+      todo cited above. Not checked off here — tracked there going forward.
+- [x] ✅ [SCRIPT] P3. **Check whether CME BTC/ETH options (OPT atom) coverage is intentionally excluded or a silent
+      gap** — surfaced by the 2026-07-25 adversarial verification of the `tradfi-bf-*` finding above: the
       `cme-ohlcv-1m-btc-2020`/`eth-2022` predecessor VMs' launches expected 2 atoms (FUT+OPT) and hit
       `[DATABENTO_FETCH_FAILED] ... underlying='BTC'/'ETH' is not a real product root ... quarantine, never     fake-canonicalize`
       for the OPT atom on every attempt (0 rows, by design — the quarantine behavior itself looks correct, not a bug).
@@ -351,7 +371,12 @@ depends_on: []
       should resolve instead of quarantining, or are genuinely out of MVP scope), or did something silently narrow the
       "expected atoms" set between launches without anyone deciding that on purpose? If the latter, CME BTC/ETH options
       coverage may have quietly gone from "expected, failing" to "no longer expected" rather than being fixed. Repo:
-      market-tick-data-service, instruments-service.
+      market-tick-data-service, instruments-service. **RESOLVED-BY-LOGIC, CLOSED 2026-07-30 (na-eligibility-audit, infra
+      tranche, dispatch agt-30721a)**: YES, operator-ruled. `infra_satellite_ao_dispatch_batch1_2026_07_26.md` already
+      resolved this by citation: `tradfi_consolidated_closeout_2026_07_18.md:196-197` states "CME BTC/ETH/MBT/MET
+      futures — FUTURES ONLY, no crypto options (operator 2026-07-21 'no CME option for BTC and ETH';
+      `option_underliers={ES}`)." Dropping the OPT atom was an explicit operator decision 4 days before this audit
+      raised the question — not a silent narrowing.
 
 - **2026-07-25 (third session) — adversarial verification of the `tradfi-bf-*` "CONFIRMED double-fetch" finding: 3/3
   independent refuters REFUTED it.** Given the finding's severity (P1, real vendor billing $ implications) and its
@@ -366,3 +391,17 @@ depends_on: []
   not sufficient evidence of waste on its own — always grep the actual `total_records=`/`complete=` values for the
   specific chunk before calling a re-fetch confirmed, since a genuinely-empty predecessor attempt looks identical to a
   genuinely-wasted one at the chunk-marker level alone.
+
+## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE (mixed doc; downgraded from
+  this run's own Phase 1 hunter's initial RECLASSIFY verdict after Phase 2's conflict-check read
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` in full). Of the 8 open todos: 6 (defi-rebuild PROGRESS.json,
+  tradfi-bf-* PROGRESS.json, af-backfill LAUNCH_PARAMS.json, cdlap checkpoint-filename, preemption-alert hardening,
+  defi-pi-range/per-instrument checkpoint) are already extracted verbatim as batch1's own open todos — cross-referenced
+  above, not checked off (batch1's todos aren't done yet). 1 (CME BTC/ETH options) was RESOLVED BY LOGIC per batch1's
+  own citation — closed above with evidence. The remaining 1 (pre-flight gate marker-mechanism design) is genuinely
+  operator-gated per batch1's own BLOCKED-OPERATOR-DECISION section ("the known-dead-shard pre-flight gate's
+  manifest-schema-vs-side-table choice — schema blast radius") — stays NA. Zero `assigned_vm`/backlog impact from this
+  pass; this doc's own content was NOT wrong, it was simply already covered by an active plan this run's Phase 1 hunter
+  didn't cross-check against in depth — exactly the class of catch Phase 2 exists for.

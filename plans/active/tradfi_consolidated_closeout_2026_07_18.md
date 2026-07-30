@@ -253,7 +253,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       that no such proof exists yet for that cell. Also re-verify each "Backfill proven" cell against a fresh
       `data-pipeline-check-is`/`data-pipeline-check-mtds` run rather than the last-recorded Progress Log entry.
       Definition-of-done: 0 remaining "NOT VERIFIED IN THIS PASS" cells in the table, each replaced with a real
-      verdict + evidence citation (report path / ledger query / dispatch_id).
+      verdict + evidence citation (report path / ledger query / dispatch_id). **CROSS-REFERENCED 2026-07-30
+      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted near-verbatim (source lines
+      218-224 of this doc) as `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo (active,
+      `assigned_vm: planning`). Not checked off here — the extracting doc's todo is not yet done; tracked there going
+      forward.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
+  checkbox is already duplicated near-verbatim in the active `tradfi_consolidated_native_ao_extract_2026_07_25.md`;
+  citation added above, zero `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not
+  `infra` — a residual scope-leak from this session's pre-fix Phase 0 population (see
+  `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
+  accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
+  this doc going forward.
 
 ---
 

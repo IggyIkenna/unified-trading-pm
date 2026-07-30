@@ -82,15 +82,19 @@ drift_direction: advance-code
 
 ## Phase 0 — Tooling (re-verify before trusting, don't re-derive from scratch)
 
-- [ ] [SCRIPT] P1. **Fix the blank/NA detection script's known false-positive** before running any bulk sweep: a
+- [x] ✅ [SCRIPT] P1. **Fix the blank/NA detection script's known false-positive** before running any bulk sweep: a
       single-line `grep -lE '^assigned_vm:\s*$'` misses a multi-line YAML value (key on its own line, value on an
       indented continuation line — found live on `sports_consolidated_closeout_2026_07_19.md` this session, caught only
       by `check_frontmatter_schema.py` rejecting a duplicate before it shipped). Parse frontmatter properly (PyYAML on
-      the extracted `---...---` block) rather than line-grepping for this and every future sweep.
-- [ ] [SCRIPT] P2. Generate the current, re-verified list of `assigned_vm: NA` + `status` ∈ {active, open} docs, split
-      by which of the 9 tranches (cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infra) each belongs to — reuse
-      `/ag-closeout-audit`'s now-fixed (2026-07-26) membership rule (sweeps `asset_group: infrastructure`/`meta` too,
-      not just `cross-cutting`).
+      the extracted `---...---` block) rather than line-grepping for this and every future sweep. **DONE 2026-07-27 —
+      unified-trading-pm@ea3456087** — promoted `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (PyYAML
+      frontmatter parse), fixing this exact P1 todo (per this doc's own 2026-07-27 Progress Log entry).
+- [x] ✅ [SCRIPT] P2. Generate the current, re-verified list of `assigned_vm: NA` + `status` ∈ {active, open} docs,
+      split by which of the 9 tranches (cefi/defi/tradfi/prediction/sports/cross-cutting/ao/ci/infra) each belongs to —
+      reuse `/ag-closeout-audit`'s now-fixed (2026-07-26) membership rule (sweeps `asset_group: infrastructure`/`meta`
+      too, not just `cross-cutting`). **DONE 2026-07-27 — unified-trading-pm@ea3456087** — same commit shipped
+      `generate_na_doc_tranche_inventory.py` and reported the resulting fresh count (389 docs / 127 zero-open-todo), per
+      this doc's own 2026-07-27 Progress Log entry.
 
 ## Phase 1 — Per-tranche validity + classification audit (the real work — read every doc end-to-end, not checkbox counts)
 
@@ -598,3 +602,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
   **5 archivable_now candidates found, not archived this pass** (own follow-up todo above) — genuinely resolved/moot per
   the classifying agent's read, but archival is its own 6-step-ritual action deserving independent re-verification
   before executing, not a rider on this already-large tick.
+
+## Progress Log (na-eligibility-audit incremental marker)
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — closed Phase 0's 2 todos
+  (blank/NA-detection false-positive fix; re-verified tranche-split NA list), both already done via
+  `unified-trading-pm@ea3456087` per this doc's own 2026-07-27 Progress Log entry, just never flipped. Doc stays NA
+  overall (this is the LOCAL/human-driven origin plan for the very skill this run executes under — the remaining 13 open
+  items are Phase 1 tranche-audit checkboxes deliberately left unflipped per the doc's own honest "would overclaim"
+  note, plus Phase 2's conflict-check/fold-in and Phase 3's pre-filter-widening work, all genuinely unexecuted).
+  Self-referential note: this run (`/na-eligibility-audit infra`) is itself one incremental instance of the
+  daily-scheduled generalization this plan's own Phase 2 todo describes authoring — no circularity issue, just worth
+  flagging for a future reader.

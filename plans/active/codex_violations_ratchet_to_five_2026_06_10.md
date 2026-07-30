@@ -593,3 +593,16 @@ not yet landed), the corrected `delta_proxy_repricer.py` wire-in item, Phase 3's
 a `batch2` to rehome into yet (`infra_*_satellite_ao_dispatch_batch2*` does not exist as of this pass) — per this
 migration's own fallback instruction, they stay open here rather than pointing at a plan that doesn't exist. Re-check
 for a `batch2` on the next pass and rehome then.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA, stale-items — the 2 checkboxes
+  already carrying a "MIGRATED 2026-07-27" citation (UAC `defi_position.py` reconcile; deployment-api codex-violations
+  5→0) are confirmed correctly cross-referenced into `infra_satellite_ao_dispatch_batch1_2026_07_26.md`, no new citation
+  needed. Doc stays NA overall — Phase 3 schema-provenance migration is a genuine design/judgment call (already flagged
+  too-large-for-a-batch-todo in batch1's own Deferred section). Re-checked whether
+  `infra_satellite_ao_dispatch_batch2_ 2026_07_27.md` (which now exists, unlike when this doc's own "does not exist as
+  of this pass" note was written) covers the pip-audit-bump / domain-client base-gate retarget /
+  `delta_proxy_repricer.py` wire-in items this doc flags as waiting for exactly such a batch: confirmed zero hits, still
+  genuinely uncovered — flagging these 3 items as a future RECLASSIFY candidate for a dedicated follow-up pass, not
+  actioned this run.

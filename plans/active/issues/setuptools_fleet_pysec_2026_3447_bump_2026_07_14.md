@@ -123,3 +123,16 @@ Bump setuptools 82.0.1 → 83.0.0 across the affected repos:
       own — e2e-testing's lock is at 83.0.0, so the ignore is currently masking nothing. **Done when**:
       `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing and e2e-testing's QG is green.
       Repo: e2e-testing.
+
+**CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: all 3 todos above are
+already extracted verbatim, together as a single consolidated todo, in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "sweep every repo... re-run QG... remove the ignore-vuln"
+`[INFRA]` P1 item (Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there
+going forward.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE (downgraded from this run's
+  own Phase 1 hunter's initial RECLASSIFY verdict — Phase 2's conflict-check found
+  `infra_satellite_ao_dispatch_batch1_ 2026_07_26.md` already carries a single consolidated todo covering all 3 items
+  here verbatim, citing this exact doc). Cross-reference added above. Zero `assigned_vm`/backlog impact from this pass.

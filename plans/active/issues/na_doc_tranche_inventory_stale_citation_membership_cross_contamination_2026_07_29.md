@@ -185,6 +185,36 @@ class in a third script.
       the near-verbatim shared helper shapes — consider extracting one shared membership-test module both scripts
       import, to prevent a third recurrence of this bug class.
 
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA, valid — 3 of 4 todos already done
+  (`unified-trading-pm@6228cff7e` + `a72f78ab5`); the sole remaining item (bundle-vs-extract-shared-helper) is a design
+  preference call, not a bounded/deterministic outcome, so it stays NA rather than RECLASSIFY. **Additional evidence for
+  this remaining todo, found while running this session's own infra-tranche Phase 0 against the now-fixed script**: this
+  run's ORIGINAL (pre-fix, buggy) `--tranche infra --json` population (64 docs, captured before this session pulled
+  `6228cff7e`) was diffed against a fresh post-fix run — beyond the 5 false positives + 1 false negative this issue doc
+  already documented, 3 MORE false positives surfaced that this doc's own investigation had not caught (scoped to just
+  the 6 anomalous docs it happened to trace, not an exhaustive sweep, as its own Impact section already flagged as
+  likely): `ao_consolidated_closeout_2026_07_25.md` (`asset_group: [ao]`, not infra),
+  `issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` and
+  `issues/sports_mdps_coverage_reader_wrong_bucket_2026_07_28.md` (both `asset_group: [sports, meta]` — the `sports` tag
+  should have taken precedence over the `meta` last-resort infra-fold, but the fixed script's `meta` fallback only
+  checks `not tranches` at evaluation time, not whether a REAL AG tag is also present in the list; confirmed this is now
+  CORRECTLY handled post-fix since the `sports` AG loop runs before the `meta` fallback and populates `tranches` first —
+  these 3 were leaks in the OLD buggy citation-grep mechanism, not a residual gap in the new fix). Also found (not acted
+  on, no assigned_vm change made): `issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`,
+  `issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
+  `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (all cefi/multi-AG-tagged, not infra) were also
+  present in the stale 64-doc population but only classified (KEEP-NA, no state change), not reclassified — zero harm.
+  **Net**: the 3 acted-upon leaks (`ao_consolidated_closeout`, both sports docs) were already read end-to-end and
+  RECLASSIFY-verdicted with real conflict-checks by this session before this cross-check ran; per operator-precedent
+  (undoing sound, evidenced work over a scope technicality is worse than leaving it, since the correct tranche's own
+  future audit will simply find these docs already `assigned_vm: planning` and skip them, no duplicate-dispatch risk) —
+  left applied, flagged here for the record rather than reverted. This raises today's confirmed leak count to 8 docs
+  total (5 original FP + 1 original FN + 3 new FP), materially more than the issue doc's original estimate — strengthens
+  the case for the shared-helper extraction in the remaining P3 todo (a single well-tested membership module is less
+  likely to leak silently a third time than two independently-maintained near-duplicates).
+
 ## Codex SSOTs
 
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §2 — the `parent_epic` vs `asset_group`

@@ -117,7 +117,11 @@ commit date), file count, `.py` count, and a class:
       default + --apply/--repo/--base + classification taxonomy)
 - [ ] [INFRA] P3. Smoke-test: run `--dry-run --repo unified-trading-pm` on this host; eyeball the 31-stash
       classification; hand-verify 2-3 "redundant" calls actually have no net diff vs LDR before trusting the auto-drop
-      class. — owner: planning-host
+      class. — owner: planning-host **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch
+      agt-30721a)**: this + the Phase 2 sweep-this-host item below are already extracted (verbatim scope) as
+      `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Measure fleet-wide..." todo (Done when: a written
+      classification report with ≥3 hand-verified `redundant` calls + an explicit classifier-trustworthy verdict,
+      Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there going forward.
 
 ### Phase 2 — sweep this host
 
@@ -171,8 +175,19 @@ surface — do not auto-drop — genuine WIP.
       structural. Investigate folding a `--max-stash-age` warning into `slot-git-status-report.sh` (or a weekly cron) so
       a host pings its inbox when `refs/stash` exceeds N or a stash ages past M days, instead of relying on manual
       sweeps. Capture decision in `/codex/05-infrastructure/per-tab-worktrees.md`. — owner: planning-host
+      **CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted
+      (verbatim scope) as `infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s "Add a stash-pile regrowth signal..."
+      todo (Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there going
+      forward.
 
-## Relationship to the 2026-06-01 issue doc
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — cross-referenced the 3 items
+  already duplicated verbatim in `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (smoke-test + sweep-this-host → its
+  "Measure fleet-wide..." todo; Phase 5 regrowth signal → its own separate todo). Doc stays NA overall — the Phase 3
+  fan-out's disposition (retired per-epic-VM topology) is separately tracked as a genuine BLOCKED-OPERATOR-DECISION in
+  `issues/infra_plan_reconcile_parked_decisions_2026_07_26.md` (cited by the same batch1 doc), and Phase 4's
+  owner-review + purge is downstream-gated on that unresolved Phase 3 re-targeting — not independently actionable.
 
 `shared_stash_pile_archive_cleanup_2026_06_01.md` covered ONLY `unified-trading-pm` on ONE host and has its own
 2026-06-08 purge window — it proceeds independently. This plan generalises its proven archive-first pattern to all repos
