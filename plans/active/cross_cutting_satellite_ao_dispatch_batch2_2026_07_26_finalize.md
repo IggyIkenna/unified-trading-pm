@@ -128,3 +128,19 @@ drift_direction: advance-code
       path → confirm `locked_by` is empty on both (it is). **Done when**: both docs are in `plans/archive/2026_07/`,
       every corpus referrer resolves to the new path, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports
       0 hard failures and 0 orphans.
+
+## Progress Log
+
+- 2026-07-30 (slot 7, worker on `assigned_role: review`, dispatch `...finalize-002`): **HOLDING OFF — same
+  `gate_on_depends` wiring gap as the tracked recurring bug.** Todo 1 is genuinely done (verified above). But batch2's
+  own plan file shows only 10/15 todos checked `[x]` (5 still `- [ ]`: the features-service catalogue inventory, the
+  dp-audit OOM driver fix, the two bounded data-pipeline-alert bug fixes, the retagged `[DATA]` P2 item, and the
+  unfiltered-callsite-audit item) — not the "all 14 done" this finalize plan's own header requires before ANY of its
+  todos dispatch. `GET /api/backlog/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize-002/blockers` →
+  `"ready (no blockers)"` confirms the gate did not hold. Same bug as
+  `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` (added as a new recurrence there
+  rather than re-investigating from scratch — this is the 2nd distinct plan pair I've hit this exact bug on in one
+  session, after `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`). Not flipping todo 2's checkbox — its
+  own "Done when" (a dated re-verification verdict for every Deferred entry) is a genuine, non-trivial audit that the
+  plan's authors explicitly intended to run only after the full batch lands, and re-checks (a)/(b) in its own text
+  reference OTHER tranches' finalizes whose state I have not verified either. Skipped back to the queue.

@@ -297,6 +297,25 @@ that batch6 shipped; not flipping the finalize plan's todo 1 checkbox; skipped v
 filing a duplicate issue doc (my first attempt did exactly that — reverted, see this doc's own dedup precedent from slot
 14 on the batch1/1b pair the same day). 11th+ documented bounce off this general wiring gap.
 
+## 2026-07-30 recurrence — EIGHTH distinct plan pair (cross_cutting_satellite_ao_dispatch_batch2, mid-sequence this time)
+
+Same session, slot 7's very next dispatch after the recurrence above:
+`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize-002`
+(`depends_on: [cross_cutting_satellite_ao_dispatch_batch2_2026_07_26]`, `gate_on_depends: true`, `sequential: true`,
+requiring all 14/15 of batch2's todos done before ANY finalize todo dispatches). Todo 1 of the finalize plan was
+genuinely done (verified — 13/14 source-doc reconciliations correct, one real discrepancy found and fixed), so
+`sequential` chaining correctly let todo 2 through — but batch2's OWN plan file shows only 10/15 todos checked (5 still
+`- [ ]`: features-service catalogue inventory, the dp-audit OOM fix, two bounded alert bug fixes, a retagged `[DATA]` P2
+item, the unfiltered-callsite audit).
+`GET /api/backlog/cross_cutting_satellite_ao_dispatch_batch2_2026_07_26_finalize-002/blockers` → `"ready (no blockers)"`
+— same failure. Notable new data point: this is the first recurrence where the finalize plan's TODO 1 (not just the
+whole finalize plan) had already correctly dispatched-and-completed while the gate on the REMAINING todos still failed
+to hold — confirms the wiring gap isn't a one-time "first dispatch after ingestion" race (todo 2 is a later dispatch,
+well after the plan pair's initial regen tick), consistent with this doc's standing "re-wiring across regen ticks"
+hypothesis over a first-tick-only race. Declined to author the Deferred-items re-check on the false premise the full
+batch landed; not flipping todo 2's checkbox; skipped via `POST /skip-current-task`. 12th+ documented bounce, 8th
+distinct plan pair.
+
 ## Todos
 
 - [ ] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`**
