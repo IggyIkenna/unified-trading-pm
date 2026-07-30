@@ -143,10 +143,12 @@ not just noting.
       NOT be queried (see Progress Log entry below for the full host-level measurement); host-level evidence answers the
       todo's underlying question directly: the box remains severely oversubscribed post-resize, closing this todo with a
       NEGATIVE verdict (the host fix has NOT resolved the contention) rather than a positive confirmation.**
-- [ ] [BACKEND] P2. Diagnose whether PM's `plan_health` escalation queue (44 active, growing, none resolving) shares the
-      `ldr_qg_failure` box-contention root cause or has an independent bottleneck — check whether a `plan_health` worker
-      type is actually being spawned/claiming slots at all, vs. queuing indefinitely for lack of a matching worker (a
-      distinct failure mode from "slow due to contention").
+- [x] ✅ [BACKEND] P2. Diagnose whether PM's `plan_health` escalation queue (44 active, growing, none resolving) shares
+      the `ldr_qg_failure` box-contention root cause or has an independent bottleneck — check whether a `plan_health`
+      worker type is actually being spawned/claiming slots at all, vs. queuing indefinitely for lack of a matching
+      worker (a distinct failure mode from "slow due to contention"). **DIAGNOSED 2026-07-30 (slot 4, backend_engineer)
+      — SAME root cause, no independent bottleneck; a genuine but different mechanism than pure host contention. Full
+      breakdown in Progress Log below.**
 - [ ] [SCRIPT] P2. Once `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s Recommended-fix-path section
       is next revisited, consider splitting that doc (archive the day-1 Progress Log, keep an active continuation) so
       future corroborations have somewhere to land instead of spawning sibling docs like this one.
@@ -166,6 +168,16 @@ not just noting.
       `i-0c9b283b31d6b5ca7` (needs root — no agent session has it). Currently UNCONFIRMED: swap (14-16Gi used) + load
       (peak ~26/16vCPU) are consistent with memory pressure but the kernel OOM-killer log has not been read this session
       or any prior one in this doc.
+- [ ] [BACKEND] P3. **New, opened by the `plan_health` diagnosis above.** `server/escalation.py`'s
+      `retry_queued_escalations()` caps queued-escalation retries at `RETRY_PER_TICK = 2` per `AutoSpawnLoop` tick
+      (default 60s), shared GLOBALLY across every `WALL_TYPES` value (not partitioned per wall_type) — a deliberate
+      tradeoff (own code comment: "a burst must not starve the task queue forever") that becomes the binding throughput
+      ceiling during a genuine multi-wall-type incident burst (91 combined `ldr_qg_failure`+`plan_health` active
+      escalations at this doc's 2026-07-29T01:05Z snapshot, all sharing this one 2-per-tick budget). Consider whether
+      the cap should scale with queue depth, or partition budget per wall_type, so an `ldr_qg_failure` flood can't
+      starve `plan_health`'s (or vice versa) dispatch attempts. Done when: either a deliberate "leave as-is, here's why"
+      ruling is recorded, or a scaled/partitioned retry budget ships + is verified to cut tail dispatch latency on the
+      next comparable burst.
 
 ## Evidence
 
@@ -525,5 +537,62 @@ not just noting.
   `quality-gates-v2` runs (`30569668743` push:main, `30570836256` workflow_dispatch on LDR) sat `status=queued` for
   1h38m+ at investigation time with zero conclusion — consistent with the same runner- capacity crisis this doc tracks
   (queue backlog, not a hang once picked up) — noted here as a data point, not separately actioned since nothing is
-  blocked pending their completion. **No code or workflow change made or needed.** Slot left clean on
-  `live-defi-rollout`, no branch changes. clean on `live-defi-rollout`, no branch changes.
+  blocked pending their completion.
+
+- **2026-07-30 (slot 4, backend_engineer) — `plan_health` escalation-queue diagnosis, the P2 todo above**. Code read +
+  direct live SQLite query against the orchestrator's own `state.db`
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db` — this session runs ON the
+  orchestrator VM itself, `http://localhost:8765` is the live API, no SSM needed), not the `/api/escalations/active`
+  endpoint (already known too small — `.limit(100)`, per the P1 cost-quantification entry above).
+
+  **Ruled out "no matching plan_health worker type" — both by code and by data.** `server/escalation.py`'s `WALL_TYPES`
+  includes `"plan_health"` (line ~67) and `_prompt_template_for()` (line ~116) routes it through the exact SAME fallback
+  as `ldr_qg_failure`/`main_ci_red`/every other generic wall — the shared `"cicd"` boot-prompt template, spawned via the
+  identical `escalate()`→`_pick_free_slot()`→`tmux_spawn.spawn()` path. There is no separate "plan_health worker type"
+  to be missing; a plan_health escalation and an ldr_qg_failure escalation compete for slots identically. (Note:
+  `server/plan_health.py`'s own `dispatch()`/`_pick_free_slot()` is a DIFFERENT thing — the daily
+  plan-reconciler/ag-closeout/etc. AUDIT dispatcher, unrelated to the `wall_type="plan_health"` CI-escalation path this
+  todo is about; same free-slot semantics, different call site, easy to conflate by name alone.) Confirmed empirically:
+  `SELECT status, count(*) FROM escalation_queue WHERE wall_type='plan_health' GROUP BY status` → **all 214 rows ever
+  created are `status='resolved'`, resolution=`qg_v2_green`, ZERO currently stuck** — a mechanically broken/missing
+  worker type would show a growing pool of permanently-`queued` rows, not a 100% eventual-resolution rate.
+
+  **The real mechanism: `plan_health` shares the SAME host-contention root cause as `ldr_qg_failure`, via a literal
+  shared bottleneck in the dispatch code — not just "the same kind of problem."** Traced the actual source of
+  `wall_type=plan_health` escalations first: `unified-trading-pm/.github/workflows/plan-health-agent.yml`'s
+  `plan-health-gate` job fires on EVERY PM→main promotion `pull_request` (not `ldr-docs-gate.yml`'s hourly
+  frontmatter-only check, which is a separate, rarer trigger with `pr_number: 0`) — this matches the issue doc's finding
+  exactly (12 promote-PR incarnations #1740-#1751 in ~5h = one plan-health-gate run per regenerated promote PR). When
+  `run_hygiene_sweep.sh --ci` finds HARD failures the deterministic auto-fix couldn't resolve, it dispatches
+  `wall_type=plan_health` with the REAL `pr_number` via `escalate-to-orchestrator.yml`.
+
+  On the orchestrator side, `escalate()` tries an immediate `_pick_free_slot()` dispatch at creation time; if no slot is
+  free right then, the row is inserted `status='queued'` (never dropped — Gap 3 fix) and only re-attempted by
+  `retry_queued_escalations()`, called once per `AutoSpawnLoop` tick (`server/autospawn.py:2485`, default tick interval
+  60s via `autospawn_interval_seconds`). That function caps itself at **`RETRY_PER_TICK = 2`**
+  (`server/escalation.py:979`) — oldest-`created_at`-first, but critically **shared globally across every `WALL_TYPES`
+  value, not partitioned per wall_type**. The code comment states the tradeoff plainly: "escalations claim free slots
+  BEFORE backlog tasks — CI walls are urgent — but a burst must not starve the task queue forever." Reasonable in
+  isolation, but during THIS doc's incident window, `plan_health` (44 active) and `ldr_qg_failure` (47 active) — 91
+  combined — were both drawing from the identical 2-per-60s global retry budget, on top of the already well-documented
+  host/slot scarcity (33 self-hosted runners + a dozen concurrent `claude` sessions on a 16-vCPU box). Empirical
+  confirmation: `created_at`→`dispatched_at` gaps for `plan_health` rows during the burst window range from ~5 to ~12.4
+  hours (e.g. PR #1754, `agt-f6a9b1`: created 01:42:37Z, not dispatched until 14:08:06Z — **745 minutes**, 298 recorded
+  `attempts` — then resolved just 15 minutes after that dispatch finally landed), even though the OVERALL average
+  `created_at`→`dispatched_at` gap across all 214 resolved rows is a much saner ~62 minutes
+  (`avg((julianday(dispatched_at)-julianday(created_at))*24*60)` = 61.8) — i.e. the "44 active, growing, none resolving"
+  snapshot the issue doc captured was a genuine acute tail spike during the worst of the incident, not the steady state,
+  and it fully drained afterward (0 stuck now). The operator-flagged trio specifically
+  (`agt-6a6ba6`/`agt-4c0ede`/`agt-4de402`, PRs #1746/#1747/#1748) DID resolve — dispatched ~43-51min after creation
+  (matching the doc's own live check at the time), resolved a further ~59min after that (`qg_v2_green` at
+  `01:33:3{5,6}Z`), so roughly 1h40m-2h50m total creation-to-resolution — slow, but not silently stuck, and now closed.
+
+  **Verdict: same root cause (fleet-wide host/slot contention), not an independent bottleneck — but the PRECISE
+  mechanism is more specific than "the host is busy": a hardcoded, wall-type-agnostic `RETRY_PER_TICK=2` throttle in the
+  queued-escalation retry loop compounds pure slot scarcity into visibly long, uneven per-row dispatch delays during a
+  multi-wall-type burst.** Opened a new `[BACKEND] P3` follow-up todo above (not fixing inline — this is a
+  scheduling-policy tuning call, not a bug, and the existing 2-per-tick choice has a stated deliberate rationale worth
+  an explicit ruling rather than a unilateral change) to revisit whether the cap should scale with queue depth or be
+  partitioned per wall_type. No code changed this session — read-only SQLite query + code read only; slot left clean on
+  `live-defi-rollout`. blocked pending their completion. **No code or workflow change made or needed.** Slot left clean
+  on `live-defi-rollout`, no branch changes. clean on `live-defi-rollout`, no branch changes.
