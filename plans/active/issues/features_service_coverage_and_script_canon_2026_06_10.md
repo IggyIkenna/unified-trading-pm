@@ -75,24 +75,25 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       scoped work, no human owner needed) — dispatched as a real scoped `- [ ]` [CODE] P2 todo in
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft) with the fix + test criteria spelled out; do
       not re-dispatch from here, flip this checkbox once that todo ships citing its commit sha.
-- [ ] [SCRIPT] P2. features-service: make `_make_session` resolver construction lazy/loop-safe —
+- [x] ✅ [SCRIPT] P2. features-service: make `_make_session` resolver construction lazy/loop-safe —
       `onchain/app/core/data_loader.py:224`. ~~**DEFERRED**~~ **RESCOPED 2026-07-27** (operator ruling, vintage-audit
-      §5-RESOLVED item 35: agent-owned scoped work) — dispatched as a real scoped `- [ ]` [CODE] P2 todo in
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft) with the fix + test criteria spelled out; do
-      not re-dispatch from here, flip this checkbox once that todo ships citing its commit sha.
+      §5-RESOLVED item 35: agent-owned scoped work) — shipped via
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`'s corresponding todo — features-service@25932d23:
+      `_make_session` made async, deferring `ThreadedResolver()` construction until awaited inside a running loop;
+      regression test added; quality-gates.sh green.
 - [ ] [INFRA] P2. features-service: fix the per-module `--cov=<module>` scipy/numpy double-import crash (pin/patch
       scipy↔numpy↔pytest-cov, or a tracked conftest pre-import) so local per-module coverage works.
 
       **SUPERSEDED (2026-07-30, conflict-check)** — `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:84-98`
-                  already bundles this exact fix (item 1 of its combined SCRIPT/P2 todo), explicitly sourced from this doc. Do not
-                  re-dispatch from here; flip this checkbox once that todo ships citing its commit sha.
+                      already bundles this exact fix (item 1 of its combined SCRIPT/P2 todo), explicitly sourced from this doc. Do not
+                      re-dispatch from here; flip this checkbox once that todo ships citing its commit sha.
 
 - [ ] [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
       `scripts/e2e/*`) to `e2e-testing/scripts/<domain>/` per `script-homes.md`, wired to primary-consumer QG (STEP
       5.65).
 
       **SUPERSEDED (2026-07-30, conflict-check)** — same `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
-                  todo, item (2): same file list, same target path, same source citation. Do not re-dispatch from here.
+                      todo, item (2): same file list, same target path, same source citation. Do not re-dispatch from here.
 
 - [ ] [SCRIPT] P3. features-service + deployment-service: retire `scripts/sports/compute_sfi_progressive_only.py` + its
       `deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh` launcher once the Phase 4-7
@@ -101,7 +102,7 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
       (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before deleting migrations).
 
       **SUPERSEDED (2026-07-30, conflict-check)** — two active docs already claim this ground:
-                  `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
-                  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
-                  features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
-                  from here.
+                      `plans/active/repo_scripts_governance_audit_2026_06_18.md` (Phase 1, full 21-repo sweep, in progress) AND
+                      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` item (3), which explicitly runs the sweep "EXCLUDING
+                      features-service's smoke/e2e harnesses already handled in (2)" and cites this doc as source. Do not re-dispatch
+                      from here.

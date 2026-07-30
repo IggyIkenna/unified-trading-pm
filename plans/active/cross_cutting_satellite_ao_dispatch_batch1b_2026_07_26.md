@@ -118,7 +118,7 @@ drift_direction: advance-code
       early velocity, and (b) a legitimate `v_late=0.0` is preserved rather than replaced by the fallback;
       `quality-gates.sh` is green in features-service; and the source doc's line ~71-75 checkbox is flipped citing the
       commit sha.
-- [ ] [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
+- [x] ✅ [CODE] P2. **features-service — make `_make_session`'s aiohttp resolver construction lazy/loop-safe (latent
       out-of-loop-construction crash).** `features_service/onchain/app/core/data_loader.py:224`'s `_make_session`
       constructs `aiohttp.resolver.ThreadedResolver()` eagerly, which calls `asyncio.get_running_loop()` at construction
       time — this crashes with a `RuntimeError` if `_make_session` (or anything that constructs the session) is ever
@@ -133,7 +133,10 @@ drift_direction: advance-code
       item 35: this is now agent-owned scoped work, not parked on a human). Done when: the fix lands with a new/extended
       test confirming the session-construction path no longer raises the construction-time `RuntimeError` when exercised
       outside a running loop while existing async-context callers remain green; `quality-gates.sh` is green in
-      features-service; and the source doc's line ~76-79 checkbox is flipped citing the commit sha.
+      features-service; and the source doc's line ~76-79 checkbox is flipped citing the commit sha. —
+      features-service@25932d23: `_make_session` made async so `ThreadedResolver()` construction defers until awaited
+      inside a running loop; regression test `test_calling_outside_running_loop_does_not_raise_at_call_time` + existing
+      async-caller test confirmed green; quickmerge-shipped to live-defi-rollout.
 - [ ] [CODE] P2. Close the 4 remaining fixable-bug residuals from `fleet_data_acquisition_health_2026_06_21.md`: **(a)
       sports** — recheck `mtds-backfill-odds-*` ODDS_API source-completeness (item #4: manifest flags
       `complete=False missing=['ODDS_API']` despite 8.5K rows across 22 bookmaker shards) and verify the sports-odds
