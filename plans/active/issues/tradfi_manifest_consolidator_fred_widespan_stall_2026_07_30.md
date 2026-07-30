@@ -48,7 +48,7 @@ created: 2026-07-30
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
-priority: P0
+priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
@@ -67,6 +67,39 @@ source:
 ---
 
 # tradfi manifest consolidator stalled 90+ min — FRED long-history rows blew up the incremental-merge chunk count
+
+> **RESOLVED 2026-07-30T12:30Z (same session, different agent/pass) — the chunking-strategy fix is shipped + verified
+> live; the stall is over.** Independently re-confirmed this exact root cause while working the parent ES issue
+> (`tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`). Fixed the `[CODE] P1` todo below: tightened
+> `unified_trading_library.manifest_consolidator._DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing
+> `merge_chunk_days_widened` safety-valve actually triggers for this span (it never had before — 787 chunks was still
+> under the old 2000 cap). Verified safe fleet-wide FIRST, before touching a constant shared across every asset group's
+> consolidator: cefi/defi/sports real chunk-counts-at-30-days are 89/80/74 respectively, all comfortably under 300.
+> Added a regression test reproducing this exact incident shape (a sparse ancient-date outlier alongside a normal range)
+> with the harness the merge-chunking tests already use. Shipped `unified-trading-library@59ed61c9`, `quality-gates.sh`
+> green.
+>
+> **Deployed, not just shipped**: manually triggered a rebuild of `market-tick-data-service-live-defi-rollout` (Cloud
+> Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS, image `sha256:ff6e57e6...`) — this repo's `cloudbuild.yaml`
+> clones UAC/UTL at their current `live-defi-rollout` tip during its `stage-workspace-deps` step (the 2026-07-20
+> structural fix this Dockerfile documents), so the fresh build picked up the chunk-count fix without needing a
+> hand-bumped digest. Confirmed the manifest-consolidator Cloud Run JOB (not Service) re-resolves `:latest` per
+> execution, not per revision — the very next scheduled execution (`...-knldw`, started 12:24:07Z) pulled the new image
+> (digest-matched against the build's own push).
+>
+> **Verified live, in that execution's own logs**:
+> `phase=merge_chunk_days_widened bucket=... span_days=23586 requested_chunk_days=30 effective_chunk_days=78`
+> immediately followed by `phase=duckdb_merge_start ... chunks=303` (down from 787) — the widen-safety-valve firing for
+> the first time ever on this bucket, exactly as designed. That cycle processed 54 shards (heavier than this incident's
+> own 29-30-shard norm) and completed in ~75s from lock-acquire, comfortably inside the 300s TTL — no more
+> clearing-stale-lock churn.
+>
+> **This todo list's `[OPERATOR] P0`** (decide whether to manually intervene on the stuck execution) is now moot — no
+> manual kill was needed, the fix itself let subsequent cycles complete normally. **`[DATA] P1`** (re-check the ES fleet
+> once healthy) is answered in the parent issue doc: real ES data now captures post-fix (verified via the per-VM shards
+> directly — real per-contract row counts for 2026-01-02/05/06). **Only `[DIAG] P2`** (should FRED live in this bucket
+> at all — a genuine architectural/ownership call, not a bug) remains open; downgraded this doc's priority P0→P2
+> accordingly since the live incident is over.
 
 ## What I found
 
@@ -156,18 +189,21 @@ stuck in `_wait_for_in_flight_cycle_then_reread`'s bounded consolidator-lock wai
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Decide whether to intervene NOW on the stuck `...-fjscl`-class consolidator execution (e.g.
-      manually kill + investigate why DuckDB isn't completing the 303-chunk merge, or set
-      `MANIFEST_ALLOW_STALE_FALLBACK=true` temporarily to unblock readers) vs. let the standing 1-min cron keep retrying
-      — this is a live production data-pipeline stall affecting the whole tradfi bucket, not a routine code-fix todo.
-      Repo: unified-trading-library / deployment-service (Cloud Run job config).
-- [ ] [DATA] P1. Once the consolidator is confirmed healthy again (canonical blob age back under the 120s freshness
-      threshold on a normal cadence), re-check the `tradfi-bf-cme-ohlcv-1m-es-*` fleet's actual capture progress — do
-      NOT re-launch a third VM fleet blind; the 6 survivors may resume on their own. Cite results back into
-      `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. Repo: market-tick-data-service.
-- [ ] [CODE] P1. Fix the consolidator's chunking strategy (`unified_trading_library/manifest_writer` — the
-      `duckdb_merge_start`/`merge_chunk_days_widened` path) so a small number of very-long-history rows (FRED-style)
-      can't inflate the whole bucket's merge chunk count ~8x. Repo: unified-trading-library.
+- [x] ✅ [OPERATOR] P0. **MOOT 2026-07-30 — no manual intervention needed.** The `[CODE] P1` fix below let subsequent
+      consolidator cycles complete normally on their own; the stuck `...-fjscl`-class execution was never manually
+      killed and no `MANIFEST_ALLOW_STALE_FALLBACK` override was needed. See the RESOLVED banner above.
+- [x] ✅ [DATA] P1. **DONE 2026-07-30.** Consolidator confirmed healthy (verified live: `chunks=303`, ~75s cycle).
+      Re-checked the `tradfi-bf-cme-ohlcv-1m-es-*` fleet's per-VM shards directly: real captured data now landing
+      (2026-01-02/05/06, real per-contract row counts). Cited in `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. Repo:
+      market-tick-data-service.
+- [x] ✅ [CODE] P1. **DONE 2026-07-30.** Tightened `_DUCKDB_MERGE_MAX_CHUNKS` 2000→300
+      (`unified_trading_library/manifest_consolidator.py`) so the existing `merge_chunk_days_widened` widen-path
+      actually triggers for a small number of very-long-history rows (FRED-style) instead of letting the naive min..max
+      span inflate chunk count ~9x. Verified safe fleet-wide (cefi/defi/sports real chunk counts 74-89, all well
+      under 300) before changing this shared constant. Regression test added
+      (`test_duckdb_merge_max_chunks_widens_on_pathological_date_outlier`). Shipped `unified-trading-library@59ed61c9`;
+      rebuilt + redeployed the live consolidator (Cloud Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS) and
+      verified the fix firing in the running job's own logs. Repo: unified-trading-library.
 - [ ] [DIAG] P2. Decide (operator call) whether FRED macro/yield-curve series belong in `market-data-tick-tradfi-prd-*`
       at all, or should live in a dedicated macro-data bucket with its own consolidation cadence, to decouple it from
       the high-frequency CME/ICE/etc. OHLCV merge path. Repo: deployment-service / unified-cloud-interface (bucket

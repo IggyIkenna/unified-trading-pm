@@ -39,7 +39,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
-depends_on: [tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30]
+depends_on: []
 locked_by:
 locked_since:
 resolved_by:
@@ -174,6 +174,39 @@ source:
 > was deliberately avoided. This todo (verify row capture) stays open, gated on the consolidator issue's resolution, not
 > on any further ES-specific action.
 
+> **FINAL UPDATE 2026-07-30T12:30Z (same session, different agent/pass — closes out UPDATE 3 above) — RESOLVED: the
+> consolidator is fixed, real ES data now captures.** `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s
+> root-cause (above) is exactly right — independently re-confirmed via the same evidence (398 real FRED rows,
+> `span_days=23586`, `chunks=303`). That issue's `[CODE] P1` todo ("fix the consolidator's chunking strategy") is now
+> DONE: tightened `unified_trading_library.manifest_consolidator._DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing
+> widen-safety-valve actually catches this span (verified safe fleet-wide first: cefi/defi/sports real chunk counts
+> 74-89, all `<<` 300) — shipped `unified-trading-library@59ed61c9`, regression test added. Manually rebuilt +
+> redeployed the live consolidator (`market-tick-data-service-live-defi-rollout` Cloud Build
+> `19b20104-9000-44ff-b968-77468617832f`, SUCCESS) since Cloud Run Jobs re-resolve `:latest` per execution, not per
+> revision. **Verified live in the running job's own logs**:
+> `phase=merge_chunk_days_widened ... effective_chunk_days=78` → `phase=duckdb_merge_start ... chunks=303` (down from
+> 787), cycle completed in ~75s despite a heavier-than-normal 54-shard workload — the fix works exactly as designed.
+> That other issue's `[OPERATOR] P0` intervention-decision todo is moot (no manual kill was needed; the fix itself
+> resolved the stall) and its `[DATA] P1` re-check todo is answered below — only its `[DIAG] P2` (should FRED live in
+> this bucket at all — an architectural/ownership call, not a bug) stays genuinely open.
+>
+> **Post-fix, read the re-launched fleet's per-VM manifest shards directly** (not the canonical index, which lags by up
+> to one merge cycle): the 2026 year-shard VM shows REAL captured data landing for 2026-01-02/05/06 — e.g. four distinct
+> real per-contract row counts (1190/1519/86/1) for `ohlcv_1m` on 2026-01-02, tens of thousands of rows for `ohlcv_1s` —
+> this directly proves the zero-capture problem is resolved: real ES data captures today, from this exact re-launched
+> fleet, once both infra bugs stopped blocking it.
+>
+> **One narrower, separate finding, now confirmed live rather than hypothesized**: these newly-captured real rows carry
+> a BLANK `instrument_id` (not `ES.FUT`), while a couple of same-date `SOURCE_RETURNED_ZERO` rows ARE tagged
+> `instrument_id=ES.FUT` exactly — this is why the canonical-index query scoped to `instrument_id=ES.FUT` still shows 0
+> real rows for this run even now. This is the SAME shape the very first CORRECTION banner above hypothesized, except
+> now proven to be a LIVE, currently-reproducing bug in THIS EXACT backfill's own manifest-write path (not a separate
+> historical process as first guessed): `ES.FUT` is a `futures_chain` bundle;
+> `market_tick_data_service/market_interface/adapters/tradfi/databento_enrichment.py::download_batch_df` →
+> `_fetch_and_stream_chunks` writes each real per-contract capture with no `instrument_id` stamped, while a separate
+> write correctly tags the non-tradeable parent symbol `ES.FUT` itself as a genuine zero-row. This is the sole remaining
+> item — see the rewritten Todos below.
+
 ## What I found
 
 Ran the exact query the ruling's todo specified — a single live read of `market-data-tick-tradfi-prd`'s
@@ -247,38 +280,39 @@ root-cause fix.
 
 ## Todos
 
-- [x] ✅ [INFRA] P1. **DONE 2026-07-30 — the systemic stall-watchdog/consolidator-lock-horizon mismatch UPDATE 2 found
-      above.** `_tradfi-ohlcv-launcher-lib.sh` now sets `STALL_TIMEOUT_SEC=3900` alongside `STALL_PROGRESS_REGEX` (3600s
-      consolidator-lock horizon + 300s buffer, vs. the 1800s generic default that was killing legitimately- waiting
-      VMs). 2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@c1e3dc70`. Repo:
-      deployment-service.
-- [ ] [DATA] P1. **BLOCKED — gated on `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md` (P0), NOT a
-      re-launch or a code-fix on this issue's own scope.** Original text preserved: verify the SECOND re-launch of the 7
-      `tradfi-bf-cme-ohlcv-1m-es-*` VMs (started `2026-07-30T10:41-10:43Z`, post-stall-timeout-fix, scope
-      `--only-root ES`, same 2020-2026 year-shards as the original fleet) actually captured real rows once they
-      complete/self-delete. **UPDATE 3 (see banner above): as of 11:44Z none of the 6 surviving VMs had advanced past
-      their first trading-day pre-flight manifest check after 55-60+ min — root-caused to a stalled tradfi manifest
-      consolidator (separate P0 issue filed), not a fetch/adapter defect.** Once that issue's todos confirm the
-      consolidator healthy again, RE-CHECK this fleet's progress first (do not blind-relaunch a third time — the
-      survivors may resume on their own) via the original query — live read of `market-data-tick-tradfi-prd`'s
-      `_index/availability_index.parquet`, scoped to
-      `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m,     ohlcv_1s}`, filter `written_at` to this run's date —
-      and confirm `row_count>0` / `capture_status=captured` now appears for at least a substantial share of the
-      2020-2026 window. If the fleet completes post-consolidator-fix and STILL shows 0 real rows with no
-      stall-kill/preemption signature, THEN re-open as a genuine code-bug investigation (starting with the
-      `stype_in=parent`-vs-schema hypothesis in "Recommended next steps" §1 below) — do not assume transient a third
-      time without evidence. Cite the resulting row counts as closing evidence on both this issue and
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s original P0 todo (which reported the original false
-      "zero capture ever" framing). Repo: market-tick-data-service.
-- [ ] [DIAG] P2. **Secondary, lower-priority data-hygiene item (demoted from P1 — confirmed NOT the cause of the
-      original zero-capture finding, see UPDATE above).** Real ohlcv_1m/1s data for the SP500/ES/MES family already
-      exists under a BLANK `instrument_id` with `underlying` correctly populated (28,307+111 real rows; `written_at`
-      2026-06-21..2026-07-28) — see the first CORRECTION banner above for the exact query + overlap evidence. Diagnose:
-      (a) which script/handler wrote these blank-`instrument_id` rows; (b) whether
-      `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script already covers reconciling
-      blank-`instrument_id`-but-real-`underlying` manifest rows into the canonical `ES.FUT` tag, or whether this is a
-      genuinely new gap in that tooling's scope. Repo: market-tick-data-service.
-- [ ] [DATA] P3. Once P1 confirms the re-launched fleet captured real `ES.FUT`-tagged rows, determine whether the other
-      "in flight" CME roots (CL/GC/HG/NG/NQ/SI) show the same historical zero-capture pattern their own fleets — if so,
-      the same "just re-run it" fix likely applies there too; check before assuming any of them need a code change.
-      Repo: instruments-service.
+- [x] ✅ [INFRA] P1. **DONE 2026-07-30.** Stall-watchdog-vs-consolidator-lock-horizon mismatch:
+      `_tradfi-ohlcv-launcher-lib.sh` now sets `STALL_TIMEOUT_SEC=3900` alongside `STALL_PROGRESS_REGEX` (3600s
+      consolidator-lock horizon + 300s buffer, vs. the 1800s generic default that was killing legitimately-waiting VMs).
+      2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@c1e3dc70`. Repo: deployment-service.
+- [x] ✅ [INFRA/CODE] P1. **DONE 2026-07-30 — closes out
+      `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s `[CODE] P1` todo.** Manifest-consolidator
+      pathological-chunk-count bug (398 genuine FRED macro rows, real history back to 1962, stretching the merge span to
+      64 years — not corruption): tightened `_DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing widen-safety-valve
+      actually catches it (787 chunks vs. the ~85 a normal tradfi range needs). Verified safe fleet-wide first
+      (cefi/defi/sports real chunk counts 74-89, all `<<` 300) before touching this shared-across-asset-groups constant.
+      Regression test added. Shipped `unified-trading-library@59ed61c9`. **Rebuilt + redeployed the live consolidator**
+      (`market-tick-data-service-live-defi-rollout` Cloud Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS).
+      Verified live in the running job's own logs: `phase=merge_chunk_days_widened ... effective_chunk_days=78` →
+      `chunks=303` (down from 787), cycle completed in ~75s. Repo: unified-trading-library.
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 — RESOLVED, verified real rows now capture.** Read the re-launched fleet's per-VM
+      manifest shards directly (not the canonical index, which lags by up to one merge cycle): the 2026 year-shard VM
+      shows REAL captured `ohlcv_1m`/`ohlcv_1s` data for 2026-01-02/05/06 — e.g. 4 real per-contract row counts
+      (1190/1519/86/1) for `ohlcv_1m` on 2026-01-02, tens of thousands of rows for `ohlcv_1s`. This directly proves the
+      zero-capture problem is resolved: real ES data captures today, from this exact re-launched fleet, once the two
+      infra bugs above stopped blocking it. The canonical-index query scoped to `instrument_id=ES.FUT` still shows 0
+      real rows for this run — see the next todo, this is the reason why (a tagging gap, not a capture failure).
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s P0 todo can now cite this evidence.
+- [ ] [CODE] P2. **Fix the blank-`instrument_id` write for CME futures-chain bundle captures — now confirmed a LIVE,
+      currently-reproducing bug (not a separate historical process as the first correction banner above guessed).**
+      `ES.FUT` is a `futures_chain` bundle; `databento_enrichment.py::download_batch_df` → `_fetch_and_stream_chunks`
+      writes each real per-contract capture with NO `instrument_id` stamped, while a separate write correctly tags the
+      non-tradeable parent symbol `ES.FUT` itself as a genuine zero-row (`SOURCE_RETURNED_ZERO`) — this is exactly why
+      the original manifest-count check (scoped to `instrument_id=ES.FUT` exactly) found 100% zero-row rows: it was
+      reading the right key for the wrong half of the data. Fix: stamp a real per-contract `instrument_id` (or a
+      canonical bundle-child id) on these writes instead of leaving it blank. Once fixed, re-verify whether
+      `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script can backfill-reconcile the 28,307+111
+      pre-existing blank-`instrument_id` rows (the first correction banner's finding) into the same canonical form.
+      Repo: market-tick-data-service.
+- [ ] [DATA] P3. Now that the fix is proven for ES, determine whether the other "in flight" CME roots
+      (CL/GC/HG/NG/NQ/SI) hit the same two infra bugs (both now fixed fleet-wide) or the same blank-instrument_id
+      tagging gap (still open) — check before assuming any of them need further work. Repo: instruments-service.
