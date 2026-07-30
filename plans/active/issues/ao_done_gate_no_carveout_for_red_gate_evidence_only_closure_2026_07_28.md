@@ -126,13 +126,20 @@ forces an operator/main manual DB patch outside the normal flow.
       `_blocks_at_path_or_rename`, wired into `_mode1_disposition`/`_mode2_disposition` as the 4th disposition
       (`reason="todo_blocked_pending_other_owner"`), plus single-repo + cross-repo unit tests in
       `tests/test_done_gate_plan_flip_hard_reject.py`. QG green, shipped via quickmerge.
-- [ ] [BACKEND] P2. Separately: widen (or remove) the Mode-2 30-minute window specifically for the fallback
+- [x] ✅ [BACKEND] P2. Separately: widen (or remove) the Mode-2 30-minute window specifically for the fallback
       `checkbox_currently_checked`-style checks -- i.e. even when `pm_shas` is empty because the evidence commit is old,
       still fall through to reading the CURRENT on-disk plan text for a recognized disposition marker (mirrors how Mode
       1's fallback at L920-932 already does this for the `[x]`-flip case; Mode 2's empty-`pm_shas` branch at L1006-1025
       currently only checks `checkbox_currently_checked` for a real `[x]`, not for the CANCELLED/DEFERRED/ (future
       BLOCKED) marker text). This closes the "evidence aged out of the log window" half of the gap independently of the
-      marker-convention fix above. Repo: agent-orchestrator.
+      marker-convention fix above. Repo: agent-orchestrator. — agent-orchestrator@e1b30f5: added
+      `_marker_disposition_in_text` (diff-less on-disk marker check, correlated by the todo's `[TAG] P<n>.` prefix since
+      full-brief matching doesn't survive any of the three marker rewrites; fails closed on an ambiguous same-prefix
+      match), wired into new `_mode1_fallback_disposition`/`_mode2_no_recent_commit_disposition` helpers (extracted to
+      keep `check_plan_flip` under the C901 gate). 5 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py`
+      (all three dispositions cross-repo outside the log window, incl. the exact BLOCKED-ON real-world scenario; the
+      single-repo mode-1 fallback; the ambiguous-match fail-closed case). QG green (2041 passed), shipped via
+      quickmerge.
 - [ ] [DOC] P3. Once either fix above ships, add the accepted BLOCKED-marker convention to `task_template.md`'s
       "remove/re-state a todo" section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions)
       so future RED-gate todos use a consistent, machine-recognized marker from the start.
@@ -216,3 +223,21 @@ forces an operator/main manual DB patch outside the normal flow.
   `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner`) in
   `tests/test_done_gate_plan_flip_hard_reject.py`. Full `quality-gates.sh` green (2033 passed, 1 skipped; ruff +
   basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 2-4 (same file).
+- **2026-07-30 (worker, slot 7)**: Shipped todo 2 (widen/remove the Mode-2 aged-out-window gap for the marker
+  dispositions) — `agent-orchestrator@e1b30f5`. The diff-based CANCELLED/DEFERRED-BY-DESIGN/BLOCKED-ON checks from todo
+  1 all need a commit inside `_pm_log_commits_touching_plan_ref`'s lookback window to diff — when `pm_shas` comes back
+  empty (the exact real-world case this issue documents: evidence commit older than the window), the only fallback was
+  `checkbox_currently_checked` (a real `[x]`), so a genuinely-blocked/deferred/cancelled todo whose retag commit aged
+  out still hard-409'd `cross_repo_pm_log_clean`. Added `_marker_disposition_in_text`: since all three marker
+  conventions REWRITE the todo's line (verified against both the test fixtures' convention and a real corpus example,
+  `defi_satellite_ao_dispatch_batch2_2026_07_26.md:82`), the full `brief` string does not survive as a substring — only
+  the `[TAG] P<n>.` prefix reliably does, so the check correlates on that prefix and fails CLOSED (returns no match)
+  when a doc has more than one same-prefix marker line, to avoid a false-positive `/done` on the wrong todo (this exact
+  issue doc has three `[BACKEND] P2.` todos, which is why prefix-only correlation without the ambiguity guard would have
+  been unsafe). Wired into new `_mode1_fallback_disposition` and `_mode2_no_recent_commit_disposition` helpers
+  (extracted from `check_plan_flip`'s body to keep its McCabe complexity under the C901 gate — the inline version
+  tripped it at 29 > 26). 5 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py`: all three dispositions
+  cross-repo outside the log window (the BLOCKED-ON one reproduces the issue's exact real-world scenario), the
+  single-repo mode-1 fallback (BLOCKED-ON via an earlier commit + a later unrelated cited sha), and a negative test
+  proving the ambiguous-match fail-closed behavior. Full `quality-gates.sh` green (2041 passed, 1 skipped; ruff +
+  basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 3-4 (same file).
