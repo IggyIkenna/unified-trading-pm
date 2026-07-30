@@ -238,7 +238,7 @@ against the reproduction script.
 - [x] ✅ [DATA] P3. **DONE — market-tick-data-service@6bf568ee (2026-07-30).** `derivative_ticker` capture DID start
       routing through `finalise_rows_and_path` with `validate=True` (LIGHTER-ZKSYNC's first real production write hit
       `missing_column:ts_event`, per
-      `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`).
+      `/plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`).
       Fixed with the same treatment this doc's book_snapshot_5 fix used: added `"derivative_ticker": {}` to
       `_WIRE_COLUMN_RENAMES` in `tardis_shared.py` (verified live, 2026-07-30 — `funding_rate`/`open_interest`/
       `mark_price`/`index_price` already match the contract, only the `ts_event` derivation step needed to run).
@@ -277,7 +277,7 @@ against the reproduction script.
 - **2026-07-30 (slot-12, `/ag-closeout-audit cefi`):** Flipped the false-unchecked `derivative_ticker` P3 todo — it was
   provably already shipped (`market-tick-data-service@6bf568ee`, verified live in `tardis_shared.py`'s
   `_WIRE_COLUMN_RENAMES`), found via
-  `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+  `/plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
   1 todo remains open (features-service reader design gap) — not archiving this doc yet.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, stale item closed - the P3
   `derivative_ticker` ts_event todo is provably already shipped (`market-tick-data-service@6bf568ee`); the remaining

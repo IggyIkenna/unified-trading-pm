@@ -146,7 +146,7 @@ Other: operator can type a custom answer
 - `plans/active/issues/cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md`'s open P3 todo
   ("if/when `derivative_ticker` is routed through `finalise_rows_and_path` with `validate=True` it will need the same
   `ts_event`-derivation treatment") is **provably already shipped** —
-  `plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`
+  `plans/archive/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`
   records `market-tick-data-service@6bf568ee` adding `"derivative_ticker": {}` to `_WIRE_COLUMN_RENAMES` for exactly
   this reason. False-unchecked.
 

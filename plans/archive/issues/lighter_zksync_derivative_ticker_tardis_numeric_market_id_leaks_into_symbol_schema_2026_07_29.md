@@ -15,7 +15,7 @@ summary: >-
   `raw_tick_data/.../instrument_type=perpetual/data_type=derivative_ticker/LIGHTER-ZKSYNC:PERPETUAL:43.parquet` — using
   the raw Tardis numeric market_id (`43`) as the instrument identifier instead of the canonical ticker-based
   instrument_id (`LIGHTER-ZKSYNC:PERPETUAL:BTC-USDC@LIN`).
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -47,8 +47,12 @@ resolved_by:
 
 # LIGHTER-ZKSYNC derivative_ticker: Tardis numeric market_id leaks into the written `symbol` schema
 
-> Investigation-only record (this doc). No code was changed while authoring this doc — `assigned_vm: NA`, a human
-> decides when to pick this up.
+> **🗄️ ARCHIVED 2026-07-30** — status=resolved, all 5 todos done: (1) symbol-remap fix
+> (`market-tick-data-service@7a708284`/`@039cddb6`/`@6bf568ee`), (2) full production backfill (179 instruments × 105
+> dates, ~1.10B rows, 0 schema violations), (3) the 4th-bug manifest-recording fix
+> (`market-tick-data-service@064f872a`), (4) manifest reconciliation for the pre-fix backfill
+> (`market-tick-data-service@67dd6422`, 15,639/15,639 cells recorded as captured, 0 skipped), (5) the
+> Tardis-concurrency-guard exemption-list fix (`deployment-service@45e1cd1`). See each todo below for full evidence.
 
 ## What I found
 
@@ -229,13 +233,34 @@ walk — the exact path set is fully known) and calls `ManifestWriter.record_cap
       `quality-gates.sh` green for all 4 changed files (the one QG failure present in the tree,
       `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py` STEP 5.101, is foreign — committed by `slot-11` at
       2026-07-30 04:08 UTC, unrelated to and not touched by this fix). Pushed, `ahead=0`.
-- [ ] [DATA] P2. Once the manifest-recording gap is fixed (or as an interim narrower fix), run a targeted reconciliation
+- [x] [DATA] P2. Once the manifest-recording gap is fixed (or as an interim narrower fix), run a targeted reconciliation
       pass for the ALREADY-WRITTEN real GCS data (the full 179-instrument × 105-date backfill completed above, ~15,639
       shards, ~1.10B rows): for each known (instrument, date) cell, `gcs_describe_object` the expected canonical path
       (fully enumerable, NOT a corpus walk — the exact scope is known and fixed) and
       `ManifestWriter.record_captured(...)` (or `record_captured_from_counts`, whichever fits the plain per-instrument
       shard shape — needs checking, the bundled-shard-oriented signature seen in `manifest_finalize.py` may not directly
-      apply) directly for each confirmed-existing object. Repo: market-tick-data-service.
+      apply) directly for each confirmed-existing object. Repo: market-tick-data-service. **DONE —
+      `market-tick-data-service@67dd6422`.** Resolved the open `record_captured` vs `record_captured_from_counts`
+      question in favor of a THIRD option: `ManifestWriter.add()` (the same v9-compliant per-instrument API the shipped
+      4th-bug fix now uses going forward — see `067dd6422`'s sibling `@064f872a`) — `record_captured` needs a real `df`
+      for schema validation and `record_captured_from_counts` is bundled-shard-oriented (neither fits a plain
+      per-instrument cell cleanly). New one-off script
+      `scripts/reconcile_lighter_derivative_ticker_manifest_2026_07_30.py`: one `list_blobs` call per day (105 total,
+      not a corpus walk) against the known canonical prefix, row counts read via a lazy range-reading wrapper so pyarrow
+      reads ONLY the parquet footer (a few KB, not the several-MB-per-shard full file — downloading full bytes for
+      ~15,000+ shards would have been an unbounded bulk transfer, genuinely unsuitable for a laptop). Hardened with
+      retries (4 attempts + backoff) and per-cell skip-and-continue after a live dry-run hit real transient network
+      failures (read timeouts, SSL EOF, even a transient local DNS resolution failure) partway through — a naive first
+      pass let ONE bad read kill the whole 105-day sweep; the hardened version completed cleanly. **Verified via
+      `--apply` on real prod data**: 105/105 dates scanned, **15,639 (ticker, date) cells recorded as captured, 0
+      skipped** — an EXACT match to the original backfill's ~15,639 shards. Spot-checked the written per-VM manifest
+      shard directly (`market-data-tick-cefi-prd-central-element-323112/_index/per_vm/local-20288-3b12.parquet`, 15,639
+      rows): every row shows `venue=LIGHTER-ZKSYNC`, `data_type=derivative_ticker`, `instrument_type=PERPETUAL`,
+      `source=tardis`, `pipeline_mode=batch_tardis`, `capture_status=captured`, clean bare `instrument_id`/`underlying`
+      (no numeric market_id leak — reused the same `KNOWN_INSTRUMENTS` ticker list the backfill VM was launched with,
+      not the raw Tardis wire filenames), plausible `row_count` values (tens of thousands per shard, consistent with the
+      ~1.10B total rows / 15,639 shards ≈ 70k rows/shard average). Per-VM shard merges into the canonical index via the
+      consolidator daemon within ~60s (never a direct index rewrite).
 - [x] [PROCESS] P3. The Tardis-concurrency-guard's `TARDIS_VM_NAME_PATTERN`-based venue exemption list treats
       LIGHTER-ZKSYNC as blanket "non-Tardis" (`deployment-service/scripts/vm/tardis-concurrency-guard.sh`), but its
       `trades`/`book_snapshot_5`/`derivative_ticker` DO route through Tardis (confirmed throughout this and the
