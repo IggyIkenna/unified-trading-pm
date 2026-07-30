@@ -444,3 +444,28 @@ not just noting.
   needs). **Recommend** (not actioned — plan-owner's call, not mine): this is the second corroboration entry landed in
   under 12h (after the 08:44Z one above); the L150 `[SCRIPT] P2` doc-split todo is worth pulling forward given entries
   keep accumulating. No code or plan-structure change made; slot 1 left clean on `live-defi-rollout`.
+- **2026-07-30T16:39Z (review agent `agt-f99b61`, slot 1) — a FRESH, LARGER `tmux_session_lost` wave than the one above,
+  third corroboration entry today**: independently re-verified via
+  `GET /api/activity?type=tmux_session_lost &since=2026-07-30T14:00:00Z` (not relayed) — **~18 kill events across 12
+  distinct slots (1, 2, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14) within a 26-minute window (16:09:24Z–16:35:39Z)**, wider
+  blast radius than the 14:54-15:01Z cluster this doc already tracks (6 slots, ~8 kills in 7min). Several kills forced a
+  genuine task requeue (real rework, not retry-churn): slot 9 released `prediction_satellite_ao_dispatch_batch6-004`,
+  slot 10 released `cefi_satellite_ao_dispatch_batch1_finalize-004`, slot 4 released
+  `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003` (again — see the prior corroboration entry's double-requeue note
+  for this same task id) then again `cefi_track2_backfill_vm_preempted_no_recovery-001`, slot 5 released
+  `sports_odds_api_scattered_multiyear_gaps-002` then `tradfi_satellite_ao_dispatch_batch5-014`, slot 12 released
+  `cefi_track2_coverage_backfill_checkpoints_finalize-001`, slot 13 released
+  `prek_patch_cache_replays_stale_diff_onto_unrelated_files-003`, slot 11 released
+  `prediction_satellite_ao_dispatch_batch6-004`. Slot 1 itself (this review agent's own slot) was killed 3 times in this
+  window (16:21:52Z, 16:23:56Z, 16:29:01Z) — all BEFORE this session (`agt-f99b61`) successfully registered at
+  16:32:42Z, i.e. this is why the queued main-agent messages from ~15:10-15:54Z sat unanswered for over an hour: the
+  review role's slot kept getting killed on respawn, not just the one predecessor session (`agt-2552a2`) already
+  attributed to the earlier 14:54-15:01Z wave. **Current host reading (16:39:44Z, this box) is EASED, not worse**:
+  `uptime` load average 7.66/8.79/11.57 (1/5/15-min) on 16 vCPUs — 1-min now comfortably under core count, versus the
+  97.38/93.02/78.15 reading at 06:20Z and the 26.20/16vCPU peak cited earlier today; `free -h` swap 8.6Gi/47Gi used,
+  down from the 14-21Gi range cited in the two entries above. **Read together with the eased current snapshot, this
+  looks like another acute burst that has already subsided, not a sustained worsening trend** — consistent with this
+  doc's standing "fluctuating-but-still-elevated" characterization, just a bigger individual burst than the last one.
+  Flagged to main agent (`agt-fd75de`) for awareness per its own standing re-flag trigger ("task-holders start getting
+  kicked repeatedly"); no operator page requested (bursty-not-steady-state read, same disposition as the prior
+  corroboration). No code or plan-structure change made; slot 1 left clean on `live-defi-rollout`.
