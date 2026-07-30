@@ -571,8 +571,27 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       todos applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of `needs-config` once a real
       reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as those todos' own notes. No
       code changed this pass; this is a checkbox-only verification flip.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py) —
+      unified-api-contracts@c92cf034: the "(no reason recorded)" text was stale — the committed
+      `capability-manifest.json` already carried a real reason ("Cross-product routing policy not declared in UAC (gap
+      #10)."), which was itself FALSE: `unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`
+      already declares `cme_wti_ice_brent_spread` (CROSS_VENUE_ROUTING_POLICIES), closing the UAC-declaration half of
+      gap #10 since 2026-05-08. The manifest cell (`archetype_capability_manifest.json`, TRADFI/dated_future,
+      venue_ids=[cme, ice]) just never got updated to reflect that. Grepped execution-service + strategy-service for any
+      consumer of `CROSS_VENUE_ROUTING_POLICIES`/`CrossVenueRoutingPolicy`/`policies_for_venue_pair` — 0 hits, so the
+      capability is still genuinely not end-to-end usable (kept status PARTIAL, not flipped to SUPPORTED). Corrected the
+      cell's `notes` to name the real remaining gap (execution-service/strategy-service router integration, not UAC
+      declaration) and propagated the fix through the committed derived artifacts (`capability-manifest.json`,
+      `capability-unlock-report.json`, `prospectus/ARBITRAGE_PRICE_DISPERSION.md`) — hand-patched rather than
+      full-regenerated, since a from-scratch regen in this slot picked up unrelated environment noise (missing
+      sibling-service `.venv`s skewing unrelated edges/leg-venue lists); verified the 3-edge diff (`supports→venue:ice`,
+      `supports→venue:cme`, `trades_instrument→instrument_type:dated_future`, all sourced from the same cell) was the
+      only change via `git diff`. QG green (sentinel `a86be26d`); `tests/unit/test_capability_unlock.py` (PM) +
+      `tests/internal/unit/test_archetype_capability_manifest_parity.py` +
+      `tests/unit/test_archetype_capability_may_23_coverage.py` (UAC) all pass. Follow-up (not in this task's scope):
+      actually wiring `CROSS_VENUE_ROUTING_POLICIES` into `execution-service/execution_service/v2/router.py` is the real
+      unlock for this cell — left as a future SCRIPT/BACKEND todo, not fabricated here.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance
       1, status partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap
       #10).. (auto-emitted by generate_capability_unlock_report.py)
