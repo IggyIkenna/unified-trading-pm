@@ -756,15 +756,23 @@ code.
 
 ## Todos
 
-- [ ] [CODE] P1. **RULED 2026-07-29 (operator direct answer) — (1) Option B, (2) converge to one enum.** (1)
-      "ETH-underlying units" means a genuinely different, FX-noise-isolated "true native staking return" metric matching
-      Hard Rule #5's literal `holding`-based formula — NOT a currency-preference view of the already-computed USD PnL.
-      This needs the one new per-position entry-price anchor identified in item 4 of "Smallest correct increment" above;
-      it disagrees with the already-shipped `convert_settlement_to_share_class` view over any multi-day window where
-      ETH/SOL's own USD price moves, so building it is real new work, not a wiring exercise. (2) Converge
+- [ ] [CODE] P1. **RULED 2026-07-29 (operator direct answer) — Option B.** "ETH-underlying units" means a genuinely
+      different, FX-noise-isolated "true native staking return" metric matching Hard Rule #5's literal `holding`-based
+      formula — NOT a currency-preference view of the already-computed USD PnL. This needs the one new per-position
+      entry-price anchor identified in item 4 of "Smallest correct increment" above; it disagrees with the
+      already-shipped `convert_settlement_to_share_class` view over any multi-day window where ETH/SOL's own USD price
+      moves, so building it is real new work, not a wiring exercise. **Not yet started.** (repo: strategy-service)
+- [x] ✅ [CODE] P1. **RULED 2026-07-29 (operator direct answer) — converge to one enum. DONE 2026-07-30.** Converged
       `unified_api_contracts.canonical.crosscutting.share_class.ShareClass` (`{USDT,ETH,BTC}`) and
-      `unified_api_contracts.internal.architecture_v2.enums.ShareClass` (9 values) to ONE canonical enum — pick the
-      superset shape (architecture_v2's 9 values, since it already covers the `canonical` one's 3), migrate the
-      `canonical` module's consumers (`client_reporting.py`, `registry/client_share_classes.py`) to import the unified
-      enum, delete the duplicate. Full completion, no partial migration leaving both alive. (repo:
-      unified-api-contracts, strategy-service)
+      `unified_api_contracts.internal.architecture_v2.enums.ShareClass` (9 values) to ONE canonical enum object —
+      `unified-api-contracts@4df243f7`, `quality-gates.sh` green, shipped via quickmerge. One deliberate deviation from
+      the ruling's literal module choice: kept `canonical.crosscutting.share_class.ShareClass` as the actual definition
+      (expanded 3→9 values) and made `internal.architecture_v2.enums.ShareClass` a re-export
+      (`from unified_api_contracts.canonical.crosscutting.share_class import ShareClass as ShareClass`) rather than the
+      reverse — `canonical` is the layer other internal types already build on (the natural dependency direction), and
+      this way **zero consumer files needed touching** (`client_reporting.py`, `registry/client_share_classes.py`
+      already imported from `canonical.crosscutting`, so they picked up the 9 values for free). Verified live, in
+      -process: `unified_api_contracts.ShareClass`, `internal.architecture_v2.enums.ShareClass`, and
+      `internal.ShareClass` are now all the identical class object (`is` comparison), all 9 members present,
+      `SHARE_CLASS_BASE_ASSETS` keys match. Confirmed exactly one `class ShareClass(StrEnum)` definition remains
+      repo-wide (`grep`). Full completion — no partial migration, duplicate deleted. (repo: unified-api-contracts)
