@@ -13,7 +13,7 @@ summary:
   SSOT, not accidental litter) -- were never added to .gitignore, so the dirty-tree check never cleared. This meant the
   VM's deployed code could silently fall behind origin for however long the tree stayed dirty, with no alert
   (self-pull's skip is a silent no-op by design, not a paged failure)."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -29,7 +29,7 @@ created: 2026-07-29
 priority: P2
 parent_epic: agent_operating_framework_master
 source: "Found while live-verifying dispatch_sequential_gate_fix_2026_07_24.md's [BACKEND] P1 todo via SSM, 2026-07-29"
-resolved_by:
+resolved_by: agent-orchestrator@b5fb9fc, agent-orchestrator@61b7a4f
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -39,13 +39,11 @@ depends_on: []
 
 # ao-self-pull.sh silently stalled 2+ hours -- 2 untracked backup files never gitignored
 
-> **🟡 STATUS CORRECTED 2026-07-30** (`/plan-reconcile` autonomous sweep) — frontmatter said `status: resolved` while
-> the doc still carries an OPEN `- [ ]` [INFRA] P3 todo (the self-pull staleness alert), so
-> `check_terminal_status_archived` demanded an archive the doc is not actually ready for. Aligned frontmatter to reality
-> per the skill's "frontmatter status contradicting body completion" auto-fix class: `status: resolved` → `open`,
-> `resolved_by:` cleared. **The original incident IS fixed** — see § "Fix (shipped same session)" below (gitignore
-> change + live-verified VM HEAD match on 2026-07-29); what remains open is only the follow-up alerting gap. Re-flip to
-> `resolved` and archive once that todo closes.
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, 0 open todos. The original incident was fixed same-session
+> (`agent-orchestrator@b5fb9fc` gitignore fix, live-verified VM HEAD match 2026-07-29); the follow-up staleness-alert
+> todo (a `/plan-reconcile` sweep had earlier flagged this doc's `status: resolved` as premature while it was still
+> open) is now also shipped (`agent-orchestrator@61b7a4f` — TIME-gated dirty-skip alert, functionally verified).
+> Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule (ACKED-INTO-CODE).
 
 ## Evidence
 
@@ -77,7 +75,7 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
 
 ## Fix (shipped same session)
 
-- `agent-orchestrator@<gitignore-fix-sha>` — added `data/config/accounts.json.bak-pre-sub-*` to `.gitignore`, same
+- `agent-orchestrator@b5fb9fc` — added `data/config/accounts.json.bak-pre-sub-*` to `.gitignore`, same
   secrets-adjacent-class reasoning as the tracked exclusion it backs up.
 - Verified live: VM HEAD now matches the pushed commit exactly (`b5fb9fcaff438f7fc2990678ce1d7edca80da81c`),
   `git status --porcelain` is empty, self-pull's next tick will succeed normally. The 2 backup files were left in place

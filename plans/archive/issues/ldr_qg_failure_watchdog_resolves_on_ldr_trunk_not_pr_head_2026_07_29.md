@@ -21,7 +21,7 @@ summary: >-
   head the escalation was created for. In this case LDR's own trunk had a green `workflow_dispatch` run at 16:31:50Z (an
   unrelated retry, done before the worker was even dispatched at 20:13:59Z) — the watchdog saw that stale trunk-level
   green and immediately closed the escalation 9 minutes after dispatch, despite PR #796's own head never having passed.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -50,10 +50,18 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: agent-orchestrator@270e50b
 drift_direction: advance-code
 source: "cicd escalation agt-0cd704, slot 9, unified-api-contracts PR#796 (ldr_qg_failure), 2026-07-29"
 ---
+
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, 0 open todos. The P1 fix (PR-head-scoped `ldr_qg_failure` resolution)
+> shipped as `agent-orchestrator@270e50b`. Follow-on audit (P2: no broader false-positive pattern found among the
+> trailing 48h's other 11 `qg_v2_green`+`pr_number>0` escalations — 1 genuinely merged, 10 closed/superseded via normal
+> promote-fleet-cron lifecycle) and recheck (P3: PR #796 did not self-clear; manually re-triggered `quality-gates-v2` on
+> it, found it currently blocked by the separate, already-tracked
+> `github_actions_billing_wall_recurrence_2026_07_29.md`, not this doc's bug) both closed 2026-07-30. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule (ACKED-INTO-CODE).
 
 # `ldr_qg_failure` watchdog resolves on LDR trunk health, not the actual PR head
 

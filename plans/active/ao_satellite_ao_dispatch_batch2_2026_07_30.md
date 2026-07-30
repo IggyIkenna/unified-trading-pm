@@ -186,10 +186,10 @@ other orphaned candidate considered and why it was NOT drafted.
   existing signal ... Prefer (b) if it proves reliable enough") whose own tiebreaker ("reliable enough") is itself a
   judgment call, not a hard criterion. Todo 3 is explicitly "not actionable today" per the doc. Re-triage once the DATA
   todo's direction is operator-ruled or the doc itself commits to one path.
-- `/plans/active/issues/ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md` — its sole open todo offers "page
-  or Slack-notify" with no stated preference, plus a soft "Consider adding" framing (a judgment call on whether to build
-  at all) and a suggested-not-fixed threshold. Re-scope (pick one channel + a fixed threshold) before this becomes
-  batchable.
+- `/plans/archive/issues/ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md` — **MOOT, resolved 2026-07-30**
+  (`agent-orchestrator@61b7a4f`) before this exclusion rationale could become relevant: built a TIME-gated
+  `_track_dirty_tick` Slack alert (mirroring the file's own existing `_track_stale_process` pattern), functionally
+  verified end-to-end; doc archived, 0 open todos remain. Nothing left to dispatch here.
 - `/plans/active/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` — its substantive
   fix is literally phrased "either (a) ... or (b) ..." with no operator ruling; the doc's own Root Cause section leans
   rhetorically toward (a) but never commits. Its second todo (investigate the `priority_override`-vs-`auto_unpark__`

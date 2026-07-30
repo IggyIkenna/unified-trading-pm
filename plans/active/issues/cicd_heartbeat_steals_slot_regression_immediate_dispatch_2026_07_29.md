@@ -44,7 +44,7 @@ related:
     /plans/archive/issues/cicd_escalation_heartbeat_steals_slot_before_done_no_agentrow_2026_07_28.md,
     /plans/active/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md,
     /plans/active/issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29.md,
-    /plans/active/issues/ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head_2026_07_29.md,
+    /plans/archive/issues/ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head_2026_07_29.md,
     /plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md,
   ]
 created: 2026-07-29

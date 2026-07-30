@@ -21,9 +21,10 @@ summary: >-
   pass cleanly in isolation immediately after — flaky under this shared host's real concurrent tmux-session traffic
   (many live orch-slot-N sessions), not a code defect; captured for awareness but NOT one of the 7 tracked fix todos
   below.
-status: open
+status: resolved
 assigned_vm: planning
 resolved_by:
+  agent-orchestrator@02d2e9f, agent-orchestrator@296e5e4, agent-orchestrator@17a6773, agent-orchestrator@61b7a4f
 locked_by:
 nature: issue
 asset_group: [ao]
@@ -45,6 +46,12 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, 0 open todos. All 3 QG-red root causes fixed
+> (`agent-orchestrator@02d2e9f`, `@296e5e4`, `@17a6773`) and the 1 flaky-test follow-up investigated + marked
+> `host_load_sensitive` (`agent-orchestrator@61b7a4f` — confirmed already fully mocked, no logic defect; flake is
+> host-scheduler contention, not something this test's own code can close further). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule (ACKED-INTO-CODE).
 
 ## What I found
 

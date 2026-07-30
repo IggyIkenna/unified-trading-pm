@@ -271,14 +271,22 @@ the daily digest, they never page; a standing condition pages once on the false�
 | Continuous deploy (code) | `agent-orchestrator/scripts/ao-self-pull.sh` (root cron `*/15`)     |
 
 **Deploy currency**: `ao-self-pull.sh` FF-pulls `origin/live-defi-rollout` (ff-only) and `systemctl restart`s the
-orchestrator only when HEAD moved, or when the running process predates the checkout HEAD. A deduped Slack
-`_alert_wedge` fires when the pull is wedged (dirty/diverged) AND the clone is `≥AO_DRIFT_ALERT_COMMITS` (10) behind.
-**Open hardening gap**: the wedge alert fires on checkout-behind, NOT on a current-checkout-but-stale-running-process —
-tracked in the AO close-out plan. **`launch-epic-vm*.sh` REMOVED 2026-07-24** (operator ruling: per-epic VMs are
-deprecated and unused since the 2026-06-27 single-VM pivot — no re-spin optionality is worth the code debt; recreate
-from git history, `deployment-service@7438ec5^`, if the per-epic model ever returns). Disaster recovery for the single
-central/planning VM is the separate, already-covered `launch-central-brain-aws.sh` (from-scratch relaunch + EIP
-reassociation) — see its header comment for the current recovery procedure.
+orchestrator only when HEAD moved, or when the running process predates the checkout HEAD. Three deduped Slack alert
+conditions, each with its own dedup statefile so none suppresses the others: (1) `_alert_wedge` fires when the pull is
+wedged (dirty/diverged) AND the clone is `≥AO_DRIFT_ALERT_COMMITS` (10) commits behind — a COMMIT-DISTANCE gate; (2)
+`_track_stale_process`/`_STALE_TICKS_STATE` fires after `AO_STALE_PROCESS_ALERT_TICKS` (3) consecutive ticks where the
+checkout is current but the RUNNING PROCESS still predates HEAD (the self-heal restart isn't resolving it) — closes the
+older "current-checkout-but-stale-process" gap this note used to flag as open; (3) `_track_dirty_tick`/
+`_DIRTY_TICKS_STATE` (added 2026-07-30,
+`/plans/archive/issues/ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md`) fires after `AO_DIRTY_ALERT_TICKS`
+(4, ~1h at the `*/15` cadence) consecutive dirty-skip ticks regardless of how many commits LDR moved meanwhile — closes
+the blind spot where `_alert_wedge`'s commit-distance gate never trips during a quiet LDR window even though the tree
+has been silently stuck dirty for hours (the incident that doc found: 2+ hours, 10 consecutive ticks, never alerted).
+**`launch-epic-vm*.sh` REMOVED 2026-07-24** (operator ruling: per-epic VMs are deprecated and unused since the
+2026-06-27 single-VM pivot — no re-spin optionality is worth the code debt; recreate from git history,
+`deployment-service@7438ec5^`, if the per-epic model ever returns). Disaster recovery for the single central/planning VM
+is the separate, already-covered `launch-central-brain-aws.sh` (from-scratch relaunch + EIP reassociation) — see its
+header comment for the current recovery procedure.
 
 ### What a self-pull ACTUALLY deploys — the generator-inert boundary (HARD RULE)
 
