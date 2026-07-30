@@ -187,13 +187,22 @@ masking rows together to apply the tie-break. This is a genuinely live, unmitiga
 
 **Corrected action item — replaces the INFRA redeploy todo above (not done, superseded by this)**:
 
-- [ ] [CODE] P1. **Extend the "never emit empty_confirmed over a captured atom" guard to the regular sports instruments
+- [x] [CODE] P1. **Extend the "never emit empty_confirmed over a captured atom" guard to the regular sports instruments
       batch-capture emission path** (`sports_fixtures.py`/`sports_reference_core.py` or wherever
       `uts-prod-instruments-service-sports-fixtures`'s `--operation=instruments --mode=batch --asset-group=SPORTS` run
       emits `EXPECTED_NO_FIXTURE`/`EXPECTED_PAUSED_LEAGUE`/etc.) — same guard shape as `ba306543`
       (`enumerate_expected_universe.py`'s `captured_set` check), applied to this SEPARATE code path. This is real code
       investigation + a fix + tests, not a redeploy — appropriately scoped as its own session's work, not rushed here.
-      Repo: `instruments-service`.
+      Repo: `instruments-service`. — ✅ 2026-07-30 instruments-service@4275b2d8: generalized the existing
+      FIXTURES_SCHEDULE-only manifest-captured-set guard (`_manifest_captured_fixture_leagues`, used by
+      `process_write._write_sports_fixture_venue`) into a data_type-parameterized
+      `_manifest_captured_leagues_for_data_type`, and wired a new
+      `_AfManifestHooks._manifest_index_guarded_captured_leagues` hook into `emit_empty_gaps_for_entity`
+      (TEAMS/STANDINGS/INJURIES path in `sports_reference_core.py`) — same fail-safe (`None` on manifest-read failure →
+      skip emission entirely) and `bucket=""`-disable contract as the existing GCS-presence guard. +9 unit tests
+      (generalization proof, guard-unit coverage, and an end-to-end `emit_empty_gaps_for_entity`
+      guard/fail-safe/regression suite in `tests/unit/test_sports_reference_core_manifest_index_guard.py`); full
+      `quality-gates.sh` green (5051 passed) at instruments-service@4275b2d8.
 - [x] [INFRA] P3. **Downgrade, don't drop, the original "redeploy `expected-universe-v2-sports`" todo** — that image IS
       now current (confirmed `:latest` contains `ba306543` as of 2026-07-23T08:07:36Z) and Cloud Run Jobs generally
       re-pull a mutable tag per execution, so no action is likely needed there specifically; keep as a low-priority
