@@ -368,6 +368,13 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       (`23:25Z`) is still ~18.6h before the day-plus gate (`2026-07-30T18:02Z`). No change since the 20:07Z check.
       Releasing via `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above — once
       `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
+      verdict. — **Checked 2026-07-30T00:29Z (slot 11, data_engineering): still premature, bare check only (no manifest
+      re-query, per the prior check's own guidance).** Confirmed no further relevant change: instruments-service HEAD
+      (`7f272911`, `origin/live-defi-rollout`) unchanged since the 23:25Z check — zero commits touching
+      `*process_fetch*` since `2026-07-29T18:00:00Z`. Current time (`2026-07-30T00:29Z`) is still ~17.5h before the
+      day-plus gate (`2026-07-30T18:02Z`). No change since the 23:25Z check. Releasing via
+      `/skip-current-task {"reason_code":     "GATED"}`. Next dispatch: same condition as above — once
+      `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
       verdict.
 - [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
