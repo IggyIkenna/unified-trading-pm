@@ -287,12 +287,31 @@ what they were approving. Fixing the question text removes the thing the guard w
       `test_get_full_todo_text_returns_full_continuation_block`,
       `test_get_full_todo_text_falls_back_to_description_when_line_not_found`,
       `test_get_full_todo_text_falls_back_when_plan_unreadable`.
-- [ ] [UI] P1. Dashboard: add the reclassify action with a role dropdown sourced from `GET /api/roles`, a free-text
+- [x] ✅ [UI] P1. Dashboard: add the reclassify action with a role dropdown sourced from `GET /api/roles`, a free-text
       instruction box, and a purple outline on operator-gated (`BLK-op-*` / `authority="operator"`) cards distinguishing
-      them from worker `/blocked` questions (repo: agent-orchestrator — `dashboard/src/`; needs `[UI]` + `pw:L2 ✓` with
-      a cited regression spec per `/codex/06-coding-standards/ui-testing-layers.md`). **NOT YET DONE** — the backend is
-      fully live (this same commit) and ready for it; the operator can already drive D3 directly via
-      `POST /api/blocked/{id}/answer` with `{ruling_action, ruling_role, ruling_instruction}` in the meantime.
+      them from worker `/blocked` questions (repo: agent-orchestrator — `dashboard/src/`). — agent-orchestrator@97a4864.
+      `BlockedCard` (`dashboard/src/layout.tsx`) now: (1) renders a purple `authority-operator-gated` outline +
+      "operator-gated" badge for any `blocked_id` starting `BLK-op-`, distinct from the existing amber
+      `authority-operator` style kept for a live worker's own operator escalation; (2) a "Reclassify to role…"
+      `<select>` populated from `roles` (already fetched app-wide via the pre-existing `GET /api/roles` — **this todo's
+      own earlier `GET /api/roles` addition was reverted**, see the fix commit noted below, and the role list is instead
+      filtered client-side, excluding `project_management`/`review`) that submits `ruling_action="reclassify"`; (3) the
+      free-text box, for these rows only, submits `ruling_action="instruct"` with no content guard, per D4. `types.ts`
+      gained `BlockedRuling`; `api.ts`'s `answerBlocked` and `App.tsx`'s `onAnswerBlocked` thread it through. New spec
+      `dashboard/tests/e2e/reclassify-blocked.spec.ts` (3 tests: purple styling + reclassify-to-worker dispatch,
+      free-text instruct, negative check an ordinary card is unaffected) — `pw:L2 ✓`
+      (`npx playwright test --project=chromium`, 12/12 passed including the 9 pre-existing specs unaffected). Evidence:
+      `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
+
+      **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
+              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+
 - [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
       again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
       the plan doc updated (tag stripped / role set / checkbox flipped) — cite fresh evidence, do not reuse this doc's
