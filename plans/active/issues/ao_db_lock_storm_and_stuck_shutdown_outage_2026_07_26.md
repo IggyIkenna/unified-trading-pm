@@ -285,6 +285,21 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
 
 ## Progress Log
 
+- **2026-07-30T12:14Z (slot 8, review)** — Dispatched `ao_db_lock_storm_and_stuck_shutdown_outage-007` (this `[REVIEW]`
+  todo). Running directly on the orchestrator VM (`ip-172-31-5-118`) gave direct access: confirmed via
+  `systemctl status orchestrator.service`'s own process listing that the live `ExecStart` STILL carries
+  `--reload --reload-dir server` — the `[OPERATOR]` todo is still genuinely not applied. Confirmed `sudo -n true` still
+  fails (`NoNewPrivileges=yes`) even from a session running on the VM itself — no more privileged access than prior
+  sandboxed sessions had. Also discovered slot-15's earlier park (`-005`/`-006`, priority 999 + prereqs gate) had
+  silently reverted to a fresh, ungated `-007` — NOT the same bug slot-15 already fixed (todo-text-edit fingerprint
+  drift), but a related gap: the park didn't carry forward across an unrelated SIBLING todo being added to this same doc
+  afterward. Re-applied the same park recipe to `-007` directly on the live `backlog.yaml` (this session has filesystem
+  access on the VM) and verified it survives BOTH `/reload` and a real `/regen` tick this time. Filed a scoped follow-up
+  issue for the underlying gap:
+  [backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md](/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md).
+  Not flipping this todo's checkbox — its own precondition (live unit updated) is still unmet. No code shipped this
+  entry.
+
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
