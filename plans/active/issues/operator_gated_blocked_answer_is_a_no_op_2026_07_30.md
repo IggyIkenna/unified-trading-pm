@@ -304,13 +304,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                          this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                          a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                          `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                          load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                          authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                          own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                          deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
       again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
@@ -323,6 +323,17 @@ what they were approving. Fixing the question text removes the thing the guard w
       dispatchable `--ruling` task, gated on `done_definition` requiring the plan edit in the same commit so both tasks
       become ordinary orphans together), the dashboard's purple/reclassify/instruct UI, and a note on the
       duplicate-`/api/roles` regression found while building it. `docspec.py --check --soft`: hard=0 soft=0.
+
+## E2E verification fixture for the [REVIEW] todo above (temporary, added 2026-07-30)
+
+The only live `BLK-op-*` row in the corpus right now is a genuinely contested cross-AG architecture question
+(`defi_cefi_venue_chain_axis_contamination-006`) — not appropriate for a reviewer to rule on just to exercise this
+mechanism. These two todos are deliberately bounded, judgment-free, safe-to-dispatch fixtures whose sole purpose is to
+seed real `BLK-op-*` rows to drive through the live reclassify + compound-instruction answer paths. Both todos (and
+their materialized `--ruling` tasks) are removed from this doc once the [REVIEW] todo above cites their evidence.
+
+- [ ] [OPERATOR] P1. E2E fixture A (reclassify test, safe/no-judgment, temp): print `RULES.md`'s line count.
+- [ ] [OPERATOR] P1. E2E fixture B (free-text test, safe/no-judgment, temp): print `agent-orchestrator`'s short SHA.
 
 # Codex SSOTs
 
