@@ -125,6 +125,15 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       (give `classify_no_capture_reason()` a "task never writes the manifest" exemption for this script family) — these
       21 dead VMs are a second, larger, concrete instance of exactly the alerting gap that doc already diagnosed from
       one VM; worth citing as corroborating evidence when that fix is prioritized.
+- [ ] [SCRIPT] P2. Change `cefi-content-apply`'s default `MACHINE_TYPE` from `e2-standard-8` to `e2-standard-16` in
+      `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (the category-specific default, not the
+      launcher's global default — other categories are unaffected). Confirmed root cause 2026-07-30: 3 independent
+      shards (17, 18, 41) OOM-killed (`rc=137`, worker process killed while VM stayed alive, no preemption event) on
+      `e2-standard-8` within the same 21-VM relaunch, at 3.6%-7.9% progress; all 3 ran clean to well past their prior
+      death points after being individually relaunched on `e2-standard-16`. Likely cause: the script's in-memory
+      catalogue load (`Loaded N catalogue rows from instruments-store-cefi-prd-...`) has grown since the category's
+      original 2026-07-19 launch (11 days of continued live capture), pushing every shard closer to the 32GB ceiling.
+      Repo: deployment-service.
 
 ## Progress Log
 
@@ -188,3 +197,25 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   **Watch for more of these** — if the pattern continues, the durable fix belongs in the launcher's own
   `cefi-content-apply` category comment (default to `e2-standard-16` for this category going forward, not per-incident
   escalation).
+- **2026-07-30 update (slot-15, same session, ~10 min later) — THIRD occurrence, escalated to fleet-wide fix**: shard 17
+  (`canonical-migration-cefi-content-17-relaunch20260730-122417`) died with the SAME `rc=137` signature at
+  12,400/157,497 files (7.9%, ~30 min runtime — notably further than shards 41 (4.9%) or 18 (3.6%), consistent with
+  memory accumulating over TIME/volume-processed rather than dying at a fixed absolute file count). This is the bar
+  explicitly set in the entry above ("a THIRD independent OOM would be strong enough confirmation") — three different
+  shards, three different date ranges, same signature, now confirmed systemic rather than coincidental. Relaunched shard
+  17 on `e2-standard-16`. **Escalated to the fleet-wide fix**: rather than wait for each of the remaining 18
+  still-`e2-standard-8` shards to individually OOM (each wasting its accumulated runtime before being caught), deleted
+  all 18 and relaunched them on `e2-standard-16` in one batch
+  (`canonical-migration-cefi-content-<shard>-relaunch20260730-130600`). Accepted the sunk cost of their partial progress
+  deliberately — the script's `already_canonical_skipped` counter means a fresh re-scan re-confirms already-migrated
+  files CHEAPLY (a metadata check, not a re-migration), so restarting is materially cheaper than it looks from raw
+  file-count-discarded alone. **All 21 shards are now on `e2-standard-16`** as of this action;
+  `MACHINE_TYPE=e2-standard-8` default for `cefi-content-apply` in `launch-canonical-migration-vm.sh` should be
+  reconsidered as a follow-up if this pattern is confirmed durable (i.e., if e2-standard-16 shards run to completion
+  without further OOMs) — not yet added as a tracked todo since the e2-standard-16 fix itself isn't confirmed successful
+  yet (shard 41 was mid-test crossing its prior death point at time of writing).
+- **2026-07-30 update (slot-15, same session, ~5 min later) — fix CONFIRMED**: shard 41 safely cleared 5,400/77,941
+  files (well past its 3,800-file death point on `e2-standard-8`) and is still `RUNNING` healthy on `e2-standard-16` —
+  the machine-type escalation genuinely resolves the OOM, not a coincidence of timing. Also confirmed the `54817bc1`
+  SPOT-checkpoint fix is actively writing (`[[VM_PROGRESS]] last_completed_date=2024-10-01 monotonic=true` observed in
+  shard 41's log). Adding the tracked follow-up now that the fix is verified:
