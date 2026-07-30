@@ -22,6 +22,15 @@ summary: >-
   partway through the same investigation, so a false negative from operator error can't yet be ruled out. No GCS writes,
   deletes, or manifest corrections were made — this doc exists specifically because the investigation stopped short of
   touching production data on shaky footing, per the workspace's own content-verify-not-existence delete-safety lesson.
+  **UPDATE (same day, completing this doc's own todos):** the listing bug is fixed (Finding C CONFIRMED real, not a
+  tooling artifact); Finding A root-caused to a `record_failed` classification-token bug (fixed + shipped); the 26
+  confirmed-real KALSHI_PERP objects were migrated to canonical venue paths (applied + verified). A SEPARATE, SELF-
+  CAUGHT P0 regression surfaced mid-fix: the sibling small-drift doc's "chain wrong-axis" finding was itself a
+  misdiagnosis, and its same-day fix silently broke every perp_funding manifest write for these 3 venues for ~2h15m —
+  caught and reverted same session, zero real writes lost. The 8-row + 76-row manifest metadata corrections remain
+  BLOCKED, not on logic, but on `DefiManifestRecorder`'s full-index read-merge-write timing out repeatedly from a local
+  session against the 9.5M-row consolidated manifest — this is the heavy-I/O-belongs-on-a-VM class of problem, not a
+  data-correctness one.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -152,23 +161,64 @@ workspace has already been burned by once.
 
 ## Todos
 
-- [ ] [DATA] P1. **Fix the storage-client listing helper** used in this investigation (or find/reuse the already-
-      correct pattern from `_axis_census.py`'s delimiter descent, which IS proven working — SKILL.md § 3f) so
-      `list_blobs(..., delimiter='/')`'s prefix-grouping can be read reliably, then re-run the 07-26/07-27 check against
-      a KNOWN-populated day first to prove the method before trusting a negative result.
-- [ ] [DATA] P1. **Root-cause the POLYMARKET_PERP capture failure** (Finding A) — get a real error message (the
-      manifest's `"polymarket_perp"` placeholder is not one), likely requires a live/dry-run repro of the Polymarket
-      perp-funding collector in `market-tick-data-service` (`_perp_funding_kalshi_polymarket.py` /
-      `perp_funding_handler.py`). Fix both the actual collection failure AND the `error_reason`-recording bug that let a
-      non-message string reach the manifest.
-- [ ] [DATA] P2. **Once § listing method is fixed and Finding C is resolved either way**: migrate the confirmed-real
-      KALSHI_PERP objects (§3's per-day object counts, re-enumerated correctly) from `venue=KALSHI_PERP/` to
-      `venue=KALSHI-PERP/` (copy → content-verify → delete-old, per the delete-safety protocol's five-part proof), and
-      re-stamp the 8 manifest rows (venue + chain) so the census stops showing them. If Finding C confirms 07-26/07-27
-      are genuinely phantom `captured` rows with no object, that's a `masked_empty_row` finding requiring its own
-      remediation (likely `record_failed` re-stamp), not a migrate-in-place.
+- [x] [DATA] P1. **Fix the storage-client listing helper** — root-caused: the CLIENT-level `list_blobs(bucket, ...)`
+      convenience wrapper (`unified_trading_library/cloud_interface/providers/gcp.py:283`) iterates the raw
+      `HTTPIterator` internally and only ever yields `BlobMetadata` — it discards `.prefixes` entirely, which is why
+      asking it for `.prefixes` crashed. The BUCKET-level API
+      (`client.bucket(name).list_blobs(prefix=...,     delimiter='/')`, `gcp.py:135`) returns the native iterator that
+      DOES preserve `.prefixes`. Re-verified Finding C with the correct method against a known-populated day first
+      (07-28/07-29, confirmed 13 objects each) before trusting the negative result — **Finding C is CONFIRMED real**:
+      2026-07-26 and 2026-07-27 have zero `pipeline_mode=batch_kalshi_perp/` (or `batch_polymarket_perp/`) directories
+      at all under `asset_group=cefi` — only
+      `batch_aster`/`batch_deribit`/`batch_extended`/`batch_hyperliquid`/`batch_tardis` exist for those 2 dates.
+- [x] [DATA] P1. **Root-cause the POLYMARKET_PERP capture failure** (Finding A) — NOT a live bug: Polymarket's
+      perp-funding endpoint (`perps-api.polymarket.com`) has a known, DELIBERATE, documented DNS-outage scaffold since
+      2026-06-21 (`_collect_polymarket_perp`'s own docstring) — it correctly raises to route to `attempted_failed`. The
+      REAL bug was narrower: `DefiManifestRecorder.record_failed` derives the manifest `error_reason` from
+      `str(error).split(":", 1)[0]` (the first colon-delimited segment), and the raised message started
+      `"polymarket_perp: ..."` — so the classification token extracted was the venue name, not a real reason. Fixed by
+      reordering the message to `"SOURCE_UNREACHABLE: polymarket_perp perps-api.polymarket.com     unreachable..."` + a
+      regression test asserting the token. Shipped `market-tick-data-service@dcd1bc8d`.
+- [x] [DATA] P2. **Migrate the confirmed-real KALSHI_PERP objects** — 26 objects (13 tickers × 2 days, 07-28/07-29; the
+      manifest row is a BUNDLE covering 13 per-ticker files, not 1:1 — undercounted in the original filing). Copy →
+      crc32c content-verify → delete-old, per the delete-safety protocol's proof. **APPLIED and verified**: 26/26
+      copied + content-verified, 26/26 legacy objects deleted, final listing confirms `venue=KALSHI_PERP/` = 0 objects
+      remaining and `venue=KALSHI-PERP/` = 13 objects on each of 07-28/07-29.
+- [x] [DATA] P0. **SELF-CAUGHT REGRESSION, urgently reverted** — while preparing this todo's manifest re-stamp, found
+      that `cefi_sports_prediction_first_census_small_drift_2026_07_30.md`'s "chain wrong-axis" finding (and its
+      same-day fix) was a MISDIAGNOSIS: `DefiManifestRecorder` enforces a hard A4-full invariant (every DeFi-family
+      shard, perp_funding included, requires a non-blank `chain` — the last caller that ever keyed a blank chain was
+      deliberately removed 2026-07-25 to close this off). Setting `chain=""` (shipped
+      `market-tick-data-service@     4d147d9a`, 2026-07-30T14:12 UTC) made every `record_captured`/`record_failed` call
+      for kalshi_perp/ polymarket_perp/hyperliquid perp_funding silently raise `BlankChainError`, caught by shard-level
+      isolation, and drop the row with only a WARNING — no manifest write at all. **Reverted same session**
+      (`market-tick-data-service@fb32fb65`, QG-green) — `chain=<VENUE>` restored as the established, load-bearing
+      workaround for a venue with no underlying blockchain. **Blast radius measured as ZERO real production rows lost**:
+      no `written_at` timestamp exists for any of the 3 venues' perp_funding rows in the 14:00-16:30 UTC window (the
+      daily batch cron runs once ~01:15 UTC and did not fire again inside the regression window).
+      `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` corrected to retract the finding.
+- [ ] [DATA] P1. **Re-stamp the 8 KALSHI_PERP/POLYMARKET_PERP manifest rows — BLOCKED on local-machine infra, not a
+      logic gap.** Corrected script ready and dry-run-verified (venue + chain values confirmed correct against the
+      reverted source's own `_chain_map`) — script preserved at
+      `/private/tmp/claude-501/.../scratchpad/restamp_perp_funding_manifest_FINAL.py` (paste into a fresh script on
+      whichever runner executes this). **Every one of 8 `--apply` attempts timed out** (120s client timeout,
+      `HTTPSConnectionPool read timed out` / `write operation timed out` / one DNS resolution failure) across ~90
+      minutes of retries from this interactive session. Root cause: `DefiManifestRecorder` triggers a full
+      read-merge-write of the ENTIRE consolidated `_index/availability_index.parquet` (9.5M rows) on every instantiation
+      — this is exactly the class of operation `/codex/05-infrastructure/vm-launcher-runbook.md`'s heavy-I/O rule
+      reserves for a VM in-region, never the operator's local machine ("manifest-index rewrites go on a VM ALWAYS").
+      Running it from a local interactive session against a 9.5M-row index is very plausibly the actual cause of the
+      sustained timeouts, not incidental network flakiness — 8 consecutive failures over 90 minutes is the
+      stable-condition signal, not flapping. **Recipe for the next attempt** (VM, or a session with a demonstrably
+      faster path to this bucket): run the preserved script with `--apply`; it write-corrects 4 KALSHI_PERP `captured`
+      rows (07-28/07-29, matching the now-real objects) to `venue=KALSHI-PERP`, 2 KALSHI_PERP `captured` rows
+      (07-26/07-27, the confirmed-phantom Finding C rows) to `record_failed` with an explicit `PHANTOM_CAPTURED_ROW`
+      reason, and 4 POLYMARKET_PERP `attempted_failed` rows to `venue=POLYMARKET-PERP` with the corrected
+      `SOURCE_UNREACHABLE` reason. Dedup/upsert semantics mean this is purely additive — nothing to undo if a partial
+      run lands before a full one succeeds.
 - [ ] [DATA] P3. **Migrate/correct the ~76 prediction `instrument_type=prediction` manifest rows** (from
-      `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` items 6-7) — these are CQG bundle rows with no 1:1
-      GCS object (confirmed manifest-only), so this is a pure manifest re-stamp via `record_captured_from_counts` with
-      the corrected `instrument_type`, no object migration needed. Lower priority than the cefi items above since it's a
-      pure hygiene fix with no live-collection-failure component.
+      `cefi_sports_prediction_first_census_small_drift_2026_07_30.md` items 6-7) — confirmed CQG bundle rows with no 1:1
+      GCS object (manifest-only), so this is a pure `record_captured_from_counts` re-stamp, no object migration. **Not
+      attempted this session** — deliberately deferred once the identical `DefiManifestRecorder` local-timeout wall hit
+      the todo above; the same VM/faster-path prerequisite applies. Lower priority than the cefi items above (pure
+      hygiene, no live-collection-failure component).
