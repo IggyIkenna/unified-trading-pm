@@ -755,3 +755,13 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
       ohlcv_15m/24h rows (any status) for 2026-07-13 through 07-15, consistent with this gap. Repo:
       market-data-processing-service + unified-api-contracts/instruments-service (seeding). Provenance: this Progress
       Log.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 14 open todos read end-to-end. The doc
+  is a genuine mix and cannot flip as a whole: 5 are explicitly operator- or credential-gated (the `altdata`
+  asset_group-home `[OPERATOR-DECISION]` plus its 3 dependents, and the `[BLOCKED-CREDENTIALS]` EIA API key); the R1
+  `--also-legacy` item is self-marked "checkbox stays OPEN pending operator decision" with a data-loss issue doc already
+  filed; and G1.run `--apply-write` is gated on named, still-unmet prerequisites (gate-b Databento IS reference re-feed,
+  gate-c the v9 instruments-store walk). Bounded AO-eligible content does exist here (the pre- existing UAC
+  `test_schema_version_matrix` QG-RED item; the `--source databento` IS reference-capture re-run), but a whole-doc
+  `assigned_vm` flip would dispatch the operator-gated majority alongside it — that content belongs in an
+  `/ag-closeout-audit` carve-out, not a reclassification. No content found stale on this pass.

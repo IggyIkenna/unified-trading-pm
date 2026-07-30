@@ -85,6 +85,17 @@ scope).
 
 ## Recommended decision
 
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All three todos below
+> are already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
+> ("Trace/fix 3 distinct-value mis-stamp clusters", whose `Source:` cites this doc by name; its items (1)-(3) map 1:1
+> onto the three todos here). That batch doc is `assigned_vm: planning` but **`status: draft`** — NOT ingested, NOT
+> dispatched today. Flipping this doc's `assigned_vm` would dispatch a duplicate, so the shared conflict-check
+> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
+> only. Note also that the `YAHOO_FINANCE` half (todo 2) is the SAME question batch5's sibling todo sourced from
+> `/plans/active/issues/tradfi_yahoo_venue_vendor_conflation_2026_07_27.md` owns; batch5 already encodes the
+> "investigate once, cite from all three" sequencing. Live blocker = batch5's draft status (operator item 5 in
+> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+
 - [ ] [DATA] P2. Trace the `ESM0`/`ESM0_MIGRATED_20260418T131054Z` chain-axis writer (tradfi manifest `chain` column)
       and either fix the writer to leave `chain=""` for tradfi (mirrors the cefi `_canonical_manifest_venue_chain`
       precedent) or re-stamp the 7+7 rows if the writer fix alone would fragment row identity (same caution as the MTDS
@@ -94,3 +105,12 @@ scope).
       `venue` column. Source: this doc.
 - [ ] [DIAG] P3. Identify what writes `instrument_type='UD'` in tradfi and either register it (if a real, distinct
       instrument type) or trace it as a mis-stamp. Source: this doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** All 3 todos are bounded, deterministic-outcome work and would otherwise have been a clean RECLASSIFY; the
+  shared conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) returned
+  CONFLICT because `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts all three verbatim
+  as one combined todo citing this doc as its `Source:`. See the note added above the todos. Live blocker is batch5's
+  `status: draft`, not this doc's classification.

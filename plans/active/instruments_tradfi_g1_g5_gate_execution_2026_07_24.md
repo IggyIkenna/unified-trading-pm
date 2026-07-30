@@ -588,3 +588,14 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
 | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---- | -------- | ------------------------------------------------------- |
 | 1   | **NEW FINDING (2026-07-26)**: full CME instrument-definitions re-fetch for `2020-01-01`→`2026-06-18` (~2,368 days), captured under the pre-lockdown narrower universe (EC\* event contracts + DBEQ.BASIC consolidation absent) — sample-verified (2 dates re-fetched, both confirm the gap: instrument_count jumps from ~15-18K/day pre-lockdown to ~74-95K/day post). This is a real backfill campaign, not a "small sample" task — needs its own dedicated plan/VM launch, not attempted here. | IS   | P2       | Nothing (scoping only; needs a dedicated backfill plan) |
 | 2   | 2 anomalous Sundays (`2024-06-02`, `2024-10-06`) in the CME instrument-definitions manifest hard-fail with `RuntimeError: URDI returned zero records` instead of writing an honest `empty_confirmed` row like the other 363 weekends — a minor adapter-level inconsistency (99.92% floor coverage otherwise), needs investigation into why these 2 specific dates diverge.                                                                                                                       | IS   | P3       | Nothing (low-priority, non-blocking)                    |
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 8 open todos read end-to-end (7 top-
+  level + 1 nested under the G1 checklist). Three are genuinely gated and keep the doc NA: G1 retirement is "OPERATOR-
+  CONFIRM before purge", the surviving ICE-futures half of the BLOCKED-CREDENTIALS finding needs a paid ICE/OPRA
+  subscription the operator already declined once (2026-06-18 ruling), and the optional ICE-Databento parquet cleanup is
+  an operator-gated GCS delete. Two items ARE bounded and were operator-ruled 2026-07-29 (run the ES CME ohlcv_1s/1m
+  manifest-count check; launch the ES_OPT backfill via `launch-tradfi-backfill-vm.sh --root-symbol ES_OPT`) — real
+  AO-eligible content a whole-doc flip cannot reach in isolation. Flagged for a future `/ag-closeout- audit` carve-out
+  rather than reclassified.

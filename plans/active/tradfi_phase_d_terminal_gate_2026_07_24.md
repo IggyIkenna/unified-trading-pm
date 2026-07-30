@@ -111,6 +111,14 @@ source:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Both open todos read end-to-end and are
+  explicitly gated. The P0 MVP-backfill-readiness gate says in its own text "**Still blocked** … do not start this until
+  the chain-bundle follow-up is resolved **or the operator explicitly accepts the current evidence as sufficient**" — an
+  operator acceptance decision — and the named chain-bundle blocker
+  (`/plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4) is itself operator-gated on the
+  `EXCHANGE_CODE_TO_NAME` SSOT contradiction. The P1 post-backfill reconciliation checkpoint is gated on that same P0.
+  Nothing worker-determinable to dispatch.
+
 > **Moved verbatim from the parent's Progress Log (2026-07-24 line-cap split)** — this is the Phase-D testing slice of
 > the parent's single continuous autonomous-session narrative (tick 13's terminal-gate runbook, ticks 17-19's MVP-only
 > green verdict, and the two 2026-07-23 continuations covering the full all-shards run + IS check that found and fixed 3

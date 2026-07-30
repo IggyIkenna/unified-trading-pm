@@ -241,6 +241,19 @@ not a live regression), but real enough to need their own scoped root-cause-and-
 
 ## Follow-up (unchecked, added 2026-07-27 by this re-measurement — NOT auto-dispatched, `assigned_vm: NA` on this doc)
 
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** All four follow-up
+> todos below are already claimed VERBATIM as a single combined todo in
+> `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` ("Root-cause + fix 3 populations of NULL/bare
+> `instrument_id` manifest writes, plus one doc-hygiene fix", whose `Source:` cites this doc by name; its items (1)-(4)
+> map 1:1 onto todos 1-4 here). That batch doc is `assigned_vm: planning` but **`status: draft`** — so it is NOT
+> ingested and NOT dispatched today. Flipping THIS doc's `assigned_vm` to `planning` would dispatch a duplicate of that
+> extraction, so the shared conflict-check
+> (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) verdict is CONFLICT → citation fix
+> only, `assigned_vm` unchanged. **The live blocker is batch5's draft status**, which is the same unanswered operator
+> question already queued as item 5 in
+> `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`. These checkboxes stay open until
+> batch5 is activated and its todo lands.
+
 - [ ] [DATA] P1. Root-cause + fix the live-path null-`instrument_id` write for tradfi equity/ETF (NASDAQ/NYSE,
       `ohlcv_1m`+`trades`) — find the call site writing these manifest rows (confirmed NOT the `tradfi-bf-*` backfill
       fleet, confirmed NOT within the 2026-07-21 fix-to-drain window) and apply the same canonical-id derivation
@@ -301,3 +314,11 @@ not a live regression), but real enough to need their own scoped root-cause-and-
   Four follow-up todos added above. Full working scripts (not committed — scratch analysis) used
   `unified_trading_library.get_storage_client().download_bytes()` +
   `resolve_bucket_name(kind="market-data", asset_group="tradfi")`, single-object reads only, no GCS walk.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** All 4 follow-up todos (added by the 2026-07-27 post-drain re-measurement) are bounded root-cause-and- fix
+  work with named repos and named entry points — the strongest RECLASSIFY candidate in this tranche on content alone.
+  The shared conflict-check returned CONFLICT: `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already
+  extracts items (1)-(4) verbatim as one combined todo citing this doc as its `Source:`, and encodes the cross-doc
+  "investigate the YAHOO_FINANCE axis once, cite from all three" sequencing that a whole-doc flip would break. See the
+  note added above the follow-up todos.

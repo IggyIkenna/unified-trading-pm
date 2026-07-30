@@ -222,6 +222,18 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 
 ## Todos
 
+> **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche) — KEEP-NA-STALE, do NOT reclassify.** Todos 1 + 2 below are
+> already claimed VERBATIM as one combined todo in `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`
+> ("Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden the script against
+> recurrence", whose `Source:` cites this doc by name). That batch doc is `assigned_vm: planning` but
+> **`status: draft`** — NOT ingested, NOT dispatched today. Flipping this doc's `assigned_vm` would dispatch a
+> duplicate, so the shared conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
+> § 3) verdict is CONFLICT → citation fix only. Independently of that, todo 1 is a ~198K-row destructive manifest
+> mutation whose directly-analogous sibling (the 50,520-row retire-phase `--apply` in
+> `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop —
+> so this doc would stay NA on that ground even if the batch5 overlap did not exist. Live blocker = batch5's draft
+> status (operator item 5 in `/plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md`).
+
 - [ ] [DATA] P0. Migration/purge pass: for every CME + CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` row keyed by the retired `instrument_id=<parent>.FUT`/`.OPT`
       grain, verify a real `captured` row exists at `(date, venue, data_type, instrument_type, underlying)` and retire
@@ -245,3 +257,11 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   Confirmed NASDAQ/NYSE's share of the original alert is already resolved (separate, already-closed root cause). No fix
   implemented in this pass — this todo was investigate/diagnose-only per its own Done-when; remediation todos above are
   the follow-up.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA-STALE — citation fixed, `assigned_vm` deliberately
+  unchanged.** Two independent reasons, either sufficient: (1) the shared conflict-check returned CONFLICT —
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` already extracts todos 1+2 verbatim as one combined
+  todo citing this doc as its `Source:`; (2) todo 1 is a destructive manifest mutation over up to ~198K CME + 2,489 CBOE
+  rows, and its directly-analogous sibling (the 50,520-row retire-phase `--apply` in
+  `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop.
+  See the note added above the todos.

@@ -975,3 +975,7 @@ UAC) — no separate deploy needed here.
   write-back/verify-HOLD playbook as the YAHOO_FINANCE cleanup, HOLD proven across 6 real consolidator merge cycles.
   `market-tick-data-service@c24db4cf`. Full evidence in "Resolution — corporate_action_confirmed / earnings_result"
   above.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** Sole open todo is a `[DESIGN] P2` "decide
+  whether real aggregated `ohlcv_15m`/`ohlcv_24h` TradFi bars are wanted" — a scope/product judgment call, not a
+  worker-determinable fact. Not reclassified.

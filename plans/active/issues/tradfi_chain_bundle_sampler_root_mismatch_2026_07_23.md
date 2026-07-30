@@ -275,3 +275,12 @@ once confirmed with Databento") while `tradfi_instrument_universe.py` already ca
 - `EXCHANGE_CODE_TO_NAME` disagreement — full exhaustive diff in § "Exhaustive `EXCHANGE_CODE_TO_NAME` diff" above:
   `unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:552` vs
   `unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py:166`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — established ruling, not re-litigated.** The
+  sole open todo is self-tagged `P1-OPERATOR-DECISION` and states in its own text: "Not AO-dispatchable — blocked on the
+  same operator SSOT decision as §4, not a worker-determinable fact." Citation confirmed real by reading §4: two
+  `unified-api-contracts` files both define `EXCHANGE_CODE_TO_NAME` and disagree on 17 values (exhaustively diffed
+  2026-07-26 — 96 vs 61 keys, union 107), and the map is non-injective (`6A`+`M6A` both map to `AUD`), so the reverse
+  translation cannot be derived mechanically. Which registry wins is a genuine operator call.

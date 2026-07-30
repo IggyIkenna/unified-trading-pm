@@ -291,3 +291,16 @@ the 403-denied list call yields it). No available worker credential can close th
 
 **Recommendation: A.** It is a single read-only command, it is the only step that can still change the outcome, and
 every day narrows or closes it permanently.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid — operator-gated by construction.** Both open
+  todos are literally "once you've answered items 1-3 / 5-9, record the decision inline here and propagate into the
+  named plan doc(s)"; this doc IS the tranche's queued-operator-decision register. Nothing to reclassify. **Cross-
+  reference for whoever answers it: item 5 (tradfi AO batch plans sitting `status: draft`) is now the single live
+  blocker behind four separate KEEP-NA-STALE verdicts from this run** —
+  `tradfi_manifest_writer_legacy_id_regression_2026_07_21`, `tradfi_distinct_values_net_new_clusters_2026_07_28`,
+  `tradfi_yahoo_venue_vendor_conflation_2026_07_27` and
+  `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28` are all extracted verbatim into
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, which is `assigned_vm: planning` but still
+  `status: draft`, so none of that work is dispatched. Answering item 5 (extended to batch5) unblocks all four at once.

@@ -299,7 +299,13 @@ source:
 - [ ] [INFRA] P1. **Bundle roots into fewer larger VMs.** `_tradfi-ohlcv-launcher-lib.sh` spawns one VM per
       (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
       (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
-      default (staged locally 2026-07-18). (repo: deployment-service)
+      default (staged locally 2026-07-18). (repo: deployment-service) **NOTE (na-eligibility-audit 2026-07-30, tradfi
+      tranche)**: this exact item is already extracted VERBATIM as
+      `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo
+      (which cites this doc's own still-open item as its source, via
+      `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). Not
+      reclassified independently — batch5 is `assigned_vm: planning` but `status: draft`, so nothing is dispatched on it
+      yet; this checkbox stays open until batch5 is activated and its todo lands.
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
       The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry
       (config `max_retries`/`backoff_factor` were log-only). Now `fetch_timeseries_range_with_retry` wraps the
@@ -645,3 +651,14 @@ allowlist" table.
 **End of forked content.** For MVP universe / ground-truth-verdict context, Phase A2/C (adapter correctness,
 data-status, honest-coverage) still tracked on the parent, and the full aggregated source-doc list, see
 `tradfi_consolidated_closeout_2026_07_18.md`.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid + 1 stale citation fixed.** Both open todos
+  read end-to-end. The "Bundle CME roots into fewer larger VMs" item is already extracted verbatim into
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` — citation added inline, not reclassified
+  (conflict-check CONFLICT). The other open item is an umbrella pointer bundling three separately-owned docs
+  (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`, `tradfi_backfill_oom_remediation_2026_06_24`,
+  `consolidator_throughput_backlog_monitor_2026_07_09`) rather than worker-determinable work of its own, so the doc
+  stays NA. **Observation for the next pass (not actioned here):** the first of those three now has 0 open checkboxes
+  and is itself flagged as an over-line-cap prose-trap by
+  `/plans/active/issues/archive_candidate_docs_over_line_cap_blocks_edit_2026_07_29.md`, so this umbrella todo's
+  citation is drifting.

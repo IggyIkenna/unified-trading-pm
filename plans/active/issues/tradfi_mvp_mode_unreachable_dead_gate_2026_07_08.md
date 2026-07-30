@@ -135,3 +135,18 @@ cost-constrained CME-options-only backfill) will silently get the full universe 
   `launch-tradfi-bf-cme-ohlcv-1m.sh`/`launch-tradfi-backfill-vm.sh`). Doc stays `status: open` pending that
   implementation todo. Every corpus doc citing this issue as "genuinely operator-gated"/"0 AO-eligible"/"DECISION still
   open" is being retagged in the same pass to point at this ruling.
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **ARCHIVE-READY — verified, but the 6-step ritual was NOT
+  executed this run; do not re-derive, just finish it.** Every checkbox in this doc is now `[x]`: the 3 original todos
+  were closed by the 2026-07-29 operator ruling, and the gating `[CODE] P1` implementation landed 2026-07-30 —
+  independently verified this pass against the real repo (`deployment-service@c847395`, "feat(vm): wire tradfi mvp_mode
+  via opt-in --mvp-mode flag on the forward-poll launcher", committed 2026-07-30). The doc's own Progress Log condition
+  ("Doc stays `status: open` pending that implementation todo") is therefore satisfied, `locked_by:` is empty, and no
+  open work remains. **Why it was not archived here:** the referrer sweep is the blocker, not the verdict — 13 corpus
+  docs cite this path, and several of them (`instruments_remaining_work_audit_2026_07_10`,
+  `ag_closeout_audit_rollout_2026_07_25`) are multi-tranche docs being audited concurrently by sibling per-tranche
+  workers in this same sharded run, so repathing them from here would create N-way merge conflicts at integration. Two
+  real dependencies also need confirming first: `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md` is
+  documented as owning the job of re-checking this doc, and
+  `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s first todo still asks for the mvp_mode wiring that
+  has now already shipped — that batch5 todo is itself stale and should be flipped in the same pass.

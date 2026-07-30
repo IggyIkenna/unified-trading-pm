@@ -193,3 +193,13 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
 backtest execute on real infra against real data and produce verified parquets / metrics — code-shipped is not
 operationally- shipped. The backtest-harness fidelity + the May-23 cutover decision are gated in master Group F, not
 here.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tradfi tranche): **KEEP-NA, valid.** All 8 open todos read end-to-end.
+  `locked_by: live-defi-rollout` is set (archival blocked; reclassification would be a state change on a locked doc). On
+  content: 4 items are self-tagged `BLOCKED-UPSTREAM` with a live, still-unfixed tracker
+  (`/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` — mismatches (2) and
+  (4) re-confirmed unfixed by direct code read 2026-07-26/29, and the `features-tradfi-prd` bucket has no availability
+  index at all), and the 3 P3 backtest items are gated on the master Group-F harness owned by
+  `master_to_live_defi_2026_05_23`, not by this plan. Genuinely blocked upstream, not mis-defaulted.
