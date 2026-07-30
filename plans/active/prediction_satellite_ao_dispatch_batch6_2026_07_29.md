@@ -401,3 +401,27 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
   evidence trail in the source doc's Progress Log. Genuinely not completable in one session (multi-day backfill); a
   future dispatch/check needs to confirm terminal STOPPED state + run the post-completion VERIFY before flipping to
   `[x]`.
+
+- **2026-07-30 (slot-3, data_engineering craft) — todo -014 picked up: 3/4 shards genuinely complete, 1 relaunched.**
+  Checked all 4 original shards' terminal state via `gcloud compute operations list` + each VM's GCS log/EXIT_STATUS:
+  - `...161607` (2025-03-14→2025-12-09): reached end-date, `EXIT_STATUS=0`, self-deleted (`VM_SHUTDOWN_ON_COMPLETION`).
+    COMPLETE.
+  - `...161641` (2025-12-10→2026-03-04): reached end-date, `EXIT_STATUS=0`, self-deleted. COMPLETE.
+  - `...161832` (2026-04-28→2026-06-15): reached end-date, `EXIT_STATUS=0`, self-deleted (fast — only 27min, smallest
+    shard). COMPLETE.
+  - `...161707` (2026-03-05→2026-04-27): **PREEMPTED** (`compute.instances.preempted`, `2026-07-30T18:32Z`) mid-run at
+    `date=2026-04-01` — no `EXIT_STATUS`, no `PROGRESS.json` (this launcher does not emit the PROGRESS-checkpoint
+    contract, unlike the cefi-coverage-backfill launcher), no auto-resume, no replacement VM. Genuinely stuck per this
+    todo's own "diagnose before relaunching" instruction — diagnosed, then relaunched just the missing tail
+    (`2026-04-02→2026-04-27`, ~26 days) as `mtds-prediction-polymarket-20260730-220658` (SPOT, `--vm-force` to match the
+    original invocation's `--force` CLI flag), singleton-lock-clear confirmed first. **STARTED@T+65s**: `RUNNING`.
+    **PROGRESS@~T+3min**: real heartbeats + `RESOURCE_SAMPLE` + genuine Polymarket API activity (429 backoffs absorbed
+    by retry, same benign pattern the other 3 completed shards also hit) — not a hung/idle VM. Given the smallest
+    comparable shard (`...161832`, 48 days) completed in ~27min, this ~26-day relaunch should complete within the hour,
+    but genuinely hasn't reached terminal state as of this touch — **not flipping this checkbox or running the
+    full-corpus VERIFY yet** (running VERIFY before the 4th shard's gap closes would undercount). Filed no new issue doc
+    (this is a normal SPOT-preemption-without-checkpoint case, not a new defect class — worth noting for whoever
+    eventually touches this launcher that it lacks the PROGRESS.json contract other backfill launchers have). Next
+    dispatch/check: confirm `...220658` reaches `EXIT_STATUS=0`, then run the full-corpus VERIFY
+    (`read_capture_status_counts`, bucket `market-data-tick-pred-prd-central-element-323112`, `2025-03-14→2026-06-15`)
+    and flip both this todo and the source issue doc's item, citing the numbers.
