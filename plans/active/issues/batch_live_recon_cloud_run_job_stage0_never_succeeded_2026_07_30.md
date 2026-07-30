@@ -28,7 +28,7 @@ related:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
-    /plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md,
+    /plans/active/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md,
   ]
 created: "2026-07-30"
 parent_epic: batch_live_symmetry_master

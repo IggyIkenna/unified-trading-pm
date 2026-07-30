@@ -10,7 +10,7 @@ summary: >-
   VM_TASK=batch-live-recon nor VM_SERVICE=chaos-drill has a matching dispatch branch, so the VM self-deleted before ever
   running its real workload (and before the heartbeat daemon / DeploymentsRegistry registration ever started). Unrelated
   to the dualwrite fix itself — a pre-existing dispatch-coverage gap.
-status: resolved
+status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -31,19 +31,18 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
-  "All 3 todos done 2026-07-30: batch-live-recon dispatch branch (deployment-service@fef5168, prior session);
-  chaos-drill + dr-drill-cutover dispatch branches + SERVICE_TARBALLS entries + hardcoded-/app-path fixes
-  (deployment-service, this session); scheduler-wiring check found NEITHER VM launcher is the live path (chaos-drill
-  never scheduled; batch-live-recon's live nightly runs via a separate Cloud Run Job that has its own, unrelated Stage-0
-  failure — filed separately as batch_live_recon_cloud_run_job_stage0_never_succeeded_2026_07_30.md)."
 last_updated: "2026-07-30"
 locked_by:
 locked_since:
 ---
 
-> **🟢 ARCHIVED 2026-07-30** — status=resolved, all 3 todos done, 0 open todos, moved to
-> `/plans/archive/issues/setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_drill_2026_07_30.md`. Archived per
-> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
+> **⚠️ CORRECTION 2026-07-30 — un-archived.** This doc was briefly marked `status: resolved` + archived earlier today.
+> Todo 1 (`deployment-service@fef5168`) genuinely shipped in a prior session and todo 3 (verification-only) is genuinely
+> done — but todo 2's chaos-drill/dr-drill-cutover code, while written and locally verified (`bash -n` clean), never
+> actually shipped: the `deployment-service` quickmerge correctly refused at the full-repo re-gate, which fails on a
+> PRE-EXISTING, unrelated hard-cap violation (`deployment_service/sports_trigger_scheduler.py: 945L > 930L`, a file this
+> todo never touched). Reverting the premature archive/resolved claim until todo 2 actually lands via quickmerge — see
+> its own note below.
 
 # What I found
 
@@ -112,18 +111,22 @@ whether this is the first real invocation.
       tarball-selection + dispatch logic (currently falls through to "Unknown VM_SERVICE — installing all available
       tarballs" then SETUP FAILED with no logged reason); re-run with `set -x` if the root cause isn't obvious once the
       tarball-selection gap is fixed, so `launch-disaster-drill-cron-vm.sh` VMs actually run the nightly chaos drill
-      (repo: deployment-service). — **DONE 2026-07-30, `deployment-service` (uncommitted at write time, ships this
-      session).** Added `["chaos-drill"]="e2e-testing-code"` to `SERVICE_TARBALLS` (closes the tarball-selection
-      warning) + a new `elif [[ "$VM_TASK" == "chaos-drill" ]]` dispatch branch (mirrors `batch-live-recon`) so the VM
-      no longer falls through to the generic no-dispatch-branch guard. **Root cause of the actual `SETUP FAILED` pinned
-      without needing `set -x`**: `launch-disaster-drill-cron-vm.sh`'s own `RUNNER_CMD` hardcoded `cd /app/e2e-testing`
-      — not a real path on this VM family (`setup-data-pipeline-vm.sh` extracts every tarball under
-      `$WORKSPACE=/home/ikennaigboaka/workspace`, confirmed against `launch-batch-live-recon-cron-vm.sh`'s own correct
+      (repo: deployment-service). — **CODE WRITTEN + LOCALLY VERIFIED 2026-07-30, `deployment-service` — NOT YET
+      SHIPPED** (see correction banner at top of doc: `quickmerge.sh` refused on a pre-existing, unrelated
+      `sports_trigger_scheduler.py` 945L>930L cap violation). Added `["chaos-drill"]="e2e-testing-code"` to
+      `SERVICE_TARBALLS` (closes the tarball-selection warning) + a new `elif [[ "$VM_TASK" == "chaos-drill" ]]`
+      dispatch branch (mirrors `batch-live-recon`) so the VM no longer falls through to the generic no-dispatch-branch
+      guard. **Root cause of the actual `SETUP FAILED` pinned without needing `set -x`**:
+      `launch-disaster-drill-cron-vm.sh`'s own `RUNNER_CMD` hardcoded `cd /app/e2e-testing` — not a real path on this VM
+      family (`setup-data-pipeline-vm.sh` extracts every tarball under `$WORKSPACE=/home/ikennaigboaka/workspace`,
+      confirmed against `launch-batch-live-recon-cron-vm.sh`'s own correct
       `RECON_MODULE_PATH=/home/ikennaigboaka/workspace/blr` precedent) — fixed to
       `cd /home/ikennaigboaka/workspace/e2e-testing`. **Adjacent finding, same bug class, fixed alongside**:
       `launch-dr-drill-cutover-vm.sh` (VM_TASK/VM_SERVICE=`dr-drill-cutover`) had the identical
       missing-dispatch-branch + hardcoded-`/app`-path defect — given its own `SERVICE_TARBALLS` entry + dispatch
-      branch + `RUNNER_CMD` path fix in the same commit, since it's the same root cause found while fixing chaos-drill.
+      branch + `RUNNER_CMD` path fix, same root cause found while fixing chaos-drill. All of this is currently an
+      uncommitted local diff in `deployment-service` (`bash -n` clean on both launchers + `setup-data-pipeline-vm.sh`) —
+      do not re-do this work, just get it past the unrelated gate and quickmerge.
 - [x] ✅ [INFRA] P3. Check whether either nightly cron (`batch-live-recon`, `disaster-drill-cron`) is actually wired to
       a live Cloud Scheduler job today, and if so, how long it has been silently failing every scheduled invocation
       (repo: deployment-service / infra — read `gcloud scheduler jobs list` + recent VM history for both prefixes). —
