@@ -99,24 +99,24 @@ is quick and doesn't block anything.
       to now read `SAFE`. Exact per-venue twin coverage, before -> after:
 
       | Venue    | Total markers | FLAGGED (before) | Coverage before | FLAGGED (after) | Coverage after |
-                                                                                              | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
-                                                                                              | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
-                                                                                              | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
-                                                                                              | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
-                                                                                              | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
+                                                                                                  | -------- | ------------- | ----------------- | --------------- | ----------------- | -------------- |
+                                                                                                  | COINBASE | 1623          | 202                | 87.55%           | 0                  | **100.00%**    |
+                                                                                                  | MAKER    | 1276          | 132                | 89.66%           | 0                  | **100.00%**    |
+                                                                                                  | SWELL    | 1192          | 5                  | 99.58%           | 0                  | **100.00%**    |
+                                                                                                  | ETHENA   | 975           | 7                  | 99.28%           | 0                  | **100.00%**    |
 
-                                                                                              "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
-                                                                                              the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
-                                                                                              genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
-                                                                                              for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
-                                                                                              `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
-                                                                                              (specific `_migrated_*` marker objects, never the bucket), target
-                                                                                              `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
-                                                                                              returned `604800` (7 days) fresh-checked 2026-07-27 per
-                                                                                              `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
-                                                                                              this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
-                                                                                              per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
-                                                                                              Progress Log below.
+                                                                                                  "Total markers" = every `_migrated_*` lst_rates object for that venue (server-side `match_glob` listing over
+                                                                                                  the FULL 2020-2026 range, independent of the marker-cleanup VM's own scan progress). All 4 venues are now at
+                                                                                                  genuine 100% verified twin coverage -- the disposition can move from `no-migrate-first` to `yes-after-verify`
+                                                                                                  for the PURGE half of this todo. **The purge itself remains un-executed but is now agent-executable, not
+                                                                                                  `[OPERATOR]`-gated. Reversibility-verified** (finding T, `task_template.md`): object-level delete only
+                                                                                                  (specific `_migrated_*` marker objects, never the bucket), target
+                                                                                                  `market-data-tick-defi-prd-central-element-323112` -- `gcs_bucket_soft_delete_retention_seconds(...)`
+                                                                                                  returned `604800` (7 days) fresh-checked 2026-07-27 per
+                                                                                                  `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a. Re-query fresh before running, not from
+                                                                                                  this citation -- the content-correctness gate (twin coverage, live-reader fix) is independently satisfied
+                                                                                                  per the table above. Full detail (VM name/zone/mode, resume-log caveat, 12-leaf spot-check): this plan's
+                                                                                                  Progress Log below.
 
 - [x] ✅ [BACKEND] P1. **Fix the `messari_basic` subgraph query** in
       `market_tick_data_service/cli/handlers/dex_pools_handler.py` -- add `inputTokens { symbol }` (and
@@ -706,3 +706,32 @@ is quick and doesn't block anything.
   `SAFE`/`FLAGGED_NO_SIBLINGS_NO_BACKUP`/`FLAGGED_ROWCOUNT_SHORTFALL`/`SAFE_NEEDS_ATTRIBUTION_COVERED`, no unexplained
   categories), not yet complete. Next: let it finish, confirm near-zero FLAGGED for these 4 venues, then `--apply` (same
   no-nohup approach) and verify via fresh GCS listing before flipping this todo's checkbox.
+
+- **2026-07-30 (slot-15) — category-1 dry-run COMPLETE + verified; `--apply` phase IN PROGRESS (checkpoint before a
+  context compact, not yet closed).** Dry-run finished cleanly: 23,588/23,588 in-scope markers, breakdown
+  `SAFE=20,966 + SAFE_NEEDS_ATTRIBUTION_COVERED=358` (21,324 safe-to-delete, 90.4%) vs
+  `FLAGGED_ROWCOUNT_SHORTFALL=1,287 + FLAGGED_NO_SIBLINGS_NO_BACKUP=977` (2,264 correctly-retained, 9.6% — consistent
+  with the catalogue-undercoverage finding already documented for category-2/leaf-purge on this same todo, not a new
+  problem). Fresh `gcs_bucket_soft_delete_retention_seconds` re-check passed (`604800`) immediately before `--apply`.
+  **`--apply` uses a SEPARATE resume-log from the dry-run's** (`.dry.resume.jsonl` vs `.apply.resume.jsonl`) — required:
+  the script's `todo = markers not in already_done` filter would otherwise silently no-op the entire apply pass
+  (identical bug class to the leaf-purge launcher's earlier fix on this same plan, see the 2026-07-28 entries above).
+  Full detail on 3 real interruptions hit during this session (a disk-full `/tmp` tmpfs corruption, root-caused
+  - fixed by relocating the resume-log off the shared 2GB tmpfs onto the repo worktree's real disk; and 2 more clean
+    exit-144 kills matching the already-tracked incident class) logged to
+    `issues/footystats_migration_bg_workers_killed_externally_2026_07_28.md` (2026-07-30 update) rather than duplicated
+    here — none lost any progress, the resume-log's per-marker append design made every relaunch a clean resume.
+    **Status at this checkpoint**: `--apply` run healthy, resume-log at
+    `market-tick-data-service/apply_resume_state/dex_pool_marker_purge.apply.resume.jsonl` (untracked local scratch
+    file, not committed) showing 13,763/23,588 processed (steady real deletes, not just verification). **Not yet done**:
+    let the apply run finish (~10k markers remaining at this checkpoint), verify `=== SUMMARY ===` deleted-count matches
+    the dry-run's 21,324 SAFE count, spot-check ~5 `action:"deleted"` paths are actually gone from GCS via direct
+    listing (don't trust the log alone), THEN flip this todo's checkbox with that evidence + call `/done`. If this
+    session compacts before completion, the next session should: (1) `ps aux | grep delete_migrated_defi_markers` — if a
+    process is running, just keep monitoring it (heartbeat + poll `wc -l` on the apply resume-log path above); (2) if
+    gone, check the resume-log's last line is valid JSON (repair by dropping a truncated trailing line if not — has NOT
+    recurred since the relocation off `/tmp`, but check anyway) and relaunch the exact same `--apply` command reusing
+    that SAME resume-log path (never revert to `/tmp`, never start a fresh resume-log — both would redo real work); (3)
+    once the apply run's own `=== SUMMARY ===` shows `deleted` counts matching 21,324 (or explains any small delta —
+    `delete_failed` entries would be the only expected source of a gap), do the GCS spot-check, flip the checkbox, and
+    `/done`.
