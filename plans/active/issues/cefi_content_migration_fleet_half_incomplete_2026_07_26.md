@@ -191,6 +191,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       `vm_zombie_watchdog.py`'s other code paths (`_reap_terminated_vms`/`should_reap()`) and any other automated
       process running under the GCE default compute SA that could issue `compute.instances.delete` against a
       `canonical-migration-cefi-` VM. Repo: deployment-service.
+- [ ] [OPERATOR] P0. **Break the `-006`/`-002` dispatch deadlock.** Live-reverified 2026-07-30T16:35Z (backlog API +
+      `/api/state`, not relayed): `-002` (this doc's P2 corpus-wide re-verify+delete todo, monitoring-only) has held
+      slot 15 continuously since `2026-07-30T12:16:10Z` — **4h20m and counting**, `status=working` the whole time, no
+      code path forward (it is gated on the fleet reaching 44/44 complete, which cannot happen without a root-cause fix)
+      — while `-006` (this doc's P1 root-cause leak-investigation todo above, priority 20 = top of queue, `ready`, zero
+      blockers) has sat `queued` and never dispatched the entire time. Per this plan's own one-in-flight-slot dispatch
+      behavior, `-002` is structurally starving `-006` of the only slot the plan can use, so the migration cannot
+      converge: the fleet has decayed from the original 21 relaunched shards to **8 survivors** (13 dead since the
+      relaunch — freeze-class + OOM-class, see Progress Log above) with no fix in flight, and `-002`'s own worker is now
+      at **99% context used** (18 compactions) after 4+ hours producing only "fleet stable at N shards" status pings.
+      Resolve by EITHER (a) cancel/defer `-002` so the slot frees for `-006` to dispatch, OR (b) split `-006` into its
+      own plan per the partial-parallelism rule (CLAUDE.md § Plans — "parallel work in Plan A; the gated step in Plan B
+      via `depends_on` + `gate_on_depends: true`") so both can run concurrently. Neither review nor monitor role can
+      self-action this (backlog/plan-structure change + task-cancel is main/operator territory) — flagged per main
+      agent's (`agt-fd75de`) 2026-07-30T15:54Z ruling that this meets the data-completeness operator-escalation bar.
 
 ## Progress Log
 
@@ -514,3 +529,13 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   No relaunch/kill action taken on shard 23 (monitoring-only).
 - **2026-07-30 update (slot-15, ~15 min later)**: shard 18 (`-135500`) OOM-killed (`rc=137`, clean self-delete) at
   49,000/148,799 files (8837s elapsed). Fleet at 8 shards. No action taken (monitoring-only).
+- **2026-07-30T16:35Z (review agent `agt-f99b61`, slot 1)**: picked up a queued main-agent message (`agt-fd75de`,
+  2026-07-30T15:54:39Z) ruling that the `-006`/`-002` dispatch deadlock meets the data-completeness operator-escalation
+  bar — left unactioned because the prior review-agent session (`agt-2552a2`, this same slot) was killed in the
+  14:54-15:01Z `tmux_session_lost` cluster before it could act. Independently re-verified the deadlock still holds live
+  (not just relayed): `GET /api/backlog` shows `-006` still `queued`/priority 20/no blockers, `-002` still
+  `dispatched`/slot 15 since `12:16:10Z`; `GET /api/state` confirms slot 15 is genuinely alive and working (fresh
+  `last_ping`), not stalled-dead — this is a live structural deadlock, not an orphaned dispatch. Added the
+  `[OPERATOR] P0` todo above with current numbers (4h20m elapsed, fleet at 8/44 survivors, slot 15 at 99% context). Did
+  not action (a)/(b) myself — plan-structure edit + task-cancel is outside review's remit, per main's own ruling. No
+  code changed; issue-doc edit only.
