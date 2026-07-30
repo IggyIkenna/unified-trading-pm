@@ -201,11 +201,32 @@ investigated further here, out of scope for this doc.
 
 ## Todos
 
-- [ ] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
+- [x] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
       `sports_satellite_ao_dispatch_batch2-0*` — real work, not a resource issue, so out of scope for this doc, but not
       yet investigated by anyone. Whoever picks this up: check
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` and its `_finalize` sibling for the specific
-      blocking task and why it's gating 52 downstream items.
+      blocking task and why it's gating 52 downstream items. — **Investigated 2026-07-30: the "52 tasks blocked" framing
+      does not hold up against live data.** Live `/api/backlog` query found only 6 tasks total under
+      `sports_satellite_ao_dispatch_batch2[_finalize]`, all `status: queued`, none carrying a `prereqs` field except
+      one. Exactly ONE task fleet-wide (`sports_satellite_ao_dispatch_batch2-001`, the curated-universe
+      define→backfill→drop sequence) references the named AO prerequisite
+      `sports-curated-universe-backfill-walk-complete` (confirmed via `data/config/backlog.yaml` — `grep -c` found 1
+      match workspace-wide) — no other task, in this plan or any other, structurally depends on it. The "52" figure from
+      the original 2026-07-29 post-resize observation was very likely a transient dispatch-loop perception right after
+      ~14 slots simultaneously went idle (many idle-slot dispatch attempts probably kept re-encountering this one
+      un-dispatchable high-priority task before reaching further down the queue), not a real structural block — it had
+      already cleared by the time of this re-check. **Separately, and more concretely actionable**: the prerequisite is
+      still `false` (set 2026-07-27T21:21:12Z by slot-14) gating `batch2-001`, but the backfill VM it's waiting on
+      (`af-backfill-20260727-064958`) **already completed successfully 2026-07-28T05:34:06Z**
+      (`gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-     20260727-064958/run.log`:
+      `chunk=25/25 range=2026-05-06→2026-07-25`, `DEPLOYMENT_COMPLETED ... exit_code=0`, clean self-delete) — nobody has
+      checked back on it since the plan's last logged check-in (2026-07-27T21:11Z, ~8h before the VM finished). Filed as
+      its own follow-up rather than executed here: step 3 ("drop residual out-of-curated rows/objects, snapshot-first,
+      twin-verified") is a real production-data deletion needing its own careful execution per the delete-safety
+      protocol, not something to tack onto this unrelated doc's closeout. **New todo, tracked in the source plan
+      itself**: verify the backfill's actual data completeness, execute step 3, then flip the prerequisite per the
+      plan's own instructions
+      (`curl -X POST $SERVER_URL/api/prerequisites/sports-curated-universe-backfill-walk-complete -d '{"value":     true, "set_by": "<slot>"}'`).
 - [x] [BACKEND] P3. Once the runner-capacity crisis's remedy ships, spot-check swap% on the dashboard. — **Done
       2026-07-29**: post-resize `free -h` shows 54GB available (vs 269MB before); the dashboard's Swap tile is live and
       will reflect this on the next `/ws/vm-resources` push.

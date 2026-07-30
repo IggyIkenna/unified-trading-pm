@@ -311,7 +311,23 @@ source: >-
       drop (step 3) MUST flip it**:
       `curl -X POST $SERVER_URL/api/prerequisites/sports-curated-universe-backfill-walk-complete -d '{"value": true, "set_by": "<slot>"}'`
       — then this todo will dispatch normally to actually flip the checkbox. Do not delete/rename this condition without
-      updating `backlog.yaml`'s `prereqs.prerequisites` for this task accordingly.
+      updating `backlog.yaml`'s `prereqs.prerequisites` for this task accordingly. **Check-in 2026-07-30T08:4xZ
+      (interactive session, re-verified from scratch per this section's own instruction)**: the backfill VM
+      (`af-backfill-20260727-064958`) is GONE from GCE (`gcloud compute instances     describe` → not found) — checked
+      its final `run.log` (`gs://deployment-scripts-central-element-323112/vm-logs/af-backfill-20260727-064958/run.log`)
+      instead of assuming preemption: it **completed successfully 2026-07-28T05:34:06Z** —
+      `chunk=25/25     range=2026-05-06→2026-07-25`, `DEPLOYMENT_COMPLETED ... exit_code=0`, clean self-delete on
+      completion, not a preemption-vanish. Step 2 (curated-universe backfill) is DONE and has been for over 2 days;
+      nobody checked back since the last logged check-in (2026-07-27T21:11Z, ~8h before it actually finished). Confirmed
+      the prerequisite is still `false` (`data/config/state.json`'s `prerequisites` entry:
+      `set_by: slot-14, set_at:     2026-07-27T21:21:12Z` — unchanged since it was created, i.e. never touched
+      post-completion). **Not executed in this check-in** (deliberately — this needs its own careful pass, not a
+      tack-on): (a) verify the backfill's actual data completeness against the curated ~300-league set (the run.log
+      confirms the WALK finished, not that every league's data is honest-complete — a separate manifest-level check);
+      (b) execute step 3 (drop residual out-of-curated rows/objects, snapshot-first, twin-verified per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`); (c) only then flip the prerequisite via the curl
+      command above. Next slot: steps (a)-(c) are now genuinely actionable (not a "still running, nothing to do"
+      check-in like every prior one) — this is the first check-in where real forward progress is possible.
 
 ### From `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`
 

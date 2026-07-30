@@ -141,7 +141,16 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
       doc) — if it holds at/near 0% over that longer, fuller-volume window, set `done_require_origin=true` in the
       orchestrator's `.env.local` (or the systemd unit template if it should apply fleet-wide) and ship. If a nonzero
       rate persists, sample those specific examples the same way this session did (check the cited SHA against the real
-      repo) before deciding whether it's a genuine failure class or a different race this fix didn't cover.
+      repo) before deciding whether it's a genuine failure class or a different race this fix didn't cover. **Third
+      spot-check, 2026-07-30 (~31.4h after `25d497f` shipped)**: `--days 2` shows 0/222 false (0.0%, window
+      2026-07-28T08:05Z→now — includes ~16.7h of PRE-fix time and ~31.3h of POST-fix time, and the false rate is still
+      0% even mixed). Volume has recovered towards normal (222 events / 2 days ≈ 111/day vs the ~81/day pre-fix
+      baseline). Three consecutive 0%-false measurements is a strong trend, but **still deliberately not flipping** — it
+      is ~1.3 days since the fix shipped, short of the "a few days" this todo's own gate asks for (independently
+      confirmed as still-correctly-gated by the 2026-07-30 na-eligibility-audit below). Next check target: **on/after
+      2026-08-01T00:45Z** (3 full days post-fix) — if `check-on-origin-rate.sh --days 3` (or the exact elapsed window)
+      still reads at/near 0%, flip `done_require_origin=true` and ship; a nonzero rate still needs the same per-example
+      SHA sampling this session used before deciding genuine-failure vs a different race.
 - [x] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
       landing behavior, but worth a deliberate yes/no rather than leaving it implicit. **Decided 2026-07-29 (batch
