@@ -96,6 +96,12 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       collapse to `staleness_seconds`. Verified `zero_activity` has no code consumers (pure doc drift, not a live
       breakage).
 
+      **MOSTLY STALE-DONE (2026-07-30, conflict-check)** — `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md:375`
+          already shipped this exact reconciliation in BOTH `honest-absence-downstream-handling.md` and
+          `live-pipeline-architecture.md` (reconciliation banners verified live in both). Real residual: a named 3-doc set
+          (incl. `00-SSOT-INDEX.md`) still untouched — narrow this todo to that residual rather than re-doing the whole
+          reconciliation.
+
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 
 - [x] ✅ [DATA] P2. **DeFi swaps_ohlcv `chain`-column reprocess** — 28,634 UNISWAP_V3-ETHEREUM `attempted_failed` rows +

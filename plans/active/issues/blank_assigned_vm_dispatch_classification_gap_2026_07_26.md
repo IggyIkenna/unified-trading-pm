@@ -112,11 +112,10 @@ re-check `check_frontmatter_schema.py` passes after any bulk frontmatter edit be
       `check_frontmatter_schema.py` always used), never a line-based grep, so the exact false-positive class this todo
       warned against (a scalar value on an indented continuation line after a bare `key:`) cannot recur here — it was
       only ever a hazard for a hand-rolled single-line grep, which this fix never introduces.
-- [ ] [REVIEW] P2. **The 30 now-`planning`-tagged docs with real open todos still need the standard conflict-check
-      against currently-active plans before their content is trusted for dispatch** (per `/ag-closeout-audit`'s own
-      Phase-3 methodology) — flipping `assigned_vm` makes them backlog-eligible, it does not itself verify no other
-      active plan already covers the same file/ground. Not done in this pass; flagged for the next tranche audit or a
-      dedicated follow-up.
+- [x] ✅ [REVIEW] P2. **DONE 2026-07-30 (slot-15).** Ran the shared conflict-check
+      (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) over every doc this sweep
+      flipped to `planning` that still carries real open todos. See Progress Log entry below for the full verdict
+      breakdown, population-shrinkage correction, and the 6 source docs annotated with supersession notes.
 
 ## Progress Log
 
@@ -128,3 +127,65 @@ re-check `check_frontmatter_schema.py` passes after any bulk frontmatter edit be
   (`unified-trading-pm@e88c41727`, `assigned_vm` now `Req.R` for issue docs). **Phase-2 conflict-check**: zero hits for
   a competing claim on this ground anywhere on the active planning surface. CLEAR. Set `assigned_role: infra`,
   `execution_scope: orchestrator-agent`.
+
+- **slot-15 2026-07-30**: Ran the shared conflict-check (§ 3 above) over the population. **Population correction
+  first**: re-derived the "30 docs" list from this doc's own 2026-07-26 candidate set (34 docs with open todos at that
+  time, minus the sports false-positive) and checked LIVE current state, not the stale snapshot — in the 4 days since,
+  the fleet independently drained 17 of those 34 to archived/resolved, 2 back to `assigned_vm: NA`, and 2 down to zero
+  open todos. **Real remaining population: 13 docs / 46 open todos** (not 30/198) — a healthy sign the backlog is
+  actively shrinking, not stale.
+
+  Ran the conflict-check on all 13 (5 parallel investigation sub-agents by `parent_epic` group + 2 done directly).
+  **Verdict tally**: 32 of 46 todos **CLEAR** (no overlap, safe for dispatch); **11 CONFLICT** (another currently-active
+  doc already claims the same ground — real duplicate-dispatch risk if left unflagged); **2 STALE-DONE** (already
+  shipped elsewhere, checkbox never flipped); **1 CLEAR-with-flag** (no duplicate claim, but an unretracted
+  contradictory note elsewhere worth an operator nod before scoping). Annotated all 14 non-CLEAR todos in place, in
+  their 6 source docs, with a `SUPERSEDED`/`STALE-DONE`/`PARTIAL-STALE` note citing the specific other doc/commit —
+  never checked a box that wasn't actually done, per the protocol's "never resolve a conflict by guessing which claim
+  should win."
+
+  **Per-doc breakdown** (parent_epic in parens):
+  - `cefi_hl_aster_batch_data_gaps_2026_06_22.md` (mtds_mdps_master, 6 todos): 4 clear, 1 CONFLICT (Slack-parity codex
+    fix already extracted verbatim into `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`, which cites this doc as its
+    own source), 1 PARTIAL-STALE (the `perp_funding=0` sub-claim for HL/ASTER is by-design since the 2026-07-08
+    `PerpFundingHandler` retirement, not a bug — the `futures_chain`/`options_chain`/`ohlcv_1m` sub-claims stay open).
+  - `perp_funding_data_semantics_and_cadence_2026_06_16.md` (mtds_mdps_master, 11 todos): 9 clear, 2 CONFLICT — the
+    "Backfill Aster perp funding" todo instructs running a launcher
+    (`launch-mtds-perp-funding-backfill-vm.sh --perp-protocols aster`) RETIRED 2026-07-08 (would write false
+    `attempted_failed` rows); the correct, currently OPERATOR-BLOCKED ground is
+    `aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md` (BLK-a94f446d, 3-way genesis-date
+    ambiguity). The genesis rollup todo restates one of the 3 disputed dates as settled — annotated, not blocking (its
+    other sub-legs stay clear).
+  - `capability_wizard_analysis_findings_2026_06_11.md` (strategy_master, 5 todos): all CLEAR.
+  - `e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md` (strategy_master, 2 todos): all CLEAR (one is an
+    operator-ruled DEFERRED-BY-DESIGN item — gated, not conflicted).
+  - `fleet_audit_triad_deferred_followups_2026_06_01.md` (infrastructure_master, 6 todos): 4 clear, 1 already
+    self-annotated parked (Tardis paid-key item — no edit needed, doc already notes the paid backfill is
+    dispatched/in-progress elsewhere), 1 STALE-DONE (B2 codex marker reconciliation already shipped in both cited codex
+    files per `issue_docs_remediation_sweep_2026_06_02.md:375` — narrowed to the real residual, a 3-doc set still
+    untouched).
+  - `features_service_coverage_and_script_canon_2026_06_10.md` (infrastructure_master, 6 todos): 2 clear, 4 CONFLICT — 2
+    already self-annotated RESCOPED (no edit needed), 2 newly annotated (the `--cov` crash fix + harness relocation are
+    both already bundled in `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`; the fleet-wide script-homes
+    sweep is claimed by BOTH `repo_scripts_governance_audit_2026_06_18.md` and that same batch1b plan).
+  - `cve_affected_pinned_deps_remediation_2026_06_18.md` (infrastructure_master, 4 todos): 1 clear, 3 CONFLICT — all
+    three (alerting-service test investigation, pip-floor bump, cryptography/idna re-check) are already claimed in
+    `infra_satellite_ao_dispatch_batch1_2026_07_26.md`.
+  - `dp_catalog_not_running_sports_prediction_2026_07_15.md` (instruments_master, 1 todo): CLEAR.
+  - `deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` (deployment_and_user_management_master, 1 todo):
+    STALE-DONE — the nav-menu-dedup fix already shipped + archived
+    (`plans/archive/issues/deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`, `deployment-ui@067f7cd`/
+    `258986d`); this doc's own checkbox was simply never flipped (out of THIS task's scope to fix — flagging for whoever
+    next touches that doc).
+  - `defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md` (defi_master, 1 todo): CLEAR.
+  - `solana_perp_dex_cull_drift_pacifica_2026_07_16.md` (defi_master, 1 todo): CLEAR.
+  - `defi_code_codex_drift_2026_05_27.md` (defi_master, 1 todo): CLEAR-with-flag — annotated (no competing claim, but an
+    unretracted contradictory classification note in a sibling doc worth a quick operator nod before scoping).
+  - `tradfi_backfill_oom_remediation_2026_06_24.md` (tradfi_master, 1 todo): CLEAR.
+
+  **Net**: the conflict-check protocol earned its keep — without it, 11 todos across 5 docs would have risked
+  double-dispatch (duplicate agent work on ground already claimed by an active AO-dispatch batch plan), and 2 more would
+  have re-run already-shipped fixes. Sub-agent methodology: 5 parallel Explore-type read-only investigation agents, one
+  per `parent_epic` group (mtds_mdps_master done directly by this session; strategy_master, infrastructure_master,
+  instruments+deployment, defi+tradfi each their own agent), each running the same 4-step protocol and reporting
+  per-todo verdicts; this session synthesized + applied the annotations. `unified-trading-pm@<pending>`.
