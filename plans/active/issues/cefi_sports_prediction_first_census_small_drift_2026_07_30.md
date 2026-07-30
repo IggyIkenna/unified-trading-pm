@@ -47,6 +47,7 @@ source:
   "operator request 2026-07-30 — audit /data-pipeline-reconciliation's coverage against its own stated criteria across
   all 5 AGs"
 resolved_by:
+depends_on: []
 ---
 
 # cefi/sports/prediction first census — small residual drift
