@@ -273,6 +273,30 @@ a delete that has not been verified, backfilled, or executed. Declining, same di
 skipping rather than re-blocking on an already-answered question. Fifth distinct plan pair confirms this is a durable,
 general dispatcher gap, not an isolated one-off — root-cause item 1 remains the correct fix.
 
+## 2026-07-30 recurrence — SEVENTH distinct plan pair (prediction_satellite_ao_dispatch_batch6)
+
+Slot 7 was dispatched `prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize-001` (`already_in_progress: true`,
+`depends_on: [prediction_satellite_ao_dispatch_batch6_2026_07_29]`, `gate_on_depends: true`, requiring all 14 of
+batch6's todos done) while batch6 is only 3/14 done (001 CQG fix, 002 EventTransport bridge, 004 VM launch-only; 003,
+005-014 still `queued`). Confirmed via
+`GET /api/backlog/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize-001/blockers` → `"ready (no blockers)"` —
+same standard-wiring-path failure (all 14 upstream task ids are real, non-pruned backlog rows; the gate simply never
+attached them). Cross-checked the finalize plan's OWN `sequential: true` chaining is working correctly
+(`GET .../finalize-002/blockers` → `"prereq task ...finalize-001 not done"`), isolating the failure to the
+`gate_on_depends` wiring specifically, not `sequential`. Read the current `regen_backlog_from_plan.py`/`dispatch.py`
+(local HEAD `30568ec2`) end-to-end — depends_on parsing, `_stem()` matching, the non-empty-upstream_ids path in
+`_wire_gate_on_depends_prereqs`, and `_wire_sequential_prereqs`'s same-plan-id scoping all look correct on static
+reading, consistent with this doc's standing conclusion ("wiring simply didn't happen" / re-wiring across regen ticks is
+the gap, not a parsing defect). Noted one additional data point for the root-cause investigation: the live
+orchestrator's `GET /api/state` reports `server_started: 2026-07-30T16:44:20Z`, and my worker checkout's HEAD (pulled
+fresh this session) has commits landing up to `~17:14:43Z` — i.e. it's possible the running server process predates some
+regen-path commits from its own uptime window; `version` in `/api/state` reads literally `"unknown"`, so this couldn't
+be confirmed either way. Worth checking whether the P0 fix in flight (below) has actually been deployed+restarted into
+the live process once it lands, not just merged. Declining to author any reconciliation content on the false premise
+that batch6 shipped; not flipping the finalize plan's todo 1 checkbox; skipped via `POST /skip-current-task` rather than
+filing a duplicate issue doc (my first attempt did exactly that — reverted, see this doc's own dedup precedent from slot
+14 on the batch1/1b pair the same day). 11th+ documented bounce off this general wiring gap.
+
 ## Todos
 
 - [ ] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`**
