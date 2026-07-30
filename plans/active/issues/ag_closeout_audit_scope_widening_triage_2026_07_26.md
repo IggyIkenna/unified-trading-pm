@@ -149,7 +149,7 @@ citing file):
 | `issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`                  | ao            | AO `orphan_reap` sweep kills detached background work                      |
 | `archive/issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`       | infra         | plan-hygiene checker false positive                                        |
 | `issues/production_readiness_checklist_file_missing_2026_07_24.md`                              | infra         | deployment-service + codex governance doc gap                              |
-| `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md`               | ci            | QG step 5.83 timeout root doc                                              |
+| `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md (archived)`    | ci            | QG step 5.83 timeout root doc                                              |
 | `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`    | cross-cutting | same UTL-manifest-reader family as the above (resolved 2026-07-28)         |
 | `issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`                      | ao            | AO `RepoHealthWatcher` false-green recurrence                              |
 | `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                       |

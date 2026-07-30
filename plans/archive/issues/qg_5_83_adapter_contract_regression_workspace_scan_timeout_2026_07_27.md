@@ -17,7 +17,7 @@ summary: >-
   any code change: `git stash` (removing my in-flight features-service diff) still hit the identical ❌ at the identical
   step. This blocks shipping ANY commit, in ANY repo, via the mandatory quality-gates.sh → quickmerge flow, fleet-wide,
   until either the timeout budget is raised or the scan is made faster/incremental.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -44,7 +44,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: |
+  unified-trading-pm@91e9865b9 (todo 2, scan-scoping), execution-service@4aae5c8a3 +
+  features-service@f4f2b3ba + instruments-service@24f7b9a9 + market-tick-data-service@bd1a9ad0
+  (todo 3, timeout-vs-regression message distinction) — all `quality-gates.sh` green, STEP 5.83
+  verified passing in each real run. Todo 1 was stale-confirmed-done pre-existing infra.
 source: >-
   measured 2026-07-27 (slot 8) while attempting to ship features-service@<pending> for
   /plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md todo 6 — real host measurement, not
@@ -53,6 +57,11 @@ depends_on: []
 ---
 
 # QG STEP 5.83 hard-fails fleet-wide on a 60s timeout it can't meet under current host I/O load
+
+> **🟢 ARCHIVED 2026-07-30 — all 3 todos done.** Todo 1 (raise the timeout) was stale-confirmed-done pre-existing; todo
+> 2 (scope the scan to baseline-only files, `unified-trading-pm@91e9865b9`) resolved the wall; todo 3 (distinguish a
+> timeout failure from a genuine regression in the emitted message) shipped across all 4 STEP-5.83-carrying repos — see
+> `resolved_by:` above for full SHA evidence.
 
 ## What was found
 
@@ -109,8 +118,8 @@ Two independent, non-exclusive fixes:
 ## Todos
 
 - [x] 1. [INFRA] P2 (downgraded from P0 — see progress log 2026-07-27 cicd/slot-5: todo 2's fix alone resolved the
-      timeout, this is now optional defense-in-depth, not a blocker). ✅ **STALE-CONFIRMED-DONE (2026-07-28)** —
-      already fixed by a concurrent session prior to this pickup: `features-service@1f7fec3f8` ("raise STEP 5.83
+      timeout, this is now optional defense-in-depth, not a blocker). ✅ **STALE-CONFIRMED-DONE (2026-07-28)** — already
+      fixed by a concurrent session prior to this pickup: `features-service@1f7fec3f8` ("raise STEP 5.83
       adapter-contract-regression run_timeout 60->300s", citing this exact todo) bumped the timeout for the STEP 5.83
       block found there. Re-verified live across the WHOLE workspace (grep every repo's `scripts/quality-gates.sh` for
       the `no_adapter_contract_regression.sh` invocation, per-repo file, not templated): `execution-service`,
@@ -124,11 +133,24 @@ Two independent, non-exclusive fixes:
       `run_timeout`). `scan_workspace()` (the full walk) is retained but now used only by `--regenerate-baseline`, an
       explicit non-CI operator action. Pass/fail semantics unchanged (existing test suite + 1 new regression test lock
       in that the check path never calls `scan_workspace`). — unified-trading-pm@91e9865b9
-- [ ] 3. [INFRA] P2. Distinguish a genuine "count dropped below baseline" failure from a "scan timed out / didn't
-      complete" failure in the emitted message — the current `log_fail "Adapter contract-call regression..."` text is
-      identical for both, which will send whoever hits this chasing a nonexistent code regression instead of an infra
-      timeout. Lower urgency now that todo 2 makes a genuine timeout very unlikely, but still worth doing for the rare
-      pathological case. (repo: unified-trading-pm)
+- [x] ✅ 3. [INFRA] P2. **DONE 2026-07-30 (doc-triage pass).** Distinguish a genuine "count dropped below baseline"
+      failure from a "scan timed out / didn't complete" failure in the emitted message — the current
+      `log_fail "Adapter contract-call regression..."` text is identical for both, which will send whoever hits this
+      chasing a nonexistent code regression instead of an infra timeout. Lower urgency now that todo 2 makes a genuine
+      timeout very unlikely, but still worth doing for the rare pathological case. **Repo correction**: the actual
+      `log_fail` call site lives in each of the 4 STEP-5.83-carrying SERVICE repos' own `scripts/quality-gates.sh`
+      (execution-service / features-service / instruments-service / market-tick-data-service), not in unified-trading-pm
+      — `no_adapter_contract_regression.sh`/`check_adapter_contract_regression.py` (the PM-owned shared scanner) needed
+      no change; the message-construction + `exit 1` happen at each repo's own call site. Shipped identically in all 4:
+      capture `run_timeout 300 bash .../no_adapter_contract_regression.sh ...`'s real exit code (`$?`) instead of piping
+      straight into `||`; `-eq 124` (GNU `timeout`'s standard signal for "the wrapped command was killed by the timeout,
+      not a normal non-zero exit") emits a distinct "TIMED OUT after 300s — this is an infra/host-load issue, NOT a
+      content regression" message citing this issue doc; any other non-zero still emits the original regression message.
+      Each verified in a REAL `quality-gates.sh --no-fix` run (not just `bash -n` syntax check) exercising the
+      pass-through (`rc=0`) branch before shipping. Evidence: `execution-service@4aae5c8a3`,
+      `features-service@f4f2b3ba`, `instruments-service@24f7b9a9`, `market-tick-data-service@bd1a9ad0` (all
+      `quality-gates.sh` green, STEP 5.83 confirmed passing via
+      `[check_adapter_contract_regression] OK — 329 baselined file(s) at or above minimum.` in each run's own log).
 
 ## Progress Log
 
