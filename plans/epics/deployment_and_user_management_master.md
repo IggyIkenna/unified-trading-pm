@@ -26,15 +26,10 @@ related_plans:
   - ../active/data_status_cell_grid_rearchitecture_2026_07_18.md
   - ../active/data_status_page_ux_and_canonicalisation_2026_07_16.md
   - ../active/data_status_tab_and_downloads_remediation_2026_06_16.md
-  - ../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md
-  - ../active/deployment_redesign_cherrypicks_2026_07_20.md
-  - ../active/github_actions_ci_cost_reduction_2026_07_15.md
-  - ../active/github_actions_cost_reduction_options_analysis_2026_07_15.md
   - ../active/github_actions_operator_gated_followups_2026_07_17.md
-  - /plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md
   - ../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md
   - ../active/sports_prediction_mvp_writetime_precompute_2026_07_24.md
-last_updated: 2026-07-14
+last_updated: 2026-07-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -50,8 +45,14 @@ Management | user-management-ui | archived") + CLAUDE.md's system map ("`user-ma
 **Status**: populated (was: "stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with
 P0/P1/P2/P3 priority blocks listing all assigned active plans." — left in place after fill, corrected 2026-07-25, same
 class as batch_live_symmetry_master.md's finding id 311, §A2 B-queue ruling). Body below (UI Verification Contract,
-codex SSOT table, 12 active plans in P0-tier blocks) is populated as of `last_updated: 2026-07-14`; this line is no
-longer describing an empty stub.
+codex SSOT table, 7 active plans in P0-tier blocks) is populated as of `last_updated: 2026-07-30`; this line is no
+longer describing an empty stub. **2026-07-30 refresh**: `populate_epic_bodies_2026_05_21.py --apply` found the prior
+fill stale — 5 of the 12 listed plans had already been archived
+(`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13`, `deployment_redesign_cherrypicks_2026_07_20`,
+`github_actions_ci_cost_reduction_2026_07_15`, `github_actions_cost_reduction_options_analysis_2026_07_15`,
+`github_actions_staging_machinery_shutdown_2026_07_24`) but were still shown as active; regenerated to the 7
+genuinely-active plans. The epic itself (ownership, UI verification contract, codex SSOTs) is current and usable — only
+the plan-list body had drifted.
 
 See [`README.md`](README.md) for the canonical epic frontmatter schema + body structure.
 
@@ -94,7 +95,7 @@ Key deployment/user-management UI surfaces and their required layers:
 
 ## Assigned active plans
 
-_12 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
+_7 active plans declare `parent_epic: deployment_and_user_management_master` in their frontmatter. Workers pick up in
 priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
@@ -104,10 +105,10 @@ priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor) **title**: Data-status tab + instruments download
 remediation (deployment-api / deployment-ui / CeFi universe)
 
-### [`deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13`](../active/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md)
+### [`github_actions_operator_gated_followups_2026_07_17`](../active/github_actions_operator_gated_followups_2026_07_17.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design) **title**: deployment-api cache OOM + UI latency
-remediation — bounded caching architecture that fits 4GB
+**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI cost reduction —
+operator-gated followups (D2/D3/D4 decisions, verification-pending items)
 
 ## P1 — important; post-current-gate
 
@@ -121,6 +122,13 @@ true-catalogue (expected-universe) source
 **status**: active · **estimate**: 5.4 cal AI-days (class: design) **title**: Data-status page — honest-coverage fix
 (shipped) + UX & canonicalisation follow-ups (P1–P8)
 
+## P2 — useful; opportunistic
+
+### [`data_status_cell_grid_rearchitecture_2026_07_18`](../active/data_status_cell_grid_rearchitecture_2026_07_18.md)
+
+**status**: active · **estimate**: 3 cal AI-days (class: design) **title**: Data-status manifest cell-grid
+re-architecture — bound / stream / precompute the full-history view
+
 ### [`sports_fixtures_browser_single_catalogue_source_2026_07_24`](../active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md)
 
 **status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports fixtures browser — switch to the
@@ -130,39 +138,6 @@ single-file catalogue source (P10-B backend + follow-ups)
 
 **status**: active · **estimate**: 0.9 cal AI-days (class: design) **title**: Sports/prediction MVP write-time
 precompute — manifest schema v9→10 stamp + historical backfill
-
-## P2 — useful; opportunistic
-
-### [`data_status_cell_grid_rearchitecture_2026_07_18`](../active/data_status_cell_grid_rearchitecture_2026_07_18.md)
-
-**status**: active · **estimate**: 3 cal AI-days (class: design) **title**: Data-status manifest cell-grid
-re-architecture — bound / stream / precompute the full-history view
-
-### [`deployment_redesign_cherrypicks_2026_07_20`](../active/deployment_redesign_cherrypicks_2026_07_20.md)
-
-**status**: active · **estimate**: 0.8 cal AI-days (class: refactor) **title**: Deployment data-status redesign
-cherry-picks (A–E) from Harsh's superseded branch
-
-### [`github_actions_ci_cost_reduction_2026_07_15`](../active/github_actions_ci_cost_reduction_2026_07_15.md)
-
-**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI/CD cost reduction —
-self-host the glue, kill the minute-minimum tax, fix cron cadence
-
-### [`github_actions_cost_reduction_options_analysis_2026_07_15`](../active/github_actions_cost_reduction_options_analysis_2026_07_15.md)
-
-**status**: active · **estimate**: 2 cal AI-days (class: design) **title**: GitHub Actions cost reduction — full options
-analysis & decision record
-
-### [`github_actions_operator_gated_followups_2026_07_17`](../active/github_actions_operator_gated_followups_2026_07_17.md)
-
-**status**: active · **estimate**: 4 cal AI-days (class: infra) **title**: GitHub Actions CI cost reduction —
-operator-gated followups (D2/D3/D4 decisions, verification-pending items)
-
-### [`github_actions_staging_machinery_shutdown_2026_07_24`](/plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md)
-
-**status**: ✅ ARCHIVED 2026-07-28 (was: active) · **estimate**: 4 cal AI-days (class: infra) · **title**: GitHub
-Actions staging-branch machinery shutdown — dead-cron audit + escalation-dispatch bugfix (2026-07-23) — the one residual
-(codex-SSOT home for the re-entry runbook) landed `unified-trading-pm@97970974e`; verified zero open todos.
 
 ## P3 — backlog; revisit quarterly
 
