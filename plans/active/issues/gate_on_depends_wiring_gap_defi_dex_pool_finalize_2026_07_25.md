@@ -238,6 +238,20 @@ skipping this task rather than `/blocked`-ing on an already-answered question. R
 (populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
 be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
 
+## 2026-07-30 recurrence — FIFTH distinct plan pair (cefi_track7_candle_namespace_residual)
+
+Slot 7 was dispatched `cefi_track7_candle_namespace_residual_finalize-001` (plan_ref
+`cefi_track7_candle_namespace_residual_finalize_2026_07_25.md`,
+`depends_on: [cefi_track7_candle_namespace_residual_2026_07_25]`, `gate_on_depends: true`) while the gating parent
+plan's single todo — an `[OPERATOR]`-tagged delete of 149 stale legacy candle objects — is still `- [ ]` unchecked.
+Worse than the prior recurrences: this delete is human-execution-only under delete-safety-protocol hard-stop #2 (no §3a
+carve-out per the parent doc's own 2026-07-28 "Hard-stop review" banner), AND its own upstream gate (candidate-7 of
+`cefi_consolidated_native_ao_extract_2026_07_25.md`, the verify+`--force`-backfill prerequisite) is ALSO still `- [ ]`
+unchecked — a two-level unmet gate, not one. Reconciling the finalize plan's checkboxes now would fabricate evidence for
+a delete that has not been verified, backfilled, or executed. Declining, same disposition as every prior bounce;
+skipping rather than re-blocking on an already-answered question. Fifth distinct plan pair confirms this is a durable,
+general dispatcher gap, not an isolated one-off — root-cause item 1 remains the correct fix.
+
 ## 2026-07-30 recurrence — FOURTH distinct plan pair (cefi_track2_coverage_backfill_checkpoints)
 
 Slot 7 was dispatched `cefi_track2_coverage_backfill_checkpoints_finalize-001` (plan_ref
