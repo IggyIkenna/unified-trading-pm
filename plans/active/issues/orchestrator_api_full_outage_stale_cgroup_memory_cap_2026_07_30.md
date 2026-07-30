@@ -117,13 +117,20 @@ again) never triggers it. Nothing currently reminds an operator/agent to re-run 
 - [x] [BACKEND] P1. Diagnose the full API outage and restore service without a restart. — **Done 2026-07-30**: see "Fix
       applied" above. `agent-orchestrator@f2b6d73` (yesterday's session, unrelated) already live; this fix is
       config-only, no code shipped, no commit needed for the immediate relief.
-- [ ] [BACKEND] P2. Close the durable gap: make the post-resize memory-cap rescale automatic instead of relying on
+- [x] [BACKEND] P2. Close the durable gap: make the post-resize memory-cap rescale automatic instead of relying on
       someone remembering to re-run `bootstrap_vm.sh` Step 5.7. Two viable directions (pick one, don't just flag both):
       (a) extract Step 5.7 into its own standalone idempotent script (e.g. `scripts/rescale-memory-cap.sh`) and call it
       from `ao-self-pull.sh`'s existing ~15-min cron loop (cheap, already-polling, already root) so any future RAM
       change self-heals within 15 minutes without a human remembering; (b) add an explicit manual step to whatever
       runbook governs EC2 instance-type changes. (a) is strictly better (self-healing, no runbook-discipline dependency)
-      unless there's a reason a cron shouldn't be touching systemd drop-ins found during implementation.
+      unless there's a reason a cron shouldn't be touching systemd drop-ins found during implementation. — **Done
+      2026-07-30, direction (a): `agent-orchestrator@a916694`.** New `scripts/rescale-memory-cap.sh` — idempotent,
+      no-ops (one log line) when already correctly scaled, applies live via `systemctl set-property --runtime` (zero
+      restart) + writes the persistent drop-in + `daemon-reload`. Wired into `ao-self-pull.sh`'s existing ~15-min cron
+      (best-effort, independent of the git-pull logic) AND `bootstrap_vm.sh`'s own Step 5.7 (now delegates to the same
+      script instead of a second, divergence-prone copy of the ratio logic). Smoke-tested live against the orchestrator
+      VM both paths (no-op detection + `--dry-run`), both exit 0 as expected. Full `quality-gates.sh` green (bash -n +
+      shellcheck clean on the new script; no Python touched).
 - [ ] [REVIEW] P3. This is the SECOND stale-cgroup-cap incident this class has produced (2026-07-28 downsize-left-
       cap-too-high; 2026-07-30 upsize-left-cap-too-low) — both times found by accident while investigating something
       else, not by any monitor. Consider whether `agent-orchestrator`'s existing host-resource dashboard/alerting (the
