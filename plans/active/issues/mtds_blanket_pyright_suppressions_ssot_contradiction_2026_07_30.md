@@ -127,13 +127,14 @@ and are correct under both outcomes; todo 3 sets the eventual target.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Correct `market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md` §2.3 "Basedpyright Exceptions"** to
-      reflect reality instead of "None": itemize (or reference a generated inventory file for) the 237 files carrying
+- [x] ✅ [SCRIPT] P2. **Correct `market-tick-data-service/QUALITY_GATE_BYPASS_AUDIT.md` §2.3 "Basedpyright Exceptions"**
+      to reflect reality instead of "None": itemize (or reference a generated inventory file for) the 237 files carrying
       the blanket file-level `# pyright: report*=false` header and the 658 inline `# type: ignore` comments, grouped by
       directory/module for readability (a flat 237-row table is unwieldy — consider one row per distinct
       suppression-set + a file-count, matching how §2.1's `FUNCTION_SIZE_EXTRA_EXCLUDES` entry summarizes ~30 files as a
       named list rather than 30 rows). This todo is required under EITHER outcome of todo 3. (repo:
-      market-tick-data-service)
+      market-tick-data-service) — market-tick-data-service@409ee88f. Re-measured at correction time (counts unchanged:
+      237 files / 658 comments); §2.3 now itemizes both by directory bucket with regen grep commands.
 - [ ] [CODE] P2. **Add a freeze-and-shrink ratchet to `market-tick-data-service/scripts/quality-gates.sh`** for both
       patterns (blanket file-level pyright headers via a grep/AST count of `^# pyright: report\w+=false` lines; inline
       `# type: ignore` via a grep count), mirroring the existing `BE_EXCLUDE_GLOBS` / `FUNCTION_SIZE_EXTRA_EXCLUDES` /
@@ -159,3 +160,9 @@ and are correct under both outcomes; todo 3 sets the eventual target.
   market-tick-data-service@c8742adf/7be1c3b8) — they mirrored the dominant existing convention faithfully, they did not
   introduce anything novel, and the actual data-correctness work in that commit is sound (reviewed separately, verdict
   ok).
+- **2026-07-30 (backend_engineer, slot 3)**: Todo 1 shipped — market-tick-data-service@409ee88f. Re-measured both counts
+  fresh (grep -rl "^# pyright: report" market_tick_data_service/ | wc -l → still 237; grep -rn "# type: ignore"
+  --include="*.py" . | grep -v .venv | wc -l → still 658, no drift since filing). Corrected §2.3 from "None" to two
+  tables (blanket-header files + inline-ignore occurrences), each grouped by directory bucket, plus the two regen grep
+  commands so future re-measurement doesn't require re-deriving the query. Todos 2 (ratchet) and 3 (operator policy
+  call) remain open — not in this task's scope.
