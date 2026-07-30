@@ -35,7 +35,8 @@ summary: >-
   shipped re-nag cooldown (`DP_RUN_MOSTLY_EMPTY: 1800s`, `alerting-service@fe76ded3`, 2026-07-15) is deliberately
   designed to keep re-paging every 30 minutes while a cell stays "high" — which a dead, never-purged cell will do
   forever. Not a new incident.
-status: open
+status: resolved
+resolved: "2026-07-30"
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -80,11 +81,19 @@ drift_direction: unknown
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: market-tick-data-service@0cd76b93
 source: >-
   operator-reported #data-pipeline-alerts DP_RUN_MOSTLY_EMPTY CRITICAL batch, window 2026-07-22 23:46-48Z, triaged
   2026-07-23 (read-only investigation, no changes made).
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: market-tick-data-service@0cd76b93`. Every todo in this
+> doc is done: the ohlcv_1s/ohlcv_1m root-cause investigation is delegated to and tracked in
+> `plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (that real, still-open Databento silent-zero-row gap
+> is NOT closed by this archival — it lives on in that plan); the ohlcv_15m dead-cell reclassification (this doc's own
+> concrete deliverable) is fully shipped + live-verified (1,242/1,242 rows `attempted_failed` → `empty_confirmed`, 0
+> residual); the `known_dead_cells_registry.py` alert-suppression design landed earlier (`deployment-service@01414fc`).
+> Archived per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # TradFi DP_RUN_MOSTLY_EMPTY cluster — ohlcv_1s / ohlcv_1m (real, open) vs ohlcv_15m (dead, already-tracked)
 
@@ -245,30 +254,18 @@ actions are different (see Todos).
       `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`. Snapshot-before-write,
       dry-run default, matching the established `reclass_*`/`purge_*` precedent scripts. Repo:
       `market-tick-data-service`.
-- [ ] [DATA] P2. **NEW 2026-07-29 (executes the operator ruling above) — build + run the concrete CBOE `ohlcv_15m`
-      dead-cell reclassification script, converting the 1,242 rows `attempted_failed` → `empty_confirmed`.** No existing
-      `reclass_*`/`purge_*` script in `market-tick-data-service/scripts/` or
-      `market-tick-data-service/market_tick_data_service/scripts/` already covers this exact predicate — checked live:
-      this doc has no dedicated `## Progress Log` section naming one, and the closest precedent,
-      `reclass_tradfi_expected_reason_attempted_failed_2026_07_15.py`, only handles rows whose `error_reason` carries an
-      `EXPECTED_*` prefix — this cell's rows carry `error_reason=WithinBoundsTradfiSourceZero` instead (per Finding 2
-      above), a different predicate that script does not match. Build a new one-off script following the same naming
-      convention as the precedent family (e.g.
-      `market-tick-data-service/scripts/reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py`), targeting the exact
-      Finding-2 predicate (`venue=CBOE`, `data_type=ohlcv_15m`, `capture_status=attempted_failed`,
-      `error_reason=WithinBoundsTradfiSourceZero`, `attempted_at` inside the frozen
-      `2026-07-07T06:40:00.845783Z`-`07:29:16.510922Z` window) and rewrite `capture_status` → `empty_confirmed` (not a
-      row delete — the operator's ruling above specifies reclassify, and this preserves the historical record). Follow
-      this doc's own established snapshot-first / dry-run-default pattern, matching the sibling
-      corporate_action/earnings-orphan and FX/ICE/KRX cleanups already run elsewhere in this plan family: (1) dry-run is
-      the default invocation (count-only, no write; `--apply` opts in); (2) snapshot `_index/availability_index.parquet`
-      before any write; (3) a fresh `gcs_bucket_soft_delete_retention_seconds()` check on
-      `market-data-tick-tradfi-prd-central-element-323112` (≥604800s qualifies, no operator sign-off needed per finding
-      T / delete-safety §3a); (4) pause the tradfi manifest-consolidator cron before the write, resume it after; (5)
-      CAS-apply. Done when: the dry-run count matches the 1,242-row Finding-2 population exactly, `--apply` converts all
-      1,242 rows from `attempted_failed` to `empty_confirmed` with 0 residual `attempted_failed` rows left matching this
-      exact predicate, and the result holds across at least 1 real consolidator merge cycle post-resume (no
-      resurrection). Repo: `market-tick-data-service`.
+- [x] ✅ [DATA] P2. **DONE 2026-07-30 — built + ran the concrete CBOE `ohlcv_15m` dead-cell reclassification script,
+      converting all 1,242 rows `attempted_failed` → `empty_confirmed`.** Shipped `market-tick-data-service@0cd76b93`
+      (`scripts/reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py` + 6 unit tests, `quality-gates.sh` green,
+      sentinel-verified). Live execution against the exact Finding-2 predicate (`venue=CBOE`, `data_type=ohlcv_15m`,
+      `capture_status=attempted_failed`, `error_reason=WithinBoundsTradfiSourceZero`, `attempted_at` inside the frozen
+      window): fresh dry-run confirmed **1,242 candidates** (exact match to this doc's measured population); paused
+      `uts-prod-manifest-consolidator-market-data-tradfi-cron`; ran `--apply` — snapshot written to
+      `_index/backups/availability_index.pre_cboe_ohlcv_15m_dead_cell_reclass_20260730T015920Z.parquet`, CAS write
+      succeeded (generation `1785376157790136` → `1785376842007154`); resumed the cron. **Verified 0 residual**: a fresh
+      post-apply dry-run against the new generation shows **0** matching rows remain. `error_reason` rewritten to
+      `EmptyConfirmedReason.EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` (CBOE's real batch source never offered
+      `ohlcv_15m`, matching `known_dead_cells_registry.py`'s own root-cause note). Repo: `market-tick-data-service`.
 - [x] [DESIGN] P2. ✅ **DONE 2026-07-26 (batch-3 todo 8) — `deployment-service@01414fc`.** New
       `known_dead_cells_registry.py` — a
       `(asset_group, data_type) -> KnownDeadCell(narrowed_at, venue, narrowed_by,     note)` registry, consulted

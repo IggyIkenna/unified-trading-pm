@@ -554,10 +554,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
     (`status: resolved`) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
-    - **[INVESTIGATE] P1.** Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active
-      `ohlcv_1s`/`ohlcv_1m` population
-    - **[DATA] P2.** Purge or reclassify the 1,242 dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07)
+  - [`plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
+    (`status: resolved`) — 0 open todos (closed/archived; ohlcv_1s/ohlcv_1m root-cause tracked in
+    `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, the 1,242-row CBOE `ohlcv_15m` reclassify shipped
+    `market-tick-data-service@0cd76b93`)
     - **[DESIGN] P2.** Give `check_high_attempted_failed` a way to mark a cell "known-dead, expected-coverage-narrowed"
   - [`plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`](/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)
     - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi/tradfi/pred), Ikenna's migration

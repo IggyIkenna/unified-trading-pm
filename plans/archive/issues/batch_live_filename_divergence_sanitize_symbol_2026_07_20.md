@@ -12,7 +12,8 @@ summary: >-
   records the fix AND the broader family the write-path audit surfaced: filename stems written verbatim with zero form
   validation, no write-time path guard on the Tardis cefi lane, and validate=False on the cefi write sites. Those are
   the mechanisms that let ~811,200 wire-named objects land, and they belong to the same fail-hard-in-writes gap.
-status: open
+status: resolved
+resolved: "2026-07-30"
 nature: issue
 asset_group: [cefi, defi, meta]
 stage: [data]
@@ -47,10 +48,18 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
-resolved_by:
+resolved_by: market-tick-data-service@3169d25e
 ---
 
 # Batch=live filename divergence + the verbatim-write / no-guard family
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: market-tick-data-service@3169d25e`. Every todo in this
+> doc is done: the filename-divergence fix itself landed 2026-07-20 (`mtds@953679de`), the historical colon_wire
+> migration + the `build_instrument_id` catalogue-miss fallback removal both landed by 2026-07-27, and the final open
+> item (`validate=True` + FATAL-on-violation at the two `tardis_cefi_shards.py` write sites) was found already shipped
+> under `mtds@3169d25e` (2026-07-27, a related schema-contract fix) — verified live 2026-07-30 by reading
+> `finalise_rows_and_path`'s G3 gate directly. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 > **🔴 OPERATOR-NOTIFY — batch=live determinism.** The workspace holds `paper(W) == batch-rerun(W)` trade-for-trade at
 > ε=0 (`/codex/09-strategy/operational/paper-batch-live-reconciliation.md`). A live run and a batch rerun of the same
@@ -163,8 +172,13 @@ edited.)
       `data_type=book_snapshot_5/*/` and `data_type=trades/*/` for this venue/instrument_type matched zero objects
       across all dates. No corrupt objects remain to migrate (targeted, scoped GCS checks — not a new whole-corpus walk,
       per the single-walk-discipline rule).
-- [ ] [SERVICE] P1. Turn `validate=True` on the two `tardis_cefi_shards.py` write sites and make
-      `finalise_rows_and_path` violations FATAL, not advisory (fail hard, per the operator's write-path directive).
+- [x] ✅ [SERVICE] P1. **ALREADY DONE — verified 2026-07-30.** Turn `validate=True` on the two `tardis_cefi_shards.py`
+      write sites and make `finalise_rows_and_path` violations FATAL, not advisory (fail hard, per the operator's
+      write-path directive). Both write sites (`tardis_cefi_shards.py:128` and `:635`) already pass `validate=True` —
+      shipped `market-tick-data-service@3169d25e` ("bridge Tardis wire columns to UAC SchemaContract, enable write-time
+      validation", 2026-07-27) — and `finalise_rows_and_path`'s G3 gate (`tardis_shared.py`) already raises `ValueError`
+      on any schema-contract violation when `validate=True` and a contract is registered (fail hard, no advisory path).
+      No further code change needed; this todo was stale (fix landed under a different, related todo's commit).
 - [x] [SERVICE] P0. Remove the silent `build_instrument_id(venue, itype, symbol)` catalogue-miss fallback that mints
       double-wrapped `VENUE:ITYPE:<raw wire>` ids (shared with the oracle issue doc). **DONE at the shared root
       `unified-api-contracts@502ef57e`**: `build_instrument_id` now raises `ValueError` on any `symbol` carrying an
