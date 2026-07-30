@@ -347,7 +347,7 @@ concurrent workers do not collide on this file.
       `/workspace/.sha_tag_preexists`, conditional push, and drop any sha entry from `images:`. **Done when**: both
       files carry the guard, `scripts/validation/validate-cloudbuild.py` +
       `scripts/quality_gates/check_cloudbuild_substitutions.py` are clean on both, and no sha tag remains in `images:`.
-      Source: `issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` ([INFRA] P3, third item).
+      Source: `archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` ([INFRA] P3, third item).
 - [ ] [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** The per-service
       SA/IAM registry has NO entry at all for `unified-trading-sa@central-element-323112` (deployment-api's actual
       runtime SA) and its own footer admits `last_executed: NEVER` — an aspirational registry is worse than none,

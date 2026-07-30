@@ -12,7 +12,7 @@ summary: >-
   the tranche's own consolidated-closeout doc is archived (which `ci`'s was, 2026-07-28) — worked around via a direct
   frontmatter sweep (`asset_group` containing `ci`) per the skill's now-documented 2026-07-27 schema-migration guidance
   (see
-  `plans/active/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
+  `plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
   for the bug report). Phase 1 read all 9 newly-surfaced candidate docs end-to-end (29 direct `asset_group:[ci]` docs
   minus batch1/finalize minus already-cited/self-dispatched, plus 1 already-known `asset_group:[meta]` fold-in) via a
   Workflow — all 9 confirmed genuinely orphaned (7 `orphaned_never_touched`, 2 `orphaned_partial_coverage`). Phase 3's
@@ -119,8 +119,8 @@ concurrent workers do not collide on this file.
       invocation in `base-service.sh` (visibility only, zero behavior change). **Done when**: (a) and (b) each have a
       passing regression test, `quality-gates.sh` is green in every repo touched, and (c)'s duration output is visible
       on a real PM run. Sources: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist items 2 + 5,
-      RULED 2026-07-28 — no longer operator-gated) · `issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`
-      (`--durations=25` item).
+      RULED 2026-07-28 — no longer operator-gated) ·
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (`--durations=25` item).
 - [ ] [DOC] P2. **Correct the "re-run quality-gates.sh --no-fix then retry" recovery guidance** wherever it is taught
       (agent prompts, runbooks) — as written today it is a sentinel-laundering step, not a fix; correct it to describe
       the post-todo-1 behavior (sentinel now binds configuration, so the recovery is genuinely safe). Sequenced after
@@ -156,8 +156,9 @@ concurrent workers do not collide on this file.
       (`SUB_AGENT_MANDATORY_RULES.md` / the git-safety codex) to stamp it on every sanctioned direct push. **Done
       when**: a synthetic commit carrying the new trailer value is recognized as carve-out-exempt by
       `check_strict_quickmerge.py` (regression test), and the recipe doc change is verified against
-      `check_reference_paths.py`. Source: `issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`
-      (`asset_group: [meta]` — folded into `ci` per the skill's meta-sweep rule; content is quickmerge governance).
+      `check_reference_paths.py`. Source:
+      `archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (`asset_group: [meta]` —
+      folded into `ci` per the skill's meta-sweep rule; content is quickmerge governance).
 - [ ] [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** One combined todo
       (internally sequential, single source doc): (a) spec the contract-surface allowlist extension — which
       registry-dict mutations count as breaking vs additive-OK, citing the manifest `schema_version` precedent as the
@@ -186,14 +187,15 @@ concurrent workers do not collide on this file.
       (~11.65s/run); (b) `features-service` — `test_feature_cache.py` `sleep(1.1)`; (c) the smaller batch/low-value
       sleeps in `deployment-api`, `instruments-service`, `greeks-service`. **Done when**: every named test passes with
       the real sleep replaced by a mocked/monkeypatched clock and the per-repo `quality-gates.sh` stays green. Source:
-      `issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ "Real sleep()-based test waste").
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ "Real sleep()-based test waste").
 - [ ] [SCRIPT] P3. **CI-cost tooling: size + add the `uv` package-cache action; merge redundant ruff-ratchet
       invocations.** (a) Size the real savings of an `actions/cache@v4` step for the `uv` package cache in
       `python-quality-gates-v2.yml` BEFORE adding it (the doc's own precondition) — record the measurement, then add it
       if it's worth the added cache-restore overhead; (b) merge `check_ruff_rule_ratchet.py`'s per-rule-group full-tree
       ruff invocations into one `--select` pass. **Done when**: the cache sizing is recorded with a go/no-go decision
       (and the step added if "go"), and the ruff-ratchet checker runs measurably fewer full-tree passes with identical
-      violation output. Source: `issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ tooling speed).
+      violation output. Source: `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ tooling
+      speed).
 - [ ] [SCRIPT] P3. **Dead-code cleanup: 3 confirmed-stale deletions.** (a) `execution-service` — re-verify ~40
       files/~10,082 lines importing a pre-refactor module path are still genuinely dead, then delete; (b)
       `unified-trading-library` — delete the already-skip-marked dead test importing a moved `ConfigReloader` path; (c)
@@ -201,7 +203,7 @@ concurrent workers do not collide on this file.
       `features-*-service` repos. **Done when**: (a)'s re-verification is recorded before deletion (per "delete
       deprecated code, no shims" — confirm dead first), all three repos' `quality-gates.sh` stay green post-delete, and
       (c)'s `SERVICES` array matches the live repo topology. Source:
-      `issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ dead code).
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ dead code).
 - [ ] [BACKEND] P1. **Widen MTDS's ungated test coverage — fix + widen `PYTEST_UNIT_DIR`.** One combined todo
       (internally sequential, single source doc): (a) fix the 8 non-integration `tests/market_interface/unit/` failures
       (`test_defi_handlers.py` ×5, `test_defi_adapters_boost_2.py` ×2, `test_barchart_and_yahoo_adapters.py` ×1 — the
@@ -226,7 +228,8 @@ concurrent workers do not collide on this file.
       `/tmp/` checker-capture sites in `base-library.sh`, apply the identical substitution pattern, verify `bash -n`,
       re-run `quality-gates.sh` on a library-tier repo (e.g. `unified-api-contracts`). **Done when**: every named site
       uses `${TMPDIR:-/tmp}`, `bash -n` passes, and the named library-tier repo's `quality-gates.sh` is green on a full
-      tmpfs. Source: `issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (sole open todo).
+      tmpfs. Source: `archive/issues/qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (sole open
+      todo).
 - [ ] [BACKEND] P2. **Root-cause and fix `plan-health-agent.yml`'s dead `schedule` trigger (1/200 firings since
       2026-03-07).** One combined todo (todo 2 is gated on todo 1's output, same source doc): (a) compare the workflow's
       trigger/concurrency/permissions blocks line-by-line against 2-3 reliably-firing sibling crons — the doc has
@@ -333,8 +336,8 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   (`_closeout_paths()`, globs `plans/active/`), which silently returns zero once that doc is archived — stale relative
   to the skill's own documented 2026-07-27 schema migration (asset_group `ci` is now the primary membership signal for
   this tranche, not the old closeout-citation workaround). Filed
-  `issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md` and
-  worked around via a direct frontmatter sweep. Found 31 docs with `asset_group` containing `ci` (29 after excluding
+  `archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
+  and worked around via a direct frontmatter sweep. Found 31 docs with `asset_group` containing `ci` (29 after excluding
   batch1+finalize); cross-referenced batch1's citations (basename AND truncated-prose-paraphrase matching, since batch1
   sometimes elides long filenames with `…`) plus self-dispatch status (`assigned_vm: planning` + `status: active/open`)
   to narrow to 9 genuinely never-touched candidates, PLUS folded in 1 already-known `asset_group: [meta]` doc

@@ -13,7 +13,7 @@ summary: >-
   lost to the shared-clone concurrent-git-commit race documented in
   shared_clone_concurrent_commit_message_swap_2026_07_28.md (a commit landing with a swapped message, or a stash/pop
   race silently dropping a small YAML edit), rather than a fabricated claim.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta, infrastructure]
 stage: [meta]
@@ -40,13 +40,15 @@ estimate_calibrated_ai_days: 0.04
 assigned_role: NA
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: N/A (no code fix needed)
 locked_by:
 supersedes:
 superseded_by:
 ---
 
 # deployment-service empty-string-fallback ratchet claim never landed
+
+> **🟢 ARCHIVED 2026-07-30** — re-verified still at baseline 91, DONE-as-is. 0 open todos.
 
 ## What I found
 

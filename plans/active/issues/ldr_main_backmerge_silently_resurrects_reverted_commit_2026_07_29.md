@@ -199,8 +199,8 @@ confirm-fix-shape only.
       unrelated `tests/unit/wizard/parity-gates.test.ts` UAC-manifest-hash-mismatch red (confirmed via
       `git checkout HEAD~1` to fail identically before this fix's commit), already tracked in
       `issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md` +
-      `issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` — the repo-blocker mechanism will notify on
-      green, at which point `quickmerge --agent --files '.github/workflows/main-backmerge-to-ldr.yml'` ships it (no
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` — the repo-blocker mechanism will notify
+      on green, at which point `quickmerge --agent --files '.github/workflows/main-backmerge-to-ldr.yml'` ships it (no
       further diagnosis needed). Original todo text below, preserved for context:
       `unified-trading-pm/scripts/workflow-templates/`: (a) `ldr-to-main-promote-fleet.yml` (+
       `ldr-to-main-promote.yml`) — stamp a `Promoted-From-LDR: <LDR_SHA>` trailer on the squash-promote commit body (the

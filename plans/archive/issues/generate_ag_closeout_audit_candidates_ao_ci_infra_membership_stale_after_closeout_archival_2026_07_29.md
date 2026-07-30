@@ -20,7 +20,7 @@ summary: >-
   and membership should be tested directly (`t in asset_group`, same as the 5 real AGs) — this script's `else` branch
   was never updated to match, and the 2026-07-28 closeout archival additionally broke even the OLD fallback mechanism it
   still implements, compounding into total silent failure rather than a partial staleness.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -46,13 +46,15 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@e88c41727
 depends_on: []
 source: >-
   `/ag-closeout-audit ci` run 2026-07-29 (ag_closeout_auditor scheduled worker, slot 7) — Phase 0.3 discovery step.
 ---
 
 # `generate_ag_closeout_audit_candidates.py`'s ao/ci/infra branch is silently blind once the closeout doc archives
+
+> **🟢 ARCHIVED 2026-07-30** — both todos done (ao/ci/infra membership fix + regression test). 0 open todos.
 
 ## What was found
 

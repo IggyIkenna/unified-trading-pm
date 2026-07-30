@@ -7,7 +7,7 @@ summary: >-
   working-tree changes to a patch file, then failed to re-apply that patch after the branch had moved (upstream drift
   during the hook run). The patch is fully intact on disk but was never reapplied to the working tree, and nothing in
   the plans corpus references it.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -29,12 +29,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: N/A (no code fix needed)
 source: [/home/ubuntu/.cache/prek/patches/1784815445082-3204588.patch]
 depends_on: []
 ---
 
 # Stranded prek stash patch (2026-07-23)
+
+> **🟢 ARCHIVED 2026-07-30** — all 7 referenced files confirmed superseded, closed as moot. 0 open todos.
 
 ## What happened
 

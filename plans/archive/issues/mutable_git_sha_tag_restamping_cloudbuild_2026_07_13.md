@@ -18,7 +18,7 @@ summary:
   cloudbuild-api/service/ui/infra-template.yaml + ALL 19 docker-pushing repo copies (fleet rollout completed 2026-07-13,
   per-repo evidence below) — including deployment-service, which the original class analysis wrongly listed as
   not-affected (it stamps full :$COMMIT_SHA, invisible to a SHORT_SHA grep)."
-status: open
+status: resolved
 nature: notes
 asset_group: [ci]
 stage: [meta]
@@ -35,7 +35,7 @@ source:
     gcloud builds list/describe + AR tags list evidence 2026-07-13,
   ]
 assigned_vm: NA
-resolved_by:
+resolved_by: N/A (documented decisions, no code needed)
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -44,6 +44,8 @@ depends_on: []
 ---
 
 # Mutable git-sha tag re-stamping in Cloud Build (fleet class) — 2026-07-13
+
+> **🟢 ARCHIVED 2026-07-30** — all remaining P3 todos resolved as documented rulings. 0 open todos.
 
 ## Observation
 

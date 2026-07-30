@@ -105,7 +105,7 @@ isolation fixed on self-hosted runners.
 (terraform import owed for AWS CodeBuild projects/webhooks) ·
 [issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md](/plans/active/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md)
 (`rollout-cloudbuild.py` template drift would regress fleet Cloud Build fixes) ·
-[issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md](/plans/active/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md)
+[archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md](/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md)
 (Cloud Build re-stamps mutable git-sha image tags on rebuild) ·
 [issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md](/plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md)
 (`cassette-drift-check.yml` calls a deleted script, silently green) ·
@@ -209,8 +209,8 @@ unblocked on a CI runner.
     pushes every new-QG-checker wire-in into the gated finalize plan. Four more files were rationed the same way. This
     is the tranche's dominant structural constraint — expect batch 2+ to be gated on file contention, not on ideas.
   - **Four tranche members are listed in NO consolidated closeout at all** (found by sweeping beyond
-    `asset_group: cross-cutting`): `issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` and
-    `issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` (both
+    `asset_group: cross-cutting`): `archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`
+    and `issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` (both
     `asset_group: [meta]`, both orphaned — the first has **zero** referrers corpus-wide), plus
     `issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` and
     `issues/ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` (both `asset_group: [infrastructure]`,

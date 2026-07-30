@@ -23,7 +23,7 @@ summary: >-
   fleet-wide, two consecutive full-suite runs on another failing on two different unrelated pre-existing tests) — each
   was confirmed via isolated/targeted re-runs to be unrelated to the actual change before shipping via the documented
   carve-outs. No open todos remain in this doc.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -52,12 +52,15 @@ execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
 assigned_vm: NA
-resolved_by:
+resolved_by: unified-trading-pm@ (16/16 todos across 2026-07-29 pass, see doc body for the full per-todo evidence)
 locked_by:
 locked_since:
 ---
 
 # Fleet-wide test-suite content/tooling-speed findings — untracked until now
+
+> **🟢 ARCHIVED 2026-07-30** — all 16 todos done; last one (PM cost-breakdown) closed as re-confirmed superseded. 0 open
+> todos.
 
 Full raw findings (JSON) are in the session transcript only, not promoted anywhere durable — this doc captures every
 finding as an actionable todo instead of leaving them as chat prose per the workspace hard rule. Todos are grouped by

@@ -13,7 +13,7 @@ summary: >-
   2026-07-25→27 citation-grep mechanism (`CITE_RE` basename matching inside each tranche's own
   `{tranche}_consolidated_closeout_2026_07_25.md` body) instead of testing `asset_group` directly — the same stale
   mechanism
-  `plans/active/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
+  `plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
   already flagged for the sibling script earlier the same day, but manifesting differently here: instead of a hard zero,
   ordinary `related:`-frontmatter links and footnote citations between the tranches' own coordinator docs get treated as
   membership claims, so coordinator docs leak INTO other tranches and lose their OWN tranche tag. A second, independent
@@ -41,7 +41,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
+    /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,

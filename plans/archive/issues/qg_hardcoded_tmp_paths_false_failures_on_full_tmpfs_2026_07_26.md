@@ -30,7 +30,7 @@ summary: >-
   attempting to install them here failed with `/var/spool/cron/: mkstemp: Permission denied` (this host's cron appears
   locked down for this account), so an operator with the right privileges needs to register them (or fix the permission)
   directly on this host.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -54,7 +54,7 @@ execution_scope: local-only
 priority: P2
 estimate_class: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm@f2f227ff9 (base-library.sh fix), operator cron install (see Todos)
 locked_by:
 locked_since:
 supersedes:
@@ -63,6 +63,9 @@ depends_on: []
 ---
 
 # base-service.sh's own checker-output capture paths bypassed TMPDIR — false QG failures on a full /tmp
+
+> **🟢 ARCHIVED 2026-07-30** — both todos done: base-library.sh TMPDIR fix (`unified-trading-pm@f2f227ff9`) and the
+> operator cron install, both confirmed live. 0 open todos.
 
 ## What I found
 

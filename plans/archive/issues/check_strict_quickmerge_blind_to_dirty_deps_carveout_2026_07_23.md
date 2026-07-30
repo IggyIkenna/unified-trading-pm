@@ -14,8 +14,8 @@ summary: >-
   path prefixes, and by definition has no `Quickmerge:` trailer (quickmerge never ran — that is the entire point of the
   carve-out), so the checker flags it as a bypass every time. The flag was not wrong given the checker's own narrow
   rule; the rule just does not model an entire sanctioned carve-out category.
-status: open
-resolved_by:
+status: resolved
+resolved_by: unified-trading-pm@bbe9a9871
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -37,6 +37,9 @@ depends_on: []
 ---
 
 # check_strict_quickmerge.py cannot recognize the dirty-deps carve-out
+
+> **🟢 ARCHIVED 2026-07-30** — Option 2 (Quickmerge: direct-carveout-dirty-deps trailer) documented + self-demonstrated.
+> 0 open todos.
 
 ## What was found
 

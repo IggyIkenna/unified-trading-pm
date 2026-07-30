@@ -50,7 +50,7 @@ depends_on: []
       the 5 AGs. ✅ DONE 2026-07-26.
 - [x] [REVIEW] P2. 4 of the ~48 docs (ci-tranche-relevant, found by the ci tranche's own 2026-07-26 audit sweeping
       beyond `cross-cutting`) already triaged and given a live home:
-      `issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` +
+      `archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` +
       `issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` (both `[meta]`) cited as
       `Source:`/Deferred-table entries in `ci_satellite_ao_dispatch_batch1_2026_07_26.md`;
       `issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` +
@@ -147,7 +147,7 @@ citing file):
 | `issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md`                   | ci            | test-env leak blocking quickmerge                                          |
 | `issues/mtds_sports_catalog_reader_timeout_test_flaky_under_contention_2026_07_27.md`           | ci            | same flaky-under-contention class as adapter_contract_regression           |
 | `issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`                  | ao            | AO `orphan_reap` sweep kills detached background work                      |
-| `archive/issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`               | infra         | plan-hygiene checker false positive                                        |
+| `archive/issues/plan_discipline_unquoted_deferred_by_design_false_positive_2026_07_27.md`       | infra         | plan-hygiene checker false positive                                        |
 | `issues/production_readiness_checklist_file_missing_2026_07_24.md`                              | infra         | deployment-service + codex governance doc gap                              |
 | `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md`               | ci            | QG step 5.83 timeout root doc                                              |
 | `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`    | cross-cutting | same UTL-manifest-reader family as the above (resolved 2026-07-28)         |
