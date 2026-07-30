@@ -197,3 +197,112 @@ def test_ag_tranche_membership_unaffected_by_the_fix(monkeypatch, tmp_path):
     result = json.loads(_run_json("cefi"))
     assert result["total_members"] == 1
     assert result["never_cited_count"] == 1
+
+
+def test_aggregated_sources_digest_is_not_a_covering_doc(monkeypatch, tmp_path):
+    """Finding 1 in ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md:
+    `_closeout_paths()`'s glob `{prefix}_consolidated_closeout_*.md` used to also match
+    `{prefix}_consolidated_closeout_aggregated_sources_*.md` (the discoverability digest SKILL.md
+    Phase 0.1 explicitly declares non-covering), so a doc cited ONLY in the digest wrongly read as
+    `cited_somewhere` and vanished from the orphan-candidate list. A doc mentioned only in the digest
+    must be reported as never_cited.
+    """
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cefi_only_in_digest_2026_07_01.md",
+        title="cefi doc mentioned only in the digest",
+        status="open",
+        asset_group="cefi",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cefi dispatch batch 1",
+        status="active",
+        asset_group="cefi",
+    )
+    digest = _write_doc(
+        tmp_path,
+        "plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md",
+        title="cefi aggregated sources digest",
+        status="active",
+        asset_group="cefi",
+    )
+    # The digest's only "coverage" of the member doc is a plain citation of its basename -- exactly
+    # what the aggregated-sources digest does for every doc in the AG (discoverability, not dispatch).
+    citation_line = "\n- [cefi_only_in_digest_2026_07_01.md](issues/cefi_only_in_digest_2026_07_01.md)\n"
+    digest.write_text(digest.read_text(encoding="utf-8") + citation_line, encoding="utf-8")
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    result = json.loads(_run_json("cefi"))
+    covering_paths = MOD._covering_paths("cefi")
+    assert not any("aggregated_sources" in p.name for p in covering_paths), (
+        "the aggregated_sources digest must never be treated as a covering doc"
+    )
+    never_cited_paths = {c["path"] for c in result["never_cited"]}
+    assert "plans/active/issues/cefi_only_in_digest_2026_07_01.md" in never_cited_paths, (
+        "a doc cited ONLY in the aggregated_sources digest must surface as never_cited, not as covered"
+    )
+
+
+def test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering(monkeypatch, tmp_path):
+    """Finding 1 (secondary) + independently corroborated by
+    ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md: SKILL.md
+    Phase 0.2 path (b) says a line-cap-split fork of the consolidated closeout (named after its own
+    Track/phase, e.g. `cefi_misc_audits_and_hygiene_2026_07_25.md`) counts as a covering doc even
+    though its filename doesn't match `(dispatch_batch|satellite|_finalize)` -- only its paired
+    `_finalize` sibling does. `_covering_paths()` must resolve that finalize doc's `depends_on:` to
+    pull the main fork in too, and use the fork's OWN content (not just the short finalize doc's) as a
+    citation source.
+    """
+    _write_doc(
+        tmp_path,
+        "plans/active/issues/cefi_cited_only_by_the_fork_2026_07_01.md",
+        title="cefi doc cited only inside the track fork's own todos",
+        status="open",
+        asset_group="cefi",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_26.md",
+        title="cefi dispatch batch 1",
+        status="active",
+        asset_group="cefi",
+    )
+    fork = _write_doc(
+        tmp_path,
+        "plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md",
+        title="cefi misc audits + hygiene (line-cap fork)",
+        status="active",
+        asset_group="cefi",
+    )
+    fork.write_text(
+        fork.read_text(encoding="utf-8") + "\nSource: `cefi_cited_only_by_the_fork_2026_07_01.md`\n",
+        encoding="utf-8",
+    )
+    _write_doc(
+        tmp_path,
+        "plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md",
+        title="cefi misc audits + hygiene -- finalize",
+        status="draft",
+        asset_group="cefi",
+    )
+    finalize_path = tmp_path / "plans/active/cefi_misc_audits_and_hygiene_finalize_2026_07_25.md"
+    finalize_path.write_text(
+        finalize_path.read_text(encoding="utf-8").replace(
+            "depends_on: []", "depends_on: [cefi_misc_audits_and_hygiene_2026_07_25]"
+        ),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(MOD, "PM", tmp_path)
+
+    covering_paths = MOD._covering_paths("cefi")
+    assert any(p.name == "cefi_misc_audits_and_hygiene_2026_07_25.md" for p in covering_paths), (
+        "the finalize doc's depends_on: must resolve its main fork into the covering set"
+    )
+
+    result = json.loads(_run_json("cefi"))
+    never_cited_paths = {c["path"] for c in result["never_cited"]}
+    assert "plans/active/issues/cefi_cited_only_by_the_fork_2026_07_01.md" not in never_cited_paths, (
+        "the fork's own Source: citation must count as coverage once the fork is in the covering set"
+    )

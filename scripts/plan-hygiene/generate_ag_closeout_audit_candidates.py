@@ -83,12 +83,46 @@ def _iter_docs() -> list[Path]:
 
 def _closeout_paths(tranche: str) -> list[Path]:
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
-    return sorted(PM.glob(f"plans/active/{prefix}_consolidated_closeout_*.md"))
+    return sorted(
+        p for p in PM.glob(f"plans/active/{prefix}_consolidated_closeout_*.md") if "aggregated_sources" not in p.name
+    )
+
+
+def _resolve_depends_on(path: Path) -> list[Path]:
+    """Resolve a doc's frontmatter `depends_on:` slugs to real `plans/active/` file paths.
+
+    A `*_finalize*` doc's `depends_on:` names its paired MAIN plan by bare slug (PLAN_FORMAT.md
+    convention) -- for a line-cap-split fork of a consolidated closeout (e.g.
+    `cefi_misc_audits_and_hygiene_2026_07_25.md`) that main doc's OWN filename does not match the
+    `(dispatch_batch|satellite|_finalize)` regex below, so without this resolution step it is
+    invisible to `_covering_paths()` even though SKILL.md Phase 0.2 path (b) requires counting it as
+    covering. A slug whose target has since archived (e.g. a finalize whose main plan is already done
+    and moved to `plans/archive/`) resolves to nothing under `plans/active/` -- harmless, since an
+    archived doc can never appear in `_iter_docs()`'s candidate scan either.
+    """
+    if not path.exists():
+        return []
+    try:
+        fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+    except yaml.YAMLError:
+        return []
+    if fm is None:
+        return []
+    deps = fm.get("depends_on") or []
+    if isinstance(deps, str):
+        deps = [deps]
+    out: list[Path] = []
+    for slug in deps:
+        out.extend(PM.glob(f"plans/active/{slug}.md"))
+        out.extend(PM.glob(f"plans/active/issues/{slug}.md"))
+    return out
 
 
 def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     """Real covering docs: the consolidated closeout(s) + every dispatch_batch/finalize doc for this
-    tranche. Excludes *_aggregated_sources* (digest, non-covering per skill) and *_history_* (archive).
+    tranche, PLUS (Phase 0.2 path (b)) every plan a discovered `*_finalize*` doc's `depends_on:`
+    resolves to. Excludes *_aggregated_sources* (digest, non-covering per skill -- see
+    `_closeout_paths()`) and *_history_* (archive).
 
     ao/ci/infra membership is now tested the SAME way as the 5 real AGs (`t in asset_group`, see
     main()) -- as of the 2026-07-27 asset_group schema expansion (`unified-trading-pm@a97bc7bed`),
@@ -107,6 +141,9 @@ def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
             continue
         if re.search(r"(dispatch_batch|satellite|_finalize)", name):
             paths.append(p)
+    for p in list(paths):
+        if re.search(r"_finalize", p.name):
+            paths.extend(_resolve_depends_on(p))
     return sorted(set(paths))
 
 
