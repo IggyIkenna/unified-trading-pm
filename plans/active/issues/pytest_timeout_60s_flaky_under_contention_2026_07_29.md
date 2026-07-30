@@ -22,12 +22,12 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts]
+repos: [unified-trading-pm, unified-api-contracts, deployment-api, instruments-service, market-data-processing-service, features-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-30
+last_updated: 2026-07-30 (cicd escalation agt-0f20d3)
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -283,3 +283,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   deployment-api, instruments-service) to show a genuine post-both-fixes recurrence. No further raise applied in this
   pass (a 3rd raise without evidence it would actually help is exactly the "just move the threshold again" outcome this
   todo warned against — todo 4 asks for a root cause first).
+- **2026-07-30** — 6th+ confirmed instance, NEW (6th) affected repo: `cicd` escalation `agt-0f20d3`
+  (`wall_type=main_ci_red`, features-service `quality-gates-v2` RED on `main` at commit `8dffb8e7`, `qg_red_reason=pytest`).
+  Diagnosed via job-log grep across 3 separate runs (main run `30550875951` + two LDR reruns `30547641524`/`30553419354`)
+  — each hung on a DIFFERENT, unrelated test (`test_regime_clustering.py::test_returns_result_for_each_timeframe`'s
+  polars `.sort().drop_nulls()` on main; `test_momentum.py`/`test_liquidations_hft.py` inside
+  `features_service/delta_one/app/calculators/base.py::_check_constant_columns` on the two LDR runs), each producing the
+  same `pytest-timeout` thread-dump signature (`+++ Timeout +++`) this doc already catalogs. Confirmed root cause is
+  contention, not a regression: `git diff` between the last-green LDR commit (`48f77f2a`) and the first-red LDR commit
+  (`6d4a9374`) shows ZERO file changes (a no-op merge commit) — the tree was byte-identical between a passing and a
+  failing run. No features-service code/test action taken (same no-action-needed pattern as every prior entry in this
+  doc). Re-triggered `quality-gates-v2` on both `main` (run `30558921237`) and `live-defi-rollout` (run `30558943290`)
+  to get a clean, uncontended retry rather than touching any calculator code. `main`'s current red HEAD (`8dffb8e7`) is
+  byte-identical to LDR's tree at that point too — confirms this is NOT a stuck-promotion / stale-workflow case (the
+  two classifications `main_ci_red` normally expects), it is this doc's existing flake class hitting a 6th repo.
