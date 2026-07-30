@@ -152,22 +152,38 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
       constant (`features-service@84cb4613`) — that pin still just documents known-bad, this todo supplies the root
       cause. Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B1 (lines 286, 289).
 
-- [ ] [CODE] P1. **Narrow the cross-asset-group junk-symbol guard so it stops rejecting legitimate non-ASCII sports team
-      names (§D).** `instruments-service/instruments_service/engine/orchestrator/venue_core.py:394-408`
-      `_is_junk_instrument` rejects ANY non-ASCII field (`field.isascii()` check), applied to every asset group —
+- [x] [CODE] P1. ✅ **Narrowed the cross-asset-group junk-symbol guard so it stops rejecting legitimate non-ASCII sports
+      team names (§D).** `instruments-service/instruments_service/engine/orchestrator/venue_core.py`
+      `_is_junk_instrument` rejected ANY non-ASCII field (`field.isascii()` check), applied to every asset group —
       measured live: it drops ~9.8% of a sample sports date's fixtures for legitimate Latin-accented team names
       (Sanluqueño, União, Potosí, etc.), biased toward Iberian/Latin American leagues, invisibly (rejected instruments
-      never enter the coverage denominator). Narrow the rule to target CJK/emoji/symbol ranges specifically (or scope
-      the blanket ASCII rule to crypto asset groups only) so it keeps catching the CJK/meme test symbols it was built
-      for (confirmed still live 2026-06-24 finding: 龙虾/币安人生/我踏马来了 on BINANCE/BITGET/ASTER — cross-referenced
-      in `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4, whose "not implemented" framing is itself
-      stale — the guard demonstrably already exists, live-verified in code 2026-07-30) while no longer false-positiving
-      on sports. Add a regression test pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
-      REJECTED. Then quantify the corpus-wide loss (the 9.8% figure is one sampled date, 2021-11-26) and re-capture the
-      affected date/league range once the guard is narrowed. **Done when**: the regression test passes, the guard no
-      longer rejects the 3 pinned Latin-accented names, still rejects the 2 pinned CJK names, and the corpus-wide loss
-      has been quantified + the affected range re-captured. (repo: instruments-service). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D (lines 455, 458).
+      never enter the coverage denominator). Narrowed to reject only characters outside ASCII + accented Latin script
+      (`_ALLOWED_NON_ASCII_RANGES` = Latin-1 Supplement + Latin Extended-A/B), so it still catches the CJK/meme test
+      symbols it was built for (龙虾/币安人生/我踏马来了 on BINANCE/BITGET/ASTER) while no longer false-positiving on
+      sports. Regression tests added pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
+      REJECTED — `instruments-service@453e76f1`, 7/7 tests green (`tests/unit/test_orchestrator_helpers.py`, verified
+      2026-07-30). (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
+      (lines 455, 458).
+
+- [ ] [DIAG] P1. **Quantify the corpus-wide loss from the (now-fixed) junk-symbol guard and re-capture the affected
+      date/league range (§D follow-up).** The CODE fix above narrowed the guard and is verified via regression test;
+      what remains is measuring how much real sports data was silently dropped historically and backfilling it. The
+      9.8%-on-one-date (2021-11-26) figure is a single sample, not corpus-wide. **2026-07-30 attempted-and-descoped**: a
+      live single-date recapture
+      (`GCP_PROJECT_ID=... instruments-service --operation instruments --mode batch     --asset-group sports --venues api_football --start-date 2021-11-26 --end-date 2021-11-26 --force`)
+      against the real `instruments-store-sports-prd` bucket was tried interactively and did NOT finish within 180s —
+      the `instruments` operation refreshes the full team roster across ~150 leagues/seasons _before_ touching the
+      requested date's fixtures, so even a single-date run is a multi-minute, real-API-quota-consuming job. This is
+      VM-backfill-shaped work (`/codex/05-infrastructure/vm-launcher-runbook.md`), not a quick interactive CLI call.
+      **Done when**: (a) a scoped VM (or a properly-backgrounded, quota-aware run) executes `--force` recapture for the
+      2021-11-26 date (validating the fix restores the 22 previously-rejected fixtures — compare against the
+      `Junk-symbol guard: rejected %d junk/test instrument(s)` INFO log line, expect ~0 now vs. 22 before), (b) the same
+      measurement is repeated for a modest additional sample of dates spanning the affected Iberian/Latin American
+      leagues (BOLIVIA_PRIMERA_DIVISION, BOLIVIA_NACIONAL_B, PORTUGAL_LIGA_3, SPAIN_PRIMERA_DIVISION_RFEF_GROUP_1/2,
+      MEXICO_LIGA_PREMIER_SERIE_A) to produce an aggregate loss estimate (not a full-corpus single-walk — a bounded,
+      stated sample), and (c) `odds_features`/coverage is re-derived for whatever date range the recapture actually
+      touched. (repo: instruments-service). Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §D
+      (lines 455, 458), split from the CODE item above 2026-07-30.
 
 - [ ] [CODE] P1. **Implement The Odds API historical-snapshot adapter leg + backfill the thin early-kickoff horizons
       (§E1-E2).** Confirmed still absent in code as of 2026-07-30 (grep across market-tick-data-service /

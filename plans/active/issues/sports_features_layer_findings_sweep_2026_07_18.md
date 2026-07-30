@@ -488,14 +488,16 @@ instruments never enter the denominator either — the date simply looks smaller
 ranges), or make the ASCII rule crypto-only and exempt sports. Latin-1/Latin-Extended accented characters are legitimate
 identity, not noise.
 
-- [ ] [CODE] P1. Narrow `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji ranges, or
-      scope the ASCII rule to crypto asset groups); add a regression test pinning `Sanluqueño` / `União` / `Potosí` as
-      KEPT and `龙虾` / `币安人生` as REJECTED. **2026-07-30 batch8 triage**: extracted as a tracked todo (combined with
-      the item below) in `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
+- [x] [CODE] P1. ✅ Narrowed `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji
+      ranges); added a regression test pinning `Sanluqueño` / `União` / `Potosí` as KEPT and `龙虾` / `币安人生` as
+      REJECTED — `instruments-service@453e76f1`, 7/7 tests green 2026-07-30. Tracked in
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
       `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4 (whose "not implemented" framing is itself
       stale — live-verified the guard already exists in code).
 - [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
-      date/league range once the guard is narrowed.
+      date/league range once the guard is narrowed. **2026-07-30**: split into its own tracked todo (a single-date
+      recapture takes >180s of real API-Football quota — VM-backfill-shaped, not an interactive call) in
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`.
 
 ---
 
