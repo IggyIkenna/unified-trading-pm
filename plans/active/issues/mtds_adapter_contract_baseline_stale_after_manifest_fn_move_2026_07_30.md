@@ -12,7 +12,7 @@ summary:
   blocking ALL quickmerge pushes to market-tick-data-service, including an unrelated already-fixed STEP 5.101
   empty-string-fallback annotation (this repo's existing repo-blocker RB-88a81995 /
   mtds_empty_string_fallback_baseline_drift_2026_07_30.md)."
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -35,7 +35,11 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by: ""
+resolved_by:
+  "mtds_adapter_contract_baseline_stale_after_manifest_fn_move-003 (slot 2, cicd escalation agt-74c1b1), 2026-07-30 —
+  all 3 todos done: STEP 5.83 baseline regen (unified-trading-pm@83737bd99) + STEP 5.101 empty-string-fallback fix
+  (market-tick-data-service@41372139, @00c2cfe4) had already landed; slot 2 independently re-verified both green via a
+  full quality-gates.sh run on live-defi-rollout HEAD 7f42c557 and fast-path resolved repo-blocker RB-88a81995."
 locked_by: ""
 ---
 
@@ -96,19 +100,28 @@ shipping, and by extension keeps the existing repo-blocker `RB-88a81995` (condit
       (`tardis_batch_download.py` 11→7, `tardis_cefi_shards.py` added at 11) using the checker's exact regex, then
       re-ran the checker (no `--regenerate-baseline`) to confirm `OK — 330 baselined file(s) at or above minimum.`
       exit 0. `bash quality-gates.sh` STEP 5.83 now reports OK (verified in the same run as the STEP 5.101 fix).
-- [ ] [SCRIPT] P2. Once green, verify repo-blocker `RB-88a81995` (`repo-market-tick-data-service-qg-green`) actually
+- [x] ✅ [SCRIPT] P2. Once green, verify repo-blocker `RB-88a81995` (`repo-market-tick-data-service-qg-green`) actually
       flips green (both this issue's fix AND the sibling STEP 5.101 fix must have landed) — if the watcher doesn't
       auto-resolve within its normal poll window, escalate. Repo: agent-orchestrator (verification only, no code change
-      expected). **Done when**: RB-88a81995 shows `resolved_at` set. **CHECKED 2026-07-30, still NOT resolved — genuine
-      blocker, not this doc's scope.** Queried the live orchestrator (`curl localhost:8765/api/repo-blockers` via AWS
-      SSM): `RB-88a81995` is still `status: open`, `resolved_at: null`. Confirmed BOTH the STEP 5.83 (this doc) and STEP
-      5.101 (sibling doc) checks are locally green today (`check_adapter_contract_regression.py` →
-      `OK — 330 baselined     file(s) at or above minimum`; `check_no_empty_string_fallback.py` →
-      `market-tick-data-service: 89 (== baseline)`). The blocker hasn't auto-resolved because `RepoHealthWatcher` polls
-      the repo's **CI** state (`quality-gates-v2` on `live-defi-rollout`), not a local re-run — and the most recent
-      `quality-gates-v2` run for market-tick-data-service (`gh run view 30518962033`, 2h13m, 2026-07-30T06:14) genuinely
-      FAILED, with `qg_red_reason=pytest` (a real pytest failure unrelated to either STEP 5.83/5.101 — every other
-      recent run in `gh run list` is `startup_failure`, consistent with the live, separate self-hosted-runner-capacity
-      incident this corpus already tracks). Root-causing that pytest failure is a distinct, deep investigation outside
-      this doc's scope (adapter-contract-baseline specifically) — leaving this todo open rather than falsely flipping
-      it; the correct fix here (the baseline regen) is verified landed and correct.
+      expected). **Done when**: RB-88a81995 shows `resolved_at` set. — DONE (slot 2, cicd escalation agt-74c1b1,
+      2026-07-30), in two stages:
+
+      **Interim check (earlier 2026-07-30) found a genuine, separate blocker**: queried the live orchestrator —
+          `RB-88a81995` was still `status: open`, `resolved_at: null`. Both STEP 5.83 (this doc) and STEP 5.101 (sibling
+          doc) were locally green at that point, but `RepoHealthWatcher` polls the repo's **CI** state (`quality-gates-v2`
+          on `live-defi-rollout`), not a local re-run — and the most recent run at that time (`gh run view 30518962033`,
+          2026-07-30T06:14) had genuinely FAILED with `qg_red_reason=pytest`, a real pytest failure unrelated to either
+          STEP 5.83/5.101. Correctly left this todo open rather than falsely flip it, since root-causing that pytest
+          failure was outside this doc's scope.
+
+          **Final verification (this pass) confirms the pytest failure is now fixed and the blocker is genuinely
+          resolved**: a later commit on `live-defi-rollout` fixed the unrelated pytest failure — the next
+          `quality-gates-v2` run (`databaseId=30528819091`, `workflow_dispatch`, created `2026-07-30T08:58:42Z`) completed
+          with `conclusion: success` (`gh run list --json conclusion`), and an independent fresh local run corroborates:
+          (1) `check_no_empty_string_fallback.py --scope market-tick-data-service` → `87 < baseline 89`; (2) a full
+          backgrounded `bash scripts/quality-gates.sh --no-fix` on `live-defi-rollout` HEAD `7f42c557` → pytest
+          `7545 passed, 17 skipped, 1 xpassed, 0 failed`, 0 hard `[FAIL]` markers overall, terminated normally at the
+          script's final step (5.93 PASS). Fast-pathed rather than waiting on the watcher's next poll:
+          `POST /api/repo-blockers/RB-88a81995/resolve {"source":"reporter"}` →
+          `{"status":"resolved","waiters_notified":3}`; confirmed RB-88a81995 no longer appears in
+          `GET /api/repo-blockers`'s open list (resolved, `resolved_at` set). All 3 waiters (slots 14, 6, 3) notified.
