@@ -238,6 +238,17 @@ skipping this task rather than `/blocked`-ing on an already-answered question. R
 (populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
 be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
 
+## 2026-07-30 recurrence — SIXTH distinct plan pair (cross_cutting_satellite_ao_dispatch_batch1, dual-gate, worst gap yet)
+
+Slot 7 was dispatched `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize-001`
+(`depends_on: [cross_cutting_satellite_ao_dispatch_batch1_2026_07_26, cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26]`,
+`gate_on_depends: true`, requires all 31 todos across BOTH gating plans done) while the two parents are nowhere close:
+`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` is 9/19 done (10 open), `...batch1b...` is 6/18 done (12
+open) — 15/31 total, not 31/31. This is the widest gap observed across all six recurrences (previous worst was 3/5).
+Declining, same disposition; skipping rather than re-blocking. Sixth distinct plan pair, and the first to exercise the
+multi-doc `depends_on: [a, b]` gate shape (prior recurrences were all single-doc `depends_on`) — worth noting in the
+eventual root-cause fix that the gap is not scoped to the single-dependency case either.
+
 ## 2026-07-30 recurrence — FIFTH distinct plan pair (cefi_track7_candle_namespace_residual)
 
 Slot 7 was dispatched `cefi_track7_candle_namespace_residual_finalize-001` (plan_ref
