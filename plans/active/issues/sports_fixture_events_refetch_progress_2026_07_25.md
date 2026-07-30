@@ -557,3 +557,35 @@ plan's todo. Also confirmed **fully unrelated but discovered this session**: the
 (`issues/github_actions_billing_wall_recurrence_2026_07_29.md`) is still active as of this same check window (~11h since
 onset) — does not affect this VM (a GCE compute job, not GHA-gated) or either of this campaign's already-CI-verified
 fixes (`instruments-service@5a6deafd`/`unified-api-contracts@f3ae871c`, both green well before the wall's onset).
+
+**2026-07-30T22:20Z (slot-3, data_engineering) — RE-FETCH VM REACHED TERMINAL COMPLETION; ran the mandated
+post-completion VERIFY census; done-when NOT met — real, substantial progress but not zero.**
+`af-backfill-20260730-012007` confirmed `EXIT_STATUS=0`, `run.log` tail shows `date=2026-07-25` (the actual end of the
+`2020-06-06→2026-07-25` range) processed, then clean `DEPLOYMENT_COMPLETED`/self-delete — this campaign's re-fetch pass
+is genuinely finished, first time in ~20 health-checks. Ran `census_fixture_events_schema_variants_2026_07_25.py` full
+(no `--limit`) per the mandated next-step — first attempt returned 100% `read_error` (40,298/40,298), root-caused to
+`GCP_PROJECT_ID` not set in my session env (`get_storage_client()` raises `ValueError` inside the script's own retry
+loop, silently classified as `read_error` — an environment gap, not a real signal); re-ran with
+`GCP_PROJECT_ID=central-element-323112` set and got genuine results:
+
+| metric                                                                  | 2026-07-25 baseline | 2026-07-30 post-refetch |
+| ----------------------------------------------------------------------- | ------------------: | ----------------------: |
+| candidate objects                                                       |              43,233 |                  40,298 |
+| `canonical_13col`                                                       |              25,639 |          35,934 (89.2%) |
+| non-canonical (`degenerate_5col_stub`+`af_prefixed_10col`+`named_9col`) |              12,603 |               **4,327** |
+| `missing`                                                               |                 n/a |                      37 |
+
+Real progress (non-canonical objects dropped 12,603→4,327, -65.7%) but the todo's own done-when ("0 genuinely
+non-canonical objects remaining") is **NOT met** — **not flipping this checkbox or the parent plan's todo**. Wrote a
+fresh recovery-ids parquet (19,850 fixture rows across the 4,327 remaining objects) to
+`scripts/_fixture_events_recovery_ids_2026_07_30_post_refetch.parquet`, staged to GCS at
+`gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet`
+for the next dispatch. **Did NOT launch the next recovery pass this touch**: the af-backfill singleton lock
+(`launch-api-football-backfill-vm.sh`'s own `name~"^af-backfill-"` filter) is currently held by
+`af-backfill-20260730-220243` — a DIFFERENT, unrelated task (`VM_TASK=instruments-backfill`, confirmed via its own
+`run.log` header) that happens to share the `af-backfill-` name prefix this lock checks. Confirmed it's a live,
+legitimate, actively-progressing VM (not stale) — did not force past the lock or delete it. **Next dispatch**: once
+`af-backfill-20260730-220243` (or whatever `af-backfill-*`/`af-audit-*` VM is running) clears, launch:
+`bash deployment-service/scripts/vm/launch-api-football-backfill-vm.sh --force --entity FIXTURE_EVENTS --recovery-fixture-ids gs://deployment-scripts-central-element-323112/sports_fixture_events_refetch_2026_07_25/recovery_fixture_ids_2026_07_30.parquet 2020-06-06 2026-07-25`
+(the `--force` here bypasses the singleton lock ONLY once confirmed clear — not a bypass of a live VM), then repeat the
+health-check → re-census → (repeat if still non-zero) cycle this campaign has followed throughout.

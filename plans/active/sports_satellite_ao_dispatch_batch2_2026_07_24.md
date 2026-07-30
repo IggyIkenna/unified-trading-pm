@@ -824,7 +824,12 @@ source: >-
       own documented daily-quota reset time) rather than another blind hourly probe. Full detail in
       `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not completable this turn. Released via
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: not before `2026-07-30T00:00Z`; then re-probe once
-      and relaunch (without `--force`) on a clean response.
+      and relaunch (without `--force`) on a clean response. — **Health-checked 2026-07-30T22:20Z (slot 3,
+      data_engineering) — re-fetch VM reached terminal completion, ran the mandated VERIFY, done-when NOT met**:
+      non-canonical objects dropped 12,603→4,327 (real progress) but not zero; fresh recovery-ids parquet staged to GCS,
+      next-recovery-launch blocked only on the af-backfill singleton lock (held by an unrelated task). Full numbers +
+      exact resume command in `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not flipping this checkbox.
+      Released via `/skip-current-task {"reason_code": "GATED"}`.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop
