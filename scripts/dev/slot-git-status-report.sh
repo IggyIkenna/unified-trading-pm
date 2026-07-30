@@ -73,6 +73,15 @@ FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD:-25}"
 FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS:-6}"
 STARVE_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/ff-starvation-detect.sh"
 
+# Stash-pile regrowth watchdog (stash_pile_workspace_cleanup_2026_06_03.md Phase 5).
+# Same detector/alerter split as the starvation watchdog above: this reporter only
+# WARNS, it never touches `git stash` (no drop, no apply, no clear — that stays the
+# operator-run audit-stash-pile.sh runbook). Toggle off with STASH_PILE_WATCHDOG=0.
+STASH_PILE_WATCHDOG="${STASH_PILE_WATCHDOG:-1}"
+STASH_WARN_COUNT="${STASH_WARN_COUNT:-15}"
+STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS:-14}"
+STASH_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/stash-pile-detect.sh"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --workspace)          WORKSPACE_PATH="$2"; shift 2;;
@@ -481,6 +490,11 @@ STARVE_STATE_DIR="${TABS_DIR}/.ff-starve-state"
 
 post_starve_ping() {
     local slot_id="$1" repo_name="$2" payload="$3" token="$4"
+    # Log-line label (5th, optional arg): distinguishes which watchdog is calling in
+    # the shared [xxx-ping]/[xxx-ping-fail] log lines below — without this both the
+    # FF-starvation watchdog and the stash-pile watchdog would log identical
+    # "[starve-ping...]" text, making on-call triage guess which one actually fired.
+    local label="${5:-starve-ping}"
     # Reuse the message endpoint (from_role must be one of main/review/operator;
     # the watchdog speaks for the orchestrator → "main"). Same curl+token shape
     # as post_snapshot.
@@ -503,10 +517,10 @@ print(json.dumps({"text": sys.stdin.read(), "from_role": "main"}))
             -d "${body}" 2>/dev/null || echo "000")
     fi
     if [[ "${http_status}" == "200" ]]; then
-        log "[starve-ping] slot ${slot_id}/${repo_name} — FF-pull starvation signalled"
+        log "[${label}] slot ${slot_id}/${repo_name} — signalled"
         return 0
     fi
-    log "[starve-ping-fail] slot ${slot_id}/${repo_name} — HTTP ${http_status}"
+    log "[${label}-fail] slot ${slot_id}/${repo_name} — HTTP ${http_status}"
     return 1
 }
 
@@ -531,7 +545,7 @@ check_starvation_for_slot() {
         if [[ -n "${payload}" ]]; then
             # STARVED. Ping once per episode (skip if already marked).
             if [[ ! -f "${marker}" ]]; then
-                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}"; then
+                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}" "starve-ping"; then
                     : > "${marker}" 2>/dev/null || true
                 fi
             else
@@ -539,6 +553,45 @@ check_starvation_for_slot() {
             fi
         else
             # Not starved → clear any prior marker (next episode re-pings).
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done
+}
+
+# Stash-pile regrowth watchdog. For each repo under a slot, run the detector
+# (stash-pile-detect.sh); if the pile is over-threshold, POST a ONE-PER-(slot,repo)
+# WARNING to the slot's message inbox — same mechanism + dedup-marker pattern as
+# check_starvation_for_slot above (reuses post_starve_ping: it just posts whatever
+# payload text it's given, the name predates this second caller). Read-only: the
+# detector never touches `git stash`, so this can never lose or move anyone's WIP.
+check_stash_pile_for_slot() {
+    local slot_id="$1" slot_dir="$2"
+    [[ "${STASH_PILE_WATCHDOG}" -eq 1 ]] || return 0
+    [[ -x "${STASH_DETECTOR}" || -f "${STASH_DETECTOR}" ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local repo_dir repo_name marker payload
+    for repo_dir in "${slot_dir}"*/; do
+        [[ -d "${repo_dir}" ]] || continue
+        [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        repo_name=$(basename "${repo_dir}")
+        marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.stash-warn"
+        payload=$(STASH_WARN_COUNT="${STASH_WARN_COUNT}" \
+                  STASH_WARN_AGE_DAYS="${STASH_WARN_AGE_DAYS}" \
+                  bash "${STASH_DETECTOR}" "${repo_dir}" --slot "${slot_id}" 2>/dev/null || echo "")
+        if [[ -n "${payload}" ]]; then
+            # Over-threshold. Ping once per episode (skip if already marked).
+            if [[ ! -f "${marker}" ]]; then
+                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}" "stash-warn"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[stash-warn-dup] slot ${slot_id}/${repo_name} — already signalled this episode"
+            fi
+        else
+            # Back under threshold → clear any prior marker (a future regrowth re-pings).
             [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
         fi
     done
@@ -559,6 +612,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
     done
     post_snapshot "${slot_id_str}" "${rows_tsv}"
     check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
+    check_stash_pile_for_slot "${slot_id_str}" "${slot_dir}"
 done
 
 # Slot 0 = the un-slotted main workspace checkout (the base copy the per-slot

@@ -582,6 +582,39 @@ contain the ONLY copy of a foreign agent's uncommitted WIP:
 content for that file — if the autostash held a foreign agent's only WIP copy for that path, it is permanently gone
 (UNRECOVERABLE). The autostash drop follows silently and the WIP is lost with no warning.
 
+### Stash-pile regrowth signal (2026-07-30, stash_pile_workspace_cleanup_2026_06_03.md Phase 5)
+
+The autostash-conflict pattern above means `refs/stash` piles regrow silently between manual `audit-stash-pile.sh`
+sweeps — nothing un-stashes on its own, and per the multi-agent-safety HARD RULE a foreign WIP stash is never
+auto-dropped. `scripts/dev/slot-git-status-report.sh` (already running every 5 minutes per slot) now carries a
+WARNING-only watchdog: `scripts/dev/stash-pile-detect.sh` measures each repo's stash `count` and the age (in days) of
+its OLDEST entry, and the reporter pings the slot's inbox (deduped once per episode, same mechanism as the existing
+FF-pull-starvation watchdog) when either threshold trips. **It never touches `git stash`** — no read of stash content,
+no apply, no drop; remediation stays the existing `audit-stash-pile.sh` dry-run-then-`--apply` runbook.
+
+**Thresholds — measured, not invented** (2026-07-30, one laptop, 4 populated slots + the main-workspace clone,
+`unified-trading-pm`):
+
+| Slot / clone   | count | oldest entry             |
+| -------------- | ----- | ------------------------ |
+| slot 1         | 45    | 9-10 days                |
+| slot 2         | 10    | 10 days                  |
+| slot 3         | 33    | ~5 weeks                 |
+| slot 4         | 1     | (residual, post-cleanup) |
+| main-workspace | 11    | ~8 weeks                 |
+| slots 5-11     | 0     | —                        |
+
+The split is clean: a "still normal churn" slot sits at ≤11 entries with a max age around 10 days; a genuinely regrown
+pile sits at 33+ entries with entries running 5-8 weeks old. Chosen thresholds (env-overridable —
+`STASH_WARN_COUNT`/`STASH_WARN_AGE_DAYS` on the reporter, `STASH_PILE_WATCHDOG=0` disables the whole check):
+
+- **count > 15** — comfortably above the observed normal-churn ceiling (11), comfortably below the observed regrown-pile
+  floor (33).
+- **oldest entry > 14 days** — one confirmation-window's worth of buffer past the observed normal-churn max (10 days),
+  short enough to catch a pile going stale well before it reaches the multi-week range.
+
+Either condition alone trips the warning (an old-but-small pile, e.g. one long-forgotten stash, still deserves a nudge).
+
 ### Silent duplicate-file resurrection after a rebase/stash-pop (2026-07-25)
 
 A DIFFERENT failure mode from the conflict case above: a `git pull --rebase --autostash` (or a manual `git stash push` /
