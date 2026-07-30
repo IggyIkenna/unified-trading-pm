@@ -31,8 +31,8 @@ related:
   - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: 2026-07-23
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -153,3 +153,10 @@ become its own plan — this issue doc is the durable record of the finding and 
   coverage table (predates this issue; does not yet document the performance characteristics found here).
 - `deployment_alerts_ingestion_completeness_2026_07_20.md` — the plan that added `_read_alerting_service_sync` and
   measured the 277,684-object scale (2026-07-21) without flagging the per-object read cost at that scale as a risk.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

@@ -16,7 +16,7 @@ related: [/plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md]
 created: 2026-07-28
 parent_epic: agent_operating_framework_master
 priority: P3
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 source:
@@ -25,6 +25,7 @@ source:
     2026-07-28,
   ]
 execution_scope: orchestrator-agent
+assigned_role: ui_developer
 drift_direction: advance-code
 depends_on: []
 ---
@@ -75,3 +76,10 @@ instead of rediscovering it from scratch.
       resolving to 2 leg-venue-groups instead of 1) — confirm with the leg-spec registry owner whether the CME archetype
       legitimately grew to 2 legs (then update the test to scope per-leg-group) or whether this is a genuine
       duplicate-rendering bug (then fix the component). Repo: unified-trading-system-ui.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

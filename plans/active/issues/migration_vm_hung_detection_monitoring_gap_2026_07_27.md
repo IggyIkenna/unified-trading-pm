@@ -54,15 +54,15 @@ created: 2026-07-27
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra
-assigned_role: infrastructure
+assigned_role: infra
 source:
   "Found live during interactive `/autonomous` session monitoring of the cefi Script-1
   (migrate_cefi_content_instrument_id_catalogue_2026_07_17.py) corpus-wide --apply campaign under
   /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md, 2026-07-27 — 10/42 VMs found hung
   only via a manual staleness-vs-wallclock sweep of the fleet. All code-path claims in this doc were independently
   re-verified this session by direct file read (not trusted from any prior summary)."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 locked_by:
@@ -502,3 +502,10 @@ resolution); todo 5's audit deliverable is complete but its own follow-up tracki
   any other `_is_backfill_vm()`-matched VM — still does **not** resume from where it left off today. This is a genuine,
   broader, pre-existing gap (not introduced or fixed by any of this doc's 6 todos), filed separately at
   `/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

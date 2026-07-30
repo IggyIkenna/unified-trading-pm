@@ -45,13 +45,13 @@ related:
   - /codex/08-workflows/ci-cd-flow.md
 created: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
-assigned_role: devops-engineer
+assigned_role: cicd
 drift_direction: none
 depends_on: []
 locked_by:
@@ -101,3 +101,10 @@ resolved_by:
   both show deployment-service absent from Promoted/Blocked/Conflicted.
 - Closed stale PR: https://github.com/IggyIkenna/deployment-service/pull/576 (closed by this worker, comment references
   this doc).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

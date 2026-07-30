@@ -30,8 +30,8 @@ source: >-
   Discovered while attempting to quickmerge deployment-ui's half of ui_build_warm_cache_2026_06_17.md's pre-warm-build
   todo, 2026-07-29. Confirmed pre-existing via `git stash` + a clean `npx vitest run --coverage` re-run with the
   unrelated diff fully removed — identical failure numbers with or without the change.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 assigned_role: ui_developer
@@ -100,3 +100,10 @@ will hit the same wall.
       deliberate, documented adjustment (NOT a silent ratchet-down) — a decision for whoever picks this up, not
       pre-judged here. Done when: `bash scripts/quality-gates.sh` is green end-to-end on `live-defi-rollout` HEAD,
       confirmed via a fresh `.qg_last_passed_sha` write matching HEAD. Repo: deployment-ui.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

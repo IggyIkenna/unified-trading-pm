@@ -34,8 +34,8 @@ related:
 created: 2026-07-25
 last_updated: "2026-07-29"
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 6.0
@@ -276,3 +276,8 @@ missing from Sources entirely).
   `[BACKEND]`/`[INFRA]` implementation todos were added in explicit sequence (first the two-window fix, then — gated on
   it landing — the faster hard-kill escalation), each citing its source issue doc's own spec verbatim rather than
   re-deriving it.
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+  Companion gated finalize plan authored: `ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`.

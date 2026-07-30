@@ -25,8 +25,9 @@ related:
 created: 2026-07-26
 last_updated: 2026-07-27
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -203,3 +204,10 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   spawned workers from a restart, cited above as a possible interaction).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — background-loop model
   (TmuxPruner/WorkerLivenessKicker/AgentKeeper/HealthMonitor) this incident spans.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

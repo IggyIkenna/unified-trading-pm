@@ -16,8 +16,8 @@ tags: [e2e-testing, coverage-gap, alerting, deployment, trading-agent, hygiene]
 related: []
 created: 2026-07-27
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 3
@@ -72,3 +72,9 @@ service's own code. That's worth fixing on its own, independent of building the 
 
 - 2026-07-27: Plan created from the pre-June-1 stale-plans audit's e2e-testing archival follow-up investigation. No
   todos executed yet.
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+  Companion gated finalize plan authored:
+  `e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30.md`.

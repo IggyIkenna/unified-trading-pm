@@ -21,12 +21,13 @@ related:
   ]
 created: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: NA
+assigned_vm: planning
 priority: P2
 source: [defi_dex_pool_symbol_fix_backfill_purge_2026_07_25]
 resolved_by:
 locked_by:
 execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
@@ -77,3 +78,10 @@ observability record is silently missing for every affected run (a monitoring/an
 - `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` — IAM self-service grant procedure (this is
   exactly the kind of ambient-identity permission gap that rule covers; a future worker touching this can self-grant
   rather than escalate, per the 2026-07-27 operator ruling).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

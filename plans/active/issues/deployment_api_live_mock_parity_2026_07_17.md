@@ -28,13 +28,13 @@ related:
 created: 2026-07-17
 last_updated: 2026-07-17
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-assigned_role: backend_engineering
+assigned_role: backend_engineer
 resolved_by:
 locked_by:
 drift_direction: advance-code
@@ -118,3 +118,10 @@ mock parity — the drift is historical, not systemic.
   Any comparison tool hitting live concurrently MUST treat 429 as "not measured" and re-measure serially.
 - **`python -m deployment_api` ignores `$PORT`** (hardcodes 8004; `PORT` is not wired into `UnifiedCloudConfig`). Use
   `uvicorn ... --port` or the second instance silently collides with the first.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

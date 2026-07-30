@@ -48,15 +48,15 @@ created: 2026-07-27
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra
-assigned_role: infrastructure
+assigned_role: infra
 source: >-
   Surfaced while reconciling migration_vm_hung_detection_monitoring_gap_2026_07_27.md's todos against the actual shipped
   code, 2026-07-27 — a follow-up/reconciliation session, not an implementation session. Re-verified independently this
   session by a full read of `deployment-service/scripts/recovery/relaunch_stalled_vm.py` (not trusted from the parent
   doc's in-passing note) plus a `grep -n "checkpoint\|PROGRESS\|resume\|START_DATE"` over the file (zero hits) and a
   cross-check of `escalation.py` confirming `DP_VM_STALL` routes to this actuator's `auto_recover` tier unconditionally.
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 locked_by:
@@ -149,3 +149,10 @@ grep -n "DP_VM_STALL" deployment-service/deployment_service/data_pipeline_monito
       checkpointed frontier instead of the original launch params, verified by a unit test exercising both actuators
       against the same fixture checkpoint, with no regression to the existing budget/paging behavior for a VM with no
       checkpoint.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

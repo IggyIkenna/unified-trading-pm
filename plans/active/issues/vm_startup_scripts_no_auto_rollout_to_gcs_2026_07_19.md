@@ -25,13 +25,13 @@ related:
   ]
 created: 2026-07-19
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-assigned_role: devops
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 source:
@@ -121,3 +121,10 @@ verified FRESH). So the fleet is currently in sync; the open work is the DURABLE
       touching a `vm/` script is verified to land in GCS automatically (no manual `create-code-tarballs.sh` run needed),
       and this todo is flipped with the CI run/commit evidence. Repo: deployment-service (+ unified-trading-pm if the
       checklist doc also needs a "no longer required, CI-automated" update).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

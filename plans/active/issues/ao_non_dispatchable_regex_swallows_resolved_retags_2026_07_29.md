@@ -43,8 +43,9 @@ source:
   agent-orchestrator/server/regen_backlog_from_plan.py"
 resolved_by:
 locked_by:
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 ---
@@ -152,3 +153,7 @@ past tense rather than deleting it outright.
   same live-fact spot-check before being trusted as correctly rephrased, not just re-read for prose plausibility. Not
   re-auditing the other 23 myself (outside this task's scope); flagging here so whoever owns this doc's remaining todos
   knows the first pass already shipped had a proven-live gap.
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

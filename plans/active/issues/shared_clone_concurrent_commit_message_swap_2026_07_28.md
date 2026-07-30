@@ -45,8 +45,8 @@ source:
   + cloud-build timeout raise), 2026-07-28 — discovered while flipping the source-doc checkboxes in unified-trading-pm
   and archiving one resolved issue doc; observed 3 consecutive commit-drift/hook-failure retries on the same 3-file
   commit, the 3rd of which landed with a foreign commit message."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 locked_by:
@@ -195,3 +195,10 @@ foreign-file-sweep-in symptoms, not just `COMMIT_EDITMSG`. No code fix attempted
 the original filing) — this is a corroborating field report + a documented recovery pattern (re-verify content on disk
 after every Edit, re-verify commit content via `git show --stat`/`grep` before AND after every push, never trust a
 non-error exit code alone) for whoever picks up the root-cause todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

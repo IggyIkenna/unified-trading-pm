@@ -28,8 +28,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 16
@@ -172,3 +172,8 @@ heartbeat
   provisioning before P1 exists, `eb2a87e56`). Switched P1–P5 to `status: draft` (ironclad not-ingested) + a draft-gated
   handoff (each phase's last todo activates the next); removed P3's `[OPERATOR]` gates (snapshot-before-delete is the
   safeguard, no human in the loop). Only P0 is dispatchable now (`4efa7502c` + this follow-up).
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+  Companion gated finalize plan authored: `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md`.

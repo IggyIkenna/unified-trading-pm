@@ -48,8 +48,9 @@ related:
   ]
 created: 2026-07-28
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 source: >-
   Slot 12, data_engineering worker, 2026-07-28, while executing `sports_track_h_denominator_prereqs_2026_07_28.md` todo
   1. Verified live via `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="sports")` vs
@@ -132,3 +133,10 @@ last_updated: 2026-07-28
       legitimate legacy rows in the data bucket per the 2026-07-15 audit's § D volume table). Done when: a fresh
       `compute_coverage_for_bucket` call for `market-data-processing-service`/sports/`odds_horizon_bucket` reflects rows
       written to `instruments-store-sports-prd` by `reprocess_sports_odds.py`. (repo: deployment-service)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

@@ -34,8 +34,9 @@ related:
 created: "2026-07-28"
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: ui_developer
 drift_direction: advance-code
 source: [ui_hardcoded_colour_and_localhost_debt_2026_07_21-batch5-retroactive-evidence]
 resolved_by:
@@ -110,3 +111,10 @@ otherwise-idle attempt sequence, which is concerning for CI trustworthiness if C
 ## Codex SSOTs
 
 `/codex/06-coding-standards/ui-testing-layers.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
