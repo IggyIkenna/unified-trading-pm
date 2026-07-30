@@ -21,7 +21,9 @@ summary: >-
   not the Dockerfile content itself (that's the sibling doc's scope).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is an LDR<->main
+  # promote/backmerge pipeline race, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos: [unified-trading-pm, instruments-service]
 scope: [engineer, admin]

@@ -34,7 +34,9 @@ summary: >-
   fine; it is specifically the `process_repo` PR-create/arm stage that appears to silently drop deployment-service.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [meta]; content is ldr-to-main-promote-fleet.yml
+  # automation bug, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-workspace content.
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]

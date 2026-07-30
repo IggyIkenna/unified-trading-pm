@@ -17,7 +17,9 @@ summary: >-
   left OPEN as a genuine operator routing call, not self-promoted here.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is PM's own
+  # self-hosted-runner workflow migration scoping, squarely ci-tranche (CI/CD pipeline mechanics).
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

@@ -32,7 +32,9 @@ summary: >-
   never gets refreshed because there's no continuous build wired up), not a live incident.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is a Cloud Build
+  # publish-ordering race, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos:
   [

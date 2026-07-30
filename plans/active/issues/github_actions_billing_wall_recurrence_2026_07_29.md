@@ -11,7 +11,9 @@ summary:
   github.com/settings/billing. No workflow file, test, or code change can resolve this class."
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is a GitHub Actions
+  # fleet-wide billing-wall incident, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos:
   [

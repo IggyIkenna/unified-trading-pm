@@ -19,7 +19,10 @@ summary: >-
   suppression pattern already used for other staging-direction signals).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting], a genuine mistag: forked out
+  # of ci_satellite_ao_dispatch_batch1_2026_07_26.md's F5 todo, content is SIT-gate/CI-dashboard tri-state
+  # correctness (deployment-api + deployment-ui), squarely ci tranche's Track 3 scope, not generic cross-AG content.
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]

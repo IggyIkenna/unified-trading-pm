@@ -26,7 +26,9 @@ summary: >-
   same window, consistent with a queue that isn't keeping pace with its own inflow rather than one that's merely slow.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; continuation of the
+  # fleet_wide_qg_self_hosted_runner_capacity_crisis ci-tranche incident, same content class.
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]

@@ -62,7 +62,9 @@ summary: >-
   rate-limit/abuse banner, and/or check email for a GitHub compliance notice.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [meta]; content is a GitHub Actions
+  # ldr-to-main-promote workflow startup_failure incident, squarely ci-tranche (CI/CD pipeline mechanics).
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
