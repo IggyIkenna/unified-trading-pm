@@ -158,3 +158,10 @@ that point in the sequence.
   the actual prod-bucket delete step human-only/`[OPERATOR]`-gated per the standard delete-safety protocol. Retagged the
   decision todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete scope→copy→verify→(gated delete)
   sequence written into the doc. Docs-only, no GCS action taken.
+
+- **2026-07-30 (interactive session, incidental discovery)**: `scripts/migrate_legacy_gas_fees_venue_2026_07_30.py` (the
+  migration script slot-7 is executing this todo through) has a confirmed unbounded memory leak — killed TWICE in ~15
+  minutes after ballooning to 42-45GB RSS each time, both times taking down the whole orchestrator API (fleet-wide, not
+  scoped to this task). Root-cause isolation + full detail:
+  `/plans/active/issues/mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md`. **This todo cannot safely
+  proceed until that leak is fixed** — do not re-run the script as-is.
