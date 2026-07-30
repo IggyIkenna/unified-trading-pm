@@ -105,23 +105,19 @@ cost-constrained CME-options-only backfill) will silently get the full universe 
       below** (ship via quickmerge once that todo lands, per the standard commit-push-flip discipline). Ship via
       quickmerge, quality-gates green in both `market-tick-data-service` and `unified-api-contracts` if the removal path
       is chosen.
-- [ ] [CODE] P1. **Wire `mvp_mode` via an opt-in flag on the existing forward-poll launcher — operator-ruled 2026-07-29
-      concrete implementation plan.** (i) Add `VM_MVP_MODE` metadata plumbing to
-      `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s `mtds-backfill` branch, mirroring the existing
-      `VM_FORCE`/`VM_FORCE_WINDOW` metadata pattern already in that same file (`_meta VM_FORCE` → `--force` on the
-      generated CLI). (ii) Add an opt-in `--mvp-mode` CLI flag + `VM_MVP_MODE=true` metadata line to
-      `deployment-service/scripts/vm/launch-tradfi-forward-poll.sh` specifically, mirroring that launcher's existing
-      `--force` flag parsing (`--force) FORCE=true; shift ;;`) — explicitly NOT changing that launcher's default
-      behavior (no flag = today's unfiltered full-universe fetch, unchanged). (iii) Extend the existing regression tests
-      (`market-tick-data-service/tests/market_interface/unit/test_databento_adapter_logic.py`,
-      `market-tick-data-service/tests/unit/test_handler.py` if this repo is checked out alongside) with a `--dry-run`
-      assertion that `VM_MVP_MODE=true` produces `--mvp-mode` in the generated CLI. (iv) Explicitly note
-      `launch-tradfi-bf-cme-ohlcv-1m.sh` and `launch-tradfi-backfill-vm.sh` are NOT touched by this ruling — the first
-      has its own no-client-side-filters ruling, the second already has its own separate `--instrument-ids` narrowing
-      mechanism; both coexist unchanged, `mvp_mode` does not replace either. Repos: deployment-service,
-      market-tick-data-service. Done when: (i)-(iii) land QG-green in the affected repo(s), the dry-run regression test
-      in (iii) passes, and the change ships via quickmerge (quality-gates green in both `market-tick-data-service` and
-      `unified-api-contracts` if that registry function's callsite needs touching).
+- [x] ✅ [CODE] P1. **DONE 2026-07-30 (autonomous session).** Wired `mvp_mode` via an opt-in flag on the existing
+      forward-poll launcher, exactly per the operator-ruled 2026-07-29 concrete implementation plan: (i) `VM_MVP_MODE`
+      metadata plumbing added to `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch, mirroring `VM_FORCE`'s identical
+      metadata->CLI-flag pattern. (ii) New opt-in `--mvp-mode` CLI flag on `launch-tradfi-forward-poll.sh` ->
+      `VM_MVP_MODE=true` metadata, mirroring the launcher's existing `--force` parsing; no flag = unchanged
+      full-universe fetch (verified via the launcher's own dry-run echo). (iii) New regression test class
+      `TestMtdsBackfillMvpModeFlag` in `deployment-service/tests/unit/test_vm_launcher_scripts.py` (the correct home —
+      the doc's suggested MTDS test files don't test shell-launcher CLI generation; this repo's existing
+      `TestCanonicalMigrationServiceKeyedWorkspaceDir` class is the established idiom for exactly this, extracting the
+      real script lines rather than a hand-duplicated copy) — 3 new tests (true/false/absent), all green; full
+      `test_vm_launcher_scripts.py` suite (130 tests) green. (iv) `launch-tradfi-bf-cme-ohlcv-1m.sh` /
+      `launch-tradfi-backfill-vm.sh` confirmed untouched. Shipped `deployment-service@c847395e`, quality-gates green,
+      quickmerge landed on `live-defi-rollout`.
 
 ## Progress Log
 
