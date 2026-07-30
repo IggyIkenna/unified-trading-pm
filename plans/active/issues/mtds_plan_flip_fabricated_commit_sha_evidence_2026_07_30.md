@@ -110,13 +110,14 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       fails QG the same way a non-SUCCESS Cloud Build citation does today — verified: re-running the checker against
       this exact incident's original fabricated citation (`market-tick-data-service@6efb252b`) confirms it does NOT
       resolve (`git cat-file -t` exits non-zero), so a repeat of this incident would regress the gate. Repo:
-      unified-trading-pm. - [x] ✅ [SCRIPT] P3. Findings-closure follow-up: the initial corpus scan (632 plan/issue
-      docs) found 18 PRE-EXISTING `<repo>@<sha>` citations that do not resolve locally either — unrelated pre-existing
-      drift (not today's incident, not newly introduced), baselined so the new gate doesn't fail the whole fleet on
-      rollout. Full list: `scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`. Each should eventually be
-      corrected to the real SHA (or annotated as historical/unverifiable) — this is real but low-urgency cleanup debt,
-      tracked here rather than fixed inline (would require per-doc archaeology of what the intended commit actually
-      was). Repo: unified-trading-pm.
+      unified-trading-pm.
+- [x] ✅ [SCRIPT] P3. Findings-closure follow-up: the initial corpus scan (632 plan/issue docs) found 18 PRE-EXISTING
+      `<repo>@<sha>` citations that do not resolve locally either — unrelated pre-existing drift (not today's incident,
+      not newly introduced), baselined so the new gate doesn't fail the whole fleet on rollout. Full list:
+      `scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`. Each should eventually be corrected to the real
+      SHA (or annotated as historical/unverifiable) — this is real but low-urgency cleanup debt, tracked here rather
+      than fixed inline (would require per-doc archaeology of what the intended commit actually was). Repo:
+      unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. Correct the record on the source doc — DONE (slot 6, this session):
       `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
