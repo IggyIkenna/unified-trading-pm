@@ -119,8 +119,8 @@ wound), but should be tracked rather than silently absorbed.
       confirmed present on GCS (within the ~428 upper bound; 6,797 distinct cells x 144 recognised roots), 2
       independently spot-checked `target_uri`s confirmed real content on GCS. **Apply**: 248 canonical rows registered
       into `_index/per_vm/local-2108856-43a6.parquet` (additive, no CAS). **Data-correctness finding + remediation**
-      (see `/plans/active/issues/tradfi_register_underlying_translation_bug_2026_07_30.md`): 98/248 (39.5%) of the
-      written rows carried a manifest `underlying` that did NOT match the `underlying=` segment of the row's own
+      (see `/plans/archive/issues/tradfi_register_underlying_translation_bug_2026_07_30.md`, RESOLVED): 98/248 (39.5%)
+      of the written rows carried a manifest `underlying` that did NOT match the `underlying=` segment of the row's own
       physically-confirmed GCS path (chain instrument_types translate the root through `_exchange_to_product_root` when
       building the target path, but `apply_register` wrote the untranslated root). Caught BEFORE the
       manifest-consolidator cron merged the shard (main index `updateTime` 12:00:59 UTC, shard write 12:06:04 UTC,
