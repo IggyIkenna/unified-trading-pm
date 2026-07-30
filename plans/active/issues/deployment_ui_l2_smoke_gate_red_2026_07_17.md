@@ -156,13 +156,18 @@ correct-and-failing, not stale.
       `pnpm install` (no code change needed, `pnpm-workspace.yaml`'s `packages:` fix was already merged); full
       `quality-gates.sh` green post-reinstall (73.85% lines, sentinel matches `c14af3a`). Shipped via quickmerge —
       landed on `live-defi-rollout`.
-- [ ] [UI] P2. **Fix `nav-menu-dedup.spec.ts`'s 5 stale fleet-tab-removal failures** — remove the
-      `["fleet", "/fleet", "cockpit-fleet"]` row from the `CANONICAL` array; re-derive (don't guess) the "17 entries"
-      count (16 canonical nav items exist today per `NavMenu.tsx`'s own `NAV_ITEMS_CANONICAL`, split into N
-      cockpit-tabs + M navlinks — count both live rather than hardcoding); rewrite "the top bar stays visible OFF the
-      cockpit" to click a tab that still exists instead of `cockpit-tab-fleet`; re-derive what `/infra` and `/infra`
-      (previously-selected-service case) actually redirect to now that `/fleet` doesn't exist for them to redirect to
-      (per `NavMenu.tsx`'s own comment, `/infra` "now falls through to the catch-all" — verify live, don't assume).
+- [x] ✅ [UI] P2. **ALREADY RESOLVED — reverified 2026-07-30 (slot-9, ui_developer), no code change needed.** The
+      fleet-tab-removal fix already landed at `deployment-ui@044bd81` ("fix(tests): remove fleet-tab smoke specs —
+      /fleet page retired, git-health lives on AO dashboard", superset of the
+      `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md` fix at `067f7cd` this todo's text was written
+      against). Fresh run today: `npx playwright test --project=chromium     tests/smoke/nav-menu-dedup.spec.ts` → **19
+      passed, 0 failed** (11.9s). Confirmed no `fleet`/`/fleet`/`cockpit-fleet` entries remain in `CANONICAL`;
+      `grep -n fleet` on the file only matches explanatory code-comments, not live assertions; the top-bar-count
+      assertions already read `cockpit-tab-` = 9 / `cockpit-navlink-` = 7 (live-derived, not the stale "17"); the
+      `/infra` redirect tests were already removed (comment: "`/infra` was removed 2026-07-27, its redirect target
+      `/fleet` was retired — no nav entry points at it"), leaving only the still-valid `/repos` → `/ci` bookmark-compat
+      redirect. This todo's own title ("5 stale fleet-tab-removal failures") predates that fix; no further action
+      needed.
 - [ ] [UI] P3. **Diagnose the ~7 apparently-unrelated 2026-07-28 failures** (not touched this session, no root cause
       established): `cadence_badge_drilldown.spec.ts:39`, `mobile_responsive.spec.ts:178`,
       `needs-attention-panel.spec.ts:40` + `:56`, `repos-tab.spec.ts:272` (name mentions "fleet" cross-link — check
@@ -267,6 +272,14 @@ reasoning" lesson below, applied).
 tests) plus the directly-related `cockpit-alerts-logs-ag-vm-picker.spec.ts` + `cockpit.spec.ts` (40 tests total) all
 pass 100% — cited on the finalize-plan checkbox rather than a whole-suite exit code, per this doc's own standing finding
 that a truthful whole-suite `pw:L2 ✓` is not currently achievable through no fault of any single UI todo.
+
+## 2026-07-30 update (slot-9, ui_developer) — nav-menu-dedup.spec.ts todo was already resolved by prior work
+
+Picked up the "Fix `nav-menu-dedup.spec.ts`'s 5 stale fleet-tab-removal failures" P2 todo. Before writing any spec
+changes, re-ran the file fresh to get a current baseline (per this doc's own "baseline by stashing/re-running, never by
+reasoning" lesson) — **19 passed, 0 failed**. `git log` on the spec shows `deployment-ui@044bd81` ("fix(tests): remove
+fleet-tab smoke specs — /fleet page retired, git-health lives on AO dashboard") already fixed it, superseding this
+todo's premise. Flipped the checkbox with the reverification evidence; no code shipped this task since none was needed.
 
 ## Lessons (carry these; they each cost real time)
 
