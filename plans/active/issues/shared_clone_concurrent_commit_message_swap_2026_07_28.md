@@ -24,7 +24,7 @@ summary: >-
   changes detected, stashing unstaged changes to /Users/.../.cache/prek/patches/<ts>-<pid>.patch` / `Restored working
   tree changes from` lines were observed during these same attempts) at the exact moment two `git commit` calls in the
   same `.git` overlapped.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure, meta]
 stage: [meta]
@@ -51,8 +51,20 @@ assigned_role: infra
 drift_direction: advance-code
 locked_by:
 resolved_by:
+  '2026-07-30 — root-caused via direct reproduction (COMMIT_EDITMSG is an unlocked, shared, cross-invocation file; index
+  and HEAD are properly guarded, prek''s patch-stash is PID-namespaced, both ruled out). Discipline + mechanism
+  documented in /codex/05-infrastructure/per-tab-worktrees.md § "What worktree isolation does NOT cover" item 3
+  (unified-trading-pm@71c55ed6a); todo flipped unified-trading-pm@50f727f9e. Sibling P3 mitigation (quickmerge.sh
+  WARN-on-mismatch) already shipped. Every todo done, unlocked — archived same session per
+  /codex/11-project-management/plan-completion-and-archival-discipline.md.'
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Both todos are `[x]`: the root cause is `.git/COMMIT_EDITMSG` racing (confirmed by direct
+> reproduction), the discipline + full mechanism now live in `/codex/05-infrastructure/per-tab-worktrees.md` § "What
+> worktree isolation does NOT cover" (item 3), and the cheap technical mitigation (WARN-on-mismatch, not auto-amend)
+> already shipped in `scripts/quickmerge.sh` via the sibling P3 todo below.
 
 # Concurrent same-clone `git commit` calls can swap commit MESSAGES (not content)
 

@@ -491,7 +491,7 @@ both derive.
 
 **3. `.git/COMMIT_EDITMSG` is a single unlocked file per `.git` directory — `git commit` invocations racing in the same
 clone can swap MESSAGES across each other while each keeps its OWN correct tree (root-caused 2026-07-30,
-`plans/active/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md`).** Every `git commit`, including a
+`/plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md`).** Every `git commit`, including a
 non-interactive `git commit -m "..."`, still writes its message to `.git/COMMIT_EDITMSG` early (right after the
 `pre-commit` hook) and only reads it back — to actually build the commit object — after the `prepare-commit-msg` and
 `commit-msg` hooks finish. Unlike the index (`index.lock`, exclusive) and `HEAD` (compare-and-swap; a losing writer gets

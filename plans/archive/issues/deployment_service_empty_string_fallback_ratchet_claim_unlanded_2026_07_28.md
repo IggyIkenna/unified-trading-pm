@@ -11,8 +11,8 @@ summary: >-
   original 2026-07-08 seed value) — no commit ever wrote `89`. Not currently blocking (deployment-service is `[OK] ==
   baseline` at the live count of 91), so this is a doc-accuracy / provenance gap, not a live gate failure. Most likely
   lost to the shared-clone concurrent-git-commit race documented in
-  shared_clone_concurrent_commit_message_swap_2026_07_28.md (a commit landing with a swapped message, or a stash/pop
-  race silently dropping a small YAML edit), rather than a fabricated claim.
+  /plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md (a commit landing with a swapped
+  message, or a stash/pop race silently dropping a small YAML edit), rather than a fabricated claim.
 status: resolved
 nature: issue
 asset_group: [meta, infrastructure]
@@ -23,7 +23,7 @@ tags: [quality-gates, empty-string-fallback, baseline, provenance, doc-accuracy]
 related:
   [
     /plans/archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
-    /plans/active/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md,
+    /plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md,
   ]
 created: 2026-07-28
 parent_epic: infrastructure_master

@@ -382,10 +382,10 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       `count: 91` with no visible `89` ratchet in git history at read time, despite this doc's own 2026-07-28 Progress
       Log entry above claiming "deployment-service 91→89 ... ALL 4 NOW DONE" — the repo is currently `[OK] == baseline`
       (91, not blocking), so this is a doc-accuracy discrepancy (possibly lost in this session's observed shared-clone
-      git-commit races, see `shared_clone_concurrent_commit_message_swap_2026_07_28.md`), not a live gate failure;
-      flagging for whoever next touches this repo's baseline rather than re-chasing it here. **Gate met**:
-      `no_empty_string_fallback_baseline.yaml` — every repo row now carries a `commit:`; a future over-baseline failure
-      git-diffs against a known-good point instead of a positional tail-slice guess, fleet-wide.
+      git-commit races, see `/plans/archive/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md`), not a
+      live gate failure; flagging for whoever next touches this repo's baseline rather than re-chasing it here. **Gate
+      met**: `no_empty_string_fallback_baseline.yaml` — every repo row now carries a `commit:`; a future over-baseline
+      failure git-diffs against a known-good point instead of a positional tail-slice guess, fleet-wide.
 
 - [x] ✅ [SCRIPT] P1. **LANDED 2026-07-28 — `market-tick-data-service@69738677`.** **Land the durable per-site
       `# noqa: qg-empty-fallback` on the 2 always-flagged sites in
