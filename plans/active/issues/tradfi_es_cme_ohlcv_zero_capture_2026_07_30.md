@@ -53,6 +53,36 @@ source:
 
 # tradfi CME ES futures ohlcv — manifest-verify shows total capture failure, not a proven backfill
 
+> **CORRECTION 2026-07-30 (autonomous session, same day) — the "ZERO real rows ever captured" framing above is WRONG.
+> Real ES/S&P-500-futures ohlcv_1m/1s data DOES exist and DOES get captured from Databento.** The operator correctly
+> flagged this claim as implausible on its face (ES is one of the most liquid futures contracts in the world) before
+> this correction was written. Direct re-query of the SAME live manifest
+> (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`), scoped to `venue=CME` +
+> `data_type in {ohlcv_1m, ohlcv_1s}` + `row_count>0` (i.e. genuinely captured rows, not just `capture_status`), finds
+> **28,307 real captured `ohlcv_1m` rows** (+111 `ohlcv_1s`) sitting under a **BLANK `instrument_id`** with the
+> `underlying` column correctly populated — 1,512 rows tagged `underlying=SP500`, 1,221 `underlying=MICRO-SP500`, 1,178
+> `underlying=MES`, 15 `underlying=ECES`. **Cross-checked against the original finding's own scope**: 1,133 of these
+> real-captured dates DIRECTLY OVERLAP the same trading dates the original finding's `instrument_id=ES.FUT` query
+> reported as 100% `attempted_failed`/`empty_confirmed` — e.g. `date=2020-01-31` has a real `row_count=1883` SP500 row
+> (`written_at=2026-07-28`) sitting alongside the SAME-date `ES.FUT`-tagged failed row this issue originally cited.
+>
+> **What this actually is**: not "Databento returns zero bars for ES," but a genuine `instrument_id`-vs-`underlying`
+> manifest-tagging inconsistency between (at least) two different capture/backfill code paths for the same underlying
+> market — one (the `tradfi-bf-cme-ohlcv-1m-es-*` fleet examined below, `download_batch_df`'s curated-registry path
+> keyed on the UAC `ES.FUT` symbol def) that writes a correct `instrument_id` but apparently gets/records zero rows for
+> its specific request shape, and a SEPARATE, more recently-run process (`written_at` 2026-06-21 through 2026-07-28 —
+> spanning several distinct dates, i.e. multiple separate runs, none matching the 2026-07-21 fleet's own `written_at`)
+> that DOES get real data but writes it with `instrument_id` left blank, tagged only by `underlying`. This workspace
+> already has active tooling for exactly this class of problem —
+> `market_tick_data_service/scripts/recover_tradfi_garbage_underlying_2026_07.py` (`underlying=`-vs-real-root
+> reconciliation) and its siblings `migrate_tradfi_canonical_2026_07.py` / `rebundle_tradfi_chains_2026_07.py` — not yet
+> confirmed whether they cover this specific `instrument_id`-blank class or only GCS-path `underlying=` segment garbage;
+> that's the real open question now, not "does Databento have ES data" (it clearly does).
+>
+> **Original finding below is preserved verbatim for the record** (its narrow claim — 0 rows with `instrument_id=ES.FUT`
+> exactly — is still numerically accurate, just was written up as a much broader "zero capture ever" conclusion than the
+> data supports). Todos below have been corrected to reflect the real open question.
+
 ## What I found
 
 Ran the exact query the ruling's todo specified — a single live read of `market-data-tick-tradfi-prd`'s
@@ -126,9 +156,19 @@ root-cause fix.
 
 ## Todos
 
-- [ ] [DIAG] P1. Diagnose why the `ES.FUT` parent-symbol Databento request for `ohlcv_1m`/`ohlcv_1s` returns zero rows
-      on 100% of attempts (2020-2026) — read the adapter's request-shaping code, compare against Databento's
-      schema/symbology docs, and run one small targeted live probe before any re-launch. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Once root-caused and fixed, re-verify whether the same zero-capture pattern affects the other "in
-      flight" CME roots (CL/GC/HG/NG/NQ/SI) via the same manifest-count method (no bucket walk). Repo:
-      instruments-service.
+- [ ] [DIAG] P1. **CORRECTED SCOPE (2026-07-30) — this is NOT "why does Databento return zero for ES," it's "why do two
+      capture paths disagree on `instrument_id` for the same real data."** Real ohlcv_1m/1s data for the SP500/ES/MES
+      family exists (28,307+111 real rows, `instrument_id` blank, `underlying` correctly populated) — see the CORRECTION
+      banner above for the exact query + overlap evidence. Diagnose: (a) which script/handler wrote the
+      blank-`instrument_id` rows (`written_at` 2026-06-21..2026-07-28, several distinct runs — NOT the 2026-07-21
+      `tradfi-bf-cme-ohlcv-1m-es-*` fleet); (b) why THAT fleet's `download_batch_df` request (curated `ES.FUT` symbol,
+      `stype_in=parent`, `dataset=GLBX.MDP3` per
+      `unified-api-contracts/unified_api_contracts/     registry/tradfi_instrument_universe.py:89`) got/recorded zero
+      rows for dates where the OTHER path clearly got real data; (c) whether
+      `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script already covers reconciling
+      blank-`instrument_id`-but-real-`underlying` manifest rows into the canonical `ES.FUT` tag, or whether this is a
+      genuinely new gap in that tooling's scope. Repo: market-tick-data-service.
+- [ ] [DATA] P2. Once root-caused, determine whether the SAME blank-`instrument_id`-with-real-`underlying` pattern
+      exists for the other "in flight" CME roots (CL/GC/HG/NG/NQ/SI) — if so, this is a systemic manifest-tagging gap
+      across the whole tradfi CME ohlcv surface, not ES-specific, and reconciling it (not re-backfilling from scratch)
+      is likely the fix. Repo: instruments-service.

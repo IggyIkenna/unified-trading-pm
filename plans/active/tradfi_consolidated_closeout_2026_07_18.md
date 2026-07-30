@@ -268,6 +268,16 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
   accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
   this doc going forward.
+- **Operator-ruling closeout sweep 2026-07-30**: grepped this file for every `RULED`/`Operator-ruled`/`operator ruling`
+  instance. Found the `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` digest entry (Aggregated source docs §
+  TradFi-specific residuals) was STALE — it described a "remaining open" `[CODE] P1` implementation todo that had
+  already shipped. Verified live: the issue doc itself shows all 4 todos `[x]`, and
+  `git -C deployment-service log --oneline -1 c847395e` resolves to
+  `feat(vm): wire tradfi mvp_mode via opt-in --mvp-mode flag on the forward-poll launcher` — corrected the digest entry
+  above to reflect 0 open todos. The other 2 live rulings in this file (ES CME futures manifest-verify + ES_OPT launch,
+  both "Operator-ruled 2026-07-29") are pointers to concrete `[DATA] P0` todos tracked in
+  `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (confirmed still genuinely open there, not this file's own
+  checkbox to flip, and out of this pass's assigned-file scope) — left as-is, already accurate.
 
 ---
 
@@ -755,10 +765,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DOC] P3.** Re-verify the `future`/`FUTURE` population characterization (now 9,126 rows and growing, was stale
       "2,023 static")
   - [`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
-    - **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc.** The original 3 todos (DECISION /
-      implement / ship) are flipped there; a new **[CODE] P1** concrete implementation todo (VM_MVP_MODE metadata
-      plumbing + opt-in `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` + dry-run regression test) is the remaining
-      open work.
+    — **0 open todos, all 4 `[x]`.** RULED 2026-07-29 (wire via forward-poll opt-in flag) AND the concrete **[CODE] P1**
+    implementation (VM_MVP_MODE metadata plumbing + `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` + regression
+    tests) are both now shipped — `deployment-service@c847395e`, quality-gates green, quickmerge landed on
+    `live-defi-rollout`. Doc archived, nothing left to dispatch off it.
   - [`plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md`](/plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md)
     - **[DATA] P1.** Re-measure and break down the 182,407 by (venue, data_type, year)
     - **[BACKEND] P1.** Teach the sentinel/enumerator path the discovery floor
