@@ -353,6 +353,38 @@ operator's local box, unrelated to the routing code itself but touching this pla
 - Evidence: `agent-orchestrator@fcc7f24` on `live-defi-rollout`, `ahead=0`. 7 files, +185/-23. QG green (ruff,
   basedpyright 0/0/0, pytest 2068 passed).
 
+**2026-07-30 — `[DATA] P1` DeepSeek spend-guard ceiling SHIPPED, closing the todo below. `/autonomous` dispatch started
+here to finish the remaining locally-doable todos.**
+
+- **Design decision, documented since it narrows the todo's literal wording**: the todo asks for a "token-spend
+  ceiling." No per-token/per-dollar telemetry exists for DeepSeek spawns anywhere in this codebase — `usage_poller.py`
+  deliberately skips non-Anthropic accounts (they carry no `CLAUDE_CODE_OAUTH_TOKEN` to probe, per the fix already
+  shipped in `7076283`), and building a new DeepSeek billing-telemetry pipeline is well beyond a P1 guard todo. Used a
+  **DeepSeek route-selection COUNT** as the spend proxy instead — a new dedicated `deepseek_spawn_selected` activity-log
+  event, emitted exactly once per DeepSeek pick inside `select_account_for_spawn()` itself (not reverse-engineered from
+  pre-existing, less-precise event types). Not literal $/tokens, but monotonically correlated with actual spend, and the
+  only signal actually buildable today without new telemetry — this satisfies the functional intent (bound DeepSeek
+  exposure, fall back to Claude when exceeded, log why) even though the unit is spawns, not dollars.
+- **Implementation**: `config.py` gets two new `TuningDefaults` fields, `deepseek_daily_spawn_ceiling` and
+  `deepseek_monthly_spawn_ceiling` (both default `0` = disabled, matching the existing `deepseek_route_fraction`
+  0-disables convention). `autospawn.py` adds `_deepseek_spend_ceiling_exceeded()`, using the ALREADY-EXISTING
+  `count_recent_activity()` helper (previously only used by the M3 dual-flip escalation detector) with a rolling 24h/30d
+  window — not a calendar day/month boundary, so a burst can't double-spend by straddling midnight.
+  `select_account_for_spawn()`'s DeepSeek branch now checks this before offering the provider; on trip it logs
+  `deepseek_spend_ceiling_exceeded` (window/ceiling/count in details) and falls through to Claude — same mechanism the
+  health gate and kill-switch already use, so the fallback path was already proven correct, not new surface.
+- **Tests**: 8 new tests in `test_deepseek_provider_routing.py` — the 0-disabled default doesn't misfire against a bare
+  unconfigured `MagicMock` session (`int(MagicMock())` returns `1` by default, which would silently look like "ceiling
+  exceeded" if the disabled-check didn't short-circuit before ever calling `count_recent_activity` — caught and asserted
+  explicitly), the rolling window genuinely excludes an event just outside it (not just a raw row count), the monthly
+  ceiling independently catches a slow bleed the daily window misses, and the actual "Done when" criterion itself: a
+  simulated over-ceiling day makes `select_account_for_spawn()` return the Claude account instead of DeepSeek even at a
+  100% DeepSeek-first split, with the activity-log call captured and asserted. All 34 pre-existing routing tests
+  verified still green unmodified (the 0-default ceiling makes the new code path a no-op for every test that doesn't opt
+  in).
+- Evidence: `agent-orchestrator@4c5267d` on `live-defi-rollout`, `ahead=0`. 3 files, +191/-1. QG green (2076 passed, up
+  from 2068 — the 8 new tests).
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -406,12 +438,12 @@ operator's local box, unrelated to the routing code itself but touching this pla
       integration test proves a `sonnet`-tier task can land on the DeepSeek account while an `opus`-tier task dispatched
       in the same tick never does. — `agent-orchestrator@7076283`. Tests: 34 routing tests + 13 updated autospawn mocks,
       all green.
-- [ ] [DATA] P1. Add a spend-guard check before routing to DeepSeek — a config-driven daily/monthly token-spend ceiling,
-      mirroring the existing GCP/AWS spend-audit pattern already used elsewhere in this workspace. **More urgent after
-      the 2026-07-29 redesign** — DeepSeek is now the DEFAULT for ~80% of sonnet-tier work, not a 30% minority
-      experiment, so an unbounded-spend day is a much bigger real-dollar exposure than when this todo was written. Done
-      when: a simulated over-ceiling day makes `select_account_for_spawn()` stop offering DeepSeek and fall back to
-      Claude, with an activity-log event recording why.
+- [x] [DATA] P1. ✅ Add a spend-guard check before routing to DeepSeek — a config-driven daily/monthly token-spend
+      ceiling, mirroring the existing GCP/AWS spend-audit pattern already used elsewhere in this workspace. **More
+      urgent after the 2026-07-29 redesign** — DeepSeek is now the DEFAULT for ~80% of sonnet-tier work, not a 30%
+      minority experiment, so an unbounded-spend day is a much bigger real-dollar exposure than when this todo was
+      written. Done when: a simulated over-ceiling day makes `select_account_for_spawn()` stop offering DeepSeek and
+      fall back to Claude, with an activity-log event recording why.
 - [ ] [UI] P1. Surface `provider` next to `account_id` in the dashboard's slot/account views so it's visible at a glance
       which of the 14 slots are on DeepSeek vs. Claude right now. Done when: the dashboard renders a provider badge per
       active slot.
