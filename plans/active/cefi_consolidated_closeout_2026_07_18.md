@@ -170,9 +170,17 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 
 - **Vehicle**: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
   `_cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
-  dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) tracked in the forked child plan.**
-- **Close-out criterion**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces, verified live; each
-  script's `--dry-run` re-run asserts 0 further changes (idempotency).
+  dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) — DONE, see checkbox below.**
+- [x] ✅ [PM] P0. **Execute the minutes-gap hybrid cutover (Phase D/E: drain + `--apply` for Scripts 1-4)** — DONE
+      2026-07-27. Scripts 2 (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop) and Script 1 (parquet CONTENT
+      backfill — true corpus scope measured at ~4.5M files, executed as an iteratively-resharded 42+-VM fan-out) all
+      finished with every shard `EXIT_STATUS=0`; idempotency re-verified live (0 further planned changes on a
+      corpus-wide `--dry-run` re-run). The operator's `ADAF0:USTF0.parquet` equivalent
+      (`BITFINEX-FUTURES:PERPETUAL:ADA-USDT@LIN`) confirmed canonical on GCS filename / parquet `instrument_id` column /
+      manifest key. Full evidence (drain/consolidate/snapshot, per-script dry-run+apply logs, the full VM campaign):
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 3, archived).
+- **Close-out criterion**: the operator's `ADAF0:USTF0.parquet` is canonical on all four surfaces, verified live (MET,
+  above); each script's `--dry-run` re-run asserts 0 further changes (idempotency — MET, above).
 - **Subsumes / closes on cutover**: `cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`
   (relabel + purge `--apply`), `instrument_id_format_canonicalization_2026_07_08.md` (id-format traces),
   `instruments_remaining_work_audit_2026_07_10.md` (BYBIT-SPOT anomaly).
@@ -301,9 +309,12 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
 > The operator reviewed the audit and directed a pre-migration close-out. Each maps to a source doc; archive the source
 > when its item lands.
 
-- **DERIBIT missing-quote fix + `prod/catalog.parquet` rebuild** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1) — see the Reachability
-  map above.
+- [x] ✅ [BACKEND] P0. **DERIBIT missing-quote fix + `prod/catalog.parquet` rebuild** — DONE
+      `instruments-service@d72edcf7` (adapter/builder fix — DERIBIT `instrument_id` always `BASE-QUOTE`) +
+      `instruments-service@b2e084fa` (Phase-−1 gate extended with the quote-mandatory assertion), both 2026-07-18;
+      live-verified 2026-07-27 against the 429,129-row `prod/catalog.parquet`: `GREEN=True`, 0 `:PERP:`, 0
+      id!=canonical, **0 missing-quote**. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 1, archived).
 - [x] ✅ [BACKEND] P0. **Remove the UAC-seed catalogue fallback — catalogues FAIL LOUD** — DONE
       `market-tick-data-service@3253cae3`. New `InstrumentCatalogUnavailableError(RuntimeError)`; cefi/defi/tradfi
       `list_instruments` + sentinel paths now RAISE on absent/empty/schema-drift; off-season empty sports stays honest.
@@ -361,25 +372,44 @@ Real but non-blocking, each in its own doc; listed for completeness so nothing i
       3,824,258 itype rows changed; canonical-fraction 84.98%→99.41%). **`--apply` DRAIN-GATED under the Track-1
       cutover.** Casing freeze lifted 2026-07-20 (ruling D1, UPPERCASE ratified) — ruling recorded in
       `plans/active/data_pipeline_reconciliation_skill_2026_07_20.md` § D1.
-- **`:PERP:` → `:PERPETUAL:` rewrite** — manifest side SHIPPED (`instruments-service@555ddf1c`, 374,227/374,272 rows).
-  **On-disk GCS rename** → forked to `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md`
-  (todo 2). **Writer-side fix** (future captures) → dispatched as candidate 8 of
-  `cefi_consolidated_native_ao_extract_2026_07_25.md`.
+- [x] ✅ [SCRIPT] P0. **`:PERP:` → `:PERPETUAL:` rewrite** — manifest side SHIPPED (`instruments-service@555ddf1c`,
+      374,227/374,272 rows). **On-disk GCS rename — DONE 2026-07-27** (sub-agent): live audit confirmed 0 `:PERP:`-form
+      rows both before and after (manifest side already corpus-wide-complete); a fresh 9-shard `--dry-run`
+      re-verification (full corpus, 2019-03-30..today) confirmed 0 further planned changes on every shard except the
+      already-analyzed DERIBIT spot/perpetual-mislabel collision class (~5,001 objects, left honest-raw per that
+      finding's own "leave as-is, zero data loss" ruling — not a fresh open call). Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 2, archived).
+      **Writer-side fix** (future captures) → dispatched as candidate 8 of
+      `cefi_consolidated_native_ao_extract_2026_07_25.md` (separate, not part of this flip).
 - [x] ✅ [SCRIPT] P1. **bare-wire / missing-quote / DATED-contract recovery** — DONE `instruments-service@555ddf1c`
       (operator Option A + resolver-gap fix). +115,225 captured dated rows / ~40.7B ticks recovered via the dated-wire
       itype-fix; +3,531 rows / 186M ticks via the `-SPOT`/`-SWAP` override. Result: adjusted canonical-fraction 99.41%.
       Residual 53,965 captured rows / 7.46B ticks, all genuinely-unresolvable (captured-with-data dropped = 0).
-- **POST-CUTOVER: flip the smoke-check + downloader to canonical ids** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4). Full evidence:
-  `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`.
+- [x] ✅ [BACKEND] P0. **POST-CUTOVER: flip the smoke-check + downloader to canonical ids** — CODE SHIPPED
+      `market-tick-data-service@a4f90769` (2026-07-27, slot-13): `venue_fetch._process_venue` resolves canonical
+      `--instrument-ids` to raw wire symbols via `CeFiWireCanonicalMap.raw_symbol_for`; `pipeline_e2e_check.py`'s
+      canonical-stem skip-guard removed. **Residual live-refetch proof CLOSED 2026-07-28**: a real end-to-end VM smoke
+      run (`pipeline_e2e_check.py --day 2024-06-15 --venue BITFINEX-FUTURES --tardis-only --legs force --auto-day`) —
+      the `CEFI:BITFINEX-FUTURES:trades` shard passed `exit=0`, a real parquet written
+      (`BITFINEX-FUTURES:PERPETUAL:AAVE-USDT@LIN`), manifest status `captured`; the other 8 shards' `no_parquet_under`
+      failures are an unrelated data-availability gap (the venue genuinely has no data for those data_types on that
+      day), not a canonical-id-resolution failure. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 4, archived);
+      `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` (RESOLVED section).
 - **Re-add the "data status" enumeration to deployment-ui/api** — code COMPLETE + `quality-gates.sh`-green
   (deployment-ui shipped `deployment-ui@3fb6779`; deployment-api blocked only on 3 dirty sibling-repo deps as of
   2026-07-18, now **7 days stale — re-check before trusting**). Investigation found no single removal commit; shipped as
   a NEW read-only endpoint (`GET /api/data-status/axis-value-census`) rather than touching the legitimate math fix that
   eroded the raw-value signal. **Dispatched**: landing the quickmerge (with a fresh dirty-deps re-check first) is
   candidate 5 of `cefi_consolidated_native_ao_extract_2026_07_25.md`.
-- **Enumeration-audit terminal checkpoint** → forked to
-  `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5).
+- [x] ✅ [DATA] P1. **Enumeration-audit terminal checkpoint** — DONE 2026-07-27. Re-ran
+      `scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py` (read-only) against the live cefi manifest
+      post-cutover (8,880,557 rows): **`instrument_id` 8,790,637/8,880,557 canonical (99.49%)**, the 45,170-row residual
+      all bare-wire/missing-quote/bad-itype (accepted-exception class), down from the pre-migration ~1.48M.
+      `instrument_type`: 2,982 non-canonical, dominated by already-ruled lowercase-casing variants (D1/D2 2026-07-20). 2
+      findings without an existing ruling filed as a new followup (not silently accepted):
+      `issues/cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md`. Full evidence:
+      `/plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md` (todo 5, archived).
 
 ## CEFI CANONICAL SPEC (operator-authoritative, 2026-07-18 — the migration target)
 
