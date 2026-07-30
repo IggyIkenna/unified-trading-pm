@@ -13,7 +13,7 @@ summary: >-
   was excluded as genuinely conflict-adjacent — see Deferred). Two internally-related items (4 and 5, both append
   findings to the SAME sibling issue doc) were combined into one todo to avoid a same-priority file collision. All other
   conflict-gated candidates across the remaining 12 docs are preserved and queued for the operator, not dropped.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -53,12 +53,17 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 1 — conflict-cleared extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 7 todos below are same-priority; items 4/5 from the source triage were combined into todo 5 below
-> specifically to avoid a same-file collision (both write to
-> `prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`) — verified no other collisions across the
-> remaining items (see the triage journal, `subagents/workflows/wf_b8829ea8-6cd/journal.jsonl`).
+> **🟢 ARCHIVED 2026-07-30.** All 7 todos done — 4 corresponding checkboxes flipped in
+> `prediction_phase_ab_residuals_2026_07_24.md` citing this plan's commits (A1a stays open there, outside this batch's
+> scope). The Deferred section below (item 9 + 12 fully-excluded docs) was independently re-verified 2026-07-30 via the
+> companion finalize plan: 6 of the 12 were already extracted into
+> `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` (executed to completion), 1
+> (`prediction_arb_live_execution_bridge_2026_07_20.md`) is already absorbed into
+> `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s own dispatched todo, and the remainder stay genuinely
+> tracked/gated in their own source docs — nothing orphaned. No new durable contract from this batch — codex-alignment
+> check: nothing to update (per this doc's own "Codex SSOTs" section, every todo executed an already-decided spec).
+> Archived via `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` (archived
+> alongside this doc, same commit).
 
 ## Todos
 

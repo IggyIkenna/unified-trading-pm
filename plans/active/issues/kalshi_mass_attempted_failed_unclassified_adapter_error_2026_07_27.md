@@ -21,7 +21,7 @@ related:
   [
     /plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/issues/kalshi_live_capture_regression_and_drift_2026_07_13.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: 2026-07-27
 parent_epic: predictions_master

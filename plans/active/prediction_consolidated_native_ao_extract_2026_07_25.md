@@ -25,7 +25,7 @@ tags: [prediction, ao-dispatch, close-out, native-extract, conflict-checked]
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,

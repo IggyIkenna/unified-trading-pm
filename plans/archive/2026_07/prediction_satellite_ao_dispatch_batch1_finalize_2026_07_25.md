@@ -7,7 +7,7 @@ summary: >-
   (reconcile each of the 4 distinct source docs' checkboxes/Progress-Log entries independently), plus a batch1-specific
   addition: re-check the excluded item 9 and the 12 fully-deferred docs once the operator has ruled on the queued
   decision in autonomous_session_operator_decisions_2026_07_25.md.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
@@ -45,6 +45,11 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 1 — finalize
 
+> **🟢 ARCHIVED 2026-07-30.** All 3 todos done: source-doc reconciliation (todo 1), the item-9 + 12-doc Deferred
+> re-check (todo 2), and this archival (todo 3) — parent moved to
+> `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md`, corpus referrers updated. No new
+> durable contract from this batch — codex-alignment check: nothing to update.
+>
 > **Machine-gated on `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`)
 > — the dispatcher will not queue any todo below until all 7 tasks in that plan are `done`. `sequential: true` because
 > todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
@@ -134,10 +139,29 @@ drift_direction: advance-code
       clearance is already correctly absorbed into `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, so no new
       todo/plan is created by this pass (one would duplicate existing dispatched work). No code changed — doc-only
       re-verification across the cited docs, all read live, no historical snapshot re-cited as current.
-- [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
-      should have already resolved what it could — verify none remain unaddressed) → add the archive banner → run the
-      codex-alignment check → grep the corpus for every referrer of `prediction_satellite_ao_dispatch_batch1_2026_07_25`
-      and fix each path to point at the archived location → clear `locked_by` (already empty here, confirm). **Done
-      when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this
-      finalize doc itself gets archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-4).** **Archive `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** via
+      the standard 6-step ritual (per CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked
+      todo elsewhere (todo 2 above should have already resolved what it could — verify none remain unaddressed) → add
+      the archive banner → run the codex-alignment check → grep the corpus for every referrer of
+      `prediction_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location → clear
+      `locked_by` (already empty here, confirm). — **Result**: Deferred-item migration — none needed; todo 2's own
+      re-verification already confirmed every Deferred item has a home elsewhere (6 of 12 executed via batch2, 1
+      absorbed into batch6's dispatched todo, the rest genuinely still tracked/gated in their own source docs). Archive
+      banners added to both this doc and the parent, `status` flipped `active` → `complete` on both. Codex-alignment
+      check: this plan's own "Codex SSOTs" section already states no new durable contract — confirmed, nothing to update
+      (every todo executed an already-decided spec from its source doc). Corpus referrers fixed (path-shaped
+      `related:`/link references only — bare-filename prose citations of what happened are left as historical narrative,
+      per the sports/tradfi precedent): `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` (2 refs),
+      `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`,
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`, `defi_satellite_ao_dispatch_batch1_2026_07_25.md`,
+      `prediction_consolidated_closeout_2026_07_18.md`, `prediction_consolidated_native_ao_extract_2026_07_25.md`,
+      `issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md`. `plans/active/INDEX.md` is
+      auto-generated (`scripts/plans/regenerate_active_plan_index.py`) — regenerated rather than hand-edited. Already-
+      archived docs referencing the old path (`prediction_satellite_ao_dispatch_batch3_2026_07_26.md`,
+      `active_plan_inventory_dashboard_2026_07_24.md`,
+      `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`) are historical narrative
+      snapshots, correctly left as-is. `/codex/02-data/non-canonical-path-inventory.md`'s citation is a provenance note
+      for a fact already stated in that same codex table cell, not a bare path — left as-is. `locked_by` was already
+      empty on both docs. Both moved to `plans/archive/2026_07/` in the same commit. **Done when**: the plan is moved to
+      `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
+      archived alongside it in the same commit.

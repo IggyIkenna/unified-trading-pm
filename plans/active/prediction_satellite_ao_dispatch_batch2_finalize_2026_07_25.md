@@ -19,7 +19,7 @@ related:
   [
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
