@@ -22,12 +22,12 @@ status: open
 nature: issue
 asset_group: [meta]
 stage: [meta]
-repos: [unified-trading-pm, unified-api-contracts]
+repos: [unified-trading-pm, unified-api-contracts, instruments-service]
 scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -146,9 +146,26 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       `scripts/quality-gates-base/base-library.sh:394-395` (default raised 60→150) + documented the new override in the
       file's header comment block. GH-Actions verification is the separate todo 3 (watch the next 5-10
       `quality-gates-v2` runs), not re-done here.
-- [ ] 2. [INFRA] P3. Grep `unified-trading-pm/` + every repo's `scripts/quality-gates.sh` for other hardcoded wall-clock
-      literals lacking an env-var override (pattern: `run_timeout <N>` / `--timeout=<N>` / similar) to check whether
-      this "no override, unlike its sibling knobs" gap is a one-off or a recurring authoring pattern worth a lint rule.
+- [x] ✅ 2a. [INFRA] P3. Grep the shared `scripts/quality-gates-base/base-*.sh` scripts specifically for other
+      `--timeout=`/PARGS copies of this exact pytest-wall-clock pattern — **answered: it recurs.**
+      `base-service.sh` (sourced by every SERVICE repo, e.g. instruments-service, execution-service,
+      features-service, market-tick-data-service, deployment-api, ~20 repos total — every repo whose
+      `scripts/quality-gates.sh` sources `base-service.sh` rather than `base-library.sh`) had its OWN separate copy
+      of the identical PARGS line (`--timeout=${PYTEST_TIMEOUT:-60}`, line ~799) that todo 1's `cedef544b` fix never
+      touched (it only edited `base-library.sh`, used by library-type repos). Confirmed via a bounded grep of all 4
+      `base-*.sh` files (`base-codex.sh`, `base-library.sh`, `base-service.sh`, `base-ui.sh`) — exactly these 2 had
+      the pattern, `base-codex.sh`/`base-ui.sh` don't run pytest this way. Discovered while resolving `ldr_qg_failure`
+      escalation `agt-41a9d1` for `instruments-service` promotion PR #1026 (run 30519066074, `Failed: Timeout
+      (>60.0s)` — the literal `60.0s`, not `150.0s`, in the failure message was the tell that the base-library.sh fix
+      hadn't reached this codepath). Fixed: `unified-trading-pm@<see quickmerge output>` bumps
+      `base-service.sh`'s `${PYTEST_TIMEOUT:-60}` → `${PYTEST_TIMEOUT:-150}` (kept the existing `PYTEST_TIMEOUT` var
+      name, NOT renamed to `PYTEST_TIMEOUT_SECONDS`, since it is already a live documented override — see
+      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md`).
+- [ ] 2b. [INFRA] P3. Broader remaining scope of the original todo 2: a fleet-wide sweep of every INDIVIDUAL repo's
+      OWN `scripts/quality-gates.sh` (not just the 4 shared `base-*.sh` files, which 2a already covered) for
+      repo-local `run_timeout <N>` calls guarding custom STEP-5.6x-style checks that similarly lack an env-var
+      override — e.g. instruments-service's own script has several (`run_timeout 30/60/300 ...` for codex-compliance
+      checks). Not yet swept; 2a only closes the shared-script half of the original question.
 - [ ] 3. [INFRA] P3. Once todo 1 ships, watch the next 5-10 GH Actions `quality-gates-v2` runs across a few repos for
       any recurrence of a `qg_red_reason=pytest` failure whose actual failing test, re-run in isolation, passes in well
       under the new budget — that would confirm the fix closes this specific flake class rather than just moving the
@@ -184,3 +201,23 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `PYTEST_WORKERS`/`PYTEST_UNIT_DIR` override pattern, default raised 60→150s. Local `quality-gates.sh` green (sentinel
   verified at HEAD), shipped via `quickmerge --agent --files`. Todos 2 (workspace-wide hardcoded-timeout sweep) and 3
   (watch next 5-10 GH Actions `quality-gates-v2` runs for recurrence) remain open, unassigned to this task.
+- **2026-07-30 ~07:00Z (cicd escalation `agt-41a9d1`, slot 1) — todo 1's fix confirmed INCOMPLETE, 4th confirmed
+  instance, `instruments-service` (2nd repo)**: dispatched for `ldr_qg_failure` on `instruments-service` promotion PR
+  #1026 (LDR→main, head `5c1c3ccb`, run `30519066074`). `QG slice (tests)` failed with the exact same signature as
+  every prior entry: `Failed: Timeout (>60.0s) from pytest-timeout.` → xdist `worker_internal_error` →
+  `RuntimeError: Unexpectedly no active workers available`, despite `1375 passed, 2 warnings in 161.31s` in the same
+  run. The literal `60.0s` (not `150.0s`) was the tell that todo 1's fix hadn't reached this codepath — confirmed
+  `cedef544b` (05:39:50Z) WAS already an ancestor of the `unified-trading-pm` HEAD this run's "Clone unified-trading-pm
+  and dependencies" step fetched (06:40:56Z, 45 commits later), ruling out a stale-clone/propagation-lag explanation.
+  Root-caused instead to `base-service.sh` (not `base-library.sh`) carrying an untouched duplicate of the same PARGS
+  line — see todo 2a above for the full diagnosis and fix (`unified-trading-pm@<see quickmerge output>`, this same
+  commit). PR #1026 itself had already reached `state: MERGED` independently by the time of investigation (~06:59Z,
+  presumably via the "Option-B direct" LDR→main push path rather than a literal green PR check — consistent with
+  every prior entry's "self-clears via retry/cron before a fix is needed" pattern) — no instruments-service code/test
+  change was needed or made. However, a NEW promotion PR cycle was already in flight at diagnosis time (head
+  `9a30b6c5`, run `30521486911`, `queued` as of 07:01:20Z) that would have cloned the STILL-unfixed `base-service.sh`
+  and could plausibly hit the same flake — shipping this fix promptly (rather than filing it as a pure evidence
+  entry like several prior corroborations did) directly protects that in-flight run and every future service-repo
+  promotion, not just a retroactive diagnosis. This closes todo 2a's "is the gap a one-off" question definitively:
+  no, the exact same un-overridden-hardcoded-wall-clock authoring pattern recurred in a sibling shared script one day
+  after the first instance was "fixed," silently leaving ~20 service repos (the majority of the fleet) still exposed.
