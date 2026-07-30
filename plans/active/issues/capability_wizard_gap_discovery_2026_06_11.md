@@ -692,8 +692,22 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       So the real remaining gap for this edge is SOR-wiring (routing policy declared but not consumed), not registry
       absence. Status correctly stays `partial` (not fabricated to `supported`). No further code change needed this pass
       — checkbox flip only (the note correction already shipped bundled with the CME fix).
-- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **CONFIRMED 2026-07-30 (slot-13, capability_wizard_gap_discovery-029) — note already correct; edge
+      correctly stays `partial`.** **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py) —
+      the cell's `notes` (corrected already, bundled into the sibling CME fix `unified-api-contracts@f8515eb7`) claims
+      "IBKR ↔ ICE has no declared policy yet (gap #10 registry still open for that leg)" — independently re-verified
+      this specific claim rather than trusting the sibling's note: ran `policies_for_venue_pair('ibkr','ice')` directly
+      against the live `CROSS_VENUE_ROUTING_POLICIES` registry
+      (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`) — returns an empty tuple, vs. 4
+      for `('ibkr','cme')`. Read the registry source to confirm WHY: the only entry touching ICE at all is
+      `cme_wti_ice_brent_spread` (`leg_venues=("cme","ice")`, both legs `FUTURE_LEG` — a CME-WTI-vs-ICE-Brent commodity
+      spread), which cannot serve `CARRY_BASIS_DATED`'s `CARRY_BASIS_DATED@ibkr-ice-brent-fixed-feb26-usd-prod` slot (an
+      IBKR SPOT leg vs. an ICE dated future) — no `leg_roles` combination matches, and no `("ibkr","ice")` pair exists
+      in the registry at all. So this edge's gap is a genuine registry absence (no UAC declaration to wire up), unlike
+      the sibling CME/IBKR edges (already-declared policy, just unconsumed by the SOR) — status correctly stays
+      `partial`, not fabricated to `supported`. No code change this pass (the note was already corrected in `f8515eb7`);
+      checkbox flip + independent verification only.
 
 ### 2026-06-13 — Wave-2 #9 follow-on (wizard sessions as reproducible artifacts)
 
