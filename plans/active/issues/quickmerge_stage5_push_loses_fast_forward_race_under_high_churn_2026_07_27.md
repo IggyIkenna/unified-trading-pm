@@ -60,6 +60,18 @@ resolved_by:
 3. Observed drift-per-attempt across the 16 tries: 1, 1, 3, 4, 5, 6, 5(narrower after), 2, 4, 2, 6, 4, 2 — no consistent
    downward trend from retrying faster; the limiting factor is QG wall-clock time vs. push frequency, not anything the
    caller controls.
+4. **`check-branch-drift.sh` hard-blocks the merge that RESOLVES the drift (new, measured 2026-07-30, slot-3).** The
+   hook computes `BEHIND=$(git rev-list HEAD..origin/$BRANCH --count)` and exits 1 on `BEHIND > 0`
+   (`scripts/hooks/check-branch-drift.sh:26-36`) with **no `MERGE_HEAD` exemption**. During `git merge origin/<branch>`
+   — the canonical way to reconcile a diverged branch — the pre-commit hook fires BEFORE the merge commit exists, so
+   `HEAD` is still the pre-merge commit and the hook always reads the full drift and fails, leaving
+   `Not committing merge; use 'git commit' to complete the merge`. Re-running `git commit` re-runs the hook (which does
+   its OWN fresh `git fetch`), so under churn it never converges. The only documented escapes are `SKIP_BRANCH_DRIFT=1`
+   — explicitly labelled **"Human-only — agents MUST NOT use this override"** in the hook's own message — and
+   `--no-verify`, which the workspace restricts to prek auto-restore symptoms. **Net effect: merge-based reconciliation
+   is structurally unavailable to an agent**; only `git pull --rebase*` works, because rebase replays commits without
+   running `pre-commit`. That is fine for linear WIP but silently forces an agent that was told to preserve `--no-ff`
+   merge commits to either flatten them (plain `--rebase`) or know to reach for `--rebase=merges`.
 
 ## Why it matters
 
@@ -135,6 +147,16 @@ resolved_by:
       open — the collision-safety fix is real, necessary groundwork (any future attempt to reuse this mechanism for a
       non-qg_red kind needed it regardless), but the actual declare-on-3-failures wiring + resolution mechanism is
       genuine design work, not a bounded mirror-the-pattern task.
+- [ ] [INFRA] P2. **Exempt an in-progress merge from `check-branch-drift.sh`** (finding #4). Add a `MERGE_HEAD` guard so
+      the hook does not block the exact operation that resolves the drift it is reporting: after the existing
+      `SKIP_BRANCH_DRIFT` / CI early-exits, `git rev-parse -q --verify MERGE_HEAD >/dev/null && exit 0`. Scope the
+      exemption honestly in a comment — it is safe precisely because a merge commit can only ever REDUCE drift, so
+      exempting it cannot let an agent commit on top of an un-reconciled branch (the non-merge path, which is the case
+      the hook exists for, is untouched). Repo: unified-trading-pm (`scripts/hooks/check-branch-drift.sh`; the hook is
+      wired as a `local` hook in `.pre-commit-config.yaml:53-61` and is symlink-shared fleet-wide, so verify no per-repo
+      copy needs the same edit). **Done when**: on a branch deliberately put N commits behind origin,
+      `git merge origin/<branch>` completes and creates the merge commit with hooks ENABLED (no `SKIP_BRANCH_DRIFT`, no
+      `--no-verify`), while a plain `git commit` on that same N-behind branch still fails the hook as it does today.
 
 ## Progress Log
 
@@ -160,3 +182,12 @@ resolved_by:
   resolution half needs a genuinely new polling mechanism (no "push window open" CI-state analog exists to observe,
   unlike `qg_red`'s CI-green poll), which is design work outside this pass's bounded-effort budget. Doc stays
   `status: open`.
+- 2026-07-30 (slot-3, per-tranche ruled-fixes integration): Filed finding #4 + its todo while integrating two AO worker
+  branches into PM's main checkout. Sequence that surfaced it: merged both branches `--no-ff` cleanly (hooks green, 0
+  behind at that moment), origin then moved 3 commits during the Pass-1 QG run, so the branch had genuinely diverged (5
+  ahead / 3 behind) and needed reconciling. `git merge origin/live-defi-rollout` was hard-blocked by
+  `check-branch-drift` with `Not committing merge` — the hook cannot see that the commit it is refusing IS the fix. Did
+  NOT use `SKIP_BRANCH_DRIFT` (agent-forbidden) or `--no-verify`; recovered with `git pull --rebase=merges --autostash`,
+  which reconciled cleanly AND preserved both `--no-ff` merge commits (plain `--rebase` would have flattened them).
+  Worth noting for whoever takes the todo: `--rebase=merges` is the merge-preserving escape hatch and is currently
+  undocumented in the workspace's behind-remote recipe, which says only `git pull --rebase --autostash`.
