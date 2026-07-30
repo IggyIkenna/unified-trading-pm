@@ -108,7 +108,7 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked (abbreviated forms like
       `mtds@...`/`uac@...` are ambiguous and soft-skipped by construction). **Done when**: a fabricated SHA citation
       fails QG the same way a non-SUCCESS Cloud Build citation does today — verified: re-running the checker against
-      this exact incident's original fabricated citation (`market-tick-data-service@6efb252b`) confirms it does NOT
+      this exact incident's original fabricated SHA (market-tick-data-service, commit `6efb252b`) confirms it does NOT
       resolve (`git cat-file -t` exits non-zero), so a repeat of this incident would regress the gate. Repo:
       unified-trading-pm.
 - [x] ✅ [SCRIPT] P3. Findings-closure follow-up: the initial corpus scan (632 plan/issue docs) found 18 PRE-EXISTING
