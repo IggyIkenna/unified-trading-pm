@@ -169,7 +169,7 @@ from #2** — different files, can be a separate commit.
 **Files**: `market_tick_data_service/reader.py`, `tests/market_interface/unit/test_canonical_parquet_reader.py`. **STILL
 UNSHIPPED as of 2026-07-29 late**. Content independently re-verified correct via 2 full pytest passes this session (7486
 passed, 0 failed, both times) — every failure since has been at the basedpyright/type-check step or an outer wall-clock
-timeout under host load, never a real test failure. `codex/02-data/defi-canonical-naming-ssot.md` gotcha #8's companion
+timeout under host load, never a real test failure. `/codex/02-data/defi-canonical-naming-ssot.md` gotcha #8's companion
 note already shipped separately (`unified-trading-pm@62918201e`). **Next action**:
 `cd market-tick-data-service && PYRIGHT_TIMEOUT=400 bash scripts/quality-gates.sh --no-fix --files 'market_tick_data_service/reader.py tests/market_interface/unit/test_canonical_parquet_reader.py'`
 once `uptime` shows load back under ~2x core count (see "Host contention update").

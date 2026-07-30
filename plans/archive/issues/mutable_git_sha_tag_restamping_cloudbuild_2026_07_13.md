@@ -35,7 +35,9 @@ source:
     gcloud builds list/describe + AR tags list evidence 2026-07-13,
   ]
 assigned_vm: NA
-resolved_by: N/A (documented decisions, no code needed)
+resolved_by:
+  "first-push-wins sha-tag-guard rolled to PM templates + all 19 docker-pushing repo copies (2026-07-13); remaining
+  three P3 follow-ups all closed 2026-07-30 as RULED-no-change / CONFIRMED-no-action"
 locked_by:
 execution_scope: local-only
 estimate_class: infra
@@ -45,7 +47,10 @@ depends_on: []
 
 # Mutable git-sha tag re-stamping in Cloud Build (fleet class) — 2026-07-13
 
-> **🟢 ARCHIVED 2026-07-30** — all remaining P3 todos resolved as documented rulings. 0 open todos.
+> **🟢 ARCHIVED 2026-07-30** (`/plan-reconcile` autonomous sweep) — status=resolved, all 4 todos done. The root fix
+> (first-push-wins sha-tag guard) rolled fleet-wide 2026-07-13 across the PM `cloudbuild-*-template.yaml` set and all 19
+> docker-pushing repo copies; the three residual P3s were closed 2026-07-30 as ruled-no-change (`scan-check` semantics
+> kept as-is), confirmed-no-action (`deploy-shared.sh` manual path), and done (deployment-api `cloudbuild-tier3.yaml`).
 
 ## Observation
 

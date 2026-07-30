@@ -50,7 +50,7 @@ depends_on: []
       the 5 AGs. ✅ DONE 2026-07-26.
 - [x] [REVIEW] P2. 4 of the ~48 docs (ci-tranche-relevant, found by the ci tranche's own 2026-07-26 audit sweeping
       beyond `cross-cutting`) already triaged and given a live home:
-      `archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` +
+      `/plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (archived 2026-07-30) +
       `issues/quickmerge_sentinel_race_retry_storm_under_pm_doc_push_contention_2026_07_21.md` (both `[meta]`) cited as
       `Source:`/Deferred-table entries in `ci_satellite_ao_dispatch_batch1_2026_07_26.md`;
       `issues/hatch_vcs_main_tag_ancestry_gap_breaks_cross_repo_pip_install_2026_07_26.md` +

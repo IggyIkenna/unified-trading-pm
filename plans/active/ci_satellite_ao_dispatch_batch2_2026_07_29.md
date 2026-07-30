@@ -157,8 +157,8 @@ concurrent workers do not collide on this file.
       when**: a synthetic commit carrying the new trailer value is recognized as carve-out-exempt by
       `check_strict_quickmerge.py` (regression test), and the recipe doc change is verified against
       `check_reference_paths.py`. Source:
-      `archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (`asset_group: [meta]` —
-      folded into `ci` per the skill's meta-sweep rule; content is quickmerge governance).
+      `/plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (archived 2026-07-30)
+      (`asset_group: [meta]` — folded into `ci` per the skill's meta-sweep rule; content is quickmerge governance).
 - [ ] [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** One combined todo
       (internally sequential, single source doc): (a) spec the contract-surface allowlist extension — which
       registry-dict mutations count as breaking vs additive-OK, citing the manifest `schema_version` precedent as the

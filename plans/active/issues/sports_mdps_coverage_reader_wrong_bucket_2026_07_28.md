@@ -42,7 +42,7 @@ tags: [sports, manifest, ssot-contradiction, data-correctness, honest-coverage, 
 related:
   [
     /plans/active/issues/sports_league_id_namespace_migration_2026_07_20.md,
-    /plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
+    /plans/archive/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
   ]

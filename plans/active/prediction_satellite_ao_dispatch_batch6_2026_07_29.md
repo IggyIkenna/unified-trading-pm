@@ -317,9 +317,12 @@ tranche, excluded here to avoid duplicate dispatch." Re-confirmed by this run, n
   migration + a cross-repo parity test — genuinely uncovered, but should be drafted as a SPORTS-tranche batch item).
 - `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` (residual: 4 checkbox-drift items + 2
   substantively-undone REVIEW todos + a missing codex SSOT note — same as above, sports-tranche scope).
-- `plans/active/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` (1 remaining
+- `/plans/archive/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` (1 remaining
   `[OPERATOR]` reclassification judgment call, not AO-eligible; sports's own active `batch6` already carries the
-  identical item per this run's evidence).
+  identical item per this run's evidence). **CORRECTED 2026-07-30 (`/plan-reconcile`)** — that last `[OPERATOR]` item is
+  no longer remaining: the operator ruled it 2026-07-29 in an interactive decision session,
+  `unified-trading-pm@fcfa0c97b` closed the doc (`status: resolved`, 0 open todos), and it is now archived. Sports
+  `batch6`'s matching `[DOC] P2` close-out todo was flipped in the same sweep.
 - `plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md` — classified `exclude_cross_cutting` by
   Phase 1 (not even a borderline case): 5 of 6 remaining todos build sports-only live-trading infrastructure, the doc's
   own text explicitly carves prediction OUT of scope ("a separate question... prediction hasn't reached 'ML pipeline

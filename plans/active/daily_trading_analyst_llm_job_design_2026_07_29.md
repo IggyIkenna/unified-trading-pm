@@ -93,7 +93,7 @@ was execution sound, was the data actually complete — regardless of whether ba
 ## 1. Scheduling + AO account/slot mechanics
 
 **Traced from the 4 live systemd-timer jobs, not assumed from the operator's "mirror the reconciler pattern" framing —
-the codex table describing this (`codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`) is stale (says
+the codex table describing this (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`) is stale (says
 "01:00 UTC daily" / "opus"; live reality per `plan_health.py:427-435` and the timer files is hourly retry-until-capacity
 / sonnet-forced, both flipped by 2026-07-28/29 operator rulings not yet reflected there — file that staleness as its own
 doc-drift fix, §5).**
@@ -154,7 +154,7 @@ this design doc itself):
    dicts + its `dispatch()` docstring/validation list.
 4. A new `agent-orchestrator/scripts/install-trading-analyst-timer.sh`, copying the systemd timer+service+dispatch
    pattern at the `:05` offset.
-5. Update `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`'s scheduled-jobs table: add this job's
+5. Update `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`'s scheduled-jobs table: add this job's
    row, AND fix the stale plan_reconciler cadence/model wording while touching the table (§5).
 
 ## 2. Data sources per category — the pipeline_mode-uniformity assumption is VERIFIED FALSE
@@ -306,7 +306,7 @@ job's per-category input adapters for the reconciliation-derived categories, per
   working events-archive scheme instead). File as its own issue doc rather than folding into this plan's scope — it's
   unrelated enough to the LLM job itself to warrant separate tracking and triage.
 - **[DATA] Fix the stale scheduled-jobs table** in
-  `codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality is
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` (says opus/01:00-UTC-daily; live reality is
   sonnet/hourly-retry per 2026-07-28/29 rulings) — do this at the same time as adding this job's row (§1 build recipe
   step 5), not as a separate pass.
 - **[OPERATOR] Decide the exact escalation-N** (§3, "N days recurring before severity escalates") and the initial

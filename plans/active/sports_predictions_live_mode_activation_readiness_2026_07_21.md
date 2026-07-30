@@ -284,7 +284,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   exec-dispatch bug, not 2 new per-asset-group scripts). **Major finding**: the "FSS live handler" todo's premise was
   factually wrong — `features_service/sports/cli/handlers/live_handler.py` is already shipped, CLI-wired, and
   unit-tested (confirmed by direct code read + git history back to 2026-05-08), and
-  `codex/04-architecture/features-service-architecture.md` already documents this correctly; only
+  `/codex/04-architecture/features-service-architecture.md` already documents this correctly; only
   `batch-live-architecture.md` §4's row + its broken `p1-todo-10` cross-reference were stale. Did NOT file the requested
   new "scope a LiveHandler" design doc (its premise — that no handler exists — is false; filing it would have introduced
   a new incorrect claim into the corpus) — instead corrected §4's row/pointer and flipped this todo to done, since the

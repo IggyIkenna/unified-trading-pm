@@ -294,7 +294,7 @@ picture.
       AAVE_V3 chain-axis question.
     - **[DATA] P3.** Publish an explicit key-mapping table between the two registries' key schemes — prerequisite for
       the P1 falsifier todo.
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     (3 open)
     - **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing on
       prod MDPS backfills?

@@ -147,8 +147,9 @@ ways the same hardcoded-shared-filename design fails.
       crontab-write permission on this host and no cloud identity can self-serve an OS-level account permission):
       `bash     bash unified-trading-pm/scripts/dev/install-cleanup-stale-qg-tmp-cron.sh     bash unified-trading-pm/scripts/dev/install-cleanup-stale-claude-session-tmp-cron.sh     `
       Auditing/remediating other fleet hosts the same way (if any are similarly missing these crons) is tracked
-      separately — not re-verified as part of this todo's closure, since the specific host that triggered this doc is
-      now confirmed fixed.
+      separately (`/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` — filed 2026-07-30, this doc's
+      claim of separate tracking was prose-only until then) — not re-verified as part of this todo's closure, since the
+      specific host that triggered this doc is now confirmed fixed.
 
 ## Update 2026-07-27 (slot-4, ag_closeout_auditor) — THIRD failure mode, this time on the ROOT filesystem, not just /tmp
 

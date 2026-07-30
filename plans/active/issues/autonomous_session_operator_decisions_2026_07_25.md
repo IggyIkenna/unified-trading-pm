@@ -795,8 +795,8 @@ authorization. Confirms this ruling's direction; no further action needed.
 
 The 9-tranche partition only sweeps `asset_group: cross-cutting`, but `plans/PLAN_FORMAT.md:88` also declares
 `infrastructure` and `meta` as valid values — sweeping those returns ~48 unlisted docs, 4 unambiguously ci (one,
-`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`, has zero referrers corpus-wide).
-`check_ag_closeout_linkage.py` doesn't catch this class either.
+`/plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (archived 2026-07-30), had
+zero referrers corpus-wide). `check_ag_closeout_linkage.py` doesn't catch this class either.
 
 A: Widen the skill's rule to sweep all 3 values, run one corpus-wide triage plan for all ~48. [WORKER REC] — the
 partition's stated value is total coverage, and that claim is currently false by ~48 docs. B: Fix only the 4 ci-obvious

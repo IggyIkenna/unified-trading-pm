@@ -13,7 +13,7 @@ summary:
   SSOT, not accidental litter) -- were never added to .gitignore, so the dirty-tree check never cleared. This meant the
   VM's deployed code could silently fall behind origin for however long the tree stayed dirty, with no alert
   (self-pull's skip is a silent no-op by design, not a paged failure)."
-status: resolved
+status: open
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -29,7 +29,7 @@ created: 2026-07-29
 priority: P2
 parent_epic: agent_operating_framework_master
 source: "Found while live-verifying dispatch_sequential_gate_fix_2026_07_24.md's [BACKEND] P1 todo via SSM, 2026-07-29"
-resolved_by: "Same-session fix, 2026-07-29"
+resolved_by:
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -38,6 +38,14 @@ depends_on: []
 ---
 
 # ao-self-pull.sh silently stalled 2+ hours -- 2 untracked backup files never gitignored
+
+> **🟡 STATUS CORRECTED 2026-07-30** (`/plan-reconcile` autonomous sweep) — frontmatter said `status: resolved` while
+> the doc still carries an OPEN `- [ ]` [INFRA] P3 todo (the self-pull staleness alert), so
+> `check_terminal_status_archived` demanded an archive the doc is not actually ready for. Aligned frontmatter to reality
+> per the skill's "frontmatter status contradicting body completion" auto-fix class: `status: resolved` → `open`,
+> `resolved_by:` cleared. **The original incident IS fixed** — see § "Fix (shipped same session)" below (gitignore
+> change + live-verified VM HEAD match on 2026-07-29); what remains open is only the follow-up alerting gap. Re-flip to
+> `resolved` and archive once that todo closes.
 
 ## Evidence
 

@@ -45,6 +45,13 @@ resolved_by: autonomous-session-2026-07-30
 
 # sports odds-naming migration: checkbox drift + uncommitted in-progress rename
 
+> **🟢 ARCHIVED 2026-07-30** (`/plan-reconcile` autonomous sweep) — status=resolved (set by
+> `unified-trading-pm@fcfa0c97b`), both todos `[x]`, unlocked. All three original prose steps are closed: step 1 flipped
+> via `features-service@b03a6de4`; step 2's rename landed as `features-service@0ded2449` (verified reachable on that
+> repo's `origin/live-defi-rollout` this run) and the parent plan's matching `odds_columns.py` todo is `[x]`; step 3
+> (the `assigned_vm` re-designation) was operator-ruled 2026-07-29 in an interactive decision session. Corpus referrers
+> repointed to this archive path in the same commit.
+
 ## What I found
 
 Slot 3's `features-service` worktree (`.tabs/3/features-service`) carries an uncommitted diff (mtime ~1 hour stale at

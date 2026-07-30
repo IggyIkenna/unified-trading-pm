@@ -29,14 +29,20 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: N/A (no code fix needed)
+resolved_by:
+  "2026-07-30 triage — all 7 stashed files confirmed superseded by later commits, patch closed as moot (per this doc's
+  own staleness criterion)"
 source: [/home/ubuntu/.cache/prek/patches/1784815445082-3204588.patch]
 depends_on: []
 ---
 
 # Stranded prek stash patch (2026-07-23)
 
-> **🟢 ARCHIVED 2026-07-30** — all 7 referenced files confirmed superseded, closed as moot. 0 open todos.
+> **🟢 ARCHIVED 2026-07-30** (`/plan-reconcile` autonomous sweep) — status=resolved, both todos done. Triage confirmed
+> all 7 files named in the failed stash-pop were touched by LATER commits (the corpus-wide reference-path leading-slash
+> migration batches 1–5, plus one archival move), so by this doc's own stated criterion the stashed content is
+> superseded and the patch is moot. The patch file itself lives in a per-host prek cache outside git and is now harmless
+> debris on that host.
 
 ## What happened
 

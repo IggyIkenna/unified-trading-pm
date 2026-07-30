@@ -40,7 +40,9 @@ estimate_calibrated_ai_days: 0.04
 assigned_role: NA
 drift_direction: advance-code
 depends_on: []
-resolved_by: N/A (no code fix needed)
+resolved_by:
+  "2026-07-30 re-verification — deployment-service genuinely still at count 91 (== baseline); the 2026-07-28 '91→89'
+  Progress Log claim is confirmed unsubstantiated, nothing to fix, record corrected"
 locked_by:
 supersedes:
 superseded_by:
@@ -48,7 +50,11 @@ superseded_by:
 
 # deployment-service empty-string-fallback ratchet claim never landed
 
-> **🟢 ARCHIVED 2026-07-30** — re-verified still at baseline 91, DONE-as-is. 0 open todos.
+> **🟢 ARCHIVED 2026-07-30** (`/plan-reconcile` autonomous sweep) — status=resolved, the single P3 todo is done.
+> Re-verified 2026-07-30: `check_no_empty_string_fallback.py --scope deployment-service` reports
+> `[OK] deployment-service: 91 (== baseline)`, so the repo is not gate-blocked and the live count never dropped to 89.
+> The finding stands as a record-correction (the 2026-07-28 Progress Log claim was wrong); there is no code or baseline
+> change to make.
 
 ## What I found
 

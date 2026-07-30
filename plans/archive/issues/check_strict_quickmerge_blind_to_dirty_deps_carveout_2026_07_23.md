@@ -15,7 +15,7 @@ summary: >-
   carve-out), so the checker flags it as a bypass every time. The flag was not wrong given the checker's own narrow
   rule; the rule just does not model an entire sanctioned carve-out category.
 status: resolved
-resolved_by: unified-trading-pm@bbe9a9871
+resolved_by: unified-trading-pm@bbe9a9871 (Option 2 ruled + documented in /codex/08-workflows/ci-cd-flow.md, 2026-07-30)
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -38,8 +38,11 @@ depends_on: []
 
 # check_strict_quickmerge.py cannot recognize the dirty-deps carve-out
 
-> **🟢 ARCHIVED 2026-07-30** — Option 2 (Quickmerge: direct-carveout-dirty-deps trailer) documented + self-demonstrated.
-> 0 open todos.
+> **🟢 ARCHIVED 2026-07-30** (`/plan-reconcile` autonomous sweep) — status=resolved, the single todo is done. Operator
+> ruled Option 2 on 2026-07-29; shipped `unified-trading-pm@bbe9a9871` (verified reachable on
+> `origin/live-defi-rollout`), which documents the third `Quickmerge: direct-carveout-dirty-deps` trailer value + the
+> dirty-deps direct-push recipe in `/codex/08-workflows/ci-cd-flow.md`. No open work remains here; the durable rule now
+> lives in that codex SSOT, not in this issue doc.
 
 ## What was found
 

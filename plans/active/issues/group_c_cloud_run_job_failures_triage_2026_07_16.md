@@ -59,7 +59,7 @@ related:
     ./dp_catalog_not_running_sports_prediction_2026_07_15.md,
     ./recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     ./defi_scheduled_collection_outage_paused_crons_2026_07_16.md,
-    ./mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
+    /plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
     ./aws_consolidator_batch_logstream_iam_gap_2026_07_16.md,
     ../tradfi_v9_stage1_finish_2026_07_06.md,
   ]
