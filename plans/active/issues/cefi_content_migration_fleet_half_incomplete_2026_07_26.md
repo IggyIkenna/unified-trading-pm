@@ -472,3 +472,13 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   clean self-delete) — 24 at 67,600/155,419 files (8249s elapsed), 41 at 9,600/77,941 files (1547s elapsed). Fleet now
   at 14 shards. Death rate has accelerated sharply this cycle (4 of 16 shards died within one ~10 min window: 17, 21,
   24, 41 — two freeze-class, two OOM-class). No action taken (monitoring-only).
+- **2026-07-30 update (slot-15, ~20 min later, ~16:09Z)**: shard 19 (`-150600`) OOM-killed (`rc=137`, clean self-delete)
+  at 19,600/153,655 files (3460s elapsed). Fleet at 12 shards, no other changes. Also: hit a NEW variant of the `gcloud`
+  identity-poisoning issue (`…/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`) — this time
+  `gcloud config configurations list` showed the active config had flipped from `slot15-work` to `slot11-work` (a
+  DIFFERENT slot's isolated config, not just `default`), AND `slot15-work` itself was found poisoned
+  (`account=github-deploy@…`, not `unified-trading-sa@…`). This is stronger evidence than previously documented: the
+  isolated per-slot named-config is NOT immune — a foreign CI job or another slot's session can flip both the
+  system-wide active configuration name AND mutate the account stored inside a DIFFERENT slot's own named config on this
+  shared host. Fixed via `gcloud config configurations activate slot15-work` +
+  `gcloud config set account unified-trading-sa@…`. No relaunch/kill action taken on shard 19 (monitoring-only).

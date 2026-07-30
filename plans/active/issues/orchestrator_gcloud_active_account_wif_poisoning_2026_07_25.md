@@ -163,6 +163,17 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
   `gcloud config set account` sufficed each time (worth noting as a lighter-weight alternative fix for the
   active-account-pointer-only poisoning case, vs. the todo-3 workaround's presumed scope of a fully invalid/expired
   credential).
+- **2026-07-30 follow-up (slot-15, same session, later cycle)**: hit a FOURTH occurrence, and it is qualitatively worse
+  than the three above — `gcloud config configurations list` showed the system-wide active configuration had flipped
+  from this slot's own `slot15-work` to a DIFFERENT slot's isolated config, `slot11-work` (not just `default`). AND,
+  separately, `slot15-work` itself was found with its stored `account` mutated to `github-deploy@…` (not
+  `unified-trading-sa@…`). This means the earlier working hypothesis — "give each slot its own named config and the
+  isolation holds" — is disproven with direct evidence: a foreign CI job or another slot's session mutated a DIFFERENT
+  slot's named-config account property, not just the shared `default`/active-selector. Whatever writes
+  `gcloud config set account` (or edits the underlying `~/.config/gcloud/configurations/config_*` files directly) is not
+  scoped to the invoking job's own config file. Fixed via `gcloud config configurations activate slot15-work` +
+  `gcloud config set account unified-trading-sa@…`. This raises the priority of option (a)/(d) in the head todo —
+  per-slot config isolation (already deployed) is NOT a sufficient mitigation on its own.
 
 ## na-eligibility-audit verdict
 
