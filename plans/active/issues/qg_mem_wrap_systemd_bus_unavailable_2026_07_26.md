@@ -76,14 +76,15 @@ FAILED/timeout" output hints that MEM_WRAP/D-Bus is the actual cause.
 
 ## Recommended decision
 
-- [ ] [AGENT] P2. In `scripts/quality-gates-base/base-service.sh`'s `[4] TYPE CHECK` step, detect a MEM_WRAP-specific
+- [x] ✅ [AGENT] P2. In `scripts/quality-gates-base/base-service.sh`'s `[4] TYPE CHECK` step, detect a MEM_WRAP-specific
       launch failure (the real invocation's captured output is empty/contains `Failed to connect to bus` AND `MEM_WRAP`
       was non-empty) and retry ONCE unwrapped (i.e. without `"${MEM_WRAP[@]}"`) before concluding a genuine failure —
       mirrors the script's own existing single-retry patterns elsewhere in this file. Add a clear log line
       distinguishing "MEM_WRAP launch failed, retried unwrapped" from a genuine basedpyright timeout, so the next agent
       hitting this doesn't have to re-derive the diagnosis from scratch. New regression/smoke coverage: a fake
       `systemd-run` shim (in `PATH` for the test) that fails on its FIRST invocation and succeeds on a second, asserting
-      the retry-unwrapped path recovers and reports basedpyright's real result. (repo: unified-trading-pm)
+      the retry-unwrapped path recovers and reports basedpyright's real result. (repo: unified-trading-pm) —
+      unified-trading-pm@d59230eaa
 - [ ] [AGENT] P3. Consider whether the preflight probe should re-run (or the wrapper should be re-validated) when the
       real invocation is markedly longer than the probe (a 100ms `true` vs. an 80s+ `basedpyright` run) rather than
       trusting a single point-in-time check — lower priority than the todo above since the retry-on-failure fix covers
@@ -91,6 +92,27 @@ FAILED/timeout" output hints that MEM_WRAP/D-Bus is the actual cause.
 
 ## Progress log
 
+- 2026-07-30 (slot 14): Shipped P2 todo 1 — `unified-trading-pm@d59230eaa`. Factored the [4] TYPE CHECK basedpyright
+  invocation into `_qg_run_basedpyright_attempt()` (wrap-prefix param), called once with `"${MEM_WRAP[@]}"`; on the
+  MEM_WRAP-TOCTOU signature (exit≠0, 0 errors, 0 warnings, MEM_WRAP non-empty, output empty or containing "Failed to
+  connect to bus") logs `MEM_WRAP launch failed, retried unwrapped` and retries once with no wrap prefix, then falls
+  through to the existing genuine-failure check unchanged (so a still-failing retry, or a non-MEM_WRAP failure, is
+  reported exactly as before — no new failure mode). New `tests/test_qg_mem_wrap_typecheck_retry.bats` (9 tests):
+  hermetic fake-systemd-run/fake-basedpyright fault injection covering recovery, the already-unwrapped no-retry case,
+  genuine basedpyright errors not being mistaken for the race, and the bounded single-retry (no infinite loop); plus
+  grep-based sync-guard tests against the real file. Verified: `bash -n` syntax clean; all 9 bats tests green (built
+  bats-core from source into scratch — not installed on this box, matching the precedent in
+  `pm_bats_tests_never_invoked_by_quality_gates_2026_07_26.md`); sanity-checked the tests actually catch a regression by
+  reverting the retry call in a scratch copy (2 behavioral tests correctly failed); real `QG_SLICE=typecheck` run on
+  this dev box passed clean (this box's systemd-run permanently fails "Failed to connect to bus" — confirms the
+  pre-existing preflight-probe fallback already handles the _permanent_ case; this fix targets the narrower _transient_
+  probe-passes-then-real-call-fails race, which can't be reproduced live here, hence the hermetic test); full
+  `quality-gates.sh` green end-to-end. Left P3 (todo 2, preflight re-validation) untouched — separate, lower-priority
+  scope not part of this dispatch. Shipping hit a very busy `live-defi-rollout` (3 peer-push races across 2 quickmerge
+  attempts); each resolved via the documented `git pull --rebase --autostash` + retry recipe, no force-push. Also
+  reverted (not committed) incidental unrelated dirt from PM's always-on `fix_frontmatter.py` post-gate touching
+  `defi_consolidated_closeout_2026_07_18.md` / `cefi_instruments_store_blank_data_type_residual_2026_07_29.md` each QG
+  run — expected repo-hygiene side effect, out of this task's scope.
 - 2026-07-26 (slot 4): Filed while shipping `market-data-processing-service@22b926c` (the
   `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md` `_list_instrument_files` P1 fix). Worked
   around via the documented `QG_MEM_CAP=0` escape hatch to ship; not fixed in this session (different repo/topic from
