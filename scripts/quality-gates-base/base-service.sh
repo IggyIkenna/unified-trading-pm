@@ -1056,42 +1056,6 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     fi
     qg_prof end typecheck
     trap - INT TERM
-<<<<<<< Updated upstream
-||||||| Stash base
-    PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
-    ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
-    WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
-=======
-    PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
-    ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
-    WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
-    # qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md: MEM_WRAP's ONE-TIME preflight probe (near
-    # MEM_WRAP=() above) can pass while the REAL wrapped invocation TOCTOU-races a transient D-Bus
-    # outage under shared-host contention ("Failed to connect to bus: No medium found") — the
-    # wrapped subprocess then never starts (empty/near-empty output, nonzero exit), indistinguishable
-    # from a genuine 120s basedpyright timeout until someone notices ERROR_COUNT/WARN_COUNT are both
-    # 0 from an empty capture. Detect that specific shape and retry ONCE unwrapped (mirrors this
-    # file's other single-retry patterns) before concluding a real failure.
-    if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ] \
-       && [ "${#MEM_WRAP[@]}" -gt 0 ] \
-       && { [ -z "$PYRIGHT_OUT" ] || printf '%s' "$PYRIGHT_OUT" | grep -q "Failed to connect to bus"; }; then
-        log_warn "TYPE CHECK: MEM_WRAP (systemd-run) launch produced no output — looks like a D-Bus race, not a basedpyright timeout; retrying ONCE unwrapped"
-        _bp_out="${TMPDIR:-/tmp}/bp_out.$$.retry"
-        trap '''[[ -n "$BP_PID" ]] && kill -9 $BP_PID 2>/dev/null''' INT TERM
-        qg_prof start typecheck_mem_wrap_retry
-        run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
-        BP_PID=$!
-        PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?
-        qg_prof end typecheck_mem_wrap_retry
-        trap - INT TERM
-        PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
-        ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
-        WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
-        if [ "${PYRIGHT_EXIT}" -eq 0 ] || [ "${ERROR_COUNT:-0}" -gt 0 ] || [ "${WARN_COUNT:-0}" -gt 0 ]; then
-            log_success "TYPE CHECK: unwrapped retry recovered — confirmed a MEM_WRAP/D-Bus launch failure, not a genuine basedpyright timeout"
-        fi
-    fi
->>>>>>> Stashed changes
     if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ]; then
         echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout (exit=${PYRIGHT_EXIT})"; exit 1
     fi
