@@ -304,13 +304,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                                  this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                                  a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                                  `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                                  load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                                  authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                                  own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                                  deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [x] ✅ [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify
       and again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed,
@@ -328,7 +328,7 @@ what they were approving. Fixing the question text removes the thing the guard w
       true`→    `false`, `agent-orchestrator@93862de`) compounded by an unrelated ~7h live-orchestrator deploy-currency wedge     (`ao-self-pull.sh`dirty-gated on the main agent's untracked`.orch-main-inbox.json`scratch file,    `agent-orchestrator@474d7e0`) — full writeup at     `/plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`. Worked around by adding     fresh fixture C/D (regen-wired cleanly under the now-`sequential:
       false` plan) rather than waiting on either fix to reach the live server, since dispatch of C/D didn't require the
       deploy-wedge to clear.
-- [ ] [INFRA] P1. Fix the M3 checkbox-flip verifier's brief-matching for `--ruling` tasks (`server/verify.py`'s
+- [x] ✅ [INFRA] P1. Fix the M3 checkbox-flip verifier's brief-matching for `--ruling` tasks (`server/verify.py`'s
       `_brief_is_currently_checked` / `_mode2_disposition`, both invoked from `check_plan_flip`): both match the DONE
       task's own `brief` field verbatim against a `- [x] <brief>` line in the plan — correct for a normal regen-derived
       task, whose `brief` IS the plan's own single checkbox line, but a `--ruling` task's `brief` is instead a synthetic
@@ -346,7 +346,20 @@ what they were approving. Fixing the question text removes the thing the guard w
       brief's own `"Original todo text:\n<line>"` suffix (see `_materialize_operator_ruling_tasks`'s own
       brief-construction template in `server/regen_backlog_from_plan.py`) — extract and match against THAT instead of
       the full synthetic brief, or thread the original brief through as a separate stored field on the `--ruling` task
-      so the extraction isn't a string-parse of the brief a second time (repo: agent-orchestrator).
+      so the extraction isn't a string-parse of the brief a second time (repo: agent-orchestrator). —
+      agent-orchestrator@8809ee3. Threaded the original brief through as a separate mechanism (the doc's own second
+      option): new `server/ruling_task_brief.py` holds the shared `ORIGINAL_TODO_TEXT_MARKER` + an
+      `extract_original_brief()` helper, imported by both the producer (`_materialize_operator_ruling_tasks` in
+      `regen_backlog_from_plan.py`, which now builds the brief with the shared marker instead of a duplicated literal)
+      and the consumer (`check_plan_flip` in `verify.py`, which normalizes `brief` via `extract_original_brief()` once
+      at the top of the function — every downstream mode-1/mode-2 comparison, including the marker-disposition
+      fallbacks, now runs against the embedded original todo text). A non-ruling `brief` (no marker present) passes
+      through unchanged. Tests (in `tests/test_done_gate_plan_flip_hard_reject.py`):
+      `test_extract_original_brief_recovers_embedded_text_and_passes_through_otherwise` (unit),
+      `test_done_accepts_single_repo_ruling_task_when_original_checkbox_flipped` (mode 1),
+      `test_done_accepts_cross_repo_ruling_task_when_original_checkbox_flipped` (mode 2 — reproduces the live
+      `-010--ruling` incident exactly and asserts it now ACCEPTs). Full `quality-gates.sh` green (2045 passed, 1
+      skipped, ruff/basedpyright/format clean).
 - [ ] [INFRA] P2. Fix a race in `get_full_todo_text()` (D5): the full-text lookup reads `_pm_repo_path()`'s checkout at
       the exact moment a `BLK-op-*` row is first seeded, but that checkout is only kept current by `pm-pull.timer`
       (external 5-min cron) — a freshly-created `[OPERATOR]` todo (in a plan that itself just landed) can race the seed
