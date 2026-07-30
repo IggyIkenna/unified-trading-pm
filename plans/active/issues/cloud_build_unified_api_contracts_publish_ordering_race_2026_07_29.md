@@ -58,7 +58,7 @@ related:
     /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -222,15 +222,33 @@ applied to every repo this grep surfaces, not just instruments-service.
       remained unreliable this session too (repeatedly timed out on broad filters even with `timeout 90`+;
       per-trigger-id-scoped queries or a fallback to `gh run list`/`gh api` worked where it didn't) — this reliability
       gap is real and worth its own look if it keeps recurring, but was worked around each time rather than blocking.
-- [ ] [SCRIPT] P2. Harden against recurrence: add a short retry-with-backoff (e.g. 3 attempts, exponential, ~30-60s
-      total budget) around the `uv pip install --system ... --no-sources` step in each affected repo's Dockerfile (or
-      wherever the shared pattern is defined, if one exists — Dockerfiles were confirmed NOT currently templated the way
-      `quality-gates-v2.yml` is, so this is likely 7+ individual per-repo edits, each needing its own local Docker build
-      verification, not a single templated change). Cheap, safe, directly prevents this exact failure mode from
-      recurring on the next cross-repo floor-bump wave.
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot 4, cicd craft dispatch).** Wrapped the
+      `uv pip install --system --no-sources -e .` step in every affected repo's Dockerfile with a POSIX-sh retry loop (3
+      attempts, exponential 15s/30s backoff, ~45s total budget on full failure), scoped to ONLY that
+      `RUN --mount=type=secret,id=gar_token` layer so the `UV_EXTRA_INDEX_URL` env var still applies to every retry.
+      Confirmed Dockerfiles are NOT templated (7 individual per-repo edits, as anticipated) across the 8 repos that
+      carry the live-registry `uv pip install` pattern (the same set already fixed for the underlying keyring-auth bug
+      in the P1/P2-rollout todos above): `strategy-service@7cac6edc`, `ml-service@99edbe8`,
+      `market-data-processing-service@c3c3aee`, `instruments-service@41f1a25b`, `trading-agent-service@81c08a2`,
+      `greeks-service@2d24469`, `alerting-service@8eea670`, `fund-administration-service@d5549a5` — all shipped via the
+      normal QG→quickmerge flow (Pass-1 `quality-gates.sh` green, Pass-2 `quickmerge --agent`), all confirmed `ahead=0`
+      on `live-defi-rollout`. `market-tick-data-service` correctly excluded (installs UTL/UAC from vendored local
+      `.deps/` paths, never resolves from the live GAR index — see this doc's earlier confirmed-not-affected note);
+      `unified-trading-system-ui` excluded (no Cloud Build trigger); `deployment-api` excluded (its `uv pip install`
+      calls install from local `/tmp/*` wheel paths, not the live registry — its storm root cause was the separate
+      pnpm/npm mismatch, not this pattern). **Verified via 2 REAL Cloud Build triggers** (never just step-status — read
+      the actual build log content): `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` →
+      build `56fbc849-6625-4d89-a21d-a0fa71a9bece`, `status: SUCCESS`; log confirms the retry-wrapper `sh -c` command
+      ran exactly as shipped and `uv pip install` succeeded on the FIRST attempt (no retry/backoff lines — proves the
+      wrapper adds zero overhead on the happy path).
+      `gcloud builds triggers run strategy-service-build     --branch=live-defi-rollout` → build
+      `293cc110-4730-444e-b0e2-6dac9430fded`, `status: SUCCESS`, same clean first-attempt confirmation. (Both logs show
+      an unrelated `publish-wheel` step `400 Bad Request` — a pre-existing "wheel version already published" re-trigger
+      artifact, orthogonal to this fix and not gating build SUCCESS.)
   - [ ] [SCRIPT] P3. Once a retry pattern is chosen for one repo and verified, consider whether it's worth promoting to
         a shared Dockerfile snippet/base-image convention (mirrors the `quality-gates-v2.yml.tmpl` precedent) rather
-        than repeating the same edit 7+ times by hand.
+        than repeating the same edit 7+ times by hand. **Pattern is now consistently applied across all 8 affected repos
+        (2026-07-30) — still an open judgment call whether to further consolidate into a shared snippet.**
 - [x] ✅ [SCRIPT] P3. **FIXED 2026-07-30 (slot 1, `/autonomous` dispatch)** —
       `unified-trading-pm@<pending-sha, see     Progress Log>`. Added `active_trigger_repos()` to
       `stale_build_monitor.py` (one `gcloud builds triggers list` call, cached across the run) and wired it into
