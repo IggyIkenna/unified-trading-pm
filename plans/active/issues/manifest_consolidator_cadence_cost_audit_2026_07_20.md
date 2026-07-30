@@ -197,48 +197,48 @@ with a post-change cost verification showing the expected reduction and zero new
       "Suggested path forward":
 
       **(1) extend `AG_STALENESS_BUDGET_SEC` for sports' read path first** — ALREADY DONE by separate, earlier work,
-          confirmed live 2026-07-30 before touching anything else:
-          `unified_trading_library/manifest_writer/_staleness_budget.py`'s `AG_STALENESS_BUDGET_SEC` is
-          `{"cefi": 86400, "sports": 1800, "defi": 3600}` — sports added `fix(manifest): add sports:1800s override`
-          (`unified-trading-library@fd87daa1`, 2026-07-24) and defi added as a bonus 2026-07-29
-          (`unified-trading-library@13d3daef`) by `sports_manifest_read_staleness_budget_missing_2026_07_15.md` /
-          `defi_manifest_consolidator_staleness_budget_missing_2026_07_29.md`, both predating this dispatch.
-          `deployment-api`'s cockpit-only `_AG_STALENESS_BUDGET_SEC` mirrors the same 3 entries. No new code needed here.
+              confirmed live 2026-07-30 before touching anything else:
+              `unified_trading_library/manifest_writer/_staleness_budget.py`'s `AG_STALENESS_BUDGET_SEC` is
+              `{"cefi": 86400, "sports": 1800, "defi": 3600}` — sports added `fix(manifest): add sports:1800s override`
+              (`unified-trading-library@fd87daa1`, 2026-07-24) and defi added as a bonus 2026-07-29
+              (`unified-trading-library@13d3daef`) by `sports_manifest_read_staleness_budget_missing_2026_07_15.md` /
+              `defi_manifest_consolidator_staleness_budget_missing_2026_07_29.md`, both predating this dispatch.
+              `deployment-api`'s cockpit-only `_AG_STALENESS_BUDGET_SEC` mirrors the same 3 entries. No new code needed here.
 
-          **(2) widen the cron schedule for the 12 low-risk jobs + matching liveness-watchdog fast/slow-tier split** —
-          SHIPPED + APPLIED LIVE 2026-07-30, `deployment-service@<pending-see-below>`:
-          `manifest_consolidator_scheduler.tf` gained a `manifest_consolidator_schedule` local (the exact 12 categories
-          from this audit's §2b: `instruments-{cefi,tradfi,defi,prediction}`, `market-data-cefi`,
-          `features-{cefi,defi,tradfi,calendar}`, `strategy`, `execution`, `ml-training-artifacts`) mapped to `0 * * * *`
-          (hourly), consumed via `lookup(..., "*/1 * * * *")` in both `manifest_consolidator_cron` resources so every
-          other category keeps its original per-minute cadence. `consolidator_liveness_scheduler.tf`'s single watchdog
-          job/cron was split into a `for_each` fast/slow tier pair (fast: unchanged 60s/5-cycle=300s threshold for the 6
-          still-`*/1` buckets; slow: 3600s/2-cycle=7200s threshold, checked at `:15,:45` past the hour, for the 12 widened
-          buckets) — the watchdog CLI applies one shared `--cycle-sec`/`--cycles-grace` per invocation, so this split was
-          required, not optional, once the cron cadences diverged. The alert policy's `dynamic "conditions"` per-tier
-          approach was REJECTED live by GCP ("Alert policies with a log matching condition can only have a single
-          condition") — used a single condition with an OR'd `job_name` filter across both tiers instead (same
-          page-on-either-tier semantics). **Applied via `ENV=prod ./tofu.sh apply` (scoped `-target=`, confirmed a
-          subsequent untargeted-but-scoped re-plan shows "No changes")**: live `gcloud scheduler jobs list` confirms
-          exactly 12 jobs on `0 * * * *` / 6 on `*/1 * * * *`; both new watchdog Cloud Run Jobs
-          (`uts-prod-consolidator-liveness-watchdog-{fast,slow}`) manually executed to completion (`gcloud run jobs
-          execute --wait`) with every bucket reporting `-> ok` (zero false `CONSOLIDATOR_DOWN`). Two IAM self-grants were
-          needed mid-apply (`roles/monitoring.alertPolicyEditor`, `roles/logging.configWriter` on `unified-trading-sa`,
-          per the cloud-identity self-service rule) — granted + verified live, not paused on.
+              **(2) widen the cron schedule for the 12 low-risk jobs + matching liveness-watchdog fast/slow-tier split** —
+              SHIPPED + APPLIED LIVE 2026-07-30, `deployment-service@7b832cb0`:
+              `manifest_consolidator_scheduler.tf` gained a `manifest_consolidator_schedule` local (the exact 12 categories
+              from this audit's §2b: `instruments-{cefi,tradfi,defi,prediction}`, `market-data-cefi`,
+              `features-{cefi,defi,tradfi,calendar}`, `strategy`, `execution`, `ml-training-artifacts`) mapped to `0 * * * *`
+              (hourly), consumed via `lookup(..., "*/1 * * * *")` in both `manifest_consolidator_cron` resources so every
+              other category keeps its original per-minute cadence. `consolidator_liveness_scheduler.tf`'s single watchdog
+              job/cron was split into a `for_each` fast/slow tier pair (fast: unchanged 60s/5-cycle=300s threshold for the 6
+              still-`*/1` buckets; slow: 3600s/2-cycle=7200s threshold, checked at `:15,:45` past the hour, for the 12 widened
+              buckets) — the watchdog CLI applies one shared `--cycle-sec`/`--cycles-grace` per invocation, so this split was
+              required, not optional, once the cron cadences diverged. The alert policy's `dynamic "conditions"` per-tier
+              approach was REJECTED live by GCP ("Alert policies with a log matching condition can only have a single
+              condition") — used a single condition with an OR'd `job_name` filter across both tiers instead (same
+              page-on-either-tier semantics). **Applied via `ENV=prod ./tofu.sh apply` (scoped `-target=`, confirmed a
+              subsequent untargeted-but-scoped re-plan shows "No changes")**: live `gcloud scheduler jobs list` confirms
+              exactly 12 jobs on `0 * * * *` / 6 on `*/1 * * * *`; both new watchdog Cloud Run Jobs
+              (`uts-prod-consolidator-liveness-watchdog-{fast,slow}`) manually executed to completion (`gcloud run jobs
+              execute --wait`) with every bucket reporting `-> ok` (zero false `CONSOLIDATOR_DOWN`). Two IAM self-grants were
+              needed mid-apply (`roles/monitoring.alertPolicyEditor`, `roles/logging.configWriter` on `unified-trading-sa`,
+              per the cloud-identity self-service rule) — granted + verified live, not paused on.
 
-          **(3) re-verify via the existing recipe** — done above (live scheduler list + watchdog dry-executions + log
-          read, zero false pages). **The "follow-up cost check after one full billing cycle" cannot be done
-          synchronously** (GCP billing export settles ~1 day later) — tracked as its own new P3 todo below rather than
-          left as unchecked prose.
+              **(3) re-verify via the existing recipe** — done above (live scheduler list + watchdog dry-executions + log
+              read, zero false pages). **The "follow-up cost check after one full billing cycle" cannot be done
+              synchronously** (GCP billing export settles ~1 day later) — tracked as its own new P3 todo below rather than
+              left as unchecked prose.
 
-          **(4) correct the codex SSOT's stale claim** — DONE:
-          `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s "Per-(kind, AG) cadence staleness budget" section
-          corrected to the real `{"cefi": 86400, "sports": 1800, "defi": 3600}` dict + the new non-uniform cron cadence;
-          the older 2026-07-12 "Feed-SLA registry" finding kept historically intact with a dated stale-as-of note
-          appended (this doc's own dated-finding convention).
+              **(4) correct the codex SSOT's stale claim** — DONE:
+              `/codex/05-infrastructure/manifest-consolidator-ssot.md`'s "Per-(kind, AG) cadence staleness budget" section
+              corrected to the real `{"cefi": 86400, "sports": 1800, "defi": 3600}` dict + the new non-uniform cron cadence;
+              the older 2026-07-12 "Feed-SLA registry" finding kept historically intact with a dated stale-as-of note
+              appended (this doc's own dated-finding convention).
 
-          Repos: unified-trading-library (already-landed, no new commit this session), deployment-service (terraform),
-          unified-trading-pm (codex).
+              Repos: unified-trading-library (already-landed, no new commit this session), deployment-service (terraform),
+              unified-trading-pm (codex).
 
 - [ ] [OPS] P3. Query the BigQuery billing export for `purpose=manifest-consolidator` for a fully-settled day AFTER
       2026-07-30 (the cadence-reduction ship date) — same recipe as this doc's own §5 — and confirm the
