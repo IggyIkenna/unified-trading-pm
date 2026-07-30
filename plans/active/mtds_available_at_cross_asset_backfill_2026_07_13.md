@@ -325,6 +325,11 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Progress Log
 
+**Dispatch-order finding #4 — 2026-07-30T00:45Z (slot 11, data_engineering)**: `-006` dispatched a third time, same as
+findings #2/#3 — prerequisite todo (line 157) still `[ ]`, issue doc still open. Declined (nothing to resume); did not
+self-select todo 157's work either (separately-tracked task, not this dispatch). No production writes. Released via
+`/skip-current-task {"reason_code": "GATED"}`.
+
 **Dispatch-order finding #2 — 2026-07-29 (slot 14, data_engineering)**: dispatched task
 `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron", line 162) while `-001` ("Apply
 `rebuild_prediction_manifest.py`", line 157, `-006`'s direct predecessor/prerequisite) was still `queued` on the live
