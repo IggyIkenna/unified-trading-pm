@@ -118,7 +118,7 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       and auto-`git restore`s any path that is newly dirty AND outside the commit's own `--files` scope. A real, working
       mitigation for the ORIGINAL symptom (collateral damage to a file the commit never touched) — but see the explicit
       gap in the new P1 below.
-- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
+- [x] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
       Confirmed via direct reproduction: this exact field corrupted TWICE MORE on
       `defi_consolidated_closeout_2026_07_18.md`, hours after `e37b7ab47` (the real fix_frontmatter.py fix above) was
       already live in this slot's checkout — so that fix, while genuine, does not explain or prevent this recurrence.
@@ -133,6 +133,20 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       the Progress Log below as a starting evidence base. **UPDATE 2026-07-30 (slot-1) — see the new P1 immediately
       below: the actually-running prek binary on this host turned out to be 5+ months stale and confirmed to predate a
       real, matching upstream bugfix in this exact code path. Hypothesis (b) now has a concrete, named candidate.**
+      **CLOSED 2026-07-30 (slot-13) — see Progress Log entry below.** Hypothesis (b) is sufficient: the subsequent P1
+      below reproduced the confirmed-still-open upstream `j178/prek#1889`-class bug in an ISOLATED, SINGLE-INVOCATION
+      scratch repo (no concurrency involved at all) and got the exact same destructive-empty symptom shape. That alone
+      fully explains a same-slot, back-to-back, in-scope-file recurrence without needing hypothesis (a); further
+      concurrent-invocation stress-testing against the shared, live, production `~/.cache/prek/patches/` was judged not
+      worth the added corruption risk to other slots' in-flight work for what would only add color to an already-
+      sufficient explanation. Root-causing the remaining upstream fix (or contributing one) is out of this todo's scope
+      — tracked under the still-open workspace-wide-drift P1 below, pending operator scope decision. Shipped one
+      concrete, scoped closure alongside: extended `docspec.py`'s tightened date-format gate (see the DONE P1 below) to
+      also cover `doc_type: issue` (previously `plan`-only, an explicitly named gap) — Req.E so it validates format only
+      when present, not a corpus-wide backfill demand — plus fixed the 4 pre-existing malformed `last_updated` values it
+      surfaced across the live issue-doc corpus so the gate stays green (2 of the 4 were genuine YAML-folded-
+      continuation artifacts of the exact same corruption shape this issue chases, just never caught before because
+      issue docs were unvalidated).
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — `~/.local/bin/prek` upgraded 0.3.1 → 0.4.11 on this host, and BOTH
       candidate upstream bugs directly tested against the new binary (not just read about).** Was `0.3.1` (2026-01-31,
       mtime matched the release day exactly — installed once, never touched since; `pip show prek` separately reported
@@ -362,3 +376,36 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   Reported the full picture to the operator; awaiting their call on scope (remediate other hosts now vs. also build the
   durable version-check vs. pursue an upstream fix for #1889 using the repro we now have) before doing anything beyond
   this host.
+
+- **2026-07-30 (slot-13, orchestrator VM) — closed the "root cause unknown" P1 todo; shipped a scoped issue-doc
+  validation-gap fix.** Dispatched to this exact todo (the "corruption still recurs on IN-SCOPE files; root cause
+  unknown" P1). Confirmed this host (`ip-172-31-5-118`, EIP `13.113.200.22`) is the same orchestrator VM the prior
+  slot-1 entries already profiled read-only via SSM — `prek --version` here reads `0.4.8` (has the #2142 fix, still
+  exposed to the confirmed-open #1889-class bug), matching that earlier finding directly rather than needing to re-check
+  it. Rather than re-run the concurrency stress test this todo originally called for, judged it unnecessary: the
+  subsequent DONE P1 above already reproduced the #1889-class bug's exact destructive-empty symptom in an ISOLATED,
+  SINGLE-INVOCATION scratch repo — no concurrency in that repro at all — which is sufficient on its own to explain a
+  same-slot, back-to-back, in-scope-file recurrence. Hypothesis (a) (a concurrency blind spot) is therefore not needed
+  to close this todo, and deliberately stress-testing concurrent `prek` invocations against the shared, live
+  `~/.cache/prek/patches/` on a host every other slot depends on right now was judged not worth the corruption risk for
+  marginal additional color on an already-sufficient explanation.
+
+  Shipped one concrete, scoped closure instead of leaving this purely a synthesis: `scripts/docs/docspec.py`'s
+  `PER_TYPE["issue"]` gained a `FieldSpec("last_updated", Req.E, "date")` entry, closing the exact gap the DONE P1 above
+  flagged and left open ("last_updated is only a validated field for doc_type: plan ... the same corruption on an issue
+  doc's last_updated field would still sail through undetected"). Used `Req.E` (elective — validate format only when
+  present), not `Req.O` (optional — demands present-but-empty when absent): a dry-run against the live corpus with
+  `Req.O` produced 196 new SOFT violations (issue docs with no `last_updated` field at all), which would have been a
+  corpus-wide backfill demand, not a scoped fix; `Req.E` produced exactly 4, all genuine pre-existing malformed values.
+  Fixed all 4 so the gate stays green: `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` and
+  `defi_code_codex_drift_2026_05_27.md` each had a YAML-folded multi-line `last_updated` value with a historical
+  correction note baked into the scalar itself (structurally the same shape as this issue's own corruption — a
+  continuation the docspec gate never caught because issue docs weren't validated at all before this change) — trimmed
+  each to a clean `YYYY-MM-DD` with the historical note preserved as a trailing `#` comment on the same line (verified
+  this pattern parses clean: an existing doc in the corpus already uses it).
+  `solana_perp_dex_cull_drift_pacifica_2026_07_16.md` had a `T10:07Z` time-of-day suffix (schema is date-only); trimmed
+  to the date. `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` had free-text appended
+  unquoted after the date; moved it to a trailing comment. Verified zero violations across the full 1836-doc live corpus
+  (`check_frontmatter_schema.py`) and confirmed `check_doc_retrieval_layer_parity.py` stays green (no facet-parity drift
+  from the new field). `status` stays `open` — the still-open workspace-wide version-drift P1 below is untouched, its
+  own scope decision still belongs to the operator.

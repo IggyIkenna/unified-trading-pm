@@ -90,7 +90,7 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-30 (4th duplicate-dispatch confirmation, agt-606bbf)
+last_updated: 2026-07-30 # (4th duplicate-dispatch confirmation, agt-606bbf)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)

@@ -158,6 +158,14 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
         FieldSpec("context_scope", Req.E, "free_list"),
+        # Req.E (not Req.O): issue docs don't universally carry last_updated (~196 of 373 live docs
+        # don't), so Req.O's present-but-empty demand would false-flag the whole corpus. Elective means
+        # "validate the format IF present, don't require presence" -- closes the exact gap flagged in
+        # prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md: the tightened
+        # full-match date regex (see _validate_value's "date" branch) was previously wired ONLY for
+        # doc_type: plan, so this same corruption signature landing on an issue doc's last_updated
+        # would have sailed through undetected.
+        FieldSpec("last_updated", Req.E, "date"),
     ],
     "audit-result": [
         FieldSpec("audited_scope", Req.R, "scalar"),

@@ -49,7 +49,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-18T10:07Z
+last_updated: 2026-07-18
 ---
 
 # Solana perp DEX cull — DRIFT + PACIFICA data/state purge (2026-07-16)
