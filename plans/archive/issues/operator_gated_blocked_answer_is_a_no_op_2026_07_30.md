@@ -311,13 +311,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                                                                  this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                                                                  a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                                                                  `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                                                                  load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                                                                  authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                                                                  own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                                                                  deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                                                      this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                                                      a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                                                      `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                                                      load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                                                      authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                                                      own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                                                      deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [x] ✅ [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify
       and again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed,

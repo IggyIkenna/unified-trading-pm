@@ -23,7 +23,7 @@ related:
   ]
 created: 2026-07-30
 authoritative_for: [operator-gated-blocked-row-lifecycle, blk-op-ruling-mechanism, reclassify-instruct-ui]
-referenced_by: [/plans/active/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
+referenced_by: [/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md]
 owner:
 last_reviewed: 2026-07-30
 code_refs:
@@ -43,7 +43,7 @@ source:
 
 # Operator-gated blocked-row lifecycle (`BLK-op-*`)
 
-> Codified 2026-07-30 per `/plans/active/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md`, which has the
+> Codified 2026-07-30 per `/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md`, which has the
 > full root-cause writeup, the live measurements that proved the pre-fix behavior was a no-op, and the rejected
 > alternatives. This doc describes the mechanism as it now works — read the issue doc for the "why", not this one.
 
@@ -163,7 +163,7 @@ thinner shape). It was deleted before shipping — if you're adding a new backen
 
 ## Cross-references
 
-- `/plans/active/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md` — full root cause, live measurements,
+- `/plans/archive/issues/operator_gated_blocked_answer_is_a_no_op_2026_07_30.md` — full root cause, live measurements,
   rejected alternatives, decision log.
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — dispatch / regen behavior this mechanism
   builds on.
