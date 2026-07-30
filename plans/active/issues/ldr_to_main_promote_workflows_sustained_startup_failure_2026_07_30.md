@@ -152,3 +152,10 @@ historical one.
 
 - **2026-07-30 (slot-11)**: filed, evidence-gathered, escalated to main via chat (message id 2649). Awaiting operator
   check of the GH account/repo Actions UI (not REST-accessible with the available PAT).
+- **2026-07-30 (slot-6)**: independent blast-radius confirmation from a DIFFERENT task
+  (`defi_venue_pipeline_to_live_ao_build_2026_07_30.md` todo 2) — `market-tick-data-service` is ALSO affected: no
+  `chore(promote): LDR → main` PR has merged since #773 (2026-07-28T13:56:40Z), and
+  `origin/main..origin/live-defi-rollout` is now **823 commits**. This confirms the incident is genuinely fleet-wide
+  (not just deployment-service) and still ongoing at time of writing (`ldr-to-main-promote.yml` still showing
+  intermittent `startup_failure`, not fully recovered). Re-confirms `assigned_vm: NA` + P0 is the correct routing —
+  already on the operator's radar, no new escalation needed, just corroborating evidence for whoever investigates next.
