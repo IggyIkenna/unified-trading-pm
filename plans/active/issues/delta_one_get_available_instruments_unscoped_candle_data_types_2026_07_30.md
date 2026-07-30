@@ -121,12 +121,19 @@ group doesn't consume that data_type.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Scope `DataLoader.candle_data_types` to the CLI's actual requested `--feature-group` (or the full
+- [x] ✅ [BACKEND] P2. Scope `DataLoader.candle_data_types` to the CLI's actual requested `--feature-group` (or the full
       set for `ALL`) instead of always unioning over `DEFAULT_FEATURE_GROUPS`, threading the value through from
       `batch_handler.py`'s CLI args into `DataLoader.__init__`. Repo: features-service. Done when: a DEFI
       `--feature-group funding_oi` launch's `get_available_instruments()` no longer includes `dex_pool_swaps`-only
       instruments, verified by a new unit test; `--feature-group ALL` still produces the same union as today (no
-      regression); `bash     scripts/quality-gates.sh` green.
+      regression); `bash     scripts/quality-gates.sh` green. — features-service@f932908b (already shipped on LDR):
+      `DataLoader.__init__` accepts `feature_groups: list[str] | None = None`, scopes `candle_data_types` to just the
+      passed group(s) (unioning over `DEFAULT_FEATURE_GROUPS` only when `None`); `batch_handler.py` now resolves
+      `groups_to_process` BEFORE `_initialize_services` and threads it through to `DataLoader(feature_groups=...)`.
+      Regression coverage in `tests/delta_one/unit/test_data_loader.py`:
+      `test_feature_groups_scoped_excludes_other_groups_data_types` (single-group scoping excludes the other group's
+      data_type) + `test_feature_groups_none_uses_full_default_union` (no-override case still produces the full
+      historical union — no regression for `ALL`/`target_handler.py`'s live path).
 - [ ] [DATA] P3. Once the above lands, re-verify the D1 delta_one leg's real throughput improves materially (fewer log
       lines / shorter wall-clock for the same date range) on a fresh relaunch. Repo: features-service /
       deployment-service (VM launch only, no code change).
@@ -138,3 +145,8 @@ group doesn't consume that data_type.
   this is a SEPARATE, downstream instrument-resolution path. VMs `features-delta-one-defi-20260730-223654` (funding_oi)
   and `features-delta-one-defi-20260730-224916` (returns) left running (idempotent SPOT, should still converge) rather
   than killed mid-backfill.
+- 2026-07-30 (slot-4): picked up the P2 BACKEND todo via `/boot`; found the fix already landed on LDR at
+  features-service@f932908b (slot-14, same-day) with the regression test coverage the todo's done-when required —
+  verified both new `test_data_loader.py` tests cover the required cases (scoped exclusion + ALL-case non-regression)
+  and confirmed f932908b is an ancestor of `origin/live-defi-rollout`. Flipped the checkbox; no new code needed. The
+  remaining `[DATA] P3` re-verification todo (fresh relaunch throughput check) is out of this task's scope.
