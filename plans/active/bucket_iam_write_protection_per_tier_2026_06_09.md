@@ -264,12 +264,37 @@ Two independent gates because Group A and Group B are at different stages:
 
 ### Phase 2 — Prod cutover + wiring
 
-- [ ] [TERRAFORM] P2.1. Apply `-prd-` write-scope; remove the god-SA `objectAdmin`. Verify live/batch prod workloads
-      retain `-prd-` write; verify a dev/stg credential is **denied** a `-prd-` write (IAM-level, not just
-      name-resolver). **Group B buckets join here only after the consolidation plan's Wave-3 folds provision their
-      `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
+> **🟥 SEQUENCING HAZARD found 2026-07-30 (slot-11) — P2.1 as originally written is UNSAFE to execute before P2.2.**
+> `unified-trading-sa` is the ACTUAL LIVE runtime identity for essentially the entire fleet today (deployment-api, Cloud
+> Run services, VM backfill launchers — `main.tf:651` comment: "unified-trading-sa, deployment-api's actual runtime
+> identity"). Live-verified 2026-07-30: zero references to `uts-prd-sa`/`uts_prd`/`uts-test-sa` anywhere in
+> deployment-service outside `terraform/`
+> (`grep -rn "uts-prd-sa\|uts_prd\|uts-test-sa" --include=*.py --include=*.yaml --include=*.sh .` → 0 hits), and only 5
+> of 165 `scripts/vm/launch-*.sh` even pass `--service-account=` at all. P2.2 ("wire each runtime to its tier SA") is
+> still fully unchecked — **nothing anywhere in the codebase authenticates as `uts-prd-sa` yet.** Removing
+> `unified_trading_storage_admin` (`main.tf:598-602`, the project-wide `roles/storage.objectAdmin` grant — the literal
+> "god-SA objectAdmin" this todo names) BEFORE P2.2 rewires runtimes would immediately 403 every live + batch GCS write
+> across the whole fleet (MTDS/MDPS/IS/features/execution/strategy stores, everything) — a direct violation of the
+> data-pipeline-correctness-is-the-heartbeat HARD RULE, and it would ALSO fail P2.1's own stated verification ("verify
+> live/batch prod workloads retain `-prd-` write") since they would in fact LOSE write access. **Split below mirrors
+> this plan's own precedent** (P1.2 → P1.2a/P1.2b: "a single checkbox covering both a genuinely-complete slice and a
+> still-blocked slice left nothing honestly flippable"). Full evidence + recommendation:
+> `issues/bucket_iam_p2_god_sa_removal_before_runtime_rewire_2026_07_30.md`.
+
+- [x] ✅ [TERRAFORM] P2.1a. **`-prd-` write-scope is already live** — P1.2b's `uts_prd_objectadmin_group_a` /
+      `uts_prd_objectadmin_group_b` bindings (`bucket_iam_per_tier_sa.tf`) were confirmed LIVE via `tofu state list` + a
+      clean `tofu plan` on 2026-07-29 (P1.2b's own evidence trail). No new terraform state change made this pass —
+      re-verified by reading `bucket_iam_per_tier_sa.tf` against that evidence. — slot-11, 2026-07-30.
+- [ ] [TERRAFORM] P2.1b. **Remove the god-SA `objectAdmin`** (`unified_trading_storage_admin` in `main.tf:598-602`);
+      verify live/batch prod workloads retain `-prd-` write (now via `uts-prd-sa`, not the god-SA); verify a dev/stg
+      credential is **denied** a `-prd-` write (IAM-level, not just name-resolver). **HARD-GATED on P2.2 completing +
+      being live-verified first** — do not remove the god-SA grant while any runtime still authenticates as
+      `unified-trading-sa` for writes. **Group B buckets join here only after the consolidation plan's Wave-3 folds
+      provision their `-{env}-` form (re-gated 2026-07-13; env-split plan archived).**
 - [ ] [CODE] P2.2. Wire each runtime to its tier SA (deployment-service launchers / Cloud Run service identities);
-      migration scripts opt into `uts-migration-sa` explicitly.
+      migration scripts opt into `uts-migration-sa` explicitly. **Do this BEFORE P2.1b** (see sequencing-hazard note
+      above) — P2.1b is not safely executable until every write-path runtime is confirmed running as `uts-prd-sa` (or
+      the relevant tier SA), not `unified-trading-sa`.
 - [ ] [TEST] P2.3. Negative tests: `ENVIRONMENT=staging` write to a `*-prod-*` bucket → `403` at IAM; migration SA →
       allowed. Add as a deployment-service QG check.
 
