@@ -398,3 +398,14 @@ and the residual-KeyError defense-in-depth path.
   redundant-dispatch waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still
   `status: open`, P2, awaiting an operator/design decision on Option A/B/C); adding this as further corroborating
   evidence there rather than duplicating the todo here.
+- **2026-07-30 (data_pipeline_failure escalation worker, escalation agt-14f171) — 6th+ dispatch, byte-identical
+  numerator to the immediately-prior reading, no manifest read needed.** Alert re-fired: 158,475/1,503,839
+  attempted_failed (10.5%), labeled "STATIC BACKLOG — no new attempted_failed activity in 1d". Numerator (158,475) is
+  byte-identical to agt-40f31f's reading minutes/hours earlier the same day (also 158,475/1,502,222) — only `attempted`
+  (denominator, `captured`) grew by 1,617, consistent with ordinary forward-progress on other cells, not this backlog
+  moving. Per agt-40f31f's own finding (this doc's prior entry), a byte-identical numerator against the
+  immediately-prior verified reading does not warrant re-running the live bounded manifest read — skipped it this
+  session. Verified both fix commits (`market-tick-data-service@6a067cf1` aiodns, `@6c6fab03` HYPERLIQUID 429/K*-symbol)
+  remain ancestors of `origin/live-defi-rollout` (`git merge-base --is-ancestor`, both true). **No code change, no new
+  todo** — same redundant-dispatch waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` tracks;
+  adding this as further corroborating evidence there.

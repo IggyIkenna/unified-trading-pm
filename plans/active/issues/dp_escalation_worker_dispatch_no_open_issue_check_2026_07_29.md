@@ -147,3 +147,11 @@ regression) is worse.**
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc self-documents its own AO-ineligibility: 'This needs an
   operator/design call on the right dedup semantics before implementation (marked assigned_vm: NA — not
   AO-dispatch-eligible as a bare fix-it todo per the dispatch-scope-eligibility rule)'.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-14f171) — 6th+ dispatch, `(cefi, derivative_ticker)`.**
+  `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired yet again. This time the numerator
+  (158,475) WAS byte-identical to the immediately-prior verified reading (agt-40f31f, same day), so — per that prior
+  session's own "no new `written_at` activity" finding — skipped the live manifest read entirely and did only a
+  git-ancestor check on the two shipped fix commits (both still ancestors of `live-defi-rollout`). Session cost: two
+  file reads + one `git merge-base` check + a Progress Log append, no GCS read. Further corroborates Option A: this
+  condition has now consumed 6 full orchestrator-agent dispatches for a backlog that has not moved in any
+  root-cause-relevant way since 2026-07-28.
