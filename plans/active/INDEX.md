@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 244 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -936,7 +936,7 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (13)
+### infrastructure (11)
 
 - [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) — A new /ops/artifacts
   page that shows the deployment estate's FINAL stage end-to-end — every Docker image and VM tarball built, where it
@@ -950,14 +950,6 @@ by hand._
   **[draft]** — Gated closeout for codex_vs_repo_docs_ssot_audit_2026_06_01.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todos…
-- [`e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27`](./e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md)
-  — Three services have no genuine end-to-end test coverage, surfaced by the 2026-07-27 pre-June-1 stale-plans audit
-  while archiving the old plans/active/end-to-end-testing/ per-service checklist. alerting-service and
-  deployment-service each…
-- [`e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30`](./e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30.md)
-  — Gated closeout for e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md, reclassified
-  `assigned_vm: NA -> planning` by the na-eligibility-audit infra-tranche run 2026-07-30 (retroactive-reclassification
-  shape, codex…
 - [`infra_satellite_ao_dispatch_batch1_2026_07_26`](./infra_satellite_ao_dispatch_batch1_2026_07_26.md) — The infra
   tranche's covering set is a ZERO-TODO digest. `infra_consolidated_closeout_2026_07_25.md` lists 32 Source docs for
   discoverability and carries no `- [ ]` of its own (verified: `grep -cE '^\s*-\s*\[[ xX]\]'` on it returns 0), and…
