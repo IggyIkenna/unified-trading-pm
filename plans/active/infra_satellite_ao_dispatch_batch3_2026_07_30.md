@@ -117,13 +117,19 @@ checkboxes _without_ archiving — precisely the distinction `task_template.md` 
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Make `scripts/workspace/sync-gitignore-cursorignore.py --dry-run` actually gate every write.**
-      Verified live at HEAD 2026-07-30 (re-read the file, do not trust this restatement): `main()` calls
-      `gitignore_path.write_text(...)` / `cursorignore_path.write_text(...)` unconditionally (~L294-296, printing
-      `Updated <repo>/`), then unconditionally shells out to `untrack-ignored-files.py --untrack` (~L327-334); the
-      `dry_run` flag is consulted **only** inside the `--purge-history` branch (~L305-321). The module docstring at L13
-      already promises "Preview changes without writing anything", so this aligns behaviour with an already-documented
-      contract rather than inventing one. Note the callee already supports report-only mode — but its gate is
+- [x] ✅ [SCRIPT] P2. **Make `scripts/workspace/sync-gitignore-cursorignore.py --dry-run` actually gate every write.** —
+      `unified-trading-pm@78a3740bf`: gated the `.gitignore`/`.cursorignore` writes + the chained
+      `untrack-ignored-files.py` call behind `dry_run` (prints "would update" instead of writing; forwards `--dry-run`
+      not `--untrack` downstream). Regression test `tests/unit/test_sync_gitignore_cursorignore_dry_run.py` (4 cases)
+      proves zero writes under `--dry-run` + correct flag forwarding. Live-verified:
+      `--dry-run --repo unified-trading-pm` + a `git status --short -- .gitignore .cursorignore` sweep across all 25
+      slot repos afterward showed zero diffs. `quality-gates.sh` green at this SHA. Verified live at HEAD 2026-07-30
+      (re-read the file, do not trust this restatement): `main()` calls `gitignore_path.write_text(...)` /
+      `cursorignore_path.write_text(...)` unconditionally (~L294-296, printing `Updated <repo>/`), then unconditionally
+      shells out to `untrack-ignored-files.py --untrack` (~L327-334); the `dry_run` flag is consulted **only** inside
+      the `--purge-history` branch (~L305-321). The module docstring at L13 already promises "Preview changes without
+      writing anything", so this aligns behaviour with an already-documented contract rather than inventing one. Note
+      the callee already supports report-only mode — but its gate is
       `dry_run = "--dry-run" in sys.argv and "--untrack" not in sys.argv` (`untrack-ignored-files.py` ~L54-58), so the
       caller must pass `--dry-run` **without** `--untrack`, not both. **Scope guard**: flag-gating only. Do NOT touch
       `scripts/templates/.gitignore.central` or attempt the template↔PM-live reconciliation — that is the source doc's
