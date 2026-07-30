@@ -48,8 +48,8 @@ related:
 created: "2026-07-28"
 last_updated: "2026-07-28"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 1.5
@@ -124,3 +124,10 @@ in this read-only audit pass (time-bounded scope).
 - [ ] [DATA] P2. Once root-caused, fix the writer (if writer bug) or the consolidator (if TOCTOU regression) and
       re-stamp affected historical rows per the paired writer-fix + re-stamp pattern already used for the cefi
       venue-as-chain fix on this same plan. Source: this doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). all 3 todos are bounded manifest-row sampling traces with stated discriminants; conflict-check clear
+  (`cross_cutting_satellite_ao_dispatch_batch1` only records the finding, does not claim the fix). Shared conflict-check
+  protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.

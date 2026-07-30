@@ -21,7 +21,8 @@ related:
 created: "2026-07-28"
 priority: P1
 parent_epic: cefi_master
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: backend_engineer
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -137,3 +138,11 @@ this historical spot-check date. No follow-up needed for these two.
 `/codex/02-data/four-surface-reconciliation-procedure.md` (venue-day gap classification),
 `.claude/skills/data-pipeline-check-is/SKILL.md` (ground-truth run.log verification method — no new pattern introduced
 by this doc, just applying the documented method to a genuinely-real finding).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). root cause already established (pre-launch date filter, expected); the sole todo is a bounded
+  crash-harden + a checkable date-registry reconciliation with a stated done-when. Conflict-check clear (both sibling
+  planning plans REFERENCE this doc as the owner). Shared conflict-check protocol:
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.

@@ -27,7 +27,8 @@ source:
     "Split out of ui_coverage_ts_venue_category_v2_rename_gap_2026_07_10.md at archival time, per the todos-not-prose
     archival rule (/codex/12-agent-workflow/plan-completion-and-archival-discipline.md § 2).",
   ]
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: ui_developer
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -54,3 +55,11 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
 - [ ] [ENGINEER] P3. Re-run `sync-archetype-capability-to-ui.sh --write`, verify the UI's `quality-gates.sh` stays green
       against the regenerated `coverage.ts`, and grep UAC's `architecture_v2` enums/types against the UI mirror for any
       other renamed/drifted export — fix any found the same way this issue's parent was fixed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). sole todo is a bounded script re-run (`sync-archetype-capability-to-ui.sh --write`) + a mechanical
+  enum-mirror grep; conflict-check clear (the one `capability_wizard_analysis_findings` hit is a missing-TEST claim, not
+  the regen). Shared conflict-check protocol:
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.

@@ -56,7 +56,8 @@ related:
   ]
 created: 2026-07-15
 parent_epic: cefi_master
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: data_engineering
 source:
   "Root cause found by a peer data_engineering slot, 2026-07-15T18:50Z, direct filtered read of
   market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet (KRAKEN-FUTURES/book_snapshot_5,
@@ -668,3 +669,10 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   redesign per the ruling's own text — not re-opened here. Leaving `status: open` (unchanged) since the relabel half of
   this doc's original scope is still tracked, now entirely in that other doc; this doc has nothing further of its own
   left to execute.
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). operator RULED 2026-07-29 approving the 49,720-row purge `--apply` (dry-run already verified) and the doc
+  itself retags it `[OPERATOR]`->`[DATA]` "now a normal dispatchable run"; the relabel half is parked elsewhere.
+  Conflict-check clear (only the non-covering digest mentions it). Shared conflict-check protocol:
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED. **Note (integrator,
+  same day)**: the close-out pass recorded immediately above executed that very purge while this tranche was running, so
+  the reclassification is now moot in practice — the doc has no remaining work of its own.

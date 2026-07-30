@@ -13,7 +13,8 @@ stage: [data]
 repos: [market-data-processing-service]
 scope: [engineer, admin]
 created: 2026-07-27
-assigned_vm: NA
+assigned_vm: planning
+assigned_role: data_engineering
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
@@ -75,3 +76,11 @@ here.
       2026-07-05, 1m, BTC-USDT@LIN) shard landed at two different object paths (with vs. without `instrument_type=`
       segment) — check whether this is invocation-path-dependent (skill driver vs. direct CLI) or a race in
       instrument_type resolution (repo: market-data-processing-service).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). sole todo is a bounded root-cause with two named candidate mechanisms (invocation-path vs resolution
+  race), determinable by code read; conflict-check clear (`data_pipeline_check_mdps_features` only REFERENCES this doc
+  as owner). Shared conflict-check protocol:
+  `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.

@@ -18,7 +18,7 @@ tags: [strategy, v2-engine, vol-trading, backtest, deribit]
 related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
 created: 2026-07-13
 parent_epic: strategy_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: brand-new
@@ -220,3 +220,10 @@ what's missing.
   manifest rows actually exist. **No production action taken in this pass** (no GCS writes, no VM launches, no `--apply`
   runs) — this was a docs/backlog-unblocking edit only; the actual full historical pull is the next AO-dispatchable
   step.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
+  unchanged). the operator gate was RULED 2026-07-28 and the doc itself states "no longer operator-gated, now
+  AO-dispatchable"; all 5 todos are bounded (DVOL pull -> backtest -> conditional register -> matrix regen).
+  Conflict-check clear: `cross_cutting_satellite_ao_dispatch_batch2` and the cefi digest both name THIS doc as the live
+  owner. Shared conflict-check protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
+  sect.3 - CLEARED.
