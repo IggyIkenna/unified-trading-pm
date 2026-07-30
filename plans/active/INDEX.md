@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 249 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -149,8 +149,11 @@ by hand._
 - [`prediction_live_clob_depth_capture_2026_07_24`](./prediction_live_clob_depth_capture_2026_07_24.md) — The live/batch
   data-capture pipeline for PREDICTION Kalshi + Polymarket YES/NO markets — WS connectors, transport/ sink correctness,
   message-shape fixes, live producer VM operations, source/pipeline-mode registration; split out of…
+- [`vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30`](./vol_dvol_backtestable_engines_2026_07_13_finalize_2026_07_30.md)
+  — Gated closeout for vol_dvol_backtestable_engines_2026_07_13.md, reclassified `assigned_vm: NA -> planning` by the
+  na-eligibility-audit cefi-tranche run 2026-07-30 (retroactive-reclassification shape, codex…
 
-### defi (40)
+### defi (45)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -254,6 +257,14 @@ by hand._
   **[draft]** — Gated closeout for defi_satellite_ao_dispatch_batch5_2026_07_27.md — machine-held via depends_on +
   gate_on_depends: true until all 7 of that plan's todos are done. Mirrors batch1-4-finalize's pattern (reconcile each
   distinct source doc's…
+- [`defi_satellite_ao_dispatch_batch6_2026_07_30`](./defi_satellite_ao_dispatch_batch6_2026_07_30.md) **[draft]** —
+  Sixth AO-dispatch batch for defi, produced by the scheduled `ag_closeout_auditor` role running the
+  `/ag-closeout-audit` skill's Phase-1 (per-doc classify) + Phase-3 (conflict-check + draft) triage over all 66 defi
+  AG-primary docs…
+- [`defi_satellite_ao_dispatch_batch6_2026_07_30_finalize`](./defi_satellite_ao_dispatch_batch6_2026_07_30_finalize.md)
+  **[draft]** — Gated closeout for defi_satellite_ao_dispatch_batch6_2026_07_30.md — machine-held via depends_on +
+  gate_on_depends: true until all 20 of that plan's todos are done. Mirrors batch1-5-finalize's pattern (reconcile each
+  distinct source doc's…
 - [`defi_strategy_pnl_axis_index_2026_07_24`](./defi_strategy_pnl_axis_index_2026_07_24.md) — Entry-point index for the
   DeFi strategy/PnL/backtest-engine axis (`strategy-service`), extracted from defi_consolidated_closeout_2026_07_18.md's
   "Strategy/PnL/backtest-side DeFi tracking" section (folded in there 2026-07-23, "no orphans")…
@@ -264,6 +275,14 @@ by hand._
 - [`defi_track5_coverage_mvp_backfill_2026_07_24`](./defi_track5_coverage_mvp_backfill_2026_07_24.md) — Forked verbatim
   from defi_consolidated_closeout_2026_07_18.md's "Track 5 — COVERAGE" section (2026-07-24, per task_template.md's
   "partial parallelism is NOT expressible inside one plan — SPLIT" rule and an operator ruling during the 5-AG…
+- [`defi_venue_pipeline_to_live_ao_build_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_2026_07_30.md) — Executes
+  the operator's 2026-07-29 ruling on issues/defi_venue_phase_live_definition_contradiction_2026_07_22.md — count
+  ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER toward the `defi` completeness_pct denominator, but only after they
+  genuinely…
+- [`defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30`](./defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md)
+  — Gated finalize companion for defi_venue_pipeline_to_live_ao_build_2026_07_30.md — reconciles the completed build's
+  evidence back into its source issue doc, then archives both docs per plan-completion-and-archival-discipline once
+  every todo…
 - [`instruments_satellite_ao_dispatch_batch1_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_2026_07_27.md) —
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
@@ -275,6 +294,10 @@ by hand._
   — MTDS `liquidations_handler.py`'s lending `instrument_type` writer bug is already fixed going forward
   (`mtds@fec20de2` — manifest stamp + disk write both derive from the same `resolve_lending_instrument_type()` call),
   but existing…
+- [`market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30`](./market_tick_data_service_lending_instrument_type_historical_restamp_finalize_2026_07_30.md)
+  **[draft]** — Gated close-out twin for market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24,
+  reclassified NA -> planning by /na-eligibility-audit defi on 2026-07-30. Verifies the re-stamp landed honestly
+  (row-count parity, no…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
   Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
   unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.
@@ -290,8 +313,12 @@ by hand._
   **[draft]** — Gated closeout for mvp_backfill_defi_onchain_v10_2026_06_27.md -- machine-held via depends_on +
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todo…
+- [`scenario_library_completion_13_16_finalize_2026_07_30`](./scenario_library_completion_13_16_finalize_2026_07_30.md)
+  **[draft]** — Gated close-out twin for scenario_library_completion_13_16_2026_07_27, reclassified NA -> planning by
+  /na-eligibility-audit defi on 2026-07-30. Reconciles the source plan's checkboxes, confirms both ScenarioOverlay
+  entries are genuinely…
 
-### tradfi (28)
+### tradfi (27)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -390,7 +417,7 @@ by hand._
   — Run ES feature calculations and ML training smoke test, and complete the full S&P 500 backtest for price-arb and
   prediction strategies.
 
-### sports (40)
+### sports (41)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -465,6 +492,10 @@ by hand._
   — Sports-specific live/forward data-availability matrix (per data_type x source: availability phase, live
   timestamp/cadence, live feed status, gap + cheap-source recommendation) and the companion source-latency validation
   (empirical p95-lag…
+- [`sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30`](./sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md)
+  — Gated closeout for sports_live_availability_and_source_latency_2026_07_24.md, reclassified
+  `assigned_vm: NA -> planning` by the na-eligibility-audit sports-tranche run 2026-07-30 (retroactive-reclassification
+  shape, codex…
 - [`sports_odds_feature_naming_canonicalization_2026_07_21`](./sports_odds_feature_naming_canonicalization_2026_07_21.md)
   — Operator-ruled 2026-07-21 (BLK-a1ce4719) resolution of sports_odds_feature_naming_four_way_mismatch_2026_07_21.md —
   direction is UAC-as-SSOT (Option A), executed as a scoped migration, not a blind rename. Picks deliberate field names
@@ -531,7 +562,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (30)
+### prediction (29)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -638,7 +669,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (62)
+### cross-cutting (59)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -687,9 +718,6 @@ by hand._
 - [`colocated_feature_pipeline_in_memory_handoff_2026_06_21`](./colocated_feature_pipeline_in_memory_handoff_2026_06_21.md)
   — Land deferred colocated feature pipeline I/O efficiency items (in-memory DAG handoff, parquet consolidation, column
   pruning) and restore features-service basedpyright strictness.
-- [`consolidator_throughput_backlog_monitor_2026_07_09`](./consolidator_throughput_backlog_monitor_2026_07_09.md) — Make
-  the Consolidators cockpit tab answer "is the consolidator keeping up?" — surface the per-asset_group backlog (per-VM
-  shards written since the last consolidated-index run, i.e. not yet absorbed) and a live throughput view of shards…
 - [`cross_cutting_consolidated_closeout_2026_07_25`](./cross_cutting_consolidated_closeout_2026_07_25.md) — New 6th
   "asset-group-style" umbrella (alongside cefi/defi/tradfi/prediction/sports) for data-pipeline (+ a small
   strategy/execution-determinism angle, Track 24) work that genuinely spans multiple asset groups rather than belonging
@@ -737,6 +765,10 @@ by hand._
   residual alert-substrate + hygiene-digest + writer-invariant hardening items forked out of
   data_pipeline_hardening_self_monitoring_2026_06_22.md's Phase 2/3/4/6-B sections during the 2026-07-24 line-cap
   remediation split. Everything…
+- [`data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30`](./data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md)
+  — Gated close-out twin for `data_pipeline_alert_substrate_residual_2026_07_24.md`, which was reclassified
+  `assigned_vm: NA → planning` by the 2026-07-30 `/na-eligibility-audit cross-cutting` run. Holds the post-ship
+  verification + archival…
 - [`data_pipeline_e2e_milestones_gate_2026_07_24`](./data_pipeline_e2e_milestones_gate_2026_07_24.md) —
   Operator-specified checklist (2026-07-24) of 14 milestones that must hold, symmetrically, across all 5 asset groups
   (tradfi/defi/cefi/prediction/sports) — across every data source, venue, chain, league, fixture, data_type,
@@ -754,20 +786,6 @@ by hand._
   2026-07-24 from data_completion_to_100_all_ag_2026_06_21.md (M-1) per the plan line-cap remediation
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
   still-inline…
-- [`data_status_catalogue_true_source_phase2_2026_07_24`](./data_status_catalogue_true_source_phase2_2026_07_24.md) —
-  Phase-2 follow-up forked from data_status_page_ux_and_canonicalisation_2026_07_16.md's P6 (catalogue explorer). Phase
-  1 ("captured instruments, availability-derived") is shipped. This plan builds the true-catalogue / expected-universe
-  side…
-- [`data_status_cell_grid_rearchitecture_2026_07_18`](./data_status_cell_grid_rearchitecture_2026_07_18.md) — Operator
-  ruled 2026-07-18 to schedule the real fix for a data-status tab that is fast at FULL history. Today the tab's manifest
-  cell-grid is built by reading the entire per-service manifest into memory (measured ~18GB IS / 81GB MTDS / 56GB…
-- [`data_status_page_ux_and_canonicalisation_2026_07_16`](./data_status_page_ux_and_canonicalisation_2026_07_16.md) —
-  Eight operator issues on the instruments-service data-status page (deployment-ui + deployment-api), each
-  code/live-verified via a multi-agent audit. P1 (Honest Coverage rendering only DeFi) is ROOT-CAUSED and FIXED — the
-  daily writer OOM'd…
-- [`data_status_tab_and_downloads_remediation_2026_06_16`](./data_status_tab_and_downloads_remediation_2026_06_16.md) —
-  Fix data-status tab UI bugs and instruments CSV download regressions in deployment-api/deployment-ui, gated on v9
-  manifest migration completion.
 - [`defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17`](./defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md)
   — Implement collateral-aware position sizing with USDC down-size branch, opportunity checker scoring for stables-only
   venues, and full wizard parameterization for all supported archetypes.
@@ -806,6 +824,10 @@ by hand._
   — Re-scoped from the never-completed Phases 5-7 of the archived 2026-03 instruments-service E2E audit
   (plans/archive/2026_07/e2e_testing_001_instruments_service_2026_03_22.md) — live-mode 15-min clock alignment,
   mock-mode failure scenarios,…
+- [`instruments_service_e2e_live_mock_observability_2026_07_27_finalize_2026_07_30`](./instruments_service_e2e_live_mock_observability_2026_07_27_finalize_2026_07_30.md)
+  **[draft]** — Gated close-out twin for `instruments_service_e2e_live_mock_observability_2026_07_27.md`, which was
+  reclassified `assigned_vm: NA → planning` by the 2026-07-30 `/na-eligibility-audit cross-cutting` run. Holds the
+  archival ritual + the…
 - [`instruments_store_cf_canonicalization_single_walk_2026_07_24`](./instruments_store_cf_canonicalization_single_walk_2026_07_24.md)
   — Split 1 of 3 from instruments_mtds_subset_consistency_remediation_2026_06_17.md (2026-07-24 line-cap remediation,
   clean-partition). Carries the instruments-store canonical-form (CF-1..CF-12) single-walk code-remediation lineage --
@@ -913,11 +935,8 @@ by hand._
 - [`ui_build_warm_cache_2026_06_17`](./ui_build_warm_cache_2026_06_17.md) — Keep the UI quality-gate build cache warm so
   incremental rebuilds only recompile changed code, not the full app.
 
-### infrastructure (11)
+### infrastructure (10)
 
-- [`artifact_pipeline_observability_2026_07_17`](./artifact_pipeline_observability_2026_07_17.md) — A new /ops/artifacts
-  page that shows the deployment estate's FINAL stage end-to-end — every Docker image and VM tarball built, where it
-  landed, what git SHA it carries, why a build failed, and (the view that does not exist today) what each…
 - [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) — Ratchet all repo
   codex-violation budgets to ≤5 fleet-wide and split egregious oversized source files (registry.py 18k, orchestrator.py
   8k).
@@ -950,7 +969,7 @@ by hand._
 - [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) — Runbook for auditing and
   clearing git stash piles across all workspace repos on any host, with archive-first conservative tooling.
 
-### meta (7)
+### meta (3)
 
 - [`data_pipeline_alerts_batch_remediation_2026_07_15`](./data_pipeline_alerts_batch_remediation_2026_07_15.md) —
   "Operator pasted a dense batch of data-pipeline-alerts Slack alerts (2026-07-14 23:50 to 2026-07-15 00:19 UTC) —
@@ -959,22 +978,6 @@ by hand._
   Register DeepSeek V4 Pro as a second, first-class model provider in agent-orchestrator's account pool, and add a
   routing layer so AutoSpawn decides per-task whether a fresh spawn uses DeepSeek or a Claude Max account — a real
   policy…
-- [`deployment_registry_firestore_migration_2026_07_14`](./deployment_registry_firestore_migration_2026_07_14.md) —
-  Design overview + phase index for migrating the deployment registry (heartbeat + lifecycle state, one JSON blob per VM
-  under deployments/active/ in GCS) to Firestore. The GCS-object-per-VM read pattern does not scale — the inventory
-  census…
-- [`deployment_registry_firestore_p3_cutover_2026_07_14`](./deployment_registry_firestore_p3_cutover_2026_07_14.md) —
-  Once every reader is on Firestore (Phase 2), stop writing GCS — drop the dual-write so Firestore is the sole SSOT —
-  then delete the GCS registry blobs after a snapshot, keeping only a codex note of the GCS-to-Firestore lineage. The
-  two…
-- [`deployment_registry_firestore_p5_verify_2026_07_14`](./deployment_registry_firestore_p5_verify_2026_07_14.md)
-  **[draft]** — Prove the migration actually solved the scale ceiling — a synthetic 5,000-doc registry with the
-  inventory query + UI render staying under budget, a recorded heartbeat-cadence cost recommendation — then close the
-  loop in the docs by…
-- [`deployment_ui_observability_ux_tracker_2026_07_17`](./deployment_ui_observability_ux_tracker_2026_07_17.md)
-  **[draft]** — Operator-driven tracker for the next round of deployment-ui work, captured 2026-07-17 so nothing is lost
-  — to be SPLIT into per-workstream AO plans before dispatch. WS-1 Cost/day column accuracy (root cause CONFIRMED by
-  code trace — the…
 - [`qg_host_adaptive_resource_governor_2026_07_14`](./qg_host_adaptive_resource_governor_2026_07_14.md) — Replace
   quality-gates.sh's fixed-K host-concurrency token bucket with a host-adaptive admission controller that reads each
   host's real MemTotal/MemAvailable + physical cores at runtime and admits a QG heavy phase only when BOTH a RAM…

@@ -298,6 +298,29 @@ Flip format is the CLAUDE.md HARD RULE: `- [x] … — <repo>@<sha> + <one-line 
 `docs(plans):` prefix (**not** `plan(...)` — hook-rejected). Half-done items: flip only the shipped half, annotate the
 rest `**DEFERRED**:` with why.
 
+### 4. ZERO-CHECKBOX docs — this skill's standing responsibility, all 10 tranches (added 2026-07-30)
+
+**This skill OWNS the zero-checkbox sweep.** A doc with no `- [ ]` and no `- [x]` at all has no surface for any of the
+three sweeps above — it is invisible to `check_todo_format.sh`, to `regen_backlog_from_plan.py`, to the near-complete /
+fully-done candidate computation in Phase 0, and to every orphan and NA audit that counts todos. It is the purest form
+of the false-progress class this skill exists to kill: real remaining work written as prose, with nothing mechanical
+able to see it. Named owner + named cadence, so it stops being a periodically-rediscovered one-off: **it runs as part of
+this skill's own periodic run, every run.**
+
+- **Corpus scope is ALL 10 tranches** — `cefi`, `defi`, `tradfi`, `prediction`, `sports`, `cross-cutting`, `ao`, `ci`,
+  `infra`, `ui`, PLUS `asset_group: meta` and any doc whose tag doesn't resolve to a tranche at all. This is the
+  correction: the previous sweep covered only the 5 original AGs, and that was a STRUCTURAL blind spot, not an oversight
+  of execution — `ao`/`ci`/`infrastructure` (real enum values since 2026-07-27) and `ui` (since 2026-07-30) are
+  precisely where prose-only process/incident write-ups collect. In a topic-scoped run, sweep your own tranche; an
+  `all`/unscoped run must cover every one.
+- **Per doc**: read it end to end, decide whether it holds genuine remaining work. If yes → convert each item into a
+  canonical `- [ ]` [TAG] P<n>. todo in the doc (never leave it prose — `/codex/12-agent-workflow/`
+  `plan-completion-and-archival-discipline.md` § 2). If no → it is a finished record: archive it via the 6-step ritual
+  (a zero-open-todo doc archives regardless of line-cap — same codex doc, § "The line-cap does NOT block archival").
+  Genuinely ambiguous → route through Phase 4 like any other judgment call.
+- **Report the count every run** (docs with zero checkboxes found / converted / archived / routed), so a growing
+  population is visible instead of silently accumulating between sweeps.
+
 ## Phase 3 — adversarial verification (nothing ships unverified)
 
 Dedup candidates by (doc-pair, claim), then for each: an independent **refuter** (assume NOT real; attack via
@@ -330,6 +353,24 @@ the same way: the refuter attacks the evidence chain (sha actually reachable? ar
   work lives is a planning decision: interactive → ask with a recommended fold-target; autonomous/AO → **park with the
   specific recommended target named**, never auto-fold (moving live todos between plans without a ruling is
   review-blocking). Once the remnant is folded by ruling, the emptied shell archives as a fully-done plan.
+
+  **The ONE narrow fold-by-default carve-out (operator ruling 2026-07-30).** Auto-folding without a ruling is authorized
+  ONLY when BOTH hold:
+  1. the single remaining open todo is tagged **`[REVIEW]` or `[DOC]`** — the two lowest-blast-radius classes, where a
+     wrong fold target costs a re-read, not mis-routed engineering work; AND
+  2. its `parent_epic` has **exactly one** obvious ACTIVE sibling plan — i.e. the fold target is not a choice at all, it
+     is the only destination that exists. Two or more candidate siblings means the destination IS a preference call and
+     the default rule above applies unchanged.
+
+  Anything else stays operator-gated — a `[SCRIPT]`/`[DATA]`/`[OPERATOR]` remnant, a zero-sibling epic, a multi-sibling
+  epic, or any remnant carrying a `locked_by:`. When the carve-out DOES apply, still record the fold both ways
+  (FOLDED-OUT marker in the shell, FOLDED-IN section in the target) so Phase 5.9(d)'s conservation assertion balances.
+
+  **Ongoing near-complete-plan handling routes through the regular audit cadence, not a one-off mechanism.** This
+  skill's own periodic run plus `/ag-closeout-audit` and `/na-eligibility-audit` on their standing schedules already
+  sweep the whole corpus for this shape — near-complete plans are a steady-state condition, not a backlog to be drained
+  once. Do not build (or ask the operator to schedule) a special one-off near-complete sweep; if the cadence isn't
+  catching them, fix the cadence.
 
 | Claim provably wrong vs the source of truth | **AUTO-RESOLVE — do not escalate.** If a number/name/status is countable
 or checkable (AST, `git cat-file`, `os.path.exists`, a newer dated banner in the same doc), RUN the check and fix it,
@@ -420,14 +461,19 @@ to zero.
 
 ## AO-VM handoff — LIVE (this skill's own doc was stale on the cadence; fixed ao_remediation_a_independent_fixes_2026_07_23 #8)
 
-The handoff described below is DONE, not a target end-state: `plan_reconciler` (the `agents/plan_reconciler.md` daily
-worker that folds this skill's autonomous contract in) runs automatically once a day, autonomous mode, via
-`plan-reconciler.timer` on the central orchestrator VM — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`
-installs it (01:00 UTC, a quiet window before the fleet's morning activity). The timer POSTs `{"mode": "reconcile"}` to
-`/api/plan-health/dispatch`, which spawns the worker (opus / effort max / thinking on) on a free Max-plan slot. The
-autonomous contract above (no pauses, auto-fix only, park rulings, notify on big findings) is exactly the
-non-interactive behaviour that daily worker runs under. This skill (`/plan-reconcile`) stays directly invocable
-interactively any time — the timer is additive, not a replacement for an on-demand run.
+The handoff described below is DONE, not a target end-state: `plan_reconciler` (the `agents/plan_reconciler.md` worker
+that folds this skill's autonomous contract in) runs automatically in autonomous mode via `plan-reconciler.timer` on the
+central orchestrator VM — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh` installs it. **Cadence as of
+2026-07-30: every 2 hours, on EVEN hours at :00 UTC**, with an idempotency guard that makes every fire after the day's
+first success a cheap no-op — so this is retry-until-capacity, not 12 reconciles a day. Widened from the 2026-07-29
+hourly cadence because a whole-corpus run MEASURED 4175s (69.6min) on 2026-07-30 (45-50min even on a quiet corpus), well
+past the 15-min inter-job stagger the hourly schedule assumed; the unit's `TimeoutStartSec` went 2450 → 6000 in the same
+change. If a run ever needs more than ~2h, shard it by tranche (this skill already supports that) rather than growing
+one monolithic run's budget again. The timer POSTs `{"mode": "reconcile"}` to `/api/plan-health/dispatch`, which spawns
+the worker (opus / effort max / thinking on) on a free Max-plan slot. The autonomous contract above (no pauses, auto-fix
+only, park rulings, notify on big findings) is exactly the non-interactive behaviour that daily worker runs under. This
+skill (`/plan-reconcile`) stays directly invocable interactively any time — the timer is additive, not a replacement for
+an on-demand run.
 
 ## Codex SSOTs
 

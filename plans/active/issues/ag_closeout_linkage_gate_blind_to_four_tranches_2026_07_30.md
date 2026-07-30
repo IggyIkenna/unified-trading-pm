@@ -121,7 +121,7 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Extend `check_ag_closeout_linkage.py` to cover `cross-cutting`/`ao`/`ci`/`infrastructure`: replace
+- [x] [SCRIPT] P2. Extend `check_ag_closeout_linkage.py` to cover `cross-cutting`/`ao`/`ci`/`infrastructure`: replace
       the hard-coded `REAL_AGS` with the live `docspec` `ASSET_GROUP` enum minus `meta`, and make
       `closeout_family_for()` resolve the filename form (`ag.replace("-", "_")`) not the raw enum value so it finds
       `cross_cutting_consolidated_*`. Add a loud assertion (not a silent `continue`) when a tranche in the covered set
@@ -130,13 +130,45 @@ and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI
       measured across the whole corpus first and the baseline set to the measured count (expected to jump from 0 into
       the tens), then ratcheted DOWN as docs get linked. **Done when**: the widened check runs green at a
       measured-and-recorded baseline, and a deliberately-unlinked test doc in each of the 4 tranches makes it fail.
+      **DONE 2026-07-30** — `COVERED_ASSET_GROUPS` now derives from `docspec.ASSET_GROUP - {"meta"}`; the enum→filename
+      mapping is an explicit `_CLOSEOUT_FILENAME_PREFIX` dict (`cross-cutting`→`cross_cutting`, `infrastructure`→`infra`
+      — note a bare `.replace("-", "_")` would still have MISSED `infra_*`, which is why the fix is a mapping, not a
+      string transform); an empty closeout family now prints a loud multi-line block to stderr on EVERY run (including
+      under `--quiet`, the shape `run_hygiene_sweep.sh` uses) and is named in the final verdict line, with
+      `--strict-families` available to make it exit non-zero. **Measured + re-seeded**: the final full-corpus run
+      against the committed tree gave **32 orphans** (per-tranche: cross-cutting 21/97, infrastructure 8/36, cefi 2/61,
+      tradfi 1/38, defi 0/81, prediction 0/18, sports 0/68, ui 0/17), baseline re-seeded 0 → 32 with the reason recorded
+      in `ag_closeout_linkage_baseline.yaml`'s own header; re-run green at 32 (exit 0). Two earlier passes the same day
+      recorded 31 and 34 against different corpus snapshots — this corpus is edited concurrently by several agents, so
+      the raw number moves between runs; 32 is the snapshot the gate was actually verified against. All 32 pre-date this
+      change (verified `git cat-file -e HEAD:<path>` on every one); the single NEW orphan this session would have
+      introduced was fixed by adding a `related:` link, not absorbed into the baseline. **Negative test PASSED for 3 of
+      the 4 named tranches, and honestly FAILED for 2** — run against an isolated throwaway copy of `plans/active`
+      (never the live tree) with one deliberately-unlinked doc injected per tranche: `cross-cutting`, `infrastructure`,
+      `ui` and the `cefi` control each caught theirs (count 33 → 37 in that environment, exit 1). **`ao` and `ci` did
+      NOT catch theirs — they read 0 orphans / 0 enforced docs, because both `ao_consolidated_closeout_2026_07_25.md`
+      and `ci_consolidated_closeout_2026_07_25.md` are ARCHIVED so no family resolves.** That is the loud-warning path
+      working as designed, not a silent pass — but those two tranches have no linkage safety net at all until they get
+      an active closeout family. See the follow-up todo below.
+- [ ] [PLAN] P2. Give `ao` and `ci` an ACTIVE closeout family again so `check_ag_closeout_linkage.py` can enforce them —
+      today both resolve to an empty family and the gate reports them UNENFORCED on every run (proven 2026-07-30 by the
+      negative test above: an unlinked `ao`/`ci` doc is NOT caught). Two candidate shapes, needs a ruling: (a) author a
+      fresh `ao_consolidated_closeout_<date>.md` / `ci_consolidated_closeout_<date>.md` for the post-archival residual;
+      or (b) if `plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` is genuinely `ao`'s live closeout
+      family, add its prefix to `_CLOSEOUT_FILENAME_PREFIX` — that is a content judgment about what that doc IS, not a
+      mechanical rename, which is why this run did not decide it. **Done when**: both tranches report a non-zero
+      enforced-doc count, the baseline is re-measured (it will RISE — 32 currently under-counts by exactly these two
+      tranches) and the raise is recorded in the baseline header.
 - [ ] [DATA] P3. Once the widened gate has a real baseline, re-run it and reconcile its orphan list against this run's
       measured 29 never-cited cross-cutting docs (listed in the Progress Log below) — the two should broadly agree; any
       doc the gate still misses points at a third blind spot worth understanding before ratcheting.
-- [ ] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
+- [x] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
       currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
-      true only for the 5 real AGs today. **[OPERATOR]** — SKILL.md edits need an operator ruling; this run could not
-      make it.
+      true only for the 5 real AGs today. **DONE 2026-07-30** (operator ruling this session authorised the SKILL.md
+      edit): that paragraph now states the real coverage — the gate derives its covered set from docspec's live
+      `ASSET_GROUP` enum minus `meta`, baseline re-seeded 0 → 32 at the measured count, and **`ao`/`ci` remain
+      UNENFORCED** because both closeout docs are archived so no family resolves (the gate prints that loudly on every
+      run rather than skipping silently).
 
 ## BLOCKED-OPERATOR-DECISION — the cross-cutting tranche is accumulating `ci`/`ao` content by habitual tag
 

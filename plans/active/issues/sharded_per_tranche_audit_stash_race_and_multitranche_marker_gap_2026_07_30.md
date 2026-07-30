@@ -130,12 +130,25 @@ For **(2) the multi-tranche marker gap** — recommended **A**:
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Rule on option A/B/C for the multi-tranche marker gap (§ 2) — this is an ownership/schema design
+- [x] [OPERATOR] P1. Rule on option A/B/C for the multi-tranche marker gap (§ 2) — this is an ownership/schema design
       call, not a worker-determinable fact, and it changes both `/na-eligibility-audit` and `/ag-closeout-audit`.
-- [ ] [DOC] P1. Once § 1's option is ruled (recommendation A), add the "never `git stash` in a sharded run — use a
+      **RULED 2026-07-30: option A (one owning tranche per doc), with the owning tranche derived from `parent_epic`
+      rather than from the first `asset_group` entry** — `parent_epic` is single-valued and maps 1:1 onto a real
+      `plans/epics/{parent_epic}.md`, and the `parent_epic`→tranche mapping is already blessed in
+      `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 2, so no new `audit_tranche:`
+      frontmatter key is needed. A non-owning tranche still classifies and reports a shared doc; only the owning tranche
+      WRITES to it. Applied to `/cursor-configs/skills/na-eligibility-audit/SKILL.md` § "Primary-owner rule for
+      multi-tranche docs" (the statement) and referenced from `/cursor-configs/skills/ag-closeout-audit/SKILL.md` §
+      "Running as one of N concurrent sharded tranche workers" (not duplicated).
+- [x] [DOC] P1. Once § 1's option is ruled (recommendation A), add the "never `git stash` in a sharded run — use a
       throwaway second worktree to A/B against a pristine tree" rule to both skills' Autonomous/AO-dispatched sections
       and to `/codex/05-infrastructure/per-tab-worktrees.md`, which currently documents worktree isolation without
-      noting that `refs/stash` is shared.
+      noting that `refs/stash` is shared. **DONE 2026-07-30** — added to
+      `/cursor-configs/skills/ag-closeout-audit/SKILL.md` § "Running as one of N concurrent sharded tranche workers"
+      (rule 2), `/cursor-configs/skills/na-eligibility-audit/SKILL.md` § "NEVER `git stash` as one of several concurrent
+      sharded tranche workers", and `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT
+      cover" (which now states that `refs/stash` is one shared LIFO stack per `.git`, and that a shared scratch/temp
+      path is likewise not isolated).
 - [ ] [SCRIPT] P2. Have `generate_na_doc_tranche_inventory.py` emit an explicit `owning_tranche` per doc (however § 2 is
       ruled) so a worker can filter to the docs it owns instead of each tranche independently re-deriving membership
       from the full `asset_group` list.

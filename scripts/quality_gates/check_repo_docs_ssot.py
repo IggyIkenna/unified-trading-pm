@@ -60,6 +60,18 @@ BASELINE = Path(__file__).resolve().parent / "repo_docs_ssot_baseline.yaml"
 
 # Repos that are NOT audit targets: the PM repo is the SSOT itself.
 _EXCLUDED_REPOS = {"unified-trading-pm"}
+# Scratch/agent-work clones sitting alongside the real sibling repos are NOT audit targets
+# (added 2026-07-30). `_iter_repo_docs()` blindly `iterdir()`s every directory in the
+# workspace root, so a throwaway clone like
+# `instruments-service-agentwork-sports-2026-07-13/` read as a real repo owing doc-SSOT
+# compliance and its frozen, weeks-old `docs/` re-entered the scan — pure noise, and a
+# false gate failure nobody could fix without deleting a directory that isn't a repo.
+# Same intent as check_frontmatter_schema.py's `_CLAUDE_WORKTREE_PREFIX` exclusion (a live
+# agent's `.claude/worktrees/<id>/` copy is scratch space, never real corpus content) —
+# mirrored here on the directory NAME, which is the only signal available at this level.
+# Matches: `<repo>-agentwork-<anything>`, `scratch-clone*`, `*-scratch-clone*`, and any
+# `.`/`_`-prefixed dir (`.claude`, `.tabs`, `__pycache__`).
+_SCRATCH_CLONE_RE = re.compile(r"(-agentwork-|(^|-)scratch-clone)")
 # Path fragments that mark a vendored mirror / dependency tree / archived doc — excluded
 # per the audit method (Appendix B: ".cursor/* symlinks excluded as vendored mirrors in
 # every repo; docs/archive/* excluded").
@@ -82,11 +94,22 @@ def _is_excluded(rel_parts: tuple[str, ...]) -> bool:
     return "archive" in rel_parts
 
 
+def _is_scratch_clone(name: str) -> bool:
+    """True for a throwaway agent-work / scratch clone sitting next to the real repos.
+
+    Name-based by necessity — at workspace-root level there is nothing else to go on. See
+    `_SCRATCH_CLONE_RE` for the incident this closes.
+    """
+    return name.startswith((".", "_")) or bool(_SCRATCH_CLONE_RE.search(name))
+
+
 def _iter_repo_docs(workspace_root: Path) -> list[Path]:
     """Every living repo doc in scope: each sibling repo's docs/**/*.md + root README.md."""
     out: list[Path] = []
     for repo_dir in sorted(workspace_root.iterdir()):
         if not repo_dir.is_dir() or repo_dir.name in _EXCLUDED_REPOS:
+            continue
+        if _is_scratch_clone(repo_dir.name):
             continue
         readme = repo_dir / "README.md"
         if readme.is_file():

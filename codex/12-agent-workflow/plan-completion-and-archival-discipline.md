@@ -70,6 +70,35 @@ but all todos are done — should I unlock it?") but MUST NEVER unlock autonomou
 `run_hygiene_sweep.sh` + `regenerate_active_plan_inventory.py` catch a stale-active-but-fully-checked plan on their own
 cadence, but that is the SAME "caught later, not at completion time" pattern this doc exists to stop relying on.
 
+### The line-cap does NOT block archival of an already-done doc (RULED 2026-07-30)
+
+**A doc with ZERO open todos archives via the normal 6-step ritual regardless of how far over the line-cap it is.**
+`check_line_caps.sh`'s two-tier cap (plans 500 soft / 1000 hard; epics 2000 hard) exists to stop a LIVE plan growing
+into an unreadable hub — it has no purpose on a doc whose work is finished and which is on its way out of
+`plans/active/` entirely. Archiving it is the very thing that removes it from the capped corpus.
+
+**The failure this closes**: on 2026-07-30 the gate refused a completion marker on a 1509-line, zero-open-todo doc. The
+practical consequence is the exact opposite of what the cap is for — the doc stays `active`, so every `/plan-reconcile`,
+`/ag-closeout-audit` and `/na-eligibility-audit` run re-reads all 1509 lines of it, forever, to re-derive the same "yes,
+this is done" verdict. A cap meant to reduce read cost was instead permanently maximising it.
+
+Mechanics: the cap fires in `check_line_caps.sh`'s SCOPED mode (the prek hook, called with the staged file list), which
+by design has no baseline and refuses any staged over-cap file. Two things keep this exception honest rather than a
+loophole:
+
+- **It is gated on ZERO OPEN TODOS, verified — not on "looks done".** Every `- [ ]` must be genuinely closed against the
+  `/plan-reconcile` Phase-2 HARD-evidence bar first. A doc with even one open todo is a live plan and the cap applies
+  normally: split it, or fold the remnant (see `/plan-reconcile`'s near-complete-plan handling).
+- **The commit must be the archival move itself** (the `git mv` into `plans/archive/<YYYY_MM>/` plus the 6 ritual
+  steps), not a content edit that happens to leave the over-cap doc sitting in `plans/active/`. Once archived, the doc
+  is outside the checked globs (`plans/active/*.md` + `plans/epics/*.md`) and the question is moot — `nature: record`
+  archive docs are unbounded by design, which the script already documents for the neighbouring
+  extract-history-into-archive case.
+- Practically: if the hook still blocks the staged move, that is the gate mis-scoping an archive-bound path (the same
+  class it already special-cases at `check_line_caps.sh`'s `plans/active/`+`plans/epics/` path filter) — fix the
+  scoping, do not shrink a finished doc to appease it, and never delete content from a done plan just to get under a
+  cap.
+
 ## 2. Every follow-up is a canonical `- [ ]` todo — never prose
 
 A "next steps" paragraph, a Progress Log aside that only describes future work in prose, or a chat-summary bullet that

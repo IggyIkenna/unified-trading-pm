@@ -461,6 +461,34 @@ worktree-level (separate index/working tree). Separate clones drop the entire **
 (deleted fleet-wide), the tab-rebase/upstream self-heal in `slot-cron-ff-pull.sh`, and the diverged-tab recovery class.
 Contention moves to **LDR push-time** (rebase-on-reject), already handled by quickmerge STAGE 0.4.
 
+### What worktree isolation does NOT cover (codified 2026-07-30)
+
+Worktree/clone isolation covers exactly three things: the **working tree**, the **index**, and **HEAD**. Two surfaces
+that agents routinely assume are isolated are NOT, and both have caused real data loss:
+
+**1. `refs/stash` is a SINGLE shared LIFO stack per `.git` directory — not per worktree.** Multiple `git worktree`s on
+ONE clone (including the `Agent` tool's `isolation: "worktree"` scratch worktrees under `.claude/worktrees/<id>/`) all
+push to and pop from the same stack. Worker A's `git stash push` followed by worker B's `git stash pop` pops **A's**
+entry, not B's — silently, with no conflict and no warning. **Confirmed incident 2026-07-30**: a push/pop race between
+two concurrent sharded tranche workers of `/na-eligibility-audit` swapped two workers' unrelated changesets. This is
+distinct from (and additive to) the "never `git stash drop` foreign WIP" rule below — here nobody drops anything, the
+stack just hands the wrong entry to the wrong worker.
+
+- **HARD RULE**: never `git stash` while running as one of several concurrent workers on a shared clone. Need a
+  pristine-tree comparison? Use a **throwaway second worktree at HEAD** — `git worktree add <scratch> HEAD`, read it,
+  `git worktree remove <scratch>` — which IS properly isolated. The `--autostash` flavours drive the same stack, so
+  prefer `git pull --ff-only` from an already-clean tree over `git pull --rebase --autostash` in that shape. (Per-SLOT
+  clones are separate `.git` dirs and therefore separate stash stacks — the hazard is concurrency WITHIN one clone,
+  which is the normal shape for sub-agents and for the sharded per-tranche audit workers.)
+- Note the asymmetry with the neighbouring rules: separate slot CLONES made cross-slot index collisions unrepresentable,
+  which is exactly why the remaining shared-state surfaces are easy to forget.
+
+**2. A shared scratch/temp filesystem path is not isolated either.** If two agents resolve the same scratchpad or temp
+directory (a shared `TMPDIR`, a hardcoded workspace-relative scratch dir, a per-session path that two sub-agents of the
+same session both inherit), they will clobber each other's intermediate files with no git involvement at all. Scope
+scratch artifacts by a unique per-agent token (agent id / PID / `mktemp -d`), never by a name two concurrent workers can
+both derive.
+
 ## Within-slot ergonomics
 
 Every slot clone's `.envrc` declares:

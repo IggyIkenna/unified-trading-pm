@@ -66,8 +66,16 @@ retag pass only covered docs that were bare-tagged `cross-cutting` at the time; 
 a habitually-typed `cross-cutting` tag (old muscle memory) or a blank/mistagged `asset_group` needs the same
 content-judgment fallback the old workaround used: read that tranche's own consolidated-closeout doc's Track/Sources
 lists, or read the doc itself, before concluding it's out of scope. **Still do not fully trust `asset_group` alone
-without a linkage check** — `check_ag_closeout_linkage.py` remains the safety net for any doc the tag and the Sources
-lists disagree about.
+without a linkage check** — `check_ag_closeout_linkage.py` is the safety net for any doc the tag and the Sources lists
+disagree about. **Read that gate's real coverage before relying on it (corrected 2026-07-30)**: until today it enforced
+only the 5 original AGs — a hand-listed `REAL_AGS` that never got the 2026-07-27 `ao`/`ci`/`infrastructure` expansion,
+plus a filename-prefix bug that silently matched zero closeout docs for `cross-cutting` and `infrastructure` — so it
+reported a comfortable "0 orphans" while checking nothing at all for 5 of 10 tranches. It now derives its covered set
+from docspec's live `ASSET_GROUP` enum minus `meta` (baseline re-seeded 0 → 32 at the measured count) and reports any
+tranche with no discoverable closeout family LOUDLY instead of skipping it in silence. **`ao` and `ci` are still
+UNENFORCED** — both closeout docs are archived, so no family resolves; the gate says so on every run, and a doc in
+either tranche gets no linkage safety net at all until that's fixed. Track:
+`/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`.
 
 **`ui`**: **`ui` is a real dedicated `asset_group` enum value from the day it was added** (2026-07-30,
 `unified-trading-pm@<sha-this-session>` — `docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5, now 11 values:
@@ -114,9 +122,21 @@ of 2026-07-25, a single topic-scoped shard of it — see `/plan-reconcile`'s own
 drafts the next AO-dispatch batch to close the gap. Run `/plan-reconcile` first if the corpus might have
 stale/false-unchecked state — this skill's classification is only as good as the frontmatter `status` it reads.
 
-**Also NOT `/na-eligibility-audit`.** An `assigned_vm: NA`, `status: active`/`open` doc is by definition NOT orphaned
-(it has an owner: itself) — this skill correctly never touches it. Whether that doc's OWN `NA` self-classification is
-still correct is a disjoint question `/na-eligibility-audit` answers, over a disjoint population, on its own schedule.
+**Also NOT `/na-eligibility-audit` — but an `assigned_vm: NA` doc is NOT categorically excluded from orphan-eligibility
+here (RULED 2026-07-30, correcting this section's prior wording).** The two skills are disjoint by QUESTION, not by
+population. This skill asks "does any currently-active covering plan actually claim this doc's remaining work?";
+`/na-eligibility-audit` asks "is this doc's own `NA` self-classification still correct?". **An NA doc's
+self-classification correctness is out of scope here** — never reclassify one from this skill, never verdict its
+NA-ness, just report whether anything covers it.
+
+The prior wording ("an `assigned_vm: NA` doc is by definition NOT orphaned — it has an owner: itself") was WRONG, and it
+contradicted the shipped tooling. **Tooling wins — `generate_ag_closeout_audit_candidates.py` is the definition.** That
+script treats a doc as covering itself only when it is SELF-DISPATCHED: `assigned_vm == "planning"` AND `status` ∈
+`{active, open}` (its `self_dispatched` flag). `assigned_vm: NA` is precisely the case where the doc is NOT its own
+dispatch vehicle — nothing will pick it up — which is exactly the orphan signal this skill exists to raise. Reading the
+old prose literally excludes every NA doc from the candidate set; that swung one tranche's orphan count by 19 docs on
+2026-07-30. An NA doc reported orphaned here is an accurate "no active plan covers this" finding: report it, and let
+`/na-eligibility-audit` separately decide, on its own schedule, whether NA was the right classification to begin with.
 
 ## Why `batchN` exists as a SIBLING doc, not content folded into the consolidated closeout plan
 
@@ -192,6 +212,32 @@ a cycle:
   (drafting a new batch/finalize pair) is a `status: draft` doc creation, which is safe to do autonomously (drafts are
   not ingested/dispatched), but flipping it to `status: active` to actually dispatch it is an operator decision — park
   it as a normal `- [ ]` follow-up item, never auto-flip.
+
+## Running as one of N concurrent sharded tranche workers — two HARD safety rules (added 2026-07-30)
+
+The scheduled shape of this skill is NOT one worker sweeping 10 tranches — it is up to 9-10 workers, ONE PER TRANCHE,
+dispatched concurrently onto separate slots by `ag-closeout-auditor.timer`
+(`agent-orchestrator/scripts/install-ag-closeout-auditor-timer.sh`). Two failure classes exist only in that shape, and
+both bit on 2026-07-30:
+
+**1. A doc that legitimately spans multiple tranches has exactly ONE owning tranche — derive it from `parent_epic`.**
+Stated once, not twice: `cursor-configs/skills/na-eligibility-audit/SKILL.md` § "Primary-owner rule for multi-tranche
+docs" is the rule, and `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 2 (`parent_epic`,
+not `asset_group`, is the clean grouping axis) is the SSOT both skills defer to. This skill and `/na-eligibility-audit`
+partition the SAME corpus by the SAME 10-way split, so they hit the SAME collision — measured on the NA corpus
+2026-07-30: one doc appeared in 6 of 9 tranches, and up to 47% of a single tranche's docs appeared in 2+. Applied here:
+a NON-owning tranche still classifies a shared doc and still reports its orphan verdict (that verdict is real and
+belongs in that tranche's report), but any **write** to the shared doc itself — a linkage/`related:` fix, a retag, a
+verdict marker — belongs to the OWNING tranche alone, so N workers never race the same file.
+
+**2. NEVER `git stash` while running as one of several concurrent sharded tranche workers on a shared clone.**
+`refs/stash` is a SINGLE shared LIFO stack per `.git` directory — it is **not** worktree-scoped, so worktree isolation
+does not protect it (`/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover"). A
+`stash push` in worker A followed by a `stash pop` in worker B pops **A's** entry, not B's. That exact push/pop race on
+2026-07-30 swapped two workers' unrelated changesets. **If you need a pristine-tree comparison, use a throwaway second
+worktree at HEAD instead** — `git worktree add <scratch-path> HEAD`, read it, `git worktree remove <scratch-path>`. The
+same hazard applies to the `--autostash` flavours (`git pull --rebase --autostash` drives the same stack), so prefer an
+explicit `git pull --ff-only` from an already-clean tree.
 
 ## Phase 0 — discover the AG's covering-plan set (cheap, no agents)
 
@@ -309,6 +355,20 @@ For the target `<ag>`:
    / `issues/(cefi|defi|tradfi|prediction|sports)_.*\.md` against the cross-cutting-tagged file list as a fast first
    pass before the full corpus sweep.
 
+   **`asset_group: [meta]` on a NEW doc is an authoring defect going forward (added 2026-07-30, after this session's
+   one-time meta fold-in sweep).** `meta` is a legitimate value for genuinely process-level content that belongs to no
+   tranche (the frontmatter schema itself, the plan-format spec, a corpus-wide convention doc). It is NOT a default, and
+   it is NOT a place to park a doc whose content is really single-tranche or genuinely cross-AG — a bare `[meta]` doc is
+   invisible to all 10 tranche membership rules, which is exactly the invisible-orphan class Phase 0.3 exists to catch
+   (the one-time sweep that folded the standing `meta` population into its real tranches is done; the point of this note
+   is that the population must not silently rebuild). **Authoring rule**: pick the correct tag at creation time — a real
+   tranche value when the content is tranche-scoped, `cross-cutting` when it genuinely spans AGs, `meta` only when it
+   spans everything or nothing. **Tooling follow-up**: `check_frontmatter_schema.py` (or a lighter dedicated QG check)
+   should at minimum FLAG — not necessarily hard-block — a `meta`-tagged doc whose filename carries an AG-specific-
+   sounding prefix (`cefi_`/`defi_`/`tradfi_`/`prediction_`/`sports_`/`ao_`/`ci_`/`infra_`/`ui_`), mirroring the
+   existing cross-cutting-mistag heuristic two paragraphs above. Until that check exists, an `all`-mode run still sweeps
+   `asset_group: meta` by hand per the "Total-coverage gap" note above.
+
 ## Phase 1 — per-doc classification (Workflow tool, one agent per doc)
 
 **`all` mode**: run Phase 0-3 once PER TRANCHE, as 10 separate top-level `Workflow` invocations (never nest a
@@ -342,6 +402,34 @@ Use the exact schema and covering-context prompt pattern from the sports run
 Count by verdict, excluding `exclude_cross_cutting`. Report to the operator: total AG-primary docs audited, counts per
 verdict, and the full list of `orphaned_partial_coverage` + `orphaned_never_touched` paths with one-line reasoning each.
 This alone answers "how many docs are left orphaned" — stop here if the operator only asked the audit question.
+
+## Parked findings ALWAYS get a durable issue doc — including a Phase-0-2-only run (HARD, added 2026-07-30)
+
+**The failure this closes**: on 2026-07-30, **30 of 41** parked ag-closeout decisions were never written anywhere
+durable — they existed only in the ephemeral chat/return text of the agent that found them. The root cause is
+structural, not carelessness: until now the ONLY parking location this skill designated was **Phase 3's** new-batch
+`## Deferred` section, and a **Phase-0-2-only run never reaches Phase 3**. That is the NORMAL daily-cron shape (audit +
+report, no drafting), so the standard scheduled run had nowhere sanctioned to put a parked finding and simply reported
+them into the void.
+
+**The rule**: every genuine parked / `BLOCKED-OPERATOR-DECISION` finding is written to a durable doc in the SAME run
+that found it, whichever phase the run stops at. **Never leave one only in the agent's own return text** — chat is not a
+durable surface, and an AO-dispatched run has no human reading its chat at all.
+
+- **Phase 3 ran** → the new batch's own `## Deferred` section stays the durable home (unchanged; tag each entry with its
+  non-batchable-taxonomy category, above).
+- **Phase 0-2 only** — including EVERY scheduled/cron invocation → write
+  `plans/active/issues/ag_closeout_audit_<tranche>_parked_<YYYY_MM_DD>.md`. This is the same pattern `/plan-reconcile`,
+  `/docs-reconcile` and `/na-eligibility-audit` already use for their own parked findings; do not invent a new shape.
+  One doc per tranche per run — APPEND to a same-day doc if one already exists rather than creating a second. Each entry
+  carries: the doc/finding, which taxonomy category it is parked under, and an options block with a marked
+  recommendation (`cursor-configs/SUB_AGENT_MANDATORY_RULES.md` § escalation format). **ASK > PARK still applies** — if
+  the operator is reachable, ask; the issue doc is for a genuinely absent operator, not a mode flag.
+- **`all` mode** → each tranche writes its OWN doc; the aggregated report cites every one by path.
+- **Count it, don't eyeball it.** Mirror `/plan-reconcile`'s Phase 5.9(a) ledger: assert
+  `parked_findings == entries_actually_written_to_the_issue_doc(s)` and print BOTH numbers in the final report. That
+  reconciliation is the specific defence against the 30-of-41 class — a run whose two numbers do not balance is NOT
+  done; go write the difference before reporting.
 
 ## Phase 3 — draft the next batch (only if the operator wants this AG progressed, not just measured)
 
@@ -402,8 +490,12 @@ yourself only after that approval, then ship).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility"
 - `/codex/11-project-management/` — findings triage, archival ritual
 - `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol
-  (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`
-- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity,
-  disjoint population from this skill's orphan detection)
+  (§ 3) this skill's Phase 3 runs, also used by `/na-eligibility-audit`; § 2 (`parent_epic` as the grouping axis) is the
+  SSOT behind the primary-owner rule for multi-tranche docs
+- `/codex/05-infrastructure/per-tab-worktrees.md` § "What worktree isolation does NOT cover" — why `git stash` is banned
+  for concurrent sharded tranche workers (`refs/stash` is one shared LIFO stack per clone)
+- `cursor-configs/skills/na-eligibility-audit/SKILL.md` — sibling skill (already-owned `assigned_vm: NA` doc validity —
+  a disjoint QUESTION over an OVERLAPPING population; see the "Also NOT `/na-eligibility-audit`" note above) + the
+  statement of the primary-owner rule this skill references rather than duplicates
 - Precedent: `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` +
   `plans/active/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md`
