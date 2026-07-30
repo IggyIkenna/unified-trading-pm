@@ -95,14 +95,44 @@ rows, that's a separate write-path bug to diagnose via its logs.
 
 ## Todos
 
-- [ ] [DATA] P1. **Determine why `collect-oracle-prices` (CHAINLINK/PYTH/AAVE) has produced zero manifest rows since
-      2026-07-22** — check whether a `launch-defi-forward-poll.sh --operation collect-oracle-prices` VM is currently
-      running (heartbeat blob + `run.log` tail per the VM-delete guardrail's staleness checklist); if none is running,
-      relaunch it; if one is running but silent, diagnose the write path. (repo: deployment-service,
-      market-tick-data-service)
-- [ ] [INFRA] P2. **Decide whether `collect-oracle-prices` needs a standing cron/scheduler** instead of relying on a
-      manually-relaunched VM — no CI/cron reference to `launch-defi-forward-poll.sh` exists anywhere in the workspace
-      today, so a "high-freq PRICE-SENSITIVE" op currently has no self-sustaining trigger. (repo: deployment-service)
+- [x] ✅ [DATA] P1. **RESOLVED 2026-07-30 (slot-16) — root cause was mis-diagnosed by the filing sub-agent; corrected
+      here, NOT relaunched.** The 8-day silence is NOT an accidental stall — `collect-oracle-prices` (both the
+      `defi-fwd-oracle-prices-prd` `*/5` live-poll Cloud Scheduler job AND its daily-batch sibling
+      `uts-prod-mtds-collect-oracle-prices-cron`) is **DELIBERATELY PAUSED**, confirmed live via
+      `gcloud scheduler jobs describe defi-fwd-oracle-prices-prd --location=asia-northeast1` →
+      `state: PAUSED, userUpdateTime: 2026-07-18T19:15:25Z`. This is the SAME scoped pause documented in
+      `/plans/active/defi_consolidated_closeout_2026_07_18.md` Track 8 ("Resume the paused DeFi crons NOT scoped to
+      `dex_pool_state`... AFTER Track-1/2 land... **Do not resume before the currently-running per-instrument migration
+      VM finishes** (it is actively migrating exactly the 4 paused collectors' data types — resuming now races live
+      writes against it)") — a real, `gate_on_depends: true` cross-plan gate
+      (`depends_on: [defi_track01_per_instrument_and_canon_id_2026_07_24, defi_lending_writer_retire_prerequisite_2026_07_20]`),
+      not an unowned outage. Per `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md`, the gating
+      sequence is R1+R2 (✅ done) → **R3** (historical batch→per-instrument migration — last recorded `[~]` RUNNING
+      partial as of 2026-07-24/25, "2022 applying, 2023-2026 + rebuild_defi_manifest remain") → **R4** (coverage
+      scoring, `[ ]` not started) → **then** resume capture. That gate has NOT cleared, so the todo's own suggested fix
+      ("if none is running, relaunch it") would have been WRONG — relaunching now would race the live per-instrument
+      migration and violate the operator-approved sequencing. **Correcting the filing sub-agent's grep miss**: it
+      searched only `--include="*.yml" --include="*.yaml"` for `launch-defi-forward-poll` and concluded "no CI workflow,
+      cron, or scheduler reference... found anywhere" — the actual scheduler is declared in Terraform
+      (`deployment-service/terraform/gcp/defi_forward_poll_scheduler.tf`, a `google_cloud_scheduler_job` resource that
+      does its own direct `instances.insert`, not a shell-out to the launcher script), so an `.yml`/`.yaml`-scoped grep
+      structurally cannot find it — grep-then-READ, not grep-then-conclude. **Separate observation (NOT fixed here,
+      flagging for Track 1's own owner)**: the `canonical-migration-defi-per-instrument-*` VM chain that R3 depends on
+      shows NO instance running and NO `insert`/`delete` operation since 2026-07-24T07:26 (UTC-7) — 6 days idle as of
+      this check (`gcloud compute operations list --filter="targetLink~'canonical-migration-defi-per-instrument'"`),
+      while Track 1's own R3 todo still reads "RUNNING, partial" unrevised since 2026-07-24/25. This MAY mean R3
+      silently died before finishing (as opposed to genuinely completing without the todo being ticked) — worth a fresh
+      check by whoever owns Track 1, since if R3 never finishes, `oracle_prices`/`evm-defi`/`solana-defi`/`dex-pools`
+      stay paused indefinitely. Not resolved here — that diagnosis belongs to
+      `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s own R3/R4 todos, not this issue's scope. (repo:
+      deployment-service, market-tick-data-service, unified-trading-pm)
+- [x] ✅ [INFRA] P2. **ANSWERED 2026-07-30 (slot-16) — a standing scheduler already exists**, so there is no
+      "manually-relaunched VM with no self-sustaining trigger" gap to decide on. `defi-fwd-oracle-prices-prd`
+      (`2-59/5 * * * *`, staggered vs. `dex-swaps`/`dex-pools`) is a live `google_cloud_scheduler_job` Terraform
+      resource in `deployment-service/terraform/gcp/defi_forward_poll_scheduler.tf`, applied to prod (confirmed via
+      `gcloud scheduler jobs list`) — it is simply PAUSED, per the P1 finding above, pending the same Track 1 R3/R4
+      gate. No new automation is needed; un-pausing IS the standing mechanism once the gate clears. (repo:
+      deployment-service)
 - [ ] [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — it still points
       at `/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md` (now archived to
       `/plans/archive/issues/...`), but that file is already at 1001 lines (over the 1000-line hard cap with no baseline
@@ -115,3 +145,22 @@ rows, that's a separate write-path bug to diagnose via its logs.
 - **slot-11 2026-07-30**: Filed while closing `lst_exchange_rate_data_availability_2026_07_21.md`'s Aave-oracle-wiring
   todo. Confirmed via manifest read (not a new GCS walk) that the AAVE branch itself works (5,568 real captured rows),
   but the whole `oracle_prices` data_type across all 3 venues has been silent for 8 days.
+- **slot-16 2026-07-30**: Investigated todo 1 (P1).
+  `gcloud scheduler jobs list --project=central-element-323112 --location=asia-northeast1` shows
+  `defi-fwd-oracle-prices-prd` (`2-59/5 * * * *`) PAUSED, `userUpdateTime: 2026-07-18T19:15:25Z` — same for its
+  `dex-swaps`/`dex-pools` siblings and the daily-batch `uts-prod-mtds-collect-oracle-prices-cron`. Traced this to a
+  pre-existing, explicitly-documented, `gate_on_depends: true` cross-plan gate in
+  `/plans/active/defi_consolidated_closeout_2026_07_18.md` Track 8: these 4 collect + 3 forward-poll crons were
+  deliberately paused 2026-07-18 because the still-in-flight `canonical-migration-defi-per-instrument-*` VM chain
+  (tracked in `/plans/active/defi_track01_per_instrument_and_canon_id_2026_07_24.md` R3) is actively migrating exactly
+  these data types to the new per-instrument canonical shape, and resuming capture before R3 (+ R4 coverage scoring)
+  completes would race live writes against that migration. R3 is last recorded `[~]` partial (2022 done, 2023-2026 +
+  `rebuild_defi_manifest` remaining, per the 2026-07-24/25 entry); R4 is `[ ]` not started. **Did NOT relaunch the
+  forward-poll VM** — the original todo's suggested fix would have violated this explicit gate. Corrected + resolved
+  todos 1 and 2 with full citations; left todo 3 (unrelated stale-referrer/line-cap fix) untouched for a separate
+  session. Also flagged (not fixed, out of this issue's scope): the `canonical-migration-defi-per-instrument-*` VM chain
+  shows zero activity (`gcloud compute operations list`) since 2026-07-24T07:26 (UTC-7) — 6 days idle — while Track 1's
+  own R3 todo text is unrevised since then, so R3 may have silently died before finishing rather than genuinely
+  completed; recommend Track 1's owner re-check this on their next pass, since the oracle-prices/evm-defi/
+  solana-defi/dex-pools pause stays open indefinitely until R3+R4 clear. No code changes required — this was a
+  diagnosis-and-documentation correction, not a bug fix.
