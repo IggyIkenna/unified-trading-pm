@@ -155,6 +155,26 @@ QG-green per repo.
   Additive + safe (fallback preserved); it does NOT drop the GCS write or delete anything — those stay blocked per the
   checklist above.
 
+- **2026-07-30 (slot 7, infra) — re-checked the DELETE GO/NO-GO checklist's precondition; HALT stays correctly in
+  force.** Dispatched via `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md` (gated finalize
+  plan, itself gated on the sibling migration-overview doc's dual-write-deploy todo, which slot-12 flipped `[x]` earlier
+  today with an honest FAIL result — see that doc's Progress Log and
+  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`). Independently
+  re-measured criterion 1 with fresh live data (did not just trust slot-12's snapshot): Firestore REST API, full
+  pagination, prod `deployments` collection = **193 docs** (190 `status=failed`, 3 `status=completed`, **0
+  `status=running`**); cross-referenced every doc's `vm_name` against **50** currently-`RUNNING` GCE instances
+  (`gcloud compute instances list --filter=status=RUNNING`, project `central-element-323112`) — **zero overlap**. Root
+  cause is unchanged from the linked issue doc: the Cloud Run dual-write flag only governs deployment-api's own process,
+  not the VM-side heartbeat writer, which reads GCE instance metadata that no real production launcher sets. **Criterion
+  1 genuinely fails; criteria 2 and 4 stay untestable as a direct consequence (no `status=running` doc exists to source
+  resource stats from or compare for parity); criterion 3's read-path plumbing was already verified passing by slot-12**
+  (not re-verified here — a code-path check, not a live-fleet-state check, and not in doubt). **This HALT banner's
+  precondition is NOT met — the GCS-write-drop / snapshot-then-delete todos below stay correctly BLOCKED.** Unblocking
+  needs the fix + soak tracked in the linked issue doc's own todos (project-metadata fallback for
+  `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE`, then a real soak on non-benchmark production VMs, then a fresh 4-criteria
+  re-measurement) — not a re-run of this same measurement. Per the finalize plan's own instruction, `assigned_vm` here
+  is intentionally left untouched.
+
 ## Codex SSOTs
 
 - `/codex/05-infrastructure/gcs-object-operations.md` — GCS object ops via UTL wrappers (the delete rule).

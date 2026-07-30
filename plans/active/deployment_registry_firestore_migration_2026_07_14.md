@@ -203,3 +203,13 @@ heartbeat
   cause + two fix options + follow-up todos (deliberately NOT fixed inline — touches 137+ VM launcher scripts, no safe
   single choke point, needs its own scoped + soaked change). Todo flipped done with this honest FAIL result; P3's HALT
   is unaffected and stays correctly in force.
+- **2026-07-30 (slot 7, infra)** — Worked the gated
+  `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md` twin: independently re-measured GO/NO-GO
+  criterion 1 with fresh live data (193 Firestore docs, 0 `status=running`, 0 overlap with 50 currently-live GCE VMs —
+  same FAIL, confirmed not stale), added a Progress Log entry to
+  `deployment_registry_firestore_p3_cutover_2026_07_14.md` re-confirming its HALT stays in force. **This doc's own
+  single todo has been `[x]` since slot-12's pass, but it is intentionally NOT being archived here** — its archival is
+  reserved for `deployment_registry_firestore_p5_verify_2026_07_14.md`'s own final todo (own 2026-07-14 Progress Log:
+  "the codex/CLAUDE.md doc updates + master archival ... stay BLOCKED on P3 ... completing"), which is still correctly
+  blocked. The finalize plan itself archived (its own todo done, no lock); this overview stays `active` until P3
+  unblocks and P5 runs.
