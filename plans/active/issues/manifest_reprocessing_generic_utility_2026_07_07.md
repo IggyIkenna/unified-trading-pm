@@ -117,8 +117,18 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
 
 ## Todos
 
-- [ ] [DESIGN] P2. Design `select_shards_for_reprocess()` + the flip-and-write helper signature; confirm placement
-      (`unified-trading-library/manifest_writer/_queries.py` vs. a new `manifest_reprocess.py`).
+- [x] ✅ [DESIGN] P2. Design `select_shards_for_reprocess()` + the flip-and-write helper signature; confirm placement
+      (`unified-trading-library/manifest_writer/_queries.py` vs. a new `manifest_reprocess.py`). —
+      `unified-trading-library@abeebede`. Placement: new top-level `unified_trading_library/manifest_reprocess.py`
+      (sibling to `manifest_completeness.py`/`manifest_consolidator.py`/`manifest_freshness.py` — the established
+      convention for a standalone manifest concern, not a fragment of the split monolith), re-exported via the top-level
+      package `__init__.py`. Rejected `_queries.py` (read-side-only by its own docstring; the flip-and-write half is a
+      real mutation) and `_maintenance.py` (already 891 lines against the 900-line file-size ratchet) and
+      `manifest_migrations/` (schema-migration-specific, a different axis). `select_shards_for_reprocess()` is fully
+      implemented (pure/stateless filter: capture_status + optional asset_group/venue-or-data_type/date_range/
+      error_reason_predicate) with 13 unit tests. `reprocess_shards()`'s signature + the 3-gate safety contract (per-VM
+      shard isolation, idx-only mutation, captured-count invariant) are pinned in its docstring; the body is a
+      documented `NotImplementedError` stub — implementing it is the separate `[CODE] P2` todo below, unchanged.
 - [ ] [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
       existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks).
 - [ ] [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
@@ -129,6 +139,22 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
       going forward).
 
 ## Progress Log
+
+- **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-001` (the `[DESIGN] P2` todo).
+  Resolved the placement question and shipped `unified_trading_library/manifest_reprocess.py`: `CaptureStatus` +
+  `pd.Index`-shaped
+  `select_shards_for_reprocess(df, *, asset_group=None, venue=None, capture_status=CaptureStatus.ATTEMPTED_FAILED.value, date_start=None, date_end=None, error_reason_predicate=None)`
+  fully implemented (pure filter, no I/O — mirrors the template script's `_identify_transient_rows`, generalized with
+  asset_group/venue-or-data_type/date-range/reason-predicate filters);
+  `reprocess_shards(bucket, df, idx, *, target_status=..., target_error_reason="", dry_run=True) -> ReprocessResult`
+  signature + its 3-gate safety contract (per-VM shard isolation before any write, mutate ONLY the given `idx`,
+  captured-count invariant) pinned in the docstring, body a documented `NotImplementedError` — implementing it is the
+  next `[CODE] P2` todo, deliberately left untouched. Re-exported through the top-level `unified_trading_library`
+  `__init__.py` (`ReprocessResult`, `reprocess_shards`, `select_shards_for_reprocess`) so market-tick-data-service and
+  instruments-service can import it once the CLI-wiring todo lands. 13 new unit tests in
+  `tests/unit/test_manifest_reprocess.py` covering every filter dimension + combinations, plus one asserting the
+  `reprocess_shards` stub still raises (so a future partial implementation can't silently skip the documented safety
+  gates without a test failure). `bash scripts/quality-gates.sh` run before shipping.
 
 - **2026-07-07** — Filed from the ASTER/CEFI instrument-service data-status audit, prompted by the operator asking
   whether the 2026-05-14 ASTER base-URL fix needed a follow-up reprocessing run. No files edited.
