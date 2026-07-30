@@ -518,3 +518,23 @@ newer commit). Relaunched WITHOUT `--force` per the established plan: `af-backfi
 `--force`) — skip-if-fresh will naturally retry every `attempted_failed` cell from yesterday's quota exhaustion plus
 continue the ~13 remaining days. Verifying it's running cleanly now; will monitor to genuine completion, then re-census,
 then move to the queued FIXTURE_STATS/FIXTURE_LINEUPS all-leagues backfill.
+
+**Health-checked 2026-07-30T00:45Z-00:47Z (slot 10, data_engineering), RUNNING, confirms clean post-relaunch progress**:
+`gcloud compute instances list` confirms exactly one `af-backfill-*` VM present, `af-backfill-20260730-012007`, status
+`RUNNING` in `asia-northeast1-c` (the 3 others listed are prior campaigns' VMs, all `TERMINATED`). 2-read
+progress-metric check over ~2min: heartbeat blob `vm-heartbeat/af-backfill-20260730-012007.txt` fresh at both reads
+(epoch `1785372272`→`1785372519`, ~4min apart, consistent with the poll gap); `run.log` grew 2,438→2,737 lines (+299);
+`date=` boundary advanced `2020-07-13`→`2020-07-19` (+6 days, ~3 days/min — the expected fast skip-if-fresh pace through
+already-captured 2020-era dates; log shows the per-fixture recovery-allowlist filter actively narrowing, e.g.
+`119 → 30 fixtures (89 skipped — not in allowlist)`, i.e. genuinely skip-if-fresh, not a `--force` redo); no error/stall
+signature beyond the expected benign `CANONICAL_LEAGUE_ID_LOOKUP_MISS` warnings (already documented elsewhere in this
+doc as non-lossy passthrough); `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 (no terminal marker — note: this grep
+legitimately exits 1 on zero matches, which is the healthy/expected outcome here, not a script failure). Genuine forward
+progress, no stall. Not completable this turn — skip-if-fresh should accelerate further once past the ~13 real-fetch
+days near `2026-07-12`→`2026-07-25` (per the 00:03Z-00:20Z relaunch note), but the full `2020-06-06→2026-07-25` walk is
+still gated on VM completion. Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next
+dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date
+fixture-fetch advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
+self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
+flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
+todo.
