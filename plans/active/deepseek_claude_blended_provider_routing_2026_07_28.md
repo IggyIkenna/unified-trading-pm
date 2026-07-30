@@ -296,6 +296,32 @@ entirely):
   `aws s3 cp` mirroring the 4 existing Claude accounts' convention. `CredsEnvPoller` only syncs an env file when an
   account IS in that VM's own `accounts.json`, so pushing a file ahead of registration is harmless/noop.
 
+**2026-07-30 — DeepSeek/Claude token-cost comparison exercise surfaced + fixed a real env-leakage incident on the
+operator's local box, unrelated to the routing code itself but touching this plan's own
+`docs/deepseek_cli_setup_guide.md` artifact.**
+
+- While collecting per-account `/usage` data for a Claude-vs-DeepSeek cost comparison, found that
+  `ANTHROPIC_MODEL= deepseek-v4-pro` / `ANTHROPIC_BASE_URL` had leaked into a long-lived interactive shell on 2026-07-29
+  (someone `source`d `~/.claude-accounts/deepseek-v4-pro.env` directly instead of calling the
+  `deepseek()`/`deepseek-code()` wrapper functions the setup guide provides). That shell went on to spawn a local VS
+  Code instance, a dev server, and a tmux server — all frozen with the poisoned env from the moment they started.
+  Because VS Code desktop reuses a single long-lived Electron process for every new window, the poisoned instance kept
+  silently routing every subsequent "normal" `code`/`claude` launch to DeepSeek for most of a day, until root-caused and
+  cleaned up.
+- **Fix shipped**: `agent-orchestrator@02c8d7f`. `docs/deepseek_cli_setup_guide.md`'s `deepseek()`/`deepseek-code()` now
+  `unset ANTHROPIC_MODEL ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN CLAUDE_ACCOUNT_LABEL CLAUDE_CODE_OAUTH_TOKEN` before
+  sourcing the env file (defense-in-depth against the same direct-source mistake), plus a new `[!CAUTION]` block
+  documenting the VS Code single-instance trap and the fix (fully quit VS Code + close stale terminal tabs, don't just
+  relaunch). `~/.bashrc` on the affected box hardened to match (personal dotfile, not repo-tracked). Orphaned processes
+  (2 VS Code crash handlers, a poisoned dev-server tree, a poisoned tmux session) killed and, where live, cleanly
+  restarted.
+- **Unrelated second finding, same investigation**: a dashboard e2e test fixture (`fake_worker_pane.sh`, spawned by
+  `run-e2e-backend-chat.sh` for `worker-chat.spec.ts`) was found orphaned from an unrelated crashed/interrupted test run
+  — its cleanup trap can't fire if a test runner SIGKILLs its whole process tree at once. Fixed in the same commit: the
+  fixture now self-reaps by polling its launcher's PID, verified end-to-end (killed a stand-in parent process, confirmed
+  the orphaned tmux session self-destructed in ~4s). Not part of this plan's own scope — flagged here only because it
+  shipped in the same commit as the guide fix above.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
