@@ -133,54 +133,54 @@ script's own instruction: "File any genuine divergence via standard findings-tri
       other branch — do not leave a half-reversed, half-proxy state. No partial rollout satisfies this ruling.
 
       **Resolution (2026-07-30) — branch (3) invoked for ASTER/LIGHTER-ZKSYNC, via code proof, not a live-fetch probe:**
-          Reading the PRE-retirement collector source (git history, both files still recoverable at `ba6df0ac^`) instead of
-          re-probing the live endpoints answers exactly what branch (3) asks — with MORE certainty than a fresh live probe
-          would, because it shows the CONSTRUCTION of the two data_types, not just their current values:
-          - **HYPERLIQUID**: `_collect_hyperliquid` (`_perp_funding_hl_aster.py`) fetched a genuinely separate endpoint
-            (`POST /info {"type":"fundingHistory"}`) from what `derivative_ticker` uses (S3 `asset_ctxs` archive, via
-            `onchain_perp_batch_handler.py`) — two independent code paths, two independent HTTP calls. The measured 60.7%
-            divergence is exactly what you'd expect from two independent sources of a related-but-not-identical signal.
-            → RESTORED. UAC: `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]["perp_funding"] = "2023-05-20"` +
-            `expected_coverage._CEFI["HYPERLIQUID"]` gains `"perp_funding"` + `SOURCE_PRIORITY[("cefi","perp_funding")]`
-            gains `"hyperliquid"` (unified-api-contracts). Collector restored as a new HYPERLIQUID-only stage module
-            `market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py` (the Hyperliquid half of the deleted
-            `_perp_funding_hl_aster.py`, NOT the Aster half — see below), wired into `perp_funding_handler.py`
-            (`DEFAULT_PROTOCOLS`, `_dispatch_protocol`, `_PROTOCOL_PIPELINE_SOURCE`, `preflight()`), writing via the
-            MODERN CeFi per-instrument partition path (`build_cefi_partition_path`, mirroring
-            `_perp_funding_kalshi_polymarket.py`) rather than the stale pre-reclassification `write_defi_rows` the original
-            collector used (HYPERLIQUID was reclassified DeFi→CeFi 2026-07-06, AFTER that collector was written and BEFORE
-            it was retired — the restoration targets where the data belongs today, not where it was written before).
-          - **ASTER**: `_collect_aster` (same file) derived its `perp_funding` rows AND its `derivative_ticker` row from
-            the exact SAME `/fapi/v1/fundingRate` REST response in ONE fetch — the code's own comment: "Also emit the
-            canonical CeFi derivative_ticker ... from the SAME funding settlements (Live=Batch — one fetch)." This is not
-            "unmeasured how close they are" — it is a single HTTP call duplicated into two data_types. Restoring a
-            standalone `perp_funding` shard would double GCS objects for the exact same bytes, not add a second
-            independent signal to compare against `derivative_ticker`. Branch (3) applies: **stays retired**, not "leave
-            it as an unverified proxy" — it's now a VERIFIED single-source signal, correctly modeled as one data_type
-            (`derivative_ticker`), matching the original 2026-07-08 premise (which happened to be right for THIS venue).
-          - **LIGHTER-ZKSYNC**: `_collect_lighter` (`_perp_funding_pacifica_lighter.py`) fetched Tardis's OWN
-            `derivative_ticker` dataset (`datasets.tardis.dev/v1/lighter/derivative_ticker/...`) directly and relabeled the
-            result `perp_funding` — there was never a second source to begin with, just one dataset written under two
-            data_type names. Branch (3) applies: **stays retired**, same reasoning as ASTER.
-          No partial-rollout violation: every venue got the SAME rigor (full collector-construction read, not a
-          surface-level "wasn't measured" shrug) — HYPERLIQUID's construction proved two sources; ASTER/LIGHTER-ZKSYNC's
-          construction proved one. The ruling's own text anticipates exactly this outcome ("if...PROVES their dedicated
-          endpoint genuinely cannot be captured...remove fully") — the mechanism here (proving the endpoint IS the same
-          fetch as derivative_ticker, so a standalone shard is pointless duplication rather than technically uncapturable)
-          is the substantively equivalent finding for the "should not exist as a distinct data_type" branch.
-          Evidence: `unified-api-contracts@cf11ea3f` (market_data_categories.py, expected_coverage.py,
-          _source_priority_data.py), `market-tick-data-service@c8742adf` + `@7be1c3b8` (`_perp_funding_hyperliquid.py`
-          new, `cli/handlers/perp_funding_handler.py`, `cli/main.py`, `tests/unit/test_perp_funding_hyperliquid.py` new) —
-          QG green both repos (7560 passed market-tick-data-service; unified-api-contracts full suite green), shipped via
-          quickmerge.
+              Reading the PRE-retirement collector source (git history, both files still recoverable at `ba6df0ac^`) instead of
+              re-probing the live endpoints answers exactly what branch (3) asks — with MORE certainty than a fresh live probe
+              would, because it shows the CONSTRUCTION of the two data_types, not just their current values:
+              - **HYPERLIQUID**: `_collect_hyperliquid` (`_perp_funding_hl_aster.py`) fetched a genuinely separate endpoint
+                (`POST /info {"type":"fundingHistory"}`) from what `derivative_ticker` uses (S3 `asset_ctxs` archive, via
+                `onchain_perp_batch_handler.py`) — two independent code paths, two independent HTTP calls. The measured 60.7%
+                divergence is exactly what you'd expect from two independent sources of a related-but-not-identical signal.
+                → RESTORED. UAC: `VENUE_DATA_TYPE_CAPABILITIES["HYPERLIQUID"]["perp_funding"] = "2023-05-20"` +
+                `expected_coverage._CEFI["HYPERLIQUID"]` gains `"perp_funding"` + `SOURCE_PRIORITY[("cefi","perp_funding")]`
+                gains `"hyperliquid"` (unified-api-contracts). Collector restored as a new HYPERLIQUID-only stage module
+                `market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py` (the Hyperliquid half of the deleted
+                `_perp_funding_hl_aster.py`, NOT the Aster half — see below), wired into `perp_funding_handler.py`
+                (`DEFAULT_PROTOCOLS`, `_dispatch_protocol`, `_PROTOCOL_PIPELINE_SOURCE`, `preflight()`), writing via the
+                MODERN CeFi per-instrument partition path (`build_cefi_partition_path`, mirroring
+                `_perp_funding_kalshi_polymarket.py`) rather than the stale pre-reclassification `write_defi_rows` the original
+                collector used (HYPERLIQUID was reclassified DeFi→CeFi 2026-07-06, AFTER that collector was written and BEFORE
+                it was retired — the restoration targets where the data belongs today, not where it was written before).
+              - **ASTER**: `_collect_aster` (same file) derived its `perp_funding` rows AND its `derivative_ticker` row from
+                the exact SAME `/fapi/v1/fundingRate` REST response in ONE fetch — the code's own comment: "Also emit the
+                canonical CeFi derivative_ticker ... from the SAME funding settlements (Live=Batch — one fetch)." This is not
+                "unmeasured how close they are" — it is a single HTTP call duplicated into two data_types. Restoring a
+                standalone `perp_funding` shard would double GCS objects for the exact same bytes, not add a second
+                independent signal to compare against `derivative_ticker`. Branch (3) applies: **stays retired**, not "leave
+                it as an unverified proxy" — it's now a VERIFIED single-source signal, correctly modeled as one data_type
+                (`derivative_ticker`), matching the original 2026-07-08 premise (which happened to be right for THIS venue).
+              - **LIGHTER-ZKSYNC**: `_collect_lighter` (`_perp_funding_pacifica_lighter.py`) fetched Tardis's OWN
+                `derivative_ticker` dataset (`datasets.tardis.dev/v1/lighter/derivative_ticker/...`) directly and relabeled the
+                result `perp_funding` — there was never a second source to begin with, just one dataset written under two
+                data_type names. Branch (3) applies: **stays retired**, same reasoning as ASTER.
+              No partial-rollout violation: every venue got the SAME rigor (full collector-construction read, not a
+              surface-level "wasn't measured" shrug) — HYPERLIQUID's construction proved two sources; ASTER/LIGHTER-ZKSYNC's
+              construction proved one. The ruling's own text anticipates exactly this outcome ("if...PROVES their dedicated
+              endpoint genuinely cannot be captured...remove fully") — the mechanism here (proving the endpoint IS the same
+              fetch as derivative_ticker, so a standalone shard is pointless duplication rather than technically uncapturable)
+              is the substantively equivalent finding for the "should not exist as a distinct data_type" branch.
+              Evidence: `unified-api-contracts@cf11ea3f` (market_data_categories.py, expected_coverage.py,
+              _source_priority_data.py), `market-tick-data-service@c8742adf` + `@7be1c3b8` (`_perp_funding_hyperliquid.py`
+              new, `cli/handlers/perp_funding_handler.py`, `cli/main.py`, `tests/unit/test_perp_funding_hyperliquid.py` new) —
+              QG green both repos (7560 passed market-tick-data-service; unified-api-contracts full suite green), shipped via
+              quickmerge.
 
-- [ ] [DESIGN] P1. **Resolved-condition NOW MET (2026-07-28) — no longer pending.** Close the `[DESIGN] P1` "demote
-      perp_funding to a derived view" todo in
-      `defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` citing this doc: parity FAILS for
-      HYPERLIQUID (the only venue with comparable historical data), so the todo resolves as "keep both — parity report
-      explains why" per its own stated closing condition. The operator-decision gate this was pending on above is now
-      resolved (retirement reversed, dedicated capture resuming) — this closing action can proceed immediately, no
-      further wait needed.
+- [x] ✅ [DESIGN] P1. **Verified already closed — no action needed.** Checked
+      `plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`: its
+      `[DESIGN] P1` "demote perp_funding to a derived view" todo is already marked
+      `[x] ✅ CLOSED 2026-07-28 — "keep     both"`, citing exactly this doc's parity findings (HYPERLIQUID 60.7% match,
+      parity FAILS) as the closing evidence — the cross-reference this todo asked for was made when that doc's todo
+      itself closed, and that doc's own header banner already reads "🟢 RESOLVED 2026-07-28 — all todos shipped; the
+      DESIGN gate closed as KEEP BOTH". Nothing further to do here.
 - [ ] [DIAG] P2. Determine whether `derivative_ticker.predicted_funding_rate` (the asset_ctxs `premium` column,
       currently unused in this comparison) tracks `perp_funding.funding_rate` more closely than `funding_rate` does — if
       Hyperliquid's realized hourly rate is actually closer to a smoothed/clamped function of the premium than to the
@@ -189,6 +189,12 @@ script's own instruction: "File any genuine divergence via standard findings-tri
       an ad-hoc variant).
 
 ## Progress log
+
+- **2026-07-30 (slot-13, data_engineering, AO dispatch)**: Actioned the `[DESIGN] P1` close-out todo. The referenced
+  todo in `plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` was
+  already closed `[x]` 2026-07-28 ("keep both") citing this doc's own parity findings — the cross-reference this todo
+  asked for had already happened at that doc's own close-out. No code/doc change needed there; flipped this todo done.
+  Remaining open work on this doc: the `[DIAG] P2` predicted_funding_rate re-check.
 
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - operator RULED 2026-07-28 (reverse the retirement); all
