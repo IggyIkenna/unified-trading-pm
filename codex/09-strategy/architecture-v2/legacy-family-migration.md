@@ -15,7 +15,7 @@ tags: [strategy, migration, ssot-audit, ui, refactor]
 related:
   [
     /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
     /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
     /codex/09-strategy/architecture-v2/MIGRATION.md,
   ]
@@ -25,7 +25,7 @@ referenced_by:
   [
     /codex/09-strategy/README.md,
     /codex/09-strategy/architecture-v2/MIGRATION.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
     /codex/09-strategy/architecture-v2/strategy-registry-v2.md,
     /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
     /codex/09-strategy/architecture-v2/value-betting-archetype-decision.md,
@@ -245,7 +245,8 @@ Mapping is `v1_archetype` + asset-class inference → `v2_family.v2_archetype` +
 ## 3. References
 
 - `/codex/09-strategy/architecture-v2/strategy-registry-v2.md` — canonical v2 registry overview.
-- `/codex/09-strategy/architecture-v2/naming-convention.md` — `parse_strategy_id` / `format_strategy_id` canonical form.
+- `/codex/06-coding-standards/strategy-identity-versioning.md` — `parse_strategy_id` / `format_strategy_id` canonical
+  form.
 - `/codex/09-strategy/architecture-v2/value-betting-archetype-decision.md` — Wave 6 decision on value-betting semantics.
 - `/codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md` — Wave 6 decision on bond instrument
   type.

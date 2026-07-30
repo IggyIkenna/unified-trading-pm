@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [strategy, registry, uac, refactor, canonicalisation]
 related:
   [
-    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
     /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
     /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
     /codex/09-strategy/architecture-v2/legacy-family-migration.md,
@@ -36,7 +36,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/category-instrument-coverage.md,
     /codex/09-strategy/architecture-v2/dart-exclusive-research-fork.md,
     /codex/09-strategy/architecture-v2/legacy-family-migration.md,
-    /codex/09-strategy/architecture-v2/naming-convention.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
     /codex/09-strategy/architecture-v2/strategy-lifecycle-maturity.md,
     /codex/09-strategy/architecture-v2/tradfi-bond-instrument-type-decision.md,
   ]

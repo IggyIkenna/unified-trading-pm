@@ -15,7 +15,11 @@ tags:
 ---
 # UI Quality Gates: MUST Abide by Codex
 
-**Source of truth:** `unified-trading-codex/06-coding-standards/quality-gates-ui-typescript.md`
+**Source of truth:** dead reference, no live successor (2026-07-30) — `unified-trading-codex` is archived and no
+`quality-gates-ui-typescript.md` exists anywhere live. `codex/06-coding-standards/ui-testing-layers.md` covers a
+related but distinct topic (the 8-layer UI testing strategy, not this rule's tsc/ESLint quality-gate mechanics) and is
+NOT a provable rename — do not repoint to it without confirming scope overlap. The general
+`codex/06-coding-standards/quality-gates.md` (cited below) is the closest live doc.
 
 ---
 

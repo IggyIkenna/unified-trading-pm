@@ -38,10 +38,11 @@ scope: [engineer, admin]
   reconcile UAC canonical lists against live backend registries. Endpoints owned by strategy-service (archetypes + ML
   models) and every `features-*-service` (features). Shared-secret `X-Admin-Token` auth, safe-by-default 503 when
   unconfigured.
-- [`architecture-v2/naming-convention.md`](architecture-v2/naming-convention.md) — canonical strategy-id format
-  (`FAMILY.ARCHETYPE.slot_id` fully-qualified OR `ARCHETYPE@slot_id` slot-label), parse + format contracts
-  (`unified_api_contracts.strategy.parse_strategy_id` / `format_strategy_id`), per-surface usage table (UI URLs →
-  fully-qualified, registry / records → slot-label), and legacy-migration notes.
+- [`../06-coding-standards/strategy-identity-versioning.md`](../06-coding-standards/strategy-identity-versioning.md) —
+  canonical strategy-id format (`FAMILY.ARCHETYPE.slot_id` fully-qualified OR `ARCHETYPE@slot_id` slot-label), parse +
+  format contracts (`unified_api_contracts.strategy.parse_strategy_id` / `format_strategy_id`), per-surface usage table
+  (UI URLs → fully-qualified, registry / records → slot-label), and legacy-migration notes. (Merged with the strategy
+  identity + versioning doc 2026-07-30 — was `architecture-v2/naming-convention.md`.)
 - [`architecture-v2/legacy-family-migration.md`](architecture-v2/legacy-family-migration.md) — audit report for
   `p8-audit-legacy-family-strings`: lists UI files still using v1-era family strings (`basis-trade` / `mean-reversion` /
   `sports-arb` / `prediction-ml`), classifies each finding as DONE / DEFERRED-TO-PHASE-11 / NOT-A-TARGET, and records

@@ -819,10 +819,10 @@ target archetype + example v2 slot labels. Key callouts: `defi/basis-trade.md`, 
 different config); `defi/omnichain-transfers.md` moved out of strategies entirely — it is now the Transfer/Rebalance
 service.
 
-**2. naming-convention.md** —
-[naming-convention.md](vscode-webview://09jfvupa03v4sfnuon9htjsoeab7rbdp72dj30bd86vckd3bkckv/unified-trading-system-repos/unified-trading-pm/codex/09-strategy/architecture-v2/naming-convention.md)
-SSOT for how a strategy is named everywhere — registry, records pipeline, UI URLs, audit logs. Three interlocking
-identifier forms:
+**2. strategy-identity-versioning.md** —
+[strategy-identity-versioning.md](/codex/06-coding-standards/strategy-identity-versioning.md) (merged from
+`naming-convention.md` 2026-07-30) SSOT for how a strategy is named everywhere — registry, records pipeline, UI URLs,
+audit logs. Three interlocking identifier forms:
 
 - **Slot label** (`ARCHETYPE@venue-asset-instrument-period-quote-env`) — e.g.
   `CARRY_BASIS_PERP@binance-eth-perp-10m-usdt-prod`
