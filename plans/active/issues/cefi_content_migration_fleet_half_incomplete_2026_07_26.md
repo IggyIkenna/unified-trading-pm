@@ -308,3 +308,13 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   - **Final verified state: all 21/21 shards present, `RUNNING`, and on-demand** (zero `preemptible=true` remaining,
     confirmed via `scheduling.preemptible` on every instance) — SPOT preemption is now structurally eliminated for the
     remainder of this migration.
+- **2026-07-30 update (slot-15, ~40 min later during routine health monitoring) — a 4TH OOM occurrence, this time on
+  `e2-standard-16` itself**: shard 42 died with the identical `rc=137` signature (VM stayed alive, no preemption event —
+  confirmed via `gcloud compute operations list` showing a `delete` op, not `preempted`) at 21,000/73,965 files (28.4%,
+  ~62 min elapsed) — notably FURTHER than any prior `e2-standard-8` OOM death (3.6-7.9%) before hitting the same wall on
+  64GB. Supports the "memory grows with elapsed time/volume processed" theory over a fixed absolute-file-count ceiling —
+  `e2-standard-16` raised the threshold, it did not eliminate the failure mode. Relaunched shard 42 again on the SAME
+  `e2-standard-16` (not yet escalating machine size further) — this is the FIRST OOM at this tier, not yet a confirmed
+  pattern; per the same 2-3-strikes discipline used for the preemption waves, will escalate to a larger machine type
+  only if this recurs on `e2-standard-16`, not preemptively. Rest of the 21-shard fleet unaffected (confirmed healthy
+  via full status sweep immediately after).
