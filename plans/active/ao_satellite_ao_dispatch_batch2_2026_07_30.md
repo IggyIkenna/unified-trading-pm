@@ -120,17 +120,37 @@ other orphaned candidate considered and why it was NOT drafted.
       checkboxes/dispositions left untouched (already correct, doc archived) per this plan's "don't edit the source
       doc's checkboxes" rule. Repos: features-service, unified-api-contracts, agent-orchestrator (read-only, confirmed
       no write needed), unified-trading-pm (this flip).
-- [ ] [BACKEND] P1. **Root-cause + fix why `sequential: true` did not gate dispatch order for a queued predecessor.**
-      `mtds_available_at_cross_asset_backfill_2026_07_13.md` carries `sequential: true` (added 2026-07-14 for this exact
-      bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`. Read
-      `_wire_sequential_prereqs` in `agent-orchestrator/server/regen_backlog_from_plan.py` directly, reproduce against
-      the plan's current task rows, and determine the actual cause (candidate hypotheses in the source doc:
-      stale-ordinal chaining after checkbox renumbering, a lane-crossing bug when two asset-group sub-sequences
-      interleave in one file, or prereqs not re-derived on every regen tick). **Done when**: `quality-gates.sh` green +
-      a regression test asserting a `sequential: true` plan never offers a later-in-document unchecked todo while an
-      earlier one is still `queued` (not `done`); then re-check the live backlog to confirm `-001` dispatches/completes
-      before `-006` is ever offered again. Source:
-      `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Repo:
+- [x] [BACKEND] P1. ✅ **Root-caused + fixed — `agent-orchestrator@77769ab`.** Actual cause: NONE of the 3 candidate
+      hypotheses in the source doc as literally stated — the real mechanism is call-ORDER, not stale ordinals or lane
+      interleaving per se. `_wire_sequential_prereqs` (server/regen_backlog_from_plan.py) runs BEFORE `_prune_stale` in
+      `regen()`'s pipeline. When a same-plan todo's TEXT changes mid-tick (a reword/retag — exactly what happened to
+      both `-001`'s and `-006`'s todo text on 2026-07-28, "retagged... same ruling"), the OLD row for the pre-edit brief
+      is still sitting in `backlog.tasks` at chain-wiring time (an orphan about to be pruned, but not yet), carrying a
+      STALE `plan_order` from a prior tick that can tie/interleave with the freshly (re)computed `(plan_order, id)`
+      values for the plan's live todos — sorting the stale row into the chain and hijacking the immediate-predecessor
+      slot the fresh row should have gotten. Once the orphan is pruned moments later (same tick or the next), an id
+      absent from both DB and backlog reads as satisfied by design, so the hijacked task can dispatch with its TRUE
+      predecessor still queued. Reproduced via a self-contained regen() test (reword a mid-sequential-plan todo, assert
+      the reworded row still chains onto its true document-order predecessor, not the stale orphan) — FAILS on pre-fix
+      code (`['p-002'] == ['p-001']` mismatch), PASSES post-fix. **Fix**: track each tick's live (non-orphan) task ids
+      per plan during the scan loop (`current_task_ids_by_plan`) and restrict `_wire_sequential_prereqs`'s chain WALK to
+      those live ids only, while still classifying same-plan-vs-cross-plan links from the FULL per-plan task set (so a
+      genuinely stale same-plan link is still recognised + stripped by the non-sequential branch) —
+      `_wire_sequential_prereqs` signature gained an optional `current_task_ids_by_plan: dict[str, set[str]] | None`
+      param, defaulting to the old (unfiltered) behavior when omitted. **Gate met**: new regression test
+      `test_sequential_reword_mid_flight_does_not_corrupt_chain` (`tests/test_regen_reconcile.py`) fails pre-fix, passes
+      post-fix; full `tests/test_regen_reconcile.py` (17/17), the broader regen-touching suite (287/287 across
+      `test_backlog_reconcile_brief.py`, `test_done_gate_plan_flip_hard_reject.py`, `test_e2e_findings_remediation.py`,
+      `test_failover_allowed.py`, `test_operator_gated_dispatch_ruling.py`, `test_regen_backlog_from_plan.py`,
+      `test_regen_effort_field.py`, `test_role_registry.py`, `test_skip_endpoint_cooldown_and_park.py`,
+      `test_skip_stale_marker_orphan.py`), and the full repo `quality-gates.sh` (2077 passed, 2 skipped) all green.
+      Shipped via quickmerge, landed on `live-defi-rollout`. **Live-backlog re-check deliberately NOT done from this
+      todo** — the source issue doc already tracks it as its own separate `[VERIFY] P2` todo, explicitly gated on the
+      fix reaching the live orchestrator VM through the normal deploy pipeline (this fix hasn't been deployed there yet
+      as of this commit; forcing a live orchestrator restart mid-fleet-operation to satisfy it here would be out of this
+      todo's scope). `mtds_available_at_cross_asset_backfill_2026_07_13.md` carries `sequential: true` (added 2026-07-14
+      for this exact bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`.
+      Source: `/plans/active/issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md`. Repo:
       agent-orchestrator.
 - [ ] [SCRIPT] P3. **Read-only: verify whether `na-eligibility-auditor.timer`'s most recent scheduled fire(s) since
       2026-07-28 reached `agent_kind=na_eligibility_auditor` lifecycle-complete.** Use the read-only SSM path

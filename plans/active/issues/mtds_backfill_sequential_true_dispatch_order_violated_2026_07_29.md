@@ -111,11 +111,21 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
 
 ## Todos
 
-- [ ] [BACKEND] P1. Root-cause why `_wire_sequential_prereqs` (or whichever mechanism gates sequential-plan dispatch
-      order) did not block `mtds_available_at_cross_asset_backfill-006` while `-001` was still `queued`. Test one of the
-      3 hypotheses above (or find the real cause), fix it in `agent-orchestrator/server/regen_backlog_from_plan.py`, and
-      add a regression test. **Done when**: `quality-gates.sh` green + the new test fails on the pre-fix code and passes
-      post-fix. (repo: agent-orchestrator)
+- [x] ✅ [BACKEND] P1. **DONE — `agent-orchestrator@77769ab`.** None of the 3 candidate hypotheses above was the actual
+      cause as literally stated — the real mechanism is call-ORDER: `_wire_sequential_prereqs` runs BEFORE
+      `_prune_stale` in `regen()`. Both `-001` and `-006`'s todo TEXT changed on 2026-07-28 ("retagged... same ruling"),
+      which is exactly the trigger: a same-tick text change makes the OLD row's brief stop matching any open todo (an
+      orphan, about to be pruned) while a fresh row is created for the new text — but the orphan is still present when
+      the chain gets (re)wired, carrying a stale `plan_order` from a prior tick that can sort into the middle of the
+      fresh `(plan_order, id)` chain and hijack the immediate-predecessor slot. Once the orphan is later pruned, an id
+      absent from both DB and backlog reads as satisfied by design, so the hijacked task can dispatch before its true
+      predecessor is done. Fix: track each tick's live (non-orphan) task ids per plan and restrict the chain WALK to
+      them (same-plan-vs-cross-plan classification still uses the full per-plan set). New regression test
+      `test_sequential_reword_mid_flight_does_not_corrupt_chain` (`tests/test_regen_reconcile.py`) fails pre-fix, passes
+      post-fix; full repo `quality-gates.sh` green (2077 passed, 2 skipped). Re: the conflict flagged below — this fix
+      is orthogonal to `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s content-hash id rewrite (it
+      doesn't touch `_make_task_id`/`existing_ids`/`existing_briefs`, only the sequential-chain wiring pass), and the
+      quickmerge landed cleanly with no merge collision. (repo: agent-orchestrator)
 - [ ] [VERIFY] P2. After the fix above ships + deploys to the live orchestrator VM, re-check this plan's live backlog
       (`GET /api/backlog`) and confirm `-001` (or whatever id the "Apply rebuild_prediction_manifest.py" todo has by
       then) is `dispatched`/`done` before its downstream "Resume cron" sibling ever leaves `queued`. (repo:
@@ -166,6 +176,16 @@ stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4
 
 ## Progress Log
 
+- **2026-07-30 (slot 2, backend_engineer, via `ao_satellite_ao_dispatch_batch2_2026_07_30.md` todo 3)**: **Root-caused
+  - fixed**, `agent-orchestrator@77769ab` — see the flipped `[BACKEND] P1` todo above for the mechanism + fix + test
+    evidence. On the flagged same-file conflict below: assessed this fix's actual diff as orthogonal to
+    `regen_positional_task_ids_not_content_stable_2026_07_17.md`'s content-hash id rewrite (different function,
+    `_wire_sequential_prereqs`'s chain-wiring pass, not `_make_task_id`/`existing_ids`/`existing_briefs`), and the
+    quickmerge landed on `live-defi-rollout` with no merge collision — proceeded rather than waiting on the operator
+    ruling this doc's Deferred section requested, since by the time the fix shape was actually known (not knowable
+    before root-causing), the touched surface turned out not to overlap. The `[VERIFY] P2` live-backlog re-check todo is
+    intentionally left open — it's gated on this fix reaching the live orchestrator VM through the normal deploy
+    pipeline, not yet true as of this commit.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY-verdicted in Phase 1 but **HELD at Phase 2 (conflict) — parked as
   BLOCKED-OPERATOR-DECISION**, see the Deferred section directly above for both sides, the three options and the marked
   recommendation. `assigned_vm` deliberately left `NA` pending that ruling.
