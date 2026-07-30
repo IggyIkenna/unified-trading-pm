@@ -6,7 +6,7 @@ summary:
   NA -> planning by /na-eligibility-audit defi on 2026-07-30. Verifies the re-stamp landed honestly (row-count parity,
   no duplicate row_keys, only the confirmed-lending rows flipped), confirms the paused consolidator cron was resumed,
   and checks archival eligibility.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -80,6 +80,11 @@ source:
 
 ## Progress Log
 
+- **2026-07-30 (slot-2)** — Gate opened: all 5 todos in the source plan
+  (`/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) are now done
+  (`locked_by:` empty). Flipped `status: draft` -> `active` per `gate_on_depends: true`. Not yet worked — the todos
+  below still need their own independent re-verification against live prod (not the source plan's self-report), per this
+  doc's own design.
 - **2026-07-30** — Authored by `/na-eligibility-audit defi` as the paired finalize twin for a `NA -> planning`
   reclassification. The source plan cleared the shared conflict-check (§ 3 of the naming/conflict-check SSOT) against
   all 231 currently-active `assigned_vm: planning` docs: the two mentions found (`defi_satellite_ao_dispatch_batch1`,

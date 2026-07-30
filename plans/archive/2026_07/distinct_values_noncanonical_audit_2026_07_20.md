@@ -371,6 +371,19 @@ handler. → tracked as a P1 writer fix mirroring the IS pattern.
   `instrument_type`; the data_type for those rows is `trades`). `options_chain` has a documented T-OLD-2b carve-out;
   `futures_chain` has none. Needs a live row-count to choose registry-exception vs writer-fix.
 
+### 2026-07-30 — forked lending instrument_type re-stamp workstream closed out
+
+The MTDS lending `instrument_type` historical re-stamp forked out of this plan on 2026-07-24
+(`/plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`) is now fully done
+and archived. Measured live scope was 0 the entire time it was open (five independent measurements across 2026-07-27 and
+2026-07-30) — the buggy `instrument_type="liquidation"` population had already fully cycled out via post-fix re-capture
+before the fork's todos were even executed. `--apply` was run against prod as a formality (confirmed no-op via direct
+source read: `try_once()` returns before any CAS write when `safe_idx` is empty), and the distinct-values panel's live
+nightly rollup (`source_date=2026-07-30`) confirms `liquidation` is absent from the defi `instrument_types` axis
+entirely, `non_canonical_count.instrument_types == 0`. See
+`/plans/archive/2026_07/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md` for full
+detail.
+
 ## Refined worklist (post-verification, 2026-07-20)
 
 ### Executable safe-code (no manifest mutation, no denominator shift)
