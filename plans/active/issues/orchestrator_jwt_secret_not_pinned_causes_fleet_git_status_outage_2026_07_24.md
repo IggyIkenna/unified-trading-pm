@@ -166,17 +166,23 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
       attempt left zero partial state (`jwt-secret-gcs.conf` does not exist). Today's fix is durable via `.env.local`
       alone (survives any restart short of the VM's disk being lost); see new follow-up todo below for the
       belt-and-suspenders systemd pin.
-- [ ] [DEVOPS] P3. **(Follow-up, non-blocking)** Add
-      `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret`
-      to `orchestrator.service` as a systemd drop-in (`/etc/systemd/system/orchestrator.service.d/jwt-secret-gcs.conf`,
-      mirroring `internal-asym.conf`'s existing style — content already staged and verified safe by the 2026-07-30
-      investigation above), for defense-in-depth against `.env.local` being lost on a VM rebuild (it's gitignored +
-      per-machine, unlike the systemd-unit-pinned internal secret). Needs an execution context with real root on
-      `i-0c9b283b31d6b5ca7` (an operator/admin interactive session, or a worker identity actually granted
-      `ssm:SendCommand` on this instance) — ordinary worker sessions on this VM run sandboxed without root and without
-      that AWS permission. **Done when**: the drop-in exists,
-      `systemctl daemon-reload && systemctl restart orchestrator.service` completes, and the existing `.orch_token`
-      still validates post-restart (same test as above).
+- [x] ✅ **DONE 2026-07-30 (interactive operator session, `admin_od` AWS identity via SSM) — closes the gap slot-12's
+      session couldn't.** Added
+      `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://central-element-323112-orchestrator-creds/     orchestrator/jwt-secret`
+      to `/etc/systemd/system/orchestrator.service.d/jwt-secret-gcs.conf` (mirroring `internal-asym.conf`'s exact style
+      — `[Service]` + one `Environment=` line, written via `printf | sudo tee`, NOT a heredoc — a heredoc embedded in an
+      SSM `commands` array element got mis-split and clobbered the file with literal script text on the first attempt;
+      caught it via a follow-up `cat`, rewrote cleanly). Had working root via SSM `send-command` on
+      `i-0c9b283b31d6b5ca7` under the operator's own `admin_od` AWS identity (`aws sts     get-caller-identity`
+      confirmed), which is exactly the access class slot-12's sandboxed `ikenna-worker` identity lacked. Ran
+      `sudo systemctl daemon-reload && sudo systemctl restart orchestrator.service` — a genuine systemd-level restart
+      (`ActiveEnterTimestamp` moved 12:13:12→12:21:59 UTC, distinct PID), not just the `--reload` file-watcher cycle.
+      **Done-when proven**: minted a token via a temp `jwt-verify2-2026-07-30` account, confirmed HTTP 200 against the
+      real proxied public URL (`https://api.agent-orchestrator.odum-research.com/api/backends`) _before_ writing the
+      drop-in, then again _after_ the restart that activated it — same 200, same token, plus `/api/healthz` → `200`
+      post-restart. Temp account removed after. The systemd-unit-level pin now exists alongside the `.env.local` one
+      (`drop-in` list in `systemctl status` shows `jwt-secret-gcs.conf` loaded) — durable across a VM rebuild that loses
+      the gitignored `.env.local`, not just across ordinary restarts.
 - [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Point `slot-git-status-report.sh`'s
       default `ORCH_URL` at `http://localhost:8765` when running ON the orchestrator VM itself (keep the public URL
       default for any future non-central host), so the existing `_is_trusted_loopback` escape hatch actually protects
@@ -216,3 +222,17 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
   this worker session has no root on the VM (sandboxed, no `ssm:SendCommand` on `ikenna-worker`, no reachable instance
   metadata to assume `uts-orchestrator-epic-role`), confirmed via a failed `sudo install` attempt that left zero partial
   state. No agent-orchestrator repo code change was needed (no commit).
+- **2026-07-30 (interactive session, operator-directed)**: operator reported the `vm/ikenna-vm` dashboard stuck on
+  "Fetching dashboard state" and asked to dispatch this P1. Independently root-caused live (backend healthy throughout —
+  `/api/healthz`/`/api/backlog` both fast — the hang was an authenticated-fetch path issue, confirmed via a fresh
+  Playwright browser context: no-token correctly shows sign-in, but the operator's browser had a stored token and the
+  frontend has no fallback-to-sign-in on a 401, just an infinite spin). Arrived at this doc concurrently with slot-12
+  and found the P1 already flipped — independently re-verified with a **full `systemctl restart`** (stronger than
+  slot-12's `--reload` touch test): pre-restart token still validated post-restart via the real proxied public URL. Then
+  closed the P3 follow-up slot-12 opened, using working root/SSM access this interactive session has (via the operator's
+  own `admin_od` AWS identity) that autonomous worker sessions don't. **Residual, unresolved**: neither slot-12's nor
+  this session's testing reproduces a scenario where a restart actually breaks a token — the secret has been stable
+  across every restart tested today. The operator's specific hang is therefore NOT fully explained by this issue; likely
+  candidate is the frontend's missing 401→sign-in fallback combined with some other transient (the 10:45:57 UTC
+  `--reload` cycle dropping their WebSocket without a client-side reconnect) — flagged as a candidate follow-up, not
+  filed as a separate issue yet. Practical resolution given to the operator: sign out/in for a fresh token.
