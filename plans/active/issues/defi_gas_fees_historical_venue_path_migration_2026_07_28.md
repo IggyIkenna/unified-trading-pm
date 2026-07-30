@@ -206,9 +206,45 @@ that point in the sequence.
 | `ManifestWriter.__init__` safety-check follow-up (P1, filed in the linked memory-leak doc)               | Not started — separate, smaller follow-up task                                                                                                      | Nobody yet; open item, not gating this migration                                             |
 | Audit sibling `scripts/` for the same `per_vm_shards` omission (P2, filed in the linked memory-leak doc) | Not started — separate follow-up task                                                                                                               | Nobody yet; open item, not gating this migration                                             |
 
-**Recommended next action**: check whether the background migration process (see script + log path in this session's
-scratchpad, or just re-run the script — it is fully idempotent/resumable via its fast `blob_exists` pre-check) has
-completed; if so, verify final written+skipped counts against the 12,424-row worklist (minus the 1 known collision),
-update this doc with final numbers, flip the checkbox, ship, and `/done`. If the process died again, check
-`ps`/`dmesg`/host memory BEFORE assuming a regression — this host runs many concurrent agent slots and a
-non-migration-related host-memory event could still kill it even with the fix in place.
+**UPDATE 2026-07-30 (later same session) — migration COMPLETE, superseding the table above.**
+
+Final results: `{'written': 11724, 'skipped_existing': 14743, 'missing_source': 0, 'manifest_rows_added': 12424}`. Every
+one of the 12,424 worklist rows now has a `venue=ALCHEMY` canonical twin; `missing_source: 0` confirms zero manifest
+rows without a corresponding legacy GCS object. Spot-verified independently against GCS (not just the migration's own
+log) for ETHEREUM/POLYGON/MANTLE/AURORA across earliest/latest dates — all present, content-equal to their legacy
+source.
+
+**Delete-safety proof (5-part), staged — NOT executed:**
+
+```
+Location:            gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=*/
+                      pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=<10 legacy chain names>/
+                      chain=<same>/instrument_type=spot_asset/data_type=gas_fees/
+Part 1 twin probe:   migration totals (missing_source=0 across all 12,424 rows) IS the exhaustive Part-1 proof;
+                      spot gcs_describe_object() checks on 5 samples corroborate (4/5 exist; the 1 absence
+                      confirmed via manifest query to be a genuine pre-existing gap, not a migration miss).
+Part 2 content:      content-verified (sorted common cols, venue/instrument_id/available_at excluded as
+                      intentionally-changed) for ARBITRUM/2021-09-01, ETHEREUM/2020-01-01, POLYGON/2020-06-01,
+                      MANTLE/2023-07-14 — 4/4 samples byte-equal on every other column.
+Part 3 writers:      grep+READ every gas_fee* call site across market-tick-data-service/execution-service/
+                      features-service/market-data-processing-service — ALL 13 venue= writes resolve to the
+                      _GAS_FEE_VENUE="ALCHEMY" constant. WRITES legacy path? NO.
+Part 4 readers:      same sweep found ONE live reader still on the legacy scheme —
+                      features-service block_priority_gas_distribution_calculator.py (venue=chain). FIXED
+                      same-day (features-service@7f800b45); filed as its own doc:
+                      /plans/active/issues/features_gas_fees_calculator_stale_legacy_venue_read_2026_07_30.md
+                      (also documents an 8-day silent-stale-data consequence, now closed).
+Part 5 twin coverage: 100% (12,424/12,424), per the migration's own totals.
+Disposition:         no-migrate-first UNTIL features-service@7f800b45 is confirmed shipped (QG was in flight at
+                      last check) — re-evaluate to yes-twin-confirmed once confirmed live. Genuine sequencing
+                      gate, not an open question.
+Hard stop:           prod-bucket delete (hard-stop #1) applies regardless — the actual delete stays
+                      [OPERATOR]/human-only per this doc's original Recommended Decision, independent of
+                      disposition.
+```
+
+**Not executed**: no `gcs_delete_object`/`gcs_conditional_delete` call was made against any legacy prefix.
+
+**Recommended next action**: confirm `features-service@7f800b45` QG passed + was quickmerged + CI green, THEN flip this
+doc's checkbox citing both shas (the migration + the reader fix) and the staged proof above, and `/done`. The actual
+delete stays for the operator.
