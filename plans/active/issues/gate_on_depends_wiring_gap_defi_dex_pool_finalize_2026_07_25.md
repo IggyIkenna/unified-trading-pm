@@ -387,3 +387,17 @@ vs P2/P3's 50/80, per main's corroboration in an earlier message this session re
 — the root-cause fix appears to already be in flight, so this bump is a durable-record correction (keeps the doc
 accurate for any future re-queue) rather than a live re-prioritization of already-dispatched work. Todo 2 (the P2
 dispatch-time defense-in-depth check) is intentionally left unchanged — main's ask was scoped to item 1 only.
+
+While landing this, a race: slot 14 briefly filed a duplicate issue doc for this same batch1/batch1b case
+(`finalize_plan_gate_on_depends_premature_dispatch_2026_07_30.md`), then self-corrected two commits later
+(`57e98f3c9`, `119ebe64b`) — deleted its own duplicate and repointed the finalize plan's Progress Log at this doc, on
+noticing slot 7/12 had already documented the identical byte-for-byte counts here. No action needed on my end beyond
+noting it; my initial cross-link to that path is now a dead link since the file no longer exists, so removed it
+again.
+
+One piece of that deleted doc's content is worth preserving even though the filing itself was a duplicate: its
+root-cause hypothesis #1 — "does `_wire_gate_on_depends_prereqs`/the dispatcher check whether the referenced
+`depends_on` plan **files** are archived/complete (a doc-level check) rather than counting each plan's own derived
+backlog-task completion?" — is a genuinely distinct candidate from this doc's existing once-at-ingestion-vs.
+every-regen-tick hypothesis (item 1 in Recommended decision above). Worth checking BOTH code paths when the P0 fix
+lands, not just the one this doc originally proposed.
