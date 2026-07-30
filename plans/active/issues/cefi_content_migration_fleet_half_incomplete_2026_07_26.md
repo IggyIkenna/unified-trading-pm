@@ -560,3 +560,17 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
 - **2026-07-30T17:29Z (slot-15)**: shard 15 (`-135300`) OOM-killed (`rc=137`, clean self-delete) at 212,200/514,504
   files (41.2%, 12,755s elapsed — this shard's own largest window, 2026-03-28..2026-07-19). Fleet at 4 shards (14, 26,
   29, 42). No action taken (monitoring-only).
+- **2026-07-30T17:53Z (slot-15)**: **notable, likely a distinct failure class** — shard 29 (`-134500`) is frozen at the
+  EXACT same point its original (pre-relaunch) attempt died: "1 files still outstanding" (194,804/194,805, 99.9995%), no
+  `rc=137`, `run.log` silent since 17:04:55Z (~49 min at check time). The original doc table above recorded shard 29's
+  best-known progress as 138,800/138,919 (99.9%) with the same "1 file short" signature on a DIFFERENT attempt/window —
+  two independent runs of this shard both stalled on their respective single final file rather than a random OOM/freeze
+  point. This is corroborating evidence for a SPECIFIC poison-pill file in this shard's date range (something the
+  resolver/patcher hangs on, e.g. malformed parquet, huge outlier file, or a resolver edge case) rather than the generic
+  time-based memory leak affecting other shards — worth flagging separately to whoever picks up the `-006` root-cause
+  investigation once dispatched. Also hit the `gcloud` identity-poisoning issue again, this time actively re-poisoning
+  `slot15-work` back to `github-actions-deploy@…` within seconds of my fix (confirmed via immediate retry) — strong
+  evidence a CI job is running RIGHT NOW on this host, not just leaving stale state. Fixed by re-running
+  `gcloud config set account` immediately before the next gsutil call in the same turn. No relaunch/kill action taken on
+  shard 29 (monitoring-only). Fleet still at 4 shards (this is a freeze, not yet a confirmed death — still `STOPPING` at
+  check time).
