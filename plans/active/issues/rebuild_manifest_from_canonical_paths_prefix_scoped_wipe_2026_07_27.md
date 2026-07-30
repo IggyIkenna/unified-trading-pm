@@ -23,18 +23,28 @@ status: open
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction]
 stage: [data]
-repos: [unified-trading-library, market-tick-data-service, market-data-processing-service, unified-trading-pm]
+repos:
+  [
+    unified-trading-library,
+    market-tick-data-service,
+    market-data-processing-service,
+    deployment-service,
+    unified-trading-pm,
+  ]
 scope: [engineer, admin]
 tags: [data-correctness, manifest, gcs, mdps, mtds, candle, orphan, data-loss-risk, operator-notify]
 related:
   [
     /plans/active/issues/mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md,
     /plans/active/data_pipeline_check_mdps_features_2026_07_20.md,
+    /plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md,
+    /plans/active/sports_satellite_ao_dispatch_batch6_2026_07_26.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -164,12 +174,108 @@ not a caller-side workaround.
       regression tests (`tests/unit/scripts/test_rebuild_mtds_manifest_from_canonical_safe.py`) pinning that the safe
       merge function is called (never the wholesale-replacing sibling) and that the call scopes to this script's own
       prefix. Full `quality-gates.sh` green (529s, 7162 passed).
-- [ ] 4. [DATA] P2. Grep the corpus for any OTHER caller of `rebuild_manifest_from_canonical_paths` that might already
-      have been run against a co-located bucket in the past (this session found none besides the two above via
-      `grep -rn "rebuild_manifest_from_canonical_paths(" --include="*.py"`, but a shipped one-off VM script invoked via
-      a launcher's `VM_BACKFILL_CMD` metadata string would not show up in that grep) — confirm via manifest `written_at`
-      timestamps whether any bucket's index shows a suspicious mass-drop matching this function's known call shape. Not
-      urgent (no evidence of a past incident), but worth a bounded check before closing this doc.
+- [x] 4. ✅ [DATA] P2. **DONE 2026-07-30 (slot-3)**. Grepped the full corpus (`*.py` across all repos, VM-launcher shell
+      scripts, and `plans/active/**/*.md` prose) for other callers/recommenders of
+      `rebuild_manifest_from_canonical_paths`, and empirically checked all 4 co-located tick buckets' manifest
+      `written_at` distributions for a mass-drop signature. Full findings: § "Fourth risk site" below. Summary: found
+      and fixed one LIVE code landmine (`launch-mdps-backfill-vm.sh`), found and fixed one more doc leading-indicator
+      (sports features launcher hint), found and tracked one more live-but-currently-inert code site
+      (`launch-features-sharded-backfill.sh`, new todo 5), and confirmed via direct manifest read — **no evidence of a
+      past wipe on any of the 4 co-located tick buckets** (cefi/defi/tradfi/prediction all show healthy, near-row-unique
+      `written_at` timestamps for both MTDS and MDPS spanning months, the opposite signature of a wholesale-replace
+      event).
+
+- [ ] 5. [CODE] P3. **Swap `launch-features-sharded-backfill.sh`'s post-backfill reminder to the additive merge
+      function.** Same bug shape as todo 4's other findings: the reminder (near end of file) calls
+      `rebuild_manifest_from_canonical_paths(resolve_bucket_name(cloud='gcp', kind='features', asset_group=...), service_name='features-service')`
+      with no `prefix=` — defaults to `"raw_tick_data/by_date"`, which doesn't exist in a features bucket, so today this
+      is a harmless no-op (0 blobs discovered → the function's own empty-guard returns before writing anything). Still
+      worth closing: swap to `merge_manifest_from_canonical_paths` (same args, but `prefix` is REQUIRED — pick the real
+      per-family object-key prefix, e.g. `delta_one/by_date` confirmed live at
+      `features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:223`; calendar and sports need
+      their own real prefixes, do NOT assume `${FAMILY}/by_date` is uniform — verify each family's actual writer path
+      before hardcoding, per the SAME file's own existing "do NOT hardcode a prefix" comment). Lower priority than todo
+      4's other sites because it is non-destructive today regardless (wrong prefix ⇒ 0 discovered ⇒ early return,
+      verified by reading `_maintenance.py:648-651`'s `if rebuilt.empty: return` guard) — this is a defense-in-depth
+      close, not an active-risk fix. Repo: deployment-service. No `[OPERATOR]` gate needed (same hint-text-only
+      justification as the sports todo above — no VM launch, no GCS write/delete). `launch-features-backfill-vm.sh`
+      carries the identical unsafe-function text but is DEPRECATED (2026-05-08, superseded by `launch-features-vm.sh`)
+      and the block is dead code — the file `exec`s into the consolidated launcher unconditionally once its required
+      args are present, so the legacy reminder only fires on a malformed partial invocation; not worth fixing, noted
+      here so it isn't rediscovered as a false new finding.
+
+## Fourth risk site found 2026-07-30 (todo 4's own corpus sweep) — one live fix, one more doc fix, one tracked, all clear on past execution
+
+**Corpus grep (`*.py`, all repos)**: zero callers beyond the function definition itself and its own 5 regression tests
+in `test_manifest_v4_migration.py`. Confirmed both risk-site-1/2 callers now delegate to the safe
+`merge_manifest_from_canonical_paths` (verified by reading `rebuild_mtds_manifest.py:253-259` directly, not just
+grepping) — todos 1-3's fix held.
+
+**VM-launcher plain-text grep (the "`VM_BACKFILL_CMD` metadata string" blind spot this todo named at creation)** —
+`grep -rln "rebuild_manifest_from_canonical_paths" --include="*.sh" --include="*.yaml" --include="*.yml" .` surfaced 5
+files the `*.py` grep structurally cannot see (the calls live inside `echo`'d post-backfill reminder text, not
+importable Python):
+
+1. **`launch-mdps-sharded-backfill.sh`** — already safe (already cites `merge_manifest_from_canonical_paths`, fixed in
+   the same 2026-07-27 session as todos 1-3, confirmed by direct read). No action.
+2. **`launch-mdps-backfill-vm.sh`** — **LIVE LANDMINE, FIXED THIS SESSION** (`deployment-service`, this todo). This is
+   the primary, currently-canonical MDPS backfill launcher (registered in `vm_prefix_registry.py`'s
+   `mdps-backfill-{cefi,tradfi,defi,prediction,sports}-` prefixes, wired into `deployment-api`'s `deploy_missing.py`,
+   invoked verbatim in currently-active dispatch plans `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` and
+   `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, last touched 2026-07-30 for an unrelated fix — not stale, not
+   superseded). Its post-backfill reminder printed the exact risk-site-1 recipe
+   (`rebuild_manifest_from_canonical_paths('market-data-tick-${ASSET_GROUP}-central-element-323112', service_name='market-data-processing-service', prefix='processed_candles/by_date')`)
+   against the real co-located tick bucket, with a real, populated, existing `processed_candles/by_date` prefix (NOT a
+   0-discovery no-op like the features cases below — this recipe would genuinely have destroyed the bucket's raw-tick
+   manifest rows if copy-pasted and run). Fixed to call `merge_manifest_from_canonical_paths` instead, mirroring
+   `launch-mdps-sharded-backfill.sh`'s already-shipped, already-reviewed fix pattern verbatim (same warning comment,
+   same call shape). Not yet shipped as of this write-up — ships via quickmerge in this same session, see evidence
+   below.
+3. **`launch-features-vm.sh`** — unsafe function present but currently non-destructive (omits `prefix=`, defaults to
+   `"raw_tick_data/by_date"` which doesn't exist in a features bucket ⇒ 0 discovered ⇒ early-return no-op, per
+   `_maintenance.py:648-651`). Already has an open, correctly-scoped fix todo
+   (`sports_satellite_ao_dispatch_batch6_2026_07_26.md`, sourced from
+   `sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` § Y) that — as originally scoped — fixed only
+   the bucket-name-404 bug and would have left the wholesale-replacing function in place, now pointed at a bucket that
+   resolves (turning a harmless 404 into a live risk). Amended both docs in place (2026-07-30) to require the function
+   swap in the same edit as the bucket/prefix fix. Did not implement the fix myself — it is already assigned scope in an
+   active plan; duplicating it risks a conflicting edit to the same lines.
+4. **`launch-features-backfill-vm.sh`** — DEPRECATED, dead-code reminder (see todo 5).
+5. **`launch-features-sharded-backfill.sh`** — same non-destructive-today shape as `launch-features-vm.sh`, live and
+   current (not deprecated), not covered by any existing todo. New todo 5 above.
+
+**`plans/active/**/*.md` prose grep** (per the Third-risk-site addendum's own recommendation to re-check this
+periodically): 8 files matched. `mdps_cefi_candle_manifest_orphan_reconciliation_2026_07_26.md` (risk site 1) and
+`mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md` (risk site 3) are already corrected. Three more matches
+are the two sports docs above (now amended) and this doc's own text/todo 4 wording (expected — it names the function to
+warn about it). The remaining match, **`cefi_satellite_ao_dispatch_batch1_2026_07_25.md`**, is Progress-Log narrative
+(not a live recipe) — a 2026-07-26 session recorded "post-completion steps: (1) run the launcher's own reminder —
+`rebuild_manifest_from_canonical_paths('market-data-tick-cefi-central-element-323112', ...)`" as its _planned_ next step
+after launching an MDPS candle backfill, predating both this issue doc's discovery (2026-07-27) and the safe function's
+existence. The todo it belongs to (`-001`) was flipped `[x]` the same day via GCS-direct verification that explicitly
+did **not** depend on the manifest reconciliation step running (`RollingAdvReader` reads candles directly off GCS,
+bypassing the manifest entirely) — the doc gives no direct confirmation the reconciliation step was ever actually run.
+Resolved empirically instead of by further doc archaeology: see the written_at check below. Historical Progress Log
+entries are not rewritten (append-only record); no edit made to that doc.
+
+**Manifest `written_at` mass-drop check (direct read, not a corpus walk — one slim-projected read of each bucket's
+existing single consolidated index object, `columns=["service_name","written_at","date"]`)**, for all 4 co-located tick
+buckets this doc's `asset_group:` frontmatter scopes to. A wholesale-replace event would show as either a service's rows
+vanishing entirely, or surviving rows collapsing to one/few uniform `written_at` values at the moment of the replace.
+Measured 2026-07-30:
+
+| bucket (real name incl. env/pred-infix quirk)                                                                                                                                                | market-tick-data-service rows | written_at span         | distinct written_at | market-data-processing-service rows |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------: | ----------------------- | ------------------: | ----------------------------------: |
+| `market-data-tick-cefi-prd-central-element-323112`                                                                                                                                           |                     6,124,758 | 2026-04-14 → 2026-07-30 |           6,124,685 |                             509,049 |
+| `market-data-tick-defi-prd-central-element-323112`                                                                                                                                           |                    27,642,709 | 2026-07-22 → 2026-07-29 |          27,627,088 |                           1,486,537 |
+| `market-data-tick-tradfi-prd-central-element-323112`                                                                                                                                         |                     4,199,707 | 2026-04-06 → 2026-07-28 |           1,325,450 |                              49,536 |
+| `market-data-tick-pred-prd-central-element-323112` (NOT `-prediction-` — confirmed via `bucket-isolation-model.md`, an earlier probe against the wrong name misread as an empty/wiped index) |                     1,596,905 | 2026-04-05 → 2026-07-28 |           1,596,896 |                              18,646 |
+
+Every bucket: both services' row counts are large, `written_at` values are near-1:1-unique with the row count (i.e.
+genuine incremental per-shard writes accumulated over months), and MTDS rows are intact everywhere. **This is the
+opposite signature of a wholesale replace** (which would show 0 rows or a handful of uniform recent timestamps for the
+wiped service). **Conclusion: no evidence of a past incident on any of the 4 buckets** — matches this doc's original
+"not urgent" framing; now confirmed rather than assumed.
 
 ## Third risk site found 2026-07-30 (ag-closeout-audit cefi) — a doc, not a past execution
 

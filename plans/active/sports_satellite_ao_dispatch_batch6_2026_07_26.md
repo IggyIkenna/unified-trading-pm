@@ -169,16 +169,23 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       fix**: the source finding records that a watchdog armed on the hinted bucket read `shard_days=0` for 20 minutes,
       indistinguishable from a genuinely stalled backfill — a 404 bucket does not error in a `| wc -l` pipeline, it
       silently returns zero forever. This is the inverted form of the async-wait rule 1a hazard
-      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). Repo: deployment-service. **No `[OPERATOR]` gate
-      needed (`task_template.md` finding O justification)**: this todo names a VM launcher (`launch-features-vm.sh`) and
-      so trips the `check_delete_vm_launch_gating.sh` soft pre-filter, but it **launches no VM, writes no GCS object and
+      (`/codex/12-agent-workflow/async-wait-and-poll-discipline.md`). **ALSO swap the function itself (added 2026-07-30,
+      `rebuild_manifest_from_canonical_paths_prefix_scoped_wipe_2026_07_27.md` todo 4's corpus sweep)**:
+      `rebuild_manifest_from_canonical_paths()` wholesale-REPLACES the target bucket's whole manifest index on a
+      prefix-scoped call — fixing only the bucket/prefix strings turns this hint from a harmless 404 into a LIVE wipe
+      risk the moment the bucket name resolves. Swap to the additive `merge_manifest_from_canonical_paths()` (same
+      module; `prefix` is required, not optional, on the additive sibling) in the SAME edit — do not ship the
+      bucket/prefix fix without the function fix. Repo: deployment-service. **No `[OPERATOR]` gate needed
+      (`task_template.md` finding O justification)**: this todo names a VM launcher (`launch-features-vm.sh`) and so
+      trips the `check_delete_vm_launch_gating.sh` soft pre-filter, but it **launches no VM, writes no GCS object and
       deletes nothing** — the entire change is to the launcher's printed post-backfill HINT TEXT (a Python bucket-name
       string it echoes for the operator to copy), shipped as source via the normal quickmerge path, and its done-when is
       a `quality-gates.sh` run plus a checkbox flip. Safe-idempotent by construction. **Coordination**: todo 2 (P1,
       drains first) leaves part3's § Y checkbox open and annotated for you — flip it as part of THIS todo's evidence,
-      and do not make any other edit to part3. **Done when**: the hint resolves both the bucket and the prefix through
-      `resolve_bucket_name`/the real `sports_features/` prefix, a `quality-gates.sh` run is green on deployment-service,
-      and part3's § Y checkbox is `[x]` with the shipping sha. Source:
+      and do not make any other edit to part3. **Done when**: the hint resolves the bucket and prefix through
+      `resolve_bucket_name`/the real `sports_features/` prefix AND calls `merge_manifest_from_canonical_paths()` (not
+      the wholesale-replacing sibling), a `quality-gates.sh` run is green on deployment-service, and part3's § Y
+      checkbox is `[x]` with the shipping sha. Source:
       `issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md` § Y.
 
 - [x] ✅ [DATA] P1. **`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` carries
