@@ -195,26 +195,43 @@ walk — the exact path set is fully known) and calls `ManifestWriter.record_cap
       regressions for any other venue).
 - [x] [DATA] P2. Once fixed, re-launch the `(LIGHTER-ZKSYNC, derivative_ticker)` backfill for 2026-04-17..today (179
       instruments, bare-ticker `--instrument-ids`, SPOT, single Tardis-VM cap respected) and verify real `captured` rows
-      land with non-null `funding_rate`. **PARTIALLY DONE** — small-scope smoke test (2 instruments × 3 days) verified
-      end-to-end on real infra (see "Live verification" above): real data lands correctly in GCS with correct schema.
-      Full 179-instrument/full-date-range launch is the next immediate action (in progress this session). The manifest
-      NOT yet showing `captured` is the separate 4th finding above, not a blocker to running the backfill itself (real
-      GCS data is the valuable artifact; manifest visibility is a tracked follow-up).
+      land with non-null `funding_rate`. **DONE — full production backfill completed 2026-07-30.** VM
+      `mtds-backfill-cefi-lighter-derivative-ticker-full-20260730` (179 instruments, 2026-04-17..2026-07-30, SPOT,
+      e2-highmem-4, single Tardis-VM cap respected — verified 0 other Tardis VMs running both pre-launch and throughout
+      via the fixed guard below) ran to `DEPLOYMENT_COMPLETED exit_code=0` in ~25 minutes wall-clock (00:39–01:04 UTC).
+      Full-run log verification: **0** `schema contract violated` occurrences (down from 100% of writes before the 3
+      fixes), 15,639 successful shard uploads across the 105-date range, **~1.10 billion real funding-rate rows
+      written** (`funding_rate`/`open_interest`/`mark_price`/`index_price` columns all populated). 16,058
+      `Stage-0 OBSERVE` lines are the known cosmetic filename-shape warning (bare-ticker filenames, e.g.
+      `LIGHTER-ZKSYNC:PERPETUAL:APEX.parquet`, instead of the fully `-USDC@LIN`-suffixed canonical form) — informational
+      only, not a write failure. Manifest visibility for this real data is the separate 4th finding below, tracked as
+      its own todo, not a blocker on this todo's completion (the GCS data itself is the deliverable here).
 - [ ] [FIX] P1. **NEW finding.** Wire manifest `record_captured` recording for the LIGHTER-ZKSYNC (and by extension any
       future) delegated-to-`download_batch` onchain-perp-batch path — either (a) properly integrate with the day-level
       `_DateRunState`/`_record_venue_shard_counts` accumulator `venue_fetch.py` uses for every other venue, or (b)
       design a narrower, self-contained manifest-recording call inside `_onchain_perp_batch_lighter.py` itself once
       `download_batch` returns, using the per-symbol row counts it currently discards. Needs careful design + regression
-      tests against the shared day-level state machine (option a) before shipping. Repo: market-tick-data-service.
+      tests against the shared day-level state machine (option a) before shipping. Deliberately left open — a rushed
+      write against the shared manifest-accounting state machine is a worse outcome than a documented, correctly-scoped
+      follow-up. Repo: market-tick-data-service.
 - [ ] [DATA] P2. Once the manifest-recording gap is fixed (or as an interim narrower fix), run a targeted reconciliation
-      pass for the ALREADY-WRITTEN real GCS data (both the smoke-test shards and the full backfill once it completes):
-      for each known (instrument, date) cell, `gcs_describe_object` the expected canonical path (fully enumerable, NOT a
-      corpus walk — the exact scope is known) and `ManifestWriter.record_captured(...)` directly for each
-      confirmed-existing object. Repo: market-tick-data-service.
-- [ ] [PROCESS] P3. The Tardis-concurrency-guard's `TARDIS_VM_NAME_PATTERN`-based venue exemption list treats
+      pass for the ALREADY-WRITTEN real GCS data (the full 179-instrument × 105-date backfill completed above, ~15,639
+      shards, ~1.10B rows): for each known (instrument, date) cell, `gcs_describe_object` the expected canonical path
+      (fully enumerable, NOT a corpus walk — the exact scope is known and fixed) and
+      `ManifestWriter.record_captured(...)` (or `record_captured_from_counts`, whichever fits the plain per-instrument
+      shard shape — needs checking, the bundled-shard-oriented signature seen in `manifest_finalize.py` may not directly
+      apply) directly for each confirmed-existing object. Repo: market-tick-data-service.
+- [x] [PROCESS] P3. The Tardis-concurrency-guard's `TARDIS_VM_NAME_PATTERN`-based venue exemption list treats
       LIGHTER-ZKSYNC as blanket "non-Tardis" (`deployment-service/scripts/vm/tardis-concurrency-guard.sh`), but its
       `trades`/`book_snapshot_5`/`derivative_ticker` DO route through Tardis (confirmed throughout this and the
-      companion doc's investigation, `pipeline_mode=batch_tardis`) — the guard's exemption is coarser than reality. Not
-      a live problem today (no other Tardis VM was running during any launch in this session), but worth tightening the
-      exemption to be per-(venue, data_type) rather than per-venue before it causes a real concurrent-IP-lockout
-      incident. Repo: deployment-service.
+      companion doc's investigation, `pipeline_mode=batch_tardis`) — the guard's exemption is coarser than reality.
+      **DONE — `deployment-service@45e1cd1`.** Removed LIGHTER-ZKSYNC from `TARDIS_CAP_EXEMPT_VENUES`; verified
+      HYPERLIQUID (own `hyperliquid_s3.py` REST funding fetch), ASTER, EXTENDED-STARKNET (own distinct
+      `pipeline_mode=batch_extended`, confirmed via manifest read — never `batch_tardis`), and COINBASE-CDE remain
+      genuinely non-Tardis and correctly stay exempt. Manually verified `tardis_venue_list_needs_guard()`'s behavior for
+      all 5 cases (LIGHTER-ZKSYNC alone, mixed with an exempt venue, EXTENDED-STARKNET alone, HYPERLIQUID+ASTER, a real
+      Tardis venue) matches the intended fix exactly. This was live-relevant, not just a future-incident risk — the full
+      179-instrument backfill above was actively consuming the single Tardis IP slot while this gap existed; confirmed
+      the launcher's `VM_TARDIS_CONSUMER=1` metadata stamp is unconditional (not gated on the buggy pre-flight check),
+      so the live blast radius was narrower than a fully-blind gap, but a second concurrent LIGHTER-ZKSYNC-only launch
+      would have also skipped its own pre-flight check.
