@@ -55,14 +55,15 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P0. **Reconcile `cefi_consolidated_closeout_2026_07_18.md`'s Track-1/Track-8 checkboxes.** Flip: the
-      Track-1 "Execute the minutes-gap hybrid cutover" checkbox; the Operator-dispositions DERIBIT quote-fix checkbox;
-      Track 8's `:PERP:` → `:PERPETUAL:` rewrite checkbox (note the on-disk-rename half only — the writer-side half is
-      reconciled separately by `cefi_consolidated_native_ao_extract_2026_07_25_finalize.md`); Track 8's POST-CUTOVER
-      smoke-check/downloader-flip checkbox; Track 8's enumeration-audit terminal-checkpoint checkbox. Cite the shipped
-      commit(s) for each — verify each cited commit actually exists (resolves as an ancestor of
-      `origin/live-defi-rollout`) before citing it. Repo: unified-trading-pm. **Done when**: all 5 named checkboxes/
-      sections in the parent doc are flipped with verified evidence.
+- [x] ✅ [REVIEW] P0. **DONE — Reconciled `cefi_consolidated_closeout_2026_07_18.md`'s Track-1/Track-8 checkboxes.**
+      Flipped all 5 named checkboxes with cited evidence, each commit verified as an ancestor of
+      `origin/live-defi-rollout` before citing: Track-1 "Execute the minutes-gap hybrid cutover" (all 4 scripts'
+      `EXIT_STATUS=0`, idempotency-verified); Operator-dispositions DERIBIT quote-fix (`instruments-service@d72edcf7` +
+      `@b2e084fa`); Track 8's `:PERP:` → `:PERPETUAL:` rewrite, on-disk-rename half only (0 `:PERP:`-form rows
+      before/after, DERIBIT collision class left honest-raw per its own ruling); Track 8's POST-CUTOVER
+      smoke-check/downloader flip (`market-tick-data-service@a4f90769`, live-refetch residual closed 2026-07-28); Track
+      8's enumeration-audit terminal checkpoint (99.49% canonical `instrument_id`, 8,790,637/ 8,880,557). Repo:
+      unified-trading-pm. Evidence: `unified-trading-pm@fde8fca09`.
 - [ ] [REVIEW] P1. **Reconcile the 2 true source docs.** (1) `cefi_residual_followups_after_honest_done_2026_07_17.md`'s
       own Phase-1/2 todos (the cutover's real vehicle) — flip with the same cited evidence as todo 1 above. (2)
       `cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md` — confirm its findings are now
