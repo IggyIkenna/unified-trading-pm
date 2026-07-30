@@ -207,10 +207,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
-        "warn_file_count": 0,
         "large_file_count": 0,
+        "coverage_pct": 87.6,
         "qg_red_reason": null,
-        "coverage_pct": null
+        "warn_file_count": 0
       }
     },
     "client-reporting-api": {
@@ -341,10 +341,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
-        "warn_file_count": 16,
+        "large_file_count": 6,
+        "coverage_pct": 82.68,
         "qg_red_reason": null,
-        "coverage_pct": null,
-        "large_file_count": 6
+        "warn_file_count": 16
       }
     },
     "deployment-service": {
@@ -392,10 +392,10 @@
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
-        "warn_file_count": 7,
-        "qg_red_reason": null,
         "large_file_count": 6,
-        "coverage_pct": null
+        "coverage_pct": 73.54,
+        "qg_red_reason": null,
+        "warn_file_count": 7
       }
     },
     "execution-service": {
@@ -455,10 +455,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "qg_red_reason": null,
-        "warn_file_count": 21,
         "large_file_count": 0,
-        "coverage_pct": null
+        "coverage_pct": 84.3,
+        "qg_red_reason": null,
+        "warn_file_count": 21
       }
     },
     "features-service": {
@@ -652,7 +652,7 @@
       ],
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": null,
+        "coverage_pct": 86.35,
         "qg_red_reason": null,
         "warn_file_count": 0
       },
@@ -760,10 +760,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 10,
-        "coverage_pct": null,
         "large_file_count": 9,
-        "qg_red_reason": null
+        "coverage_pct": null,
+        "qg_red_reason": "pytest",
+        "warn_file_count": 10
       }
     },
     "market-data-processing-service": {
@@ -822,8 +822,8 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 5,
+        "coverage_pct": 89.58,
         "qg_red_reason": null,
-        "coverage_pct": null,
         "warn_file_count": 7
       }
     },
@@ -948,9 +948,9 @@
       "created": "2026-05-19",
       "codebase_health": {
         "large_file_count": 0,
-        "coverage_pct": null,
-        "warn_file_count": 6,
-        "qg_red_reason": null
+        "coverage_pct": 82.62,
+        "qg_red_reason": null,
+        "warn_file_count": 6
       },
       "ldr_ci_status": "GREEN"
     },
@@ -980,7 +980,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1011,10 +1011,10 @@
       ],
       "ldr_ci_status": "GREEN",
       "codebase_health": {
-        "warn_file_count": 10,
         "large_file_count": 5,
-        "qg_red_reason": null,
-        "coverage_pct": null
+        "coverage_pct": 85.82,
+        "qg_red_reason": "pytest",
+        "warn_file_count": 10
       }
     },
     "system-integration-tests": {
@@ -1104,9 +1104,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
         "large_file_count": 0,
+        "coverage_pct": 9.47,
         "qg_red_reason": null,
-        "warn_file_count": 0,
-        "coverage_pct": null
+        "warn_file_count": 0
       }
     },
     "trading-agent-service": {
@@ -1166,9 +1166,9 @@
       "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
-        "warn_file_count": 0,
-        "coverage_pct": null,
-        "qg_red_reason": null
+        "coverage_pct": 73.53,
+        "qg_red_reason": null,
+        "warn_file_count": 0
       }
     },
     "unified-api-contracts": {
@@ -1347,9 +1347,9 @@
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
         "large_file_count": 0,
+        "coverage_pct": 80.63,
         "qg_red_reason": null,
-        "warn_file_count": 5,
-        "coverage_pct": null
+        "warn_file_count": 5
       },
       "ldr_ci_status": "GREEN"
     },
@@ -1366,7 +1366,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1387,8 +1387,8 @@
       ],
       "codebase_health": {
         "large_file_count": 34,
+        "coverage_pct": 51.03,
         "qg_red_reason": null,
-        "coverage_pct": 50.93,
         "warn_file_count": 38
       },
       "ldr_ci_status": "GREEN",
@@ -1401,7 +1401,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "SIT_VALIDATED",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1474,10 +1474,10 @@
       ],
       "cascade_invalidated_by": "unified-trading-library=0.65.0",
       "codebase_health": {
-        "coverage_pct": null,
-        "warn_file_count": 0,
+        "large_file_count": 0,
+        "coverage_pct": 99.24,
         "qg_red_reason": null,
-        "large_file_count": 0
+        "warn_file_count": 0
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "tests"
