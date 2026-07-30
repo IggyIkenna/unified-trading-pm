@@ -144,7 +144,7 @@ confirmed running healthily. The only remaining action is the backfill for the 2
       full-corpus load): 145/145 rows present for the window (29 days × 5 protocols), all `capture_status=captured`,
       zero gaps remaining. Non-blocking IAM warning during the run (`run-ledger` pubsub publish 403 on the VM's default
       service account) is a separate, already-tracked issue
-      (`/plans/active/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`) — did not block or affect the
+      (`/plans/archive/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`) — did not block or affect the
       backfill write path. No code change required (repo: market-tick-data-service, deployment-service — launcher script
       used as-is).
 
@@ -191,5 +191,5 @@ for a targeted query — the same filtered read above completed in seconds.
   registry has been unchanged since 2026-05-03 (already confirmed above) and the run's own log confirms it wrote the
   expected 5-protocol/8-vault set correctly. One non-blocking IAM 403 in the run log (`run-ledger` pubsub publish, VM
   default service account lacks `pubsub.topics.publish`) did not affect the backfill's data write path — already tracked
-  separately at `/plans/active/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`, no new issue filed.
+  separately at `/plans/archive/issues/vm_run_ledger_publish_iam_permission_denied_2026_07_28.md`, no new issue filed.
   Both todos now done; issue closed (`status: resolved`).

@@ -21,7 +21,7 @@ tags: [plan-reconcile, operator-decision, infra, plan-hygiene, autonomous]
 related:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
+    /plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md,
     /plans/archive/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md,
     /plans/archive/issues/plan_reconciler_doc_hygiene_findings_2026_06_17.md,
     /plans/active/stash_pile_workspace_cleanup_2026_06_03.md,
@@ -66,7 +66,7 @@ depends_on: []
 
 ## 1. Which durable fix for VM startup/helper scripts not auto-rolling out to GCS? (P1)
 
-`/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md:81-89` states three fix shapes under the
+`/plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md:81-89` states three fix shapes under the
 heading **"Fix options (for operator decision)"** and picks none. The doc is `priority: P1`, `status: open`, and had
 **zero checkboxes** until this pass added an `[OPERATOR]`-gated capture todo — so for 7 days its only P1 work was
 invisible to every hygiene and dispatch surface.
@@ -87,7 +87,7 @@ discipline as the control. Other: operator can type a custom answer
 
 **Status**: resolved — **option A** (operator general theme applied 2026-07-28: full automatic recovery preferred over a
 manual/partial control). Ruled + written into
-`/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md`'s own todo (retagged
+`/plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md`'s own todo (retagged
 `[OPERATOR]→[SCRIPT]` there, full reasoning + full-completion scope in that doc) — Option C kept as the standing interim
 safety net, not as the durable fix.
 
