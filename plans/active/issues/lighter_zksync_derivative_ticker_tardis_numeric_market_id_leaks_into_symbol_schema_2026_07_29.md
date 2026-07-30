@@ -206,14 +206,29 @@ walk — the exact path set is fully known) and calls `ManifestWriter.record_cap
       `LIGHTER-ZKSYNC:PERPETUAL:APEX.parquet`, instead of the fully `-USDC@LIN`-suffixed canonical form) — informational
       only, not a write failure. Manifest visibility for this real data is the separate 4th finding below, tracked as
       its own todo, not a blocker on this todo's completion (the GCS data itself is the deliverable here).
-- [ ] [FIX] P1. **NEW finding.** Wire manifest `record_captured` recording for the LIGHTER-ZKSYNC (and by extension any
+- [x] [FIX] P1. **NEW finding.** Wire manifest `record_captured` recording for the LIGHTER-ZKSYNC (and by extension any
       future) delegated-to-`download_batch` onchain-perp-batch path — either (a) properly integrate with the day-level
       `_DateRunState`/`_record_venue_shard_counts` accumulator `venue_fetch.py` uses for every other venue, or (b)
       design a narrower, self-contained manifest-recording call inside `_onchain_perp_batch_lighter.py` itself once
       `download_batch` returns, using the per-symbol row counts it currently discards. Needs careful design + regression
       tests against the shared day-level state machine (option a) before shipping. Deliberately left open — a rushed
       write against the shared manifest-accounting state machine is a worse outcome than a documented, correctly-scoped
-      follow-up. Repo: market-tick-data-service.
+      follow-up. Repo: market-tick-data-service. **DONE — `market-tick-data-service@064f872a`.** Shipped option (b):
+      `_emit_per_symbol_manifest` (`tardis_batch_download.py` → relocated to `tardis_cefi_shards.py`, which already owns
+      `symbol_display_map_var`, per the 900-line codex ratchet) gained a `record_success` kwarg — self-records via
+      `manifest.add(row_count=...)` for successful `int` results ONLY when `partition_writer is None` (today exclusively
+      this LIGHTER-ZKSYNC standalone path), so every other Tardis-CeFi venue (which relies on the day-level flow) is
+      provably unaffected — no double manifest write. Reuses the existing `symbol_display_map_var` ContextVar to resolve
+      the numeric Tardis `market_id` back to the real ticker for `instrument_id`/`underlying`, so the manifest can never
+      re-leak the numeric id this whole investigation started from. Both `_run_per_symbol_batch` call sites updated to
+      pass `record_success=partition_writer is None`. 7 new regression tests (5 in
+      `test_tardis_batch_download_fetch_evidence.py`: default `False` is a no-op, `True` self-records via
+      `manifest.add`, numeric-symbol resolution via the display map, failures still route normally; 2 in
+      `test_tardis_batch_download_failure_instrument_type.py` proving the `partition_writer`-gated wiring end-to-end at
+      the `_run_per_symbol_batch` level). Full test suite for every touched Tardis/lighter file green (85 passed).
+      `quality-gates.sh` green for all 4 changed files (the one QG failure present in the tree,
+      `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py` STEP 5.101, is foreign — committed by `slot-11` at
+      2026-07-30 04:08 UTC, unrelated to and not touched by this fix). Pushed, `ahead=0`.
 - [ ] [DATA] P2. Once the manifest-recording gap is fixed (or as an interim narrower fix), run a targeted reconciliation
       pass for the ALREADY-WRITTEN real GCS data (the full 179-instrument × 105-date backfill completed above, ~15,639
       shards, ~1.10B rows): for each known (instrument, date) cell, `gcs_describe_object` the expected canonical path
