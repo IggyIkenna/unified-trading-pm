@@ -16,7 +16,9 @@ summary: >-
   this session (out of scope for the 1h reaper-drain P0 todo that surfaced it) — needs its own focused investigation.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-api] only, a
+  # deployment-api container stability bug
 stage: [meta]
 repos: [deployment-api]
 scope: [engineer]

@@ -14,7 +14,9 @@ summary: |
   day). Filed so the gate gets back to green and the 5 get a real diagnosis rather than being written off.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-ui] only, the
+  # pw:L2 smoke gate itself
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]

@@ -55,12 +55,12 @@ def _load_docspec():
 ds = _load_docspec()
 
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
-NON_AG_TRANCHES = ["ao", "ci", "infra"]
+NON_AG_TRANCHES = ["ao", "ci", "infra", "ui"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 
 # infra's TRANCHE name (CLI --tranche, closeout-doc prefix) does not match its actual `asset_group`
 # enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no "infra"
-# member) -- ao/ci have no such mismatch (their enum values equal their tranche names).
+# member) -- ao/ci/ui have no such mismatch (their enum values equal their tranche names).
 TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 
 DOC_TREES = ["plans/active/*.md", "plans/active/issues/*.md"]
@@ -126,8 +126,9 @@ def main(argv: list[str] | None = None) -> int:
             if ag in asset_group:
                 tranches.append(ag)
         for t in NON_AG_TRANCHES:
-            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
-            # tested identically to the 5 real AGs, not via the retired closeout-citation proxy (see
+            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion);
+            # ui joined them 2026-07-30 -- all tested identically to the 5 real AGs, not via the
+            # retired closeout-citation proxy (see
             # na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md).
             if TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group:
                 tranches.append(t)

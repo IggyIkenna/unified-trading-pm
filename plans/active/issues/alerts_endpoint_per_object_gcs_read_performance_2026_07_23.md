@@ -21,7 +21,9 @@ summary: >-
   still 30) would reproduce the original crash if a user actually uses it.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; the deployment-ui /alerts page's
+  # own backend (deployment-api) N+1 read-performance bug
 stage: [meta]
 repos: [deployment-api, deployment-ui, alerting-service]
 scope: [engineer]

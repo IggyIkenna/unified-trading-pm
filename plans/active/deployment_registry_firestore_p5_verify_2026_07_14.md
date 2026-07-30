@@ -8,7 +8,9 @@ summary:
   note, and the DynamoDB backend-swap note, plus the CLAUDE.md one-liner.
 status: draft
 nature: process
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api's own registry
+  # backing-store migration, core ui-tranche scope (repos: deployment-api)
 stage: [meta]
 repos: [deployment-api, unified-trading-pm]
 scope: [engineer]
@@ -94,14 +96,14 @@ datetimes; QG-green.
   - **Heartbeat-cadence (todo 2).** Observed batched write cost ≈16ms/write (batches of 500); a registry heartbeat is
     ONE Firestore write per VM per interval. Firestore write pricing ≈
     $0.18/100k (no base cost). Cost = fleet ×
-    (3600/interval_sec) × 24 × $0.0000018/write/day:
-    | scale                                                                                                        | 60s cadence              | 300s cadence            |
-    | ------------------------------------------------------------------------------------------------------------ | ------------------------ | ----------------------- |
-    | 100 VMs                                                                                                      | ~$0.26/day (144k writes) | ~$0.05/day (29k writes) |
-    | 5,000 VMs                                                                                                    | ~$13/day (7.2M writes)   | ~$2.6/day (1.4M writes) |
-    | Recommendation: keep the current ~60s heartbeat at ≤100 VMs (negligible); at 1k+ VMs widen to 300s — the D.1 |
-    | resource-sample forensics ride the run.log (`utl@600fe4f4`), so slowing the registry write loses NO resource |
-    | history. The reads are the cheaper side (indexed query, one per inventory refresh, cached).                  |
+    (3600/interval_sec) × 24 × $0.0000018/write/day: | scale | 60s cadence
+    | 300s cadence | |
+    ------------------------------------------------------------------------------------------------------------ |
+    ------------------------ | ----------------------- | | 100 VMs | ~$0.26/day (144k writes) | ~$0.05/day (29k writes)
+    | | 5,000 VMs | ~$13/day (7.2M writes) | ~$2.6/day (1.4M writes) | | Recommendation: keep the current ~60s heartbeat
+    at ≤100 VMs (negligible); at 1k+ VMs widen to 300s — the D.1 | | resource-sample forensics ride the run.log
+    (`utl@600fe4f4`), so slowing the registry write loses NO resource | | history. The reads are the cheaper side
+    (indexed query, one per inventory refresh, cached). |
   - **Blocked (todos 3-5)**: the codex `deployment-observability.md` rewrite, the CLAUDE.md one-liner, and the master
     archival all describe a COMPLETED cutover — they must wait for P3 (deploy + soak + GCS decommission). Doing them now
     would misstate prod as Firestore-backed when it is still GCS.

@@ -9,7 +9,9 @@ summary:
   renders without loading the whole manifest per request.
 status: active
 nature: design
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; repos:[deployment-api,
+  # deployment-ui] only, fixing the deployment-api-side OOM behind the data-status tab UI
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]

@@ -8,7 +8,9 @@ summary: >-
   criterion" rule; not fixed here to avoid scope creep on an unrelated dispatch.
 status: open
 nature: process
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; repos:[deployment-ui]
+  # only, smoke-test failures in deployment-ui's own pages
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]

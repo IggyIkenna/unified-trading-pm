@@ -14,7 +14,9 @@ summary: |
   audit found. Also documents why the `*` catch-all silently renders Overview for any unknown URL.
 status: open
 nature: process
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; repos:[deployment-ui] only, a
+  # deployment-ui nav-surface issue
 stage: [meta]
 repos: [deployment-ui]
 scope: [engineer]

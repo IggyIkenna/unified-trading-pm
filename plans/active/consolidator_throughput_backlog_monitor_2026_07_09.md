@@ -13,7 +13,9 @@ summary:
   to (deployments owns liveness/fired-on-time). LOCAL plan — built interactively in this slot.
 status: active
 nature: design
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; the Consolidators cockpit
+  # tab itself (repos: deployment-ui, deployment-api, unified-trading-library)
 stage: [meta]
 repos: [deployment-ui, deployment-api, unified-trading-library]
 scope: [engineer]

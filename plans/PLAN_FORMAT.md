@@ -85,7 +85,7 @@ title: <human-readable title>
 summary: <one-line "what this plan does">
 status: draft | active | blocked | paused | complete | cancelled | superseded
 nature: ssot | guideline | process | design | spec | record | notes
-asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting, ao, ci, infrastructure, meta] # list; [] if N/A
+asset_group: [cefi, defi, tradfi, sports, prediction, cross-cutting, ao, ci, infrastructure, ui, meta] # list; [] if N/A
 stage: [meta] # list; pipeline phase(s): data, features, strategy, backtest, paper, live, execution, reporting, meta
 repos: [repo-slug, ...] # list of repos this touches; [] if none / cross-cutting
 scope: [engineer, admin] # audience: who this doc is for
@@ -189,7 +189,7 @@ created: YYYY-MM-DD
 last_updated: YYYY-MM-DD
 locked_by: live-defi-rollout
 locked_since: YYYY-MM-DD
-asset_group: cefi | defi | tradfi | sports | prediction | cross-cutting | ao | ci | infrastructure | meta
+asset_group: cefi | defi | tradfi | sports | prediction | cross-cutting | ao | ci | infrastructure | ui | meta
 related_plans:
   - plans/active/<sub-plan>.md # list grows as audits spawn new active plans
 ---

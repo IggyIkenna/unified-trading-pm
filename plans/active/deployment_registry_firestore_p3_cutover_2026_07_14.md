@@ -8,7 +8,9 @@ summary:
   autonomously with no human gate.
 status: active
 nature: process
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api's own registry
+  # backing-store migration, core ui-tranche scope
 stage: [meta]
 repos: [unified-trading-library, deployment-api, unified-trading-pm]
 scope: [engineer]

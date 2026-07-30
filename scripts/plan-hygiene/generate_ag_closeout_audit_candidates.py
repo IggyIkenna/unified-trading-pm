@@ -41,7 +41,7 @@ def _load_docspec():
 ds = _load_docspec()
 
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
-NON_AG_TRANCHES = ["ao", "ci", "infra"]
+NON_AG_TRANCHES = ["ao", "ci", "infra", "ui"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 # The `infra` TRANCHE name (CLI --tranche, SKILL.md, closeout-doc prefix) does not match the actual
 # `asset_group` enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no
@@ -49,7 +49,7 @@ ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 # (generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md):
 # a naive `t in asset_group` for t="infra" would silently match zero docs (every real doc is tagged
 # `infrastructure`), reproducing the exact silent-zero-candidates failure class this fix exists to
-# close, just via a different root cause. `ao`/`ci` have no such mismatch (their enum values equal
+# close, just via a different root cause. `ao`/`ci`/`ui` have no such mismatch (their enum values equal
 # their tranche names).
 TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 

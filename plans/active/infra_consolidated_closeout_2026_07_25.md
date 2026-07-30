@@ -157,7 +157,14 @@ reference-path convention rollout complete corpus-wide.
 
 ## Track 4 — Generic product/UI bugs (no data-pipeline or single-AG content) · P2
 
-**Source**:
+> **✅ SUPERSEDED 2026-07-30 — moved to the new `ui` tranche.** Both this Track's sources were retagged
+> `asset_group: [ui]` (was `[infrastructure]`) when the UI tranche launched — deployment-ui/deployment-api now has its
+> own dedicated tranche instead of falling into this infra catch-all. See
+> [ui_consolidated_closeout_2026_07_30.md](/plans/active/ui_consolidated_closeout_2026_07_30.md) Track 4 (nav/smoke/
+> mock-parity hygiene) and Track 3 (observability surfaces), which now own this content. Left cited below for history;
+> this Track's close-out criterion no longer belongs to the infra tranche's own completeness measurement.
+
+**Source** (historical — now `ui`-tranche primary):
 [issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md](/plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md)
 (8 pre-existing deployment-ui smoke/playwright failures — Daily Costs page, mobile nav; generic product/UI bugs, not
 data-pipeline or CI mechanics) ·
@@ -165,8 +172,7 @@ data-pipeline or CI mechanics) ·
 (build→artifact→deploy lineage UI — Cloud Build images, VM tarballs, drift-vs-running; deployment-observability domain,
 not data-pipeline).
 
-**Close-out criterion**: the 8 smoke failures fixed + pw:L2 regression specs added; the artifact-lineage UI's remaining
-phases ship.
+**Close-out criterion**: **N/A here — see `ui_consolidated_closeout_2026_07_30.md` Tracks 3/4 instead.**
 
 ## Codex SSOTs (read before touching a track)
 
@@ -190,8 +196,10 @@ phases ship.
       here by the 2026-07-30 na-eligibility-audit.)
 - [ ] [REVIEW] P2. Track 3 close-out: each tooling doc's own open todos closed; the zero-checkbox sweep's findings
       triaged; the reference-path convention rollout complete corpus-wide.
-- [ ] [REVIEW] P2. Track 4 close-out: the 8 deployment-ui smoke failures fixed + pw:L2 regression specs added; the
-      artifact-lineage UI's remaining phases ship.
+- [x] ➡️ [REVIEW] P2. **SUPERSEDED 2026-07-30** (was: "Track 4 close-out: the 8 deployment-ui smoke failures fixed +
+      pw:L2 regression specs added; the artifact-lineage UI's remaining phases ship.") — both Track 4 sources retagged
+      `asset_group: [ui]`, moved to `ui_consolidated_closeout_2026_07_30.md` Tracks 3/4. Not this tranche's completeness
+      measurement anymore; not double-counted as done here.
 
 ## Progress Log
 

@@ -9,7 +9,9 @@ summary:
   up individually when prioritised.
 status: open
 nature: process
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; the /costs page's own deferred
+  # backlog (repos: deployment-api, deployment-ui)
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]

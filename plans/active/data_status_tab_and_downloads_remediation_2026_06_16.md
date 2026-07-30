@@ -6,7 +6,9 @@ summary:
   manifest migration completion.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are deployment-api/
+  # deployment-ui data-status tab UI bugs, the new ui tranche's exact scope
 stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, market-tick-data-service, ml-service]
 scope: [engineer, admin]

@@ -15,8 +15,8 @@ description:
   archive fully-done plans (verified, unlocked), flag near-complete plans (<=1 open todo) for consolidation, and leave
   the corpus canonical (prettier + run_hygiene_sweep.sh-green, within line-caps). Plan↔codex drift is in scope and
   plans→codex SSOT updates are applied ONLY after an explicit operator ruling. **Optionally topic-scoped** — invoke as
-  `/plan-reconcile [<tranche>]` across the same 9 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
-  `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`), or `all` (the default with no argument — preserves
+  `/plan-reconcile [<tranche>]` across the same 10 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
+  `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`, `ui`), or `all` (the default with no argument — preserves
   today's whole-corpus behavior exactly) for smaller, faster sharded runs a scheduled AO trigger can complete
   reliably. Trigger on /plan-reconcile [<tranche>], "reconcile the plans", "reconcile <tranche>", "plan contradiction
   audit", "check the plans for contradictions", "flip done-but-unchecked plan items", "archive done plans",
@@ -46,14 +46,18 @@ the doc should flip to `assigned_vm: planning` is not.
 
 **`all` (no argument) is the default and preserves today's exact whole-corpus behavior — nothing changes for an existing
 unscoped invocation.** Passing a specific tranche narrows the audited corpus for a smaller, faster run, using the SAME
-classification mechanism `/ag-closeout-audit` uses (see that skill's "9 tranches" section for the full mechanism —
-summarized here): the 5 AGs (`cefi`/`defi`/`tradfi`/`prediction`/`sports`) filter on `asset_group` directly;
-`cross-cutting` filters on `asset_group: cross-cutting` + the classification already baked into
-`cross_cutting_consolidated_closeout_2026_07_25.md`'s own Tracks; `ao`/`ci`/`infra` have no dedicated `asset_group`
-value (all 3 stay tagged `cross-cutting`) so their membership is exactly the Sources listed in
-`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
-`infra_consolidated_closeout_2026_07_25.md` respectively. The normative refs (`PLAN_FORMAT.md`, `task_template.md`,
-`INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're corpus-wide policy, not tranche-owned).
+classification mechanism `/ag-closeout-audit` uses (see that skill's "10 tranches" section for the full mechanism —
+summarized here, corrected 2026-07-30 to match current reality): the 5 AGs
+(`cefi`/`defi`/`tradfi`/`prediction`/`sports`) filter on `asset_group` directly; `cross-cutting` filters on
+`asset_group: cross-cutting` + the classification already baked into
+`cross_cutting_consolidated_closeout_2026_07_25.md`'s own Tracks; **`ao`/`ci`/`infrastructure`/`ui` are now real
+dedicated `asset_group` enum values** (`ao`/`ci`/`infrastructure` since 2026-07-27, `ui` since 2026-07-30 — see
+`docspec.py`/`PLAN_FORMAT.md`/`doc-frontmatter-schema.md` §5) — filter on `asset_group` directly exactly like the 5 real
+AGs; `parent_epic` (`ao_consolidated_closeout_2026_07_25.md` / `ci_consolidated_closeout_2026_07_25.md` /
+`infra_consolidated_closeout_2026_07_25.md` / `ui_consolidated_closeout_2026_07_30.md`'s own Sources lists) is only a
+secondary hint for docs the tag doesn't yet cover, same caveat as `/ag-closeout-audit`. The normative refs
+(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`, `ACTIVE_INDEX.md`) and codex stay in scope for EVERY shard (they're
+corpus-wide policy, not tranche-owned).
 
 **Why shard**: this corpus routinely runs 500+ active plans/issues — a full sweep is expensive enough that a
 scheduled/cron AO trigger benefits from a smaller, bounded-runtime shard instead of always paying for the whole corpus.
@@ -67,7 +71,7 @@ topic-scoped run genuinely cannot find it. Sharded runs are a good default for r
 needed to catch genuinely cross-tranche contradictions. Don't let sharding become the ONLY mode this skill ever runs in.
 
 **Archival caution in a topic-scoped run**: before archiving a doc that looks fully done within the current shard, grep
-the OTHER 8 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
+the OTHER 9 tranches' consolidated-closeout docs (or their Sources lists) for a reference to it — a doc can be primary
 to one tranche but still cross-referenced from another's Track content (the way this session's cross-cutting Tracks 2/13
 explicitly flag overlap with the cefi/defi closeouts). Archiving it without checking would silently orphan the other
 tranche's reference. When in doubt, leave it and note the cross-reference for a future `all` pass.

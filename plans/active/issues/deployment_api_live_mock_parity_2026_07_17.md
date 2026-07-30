@@ -15,7 +15,9 @@ summary: |
   parity decays every time an endpoint is added to one side only**.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [meta]; deployment-api/deployment-ui
+  # mock-vs-live contract parity, core ui-tranche scope
 stage: [meta]
 repos: [deployment-api, deployment-ui]
 scope: [engineer]

@@ -11,7 +11,9 @@ summary:
   guide; operator decisions are all resolved.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [cross-cutting]; title/summary are the
+  # deployment-ui + deployment-api data-status PAGE UX itself, not the underlying data pipeline
 stage: [meta]
 repos: [deployment-ui, deployment-api, instruments-service, unified-api-contracts, deployment-service]
 scope: [engineer, admin]
@@ -381,9 +383,9 @@ breakdown: CeFi chain-axis drift — completed checkbox evidence".
 
 ## P8 — Sports league-drilldown consistency + TEAMS data-correctness
 
-**Design guide.** Drillability is set per data_type by the `axis` in `SPORTS_DATA_TYPE_META`
-(`deployment-api/deployment_api/services/data_status/sports_helpers.py:77-219`): `per_league_*` → the response carries a
-`leagues` map → the UI's `hasLeagues` gate (`DataStatusTab.tsx:4288,5279`) renders a league drilldown; `global_*` →
+**Design guide.** Drillability is set per `data_type` by the `axis` in `SPORTS_DATA_TYPE_META`
+(`deployment-api/deployment_api/services/data_status/sports_helpers.py:77-219`): `per_league` → the response carries a
+`leagues` map → the UI's `hasLeagues` gate (`DataStatusTab.tsx:4288,5279`) renders a league drilldown; `global` →
 `per_league: None` → no league section at all. So some sources drill by league and some don't. Separately, the deeper
 per-fixture drill + downloads are hardcoded to `name === "FIXTURES"`
 (`DataStatusTab.tsx:5285,5385,5393,5433,5440,5462`).

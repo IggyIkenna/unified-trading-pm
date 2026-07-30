@@ -28,7 +28,9 @@ summary: >-
   separately rather than silently folded into that fix.
 status: open
 nature: issue
-asset_group: [infrastructure]
+asset_group:
+  [ui] # corrected 2026-07-30 (ui-tranche launch) -- was [infrastructure]; deployment-api's own
+  # inventory/health-alert code path (repos: deployment-api primary, deployment-service for the missing cron)
 stage: [meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer]
