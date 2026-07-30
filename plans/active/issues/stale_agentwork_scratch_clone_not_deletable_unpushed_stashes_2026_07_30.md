@@ -44,6 +44,7 @@ drift_direction: flat
 source: ["2026-07-30 operator instruction to delete the stale scratch clone (infra-methodology fix pass)"]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # Stale agentwork scratch clone — deletion blocked on unproven stash WIP

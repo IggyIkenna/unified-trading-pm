@@ -52,6 +52,7 @@ source:
   "operator request 2026-07-30 — root-causing cefi_sports_prediction_first_census_small_drift_2026_07_30.md item 2 while
   fixing the small-drift census findings"
 resolved_by:
+depends_on: []
 ---
 
 # CeFi live spot connectors build non-canonical instrument_ids

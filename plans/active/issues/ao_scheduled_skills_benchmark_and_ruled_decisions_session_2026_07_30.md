@@ -41,6 +41,7 @@ last_updated: 2026-07-30
 source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution session"]
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # 2026-07-30 mega-session status ledger
