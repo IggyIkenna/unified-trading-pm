@@ -105,8 +105,31 @@ mock parity — the drift is historical, not systemic.
       `asset_groups.PREDICTION`. Added the missing PREDICTION seed entry (mirrors `build_mock_turbo_response`'s existing
       PREDICTION seed shape: event-driven, high-attempt/low-capture). `unique_instruments` already present at the
       per-response level. Regression test updated; full `quality-gates.sh` green, `quickmerge --agent` landed clean.
-- [ ] [SERVICE] P2. **Diagnose `ImportError: artifactregistry_v1`** driving the `/api/builds/history` +
-      `/api/fixtures/upcoming` 500s — venv-only, or a real missing dependency that reaches Cloud Run?
+- [x] ✅ [SERVICE] P2. **Diagnose `ImportError: artifactregistry_v1`** driving the `/api/builds/history` +
+      `/api/fixtures/upcoming` 500s — venv-only, or a real missing dependency that reaches Cloud Run? —
+      **DONE 2026-07-30 (slot 4), `deployment-api@<pending-sha>`.** REAL, reaches Cloud Run — not venv-only. Root
+      cause: `deployment-api/Dockerfile`'s Stage-1 `api` build cannot run `uv sync`/`uv pip install .` (the
+      `[tool.uv.sources]` sibling-repo paths like `../deployment-service` don't exist in the Cloud Build context), so
+      it hand-lists every needed package in an explicit `uv pip install --system` block, then installs
+      `deployment-service` itself with `--no-deps` (its transitive GCP SDK deps never get pulled in). Sibling deps
+      `google-cloud-run` and `google-cloud-compute` (also `deployment-service` deps) were present in that explicit
+      list; `google-cloud-artifact-registry` — used by `routes/builds_history.py`, `routes/builds.py`, and
+      `services/artifact_pipeline/providers.py` — was simply never added, even though `deployment-service`'s own
+      `pyproject.toml` correctly declares `google-cloud-artifact-registry>=1.13.0,<2.0.0` and `uv.lock` resolves it
+      (confirmed: this repo's own venv has it installed and `from google.cloud import artifactregistry_v1` succeeds
+      here — the gap is Docker-image-only). Fix: added the same pin to the Dockerfile's explicit install list.
+      **Separate finding (NOT the same root cause, despite being grouped together above)**: `/api/fixtures/upcoming`
+      does not import `artifactregistry_v1` anywhere in its call path (`routes/fixtures.py` →
+      `services/upcoming_fixtures.list_upcoming_fixtures` has zero artifactregistry references). Reproduced locally
+      instead as `google.api_core.exceptions.NotFound: 404 ... bucket
+      instruments-store-sports-dev-central-element-323112 does not exist` inside the UTL `cloud_interface` GCS
+      `list_blobs` call — a distinct bug, tracked as a new todo below.
+- [ ] [SERVICE] P3. **`/api/fixtures/upcoming` 500 has a DIFFERENT root cause than the artifactregistry ImportError it
+      was grouped with above** — reproduced locally as `google.api_core.exceptions.NotFound: 404` on bucket
+      `instruments-store-sports-dev-<project>` inside `list_upcoming_fixtures`
+      (`deployment-api/deployment_api/services/upcoming_fixtures.py`) → UTL `cloud_interface.providers.gcp.list_blobs`.
+      Confirm whether the bucket genuinely doesn't exist in the target GCP project (real gap, e.g. missing
+      provisioning) or was only absent because this diagnostic ran against a project without that dev bucket.
 - [ ] [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
       `staging_dormant_mode`, `image_gcp`/`image_aws`, `image.deploy_host`/`deploy_model`).
 - [ ] [SERVICE] P3. **Reconcile the `/api/deployments` pagination contract** — live `has_more`+`total_count` vs mock
