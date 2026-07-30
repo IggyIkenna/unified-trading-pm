@@ -90,7 +90,7 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-30 (duplicate-dispatch confirmation, agt-ccb54c second spawn)
+last_updated: 2026-07-30 (4th duplicate-dispatch confirmation, agt-606bbf)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -323,3 +323,23 @@ against the reproduction script.
   performed — the alert numbers are identical to the just-completed investigation above, so there is nothing new to
   measure. No code change, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-30 (slot-4, `data_pipeline_failure` escalation worker, task `agt-606bbf`):** Yet another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL re-page for the same `(cefi, book_snapshot_5)` tuple, this time a
+  DIFFERENT escalation_id (`agt-606bbf`, not `agt-ccb54c`) but the same static condition, numbers 300,671/1,064,232 =
+  28.3% ("STATIC BACKLOG — no new attempted_failed activity in 1d"). Read this doc first per the pre-task plan/issue
+  conflict-check rule. Per `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A, did the cheap
+  deterministic re-check rather than a full re-diagnosis: re-verified both fix commits
+  (`unified-api-contracts@8db188fe`, `market-tick-data-service@339ca767`) are still ancestors of
+  `origin/live-defi-rollout` in this worktree (`git merge-base --is-ancestor` = true for both, fresh `git fetch`). The
+  numerator (`attempted_failed`=300,671) is byte-identical to the last two readings while the denominator grew
+  1,063,183→1,064,232 (+1,049) — i.e. ~1,049 MORE book_snapshot_5 rows were captured since the last check and ZERO of
+  them hit a new schema-contract violation, which is stronger evidence the fix is holding under continued production
+  load than a merely-unchanged snapshot would be. Conclusion unchanged from the prior two entries: no code fix needed,
+  the remaining ~300k rows are the same historical backlog requiring a normal idempotent backfill re-attempt (out of
+  this one-shot worker's scope). This is now the 4th `data_pipeline_failure` worker dispatch for this same
+  already-diagnosed condition in ~24h (2 sessions did the original diagnosis+fix on 2026-07-28, 2 more did this
+  cheap-recheck pattern on 2026-07-30) — further corroborates
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A recommendation that the escalation
+  dispatch path needs an "already has an OPEN issue doc, numerator unchanged" dedup check to stop spending full worker
+  sessions on a condition nothing new is happening to. No GCS/manifest write, no VM launch, no code change this session
+  (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome.

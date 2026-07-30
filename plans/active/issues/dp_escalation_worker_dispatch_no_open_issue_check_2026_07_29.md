@@ -54,7 +54,7 @@ resolved_by:
 source:
   "data_pipeline_failure escalation worker (agt-0df274), found while working
   cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md's third re-fire"
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 ---
 
 # Escalation-worker dispatch has no "already an open issue doc" dedup check
@@ -122,6 +122,15 @@ regression) is worse.**
   Progress Log entry) — no lasting damage, but this is a materially worse failure mode than redundant re-diagnosis: a
   missing dedup check let a worker actively UNDO a standing correction. Reinforces Option A (check for an OPEN issue doc
   on the exact tuple before spawning / before taking any write action) over B or C.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-606bbf) — 4th dispatch for one condition in ~24h.**
+  `cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md` has now had FOUR separate
+  `data_pipeline_failure` worker dispatches for the identical `(asset_group=cefi, data_type=book_snapshot_5)` static
+  backlog: 2 did the original diagnosis+fix (2026-07-28), 2 more (2026-07-30, escalation_ids `agt-ccb54c` twice then
+  `agt-606bbf`) each spent a full session re-confirming the numerator is still frozen and the fix commits are still
+  ancestors of `origin/live-defi-rollout` — genuinely cheap per-session (git ancestor check + a Progress Log append, no
+  manifest read needed since the numbers were already labeled STATIC BACKLOG) but still a full worker-session dispatch
+  each time. Further corroborates Option A over B/C — a numerator-unchanged condition with an OPEN issue doc already
+  covering it should not need a fresh orchestrator-agent spawn at all, even a cheap one.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc self-documents its own AO-ineligibility: 'This needs an
   operator/design call on the right dedup semantics before implementation (marked assigned_vm: NA — not
