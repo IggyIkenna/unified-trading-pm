@@ -140,7 +140,7 @@ surfacing of this data (a separate, later consumer-side concern).
       server-rendered markup) — but the LIVE site sits behind a Cloudflare Managed Challenge blocking every plain-HTTP
       path (curl/`requests`/WebFetch all hit a 403 JS-challenge shell on every path tried), so a
       `requests`+`BeautifulSoup`-only client as originally scoped will fail at the FIRST request regardless of
-      JS-rendering being a non-issue; budget for a stealth/ anti-detection headless browser (e.g. Playwright) OR a paid
+      JS-rendering being a non-issue; budget for a stealth/anti-detection headless browser (e.g. Playwright) OR a paid
       unblocking proxy to get past the challenge, then parse the resulting HTML with a plain parser (no JS execution
       needed once past the gate). Before marking this todo done, explicitly resolve how `actual_value` gets captured
       given the JSON feed never carries it (HTML-only, and HTML is challenge-gated) and confirm/replace the 404ing
