@@ -108,9 +108,17 @@ an adapter/handler file.
 - [ ] 2. [INFRA] P3. Consider whether `no_adapter_contract_regression.sh`'s per-file walk can be made faster/more
       I/O-light (e.g. operating on `git     diff --name-only` against the baseline commit instead of a broader
       filesystem walk, if it isn't already) so the check is less exposed to contention regardless of the timeout value.
-- [ ] 3. [INFRA] P3. If GH Actions / promote-PR CI also runs this same QG step (not just local/slot `quality-gates.sh`),
-      confirm whether CI runners see the same contention profile — if CI is single-tenant per run, the flake may be
-      slot-worktree-specific only; scope todo 1's fix accordingly (repo-wide `quality-gates.sh` vs a CI-only override).
+- [x] 3. [INFRA] P3. **DONE 2026-07-30 — CI is NOT single-tenant; the fix already covers it.** Confirmed
+      `quality-gates-v2.yml`'s `qg-slices` job runs the SAME `scripts/quality-gates.sh` file todo 1 already fixed (no
+      separate CI-side invocation or CI-only timeout override exists for this step) — so there is no CI-vs-local split
+      to scope. Second, `qg-slices` is no longer single-tenant per run: 22 of 24 Python repos (incl. all 4 repos this
+      doc's class touches — features-service/execution-service/instruments-service/market-tick-data-service) now run on
+      the shared self-hosted `[self-hosted, glue]` pool (Wave-1/Wave-2 self-hosted-runner migrations), sharing the SAME
+      host-contention exposure as local slot runs (corroborated live by
+      `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` /
+      `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`, both documenting the identical
+      `run_timeout`/`[qg-governor] all 4 tokens busy` flake class firing IN CI on this shared pool). No CI-only override
+      needed — the repo-wide `run_timeout 300` fix already shipped in todo 1 protects both paths identically.
 
 ## Progress Log
 

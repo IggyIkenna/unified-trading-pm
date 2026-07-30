@@ -79,7 +79,13 @@ almost certainly stale by now).
 
 ## Todos
 
-- [ ] 1. [REVIEW] P2. Check whether the 7 files listed in the failed patch have been touched by later commits since
-      2026-07-23T14:04 UTC; if yes for all, delete the stash patch file and close this issue as moot.
-- [ ] 2. [REVIEW] P2. If any file was NOT superseded, recover the relevant hunk from the patch file and apply it
-      properly (or flag to the operator for whose work it was).
+- [x] 1. [REVIEW] P2. **DONE 2026-07-30 — all 7 files superseded, closing as moot.**
+      `git log --since="2026-07-23T14:00:00Z"` on each of the 7 listed files confirms every one was touched by a LATER
+      commit (the corpus-wide reference-path leading-slash migration batches 1-5, plus a normal archival move for the
+      `tradfi_manifest_row_loss_regression` file) — per this doc's own stated criterion, all 7 are superseded. The patch
+      file itself (`/home/ubuntu/.cache/prek/patches/1784815445082-3204588.patch`) lives on the ORIGINAL host's local
+      disk (a per-host prek cache path, not in git) — not reachable from this session's host/clone, so it cannot be
+      physically deleted from here; if it still exists it is now-confirmed-superseded dead disk debris on that host,
+      harmless.
+- [x] 2. [REVIEW] P2. **N/A 2026-07-30** — not needed; all 7 files were superseded per todo 1, so no hunk needed
+      recovery.

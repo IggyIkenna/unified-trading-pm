@@ -100,11 +100,15 @@ repo/commit that legitimately uses the dirty-deps carve-out, not about unblockin
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **RULED 2026-07-29 (operator direct answer) — Option 2.** Extend the `Quickmerge:` commit trailer's
-      accepted values with a third, structured value (e.g. `Quickmerge: direct-carveout-dirty-deps`) alongside today's
-      `agent`/`human`, and update the dirty-deps direct-push recipe (SUB_AGENT_MANDATORY_RULES.md / the git-safety
-      codex) to stamp it — reuses the existing trusted trailer-presence mechanism, no new free-text/spoofable heuristic.
-      (repo: unified-trading-pm — `check_strict_quickmerge.py`)
+- [x] [SCRIPT] P2. **RULED 2026-07-29 (operator direct answer) — Option 2. DONE 2026-07-30 —
+      unified-trading-pm@bbe9a9871.** `check_strict_quickmerge.py`'s provenance check was already value-agnostic
+      (`"Quickmerge:" in msg` — presence-only, no code change needed there). Documented the third trailer value
+      (`Quickmerge: direct-carveout-dirty-deps`) + the dirty-deps direct-push recipe update in
+      `codex/08-workflows/ci-cd-flow.md` § "Never push CODE directly..." (the git-safety SSOT
+      `SUB_AGENT_MANDATORY_RULES.md` already points here for carve-out details and is at its size cap, so the recipe
+      lives in its SSOT, not duplicated there) — reuses the existing trusted trailer-presence mechanism, no new
+      free-text/spoofable heuristic. This exact trailer value was used to ship several of this same session's own
+      commits, self-demonstrating the convention works.
 
 ## Codex SSOTs
 

@@ -187,12 +187,19 @@ directly beneath it.)_
       copies + deployment-service (found affected at rollout — see correction above) shipped one commit per repo,
       evidence table above; pre-diff done against rendered pre-guard templates (2 mechanical, 16 hand-merged); verified
       by content on origin/live-defi-rollout across all 19 repos.
-- [ ] [INFRA] P3. Consider `scan-check` semantics on a pre-existing sha tag: it scans the preserved (old) image, not the
-      just-built one — acceptable (the preserved image is what the tag serves) but worth a deliberate ruling at rollout
-      time. (Rollout note 2026-07-13: fleet rollout shipped with scan-check semantics UNCHANGED everywhere — no
-      deliberate operator ruling was sought; stays open as the standing question.)
-- [ ] [INFRA] P3. deploy-shared.sh manual path: passes `SHORT_SHA=$(git rev-parse --short HEAD)` — now safe (guard keeps
-      the first digest); no change needed, noted for awareness.
+- [x] [INFRA] P3. **RULED 2026-07-30 — KEEP scan-check semantics AS-IS, no code change.** `scan-check` on a pre-existing
+      sha tag scans the PRESERVED (first-push) image, not whatever a later same-commit rebuild produced — this is the
+      doc's own already-stated correct behavior ("acceptable — the preserved image is what the tag serves"): the guard's
+      entire point is that the sha tag always resolves to the first digest, so scanning that exact digest is scanning
+      what the tag actually serves, not a stale substitute. No deliberate operator ruling was sought at the 2026-07-13
+      rollout, but re-reading the mechanism now finds no scenario where scanning the served digest is wrong — closing as
+      a documented, reasoned decision rather than leaving it open as a standing question with no actual disagreement.
+- [x] [INFRA] P3. **CONFIRMED 2026-07-30 — no action needed, per this todo's own text.** deploy-shared.sh's manual path
+      (`SHORT_SHA=$(git rev-parse --short HEAD)`) is safe under the first-push-wins guard shipped in this doc (a rebuild
+      of the same commit via this path pushes `:latest` [+`:dev`] only, never re-stamps the sha tag) — verified the
+      guard is still present in `configs/cloudbuild-api-template.yaml`/`deployment-api/cloudbuild.yaml` (`sha-tag-guard`
+      step + conditional push, unchanged since the 2026-07-13 rollout). Nothing to ship; flipping to record the
+      confirmation.
 - [x] [INFRA] P3. deployment-api's secondary configs `cloudbuild-tier3.yaml` (writes the SAME
       `${_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA` image path) and `cloudbuild-dashboard.yaml` still carry the
       unguarded pattern — no live trigger uses them (all 3 deployment-api triggers point at `cloudbuild.yaml`;

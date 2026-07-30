@@ -297,13 +297,14 @@ meaningfully cleaner than the audit's working hypothesis assumed going in.
 
 ## Not covered by this pass (tracked so it isn't silently dropped)
 
-- [ ] [REVIEW] P3. The PM cost-breakdown angle of the original audit (why `unified-trading-pm` specifically is 41% of
-      measured fleet spend) hit a session usage cap mid-workflow. **Partially superseded**: the interactive session that
-      followed did this manually via direct `gh api` calls (not the stalled workflow) and found the real answer — see
+- [x] [REVIEW] P3. **DONE-AS-NO-ACTION 2026-07-30 (re-confirmed a 3rd time).** The PM cost-breakdown angle of the
+      original audit (why `unified-trading-pm` specifically is 41% of measured fleet spend) hit a session usage cap
+      mid-workflow. **Superseded**: the interactive session that followed did this manually via direct `gh api` calls
+      (not the stalled workflow) and found the real answer — see
       `github_actions_operator_gated_followups_2026_07_17.md`'s 2026-07-28 evening Progress Log entry
-      (`ci-health`/`branch-health` job-body slowness, not cron frequency). This todo is really just "resume the stalled
-      3-agent workflow if a fuller per-workflow breakdown is ever wanted" — low priority, the practical question is
-      already answered.
+      (`ci-health`/`branch-health` job-body slowness, not cron frequency). The practical question is already answered;
+      only "resume the stalled 3-agent workflow" remains as a low-priority, not-currently-wanted option — closing rather
+      than leaving an actionless checkbox open indefinitely.
 
   **Confirmed (2026-07-29 pass)**: still accurate, no code work needed this pass. Remains exactly what it says —
   superseded/answered elsewhere, low priority, only "resume the stalled workflow" left if a fuller breakdown is ever
