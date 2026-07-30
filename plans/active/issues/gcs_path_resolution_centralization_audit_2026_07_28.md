@@ -476,20 +476,23 @@ going forward. Still open, tracked as a todo below.
       `onchain/collectors/parquet_dust_loader.py:132-136`'s list prefix was missing the registry's `onchain/` root
       segment — fixed. Regression tests added for both. Evidence: `features-service@95b8233b`.
 
-- [ ] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** — PARTIALLY SHIPPED
-      2026-07-29. DONE: `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
-      (`unified_trading_library/config_interface/paths/registry.py:303-323`, `:65-73`) plus their only consumers
-      (`unified_trading_library/domain_client/clients/liquidity.py`'s `L2BookCheckpointClient`/
-      `LiquidationClustersClient`/`LiquidityFeaturesClient`; the whole `domain_client/clients/features.py` family —
-      `FeaturesCalendarDomainClient`/`FeaturesOnchainDomainClient`/`FeaturesDeltaOneDomainClient`/
-      `FeaturesVolatilityDomainClient`) deleted — evidence: `unified-trading-library@f4987fb8` (verified via grep, zero
-      remaining matches). `execution-service/execution_service/data/loaders/__init__.py`'s never-imported
-      `UCSDataLoader` also deleted — evidence: `execution-service@8039c3e5f`. **STILL OPEN** (confirmed still present
-      via grep 2026-07-29, not part of the shipped batch): `instruments-service/.../ibkr.py::get_corporate_actions()`
-      (still defined, line 519);
-      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py`'s dead `build_path()`
-      methods (both still present); `volatility/io/loader.py::VolatilityLoader`'s dead `build_path()` (file still
-      present, not yet checked for the specific dead method). (repo: instruments-service, features-service)
+- [x] [SCRIPT] P2. **Delete the confirmed-dead PATH_REGISTRY rows + their dead consumer classes** — DONE 2026-07-30.
+      `l2_book_checkpoints`/`liquidation_clusters`/`liquidity_features_1m`/`corporate_actions`
+      (`unified_trading_library/config_interface/paths/registry.py:303-323`, `:65-73`) plus their only consumers deleted
+      — evidence: `unified-trading-library@f4987fb8`. `execution-service/execution_service/data/loaders/__init__.py`'s
+      never-imported `UCSDataLoader` deleted — evidence: `execution-service@8039c3e5f`.
+      `features-service/features_service/onchain/adapters/{onchain_writer,onchain_loader}.py` and
+      `volatility/io/{writer,loader}.py`'s dead `build_path()` — confirmed the CONTAINING classes are entirely unwired
+      too (zero production instantiation anywhere, incl. via factory/registry patterns), so deleted the whole dead
+      vertical (writer + loader + thin adapter wrappers, both onchain and volatility) rather than just the methods
+      (`build_path` is an `@abstractmethod`, a partial deletion would leave a broken class). Evidence:
+      `features-service@33c5f8ff`. **`instruments-service/.../ibkr.py::get_corporate_actions()` — NOT deleted, re-scoped
+      as a flag rather than a fix**: unlike the others, `IBKRReferenceDataAdapter` (the containing class) IS live/wired
+      via `instruments-service`'s `factory.py` + `router.py` — this specific method is an optional
+      `BaseReferenceDataAdapter` interface hook (same pattern as `get_fee_schedule` right above it in `base_adapter.py`)
+      that simply has no current caller requesting corporate-actions data. Deleting a live class's unused interface
+      method is a design call, not a confirmed-dead-code deletion — left as-is pending operator input on whether
+      corporate-actions data is ever going to be needed. (repo: instruments-service, features-service)
 
 - [x] [SCRIPT] P2. **Fix the FRED/ECB/OFR `pipeline_mode` provenance-fallback mis-stamp** — DONE 2026-07-29,
       `unified-api-contracts@62d3aa03` + `unified-trading-library@f2945749`. UAC: added `BATCH_FRED`/`BATCH_ECB`/
@@ -530,36 +533,40 @@ going forward. Still open, tracked as a todo below.
       `INDEX`→`"futures_chain"` (no INDEX branch at all) — two different wrong fallbacks for the same case in the same
       repo. Fixed both to the confirmed-correct singular `index` token. Evidence: `execution-service@8039c3e5f`.
 
-- [ ] [SCRIPT] P2. **Fix `calendar_features` PATH_REGISTRY row's missing `-prd-` env tier** —
-      `unified_trading_library/config_interface/paths/registry.py`'s `calendar_features` bucket_template
-      (`features-calendar-{project_id}`) is missing the env tier every sibling FOLD-A row got in the 2026-07-18 fold
-      migration (confirmed 404 vs. the real `features-calendar-prd-{project_id}` bucket). Currently dead (the only
-      consumer, `FeaturesCalendarDomainClient`, is unused) — low urgency but a 1-line fix while in the file for the
-      dead-code-cleanup todo above. (repo: unified-trading-library)
+- [x] [SCRIPT] P2. **Fix `calendar_features` PATH_REGISTRY row's missing `-prd-` env tier** — DONE 2026-07-30. Fixed
+      `bucket_template` from `features-calendar-{project_id}` to `features-calendar-prd-{project_id}`, confirmed against
+      sibling FOLD-A rows (`onchain_features`/`lst_seasonal_rewards` both use the `-prd-` pattern). Evidence:
+      `unified-trading-library@a9520825`.
 
-- [ ] [SCRIPT] P2. **Investigate the `onchain_features`/`lst_seasonal_rewards` `pipeline_mode`-collision structural
-      gap** — neither PATH_REGISTRY template has a `pipeline_mode=` segment, unlike every other DeFi-relevant template.
-      Real onchain raw data is captured under 2+ pipeline_modes (`batch_onchain_rpc`, `batch_onchain_subgraph`); if the
-      feature-compute step ever derives the same `feature_group`+`day` from both, they'd silently overwrite each other.
-      Not proven active — first determine whether this collision can actually happen given the current onchain
-      feature-compute orchestrator's mode-selection logic, then decide fix vs. confirm-safe. (repo: features-service,
-      unified-trading-library)
+- [x] [SCRIPT] P2. **Investigate the `onchain_features`/`lst_seasonal_rewards` `pipeline_mode`-collision structural
+      gap** — CONFIRMED SAFE 2026-07-30, no fix needed. Traced the onchain feature-compute orchestrator
+      (`features_service/onchain/engine/orchestrator.py::process_feature_group` +
+      `orchestrator_manifest.py::_skip_if_fresh`): every run checks OUTPUT manifest freshness for
+      `(feature_group, date)` via `check_shard_freshness(expected_venues=[feature_group])` BEFORE computing —
+      independent of which upstream `pipeline_mode` (RPC vs. subgraph) triggered the run. Whichever raw source computes
+      first wins and writes the manifest; any later trigger for the same `(feature_group, date)` cell hits "already
+      fresh" and skips rather than recomputing/overwriting. The described collision cannot happen under normal
+      (non-`--force`) operation — the freshness guard is keyed on the OUTPUT cell, not the upstream source, so it
+      structurally prevents the silent-overwrite scenario regardless of the missing `pipeline_mode=` segment in the
+      PATH_REGISTRY template. (`--force` reprocessing is an intentional, operator-controlled override, not a silent
+      automated collision — different risk category.) (repo: features-service)
 
 - [x] [SCRIPT] P2. **Add `Mode.REPLAY` to MDPS's `_candidate_pipeline_mode_values()`**
       (`app/core/orchestration_scanner.py:119-146`) — enumerated only `(Mode.BATCH, Mode.LIVE)`, unlike UAC's analogous
       `_canonical_pipeline_mode_prefixes()` which deliberately includes `Mode.REPLAY` "to avoid false-phantoming
       replay-captured cells." Fixed. Evidence: `market-data-processing-service@eed7b53`.
 
-- [ ] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
-      caller census** — `unified_trading_library/domain/standardized_service.py:125-127`
-      (`f"raw_tick_data/by_date/day={date_str}/data_type={data_type}/{instrument}.parquet"`) and
-      `unified_trading_library/domain/market_data_client.py:236`
-      (`f"raw_tick_data/by_date/day={date_str}/data_type={data_type}"`) — two MORE independent, mutually-disagreeing,
-      hand-rolled `raw_tick_data` path implementations, neither delegating to the registry SSOT. Both live in the same
-      domain-client/domain layer already shown dead for `MarketTickDomainClient.get_tick_data()` (zero real callers
-      workspace-wide) — `tests/unit/test_domain_clients.py`'s `TestMarketTickDataDomainClient` exercises
-      `market_data_client.py`'s class directly, so confirm whether ANY real service imports
-      `MarketTickDataDomainClient`/`StandardizedService` before deciding delete-as-dead vs. fix-to-delegate. (repo:
+- [x] [SCRIPT] P2. **Decide + act on the two duplicate `raw_tick_data` path builders found during the `get_tick_data()`
+      caller census** — RESOLVED 2026-07-30, both already closed by earlier work: `market_data_client.py` was deleted
+      entirely as part of `unified-trading-library@f4987fb8`'s dead-code sweep, and `standardized_service.py`'s
+      offending `raw_tick_data` builder (and its `StandardizedService` class) is also gone (confirmed via grep — zero
+      matches, file now 625 lines of unrelated content). **New discovery while verifying this was truly closed**: a
+      DIFFERENT, confusingly-similarly-named module, `unified_trading_library/domain_client/clients/market_data.py`
+      (note `domain_client/` not `domain/`), has its own hand-rolled `raw_tick_data` builder in
+      `MarketTickDataDomainClient._build_tick_gcs_path()` with the same missing-segments bug — and grepping all 6
+      classes in that file individually found zero real callers and zero test coverage for the whole file. This is
+      genuinely separate scope (different module, only surfaced via the name collision) — filed as its own issue rather
+      than folded in here: `/plans/active/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`. (repo:
       unified-trading-library)
 
 - [x] [SCRIPT] P1. **Fix `features-service/delta_one/app/core/dependency_checker.py:648`'s vacuous-pass bug** —
