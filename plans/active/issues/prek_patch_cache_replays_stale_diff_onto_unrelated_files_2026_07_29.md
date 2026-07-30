@@ -160,25 +160,28 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       does NOT close the other (#1889-class, now confirmed rather than hypothesized), and removes an escape hatch I'd
       incorrectly believed existed. The docspec.py backstop (already shipped) remains the only concrete protection
       against this landing silently, regardless of prek version.
-- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — workspace-wide prek version drift: other hosts run different, equally
-      unpatched-for-#1889 versions, and nothing detects this.** Grepped every repo in this workspace for prek install/CI
-      references: **CI is NOT applicable at all** — zero `.github/workflows/*.yml` files anywhere invoke the `prek`
-      binary (confirmed by direct grep across all repos); CI's `quality-gates-v2` runs ruff/pytest/basedpyright/docspec
-      directly against an already-committed SHA, where prek's stash/restore mechanism has nothing to do (no unstaged
-      state exists in a CI checkout). `unified-trading-pm/.github/workflows/ldr-docs-gate.yml`'s only "prek" mention is
-      a comment citing this as the MOTIVATION for why that independent CI-side doc check exists (a different, already
-      resolved/archived issue, `prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md`, about the hook being
-      _absent_ on a clone, not about version staleness). **Other hosts, checked live via read-only SSM (same sanctioned
-      pattern as `check-ao-backlog-status.sh`):** - Orchestrator/planning VM (`i-0c9b283b31d6b5ca7`, EIP
-      `13.113.200.22`) — running **prek 0.4.8** (installed ~2026-07-07, per `bin -> .local/share/uv/tools/prek/bin/prek`
-      symlink mtime), 3 releases behind current. Has the #2142 fix (anything ≥0.4.4 does) but is equally exposed to the
-      confirmed-still-open #1889-class bug — version doesn't change that half. This is where most background AO agent
-      commits actually happen. - Human-planning VM (`i-0dd9812a96cdda5dc`) — **prek not installed at all**, checked
-      under both the default SSM execution context and the `ubuntu` user. A different, arguably more urgent gap for that
-      host specifically (zero hook coverage — gitleaks/branch-drift/prettier-autostage all skipped on any commit from
-      there), separate from the version-staleness question. - This laptop (`harsh_pc`) — fixed above. - The other
-      operator's laptop (`…@gmail.com` identity, per the slot/host commit-attribution split) — not reachable via SSM (no
-      agent on a personal machine); needs that operator to run the same check locally. **Root cause of the drift**:
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-8) — durable-prevention piece (2) SHIPPED (`agent-orchestrator@4898f88`); (1)
+      other-host remediation and (3) upstream contribution deliberately DEFERRED as their own new todos below
+      (operator-scope / separate-effort, not this todo's own determinable piece).** Originally filed as NEW (2026-07-30,
+      slot-1) — workspace-wide prek version drift: other hosts run different, equally unpatched-for-#1889 versions, and
+      nothing detects this.** Grepped every repo in this workspace for prek install/CI references: **CI is NOT
+      applicable at all** — zero `.github/workflows/*.yml` files anywhere invoke the `prek` binary (confirmed by direct
+      grep across all repos); CI's `quality-gates-v2` runs ruff/pytest/basedpyright/docspec directly against an
+      already-committed SHA, where prek's stash/restore mechanism has nothing to do (no unstaged state exists in a CI
+      checkout). `unified-trading-pm/.github/workflows/ldr-docs-gate.yml`'s only "prek" mention is a comment citing this
+      as the MOTIVATION for why that independent CI-side doc check exists (a different, already resolved/archived issue,
+      `prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md`, about the hook being _absent_ on a clone, not
+      about version staleness). **Other hosts, checked live via read-only SSM (same sanctioned pattern as
+      `check-ao-backlog-status.sh`):** - Orchestrator/planning VM (`i-0c9b283b31d6b5ca7`, EIP `13.113.200.22`) — running
+      **prek 0.4.8** (installed ~2026-07-07, per `bin -> .local/share/uv/tools/prek/bin/prek` symlink mtime), 3 releases
+      behind current. Has the #2142 fix (anything ≥0.4.4 does) but is equally exposed to the confirmed-still-open
+      #1889-class bug — version doesn't change that half. This is where most background AO agent commits actually
+      happen. - Human-planning VM (`i-0dd9812a96cdda5dc`) — **prek not installed at all**, checked under both the
+      default SSM execution context and the `ubuntu` user. A different, arguably more urgent gap for that host
+      specifically (zero hook coverage — gitleaks/branch-drift/prettier-autostage all skipped on any commit from there),
+      separate from the version-staleness question. - This laptop (`harsh_pc`) — fixed above. - The other operator's
+      laptop (`…@gmail.com` identity, per the slot/host commit-attribution split) — not reachable via SSM (no agent on a
+      personal machine); needs that operator to run the same check locally. **Root cause of the drift**:
       `agent-orchestrator/scripts/bootstrap_vm.sh` STEP 4.6 installs prek via `uv tool install 'prek>=0.3.0,<1.0.0'` —
       ONE TIME at VM bootstrap. The SemVer range is already wide enough to permit `0.4.11` (no manifest edit needed to
       "unlock" it), but `uv tool install` does not auto-upgrade an already-satisfying install, so every host silently
@@ -196,6 +199,47 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       protection layer stays the docspec.py backstop already shipped, plus a possible high-leverage option: we now have
       the exact minimal repro the upstream maintainer asked for on #1889 and never received — contributing it back
       (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
+
+      **What slot-8 actually shipped for piece (2), 2026-07-30**: `worker-host-preflight.sh`'s prek check (STEP 4c) now
+          parses `prek --version` and FAILs (not just WARNs) below a `0.4.4` floor — the confirmed j178/prek#2142 fix
+          version — with a remediation message (`uv tool install prek --reinstall` / `uv tool upgrade prek`); verified live
+          on this host (`prek 0.4.12` → `OK: prek 0.4.12 >= floor 0.4.4`) and unit-tested the version-compare logic
+          (`sort -V -C`) against `0.3.1`/`0.4.3`/`0.4.4`/`0.4.8`/`0.4.12`/`1.0.0` fakes — correctly rejects only the two
+          below-floor cases, including the `0.4.12 vs 0.4.4` lexical trap a naive string compare would get wrong.
+          `bootstrap_vm.sh` STEP 4.6's `uv tool install` pin raised `0.3.0` → `0.4.4` to match, so a freshly-bootstrapped VM
+          lands compliant. **Deliberately scoped OUT of this change** (left as new todos below, not silently dropped):
+          (a) did NOT touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek>=0.3.0,...`
+          dev-dependency pins — that file is machine-generated from the TIGHTEST pin across repos
+          (`resolve-canonical-versions.py`, header says "do not edit by hand") and governs a DIFFERENT thing (the `prek`
+          PyPI package as an importable dev-dependency) than the `uv tool install`-managed hook-runner BINARY this todo is
+          actually about; bumping it would mean editing 6 repos' pyproject.toml + regenerating + `uv lock` per repo, a much
+          larger and only tangentially-related footprint than the floor-enforcement fix itself, so it was left alone rather
+          than folded in speculatively. (b) did NOT run `uv tool install --reinstall`/`--upgrade` against the already-running
+          orchestrator VM (`prek 0.4.8`, still passes the new `>=0.4.4` floor so it isn't urgent) or the human-planning VM
+          (prek absent entirely — separate gap) — mutating an already-running shared host's tool-install state mid-session
+          is a materially different, operator-aware action than a scoped repo code change, consistent with slot-1's same
+          call earlier in this doc; filed as its own `[OPERATOR]`-tagged todo below instead. (c) did NOT pursue the upstream
+          #1889 contribution — a separate, open-ended research effort, also filed as its own todo below.
+
+- [ ] [OPERATOR] P2. **NEW (2026-07-30, slot-8) — remediate already-running hosts to prek>=0.4.4 (item (1) from the todo
+      above, split out).** The new preflight floor (shipped just above) only catches drift on a host's NEXT preflight
+      run — it does not retroactively fix a host already below floor. Known-stale as of 2026-07-30:
+      orchestrator/planning VM (`i-0c9b283b31d6b5ca7`) at `prek 0.4.8` — actually ALREADY passes the `>=0.4.4` floor
+      chosen here, so not urgent, but still 4 releases behind current and worth a routine `uv tool upgrade prek`;
+      human-planning VM (`i-0dd9812a96cdda5dc`) has prek NOT INSTALLED AT ALL (separate, more basic gap — zero hook
+      coverage on any commit from that host, independent of version staleness — decide first whether prek should even be
+      installed there); the other operator's personal laptop is not reachable via SSM and needs that operator to run the
+      check locally. Tagged `[OPERATOR]` because mutating an already-running shared host's tool-install state (as
+      opposed to a scoped repo code change) is the same category of action slot-1 explicitly deferred earlier in this
+      doc for operator awareness, not because it requires elevated credentials the worker lacks.
+- [ ] [SCRIPT] P3. **NEW (2026-07-30, slot-8) — contribute the j178/prek#1889 minimal repro upstream (item (3) from the
+      todo above, split out).** The confirmed-still-open #1889-class index-corruption bug (reproduced independently by
+      slot-1 against `prek 0.4.11` and by slot-8's own concurrency stress test — see Progress Log) has a maintainer who
+      explicitly said they could not reproduce it themselves; slot-1 already built a working minimal repro
+      (`corrupt-index.py`-based, matching the unmerged #1890 PR's own test). Reviving #1890 or filing a fresh upstream
+      issue/PR with that repro could get a real fix merged instead of this workspace re-deriving one internally
+      indefinitely. Bounded, non-operator-gated research/contribution work — a worker can pick this up directly (repo:
+      none internal; target is `j178/prek` upstream via `gh issue`/`gh pr` against that repo).
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — defensive backstop shipped regardless of root cause.** Whatever the
       remaining mechanism turns out to be, this corruption can no longer silently land: `scripts/docs/docspec.py`'s
       `date`-kind field validator (`_validate_value`) was a PREFIX-only check (`len(s)>=10` + dash-position check) that
@@ -439,3 +483,31 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   delete), and re-ran all further rounds against an isolated `PREK_HOME` under scratch. Net effect on the shared cache:
   zero (back to the pre-test 520-file count before this todo, now 520 again after the P3 finding's own — separately
   isolated — testing).
+
+- **2026-07-30 (slot-8, host `ip-172-31-5-118`) — durable-prevention piece (2) shipped from the workspace-wide-drift
+  todo; scope split for the remaining two pieces.** Picked up the open P1 that was "not yet actioned — awaiting an
+  operator decision on scope" (three sub-parts: remediate other hosts, add a durable version-floor check, pursue an
+  upstream fix). Rather than block on the whole bundle, split it: shipped the one piece that is fully bounded and
+  determinable by a worker alone (the preflight version-floor check), and split the other two into their own
+  `[OPERATOR]`/research-tagged todos instead of leaving the parent todo open indefinitely or guessing at the
+  operator-gated pieces.
+
+  Shipped `agent-orchestrator@4898f88`: `worker-host-preflight.sh`'s prek check now parses `prek --version` and FAILs
+  below a `0.4.4` floor (the confirmed j178/prek#2142 fix version) instead of only checking presence; `bootstrap_vm.sh`
+  STEP 4.6's `uv tool install` pin raised to match. Verified live on this host (`prek 0.4.12` passes) and unit-tested
+  the `sort -V -C` version-compare against 6 representative version strings (0.3.1 stale, 0.4.3 one-patch-below, 0.4.4
+  exact floor, 0.4.8 orchestrator-VM's actual version, 0.4.12 this-host's actual version, 1.0.0 future-major) — all
+  classified correctly, including the `0.4.12 vs 0.4.4` case a naive lexical string compare would get wrong
+  (`"0.4.12" < "0.4.4"` lexically, but not under `-V`). Ran Pass-1 `quality-gates.sh` (harness-backgrounded, not `nohup`
+  — the cicd role doc's own `nohup ... &` example is superseded by the newer orphan-reap HARD RULE in `worker.md`) and
+  shipped via `quickmerge --agent --files 'scripts/bootstrap_vm.sh scripts/worker-host-preflight.sh'`.
+
+  Explicitly did NOT: touch `workspace-constraints.toml`'s `prek` entry or the ~6 repos' `pyproject.toml` `prek`
+  dev-dependency pins (that machinery governs a different thing — the importable PyPI package, not the
+  `uv tool install`-managed binary — and bumping it means a much larger 6-repo footprint than this fix, so it's split
+  out as a separate, lower-priority chore rather than folded in speculatively); did NOT upgrade the orchestrator VM
+  (already passes the new floor) or touch the human-planning VM (prek absent — a distinct, more basic gap) — mutating an
+  already-running shared host mid-session is the same category of action slot-1 already deferred earlier in this doc;
+  did NOT pursue the upstream #1889 contribution. Filed both as new todos above (`[OPERATOR]` P2 for the other-host
+  remediation since it touches live shared infra; plain `[SCRIPT]` P3 for the upstream contribution since it's bounded,
+  non-operator-gated research work).
