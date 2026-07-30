@@ -563,16 +563,16 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
       routing split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
 
       **SHIPPED 2026-07-30 (slot 8) — `unified-trading-pm@66fa926d5`.** Executed via
-                  `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
-                  which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
-                  live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
-                  flipped citing the same commit, per that todo's own instruction.
+                          `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
+                          which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
+                          live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
+                          flipped citing the same commit, per that todo's own instruction.
 
-                  **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
-                              this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
-                              currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
-                              doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
-                              checkboxes citing the same commit.
+                          **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
+                                      this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
+                                      currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
+                                      doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
+                                      checkboxes citing the same commit.
 
 ## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
 
@@ -948,15 +948,18 @@ absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       `cefi_pre_listing_by_venue` thread + write block from `sentinel_catalogs.py`/`orchestrator/__init__.py`/
       `sentinels.py` (`_load_sentinel_catalogs` now returns a 3-tuple); updated the 4 tests referencing removed symbols.
       64/64 tests green, full `quality-gates.sh` clean.
-- [ ] [SCRIPT] P2. **Real zero-capture gaps (separate from the optic)**: `perp_funding`=0 captured (core to carry
-      archetype), `futures_chain`=223, `options_chain`=3, `ohlcv_1m`=738 — these aren't Tardis-tick types; diagnose
-      their source/handler.
-
-      **PARTIAL-STALE (2026-07-30, conflict-check)** — the `perp_funding`=0 sub-claim for HL/ASTER is BY DESIGN, not a
-                              bug: `PerpFundingHandler` explicitly RETIRED standalone `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC
-                              2026-07-08 (funding now rides `derivative_ticker.funding_rate`, byte-identical) — see
-                              `plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Remaining
-                              scope for this todo is genuinely open: `futures_chain`/`options_chain`/`ohlcv_1m` still need diagnosis.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot 4) — VERIFIED-STALE, no code fix needed.** `perp_funding`=0 is BY DESIGN
+      (see PARTIAL-STALE note below). The `futures_chain`=223/`options_chain`=3/`ohlcv_1m`=738 counts are **stale,
+      pre-hard-cutover measurements**: re-queried the LIVE prod cefi manifest today (`read_availability_index` UTL, MTDS
+      `.venv`, read-only; 9,531,264 rows) and found **0 rows of any status** for
+      `(HYPERLIQUID|ASTER) × {futures_chain, options_chain, ohlcv_1m}` — confirmed twice independently. The 223/3/738
+      figures were from the 2026-06-24 19:36 UTC pre-cutover snapshot (that fleet was deleted + relaunched same day —
+      see paragraph above). Every registry (`unified-api-contracts` `DATA_TYPE_CAPABILITY_REGISTRY` /
+      `expected_coverage._CEFI` / `market_data_categories`) and launcher
+      (`launch-cefi-hl-aster-historical-backfill.sh:106-111`, `onchain_perp_batch_handler.py:105`) agrees these 3
+      data_types are structurally out-of-scope for HL/ASTER (perp-only DEXes; `ohlcv_1m` is on-chain-CLOB-only, e.g.
+      LIGHTER-ZKSYNC/EXTENDED-STARKNET, never HL/ASTER) and none currently request them. No reclass needed — rows no
+      longer exist to reclassify. Self-resolved by the 2026-06-24 cutover + dedicated-launcher split.
 
 ## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
 
