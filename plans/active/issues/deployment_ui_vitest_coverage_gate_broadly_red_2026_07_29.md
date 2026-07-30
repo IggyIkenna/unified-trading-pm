@@ -96,7 +96,7 @@ will hit the same wall.
 
 ## Todos
 
-- [x] ✅ [UI] P1. Root-cause how the coverage threshold got this far behind — deployment-ui@3c7e2a8. Bisect found the
+- [ ] [UI] P1. Root-cause how the coverage threshold got this far behind — deployment-ui@3c7e2a8. Bisect found the
       "broad coverage collapse" was **not a real test-coverage regression** — it was a broken local dependency install
       caused by a mis-authored `pnpm-workspace.yaml`. See Progress Log for the full root-cause writeup + evidence. Done:
       `bash scripts/quality-gates.sh` ran green end-to-end on `live-defi-rollout` HEAD with a fresh
