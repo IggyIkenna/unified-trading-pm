@@ -333,20 +333,25 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       `bash scripts/plan-hygiene/check_reference_paths.py` reports no new violations. **Do not** execute the diff itself
       — it belongs to the existing todo, which is `status: draft` pending the same operator review as this plan.
 
-- [ ] [INFRA] P2. **RULED 2026-07-28 (2026-07-28 operator-decisions pass, applying the general theme: recurring cost
-      here is expected to be modest storage spend and "cost under $100 is not a concern" + prefer full protection over
-      an all-or-nothing risk) — retagged away from `[OPERATOR]`, moved out of Deferred.** Enable a **bucket-level
-      soft-delete retention window** (not full object versioning — this matches the reversibility mechanism already
-      standardized elsewhere in this workspace, e.g. the `gcs_bucket_soft_delete_retention_seconds()` ≥604800s/7-day bar
-      cited in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a; use **30 days**, comfortably above that
-      floor) on `instruments-store-sports-prd-central-element-323112` and its sibling prd sports buckets named in
-      `issues/sports_player_stats_empty_write_followups_2026_07_26.md`. That source doc is outside this batch's file
-      scope (not one of this session's assigned files) — its own `[OPERATOR] P2` tag/text still needs syncing to this
-      ruling the next time it is touched; this todo carries the actual ruling + terraform work so the fix isn't blocked
-      on that sync. Repo: deployment-service (terraform). **Done when**: every sports prd bucket named in that source
-      doc shows an active soft-delete retention policy of ≥30 days (verified via
-      `gcloud storage buckets describe --format='value(softDeletePolicy)'` or the terraform state), and the source doc's
-      own todo is updated to cite this ship once picked up.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30.** RULED 2026-07-28 (operator-decisions pass, applying the general theme:
+      recurring cost here is expected to be modest storage spend and "cost under $100 is not a concern" + prefer full
+      protection over an all-or-nothing risk) — retagged away from `[OPERATOR]`, moved out of Deferred. Enabled a
+      **bucket-level soft-delete retention window** (not full object versioning — matches the reversibility mechanism
+      already standardized elsewhere in this workspace, e.g. the `gcs_bucket_soft_delete_retention_seconds()`
+      ≥604800s/7-day bar cited in `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) on all 3 sibling prd
+      sports buckets named in `issues/sports_player_stats_empty_write_followups_2026_07_26.md`
+      (`instruments-store-sports-prd-central-element-323112`, `features-sports-prd-central-element-323112`,
+      `market-data-tick-sports-prd-central-element-323112`) — raised from the 604800s (7-day) baseline that doc's own
+      `[OPERATOR] P2` item had already verified fleet-wide (2026-07-27) up to **2,592,000s (30 days)**, comfortably
+      above the §3a floor. **No terraform change** — matched the exact precedent of the prior 7-day fix (per that source
+      doc: applied imperatively via `gcloud storage buckets update`, not tracked in `canonical_buckets.tf`, which
+      declares no `soft_delete_policy` block for any canonical bucket, so there is no terraform-state drift risk
+      introduced). **Verified live** (fresh
+      `gcloud storage buckets describe --format='value(soft_delete_policy.retentionDurationSeconds)'` run this session,
+      all 3 buckets): each reads `2592000`. Source doc
+      (`issues/sports_player_stats_empty_write_followups_2026_07_26.md`) is `status: resolved` + archived — left
+      untouched per its own note ("its own tag/text still needs syncing... this todo carries the actual ruling... so the
+      fix isn't blocked on that sync"); this todo's evidence here is the durable record.
 
 - [ ] [DATA] P3. **RULED 2026-07-28 (applying the operator's adapter/feature-completion theme: "All adaptors should be
       FINISHED with respect to data, UNLESS it is literally proven the data cannot be obtained — in which case the
@@ -365,7 +370,25 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       column nobody computes. That source doc is outside this batch's file scope; its own `[OPERATOR/DESIGN]` tag still
       needs syncing to this ruling when next touched. Repo: features-service. **Done when**: each of the 5 groups
       carries either a shipped, fully-computed implementation or a proven-infeasible removal (column purged from
-      schema/manifest/docs), with no group left half-built or merely diagnosed.
+      schema/manifest/docs), with no group left half-built or merely diagnosed. **Investigated 2026-07-30 (operator-
+      ruling closeout pass) — feasibility is genuinely mixed per group, not implemented this pass.** Read
+      `multisource_xg_calculator.py` + `gcs_normalizers.py` directly (not assumed): per-source passthrough for
+      `home_xg_understat`/`away_xg_understat` IS mechanically buildable today (the raw normalizer already produces
+      exactly those column names — `_normalize_understat_xg`, confirmed real data). But
+      `home_xg_footystats`/`away_xg_footystats`/`home_xg_api_football`/`away_xg_api_football` are NOT — grepped the
+      whole repo and found these 4 names exist NOWHERE outside this calculator's own dead column declarations;
+      FootyStats' raw normalizer (`_normalize_footystats_matches`) produces unsuffixed `home_xg`/`away_xg` columns, not
+      per-source-suffixed ones, and no merge step anywhere renames/joins them into `target_fixtures` under the suffixed
+      names this calculator expects — so 4 of the 6 per-source-passthrough columns need new upstream data-plumbing (a
+      real, not-yet-scoped change to the fixture-assembly/merge step), not just a calculator edit. The other 3 groups
+      (disagreement/range, derived-consensus formulas, historical-accuracy, league-rank) all need genuine per-group
+      feature-engineering DESIGN decisions with no formula specified anywhere in this corpus (e.g. the exact
+      Poisson/heuristic form for `xg_implied_over_2_5`, the historical-accuracy lookback window, the league-rank
+      tie-break rule) — inventing these silently risks shipping plausible-but-wrong ML training features, which this
+      task's own guardrails (no policy/design calls, data-pipeline-correctness-is-the-heartbeat) weigh against
+      improvising alone. Left un-implemented and the checkbox unflipped rather than partially done or guessed; whoever
+      picks this up next should start from the `home_xg_understat` passthrough (the one group confirmed mechanically
+      ready) and treat the other 4 groups' exact formulas as their own scoped sub-decisions.
 
 - [ ] [DATA] P3. **`issues/odds_api_raw_ingestion_gap_2026_06_21_24_2026_07_26.md`'s ownership-routing todo — ALREADY
       RULED 2026-07-28, do not re-draft here.** Operator direct answer: _"This isn't actually a real open question —

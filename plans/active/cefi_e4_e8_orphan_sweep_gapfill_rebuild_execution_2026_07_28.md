@@ -23,7 +23,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
-last_updated: 2026-07-28 # (slot-3: Phase C/F re-scope — legacy bucket already deleted 2026-07-14)
+last_updated: 2026-07-30 # (rulings-closeout re-confirm — Phase B still correctly gated, no change)
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -240,3 +240,13 @@ dispatching this phase would just 404; explicitly NOT a claim that its gates wer
 rebuild + verify) don't touch the legacy bucket at all. Full evidence + the operator-intent question + the open
 verification item: `plans/active/issues/cefi_legacy_bucket_deleted_before_l3_gate_2026_07_28.md`. No code shipped (plan
 reconciliation only, per the finding's own recommended decision).
+
+### 2026-07-30 (rulings-closeout pass, separate session) — re-confirmed, no change
+
+Re-verified this doc's live-gate state per a workspace-wide sweep closing out recorded operator rulings implying
+unshipped work. Phase A remains correctly flipped done (already verified complete this session by an earlier pass,
+`canonical-migration-cefi-20260730-012546`). **Phase B remains correctly gated** — re-read
+`plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` directly: `status: open`,
+unchanged, no new resolution. Per this sweep's own explicit constraint (do not resolve an open operator-only policy
+contradiction, do not execute a ~1.2M-object prod delete without an independently-verified §3a citation), Phase B was
+NOT executed and the hard-stop-2 contradiction was NOT adjudicated. No action taken; no changes needed.

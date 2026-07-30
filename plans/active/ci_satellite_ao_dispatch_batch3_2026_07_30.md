@@ -182,3 +182,16 @@ not re-escalating duplicates.
   operator-ruled-NA) — only `cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md`'s 2 remaining
   bounded todos (root cause already found + mostly fixed, genuinely stable/non-live) were conflict-clear and
   AO-eligible, combined into this batch's single todo. Nothing shipped, nothing flipped to `active`.
+
+- **2026-07-30 (rulings-closeout pass, separate session)** — reviewed this plan as part of a workspace-wide sweep to
+  close out recorded operator rulings implying unshipped work. **Finding: this plan's single todo is NOT backed by an
+  explicit operator ruling** (no "RULED"/"operator ruling" citation anywhere in this doc or its source issue for the
+  retry-with-backoff/fleet-sweep item) — it is this skill's own audit-derived triage of two still-open `[SCRIPT] P2`
+  items in `cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md` (re-confirmed both genuinely still
+  `[ ]` in that source doc: the retry-with-backoff hardening and the fleet-wide auth-gap sweep). Per this sweep's own
+  scope (execute already-made rulings, do not invent new authorization for audit-triaged-but-undecided work), left
+  unexecuted — this plan stays `status: draft`, flipping it is still the operator's call. **Separately confirmed this
+  session could not have safely executed it anyway**: the todo's own "done when" requires each of the 7 repos'
+  Dockerfile edits to be "verified via a local Docker build" — `docker ps` in this session's environment returns
+  `permission denied while trying to connect to the docker API` (no working daemon access), so there is no way to meet
+  that verification bar here even if the todo were authorized. Nothing shipped, nothing flipped to `active`.

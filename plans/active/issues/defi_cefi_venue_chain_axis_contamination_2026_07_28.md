@@ -113,17 +113,56 @@ in this read-only audit pass (time-bounded scope).
 
 ## Recommended decision
 
-- [ ] [DIAG] P1. Trace which writer/consolidator path produces the 9 chain-shaped and 5 cefi-exchange-shaped values on
-      `defi.venues` — sample a handful of the actual manifest rows (venue, chain, source, pipeline_mode columns
-      together) to distinguish "writer defaults venue to chain when unresolved" from "cross-AG bleed". Source: this doc.
-- [ ] [DIAG] P1. Trace which writer stamps `chain="FUTURES"` for defi + cefi rows — sample the actual rows (venue,
-      instrument_type, data_type alongside chain) to determine if this is the bundle-grain `futures_chain`/`FUTURES`
-      instrument_type leaking into the chain column, or an unrelated mis-stamp. Check whether this is a NEW regression
-      of the resolved TOCTOU consolidator bug (re-run the `cross_ag_prediction_rows_bleed` doc's own diagnostic query
-      against defi/cefi) before assuming a new mechanism. Source: this doc.
-- [ ] [DATA] P2. Once root-caused, fix the writer (if writer bug) or the consolidator (if TOCTOU regression) and
-      re-stamp affected historical rows per the paired writer-fix + re-stamp pattern already used for the cefi
-      venue-as-chain fix on this same plan. Source: this doc.
+- [x] ✅ [DIAG] P1. **ROOT-CAUSED 2026-07-30.** Traced via a bounded, targeted duckdb read of the live
+      `gs://market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` (single bounded object,
+      29,093,653 rows, column-projected query — not a corpus walk). The 9 chain-shaped `defi.venues` values
+      (ARBITRUM/AURORA/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON) are **NOT cross-AG bleed** — every one has
+      `data_type=gas_fees`, `instrument_type=spot_asset`, `source=onchain_rpc`, `pipeline_mode=batch_onchain_rpc`,
+      `venue==chain` (identical value in both columns), real captured rows spanning 2020-01-01→2026-07-21 (739–1,857
+      rows per chain). `gas_fees` is a genuine CHAIN-level metric with no protocol/venue concept — the writer had no
+      real venue to stamp and reused the chain name, the same "axis mismatch, not garbage" shape as the already-accepted
+      `futures_chain`/`options_chain` bundle-grain exceptions. This is a
+      **writer-defaults-venue-to-chain-when-unresolved** case (candidate class 1), NOT cross-AG bleed, for this half of
+      the finding.
+- [x] ✅ [DIAG] P1. **ROOT-CAUSED 2026-07-30.** The `chain="FUTURES"` values (+ the 5 cefi-exchange-shaped `defi.venues`
+      values BITFINEX/BITGET/BYBIT/KRAKEN/OKX, plus BINANCE which the census undercounted) are confirmed **genuine
+      cross-AG bleed** (candidate class 2) — and it is a PHYSICAL GCS bucket misfile, not just a manifest-index cosmetic
+      issue. Live evidence: all matching rows share one narrow signature — `data_type=perp_daily_ctx`,
+      `instrument_type=perpetual`, `source=tardis`, `pipeline_mode=batch_tardis`, exactly 7 rows/venue, dated
+      **2026-05-16 → 2026-05-22 only** (a single week; zero rows before or after — this predates and appears already
+      stopped by the 2026-07-24 TOCTOU consolidator fix, `unified-trading-library@14301571`, not a new regression).
+      Bounded `gsutil ls` prefix probes (single-date, single-venue — not a corpus walk) confirm the GCS PATH itself
+      carries the contamination:
+      `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16/pipeline_mode=batch_tardis/asset_group=cefi/`
+      physically contains
+      `venue={BINANCE-FUTURES,BITFINEX-FUTURES,BITGET-FUTURES,BYBIT-FUTURES,DERIBIT,KRAKEN-FUTURES,OKX-FUTURES}/` — real
+      CeFi Tardis dated-futures captures, correctly `asset_group=cefi`-tagged in the path, but physically stored in the
+      **DeFi** bucket. Comparison-checked: the identical `(day, pipeline_mode, asset_group, venue,     instrument_type)`
+      prefix ALSO exists correctly in `market-data-tick-cefi-prd-...` — this looks like a **duplicate write to both
+      buckets**, not data stranded only in the wrong place, so a cleanup of the DeFi-bucket copies is unlikely to lose
+      data (not independently verified row-for-row). The literal `chain="FUTURES"` manifest value is the `-FUTURES`
+      suffix of the glued `{EXCHANGE}-FUTURES` venue strings (e.g. `BITFINEX-FUTURES`) being run through a DeFi-style
+      `PROTOCOL-CHAIN` venue/chain splitter that doesn't validate the suffix against `KNOWN_CHAINS` before splitting —
+      the SAME bug _class_ as the already-fixed EXTENDED-STARKNET/LIGHTER-ZKSYNC "-CHAIN-suffix" split
+      (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`), hitting the "-FUTURES" venue family this time instead of
+      an on-chain-perp-CLOB chain suffix — but the actual splitter code path for THIS bucket is MTDS-side
+      (`market-tick-data-service`), not the `instruments-service/writers.py::_canonical_manifest_venue_chain` guard read
+      for this doc's earlier EXTENDED-STARKNET finding (that guard already null-checks `KNOWN_CHAINS` and would NOT
+      reproduce "FUTURES" as a chain — confirmed by reading it — so the MTDS-side equivalent is the next trace target,
+      not yet located to an exact line).
+- [ ] [DATA] P2. **Scope now much narrower than "fix + re-stamp the whole finding":** (a) locate + fix the MTDS-side
+      venue/chain splitter that treats a `-FUTURES` suffix as if it were a `KNOWN_CHAINS` member (repo:
+      market-tick-data-service) — this is a pure forward-looking code fix, no `--apply` needed; (b) decide + execute
+      cleanup of the ~42-row / 7-venue / 1-week (2026-05-16→2026-05-22) DUPLICATE CeFi objects physically stored in the
+      DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]** requires sign-off per delete-safety-protocol before
+      any GCS delete/move (the na-eligibility-audit's 2026-07-30 CONTESTED VERDICT below already flagged this exact
+      gap); confirm row-for-row duplication (not just prefix-existence) against the cefi bucket copy FIRST; (c) decide
+      whether `gas_fees`'s venue==chain shape (candidate-class-1 finding, NOT cross-AG, NOT a writer bug in the "wrong
+      data" sense) needs a `("venues","defi")` accepted-exception registry entry (mirroring `_ACCEPTED_EXCEPTIONS` in
+      `deployment-api/deployment_api/routes/data_status/_distinct_values.py`) so it stops badging as drift, OR a schema
+      change to leave `venue=""` for chain-only data_types — this is a design decision, not a bug fix, and belongs to
+      whoever owns the gas_fees writer + the distinct-values panel's exception policy. Source: this doc,
+      na-eligibility-audit 2026-07-30 tranche=defi CONTESTED VERDICT below.
 
 ## Progress Log
 
@@ -147,3 +186,16 @@ in this read-only audit pass (time-bounded scope).
   the cefi + cross-cutting tranches) — the integrator made no active change here — and the dissent is recorded rather
   than dropped. **Operator/next-toucher: decide whether the P2 `--apply` re-stamp todo needs an `[OPERATOR]` tag (and
   therefore whether this doc should revert to `assigned_vm: NA`) before a worker picks it up.**
+- **interactive session 2026-07-30**: operator confirmed the live DEFI distinct-values panel still shows this exact
+  contamination (16 non-canonical venues incl. the 9 chain names + 5 cefi-exchange names; chains 2 non-canonical incl.
+  FUTURES) and asked to root-cause + fix, plus check whether the bad names also appear at the GCS-path level (not just
+  the manifest). Both [DIAG] P1 todos above are now ROOT-CAUSED via a bounded live-data read (single-object duckdb query
+  against the real `_index/availability_index.parquet`, plus a handful of targeted, single-prefix `gsutil ls` probes --
+  no corpus walk). Two DISTINCT mechanisms confirmed, not one: (1) `gas_fees`'s venue==chain reuse (a legitimate
+  axis-mismatch, not cross-AG bleed) explains the 9 chain-shaped venues; (2) a genuine, PHYSICAL cross-AG GCS bucket
+  misfile (real CeFi Tardis `-FUTURES` venue objects duplicated into the DeFi bucket for exactly 2026-05-16 to
+  2026-05-22, already stopped, pre-dating the 2026-07-24 TOCTOU fix) explains both the 5 cefi-exchange venues and the
+  `chain="FUTURES"` value. **No GCS delete/move or code fix was executed this session** -- root-cause only, per the
+  doc's own pre-existing scope boundary and the CONTESTED VERDICT's `[OPERATOR]` gate above. See the rewritten P2 todo
+  for the 3-part remaining scope (MTDS splitter fix / duplicate-object cleanup pending operator sign-off / gas_fees
+  accepted-exception design decision).

@@ -51,7 +51,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -120,7 +120,19 @@ concurrent workers do not collide on this file.
       passing regression test, `quality-gates.sh` is green in every repo touched, and (c)'s duration output is visible
       on a real PM run. Sources: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist items 2 + 5,
       RULED 2026-07-28 — no longer operator-gated) ·
-      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (`--durations=25` item).
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (`--durations=25` item). **(c) CONFIRMED
+      ALREADY SHIPPED 2026-07-30 (this session's rulings-closeout pass)** — verified live: `base-service.sh`'s `PARGS`
+      already carries `--durations=25` (`unified-trading-pm@3ed0fc99d`, 2026-07-29, "perf(ci): add pytest --durations,
+      uv cache in the QG reusable, merge ruff dtz/tid251 rule-group scans into one invocation" — confirmed via
+      `git show 3ed0fc99d -- scripts/quality-gates-base/base-service.sh`), sourced live by every consumer repo. **(a)
+      and (b) confirmed still genuinely open** — re-read `_qg_content_hash()` in `base-service.sh` directly: it hashes
+      HEAD sha + tracked/untracked diffs + the gate-logic script + ruff version, with NO `ENVIRONMENT`/ `DEPLOYMENT_ENV`
+      dimension. Confirmed PM's own `scripts/quality-gates.sh` never exports `ENVIRONMENT` before sourcing
+      `base-service.sh` either (standalone runs still fall through to the Python resolver's bare-unset→prod default).
+      **NOT attempted this session**: (a)/(b) require editing the shared, fleet-wide sentinel-hash function every repo's
+      QG run depends on — assessed as too high-blast-radius to implement solo without a dedicated, reviewed session (a
+      subtle bug here breaks `quickmerge --agent`'s fast-path for every repo, not just one), unlike the bounded,
+      single-file fixes elsewhere in this batch. Left open and unclaimed rather than rushed.
 - [ ] [DOC] P2. **Correct the "re-run quality-gates.sh --no-fix then retry" recovery guidance** wherever it is taught
       (agent prompts, runbooks) — as written today it is a sentinel-laundering step, not a fix; correct it to describe
       the post-todo-1 behavior (sentinel now binds configuration, so the recovery is genuinely safe). Sequenced after
@@ -134,31 +146,38 @@ concurrent workers do not collide on this file.
       cause is confirmed. **Done when**: both repos' env-coupled tests pass under `ENVIRONMENT=development` and unset,
       and `quality-gates.sh` is green in both. Source: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution
       checklist item 3, partial — the non-MTDS half).
-- [ ] [DEVOPS] P2. **Ship the branch-health PROMOTION-LAG vs PROVENANCE-BLOCKED fix + clear the 2 live provenance
-      blocks.** Three bundled fixes in `scripts/cicd/promotion_lag_monitor.py` and 2 external repos (internally related,
-      one source doc): (a) when a promote PR carries `<!-- promote:provenance-blocked -->`, classify the branch-health
-      alert as `PROVENANCE-BLOCKED` (not `PROMOTION LAG`), inlining the offending SHA + subject + the "re-ship or
-      revert, do NOT hand-arm" remedy, deduped by state-transition per `/codex/04-architecture/ci-alerting.md`; (b)
-      clear the 2 currently-live blocks at source — `market-tick-data-service@d302f07a` (re-ship via
-      `quickmerge --agent --files`, or revert on LDR) and `deployment-ui`'s offending commit (identify via
-      `git log origin/main..origin/live-defi-rollout` + trailer scan, same remedy) — **do NOT hand-arm auto-merge on
-      either**; (c) confirm `_backmerge` merge commits are carve-out-exempt in `check_strict_quickmerge.py` (already
-      confirmed exempt by batch1's todo 4 — this is a re-verification, not new work). **Done when**: the alert
-      reclassification is live and tested against a synthetic provenance-blocked PR, both named blocks are cleared (or
-      explicitly reverted), and the `_backmerge` exemption is re-confirmed in this doc. Source:
-      `issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md` (retagged `[OPERATOR]` → `[DEVOPS]` 2026-07-28 —
-      re-shipping/reverting an already-identified bypassing commit needs no operator judgment call).
-- [ ] [SCRIPT] P2. **Extend the `Quickmerge:` commit trailer to recognize the dirty-deps direct-push carve-out.**
-      **RULED 2026-07-29 (operator direct answer, same-day as this audit) — Option 2.** Add a third structured trailer
-      value alongside today's `agent`/`human` — e.g. `Quickmerge: direct-carveout-dirty-deps` — to
-      `scripts/cicd/check_strict_quickmerge.py`'s accepted-value set (reuses the existing trusted trailer-presence
-      mechanism, no new spoofable free-text heuristic), and update the dirty-deps direct-push recipe
-      (`SUB_AGENT_MANDATORY_RULES.md` / the git-safety codex) to stamp it on every sanctioned direct push. **Done
-      when**: a synthetic commit carrying the new trailer value is recognized as carve-out-exempt by
-      `check_strict_quickmerge.py` (regression test), and the recipe doc change is verified against
-      `check_reference_paths.py`. Source:
-      `/plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (archived 2026-07-30)
-      (`asset_group: [meta]` — folded into `ci` per the skill's meta-sweep rule; content is quickmerge governance).
+- [x] ✅ [DEVOPS] P2. **DONE (verified 2026-07-30, this session's rulings-closeout pass) — all three parts already
+      resolved, none by this session directly; closing out the citation.** (a) The `PROVENANCE-BLOCKED` reclassification
+      is live in `scripts/cicd/promotion_lag_monitor.py` (`_provenance_blocked()` + the
+      `⛔ BLOCKED by the provenance     gate...` inline finding in `main()`, distinct from the plain `PROMOTION LAG`
+      line) — but had NO regression test exercising it against a synthetic blocked PR, which is the one genuine gap this
+      session closed: `scripts/cicd/test_promotion_lag_monitor_provenance_blocked.py` (6 new tests mocking `_gh_json` —
+      no-open-PRs, fail-closed-on-lookup-failure, PR-without-marker, PR-with-marker [the synthetic reproducer],
+      non-promote-titled PR skipped, non-int PR-number skipped), shipped `unified-trading-pm@51b93ec0a` (direct push per
+      the PM `scripts/**` carve-out — local `quality-gates.sh --no-fix` was red only on 8 pre-existing, unrelated
+      failures, confirmed by reading each traceback:
+      `test_capability_param_schema.py`/`test_capability_verdict_matrix.py` [known, strategy-service CARRY_STAKED_BASIS
+      in-progress wiring], `test_check_repo_docs_ssot.py` [drift in an unrelated `deployment-service-sports-wt`
+      worktree], `test_check_doc_body_links.py` [a 60s pytest-timeout from host contention against a second concurrent
+      full QG run, not a real broken link] — the new test file itself:
+      `.venv/bin     /python -m pytest scripts/cicd/test_promotion_lag_monitor_provenance_blocked.py -q` → 6 passed,
+      ruff-clean). (b) The 2 SPECIFIC 2026-07-17 offenders named in this todo (`market-tick-data-service@d302f07a`,
+      deployment-ui) are STALE — the source issue doc itself (see below) already recorded both its own todos `[x]` done
+      2026-07-30, explaining those exact offenders were long superseded and the CURRENT (2026-07-30) blocks were cleared
+      instead (`features-service` 4 commits, `market-tick-data-service` 38 commits, via `reprovenance_bypass.sh`).
+      Live-reverified just now: `gh pr list --repo IggyIkenna/deployment-ui --state open --base main` → **empty** — no
+      open promote PR, so there is no current block to clear for it. (c) `_backmerge` exemption reconfirmed live in
+      `check_strict_quickmerge.py` (2-parent-merge unconditional exemption + `test_backmerge_merge_commit_is_exempt`).
+      Source: `issues/promotion_lag_alert_hides_provenance_block_2026_07_17.md` (both its own todos already `[x]`,
+      2026-07-30 — this batch2 todo's citation predates that resolution and had gone stale relative to it).
+- [x] ✅ [SCRIPT] P2. **CONFIRMED ALREADY SHIPPED (verified 2026-07-30, this session's rulings-closeout pass) — no new
+      work needed.** `unified-trading-pm@bbe9a9871` documents the third `Quickmerge: direct-carveout-dirty-deps` trailer
+      value + the dirty-deps direct-push recipe in `/codex/08-workflows/ci-cd-flow.md` (confirmed live at lines 211/219
+      of the current HEAD, == `origin/live-defi-rollout`); `check_strict_quickmerge.py`'s trailer check was already
+      value-agnostic (presence-only), so no code change was needed there either. Source issue
+      `plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` is itself already
+      `status: resolved` + archived 2026-07-30 with this exact evidence — this batch2 todo's own citation was drafted
+      2026-07-29, one day before that archival, and had simply gone stale.
 - [ ] [FIX] P1. **Close the `detect_breaking_change.py` registry-data-dict blind spot end to end.** One combined todo
       (internally sequential, single source doc): (a) spec the contract-surface allowlist extension — which
       registry-dict mutations count as breaking vs additive-OK, citing the manifest `schema_version` precedent as the
@@ -188,14 +207,15 @@ concurrent workers do not collide on this file.
       sleeps in `deployment-api`, `instruments-service`, `greeks-service`. **Done when**: every named test passes with
       the real sleep replaced by a mocked/monkeypatched clock and the per-repo `quality-gates.sh` stays green. Source:
       `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ "Real sleep()-based test waste").
-- [ ] [SCRIPT] P3. **CI-cost tooling: size + add the `uv` package-cache action; merge redundant ruff-ratchet
-      invocations.** (a) Size the real savings of an `actions/cache@v4` step for the `uv` package cache in
-      `python-quality-gates-v2.yml` BEFORE adding it (the doc's own precondition) — record the measurement, then add it
-      if it's worth the added cache-restore overhead; (b) merge `check_ruff_rule_ratchet.py`'s per-rule-group full-tree
-      ruff invocations into one `--select` pass. **Done when**: the cache sizing is recorded with a go/no-go decision
-      (and the step added if "go"), and the ruff-ratchet checker runs measurably fewer full-tree passes with identical
-      violation output. Source: `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ tooling
-      speed).
+- [x] ✅ [SCRIPT] P3. **CONFIRMED ALREADY SHIPPED (verified 2026-07-30, this session's rulings-closeout pass) — no new
+      work needed.** Both parts confirmed live in `unified-trading-pm@3ed0fc99d` (2026-07-29, same commit that shipped
+      todo 1's `--durations=25` piece above): (a) `.github/workflows/python-quality-gates-v2.yml` carries
+      `actions/cache@v4` for the `uv` package cache, sized first per the commit message (cold `uv sync` ~2m07s vs warm
+      9.4s, a real ~118s/run win) before being added; (b) `scripts/quality_gates/check_ruff_rule_ratchet.py`'s
+      `run_ruff_count_all()` merges the separate `dtz`/`tid251` full-tree ruff invocations into one pass (confirmed via
+      `grep -n "run_ruff_count_all" scripts/quality_gates/check_ruff_rule_ratchet.py`). Source:
+      `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ tooling speed) — this batch2 todo's
+      citation was drafted 2026-07-29, after the fix had already shipped, and had simply gone stale.
 - [ ] [SCRIPT] P3. **Dead-code cleanup: 3 confirmed-stale deletions.** (a) `execution-service` — re-verify ~40
       files/~10,082 lines importing a pre-refactor module path are still genuinely dead, then delete; (b)
       `unified-trading-library` — delete the already-skip-marked dead test importing a moved `ConfigReloader` path; (c)
@@ -357,3 +377,24 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   `mtds_sports_catalog_reader_timeout_test_flaky_under_contention_2026_07_27.md` (`assigned_vm: planning`) — excluded
   from todo 7 to avoid dispatching a competing fix to already-claimed work; noted for that task's own worker instead. 14
   todos drafted, 15 items deferred (E1-E15), 3 escalated to the operator. Nothing shipped, nothing flipped to `active`.
+
+- **2026-07-30 (rulings-closeout pass, still `status: draft` — not flipped active)**: operator asked for every recorded
+  ruling across the plans corpus that implies concrete, unshipped work to actually be closed out. This plan is still a
+  DRAFT AO-dispatch candidate batch (flipping to `active` remains the operator's own call, untouched here), but several
+  of its todos turned out to already be fully shipped by other, more recent sessions whose citations simply predate this
+  draft's own 2026-07-29 authoring — re-verified each directly against live code/repo state rather than trusting the
+  todo text: **todo 1's part (c)** (`--durations=25`) and the separate **CI-cost-tooling todo** (uv cache + merged
+  ruff-ratchet invocation) both landed in `unified-trading-pm@3ed0fc99d` (2026-07-29); **todo 4** (promotion-lag
+  PROVENANCE-BLOCKED reclassification) was already implemented, its named 2026-07-17 offenders superseded by the source
+  issue doc's own already-`[x]` 2026-07-30 resolution (different, current offenders cleared instead) — the one genuine
+  gap (no regression test against a synthetic blocked PR) was closed this session:
+  `scripts/cicd/test_promotion_lag_monitor_provenance_blocked.py` (6 tests), shipped `unified-trading-pm@51b93ec0a`;
+  **todo 5** (Quickmerge trailer carve-out) was already shipped + archived (`unified-trading-pm@bbe9a9871`, source issue
+  `status: resolved`). Flipped all four to `[x]` with the verification evidence inline. **Todo 1's parts (a)/(b)**
+  (sentinel ENVIRONMENT-binding + quickmerge/standalone entrypoint alignment) were confirmed still genuinely open (read
+  `_qg_content_hash()` and PM's own `quality-gates.sh` directly — neither binds/aligns `ENVIRONMENT` today) but were
+  deliberately NOT attempted: this is a real, correctly-scoped gap, but implementing it safely means editing the shared
+  `base-service.sh` sentinel-hash function every repo's QG run depends on — too high a blast radius for a solo,
+  time-boxed pass without dedicated review, unlike every other bounded single-file fix touched this session. Todos 2, 3,
+  6-14 were not re-verified (out of this pass's time budget) and are left exactly as drafted. No status flip attempted;
+  this remains an operator-gated draft.

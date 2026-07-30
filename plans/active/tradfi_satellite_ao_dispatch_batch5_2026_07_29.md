@@ -6,12 +6,15 @@ summary: >-
   mode, scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against
   the 18-doc covering set (consolidated closeout + 5 forked children/extracts + finalizes + batch1/2/4 + archived
   batch3). 28 of 32 candidates came back orphaned in some form (16 partial-coverage, 12 never-touched); of those, 15
-  todos across 15 source docs cleared the Phase-3 conflict-check and are drafted below. The single highest-value item is
-  `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`'s `[CODE] P1` — the operator ruled the `mvp_mode` wire-vs-delete
-  question in an interactive session THIS SAME DAY (2026-07-29), after 3 prior batches (1/2/4) correctly left it
-  deferred as operator-gated; nothing in the covering family could have picked it up since batch4 predates the ruling by
-  3 days. The rest of the 13 orphaned-but-not-drafted docs stay deferred: 4 too-large-or-risky (unchanged from
-  batch1-4), ~7 operator-gated (unchanged, not re-asked), 2 conflict-gated on still-unresolved sequencing
+  todos across 15 source docs cleared the Phase-3 conflict-check and are drafted below. The originally single
+  highest-value item, `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`'s `[CODE] P1` — the operator ruled the
+  `mvp_mode` wire-vs-delete question in an interactive session THIS SAME DAY (2026-07-29), after 3 prior batches (1/2/4)
+  correctly left it deferred as operator-gated — **has since been shipped independently (2026-07-30, before this draft
+  batch was ever approved) via a bundled todo in the separately-active
+  `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, `deployment-service@c847395e`; this batch's own todo 1 is marked
+  done-by-cross-reference below rather than left as live dispatchable work.** The rest of the 13
+  orphaned-but-not-drafted docs stay deferred: 4 too-large-or-risky (unchanged from batch1-4), ~7 operator-gated
+  (unchanged, not re-asked), 2 conflict-gated on still-unresolved sequencing
   (`tradfi_multisource_backfill_2026_06_22.md`'s FX-yahoo-drain item,
   `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s actual bucket-delete item — both discussed in the Deferred
   section). Also notes 2 process observations for the operator/main-agent (not batch todos):
@@ -88,14 +91,18 @@ drift_direction: advance-code
 This is the first fresh `/ag-closeout-audit tradfi` pass since batch4 (2026-07-26). Three days is enough for real new
 ground to open up, and it did:
 
-1. **The mvp_mode operator ruling landed TODAY (2026-07-29).**
+1. **The mvp_mode operator ruling landed TODAY (2026-07-29).** _(2026-07-30 update: shipped since — see below.)_
    `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` has been flagged operator-gated across every batch since
    batch2 (2026-07-25) — batch3 and batch4 both explicitly declined to re-ask an already-asked question. Today, in an
    interactive decision session, the operator ruled: wire `mvp_mode` via an opt-in flag on the existing
    `launch-tradfi-forward-poll.sh` launcher (not a new dedicated launcher, never default-on). The issue doc now carries
    a fully-specified `[CODE] P1` implementation plan ((i)-(iv), exact files, exact repos, explicit done-when) with zero
    judgment call left. batch4 (created 2026-07-26) cannot possibly reference this — it predates the ruling by 3 days.
-   This is the cleanest, highest-confidence todo in this batch.
+   **This batch (batch5) was itself never approved/dispatched (`status: draft` throughout) — the implementation instead
+   landed via a DIFFERENT, separately-active plan's bundled todo (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
+   `[OPERATOR] P2` item), shipped `deployment-service@c847395e` on 2026-07-30. Verified live: the commit matches this
+   doc's own (i)-(iv) plan exactly. See this batch's todo 1 (marked done-by-cross-reference) and the Progress Log
+   below.** This is the cleanest, highest-confidence todo in this batch.
 2. **A blocker with wide downstream reach has a live mitigation to re-test.** `_retry_empty_day_listing`
    (`market-data-processing-service@22b926c`) shipped to address the listing-consistency hypothesis behind
    `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`'s stuck ~19% hit rate. That doc's
@@ -109,21 +116,22 @@ ground to open up, and it did:
 
 ## Todos
 
-- [ ] [CODE] P1. **Wire `mvp_mode` via an opt-in flag on the forward-poll launcher — operator-ruled 2026-07-29.** (i)
-      Add `VM_MVP_MODE` metadata plumbing to `deployment-service/scripts/vm/setup-data-pipeline-vm.sh`'s `mtds-backfill`
-      branch, mirroring the existing `VM_FORCE`/`VM_FORCE_WINDOW` metadata pattern already in that same file. (ii) Add
-      an opt-in `--mvp-mode` CLI flag + `VM_MVP_MODE=true` metadata line to
-      `deployment-service/scripts/vm/launch-tradfi-forward-poll.sh` specifically, mirroring that launcher's existing
-      `--force` flag parsing — explicitly NOT changing that launcher's default behavior (no flag = today's unfiltered
-      full-universe fetch, unchanged). (iii) Extend
-      `market-tick-data-service/tests/market_interface/unit/test_databento_adapter_logic.py` (+
-      `tests/unit/test_handler.py` if present) with a `--dry-run` assertion that `VM_MVP_MODE=true` produces
-      `--mvp-mode` in the generated CLI. (iv) Explicitly do NOT touch `launch-tradfi-bf-cme-ohlcv-1m.sh` (its own
-      no-client-side-filters ruling) or `launch-tradfi-backfill-vm.sh` (its own separate `--instrument-ids` mechanism) —
-      both coexist unchanged. Repos: deployment-service, market-tick-data-service. **Done when**: (i)-(iii) land
-      QG-green in both repos, the dry-run regression test passes, and the change ships via quickmerge (also
-      quality-gates green in unified-api-contracts if `get_mvp_databento_symbols_for_venue`'s callsite needs touching);
-      flip the issue doc's `[CODE] P1` checkbox citing the shipped commit(s). Source:
+- [x] ✅ **ALREADY DONE — confirmed 2026-07-30, before this batch was ever approved/dispatched.** This exact ruling was
+      independently picked up and shipped as part of `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s bundled
+      `[OPERATOR] P2` todo (a different, already-active/dispatched batch, not this draft one) —
+      `deployment-service@c847395e` (2026-07-30), verified live: commit exists, diff matches this todo's (i)-(iv) plan
+      exactly — `setup-data-pipeline-vm.sh`'s `mtds-backfill` branch got `VM_MVP_MODE` metadata plumbing mirroring
+      `VM_FORCE`; `launch-tradfi-forward-poll.sh` got the opt-in `--mvp-mode` flag -> `VM_MVP_MODE=true` metadata,
+      default behavior unchanged; `launch-tradfi-bf-cme-ohlcv-1m.sh`/`launch-tradfi-backfill-vm.sh` confirmed untouched.
+      One deliberate deviation from this todo's drafted (iii): the regression test landed as a new
+      `TestMtdsBackfillMvpModeFlag` class in `deployment-service/tests/unit/test_vm_launcher_scripts.py` (extracting the
+      real script lines, the repo's established idiom for this) rather than in the MTDS test files this todo suggested —
+      MTDS was never actually touched by the shipped fix, so an MTDS test would have had nothing real to assert against;
+      the deployment-service home is the correct one. Issue doc
+      `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` has all 4 of its own todos flipped `[x]` citing this
+      same commit. **Nothing left for this batch to do on this item** — leaving this todo checked here purely so this
+      draft, if ever approved, does not re-dispatch duplicate work. Originally: wire `mvp_mode` via an opt-in flag on
+      the forward-poll launcher — operator-ruled 2026-07-29. Source:
       `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`.
 
 - [ ] [DATA] P1. **Re-run the ES/MES per-contract backfill a third time now that the listing-retry mitigation is live,
@@ -374,6 +382,24 @@ Once a todo here ships, flip the corresponding checkbox/section in its named sou
 evidence. This plan's own reconciliation-then-archive step is machine-gated via a companion
 `tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md` (`depends_on` on this plan plus `gate_on_depends: true`),
 mirroring the batch1/batch2/batch3/batch4 finalize pattern.
+
+## Progress Log
+
+- **2026-07-30 (operator-ruling closeout sweep, this session)** — This plan is still `status: draft`, never
+  approved/dispatched, so none of its 15 todos are live AO work. Checked for any operator-ruling reference with
+  unshipped follow-up (this session's broader sweep goal) — found exactly one: todo 1 (`mvp_mode`, ruled 2026-07-29).
+  Verified live that it is now fully shipped: `deployment-service@c847395e` (2026-07-30) exists and its diff matches
+  this todo's own (i)-(iv) plan exactly (`setup-data-pipeline-vm.sh` `VM_MVP_MODE` metadata plumbing,
+  `launch-tradfi-forward-poll.sh` opt-in `--mvp-mode` flag, `launch-tradfi-bf-cme-ohlcv-1m.sh`/
+  `launch-tradfi-backfill-vm.sh` confirmed untouched, 3 new regression tests in
+  `deployment-service/tests/unit/test_vm_launcher_scripts.py`); the source issue doc
+  `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` has all 4 of its own todos flipped `[x]` citing the same
+  commit. The work landed via a DIFFERENT, already-active plan (`tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s
+  bundled `[OPERATOR] P2` todo), not through this draft batch. Marked this batch's todo 1 done-by-cross-reference (not
+  re-implemented) so that if/when the operator approves this draft for dispatch, no duplicate work gets queued. No other
+  todo in this batch references an operator ruling; the remaining 14 are `/ag-closeout-audit` orphan-extraction items,
+  out of scope for this session's ruling-closeout sweep. No code changed by this session for this file — doc-only
+  update.
 
 ## Codex SSOTs
 

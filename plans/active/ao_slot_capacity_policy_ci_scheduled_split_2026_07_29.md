@@ -22,7 +22,7 @@ related:
     /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -255,3 +255,12 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole open todo is `[OPERATOR] P0` — needs the operator's own
   github.com/settings/billing UI; `locked_by: live-defi-rollout`.
+- **2026-07-30 (rulings-closeout pass, separate session)** — re-verified this doc's state per a workspace-wide sweep
+  closing out recorded operator rulings implying unshipped work. Both `[OPERATOR]`-class actions this doc originally
+  flagged as deliberately-left-alone (reclaiming another slot's foreign uncommitted `autospawn.py` WIP; restarting the
+  live orchestrator VM) are confirmed **already executed** by the `/autonomous` continuation recorded in §3/§4 above —
+  independently re-verified rather than trusted at face value: `agent-orchestrator@b9d6190` exists and is a confirmed
+  ancestor of the repo's current `origin/live-defi-rollout` HEAD (`81f54a8`, `git merge-base --is-ancestor` confirmed).
+  Nothing left to re-attempt from that pair. The one remaining open item (§6, GitHub Actions billing wall) is correctly
+  `[OPERATOR]`-gated — genuinely needs the operator's own `github.com/settings/billing` access, not something any agent
+  can resolve. No action taken; no changes needed.

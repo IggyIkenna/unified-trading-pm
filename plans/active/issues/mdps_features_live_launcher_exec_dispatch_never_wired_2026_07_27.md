@@ -159,7 +159,17 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       `setup-data-pipeline-vm.sh`'s exec-dispatch section (mirrors the existing tarball-resolution split + the
       multi-worker sharding pattern at ~line 2031 for backgrounding N python processes under one `_launch_with_tee`
       wrapper) that invokes MDPS and features-service with the CLI flags their actual parsers require, per the decided
-      shape.
+      shape. **Investigated 2026-07-30 (operator-ruling closeout pass) — still correctly gated, one concrete gap
+      found**: the 2026-07-29 ruling fixed the family↔asset_group mapping and the topology SHAPE (per-shard MDPS +
+      per-family features-service), but did not specify the **shard-discovery mechanism** this branch needs — MDPS's
+      sibling live producer, `launch-mtds-live.sh`, takes an EXPLICIT `--shard-spec ASSET_GROUP:VENUE:DATA_TYPE` per
+      invocation (one VM launched per shard externally, no in-VM discovery — confirmed by reading the launcher, no
+      `discover_live_shards`/`LIVE_SHARDS`-style function exists anywhere in the workspace, `rg` verified), so this
+      co-located MDPS+features VM has no established way to learn at boot time WHICH (venue, data_type) shards are
+      "live" for its asset_group — the ruling's "discovered from the instruments universe" phrase names a _source_ but
+      not a concrete lookup (a live query against running MTDS-live VMs' own metadata? a static MVP-shard registry
+      read?). Inventing one now would be a fresh design call this doc's own text already ruled out of scope ("NOT
+      attempting to improvise... risks a plausible-looking but wrong fix"), so left open rather than guessed.
 - [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
       it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
       `build-continuous`); once the dispatch branch is designed, set the metadata this launcher passes to match whatever

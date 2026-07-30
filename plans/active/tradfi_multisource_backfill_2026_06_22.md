@@ -124,14 +124,14 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       EU→empty moves).
 
       APPLIED to live tradfi `_index` 2026-06-23 (fresh snapshot
-                                                                                                                                                                                      `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
-                                                                                                                                                                                      floor-clip 241,085 [trades 108,221 + tbbo 107,799 + `mbp_10` 25,065] + derived `ohlcv_15m` 140,530; VIX-index 0).
-                                                                                                                                                                                      **GATE proof: captured 733,338 → 733,338 (delta 0), `attempted_failed` 16,358 → 16,358 (delta 0), rows 6,668,467
-                                                                                                                                                                                      preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
-                                                                                                                                                                                      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (`ohlcv_1m` 313,720 +
-                                                                                                                                                                                      `ohlcv_1s` 308,871 + in-window trades 219,144/tbbo 215,617/`mbp_10` 7,908 + `corporate_action`/earnings 9,641
-                                                                                                                                                                                      each), **135 VX `futures_chain` captured cells preserved untouched**. Honest coverage
-                                                                                                                                                                                      (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
+                                                                                                                                                                                          `_index/snapshots/pre_floorclip_2026_06_23.parquet`). **EU 1,466,157 → 1,084,542** (reclassed 381,615 =
+                                                                                                                                                                                          floor-clip 241,085 [trades 108,221 + tbbo 107,799 + `mbp_10` 25,065] + derived `ohlcv_15m` 140,530; VIX-index 0).
+                                                                                                                                                                                          **GATE proof: captured 733,338 → 733,338 (delta 0), `attempted_failed` 16,358 → 16,358 (delta 0), rows 6,668,467
+                                                                                                                                                                                          preserved.** Live re-read VERIFIED post-apply: `EXPECTED_OUT_OF_COVERAGE_WINDOW`=241,093,
+                                                                                                                                                                                          `EXPECTED_OUTSIDE_PROCESSING_SCOPE`=140,530, remaining EU = real fetchable target (`ohlcv_1m` 313,720 +
+                                                                                                                                                                                          `ohlcv_1s` 308,871 + in-window trades 219,144/tbbo 215,617/`mbp_10` 7,908 + `corporate_action`/earnings 9,641
+                                                                                                                                                                                          each), **135 VX `futures_chain` captured cells preserved untouched**. Honest coverage
+                                                                                                                                                                                          (captured/(captured+failed+EU)) 33.1% → 39.98%. — instruments-service@e9e5128.
 
 - [x] [SCRIPT] P0. **Delete Barchart/massive VIX-index GCS objects — APPLIED 2026-06-23** —
       `instruments-service/scripts/delete_vix_cash_index_gcs_objects_2026_06_23.py` deletes the VIX cash-index parquet
@@ -142,19 +142,19 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       measured 2026-06-23: 1,621 VIX cash-index objects still present). **--apply re-run to completion 2026-06-23:
       deleted 1,621 objects (exit 0); VX futures_chain/future objects NOT touched.** — instruments-service@814b14a.
 
-- [ ] [SCRIPT] P1. **Operator-ruled 2026-07-29: "verify the image carries the fix, then launch" — image-freshness
-      precondition, required BEFORE the FX yahoo backfill launch todo immediately below.** Confirm the FX backfill
-      launcher's deployed image/tarball includes `unified-trading-library@f237b75a` and
-      `market-tick-data-service@020b703e` — per this workspace's documented image-staleness pattern (manual image builds
-      with no auto-trigger on main can leave a landed commit un-deployed for days; see
-      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` §"IMAGE BUILD is MANUAL + STALE" for the precedent).
-      Rebuild via `gcloud builds submit --config cloudbuild.yaml` from a clean tree if either commit is missing from the
-      deployed image/tarball. Done when: the deployed image/tarball is confirmed (or freshly rebuilt) to carry both
-      `unified-trading-library@f237b75a` and `market-tick-data-service@020b703e`.
-- [ ] [BACKFILL] P1. **Run the FX yahoo backfill to completion** (operational) — gated on the image-freshness
-      precondition todo immediately above completing first. Launch `launch-tradfi-bf-fx-ohlcv-24h.sh` per-year via the
-      wave-launcher cron / manual, verify FX ohlcv_24h expected_unattempted → captured in the manifest. (The cron
-      handles live ticks; this is the operational drain.)
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-30 — verified live.** Operator-ruled 2026-07-29: "verify the image carries the fix,
+      then launch" — image-freshness precondition. Read the deployed tarball manifests directly:
+      `gs://deployment-scripts-central-element-323112/code/unified-trading-library-code.manifest.json` →
+      `commit_sha=abeebede7c0b679d6519f3238b22fc490e181f4d` (built 2026-07-30T04:19:54Z, `git_status_clean=true`);
+      `.../mtds-code.manifest.json` → `commit_sha=f9222f780b43b611795d680b58fdf3e036708551` (same build time). Verified
+      `git merge-base --is-ancestor f237b75a abeebede...` = true and `git merge-base --is-ancestor 020b703e f9222f78...`
+      = true in both repos — both required commits ARE included in the currently-deployed tarball. No rebuild needed.
+- [x] ✅ [BACKFILL] P1. **DONE 2026-07-30 — verified already at completion, no new VM launch needed.** Read the live
+      tradfi manifest directly (`_index/availability_index.parquet`, single-object read, no corpus walk): FX `ohlcv_24h`
+      shows **0 `expected_unattempted` rows** — `captured=4,335`, `attempted_failed=59`, `empty_confirmed=1,830`, total
+      6,224, 0 EU remaining. The done-when criterion ("verify FX ohlcv_24h expected_unattempted → captured in the
+      manifest") is already satisfied by the standing forward-poll cron + prior VM launches; no fresh
+      `launch-tradfi-bf-fx-ohlcv-24h.sh` dispatch was needed or run.
 - [x] ✅ [BLOCKED-CREDENTIALS] P2. **ICE data subscription — RESOLVED BY OPERATOR DESCOPE 2026-07-14** (verbatim ruling:
       "ICE isn't in MVP outside 24h bars from Yahoo Finance, so those can be purged from manifest and honest status and
       GCS data — all the other granularities. Indeed we don't have a subscription for them."). No credential ask; ICE
@@ -186,14 +186,14 @@ allowlist." So ICE genuinely needs an operator credential/subscription ask — N
       all 3 `_iter_*` sites + 3 regression tests.
 
       tf: tradfi job 32Gi→16Gi/cpu4 (band-aid removed — memory now bounded) + `timeout_seconds` 1800→3600 (slow
-                                                                                                                                                                                      13.5k-blob GCS read). — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
-                                                                                                                                                                                      `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) +
-                                                                                                                                                                                      deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated
-                                                                                                                                                                                      to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest`
-                                                                                                                                                                                      bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
-                                                                                                                                                                                      `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
-                                                                                                                                                                                      `prod/catalog.parquet` mtime=today (evidence appended in the `data_pipeline_hardening` Progress Log). Other 4 AGs
-                                                                                                                                                                                      were already GREEN.
+                                                                                                                                                                                          13.5k-blob GCS read). — instruments-service@b84cc4f (`scripts/build_instrument_catalogue.py` +
+                                                                                                                                                                                          `tests/unit/scripts/test_build_instrument_catalogue.py`, QG-green +4 regression tests) +
+                                                                                                                                                                                          deployment-service@9b74416 (`terraform/gcp/lifecycle_catalogue_scheduler.tf`); live tradfi Cloud Run job updated
+                                                                                                                                                                                          to 16Gi/cpu4/`task-timeout`=3600 via gcloud (was 32Gi); IS image rebuilding (Cloud Build `c0b6772a`) so `:latest`
+                                                                                                                                                                                          bakes the fix. OPS (final verification, 2026-06-23): once the image build lands, re-run
+                                                                                                                                                                                          `lifecycle-catalogue-regen-tradfi` on the fixed image and confirm it COMPLETES without OOM + writes a fresh
+                                                                                                                                                                                          `prod/catalog.parquet` mtime=today (evidence appended in the `data_pipeline_hardening` Progress Log). Other 4 AGs
+                                                                                                                                                                                          were already GREEN.
 
 ## Codex SSOT updates
 
