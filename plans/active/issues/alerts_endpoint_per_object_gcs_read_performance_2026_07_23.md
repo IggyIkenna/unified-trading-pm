@@ -150,10 +150,28 @@ become its own plan — this issue doc is the durable record of the finding and 
       (50 concurrently-fetched blobs all merge, none dropped by the fan-out) and
       `::test_single_object_failure_does_not_drop_other_blobs` (one failing download doesn't blank the rest); full
       `quality-gates.sh` green on the shipped SHA.
-- [ ] [CODE] P2. **Batch alerting-service's writes into one JSONL-per-day object**, matching the already-proven
-      cicd-events pattern, as the real root-cause fix — needs either migrating the ~277k existing per-event objects or
-      the reader supporting both shapes during a transition. Sequenced after the reader-side fix (todo above), not
-      blocking on it.
+- [x] 🚫 WONT-DO / superseded [CODE] P2. ~~Batch alerting-service's writes into one JSONL-per-day object, matching the
+      already-proven cicd-events pattern~~ — **the cited pattern no longer exists.** `cicd-events` was migrated OFF
+      one-JSONL-per-day onto one-object-per-event on 2026-07-21, specifically because the daily-shared-object writer
+      (unlocked `gsutil cp` down → local append → `cp` up) silently dropped rows under concurrent writers (measured
+      ~1/145 writer-runs survived — see
+      `/plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` +
+      `/plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md`). Implementing this todo literally
+      would reintroduce that exact data-loss race class — banned per the data-pipeline-correctness hard rule — and
+      alerting-service has multiple concurrent in-process writer call sites (`alerting_service/notifiers/router.py:539`,
+      `alerting_service/core/alert_store.py:46`) exposed to the identical race. The driving symptom (OOM/504) is already
+      fixed by the reader-side todo above (`deployment-api@79a1d36`, shipped + live) — remaining per-event object volume
+      is a cost/list-latency concern, not correctness, so there's no forcing urgency to rebuild the write path now.
+      Closed on its own merits per main's ruling 2026-07-30 (BLK-ac45347a), agreeing with the investigating agent's
+      recommendation; the 2026-07-29 `[OPERATOR]` approval above was premised on the now-defunct cicd-events pattern.
+      Full evidence: Progress Log below (`unified-trading-pm@ec23016ab`). Escalation carve-out: if per-event object
+      volume is later shown to cause a genuine correctness/availability problem (not just cost/list-latency), reopen as
+      its own plan — do not silently proceed.
+- [ ] [CODE] P3. **If/when alerting-service object-count reduction is pursued, re-scope it as its own reviewed plan**
+      (not a snap-built todo) using a GCS generation-precondition CAS design: read current generation, append in-memory,
+      write with `ifGenerationMatch`, retry-on-412 with backoff, plus concurrency-safety tests proving zero dropped rows
+      under concurrent writers (model the tests on the two cicd-events race-incident docs cited above). MUST NOT use the
+      abandoned cp-down/append/cp-up shape. (repo: alerting-service)
 
 ## Codex SSOTs
 
