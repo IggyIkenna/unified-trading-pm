@@ -168,3 +168,30 @@ become its own plan — this issue doc is the durable record of the finding and 
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **backend_engineer (slot 8) 2026-07-30 — STOP, premise is stale, escalating via /blocked**: investigated implementing
+  the still-open P2 todo ("batch alerting-service's writes into one JSONL-per-day object, matching the already-proven
+  cicd-events pattern") and found the cited pattern no longer exists. `cicd-events` was ITSELF migrated OFF
+  one-JSONL-per-day onto one-object-per-event on 2026-07-21 — specifically because the daily-shared-object writer
+  (`gsutil cp` down → local append → `cp` up) was an unlocked read-modify-write race that silently dropped rows under
+  concurrent writers: measured ~1 row survived out of ~145 writer-runs on the PM repo's shared daily events file. See
+  `/plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` (root cause + measurement) and
+  `/plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md` (same fix applied to the sibling
+  `cicd/alerts/{date}/` ledger). The CURRENT `.github/actions/persist-event/action.yml` writer header says verbatim:
+  "ONE OBJECT PER EVENT (root-cause fix, not a mitigation — 2026-07-21)... writing each event straight to its OWN
+  never-overwritten object eliminates the race with zero reader changes" — i.e. cicd-events today is structurally the
+  SAME shape alerting-service already has (one-object-per-event), not the batched shape this todo asks alerting-service
+  to adopt. Implementing this todo literally would REINTRODUCE the exact data-loss race class that was root-caused out
+  of cicd-events nine days before the 2026-07-29 operator ruling approved this todo — that ruling cited "matching the
+  already-proven cicd-events pattern," which no longer describes cicd-events' live code. alerting-service also has
+  multiple concurrent in-process writer call sites (`alerting_service/notifiers/router.py:539` per delivery record,
+  `alerting_service/core/alert_store.py:46` per fired alert), so a naive daily-batch write is exposed to the identical
+  race. One piece of the plan IS still sound and unaffected by this finding: the reader
+  (`_read_alerting_service_sync`/`_read_ledgers_sync` in `deployment-api/deployment_api/routes/_repo_ci_alerts.py`) is
+  already a pure prefix-walk-then-parse-every-blob, so it would absorb a mixed corpus of per-event + daily-batch objects
+  with zero reader changes — same as how it absorbed cicd-events' writer-shape change with zero reader edits. Posted
+  `/blocked` (options: (A) implement daily batching safely via GCS generation-precondition CAS + retry-on-412 instead of
+  the abandoned cp-down/append/cp-up shape; (B) treat the premise as stale, mark this todo WON'T-DO / superseded since
+  the reader-side fix already shipped+live (`deployment-api@79a1d36`) and solved the user-facing OOM/504 symptom, the
+  remaining per-event volume is a cost/list-latency concern not a correctness one; (C) in-memory buffer +
+  periodic/shutdown flush per alerting-service process, trading the read-modify-write race for a crash-before-flush loss
+  risk instead — recommended B). NOT implementing pending the operator's re-decision; not silently skipping either.
