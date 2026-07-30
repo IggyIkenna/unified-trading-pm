@@ -96,13 +96,13 @@ will hit the same wall.
 
 ## Todos
 
-- [ ] [UI] P1. Root-cause how the coverage threshold got this far behind (bisect for the commit(s) that pushed it below
-      70%/67%/70%/64% — likely a batch of new components landed without tests) and either (a) write the missing test
-      coverage for the worst-offending files until the global thresholds pass again, or (b) if a broad rewrite genuinely
-      added many low-risk/presentational components, consider whether the global threshold itself needs a one-time,
-      deliberate, documented adjustment (NOT a silent ratchet-down) — a decision for whoever picks this up, not
-      pre-judged here. Done when: `bash scripts/quality-gates.sh` is green end-to-end on `live-defi-rollout` HEAD,
-      confirmed via a fresh `.qg_last_passed_sha` write matching HEAD. Repo: deployment-ui.
+- [x] ✅ [UI] P1. Root-cause how the coverage threshold got this far behind (bisect for the commit(s) that pushed it
+      below 70%/67%/70%/64%) — deployment-ui@3c7e2a8. Bisect found the "broad coverage collapse" was **not a real
+      test-coverage regression** — it was a broken local dependency install caused by a mis-authored
+      `pnpm-workspace.yaml` (missing `packages:`). See Progress Log for the full root-cause writeup + evidence. Done:
+      `bash scripts/quality-gates.sh` ran green end-to-end on `live-defi-rollout` HEAD (coverage Statements
+      72.32%/Branches 64.5%/Functions 68.79%/Lines 74.49%, all ≥ threshold) with a fresh `.qg_last_passed_sha` write
+      matching HEAD. Repo: deployment-ui.
 
 ## Progress Log
 
