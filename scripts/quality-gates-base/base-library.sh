@@ -66,6 +66,10 @@ _qg_content_hash() {
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null
         _qg_editable_sibling_hash                                        # workspace sibling deps (qg-common.sh)
+        # gate-affecting config (qg_sentinel_environment_blind_2026_07_23.md item 2):
+        # see base-service.sh for the full rationale — a byte-identical tree verified
+        # under a different ENVIRONMENT/DEPLOYMENT_ENV is not the same verified surface.
+        printf 'ENVIRONMENT=%s DEPLOYMENT_ENV=%s\n' "${ENVIRONMENT:-}" "${DEPLOYMENT_ENV:-}"
     } | sha256sum | awk '{print $1}'
 }
 
@@ -1552,6 +1556,12 @@ if { { [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] &&
     git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2) — mirror
+    # of base-service.sh: append (not overwrite) the resolved ENVIRONMENT/DEPLOYMENT_ENV so
+    # quickmerge's sentinel check can refuse a config mismatch. `head -1` (every SHA reader)
+    # is unaffected; an old bare-SHA sentinel still parses correctly.
+    { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+        >> "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
 fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.

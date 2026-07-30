@@ -102,6 +102,12 @@ _qg_content_hash() {
         "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
         "${PYTHON_CMD:-python3}" --version 2>/dev/null                   # tool versions
         _qg_editable_sibling_hash                                        # workspace sibling deps (qg-common.sh)
+        # gate-affecting config (qg_sentinel_environment_blind_2026_07_23.md item 2): a
+        # byte-identical tree verified under ENVIRONMENT=development is NOT the same
+        # verified surface as under production/unset (bucket resolution, credential
+        # posture, etc. all key off this) — fold it into the hash so a config change
+        # alone forces a different hash, never a false HIT.
+        printf 'ENVIRONMENT=%s DEPLOYMENT_ENV=%s\n' "${ENVIRONMENT:-}" "${DEPLOYMENT_ENV:-}"
     } | _qg_hash
 }
 
@@ -4109,6 +4115,17 @@ if { [[ "${RUN_TESTS}" == "true" ]] && \
         git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
             echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
             echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+        # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2): the
+        # SHA line alone only proves "a complete gate ran on this HEAD", not WHICH
+        # configuration it ran under. APPEND (not overwrite) the resolved ENVIRONMENT/
+        # DEPLOYMENT_ENV as trailing lines so quickmerge's sentinel check
+        # (_qm_check_agent_sentinel, quickmerge.sh) can refuse a config mismatch instead
+        # of silently trusting a pass verified under a DIFFERENT configuration than the
+        # one it's about to ship under. Appended, not prepended/replacing, so `head -1`
+        # (what every SHA reader already uses) is unaffected — and an OLD bare-SHA
+        # sentinel from before this fix still parses its SHA correctly.
+        { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+            >> "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
     else
         echo "SHA sentinel NOT refreshed (content-sentinel HIT → tests skipped; prior full-run SHA sentinel retained)."
     fi

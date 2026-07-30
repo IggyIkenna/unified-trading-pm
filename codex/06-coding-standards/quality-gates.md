@@ -3267,9 +3267,16 @@ it matters most there). `base-ui.sh` (TS repos) is out of scope (no pytest fan-o
 
 - **Green sentinel (`qg-repo-green-sentinel`) — SHIPPED, default ON.** Skips TESTS + TYPE CHECK when the working tree is
   **byte-identical** (conservative content hash: HEAD + working diff + untracked-minus-artifacts + gate scripts + tool
-  versions) to the last FULL green run; light codex/production checks still run. **Safe by construction:** no sentinel /
-  malformed hash / any content change → normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is
-  separate from quickmerge's `.qg_last_passed_sha`. Escape: `QG_SENTINEL_DISABLE=true`.
+  versions + resolved `ENVIRONMENT`/`DEPLOYMENT_ENV` — added 2026-07-30, `qg_sentinel_environment_blind_2026_07_23.md`,
+  so a byte-identical tree verified under a different configuration never false-HITs) to the last FULL green run; light
+  codex/production checks still run. **Safe by construction:** no sentinel / malformed hash / any content change →
+  normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is separate from quickmerge's
+  `.qg_last_passed_sha` (that one ALSO now binds `ENVIRONMENT`/`DEPLOYMENT_ENV`, as appended lines after the SHA — see
+  `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model"). Both paths resolve `ENVIRONMENT` via the shared
+  `qg_resolve_environment()` (`scripts/quality-gates-base/qg-environment.sh`), sourced from `qg-common.sh` (every
+  base-*.sh tier) and from `quickmerge.sh` — the single source of truth that keeps a standalone `quality-gates.sh` run
+  and a quickmerge run from silently resolving different configs for the same branch. Escape:
+  `QG_SENTINEL_DISABLE=true`.
 - **Selective testing (`qg-selective-tests`) — AUDITED, NOT enabled (operator 2026-06-02).** Evaluated `pytest-testmon`
   / import-graph changed-files→affected-tests mapping. **Decision: keep running the FULL test suite** — not ready to
   bypass any test; a missed-test false-negative is strictly worse than slowness, and the green sentinel + governor

@@ -381,7 +381,10 @@ Pass 1 — Quality Gates (MANDATORY — FULL run, no skip flags)
   • basedpyright (type check)
   • STEP 5.x codex compliance (60+ rules)
   • pip-audit (CVE scan)
-  On clean exit with NO skip flags → writes .qg_last_passed_sha = git rev-parse HEAD
+  On clean exit with NO skip flags → writes .qg_last_passed_sha:
+    line 1 = git rev-parse HEAD; lines 2-3 = ENVIRONMENT=/DEPLOYMENT_ENV= (the resolved
+    config Pass 1 ran under — appended 2026-07-30, qg_sentinel_environment_blind_2026_07_23.md,
+    so a sentinel verified under one configuration can't satisfy a run under another)
   Partial runs (--skip-tests / --skip-lint / --skip-codex / --quick) do NOT write sentinel
 
 Pass 2 — Quickmerge (--agent fast-path)
@@ -391,9 +394,15 @@ Pass 2 — Quickmerge (--agent fast-path)
     into ONE bogus filename and fails every time with "Path not found (and not
     tracked)" / "No valid paths from --files" (measured 2026-07-25, ~10 wasted retries
     before catching it — not a quickmerge bug, just an easy invocation mistake).
-  • Reads .qg_last_passed_sha — verifies SHA matches current HEAD
-    SHA mismatch / sentinel missing → EXIT 1: "Run quality-gates.sh on current HEAD first"
-    SHA match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
+  • Reads .qg_last_passed_sha — verifies SHA matches current HEAD AND that the sentinel's
+    recorded ENVIRONMENT/DEPLOYMENT_ENV match what THIS run resolved (via the shared
+    qg_resolve_environment(), scripts/quality-gates-base/qg-environment.sh — the same
+    branch-conditional default a standalone quality-gates.sh run now uses too, so the two
+    invocation paths can't silently diverge)
+    SHA mismatch / config mismatch / sentinel missing → EXIT 1 (or an automatic re-gate
+    retry on a lost race — see _qm_check_agent_sentinel): "Run quality-gates.sh on
+    current HEAD first"
+    SHA match + config match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
   • stages ONLY --files; if a pre-commit hook reformats files and the first commit
     fails, the RETRY re-stages ONLY --files again (never `git add -A`) — a hook can't
     bundle foreign modified files into a scoped commit

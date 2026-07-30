@@ -645,6 +645,12 @@ if { [ "${SKIP_TESTS:-false}" = false ] && [ "${SKIP_BUILD:-false}" = false ] &&
     git rev-parse HEAD > "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null \
         && echo "Sentinel written: .qg_last_passed_sha=$(cat "${_UI_REPO_ROOT}/.qg_last_passed_sha")" \
         || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Configuration binding (qg_sentinel_environment_blind_2026_07_23.md item 2) — mirror
+    # of base-service.sh: append (not overwrite) the resolved ENVIRONMENT/DEPLOYMENT_ENV so
+    # quickmerge's sentinel check can refuse a config mismatch. `head -1` (every SHA reader)
+    # is unaffected; an old bare-SHA sentinel still parses correctly.
+    { printf 'ENVIRONMENT=%s\n' "${ENVIRONMENT:-}"; printf 'DEPLOYMENT_ENV=%s\n' "${DEPLOYMENT_ENV:-}"; } \
+        >> "${_UI_REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null || true
 else
     echo "Sentinel NOT written — partial UI run (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
 fi

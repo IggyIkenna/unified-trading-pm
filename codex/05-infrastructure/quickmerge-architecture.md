@@ -58,20 +58,31 @@ bash scripts/quickmerge.sh "feat: description" --dep-branch "my-feature"
 
 - Branch builds: `ENVIRONMENT=development` → uses `GCP_PROJECT_ID_DEV`
 - Main builds: `ENVIRONMENT=production` → uses `GCP_PROJECT_ID`
+- **Single source of truth (2026-07-30, `qg_sentinel_environment_blind_2026_07_23.md`)**: this branch-conditional
+  default is `qg_resolve_environment()` in `scripts/quality-gates-base/qg-environment.sh`, sourced from BOTH
+  `quickmerge.sh` (this block) AND `scripts/quality-gates-base/qg-common.sh` (every base-\*.sh tier — service / library
+  / ui / codex). A standalone `quality-gates.sh` run now resolves the SAME `ENVIRONMENT` quickmerge would for the same
+  branch, instead of independently defaulting to unset→prod. No-ops in CI (`GITHUB_ACTIONS=true` — the v2 gate's
+  `QG_SLICE`-sliced runs never touch the sentinel anyway) and whenever `ENVIRONMENT` is already explicitly set.
 
 ## Sentinel integration
 
 The two-pass model uses a `.qg_last_passed_sha` sentinel file to prevent redundant QG re-runs in `--agent` mode.
 
-**Written by**: `unified-trading-pm/scripts/quality-gates-base/base-service.sh` — on a **full** QG pass (all steps, no
-skip flags), the script writes the current `git rev-parse HEAD` to `.qg_last_passed_sha` on clean exit (commit
-`a8b758c58`).
+**Written by**: `unified-trading-pm/scripts/quality-gates-base/base-service.sh` (mirrored in `base-library.sh` /
+`base-ui.sh`) — on a **full** QG pass (all steps, no skip flags), the script writes `.qg_last_passed_sha` as: line 1 =
+the current `git rev-parse HEAD`; lines 2-3 = `ENVIRONMENT=`/`DEPLOYMENT_ENV=`, the resolved config this pass ran under
+(appended 2026-07-30 — see "Environment Awareness" above; an old bare-SHA sentinel from before this still parses its SHA
+correctly, `head -1`).
 
-**Read by**: `quickmerge.sh` at line 819 in `--agent` mode — it compares the sentinel SHA against the current HEAD:
+**Read by**: `quickmerge.sh`'s `_qm_check_agent_sentinel()` in `--agent` mode — it compares the sentinel SHA against the
+current HEAD AND the sentinel's recorded `ENVIRONMENT`/`DEPLOYMENT_ENV` against what THIS run resolved:
 
-- **SHA match** → Pass 1 is guaranteed for the current HEAD; all Pass 2 QG re-runs are skipped (sentinel IS the
-  guarantee).
-- **SHA mismatch / sentinel absent** → `EXIT 1: "Run quality-gates.sh on current HEAD first"`.
+- **SHA match + config match** → Pass 1 is guaranteed for the current HEAD under the SAME configuration; all Pass 2 QG
+  re-runs are skipped (sentinel IS the guarantee).
+- **SHA mismatch / config mismatch / sentinel absent** → `EXIT 1: "Run quality-gates.sh on current HEAD first"` (or an
+  automatic re-gate retry on a lost race — a config mismatch self-heals on that retry too, since the re-gate inherits
+  quickmerge's own already-resolved `ENVIRONMENT`).
 
 **Partial runs do NOT write the sentinel** and therefore cannot unblock `--agent`:
 

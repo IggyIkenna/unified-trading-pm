@@ -88,6 +88,17 @@ SCRIPT_DIR="${SCRIPT_DIR:-$QG_SCRIPT_DIR}"
 PROJECT_ROOT="${PROJECT_ROOT:-$QG_PROJECT_ROOT}"
 REPO_ROOT="${REPO_ROOT:-$(cd "$PROJECT_ROOT/.." 2>/dev/null && pwd)}"
 
+# ── ENVIRONMENT RESOLUTION (single source of truth shared with quickmerge.sh) ──
+# qg_sentinel_environment_blind_2026_07_23.md item 5: a standalone `quality-gates.sh`
+# run and a quickmerge run must resolve the SAME ENVIRONMENT for the same branch
+# context, or the two silently diverge (quickmerge forces development off any
+# non-main branch; a standalone run previously left ENVIRONMENT unset and every
+# downstream resolver, e.g. UTL's bucket_naming.py, defaulted to prod). qg-environment.sh
+# is sourced from BOTH this file and quickmerge.sh so there is exactly one
+# branch-conditional check to keep correct, not two copies that can drift apart again.
+source "${BASH_SOURCE[0]%/*}/qg-environment.sh"
+qg_resolve_environment "$PROJECT_ROOT"
+
 # ── WORKTREE-IDENTITY GUARD (fail loud, never silently gate the wrong clone) ──
 # Confirmed root cause (qg_backfill_disk_and_lint_checks_resolve_via_main_clone_not_worktree_2026_07_24.md):
 # PROJECT_ROOT/REPO_ROOT/WORKSPACE_ROOT all use `${VAR:-fresh-derivation}` patterns that TRUST an

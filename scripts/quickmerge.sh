@@ -1353,10 +1353,29 @@ fi
 
 CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || echo "main")
 if [ -z "${ENVIRONMENT:-}" ]; then
-  if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
-    export ENVIRONMENT="production"
-  else
-    export ENVIRONMENT="development"
+  # Single source of truth (qg_sentinel_environment_blind_2026_07_23.md item 5): this
+  # branch check used to live ONLY here, as a second, independently-authored copy of
+  # the same logic a standalone `quality-gates.sh` run needed — the two drifted (that
+  # run left ENVIRONMENT unset, defaulting to prod downstream, while quickmerge always
+  # forced development off any non-main branch). qg-environment.sh (also sourced from
+  # qg-common.sh) is now the ONE place this check lives. `|| true` + the inline
+  # fallback below: PM is a foundational sibling dependency fleet-wide, so a missing
+  # sibling should not happen in practice, but quickmerge must never hard-fail on it.
+  _QM_ENV_HELPER="${REPO_DIR}/../unified-trading-pm/scripts/quality-gates-base/qg-environment.sh"
+  if [ -f "$_QM_ENV_HELPER" ]; then
+    # shellcheck disable=SC1090
+    source "$_QM_ENV_HELPER"
+    qg_resolve_environment
+  fi
+  unset _QM_ENV_HELPER
+  if [ -z "${ENVIRONMENT:-}" ]; then
+    if [ "$CURRENT_BRANCH" = "main" ] || [ "${PROD_FLAG:-false}" = "true" ]; then
+      export ENVIRONMENT="production"
+    else
+      export ENVIRONMENT="development"
+    fi
+  fi
+  if [ "$ENVIRONMENT" != "production" ]; then
     export GCP_PROJECT_ID="${GCP_PROJECT_ID_DEV:-${GCP_PROJECT_ID:-}}"
     echo "[$REPO_NAME] 🟡 BRANCH MODE: using dev project (branch: $CURRENT_BRANCH)"
   fi
@@ -1462,9 +1481,38 @@ if [ -f "scripts/quality-gates.sh" ]; then
       _SENTINEL=".qg_last_passed_sha"
       _CURRENT_SHA=$(git rev-parse HEAD 2>/dev/null || echo "")
       _SENTINEL_SHA=""
-      [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(cat "$_SENTINEL" | tr -d '[:space:]')
+      # Line 1 = the SHA (unchanged contract); lines 2+ = the ENVIRONMENT/DEPLOYMENT_ENV
+      # config the sentinel was written under (qg_sentinel_environment_blind_2026_07_23.md
+      # item 2 — see base-service.sh's sentinel-write block for the writer side). `head -n1`
+      # rather than the old whole-file `tr -d '[:space:]'` so multi-line sentinels parse
+      # correctly; an OLD single-line (bare-SHA, pre-fix) sentinel still parses identically.
+      [ -f "$_SENTINEL" ] && _SENTINEL_SHA=$(head -n1 "$_SENTINEL" 2>/dev/null | tr -d '[:space:]')
       if [ -z "$_SENTINEL_SHA" ]; then
         echo "[$REPO_NAME] ❌ Pass 1 quality-gates.sh sentinel missing — run: bash scripts/quality-gates.sh"
+        return 1
+      fi
+      # Configuration binding: a sentinel verified under a DIFFERENT ENVIRONMENT/
+      # DEPLOYMENT_ENV than THIS run resolved cannot certify this run's configuration —
+      # e.g. a `quality-gates.sh --no-fix` re-run under the ambient prod default must not
+      # satisfy a quickmerge run that will actually ship as ENVIRONMENT=development. An
+      # OLD sentinel (written before this fix shipped — no config lines at all) has no
+      # match and is treated as a mismatch: fails closed, forcing exactly one re-gate
+      # under the new contract rather than silently trusting stale state. The
+      # <absent> marker (rather than comparing against "") distinguishes
+      # "no ENVIRONMENT= line at all" (old sentinel) from "line present with an empty
+      # value" — a real ENVIRONMENT/DEPLOYMENT_ENV value can never legitimately equal it.
+      if _SENTINEL_ENV_LINE=$(grep -m1 '^ENVIRONMENT=' "$_SENTINEL" 2>/dev/null); then
+        _SENTINEL_ENV="${_SENTINEL_ENV_LINE#ENVIRONMENT=}"
+      else
+        _SENTINEL_ENV="<absent>"
+      fi
+      if _SENTINEL_DEPLOYMENT_ENV_LINE=$(grep -m1 '^DEPLOYMENT_ENV=' "$_SENTINEL" 2>/dev/null); then
+        _SENTINEL_DEPLOYMENT_ENV="${_SENTINEL_DEPLOYMENT_ENV_LINE#DEPLOYMENT_ENV=}"
+      else
+        _SENTINEL_DEPLOYMENT_ENV="<absent>"
+      fi
+      if [ "$_SENTINEL_ENV" != "${ENVIRONMENT:-}" ] || [ "$_SENTINEL_DEPLOYMENT_ENV" != "${DEPLOYMENT_ENV:-}" ]; then
+        echo "[$REPO_NAME] ❌ Pass 1 sentinel config mismatch — sentinel verified under ENVIRONMENT=${_SENTINEL_ENV:-<unset>}/DEPLOYMENT_ENV=${_SENTINEL_DEPLOYMENT_ENV:-<unset>}, this run resolved ENVIRONMENT=${ENVIRONMENT:-<unset>}/DEPLOYMENT_ENV=${DEPLOYMENT_ENV:-<unset>}. Re-run: bash scripts/quality-gates.sh"
         return 1
       fi
       if [ "$_SENTINEL_SHA" = "$_CURRENT_SHA" ]; then
