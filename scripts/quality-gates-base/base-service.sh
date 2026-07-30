@@ -301,9 +301,9 @@ Env var:
   QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
                                          reusable workflow — not usually set by hand.
 
-NOTE: any OTHER flag is currently silently ignored (no error, no effect) — there is
-no catch-all/unknown-flag case below. If you are not sure a flag is real, run --help
-first rather than guessing; the gate will otherwise proceed with default settings.
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30
+for why: a silently-ignored unrecognized flag is how a fat-fingered run ends up executing the
+full gate with unintended default settings instead of failing loud.
 QG_USAGE
             exit 0
             ;;
@@ -318,6 +318,15 @@ QG_USAGE
         # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel, so the commit still runs the FULL
         # gate at quickmerge Pass-1 / CI. For the local iterate loop only.
         --fast) QG_FAST=1; export QG_FAST ;;
+        *)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: previously any
+            # unrecognized flag was silently ignored here (no catch-all arm at all), so a typo
+            # or a caller passing through a flag this script doesn't know about proceeded with
+            # default settings instead of failing loud. Hard error instead.
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -659,11 +668,18 @@ fi
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     qg_prof start autofix
-    # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
+    # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts.
+    # prettier@3.9.5 (not 3.6.2): prettier_emphasis_mangling_corpus_corruption_2026_07_14
+    # proved <3.9.5 deterministically corrupts markdown (bare underscore identifiers rewritten
+    # as asterisks/escaped-underscores) and shipped a PRETTIER_MIN_VERSION=3.9.5 guard — but
+    # only in scripts/hooks/prettier-autostage.sh (the prek per-commit hook). This tree-wide
+    # invocation is a SEPARATE code path that still hardcoded the old, proven-buggy 3.6.2,
+    # silently reintroducing the "resolved" corruption on every --fix run (incident:
+    # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30).
     if command -v npx &>/dev/null; then
         _BASE_IGNORE="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/.prettierignore-base"
         _PRETTIER_IGNORES="--ignore-path .gitignore $([ -f .prettierignore ] && echo '--ignore-path .prettierignore') $([ -f "$_BASE_IGNORE" ] && echo "--ignore-path $_BASE_IGNORE")"
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} >/dev/null 2>&1 \
+        npx --yes prettier@3.9.5 --write --cache "**/*.{md,json,yaml,yml}" ${_PRETTIER_IGNORES} >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"

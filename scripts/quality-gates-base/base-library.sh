@@ -111,6 +111,46 @@ MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES
 FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: mirrors the guard
+            # added to base-service.sh — --help/-h must be a pure, immediate, side-effect-free
+            # no-op, never fall through to the unknown-flag arm below (or, before that arm
+            # existed, be silently ignored and run the full gate with default settings).
+            cat <<'QG_USAGE'
+Usage: quality-gates.sh [FLAGS]   (library-repo gate body: base-library.sh)
+
+Mode flags:
+  --no-fix                  Don't auto-reformat the tree (DEFAULT — safe for agents/CI;
+                             use for any run whose diff you intend to commit).
+  --fix                     Opt into tree-wide auto-fix (ruff --fix / prettier --write).
+                             Can dirty files outside your own change — use deliberately.
+  --quick                   Faster iteration pass (skips version-alignment / merge-sentinel
+                             write) — NOT a substitute for a full gate before shipping.
+  --fast                    Change-scoped codex-grep tier (scans only files changed vs the
+                             merge-base). Never writes the merge sentinel — the full gate
+                             still runs at quickmerge/CI. Local iteration only.
+
+Scope flags (skip one phase):
+  --lint                    Lint-only (skips tests).
+  --test                    Test-only (skips lint).
+  --skip-tests               Skip the pytest phase.
+  --skip-typecheck           Skip basedpyright.
+  --skip-version-alignment    Skip the version-alignment check.
+
+Other:
+  --act                      Run under `act` (local GitHub Actions emulation).
+  --help, -h                 Show this message and exit 0 (no gate phases run).
+
+Env var:
+  QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
+                                         reusable workflow — not usually set by hand.
+
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30
+for why: a silently-ignored unrecognized flag is how a fat-fingered run ends up executing the
+full gate with unintended default settings instead of failing loud.
+QG_USAGE
+            exit 0
+            ;;
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;;
@@ -120,6 +160,14 @@ for arg in "$@"; do
         # --fast: change-scoped ITERATION tier — codex greps only changed source files (see the
         # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel → commit still runs the FULL gate.
         --fast) QG_FAST=1; export QG_FAST ;;
+        *)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: previously any
+            # unrecognized flag was silently ignored here (no catch-all arm at all). Hard
+            # error instead, mirroring base-service.sh.
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -309,8 +357,11 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     qg_prof start autofix
+    # prettier@3.9.5 (not 3.6.2) — see base-service.sh's identical comment:
+    # prettier_emphasis_mangling_corpus_corruption_2026_07_14 proved <3.9.5 corrupts markdown;
+    # this tree-wide invocation was a second, un-updated pin of the proven-buggy version.
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
+        npx --yes prettier@3.9.5 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
