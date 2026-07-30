@@ -26,7 +26,7 @@ tags: [defi, gas-fees, pnl-correctness, silent-failure, reader-path, canonical-p
 related:
   [
     /plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md,
-    /plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
+    /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
@@ -121,8 +121,9 @@ already exist in UAC and are publicly exported from `unified_api_contracts.regis
 
 Objects written before 2026-07-22 sit under the legacy `venue=<CHAINNAME>` prefixes; migrating them to `venue=ALCHEMY`
 is in progress as of 2026-07-30 and is owned by
-`/plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`. Target the canonical `venue=ALCHEMY`
-path here — do not build a permanent dual-read into the reader; that migration exists precisely so the history matches.
+`/plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`. Target the canonical
+`venue=ALCHEMY` path here — do not build a permanent dual-read into the reader; that migration exists precisely so the
+history matches.
 
 ## Todos
 

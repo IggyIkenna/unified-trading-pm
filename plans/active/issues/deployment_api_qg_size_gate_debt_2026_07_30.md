@@ -18,7 +18,7 @@ repos: [deployment-api]
 scope: [engineer]
 tags: [code-quality, function-size, file-size, qg-ratchet, quality-gates, deployment-api]
 related:
-  - /plans/active/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md
+  - /plans/archive/issues/qg_size_gate_sentinel_skip_root_cause_2026_07_25.md
 created: 2026-07-30
 last_updated: 2026-07-30
 parent_epic: deployment_and_user_management_master

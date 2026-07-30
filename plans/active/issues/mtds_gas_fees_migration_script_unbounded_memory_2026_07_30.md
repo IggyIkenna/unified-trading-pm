@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [defi, gas-fees, memory-leak, manifest-writer, incident, fleet-wide-outage, migration-script, slot-7]
 related:
   [
-    /plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
+    /plans/archive/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md,
     /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]

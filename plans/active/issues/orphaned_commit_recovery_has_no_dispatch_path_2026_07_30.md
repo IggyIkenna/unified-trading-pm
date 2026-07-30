@@ -37,7 +37,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md,
+    /plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md,
     /plans/active/issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
     /plans/active/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
     /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,

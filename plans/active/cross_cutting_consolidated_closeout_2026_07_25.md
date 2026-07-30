@@ -587,7 +587,7 @@ shipped detect→auto_recover→file_issue→page loop) + its 3 residual forks (
 [data_pipeline_ag_residual_backfill_decisions_2026_07_24.md](/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md)
 (tradfi `attempted_failed` retries, a UAC image-packaging bug, tradfi `ohlcv_15s` spurious-aggregation bug, defi
 DIVERGENT_EMPTY backfill-vs-scope campaign) ·
-[data_pipeline_alert_substrate_residual_2026_07_24.md](/plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md)
+[data_pipeline_alert_substrate_residual_2026_07_24.md](/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md)
 (alert-substrate/digest/writer-invariant residuals, alerting-service app-log visibility) ·
 [data_pipeline_self_healing_completion_residual_2026_07_24.md](/plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md)
 (Phase 6-C self-heal actuator wiring/packaging/scheduling).

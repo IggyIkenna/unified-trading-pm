@@ -22,7 +22,7 @@ tags: [findings-triage, false-progress, evidence-integrity, plan-hygiene, agent-
 related:
   [
     /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
-    /plans/active/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
+    /plans/archive/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
   ]
 created: 2026-07-30
 priority: P1

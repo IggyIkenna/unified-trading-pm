@@ -114,7 +114,7 @@ other orphaned candidate considered and why it was NOT drafted.
       cherry-pick the saved backstop patch (`.orch-orphan-commits-recovery/`) onto current origin tip and ship via
       quickmerge per the doc's own stated recipe. **Done when**: all 4 items have an explicit disposition
       (MOOT-SUPERSEDED + landed SHA, or recovered + re-shipped SHA) recorded in the source doc. Source:
-      `/plans/active/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`. Repos:
+      `/plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`. Repos:
       features-service, unified-api-contracts, agent-orchestrator (read-only verification; write only if a genuine
       recovery is needed).
 - [ ] [BACKEND] P1. **Root-cause + fix why `sequential: true` did not gate dispatch order for a queued predecessor.**

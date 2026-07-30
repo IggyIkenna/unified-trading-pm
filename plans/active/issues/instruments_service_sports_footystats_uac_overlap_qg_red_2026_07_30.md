@@ -8,7 +8,7 @@ stage: [data]
 repos: [instruments-service, unified-api-contracts]
 scope: [engineer]
 tags: [qg-red, sports, footystats, golden-fixture, uac-invariant, duplicate]
-related: [/plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md]
+related: [/plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md]
 created: "2026-07-30"
 assigned_vm: planning
 parent_epic: sports_master
@@ -32,7 +32,7 @@ locked_since: 2026-05-21
 > **SUPERSEDED** — duplicate discovery of the same repo-blocker (RB-ecfc50de), filed minutes before slot-11's
 > independent, more complete report which already identifies the exact root-cause commit
 > (`unified-api-contracts@26092ac8`). See
-> `/plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md` for the authoritative
+> `/plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md` for the authoritative
 > version + tracked todos. This doc is kept for the corpus trail only — do not dispatch its todos below (they duplicate
 > that doc's).
 
@@ -77,7 +77,7 @@ Two real options, an operator/data-engineering call (not picked here — outside
 ## Todos
 
 Superseded — the tracked, dispatchable todos for this finding live in
-`/plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`, not here (kept as plain
+`/plans/archive/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`, not here (kept as plain
 bullets, not checkboxes, so backlog regen does not double-dispatch this duplicate):
 
 - Diagnose which UAC commit introduced BET888SPORT/FOOTYSTATS/LADBROKES/SMARKETS into `VENUES_BY_ASSET_GROUP["sports"]`

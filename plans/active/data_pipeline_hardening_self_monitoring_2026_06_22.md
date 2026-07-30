@@ -24,7 +24,7 @@ related:
     issues/backfill_vm_silent_worker_stall_watchdog_2026_06_19.md,
     issues/fleet_mtds_qg_red_hardcoded_url_record_empty_ratchet_2026_06_22.md,
     issues/sports_manifest_null_vs_empty_dedup_double_count_2026_06_21.md,
-    /plans/active/data_pipeline_alert_substrate_residual_2026_07_24.md,
+    /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md,
