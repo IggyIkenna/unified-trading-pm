@@ -109,6 +109,14 @@ the flip in the verification window either way.
 **Enforcement**: `slot_done_no_plan_flip` when the check IS applicable and neither pattern fired. ≥3 in 4 h from one
 slot escalates to `slot_dual_flip_pattern_violation` — the review agent chats main about you.
 
+**Never combine the checkbox flip with a `git mv` archival in ONE commit (2026-07-30 incident).** If a todo's own
+completion also makes its doc archival-eligible (all todos done, no lock), a single commit that both edits the checkbox
+AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL `plan_ref` PATH show only a file deletion —
+no `[ ] → [x]` transition is visible there (git's rename pairing isn't applied when a path-scoped `git show`/`git log`
+query is run against just the old path), so `/done`'s M3 check (`cross_repo_pm_flip_verified`) rejects it with
+`cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened. Fix: commit the flip FIRST as a
+plain edit at the still-active path, THEN `git mv` to the archive location as a separate follow-up commit.
+
 **Pre-shutdown self-check** before you walk away:
 
 ```bash
