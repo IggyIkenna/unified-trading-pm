@@ -150,3 +150,10 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
   CI job that runs on this host, not a narrow bugfix.
 - The VM stop this incident was blocking on succeeded once the manual repoint above completed; no data-correctness
   impact from the auth failure itself (the underlying VM-stop urgency was about a separate bug, not this one).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo carries an explicit
+`[OPERATOR-DECISION]` tag and enumerates four unadopted candidate directions (a)-(d) for a shared-infrastructure auth
+design affecting every CI job on the host; the doc's own Notes confirm none was attempted for exactly that reason. Todo
+2 is stated blocked on that decision, and todo 3 is a partial mitigation of the same surface.

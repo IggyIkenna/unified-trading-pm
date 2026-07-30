@@ -166,3 +166,11 @@ change needs a caller audit across the repo before touching it — out of scope 
       `UnifiedCloudServicesConfig.environment`'s alias precedence with `BaseConfig.environment`'s, then revisit whether
       `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`, then grep the other ~20
       repos for the same ambient-default-reliant test pattern) remain unstarted.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — conflict-gated as
+`/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E5**: steps 2-4 touch `scripts/quickmerge.sh`,
+which that batch's todo 1 owns this round, and E5 further notes the item's own internal step-2 precondition (the
+`UnifiedCloudServicesConfig` caller audit) was not re-verified. Step 3 is explicitly gated on step 2 by this doc's own
+text.

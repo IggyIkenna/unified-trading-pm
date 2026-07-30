@@ -188,3 +188,12 @@ failure mode in the same promotion pipeline: `main`'s squash-merge history can m
 `pip install -e` of any package pinned to that floor. Different mechanism than this doc's alert-wording problem (that's
 about a misleading `PROMOTION LAG` message masking a deliberate provenance hold), but both are downstream effects of
 `main`'s squash-commit promotion history — worth checking together when diagnosing anything tag/version-ish on `main`.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **ARCHIVE-READY, but BLOCKED-OPERATOR-DECISION** — 0
+open / 2 done todos. All three "Fix direction" items are confirmed resolved in-doc: #1 (cause-naming in the lag alert)
+verified already shipped in `promotion_lag_monitor.py`, #2's live provenance blocks cleared 2026-07-30, #3's
+`_backmerge` carve-out confirmed in `check_strict_quickmerge.py`. Archival is NOT taken autonomously:
+`locked_by: live-defi-rollout` requires an explicit `[unlock-plan]`. **Operator ask: `[unlock-plan]` and this archives
+on the standard 6-step ritual.**

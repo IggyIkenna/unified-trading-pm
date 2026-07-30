@@ -108,3 +108,11 @@ todo.
 - [ ] [INFRA] P3. Once the WARN-ONLY phase above has run clean across a full fleet PR cycle, re-harden it to a hard
       failure (`exit 1` on any bats test failure), same re-harden-after-baseline pattern used for actionlint. (repo:
       unified-trading-pm)
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — conflict-gated as
+`/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E1** (that batch's todo 1 owns
+`scripts/quality-gates-base/base-service.sh` this round). Independently, this doc's own "Recommended decision" states
+the change needs "its own properly-scoped plan with the operator's plan-destination call" because `base-service.sh` is
+the shared fleet framework — an authority call this audit cannot make.

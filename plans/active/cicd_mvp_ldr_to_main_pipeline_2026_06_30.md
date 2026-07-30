@@ -713,3 +713,12 @@ Phase 1:
   build-signal cache/scan-window staleness, not a real gap — confirmed 3 fresh SUCCESS builds via direct Cloud Build
   query; and confirmed only deployment-api+deployment-ui auto-redeploy continuously on green build, every other service
   builds-only and deploys via a separate deployment-service-driven action).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **ARCHIVE-READY, but BLOCKED-OPERATOR-DECISION** — 0
+open / 29 done todos, so CLAUDE.md's "every todo done + unlocked MUST be archived immediately" rule is otherwise
+satisfied. Archival is NOT taken autonomously: `locked_by: live-defi-rollout` requires an explicit `[unlock-plan]`, and
+CLAUDE.md still cites this doc as the in-flight LDR→main refactor reference, so archiving it would need its referrers
+repointed in the same ritual. **Operator ask: `[unlock-plan]` + confirm the CLAUDE.md referrer repoint, then this can
+archive.**

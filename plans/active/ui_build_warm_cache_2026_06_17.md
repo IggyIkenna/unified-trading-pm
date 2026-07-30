@@ -107,3 +107,12 @@ drift_direction: advance-code
 - A warm-cache UI QG build re-checks only changed files (sub-second incremental); a fresh clone pays the cold build once
   (at setup, off the timed gate path).
 - No UI source change ships without `pw:L2 ✓` + a cited regression spec (playwright gate).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — both open items are `[UI]`-gated
+(playwright `pw:L2 ✓` + a cited regression spec, per CLAUDE.md's UI gate), and this doc already records the dated reason
+they were deliberately kept OUT of the ci dispatch batch:
+`/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`'s `assigned_role` is `cicd`, not `ui_developer` (D20/D28,
+2026-07-26/27). The pnpm migration is operator-APPROVED as scope but the role/gate blocker is unchanged. Established
+ruling confirmed present, not re-litigated.

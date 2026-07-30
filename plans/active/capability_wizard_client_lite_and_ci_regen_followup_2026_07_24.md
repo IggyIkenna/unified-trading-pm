@@ -130,3 +130,10 @@ precondition named by the parent plan.
   parent plan archived to `plans/archive/2026_07/capability_wizard_and_manifest_2026_06_11.md` in the same action
   (`superseded_by: capability_wizard_client_lite_and_ci_regen_followup_2026_07_24`). No new work done yet — both items
   carried forward verbatim, unchanged in status (open/blocked, open/deferred).
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — both residuals are genuinely gated.
+Residual 1 is blocked on an operator-provisioned `.venv-workspace`-capable CI runner, and the parent plan's own operator
+mandate forbids building new CI infrastructure to work around it. Residual 2 is an unscoped design call whose own stated
+first step is authoring the build sub-plan — a human decision, not a bounded worker outcome.

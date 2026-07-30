@@ -669,3 +669,13 @@ manual session because firing breaking/red/billing states on the live fleet jams
      documented `MANIFEST_ALIGNMENT_SKIP=true` (e2e-testing@396610d, system-integration-tests@19fea22).
   3. deployment-api `get_secret_client` first positional is `provider` not `project_id` (live 500) — fixed with keyword
      arg; checks-API 403s degraded per-repo (shard-level isolation), never response-fatal.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — all four open items are
+`deployment-api` + `deployment-ui` surface work requiring a `[UI]`-capable role plus the playwright gate (`pw:L2 ✓` + a
+cited regression spec), which is this doc's own established convention for every shipped item in it. Parked on exactly
+that basis as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E13** (rollout-ratchet panels +
+G4) and **E14** (runtime-level deploy signal v2, escalated there as operator question 2 for a scoping pass). G3
+additionally carries an explicit "IN PROGRESS — slot 3 (operator 2026-06-12). NOT for other slots to pick up" marker and
+needs operator reconciliation against what the deployment-health cockpit already shipped.

@@ -217,3 +217,10 @@ it.
       for ci's next batch) (see that doc for execution).
 - [ ] [INFRA] P3. Confirm the wasted auto-heal dispatch (`gh workflow run main-backmerge-to-ldr.yml` at
       `scripts/quickmerge.sh:1046`) no longer fires for this cause — it is a real, if small, CI cost line.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the sole open todo (confirm the wasted
+`main-backmerge-to-ldr` auto-heal dispatch no longer fires) is a verification gated on the STAGE 1.6 dormancy-aware
+dep-gate fix landing first. That fix is conflict-gated as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md`
+Deferred **E3**, which names it "genuinely next in line for batch 3".

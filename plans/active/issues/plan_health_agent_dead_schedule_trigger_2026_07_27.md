@@ -122,3 +122,10 @@ honestly-absent one: nobody notices the gap because the workflow file itself loo
 
 - `/codex/04-architecture/ci-alerting.md` — documented GHA `schedule:` throttle baseline (~80-90%, re-measured
   2026-07-21) that this workflow's 0.5% rate is clearly NOT an instance of.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — both open todos
+are extracted verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 13 (combined (a)
+root-cause + (b) fix, carrying this doc's already-ruled-out candidates and its 48-hour schedule-fired verification, and
+citing this doc as Source). Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.

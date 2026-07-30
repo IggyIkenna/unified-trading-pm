@@ -138,3 +138,10 @@ acting. (The artifact-pipeline page does not depend on this — it reads the Clo
   `unified-trading-deployment-scripts-427895769566` is 404 and `uts-prod-deployment-state/code/` is populated. No
   existing issue doc covered these; the adjacent `change_freeze_…` doc (resolved) is about the freeze calendar, not the
   replay-filter naming. Loop Ikenna in before any fix — every open item lives in a file in his active CI area.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — carries an explicit dated operator
+ruling at the top of the doc ("Page-first, do NOT fix here", operator 2026-07-21). #4 and #7 are AWS-lane and gated on
+AWS credits resuming; #1 and #3 are explicitly framed as "do not assume it is a bug" judgment calls in an
+actively-edited CI area requiring coordination. Ruling confirmed present, not re-derived.

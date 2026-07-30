@@ -549,3 +549,15 @@ codex, or a future staging re-entry gets a dead pipeline.
       model, and add the staging re-entry procedure INCLUDING "uncomment the disabled triggers" to codex.
 - [ ] [REVIEW] P3. Guard the latent repeat: `agent-runner.yml:91` / `sit-gate.yml:357` self-dispatch is safe only by
       file placement. Either hardcode the PM target or add a rollout guard.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — of 18 open items, 8 must NOT be
+dispatched as written: the 6 Option-B sub-steps sit under a ⛔ SUPERSEDED banner that says they are "left unticked on
+purpose" with their retirement "parked as a planning call"; the F2 resolution item is ⛔ "SUPERSEDED — DO NOT IMPLEMENT
+AS WRITTEN" with retirement likewise parked; and F1 (kill-switch) is TIME-GATED on execution-service handling live order
+flow per a dated 2026-07-28 ruling. The F4 vacuous-cron item is parked as ci batch2 Deferred **E10**. Flipping
+`assigned_vm` in place would dispatch the superseded set, so this stays NA. **The ~10 genuinely bounded remaining items
+(Docker version-tag repointing, the `0.0.0.dev0` publish, F3 success-reporting, F5 readers, the codex LDR→main narrative
+update, the self-dispatch guard) are real carve-out candidates for a future `/ag-closeout-audit` ci batch — extraction,
+not an in-place flip.**

@@ -168,3 +168,10 @@ PYTEST_UNIT_DIR="tests/unit/ tests/market_interface/unit/test_canonical_parquet_
     Full gate GREEN, **6046 → 6162 passed** proving they execute.
   - **Stale-base note**: the whole-tree gate also hit a `is_in_known_gap` `ImportError` in `_rebuild_sports_classify.py`
     — a stale-base artifact fixed by pulling origin (commit `31d4a9c0` deleted that dead file), not a MTDS-code issue.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — todos 1-4 are
+extracted verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11 (as its
+internally-sequential (a)-(d), citing this doc as Source) and todo 5 into that batch's todo 12 (the fleet
+`PYTEST_UNIT_DIR` sweep). Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.

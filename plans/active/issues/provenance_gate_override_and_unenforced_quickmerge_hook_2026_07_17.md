@@ -166,3 +166,11 @@ A gate that refuses is not automatically a broken gate. Before "unblocking" anyt
 answer was one `gh pr view --json comments` away, and the comment said exactly what to do. The alert being unhelpful
 (anonymous "PROMOTION LAG") is a real defect worth fixing, but it is not a licence to override the safety mechanism it
 was hiding.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the open items sit under this doc's own
+"Remaining / for the operator" heading, and the head item is a genuine judgment call ("decide whether the 33 laundered
+commits need any dep-order spot-check, or whether this doc closes it"). The P3 hook-deletion item is separately
+conflict-gated as `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E4**, and the husky-UI-repos
+P3 item is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.

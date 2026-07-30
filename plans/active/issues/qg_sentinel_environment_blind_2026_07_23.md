@@ -192,3 +192,12 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       `ENVIRONMENT` for the same branch. **Done when**: `scripts/base-service.sh` (or the equivalent shared entrypoint)
       derives `ENVIRONMENT` from the same branch-conditional logic quickmerge uses regardless of invocation path, the
       regression test passes, and `quality-gates.sh` is green in every repo touched.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — all four open
+items are extracted into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md`: Resolution-checklist items 2 and
+5 into its todo 1 (sentinel config-binding + quickmerge/standalone `ENVIRONMENT` alignment), item 4 into its todo 2
+(recovery-guidance correction), and item 3's non-MTDS half into its todo 3 (`deployment-api` + `strategy-service`). Item
+3's MTDS half stays deliberately sequenced behind that batch's Deferred **E7**. Citation recorded; `assigned_vm`
+deliberately NOT flipped — that would dispatch a duplicate.

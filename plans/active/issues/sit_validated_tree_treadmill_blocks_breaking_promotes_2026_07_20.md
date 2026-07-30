@@ -193,3 +193,11 @@ decide "already promoted".
   self-inflicted-status-race sub-finding (a cancelled run's status clobbering an already-successful run's status when
   dispatches overlap) is a DISTINCT, independently fixable bug from the moving-tree race itself — worth its own todo
   line rather than folding into "tighten cadence".
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo is an explicit unmade
+direction ruling (promote-lease vs SIT-sha-pin + gate-side change vs accept-and-monitor) that this doc's own text says
+must be recorded before anything ships, and todo 2 is conditional on it ("if a retarget is chosen"). The doc also
+documents two independently-verified FATAL objections to the intuitive fix, so this is a live design fork, not a
+default. The P3 stuck-gate monitor is already claimed by `/plans/active/ci_satellite_ao_dispatch_batch1_2026_07_26.md`.

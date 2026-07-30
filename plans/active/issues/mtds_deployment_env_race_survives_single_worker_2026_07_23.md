@@ -116,3 +116,11 @@ same shell) — that instrumentation is the concrete next step, not another blin
 - [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
       check whether ancestor repos' dependency-install steps execute Python in the same shell; per "Recommendation,"
       this is the concrete next step to root-cause the race, not another blind retry loop.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid —
+`/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` Deferred **E7** (2026-07-29) explicitly rules this class
+NOT bounded as currently framed: five independent investigation sessions have failed to pin the leak mechanism, and this
+doc plus `/plans/active/issues/mtds_deployment_env_monkeypatch_leak_blocks_quickmerge_2026_07_23.md` are to be "read
+together, do not duplicate investigation". Stays parked on that single shared blocker.

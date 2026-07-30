@@ -144,3 +144,14 @@ silently regresses the fleet again.
   fixed here, intentionally baselined per the todo's own instruction). The checker fails the moment a repo's drift count
   grows PAST its seeded baseline (a template falling further behind), verified against a synthetic template-lags-repo
   case in the unit tests. Standalone only — wiring into `quality-gates.sh` stays in the finalize plan per this doc's P1.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — closest-to-eligible candidate in this
+tranche, held back on a genuine scope ambiguity rather than a conflict. The sole open todo ("roll the empty-tag guard
+out to the 19 consumer repos once the drift check exists") has had its gate met (the drift checker shipped 2026-07-28)
+and is unclaimed by either ci batch. But this doc's OWN 2026-07-28 Progress Log entry measured that **15 of 19 consumers
+now carry content the SERVICE template does not**, and the would-drop-content guard shipped the same day means
+`rollout-cloudbuild.py --apply` now correctly REFUSES all 15 — so the rollout mechanism the todo implies no longer
+works, and its replacement (hand-apply per repo vs. resolve the drift first) is undecided. Not determinable by a worker
+alone as currently written. **Re-scope the todo to name the mechanism and it becomes a clean RECLASSIFY.**

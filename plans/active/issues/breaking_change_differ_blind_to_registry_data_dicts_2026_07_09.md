@@ -188,3 +188,12 @@ declaration, shipped `unified-api-contracts@0ab1074a` + `instruments-service@c0f
 `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (resolved + archived 2026-07-30). That
 doc = "IS is red, unblock shipping"; **this doc = "the CI gate that should have stopped it didn't, and here's the
 reusable fix."** Resolve the CI-gate fix here.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): **KEEP-NA-STALE (already-duplicated)** — todos 1-4 and
+6-7 are extracted near-verbatim into `/plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 6 (which cites
+this doc as its Source and carries the allowlist spec, the differ change, the `23fa3a99` regression fixture, the SIT
+`build_expected` invariant, the xfail resolution and the codex update as its own (a)-(f)). Todo 5 (the [DESIGN] P2
+consumer-QG fan-out question) is parked there as Deferred **E8** and escalated as that batch's operator question 1.
+Citation recorded; `assigned_vm` deliberately NOT flipped — that would dispatch a duplicate.

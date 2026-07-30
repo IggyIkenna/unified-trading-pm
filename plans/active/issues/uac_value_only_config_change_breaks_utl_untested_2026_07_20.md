@@ -233,3 +233,11 @@ nothing: it is architecturally cached against exactly the input that changed.
   gate cache (highest blast radius) → needs operator direction before implementation. The adversarial verification
   earned its cost: it prevented shipping a fleet-wedging (false-break) or actively-worse (unmasked false-green) change
   under autonomous momentum.
+
+## na-eligibility-audit verdict
+
+**na-eligibility-audit 2026-07-30** (tranche `ci`, autonomous): KEEP-NA, valid — the head todo [A] (make the v2
+content-sentinel dependency-content-aware) states in its own text "**operator sign-off required**, not an autonomous
+ship" because it is the core gate's cache with the highest blast radius in the fleet; [B] is explicitly "blocked on
+[A]"; and the two remaining items are struck-through as SUPERSEDED and DO-NOT respectively. Adversarial verification
+recorded in this doc already refuted the originally-planned fix on three counts.
