@@ -115,12 +115,40 @@ own QG-verified change + a real soak before P3's checklist is re-run).
 
 ## Todos
 
-- [ ] [INFRA] P1. Author + ship the project-metadata fallback (option (a) above): set
+- [x] ✅ [INFRA] P1. Author + ship the project-metadata fallback (option (a) above): set
       `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` via `gcloud compute project-info add-metadata` on
       `central-element-323112`, and add a `_meta_project()` fallback used ONLY for this one flag in
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` + `setup-cefi-live-consolidated-vm.sh` +
       `setup-prediction-live-consolidated-vm.sh` + `setup-data-pipeline-vm-aws.sh` (AWS SSM parameter equivalent, not
-      GCE metadata) + `setup-honest-coverage-scheduler.sh` (repo: deployment-service).
+      GCE metadata) + `setup-honest-coverage-scheduler.sh` (repo: deployment-service). — deployment-service@deba676.
+      GCP: project metadata `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` on `central-element-323112` verified already
+      present (`gcloud compute project-info describe --format='value(commonInstanceMetadata.items)'`); a new
+      `_meta_project()` helper (instance attribute first, then project-level fallback — never changes the generic
+      `_meta()` behavior for any other key) now backs the read in `setup-data-pipeline-vm.sh`,
+      `setup-cefi-live-consolidated-vm.sh` (also newly exports the flag in the shared shard-process env block, since
+      this VM never read it before), `setup-prediction-live-consolidated-vm.sh` (same). AWS:
+      `setup-data-pipeline-vm-aws.sh` now falls back to
+      `aws ssm get-parameter --name     /uts/deployment-registry/firestore-dualwrite` (region `ap-northeast-1`) when the
+      launcher didn't export the var, defaulting to `false` on any SSM error (parameter absent or access denied) — safe
+      no-op today. `setup-honest-coverage-scheduler.sh` is NOT a VM startup script (a one-time
+      `gcloud scheduler jobs     create/update` invocation — never runs on a GCE VM, never reads instance/project
+      metadata); its two real VM launchers (`launch-honest-coverage-vm.sh`, `launch-measure-honest-coverage-vm.sh`) both
+      already point `startup-script-url` at `setup-data-pipeline-vm.sh`, which carries the fix — documented in-file
+      rather than force an inapplicable edit. Residual: the AWS SSM parameter
+      `/uts/deployment-registry/firestore-dualwrite` does not yet exist — this worker's identity (AWS IAM user
+      `ikenna-worker`, static creds on this slot host) has neither `ssm:PutParameter` nor `sts:AssumeRole` on
+      `uts-orchestrator-epic-role` (verified: both calls return `AccessDenied`/`AccessDeniedException`), so the
+      parameter could not be created from here. See the new P2 todo below.
+
+- [ ] [OPERATOR] P2. Set the AWS SSM parameter `/uts/deployment-registry/firestore-dualwrite=true` (String, region
+      `ap-northeast-1`, account `427895769566`) so `setup-data-pipeline-vm-aws.sh`'s new fallback actually resolves to
+      `true` instead of its safe `false` default:
+      `aws ssm put-parameter --name     /uts/deployment-registry/firestore-dualwrite --value true --type String --region ap-northeast-1 --overwrite`.
+      Needs an identity with `ssm:PutParameter` on that resource — either the operator directly, or a session running as
+      the ambient AWS orchestrator identity `uts-orchestrator-epic-role` (the human-planning/orchestrator VMs only; AO
+      worker slots run as a separate, more narrowly-scoped static IAM user per
+      `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, which does not cover this) (repo: infra,
+      AWS-only action — no code change).
 - [ ] [REVIEW] P1. Soak: launch a handful of real (non-benchmark) production VMs after the fix ships, confirm their
       heartbeats mirror to Firestore with `status=running` and fresh `last_heartbeat_at` within one heartbeat interval,
       then re-run this doc's 4-criteria measurement (repo: deployment-service / unified-trading-pm — re-verification,
