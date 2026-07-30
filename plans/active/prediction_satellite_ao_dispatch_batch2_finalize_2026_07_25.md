@@ -8,7 +8,7 @@ summary: >-
   correct prediction_consolidated_closeout_2026_07_18.md's stale claims discovered during batch2's re-triage — the "C2a
   REFUSED — unruled" framing (superseded by the codex D1 ruling) and the "0 open todos" index entries for 3 docs where
   re-check found that claim factually wrong.
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -46,6 +46,11 @@ drift_direction: advance-code
 
 # Prediction satellite AO batch 2 — finalize
 
+> **🟢 ARCHIVED 2026-07-30.** All 3 todos done: source-doc reconciliation (todo 1), correcting
+> `prediction_consolidated_closeout_2026_07_18.md`'s stale claims (todo 2), and this archival (todo 3) — parent moved to
+> `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`, corpus referrers updated. No new
+> durable contract from this batch — codex-alignment check: nothing to update.
+>
 > **Machine-gated on `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`)
 > — the dispatcher will not queue any todo below until all 6 tasks in that plan are `done`. `sequential: true` because
 > todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
@@ -82,13 +87,14 @@ drift_direction: advance-code
       open work; leave it flagged as OPERATOR-GATED, not silently marked done. **Done when**: all 3 corrections are made
       with the codex/evidence citations above, and a git diff of `prediction_consolidated_closeout_2026_07_18.md` is
       referenced in this plan's Progress Log.
-- [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere if their blocker
-      cleared during batch2's execution (verify none newly cleared) → add the archive banner → run the codex-alignment
-      check → grep the corpus for every referrer of `prediction_satellite_ao_dispatch_batch2_2026_07_25` and fix each
-      path to point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan
-      is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself
-      gets archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-2, backend_engineer craft).** **Archive
+      `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
+      plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere if their blocker cleared
+      during batch2's execution (verify none newly cleared) → add the archive banner → run the codex-alignment check →
+      grep the corpus for every referrer of `prediction_satellite_ao_dispatch_batch2_2026_07_25` and fix each path to
+      point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved
+      to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself gets
+      archived alongside it in the same commit.
 
 ## Progress Log
 
@@ -159,3 +165,59 @@ credentials) called out separately rather than conflating the two.
 Diff: `unified-trading-pm@<see commit below>` touches only `plans/active/prediction_consolidated_closeout_2026_07_18.md`
 (656 lines post-edit, under the 1000-line hard cap). Todo 2's own checkbox flipped above. No code shipped — doc-only
 correction, as scoped.
+
+### 2026-07-30 (slot-2, backend_engineer craft) — Todo 3 done: batch2 archived via the standard 6-step ritual
+
+Picked up todo 3 via `/boot`. Confirmed todos 1 and 2 above were both `[x]` before starting.
+
+**Step 1 (Deferred-item migration check)** — re-verified the batch2 Deferred section's 8 remaining item-groups against
+current corpus state, checking specifically whether any blocker cleared during batch2's own execution:
+`prediction_phase_ab_residuals_2026_07_24.md` still has 9 open todos (nonzero — phase_c/d/e's gate is still shut,
+unchanged); `data_completion_prediction_2026_07_15.md` still `status: active`, unchanged (independently re-confirmed by
+`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s own Deferred section as "too large for a batch todo"); the
+arb-bridge doc's ruling is already reflected (this plan's own todo 2 +
+`prediction_satellite_ao_dispatch_batch6_ 2026_07_29.md`'s dispatched todo — no duplicate needed);
+`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`'s Phase-5 canonical-groups backfill item is already tracked as
+its own `[SCRIPT] P1` todo in `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (line 219) — no migration needed;
+that same doc's `[VERIFY][UI]` deployment-ui re-walk item (line 106) is still genuinely blocked, but on
+`[BLOCKED-PLAYWRIGHT]` (no UI-capable dev-server slot) — a different, still-open blocker than batch2's Deferred note
+implied, not something that cleared when this batch's sentinel-fan-out todo shipped;
+`prediction_universe_capture_dead_since_07_01_2026_07_06.md`'s secondary conflicts (MVP-backfill-gate overlap,
+adapter-file collision note) remain explicitly Phase-D's own P0, unchanged — its main doc is separately confirmed fully
+archived (`plans/archive/issues/`) via batch2 todo 6. **Result: nothing newly cleared beyond what's already reflected in
+the Deferred section as written — no new todo migration required.**
+
+**Step 2** — archive banners added to both this doc and the parent
+(`prediction_satellite_ao_dispatch_batch2_2026_07_ 25.md`); `status` flipped `active` → `complete` on both frontmatters.
+
+**Step 3 (codex-alignment check)** — this plan's own "Codex SSOTs" section and the parent's already state no new durable
+contract; confirmed — every todo executed an already-decided spec from its source doc or an already-RULED codex
+standard. Nothing to update.
+
+**Step 4** — no new CLAUDE.md contract to add (same reasoning as step 3).
+
+**Step 5 (corpus referrer fixup)** — grepped the full corpus for `prediction_satellite_ao_dispatch_batch2_2026_07_25`
+and `prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25`. Fixed all 6 path-shaped (`plans/active/...`-prefixed
+`related:`/citation) hits, per the batch1-finalize precedent (path-shaped references only — bare-filename prose
+citations of "what happened" left as historical narrative): `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (2
+refs, `related:`), `prediction_consolidated_closeout_ 2026_07_18.md` (`related:`),
+`prediction_consolidated_native_ao_extract_2026_07_25.md` (`related:`),
+`issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (Source citation),
+`plans/epics/manifest_master.md` (Source citation) — all now point at `/plans/archive/2026_07/...`.
+`plans/active/INDEX.md` is auto-generated (`scripts/plans/regenerate_active_plan_index.py`) — regenerated, not
+hand-edited. Already-archived docs referencing the old path (`prediction_satellite_ao_dispatch_batch3_2026_07_26.md`,
+`prediction_satellite_ao_dispatch_batch1_2026_07_25.md`,
+`prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`, `active_plan_inventory_dashboard_2026_07_24.md`,
+`ao_operator_delete_gating_aws_iam_and_corpus_sweep_2026_07_27.md`) are historical narrative snapshots, correctly left
+as-is, per the same precedent. Bare-filename prose citations in
+`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`, `ag_closeout_audit_rollout_2026_07_25.md`,
+`prediction_phase_ab_residuals_2026_07_24.md`, `predictions_ml_walk_forward_and_arb_2026_06_20.md`, and
+`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md` (all
+"`prediction_satellite_ao_dispatch_batch2_2026_ 07_25.md` todo N" / "batch2's own finalize" style narrative, no
+`plans/active/` prefix) left as-is, same precedent.
+
+**Step 6** — `locked_by` confirmed empty on both docs (was already empty). Both docs moved to `plans/archive/2026_07/`
+in this same commit.
+
+Todo 3's own checkbox flipped above. All 3 finalize-plan todos now done — this finalize doc itself archives alongside
+the parent in this same commit, per its own Done-when. Repo: unified-trading-pm only.
