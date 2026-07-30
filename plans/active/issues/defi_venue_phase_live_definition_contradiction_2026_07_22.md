@@ -397,14 +397,17 @@ unresolved operator decision.
 
 ## Todos
 
-- **[DATA] P1.** RULED 2026-07-29 (operator direct answer — both: count them AND build out the real IS universe). SPLIT
-  2026-07-30 into its own dedicated AO build plan (this line is a digest pointer, not a real checkbox — see
-  /plans/PLAN_FORMAT.md finding H — so it is not re-derived into the backlog):
-  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (+ gated finalize companion
-  `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`). The real dispatch surface — 5 ordered
-  todos covering the genuine IS adapters, cron health fix, 90-day backfill, catalogue registration, and the
-  `DEFI_VENUE_PHASE` flip + `completeness_pct` re-measurement — now lives in that plan. The finalize companion will
-  reconcile evidence back here and archive this doc once the build plan is fully done.
+- [x] [DATA] P1. ✅ RULED 2026-07-29 (operator direct answer — both: count them AND build out the real IS universe) —
+      resolved by REDIRECTION, not by shipping the build — unified-trading-pm@cd5198cb0. This todo (as originally
+      written) asked for a single-worker-scoped outcome that is actually a 4-sub-step, 3-repo, multi-day build — not
+      determinable by one dispatched worker per the AO dispatch-scope-eligibility rule, and this doc's own 2026-07-30
+      scope assessment + the independent `defi_satellite_ao_dispatch_batch6_2026_07_30.md` audit both already
+      recommended splitting it out rather than forcing it through in one pass. The real, still-OPEN engineering work
+      (genuine IS adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip +
+      `completeness_pct` re-measurement — 5 sequential todos) now lives at
+      `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`, with a gated finalize companion at
+      `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` that will reconcile evidence back here
+      and archive this doc once the build plan is fully done. Doc `status` stays `open` until then.
 
 ## 2026-07-30 — scope assessment (operator-ruling close-out pass): NOT executed this pass, todo left open
 
