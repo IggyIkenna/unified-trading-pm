@@ -228,6 +228,14 @@ clears. Skipping this slot's dispatch of the task with `reason_code=BLOCKED` so 
 workers who hit the identical wall triggers the auto-park escalation instead of burning further worker sessions on
 read-only re-confirmation.
 
+## Addendum 2026-07-30T00:40Z (slot 11, data_engineering) — re-dispatched again, still blocked, bare check only
+
+Re-dispatched the same P1 todo a third time. Per slot 9's own guidance, not repeating the full read-only re-verification
+(nothing has changed to warrant it) — bare check only: `git log` on `unified_trading_library/manifest_consolidator.py`
+still shows no commit since `14301571` (2026-07-24), so no root-cause fix has landed. The `[OPERATOR]` P0 todo remains
+the sole blocking prerequisite; this P1 todo's done_definition still cannot be met. Skipping with `reason_code=BLOCKED`
+to keep pushing toward the auto-park threshold rather than burning another session on read-only re-confirmation.
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/manifest-consolidator-ssot.md` (merge engine, UNION-ALL invariants, pause-first discipline for
