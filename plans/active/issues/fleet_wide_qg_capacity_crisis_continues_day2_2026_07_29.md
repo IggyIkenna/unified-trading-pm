@@ -41,7 +41,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 priority: P1
 parent_epic: infrastructure_master
 source:
@@ -497,3 +497,33 @@ not just noting.
   but `conclusion: success` — direct proof the wall was transient host contention, not a defect, once contention eased.
   **No code or workflow change made or needed.** `GET /api/repo-blockers` → none open for `features-service`. Slot left
   clean on `live-defi-rollout`, no branch changes.
+- **2026-07-30 ~19:55Z (cicd escalation `agt-96bec9`, slot 8) — 2nd same-day `features-service` corroboration, both
+  slices again, this time on the LDR→main promotion PR itself**: dispatched as `ldr_qg_failure` for promotion PR `#902`
+  (`live-defi-rollout` → `main`), failing run
+  [30569658808](https://github.com/IggyIkenna/features-service/actions/runs/30569658808) (`pull_request` event on
+  `promote/features-service/edf80c88beb8`, created 18:16:08Z). Same dual-slice signature as `agt-7bcf55`'s entry
+  directly above, ~5h later same day: `QG slice (checks)` hit the hard 120s basedpyright timeout
+  (`Type check FAILED/timeout`, exit=124, 19:04:01→19:06:02Z) and `QG slice (tests)` independently hung mid-execution
+  inside `test_regime_clustering.py::TestFitAndAssignPerTimeframe::test_returns_result_for_each_timeframe` (stack paused
+  inside `fit_regime_clusters` at `regime_clustering.py:182`, a plain list-comprehension over `feature_df.columns`, not
+  a real hang point), killed by pytest-timeout's thread-based dumper after the 150s per-test budget (19:12:44→19:17:02Z,
+  roughly 4m18s past the last completed test). Diagnosed the code was clean before assuming a fix was needed: the PR's
+  own content (`edf80c88`, "fix(volatility,delta_one): project bare read_availability_index calls to actual column
+  usage") touches only `volatility/`+`delta_one/` call sites — nowhere near
+  `cross_instrument/app/calculators/regime_clustering.py` — ruling out a code regression by diff scope alone. Reproduced
+  the specific failing test locally: `test_returns_result_for_each_timeframe` passes clean in 3.84s (tiny fixture, 50-80
+  rows × 3 timeframes) — no plausible legitimate path to a 150s+ hang, matching this doc's established profile exactly.
+  Host reading at investigation time: `uptime` load average 12.75/13.39/14.01 (1/5/15-min) on 16 vCPUs — still
+  comfortably above core count, consistent with "fluctuating-but-still-elevated," not resolved; `ps aux` showed 3+
+  concurrent self-hosted "glue" CI runners (features-service, instruments-service, alerting-service) plus ~10 concurrent
+  interactive Claude sessions on the same box at once. **PR #902 was already `state=MERGED` at `18:16:11Z`** — 3 seconds
+  after this failing run even started — the exact self-merge-via-independent-earlier-green- check pattern this doc
+  already documents for instruments-service #1026/#1027/#1035: the failing `pull_request` run is orphaned noise against
+  an already-merged PR, not a live blocker. Confirmed downstream promotion machinery succeeded independently:
+  `main-backmerge-to-ldr` (run 30569667561) and `Semver Agent` (run 30569667555) both `conclusion: success` on the same
+  push. `GET /api/repo-blockers` → none open for `features-service`; `gh pr list --state open` → empty. Two
+  `quality-gates-v2` runs (`30569668743` push:main, `30570836256` workflow_dispatch on LDR) sat `status=queued` for
+  1h38m+ at investigation time with zero conclusion — consistent with the same runner- capacity crisis this doc tracks
+  (queue backlog, not a hang once picked up) — noted here as a data point, not separately actioned since nothing is
+  blocked pending their completion. **No code or workflow change made or needed.** Slot left clean on
+  `live-defi-rollout`, no branch changes. clean on `live-defi-rollout`, no branch changes.
