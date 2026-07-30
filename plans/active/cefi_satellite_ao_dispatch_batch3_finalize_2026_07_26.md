@@ -8,7 +8,7 @@ summary: >-
   blank-`data_type` conflict, the 4 prerequisite-gated items, and the too-large/risky doc) for any whose gate has since
   cleared, then archive batch3 via the standard 6-step ritual. Also carries the one `/plan-reconcile` hand-off this
   audit produced (2 provably-shipped stale checkboxes in the deribit-combo partition-move doc).
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

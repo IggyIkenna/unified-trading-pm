@@ -7,7 +7,7 @@ summary: >-
   all 31 todos across both parts are done. Reconciles each distinct source doc's checkboxes independently, then
   re-checks the Deferred conflict-gated/operator-gated/time-gated items (4/13/2) plus the 7 mistags and 2 archivable_now
   docs found during Phase 0/1, then archives both batch docs via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

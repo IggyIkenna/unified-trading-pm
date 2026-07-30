@@ -473,15 +473,26 @@ author it with the SAME discipline as `sports_satellite_ao_dispatch_batch2_2026_
 - **`status: draft`** — this is the safety rail. A draft is not ingested/dispatched (`plans/PLAN_FORMAT.md`); flipping
   it to `active` is the operator's call, in interactive mode ask directly, in autonomous mode park it as a follow-up.
 
-Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]`
+Pair it with `<ag>_satellite_ao_dispatch_batch<N>_finalize_<date>.md` in the SAME turn (`depends_on: [<batchN-slug>]` +
+`gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule. Author it
+**`status: active`, NOT draft** (corrected 2026-07-30 — see finding below). Validate both with
+`.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
+`bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
 
-- `gate_on_depends: true` + `sequential: true`) — per `task_template.md` §4's finalize-plan-coverage rule, ALSO
-  `status: draft` until the batch itself is approved and dispatched. Validate both with
-  `.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py --files <paths>` and
-  `bash scripts/plan-hygiene/check_todo_format.sh <paths>` before presenting them.
+**Why the finalize plan is `active`, not `draft` (2026-07-30 finding — no double gate)**: `gate_on_depends: true`
+already machine-holds every one of the finalize plan's tasks until the batch's own todos are done —
+`_wire_gate_on_depends_prereqs` (`regen_backlog_from_plan.py`) covers BOTH an already-active batch (holds via
+`prereqs.completed_tasks` until its tasks are literally `done`) AND a still-draft batch (holds via a derived
+`gate-upstream-open:<stem>` condition read straight off the batch file's own checkboxes, regardless of the batch's
+`status`). A finalize plan carries no independent judgment call — its content (reconcile checkboxes + archive) is fully
+decided at authoring time — so stacking the batch's `status: draft` safety rail on top of it is a redundant second gate
+that requires a SEPARATE manual flip nobody reliably remembers: a 2026-07-30 corpus audit found 46 finalize plans stuck
+in draft, most with their batch already done and archived weeks earlier. Only the BATCH itself (genuinely unreviewed,
+judgment-call content) needs `status: draft` + explicit operator approval.
 
-**Never quickmerge/ship the drafted pair without the operator explicitly approving it** (flip `status: draft` → `active`
-yourself only after that approval, then ship).
+**Never quickmerge/ship the drafted BATCH without the operator explicitly approving it** (flip its `status: draft` →
+`active` yourself only after that approval, then ship). The finalize plan needs no separate flip — it ships `active`
+from the start and `gate_on_depends` holds it correctly either way.
 
 ## Codex SSOTs
 

@@ -13,7 +13,7 @@ summary: >-
   a batch 2. Only then does the standard archival ritual run on batch 1. The goal is that after this plan, every infra
   satellite doc's real remaining work is either shipped, re-tracked as an explicit new todo, or confirmed still
   correctly gated on a human decision — with the count of genuinely-orphaned infra docs re-measured rather than assumed.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -29,7 +29,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

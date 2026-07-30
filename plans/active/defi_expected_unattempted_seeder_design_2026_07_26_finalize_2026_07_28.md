@@ -10,7 +10,7 @@ summary: >-
   conversion triggered (check_finalize_plan_coverage.py, baseline 0) — the gate was blocking ALL commits to this repo
   (unscoped, fleet-wide scan), so this was authored as a safe unblock rather than left for the source plan's own author,
   per task_template.md §4's standard pattern.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [defi, close-out, finalize-plan-coverage, manifest, expected-unattempted]
 related: [/plans/active/defi_expected_unattempted_seeder_design_2026_07_26.md]
 created: "2026-07-28"
-last_updated: "2026-07-28"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

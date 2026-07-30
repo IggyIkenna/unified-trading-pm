@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for sports_satellite_ao_dispatch_batch8_2026_07_30.md — machine-held via depends_on + gate_on_depends:
   true until all 5 of that plan's todos are done. Mirrors the batch3-7-finalize pattern: reconcile each distinct source
   doc's checkboxes once its batch-8 todo lands, then archive both docs.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

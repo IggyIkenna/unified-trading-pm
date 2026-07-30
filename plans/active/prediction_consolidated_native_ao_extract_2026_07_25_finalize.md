@@ -12,7 +12,7 @@ summary: >-
   native todos (the former P3 duplicate-note — now merged into phase_ab's reconciliation todo — and the P1 POLYMARKET
   schema-extension) have newly cleared, and archives the EXTRACT batch doc itself (never the parent — the parent stays
   active with Phase B/C/D/E still open).
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

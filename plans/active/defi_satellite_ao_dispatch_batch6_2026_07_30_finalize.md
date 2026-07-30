@@ -7,7 +7,7 @@ summary: >-
   doc's checkboxes independently once its batch-6 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch6 via the
   standard 6-step ritual. status: draft until the operator approves batch6 itself.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

@@ -8,7 +8,7 @@ summary: >-
   operator-gated items for any that have since cleared), and then carries the 4th step batch2-5's finalize plans are all
   missing and which batch6 todo 7 adds to them: archive every source doc this batch drove to terminal status, in the
   same commit as the status flip, so `check_terminal_status_archived.py` never sees a terminal doc in `plans/active/`.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

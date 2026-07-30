@@ -22,7 +22,21 @@ Exemptions (not violations):
   - `assigned_vm` is NOT `planning` (LOCAL/NA plans are untouched by AO dispatch, so this
     rule doesn't apply — archival there is a human call, not a machine-gate concern).
 
-Exit-code semantics: 0 = at/below baseline; 1 = regression; 2 = arg/IO error.
+Second check (added 2026-07-30, same script — shares the frontmatter-loading infra):
+a finalize plan (`depends_on` + `gate_on_depends: true`) sitting at `status: draft` is a
+REDUNDANT double-gate, not a safety feature. `gate_on_depends` already machine-holds the
+plan's tasks until its upstream is done (`_wire_gate_on_depends_prereqs` in
+`regen_backlog_from_plan.py` covers both an already-active upstream via
+`prereqs.completed_tasks` and a still-draft upstream via a derived
+`gate-upstream-open:<stem>` condition read off the upstream file directly) — so stacking
+`status: draft` on top requires a SEPARATE manual flip that nothing automates and nobody
+reliably remembers. A 2026-07-30 corpus audit found 46 finalize plans stuck in draft this
+way, most with their upstream already done and archived weeks earlier. Fix: author/ship
+finalize plans `status: active` from the start (`ag-closeout-audit` SKILL.md corrected the
+same day). This check ratchets that fix so it can't silently regress.
+
+Exit-code semantics: 0 = at/below baseline (both checks); 1 = regression (either check);
+2 = arg/IO error.
 """
 
 from __future__ import annotations
@@ -118,7 +132,26 @@ def _find_violations(active_dir: Path) -> list[Path]:
     return violations
 
 
-def _load_baseline(baseline_path: Path) -> int:
+def _find_draft_gate_violations(active_dir: Path) -> list[Path]:
+    """A finalize plan (`depends_on` + `gate_on_depends: true`) sitting at `status:
+    draft` is a redundant double-gate — `gate_on_depends` already machine-holds it.
+    Scoped to `assigned_vm: planning` only: an `NA`-track plan is never ingested
+    regardless of `status`, so its draft/active state isn't this bug.
+    """
+    all_plans = [c for p in active_dir.glob("*.md") if (c := _load_plan(p)) is not None]
+    violations: list[Path] = []
+    for cov in all_plans:
+        fm = cov.frontmatter
+        if fm.get("assigned_vm") != "planning":
+            continue
+        if not _is_finalize_plan(fm):
+            continue
+        if fm.get("status") == "draft":
+            violations.append(cov.path)
+    return violations
+
+
+def _load_baseline_count(baseline_path: Path, key: str) -> int:
     if not baseline_path.exists():
         return 0
     try:
@@ -126,26 +159,36 @@ def _load_baseline(baseline_path: Path) -> int:
     except yaml.YAMLError:
         return 0
     if isinstance(loaded, dict):
-        count: object = cast(dict[str, object], loaded).get("violation_count")
+        count: object = cast(dict[str, object], loaded).get(key)
         if isinstance(count, int):
             return count
     return 0
 
 
-def _write_baseline(baseline_path: Path, violations: list[Path], workspace_root: Path) -> None:
-    rels: list[str] = []
-    for v in violations:
-        try:
-            rels.append(str(v.relative_to(workspace_root)))
-        except ValueError:
-            rels.append(str(v))
+def _write_baseline(
+    baseline_path: Path,
+    violations: list[Path],
+    draft_gate_violations: list[Path],
+    workspace_root: Path,
+) -> None:
+    def _rels(paths: list[Path]) -> list[str]:
+        out: list[str] = []
+        for v in paths:
+            try:
+                out.append(str(v.relative_to(workspace_root)))
+            except ValueError:
+                out.append(str(v))
+        return out
+
     payload: dict[str, object] = {
         "violation_count": len(violations),
+        "draft_gate_violation_count": len(draft_gate_violations),
         "rule": "finalize-plan-coverage",
         "source": (
             "task_template.md §4 'Every AO-dispatched plan needs a gated finalize plan' (operator ruling 2026-07-24)"
         ),
-        "baseline_files": rels,
+        "baseline_files": _rels(violations),
+        "draft_gate_baseline_files": _rels(draft_gate_violations),
     }
     baseline_path.write_text(yaml.safe_dump(payload, sort_keys=False), encoding="utf-8")
 
@@ -174,14 +217,22 @@ def main() -> int:
         return 2
 
     violations = _find_violations(active_dir)
+    draft_gate_violations = _find_draft_gate_violations(active_dir)
     print(
         f"Scanned plans/active/ for assigned_vm: planning plans lacking a gated finalize plan — "
         f"{len(violations)} violation(s)."
     )
+    print(
+        f"Scanned plans/active/ for finalize plans redundantly stuck at status: draft — "
+        f"{len(draft_gate_violations)} violation(s)."
+    )
 
     if baseline_write:
-        _write_baseline(baseline_path, violations, workspace_root)
-        print(f"✅ Wrote baseline ({len(violations)} violations) to {baseline_path}")
+        _write_baseline(baseline_path, violations, draft_gate_violations, workspace_root)
+        print(
+            f"✅ Wrote baseline ({len(violations)} coverage / {len(draft_gate_violations)} draft-gate "
+            f"violations) to {baseline_path}"
+        )
         return 0
 
     if violations:
@@ -198,23 +249,52 @@ def main() -> int:
         if len(violations) > 20:
             print(f"  ... + {len(violations) - 20} more")
 
+    if draft_gate_violations:
+        print(
+            "\nFinalize plans redundantly stuck at status: draft (gate_on_depends already holds them —"
+            " flip to status: active, see task_template.md §4 / ag-closeout-audit SKILL.md 2026-07-30 fix):"
+        )
+        for v in draft_gate_violations[:20]:
+            try:
+                rel = v.relative_to(workspace_root)
+            except ValueError:
+                rel = v
+            print(f"  - {rel}")
+        if len(draft_gate_violations) > 20:
+            print(f"  ... + {len(draft_gate_violations) - 20} more")
+
     if strict:
-        if violations:
-            print(f"\n❌ STRICT: {len(violations)} violation(s).")
+        if violations or draft_gate_violations:
+            print(f"\n❌ STRICT: {len(violations)} coverage + {len(draft_gate_violations)} draft-gate violation(s).")
             return 1
         return 0
 
-    baseline = _load_baseline(baseline_path)
+    baseline = _load_baseline_count(baseline_path, "violation_count")
+    draft_gate_baseline = _load_baseline_count(baseline_path, "draft_gate_violation_count")
+    regressed = False
     if len(violations) > baseline:
         print(
             f"\n❌ Regression: {len(violations)} > baseline {baseline}. New AO plan(s) shipped without a gated"
             " finalize plan — author one before merging (task_template.md §4)."
         )
-        return 1
-    if len(violations) < baseline:
+        regressed = True
+    elif len(violations) < baseline:
         print(f"\n⚠️  Improvement: {len(violations)} < baseline {baseline}. Re-baseline to codify.")
-        return 0
-    print(f"\n✅ At baseline ({baseline}).")
+
+    if len(draft_gate_violations) > draft_gate_baseline:
+        print(
+            f"\n❌ Regression: {len(draft_gate_violations)} > baseline {draft_gate_baseline}. A finalize plan shipped"
+            " (or reverted to) status: draft — flip to active, gate_on_depends already holds it."
+        )
+        regressed = True
+    elif len(draft_gate_violations) < draft_gate_baseline:
+        print(
+            f"\n⚠️  Improvement: {len(draft_gate_violations)} < baseline {draft_gate_baseline}. Re-baseline to codify."
+        )
+
+    if regressed:
+        return 1
+    print(f"\n✅ At baseline ({baseline} coverage / {draft_gate_baseline} draft-gate).")
     return 0
 
 

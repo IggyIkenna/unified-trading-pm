@@ -7,7 +7,7 @@ summary: >-
   re-checks batch 2's own Deferred items (3 conflict-gated, 7 operator-gated, 3 time-gated, 9 needs-own-triage-pass),
   actions the two membership/classification findings this audit raised, and archives the batch via the standard 6-step
   ritual.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -7,7 +7,7 @@ summary: >-
   the post-run reconciliation that must happen once that plan's 4 verification todos (Phase 5 live-mode clock alignment,
   Phase 6 mock-mode failure scenarios, Phase 7 observability, and the 2026-03-23 six-bug re-verify) have all run and
   been evidenced. Stays `status: draft` until the source plan's last todo flips.
-status: draft
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]

@@ -7,7 +7,7 @@ summary: >-
   doc's checkboxes independently once its batch-5 todo lands, then re-check the Deferred conflict-gated/
   operator-gated/time-gated/too-large/human-only items for any that have since cleared), then archives batch5 via the
   standard 6-step ritual. status: draft until the operator approves batch5 itself.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -67,8 +67,9 @@ drift_direction: advance-code
       any now-clear item into a fresh batch6 candidate list rather than re-triaging the whole corpus from scratch. Repo:
       unified-trading-pm. Done when: each of the 24 items has a dated re-check note (cleared / still blocked, with the
       specific evidence checked).
-- [ ] [DOC] P3. Confirm the known mistag (`archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`)
-      has actually been retagged away from `asset_group: [defi]` by its already-tracked
+- [ ] [DOC] P3. Confirm the known mistag
+      (`archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md`) has actually been retagged
+      away from `asset_group: [defi]` by its already-tracked
       `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76` todo; if still untagged, do not re-draft a new
       todo — just verify the existing todo is still open and note its status here. Repo: unified-trading-pm. Done when:
       a verdict (retagged / still open, citing the batch2-finalize todo state) is recorded.

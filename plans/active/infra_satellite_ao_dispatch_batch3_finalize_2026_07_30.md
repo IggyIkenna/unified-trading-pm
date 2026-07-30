@@ -10,7 +10,7 @@ summary: >-
   source doc becomes archivable — both were partial carve-outs and both keep judgment-gated todos at assigned_vm: NA —
   so this plan's main job is to flip accurately and then explicitly NOT archive, rather than to run the 6-step ritual on
   the sources. It does run the ritual on the batch pair itself.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

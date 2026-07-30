@@ -9,7 +9,7 @@ summary: >-
   standard 6-step ritual. Also carries the follow-up for batch3's non-actioned findings (2 archivable_now docs to
   archive + 1 exclude_cross_cutting mistag to confirm retagged). status: draft — activated only after its parent batch3
   is operator-approved and dispatched.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -9,7 +9,7 @@ summary: >-
   during the triage (KRAKEN-SPOT Script-2 item, the 658-wire-key item, the catalogue-gap enumeration item, the DERIBIT
   combo writer-fix half, and re-verifying the _DRYRUN_COLS P0) — deliberately deferred from the extraction plan itself
   so the parent doc's edit surface is touched once, coherently.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /plans/active/issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

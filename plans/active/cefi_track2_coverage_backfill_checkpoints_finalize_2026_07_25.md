@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-2 checkboxes, cross-checks the 2 PRE-BACKFILL baselines (drafted
   separately in cefi_consolidated_native_ao_extract_2026_07_25.md) actually landed, then archives.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/cefi_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

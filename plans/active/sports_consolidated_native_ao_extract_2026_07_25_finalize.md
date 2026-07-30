@@ -8,7 +8,7 @@ summary: >-
   plan itself, unlike a satellite batch drawing from many small docs), re-checks the excluded/scoped-down sub-items for
   whether their gate has since cleared, then runs the standard archival ritual on the extract plan. Mirrors
   sports_satellite_ao_dispatch_batch3_finalize_2026_07_25.md's pattern.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -7,7 +7,7 @@ summary: >-
   batch was an extraction, so the source docs' own checkboxes are the ones that go stale), re-checks whether any
   Deferred item's gate has since cleared, archives the source docs that reach zero open todos, and runs the standard
   6-step archival ritual on the batch plan itself.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -21,7 +21,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

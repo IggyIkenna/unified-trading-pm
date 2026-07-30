@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until all 13 of that plan's todos are done. Mirrors the batch4-finalize pattern (reconcile each
   of the 9 distinct source docs' checkboxes/Progress-Log entries independently, re-check the deferred/excluded
   population for cleared gates, then archive). `status: draft` until batch6 itself is approved and dispatched.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -8,7 +8,7 @@ summary: >-
   re-check the 6 conflict-gated Deferred items once the operator has ruled on the queued decision in
   autonomous_session_operator_decisions_2026_07_25.md — some may become dispatchable once the operator confirms which
   side (the narrow batch3-style fix vs. the master closeout's broader claim) should execute first.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -23,7 +23,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

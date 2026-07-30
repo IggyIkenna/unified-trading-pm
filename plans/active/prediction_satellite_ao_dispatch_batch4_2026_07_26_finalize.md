@@ -7,7 +7,7 @@ summary: >-
   (`prediction_cross_venue_arb_and_coverage_2026_07_24.md`, `prediction_live_clob_depth_capture_2026_07_24.md`),
   re-checks the gated `[OPERATOR]` walk/backfill deferrals for whether their gate cleared, and archives any sibling doc
   whose remaining work is fully closed. `status: draft` until batch4 itself is operator-approved and dispatched.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

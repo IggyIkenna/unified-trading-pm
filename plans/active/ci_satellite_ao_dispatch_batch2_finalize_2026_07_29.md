@@ -7,7 +7,7 @@ summary: >-
   re-checks the file-contention Deferred items (E1-E5) for whether the file they were rationed away from is free again,
   re-verifies the operator-gated/role-mismatch/too-large items (E6-E14) for any state change, and archives batch 2 via
   the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

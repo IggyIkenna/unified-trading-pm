@@ -9,7 +9,7 @@ summary: >-
   items + the 1 operator-gated item once the operator has ruled on the queued FX-sequencing / mvp_mode decisions, and
   recommend whether `tradfi_manifest_content_recovery_completion_2026_07_24.md` (excluded from both batch1 and batch2)
   is ready for its own dedicated triage/design pass yet.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -25,7 +25,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

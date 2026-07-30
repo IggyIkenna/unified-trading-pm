@@ -8,7 +8,7 @@ summary: >-
   Deferred item's gate has since cleared (the time-gated item in particular — its 2026-08-02 date will likely have
   passed by the time this finalize runs), archives the source docs that reach zero open todos, and runs the standard
   6-step archival ritual on the batch plan itself.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

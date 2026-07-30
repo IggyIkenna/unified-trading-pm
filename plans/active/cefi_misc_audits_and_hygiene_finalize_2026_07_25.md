@@ -5,7 +5,7 @@ summary: >-
   Gated closeout for cefi_misc_audits_and_hygiene_2026_07_25.md — machine-held via depends_on + gate_on_depends: true
   until all 3 of that plan's todos are done. Reconciles the parent (cefi_consolidated_closeout_2026_07_18.md) checkboxes
   for the UAC-fallback decision, the reconciliation-gap spot-check, and the archival todo, then archives.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -15,7 +15,7 @@ tags: [cefi, close-out, hygiene, archival]
 related:
   [/plans/active/cefi_misc_audits_and_hygiene_2026_07_25.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

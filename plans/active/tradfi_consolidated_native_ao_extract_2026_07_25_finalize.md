@@ -9,7 +9,7 @@ summary: >-
   corresponding native checkboxes (todo 10 of the parent extraction already edits that file directly and is excluded
   from this reconciliation pass), correct the Split-notice digest's stale catalogue-migration line (found live during
   the extraction's own triage), and re-check the 3 deliberately-deferred native todos for any newly-cleared gate.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

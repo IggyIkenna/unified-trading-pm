@@ -8,7 +8,7 @@ summary: >-
   BLOCKED-PREREQUISITES/`[OPERATOR]` items have since cleared (CF-8 window, the K1/K2 delete, the batch2 INJURIES
   enrichment), then runs the standard archival ritual on the Track S2 plan. Mirrors
   sports_consolidated_native_ao_extract_2026_07_25_finalize.md's re-check-then-archive pattern.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

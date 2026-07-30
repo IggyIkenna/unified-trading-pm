@@ -8,7 +8,7 @@ summary: >-
   re-check the 3 too-large-doc exclusions for whether they are now scoped enough for a batch2 pass, and re-verify the 1
   cross-doc live-conflict exclusion (LATE colliding-venue renames) has actually landed via its own live session before
   spinning it into a fresh todo.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -22,7 +22,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

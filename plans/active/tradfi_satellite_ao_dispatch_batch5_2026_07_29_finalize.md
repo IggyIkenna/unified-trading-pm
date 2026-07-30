@@ -11,7 +11,7 @@ summary: >-
   direct operator ask; did todo 2's re-measure clear the MDPS blocker, making tradfi_sp500_ml_and_arb_backtest_readiness
   a batch6 candidate), then archive batch5 via the standard 6-step ritual. Stays `status: draft` until batch5 itself is
   approved and dispatched, per task_template.md section 4's finalize-plan-coverage rule.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -26,7 +26,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

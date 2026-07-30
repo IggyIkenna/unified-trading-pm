@@ -6,7 +6,7 @@ summary: >-
   gate_on_depends: true until that plan's single delete todo is done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-7 checkbox and candle_feature_canonical_path_divergence_2026_07_20.md
   todo 19, then archives.
-status: draft
+status: active
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -20,7 +20,7 @@ related:
     /plans/active/issues/candle_feature_canonical_path_divergence_2026_07_20.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-07-30"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

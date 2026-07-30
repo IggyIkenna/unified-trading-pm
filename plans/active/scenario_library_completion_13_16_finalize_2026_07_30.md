@@ -5,7 +5,7 @@ summary:
   Gated close-out twin for scenario_library_completion_13_16_2026_07_27, reclassified NA -> planning by
   /na-eligibility-audit defi on 2026-07-30. Reconciles the source plan's checkboxes, confirms both ScenarioOverlay
   entries are genuinely consumed downstream, and checks archival eligibility once the source plan's todos are done.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [meta]

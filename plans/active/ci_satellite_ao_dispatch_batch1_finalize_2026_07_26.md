@@ -8,7 +8,7 @@ summary: >-
   deliver as standalone files (three concurrent todos cannot share that file). Then reconciles each distinct source
   doc's checkboxes/prose independently, re-checks the 6 conflict-gated Deferred items for any whose competing claim has
   since cleared, and archives batch 1 via the standard 6-step ritual.
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
