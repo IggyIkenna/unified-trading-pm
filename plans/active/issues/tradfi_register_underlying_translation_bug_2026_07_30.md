@@ -106,10 +106,18 @@ recovery/register effort exists to close AND introduced ~98 confusing extra rows
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. After the next manifest-consolidator run for the tradfi bucket, verify the corrected 248 rows (from
-      `_index/per_vm/local-2108856-43a6.parquet`) merged correctly into `_index/availability_index.parquet` with no
-      duplicate keys and no dropped rows — spot-check the same sample cells this issue doc verified (e.g.
+- [x] ✅ [SCRIPT] P2. After the next manifest-consolidator run for the tradfi bucket, verify the corrected 248 rows
+      (from `_index/per_vm/local-2108856-43a6.parquet`) merged correctly into `_index/availability_index.parquet` with
+      no duplicate keys and no dropped rows — spot-check the same sample cells this issue doc verified (e.g.
       `date=2020-06-29, venue=CME,     instrument_type=futures_chain, data_type=ohlcv_1m` should read
       `underlying=MICRO-SP500`). Repo: market-tick-data-service. **Done when**: a fresh read of the main
       `availability_index.parquet` confirms the sample cells carry the correct translated `underlying` and the total
-      registered-row count for this population is unchanged at 248 (no dupes, no drops).
+      registered-row count for this population is unchanged at 248 (no dupes, no drops). — **Verified 2026-07-30**: the
+      per-VM shard `_index/per_vm/local-2108856-43a6.parquet` is gone (consolidated); main index `updateTime`
+      2026-07-30T12:33:22Z (well after the 12:05:27-12:06:04Z write window). Read-only check against
+      `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`: the sample cell
+      (`date=2020-06-29, venue=CME, instrument_type=futures_chain, data_type=ohlcv_1m`) reads `underlying=MICRO-SP500`,
+      `capture_status=captured`. Isolating the register-run population (rows with `written_at` in the
+      `[12:05:00Z, 12:07:00Z]` write window, `service_name=market-tick-data-service`, chain/combo instrument_types):
+      exactly 248 rows, 0 duplicate `(date, venue, data_type, instrument_type, underlying)` keys, 0 rows with
+      `capture_status != captured` — no dupes, no drops.
