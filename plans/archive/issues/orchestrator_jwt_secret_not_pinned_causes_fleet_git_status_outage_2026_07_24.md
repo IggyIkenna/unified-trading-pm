@@ -23,7 +23,7 @@ summary: >-
   (unlike the fleet-git / DR-snapshot alerts, which both correctly post a ✅ close) — fixed in
   `unified-trading-pm@<pending>`. This issue tracks the DURABLE fix: pin `ORCHESTRATOR_JWT_SECRET_GCS` the same way the
   internal secret already is, so the next restart doesn't repeat this outage.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [agent-orchestrator, auth, jwt, orch_token, slot-host-symmetry, git-status-report, alerting, outage]
 related: [/codex/04-architecture/agent-orchestrator-alerting.md, /codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-07-24
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -53,6 +53,12 @@ depends_on: []
 ---
 
 # orchestrator JWT secret not pinned — fleet-wide git-status outage recurs on every restart
+
+> **ARCHIVED (2026-07-30) — resolved.** Both the `.env.local` fix and the systemd-unit-level
+> `Environment=ORCHESTRATOR_JWT_SECRET_GCS=...` drop-in are live and proven across a `--reload` cycle and a full
+> `systemctl restart`; the `verify-slot-host-symmetry.sh` RECOVERED-bookend gap found alongside this incident was also
+> fixed; and the operator's follow-on dashboard-hang report (traced to a missing fetch timeout in
+> `dashboard/src/api.ts`) was root-caused + fixed (`agent-orchestrator@fe6d369`). Nothing left to track.
 
 ## What happened (timeline, all UTC 2026-07-24)
 
@@ -195,6 +201,27 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
       off-VM operator laptop is unaffected even if it happened to have something on local port 8765. Combined fix +
       evidence detailed in the sibling doc's matching todo:
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`.
+- [x] ✅ **DONE 2026-07-30 (interactive session) — `agent-orchestrator@fe6d369`.** Root cause of the operator's actual
+      dashboard hang, per the residual flagged in the Progress Log entry below: `dashboard/src/api.ts`'s fetch wrapper
+      had no timeout, so a dropped/half-open connection left `refresh()`'s `Promise.all` pending forever — never
+      resolving, never rejecting, so neither the success path nor the existing 401-signout path ever fired. On a COLD
+      load (no prior successful `/api/state`) the ordinary `ErrorBanner` never renders either, since its own condition
+      requires `state` to already be truthy — the operator was left staring at the generic "Fetching dashboard state"
+      placeholder forever with zero indication anything had failed, even though `refresh()` was silently retrying
+      underneath every `POLL_INTERVAL_MS`. Fixed: `http()` now bounds every request with a 20s `AbortController` timeout
+      (`FetchTimeoutError`); `LoadingState` gained an error+retry branch that renders even on a cold load; `refresh()`
+      fires a best-effort `POST /api/client-telemetry/dashboard-stall` beacon on timeout, persisted via the existing
+      `log_activity()` store (same one backing `/api/activity`) so a recurrence is retroactively visible without needing
+      the stalled tab to survive long enough to self-report. Verified live: `bash     scripts/quality-gates.sh --no-fix`
+      green (2032 backend tests, dashboard tsc/vitest), plus a new Playwright regression
+      (`dashboard/tests/e2e/dashboard-stall.spec.ts`) that hangs `/api/state` via route interception, confirms the
+      retryable error UI appears within the 20s timeout with a well-formed stall beacon, then confirms Retry actually
+      recovers the dashboard once unhung — passing end-to-end against the real fetch-timeout code path, not a mock.
+      Shipped via quickmerge, landed on `live-defi-rollout`. **Residual, explicitly unresolved**: this fixes the
+      _symptom class_ (a stall now surfaces instead of hanging silently) and gives a retroactive trail for next time,
+      but does NOT identify what specifically stalled the operator's connection this particular morning — no
+      `dashboard_client_stall` activity row exists for it (the fix didn't exist yet when it happened). If it recurs,
+      check `/api/activity?types=dashboard_client_stall` first.
 
 ## Progress Log
 
@@ -236,3 +263,20 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
   candidate is the frontend's missing 401→sign-in fallback combined with some other transient (the 10:45:57 UTC
   `--reload` cycle dropping their WebSocket without a client-side reconnect) — flagged as a candidate follow-up, not
   filed as a separate issue yet. Practical resolution given to the operator: sign out/in for a fresh token.
+- **2026-07-30 (interactive session, same continuation)**: chased the residual above to a real, code-verified root cause
+  — not the vague "missing 401 fallback" guess, but a concrete gap: `api.ts`'s `fetch()` had no timeout at all, so a
+  stalled/dropped connection hung `refresh()`'s `Promise.all` forever (neither resolves nor rejects), and the cold-load
+  `ErrorBanner` gate (`state && ...`) meant even a thrown error wouldn't have shown anything better than the static
+  placeholder. Implemented + shipped the fix (20s `AbortController` timeout, cold-load error+retry UI, a persisted
+  `dashboard_client_stall` beacon via the existing activity-log store) with a new Playwright regression, full
+  quality-gates.sh green, via quickmerge — `agent-orchestrator@fe6d369`. This is the last open item in this doc;
+  archiving now per the 6-step ritual. Also hit unrelated turbulence while re-syncing this exact clone
+  (`.tabs/4/unified-trading-pm`) mid-session: `git pull --rebase --autostash`/plain restores repeatedly collided with
+  the slot's own `slot-cron-ff-pull.sh` background cron (confirmed live via `ps aux`) doing concurrent stash/pull
+  activity in the same worktree, twice leaving stray unrelated staged content (and once an unmerged pair). Resolved
+  safely both times (verified zero unpushed local commits first, so a plain restore-to-HEAD + `git pull --ff-only` fully
+  recovered with nothing lost); did not touch the pre-existing stash list, which is a known separate tracked issue class
+  (`unified_trading_pm_stash_pile_accumulation_2026_07_26`, cited in
+  `ao_open_issues_consolidated_close_out_2026_07_17.md`'s operator-gated bucket). Not filing a new issue for the
+  collision itself — it self-resolved, no data was at risk, and the underlying stash-pile class is already tracked — but
+  noting it here in case the interactive-session-vs-cron collision pattern recurs on this host.

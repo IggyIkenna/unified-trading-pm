@@ -147,18 +147,13 @@ other orphaned candidate considered and why it was NOT drafted.
       minted on that host and `/api/fleet/git-health` reports `reporter_stale=false` for it within one 15-min tick.
       Source: `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md` (its remaining
       INFRA P3 item). Repo: agent-orchestrator (host/credential action, no code change expected).
-- [ ] [DEVOPS] P1. **Pin `ORCHESTRATOR_JWT_SECRET_GCS` for `orchestrator.service`.** Create a persisted random-value
-      secret object (e.g. `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret.txt`, mirroring the
-      existing pinned internal secret/key pattern), add `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://...` to
-      `/etc/systemd/system/orchestrator.service` via `sudoedit`, then
-      `systemctl daemon-reload && systemctl restart orchestrator.service`. This closes a fleet-wide ~4.5h-outage root
-      cause (an unpinned JWT secret regenerates on every restart, invalidating every slot's cached token at once) that
-      has sat unclaimed since its only blocker — an operator-chosen maintenance window — was removed by the 2026-07-28
-      CLAUDE.md ruling. **Done when**: a token captured before the restart still validates after it, and `/api/healthz`
-      reports healthy post-restart. Source:
-      `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (its
-      remaining DEVOPS P1 item — the SCRIPT P2 loopback-fix half is already done, see batch1 todo 3). Repo:
-      agent-orchestrator (live-host action).
+- [x] [DEVOPS] P1. ✅ **DONE 2026-07-30 — already resolved, don't dispatch.** The `.env.local`-based literal
+      `ORCHESTRATOR_JWT_SECRET` was found already durably pinned (verified: a token survives a real restart), and the
+      systemd-unit-level `ORCHESTRATOR_JWT_SECRET_GCS` drop-in this todo describes was separately completed the same day
+      (`/etc/systemd/system/orchestrator.service.d/jwt-secret-gcs.conf`, verified via a genuine `systemctl     restart`
+      — token survived). Full evidence in the source doc's own "Remaining work" section (both todos) — now archived at
+      `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`. Repo:
+      agent-orchestrator (no code change needed for this todo specifically).
 - [ ] [DOCS] P1. [OPERATOR] **Update two codex docs still describing the old always-pin dispatch model.**
       `/codex/12-agent-workflow/work-philosophy.md` and
       `/codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` both need to state that
