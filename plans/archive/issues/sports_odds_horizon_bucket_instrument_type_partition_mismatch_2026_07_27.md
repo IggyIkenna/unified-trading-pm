@@ -21,7 +21,7 @@ summary: >-
   the whole shard's write is rejected. This is a NEW manifest-write failure with real data-loss consequence (the shard's
   candles never land), distinct from (and now cleanly surfaced by, rather than masked by) the error_reason free-text bug
   fixed in market-data-processing-service@da98dc7.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -34,6 +34,7 @@ related:
     /plans/active/sports_satellite_ao_dispatch_batch3_2026_07_25.md,
   ]
 created: 2026-07-27
+last_updated: 2026-07-29
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -44,13 +45,18 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
 drift_direction: advance-code
 locked_by:
-resolved_by:
+resolved_by: market-data-processing-service@1390312
 source: >-
   Surfaced during sports_satellite_ao_dispatch_batch3_2026_07_25.md's "[DIAG] Determine whether the free-text
   error_reason pattern ... is still live-writing today" todo — a by-product finding from the census script
   (market-tick-data-service/scripts/sports_error_reason_free_text_census_2026_07_27.py), not the todo's own subject.
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-INTO-CODE.** Already fixed by `market-data-processing-service@1390312` (2026-07-27
+> 08:12 UTC, shipped under a sibling finding's investigation) before this doc was even filed the same day — verified
+> live 2026-07-29 that `_group_batches_by_own_type` + its regression test
+> (`tests/unit/test_streaming_write_group_by_type.py`) are present and passing.
 
 # Sports odds_horizon_bucket/arbitrage_opportunity partition_mismatch — MATCH_ODDS vs MATCH_ODDS_LAY
 
@@ -81,16 +87,19 @@ ITSELF is still there — only its visibility/classification improved. The under
 
 ## Recommended decision
 
-- [ ] [DIAG] P2. Confirm the root-cause hypothesis by capturing one live failing batch (or reproducing from a recent
-      day's raw ticks) for a BETFAIR_EX_UK/MATCHBOOK MATCH_ODDS_LAY odds_horizon_bucket shard: verify whether
-      `_streaming_write_per_tf`'s per-shard grouping key in
-      `market_data_processing_service/app/core/live_workers_streaming.py` actually splits MATCH_ODDS from MATCH_ODDS_LAY
-      into separate `open_candle_streaming_writer` calls, or whether both instrument_types are routed into the same open
-      writer (the write-time contract in `canonical_writer_shaping.py::_infer_instrument_type`'s docstring requires the
-      two to always agree — if the grouping key doesn't include the LAY/back distinction, this is the code defect).
-      Repo: market-data-processing-service. Read-only investigation; no fix in this todo.
-- [ ] [CODE] P2. If confirmed, fix the per-shard grouping key so MATCH_ODDS and MATCH_ODDS_LAY rows for the same (venue,
-      league, fixture, timeframe) always land in separate writer shards (matching how the partition path already treats
-      them as distinct `instrument_type` values), with a regression test proving a mixed-type batch no longer raises
-      `partition_mismatch`. Repo: market-data-processing-service. Gated on the DIAG todo above confirming the root cause
-      first.
+- [x] ✅ [DIAG] P2. **ALREADY DONE — found already-shipped 2026-07-29 while triaging this doc.** Confirmed by direct
+      code read: `_streaming_write_per_tf`'s pre-fix behavior accumulated every batch for a timeframe and derived the
+      write partition's `instrument_type` from just the FIRST batch, force-writing every other batch (possibly a
+      different real type, e.g. MATCH_ODDS vs MATCH_ODDS_LAY) under that same partition — exactly this doc's root-cause
+      hypothesis, confirmed true. Root-caused and fixed under a sibling finding's own investigation
+      (`mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` Update 5's third bug), not re-derived here.
+- [x] ✅ [CODE] P2. **ALREADY DONE — `market-data-processing-service@1390312`** ("fix(mdps): split chain-streaming write
+      by per-batch instrument_type when no real chain root exists", 2026-07-27 08:12:34 UTC).
+      `_group_batches_by_own_type` (`live_workers_streaming.py:481-507`) now groups batches by each batch's OWN inferred
+      `instrument_type` whenever there is no genuine chain root (the sports legacy-sentinel `ticks.parquet` case),
+      writing one file per type instead of force-combining MATCH_ODDS and MATCH_ODDS_LAY under one partition; a true
+      chain (options_chain/futures_chain/DeFi reserves, single shared type) is unaffected, byte-identical to pre-fix
+      behavior. Regression test `tests/unit/test_streaming_write_group_by_type.py` (`TestGroupBatchesByOwnType`) proves
+      MATCH_ODDS/MATCH_ODDS_LAY split into separate groups (using the exact real crash order, MATCH_ODDS_LAY first)
+      while same-market batches with multiple fixtures stay combined — verified present and passing in the current
+      worktree. No new code shipped by this session — the fix predates this doc's own filing; closed on that evidence.
