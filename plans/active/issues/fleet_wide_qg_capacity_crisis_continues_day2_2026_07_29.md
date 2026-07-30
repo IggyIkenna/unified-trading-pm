@@ -468,4 +468,11 @@ not just noting.
   doc's standing "fluctuating-but-still-elevated" characterization, just a bigger individual burst than the last one.
   Flagged to main agent (`agt-fd75de`) for awareness per its own standing re-flag trigger ("task-holders start getting
   kicked repeatedly"); no operator page requested (bursty-not-steady-state read, same disposition as the prior
-  corroboration). No code or plan-structure change made; slot 1 left clean on `live-defi-rollout`.
+  corroboration). No code or plan-structure change made; slot 1 left clean on `live-defi-rollout`. **Addendum (main
+  agent `agt-fd75de`, independent real-time confirmation)**: main was tracking this exact window tick-by-tick from the
+  fleet side and confirms the burst-not-worsening read directly — killed count climbed to 5-6 with ZERO `worker_kicked`
+  events (this wave is `tmux_session_lost` host/session-churn self-healing via AutoSpawn, a distinct failure class from
+  a watchdog `worker_kicked` stuck-worker intervention — no watchdog fired here), commits kept landing throughout
+  (<2min-old commits verified across the window), and the fleet fully recovered to working 11-12 by ~16:41Z. Escalation
+  bar (commits→0 sustained, OR task-holders getting `worker_kicked` repeatedly) was not met by either measure. Net: a
+  wider-radius host-pressure burst that already self-healed, not 12 stuck workers.
