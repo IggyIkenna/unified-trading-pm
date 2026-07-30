@@ -134,7 +134,11 @@ class ImportChecker:
         """Recursively check all Python files in a directory."""
         for file_path in directory.rglob("*.py"):
             # Skip certain directories
-            skip_dirs = {".venv", "venv", "__pycache__", ".git", "node_modules"}
+            # .deps: some repos (e.g. market-tick-data-service) vendor-clone sibling
+            # packages (unified-trading-library, unified-api-contracts) here for Cloud
+            # Build staging — that's the sibling's OWN source tree, not this repo's code,
+            # so it must never be scanned for THIS repo's import-convention violations.
+            skip_dirs = {".venv", "venv", "__pycache__", ".git", "node_modules", ".deps"}
             if any(part in file_path.parts for part in skip_dirs):
                 continue
 
