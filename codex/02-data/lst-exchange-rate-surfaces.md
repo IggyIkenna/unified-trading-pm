@@ -77,12 +77,19 @@ exchange-listed symbol — there is **no per-symbol IS allow-list**.
 Honest absence: wstETH/rETH/rsETH/ezETH are DeFi-native wrappers rarely CEX-listed. If no venue lists a pair, the honest
 state is `EXPECTED_INSTRUMENT_NOT_LISTED` (their rate comes from #2/#3), NOT a fetch target that reads RED forever.
 
-### Surface #3 — Oracle price: the real code build, but PLUMBING (the RPC exists, it is dormant)
+### Surface #3 — Oracle price: SHIPPED 2026-07-21 (was dormant plumbing, now wired + manifest-verified)
 
-`AaveOracle.getAssetPrice()` is fully implemented and **dormant** (unwired to a running collection venue), not missing:
-`aave_positions.py::_fetch_rpc_oracle_prices` (+ the LST adapters) and
-`AAVE_ORACLE_ADDRESS = 0x54586bE62E3c3580375aE3723C145253060Ca0C2`. **Lift/share the RPC call — do NOT re-implement
-it.** The build is a 3rd collection branch + venue registration + denominator.
+**Update 2026-07-30**: the build described below shipped same-day as this doc (market-tick-data-service@672f82f5,
+follow-ups `27e077da`/`51ec9af2`) — `OraclePricesHandler` now collects `AaveOracle.getAssetPrice()` via a dedicated
+`_aave_oracle_collection.py` branch for all 6 LST reserves. Manifest-verified: venue=AAVE data_type=oracle_prices
+source=aave shows 5,568 `capture_status=captured` rows, 2023-01-27→2026-07-22 (backfilled in 3 waves 07-23/07-27/07-28).
+**Residual gap (tracked separately, NOT a build gap):** no oracle_prices row (any of the 3 venues — CHAINLINK/PYTH/AAVE)
+has landed since 2026-07-22, an 8-day silence despite the rest of the DeFi manifest writing daily — see
+`plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`.
+
+`AaveOracle.getAssetPrice()` was fully implemented and dormant (unwired to a running collection venue) before the above
+fix: `aave_positions.py::_fetch_rpc_oracle_prices` (+ the LST adapters) and
+`AAVE_ORACLE_ADDRESS = 0x54586bE62E3c3580375aE3723C145253060Ca0C2`. The RPC call was lifted/shared, not re-implemented.
 
 - **Venue token (RULED):** write venue `AAVE`, IS venue `AAVE-ETHEREUM`, `instrument_type=spot_asset`,
   `data_type=oracle_prices`. This EXTENDS the already-existing `AAVE-ETHEREUM` venue (flip phase `pipeline`→`live`), not
@@ -135,5 +142,6 @@ inner-join/vocab that drops Solana + LRTs from the feature output.
 ## Provenance
 
 Grounded by the 2026-07-21 4-rate data-availability audit
-(`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`) + the pipeline-add understand sweep. Build
-plan of record: `plans/active/lst_rate_honest_coverage_2026_07_21.md`. </content>
+(`plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md` — archived 2026-07-30, all todos shipped) +
+the pipeline-add understand sweep. Build plan of record: `plans/active/lst_rate_honest_coverage_2026_07_21.md`.
+</content>

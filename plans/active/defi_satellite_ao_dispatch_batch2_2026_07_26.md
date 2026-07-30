@@ -650,7 +650,7 @@ drift_direction: advance-code
   this doc — the unchecked `- [ ] [FEATURE] P2 delta_one funding_oi venue-aware annualisation` todo (features-service,
   thread venue through the delta_one calculator interface so non-8h venues like Hyperliquid annualise correctly) — is
   explicitly annotated in the doc itself as "DEFERRED —...
-- **`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
+- **`plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md`**: Phase-1's "orphaned_never_touched"
   verdict is a false positive produced by the narrow covering-set grep — the target doc is NOT actually orphaned.
   Grepping the covering set for the mechanism names (lst_yields, lst_rates, aave_oracle/AaveOracle, dex_pool_swaps,
   Curve, Orca/Raydium/Meteora) surfaced...

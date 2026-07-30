@@ -20,7 +20,7 @@ scope: [engineer, admin]
 tags: [defi, oracle-prices, capture-gap, forward-poll, manifest, data-availability, aave, chainlink, pyth]
 related:
   [
-    /plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md,
+    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/02-data/lst-exchange-rate-surfaces.md,
   ]
@@ -103,6 +103,12 @@ rows, that's a separate write-path bug to diagnose via its logs.
 - [ ] [INFRA] P2. **Decide whether `collect-oracle-prices` needs a standing cron/scheduler** instead of relying on a
       manually-relaunched VM — no CI/cron reference to `launch-defi-forward-poll.sh` exists anywhere in the workspace
       today, so a "high-freq PRICE-SENSITIVE" op currently has no self-sustaining trigger. (repo: deployment-service)
+- [ ] [DOCS] P3. **Fix the stale referrer in `plans/active/lst_rate_honest_coverage_2026_07_21.md`** — it still points
+      at `/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md` (now archived to
+      `/plans/archive/issues/...`), but that file is already at 1001 lines (over the 1000-line hard cap with no baseline
+      exemption for a touched file — `check_line_caps.sh`), so the referrer fix could not be committed alongside the
+      archival. Trim the plan below the cap first, then fix the two stale path references (frontmatter `related:` + the
+      body "Audit:" line). (repo: unified-trading-pm)
 
 ## Progress Log
 

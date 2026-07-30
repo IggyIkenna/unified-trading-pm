@@ -415,8 +415,8 @@ picture.
       on a data_type with non-zero coverage elsewhere.
   - [`plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md`](/plans/active/issues/defi_lst_oracle_timestamp_glued_instrument_id_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md`](/plans/active/issues/lst_exchange_rate_data_availability_2026_07_21.md)
-    — 0 open todos (closed/archived/record-only).
+  - [`plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md`](/plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md)
+    — 0 open todos (closed/archived/record-only; archived 2026-07-30).
   - [`plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md`](/plans/archive/issues/gas_fees_lst_rates_manifest_bucket_mismatch_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md`](/plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md)

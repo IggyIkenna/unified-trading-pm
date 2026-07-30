@@ -88,7 +88,7 @@ related:
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
-    issues/lst_exchange_rate_data_availability_2026_07_21.md,
+    /plans/archive/issues/lst_exchange_rate_data_availability_2026_07_21.md,
     archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md,
     /plans/archive/issues/mtds_lst_extended_rates_uncited_addresses_2026_07_19.md,
     issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
