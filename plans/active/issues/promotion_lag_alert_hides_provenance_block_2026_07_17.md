@@ -140,14 +140,15 @@ about the alert that reports the residue.
       promote PR actually merges — the recovery-bookend mechanism itself (`branch-health.yml`'s `lag-notify-resolved` +
       `promotion_lag_monitor.py`'s per-pair clear-diff) was independently verified this session to be correctly
       implemented, not missing.
-- [ ] [DATA] P2. **New, separate finding (not tonight's alert, not fixed by this session)**: `market-tick-data-service`
-      promote PR (currently #782, immutable-per-SHA-ref pattern means the number will keep changing as LDR moves) is
-      blocked by STEP 5.101 (empty-string-fallback-site ratchet, ratchet baseline 89, current count 93) — 4 new sites in
+- [x] ✅ [DATA] P2. **New, separate finding — ALREADY RESOLVED, no action needed.** `market-tick-data-service`'s promote
+      PR was blocked by STEP 5.101 (empty-string-fallback-site ratchet, baseline 89, observed 93) at
       `scripts/verify_cefi_canonical_4surface_2026_07_20.py:531-532` and
-      `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py:67-68`, both owned by slot-11's active in-flight work
-      (last touch `f9222f78`, 2026-07-30T04:08:24Z). Owner (slot-11) or a future hygiene pass should either refactor the
-      4 sites' `.get(key, "")` fallback pattern or explicitly accept the ratchet bump, so the promote PR can merge.
-      Provenance is cleared and the SIT gate passes — this is the ONLY remaining blocker for MTDS's promotion.
+      `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py:67-68`. Investigated to fix directly; found slot-7 had
+      already shipped the fix (`market-tick-data-service@00c2cfe4`, 07:57:57Z, fleet count back to 87 < baseline 89) —
+      its own issue doc `mtds_empty_string_fallback_baseline_drift_2026_07_30.md` is `status: resolved`, archived.
+      Manually re-dispatched `ldr-to-main-promote-fleet.yml` to cut a fresh promote PR carrying that fix sooner than the
+      scheduled tick. Provenance cleared, SIT gate passes — once the fresh PR's own SIT-revalidation cycle completes,
+      MTDS's promotion has no remaining blocker.
 
 ## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — outcome update)
 
@@ -156,21 +157,27 @@ about the alert that reports the residue.
   dispatched `full-workspace-sit` run reached `conclusion=success` (07:31:30Z start, ~45min runtime — genuine
   workspace-wide integration-test duration, not a hang; queued behind one busy self-hosted runner beforehand). This
   branch-health alert line is now fully resolved with no operator action needed.
-- **market-tick-data-service: SIT-gate cleared, blocked on a SEPARATE, genuine, NOT-mine-to-fix issue.** Its promote PR
-  was likewise superseded (#781 → fresh #782, same immutable-ref pattern) and `sit-gate/fleet-green` now shows `pass`
-  against the fresh SIT run. But its own `quality-gates-v2` / QG slice (checks) then FAILED for a real reason
-  unconnected to provenance, SIT, or the GHA billing wall: **STEP 5.101 (empty-string-fallback-site ratchet)** — 93
-  `.get(key, "")` sites found vs. baseline 89, the 4 new ones in `scripts/verify_cefi_canonical_4surface_2026_07_20.py`
-  (lines 531-532) and `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py` (lines 67-68). Traced ownership: both
-  files were committed by **slot-11** (`ikennaigboaka [slot-11·planning]`, most recently
-  `f9222f78 fix(defi): dedupe verify script by dest object before re-download`, 2026-07-30T04:08:24Z) — active,
-  in-flight work by a different slot, not stale/abandoned. **Not fixed by this session**: it's a different slot's active
-  script, the fix requires either refactoring their fallback pattern or a baseline-bump judgment call that isn't mine to
-  make unilaterally, and it is unrelated to either of tonight's two Slack alerts (stale-build-watcher,
-  branch-health/promotion-lag) — both of which are otherwise fully resolved. Flagging as a genuinely new, separate,
-  small finding for slot-11 or the next PM-corpus hygiene pass: fix the empty-string-fallback sites (or explicitly
-  accept the ratchet bump) in `market-tick-data-service`'s `verify_cefi_canonical_4surface_2026_07_20.py` /
-  `verify_kamino_solend_lending_relabel_2026_07_30.py` so PR #782 (or whatever supersedes it) can merge.
+- **market-tick-data-service: SIT-gate cleared; hit a SEPARATE, real ratchet violation, ALREADY FIXED by another slot
+  before I could act.** Its promote PR was likewise superseded (#781 → fresh #782, same immutable-ref pattern) and
+  `sit-gate/fleet-green` now shows `pass` against the fresh SIT run. But its own `quality-gates-v2` / QG slice (checks)
+  then FAILED for a real reason unconnected to provenance, SIT, or the GHA billing wall: **STEP 5.101
+  (empty-string-fallback-site ratchet)** — 93 `.get(key, "")` sites found vs. baseline 89, reported (positional
+  tail-slice, git-diff-against-baseline-commit failed) at `scripts/verify_cefi_canonical_4surface_2026_07_20.py:531-532`
+  and `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py:67-68`. Investigated to fix directly per the
+  operator's explicit instruction — read `check_no_empty_string_fallback.py`'s exemption criteria, confirmed all 11
+  `.get(..., "")` sites across both files fit the documented "field may be absent, empty string is the correct
+  not-present sentinel" safe case (the `parse_object()`/`resolve_with_maps()` skip-if-absent pattern in the cefi script;
+  the kamino/solend script's absence-correctly-falls-through-to-MISMATCH pattern) — but found **slot-7 had already
+  shipped the identical fix** minutes earlier: `market-tick-data-service@00c2cfe4` (07:57:57Z, "annotate 6 pre-existing
+  empty-string-fallback sites (STEP 5.101 baseline drift)"), already pushed to `live-defi-rollout`, bringing the
+  fleet-wide count to 87 (< baseline 89). Its own issue doc
+  (`plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md`) is already `status: resolved` and
+  archived — nothing left to fix. PR #782 predates that fix commit (created 07:16:25Z, the fix landed 07:57:57Z) so it
+  doesn't carry it; manually re-dispatched `ldr-to-main-promote-fleet.yml` to cut a fresh superseding PR sooner rather
+  than waiting for the ~15-30min scheduled tick — that fresh PR will include `00c2cfe4` and should clear STEP 5.101,
+  though it will need its own SIT-gate revalidation cycle (the tree moved again) before it can merge. Correcting my own
+  earlier note in this doc: the files' most recent prior touch was slot-11's (`f9222f78`), but the actual STEP 5.101 fix
+  was slot-7's, not slot-11's — attributing correctly for anyone reading this later.
 
 ## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — final update)
 
