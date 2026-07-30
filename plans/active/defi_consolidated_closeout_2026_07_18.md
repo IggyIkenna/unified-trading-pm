@@ -94,7 +94,7 @@ related:
     issues/mtds_perp_funding_backfill_hang_2026_07_14.md,
     archive/issues/mtds_solana_defi_drift_adapter_contract_baseline_stale_2026_07_15.md,
     issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
+    archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
     issues/phantom_captures_defi_2026_06_28.md,
     issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
