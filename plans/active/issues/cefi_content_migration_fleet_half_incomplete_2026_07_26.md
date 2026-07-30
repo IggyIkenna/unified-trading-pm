@@ -443,3 +443,17 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   insufficiently-verified basis — flagging honestly that their true today-relaunch-counts are UNVERIFIED, not
   confirmed-within-budget as I claimed when relaunching them). My role from here: monitoring + documentation
   consolidation only, not further manual VM relaunch/kill actions on this fleet.
+- **2026-07-30 update (slot-15, post-`/compact`, monitoring-only, no action taken)**: fleet check post-compaction shows
+  19 VMs present (down from 20 — shard 16 already-accepted absent, plus one more now gone). Confirmed via `run.log` that
+  shards 43 (`-132900`) and 44 (`-145700`) both died on a THIRD distinct failure signature from this session: explicit
+  `rc=137` (OOM-kill, `bash: ... Killed`) after making real progress (43: 41,200/71,925 files, 6573s elapsed; 44:
+  10,400/80,026 files, 1296s elapsed) — this is the ORIGINAL small-machine-type OOM class, not the slow-freeze class,
+  meaning it recurred even on relaunches that should already carry the machine-type fix (unverified whether these two
+  specific relaunches used the escalated machine type — flagging as unconfirmed rather than asserting). Both
+  self-deleted cleanly via their own `VM_SHUTDOWN_ON_COMPLETION=true` path (not an external kill). A partial
+  `DeploymentsRegistry` archive scan (timed out after 250/​day's-objects, so this count is a LOWER BOUND, not
+  exhaustive) already showed shard 44 with 4 archived dead attempts today (`-122417`, `-130600`, `-132900`, `-145700`)
+  and shard 43 with at least 1 (`-130600`) plus the `-132900` death just observed — both almost certainly over the
+  `RB-INFRA-RELAUNCH` ≤2/(vm-prefix,day) budget already. Per my prior self-correction commitment: **did not relaunch
+  either shard** — documenting only, deferring to the `data_pipeline_failure` fleet-monitor (slot-3/slot-7) which has
+  the correct tooling and mandate to act on this.
