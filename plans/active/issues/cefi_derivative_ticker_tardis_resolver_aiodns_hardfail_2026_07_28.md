@@ -64,7 +64,7 @@ resolved_by:
 source:
   "POST /api/escalate wall_type=data_pipeline_failure, escalation agt-7a4d1d, DP_RUN_MOSTLY_EMPTY (DP-FETCH-009)
   CRITICAL, asset_group=cefi data_type=derivative_ticker, 158085/1410602 attempted_failed (11.2%), Fresh 0d"
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 ---
 
 # CeFi derivative_ticker DP-FETCH-009 -- Tardis clients hard-fail without aiodns (fixed) + open HYPERLIQUID 429 question
@@ -377,3 +377,24 @@ and the residual-KeyError defense-in-depth path.
   labels, never gates paging cadence). The real, worth-fixing gap is that a THIRD full escalation-worker session got
   spent re-confirming a condition two prior sessions already fully diagnosed -- filed as its own process issue (see new
   P2 todo above) since the fix belongs in agent-orchestrator/ deployment-service's escalation dispatch, not this repo.
+- **2026-07-30 (data_pipeline_failure escalation worker, escalation agt-40f31f) — 5th+ dispatch, confirmed still static,
+  no new work.** Alert re-fired: 158,475/1,502,222 attempted_failed (10.5%), labeled "STATIC BACKLOG — no new
+  attempted_failed activity in 1d". Ran a fresh live, bounded, column-projected `read_availability_index` read
+  (`data_type=derivative_ticker`, `capture_status=attempted_failed`) before assuming the label was correct, since the
+  raw numerator had moved (+390 vs the 2026-07-29 reading of 158,085 — NOT byte-identical this time, unlike the prior
+  three re-fires). Confirmed the delta is fully explained, not a regression: `written_at` max across all 158,475 rows is
+  `2026-07-29T09:07:42Z` — **zero rows written in the last 24h** (0 within 1d; the +390 are rows written 2026-07-29,
+  i.e. before or concurrent with the prior session's same-day reading, not a new event). Full `error_reason` breakdown
+  confirms every bucket is a subset of the already-documented static backlog: `UNCLASSIFIED:Tardis HTTP 403` +
+  `Tardis HTTP 403` + `Tardis HTTP 403 code=274 concurrent-IP-lock` = 118,584 (the 403-family), `VENUE_FETCH_FAILED` =
+  30,934 (exact match to the prior doc's figure), the 2,258-row 2026-07-28T09:03:12Z fresh-slice signatures (429
+  raw-tuple, aiodns, K\*-symbol KeyError) all present at their expected counts, plus a handful of older/smaller
+  historical buckets not previously itemized here (`Tardis HTTP 500`/`503`/`400`: 2,784 rows combined;
+  `schema contract violated for cefi/COINBASE-FUTURES/perpetual/derivative_ticker`: 115 rows, 100% COINBASE-FUTURES;
+  `StreamingParquetWriter pre-write validation failed`: 81; `In CSV column #N`: 68) — none of these wrote anything in
+  the last 7 days either (confirmed via the same read filtered to `written_at`), so they're pre-existing static debris,
+  not a new failure class. Verified both prior fix commits (`market-tick-data-service@6a067cf1`, `@6c6fab03`) remain
+  ancestors of `origin/live-defi-rollout` — nothing to re-ship. **No code change, no new todo** — this is exactly the
+  redundant-dispatch waste `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` already tracks (still
+  `status: open`, P2, awaiting an operator/design decision on Option A/B/C); adding this as further corroborating
+  evidence there rather than duplicating the todo here.

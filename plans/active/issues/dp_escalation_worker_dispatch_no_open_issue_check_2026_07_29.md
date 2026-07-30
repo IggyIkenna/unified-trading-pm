@@ -131,6 +131,18 @@ regression) is worse.**
   manifest read needed since the numbers were already labeled STATIC BACKLOG) but still a full worker-session dispatch
   each time. Further corroborates Option A over B/C — a numerator-unchanged condition with an OPEN issue doc already
   covering it should not need a fresh orchestrator-agent spawn at all, even a cheap one.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-40f31f) — 5th+ dispatch, `(cefi, derivative_ticker)`.**
+  `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md` re-fired again (its 5th dispatch overall — 2
+  diagnosis+fix sessions, 2 prior static-confirm sessions, now this one). This time the raw numerator had genuinely
+  MOVED since the last reading (158,085 → 158,475, +390) rather than being byte-identical, so a full live bounded
+  manifest read was actually warranted (not just a git-ancestor check) to rule out a real regression — it confirmed the
+  delta was fully attributable to writes already made on 2026-07-29 (before/concurrent with the prior session's same-day
+  reading), zero rows written in the last 24h, no new failure class. Still net-zero new work, but this instance shows a
+  numerator-moved condition can still be a false alarm — Option A's "skip only if numerator/ratio unchanged since
+  last_updated" criterion (as literally worded) would have WRONGLY forced a full re-diagnosis here, since the numerator
+  DID move. Worth folding into whichever option gets picked: the correct skip condition is "no new `written_at` activity
+  since the doc's last verified reading," not "numerator byte-identical" — the former is robust to reads landing on
+  different sides of a write batch, the latter isn't.
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc self-documents its own AO-ineligibility: 'This needs an
   operator/design call on the right dedup semantics before implementation (marked assigned_vm: NA — not
