@@ -75,7 +75,7 @@ operator approval.
 
 ## Todos
 
-- [x] ⛔ [DATA] P1. **MOVED to Conflict-gated item 3 below (BLOCKED-OPERATOR-DECISION) — 2026-07-30, slot-12.** Was:
+- [x] ✅ [DATA] P1. **MOVED to Conflict-gated item 3 below (BLOCKED-OPERATOR-DECISION) — 2026-07-30, slot-12.** Was:
       "Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group." Both skills'
       SKILL.md § 0 forbid synthesizing `--day`; filed `/blocked` (`BLK-b5b0e61a`, duplicate of standing `BLK-d355f03a`
       already independently raised by slots 4 and 5); operator ruled **C** — park, do not invent a day. **No dated runs
