@@ -39,13 +39,14 @@ source:
 ## Todos
 
 - [ ] [OPERATOR] P1. **Approve/dispatch `ao_satellite_ao_dispatch_batch2_2026_07_30.md`** (flip `status: draft` →
-      `active`). It already carries real, ready fixes for 7 docs from the orphan sweep
-      (`ao_done_require_origin_not_enforced_2026_07_29`, `dispatch_sequential_gate_fix_2026_07_24`,
+      `active`). It already carries real, ready fixes for 6 docs from the orphan sweep (was 7 —
+      `orphan_rootm_branch_unmerged_work_2026_06_05` resolved + archived 2026-07-30 directly, moot, no batch2 fix
+      needed): `ao_done_require_origin_not_enforced_2026_07_29`, `dispatch_sequential_gate_fix_2026_07_24`,
       `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27`,
       `git_status_reporter_stale_public_url_token_expiry_2026_07_24`,
       `orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24`,
-      `orphan_rootm_branch_unmerged_work_2026_06_05`, `ao_recovery_audit_layer1_deleted_2026_07_15`) — nothing else is
-      needed to unblock them. **Done when**: `status: active` + AO has picked it up (`/check-agent-orchestrator`).
+      `ao_recovery_audit_layer1_deleted_2026_07_15` — nothing else is needed to unblock them. **Done when**:
+      `status: active` + AO has picked it up (`/check-agent-orchestrator`).
 - [ ] [OPERATOR] P1. **Rule on the 12 operator-gated docs from the orphan sweep**, one at a time — each is a genuine
       design/judgment fork with no evidence-based tiebreaker, per Phase 1 of the audit:
       `escalation_backlog_repo_collision_blind_spot_2026_07_25`,

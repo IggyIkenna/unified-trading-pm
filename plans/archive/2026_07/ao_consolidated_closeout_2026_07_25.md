@@ -151,7 +151,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (git-health reporter races the FF-pull cron, phantom-dirty flicker) ·
 [issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·
-[issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/active/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
+[issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/archive/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
 (orphaned unmerged work on dead root-VM agent-slot branches).
 
 **Close-out criterion**: each git-safety race fixed (killed-slot orphan recovery, idle-slot inherit, double-reset guard,

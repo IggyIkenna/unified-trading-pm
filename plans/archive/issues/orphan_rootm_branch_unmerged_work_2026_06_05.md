@@ -4,7 +4,7 @@ title: Orphaned unmerged work on 7 tab/rootm/* branches (dead root-VM agent slot
 summary:
   "`tab/rootm/*` branches were created by VMs that ran the OLD setup-tab-worktrees.sh as `$USER=root` (prefix collapsed
   to `rootm` — the collision class fixed by the VM-name-scoped prefix, 2026-06-04)..."
-status: open
+status: resolved
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -29,13 +29,31 @@ source:
     tab_branch_global_uniqueness (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § precondition),
   ]
 assigned_vm: planning
-resolved_by:
-locked_by: live-defi-rollout
+resolved_by: slot-1 (harsh_pc)
+locked_by:
+locked_since:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-27
+last_updated: "2026-07-30"
 ---
+
+> **🗄️ ARCHIVED 2026-07-30 — MOOT, no cherry-pick needed.** The 7 branches themselves are already confirmed gone
+> (2026-07-27 correction below), and the presence-check that was gating archival (does each branch's functionality
+> already exist on LDR through other commits?) has now been run directly — every one of the 7 commit-sets is
+> superseded-in-spirit by since-independently-developed code, generally more extensively: agent-orchestrator's
+> `WorkerLivenessWatchdog` exists (`server/worker_liveness_watchdog.py` + 4 test files); deployment-service's
+> consolidator watchdog exists (`vm_zombie_watchdog.py`, `deadman_poster.py`, `cloud_run_job_registry.py`);
+> market-tick-data-service's tardis concurrency cap / `book_snapshot_5` handling / `available_from_datetime` filtering
+> are all covered far more extensively than the single dead commit-sets (dedicated `test_tardis_concurrency_lease.py`,
+> `book_snapshot_5` referenced across a dozen+ files); strategy-service's kill-switch subscriber exists in far more
+> complete form (separate subscribers for risk/position/pnl/archetype/scenario, not just one generic update);
+> unified-api-contracts' incident/risk/circuit-breaker modules exist (`incident.py`, `risk.py`,
+> `registry/circuit_breakers/`); unified-trading-library's cloud-interface messaging module exists verbatim
+> (`cloud_interface/messaging.py` + tests); the 7th commit (`ruff format`) is trivial/moot by nature. Nothing was lost —
+> later, independent work simply overtook these dead branches' ideas. No cherry-pick, no further review needed.
+> Satisfies `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "Done when" gate for its rootm-presence-check todo
+> (dated verdict + evidence, this section) — flip that todo whenever that plan is next touched.
 
 > **🟡 CORRECTION (2026-07-27)**: this doc's core premise — "7 branches left in place" — is now factually false.
 > Independently re-verified fresh via `git ls-remote --heads origin 'tab/rootm/*'` across all 6 named repos
@@ -100,13 +118,10 @@ divergence monitor's signal meaningfully (7 vs the prior 41), and the naming-col
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Note (2026-07-29, corpus hygiene pass): branches confirmed absent per the 2026-07-27 correction;
-      full archival still pending the finalize plan's dated verdict** (`ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
-      presence-check todo is still `- [ ]` and `ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md` is still
-      `status: draft`, gated, none of its todos run yet — so the specific dated verdict this doc's own process requires
-      does not exist yet; checkbox intentionally left unflipped). **Review + inherit-or-delete the 7 remaining
-      `tab/rootm/*` branches** — per commit, per repo (agent-orchestrator, deployment-service, market-tick-data-service,
-      strategy-service, unified-api-contracts×2, unified-trading-library×2): confirm superseded-in-spirit work vs.
-      genuinely valuable unmerged work, then delete or cherry-pick+quickmerge accordingly. Blocked on
-      `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s read-only presence-check todo (still `- [ ]`) landing a dated
-      verdict here first — do not archive this doc until that verdict exists.
+- [x] ✅ [OPERATOR] P2. **Review + inherit-or-delete the 7 remaining `tab/rootm/*` branches** — per commit, per repo
+      (agent-orchestrator, deployment-service, market-tick-data-service, strategy-service, unified-api-contracts×2,
+      unified-trading-library×2): confirm superseded-in-spirit work vs. genuinely valuable unmerged work, then delete or
+      cherry-pick+quickmerge accordingly. **RESOLVED 2026-07-30** — the branches are gone (2026-07-27 correction) and
+      the presence-check landed a dated verdict directly on this doc (see the ARCHIVED banner above): all 7 commit-sets
+      are superseded-in-spirit by since-independently-developed code. No cherry-pick performed or needed; nothing was
+      lost.
