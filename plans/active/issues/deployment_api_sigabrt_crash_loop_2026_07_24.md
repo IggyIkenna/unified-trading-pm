@@ -294,6 +294,20 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
+- **2026-07-30T12:45Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-005` (this `[REVIEW] P2`
+  todo, 12th+ dispatch) — same slot's own prior check (12:09Z entry immediately below, 36min ago). Re-verified both
+  facts fresh rather than trusting the recent memory: (1)
+  `git log -- cloudbuild.yaml deployment_api/gunicorn.conf.py gunicorn.conf.py deployment_api/main.py` on
+  `origin/live-defi-rollout` shows no new commit since `acdd4c8` (the gen1 pin) — the newly-filed `[BACKEND] P2`
+  sandbox-external-termination todo has not shipped; (2) `gcloud run revisions list` confirms
+  `uts-shared-deployment-api-00339-dw7` (created `11:39:33Z`) is still the live revision, unchanged; (3)
+  `gcloud logging read` for `"Uncaught signal"` since `2026-07-30T11:17:00Z` returns only the same already-catalogued
+  `00338-4qv@11:17:37Z` row — zero new occurrences in the 88min since. Neither precondition branch advanced. Not
+  flipping the checkbox (unchanged from 12:09Z). Releasing via `skip-current-task` (`reason_code: GATED`) per this doc's
+  own established pattern (13th+ consecutive dispatch to hit the same unmet, stochastic-external-event precondition) —
+  the actionable next step remains the BACKEND-scoped Cloud Monitoring investigation filed at 12:09Z, not a REVIEW
+  re-check.
+
 - **2026-07-30T12:09Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
   todo, 11th+ dispatch). This time BOTH preconditions are met: (1) confirmed via DIRECT annotation inspection
   (`gcloud run revisions describe ... --format=json`, not source-diff) that the gen1 pin IS live —
