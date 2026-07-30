@@ -78,10 +78,9 @@ resolved — the baseline creeps toward meaninglessness instead of catching real
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P3. Add a `BLK_ID_RE = re.compile(r"BLK-[0-9a-f]{6,}")` (or similar) to
-      `check_credential_ask_orphans.py`'s accepted-citation set, matching the live `/api/slots/<N>/blocked` id format,
-      so an answered blocked-question citation counts as a valid ack (mirrors how `ACK_TOKENS` already accepts
-      `CONFIRMED-STATUS`/`DEFERRED-OPERATOR-DECISION` for other resolved-without-a-file-ping cases).
+- [x] [SCRIPT] P3. **DONE — already shipped, unified-trading-pm@75adf01c4** ("fix(qg): recognize BLK-<id> as valid
+      credential-ask-orphan evidence"). Verified live 2026-07-30: `BLK_ID_RE = re.compile(r"\bBLK-[0-9a-f]{6,}\b")` is
+      defined and wired into `_has_ask_evidence()`'s accepted-evidence checks alongside `PING_PATH_RE`/`SECRET_NAME_RE`.
 - [ ] [SCRIPT] P3. Consider whether an IAM-permission gap (names the exact missing role/permission + exact remedy
       command, no secret needed) should be tagged `BLOCKED-PERMISSIONS` instead of `BLOCKED-CREDENTIALS` going forward —
       a naming split, not a behavior change, so the vendor-credential ratchet stays meaningful. If adopted, migrate the

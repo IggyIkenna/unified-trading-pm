@@ -100,12 +100,17 @@ re-check `check_frontmatter_schema.py` passes after any bulk frontmatter edit be
       sports_consolidated_closeout, needed no change — see correction above). `unified-trading-pm@<pending>`.
 - [x] [DOC] P2. ✅ N/A — `sports_consolidated_closeout_2026_07_19.md` was never actually blank (see correction); no edit
       needed.
-- [ ] [SCRIPT] P3. Add a hygiene check (`run_hygiene_sweep.sh` or `check_frontmatter_schema.py`) flagging any active
-      plan/issue doc with a blank `assigned_vm` as a HARD violation — the field should never be silently absent; `NA`
-      and `planning` are both valid, blank is not. This closes the root cause, not just today's backlog. **Extend the
-      checker to also catch the multi-line-continuation false-positive shape** found above (a scalar value living on an
-      indented line after a bare `key:`), not just a same-line-blank pattern — a naive fix for this todo could itself
-      reintroduce the exact bug this correction just fixed.
+- [x] [SCRIPT] P3. **DONE 2026-07-30 — unified-trading-pm@e88c41727.** `scripts/docs/docspec.py`'s `issue` doc_type
+      `FieldSpec("assigned_vm", ...)` flipped `Req.O` → `Req.R` — `check_frontmatter_schema.py` (already the sole,
+      whole-corpus, blocking frontmatter gate) now HARD-fails on a blank/absent `assigned_vm` on any issue doc; `NA` and
+      `planning` both still pass (`registry_or_na` validator type unchanged). This closes the root cause via the SAME
+      already-existing zero-violations gate, not a new checker — proven live: 4 pre-existing issue docs newly caught
+      with a genuinely blank field (none from this doc's own original 58; new arrivals since), all fixed in the same
+      change so the corpus stayed at its pre-existing violation count. **Multi-line-continuation false-positive immune
+      by construction**: this fix uses `docspec.validate_frontmatter()`'s real `yaml.safe_load` parser (the same one
+      `check_frontmatter_schema.py` always used), never a line-based grep, so the exact false-positive class this todo
+      warned against (a scalar value on an indented continuation line after a bare `key:`) cannot recur here — it was
+      only ever a hazard for a hand-rolled single-line grep, which this fix never introduces.
 - [ ] [REVIEW] P2. **The 30 now-`planning`-tagged docs with real open todos still need the standard conflict-check
       against currently-active plans before their content is trusted for dispatch** (per `/ag-closeout-audit`'s own
       Phase-3 methodology) — flipping `assigned_vm` makes them backlog-eligible, it does not itself verify no other
