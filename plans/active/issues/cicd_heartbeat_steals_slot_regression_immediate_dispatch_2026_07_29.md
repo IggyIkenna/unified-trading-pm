@@ -185,10 +185,28 @@ visible to the very next read, at least for this `wall_type=ldr_qg_failure` esca
       genuinely stuck/failed spawn never strands a slot. Covered by 7 new unit tests (grace-window hold/expiry/
       idle-slot-unaffected/ordering-vs-live-check in `tests/test_boot_typed_role_gate.py`, pre-stamp assertions in
       `tests/test_escalation.py` + `tests/test_plan_health.py`); full `quality-gates.sh` green (2001 passed, 1 skipped).
-- [ ] [BACKEND] P2. Once root-caused, audit how many currently-bound `slot.current_task` values across the fleet are
+- [x] ✅ [BACKEND] P2. Once root-caused, audit how many currently-bound `slot.current_task` values across the fleet are
       actually foreign Class-A tasks silently stolen from a typed one-shot occupant mid-escalation (this session found
       one; the fleet-wide billing-wall storm today dispatched many `cicd` workers in a short window, raising the odds
-      this class fired more than once). (repo: agent-orchestrator)
+      this class fired more than once). (repo: agent-orchestrator) — audited, no code change (see Progress Log).
+      **Answer: 0 currently-bound `slot.current_task` values are live unresolved steals, as of 2026-07-30 05:35 UTC.**
+      Historically confirmed 83 same-call steal incidents (typed claim → `stale_spawn_base_role_cleared`(no_agentrow) →
+      `task_dispatched` within ~0.2-2s, all sub-second in spot checks) fleet-wide across 16/16 slots between 2026-07-25
+      23:00 and 2026-07-30 04:15, concentrated 2026-07-28 19:00–2026-07-29 05:00 (~41 of the 83) — corroborates this
+      doc's own suspicion that the `github_actions_billing_wall_recurrence_2026_07_29` storm's mass `cicd`-worker
+      dispatch wave fired this bug repeatedly, not just the one session that found it. Exactly ONE incident fired after
+      the P1 fix's commit timestamp (agent-orchestrator@3d993fb, authored 03:45:25) — slot 8, 04:15:43 — but that is a
+      deploy-propagation-lag artifact, not a code defect: the ROOT checkout's `server/routes/slots_worker.py` (the
+      uvicorn `--reload`-watched file the live process actually serves) did not pick up the fix's content until 04:20:54
+      (confirmed via file mtime; the periodic root-checkout FF-pull cron lags commit-landed-on-LDR by several minutes) —
+      so the running process was still serving pre-fix code at 04:15:43 despite the fix already being on
+      `origin/live-defi-rollout`. Zero `no_agentrow` steals have recurred in the ~74 minutes (dozens of further
+      dispatches) since 04:20:54, when the fix code actually went live. Every currently-bound slot's MOST RECENT
+      dispatch of its bound task (not just any historical dispatch of that task_id — several stolen tasks got
+      reclaimed/requeued and later legitimately redispatched to a different or the same slot, which a naive task_id-only
+      correlation would misattribute) was independently verified clean (no `stale_spawn_base_role_cleared` immediately
+      preceding it). No new issue doc filed — this confirms the P1 fix is holding, it does not surface a new defect;
+      P3's shared-fix consideration below is unaffected.
 - [ ] [BACKEND] P3. Consider whether the `/done` 400 fix (tracked in the sibling docs above) and this heartbeat-steal
       regression should share one fix: both trace to the same `find_active_agent_for_session` miss: a fix there (grace
       window, widened status filter, or transaction-scope correction) likely closes both simultaneously. (repo:
@@ -253,3 +271,22 @@ visible to the very next read, at least for this `wall_type=ldr_qg_failure` esca
   session) — already resumed and back on normal dispatch (`e2e_coverage_gaps_alerting_deployment_trading_agent-003`), no
   action needed. P2 (fleet audit of currently-bound stolen tasks) and P3 (shared-fix consideration with the `/done` 400
   family) remain open, unassigned.
+
+- 2026-07-30 (slot 16, backend_engineer): completed the P2 fleet audit — no code change, live-data analysis only.
+  Method: read-only SQLite queries (`file:...?mode=ro`, WAL mode already in use so this never contends with the live
+  server's writer) directly against the running orchestrator's `data/state/state.db` (found via the
+  `orchestrator.service` systemd unit's `WorkingDirectory=`, since `spawn_base_role` is not exposed by
+  `GET /api/state`). Defined the steal signature precisely from the code read of
+  `_typed_occupant_liveness`/`heartbeat_slot` (`server/routes/slots_worker.py`): a genuine same-heartbeat-call steal is
+  `escalation_dispatched`/`plan_health_dispatched` (the typed claim) →
+  `stale_spawn_base_role_cleared`(reason=`no_agentrow`) → `task_dispatched` on the SAME `slot_id`, with the
+  stale-clear→dispatch gap sub-2-second (spot-checked at ~0.2s) — looser windows (I first tried 90s/120s) produced false
+  positives by matching an OLD unrelated stale-clear/dispatch pair days apart, or by crediting a steal to a task_id's
+  FIRST-ever dispatch when that exact task had since been legitimately reclaimed and redispatched (e.g.
+  `defi_dex_pool_symbol_fix_backfill_purge-007` was actually stolen once on 2026-07-29 but its CURRENT slot-6 binding
+  traces to a wholly separate, clean 2026-07-30 04:58:01 dispatch following an ordinary `worker_plan_switch_reset` +
+  autospawn respawn — verified by checking the MOST RECENT `task_dispatched` event for the slot's presently-bound
+  `(slot_id, task_id)` pair specifically, not just any dispatch of that task_id ever). Full findings recorded on the P2
+  checkbox above; scripts used are throwaway (`/tmp`-equivalent scratchpad, not committed — pure read-only
+  investigation, nothing to ship in `agent-orchestrator`). This plan-doc edit (unified-trading-pm only) is the complete
+  deliverable.
