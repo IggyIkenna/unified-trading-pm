@@ -172,7 +172,7 @@ yet, for ANY launcher family, not just candle-migration.
       the updated code comments; that's a SEPARATE axis from UAC alert-routing registration, per the existing
       `DP_VM_EXIT_NONZERO`-vs-`DP_VM_PREEMPTED` precedent in the same files). Both repos' full `quality-gates.sh` PASSED
       and landed on `live-defi-rollout`: `unified-api-contracts@d3739c57`, `deployment-service@dd7b62e`.
-- [ ] 8. [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout — REVISED after checking real
+- [x] 8. ✅ [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout — REVISED after checking real
       coverage, not just direct-call grep**: my original framing ("only 3 of ~74 launchers call
       `lc_write_preemption_signal_file`, so ~dozens are uncovered") was misleading. Re-checked: **125 of 158**
       `launch-*.sh` scripts already reference `setup-data-pipeline-vm.sh` (the shared boot seam that ITSELF installs the
@@ -182,31 +182,63 @@ yet, for ANY launcher family, not just candle-migration.
       a "close a total absence" sweep.
 
       **But the early-preemption blind spot this doc's fix closes (native GCE shutdown-script, available from t=0, vs
-                                                                                                                                                                          the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
-                                                                                                                                                                          install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
-                                                                                                                                                                          direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
-                                                                                                                                                                          coverage) — preempted 4 times in one session
-                                                                                                                                                                          (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
-                                                                                                                                                                          independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
-                                                                                                                                                                          pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
-                                                                                                                                                                          strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
+                                                                                                                                                                              the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
+                                                                                                                                                                              install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
+                                                                                                                                                                              direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
+                                                                                                                                                                              coverage) — preempted 4 times in one session
+                                                                                                                                                                              (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
+                                                                                                                                                                              independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
+                                                                                                                                                                              pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
+                                                                                                                                                                              strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
 
-                                                                                                                                                                          **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
-                                                                                                                                                                          confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
-                                                                                                                                                                          exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
-                                                                                                                                                                          task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
-                                                                                                                                                                          sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
-                                                                                                                                                                          `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply), and the two Phase-D pipeline-check
-                                                                                                                                                                          launcher name patterns `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` (registered in
-                                                                                                                                                                          the fleet relaunch machinery by launcher-prefix match but never previously named as candidates here; exhibited
-                                                                                                                                                                          the same early-boot `vm_self_deleted_no_exit_status` preemption pattern repeatedly on single-shard smoke-test
-                                                                                                                                                                          VMs during the TradFi Phase-D terminal-gate work — see `tradfi_phase_d_terminal_gate_2026_07_24.md`).
+                                                                                                                                                                              **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
+                                                                                                                                                                              confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
+                                                                                                                                                                              exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
+                                                                                                                                                                              task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
+                                                                                                                                                                              sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
+                                                                                                                                                                              `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply), and the two Phase-D pipeline-check
+                                                                                                                                                                              launcher name patterns `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` (registered in
+                                                                                                                                                                              the fleet relaunch machinery by launcher-prefix match but never previously named as candidates here; exhibited
+                                                                                                                                                                              the same early-boot `vm_self_deleted_no_exit_status` preemption pattern repeatedly on single-shard smoke-test
+                                                                                                                                                                              VMs during the TradFi Phase-D terminal-gate work — see `tradfi_phase_d_terminal_gate_2026_07_24.md`).
+
+          **Final candidate list (enumerated 2026-07-30, not just categories) — every `launch-*.sh` matching the revised
+          criteria (SHARD_OF/SHARD_INDEX/NUM_SHARDS fan-out var, `-sharded-` filename, or a Phase-D `*-pipelinecheck-*`
+          VM-name pattern), cross-checked for `lc_write_preemption_signal_file` absence AND actual
+          `--provisioning-model=SPOT` use (grep-then-READ, not grep-0-and-conclude):**
+
+          1. `launch-mtds-dex-swaps-backfill-vm.sh` — proven hit (4 preemptions, `lst_rate_honest_coverage_2026_07_21.md`).
+          2. `launch-mtds-dex-pools-backfill-vm.sh` — same SHARD_INDEX-fan-out family as #1, same exposure.
+          3. `launch-features-sharded-backfill.sh` — `-sharded-` filename fan-out.
+          4. `launch-mdps-sharded-backfill.sh` — `-sharded-` filename fan-out.
+          5. `launch-tradfi-is-defs-sharded.sh` — `-sharded-` filename fan-out.
+          6. `launch-instruments-backfill-vm.sh` — emits the `instr-backfill-*-pipelinecheck-*` VM names named above.
+          7. `launch-mtds-backfill-vm.sh` — emits the `mtds-backfill-*-pipelinecheck-*` VM names named above.
+          8. `launch-mdps-backfill-vm.sh` — its own driver names `mdps-backfill-<cat>-pipelinecheck-<ts>`, same pattern.
+
+          All 8 confirmed via direct grep: `provisioning-model=SPOT` present (genuinely preemption-exposed) AND
+          `lc_write_preemption_signal_file` absent (zero calls) AND already `--instance-termination-action=DELETE` (so none
+          of them need item 3's STOP→DELETE fix — only the signal-file + metadata-flag pair from items 1-2).
+
+          **Two launchers matched the filename/category sweep but are correctly OUT of scope, not silently dropped:**
+          - `launch-cefi-sharded-backfill-aws.sh` — an AWS EC2 launcher (`source lib/aws_ec2_launch_lib.sh`, `aws ec2`/`aws
+            s3` calls, no `gcloud`). `lc_write_preemption_signal_file` sets a native **GCE** `shutdown-script` instance
+            metadata key — that mechanism does not exist on AWS. Fixing AWS spot-interruption detection would need EC2's own
+            instance-metadata-service `/spot/instance-action` poll, a genuinely different implementation, not this
+            2-3-line pattern. Out of this issue's scope; flag as a separate follow-up only if this launcher shows the same
+            silent-loss symptom in the field.
+          - `launch-legacy-bucket-migration-sharded.sh` — grepped for `provisioning-model=SPOT`: zero matches: this
+            launcher is on-demand, not SPOT, so it is not preemption-exposed at all (nothing to fix here). Also
+            `Lifecycle: oneoff` / `Delete-when: after prod-run verified + GCS orphan-sweep=0` — a temporary migration
+            script slated for deletion, not a standing fleet member.
 
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
-      flag + verify `--instance-termination-action=DELETE`) to the launchers item 8's revised scoping identifies —
-      starting with `launch-mtds-dex-swaps-backfill-vm.sh` (already proven to need it) and the other sharded-fan-out
-      launchers, not a blind sweep of all 158. Batch by quality-gate sweep per the workspace's QG-sweep-batching
-      convention, not one commit per file.
+      flag; `--instance-termination-action` already `DELETE` on all 8, so that sub-step is a no-op verify only) to the 8
+      launchers item 8 enumerated above (`launch-mtds-dex-swaps-backfill-vm.sh`, `launch-mtds-dex-pools-backfill-vm.sh`,
+      `launch-features-sharded-backfill.sh`, `launch-mdps-sharded-backfill.sh`, `launch-tradfi-is-defs-sharded.sh`,
+      `launch-instruments-backfill-vm.sh`, `launch-mtds-backfill-vm.sh`, `launch-mdps-backfill-vm.sh`) — not a blind
+      sweep of all 158, and not the two out-of-scope launchers above. Batch by quality-gate sweep per the workspace's
+      QG-sweep-batching convention, not one commit per file.
 
 ## Codex SSOTs
 
