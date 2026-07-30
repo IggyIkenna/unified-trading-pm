@@ -210,6 +210,24 @@ full consolidation cycle before the next one prunes it. Both are live-bucket dia
 
 Scratch artifacts (downloaded canonical snapshot, probe script) were session-local only, not committed.
 
+## Addendum 2026-07-30 (slot 9, data_engineering) — re-confirmed still blocked, no new writer activity
+
+Re-dispatched the same P1 todo. `git log` on `manifest_consolidator.py` still shows no commit since the 2026-07-24
+TOCTOU-race fix (`14301571`), well before this incident — no root-cause fix has landed. Read-only re-verification
+(single download of the current canonical, DuckDB query, no live-bucket writes):
+
+- Canonical `availability_index.parquet` row count: **11,778,300** — byte-identical to the count slot 7 observed at
+  23:46:16 UTC on 2026-07-29, ~14 hours earlier. Expected (no odds-gapfill VM has run since), not a new stall instance.
+- `source='odds_api' AND date BETWEEN '2026-02-22' AND '2026-03-28'` → still **0 rows**. The disputed range remains
+  completely absent.
+
+No new evidence to add beyond slot 7's root-cause narrowing — the mystery (real merge, real changing input,
+`success=True`, but the specific new content never landing) is unchanged. The `[OPERATOR]` P0 todo above is still the
+sole blocking prerequisite; this P1 todo's done_definition (root-caused fix + verified census) cannot be met until it
+clears. Skipping this slot's dispatch of the task with `reason_code=BLOCKED` so repeated fleet-wide re-dispatch to
+workers who hit the identical wall triggers the auto-park escalation instead of burning further worker sessions on
+read-only re-confirmation.
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/manifest-consolidator-ssot.md` (merge engine, UNION-ALL invariants, pause-first discipline for
