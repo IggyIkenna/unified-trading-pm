@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [backlog, regen, verification, done-gate, cross-repo, false-negative]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md,
   ]
 created: 2026-07-27
@@ -56,13 +56,13 @@ depends_on: []
 ```
 
 That `brief` string is the **literal opening text of a different todo** —
-`plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:386` (the "Conflict-check ... v6-canonicalisation-proof"
-todo, a separate GCS-migration-heavy piece of work: prove the W1 v6 fix end-to-end, enumerate + migrate real v5 cefi
-chain objects, record the cutover in `canonical-cutover-register.md`). It is NOT the text of the todo my task's
-`plan_ref`/`done_definition` actually resolved to, which was the ADJACENT todo just below it (line ~407 pre-edit):
-"Conflict-check (2026-07-25 plan-reconcile): shares the same `partitioned_writer.py` call chain as the P1
-v6-canonicalisation-proof todo above — run this one FIRST, then the P1 proof, never concurrently.\*\* **Widen the cefi
-chain-tail cluster-counts bookkeeping key to include quote/margin.**"
+`plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:386` (the "Conflict-check ...
+v6-canonicalisation-proof" todo, a separate GCS-migration-heavy piece of work: prove the W1 v6 fix end-to-end,
+enumerate + migrate real v5 cefi chain objects, record the cutover in `canonical-cutover-register.md`). It is NOT the
+text of the todo my task's `plan_ref`/`done_definition` actually resolved to, which was the ADJACENT todo just below it
+(line ~407 pre-edit): "Conflict-check (2026-07-25 plan-reconcile): shares the same `partitioned_writer.py` call chain as
+the P1 v6-canonicalisation-proof todo above — run this one FIRST, then the P1 proof, never concurrently.\*\* **Widen the
+cefi chain-tail cluster-counts bookkeeping key to include quote/margin.**"
 
 Both todos:
 
@@ -175,8 +175,8 @@ time) — it will recur for any other collision-group-mate pair phrased with a s
 
 - Task record: `GET /api/backlog` → id=`cefi_satellite_ao_dispatch_batch1-012`, `brief` ends `→` (literal arrow, not a
   display truncation — confirmed via the raw JSON API response, not a client-side render).
-- Sibling todo owning that brief text: `plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:386`, still `- [ ]`
-  (genuinely unfinished) at time of filing.
+- Sibling todo owning that brief text: `plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:386`,
+  still `- [ ]` (genuinely unfinished) at time of filing.
 - My actual flip: `unified-trading-pm@dadf5db6e`, diff shows
   `- [ ] [DATA] P1. **Conflict-check (2026-07-25 plan-reconcile): shares the same \`partitioned_writer.py\` call chain
   as the`removed and`+ - [x] ✅ [DATA] P1. **DONE 2026-07-27 (slot-5) — market-tick-data-service@94b4aff5.** Widened`

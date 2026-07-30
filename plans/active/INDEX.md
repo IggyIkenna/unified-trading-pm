@@ -17,11 +17,11 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 250 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
-### cefi (37)
+### cefi (35)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -77,13 +77,6 @@ by hand._
 - [`cefi_ml_directional_continuous_live_2026_06_20`](./cefi_ml_directional_continuous_live_2026_06_20.md) — "Ship the
   live CeFi ML_DIRECTIONAL_CONTINUOUS archetype across OKX, Binance, and Bybit: live tick to live ML inference to live
   strategy to live execution."
-- [`cefi_satellite_ao_dispatch_batch1_2026_07_25`](./cefi_satellite_ao_dispatch_batch1_2026_07_25.md) — First
-  AO-dispatch batch for cefi. Extracted from a 29-doc AO-eligibility triage over every cefi satellite doc not covered by
-  cefi_consolidated_closeout_2026_07_18.md / cefi_consolidated_closeout_aggregated_sources_2026_07_24.md. The triage…
-- [`cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25`](./cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md)
-  — Gated closeout for cefi_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on + gate_on_depends:
-  true until all 33 of that plan's todos are done. Mirrors the tradfi batch1_finalize / prediction batch1_finalize
-  pattern…
 - [`cefi_satellite_ao_dispatch_batch3_2026_07_26`](./cefi_satellite_ao_dispatch_batch3_2026_07_26.md) — Third
   AO-dispatch batch for cefi, produced by the `/ag-closeout-audit` skill run 2026-07-26 (autonomous mode) immediately
   after the cefi `/plan-reconcile` pass. Phase 0-2 re-derived the covering-plan set (19 plans + the epic) and…

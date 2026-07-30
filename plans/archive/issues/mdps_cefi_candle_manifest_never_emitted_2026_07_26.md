@@ -29,9 +29,9 @@ parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 source: >-
-  cefi_satellite_ao_dispatch_batch1-003 (`plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), which asked to
-  "verify MDPS candle-manifest faithfulness" on a sample day per `data_completion_cefi_2026_07_15.md`'s open sub-item.
-  FAIL verdict — filed here per the findings-closure hard rule.
+  cefi_satellite_ao_dispatch_batch1-003 (`plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), which
+  asked to "verify MDPS candle-manifest faithfulness" on a sample day per `data_completion_cefi_2026_07_15.md`'s open
+  sub-item. FAIL verdict — filed here per the findings-closure hard rule.
 execution_scope_note: read-only verification this session; the fix is the follow-up todo below.
 locked_by:
 locked_since:

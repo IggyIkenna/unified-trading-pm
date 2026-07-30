@@ -178,10 +178,10 @@ papering over them.
       were also only 4-tuple-keyed — widened to 6-tuple via a new shared `_widen_chain_key` helper, plus
       `manifest_finalize.py::_write_bundle_shard_row`). New regression test
       `test_cluster_counts_same_underlying_different_margin_never_collides`; full `quality-gates.sh` green (6978 tests).
-- [x] 5. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
-      PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the v6-first probe at
-      `reader.py:402`), with the guard raising on a synthetic v5 path. — **DONE 2026-07-27, real GCS `-test-` bucket
-      (`market-data-tick-cefi-test-central-element-323112`), no mocking.** Ran
+- [x] 5. [DATA] P1. **[executed 2026-07-27 via plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo]** PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the v6-first
+      probe at `reader.py:402`), with the guard raising on a synthetic v5 path. — **DONE 2026-07-27, real GCS `-test-`
+      bucket (`market-data-tick-cefi-test-central-element-323112`), no mocking.** Ran
       `market_tick_data_service/scripts/prove_cefi_chain_tail_v6_e2e_2026_07_27.py`, day=2026-07-27, venue=DERIBIT,
       underlying=BTC, both real settlement variants (USD/inverse, USDC/linear — the exact anti-collision shape): - **(a)
       write PASS**: both objects landed at the v6 path —
@@ -212,9 +212,9 @@ papering over them.
       `market-tick-data-service@4e5d0a24` (`reader.py` fix + `tests/unit/test_reader.py` new coverage —
       `TestBlobPathName`, `TestCefiChainUnderlyingBlobs`, `TestBlobPathsDerivativeCefiListing`,
       `TestReadCandidateBlobsCefiChainUnion` — + the one-off proof script).
-- [x] 6. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
-      Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5), recording any v5
-      collisions where two logical chains overwrote one object as unrecoverable rather than silently merging. —
+- [x] 6. [DATA] P1. **[executed 2026-07-27 via plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo]** Migrate existing v5 cefi chain objects → v6 (copy → content-verify → human-only purge of v5), recording
+      any v5 collisions where two logical chains overwrote one object as unrecoverable rather than silently merging. —
       **ENUMERATION = 0 objects, migration is a confirmed no-op.** Queried the real consolidated availability manifest
       (`market-data-tick-cefi-prd-central-element-323112`, `GCP_PROJECT_ID` env required for `read_availability_index`
       to actually resolve credentials — silently returns an empty frame otherwise, a sharp edge worth flagging for
@@ -226,15 +226,16 @@ papering over them.
       exact attempted-failed (day, venue) prefixes (DERIBIT, OKX-FUTURES, BINANCE-DELIVERY, day=2026-07-26): all
       returned zero objects, consistent with the manifest. No v5 objects exist to migrate; no collisions to record;
       nothing to leave in place per the "do not delete/purge" instruction (there is nothing there).
-- [x] 7. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
-      Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical surfaces agree
-      post-migration. — **N/A, depends on todo 6 which migrated 0 objects.** No cells to re-sync; the manifest already
-      correctly shows 0 captured cefi chain rows, consistent with 0 real objects on disk.
-- [x] 8. [REVIEW] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]** On
-      W1 ship, record the cefi chain-tail v6 cutover date in `/codex/02-data/canonical-cutover-register.md` (repo@sha)
-      and update the §7 summary cefi `chain tail` cell from "v5/v6 dual hazard" to the ruled v6 (migration_pending →
-      EXECUTED). — **DONE 2026-07-27** — see register §6c/§7, citing `market-tick-data-service@04222eb0` (W1 write fix),
-      `unified-api-contracts@9a92cf4f` (structural guard), and this session's reader-fix + e2e-proof sha.
+- [x] 7. [DATA] P1. **[executed 2026-07-27 via plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo]** Re-sync the manifest / data-status render for the migrated cefi chain cells so all four canonical surfaces
+      agree post-migration. — **N/A, depends on todo 6 which migrated 0 objects.** No cells to re-sync; the manifest
+      already correctly shows 0 captured cefi chain rows, consistent with 0 real objects on disk.
+- [x] 8. [REVIEW] P1. **[executed 2026-07-27 via plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo]** On W1 ship, record the cefi chain-tail v6 cutover date in `/codex/02-data/canonical-cutover-register.md`
+      (repo@sha) and update the §7 summary cefi `chain tail` cell from "v5/v6 dual hazard" to the ruled v6
+      (migration_pending → EXECUTED). — **DONE 2026-07-27** — see register §6c/§7, citing
+      `market-tick-data-service@04222eb0` (W1 write fix), `unified-api-contracts@9a92cf4f` (structural guard), and this
+      session's reader-fix + e2e-proof sha.
 
 ## Progress Log
 

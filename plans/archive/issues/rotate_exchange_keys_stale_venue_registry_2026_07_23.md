@@ -79,21 +79,21 @@ Reasons:
 
 ## Todos
 
-- [x] [SCRIPT] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
-      execution]** Verify every venue in `rotate-exchange-keys/main.py`'s key-pattern list against live GCP Secret
-      Manager** (`central-element-323112`) — for each, confirm the referenced secret name(s) actually exist; produce a
-      corrected list. — **PARTIAL (2026-07-26, slot-4): 10/15 venues classified with high confidence via
+- [x] [SCRIPT] P1. **[already covered by plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that
+      doc for execution]** Verify every venue in `rotate-exchange-keys/main.py`'s key-pattern list against live GCP
+      Secret Manager** (`central-element-323112`) — for each, confirm the referenced secret name(s) actually exist;
+      produce a corrected list. — **PARTIAL (2026-07-26, slot-4): 10/15 venues classified with high confidence via
       cross-referenced evidence (codex doc + code-anchored secret-name usage), NOT a live `gcloud secrets` query — this
       worktree's service account lacks `secretmanager.secrets.list`/`.get` (verified: both calls return
       `PERMISSION_DENIED` for `unified-trading-sa@central-element-323112.iam.gserviceaccount.com`, the only credential
       available in this slot; `ikenna@odum-research.com` needs interactive reauth, unavailable non-interactively). 5
       venues (coinbase, kraken, bitfinex, bitget, upbit) remain genuinely UNVERIFIED — same as the original 2026-07-23
       pass, still `BLOCKED-CREDENTIALS`. See the Progress Log below for the full table + method.**
-- [x] [SCRIPT] P1. **[already covered by plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that doc for
-      execution]** Confirm whether `rotate-exchange-keys` is actually invoked on a schedule/trigger** (Cloud Scheduler /
-      Cloud Function trigger config) — if it's dead/unwired like the Polymarket/Kalshi adapter stubs were, severity
-      drops; if it's live, this is a real rotation gap needing prompt attention. — **NOT DONE (2026-07-26, slot-4): out
-      of this pass's scope (only the venue-list fix below was dispatched); still open.**
+- [x] [SCRIPT] P1. **[already covered by plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md, see that
+      doc for execution]** Confirm whether `rotate-exchange-keys` is actually invoked on a schedule/trigger** (Cloud
+      Scheduler / Cloud Function trigger config) — if it's dead/unwired like the Polymarket/Kalshi adapter stubs were,
+      severity drops; if it's live, this is a real rotation gap needing prompt attention. — **NOT DONE (2026-07-26,
+      slot-4): out of this pass's scope (only the venue-list fix below was dispatched); still open.**
 - [x] ✅ [SCRIPT] P2. **DONE (2026-07-26, slot-4).** Fixed the corrected venue list in `rotate-exchange-keys/main.py`
       for the 10 confidently-classified venues (see Progress Log evidence table) — renamed-target entries updated to the
       verified real GCP name, `okx-*` (no-secret-exists) left with an explanatory comment, the 5 unverified venues

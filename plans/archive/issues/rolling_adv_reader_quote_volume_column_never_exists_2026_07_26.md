@@ -24,7 +24,7 @@ tags: [features-service, mdps, adv, quote-volume, schema-mismatch, cross-repo, d
 related:
   [
     /plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"

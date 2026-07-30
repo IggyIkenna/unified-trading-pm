@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/aster_capture_broken_coverage_and_completeness_2026_07_20.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
     /plans/active/aster_and_cefi_rolling_adv_feature_2026_07_21.md,
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-26"
 last_updated: "2026-07-26"
