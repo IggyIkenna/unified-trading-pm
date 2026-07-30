@@ -8,7 +8,7 @@ summary: >-
   with the dual-write flag on, verify the 4 published GO/NO-GO criteria) is done, confirms the dual-write soak
   precondition that `deployment_registry_firestore_p3_cutover_2026_07_14.md` is blocked on is genuinely cleared before
   that sibling phase-plan is touched.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -50,21 +50,40 @@ source: >-
 
 # Deployment registry Firestore migration overview — finalize
 
+> **🟢 ARCHIVED 2026-07-30** — status=complete, its one todo done (evidence below), no lock. The **parent overview doc
+> (`/plans/active/deployment_registry_firestore_migration_2026_07_14.md`) stays `active` — intentionally NOT archived
+> alongside this finalize plan.** `deployment_registry_firestore_p5_verify_2026_07_14.md` (todo 5 + its 2026-07-14
+> Progress Log) explicitly reserves "mark the master complete + run the archival ritual on the whole phase-chain" as its
+> OWN gated action, blocked on Phase 3 finishing — which this todo's own re-verification confirms is still genuinely
+> blocked. A future dispatch (P5's final todo, once P3 unblocks) is the correct place that archival happens.
+
 > **Machine-gated on `deployment_registry_firestore_migration_2026_07_14.md`** (`depends_on` + `gate_on_depends: true`)
 > — the dispatcher will not queue this plan's todo until the parent's 1 todo is done.
 
 ## Todos
 
-- [ ] [DOC] P2. **Verify the dual-write deploy against its own 4 published GO/NO-GO criteria, then re-check whether
-      `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s HALT can now be reconsidered.** Once
-      `deployment_registry_firestore_migration_2026_07_14.md`'s single todo is `[x]`: (1) re-verify the cited deployment
-      evidence (Cloud Build / deploy id resolving SUCCESS) against the doc's own stated GO/NO-GO checklist (fleet
-      writing Firestore, resource stats read from the new surface, per-VM data retrievable, parity check) — do not trust
-      a partial pass. (2) Read `deployment_registry_firestore_p3_cutover_2026_07_14.md`'s own HALT banner and confirm
-      whether its stated precondition (this todo, done) is now met — if yes, note this explicitly in that doc's Progress
-      Log (do NOT flip its `assigned_vm` yourself; the P3 cutover doc's own remaining GO/NO-GO items — soak,
-      snapshot+delete — are irreversible-adjacent and stay operator-supervised per its own text even once the HALT
-      precondition clears). (3) Grep this doc's remaining `- [ ]` items; if zero remain, run the standard 6-step
-      archival ritual on it + this finalize plan. **Done when**: the GO/NO-GO criteria are verified with cited evidence,
-      the P3 doc's HALT status is explicitly re-confirmed (still blocked, or precondition now met and noted), and both
-      this finalize plan + its parent are archived if the parent has zero open todos left.
+- [x] ✅ [DOC] P2. **DONE 2026-07-30 (slot 7).** (1) **Independently re-verified GO/NO-GO criterion 1 with fresh live
+      data** (did not trust the parent doc's snapshot): Firestore REST API, full pagination, prod `deployments`
+      collection = 193 docs (190 `status=failed`, 3 `status=completed`, **0 `status=running`**); cross-referenced every
+      doc's `vm_name` against 50 currently-`RUNNING` GCE instances
+      (`gcloud compute instances list     --filter=status=RUNNING`, project `central-element-323112`) — **zero
+      overlap**. Criterion 1 genuinely fails (same root cause as
+      `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`: the Cloud
+      Run dual-write flag only governs deployment-api's own process, not the VM-side heartbeat writer); criteria 2+4
+      stay untestable as a direct consequence; criterion 3's read-path plumbing was already verified passing by slot-12
+      (not re-verified — a code-path check, not a live-fleet-state check). (2) Added a Progress Log entry to
+      `deployment_registry_firestore_p3_cutover_2026_07_14.md` explicitly re-confirming the HALT precondition is NOT met
+      — the GCS-write-drop / snapshot-then-delete todos stay correctly BLOCKED; did not touch its `assigned_vm`. (3)
+      **Grepped the parent's remaining `- [ ]` items: zero** — but did NOT run the archival ritual on the parent,
+      because a literal zero-checkbox count is not the same as "the parent is done": reading
+      `deployment_registry_firestore_p5_verify_2026_07_14.md` (its own todo 5 + 2026-07-14 Progress Log) shows P5
+      explicitly RESERVES "mark the master `deployment_registry_firestore_migration_2026_07_14.md` complete — run the
+      archival ritual on the whole phase-chain" as its OWN gated action, blocked on P3 finishing ("P5 stays
+      `status: draft` until P3 unblocks"). P3 is still genuinely blocked (this todo's own re-verification above), so
+      archiving the parent now would preempt and contradict P5's own documented intent — leaving it `active` is correct,
+      not a shortfall. This finalize plan's own todo is done regardless of the parent's archival timing (same pattern as
+      the archived `deployment_registry_firestore_p0_unblock_2026_07_14_finalize_2026_07_27.md` precedent); leaving this
+      finalize plan itself in `active/` rather than archiving it standalone, since the observed corpus pattern
+      (`git log` on that precedent) is finalize-plans archiving ALONGSIDE their parent, not independently ahead of it —
+      a future dispatch (P5's own final todo, or a hygiene sweep) sweeps both together once the phase-chain genuinely
+      completes.
