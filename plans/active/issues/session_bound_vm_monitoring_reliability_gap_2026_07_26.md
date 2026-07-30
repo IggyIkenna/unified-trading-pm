@@ -91,3 +91,10 @@ in the same way and at the same time when they're the same physical connection.
       signal fleet-wide, not just for this one VM. (repo: deployment-service `scripts/vm/lib/launcher_common.sh`'s
       shutdown-script template). **Done when**: either measured evidence the race is rare (this was a one-off), or a
       mitigation (e.g. writing the marker earlier / more defensively) is proposed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Primary todo is explicitly
+  self-declared as a design/judgment call (which reliability model to commit to for ad hoc backfill VMs) with no
+  decision made yet — stays NA as a whole; the secondary measurement/audit todo is an individually plausible future
+  RECLASSIFY candidate, not actioned this run.

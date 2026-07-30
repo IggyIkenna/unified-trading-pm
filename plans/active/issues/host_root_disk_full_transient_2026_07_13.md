@@ -113,3 +113,9 @@ repo clones each appears to be the actual driver, per the ~219G `unified-trading
       runs `install-prune-uv-cache-cron.sh` (not yet scheduled, blocked on sandboxed-slot permissions); (b) investigate
       why `UV_LINK_MODE=hardlink` isn't deduping `.venv` across slots (~150-200G footprint); (c) if cross-slot dedup
       can't be made to work, build a liveness-aware per-slot `.venv` prune.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo's first
+  sub-action is explicitly operator-gated (cron install blocked on sandboxed-slot permissions, confirmed via a prior
+  session's own Permission denied result).

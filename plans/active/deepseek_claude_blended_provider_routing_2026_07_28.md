@@ -389,3 +389,6 @@ entirely):
       `provider: claude` in its frontmatter should produce a `BacklogTask.provider_override == "anthropic"` after a real
       regen pass, and a plan without it should produce `None`. Done when: a test exercises `regen()` itself (temp plans
       dir) end to end, not just the parser function in isolation.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Touches
+  agent-orchestrator's own live routing/billing/credential infra; repeated dated operator holds + 2 documented real
+  safety incidents from testing this code; highest-stakes remaining items need operator-supervised rollout.

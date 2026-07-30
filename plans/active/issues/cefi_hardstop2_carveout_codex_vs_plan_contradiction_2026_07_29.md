@@ -108,3 +108,9 @@ conservatively in the plan itself (human-execution-only kept) pending an explici
 - 2026-07-29: Filed while recording the operator's CeFi orphan-sweep authorization. Treated conservatively — Phase B
   kept human-execution-only in the plan pending this ruling. Phase A (unaffected, no delete) proceeds as already
   `[DATA]` P0 dispatchable.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo asks the operator
+  to resolve a genuine same-day SSOT contradiction (codex vs plan banner) — requires an explicit ruling, not
+  worker-determinable. NOTE: this doc's real asset_group is [cefi, meta], not infra — a residual scope-leak from this
+  session's pre-fix Phase 0 population (see
+  na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md); classified here for
+  completeness, no state changed, cefi tranche's own future audit owns this doc.

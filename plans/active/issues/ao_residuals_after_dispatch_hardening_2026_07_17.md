@@ -163,3 +163,6 @@ source:
   really complete. It was marked done in its home doc with a detailed "verified it STUCK" note — and the rows are gone.
   That is the second time this exact ledger entry has decayed after a verified-good reopen, which is why the gate above
   forbids closing it by reopening again.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 open todos cite an
+  explicit current blocking condition (a paused epic, an unresolved upstream design call, a void-pending-retest
+  measurement) — genuine external/design gates, not defaulted work.

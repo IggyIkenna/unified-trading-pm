@@ -174,3 +174,9 @@ too large.
       regardless of `from_role`, same bug class as the main.md item above and never even adopted the interim ad hoc
       mitigation. Found while shipping the main.md fix; filed rather than fixed inline because it is a different file
       outside that todo's declared scope. **Gate**: same as the main.md item above, applied to review.md.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly states its
+  NA rationale: modifies the orchestrator's own agent-messaging routing where a careless change could break
+  at-least-once delivery; one todo is an explicit operator-review gate.

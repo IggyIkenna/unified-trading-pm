@@ -774,3 +774,6 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
   AO-eligible), `archive/issues/spawn_base_role_stale_display_when_different_role_adopts_session_2026_07_25.md`. None
   were tracked in any Track above; all are now `assigned_vm: planning` and live in the AO backlog. This entry itself
   does not change this hub's own `assigned_vm: NA` gate noted above — that stays operator-controlled.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator
+  gate (2026-07-25): do not flip to planning until operator personally runs /ag-closeout-audit + /plan-reconcile for
+  this AG; sole open item is a meta-note about untracked digest items, not dispatchable work itself.

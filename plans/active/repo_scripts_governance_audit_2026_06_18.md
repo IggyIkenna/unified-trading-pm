@@ -276,3 +276,9 @@ a verdict). Heaviest:
       `script-homes.md` § "What gates a scripts/ file" in the same unit. Target: **unified-trading-pm** (checker + base
       wiring) → fleet. (FOLDED IN from scripts_lifecycle_marker_rollout_2026_06_18, 2026-07-15, plan-reconcile §6
       operator ruling)
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Mixed doc: 5 of 8 items
+  look bounded/deterministic, but 2 are explicitly operator-gated per a dated citation in
+  infra_satellite_ao_dispatch_batch1_2026_07_26.md's own BLOCKED-OPERATOR-DECISION section, and 1 is genuinely blocked
+  on an unmet fleet-wide precondition (11+ repos still missing a marker). Flipping the whole doc would improperly expose
+  the gated items to blind dispatch — stays NA as a whole pending a targeted split of just the 5 bounded items into a
+  future batch, not actioned this run.

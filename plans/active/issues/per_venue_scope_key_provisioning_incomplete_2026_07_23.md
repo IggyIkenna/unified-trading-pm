@@ -147,3 +147,9 @@ All three are real design/priority calls, not something determinable from code o
 - `/codex/05-infrastructure/secret-manager-naming.md` § 2.2 — the live read/trade/write split pattern for
   Binance/Deribit, and the note distinguishing this real pooled/house pattern from the dead per-client
   `exec-{client}-{venue}-{read,trade,withdraw}-*` design the archived plan originally also described.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — One item is genuinely
+  human-only (operator's own exchange-login credential creation, doc-confirmed); other two are explicit design/priority
+  judgment calls the doc itself labels as such.

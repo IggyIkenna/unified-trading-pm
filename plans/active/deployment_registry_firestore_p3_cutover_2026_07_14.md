@@ -159,3 +159,7 @@ QG-green per repo.
 
 - `/codex/05-infrastructure/gcs-object-operations.md` — GCS object ops via UTL wrappers (the delete rule).
 - `/codex/05-infrastructure/deployment-observability.md` — registry SSOT (lineage note added Phase 5).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit dated operator
+  HALT (2026-07-14) gated on a 4-item GO/NO-GO checklist not yet met (fleet writing Firestore, resource stats from new
+  surface, per-VM data retrievable, parity check) — irreversible cutover steps stay blocked until the sibling
+  migration-overview doc's dual-write deploy (reclassified this run) clears the precondition.

@@ -105,3 +105,9 @@ the dispatch-scope-eligibility ruling):
 - [ ] [DOCS] P3. **Reconcile instruments-service's reorganized docs against the S5.1 filename set** — either add thin
       redirect stubs at the canonical filenames pointing at the reorganized docs, or update S5.1 to accept the
       reorganized layout. (repo: instruments-service, unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
+  self-classifies as a scoping judgment ('should S5.1 tier its required set by repo type?'), not a bounded worker todo,
+  per the doc's own text citing the dispatch-scope-eligibility ruling.

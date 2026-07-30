@@ -356,3 +356,11 @@ it wasn't a reliable one for CEFI.
       the 250-day default that's proven safe for older, mostly-skip-dense history — either launcher-side (detect via a
       pre-flight gap count per chunk) or just a documented operator convention ("scope a small `--chunk-size` explicitly
       when re-running a tail that's known to have a high real-fetch-day density"). Repo: deployment-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 4 items are genuine
+  investigation/design work (byte-budget estimator design, cross-launcher audit, unresolved profiling investigation,
+  chunk-size design choice), none with a worker-determinable checkable outcome today. NOTE: this doc's real asset_group
+  is [cefi, meta], not infra — a residual scope-leak from this session's pre-fix Phase 0 population; classified here for
+  completeness, no state changed, cefi tranche's own future audit owns this doc.

@@ -908,3 +908,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   not this task's scope). **The June-2026 vintage-audit execution task, including this autonomous extension, is
   complete** — every actionable item discussed this session either shipped, is a live VM run tracked forward by its own
   checkpoint, or is a real, evidenced, filed follow-up.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Large actively-maintained
+  P1 audit-tracking doc; all 7 remaining items are genuinely gated on external, not-yet-resolved state (live SPOT VMs,
+  unresolved merge conflicts, pending batch runs), not defaulted/never-assessed work.

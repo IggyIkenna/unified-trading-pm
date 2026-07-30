@@ -367,3 +367,11 @@ batch dates to yesterday UTC (`unified-trading-library@3485c4d0`), propagated to
 (`market-tick-data-service@b8365c9d`, image `@b92a8680`). Unblocks the 11 DeFi daily-batch collectors (verified
 SUCCEEDED) and the MTDS `*-t1-recon` jobs that hit the same crash. The cefi/defi catalogue `CATALOGUE_SHRINK_BLOCKED`
 sub-finding remains a separate open owner-decision (unchanged).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo carries an
+  explicit dated operator ruling ('RULED 2026-07-29 — proper rewrite, not a shrink-allowance flag') plus
+  still-undiagnosed adjacent failures. NOTE: this doc's real asset_group spans
+  [cefi,defi,tradfi,prediction,sports,meta], not infra — a residual scope-leak from this session's pre-fix Phase 0
+  population; classified here for completeness, no state changed.

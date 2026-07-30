@@ -185,3 +185,10 @@ todo below.
       deploys, not real terraform-managed drift). **Done when**: a fresh `tofu plan` shows 0 changes for every
       `module.*_job.google_cloud_run_v2_job.job` / `google_cloud_run_v2_job.vm_log_archival` resource. Repo:
       deployment-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Dominant remaining item is
+  a live, moving-target prod-terraform review (diff grew from 10/67 to 17/71 after a permission grant, needs fresh
+  three-way classification) — stays NA as a whole; the smaller lifecycle-ignore-changes item is an individually
+  plausible future RECLASSIFY candidate, not actioned this run.

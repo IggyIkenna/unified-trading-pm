@@ -135,3 +135,11 @@ depends_on: []
 `/codex/11-project-management/cross-reference-path-convention.md` (the rule), `plans/PLAN_FORMAT.md` (frontmatter schema
 — confirms `depends_on`/`parent_epic`/`supersedes`/`superseded_by`/`entry_point_for` are bare-slug fields, out of this
 convention's scope).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc mixes bounded
+  mechanical cleanup with one genuine unresolved policy decision (archival convention: physical-move vs
+  stay-in-place-with-banner) that the bounded items depend on for correctness — stays NA as a whole; the mechanical
+  cleanup items are individually plausible future RECLASSIFY candidates for a dedicated split once the policy decision
+  lands.
