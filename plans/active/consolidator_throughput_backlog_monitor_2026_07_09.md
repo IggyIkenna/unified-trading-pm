@@ -515,3 +515,6 @@ drift_direction: advance-code
   `issues/phantom_audit_estate_coverage_gap_2026_07_10.md` (`_BUCKET_KIND_MAP` walks only 5 buckets, cron never passes
   `--manifest-bucket` → instruments-{cefi,defi,tradfi} incl. the verified 86,977-row cefi index, gas-fees /
   lending-indices / oracle-prices, features/execution/… never phantom-checked). For Ikenna (data pipeline).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — LOCAL plan built interactively; both [REVIEW] gates are
+  explicitly deferred by a dated operator decision (2026-07-10, local-dev-only until all cockpit plans complete).

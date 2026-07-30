@@ -498,3 +498,8 @@ path (fold into strategy-service `CarryStakedBasisRankAllocator` + promote paper
 
 The full deployable stack is now 3 committed e2e scripts: `funding_reversion_crossvenue_book.py` (backtest, 8 causal
 overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.py` (live paper engine).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — every open todo is strategy/ML research judgment (GBM squeeze
+  models, archetype shelving decisions, structure-5 candidacy, prime-broker research).

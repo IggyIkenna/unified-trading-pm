@@ -193,3 +193,6 @@ designated survivor/receptacle for the MTDS/MDPS file-size-splits + pandas→pol
 scope (was parked per the top-of-doc "⏸️ DEFERRED 2026-06-26 (operator) — non-essential, parked" banner — **operator
 directive 2026-07-27: resume**). There is no external successor to point to because the work was never migrated
 elsewhere — it stays captured here so nothing is lost. This plan itself remains the owner.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; contains a [DESIGN] P3 that
+  explicitly requires an operator option-pick (Phase-6 `_publish_emission_check` scalability) before implementation.

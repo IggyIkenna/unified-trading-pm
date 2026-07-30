@@ -371,3 +371,9 @@ return to a normal (non-zero-job) run.
   promotion-lag lines and will keep blocking every LDR→main promote fleet-wide until the operator clears it at
   `github.com/settings/billing`. Not filing a fresh `/blocked` (same standing `BLK-21d55fb1`). No code/workflow change
   made or needed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cross-cutting, autonomous): KEEP-NA, valid — the P0 is `[OPERATOR]`
+  (github.com/settings/billing, no agent-held token can read or clear it) and the P2 remediation is gated on an
+  operator-minted billing-scoped token.

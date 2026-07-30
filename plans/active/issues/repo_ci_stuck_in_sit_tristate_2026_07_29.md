@@ -34,8 +34,9 @@ related:
   ]
 created: 2026-07-29
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 priority: P3
 estimate_class: refactor
 source: [ci_satellite_ao_dispatch_batch1-012, F5 vacuous-reader todo, split 2026-07-29]
@@ -101,3 +102,9 @@ matter for those repos' dashboards.
       recommended fix above, with regression tests on both sides. **Done when**: `SitStateDict.stuck_in_sit` is
       `bool | None`, `derive_sit_state` emits `None` under `staging_dormant_mode`, the UI consumer treats `null` as
       no-signal (not a false "not stuck"), and both repos' `quality-gates.sh` are green.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the single todo carries a fully-specified 4-step fix
+  (bool→bool|None, dormancy-aware emit, UI null-handling, regression tests on both sides) plus an explicit Done-when;
+  ci_satellite_ao_dispatch_batch1 split it out precisely so it could be its own properly-scoped unit.

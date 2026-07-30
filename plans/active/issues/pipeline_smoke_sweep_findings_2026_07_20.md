@@ -101,3 +101,11 @@ Yahoo daily path end-to-end. Bucket paths showed no parquet/manifest asymmetry.
       fixed (dedicated `pred` flat kind, not a per-asset_group `market-data` entry); DeFi smoke stays blocked while
       `canonical-migration-defi-rebuild` runs (consolidated manifest goes stale, a watcher is armed but has not yet
       fired); sports is ~4 weeks stale and the cause is unconfirmed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE — `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
+  analysed this doc's '## 4. Still open' 3 items verbatim and found sub-item (1) (prediction bucket resolution)
+  DUPLICATE/STALE — the same BucketNamingError class already root-caused and fixed elsewhere. Citation fix, not a
+  reclassification: re-verify the remaining 2 sub-items (DeFi migration gate, sports staleness cause) before treating
+  this as live.

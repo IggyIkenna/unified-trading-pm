@@ -122,3 +122,7 @@ regression) is worse.**
   Progress Log entry) — no lasting damage, but this is a materially worse failure mode than redundant re-diagnosis: a
   missing dedup check let a worker actively UNDO a standing correction. Reinforces Option A (check for an OPEN issue doc
   on the exact tuple before spawning / before taking any write action) over B or C.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc self-documents its own AO-ineligibility: 'This needs an
+  operator/design call on the right dedup semantics before implementation (marked assigned_vm: NA — not
+  AO-dispatch-eligible as a bare fix-it todo per the dispatch-scope-eligibility rule)'.

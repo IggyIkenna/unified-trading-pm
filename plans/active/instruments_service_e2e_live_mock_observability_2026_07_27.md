@@ -15,8 +15,8 @@ tags: [e2e-testing, instruments-service, live-mode, mock-mode, observability]
 related: []
 created: 2026-07-27
 parent_epic: instruments_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -65,3 +65,7 @@ before assuming any of the below is still accurate — 4+ months have passed.
 
 - 2026-07-27: Plan created, re-scoping the never-run Phases 5-7 out of the archived 2026-03 instruments-service E2E
   audit doc per operator decision (pre-June-1 stale-plans audit).
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — all 4 todos are bounded verification RUNS with
+  explicit per-item done-when checklists (Phase 5 clock-alignment 5.1-5.4, Phase 6 mock scenarios 6.1-6.7, Phase 7
+  observability 7.1-7.6, the 6-bug re-verify) — determinable by a worker alone.

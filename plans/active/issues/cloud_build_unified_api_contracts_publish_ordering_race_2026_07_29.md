@@ -64,11 +64,12 @@ parent_epic: infrastructure_master
 source:
   "operator #ci-failures Slack dump 6:01-6:51 AM, investigated live via gcloud builds log + artifacts versions list,
   2026-07-29 ~09:00-09:15 UTC"
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: cicd
 drift_direction: advance-code
 context_scope: [/codex/08-workflows/ci-cd-flow.md]
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
@@ -282,3 +283,7 @@ Session status at checkpoint (a fresh session picking this up should verify curr
   confirmed root cause of tonight's `unified-api-contracts`/`unified-trading-pm` branch-health promotion-lag lines and
   blocks the actual PR-merge step for the two reprovenanced repos above — re-confirmed live at 2026-07-30T00:55- 00:59Z,
   still active, no self-recovery. Needs `github.com/settings/billing`.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — remaining todos are a bounded per-repo Dockerfile
+  retry-with-backoff hardening plus a fleet-wide grep-and-fix for the same latent `uv pip install` + pip.conf-only gap;
+  the P1 root fix already shipped and is cited. Other docs reference it as context, none claim its todos.

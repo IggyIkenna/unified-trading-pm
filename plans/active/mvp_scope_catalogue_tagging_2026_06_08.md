@@ -282,3 +282,9 @@ the "what we intend to capture for launch" cut) · the G3 deployment union view 
 `mtds_data_status_page_parity_2026_07_21.md` (2026-07-21 — extends this plan's `is_mvp`/`CoverageScope` toggle to MTDS,
 which has no MVP wiring today, and precomputes the sports/prediction catalogue `mvp` column this plan left as a live
 `df.apply` fallback — annotated here rather than duplicated as a new MVP-scope plan).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; features MVP membership is an
+  explicit operator policy call and the P2b-2 todo self-documents its own AO-ineligibility ('an open design call is not
+  an AO-dispatchable todo').

@@ -29,8 +29,9 @@ tags: [prek, quickmerge, git, corruption, tooling-bug, ci-cd]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-29
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: cicd
 priority: P1
 estimate_class: research
 source: [cicd/general-worker session, ci_satellite_ao_dispatch_batch1-012, 2026-07-29 21:48-21:57 UTC]
@@ -104,3 +105,7 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
   workflow-comment fix. Both corruption occurrences safely caught + reverted via `git restore` before commit; nothing
   corrupted landed on `origin/live-defi-rollout`. Not investigated further this session — root cause is a prek-internal
   mechanism, out of scope for a docs/workflow-comment task.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — reproduced twice in one session with the offending
+  patch file read directly; root-causing the patch-selection/cleanup logic and scoping the cache path are both
+  determinable by a worker. Phase-2 conflict-check: ZERO citations anywhere in the active planning corpus.

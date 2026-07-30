@@ -29,8 +29,8 @@ related:
   ]
 created: 2026-07-29
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -154,3 +154,7 @@ still in flight.
   no code fix available; noting this explicitly so a reader doesn't conflate the two blockers (one is GitHub's billing
   API, the other is this orchestrator's own local `/done` endpoint — no causal link between them). Ending session
   without a clean `/done` per the established precedent; relying on the idle-lingering-reclaim reaper path.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — both todos are bounded: query the live
+  AgentRow/`escalation_dispatched` record for a named escalation_id, then fix whichever of the two stated hypotheses it
+  proves, with a named precedent regression test. All 3 citations are `related:` cross-refs, not dispatch claims.

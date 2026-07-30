@@ -318,3 +318,9 @@ job's per-category input adapters for the reconciliation-derived categories, per
 §1/§5), `/codex/04-architecture/agent-orchestrator-autospawn.md` (account-headroom gate contract),
 `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` (batch=live determinism spine, the four ledgers),
 `/codex/02-data/availability-manifest-and-data-status.md` (the existing data-quality-gaps API this job should call).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — design doc, 0 open `- [ ]` todos. FINDING for /plan-reconcile:
+  its §5 'Follow-up todos' are prose bullets, not tracked checkboxes — violates the 'every follow-up is a `- [ ]` todo,
+  never prose' HARD RULE, and one of them is an explicit [OPERATOR] policy call.

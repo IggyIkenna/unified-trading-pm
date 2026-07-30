@@ -228,3 +228,9 @@ HashiCorp-registry version — the local `tofu` runs swap it to the opentofu mir
   `bigquery_feature_ml_compute_engine_option_2026_06_08.md` (named owning plan).
 - P3 (migrate-first/retire decision for unmanaged legacy prod resources): N/A — no migration, still owned + open in this
   plan.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the L6 decommission and version-aware delete todos are
+  prod-bucket deletes = human-only hard stop; a [BLOCKED-INFRA] P0 carries a 3-option operator decision on tarball
+  persistence.

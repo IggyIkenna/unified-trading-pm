@@ -157,3 +157,9 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
       and ml-service Cloud Run Jobs, implement run-tag-aware `_SUCCESS`-marker writers in ml-service/strategy-service,
       add a self-default date fallback to strategy-service's batch CLI, and un-pause the 7 feature-family schedulers
       (per the "2026-07-14 update" Conclusion) — no real green scheduled run exists yet.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc's own conclusion is that the residual is multi-repo
+  feature work 'correctly out of scope for the bucket-consolidation plan this issue is filed under' and 'should become
+  its own scoped plan/epic item' — an ask-before-creating operator call.

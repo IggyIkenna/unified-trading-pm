@@ -599,3 +599,8 @@ and did NOT flag that 4,410-active is the BUG** — so the catalogue defects are
 
 Evidence is read-only duckdb on the live parquets (numbers reproduce). G1.1 is the priority (catalogue is actively
 wrong).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 10 items sit behind GATE 0, explicitly NOT RECORDED SIGNED
+  OFF, and were re-reconciled 2026-07-28 with per-item evidence confirming each stays open.

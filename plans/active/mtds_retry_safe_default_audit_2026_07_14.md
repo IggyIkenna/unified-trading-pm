@@ -128,3 +128,8 @@ but these 2 sites are exactly what an idiom-lint would flag — they need an exp
   residual-annotation commit (`mtds@0041a8a6`) are real, already-shipped ancestors. Flipped both todos, shipping now.
   Todos 1-2 (repo-local MTDS lint, residual-site decision) and 5 (parent-issue closeout) remain open — not addressed by
   this uncommitted diff.
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
+  `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` carries a todo whose stated Done-when claims ALL 5 of this
+  doc's original todos (Source cites this file by path). Verbatim duplicate claim — parked for an operator ruling on
+  which side owns it.

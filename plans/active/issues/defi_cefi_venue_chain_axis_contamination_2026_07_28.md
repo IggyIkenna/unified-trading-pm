@@ -131,3 +131,9 @@ in this read-only audit pass (time-bounded scope).
   unchanged). all 3 todos are bounded manifest-row sampling traces with stated discriminants; conflict-check clear
   (`cross_cutting_satellite_ao_dispatch_batch1` only records the finding, does not claim the fix). Shared conflict-check
   protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **na-eligibility-audit 2026-07-30** (tranche=cross-cutting, autonomous): RECLASSIFY NA → planning — the two [DIAG] P1
+  todos state their own sampling method (read the actual manifest rows' venue/chain/source/pipeline_mode together) and
+  the P2 fix is gated on their outcome. `cross_cutting_satellite_ao_dispatch_batch1`'s `[x]` todo FILED this doc — it
+  does not claim its todos. (Same doc independently verdicted by the cefi tranche above; both reached RECLASSIFY — this
+  is the multi-tranche overlap recorded in
+  `/plans/active/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md`.)

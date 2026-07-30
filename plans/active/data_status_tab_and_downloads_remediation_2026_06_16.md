@@ -426,3 +426,9 @@ for blank-chain manifest rows that produce phantom entries" is explicitly gated 
 tracked within this document (see the `### APPLY-GATE todos` section). Searched `plans/active/` + `plans/epics/` for a
 plan that has since taken ownership of this specific sub-bucket phantom-row audit — none found. This plan remains the
 owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migration land.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; carries an explicit APPLY GATE
+  requiring operator eyeball of every service × asset_group projected index before any TIER-2 `--apply`, and 3 UI todos
+  blocked on a separate playwright-suite regression doc.

@@ -200,3 +200,7 @@ deposit-USDC-and-size-down branch; `stake_fraction` forced 1.0; dead `per_venue_
       via an explicit `--env=prod`. Fixes the chronic stale-UAT (it had no auto-deploy → stuck on the Jun-14 build).
       NOTE/INCIDENT: a prior manual deploy via `deploy-to-gcp.yml` (which has NO `--env` guard) hit the PROD backend
       `odum-portal`; rolled back to rev124 same-session. Repo: unified-trading-system-ui.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the remaining Phase-C/D items
+  are wizard/food-chain design work plus a dual-deposit cost constant explicitly flagged as pending operator
+  calibration.

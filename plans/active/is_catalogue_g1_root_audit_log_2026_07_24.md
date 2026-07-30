@@ -403,3 +403,7 @@ that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
   `check_frontmatter_schema.py` full sweep, confirmed via direct `docspec.parse_frontmatter()` inspection before fixing
   (grep/`git show` alone showed the file as clean, since they don't fold multi-line YAML scalars the way the parser
   does).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — self-described historical/audit record; every open todo is gated
+  (G1.run on the IS backfill + UAC accuracy + v9; G1.run-prediction on another plan's loader wiring; G1.run-full-history
+  explicitly DEFERRED pending operator review of a 190M index blow-up).

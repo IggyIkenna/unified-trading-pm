@@ -549,3 +549,11 @@ This plan **wires existing parts**. Net-new is only the keystone gate (Phase 1) 
 > `/plans/archive/2026_07/data_pipeline_hardening_self_monitoring_history_2026_07_24.md`: the remaining fully-shipped
 > Progress Log tail (ALERT SPAM REDUCTION through the TradFi databento outbound-call hardening entry,
 > 2026-06-22→2026-06-24) moved verbatim — 0 open todos in the moved content.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA — the content IS bounded
+  (re-measure a named VM set + a coverage check), but `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md`
+  deliberately DECLINED to batch it and routed it to `/vm-preemption-billing-waste-audit` instead ('re-measuring is
+  cheap but belongs with … not a batch todo that would re-diagnose a stale snapshot'). Respecting that prior routing
+  rather than overriding it.

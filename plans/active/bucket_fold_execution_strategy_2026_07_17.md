@@ -222,3 +222,9 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   exec/strategy shape against the shared fixture (execution-service assertions are literal/mock;
   deployment-service/deployment-api/UI have none) — execution-service (29659402526) + strategy-service (29659413987) v2
   stayed GREEN. No UTL change required.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17: all 5 bucket folds are HUMAN plans.
+  NOTE 4 of the 6 open todos read STALE against this doc's own 2026-07-18 Progress Log (provision+yaml scaffold, the W2
+  strategy_store gate 'SATISFIED (verified)', parity-migrate 'MIGRATE DONE + PARITY ✓', and the duplicated '(orig)
+  Atomic cutover' whose `[x]` twin sits directly above it) — flagged, not flipped, to keep the fold's audit trail
+  operator-owned.

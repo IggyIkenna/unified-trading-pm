@@ -303,3 +303,9 @@ vm_zombie_watchdog ruff cleanup. No DEFERRED-without-successor; no broken state.
   the sanctioned dirty-deps direct-LDR push per the dispatch. Broad-universe (top-40) per-venue numbers fold in once the
   cache warms (the harness reaps long background fetches; majors evidence is the validated deliverable).
 - **P1c — NEXT** (strategy-service production fold).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — remaining todos are strategy/UI design judgment (rank-allocator
+  increment, archetype surfacing, asset-class filter). NOTE the `[HISTORICAL] P3` todo is self-labelled 'SUPERSEDED —
+  DONE above' (UAC@487b9a9 + strategy-service@6b285fad) and is a stale open checkbox.

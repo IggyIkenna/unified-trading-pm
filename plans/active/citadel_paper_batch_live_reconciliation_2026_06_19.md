@@ -793,3 +793,8 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 > extracted verbatim to keep this plan under its line-count cap — see
 > [`plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md`](/plans/archive/2026_07/citadel_paper_batch_live_reconciliation_history_2026_07_24.md)
 > for the full historical narrative of how the determinism spine was built.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — carries P7.3 / P2.7.3 live-wallet+custody
+  `BLOCKED-OPERATOR-DECISION`, re-confirmed 2026-07-28 as a PERMANENT human-only hard stop. NOTE a literal duplicated
+  `- [ ] [CODE] P2.11.18` line (the first is a truncated fragment of the second) inflates this doc's open-todo count
+  by 1.

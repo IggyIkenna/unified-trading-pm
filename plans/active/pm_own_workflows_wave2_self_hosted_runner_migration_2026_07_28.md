@@ -189,3 +189,9 @@ the review doesn't silently drop them into either bucket without a look):**
 - `/plans/active/github_actions_operator_gated_followups_2026_07_17.md` — Wave-1, the original fan-out whose playbook
   (verify on one consumer before fleet rollout) this plan mirrors for Tier A and deliberately does NOT mirror
   (batch-free, one-at-a-time) for Tier B.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — explicit operator routing note: 'whether Tier A should later be
+  re-tiered to `assigned_vm: planning` … is explicitly left OPEN as a genuine operator routing call — do not
+  self-promote it'.

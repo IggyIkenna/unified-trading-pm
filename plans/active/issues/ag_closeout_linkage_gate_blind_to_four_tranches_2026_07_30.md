@@ -247,3 +247,8 @@ content-vs-tag sanity check). **1 exception worth carrying into whichever option
 DeFi-specific despite its discovery context) — **do NOT sweep it into the ci/ao retag pass**; it stays cross-cutting's
 own orphan, just not AO-eligible today (both fix options are self-described design-review/operator-risk-tolerance calls,
 not a bounded worker todo). No new batch drafted; concurs with the conclusion above.
+
+### 2026-07-30 (`/na-eligibility-audit`, tranche=cross-cutting, autonomous) — KEEP-NA verdict
+
+KEEP-NA, valid — carries an explicit `[OPERATOR]` todo (SKILL.md edits need an operator ruling) plus a
+BLOCKED-OPERATOR-DECISION section with A/B/C options on the cross-cutting/ci/ao retag.

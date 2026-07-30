@@ -24,7 +24,7 @@ related:
 created: "2026-07-24"
 last_updated: "2026-07-24"
 parent_epic: observability_master
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
@@ -207,3 +207,9 @@ locked_since:
   8b for any runtime-infra claim).
 - `bash scripts/plan-hygiene/check_line_caps.sh` no longer flags this file, and
   `bash scripts/plan-hygiene/run_hygiene_sweep.sh` shows 0 hard failures across the 4-way split.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the 3 remaining todos are bounded code/UI work
+  (SOURCE_RATE_LIMITED/SOURCE_KEY_POOL_EXHAUSTED event, deployment-ui streaming-events pane, the 2-line UTL
+  DP_DAILY_DIGEST string constants); batch2's overlapping claims land only on items already `[x]` here.

@@ -444,3 +444,7 @@ two `dependency_checker.py` per-AG guard maps; UTL `ml/model_registry.py` + `dom
   potential data-status regression since the real model index is under `models/_index/`). Phase E must: repoint the live
   GCP job `--bucket`→`ml-store-prd-<pid>` AND verify the data-status reader's expected availability_index path BEFORE
   deleting `ml-training-artifacts`.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17 (HUMAN plans) + the P0 open todo is a
+  5-source prod-bucket delete = human-only hard stop. NOTE the P1 SECURITY pickle-gate todo reads STALE — Fold-A's own
+  Progress Log lists `UTL@bccc4ca4` (ml Fold-B deserialize gate) in its shipped set.

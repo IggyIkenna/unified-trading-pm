@@ -100,3 +100,9 @@ severities were weakened to `"none"`, masking 574 errors).
 ## Temporary states + their canonical follow-up plans
 
 - (none — this IS the canonical follow-up for the archived `features_calc_efficiency_and_correctness` deferrals.)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; 3 of 4 todos already carry
+  correct SUPERSEDED-BY-BATCH1 citations (the KEEP-NA-STALE fix is already applied) and are deliberately held open as
+  the bookkeeping record; the 4th is genuinely gated.

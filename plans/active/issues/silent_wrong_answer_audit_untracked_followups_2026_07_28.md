@@ -77,3 +77,9 @@ locked_since:
 Both are cross-repo (strategy-service / e2e-testing) — outside this session's assigned repo (features-service) and its
 narrow mandate (reconcile 2 stashed features-service fixes). Filed per the "every follow-up is a `- [ ]` todo, never
 prose" HARD RULE so archiving the parent audit doc doesn't silently drop them.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the P2 todo is explicitly a schema-contract DECISION ('no
+  per-pair schema/NaN-tolerance contract exists to check against'). NOTE the P0 gas-fee reader fix IS bounded and
+  specific — worth an operator call on splitting it out.

@@ -214,3 +214,10 @@ drift_direction: advance-code
 
 Scope exemptions (by design, not gaps): features-service / strategy / execution outputs (computed — no vendor source).
 **(MIGRATED FROM: `data_source_provenance_all_asset_groups_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — P0 provenance enforcement whose [DATA] todos are prod corpus
+  backfills explicitly folded into other plans' single-walk windows (cefi/sports C-source riders) — cross-plan
+  single-walk sequencing is coordination judgment. Genuinely AO-eligible slices exist ([SCRIPT]
+  backfill_defi_source_column, [TEST] unit tests, [QG] checker wiring) but splitting them out is a plan-authoring call.

@@ -290,3 +290,7 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
     agents' sessions) that blocked all Bash calls for a stretch — recovered on its own; no workaround was needed beyond
     waiting + continuing read-only (Read-tool) investigation in the meantime. Flagging in case it recurs for another
     slot.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 3 of 4 open todos are human-only hard stops or cross-plan
+  checkpoints (prod-bucket delete of `ml-models-store` per delete-safety §3, deletions owned by other plans, the
+  recon-bucket multi-repo chain explicitly out of scope).

@@ -39,13 +39,13 @@ related:
 created: 2026-07-27
 last_updated: 2026-07-27
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.36
-assigned_role: infra_engineer
+assigned_role: infra
 drift_direction: advance-code
 locked_by:
 locked_since:
@@ -172,3 +172,9 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
       worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
       behavior against.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the gating [OPERATOR] design call was FULLY RULED
+  2026-07-29 (process topology option (a) + the family↔asset_group mapping, shipped `features-service@ebd43939`); all 3
+  remaining [SCRIPT] todos are now unblocked bounded implementation.

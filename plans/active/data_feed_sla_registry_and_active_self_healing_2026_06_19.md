@@ -293,3 +293,7 @@ two items genuinely blocked on OTHER agents' in-flight breakage (documented, own
 unblock has since fully landed fleet-wide (18/18 repos now on `aiohttp>=3.14.1,<4.0.0`, including the former
 execution-service holdout as of 2026-07-27) — the vcrpy ignore-vuln for THIS plan's repos should be re-checked for
 droppability now rather than treated as still-gated.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; both remaining todos are fleet
+  dependency/CVE ops blocked on foreign repo state, documented as genuine-impossibility-in-scope. NOTE the vcrpy
+  ignore-vuln is now re-checkable — the aiohttp<3.14 pin it was gated on lifted 2026-06-23.

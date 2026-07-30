@@ -114,3 +114,9 @@ partition walk anywhere (single-walk discipline):
   `sports_manifest_canonicalisation_2026_06_01.md` / `prediction_manifest_canonicalisation_2026_06_01.md` — each carries
   the `pipeline_mode=` partition as a named C-pipeline_mode rider in its single-walk.
 - Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; both todos are riders that
+  complete only inside another plan's whole-corpus walk (single-walk discipline) and need window coordination with the
+  IS migration owner.

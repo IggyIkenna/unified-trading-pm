@@ -562,3 +562,6 @@ Two genuine hits in this plan:
    is tracked as this same plan's own open `- [ ]` [SCRIPT] P2 todo (line ~1724), Target repo: deployment-service. It
    remains this plan's responsibility until shipped; grepping `plans/active/` and `plans/epics/` found no other plan
    that has picked up the "silent-worker watchdog" item.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — open set spans credential-gated venue onboarding, a cross-plan
+  B0→B1→B2 dependency chain the operator sequenced 2026-06-18, and cost-gated backfill scope.

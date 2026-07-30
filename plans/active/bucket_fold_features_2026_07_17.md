@@ -351,3 +351,7 @@ design's counts are 2026-07-13).
   being handled by a separate agent this same tick (also covering this plan's sibling "IAM + lifecycle" P2 todo above).
   Leaving the "Alias sunset" checkbox unchecked since it's one joint todo spanning both repos' work — flip it only once
   the deployment-service terraform/yaml-key half also lands.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — operator ruling 2026-07-17: all 5 folds are HUMAN plans; the
+  sole open todo (alias sunset) is a joint UTL+deployment-service item whose UTL half is verified done and whose
+  terraform/yaml half is another agent's in-flight work.

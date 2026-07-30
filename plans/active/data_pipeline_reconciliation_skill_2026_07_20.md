@@ -872,3 +872,7 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
   before any object was written. Never `--apply` a prod migration without inspecting the dry-run.
 - **The pre-commit hygiene gate caught 4 real defects** this session (unquoted `: ` in YAML summaries ×2,
   `nature: refactor`, invalid audit-result `status`) — the commit-is-the-quality-boundary rule works.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — same dated operator ruling as the milestones gate (entry #10,
+  option A) — standing reference surface; the single residual todo is a prod sports orphan back-fill + legacy-dup
+  triage.

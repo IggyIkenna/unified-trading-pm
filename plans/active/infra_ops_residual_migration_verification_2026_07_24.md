@@ -168,3 +168,7 @@ source: >-
 
 - P3 (re-stamp legacy schema_version tails): N/A — no migration, still owned + open in this plan. Deferred per operator
   2026-06-22 pending the active backfill fleet finishing; trigger-to-resume condition documented inline.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the RESUME runbook needs operator OK between each AG, the
+  schema_version re-stamp needs operator sign-off on an irreversible `--apply`, and 2 of the 9 todos are pointer-only
+  items the doc itself says belong elsewhere.

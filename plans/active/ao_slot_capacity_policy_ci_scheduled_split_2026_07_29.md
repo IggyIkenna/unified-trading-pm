@@ -252,3 +252,6 @@ From `/plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_
   session before my own fix landed, confirmed same resolution. Biggest finding: GitHub Actions is currently down
   fleet-wide (likely a spending-limit cap) — filed as its own P0 issue doc, pushed a notification, left for the operator
   since it needs their billing UI.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — sole open todo is `[OPERATOR] P0` — needs the operator's own
+  github.com/settings/billing UI; `locked_by: live-defi-rollout`.

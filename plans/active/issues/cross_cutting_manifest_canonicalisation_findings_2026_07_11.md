@@ -216,3 +216,8 @@ defi source/schema-int) are code+rebuild work still homed in each AG's tracking 
 - [ ] [DATA] P1. **Legacy-bucket delete (all 4 AGs) + cefi CF-audit adjudication** — the standalone legacy bucket each
       AG's own E8 step targets (cefi/defi/tradfi/sports) remains genuinely undeleted, and cefi's CF-4/CF-5/Era-B
       data-content claims are NOT ADJUDICATED (no fresh 2026-07 CF-audit re-run found for cefi).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; the sole todo's legacy-bucket
+  delete is documented as 'hard-stop, never-autonomous' operator sign-off for all four AGs.

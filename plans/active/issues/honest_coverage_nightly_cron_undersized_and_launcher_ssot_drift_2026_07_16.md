@@ -22,11 +22,11 @@ related:
 created: 2026-07-16
 last_updated: 2026-07-16
 parent_epic: deployment_and_user_management_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
-assigned_role: infra_engineer
+assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -99,3 +99,10 @@ Also: the tarball publisher (`create-code-tarballs.sh`) publishes launchers to
 - [ ] [INFRA] P3. Reconcile the launcher SSOT drift: make the tarball publisher maintain the `vm/` path the Cloud Run
       Job reads (or point the Job at `code/deployment-service/scripts/vm/`), and delete/merge the redundant
       `launch-honest-coverage-vm.sh` + `honest-coverage-daily-workflow.yaml` so ONE launcher is the SSOT.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the 3 remaining todos are a specified refactor
+  (pyarrow row-group streaming aggregation, with the unsafe naive column-drop explicitly ruled out in-doc), a tarball
+  republish from a clean tree, and a launcher-SSOT reconcile. batch1 explicitly records this as a DIFFERENT bug from its
+  own item.

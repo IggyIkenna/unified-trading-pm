@@ -116,3 +116,9 @@ the call is still awaited (ordering preserved), and check the file's line/functi
 - [ ] [INFRA] P2. **Add concurrency (`asyncio.gather` + `Semaphore`) to the DeFi CLI handler family** — per "Open — in
       priority order" item 1, `_adapter.py`'s BatchPayload loop and the nested protocol/chain loops run fully serial
       today; do the blocking-write fix (item 2) first or in the same change.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY candidate PARKED (conflict) — stays KEEP-NA —
+  `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` explicitly records 'GENUINE overlap found' against this
+  doc. Not flipped.

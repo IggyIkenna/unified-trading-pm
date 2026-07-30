@@ -80,3 +80,9 @@ Discovered incidentally while shipping `small-1` (deployment-api sleep()-based t
 `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`. That dispatch was narrowly scoped to 3
 named sleep() fixes across 3 repos and explicitly did not include this file; filing here rather than expanding scope
 mid-dispatch.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — 0 open `- [ ]` todos. FINDING for the zero-checkbox sweep
+  (`issue_docs_zero_checkbox_sweep_2026_07_24.md`): its 'Fix direction (not yet done)' is prose, never converted to a
+  tracked checkbox.

@@ -48,9 +48,10 @@ source:
   "operator #ci-failures Slack dump + operator ask to verify PM#1746/1747/1748 + 2 ldr_qg_failure items over 30-40min,
   2026-07-29 ~01:05Z"
 execution_scope: orchestrator-agent
+assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
 locked_since:
@@ -308,3 +309,9 @@ not just noting.
   real production-topology decision (which repos' CI moves back to GH-hosted, cost/perf tradeoff), not a mechanical
   follow-up of an already-made ruling, so left for the operator per this session's own scope (execute already-decided
   rulings, don't make new policy calls). No code/infra change made; read-only SSM queries only.
+- **na-eligibility-audit 2026-07-30** (tranche=cross-cutting, autonomous): RECLASSIFY NA → planning — the 4 remaining
+  todos are bounded measurements/diagnostics (attempt-count distribution over a stated window, post-resize protected-6
+  re-measure, plan_health-queue root-cause split, doc split); the one operator call is already `[x]` ruled. **Note
+  (integrator, same day)**: the close-out pass recorded immediately above already executed the post-resize protected-6
+  re-measure and returned a NEGATIVE verdict, so that particular todo is answered even though its checkbox is untouched
+  here.

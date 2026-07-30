@@ -122,3 +122,6 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
     the AUTHORITATIVE complete list (the static scan flagged further defi/deribit candidates —
     `spot_asset`/`debt_symbol`/`onchain_symbol`/etc. — to be confirmed real-vs-parse-artifact and dispositioned the same
     way).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the per-field disposition todo carries an explicit OPERATOR
+  JUDGMENT field (`min_order_size`: ADD only if execution needs the order-minimum) that gates the ADD/REMOVE pass.

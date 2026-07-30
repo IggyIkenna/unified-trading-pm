@@ -338,3 +338,9 @@ cefi/tradfi/Phase-0 children; see each child's own "Historical progress log" sec
 prediction 1,204,816 rows; monotonic ACCEPT) and the per-AG daily scheduler (T+1 producers → catalogue aggregation,
 monotonic guard) went live the same day (deployment-service@9d0e457) — see the cefi child's historical log for the full
 autonomous-run narrative and the Phase-0 child's "Autonomous run results" section for the cross-AG summary.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — gated umbrella whose entire premise is per-gate operator
+  sign-off ('ask every time'); GATE 0 is NOT RECORDED SIGNED OFF and the remaining todos are per-AG G-gate work
+  delegated to child plans.

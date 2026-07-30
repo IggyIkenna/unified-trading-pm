@@ -257,3 +257,7 @@ for these messages to close the verification loop.
   Logging + GCS `alerting/history/` for any `DP_VM_EXIT_NONZERO` occurrence — none found, so there is currently nothing
   for anyone (agent or operator) to inspect. Doc stays open (Gap 3 + Gap 4's render-verification remain genuine,
   currently un-triggerable, operator-only work) — not archived.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — `locked_by: live-defi-rollout`; both remaining todos are
+  operator-only by construction (a Slack-channel spot-check, and a render-verification with no real DP_VM_EXIT_NONZERO
+  occurrence to inspect).
