@@ -367,7 +367,7 @@ Discriminator = **does a manifest row exist**.
       recommending "approve — execute now"; a FINAL operator answer then authorizes the SAME worker session to run it
       immediately (no second agent, no manual operator execution) — not the old "an agent must never run it, a human
       runs it separately" framing. (repos: deployment-service, market-tick-data-service)
-- [ ] [BACKEND] P0. **NEW 2026-07-24 — `write_defi_rows()` writes the bare SYMBOL as the filename leaf, not the ruled
+- [x] [BACKEND] P0. **NEW 2026-07-24 — `write_defi_rows()` writes the bare SYMBOL as the filename leaf, not the ruled
       canonical_instrument_id, AND DeFi batch capture is actively writing (NOT stopped as the codex/plan text assumes) —
       so this is a growing defect, not frozen residue.** 13/13 sampled objects fail the UAC id-form oracle
       (`canonical_path_violations`, `_ID_FORM_CHECKED_ASSET_GROUPS={cefi,defi}`); `canonical-cutover-register.md` §5 +
@@ -376,7 +376,10 @@ Discriminator = **does a manifest row exist**.
       `/plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`.
       **Done when** a fresh `canonical_path_violations()` id-form sample against `write_defi_rows()` output across a
       multi-day window returns 0 violations. (repos: market-tick-data-service, unified-api-contracts,
-      unified-trading-pm)
+      unified-trading-pm) — DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 36 for full evidence: fixed via a new colon-preserving
+      sanitizer (`_sanitize_defi_instrument_id_leaf`) so filename stem == the `instrument_id` column == the manifest
+      key; shipped `market-tick-data-service@0fddb95e`, `quality-gates.sh` green.
 
 ## Track 3 — DENOM: empty_confirmed / denominator honesty · P1
 

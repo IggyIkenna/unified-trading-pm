@@ -399,8 +399,9 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       `adapters/defi_live/{alchemy_adapter.py,thegraph_ws_adapter.py}` — wire in or delete.
 - [ ] [SERVICE] P2. market-tick-data-service: consolidate `onchain/helius_solana.py::HeliusSolanaAdapter` and
       `cli/handlers/native_staking_handler.py`'s hand-rolled Helius calls onto one implementation.
-- [ ] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
-      the shared checkout is clean.
+- [x] [SERVICE] P3. market-tick-data-service: land the corrected `onchain/__init__.py` docstring quoted in § 2.2 once
+      the shared checkout is clean. — DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 12 for full evidence (market-tick-data-service@0cd76b93).
 - [x] ✅ [DIAG] P3. **DONE 2026-07-27 (slot-11) — no code shipped (diagnostic-only todo).** Traced whether
       `curve_adapter.py::_download_liquidity`'s broad-except `return []` is distinguishable from a genuine zero-snapshot
       day in the caller's success/failure accounting — **CONFIRMED MASKING**, full caller-chain evidence in § 2.3. Also

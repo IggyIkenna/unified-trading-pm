@@ -151,9 +151,11 @@ outrank the naming question entirely.
    `lst_staking_yields→lst_yields`, `eigen_rewards→rewards` (protocol-agnostic), `aave_rate_impact→rate_impact`; ADDED
    `health_factor` + `liquidation_events`; DROPPED `onchain_regime` / `defillama_tvl` / `protocol_rewards` (no writer
    dispatch). Final = the CLI's 13. No GCS partition renamed, no prod-data migration. deployment-api auto-follows.
-   **Follow-up (not blocking):** two adjacent vocabularies still carry the old names — `required_inputs.py`
-   (`FEATURE_REQUIRED_INPUTS`, currently dormant, no runtime call site) and `internal/schemas/_feature_contracts.py`
-   (own consumers/test) — reconcile in a dedicated pass.
+   **Follow-up (not blocking): DONE 2026-07-30** (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+   defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 40 for full evidence — two adjacent vocabularies still carried
+   the old names, `required_inputs.py` (`FEATURE_REQUIRED_INPUTS`, currently dormant, no runtime call site) and
+   `internal/schemas/_feature_contracts.py` (own consumers/test); both renamed to the ratified names + dropped
+   `onchain_regime`/`defillama_tvl`/`protocol_rewards`, shipped `unified-api-contracts@edf5122d`.
 2. **Any rename is a PROD DATA MIGRATION** — moot under ruling #1 (writer names are already what's on disk; the registry
    reconciliation moves NO objects).
 3. **The six false `captured` rows** + **4. the five feature-less shard families** — ✅ **RULED: mark→recompute**, but
@@ -184,7 +186,11 @@ These are producer-honesty and loudness fixes. None renames anything, none touch
   `DEFI_FEATURE_GROUPS` definitions are collapsed so they cannot drift apart.
 - deployment-api emits observed-but-unexpected groups as an explicit mismatch bucket, so vocabulary drift renders as
   drift rather than as a coverage hole.
-- A machine check enumerating all three vocabularies and reporting the diff, so this can never drift silently again.
+- A machine check enumerating all three vocabularies and reporting the diff, so this can never drift silently again. —
+  DONE 2026-07-30 (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+  defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 41 for full evidence: `e2e-testing@bc6a7be`
+  (`scripts/defi/onchain_feature_group_vocabulary_check.py`); re-run live confirms features-service == UAC-onchain
+  (13/13 identical), ml-service diverges (pre-existing, separately-tracked drift, correctly reported not asserted-away).
 
 ## 8. Two unverified signals, recorded but NOT asserted
 

@@ -207,7 +207,11 @@ Two secondary findings:
       floor at all**, since the native adapter has no funding endpoint. Free-tier Tardis key only allows first-of-month
       historical dates — re-verify with a paid key or a first-of-month date before declaring this resolved in
       production. — market-tick-data-service@0c4000a02 fixes lighter exchange fallback slug + adds Tardis numeric
-      market_id resolution + corrects data_type mapping to derivative_ticker.
+      market_id resolution + corrects data_type mapping to derivative_ticker. **Re-verify DONE 2026-07-30**
+      (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see defi_satellite_ao_dispatch_batch1_2026_07_25.md
+      todo 47 for full evidence — re-verified live against a real free-tier-compatible first-of-month historical date,
+      confirmed real `trades`/`book_snapshot_5`/`derivative_ticker` rows still return under current code; resolved in
+      production per this caveat's own bar.
 - [x] [FIX] P0. ✅ **LIGHTER-ZKSYNC: fix the separate native-trades `limit=500` bug** —
       `_fetch_lighter_trades_for_symbol` hardcodes `"limit": "500"` on `GET /recentTrades`; Lighter rejects this with
       `HTTP 400`. Confirmed live: `limit≤100` returns real trades immediately. This is independent of the Tardis-slug
@@ -254,7 +258,10 @@ Two secondary findings:
       HTTP, no fabricated timestamp, no stray `attempted_failed` row); `book_snapshot_5` is captured going forward by
       the live WS connector. Candles/trades/funding unaffected. +4 unit tests. **Real-infra confirm still wanted:** a
       past-day + a current-day EXTENDED backfill to observe 0 past-book rows + a live current-book row (deferred to an
-      attended run).
+      attended run). **DONE 2026-07-30** (defi_satellite_ao_dispatch_batch1 finalize reconciliation), see
+      defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 46 for full evidence — batch CLI couldn't reach this gate so
+      `fetch_extended_rest` was called directly: past-day produced 0 book rows (honest absence, no fabrication),
+      current-day produced 1 real book row via the WS connector; the "real-infra confirm" bar is satisfied.
 - [x] [FIX] P1. ✅ **FIXED — `unified-trading-library@08662724`.** Root cause: the `_VENUE_OVERRIDES` key was hyphenated
       `"EXTENDED-STARKNET"` but both lookup sites normalize via `venue.upper().replace("-","_")` →
       `"EXTENDED_STARKNET"`, so the override NEVER matched and rows fell through to `batch_tardis` (fabricated Tardis
@@ -347,7 +354,13 @@ Two secondary findings:
       (`node_fills_by_block`). 2025-03-22..2025-05-24 is genuine upstream absence — do NOT expect it to populate.
       HYPERLIQUID is exempt from the Tardis cap; use a SPOT backfill launcher, monitored (no fire-and-forget). Deferred
       from the autonomous session as a real-infra launch that warrants an attended start + progress watch. — already
-      covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution).
+      covered by defi_satellite_ao_dispatch_batch2_2026_07_26.md (see that doc for execution). **Cross-referenced
+      2026-07-30** (defi_satellite_ao_dispatch_batch1 finalize reconciliation):
+      `defi_satellite_ao_dispatch_batch1_2026_07_25.md` todo 43 independently closed the one real remaining gap
+      (trailing 8 days, 2026-07-21..28, after 2 SPOT preemptions) — final: all 8 days 173/173 files; prior sweeps had
+      already produced 85-95% captured coverage both windows, gap correctly left unattempted; no code change (parser fix
+      `market-tick-data-service@c48096e7`, 2026-07-13). Both plans' HL-trades-backfill todos target the same underlying
+      gap; batch1's Progress Log is the record of the final closure.
 - [ ] [FIX] P3. **HYPERLIQUID k-prefix coin case-sensitivity** — `catalogue_symbols_for_venue`
       (`_onchain_perp_batch_symbols.py:132`) `.upper()`s the segment while `_fill_to_trade_row`
       (`hyperliquid_s3.py:585`) does a case-SENSITIVE exact `coin` match, so `kPEPE`/`kBONK`/`kSHIB`/… requested via the
@@ -467,13 +480,16 @@ Two secondary findings:
     never fabricate batch_tardis; dead key deleted; +4 tests). The positive `BATCH_LIGHTER_API` stamp + source-threading
     - the `--force` re-stamp are DEFERRED (see the FIX todo) — the positive stamp needs a full new-source
       SourceCapability wiring (real endpoints) that hit the closed-set cascade and shouldn't be guessed unattended.
-  - 🟡 **HYPERLIQUID replay-prefix hardening — DEFERRED (not a regression).** The 1-line `Mode.REPLAY` add to
-    `possible_manifest._canonical_pipeline_mode_prefixes` is correct + no-risk, BUT the UAC tree is currently
-    foreign-contended: a peer's uncommitted WIP already broke the `test_possible_manifest` prefix-count guard (sports
-    0→10, independent of my change), so I could not land a green UAC tree. The actual HYPERLIQUID 373/540 false-phantom
-    is ALREADY covered by the existing `Mode.LIVE` prefix (live_hyperliquid), so this is future-proofing, not an active
-    bug — re-attempt when the UAC tree is quiescent. The `--unphantom` reverse-pass heal is a separate attended
-    real-infra step (only needed if any rows are still flipped after the live_ coverage).
+  - ✅ **HYPERLIQUID replay-prefix hardening — DONE 2026-07-30** (defi_satellite_ao_dispatch_batch1 finalize
+    reconciliation), see defi_satellite_ao_dispatch_batch1_2026_07_25.md todo 45 for full evidence. The 1-line
+    `Mode.REPLAY` add to `possible_manifest._canonical_pipeline_mode_prefixes` (was previously deferred here — UAC tree
+    was foreign-contended at the time) shipped `unified-api-contracts@6456dd23`: `_canonical_pipeline_mode_prefixes` now
+    iterates `(Mode.BATCH, Mode.LIVE, Mode.REPLAY)`; the prefix-count guard was NOT quiescent (6 sources per AG are
+    REPLAY-capable), so `test_extra_live_probe_sources_do_not_leak_cross_ag`'s expected counts were updated with the
+    same explanatory-comment precedent as prior additions; `quality-gates.sh` green. The actual HYPERLIQUID 373/540
+    false-phantom was already covered by the existing `Mode.LIVE` prefix (live_hyperliquid); this closes the
+    future-proofing gap. The `--unphantom` reverse-pass heal remains a separate attended real-infra step, not addressed
+    by this fix.
 
 - **2026-07-28 (slot-16) — EXTENDED-STARKNET `/trades` cursor investigation: CONFIRMED it structurally cannot walk back
   to historical dates.** Live-probed `https://api.starknet.extended.exchange/api/v1/info/markets/{symbol}/trades`

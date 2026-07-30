@@ -52,8 +52,20 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 29 distinct source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the
-      original list below was missing the 29th doc,
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-7, review).** Reconciled all 29 source docs against batch1's 54 done
+      todos: 11 docs edited with verified `repo@sha` citations (data_completion_defi, defi_consolidated_closeout Track
+      2, defi_dedicated_bucket_shared_migration, defi_track01_per_instrument_and_canon_id, defi_adapter_dead_code_audit,
+      defi_expected_unattempted_backlog_1m, features_onchain_featureless_shards_and_vocabulary_split,
+      non_tardis_dexperp_venue_data_status_smoketest, phantom_captures_defi (special case — confirmed the 2026-07-28
+      slot-15 root-cause completion, corrected stale banner text only, left `status`/`locked_by` untouched per its own
+      unlock-gate), lst_rate_honest_coverage, defi_five_never_captured_venues_fix); 18 docs required no edit (already
+      correctly reconciled by prior passes, or pure index docs). Every cited SHA independently verified to exist in its
+      repo before flipping (17 distinct SHAs checked). 0 docs reached genuinely 0 open items overall, so 0
+      `status:     resolved` flips — every touched doc still carries at least one unrelated open item. 1 pre-existing
+      gap flagged (not created by this pass): `defi_curve_optimism_subgraph_no_allocations_2026_07_15.md`'s `--apply`
+      execution citation for the CURVE/OPTIMISM reclassification could not be independently verified against batch1's
+      own text — worth an operator/worker double-check, not blocking this reconciliation. **Reconcile all 29 distinct
+      source docs' checkboxes** (corrected 2026-07-25 plan-reconcile: the original list below was missing the 29th doc,
       `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` — the source of
       todo 54, appended after operator-decision entry #3 resolved; batch1's own frontmatter summary already
       independently states the correct "29 of those docs" figure, confirming 28 was the stale count). For each of

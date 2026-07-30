@@ -4,7 +4,7 @@ title: Phantom captures — defi manifest (2026-06-28)
 summary:
   219,529 phantom captures (10.5% of captured scope) in defi MTDS manifest — swaps_ohlcv_* dominant across Uniswap
   V3/V4, Balancer, SushiSwap. Major data integrity finding.
-status: open # 2026-07-27: todo 2 verified done + flipped; todo 1's "already covered" [x] was FALSE (see Progress Log) -- reverted, NOT archived
+status: open # 2026-07-27: todo 2 verified done + flipped; todo 1's "already covered" [x] was FALSE (see Progress Log) -- reverted. 2026-07-28 (slot-15): todo 1 genuinely completed (root cause diagnosed, see Progress Log) -- all 3 todos now done, but locked_by blocks archival (needs [unlock-plan], never autonomous) -- see 2026-07-30 finalize-reconciliation note in Progress Log
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -28,18 +28,21 @@ locked_since: 2026-05-21
 
 # Phantom captures — defi manifest (2026-06-28)
 
-> **⚠️ NOT ARCHIVED (2026-07-27 /plan-vintage-audit correction)** — a 2026-07-27 pass verified todo 2 ("apply
-> reconciliation") is genuinely done (2026-06-28T21:35:53Z, `bj755413o`, exit_code=0, 219,632 phantoms flipped, verified
-> against `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` +
-> `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and flipped it. **But todo 1's `[x]` was FALSE**:
-> its "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md` + this doc's own 2026-07-26 Progress Log
-> entry" citation does not hold up — that Progress Log entry (below) explicitly states "Todos 1+2 above... remain open —
-> out of this todo's scope", and `defi_satellite_ao_dispatch_batch1_2026_07_25.md` (status: active) carries the
-> IDENTICAL root-cause-diagnosis todo still unchecked with zero completion evidence. Reverted todo 1 to open. **This doc
-> is NOT archived** — 1 genuine open item remains, already tracked at
-> `/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md` (line ~687, "Diagnose the root cause of the 2026-06-28
-> defi phantom-capture batch-writer failure"). Flagging per the findings-triage HARD RULE (SSOT-contradiction-adjacent:
-> a checked-but-undone todo citing a doc that disclaims the coverage in its own text).
+> **⚠️ NOT ARCHIVED (2026-07-27 /plan-vintage-audit correction; UPDATED 2026-07-30)** — a 2026-07-27 pass verified todo
+> 2 ("apply reconciliation") is genuinely done (2026-06-28T21:35:53Z, `bj755413o`, exit_code=0, 219,632 phantoms
+> flipped, verified against `plans/archive/mvp_backfill_defi_onchain_v10_operational_log_2026_07_24.md:754-762` +
+> `plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md`'s banner) and flipped it. Todo 1's `[x]` was then found
+> FALSE on 2026-07-27 (its "already covered by `defi_satellite_ao_dispatch_batch1_2026_07_25.md`" citation didn't hold
+> up at the time — that plan's own copy of the root-cause todo was still unchecked) and reverted to open. **2026-07-28
+> (slot-15): todo 1 was genuinely completed for real** (root cause diagnosed via git/commit archaeology — see Progress
+> Log "2026-07-28 (slot-15)" entry) as part of the SAME dispatch that closed
+> `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own root-cause-diagnosis todo (todo 52 there) — both carry
+> identical evidence. **All 3 todos in this doc are now `[x]` done.** Confirmed 2026-07-30
+> (defi_satellite_ao_dispatch_batch1 finalize reconciliation pass): re-verified batch1 todo 52 is checked done with this
+> same evidence before touching this doc, per the finalize plan's explicit instruction not to flip anything here without
+> that confirmation. **Still NOT archived** — `locked_by: live-defi-rollout` blocks archival pending an explicit
+> `[unlock-plan]` ask (never autonomous); `status` intentionally left as-is pending that unlock, per the finalize task's
+> own instruction not to change this doc's status.
 
 > Auto-filed by the G3 phantom-manifest audit (`reconcile_phantom_manifest_rows_all.py --asset-group defi --dry-run`)
 > run during Phase-0 catalogue finalization. Found 219,529 `capture_status=captured` rows in the MTDS defi manifest
