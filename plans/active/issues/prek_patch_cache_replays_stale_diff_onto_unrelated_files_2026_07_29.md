@@ -39,9 +39,10 @@ drift_direction: worsening-slowly
 depends_on: []
 locked_by:
 resolved_by:
-  "2026-07-30 (cicd worker, slot 16) — root-caused via upstream prek source read (not reproducible locally): prek's own
-  stash/restore is per-invocation in-memory, not a stale-patch bug; shipped a general commit-hook-side-effect purge in
-  quickmerge.sh as the fix. See Progress Log."
+  "2026-07-30 (cicd worker, slot 16) — prek's own stash/restore ruled out via upstream source (per-invocation in-memory,
+  not a stale-patch bug); ACTUAL root cause found via live in-session reproduction: fix_frontmatter.py's
+  last_updated/execution_scope auto-fill left stale YAML-folded continuation garbage across runs. Fixed at source +
+  cleaned the one corpus file proven corrupted + added a hook-agnostic quickmerge.sh hardening layer. See Progress Log."
 ---
 
 # prek's stash/restore cycle replays a stale, already-resolved patch onto unrelated files
