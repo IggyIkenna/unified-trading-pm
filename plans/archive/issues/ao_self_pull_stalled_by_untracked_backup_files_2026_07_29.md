@@ -13,7 +13,7 @@ summary:
   SSOT, not accidental litter) -- were never added to .gitignore, so the dirty-tree check never cleared. This meant the
   VM's deployed code could silently fall behind origin for however long the tree stayed dirty, with no alert
   (self-pull's skip is a silent no-op by design, not a paged failure)."
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -29,7 +29,7 @@ created: 2026-07-29
 priority: P2
 parent_epic: agent_operating_framework_master
 source: "Found while live-verifying dispatch_sequential_gate_fix_2026_07_24.md's [BACKEND] P1 todo via SSM, 2026-07-29"
-resolved_by:
+resolved_by: agent-orchestrator@b5fb9fc, agent-orchestrator@61b7a4f
 locked_by:
 assigned_vm: NA
 execution_scope: local-only
@@ -39,13 +39,11 @@ depends_on: []
 
 # ao-self-pull.sh silently stalled 2+ hours -- 2 untracked backup files never gitignored
 
-> **🟡 STATUS CORRECTED 2026-07-30** (`/plan-reconcile` autonomous sweep) — frontmatter said `status: resolved` while
-> the doc still carries an OPEN `- [ ]` [INFRA] P3 todo (the self-pull staleness alert), so
-> `check_terminal_status_archived` demanded an archive the doc is not actually ready for. Aligned frontmatter to reality
-> per the skill's "frontmatter status contradicting body completion" auto-fix class: `status: resolved` → `open`,
-> `resolved_by:` cleared. **The original incident IS fixed** — see § "Fix (shipped same session)" below (gitignore
-> change + live-verified VM HEAD match on 2026-07-29); what remains open is only the follow-up alerting gap. Re-flip to
-> `resolved` and archive once that todo closes.
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, 0 open todos. The original incident was fixed same-session
+> (`agent-orchestrator@b5fb9fc` gitignore fix, live-verified VM HEAD match 2026-07-29); the follow-up staleness-alert
+> todo (a `/plan-reconcile` sweep had earlier flagged this doc's `status: resolved` as premature while it was still
+> open) is now also shipped (`agent-orchestrator@61b7a4f` — TIME-gated dirty-skip alert, functionally verified).
+> Archived per `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule (ACKED-INTO-CODE).
 
 ## Evidence
 
@@ -77,7 +75,7 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
 
 ## Fix (shipped same session)
 
-- `agent-orchestrator@<gitignore-fix-sha>` — added `data/config/accounts.json.bak-pre-sub-*` to `.gitignore`, same
+- `agent-orchestrator@b5fb9fc` — added `data/config/accounts.json.bak-pre-sub-*` to `.gitignore`, same
   secrets-adjacent-class reasoning as the tracked exclusion it backs up.
 - Verified live: VM HEAD now matches the pushed commit exactly (`b5fb9fcaff438f7fc2990678ce1d7edca80da81c`),
   `git status --porcelain` is empty, self-pull's next tick will succeed normally. The 2 backup files were left in place
@@ -86,11 +84,25 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
 
 ## Todos
 
-- [ ] [INFRA] P3. **Consider adding a self-pull staleness alert** — e.g. if `ao-self-pull.sh` logs "dirty (non-churn) —
-      skip" N consecutive times (say, 4 = 1 hour), page or Slack-notify rather than silently repeating forever. This
+- [x] ✅ [INFRA] P3. **Consider adding a self-pull staleness alert** — e.g. if `ao-self-pull.sh` logs "dirty (non-churn)
+      — skip" N consecutive times (say, 4 = 1 hour), page or Slack-notify rather than silently repeating forever. This
       exact failure mode (silent multi-hour staleness, only caught by chance) is worth closing structurally, not just
       patching this one instance. Cross-reference the existing dirty-gate design in
-      `ao_residuals_after_dispatch_hardening_2026_07_17.md` before building — don't duplicate.
+      `ao_residuals_after_dispatch_hardening_2026_07_17.md` before building — don't duplicate. — **BUILT 2026-07-30**:
+      cross-referenced `ao_residuals_after_dispatch_hardening_2026_07_17.md` first — its dirty-gate content is a
+      DIFFERENT, already-fixed 2026-07-12 wedge (a `tempfile.gettempdir()` root cause) plus a UI-half staleness alert
+      owned by another agent; no overlap with this ask. Confirmed the existing `_alert_wedge` (fires on every dirty-skip
+      tick) is COMMIT-COUNT gated (`AO_DRIFT_ALERT_COMMITS`, default 10) — during a quiet LDR window a dirty tree can
+      sit skipped for hours without ever crossing that threshold, exactly this incident's blind spot (time-stuck ≠
+      commit-distance-stuck). Added a genuinely new, TIME-gated condition mirroring the file's own existing
+      `_track_stale_process`/`_STALE_TICKS_STATE` pattern: `_track_dirty_tick()` + `_DIRTY_TICKS_STATE`
+      (`agent-orchestrator/scripts/ao-self-pull.sh`) increments a tick counter on every dirty-skip and fires the
+      existing `_post_wedge_slack_alert` dedup path once `AO_DIRTY_ALERT_TICKS` (default 4 = ~1h at the `*/15` cadence,
+      matching this todo's own "say, 4 = 1 hour" spec) consecutive dirty ticks are hit; the counter resets to zero the
+      moment the tree goes clean. Functionally verified end-to-end against a real scratch git repo (not just read): 4
+      consecutive dirty runs correctly climb the tick file 1→2→3→4 and the WEDGE alert fires exactly at tick 4 (not
+      before); a subsequent clean run removes the tick file. `shellcheck` clean (both pre-existing warnings on unrelated
+      lines, none introduced), `bash -n` syntax-clean. — agent-orchestrator@61b7a4f.
 
 ## Progress Log
 

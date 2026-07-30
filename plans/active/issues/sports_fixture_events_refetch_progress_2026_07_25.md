@@ -538,3 +538,22 @@ fixture-fetch advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`
 self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
 flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
 todo.
+
+**Health-checked 2026-07-30T06:11Z-06:23Z (`/pre-compact` audit, sports-scoping slot), RUNNING, strong forward
+progress**: `gcloud compute instances list` confirms `af-backfill-20260730-012007` is the only non-`TERMINATED`
+`af-backfill-*` VM, status `RUNNING`. `PROGRESS.json` does not exist for this recovery-mode run (expected — recovery
+mode has no per-chunk progress file, only the GCS-teed `run.log`). `run.log` `date=` boundary at `2022-02-27` (up from
+`2020-07-19` at the 00:47Z check, ~5h36m apart — ~340 days/hour, consistent with the documented fast skip-if-fresh pace
+through mostly-already-captured dates); recovery-allowlist filter still active and narrowing correctly (e.g.
+`344 → 11 fixtures (333 skipped — not in allowlist)` at `date=2022-02-27`).
+`grep -c 'attempted_failed\|fail_fast\|reached the request limit'` on the full run.log = **0** — no quota exhaustion or
+hard-failure signature since relaunch, only the expected benign per-minute `rateLimit`-sleep (23s) and
+`CANONICAL_LEAGUE_ID_LOOKUP_MISS` passthrough warnings. Not completable this turn (range runs 2020-06-06→2026-07-25,
+currently ~2022-02, and recovery mode's per-date pace is uneven — much faster through sparse-allowlist eras, likely
+slower again near the `2026-07-12`→`2026-07-25` tail where most fixtures were still genuinely missing pre-relaunch).
+Re-armed the monitoring loop. Next dispatch: repeat this health-check; once terminal, re-run
+`census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before flipping this checkbox + the parent
+plan's todo. Also confirmed **fully unrelated but discovered this session**: the fleet-wide GitHub Actions billing wall
+(`issues/github_actions_billing_wall_recurrence_2026_07_29.md`) is still active as of this same check window (~11h since
+onset) — does not affect this VM (a GCE compute job, not GHA-gated) or either of this campaign's already-CI-verified
+fixes (`instruments-service@5a6deafd`/`unified-api-contracts@f3ae871c`, both green well before the wall's onset).

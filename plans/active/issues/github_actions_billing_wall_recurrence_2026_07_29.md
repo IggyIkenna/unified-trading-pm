@@ -347,3 +347,27 @@ return to a normal (non-zero-job) run.
   code or workflow change made or needed by this dispatch; every repo touched this session for the SEPARATE Cloud Build
   stale-image issue (a GCP-native, non-GHA-billing-gated mechanism — confirmed unaffected by this wall, builds succeeded
   normally throughout) was left clean beyond its own intended fix.
+
+- **2026-07-30T06:11-06:16Z (`/pre-compact` audit, sports-scoping slot) — still active, now ~10h55m-11h since onset,
+  triggered by the operator asking "i think github is working again btw" (incorrect as of this check).** Re-confirmed on
+  `unified-trading-pm` itself via 2 fresh live samples: run `30518827108` (06:11:42-06:11:44Z, 2s) and run `30518959178`
+  (06:14:17-06:14:22Z, 5s) both show `quality-gates-v2`/`content sentinel`/`Record QG result` jobs completing with
+  `conclusion: failure` in 2-5s — `gh run view --log-failed` returns `log not found` for both, confirming no actual
+  execution happened (consistent with the wall, not a real QG failure). **Minor signature variant worth recording**:
+  earlier samples in this doc show literal `jobs: []`; these two show named jobs that exist but complete near-instantly
+  with no logs — same root cause (account-level block), the API is just reporting slightly differently depending on
+  scheduling stage. Also sampled `instruments-service`: 3 fresh runs (`30519075096`/`30519074682`/`30519074633`,
+  dispatched ~06:16:31Z) all stuck in `status: queued` rather than even reaching `startup_failure` — runners never get
+  allocated, another presentation of the same wall. Not filing a fresh `/blocked` (same standing `BLK-21d55fb1`
+  condition). Operator was told directly in-session that CI is NOT back; `github.com/settings/billing` is still the fix.
+  No code/workflow change made or needed.
+
+- **2026-07-30T06:00-06:03Z (`/autonomous` dispatch, slot 1, resumed after a context compaction) — still active, now
+  ~10h35m since onset, spanning the full night with no self-recovery.** Re-confirmed via
+  `gh run list --repo IggyIkenna/unified-trading-pm --limit 5`: the 5 most recent runs (06:00:04-08Z) are ALL
+  `startup_failure`/`jobs: []`, including `ldr-to-main-promote` and `ldr-to-main-promote-fleet` — the exact fleet-wide
+  promote jobs this doc's earlier entries tie to the operator's branch-health alert. No change in signature or scope
+  from prior samples. Confirms this remains the single root cause for the `unified-api-contracts`/`unified-trading-pm`
+  promotion-lag lines and will keep blocking every LDR→main promote fleet-wide until the operator clears it at
+  `github.com/settings/billing`. Not filing a fresh `/blocked` (same standing `BLK-21d55fb1`). No code/workflow change
+  made or needed.

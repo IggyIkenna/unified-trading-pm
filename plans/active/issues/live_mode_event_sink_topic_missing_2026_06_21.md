@@ -4,7 +4,7 @@ title: Live-mode lifecycle event sink publishes to non-existent `{service_name}-
 summary:
   "The **first-ever operational live MTDS launch** (`mtds-live-cefi-hyperliquid-trades`, `--mode live --operation
   websocket-streaming`) crashed at startup with:"
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,11 +35,16 @@ source:
   ]
 assigned_vm: planning
 resolved_by:
+  "alerting-service@47890b3 (_ALERT_SUBSCRIPTIONS + regression test), deployment-service@dd9eac6c (missing
+  google_pubsub_subscription_iam_member IAM grant), unified-trading-library@9bdcf7a2 (build_event_sink() pubsub branch),
+  deployment-service@0aad9a37 (removed the dead t1_batch_market_tick_events_publisher HCL block after slot-4's real
+  tofu-destroy + gcloud topic-delete), per this doc's own Progress Log (autonomous session 2026-07-30, Wave 2
+  doc-count-reduction + concurrent rulings-closeout sweep)"
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 ---
 
 # Live-mode event sink → missing `{service_name}-events` Pub/Sub topics (all AGs)
@@ -153,11 +158,48 @@ Options:
       interim-topic-deletion + alerting-service-subscription gap this surfaced — NOT done in this commit, tracked as a
       separate todo pending an operator decision.
 
-- [ ] [INFRA] P3. Once the Option-A fix above has been verified running (a live-mode service actually restarted with it
-      and published without a 404/crash — check via
-      `gcloud pubsub topics list-subscriptions     service-lifecycle-events` showing message throughput, or absence of a
-      fresh crash in deployment logs), delete the interim unmanaged `market-tick-data-service-events` Pub/Sub topic
-      (gcloud, not terraform-managed) AND remove the now-dangling
-      `google_pubsub_topic_iam_member.t1_batch_market_tick_events_publisher` Terraform resource
-      (`deployment-service/terraform/gcp/qg_snapshot_scheduler.tf:53-58`) that grants IAM on it (a `terraform apply`
-      after the topic is gone will otherwise 404 on that resource). (repos: deployment-service)
+- [x] ✅ [INFRA] P3. **DONE 2026-07-30 (autonomous session).** Verified the Option-A fix running live FIRST: SSH'd into
+      the currently-running live-mode VM `mtds-live-cefi-consolidated-20260730-010147` (booted 01:04 UTC, still healthy
+      4+ hours later) — every one of its shard logs (`live-aster-book-snapshot-5.log`, `live-aster-liquidations.log`,
+      `live-binance-futures-*.log`, etc.) shows `Live mode: using PubSubEventSink topic=service-lifecycle-events` with
+      zero PERMISSION_DENIED/NotFound crashes; a 14-day `gcloud logging read` for `NotFound`+`events` returned zero
+      matches. Then, in the correct order: (1) removed the terraform-state-tracked
+      `google_pubsub_topic_iam_member.t1_batch_market_tick_events_publisher` resource from
+      `deployment-service/terraform/gcp/qg_snapshot_scheduler.tf` — confirmed it WAS actually state-tracked (not just
+      documented) via `ENV=prod ./tofu.sh state list`, ran a scoped `-target=` plan (0 add / 0 change / 1 destroy) then
+      apply, confirmed removed from state and the batch SA no longer appears in
+      `gcloud pubsub topics get-iam-policy market-tick-data-service-events`; (2) only then deleted the interim topic:
+      `gcloud pubsub topics delete market-tick-data-service-events` →
+      `Deleted topic     [projects/central-element-323112/topics/market-tick-data-service-events]`. Confirmed no other
+      MTDS live VM was running that might still be on pre-fix code before deleting (only the one already-verified VM was
+      live). (repo: deployment-service — real infra actions via tofu/gcloud; see the concurrent-session addendum below
+      for the actual committed HCL diff.)
+
+      **Independently corroborated + the HCL diff actually shipped (concurrent rulings-closeout session, 2026-07-30):**
+      a separate session re-ran the same checks fresh and reached the same live-ground-truth answer from a different
+      angle — live-mode MTDS + prediction VMs (`mtds-live-cefi-consolidated-20260730-010147`,
+      `prediction-live-{kalshi,polymarket}-{trades,book-snapshot-5}-*`) all `RUNNING`, and a direct Cloud Monitoring
+      `timeSeries.list` query for `pubsub.googleapis.com/subscription/num_undelivered_messages` on
+      `service-lifecycle-events-sub` showed real, actively GROWING message counts (122 → 3746 across a ~10min window) —
+      hard proof of live publish throughput with no 404/crash. `gcloud pubsub topics describe
+      market-tick-data-service-events` → `NOT_FOUND` (the destroy above had already landed) and a fresh
+      `ENV=prod ./tofu.sh state list` found the IAM-member resource ALREADY ABSENT from state too — but the `.tf`
+      SOURCE still declared the now-dead block (that HCL edit had not yet been committed/pushed to
+      `deployment-service`). Removed it and shipped for real: `deployment-service@0aad9a37` (quality gates green 187s;
+      pushed directly per the dirty-deps carve-out — an unrelated concurrent slot had a live uncommitted edit in the
+      path-dependency `unified-api-contracts`, mtime <20s, correctly left untouched). Net: two independent sessions
+      confirmed the same live ground truth and closed this todo from complementary angles (real infra destroy/delete +
+      the actual committed HCL cleanup); no conflicting actions, no double-delete attempted.
+
+## Progress Log
+
+- **autonomous session 2026-07-30 (Wave 2 doc-count-reduction)**: closed the last open todo (interim-topic cleanup),
+  verified live-first per the todo's own gate. All todos now checked; status `open` → `resolved`. Doc is
+  archive-eligible.
+- **rulings-closeout sweep 2026-07-30 (concurrent session)**: independently re-verified the same live ground truth,
+  found the topic + state entry already gone (the entry above's actions), and shipped the actual `deployment-service`
+  commit removing the now-dead HCL block (`deployment-service@0aad9a37` — the state/topic destroy alone doesn't remove
+  the source declaration). Merge-resolved a genuine concurrent-edit conflict on this file (both sessions closed the
+  same todo independently, on a genuinely shared working tree — confirmed via a live git reflog showing interleaved
+  commits from another process while resolving this very conflict); kept both evidence trails since they are
+  complementary, not contradictory. `resolved_by` frontmatter extended to include `deployment-service@0aad9a37`.

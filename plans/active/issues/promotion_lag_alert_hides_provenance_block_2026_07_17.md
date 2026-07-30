@@ -141,6 +141,37 @@ about the alert that reports the residue.
       `promotion_lag_monitor.py`'s per-pair clear-diff) was independently verified this session to be correctly
       implemented, not missing.
 
+## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — final update)
+
+- **GHA billing wall recovered ~06:11Z.** User independently observed "github is working again" and I confirmed live: a
+  fresh `quality-gates-v2` dispatch on `unified-trading-pm` went `queued` → real jobs executed (not the 0-step
+  `startup_failure` signature) → `failure` (a genuine, unrelated content-sentinel result, not investigated further — out
+  of this doc's scope). See `github_actions_billing_wall_recurrence_2026_07_29.md` for the corroborating entry.
+- **Re-checked features-service PR #897 and market-tick-data-service PR #781 now that GHA is back.** Both still show the
+  OLD `promote:provenance-blocked` marker comment (stale — posted before the wall lifted, the fleet bot couldn't
+  re-evaluate while walled). Manually re-dispatched `ldr-to-main-promote-fleet.yml`; its fresh run (completed success,
+  06:19-06:2xZ) shows the REAL current state has moved past provenance entirely:
+  `SIT GATE BLOCK <repo>: true-delta not SIT-validated on this tree ... fail-CLOSED. Dispatching SIT-on-LDR; a later tick promotes once SIT validates this exact tree`
+  for 6 repos (unified-api-contracts, unified-trading-library, features-service, market-tick-data-service,
+  agent-orchestrator, unified-trading-system-ui) — i.e. the LDR tree moved (my reprovenance commits + other slots'
+  concurrent fixes) past the last SIT-validated tree, so the SIT gate correctly fails closed and auto-dispatches a fresh
+  `full-workspace-sit` run rather than promoting an unvalidated tree. This is normal, designed, self-healing pipeline
+  behavior — not a bug, and not provenance-related. The old marker comments on both PRs are now misleading residue from
+  before the wall lifted; a future fleet tick should overwrite/clear them once SIT validates and the PR actually merges
+  (not forcing this — same "do NOT hand-arm" principle this doc already establishes).
+- **Dispatched SIT run status at handoff**: `full-workspace-sit` runs kept showing `pending`/`jobs:[]` for an extended
+  window; the repo's one self-hosted runner (`glue-ip-172-31-5-118-1`) was confirmed `status=online, busy=true` (busy
+  with other queued work, not offline/broken) — this is ordinary self-hosted-runner contention (the same class as
+  `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`), not the billing wall recurring. Newer dispatches
+  superseding older still-pending ones (several `cancelled`/`jobs:[]` runs in the list) is a secondary observation, not
+  chased further — `full-workspace-sit.yml`'s concurrency group is `cancel-in-progress: false`, so this is scheduled
+  fleet-tick re-dispatch churn while the runner stays busy, not a hand-authored bug; worth a look if it recurs and
+  genuinely prevents any run from ever completing, but not diagnosed as broken tonight. **Not something to force** — the
+  scheduled `ldr-to-main-promote-fleet.yml` tick (~every 15-30min) will keep re-checking and will promote both PRs
+  automatically the moment SIT validates the current tree. No further action needed from this session; the operator can
+  verify at wake-up via `gh pr view 897 --repo IggyIkenna/features-service --json state,mergedAt` / same for MTDS PR
+  #781.
+
 ## Provenance
 
 Found while shipping `bucket_estate_consolidation_to_sub100_2026_07_13`'s asset-group parity sweep (operator shared the

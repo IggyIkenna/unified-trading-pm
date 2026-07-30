@@ -45,7 +45,7 @@ related:
     /plans/active/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30" # phantom-manifest dry-run attempted, aborted for shared-host memory safety — see the Phase C todo's addendum; needs a dedicated VM re-run
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -249,6 +249,22 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       Done when: the dry-run's per-pipeline_mode false-phantom counts are recorded either directly in the "Denominator /
       catalogue-completeness" todo above or in this plan's Progress Log, confirming 0 false phantoms (or explaining any
       non-zero count). (repo: instruments-service)
+
+      **ATTEMPTED 2026-07-30 — NOT completed, aborted for shared-host safety.** Ran the exact command live
+                  (`GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python
+                  scripts/reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`, `instruments-service`). The
+                  manifest load (`merge_canonical_with_outstanding_shards` over the 5,894,011-row `market-data-tick-tradfi-prd`
+                  `_index` + its outstanding `_index/per_vm/` shards — tradfi has an extensive VM-launch history) drove the process
+                  to ~13GB RSS with growing swap (5.9Gi to 9.3Gi on a 15Gi-total shared host, other sessions concurrently active)
+                  and zero log progress past "Loading manifest" for 6+ minutes — flat progress reads as a stall, not
+                  slow-but-working, per the async-wait-discipline SSOT. Killed it (`kill -9`) before risking an OOM crash or
+                  thrashing badly enough to hurt other concurrent work on the shared host, rather than waiting indefinitely. This is
+                  the same heavy-compute-on-shared-host class the infra codex gates to a dedicated VM — tradfi's corpus size makes
+                  this a genuinely heavier operation than the ruling's "the dry-run is runnable now" framing assumed. Cross-filed in
+                  `data_completion_tradfi_2026_07_15.md`'s `⑫ FOLLOW` todo. **Recommended next step**: re-run on a dedicated VM (or
+                  scope down via `--start-date`/`--end-date`/`--venues` to shrink the per-VM-shard merge) rather than the shared
+                  host. No `--apply` was ever reached; nothing was mutated.
+
 - [ ] [BACKEND] P2. **NEW 2026-07-25 (plan-reconcile) — track the KRX name-column "STILL OPEN" work as a real todo, not
       just prose behind a checked box.** The KRX name-column code (4/4 read surfaces) shipped 2026-07-20 —
       instruments-service@6780f10e, uac@f7e0301d, deployment-api@65f5593, deployment-ui@2ff1e61; ship gate 4712 passed/0
