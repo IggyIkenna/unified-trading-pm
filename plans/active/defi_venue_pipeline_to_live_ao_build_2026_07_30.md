@@ -121,3 +121,24 @@ splitting into two plans just to parallelize two todos.
 - **2026-07-30** — plan authored (split from the issue doc's oversized single todo per that doc's own recommendation +
   the independent batch6-audit agreement same day). Companion finalize plan:
   `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`.
+- **2026-07-30 (slot-15)** — Todo 1 IMPLEMENTED, not yet shipped. Built 6 genuine `instruments-service` reference-data
+  adapters (`ankr.py`/`stader.py`/`stakewise.py`/`swell.py`/`mantle.py` — LST; `maker.py` — YIELD_BEARING sDAI, not an
+  LST — no validator staking involved), mirroring the existing `rocket_pool.py`/`puffer.py` single-token
+  curated-registry pattern. Registered in `factory._ADAPTERS` + `ADAPTER_DATA_SOURCES` only. Committed locally at
+  `instruments-service@cebead3d`; 30/30 targeted pytest assertions green
+  (`tests/unit/reference_data/adapters/defi/test_{ankr,stader,stakewise,swell,mantle,maker}_metadata.py`).
+  **Deliberately did NOT add the 6 venues to `_STATIC_DEFI_VENUES` / UAC `VENUE_TO_ADAPTER_KEY` / `DEFI_VENUE_PHASE`
+  yet** — `_build_defi_venues()` derives from `_STATIC_DEFI_VENUES`, NOT from `_ADAPTERS`, so
+  `test_defi_set_equals_uac_denominator_drift_guard` (strict `is_defi == uac_defi` set-equality) stays green; wiring
+  these venues into the denominator without also flipping phase would break that invariant. This exactly mirrors the
+  existing CHAINLINK precedent already documented in `factory.py`'s `ADAPTER_DATA_SOURCES` comment block ("adapter
+  first, declaration second"). **Todo 5 (the phase flip) must ALSO add these 6 venues to `_STATIC_DEFI_VENUES` in the
+  same commit as the `DEFI_VENUE_PHASE` flip** — doing the flip alone would leave the invariant broken the other
+  direction (phase=live but not IS-producible). Left this instruction here so the todo-5 worker doesn't miss it.
+  **BLOCKED shipping** on repo-blocker `RB-ecfc50de` (`instruments-service` `quality-gates.sh` full-suite red — 2
+  pre-existing, unrelated sports/FOOTYSTATS failures from `unified-api-contracts@26092ac8`; verified pre-existing via
+  clean-tree `git stash`, not caused by this todo's diff). Filed
+  `/plans/active/issues/instruments_service_sports_footystats_uac_overlap_qg_red_2026_07_30.md` (superseded by slot-11's
+  fuller root-caused report, `/plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`,
+  which this repo-blocker tracks). Joined `RB-ecfc50de` as a waiter — resumes via `quickmerge --agent` the moment the
+  repo goes green; the checkbox below stays unflipped until then.
