@@ -151,7 +151,7 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `LookbackValidator._discover_instruments()`
+- [x] ✅ [BACKEND] P1. Fix `LookbackValidator._discover_instruments()`
       (`features_service/delta_one/app/core/     dependency_checker.py:679`) so that when `candle_data_types` (resolved
       via `resolve_data_type_for_feature_group`) are ALL pass-through per
       `unified_api_contracts.registry.market_data_categories.needs_candle_processing()`, it sources its instrument list
@@ -160,7 +160,8 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
       candle-processed data_types (`dex_pool_swaps`/`dex_swaps`/`liquidations`) — this is DEFI-scoped only unless the
       same mismatch is confirmed elsewhere. Repo: features-service. Done when: a DEFI `funding_oi`/`returns` lookback
       check discovers oracle-price/perp-funding-shaped instrument ids (not DEX-pool ids), verified by a new unit test,
-      and `bash scripts/quality-gates.sh` green.
+      and `bash scripts/quality-gates.sh` green. — features-service@8e62dc30, quality-gates.sh ALL PASSED
+      (sentinel=HEAD).
 - [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one
       leg: launch `features-service --feature-family delta_one --asset-group DEFI --feature-group funding_oi` (and
       `returns`) with `TIMEFRAME=15m`, over a clean window verified against the live MTDS manifest for the resolved
@@ -173,3 +174,16 @@ and (need a similar clean-window check) `oracle_prices` to backfill against.
 - 2026-07-30 (slot-3): filed, root-caused via live 2-attempt repro + code trace + manifest spot-checks. D1's onchain leg
   (`perp_funding_rates`, a separate feature_family unaffected by this DEFI delta_one-specific bug) proceeding in
   parallel — see `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo for the combined status.
+- 2026-07-30 (slot-14): todo 1 shipped — features-service@8e62dc30. `_discover_instruments` now routes to a new
+  `_discover_instruments_from_manifest` when every requested `candle_data_types` entry is pass-through
+  (`needs_candle_processing()` False); candle-processed and mixed sets keep the unchanged `processed_candles` walk.
+  Synthesizes a `{venue}:{DATA_TYPE}:{raw_instrument_id}` id per distinct (venue, instrument_id) manifest pair — the raw
+  manifest `instrument_id` (bare feed_id for `oracle_prices`, blank for `perp_funding`'s per-venue bundle rows, since
+  the writer records those as venue-level aggregates with no per-instrument granularity) lands in the third colon
+  segment, so `_count_candles_for_lookback`'s EXISTING `(venue, symbol)`/`(venue, "")` fallback chain matches it against
+  `_build_captured_index` with zero changes to either — verified this actually counts end-to-end for the perp_funding
+  blank-id case with a dedicated test (`test_perp_funding_bundle_id_counts_via_existing_blank_key_fallback`), not just
+  that discovery returns a non-empty list. 6 new unit tests added in `test_lookback_validation.py`
+  (`TestDiscoverInstrumentsPassThroughManifest`); 4 existing `_discover_instruments` call sites updated for the new
+  required `candle_data_types` param. `bash scripts/quality-gates.sh` ALL PASSED (17996 tests, 0 failures; sentinel
+  written at HEAD 8e62dc30). Todo 2 (P2, DATA-tagged) is next — unblocked, not part of this task's scope.
