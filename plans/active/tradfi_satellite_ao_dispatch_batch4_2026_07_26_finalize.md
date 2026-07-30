@@ -9,7 +9,7 @@ summary: >-
   counts), then re-check batch4's own Deferred conflict-gated / too-large-or-risky items for any that have since
   cleared, then archive batch4 via the standard 6-step ritual. Stays `status: draft` until batch4 itself is approved and
   dispatched, per task_template.md section 4's finalize-plan-coverage rule.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -49,12 +49,10 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 4 — finalize
 
-> **Status: draft.** This finalize plan stays draft until `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is itself
-> approved and flipped to `active` by the operator — flipping either one is an operator decision, never autonomous.
->
-> **Machine-gated on `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`** (`depends_on` plus `gate_on_depends: true`) —
-> the dispatcher will not queue any todo below until all 8 tasks in that plan are `done`. `sequential: true` because
-> todo 2 (deferred re-check) needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
+> **🟢 ARCHIVED 2026-07-30.** All 3 todos done: source-doc reconciliation (todo 1, all 8 distinct source docs
+> reconciled, 2 real prose-only gaps found and fixed), Deferred re-check (todo 2, all 3 items confirmed
+> resolved-or-cleared, nothing orphaned), and this archival itself (todo 3) — archived alongside
+> `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` in the same commit.
 
 ## Todos
 
@@ -135,15 +133,27 @@ drift_direction: advance-code
       that it is ready for `batch5` extraction because its gate cleared, or (b) an explicit re-verified confirmation the
       gate is still open, with the evidence cited.
 
-- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
-      should have already resolved or re-confirmed all 3 — verify none silently vanish) → add the archive banner → run
-      the codex-alignment check (batch4 creates no new durable contract beyond todo 7's edit to
-      `/codex/02-data/canonical-cutover-register.md`; confirm that edit landed and is consistent) → grep the corpus for
-      every referrer of `tradfi_satellite_ao_dispatch_batch4_2026_07_26` and fix each path to point at the archived
-      location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to
-      `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself is archived
-      alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-12, data_engineering).** Archived
+      `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` via the standard 6-step ritual (per CLAUDE.md's plan-archival
+      rule / `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`): (1) verified none of the 3 Deferred
+      items silently vanish — todo 2 above already migrated the fan-out-collision item to
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s 15th todo, confirmed the DNS-starvation item is fully
+      resolved elsewhere, and confirmed the too-large-or-risky item already has its own independent
+      `assigned_vm: planning`/`status: active` AO-dispatch plan; (2) added the 🟢 ARCHIVED banner + flipped `status` to
+      `complete` on both `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` and this finalize doc; (3) ran the
+      codex-alignment check — confirmed todo 7's edit to `/codex/02-data/canonical-cutover-register.md` §4 (migration
+      COMPLETE, citing run `20260720-120911`) is live and consistent, no other durable contract created; (4) grepped the
+      whole corpus for `tradfi_satellite_ao_dispatch_batch4_2026_07_26` and fixed every leading-slash path-shaped
+      referrer to the archive location — `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` (2 refs),
+      `tradfi_satellite_ao_dispatch_batch5_2026_07_29_finalize.md` (1 ref), this finalize doc's own `related:` (1 ref),
+      and `plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md` (1 ref, plus
+      corrected its now-stale "status: draft, awaiting operator approval" parenthetical); bare-filename prose citations
+      (no leading slash) are out of scope per `check_reference_paths.py`'s own leading-slash-only pattern, left as-is
+      per established precedent (`tradfi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md`'s own archival).
+      `INDEX.md` and `active_plan_inventory_dashboard_2026_07_24.md` are both machine-regenerated (never hand-edited)
+      and will self-correct on their next scheduled run. (5) confirmed `locked_by` empty on both docs. Repo:
+      unified-trading-pm (doc-only). **Done**: both docs moved to `plans/archive/2026_07/` in the same commit as this
+      flip's follow-up, every corpus referrer resolves to the new path.
 
 ## Codex SSOTs
 

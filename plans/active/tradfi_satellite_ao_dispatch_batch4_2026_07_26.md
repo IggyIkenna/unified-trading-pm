@@ -12,7 +12,7 @@ summary: >-
   measurably CLEARED (the tradfi-bf fleet fully drained 2026-07-21, unblocking a post-drain canonical re-measure; the
   features/MDPS dependency gap resolved 2026-06-29, making the sp500 plan's three BLOCKED- premises stale). Phase 3's
   conflict check cleared 8 todos (zero intra-batch file collisions); 2 conflicts are parked in the Deferred section.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -55,14 +55,20 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 4 — post-batch3 re-audit extraction
 
-> **Status: draft — NOT approved, NOT dispatched.** Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE
-> and the ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped to
-> `active`. This pass ran with the operator away and unreachable, so nothing here was flipped. Flip this frontmatter's
-> `status` to `active` only after operator review.
+> **🟢 ARCHIVED 2026-07-30.** All 9 todos done (verified live in the source repos before citing, per
+> `tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md` todos 1-2). This batch's own Deferred items were all
+> re-checked 2026-07-30 by that same finalize doc's todo 2: the `_tradfi-ohlcv-launcher-lib.sh` fan-out collision GATE
+> CLEARED (one side shipped) and was extracted as a new tracked todo (15th) in
+> `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`; the DNS-starvation two-claimant checkbox is FULLY RESOLVED
+> (already `[x]` + `status: resolved` elsewhere); the too-large-or-risky
+> `tradfi_manifest_content_recovery_completion_2026_07_24.md` item stays not-batch-eligible but is already its own
+> independent `assigned_vm: planning` / `status: active` AO-dispatch plan whose remaining todos regen into the backlog
+> on their own — so no work is orphaned by archiving this batch. The "Deferred — operator-gated" list below is a
+> cross-reference to independently-tracked docs (each its own live source doc), not batch4-owned work, and is unaffected
+> by this archival.
 >
-> All 8 todos below are same-priority-independent and touch **distinct files** — verified explicitly (see the
-> file-collision matrix near the bottom). Two todos carry a CROSS-BATCH ordering note because they write to a doc
-> another still-draft batch also writes to; those notes matter only if both batches are activated together.
+> All 9 todos were same-priority-independent and touched **distinct files** — see the file-collision matrix near the
+> bottom.
 
 ## Why a batch4 exists one day after batch3
 
@@ -308,22 +314,22 @@ the same tranche and found genuinely new ground, not a re-run of the same list:
       `data_completion_tradfi_2026_07_15.md`.
 
       **Evidence**: (1) DONE — single-object read of the live `-prd` `_index`
-                                                                      (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
-                                                                      no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
-                                                                      `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
-                                                                      reader is separately known to return 0 rows on this bucket per
-                                                                      `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
-                                                                      data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
-                                                                      "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
-                                                                      **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
-                                                                      (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
-                                                                      combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
-                                                                      this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
-                                                                      `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
-                                                                      CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
-                                                                      Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
-                                                                      by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
-                                                                      no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
+                                                                              (`market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`, 5,876,351 total rows,
+                                                                              no bucket walk) via `unified_trading_library`'s `get_storage_client().download_bytes(...)` +
+                                                                              `pandas.read_parquet` (matches the sanctioned single-object pattern, not `read_availability_index()` — that
+                                                                              reader is separately known to return 0 rows on this bucket per
+                                                                              `tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md:734`). Scoped to venue∈{NASDAQ,NYSE} ×
+                                                                              data_type∈{ohlcv_1m,ohlcv_1s} × date≥2023-04-15 (2,087,240 cells); full per-year `capture_status` table + the
+                                                                              "manifest-count only" caveat recorded in `data_completion_tradfi_2026_07_15.md`'s COVERAGE-GAP item.
+                                                                              **Verdict: PARTIALLY FILLED, asymmetric by venue** — NYSE 72-76% `captured`; NASDAQ mostly `empty_confirmed`
+                                                                              (79-87%, ~9-10% `captured`); real `expected_unattempted` remainder both venues (NASDAQ 71,183 / NYSE 62,327
+                                                                              combined cells); `attempted_failed` negligible (170 rows, all NYSE 2026). Restated the COVERAGE-GAP todo with
+                                                                              this remainder rather than flipping it — real fetch work is still outstanding. (2) DONE — re-verified
+                                                                              `unified-trading-pm/scripts/quality-gates-base/base-library.sh` live: lines 1476-1491 confirm the "SENTINEL
+                                                                              CONTRACT (parity with base-service.sh, WS-L #1014)" block writes `.qg_last_passed_sha` on a complete green run.
+                                                                              Found the `[SCRIPT] P2` checkbox (line 422 of `data_completion_tradfi_2026_07_15.md`) was **already flipped**
+                                                                              by a prior na-eligibility-audit pass (2026-07-27, before this task dispatched) citing the same live evidence —
+                                                                              no further edit needed, confirmed correct as-is. Shipped: `unified-trading-pm` doc updates (this commit).
 
 - [x] ✅ [OPERATOR] P1. **DONE 2026-07-30 (autonomous session)** — flipped
       `tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s frontmatter `status` from `draft` to `active`;
