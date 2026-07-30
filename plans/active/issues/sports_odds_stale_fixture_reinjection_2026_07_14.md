@@ -219,6 +219,29 @@ T-24h/T-1h):
       Superleague events on day=2025-10-23), which is honest data. — already covered by
       `plans/active/sports_satellite_ao_dispatch_batch4_2026_07_25.md` (extracted as a read-only DIAG item sourced from
       this doc; see that doc for execution).
+
+      **Update (2026-07-30, finalize-001 reconciliation, slot-13/review) — sizing HALF done, purge HALF still open.**
+          Batch4's DIAG item shipped `market-tick-data-service@76ca401f` (verified ancestor of live-defi-rollout): a
+          read-only, manifest-driven sweep of the 17 sparse leagues (<=30 distinct captured days) — the 26 actively-fetched
+          leagues were explicitly NOT swept (a full-corpus sweep is ~118k GCS reads, HEAVY I/O, belongs on a dedicated VM).
+          **Findings**: `RUSSIA_PREMIER_LEAGUE` zombie CONFIRMED STILL LIVE — 18 distinct `day=` partitions (wider than the
+          5 originally documented here), 3 bookmakers (bovada/williamhill/pinnacle) × 18 days = 54 contaminated rows / 20
+          contaminated shards, `staleness_seconds` ≈1349.8 days. `AUSTRALIA_ALEAGUE`'s zombie instance is NO LONGER PRESENT
+          (resolved by intervening work). `CHINA_SUPER_LEAGUE`'s 2025-10-23 genuine-fixture control correctly EXCLUDED (0
+          contamination). **This todo's own "purge/re-derive the contaminated shards" clause is NOT yet done** — batch4's
+          DIAG scope was deliberately read-only (0 GCS objects/manifest rows deleted/overwritten/re-derived this pass). See
+          the new todo below for the tracked follow-up (per the HARD RULE that every follow-up is a `- [ ]` todo, never
+          left as prose).
+
+- [ ] [DATA] P2. **Purge/re-derive the confirmed `RUSSIA_PREMIER_LEAGUE` zombie contamination** (20 contaminated
+      `odds_horizon_bucket` shards / 54 rows across 18 `day=` partitions, sized by the read-only sweep above,
+      `market-tick-data-service@76ca401f`) — purge the contaminated rows and re-derive their downstream
+      `odds_features` + manifest rows. Repo: market-tick-data-service. Scope is bounded to the confirmed
+      `RUSSIA_PREMIER_LEAGUE` contamination sized above, not a speculative full 43-league sweep (the remaining 26
+      actively-fetched leagues would need a dedicated VM-run full sweep per the sizing todo's own note — file that
+      separately if population-wide certainty is ever needed). Done-when: 0 contaminated `RUSSIA_PREMIER_LEAGUE` rows
+      remain in the swept partitions, re-verified via the same sweep script, and downstream `odds_features`/manifest
+      rows for those (date, league) pairs are re-derived from honest-absence (not the zombie tick).
 - [ ] [DATA] P3. **Re-run `verify_ml_readiness.py --start-date 2025-09-01 --end-date 2025-11-30` after the P1/P2 fix**
       to confirm the 17 failing dates clear (or shrink to genuine honest-absence-only misses), then reassess whether the
       strict per-day gate (vs the already-precedented aggregate ≥95% pass bar from 2026-07-12) is still the right pass
@@ -255,6 +278,12 @@ casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage wo
 
 ## Progress Log
 
+- **2026-07-30 (slot-13, review craft, sports_satellite_ao_dispatch_batch4_finalize-001)**: Reconciled todo 2 against
+  batch4's shipped DIAG sweep (`market-tick-data-service@76ca401f`, verified ancestor of live-defi-rollout) — added the
+  concrete findings (RUSSIA_PREMIER_LEAGUE zombie confirmed still live across 18 partitions; AUSTRALIA_ALEAGUE resolved;
+  CHINA_SUPER_LEAGUE correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo
+  (batch4's DIAG scope was deliberately read-only, per its own text). `status: open` correctly unchanged — this doc now
+  has 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-reassessment todo), not 0.
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole remaining `[DATA] P3` bundles a
   bounded re-run of `verify_ml_readiness.py` with an open judgment ('then reassess whether the strict per-day gate vs
   the aggregate >=95% bar is still the right pass criterion for near-empty international-break days') plus a two-part

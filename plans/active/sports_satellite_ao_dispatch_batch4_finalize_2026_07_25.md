@@ -56,10 +56,10 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 3 distinct source docs' checkboxes.** For each of
-      `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s 3 now-done todos: flip the corresponding checkbox/section in
-      its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-4 commit(s) that shipped
-      it — verify the actual shipped commit exists before citing it. The 3 source docs:
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-13, review craft).** Reconcile all 3 distinct source docs' checkboxes. For
+      each of `sports_satellite_ao_dispatch_batch4_2026_07_25.md`'s 3 now-done todos: flip the corresponding
+      checkbox/section in its named source doc, citing the batch-4 commit(s) that shipped it — verify the actual shipped
+      commit exists before citing it. The 3 source docs:
       `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`,
       `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`,
       `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md`. For each: after flipping, re-check whether it now
@@ -67,6 +67,30 @@ drift_direction: advance-code
       `status` to `resolved` if it genuinely reaches 0 open todos. **Done when**: all 3 source docs' corresponding
       checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped
       to `status: resolved`.
+
+      **Evidence per doc**:
+          1. `footystats_matches_predictions_fetch_gaps_2026_07_08.md` — batch4 todo 1 was diagnosis-only (found a genuine
+             REGRESSION, not a fix) and its own worker (slot, 2026-07-27) already wrote the reconciling Progress Log entry
+             directly into this doc at execution time (self-reconciling — no new edit needed). Verified current state: 1
+             genuinely open todo (#4, `BLOCKED-PREREQUISITES` on the 2026-07-27 regression doc); `status: open` correctly
+             unchanged — NOT 0 open todos, no resolved-flip warranted.
+          2. `fixtures_manifest_legacy_backfill_2026_07_24.md` — batch4 todo 2 (slot-5/review, 2026-07-26) already edited
+             this doc directly at execution time (the "Update (2026-07-26, slot-5/review — sports_satellite_ao_dispatch_
+             batch4-002)" section is the reconciliation itself, self-reconciling). Verified current state: 1 genuinely open
+             todo (the 55,233-row collision-residual delete-vs-leave decision); `status: open` correctly unchanged.
+          3. `sports_odds_stale_fixture_reinjection_2026_07_14.md` — batch4 todo 3's read-only DIAG sweep
+             (`market-tick-data-service@76ca401f`, verified ancestor of `origin/live-defi-rollout`) had NOT been reconciled
+             into this doc yet. Updated todo 2's entry with the actual findings (RUSSIA_PREMIER_LEAGUE zombie confirmed
+             still live across 18 `day=` partitions / 20 shards / 54 rows; AUSTRALIA_ALEAGUE resolved; CHINA_SUPER_LEAGUE
+             correctly excluded) and filed the still-open purge/re-derive work as a new tracked `- [ ]` todo (batch4's DIAG
+             scope was deliberately read-only — per the HARD RULE that every follow-up is a tracked todo, never left as
+             prose). Verified current state: 2 genuinely open todos (the new purge todo + the pre-existing P3 gate-
+             reassessment todo); `status: open` correctly unchanged.
+
+          **Net**: none of the 3 source docs reached 0 open todos, so none was flipped to `status: resolved` — all 3
+          genuinely still carry open work, verified per-doc rather than trusting checkbox counts. `unified-trading-pm`
+          commit (this same commit).
+
 - [ ] [DOC] P1. **Archive every source doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the
       flip, never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
       frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
