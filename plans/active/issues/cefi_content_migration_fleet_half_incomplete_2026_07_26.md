@@ -457,3 +457,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   `RB-INFRA-RELAUNCH` ≤2/(vm-prefix,day) budget already. Per my prior self-correction commitment: **did not relaunch
   either shard** — documenting only, deferring to the `data_pipeline_failure` fleet-monitor (slot-3/slot-7) which has
   the correct tooling and mandate to act on this.
+- **2026-07-30 update (slot-15, ~10 min later)**: shard 13 (`-134900`) also just died, same `rc=137` OOM signature
+  (44,600/312,875 files, 3839s elapsed, clean `VM_SHUTDOWN_ON_COMPLETION` self-delete) — a fourth instance of this
+  session's OOM class on a relaunch, further corroborating the machine-type fix isn't reliably applying/holding across
+  relaunches. Fleet now at 17 shards. No action taken (monitoring-only, per standing self-correction).
