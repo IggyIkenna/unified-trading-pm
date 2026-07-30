@@ -114,14 +114,18 @@ forces an operator/main manual DB patch outside the normal flow.
 
 ## Recommended decision
 
-- [ ] [BACKEND] P2. Add a fourth accepted Mode-2/Mode-1 disposition in `server/verify.py` for "genuinely still open,
+- [x] ✅ [BACKEND] P2. Add a fourth accepted Mode-2/Mode-1 disposition in `server/verify.py` for "genuinely still open,
       temporarily blocked on another owner's in-flight fix, evidence documented" -- e.g. a `BLOCKED-ON:<ref>` or similar
       non-checkbox marker convention (this exact plan already uses an ad-hoc "🔴 BLOCKED ... confirmed by main" bold
       prefix on a sibling todo at `data_completion_cefi_2026_07_15.md` for the same purpose, but verify.py has no regex
       recognizing it -- only `_ADDED_CANCELLED_LINE_RE` and `_ADDED_DEFERRED_LINE_RE` exist). Mirror
       `_diff_cancels_checkbox`/`_diff_defers_checkbox`'s structure: a `_diff_blocks_checkbox` matching a
       `- [ ]     <brief>` line replaced by one still carrying `- [ ]` plus a recognizable `BLOCKED` marker, accepted
-      with `reason="todo_blocked_pending_other_owner"`. Repo: agent-orchestrator.
+      with `reason="todo_blocked_pending_other_owner"`. Repo: agent-orchestrator. — agent-orchestrator@22a14b1: added
+      `_ADDED_BLOCKED_LINE_RE` (`BLOCKED-ON:<ref>` marker convention) + `_diff_blocks_checkbox` +
+      `_blocks_at_path_or_rename`, wired into `_mode1_disposition`/`_mode2_disposition` as the 4th disposition
+      (`reason="todo_blocked_pending_other_owner"`), plus single-repo + cross-repo unit tests in
+      `tests/test_done_gate_plan_flip_hard_reject.py`. QG green, shipped via quickmerge.
 - [ ] [BACKEND] P2. Separately: widen (or remove) the Mode-2 30-minute window specifically for the fallback
       `checkbox_currently_checked`-style checks -- i.e. even when `pm_shas` is empty because the evidence commit is old,
       still fall through to reading the CURRENT on-disk plan text for a recognized disposition marker (mirrors how Mode
@@ -202,3 +206,13 @@ forces an operator/main manual DB patch outside the normal flow.
   `sequential: true` (all 4 todos change the same file), `assigned_role: backend_engineer`,
   `execution_scope: orchestrator-agent`. No finalize twin: `doc_type: issue` is structurally exempt
   (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
+- **2026-07-30 (worker, slot 7)**: Shipped todo 1 (the `_diff_blocks_checkbox` 4th disposition) —
+  `agent-orchestrator@22a14b1`. Added `_ADDED_BLOCKED_LINE_RE` (`BLOCKED-ON:<ref>` marker, still-unchecked `- [ ]` shape
+  mirroring `_ADDED_DEFERRED_LINE_RE`), `_diff_blocks_checkbox` + `_blocks_at_path_or_rename` (mirroring the
+  CANCELLED/DEFERRED siblings incl. archival-rename following), wired into both `_mode1_disposition` and
+  `_mode2_disposition` as the 4th priority-ordered disposition, and into `check_plan_flip`'s mode-1/mode-2 branches with
+  `reason="todo_blocked_pending_other_owner"`. Added single-repo + cross-repo unit tests
+  (`test_done_accepts_when_commit_blocks_todo_pending_other_owner`,
+  `test_done_accepts_cross_repo_when_pm_commit_blocks_todo_pending_other_owner`) in
+  `tests/test_done_gate_plan_flip_hard_reject.py`. Full `quality-gates.sh` green (2033 passed, 1 skipped; ruff +
+  basedpyright clean); shipped via `quickmerge --agent`. `sequential: true` holds for todos 2-4 (same file).
