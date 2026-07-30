@@ -75,13 +75,6 @@ operator approval.
 
 ## Todos
 
-- [ ] [DATA] P1. Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group
-      (gate-audit §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs
-      of either on record for defi today) and record each run's report path + date in this doc. Repos:
-      instruments-service, market-tick-data-service. Done when: 6 total dated skill-run report paths (3 IS + 3 MTDS) are
-      cited against defi in this doc, each labeled with its baseline/mid/final phase, with no prior dated run superseded
-      silently. Source: `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md`
-
 - [ ] [DATA] P3. For a representative sample of shards from the 5 affected pool-heavy DEX venues (PANCAKESWAP_V3-BSC,
       UNISWAP_V3-OPTIMISM, UNISWAP_V3-POLYGON, UNISWAP_V4-ETHEREUM, PANCAKESWAP_V3-BASE), load each flat-shape
       instrument_availability `instruments.parquet` and, for every set of rows sharing a duplicate `instrument_key`
@@ -179,6 +172,17 @@ operator approval.
    the undecided default). **Operator decision needed**: (a) confirm batch3's C6 already covers the full window once it
    completes (recommended — re-check after C6 lands, no new dispatch needed), or (b) rule on the Pyth Hermes
    coverage/backtest-window go/no-go first if a wider window than C6's is actually wanted.
+3. **Run `/data-pipeline-check-is` and `/data-pipeline-check-mtds` 3x each across the defi asset_group** (gate-audit
+   §11: pre-backfill baseline, mid-backfill spot-check, post-backfill final gate per skill — 0 dated runs of either on
+   record for defi today; moved here from the Todos list 2026-07-30, slot-12). REJECTED as a directly-dispatchable AO
+   todo: both skills' own SKILL.md § 0 hard rule states `--day` MUST come from the operator or the dispatching plan/task
+   and is NEVER synthesized by the worker or main — this exact `--day` ambiguity was independently hit by 3 worker slots
+   (4, 5, 12) before main stopped the re-dispatch churn at the source. Neither a single reused day nor 3 distinct days
+   may be picked without an operator ruling. **Operator decision needed**: name the baseline/mid/final day(s) to use for
+   the 6 runs (3 IS + 3 MTDS) — tracked as blocked question `BLK-d355f03a` (also raised independently by slot-12 as
+   `BLK-b5b0e61a` before the standing question was found). Once named, this todo returns to the Todos list and
+   dispatches normally. Repos: instruments-service, market-tick-data-service. Source:
+   `plans/active/defi_track5_coverage_mvp_backfill_2026_07_24.md`.
 
 ### Non-batchable orphans (24 docs) — operator-gated / time-gated / too-large-or-risky / human-only
 
@@ -279,3 +283,9 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   33 orphaned (30 partial, 3 never-touched); Phase-3 conflict-check (9 agents, opus/high) over the 9 AO-eligible orphans
   cleared 7 into todos above, parked 2 as genuine conflicts (see Deferred). 24 non-AO-eligible orphans + 1 known
   mistag + 1 self-gated covering-plan doc recorded in Deferred for the next iteration / operator ruling.
+- 2026-07-30 (slot-12, data_engineering): Dispatched todo 1 (the `/data-pipeline-check-is`/`-mtds` 6-run checkpoint
+  cadence). Both skills' SKILL.md § 0 forbids synthesizing `--day` — filed `/blocked` (`BLK-b5b0e61a`); operator ruled
+  **C** (park, do not invent a day), noting slots 4 and 5 independently hit the same question first under the standing
+  blocked question `BLK-d355f03a`. Moved the todo out of `## Todos` into `### Conflict-gated` item 3, tagged
+  BLOCKED-OPERATOR-DECISION, citing both blocked-question ids. No dated runs were attempted. Returns to `## Todos` once
+  the operator names the baseline/mid/final day(s).
