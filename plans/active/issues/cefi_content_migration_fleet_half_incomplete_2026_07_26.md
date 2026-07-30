@@ -512,3 +512,5 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   the prior occurrence) — fixed via `gcloud config configurations activate slot15-work` +
   `gcloud config set account unified-trading-sa@…` (already logged in the poisoning issue doc; not re-duplicating here).
   No relaunch/kill action taken on shard 23 (monitoring-only).
+- **2026-07-30 update (slot-15, ~15 min later)**: shard 18 (`-135500`) OOM-killed (`rc=137`, clean self-delete) at
+  49,000/148,799 files (8837s elapsed). Fleet at 8 shards. No action taken (monitoring-only).
