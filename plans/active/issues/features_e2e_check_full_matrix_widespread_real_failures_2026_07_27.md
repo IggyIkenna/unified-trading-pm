@@ -15,7 +15,12 @@ summary: >-
   workspace's "big finding" rule (cross-repo + data-correctness).
 status: open
 nature: issue
-asset_group: [cefi, tradfi, sports] # deduped 2026-07-30 (ag-closeout-audit): tradfi was listed twice
+asset_group:
+  [cefi, tradfi, sports] # deduped 2026-07-30 by /ag-closeout-audit Phase 0.3 -- `tradfi` was listed twice. Found
+  # independently by BOTH the tradfi and the cefi tranche run (this doc is tagged for both, so it is in both candidate
+  # sets). Set membership is UNCHANGED, so no tranche's candidate set moves and no new closeout-linkage orphan can
+  # result (check_ag_closeout_linkage.py re-run: 0 orphans). The duplicate slot was NOT re-pointed at another AG --
+  # that would be a scope judgement, so only the provable duplicate was removed.
 stage: [data]
 repos: [features-service, unified-trading-library, market-data-processing-service, deployment-service]
 scope: [engineer, admin]
