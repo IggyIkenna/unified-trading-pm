@@ -328,18 +328,18 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Progress Log
 
-**Dispatch-order findings #2-#4 — 2026-07-29/30 (slots 14, 15, 11, data_engineering; consolidated 2026-07-30 for line
-cap, nothing lost)**: `-006` ("Resume the prediction consolidator cron", line 162) has now been dispatched 3 times while
+**Dispatch-order findings #2-#5 — 2026-07-29/30 (slots 14, 15, 11, 6, data_engineering; consolidated 2026-07-30 for line
+cap, nothing lost)**: `-006` ("Resume the prediction consolidator cron", line 162) has now been dispatched 4 times while
 its direct predecessor/prerequisite `-001` ("Apply `rebuild_prediction_manifest.py`", line 157) remained unexecuted each
 time — the same failure class as the 2026-07-14 finding below, despite `sequential: true` already being set (the fix
 that closed that earlier instance). #2 (slot 14, 2026-07-29): found `-001` still `queued`, never dispatched to anyone;
 filed `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` for backend_engineer to root-cause
-the prereq-wiring gap (out of data_engineering craft scope). #3 (slot 15, 2026-07-29T15:2xZ) and #4 (slot 11,
-2026-07-30T00:45Z): re-confirmed line 157 still `[ ]` and the issue doc still `status: open` / `resolved_by:` blank each
-time — no fix landed, no new evidence to add. All three declined execution (nothing to resume — the backfill hasn't been
-applied, so resuming the cron now would defeat the pause/apply/resume sequence this plan's sports-CF8-precedent HARD
-constraint exists to enforce); none touched production or the cron; each released via
-`/skip-current-task {"reason_code": "GATED"}` without re-filing a duplicate issue.
+the prereq-wiring gap (out of data_engineering craft scope). #3 (slot 15, 2026-07-29T15:2xZ), #4 (slot 11,
+2026-07-30T00:45Z), #5 (slot 6, 2026-07-30, post-compact re-dispatch): re-confirmed line 157 still `[ ]` and the issue
+doc still `status: open` / `resolved_by:` blank each time — no fix landed, no new evidence to add. All four declined
+execution (nothing to resume — the backfill hasn't been applied, so resuming the cron now would defeat the
+pause/apply/resume sequence this plan's sports-CF8-precedent HARD constraint exists to enforce); none touched production
+or the cron; each released via `/skip-current-task {"reason_code": "GATED"}` without re-filing a duplicate issue.
 
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):
