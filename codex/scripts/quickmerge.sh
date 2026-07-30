@@ -942,13 +942,18 @@ fi
 
 # Auto-format with Prettier BEFORE staging (so pre-commit validation passes)
 # Run twice to handle idempotency
+# prettier@3.9.5 (not 3.6.2) — see prettier_emphasis_mangling_corpus_corruption_2026_07_14:
+# <3.9.5 deterministically corrupts markdown. This file is an unreferenced historical
+# snapshot (nothing sources codex/scripts/quickmerge.sh — the live SSOT is
+# unified-trading-pm/scripts/quickmerge.sh, already on 3.9.5); kept accurate so it can't
+# mislead a future copy-paste into reintroducing the proven-buggy version.
 if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier" .pre-commit-config.yaml 2>/dev/null; then
   if command -v pre-commit &>/dev/null; then
     pre-commit run prettier --all-files >/dev/null 2>&1 || true
     pre-commit run prettier --all-files >/dev/null 2>&1 || true
   else
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
-    npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    npx --yes prettier@3.9.5 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
+    npx --yes prettier@3.9.5 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi
 fi
 

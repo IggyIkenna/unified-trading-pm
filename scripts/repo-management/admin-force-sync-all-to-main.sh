@@ -107,6 +107,12 @@ _SO_CONFLICT=""
 # ---------------------------------------------------------------------------
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      # Extracted from this file's own header comment (the "# Usage:" .. "# Run from:" block)
+      # rather than duplicated here, so the two can never drift apart.
+      sed -n '/^# Usage:/,/^# Run from:/p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+      exit 0
+      ;;
     --admin-confirm)   ADMIN_CONFIRM=true; shift ;;
     --dry-run)         DRY_RUN=true; shift ;;
     --limit)           LIMIT="$2"; shift 2 ;;
@@ -125,7 +131,15 @@ while [[ $# -gt 0 ]]; do
     --stag-branch)     TARGET_BRANCH="staging"; shift ;;
     --force-version-override) FORCE_VERSION_OVERRIDE=true; shift ;;
     --allow-rewind)    ALLOW_REWIND=true; shift ;;
-    *) echo "Unknown flag: $1"; shift ;;
+    *)
+      # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: this used to warn-and-
+      # continue, so an unrecognized flag on a script that force-pushes to main with
+      # --admin-confirm still fell through and ran for real with unintended default settings.
+      # Hard error instead.
+      echo "❌ Unknown flag: $1" >&2
+      echo "   Run '${BASH_SOURCE[0]} --help' for usage." >&2
+      exit 1
+      ;;
   esac
 done
 
@@ -556,14 +570,18 @@ sync_repo() {
         -q >/dev/null 2>&1) || true
     fi
     # 2. Pre-format JS/TS/YAML/JSON/MD files with prettier
-    # Pin to 3.6.2 — matches the pre-commit additional_dependency pin so IDE/sync/hook all agree.
-    # npx 3.8.1 (system) vs hook 3.6.2 produces different output, causing re-touches every run.
+    # Pin to 3.9.5 — matches the current pre-commit hook (scripts/hooks/prettier-autostage.sh's
+    # PRETTIER_MIN_VERSION), so IDE/sync/hook all agree and re-touches don't happen every run.
+    # (Was pinned to 3.6.2 to match an OLDER pre-commit `additional_dependencies` pin that no
+    # longer exists — the hook is now the prettier-autostage.sh wrapper, not mirrors-prettier —
+    # and 3.6.2 is also the exact version proven to corrupt markdown; see
+    # prettier_emphasis_mangling_corpus_corruption_2026_07_14.)
     if [[ "$NO_FORMAT" != "true" && ( -f "$dir/package.json" || -f "$dir/.prettierrc" || -f "$dir/.prettierrc.json" || -f "$dir/prettier.config.js" ) ]]; then
-      (cd "$dir" && npx --yes prettier@3.6.2 --write . \
+      (cd "$dir" && npx --yes prettier@3.9.5 --write . \
         --ignore-path .gitignore \
         >/dev/null 2>&1) || true
     elif [[ "$NO_FORMAT" != "true" ]] && compgen -G "$dir/**/*.{yaml,yml,json,md}" &>/dev/null 2>&1; then
-      (cd "$dir" && npx --yes prettier@3.6.2 --write \
+      (cd "$dir" && npx --yes prettier@3.9.5 --write \
         --ignore-path .gitignore \
         "**/*.yaml" "**/*.yml" "**/*.json" "**/*.md" \
         >/dev/null 2>&1) || true

@@ -111,6 +111,46 @@ MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES
 FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
+        --help|-h)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: mirrors the guard
+            # added to base-service.sh — --help/-h must be a pure, immediate, side-effect-free
+            # no-op, never fall through to the unknown-flag arm below (or, before that arm
+            # existed, be silently ignored and run the full gate with default settings).
+            cat <<'QG_USAGE'
+Usage: quality-gates.sh [FLAGS]   (library-repo gate body: base-library.sh)
+
+Mode flags:
+  --no-fix                  Don't auto-reformat the tree (DEFAULT — safe for agents/CI;
+                             use for any run whose diff you intend to commit).
+  --fix                     Opt into tree-wide auto-fix (ruff --fix / prettier --write).
+                             Can dirty files outside your own change — use deliberately.
+  --quick                   Faster iteration pass (skips version-alignment / merge-sentinel
+                             write) — NOT a substitute for a full gate before shipping.
+  --fast                    Change-scoped codex-grep tier (scans only files changed vs the
+                             merge-base). Never writes the merge sentinel — the full gate
+                             still runs at quickmerge/CI. Local iteration only.
+
+Scope flags (skip one phase):
+  --lint                    Lint-only (skips tests).
+  --test                    Test-only (skips lint).
+  --skip-tests               Skip the pytest phase.
+  --skip-typecheck           Skip basedpyright.
+  --skip-version-alignment    Skip the version-alignment check.
+
+Other:
+  --act                      Run under `act` (local GitHub Actions emulation).
+  --help, -h                 Show this message and exit 0 (no gate phases run).
+
+Env var:
+  QG_SLICE=tests|typecheck|lint-codex   CI parallel-job slice selector used by the
+                                         reusable workflow — not usually set by hand.
+
+Unknown flags are a hard error (exit 1) — see quickmerge_help_flag_misparsed_as_commit_message_2026_07_30
+for why: a silently-ignored unrecognized flag is how a fat-fingered run ends up executing the
+full gate with unintended default settings instead of failing loud.
+QG_USAGE
+            exit 0
+            ;;
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
         --lint) RUN_TESTS=false ;;    --test) RUN_LINT=false ;;
         --skip-tests) RUN_TESTS=false ;;
@@ -120,6 +160,14 @@ for arg in "$@"; do
         # --fast: change-scoped ITERATION tier — codex greps only changed source files (see the
         # CODEX_SCOPE_GLOBS block). Never writes the merge sentinel → commit still runs the FULL gate.
         --fast) QG_FAST=1; export QG_FAST ;;
+        *)
+            # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: previously any
+            # unrecognized flag was silently ignored here (no catch-all arm at all). Hard
+            # error instead, mirroring base-service.sh.
+            echo "❌ quality-gates.sh: unknown flag: $arg" >&2
+            echo "   Run 'bash scripts/quality-gates.sh --help' for the full flag list." >&2
+            exit 1
+            ;;
     esac
 done
 
@@ -309,8 +357,11 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
     qg_prof start autofix
+    # prettier@3.9.5 (not 3.6.2) — see base-service.sh's identical comment:
+    # prettier_emphasis_mangling_corpus_corruption_2026_07_14 proved <3.9.5 corrupts markdown;
+    # this tree-wide invocation was a second, un-updated pin of the proven-buggy version.
     if command -v npx &>/dev/null; then
-        npx --yes prettier@3.6.2 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
+        npx --yes prettier@3.9.5 --write --cache "**/*.{md,json,yaml,yml}" --ignore-path .gitignore --ignore-path .prettierignore >/dev/null 2>&1 \
             || log_warn "Prettier not available or no files to format (skipping)"
     else
         log_warn "npx not available — skipping prettier pre-format (commit may require re-staging)"
@@ -889,11 +940,68 @@ BYPASS=$(codex_rg "\|\|true|\|\| true" --glob "**/quality-gates.sh" --glob "**/q
     | grep -v "BYPASS —\|fix the root cause\|zombies\|pyright\|cleanup" || :)
 [[ -n "$BYPASS" ]] && { log_fail "||true bypass in quality gates — fix the root cause"; echo "$BYPASS" | head -3; V=$(( V + 1 )); } || log_success "No ||true quality gate bypasses"
 
-# File / function / class / method size checks moved to the HARD-GATE zone below (after
-# `_V_PRE_RATCHET=$V`) — a size violation must never be absorbable by CODEX_MAX_VIOLATIONS
-# headroom freed by an unrelated violation class shrinking (mirrors base-service.sh's STEP 5.5z
-# fix, qg_size_gate_sentinel_skip_root_cause_2026_07_25.md). SIZE_EXTRA_EXCLUDES stays the
-# per-repo allow-list; only WHERE the V-increment is evaluated moved.
+# File size (exclude build artifacts and test dirs — tests get warn-only treatment)
+# Optional: SIZE_EXTRA_EXCLUDES array of extra ! -path patterns (set before sourcing)
+qg_prof start size-checks
+SVIOL=""; SWARN=""
+_size_extra_args=()
+for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
+# Batched size-checks (mirror of base-service.sh): ONE python pass per check instead of
+# 1 wc/python PER source file — the per-file subprocess spawn was the size-check cost.
+# Same find exclusions + thresholds + AST visitor verbatim → byte-identical violations;
+# only the spawn count drops (O(files) → 3). Helps every QG context (local/CI/SIT).
+# `|| true`: set-e-safety (a non-zero find — e.g. an rg `--glob` exclude find rejects, or a broken
+# symlink — must not trip `set -e` and kill the gate; the original for-loop tolerated it). See
+# base-service.sh size-checks for the full note.
+_SIZE_FILES_FILE=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null || true)
+# File-size: non-test files FAIL (SVIOL), test files WARN (SWARN); line count == `wc -l` (count of '\n').
+# The ./tests/ ./test/ split matches the original `[[ "$f" == ./tests/* ]]` root-anchored glob.
+SVIOL=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES; out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p or p.startswith('./tests/') or p.startswith('./test/'): continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+SWARN=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
+import sys
+mx=$MAX_FILE_LINES; out=[]
+for p in (line.strip() for line in sys.stdin):
+  if not p or not (p.startswith('./tests/') or p.startswith('./test/')): continue
+  try:
+    with open(p,'rb') as fp: n=fp.read().count(b'\n')
+  except OSError: continue
+  if n>mx: out.append(f'  {p}: {n} L')
+print('\n'.join(out))
+" 2>/dev/null || :)
+[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
+[[ -n "$SWARN" ]] && log_warn "Test files exceed limit:\n$SWARN"
+
+# Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
+FSIZES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null | $PYTHON_CMD -c "
+import ast, sys
+for p in (line.strip() for line in sys.stdin):
+  if not p: continue
+  try:
+    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
+    def v(n,par=None):
+      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
+        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
+      elif isinstance(n,ast.ClassDef):
+        l=(n.end_lineno or n.lineno)-n.lineno+1
+        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
+      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
+    v(tree)
+  except Exception: pass
+" 2>/dev/null || :)
+[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+qg_prof end size-checks
 
 # Security: pip-audit (prefer project venv to avoid workspace transitive vulns)
 qg_prof start pip-audit
@@ -1068,88 +1176,6 @@ if [[ $V -gt $_max_v ]]; then
 fi
 log_success "Codex compliance PASSED"
 qg_prof end codex
-
-# ── HARD-GATE AGGREGATION SNAPSHOT (mirror of base-service.sh,
-# qg_size_gate_sentinel_skip_root_cause_2026_07_25.md P1 follow-up: base-library.sh carried
-# the identical SVIOL/FSIZES-into-shared-V pattern but had no aggregation-verdict mechanism at
-# all, so a hard-gate step below this point failing was as unguarded as base-service.sh's
-# pre-fix bug — confirmed via base-service.sh's own qg_base_service_ratchet_exit_code_2026_06_11.md
-# incident). Snapshot V here (post-codex-tolerance, so V<=_max_v at this point because >_max_v
-# already exit-1'd above); the HARD-GATE AGGREGATION VERDICT near the end of this file fails the
-# run if ANY step below this point incremented V. Hard gates get ZERO codex tolerance.
-_V_PRE_RATCHET=$V
-
-# ── FILE / FUNCTION / CLASS / METHOD SIZE (HARD GATE, zero codex tolerance) ──
-# Moved out of the codex-tolerance-counted section above (2026-07-30,
-# qg_size_gate_sentinel_skip_root_cause_2026_07_25.md P1 follow-up, mirrors base-service.sh's
-# STEP 5.5z fix): a size violation was previously counted into the shared V/CODEX_MAX_VIOLATIONS
-# aggregate, so it could be silently absorbed by tolerance headroom freed when an UNRELATED
-# violation class shrank — the exact live bug confirmed in instruments-service (service-tier) is
-# structurally identical here (library-tier), just not yet reproduced. Placed in the hard-gate
-# zone (below _V_PRE_RATCHET): any V-increment here is checked with ZERO tolerance by the
-# HARD-GATE AGGREGATION VERDICT further down, independent of CODEX_MAX_VIOLATIONS. Each repo's
-# own pre-existing size debt stays an explicit, auditable allow-list (SIZE_EXTRA_EXCLUDES)
-# rather than a number that can't tell which class regressed.
-qg_prof start size-checks
-SVIOL=""; SWARN=""
-_size_extra_args=()
-for _excl in "${SIZE_EXTRA_EXCLUDES[@]:-}"; do [[ -n "$_excl" ]] && _size_extra_args+=("!" "-path" "$_excl"); done
-# Batched size-checks (mirror of base-service.sh): ONE python pass per check instead of
-# 1 wc/python PER source file — the per-file subprocess spawn was the size-check cost.
-# Same find exclusions + thresholds + AST visitor verbatim → byte-identical violations;
-# only the spawn count drops (O(files) → 3). Helps every QG context (local/CI/SIT).
-# `|| true`: set-e-safety (a non-zero find — e.g. an rg `--glob` exclude find rejects, or a broken
-# symlink — must not trip `set -e` and kill the gate; the original for-loop tolerated it). See
-# base-service.sh size-checks for the full note.
-_SIZE_FILES_FILE=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null || true)
-# File-size: non-test files FAIL (SVIOL), test files WARN (SWARN); line count == `wc -l` (count of '\n').
-# The ./tests/ ./test/ split matches the original `[[ "$f" == ./tests/* ]]` root-anchored glob.
-SVIOL=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
-import sys
-mx=$MAX_FILE_LINES; out=[]
-for p in (line.strip() for line in sys.stdin):
-  if not p or p.startswith('./tests/') or p.startswith('./test/'): continue
-  try:
-    with open(p,'rb') as fp: n=fp.read().count(b'\n')
-  except OSError: continue
-  if n>mx: out.append(f'  {p}: {n} L')
-print('\n'.join(out))
-" 2>/dev/null || :)
-SWARN=$(printf '%s\n' "$_SIZE_FILES_FILE" | $PYTHON_CMD -c "
-import sys
-mx=$MAX_FILE_LINES; out=[]
-for p in (line.strip() for line in sys.stdin):
-  if not p or not (p.startswith('./tests/') or p.startswith('./test/')): continue
-  try:
-    with open(p,'rb') as fp: n=fp.read().count(b'\n')
-  except OSError: continue
-  if n>mx: out.append(f'  {p}: {n} L')
-print('\n'.join(out))
-" 2>/dev/null || :)
-[[ -n "$SVIOL" ]] && { log_fail "Files exceed $MAX_FILE_LINES lines:\n$SVIOL"; V=$(( V + 1 )); } || log_success "File size OK"
-[[ -n "$SWARN" ]] && log_warn "Test files exceed limit:\n$SWARN"
-
-# Function/class/method size (exclude build artifacts and test dirs — test methods can be long)
-FSIZES=$(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./.claude/*" ! -path "./build/*" ! -path "./tests/*" ! -path "./test/*" ! -path "./unified-trading-pm/*" "${_size_extra_args[@]}" 2>/dev/null | $PYTHON_CMD -c "
-import ast, sys
-for p in (line.strip() for line in sys.stdin):
-  if not p: continue
-  try:
-    with open(p,'r',encoding='utf-8') as fp: tree=ast.parse(fp.read())
-    def v(n,par=None):
-      if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef)):
-        l=(n.end_lineno or n.lineno)-n.lineno+1
-        if isinstance(par,ast.ClassDef): l>$MAX_METHOD_LINES and print(f'  {p}:{n.lineno}:{par.name}.{n.name}(): {l}L')
-        elif l>$MAX_FUNCTION_LINES: print(f'  {p}:{n.lineno}:{n.name}(): {l}L')
-      elif isinstance(n,ast.ClassDef):
-        l=(n.end_lineno or n.lineno)-n.lineno+1
-        l>$MAX_CLASS_LINES and print(f'  {p}:{n.lineno}:{n.name}: {l}L')
-      for c in ast.iter_child_nodes(n): v(c,n if isinstance(n,ast.ClassDef) else par)
-    v(tree)
-  except Exception: pass
-" 2>/dev/null || :)
-[[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:\n$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
-qg_prof end size-checks
 
 # ── [5.6] DEAD CODE DETECTION (vulture — warn/fail thresholds) ───────────────
 # vulture detects unused functions, classes, and variables.
@@ -1508,20 +1534,6 @@ if [ -f "$_DEFI_CITE_CHECKER" ]; then
     fi
 else
     log_success "STEP 5.97: skipped (checker not yet provisioned in this repo's PM checkout)"
-fi
-
-# ── HARD-GATE AGGREGATION VERDICT (mirror of base-service.sh,
-# qg_base_service_ratchet_exit_code_2026_06_11.md fix, ported here 2026-07-30 per
-# qg_size_gate_sentinel_skip_root_cause_2026_07_25.md P1 follow-up) ──
-# Every hard-gate STEP since the snapshot increments $V on failure but $V was never re-checked
-# here before — so a red hard-gate step (e.g. the size checks above) could in principle fall
-# through to "ALL QUALITY GATES PASSED" and write the sentinel. Fail if ANY step since the
-# snapshot incremented V. Placed BEFORE the duration check / success banner / sentinel writes so
-# a failure suppresses all three, exactly like base-service.sh.
-_RATCHET_FAILS=$(( V - _V_PRE_RATCHET ))
-if [[ $_RATCHET_FAILS -gt 0 ]]; then
-    log_fail "Quality gates FAILED: ${_RATCHET_FAILS} hard gate/ratchet step(s) failed (see the ❌ STEP lines above). Sentinel NOT written; fix the root cause and re-run."
-    exit 1
 fi
 
 # ── DURATION CHECK ───────────────────────────────────────────────────────────

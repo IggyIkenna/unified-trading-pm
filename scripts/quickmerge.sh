@@ -125,6 +125,120 @@ BUILD_LDR_EXPLICIT=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help)
+      # HARD RULE (2026-07-30, quickmerge_help_flag_misparsed_as_commit_message_2026_07_30):
+      # this case MUST stay the first arm in this statement and MUST exit before anything else
+      # runs. The bug this guards against: --help used to fall through to the `*)` catch-all,
+      # got silently treated as the commit message, and the script then executed the REAL
+      # pipeline — including an unscoped `quality-gates.sh --lint --fix` tree-wide reformat
+      # (STAGE 3, non-agent path) — reformatting ~1,300 files repo-wide and hanging on the
+      # subsequent full test/typecheck/codex pass. --help/-h must always be a pure, immediate,
+      # side-effect-free no-op.
+      cat <<'QM_USAGE'
+CANONICAL QUICKMERGE — unified-trading-system
+
+Single source of truth for all repos (scripts/quickmerge.sh in every repo is a symlink here).
+
+USAGE
+  bash scripts/quickmerge.sh "commit message" [FLAGS]
+  bash scripts/quickmerge.sh "commit message" --agent --files "path1 path2"   # agent convention
+
+BRANCH MODEL (staging-first)
+  feat/*    QG only, no PR (feature iteration, auto-detected)
+  staging   ALL human commits converge here first; semver-agent validates label vs API diff;
+            SIT validates before promoting to main
+  main      always stable; only updated via staging->main promotion, or [skip ci] automation
+  [skip ci] automation commits (chore(release):, chore(manifest):, chore(deps):) route direct
+  to main, bypassing staging/semver-agent.
+
+PIPELINE (what actually runs, in order)
+  1.   Dependency validation (workspace-manifest.json)
+  1.5  PM dependency-alignment check; staging lock check (all repos)
+  1.6  Dependency version gate (deps semver-behind staging)
+  1.7  Dependency tier-readiness gate (deps ci_status must be STAGING_GREEN+)
+  2.   Pre-flight audit (skippable: --skip-preflight)
+  3.   Local quality gates — TWO-PHASE: auto-fix pass, then verify pass. This is the stage
+       that reformats/tests/typechecks the tree; see FLAGS for how it's scoped.
+  4.   Act simulation (default on; skip with --quick)
+  5.   Create PR + enable auto-merge (base: staging for human commits; main for [skip ci])
+
+FLAGS
+
+  Scoping (read this before running unattended or from a script/agent):
+    --files "p1 p2"       Stage only these paths. Strongly recommended for anything but an
+                           interactive human commit of your own full working tree.
+    --agent                Marks this as an agent-driven run. REQUIRES --files (refused
+                           otherwise) so an agent can never accidentally stage/ship another
+                           session's uncommitted work. Also switches STAGE 3 to the fast
+                           sentinel-verification path instead of re-running the full QG.
+
+  Routing / branch:
+    --dep-branch NAME      HUMAN-ONLY. Branch isolation when a dependency has uncommitted
+                            changes not yet on main. Refused under --agent (agents use
+                            active_feature_branch from workspace-manifest.json instead).
+    --to-staging            No-op, kept for backwards compat (staging is already the default
+                             route for every human commit).
+    --hotfix                Break-glass: staging with abbreviated SIT (<2 min), for production
+                             incidents only. Requires a literal [hotfix] marker in the commit
+                             message (auditable).
+    --hotfix-to-main         Rarest break-glass: lands on LDR AND fast-tracks just this one
+                              commit to main via its own PR (v2-gated; no trunk promote, no
+                              protection bypass). Requires a [hotfix-main] marker in the commit
+                              message AND operator env QUICKMERGE_HOTFIX_TO_MAIN_OK=1 — agents
+                              cannot self-authorize this path.
+
+  Gate control:
+    --quick                Skip Stage 4 (act simulation) only; Stage 3 quality gates still run
+                            in full. Not a substitute for the real gate before shipping.
+    --no-pr                 Run through quality gates but do not open a PR / enable auto-merge.
+    --unit-only              Shorthand for --quick --no-pr.
+    --skip-preflight          Skip Stage 2's pre-flight audit (a multi-agent safety check, not
+                               a quality gate — does not weaken QG enforcement).
+    --skip-dep-tier-gate       HUMAN-ONLY. Skip Stage 1.7's dep-tier-readiness check. Refused
+                               under --agent (exists specifically to catch agent promotion
+                               races).
+    --skip-tests / --skip-typecheck / --skip-codex
+                               DISABLED — always exits 1. WS-L #1014 (2026-06-26): the full
+                               quality gate (lint+format+typecheck+tests+codex) is mandatory
+                               before every push; there is no partial-skip flag. Use plain
+                               `bash scripts/quality-gates.sh <phase-flags>` locally while
+                               iterating, then quickmerge for the real, full-gate run.
+
+  Build:
+    --build                  Opt in to an LDR image build (stamps `Build-LDR: true` on the
+                              commit; the AWS CodeBuild LDR trigger only fires with this
+                              trailer present). Default off. The always-on main/deploy build is
+                              unaffected either way. Never combine with --agent.
+    --no-build                Explicit opt-out; overrides the per-repo
+                               `auto_build_on_quickmerge` manifest default.
+
+  Misc:
+    --user-approved            Deprecated no-op, kept for backwards compat (Stage 0.3 is
+                                advisory-only now; there is no gate left for it to bypass).
+    -h, --help                  Show this message and exit 0. Never runs any pipeline stage,
+                                 never touches git, never touches the working tree.
+
+EXAMPLES
+  bash scripts/quickmerge.sh "fix: correct off-by-one in shard cursor" --agent \
+      --files "src/foo.py tests/test_foo.py"
+  bash scripts/quickmerge.sh "docs(plans): flip todo 3" --agent --files "plans/active/x.md"
+  bash scripts/quickmerge.sh "fix: prod incident [hotfix]" --hotfix --files "src/bar.py"
+
+NOTES
+  - Any flag NOT listed above is a hard error (exit 1) — quickmerge does not guess. This
+    includes typos of the flags above; re-run with --help if unsure.
+  - Exactly one non-flag argument is treated as the commit message (default, if none given:
+    "chore: automated update"). It does not need to be quoted specially — pass it as one shell
+    argument.
+  - Agent sessions MUST pass --files with the changed-file list, via --agent, to avoid staging
+    another session's partial work.
+  - If quickmerge fails and you fix the underlying issue: just re-run quickmerge. Do not run
+    quality-gates.sh by hand first — quickmerge already runs it.
+
+SSOT: unified-trading-pm/scripts/quickmerge.sh — /codex/08-workflows/ci-cd-flow.md
+QM_USAGE
+      exit 0
+      ;;
     --files)
       FILES_ARG="$2"
       shift 2
@@ -205,6 +319,18 @@ while [[ $# -gt 0 ]]; do
       BUILD_LDR=false
       BUILD_LDR_EXPLICIT=true
       shift
+      ;;
+    -*)
+      # quickmerge_help_flag_misparsed_as_commit_message_2026_07_30: this arm is the actual
+      # fix — previously ANY unrecognized token (flag or not) fell into the commit-message
+      # arm below, so a typo'd/unknown flag silently became the commit message and the REAL
+      # pipeline ran anyway instead of failing loud. Anything that looks like a flag
+      # (leading dash) and didn't match a case above is now a hard error instead of a guess.
+      # A commit message that itself needs to start with a dash is not supported — SSOT
+      # convention (see --help) is that commit messages don't start with `-`.
+      echo "[quickmerge] ❌ Unknown flag: $1" >&2
+      echo "             Run 'bash scripts/quickmerge.sh --help' for the full flag list." >&2
+      exit 1
       ;;
     *)
       COMMIT_MSG="$1"
