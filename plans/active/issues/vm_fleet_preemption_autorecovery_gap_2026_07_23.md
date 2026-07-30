@@ -112,36 +112,66 @@ yet, for ANY launcher family, not just candle-migration.
       coexist safely (the "gcloud only accepts ONE shutdown-script" caveat in `lc_write_preemption_signal_file`'s
       docstring refers to two callers of THAT helper colliding, not to this cross-mechanism case). Shipped via
       quickmerge as part of items 1-3's commit — see `deployment-service@a32360a` above.
-- [ ] 5. [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event** — **REVISED, needs its own architecture
-      trace before implementing** (do not blindly build this). Correction to the earlier plan: `route_finding()` is NOT
-      a distinct delivery path from `log_event()` — it's a thin wrapper that runs the tier's extra action
-      (auto_recover/file_issue/page_operator) and THEN calls the exact same `log_event(finding.event, ...)` at its own
-      end (`escalation.py:841-844`). So `RelaunchPreemptedVm.relaunch()`'s existing success-path
-      `log_event(_EVENT_VM_PREEMPTED,     ...)` call already reaches whatever `route_finding` reaches — routing through
-      `route_finding` instead buys nothing (and would incorrectly re-trigger the auto_recover actuator dispatch /
-      file_issue / orchestrator-dispatch side effects a "resolved" confirmation should NOT re-run). Two real open
-      questions found, NEITHER yet confirmed: (a) **Dedup**: `alerting_service/core/dedup.py`'s key is
-      `event_name:hash(identity_details)`, excluding only render-only fields (`message`/`summary`/`timestamp`/etc). The
-      initial detection's `details` shape
-      (`vm_name/asset_group/exit_code/captured_before/captured_after/umbrella/cloud/...`) differs structurally from the
-      actuator's success-path `details` shape
-      (`vm_name/vm_prefix/asset_group/recovery_action/relaunched/launcher/     relaunches_today/...`) — different key
-      sets hash differently even under the SAME `event_name`, so they likely do NOT collapse into one dedup key. Reusing
-      the same event name may not actually be the reason there's no visible resolved bookend. (b) **More fundamental,
-      unconfirmed**: grepped `alerting-service` for `DP_VM_PREEMPTED` — ZERO matches, anywhere. Before designing a
-      "resolved" event, need to confirm HOW (or WHETHER) `DP_VM_PREEMPTED` (or any `DP_*` event) actually reaches
-      `alerting-service` at all today — `log_event()` writes to GCS (batch) or PubSub (live); is there a generic
-      DP_*-prefix or severity-threshold catch-all subscriber in `alerting-service` (candidate: `error_event_handler.py`,
-      unread), or does this whole VM-lifecycle alert family not reach Slack via `alerting-service` at all (a DIFFERENT
-      channel/mechanism, e.g. a Cloud Monitoring log-based alert reading the same GCS/PubSub stream directly)? This
-      determines whether item 5 is "add a resolved event" or "wire this event family to alerting-service for the first
-      time, then add a resolved event." Scope this properly before building — it's a separate architecture question from
-      the candle-migration work this issue started from.
-- [ ] 6. [SCRIPT] P2. Unit tests for the new resolved-bookend path (mirror `test_dp_recovery_actuators.py`'s existing
-      coverage style) — a dry-run relaunch, a real SUCCEEDED relaunch, and a FAILED relaunch (which must NOT emit a
-      resolved bookend, only the existing `DP_VM_PREEMPTED_NO_RELAUNCH`).
-- [ ] 7. [SCRIPT] P2. Quality gates + quickmerge for items 5-6 (deployment-service, possibly unified-trading-library if
-      the event needs a UTL registry constant like `DP_VM_EXIT_NONZERO`'s).
+- [x] 5. ✅ [DATA] P2. **New `DP_VM_PREEMPTED_RECOVERED` resolved-bookend event** — architecture-traced, THEN built.
+      `unified-api-contracts@d3739c57` + `deployment-service@dd7b62e`. **Open question (b) resolved — bigger scope than
+      either original guess**: confirmed via code read (NOT grep-0, grep-then-READ) that `DP_VM_PREEMPTED` was emitted
+      via `log_event()`, correctly reached alerting-service's `lifecycle-events-sub` subscription, and hit
+      `route_event()` — but `route_event()`'s DP_* short-circuit (`data_pipeline_rule_for(event_name)`) does an
+      EXACT-MATCH lookup against UAC `DATA_PIPELINE_ALERT_RULES`, and `DP_VM_PREEMPTED` was **not in that registry at
+      all**. Root cause: a yaml/python transcription-drift bug (same class as the 2026-07-27 `DP_FLEET_MONITOR_RUN_*`
+      regression covered by `test_dp_fleet_monitor_lifecycle_events_registered`) — the human-SSOT yaml
+      (`codex/05-infrastructure/data-pipeline-alerts.registry.yaml`) already reserved `DP-VM-007=DP_VM_PREEMPTED` /
+      `DP-VM-008=DP_VM_PARTIAL_UNCONFIRMED`, but the Python UAC tuple never transcribed them — `DP-VM-007` was
+      independently squatted by `DP_CLOUD_RUN_STALE_IMAGE` (added directly to Python, never added to the yaml), and
+      `exit_code_fleet_monitor.py` kept emitting `PipelineFinding(..., registry_id="DP-VM-007"/"DP-VM-008")` pointing at
+      IDs that (in Python) either meant something else or didn't exist. `DP_VM_PREEMPTED_NO_RELAUNCH` (the CRITICAL
+      "silent vanish" page — the entire point of this issue) was **never registered anywhere, yaml or Python**. Net
+      effect: all three events fell through to alerting-service's generic catch-all `_match_routing_rules` (matched
+      against `LIVE_ALERT_RULES`, a closed `AlertCode` set that structurally excludes `DP_*` names) — a total miss there
+      falls back to `{"slack"}, None` (`#uts-live-alerts`, unformatted, **no PagerDuty severity**), so the CRITICAL
+      no-relaunch page was not actually paging via the incident path as its own docstring claimed. This — not the dedup
+      question — is why there was no visible resolved bookend: the OPEN alert itself wasn't reaching
+      `#data-pipeline-alerts`. **Open question (a) (dedup) is moot given (b)**: since the fix adds a NEW,
+      distinctly-named event (`DP_VM_PREEMPTED_RECOVERED`) rather than reusing `DP_VM_PREEMPTED` for the success path,
+      the dedup key (`event_name:hash(identity_details)`) can never collide with the open alert's key regardless of
+      details-shape — open/resolved are visibly distinct Slack lines correlated by `vm_name`/`asset_group` in both (no
+      alerting-service threading exists to do this automatically — webhook-only, per the AO-alerts bookend convention).
+      **Shipped**: registered `DP-VM-008=DP_VM_PREEMPTED` (INFO/auto_recover), `DP-VM-009=DP_VM_PREEMPTED_NO_RELAUNCH`
+      (CRITICAL/page_operator), `DP-VM-010=DP_VM_PARTIAL_UNCONFIRMED` (WARN/auto_recover, renumbered off the
+      DP_CLOUD_RUN_STALE_IMAGE collision), `DP-VM-011=DP_VM_PREEMPTED_RECOVERED` (INFO/file_issue, the new
+      resolved-bookend — `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/rules.py`);
+      corrected + backfilled the yaml SSOT to match (added the missing `DP_CLOUD_RUN_STALE_IMAGE` entry at `DP-VM-007`,
+      renumbered `DP_VM_PREEMPTED`→008 / `DP_VM_PARTIAL_UNCONFIRMED`→010, added `DP_VM_PREEMPTED_NO_RELAUNCH`→009 and
+      `DP_VM_PREEMPTED_RECOVERED`→011 —
+      `unified-trading-pm/codex/05-infrastructure/data-pipeline-alerts.registry.yaml`); fixed the now-stale hardcoded
+      `registry_id` literals + docstring/log-line id references in `exit_code_fleet_monitor.py` + `escalation.py`;
+      switched `RelaunchPreemptedVm.relaunch()`'s success-path `log_event()` call from `DP_VM_PREEMPTED` to the new
+      `DP_VM_PREEMPTED_RECOVERED` (`relaunch_backfill_vm.py`) — the checkpoint-resume mid-flight `log_event` (a
+      DIFFERENT call site, "resuming from checkpoint", not a completion claim) intentionally still emits
+      `DP_VM_PREEMPTED`. **Not fixed / left as a documented, out-of-scope loose end**:
+      `heartbeat_sidecar_reliability.py`/`heartbeat_sidecar_reliability_cli.py` also self-label `DP-VM-008` in their
+      module docstrings, but that module never emits a `DP_*` finding with that `registry_id` (grepped — zero
+      `registry_id=` occurrences), so it's a harmless doc-label collision with no routing/test impact, not a repeat of
+      the registry-drift bug above; flagging here rather than silently leaving it for whoever next greps `DP-VM-008`. A
+      more general "does the yaml/python parity `_dp_rule` comment's claimed 'closed-set sanity test' actually exist"
+      gap (it does not — I found the collision by hand cross-check, not a failing test) is a separate, larger follow-up
+      not in this issue's scope; not filing a new issue doc for it solo (would duplicate this doc's own evidence) —
+      noting it here for whoever next touches `DATA_PIPELINE_ALERT_RULES`.
+- [x] 6. ✅ [SCRIPT] P2. Unit tests for the new resolved-bookend path (mirror `test_dp_recovery_actuators.py`'s existing
+      coverage style) — `test_preempted_relaunch_replays_captured_launch_env` (SUCCEEDED) now asserts
+      `DP_VM_PREEMPTED_RECOVERED` instead of the old `DP_VM_PREEMPTED` reuse;
+      `test_preempted_relaunch_dry_run_does_not_execute` now asserts zero events emitted;
+      `test_preempted_relaunch_guard_refusal_emits_critical_no_relaunch` (FAILED) now additionally asserts
+      `DP_VM_PREEMPTED_RECOVERED` is NEVER emitted alongside the CRITICAL no-relaunch alert. Plus new UAC
+      `test_data_pipeline_alert_rules.py` coverage (existing `test_registry_ids_and_events_are_unique` +
+      `test_critical_rules_page_via_telegram_and_pagerduty` generically cover the 4 new entries — no new test functions
+      needed there, the closed-set assertions already exercise them).
+- [x] 7. ✅ [SCRIPT] P2. Quality gates + quickmerge for items 5-6 — unified-api-contracts (registry) +
+      deployment-service (emission + tests); no unified-trading-library change needed
+      (`DP_VM_PREEMPTED`/`_NO_RELAUNCH`/`_RECOVERED` deliberately stay local string constants, not UTL-exported — see
+      the updated code comments; that's a SEPARATE axis from UAC alert-routing registration, per the existing
+      `DP_VM_EXIT_NONZERO`-vs-`DP_VM_PREEMPTED` precedent in the same files). Both repos' full `quality-gates.sh` PASSED
+      and landed on `live-defi-rollout`: `unified-api-contracts@d3739c57`, `deployment-service@dd7b62e`.
 - [ ] 8. [DATA] P2. **Scope the broader "all backfills and migration VMs" rollout — REVISED after checking real
       coverage, not just direct-call grep**: my original framing ("only 3 of ~74 launchers call
       `lc_write_preemption_signal_file`, so ~dozens are uncovered") was misleading. Re-checked: **125 of 158**
@@ -152,25 +182,25 @@ yet, for ANY launcher family, not just candle-migration.
       a "close a total absence" sweep.
 
       **But the early-preemption blind spot this doc's fix closes (native GCE shutdown-script, available from t=0, vs
-                                                                                                                                                                      the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
-                                                                                                                                                                      install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
-                                                                                                                                                                      direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
-                                                                                                                                                                      coverage) — preempted 4 times in one session
-                                                                                                                                                                      (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
-                                                                                                                                                                      independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
-                                                                                                                                                                      pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
-                                                                                                                                                                      strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
+                                                                                                                                                                          the shared seam's systemd unit which only activates once `setup-data-pipeline-vm.sh` progresses far enough to
+                                                                                                                                                                          install it) is REAL and independently corroborated**: `launch-mtds-dex-swaps-backfill-vm.sh` — confirmed via
+                                                                                                                                                                          direct grep to ALSO use the shared seam AND be registered in `launcher_registry.py` (so it SHOULD have had
+                                                                                                                                                                          coverage) — preempted 4 times in one session
+                                                                                                                                                                          (`lst_rate_honest_coverage_2026_07_21.md` Phase 5 #2) with zero auto-recovery firing (a different session,
+                                                                                                                                                                          independently caught + manually relaunched each time). This is consistent with the SAME early-preemption
+                                                                                                                                                                          pattern measured on TRADFI (18/20 shards preempted within 1-4 minutes of boot), not a separate coverage gap —
+                                                                                                                                                                          strengthening, not weakening, the case for rolling out the native-shutdown-script defense-in-depth more broadly.
 
-                                                                                                                                                                      **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
-                                                                                                                                                                      confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
-                                                                                                                                                                      exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
-                                                                                                                                                                      task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
-                                                                                                                                                                      sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
-                                                                                                                                                                      `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply), and the two Phase-D pipeline-check
-                                                                                                                                                                      launcher name patterns `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` (registered in
-                                                                                                                                                                      the fleet relaunch machinery by launcher-prefix match but never previously named as candidates here; exhibited
-                                                                                                                                                                      the same early-boot `vm_self_deleted_no_exit_status` preemption pattern repeatedly on single-shard smoke-test
-                                                                                                                                                                      VMs during the TradFi Phase-D terminal-gate work — see `tradfi_phase_d_terminal_gate_2026_07_24.md`).
+                                                                                                                                                                          **Revised scoping question for item 9**: not "which launchers lack ANY coverage" (few, if any, genuinely do —
+                                                                                                                                                                          confirm with the passing test), but "which launchers run large concurrent SPOT fleets (more zone-contention
+                                                                                                                                                                          exposure, matching TRADFI's failure mode) or have a long `setup-data-pipeline-vm.sh` staging chain before their
+                                                                                                                                                                          task-specific work starts (wider blind-spot window)" — a smaller, evidence-driven list, not a blanket 100+-file
+                                                                                                                                                                          sweep. Candidates already identified: `launch-mtds-dex-swaps-backfill-vm.sh` (proven hit), any `*-sharded-*`/
+                                                                                                                                                                          `SHARD_OF`-fan-out launcher (same concurrency profile as candle-apply), and the two Phase-D pipeline-check
+                                                                                                                                                                          launcher name patterns `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` (registered in
+                                                                                                                                                                          the fleet relaunch machinery by launcher-prefix match but never previously named as candidates here; exhibited
+                                                                                                                                                                          the same early-boot `vm_self_deleted_no_exit_status` preemption pattern repeatedly on single-shard smoke-test
+                                                                                                                                                                          VMs during the TradFi Phase-D terminal-gate work — see `tradfi_phase_d_terminal_gate_2026_07_24.md`).
 
 - [ ] 9. [SCRIPT] P3. Apply the same 2-3 line pattern (`lc_write_preemption_signal_file` call + `--metadata-from-file`
       flag + verify `--instance-termination-action=DELETE`) to the launchers item 8's revised scoping identifies —
