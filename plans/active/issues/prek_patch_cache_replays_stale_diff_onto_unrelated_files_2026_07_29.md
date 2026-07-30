@@ -97,27 +97,39 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
 
 ## Todos
 
-- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot 16)** — root-caused via upstream `j178/prek` source
-      (crates/prek/src/cli/run/keeper.rs, `UnstagedChangesRestorer`), not local reproduction (the 2 originally-affected
-      files are not currently dirty in this slot's clone). Finding: prek's stash/restore is **not** a stale-patch-replay
-      bug. `clean()` computes the unstaged diff fresh via `git diff-index` against `write-tree` at the START of every
-      invocation, writes it to a freshly-named `<millis>-<pid>.patch`, and stores that exact `PathBuf` in-process;
-      `restore()` (on `Drop`) reads back only that in-memory path — there is no directory glob / mtime-based "pick the
-      newest patch" lookup anywhere in the flow, so one invocation can never read a DIFFERENT invocation's (or an old,
-      already-consumed) patch file. The reported "byte-identical corruption reproduced twice" is therefore not prek
-      re-applying a stale patch — it is the commit-hook chain producing the SAME hook-side-effect dirt on those 2
-      unrelated files on both runs (the exact hook responsible wasn't isolated — not reproducible in this session — but
-      the mechanism is generic: some hook run during `git commit` modified files outside the commit's own scope, and
-      nothing previously stopped that modification from surviving as an uncommitted, unstaged residue after the commit
-      finished). Fix shipped at the point where this is actually preventable regardless of which hook is at fault:
-      `scripts/quickmerge.sh` now snapshots `git diff --name-only` (unstaged paths) BEFORE the commit-hook chain runs,
-      and after a successful commit, any path that is (a) newly dirty (absent from the pre-hook snapshot) and (b) not
-      one of the commit's own `--files` targets is auto-`git restore --worktree`'d immediately, with a loud warning
-      citing this doc. A path already dirty before the hooks ran (real foreign WIP) is left untouched — verified with a
-      reproduction harness (2 scratch repos: one hook-introduced-corruption-on-clean-file case, auto-reverted correctly;
-      one pre-existing-foreign-WIP case, correctly left alone). This closes the actual harm (corrupted content silently
-      riding along on every commit) without needing write access to prek's own Rust internals, which are out of this
-      repo's control.
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot 16)** — root-caused with HARD evidence, and it is NOT prek. Step 1 (source
+      read) ruled out prek itself: upstream `j178/prek` (crates/prek/src/cli/run/keeper.rs, `UnstagedChangesRestorer`)
+      computes the unstaged diff fresh via `git diff-index` against `write-tree` at the START of every invocation,
+      writes it to a freshly-named `<millis>-<pid>.patch`, and stores that exact `PathBuf` in-process; `restore()` (on
+      `Drop`) reads back only that in-memory path — no directory glob / mtime "pick the newest patch" lookup exists
+      anywhere in the flow, so one invocation can never read a stale/different invocation's patch. Step 2 (live
+      reproduction, not guesswork): this session's OWN Pass-1 `quality-gates.sh` run independently modified
+      `plans/active/defi_consolidated_closeout_2026_07_18.md` — one of the TWO files named in the original "What I
+      found" — via its `fix_frontmatter.py` auto-fixer step, and `git show HEAD` on that same file (after 3 fresh
+      `git pull --rebase`s this session) proved the exact garbled multi-date runaway string was ALREADY committed on
+      `live-defi-rollout`, not transient working-tree noise. `git log --oneline` on that file shows a repeating pattern
+      of commits titled "fill blank last_updated frontmatter (QG auto-fixer)" / "auto-fill missing frontmatter fields
+      (QG plan-hygiene side effect)" — including one EARLIER attempted fix ("fix frontmatter hygiene auto-flags
+      (malformed last_updated...)") that the bug re-corrupted afterward. **Actual root cause, confirmed in
+      `scripts/plan-hygiene/fix_frontmatter.py`**: `last_updated`/`execution_scope` are meant to be single-line YAML
+      scalars, but `is_field_empty()` only inspects the field's OWN line; when that line already holds a real value (or
+      is bare), any subsequent indented lines get silently folded into the SAME YAML plain scalar (YAML's multi-line
+      folding) and the fixer's in-place regex substitution never strips them. Each QG run that touches an affected plan
+      patches only the first line and leaves the stale fold dangling, so across runs/days the value accumulates into
+      exactly the observed runaway string. Fixed at the actual source: added `_clear_field_continuations()` and call it
+      unconditionally (not just on the empty-value branch) before setting `last_updated`/`execution_scope`, so any stray
+      fold is stripped every time the fixer touches an active plan — verified by re-running the patched script directly
+      against the still-corrupted `defi_consolidated_closeout_2026_07_18.md`, which cleaned to a single
+      `last_updated: 2026-06-27` line. The buried note text (real content, not duplicated elsewhere in that doc) was
+      recovered into its Progress Log before the frontmatter cleanup rather than silently discarded. Additionally
+      hardened `scripts/quickmerge.sh` as a second, hook-agnostic layer: it now snapshots `git diff --name-only` before
+      the commit-hook chain runs and auto-`git restore --worktree`s any path that is (a) newly dirty and (b) outside the
+      commit's own `--files` scope, so ANY future hook bug of this shape (not just this one) can never again silently
+      ride along post-commit — verified with a reproduction harness (hook-introduced corruption on a clean file:
+      auto-reverted; pre-existing foreign WIP: correctly left untouched). The OTHER originally-named file
+      (`cefi_instruments_store_blank_data_type_residual_2026_07_29.md`, reported `author:` line silently deleted) is NOT
+      reproducible now — its current frontmatter schema has no `author:` field at all, so that specific claim could not
+      be corroborated or refuted this session; flagging as unconfirmed rather than guessing at a second mechanism.
 - [x] [SCRIPT] P2. **DONE 2026-07-30 (slot 16)** — investigated via the same source read; NOT applicable, no change
       made. `Store::patches_dir()` (`~/.cache/prek/patches/`) is genuinely a shared, HOME-level, not-repo-scoped
       directory at rest, confirming the doc's raw observation — but the doc's own stated criterion for needing a
@@ -141,9 +153,14 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
   patch file read directly; root-causing the patch-selection/cleanup logic and scoping the cache path are both
   determinable by a worker. Phase-2 conflict-check: ZERO citations anywhere in the active planning corpus.
 
-- **2026-07-30 (cicd worker, slot 16)**: both todos closed — see Todos section above for the full root-cause writeup and
-  the shipped fix (`scripts/quickmerge.sh` post-commit foreign-dirt purge). Could not reproduce the original corruption
-  locally (the 2 files named in "What I found" are clean in this slot's clone), so the exact culprit hook was not
-  isolated — the fix is deliberately hook-agnostic: it reverts ANY newly-hook-dirtied out-of-scope path, regardless of
-  which hook caused it, closing the actual harm (silent corrupted residue) without depending on identifying the one
-  responsible hook. `unified-trading-pm@<see commit SHA in same push>`.
+- **2026-07-30 (cicd worker, slot 16)**: both todos closed. The title's framing ("prek's stash/restore... replays a
+  stale diff") turned out to be a misdiagnosis of the SYMPTOM's source — the actual bug lives in
+  `scripts/plan-hygiene/fix_frontmatter.py`'s `last_updated`/`execution_scope` auto-fill, which silently leaves stale
+  YAML-folded continuation lines attached across repeated runs (root-caused with a live, in-session reproduction, not
+  just source-reading — see Todos above for the full evidence chain). Fixed the actual mechanism there, cleaned the one
+  corpus file proven corrupted (`defi_consolidated_closeout_2026_07_18.md`, note text preserved in its own Progress
+  Log), and added a second, hook-agnostic hardening layer in `scripts/quickmerge.sh` so any future hook of this shape
+  can't silently persist corrupted out-of-scope residue either. `unified-trading-pm@<see commit SHA in same push>`.
+  Given this reached a materially different (and better-evidenced) root cause than the doc's own title and "Recommended
+  next step" section describe, a human/main-agent skim of this doc going forward should trust the Todos section's
+  writeup over the older title/body framing above it.

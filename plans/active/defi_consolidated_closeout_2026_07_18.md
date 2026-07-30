@@ -106,12 +106,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated:
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27
-  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
-  # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
-  # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
-  # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
+last_updated: 2026-06-27
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -784,3 +779,15 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   `issues/defi_orphan_sweep_test_artifact_prod_leak_2026_07_24.md` (defi/cefi dual-tagged),
   `issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md` (multi-AG tagged, defi among them). None were tracked in
   any Track above; all are now `assigned_vm: planning` and live in the AO backlog.
+
+- **2026-07-30 (cicd worker, slot 16)**: this doc's `last_updated:` frontmatter field had been silently corrupted into a
+  multi-date runaway YAML plain-scalar (root cause: `fix_frontmatter.py`'s `last_updated` auto-fill never stripped stale
+  multiline-folded continuation lines — fixed in the same push, see
+  `plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`). Recovering the buried
+  note text here verbatim before the frontmatter cleanup, since it isn't duplicated elsewhere in this doc:
+  _"AO-readiness pass: related: reachability (6 new docs), 2 stale line-number cross-refs -> content refs, defi.2
+  resume-crons split (operator ruling, task_template.md finding P), write_defi_rows DoD, Split-notice table +2 rows, 2nd
+  extraction pass into the history doc -- was: "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo
+  18)"_. Whoever wrote this most likely intended it for this Progress Log and it landed in the frontmatter by accident
+  during an editing session; if any of it describes work not otherwise reflected above, re-verify and fold it into the
+  relevant Track section.
