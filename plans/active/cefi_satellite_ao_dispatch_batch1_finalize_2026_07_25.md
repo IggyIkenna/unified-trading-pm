@@ -8,7 +8,7 @@ summary: >-
   re-check the 3 too-large-doc exclusions for whether they are now scoped enough for a batch2 pass, and re-verify the 1
   cross-doc live-conflict exclusion (LATE colliding-venue renames) has actually landed via its own live session before
   spinning it into a fresh todo.
-status: active
+status: complete
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]
@@ -46,6 +46,17 @@ drift_direction: advance-code
 
 # CeFi satellite AO batch 1 — finalize
 
+> **🟢 ARCHIVED 2026-07-30.** All 4 todos done: source-doc reconciliation (todo 1), the too-large-doc batch2 re-check
+> (todo 2), the LATE-renames re-verify (todo 3), and this archival (todo 4). Todo 1 flagged a gate-vs-reality mismatch —
+> parent's line 355 (BYBIT futures_chain extended duplicate-verification) was still genuinely open, the ONLY one of the
+> parent's 33 todos not done. Resolved by migrating it to its own named Source doc
+> (`issues/bybit_futures_chain_write_shape_2026_07_13.md`) as a fresh open todo (never marked done) per the
+> near-complete-plan "fold the remnant" guidance — see the parent's own Progress Log for the full rationale. Parent
+> moved to `/plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`, corpus referrers updated (17 files
+> with a literal `plans/active/...` path to the parent + referrers to this finalize doc's own path). No new durable
+> contract from this batch — codex-alignment check: nothing to update (every todo executed an already-decided spec, per
+> the parent's own banner).
+>
 > **Machine-gated on `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** (`depends_on` + `gate_on_depends: true`) — the
 > dispatcher will not queue any todo below until all 33 tasks in that plan are `done`. `sequential: true` because todo 2
 > needs todo 1's reconciliation done first, and todo 4 (archival) must run last.
@@ -120,14 +131,25 @@ drift_direction: advance-code
       verification dry-run) into a new tracked `cefi_satellite_ao_dispatch_batch2` candidate. **Done when**: a
       definitive landed-vs-still-pending verdict for the Range A/B/C migration is recorded with evidence (VM
       run.log/manifest citation), and either the item is marked DONE or a scoped batch2 candidate is created.
-- [ ] [DOC] P1. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
-      above should have already resolved the too-large-doc and LATE-renames exclusions — verify none remain untracked) →
-      add the archive banner → run the codex-alignment check → grep the corpus for every referrer of
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location → clear
-      `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
-      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
-      commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-11, `data_engineering`).** Todos 2 and 3 had already resolved the
+      too-large-doc and LATE-renames exclusions with no untracked remnant, but todo 1's own discrepancy note flagged one
+      genuine remnant they didn't cover: line 355 (BYBIT futures_chain extended duplicate-verification) was still
+      `- [ ]`. Migrated it to `issues/bybit_futures_chain_write_shape_2026_07_13.md` as a fresh open todo (marked
+      `[x] → MIGRATED`, NOT done, in the parent) per the near-complete-plan "fold the remnant" guidance — the fold
+      target was unambiguous (the item's own cited Source doc), so no operator ruling was needed. Archive banner added
+      to the parent; codex-alignment check found nothing to update (every todo executed an already-decided spec).
+      Grepped the corpus for every referrer of `cefi_satellite_ao_dispatch_batch1_2026_07_25` and repointed the 17 files
+      using the literal `plans/active/...` path form to `/plans/archive/2026_07/...` (left 1 verbatim historical
+      API-response JSON quote in `issues/backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_27.md`
+      untouched — a code block reproducing an exact past `GET /api/backlog` response, not a live reference). `locked_by`
+      confirmed empty on both docs. **Archive `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard
+      6-step ritual (per CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo
+      elsewhere (todos 2 and 3 above should have already resolved the too-large-doc and LATE-renames exclusions — verify
+      none remain untracked) → add the archive banner → run the codex-alignment check → grep the corpus for every
+      referrer of `cefi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path to point at the archived location →
+      clear `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`,
+      every corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the
+      same commit.
 
 ## Progress Log
 
@@ -249,3 +271,29 @@ drift_direction: advance-code
     `unified-trading-pm`.
   - No commits shipped in any service repo — this todo is doc-reconciliation/verdict-recording only, entirely within
     `unified-trading-pm`.
+
+- **2026-07-30 (slot-11, `data_engineering`) — todo 4, archival complete.**
+  - **Resolved the gate-vs-reality mismatch todo 1 flagged**: parent line 355 (BYBIT futures_chain extended
+    duplicate-verification) was the only one of the parent's 33 todos still `- [ ]`. Per
+    `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`'s near-complete-plan handling ("split it, or
+    fold the remnant"), migrated it verbatim into `issues/bybit_futures_chain_write_shape_2026_07_13.md` as a new open
+    `- [ ]` todo (that doc had just gone ARCHIVE-worthy per its own 2026-07-30 na-eligibility-audit entry — this todo
+    correctly keeps it active/tracked instead). Marked the parent's line 355 `[x] → MIGRATED ... NOT done` — never
+    claimed shipped. No operator ruling needed: the fold target was the item's own named Source doc, not a multi-option
+    epic/sibling choice.
+  - **Archive banner** added to the parent (`> 🟢 ARCHIVED 2026-07-30`) and to this finalize doc; both frontmatters
+    flipped `status: active` → `complete`.
+  - **Codex-alignment check**: nothing to update — every todo across both plans executed an already-decided spec (data
+    backfills, verification re-checks, doc reconciliation), no new durable contract emerged from this batch.
+  - **Corpus referrers**: grepped for `cefi_satellite_ao_dispatch_batch1_2026_07_25` and
+    `cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25` corpus-wide. 17 files carried the literal
+    `plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md` path form (frontmatter `related:` lists +
+    line-numbered prose citations) — all repointed to `plans/archive/2026_07/...`. Left
+    `issues/backlog_brief_cross_wired_adjacent_collision_group_todos_2026_07_27.md`'s one
+    `"plan_ref": "plans/active/..."` line untouched — it's inside a fenced code block reproducing a verbatim historical
+    `GET /api/backlog` JSON response, not a live doc reference; rewriting it would falsify the quote. Bare-name prose
+    mentions with no `plans/active/` path prefix (dozens, mostly in already-archived Progress Log narrative describing
+    past events) were left as-is — they are historical narrative, not machine-checked path references. Referrers to this
+    finalize doc's own path were also repointed.
+  - `locked_by` confirmed empty on both docs (no unlock needed).
+  - Both docs moved to `plans/archive/2026_07/` in the same commit as this final edit.
