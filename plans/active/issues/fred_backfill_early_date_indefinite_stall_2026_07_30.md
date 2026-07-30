@@ -197,3 +197,63 @@ minute once actually applied.
   from P1/open to P3/resolved (the remaining scope is a small observability + tuning improvement, not a live-blocking
   bug) and reassigned the actual next action back to `macro_micro_econ_data_capture_audit-003` itself (just let the
   backfill run without prematurely killing it).
+- **2026-07-30 (slot 2, DP-VM-001 escalation agt-f421bc)**: the healthy `tradfi-bf-fred-full-20260730-064542` VM (left
+  running unattended per the entry above) was later killed by the fleet monitor's exit-code sweep, which filed a
+  CRITICAL `DP_VM_EXIT_NONZERO` finding labeled OOM (`exit_code=137`) and handed it to me via `rb_infra_relaunch.md` for
+  relaunch. Investigation found **this was NOT an OOM**:
+  - Pulled the VM's `run.log` + its archived deployment record
+    (`gs://deployment-scripts-central-element-323112/deployments/archive/2026-07-30/bdd2f745-bea7-46a0-89a3-ed6e962fd74a.json`).
+    `mem_pct` sat flat at **17.0%** the entire run (`mem_slope≈0.0`, nowhere near the 85% critical threshold), `cpu_pct`
+    was **~0.8-0.9%** (idle) in the final 30 minutes. The log's own terminal lines:
+    `cause=stall reason=WORKER_STALLED mode=no-progress-marker stalled_for=1800 threshold=1800`.
+  - The VM had genuinely progressed (34 dates processed, real captured rows through 1962-02-04) and hit the SAME
+    documented, legitimate `_wait_for_in_flight_cycle_then_reread` consolidator-lock wait this doc already diagnosed —
+    **7 separate times** (confirmed via the `logger.warning` line this doc's own todo 2 added, all firing correctly:
+    `age=` values 113-178s, `horizon=3600s`). The 7th wait, entered at 09:06:27Z, ran past the in-VM watchdog's
+    **1800s** no-progress threshold before the legitimate 3600s wait could clear — a false-positive SIGKILL of healthy,
+    correctly-behaving work. `git_commit=d75e2470` on the archived record confirms it ran WITH the
+    catalogue-`iterrows()` fix from the `-052935` entry above; that bug is not implicated here.
+  - This exact headroom gap (stall-watchdog 1800s < consolidator-wait horizon 3600s) had **already been found and fixed
+    independently** by another agent in `deployment-service@c1e3dc7` ("tradfi-ohlcv launchers set STALL_TIMEOUT_SEC
+    headroom past the manifest-consolidator-lock horizon", `TRADFI_OHLCV_STALL_TIMEOUT_SEC` now defaults 3900s) — landed
+    2026-07-30T10:41:33Z, ~4h AFTER `-064542` launched (06:48:28Z), for the sibling `tradfi-bf-cme-ohlcv-1m-es-*`
+    variant of the identical bug (`tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`). No new fix needed here — a relaunch
+    from an up-to-date checkout inherits it automatically.
+  - **Separately found + fixed a real, distinct bug**: `deployment_service/vm_prefix_registry.py` +
+    `data_pipeline_monitors/launcher_registry.py` had NO `tradfi-bf-fred-` entry, so `resolve_launcher_for_vm()`'s
+    longest-prefix match fell back to the generic `tradfi-bf-` → `launch-tradfi-backfill-vm.sh` (CME/BTC/ETH launcher;
+    defaults `--root-symbol=ES`, has no FRED root at all) instead of the FRED-dedicated `launch-tradfi-bf-fred.sh`. This
+    is exactly why my escalation's `relaunch_launcher` binding was wrong — had I trusted it blindly, the "relaunch"
+    would have silently launched an unrelated ES backfill instead of resuming FRED. Fixed both registries + added a
+    regression test (`test_tradfi_bf_fred_resolves_to_its_own_dedicated_launcher`). Shipped `deployment-service@1d24854`
+    (QG green, on live-defi-rollout).
+  - **Relaunched** (correct launcher, no `--year` = production default `1962-01-02..2026-07-29`, matching `-064542`'s
+    own window — idempotent/SPOT, resumes from the manifest's already-captured dates):
+    `tradfi-bf-fred-full-20260730-110724`. Confirmed live via `gcloud compute instances describe`:
+    `STALL_TIMEOUT_SEC=3900` present in the launched VM's metadata (the headroom fix propagated). STARTED/PROGRESS
+    verification in flight — see the new todo below for the outcome once posted.
+
+## Open follow-up: exit-code monitor mislabels a stall-kill as OOM
+
+Not fixed in this pass (found live, evidence-backed, but a distinct component from anything above) — the fleet monitor's
+`exit_code_fleet_monitor._finding_for()` computes `oom = result.exit_code == 137` as a PURE exit-code equality check,
+with no distinction from an in-VM watchdog `WORKER_STALLED` kill (which also exits via SIGKILL=137). Confirmed live on
+this exact incident: `-064542`'s finding was labeled OOM (`details.oom=True`) and would have carried
+`bigger_machine=True` (see `exit_code_fleet_monitor.py` "KEY #4" comment — an OOM finding hints the actuator to relaunch
+on a BIGGER machine) even though memory never left 17%. A `bigger_machine` auto-escalation on a genuine stall event buys
+nothing (wrong remediation, wasted machine-tier cost) and, worse, neither tradfi launcher today even wires a
+`MACHINE_TYPE`-style env through consistently (`launch-tradfi-backfill-vm.sh` hardcodes `MACHINE_TYPE` as a local bash
+var, ignoring any env; `_tradfi-ohlcv-launcher-lib.sh` reads a differently-named `TRADFI_OHLCV_MACHINE`) — worth
+verifying whether `escalation._recover_backfill_vm`'s `bigger_machine` wiring is a live no-op before trusting it
+anywhere.
+
+- [ ] [BACKEND] P3. Distinguish a genuine OOM from a stall-induced SIGKILL in `exit_code_fleet_monitor._finding_for()`
+      before setting `details["oom"]`/`bigger_machine` — e.g. read the archived deployment record's
+      `mem_pct`/`mem_slope` history (already collected in `host_metrics_window`) or the run.log's own
+      `cause=`/`WORKER_STALLED` marker, and only flag OOM when memory was genuinely climbing toward the critical
+      threshold at kill time. Repo: deployment-service. Evidence: this doc's Progress Log entry above (deployment_id
+      `bdd2f745-bea7-46a0-89a3-ed6e962fd74a`, `mem_pct` flat at 17.0%, `cause=stall`).
+- [ ] [BACKEND] P3. Verify whether `escalation._recover_backfill_vm`'s `bigger_machine` hint actually reaches either
+      tradfi launcher today (neither reads a `MACHINE_TYPE` env consistently per the note above) — if it is a silent
+      no-op, either wire it through properly or drop the hint rather than leave a documented-but-dead auto-escalation
+      path. Repo: deployment-service.
