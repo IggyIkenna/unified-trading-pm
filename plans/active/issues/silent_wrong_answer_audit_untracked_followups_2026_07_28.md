@@ -9,11 +9,11 @@ summary: >-
   genuinely-open findings only as prose, never as a tracked `- [ ]` todo anywhere. **The P0 half (strategy-service's
   `pnl_input_builder.py` hardcoding every DeFi fill's gas price to 1 gwei) was EXTRACTED 2026-07-30 by operator ruling
   into its own dispatchable doc, strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md** — it was bounded and
-  ready to ship, and did not belong behind an undecided design question. What remains here is that design question:
-  P1 finding 9 — e2e-testing's `validate_shards_4pillar.py` pillar-2/3 (schema/NaN) checks are vacuous (they degrade to
+  ready to ship, and did not belong behind an undecided design question. What remains here is that design question: P1
+  finding 9 — e2e-testing's `validate_shards_4pillar.py` pillar-2/3 (schema/NaN) checks are vacuous (they degrade to
   `row_count > 0`) for 51 of 61 (asset_group, data_type) pairs because no per-pair schema/NaN-tolerance contract exists
-  to check against; the audit doc explicitly said it "needs a schema-contract decision" and left it for a follow-up
-  that was never filed.
+  to check against; the audit doc explicitly said it "needs a schema-contract decision" and left it for a follow-up that
+  was never filed.
 status: open
 nature: issue
 asset_group:
@@ -30,7 +30,7 @@ tags: [silent-failure, 4-pillar, schema-contract, follow-up]
 related:
   [
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
-    /plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md,
+    /plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md,
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
   ]
 created: 2026-07-28
@@ -60,10 +60,10 @@ locked_since:
 
 > **EXTRACTED 2026-07-30 — the P0 strategy-service gas-fee reader fix no longer lives here.** Operator ruled it out of
 > this doc so a bounded real-money PnL bug is not gated behind the undecided schema-contract question below. It is now
-> `/plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0,
-> immediately dispatchable), re-verified against the current code and expanded with three follow-on defects the
-> original one-line todo did not name. **Do not re-add a gas-fee todo here** — that doc is the single place it ships
-> from. This doc now tracks ONLY the P2 e2e-testing schema-contract decision.
+> `/plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0,
+> immediately dispatchable), re-verified against the current code and expanded with three follow-on defects the original
+> one-line todo did not name. **Do not re-add a gas-fee todo here** — that doc is the single place it ships from. This
+> doc now tracks ONLY the P2 e2e-testing schema-contract decision.
 
 - [ ] [BACKEND] P2. **e2e-testing** — resolve the schema-contract decision `validate_shards_4pillar.py`'s pillar-2 (NaN)
       / pillar-3 (schema) checks need: they are vacuous (degrade to `row_count > 0`) for 51 of 61
@@ -78,20 +78,20 @@ Both original findings were cross-repo (strategy-service / e2e-testing) — outs
 (features-service) and its narrow mandate (reconcile 2 stashed features-service fixes). Filed per the "every follow-up
 is a `- [ ]` todo, never prose" HARD RULE so archiving the parent audit doc doesn't silently drop them.
 
-The remaining item stays `assigned_vm: NA` because it is a genuine design decision, not bounded work: nobody has
-decided what the per-pair schema/NaN-tolerance contract should say, and "figure out how X should look" is a human
-decision, not an AO todo (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` §
-"Dispatch-scope eligibility"). Once that contract is decided, wiring `validate_shards_4pillar.py` to enforce it is
-ordinary dispatchable work and should be filed as its own todo against that decision's outcome.
+The remaining item stays `assigned_vm: NA` because it is a genuine design decision, not bounded work: nobody has decided
+what the per-pair schema/NaN-tolerance contract should say, and "figure out how X should look" is a human decision, not
+an AO todo (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "Dispatch-scope eligibility").
+Once that contract is decided, wiring `validate_shards_4pillar.py` to enforce it is ordinary dispatchable work and
+should be filed as its own todo against that decision's outcome.
 
 ## Progress Log
 
 - **2026-07-30 (operator-ruled split-out)**: Extracted the P0 strategy-service gas-fee reader fix into
-  `/plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0)
+  `/plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0)
   so it is dispatchable immediately instead of being trapped behind the undecided schema-contract question that is the
-  reason this doc is `assigned_vm: NA`. The new doc re-verified the claim against current code (the 1-gwei fallback,
-  the dead `gas_fees/chain_id=…/` prefix, MTDS's real canonical write path) and added three follow-on defects the
-  one-line todo here never named. Narrowed this doc's frontmatter to match what it actually still holds: `repos`
+  reason this doc is `assigned_vm: NA`. The new doc re-verified the claim against current code (the 1-gwei fallback, the
+  dead `gas_fees/chain_id=…/` prefix, MTDS's real canonical write path) and added three follow-on defects the one-line
+  todo here never named. Narrowed this doc's frontmatter to match what it actually still holds: `repos`
   `[strategy-service, e2e-testing]` → `[e2e-testing]`, `stage` `[strategy, data]` → `[data]`, dropped the
   `gas-fees`/`pnl-correctness` tags, `priority` P1 → P2, estimate halved. Docs-only, no code changed.
 

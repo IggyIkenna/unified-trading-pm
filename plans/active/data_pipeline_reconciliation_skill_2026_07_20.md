@@ -655,7 +655,7 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       archived `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` todo 15 exactly
       (`row_count=0` throughout, already tracked P2). Genuinely NEW small-scale residuals (cefi venue/instrument_type/
       chain-column drift, 6 un-registered sports bookmaker venues, prediction instrument_type/data_type case drift) —
-      filed as `plans/active/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md` (P2, per
+      filed as `plans/archive/issues/cefi_sports_prediction_first_census_small_drift_2026_07_30.md` (P2, per
       `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md` — small-scale hygiene, not
       backfill-critical, matches the P2 precedent of the two sibling census docs). Full per-AG results recorded in
       `reference-cefi.md` H7-refinement + H8, `reference-tradfi.md` H7, `reference-sports.md` H11,

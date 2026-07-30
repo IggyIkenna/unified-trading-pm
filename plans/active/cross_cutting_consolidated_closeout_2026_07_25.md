@@ -416,7 +416,7 @@ shipped independently via `features-service@57f8b45d9`, `smoke_matrix.py` fixed 
 of the other doc's finding #1**: the bucket-NAME fix landed, but the gas-fee PATH within that bucket still resolves
 nowhere — unfixed, but as of **2026-07-30 no longer tracked in the untracked-followups doc and no longer an open
 research question**: it was split out to
-`/plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0),
+`/plans/archive/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0),
 which verified against current code exactly where gas-fee data lives — MTDS writes it to the SAME bucket under the
 canonical `venue=ALCHEMY`/`chain=<CHAIN>`/`data_type=gas_fees` partition path, so it is a reader-prefix fix, not a
 data-location unknown) + `distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY;

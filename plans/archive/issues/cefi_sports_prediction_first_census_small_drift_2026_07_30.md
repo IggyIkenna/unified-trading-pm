@@ -62,6 +62,9 @@ depends_on: []
 
 # cefi/sports/prediction first census — small residual drift
 
+> **🟢 RESOLVED 2026-07-30** — all 5 findings closed (real bugs fixed with SHAs above, false positives corrected, one
+> escalated to its own properly-scoped P1 doc). Archived.
+
 > **Priority rationale** (per `/codex/11-project-management/plan-priority-tier-and-dispatch-ordering.md`): not a
 > CI/audit escalation; within the asset-group tier ordering cefi ranks second only to cross-cutting, but every item
 > below is small-scale canonicalisation hygiene, not data-completion/backfill-critical — matches the **P2** precedent

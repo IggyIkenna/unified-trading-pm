@@ -19,7 +19,7 @@ summary: >-
   cross_venue_arb_detector.py computes net_edge_after_fees + max_arb_contracts on the Kalshi/Polymarket legs ONLY, so a
   Betfair-cheap-BUY opportunity currently surfaces as a NON-executable PURE_ARB flag until the detector/runner are
   extended to fee-net + size the Betfair leg.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [strategy]
@@ -39,6 +39,12 @@ assigned_role: strategy
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "unified-api-contracts@7eb56a5f + strategy-service@baccf22a + execution-service@968e98579 + e2e-testing@8d31206 — the
+  paper-LIVE AtomicInstruction -> AtomicLegExecutor routing seam via the UTL EventTransport facade (ruled 2026-07-28),
+  round-trip proven in e2e-testing. Item [5] (two-sided back+lay Betfair odds) remains tracked separately in
+  prediction_cross_venue_arb_and_coverage_2026_07_24.md / prediction_phase_e_football_arb_live_2026_07_24.md /
+  v2_engine_venue_buildout_2026_06_15.md, not orphaned by this archival. Live promotion + Betfair
+  account/credential/jurisdiction sign-off stay operator-gated as documented above."
 locked_by:
 source:
   [
@@ -48,6 +54,10 @@ source:
 ---
 
 # Prediction cross-venue arb — the missing live execution bridge
+
+> **🟢 RESOLVED 2026-07-30** — the doc's sole `## Todos` item (the AtomicInstruction→AtomicLegExecutor paper-LIVE
+> routing seam) shipped and round-trip-proven; see `resolved_by` above. Item [5] (two-sided Betfair odds) and the
+> operator-gated live-promotion/credential items are tracked elsewhere, not dropped. Archived.
 
 **This is the gate to a LIVE prediction arb (2-venue or 3-venue). The signal side is done + verified; the execution side
 does not exist.** Everything below was traced read-only against HEAD; file:line anchors are exact.

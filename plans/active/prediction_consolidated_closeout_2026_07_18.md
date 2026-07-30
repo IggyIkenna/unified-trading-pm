@@ -525,7 +525,7 @@ sports's own consolidated closeout plan; short digest only:
 **Newly discovered (2026-07-24 completeness check via `grep -l '^asset_group:.*prediction'` — not previously named in
 this section)**:
 
-- [`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
+- [`plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
   — **1 open** (corrected 2026-07-30, batch2 finalize re-triage; was wrongly marked 0 open — `status: open` on the doc
   itself). **[BACKEND] P1.** Build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor` via the UTL
   `EventTransport` facade — the architecture question is **RULED (operator, 2026-07-28)**, so this is now build-ready

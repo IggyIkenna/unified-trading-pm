@@ -16,7 +16,7 @@ summary: >-
   whole aggregation. Split out of silent_wrong_answer_audit_untracked_followups_2026_07_28.md (operator ruling
   2026-07-30) so this bounded real-money fix is dispatchable without waiting on that doc's unrelated, undecided
   e2e-testing schema-contract question.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [strategy]
@@ -51,11 +51,18 @@ source: >-
   alongside an unrelated undecided e2e-testing schema-contract question. Original lineage: P0 finding 2 of
   /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md.
 resolved_by:
+  "strategy-service@f78d4ff9 (repointed _load_gas_fee_data off the dead prefix onto the canonical per-day DeFi partition
+  path, fixed the tz-aware timestamp parse, deleted the unreachable native_token_price_usd fallback and the 1-gwei
+  hardcode, replaced the local chain-token dict with CHAIN_CONFIGS) + strategy-service@2e409c47 (regression test proving
+  the fix, verified to fail against pre-fix code). Full-suite QG 5640 passed / 0 failed."
 locked_by:
 locked_since:
 ---
 
 # strategy-service gas-fee reader hardcodes 1 gwei
+
+> **🟢 RESOLVED 2026-07-30** — both todos shipped and verified (real shas, regression test proven to fail against
+> pre-fix code, full-suite QG green). Archived.
 
 ## What the code actually does (verified by direct read, 2026-07-30)
 
@@ -168,3 +175,7 @@ history matches.
   in this session (reader, MTDS writer, UAC path builder, UAC chain registries) rather than carried over from the
   2026-07-20 audit's prose — the 1-gwei hardcode, the dead prefix, the missing `native_token_price_usd` column, and the
   datetime-vs-epoch mismatch are all confirmed present today. No code changed.
+- **2026-07-30 (archival pass)**: both `## Todos` items now show `[x]` with real shas (`strategy-service@f78d4ff9`,
+  `strategy-service@2e409c47`) — verified against the live strategy-service repo directly (`git log --oneline -1 <sha>`
+  for each) before archiving; this Progress Log's prior "No code changed" entry predates the fix and was never updated
+  when it landed.

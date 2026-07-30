@@ -96,10 +96,16 @@ for f in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
     *" ${slug} "*) continue ;;
   esac
 
-  open_count="$(grep -cE '^[[:space:]]*- \[ \]' "$f" 2>/dev/null)"
-  open_count="${open_count:-0}"
+  # Count "not done" as anything that isn't a literal `[x]` checkbox, not just literal `[ ]` —
+  # at least 8 live docs use an informal `[~]` (in-progress) marker that a `[ ]`-only count
+  # silently treats as done, producing a false archive-candidate (found 2026-07-30:
+  # prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md's todo 5 was
+  # `[~]` IN PROGRESS — a real launched-but-incomplete infra backfill — yet counted as 0-open).
+  total_count="$(grep -cE '^[[:space:]]*- \[.\]' "$f" 2>/dev/null)"
+  total_count="${total_count:-0}"
   done_count="$(grep -cE '^[[:space:]]*- \[x\]' "$f" 2>/dev/null)"
   done_count="${done_count:-0}"
+  open_count=$(( total_count - done_count ))
 
   if [ "$open_count" -eq 0 ] && [ "$done_count" -gt 0 ]; then
     status="$(grep '^status:' "$f" 2>/dev/null | head -1 | sed 's/status: //')"

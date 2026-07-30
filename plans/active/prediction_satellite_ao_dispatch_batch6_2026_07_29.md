@@ -57,7 +57,7 @@ related:
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
     /plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
-    /plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
+    /plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
     /plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
@@ -144,7 +144,7 @@ sports-tranche-owned).
       (`tests/unit/test_atomic_instruction_live_routing_seam.py`, 3 tests): a REAL strategy-engine-emitted
       `AtomicInstruction` published via `InMemoryTransport` reaches `AtomicLegExecutor.execute` end-to-end and settles
       `COMPLETE` with both legs placed — plus a shard-identity round-trip check and a non-strategy-source filter check.
-      **Source**: `plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (sole `## Todos` item,
+      **Source**: `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (sole `## Todos` item,
       flipped in the same commit set). **Done when**: the round-trip test passes and `quality-gates.sh` is green across
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
@@ -153,7 +153,7 @@ sports-tranche-owned).
       "Smaller open items (documented, not blocking paper)" — items `[1]`-`[4]` shipped 2026-07-20, this one is still
       open and needs a Betfair-exchange book source. Different component (Betfair adapter) from the EventTransport todo
       above — no file overlap expected, safe to run concurrently. **Source**:
-      `plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]). **Done when**: back+lay both
+      `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]). **Done when**: back+lay both
       persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
 
 - [x] ✅ [INFRA] P1. **DONE (launch phase) 2026-07-30 — 4 SPOT VMs.** Launch the historical prediction re-backfill under
