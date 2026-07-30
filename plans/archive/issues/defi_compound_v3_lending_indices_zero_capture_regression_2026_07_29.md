@@ -60,7 +60,17 @@ assigned_role: data_engineering
 execution_scope: orchestrator-agent
 drift_direction: stable
 depends_on: []
+resolved: 2026-07-30
+resolved_by:
+  "market-tick-data-service@d36e2498 (lending_indices fix), market-tick-data-service@674fdd6e (risk_params fix)"
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`. Both the id-form mismatch root cause
+> (`market-tick-data-service@d36e2498`, lending_indices) and the identical bug confirmed + fixed in
+> `risk_params_handler.py` (`market-tick-data-service@674fdd6e`) are shipped and live-verified via scoped validation VM
+> runs (real GraphQL fetch + GCS write, zero false honest-absence rejections).
+> `lst_rates_handler.py`/`evm_defi_collectors.py` checked and confirmed NOT exposed to this bug (different,
+> already-matching id-space). No further open work in this doc.
 
 # COMPOUND_V3 lending_indices — 100% shard-failure regression, root-cause not yet fixed
 
