@@ -270,7 +270,7 @@ ground to open up, and it did:
       responsible, and the fix (or a scoped follow-up todo if the fix is a larger build) is recorded. Source:
       `issues/mdps_tradfi_ohlcv_15m_24h_conversion_still_zero_2026_07_27.md`.
 
-- [ ] [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
+- [x] ✅ [INFRA] P1. **Bundle CME roots into fewer larger VMs — extracted from
       `tradfi_backfill_throughput_followups_2026_07_24.md`'s own still-open item by
       `tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s Deferred re-check (2026-07-30), now that the
       conflict-gate has cleared.** `_tradfi-ohlcv-launcher-lib.sh` still spawns one VM per (venue,root,year) for the CME
@@ -289,7 +289,15 @@ ground to open up, and it did:
       the CME launcher, a dry-run of `launch-tradfi-bf-cme-ohlcv-1m.sh` shows the new bundled fan-out with no root/date
       lost or duplicated, and `tradfi_backfill_throughput_followups_2026_07_24.md`'s "[INFRA] P1. Bundle roots into
       fewer larger VMs" checkbox (line ~299) is flipped citing the shipped commit. Source:
-      `tradfi_backfill_throughput_followups_2026_07_24.md`.
+      `tradfi_backfill_throughput_followups_2026_07_24.md`. **✅ SHIPPED `deployment-service@60b9d37`** (2026-07-30):
+      added `ohlcv_split_root_groups` (the `SINGLE_VM_QUEUE`-analog) + `OHLCV_ROOT_GROUPS`/`--root-groups` knob
+      (default 10) to `_tradfi-ohlcv-launcher-lib.sh`; rewired `launch-tradfi-bf-cme-ohlcv-1m.sh` to loop (root-group x
+      year-shard) instead of (root x year) — default groups collapse 406 VMs (58 roots x 7 years) to 70. Dry-run
+      verified: the union of all bundled groups' `VM_INSTRUMENT_IDS` exactly matches the 103-symbol/58-root source
+      universe (diff clean, no loss or duplication); `--only-root` and `--root-groups 58` (legacy one-VM-per-root) both
+      still work. The pd-balanced 250GB `TRADFI_OHLCV_BOOT_TYPE`/`BOOT_GB` disk default was already committed + wired
+      into `ohlcv_create_vm` (`ac5d1660`, 2026-07-18), which the CME launcher already calls — confirmed no separate disk
+      change was needed (the "never wired" framing above was stale).
 
 ## Deferred — conflict-gated (do NOT draft a competing todo; unchanged, still genuinely unresolved)
 

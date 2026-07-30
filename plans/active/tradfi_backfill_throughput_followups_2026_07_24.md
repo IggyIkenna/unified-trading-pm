@@ -296,16 +296,21 @@ source:
       `scripts/reclassify_tradfi_below_floor_expected_unattempted_2026_07_27.py` (this session's `--apply` run) — not
       `mtds`. Regression-guard test `instruments-service@5104befc`. (repo: instruments-service, not mtds — corrected per
       the above)
-- [ ] [INFRA] P1. **Bundle roots into fewer larger VMs.** `_tradfi-ohlcv-launcher-lib.sh` spawns one VM per
-      (venue,root,year); accumulate multiple roots' symbol-sets into one VM's `VM_INSTRUMENT_IDS` per year-shard
-      (SINGLE_VM_QUEUE-analog). Fewer, saturated VMs. Also folds the pd-balanced 250GB / `TRADFI_OHLCV_BOOT_TYPE` disk
-      default (staged locally 2026-07-18). (repo: deployment-service) **NOTE (na-eligibility-audit 2026-07-30, tradfi
-      tranche)**: this exact item is already extracted VERBATIM as
+- [x] ✅ [INFRA] P1. **Bundle roots into fewer larger VMs — SHIPPED `deployment-service@60b9d37`** (2026-07-30, via
+      `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo,
+      which extracted this exact item verbatim per the NOTE below). `_tradfi-ohlcv-launcher-lib.sh` spawned one VM per
+      (venue,root,year); added `ohlcv_split_root_groups` (the SINGLE_VM_QUEUE-analog) + an
+      `OHLCV_ROOT_GROUPS`/`--root-groups` knob (default 10) that accumulates multiple roots' symbol-sets into one VM's
+      `VM_INSTRUMENT_IDS` per year-shard. `launch-tradfi-bf-cme-ohlcv-1m.sh` now loops (root-group x year-shard) —
+      default groups collapse 406 VMs (58 roots x 7 years) to 70. Dry-run verified no root/symbol lost or duplicated
+      across the bundled groups. The pd-balanced 250GB `TRADFI_OHLCV_BOOT_TYPE` disk default was already committed +
+      wired into `ohlcv_create_vm` (`ac5d1660`, 2026-07-18) — the CME launcher already calls it, so no separate disk
+      change was needed (this item's "staged locally... never wired" framing was stale). (repo: deployment-service)
+      **NOTE (na-eligibility-audit 2026-07-30, tradfi tranche)**: this exact item was extracted VERBATIM as
       `/plans/active/tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s "Bundle CME roots into fewer larger VMs" todo
-      (which cites this doc's own still-open item as its source, via
-      `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). Not
-      reclassified independently — batch5 is `assigned_vm: planning` but `status: draft`, so nothing is dispatched on it
-      yet; this checkbox stays open until batch5 is activated and its todo lands.
+      (which cites this doc's own then-still-open item as its source, via
+      `/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md`'s 2026-07-30 Deferred re-check). batch5
+      was activated 2026-07-30 (`5a6bbefc3`) and its todo dispatched + shipped as above.
 - [x] ✅ [BACKEND] P1. **Real retry-on-429 in the Databento fetch path — SHIPPED mtds@73c286a2 (`databento_retry.py`).**
       The fetch previously recorded ANY exception (incl. `RATE_LIMIT`/429) as a per-schema shard failure with no retry
       (config `max_retries`/`backoff_factor` were log-only). Now `fetch_timeseries_range_with_retry` wraps the
