@@ -1029,15 +1029,33 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     # [OOM MITIGATION 2026-05-15] MEM_WRAP wraps basedpyright in cgroup mem cap (Linux only).
     # OLD: run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix below.
+    _qg_run_basedpyright_attempt() {
+        # One basedpyright attempt with wrap-command prefix "$@" (pass no args to run unwrapped).
+        # Side effect: sets PYRIGHT_EXIT / PYRIGHT_OUT / ERROR_COUNT / WARN_COUNT.
+        run_timeout "${PYRIGHT_TIMEOUT:-120}" "$@" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
+        BP_PID=$!
+        PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?  # 2026-05-26: fix || true bug that swallowed exit code
+        PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
+        ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
+        WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
+    }
     qg_prof start typecheck
-    run_timeout "${PYRIGHT_TIMEOUT:-120}" "${MEM_WRAP[@]}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
-    BP_PID=$!
-    PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?  # 2026-05-26: fix || true bug that swallowed exit code
+    _qg_run_basedpyright_attempt "${MEM_WRAP[@]}"
+    # [MEM_WRAP TOCTOU MITIGATION 2026-07-30] The preflight probe above (~L155-156) checks
+    # systemd-run ONCE, long before this real (80s+) invocation; under heavy host contention the
+    # D-Bus user session can go transiently unreachable in between, so systemd-run itself fails to
+    # ever launch basedpyright (empty output, or a literal "Failed to connect to bus" line, with a
+    # nonzero exit) — a pattern otherwise indistinguishable from a genuine 120s analysis timeout.
+    # Retry ONCE unwrapped before concluding a real failure (mirrors setup.sh's uv-lock import-smoke
+    # retry). SSOT: plans/active/issues/qg_mem_wrap_systemd_bus_unavailable_2026_07_26.md
+    if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ] \
+        && [ "${#MEM_WRAP[@]}" -gt 0 ] \
+        && { [ -z "$PYRIGHT_OUT" ] || echo "$PYRIGHT_OUT" | grep -q "Failed to connect to bus"; }; then
+        log_warn "TYPE CHECK: MEM_WRAP launch failed, retried unwrapped (systemd/D-Bus TOCTOU race — not a basedpyright timeout)"
+        _qg_run_basedpyright_attempt
+    fi
     qg_prof end typecheck
     trap - INT TERM
-    PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
-    ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
-    WARN_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " warning:" || :)
     if [ "${PYRIGHT_EXIT}" -ne 0 ] && [ "${ERROR_COUNT:-0}" -eq 0 ] && [ "${WARN_COUNT:-0}" -eq 0 ]; then
         echo "$PYRIGHT_OUT"; log_fail "Type check FAILED/timeout (exit=${PYRIGHT_EXIT})"; exit 1
     fi
