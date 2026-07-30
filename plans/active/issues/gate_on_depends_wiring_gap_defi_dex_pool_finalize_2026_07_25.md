@@ -238,6 +238,16 @@ skipping this task rather than `/blocked`-ing on an already-answered question. R
 (populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
 be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
 
+## 2026-07-30 recurrence note (slot 12, second bounce on cross_cutting_satellite_ao_dispatch_batch1)
+
+Freshly dispatched `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize-001` on slot 12
+(`dispatch_reason: "resume"`, `already_in_progress: true`) — same task_id, same plan pair covered by the "SIXTH distinct
+plan pair" note below (slot 7). Independently re-verified via a fresh grep of both gating docs before declining:
+`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` still exactly 9/19 done (10 `- [ ]`), `...batch1b...` still
+exactly 6/18 done (12 `- [ ]`) — byte-identical counts to slot 7's note, confirming no drift and no stale evidence.
+Declining to author any reconciliation content on the false premise that all 31 todos shipped; skipping via
+`POST /skip-current-task` (reason: GATED — upstream gate genuinely unmet) rather than filing a duplicate `/blocked`.
+
 ## 2026-07-30 recurrence — SIXTH distinct plan pair (cross_cutting_satellite_ao_dispatch_batch1, dual-gate, worst gap yet)
 
 Slot 7 was dispatched `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize-001`
