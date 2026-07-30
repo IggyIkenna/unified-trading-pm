@@ -32,7 +32,7 @@ tags: [defi, dex_pool_swaps, thegraph, subgraph, honest-absence, indexer-health,
 related:
   [
     plans/active/mvp_backfill_defi_onchain_v10_2026_06_27.md,
-    plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     plans/archive/issues/defi_curve_optimism_subgraph_no_allocations_2026_07_15.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]

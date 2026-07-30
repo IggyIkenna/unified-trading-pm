@@ -24,7 +24,7 @@ scope: [engineer, admin]
 tags: [defi, terraform, cloud-scheduler, t1-freshness, stagger, honest-absence]
 related:
   [
-    plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md,
     /codex/02-data/pipeline-mode-partition.md,
   ]

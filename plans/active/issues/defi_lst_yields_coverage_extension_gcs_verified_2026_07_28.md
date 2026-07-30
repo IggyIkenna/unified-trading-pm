@@ -29,7 +29,7 @@ tags: [defi, lst_yields, lst_rates, coverage-gap, backfill-scope, features-oncha
 related:
   [
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /codex/02-data/pipeline-mode-partition.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
   ]

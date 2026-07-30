@@ -146,7 +146,7 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
       does not hold: the Progress Log entry below explicitly scopes itself to a DIFFERENT question (current-writer
       write-then-record safety, matching todo 3) and says "Todos 1+2 above... remain open"; `batch1`'s own copy of this
       exact todo (status: active) is still unchecked with no completion evidence. Genuinely open — tracked at
-      `/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`. — **DONE 2026-07-28 (slot-15,
+      `/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`. — **DONE 2026-07-28 (slot-15,
       data_engineering)**: root cause diagnosed via git/commit archaeology (no writer-fix required — see Progress Log
       "2026-07-28 (slot-15)" entry below for full evidence). Repo scope corrected: `swaps_ohlcv_*` (81% of the phantom
       set) is written by `market-data-processing-service` (MDPS), not MTDS — same repo-scoping error the 2026-07-26

@@ -15,7 +15,7 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
 tags: [tardis, lighter-zksync, hang, event-logging, diagnostics]
-related: [/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
+related: [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
 created: 2026-07-28
 parent_epic: infrastructure_master
 priority: P3

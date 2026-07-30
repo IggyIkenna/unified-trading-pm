@@ -134,7 +134,7 @@ vault-share-price collector) end-to-end:
       `source='onchain_subgraph'` on EVERY write to this cell — before AND after todo 3's fix below — regardless of
       whether the row was actually fetched via subgraph or RPC. The `pipeline_mode<->source` combination is a STRUCTURAL
       consequence of the single-source write-time provenance gate, not evidence any specific row is wrong. Full per-row
-      detail in the plan's flip note (`plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`).
+      detail in the plan's flip note (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`).
 - [x] 2. [DATA] P2. **DONE 2026-07-28 (slot-4), same scan as todo 1.** Blast radius: 7,476 total `vault_share_price`
       rows in the manifest; **185 desync rows (2.5%)**, spread EVENLY across **5 venues** (37 rows each) — ETHENA, FRAX,
       MAKER, MORPHOVAULTS, YEARN_V3 — all sharing the identical

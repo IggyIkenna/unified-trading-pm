@@ -13,7 +13,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
 tags: [infra, tmp, quality-gates, shared-host, race-condition]
-related: [/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
+related: [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md]
 created: 2026-07-26
 priority: P1
 parent_epic: infrastructure_master

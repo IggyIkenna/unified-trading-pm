@@ -181,12 +181,12 @@ oracle's PRE-`d40c5d7d` behavior (structure-only), which would have reported the
       backlog and let the eventual migration sweep it up, or (c) ship the leaf-naming fix on an expedited timeline given
       it's measurably live-growing rather than static? **Outcome confirmed closed in practice**: option (c) was executed
       — `write_defi_rows()`'s leaf fix shipped `market-tick-data-service@0fddb95e` (2026-07-27, per
-      `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding todo) on an expedited timeline
-      without stopping the crons, and the P1 census todo above (executed 2026-07-28) confirms the bare-symbol-leaf
-      violation rate collapsed to ~0-1% the day that fix went live — i.e. (a)/(b) never had to be chosen between,
-      because (c) landed fast enough that no material backlog accrued. The 2026-07-27 note left this open pending an
-      explicit operator close/confirm; the operator's 2026-07-28 review of the stale-gate audit closes it now on that
-      same evidence — no further sequencing action needed, nothing left for a worker to pick up here.
+      `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding todo) on an expedited
+      timeline without stopping the crons, and the P1 census todo above (executed 2026-07-28) confirms the
+      bare-symbol-leaf violation rate collapsed to ~0-1% the day that fix went live — i.e. (a)/(b) never had to be
+      chosen between, because (c) landed fast enough that no material backlog accrued. The 2026-07-27 note left this
+      open pending an explicit operator close/confirm; the operator's 2026-07-28 review of the stale-gate audit closes
+      it now on that same evidence — no further sequencing action needed, nothing left for a worker to pick up here.
 - [x] [DIAG] P1. **Measure the scale**: how many `pipeline_mode=batch_*` DeFi objects have been written since 2026-07-20
       (the register's implicit "capture stopped" reference point) under the bare-symbol leaf shape? A bounded
       per-day-since-2026-07-20 delimiter descent (not a corpus walk) would answer this. — already covered by

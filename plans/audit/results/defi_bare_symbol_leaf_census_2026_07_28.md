@@ -41,8 +41,8 @@ parent_epic: defi_master
 **Purpose**: measure the scale of `pipeline_mode=batch_*` DeFi objects written under the bare-symbol filename-leaf shape
 since 2026-07-20 (the `canonical-cutover-register.md` §5 "capture stopped" reference point), per
 `plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`'s "[DIAG]
-Measure the scale" todo, executed via `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s corresponding
-todo.
+Measure the scale" todo, executed via `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s
+corresponding todo.
 
 **Method**: read-only, bounded per-day GCS delimiter descent (single-walk discipline — no corpus walk). For each
 `day=2026-07-20` .. `day=2026-07-28` (run date), one delimited listing under `raw_tick_data/by_date/day={D}/` finds the
@@ -125,7 +125,7 @@ listing failure.
 
 - Source issue:
   `plans/archive/issues/defi_write_defi_rows_leaf_symbol_not_canonical_id_capture_not_stopped_2026_07_24.md`
-- Dispatching plan: `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md`
+- Dispatching plan: `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`
 - Oracle SSOT: `/codex/02-data/four-surface-reconciliation-procedure.md`, `/codex/02-data/canonical-cutover-register.md`
   §5
 - Raw data: `plans/audit/results/defi_bare_symbol_leaf_census_2026_07_28.json`

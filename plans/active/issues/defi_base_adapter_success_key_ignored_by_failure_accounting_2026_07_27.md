@@ -28,14 +28,14 @@ tags: [defi, adapters, failure-accounting, honest-absence, masking, shard-isolat
 related:
   [
     /plans/active/issues/defi_adapter_dead_code_audit_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
 priority: P2
 source:
   "Dispatched todo defi_satellite_ao_dispatch_batch1-012 (trace curve_adapter.py::_download_liquidity masking,
-  plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md) — tracing the shared caller
+  plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md) — tracing the shared caller
   (base_defi_adapter.py::_download_all_instruments) for the Curve-specific verdict surfaced this broader, cross-adapter
   version of the same failure-accounting gap."
 execution_scope: orchestrator-agent

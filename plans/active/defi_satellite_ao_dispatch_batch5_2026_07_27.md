@@ -34,7 +34,7 @@ related:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_07/defi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md,
     /plans/active/defi_satellite_ao_dispatch_batch3_2026_07_26.md,

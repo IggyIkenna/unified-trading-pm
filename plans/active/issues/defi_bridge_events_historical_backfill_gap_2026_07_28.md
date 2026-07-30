@@ -24,7 +24,8 @@ stage: [data]
 repos: [market-tick-data-service, unified-trading-library]
 scope: [engineer]
 tags: [defi, bridge-events, backfill, cli-convention, catalog-freshness, correction]
-related: [/plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/pipeline-mode-partition.md]
+related:
+  [/plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md, /codex/02-data/pipeline-mode-partition.md]
 created: 2026-07-28
 parent_epic: infrastructure_master
 assigned_vm: NA
@@ -32,8 +33,8 @@ execution_scope: local-only
 priority: P2
 estimate_class: research
 source: >-
-  Dispatched todo in plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md ("File a new tracked issue doc for the
-  ACROSS/STARGATE bridge_events historical-backfill capability gap"), itself sourced from
+  Dispatched todo in plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md ("File a new tracked issue
+  doc for the ACROSS/STARGATE bridge_events historical-backfill capability gap"), itself sourced from
   plans/archive/issues/defi_five_never_captured_venues_fix_2026_07_22.md. The todo's premise (no --start-date/--end-date
   CLI support) was verified FALSE before filing — see "What I found" below.
 drift_direction: advance-code
@@ -102,8 +103,8 @@ bug that same docstring says was already fixed for OTHER handlers.
 
 This exact fix is **already**
 todo #`[SCRIPT] P1. Thread mode= into assert_defi_catalog_fresh() for the 9 remaining DeFi handlers still omitting it`
-in `plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md` — `bridge_events_handler.py` is explicitly named in
-that todo's handler list. No new fix todo is filed here to avoid a duplicate.
+in `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md` — `bridge_events_handler.py` is explicitly
+named in that todo's handler list. No new fix todo is filed here to avoid a duplicate.
 
 ## Why it matters
 
