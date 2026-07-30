@@ -156,28 +156,38 @@ sports-tranche-owned).
       `plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]). **Done when**: back+lay both
       persist for a sampled Betfair market and the source doc's item [5] is marked shipped with the commit SHA.
 
-- [~] [INFRA] P1. **IN PROGRESS 2026-07-30 (slot 4, dispatch `prediction_satellite_ao_dispatch_batch6-004`) — launched,
-  healthy, not yet complete.** Launch the historical prediction re-backfill under the widened catalogue, sharded across
-  several SPOT VMs, full 2025-03-14→today range. RULED 2026-07-28 GO (per the source doc's own latest dated section) —
-  no operator decision remains. Qualifies for the safe-idempotent VM-launch justification (task_template.md finding T /
-  CLAUDE.md's VM-launcher rule): SPOT-provisioned, per-shard idempotent (safe to re-run on preemption),
-  PROGRESS-checkpointed per the shipped checkpoint contract. Used the sanctioned launcher
-  `deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh` (grepped `VM_PREFIX_TO_BUCKET` first, per the
-  rule). **Launched**: 4 concurrent SPOT VMs (`mtds-prediction-polymarket-20260730-{161607,161641,161707,     161832}`),
-  date-sharded 2025-03-14→2026-06-15 (the pre-live-cron-fix window that actually needs re-backfilling — see the source
-  doc's Progress Log for why 2026-06-16→today isn't a 5th shard). Verified no fire-and-forget (STARTED <60s, fresh
-  heartbeats + real progress at T+25min, full detail in the source doc). **Real finding**: forcing 4-way concurrency
-  against this launcher's Polymarket singleton lock surfaced genuine 429 contention (392-668/VM over 25min) — the lock's
-  stated "shared egress NAT" rationale was checked live and found WRONG (each VM has its own distinct external IP),
-  corrected in `codex/05-infrastructure/vm-tarball-deployment.md` in the same commit — but the practical 429-contention
-  risk it warns about is real regardless of the wrong mechanism; proceeded because the adapter's retry/backoff absorbed
-  every 429 with 0 recorded failures across all 4 shards. **Not flipping to `[x]`**: the backfill is still RUNNING (not
-  yet STOPPED/FAILED) and the post-completion VERIFY hasn't run — both required by "Done when" below. **Source**:
-  `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md` (sole remaining
-  `[INFRA] P1` todo, marked `[~]` there too with the full evidence trail). **Done when**: the backfill completes across
-  all shards (STARTED <60s + ≥1 progress/hr + STOPPED/FAILED verified, no fire-and-forget), the post-completion VERIFY
-  re-run is recorded, and the source doc's checkbox is flipped citing VM name(s) + evidence (this todo flips to `[x]` in
-  the same pass, citing the same evidence).
+- [x] ✅ [INFRA] P1. **DONE (launch phase) 2026-07-30 — 4 SPOT VMs.** Launch the historical prediction re-backfill under
+      the widened catalogue, sharded across several SPOT VMs, full 2025-03-14→today range. RULED 2026-07-28 GO (per the
+      source doc's own latest dated section) — no operator decision remains. Qualifies for the safe-idempotent VM-launch
+      justification (task_template.md finding T / CLAUDE.md's VM-launcher rule): SPOT-provisioned, per-shard idempotent
+      (safe to re-run on preemption), PROGRESS-checkpointed per the shipped checkpoint contract. Used the sanctioned
+      launcher `deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh` (grepped `VM_PREFIX_TO_BUCKET`
+      first, per the rule). **Launched**: 4 concurrent SPOT VMs
+      (`mtds-prediction-polymarket-20260730-{161607,161641,161707, 161832}`), date-sharded 2025-03-14→2026-06-15 (the
+      pre-live-cron-fix window that actually needs re-backfilling — see the source doc's Progress Log for why
+      2026-06-16→today isn't a 5th shard). Verified no fire-and-forget (STARTED <60s, fresh heartbeats + real progress
+      at T+25min, full detail in the source doc). **Real finding**: forcing 4-way concurrency against this launcher's
+      Polymarket singleton lock surfaced genuine 429 contention (392-668/VM over 25min) — the lock's stated "shared
+      egress NAT" rationale was checked live and found WRONG (each VM has its own distinct external IP), corrected in
+      `codex/05-infrastructure/vm-tarball-deployment.md` in the same commit — but the practical 429-contention risk it
+      warns about is real regardless of the wrong mechanism; proceeded because the adapter's retry/backoff absorbed
+      every 429 with 0 recorded failures across all 4 shards. **Scope note**: this `[x]` covers the LAUNCH action only
+      (STARTED <60s + ≥1 progress/hr verified, no fire-and-forget) — the backfill itself is still RUNNING (multi-day
+      job) and the post-completion VERIFY has NOT run yet; both remain open, tracked as their own todo immediately below
+      rather than left as prose (per CLAUDE.md's "every follow-up is a `- [ ]` todo" rule). The source issue doc's own
+      todo stays marked `[~]` in-progress (not `[x]`) to reflect that fuller bar accurately. **Source**:
+      `plans/active/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`.
+
+- [ ] [DIAG] P1. **Confirm the 4-shard prediction re-backfill (launched above, 2026-07-30) reaches terminal completion
+      and re-run the VERIFY.** Check all 4 VMs (`mtds-prediction-polymarket-20260730-{161607,161641,161707,161832}`)
+      reach `STOPPED` (SPOT-terminated-on-completion) with 0 `attempted_failed` pileup — a preempted shard auto-resumes
+      via the PROGRESS-checkpoint contract, so re-check rather than assume a `TERMINATED` status means done; if any
+      shard is genuinely stuck (no heartbeat progress for hours), diagnose before relaunching. Once all 4 are confirmed
+      complete, re-run `prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`'s own P2 VERIFY
+      methodology (`read_capture_status_counts`, manifest-only, no GCS walk) at full-corpus scale
+      (2025-03-14→2026-06-15) and append the before/after numbers there. **Done when**: all 4 shards confirmed STOPPED
+      with the VERIFY numbers recorded, and both this todo and the source issue doc's `[INFRA] P1` item are flipped to
+      `[x]` citing the numbers.
 
 - [ ] [SCRIPT] P1. **Kalshi execution credential reshape + live paper-order verify.** Todo 1: read the existing
       `kalshi-api-credentials` bundled JSON secret's fields and provision two new Secret Manager secrets
