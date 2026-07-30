@@ -78,19 +78,45 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
 
 ## Todos
 
-- [ ] [DATA] P1. Measure the exact scope: live-count MTDS manifest rows where `instrument_type="liquidation"` was
+- [x] [DATA] P1. ✅ Measure the exact scope: live-count MTDS manifest rows where `instrument_type="liquidation"` was
       written by the pre-fix `liquidations_handler.py` code path (before `mtds@fec20de2`), across all affected
       shards/venues/date ranges. Confirm these are genuinely lending rows (not real liquidation-event rows that should
       stay `liquidation`) by cross-checking `resolve_lending_instrument_type(protocol)` against the historical
-      `protocol` column per row. Cite the exact row count and shard breakdown.
-- [ ] [DATA] P1. Build `market-tick-data-service/scripts/restamp_lending_instrument_type_2026_07_24.py`, mirroring the
-      `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` / `restamp_sports_odds_horizon_bucket_2026_07_22.py` safety
-      pattern exactly: dry-run by default, `--apply` performs the live CAS-guarded write, pre-apply GCS snapshot of the
-      manifest availability index taken first, post-write verification (rows-in == rows-out, 0 duplicate row_keys, only
-      the confirmed-lending rows flip `liquidation`→`lending`, every other column/row byte-identical). Add unit tests
-      covering the classification + dry-run + apply paths.
-- [ ] [DATA] P1. Ship the script + tests via `quickmerge.sh --agent --files` (quality-gates.sh green first, per repo
-      convention); verify the commit lands as an ancestor of `origin/live-defi-rollout`.
+      `protocol` column per row. Cite the exact row count and shard breakdown. — `market-tick-data-service@be064c27`
+      (already shipped, ancestor of `origin/live-defi-rollout`) + re-verified live 2026-07-30. **Result: ZERO current
+      rows affected.** Live prod (`market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet`,
+      29,121,036 total rows today) shows 7,164 `data_type="liquidations"` rows — 7,070 `instrument_type="lending"` + 94
+      `None` (the `record_zero_rows` path) — and 0 with the buggy literal `instrument_type="liquidation"`. Confirmed
+      genuinely lending: `InstrumentType` has no `LIQUIDATION` member at all (grepped `_instrument_enums.py`) and the
+      literal string only ever originated from one commit (`0f9ef6d2`, 2026-04-21) and was removed by exactly one fix
+      (`fec20de2`, 2026-07-22) — `git log -S'instrument_type="liquidation"'` across all history returns only those two.
+      Historical confirmation the bug WAS live: a pre-fix snapshot
+      (`_index/snapshots/pre_drift_pacifica_solana_perp_purge_2026_07_16.parquet`) shows 9,063 affected rows as of
+      2026-07-16 (venues AAVE_V3=8,165, COMPOUND_V3=898; capture_status attempted_failed=8,509 / captured=554; dates
+      2022-03-24→2026-06-21, written_at 2026-06-21→2026-06-24) — so the bug's blast radius was real, but every
+      `data_type="liquidations"` row in the CURRENT manifest (including the 2026-07-26 snapshot, 2 days after this plan
+      was forked) has `written_at >= 2026-07-23T01:33:52Z` (the day after the fix landed) — the entire pre-fix
+      population, buggy and correctly-typed alike, has already fully cycled out via post-fix re-capture.
+      `market-tick-data-service@be064c27`'s commit message independently measured the same zero on 2026-07-27
+      (26,797,412 total rows then) — three independent measurements (07-27, and twice today 07-30 — once via direct
+      pandas read, once via the script's own `dry_run()`) agree. Re-ran
+      `scripts/restamp_lending_instrument_type_2026_07_24.py` dry-run live today:
+      `affected rows     (instrument_type='liquidation'): 0`, `pre-write gate would: PASS`.
+- [x] [DATA] P1. ✅ Build `market-tick-data-service/scripts/restamp_lending_instrument_type_2026_07_24.py`, mirroring
+      the `restamp_cefi_onchain_perp_venue_chain_2026_07_21.py` / `restamp_sports_odds_horizon_bucket_2026_07_22.py`
+      safety pattern exactly: dry-run by default, `--apply` performs the live CAS-guarded write, pre-apply GCS snapshot
+      of the manifest availability index taken first, post-write verification (rows-in == rows-out, 0 duplicate
+      row_keys, only the confirmed-lending rows flip `liquidation`→`lending`, every other column/row byte-identical).
+      Add unit tests covering the classification + dry-run + apply paths. — `market-tick-data-service@be064c27` (already
+      shipped). 589-line script at `scripts/restamp_lending_instrument_type_2026_07_24.py` matches the spec exactly
+      (dry-run default, CAS-guarded `--apply`, pre-apply GCS snapshot, streaming/memory-safe per the
+      `remove_kalshi_polymarket_defi_manifest_rows_2026_07_26.py` OOM lesson cited in its docstring, post-write
+      verification). 27 unit tests at `tests/unit/scripts/test_restamp_lending_instrument_type.py` — re-ran today,
+      `27 passed in 0.87s`.
+- [x] [DATA] P1. ✅ Ship the script + tests via `quickmerge.sh --agent --files` (quality-gates.sh green first, per repo
+      convention); verify the commit lands as an ancestor of `origin/live-defi-rollout`. —
+      `market-tick-data-service@be064c27` (2026-07-27T21:15:08Z). Verified today:
+      `git merge-base --is-ancestor be064c27 origin/live-defi-rollout` → ancestor confirmed.
 - [ ] [DATA] P1. **Retagged 2026-07-28 (was `[OPERATOR]` — no specific operator answer for this exact todo, but the
       workspace's Governance rule already covers it): pause + apply + resume the MTDS manifest-consolidator cron
       directly, no separate operator scheduling round-trip needed.** Per `CLAUDE.md`'s Governance section (2026-07-28
@@ -110,6 +136,18 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
 
 ## Progress Log
 
+- **2026-07-30 (slot-8)**: Dispatched todo 1 ("measure the exact scope"). Discovered todos 1-3 were ALREADY SHIPPED
+  2026-07-27 by `market-tick-data-service@be064c27` (slot-2) but the plan checkboxes were never flipped — flipped all
+  three now with evidence (see todos above). **Key finding for whoever picks up todo 4**: the measured scope is **ZERO**
+  and has been zero since at least 2026-07-27 (three independent measurements: 07-27 in the shipping commit, and twice
+  more today via direct pandas read + the script's own `dry_run()`). Running `--apply` against a 0-affected corpus is a
+  genuine no-op (the script's `try_once()` returns `nothing_to_do` before any write when `safe_idx` is empty — confirmed
+  by reading `try_once()`) — no rows to CAS-write, so there is nothing for a pause/apply/resume cycle to protect against
+  contention on. Recommend todo 4 either (a) run `--apply` once as a formality to produce a clean "0 rows re-stamped,
+  nothing_to_do" log line for the record (no cron pause needed — no write means no contention risk), or (b) be marked
+  WONT-DO/moot with this Progress Log entry as evidence, operator's call. Either way, todo 5's "distinct-values panel no
+  longer badges liquidation" condition is ALREADY TRUE today (0 rows found live) — that check can be closed alongside
+  todo 4 without waiting on an apply that has nothing to do.
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - all 5 todos bounded against two already-shipped
   re-stamp precedents; the apply-window todo's operator gate was resolved by the dated 2026-07-28 CLAUDE.md governance
