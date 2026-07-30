@@ -160,8 +160,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is
       unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the prediction
-      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. (repo:
-      market-tick-data-service)
+      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. **Retrofit 2026-07-30**
+      (dp_watcher_003 issue's 2nd todo): resume via `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`
+      (maintenance-window-aware), not raw `gcloud`. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
       single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
       non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
@@ -287,7 +288,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       near 85% instead would mean the dead-code theory is wrong and needs re-investigation before declaring success.
       (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
-      consolidator cron; record evidence in the Progress Log. (repo: market-tick-data-service)
+      consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
+      resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
+      `gcloud`. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
       (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
       each already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket

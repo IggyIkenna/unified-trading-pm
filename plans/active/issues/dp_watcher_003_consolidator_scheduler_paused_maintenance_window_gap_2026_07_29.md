@@ -104,10 +104,37 @@ incident.
       `cli.py`, to avoid growing that already-at-cap file) mapping the 10 core per-asset_group consolidator jobs to
       their buckets. 3 new unit tests (suppressed-by-window / window-doesn't-cover-job / no-live-window-still-pages).
       Full quality-gates.sh green (2950 passed, lint/typecheck/codex-compliance clean).
-- [ ] [CODE] P2. Retrofit the two known ad-hoc pause/resume call sites (`mtds_available_at_cross_asset_backfill`'s
+- [x] ✅ [CODE] P2. Retrofit the two known ad-hoc pause/resume call sites (`mtds_available_at_cross_asset_backfill`'s
       remaining prediction/tradfi resume todos in `market-tick-data-service`'s backfill scripts, and any future
       backfill-cron-pause script) to acquire/release via `scheduler_maintenance.pause_for_maintenance()` /
       `resume_after_maintenance()` instead of raw `gcloud scheduler jobs pause/resume` — this is the operator/
       infra-owner adoption decision `scheduler_maintenance.py`'s own docstring flags as deferred; do this only after the
       first todo above ships, so the registration is meaningful. Repo: `market-tick-data-service` (+ any other repo with
-      a raw-gcloud consolidator pause script found during the sweep).
+      a raw-gcloud consolidator pause script found during the sweep). — ✅ 2026-07-30 (backend_engineer slot-9):
+      **architecture correction** — `market-tick-data-service` cannot literally import
+      `deployment_service.data_pipeline_monitors.scheduler_maintenance.pause_for_maintenance()`/
+      `resume_after_maintenance()`: it is a T4 service and `check-no-service-deps.py` hard-fails any service-to-service
+      path dependency (`deployment-api`'s existing path dep on `deployment-service` is the one sanctioned exception, not
+      a precedent for MTDS), and an undeclared raw import wouldn't even be installed in MTDS's own venv. Shipped the
+      functionally-identical fix instead: a LOCAL composition of the same `unified_trading_library.maintenance_window`
+      CAS primitive (`acquire_maintenance_window`/ `read_maintenance_window`/`release_maintenance_window` — the
+      actually-reusable T0 part) with the same deferred `google.cloud.scheduler_v1` credential-bound pattern
+      `scheduler_maintenance.py` itself uses — `market-tick-data-service@5ca75583`: -
+      `scripts/_scheduler_pause_resume_2026_07_30.py` — `pause_via_maintenance_window()`/
+      `resume_via_maintenance_window()`, mirroring `scheduler_maintenance.py`'s
+      `pause_for_maintenance()`/`resume_after_maintenance()` signature + ordering guarantees exactly. -
+      `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py` +
+      `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` — ready-to-run replacements for
+      `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s two still-open "Resume the X consolidator cron" todos
+      (linked from both todos now); safe even though the 2026-07-29 pause itself was raw `gcloud` (predates this
+      retrofit) — `resume_via_maintenance_window()` still runs the real resume, the release is just a harmless no-op
+      since no window was ever acquired. - Swept the repo for other raw-gcloud consolidator pause/resume call sites:
+      found + retrofitted `scripts/canonicalize_prediction_manifest_2026_07_18.py`'s HELD operator-review checklist
+      (steps 3/5, not yet executed) to reference the same primitive. Several OLDER already-executed one-off migration
+      scripts (`migrate_tradfi_manifest_itype_casing_100pct_2026_07_25.py`,
+      `reclass_tradfi_cboe_ohlcv_15m_dead_cell_2026_07_29.py`, etc.) also mention raw gcloud in their own
+      docstrings/checklists — left AS-IS: their pause/resume already happened historically, so retrofitting is rewriting
+      a completed record with no operational effect, out of this P2 task's 1-hour scope. - 4 new unit tests
+      (`tests/unit/scripts/test_scheduler_pause_resume_2026_07_30.py`, mirroring `deployment-service`'s
+      `test_scheduler_maintenance.py` fake-storage convention). Full `quality-gates.sh` green (sentinel-verified at
+      `market-tick-data-service@0c82f963` pre-quickmerge).
