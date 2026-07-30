@@ -2,7 +2,8 @@
 > `tests/e2e/test_deployment_e2e.py` (129 lines, `@pytest.mark.e2e`) is import/config-existence smoke tests only (e.g.
 > `test_catalog_module_import`), not a real deploy/launch flow. This is a real, unaddressed E2E gap. Coverage gap found
 > (2026-07-27): the file's own template was blank/never-executed. Real E2E coverage does not yet exist for this service
-> — tracked as a new gap in `plans/active/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md`.
+> — tracked as a new gap in `plans/archive/2026_07/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md`
+> (archived 2026-07-30, all 3 todos done — a real harness now exists, see that doc).
 
 ---
 

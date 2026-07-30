@@ -3,7 +3,8 @@
 > assertions over VCR cassette data, not the real rule/notifier pipeline. This is a real, unaddressed E2E gap. Coverage
 > gap found (2026-07-27): the file's own template was blank/never-executed. Real E2E coverage does not yet exist for
 > this service — tracked as a new gap in
-> `plans/active/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md`.
+> `plans/archive/2026_07/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27.md` (archived 2026-07-30, all 3
+> todos done — a real harness now exists, see that doc).
 
 ---
 

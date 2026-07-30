@@ -6,7 +6,7 @@ summary:
   archiving the old plans/active/end-to-end-testing/ per-service checklist. alerting-service and deployment-service each
   have an existing "e2e" test file that does NOT actually exercise their own service code (false confidence);
   trading-agent-service has no e2e test directory at all.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -37,6 +37,10 @@ source:
 assigned_role: backend_engineer
 drift_direction: none
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — status=complete, 0 open todos (3/3 done). Closed out + verified by
+> `plans/archive/2026_07/e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30.md`.
+> Archived per /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
 
 # E2E coverage gaps — alerting-service, deployment-service, trading-agent-service
 
@@ -102,3 +106,7 @@ service's own code. That's worth fixing on its own, independent of building the 
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
   Companion gated finalize plan authored:
   `e2e_coverage_gaps_alerting_deployment_trading_agent_2026_07_27_finalize_2026_07_30.md`.
+- **2026-07-30 (slot 16, backend_engineer)** — Companion finalize plan verified all 3 harnesses actually exercise their
+  claimed coverage (real test classes + real suite pass output — alerting-service 907 passed, deployment-service 2968
+  passed/5 skipped, trading-agent-service 146 passed). Zero remaining `- [ ]` items. Archived per the standard 6-step
+  ritual; see the finalize plan's Progress Log for the full referrer-fix detail.
