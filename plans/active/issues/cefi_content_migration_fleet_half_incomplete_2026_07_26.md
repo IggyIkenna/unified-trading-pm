@@ -365,3 +365,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   the stalled VM alone — its own in-VM `STALL_PROGRESS_REGEX` stall-kill should reap it independently within ~30 min of
   its last progress-matching log line (~14:41Z), no manual kill performed. Pinged the authoring fleet-monitor with this
   outcome. No code changed this session — investigation + issue-doc update only.
+- **2026-07-30 update (slot-15, ~10 min later)**: independently hit the SAME slow-freeze variant on shard 44
+  (`canonical-migration-cefi-content-44-relaunch20260730-132900`) — corroborates slot-7's finding above with a second
+  independent instance. `run.log` went silent at `14:09:30Z` with NO `rc=137`/`Killed` line (unlike the fast OOM-killer
+  cases) — genuinely different from the shard-19 mystery too: the actor deleting it was `unified-trading-sa` via
+  `python-requests` (a Python GCP-API client), NOT `vm_zombie_watchdog.py`'s gcloud-CLI invocation pattern — this is
+  almost certainly the same `data_pipeline_failure`/fleet-monitor `auto_recover` actuator described in
+  `RB-INFRA-RELAUNCH` (`codex/15-runbooks/incidents/rb_infra_relaunch.md`), triggering on a stalled-heartbeat detection,
+  distinct from both the zombie-watchdog AND the still-unresolved shard-19 delete. Heartbeat blob confirmed genuinely
+  stale (45m50s at delete time — `14:10:07Z` last update vs `14:55:57Z` delete), so THIS instance's reaper verdict was
+  correct, unlike shard 19's. **Read `RB-INFRA-RELAUNCH` before relaunching**: it bounds relaunches to
+  ≤2/(vm-prefix,day) for a genuine failure, then requires stopping + filing an issue rather than blind-retrying a 3rd
+  time (exactly slot-7's handling of shard 16 above). Shard 44's `-132900` freeze was its FIRST genuine failure since
+  this morning's fleet-wide relaunch/on-demand-conversion (those were deliberate strategic actions, not
+  failure-triggered relaunches) — the `-145700` relaunch I already shipped is failure-relaunch #1 of the ≤2 bound,
+  within policy. **Adopting this runbook explicitly for the rest of this task**: any shard that fails a SECOND genuine
+  time after this point will NOT be relaunched by me — it gets the shard-16 treatment (P1 todo
+  - leave for the fleet monitor / in-VM stall-kill, per the runbook's own guidance) instead. Did NOT touch shard 16 —
+    already correctly owned/declined by slot-7, respecting their in-progress investigation.
