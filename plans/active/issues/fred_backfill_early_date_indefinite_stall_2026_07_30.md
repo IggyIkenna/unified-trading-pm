@@ -136,10 +136,42 @@ minute once actually applied.
       unified-trading-library. — unified-trading-library@a0546d68: added a `logger.warning` on entry citing
       `bucket`/`lock_age_sec` (via the existing read-only `read_consolidator_lock_age_sec`)/`horizon_sec`, explicitly
       stating this is a legitimate by-design wait. `quality-gates.sh` green.
-- [ ] [DATA] P1. Resume `macro_micro_econ_data_capture_audit-003`: relaunch the full `1962-01-02..today` FRED production
-      backfill and this time let it run past this wait (up to the 1h horizon if needed, or until the consolidator lock
-      clears, whichever comes first) rather than killing it prematurely. Verify real captured rows once it progresses
-      past chunk 1, then flip that todo's checkbox with the VM name + evidence. See that plan doc for full context.
+- [x] ✅ [DATA] P1. Resume `macro_micro_econ_data_capture_audit-003`: relaunch the full `1962-01-02..today` FRED
+      production backfill and this time let it run past this wait (up to the 1h horizon if needed, or until the
+      consolidator lock clears, whichever comes first) rather than killing it prematurely. Verify real captured rows
+      once it progresses past chunk 1, then flip that todo's checkbox with the VM name + evidence. See that plan doc for
+      full context. — **2026-07-30 (slot 7): relaunched (`tradfi-bf-fred-full-20260730-052935`) and found a SECOND, more
+      severe bug than the consolidator-lock wait this doc already covers**: live `py-spy dump` on the actively-running
+      process showed `_yield_for_date` (`market_tick_data_service/engine/tradfi_catalog_reader.py:298`) running
+      `pandas.DataFrame.     iterrows()` over the FULL 848,876-row TradFi instrument catalogue on **every single
+      processed date** (confirmed — `sentinel_catalogs.py`'s `_load_sentinel_catalogs` calls
+      `list_instruments("tradfi", processing_date_obj,     processing_date_obj)` fresh per date, with no venue filter).
+      The profile pinned the cost to pandas `Series` construction (`Series.__init__`/`validate_all_hashable`), not the
+      row-filter logic — this is what actually produced the "silent stall": that VM processed only 2 dates then sat
+      CPU-flat for 30 min before the in-VM no-progress watchdog killed it (exit 137), NOT another consolidator-lock wait
+      (no wait-log line fired). Fixed in **market-tick-data-service@d75e2470** (LDR): cache a plain row-dict view of the
+      catalogue once per process instead of re-walking pandas Series per date (`dict.get` behaves identically to
+      `Series.get` for every helper here — zero semantic change, 2 new/updated unit tests, `quality-gates.sh` green).
+      Rebuilt the TRADFI code tarball (`mtds-code@d75e2470...`, confirmed via manifest) and relaunched fresh:
+      **`tradfi-bf-fred-full-20260730-064542`**. **Verified fix live**: chunk 1 (7 dates, 1962-01-02→01-08, all
+      pre-captured/skip-path) completed in **~43s total** (vs ~5 minutes for the identical chunk on the OLD code, and vs
+      the prior VM's outright 30-min stall-kill after only 2 dates) — per-date latency dropped from ~30-90s+ (climbing)
+      to a flat ~5-6s. Chunk 2 then wrote genuinely NEW (never-captured) rows for 1962-01-11/01-12
+      (`venue=FRED: 12 rows written across 12 partitions`) — real per-day FRED-API fetch latency now dominates
+      (expected, unrelated to this bug) instead of the catalogue-scan pathology. Live SSH+`ps` confirmed the process
+      healthy (CPU 105%, RSS ~5GB, actively running) at a point where the uploaded log looked stale — the earlier RSS
+      climb to ~14GB during real fetches is normal GC-cycled fluctuation under active work, not the old
+      monotonic-only-up leak (confirmed by RSS dropping back to ~5GB moments later, live-checked). VM left running
+      unattended to continue its `1962-01-02..2026-07-29` sweep (SPOT + idempotent shards, safe per the backfill-VM hard
+      rule). **Follow-up filed** (see new P3 todo below): the identical `df.iterrows()`-per-date pattern exists in
+      `cefi_catalog_reader.py`/`defi_catalog_reader.py` — out of scope here, not fixed in this pass.
+- [ ] [DATA] P3. **Apply the same per-date full-catalogue `iterrows()` → cached-row-dict fix to the CeFi and DeFi
+      catalog readers** (`market_tick_data_service/engine/cefi_catalog_reader.py::_yield_for_date` line ~522,
+      `defi_catalog_reader.py::_yield_for_date` line ~349 — same `for _, row in df.iterrows():` anti-pattern, same
+      `_load_sentinel_catalogs` per-date call site). Not yet profiled to confirm equal severity (their catalogues may be
+      smaller than TradFi's 848K rows), but the code shape is identical to the confirmed TradFi bug fixed in
+      `market-tick-data-service@d75e2470` — worth the same treatment before it causes an analogous cefi/defi backfill
+      stall. Repo: market-tick-data-service.
 
 ## Evidence log
 
