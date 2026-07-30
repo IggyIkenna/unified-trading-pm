@@ -59,9 +59,24 @@ locked_since:
 
 ## Residual from Phase 2 (data-pipeline-alerts channel + streaming events + exit_code-aware fleet monitor)
 
-- [ ] [CODE] P0. Per-source **rate-limit / health event** `SOURCE_RATE_LIMITED{source, venue, http_429_count}` and
+- [x] ✅ [CODE] P0. Per-source **rate-limit / health event** `SOURCE_RATE_LIMITED{source, venue, http_429_count}` and
       `SOURCE_KEY_POOL_EXHAUSTED` (C5: TheGraph 9-key pool, Databento, etc.) → `data-pipeline-alerts`. —
-      **market-tick-data-service**
+      **market-tick-data-service@7f42c557** — TheGraph's 9-key pool (`ThegraphKeyPoolRotator` in
+      `thegraph_base_client.py`) already emitted both `DP_SOURCE_RATE_LIMITED`+`DP_KEY_POOL_EXHAUSTED` with
+      `source`/`http_429_count` (shipped earlier via `477de66c`, wired into `_dex_pools_subgraph.py`). This todo
+      extended the `DP_SOURCE_RATE_LIMITED` half to Databento: `DatabentoIPRateLimiter.acquire()`/`async_acquire()`
+      (`databento_key_cache.py`) previously self-healed a sustained-throttle condition via silent backoff+sleep with
+      zero operator visibility — now emits
+      `{source: "databento", venue: <rate-limit category>, http_429_count:     <running count>}` to
+      `data-pipeline-alerts` on both the sync and async paths, non-fatal if events aren't set up (mirrors TheGraph's
+      defensive `try/except RuntimeError`). `DP_KEY_POOL_EXHAUSTED` does NOT apply to Databento — the 2026-06-18
+      subscription cutover collapsed it to a single canonical key (`DEFAULT_NUM_API_KEYS = 1`), so there is no longer a
+      "pool" to exhaust. Extracted `_sync_backoff()` out of `acquire()` to stay under the 50-line method-size gate. 3
+      new unit tests (sync hit-limit emit, async hit-limit emit, defensive no-raise-on-missing- events-setup) + full
+      `quality-gates.sh` green (5306+ tests). Along the way, cleared 2 pre-existing repo-wide QG blockers unrelated to
+      this todo (both already-filed issue docs, now resolved): `mtds_empty_string_fallback_baseline_drift_2026_07_30.md`
+      (STEP 5.101) and `mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md` (STEP 5.83, scoped
+      2-line baseline patch via `unified-trading-pm@83737bd99`, not the full-workspace `--regenerate-baseline`).
 
 - [x] ✅ [UI] P0. **Streaming events pane** in deployment-ui that tails the live VM event stream (not just the alert
       ledger) per AG/VM. `[UI]` + `pw:L2 ✓` + regression spec required. Extend `deployment_ui_monitoring_pane`. —

@@ -6,8 +6,9 @@ summary: >-
   NA → planning` by the 2026-07-30 `/na-eligibility-audit cross-cutting` run. Holds the post-ship verification +
   archival ritual for that plan's 3 remaining todos (the per-source SOURCE_RATE_LIMITED / SOURCE_KEY_POOL_EXHAUSTED
   event, the deployment-ui streaming-events pane, and the UTL DP_DAILY_DIGEST / DP_HYGIENE_SUMMARY string constants).
-  Stays `status: draft` until the source plan's last todo flips.
-status: draft
+  Flipped to `status: active` 2026-07-30 once the source plan's last todo (the market-tick-data-service
+  SOURCE_RATE_LIMITED/SOURCE_KEY_POOL_EXHAUSTED item) landed — `market-tick-data-service@7f42c557`.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
