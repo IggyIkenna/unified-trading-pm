@@ -51,11 +51,14 @@ service's own code. That's worth fixing on its own, independent of building the 
 
 ## Todos
 
-- [ ] [CODE] P1. **alerting-service real E2E harness.** `alerting-service/tests/e2e/test_mock_replay_e2e.py` (178 lines)
-      never imports `alerting_service.*` — it re-implements ad-hoc assertions over VCR cassette data instead of
-      exercising the real pipeline. Build a real E2E test covering: (1) subscriber → `rules` → `notifiers` pipeline on a
-      real injected event; (2) alert lifecycle (open/ack/resolve) via `persistence`; (3) `api/routes` query after an
-      injected trigger; (4) multi-venue aggregation via the real `engine` code, not an inline reimplementation.
+- [x] ✅ [CODE] P1. **alerting-service real E2E harness.** — alerting-service@d35647ad. Replaced
+      `alerting-service/tests/e2e/test_mock_replay_e2e.py` with real pipeline coverage:
+      `AlertSubscriber.dispatch_event()` → `router.route_event()` (real UAC rule matching, dedup, channel resolution) →
+      `AlertStorageStore` persistence (real on-disk `LocalStorageProvider`); open/ack/resolve alert lifecycle
+      round-tripped through real persistence methods; the real `/alerts/delivery-status/{alert_id}` FastAPI route
+      querying that persisted state; multi-service health aggregation via the real
+      `core.system_health_aggregator.get_system_health()`. Only the true external boundary (Slack/health-check HTTP
+      calls) stubbed via respx.
 - [ ] [CODE] P1. **deployment-service real E2E harness.** `deployment-service/tests/e2e/test_deployment_e2e.py` (129
       lines, `@pytest.mark.e2e`) is import/config-existence smoke tests only (e.g. `test_catalog_module_import`) — not a
       real deploy/launch flow. Build a real E2E test covering: (1) `DataCatalog` aggregation against a real
