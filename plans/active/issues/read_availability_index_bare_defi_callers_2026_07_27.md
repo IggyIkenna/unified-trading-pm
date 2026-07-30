@@ -273,9 +273,30 @@ not a mechanical column-list copy.
       incident class as the other findings in this audit). A regression test already exists and pins the exact
       projection (`tests/unit/test_manifest_freshness.py::test_bulk_load_uses_slim_column_path` — asserts `columns=` is
       present and contains `capture_status`/`error_reason`/the row-key columns). Not bare; nothing to fix.
-- [ ] [SCRIPT] P2. **unified-trading-library** — `manifest_writer/_queries.py` (4 sites) + `_maintenance.py` (4 sites) +
-      `_writer_io.py:156`: internal ManifestWriter query/maintenance helpers; lower urgency (less frequently invoked
-      than the hot-path findings above) but same fix pattern.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-6)** — `unified-trading-library@6b0d0847`. **unified-trading-library** —
+      of the 9 bare sites across `_queries.py`/`_maintenance.py`/`_writer_io.py:156`, projected the 4 that are genuinely
+      safe (confirmed by direct read of each function's own downstream column usage, per this doc's caution):
+      `_queries.py` `check_data_available` → `columns=["date","venue"]`; `read_capture_status_counts` →
+      `columns=["data_type","date","capture_status","error_reason"]` (`asset_group` kwarg is dead — never used in the
+      function body, confirmed by direct read); `_maintenance.py` `purge_venue_before_date`'s first (dry-run/count-only)
+      read → `columns=["venue","date"]` (the real `dry_run=False` write-back re-fetches a fresh, unprojected index via
+      `merge_canonical_with_outstanding_shards()` and never reuses this one); `emit_migration_manifest_updates`'s
+      snapshot read → `columns=["date","venue","service_name","data_type"]` (only feeds `_remove_legacy_entries()`'s
+      length-based `legacy_removed` estimate; the real write-back similarly re-fetches fresh). Left the remaining 5
+      sites bare, WITH an in-code comment explaining why at each: `reconcile_manifest()`, `rebuild_manifest()`,
+      `rebuild_manifest_from_canonical_paths()`, and `merge_manifest_from_canonical_paths()` all return or write the
+      read DataFrame VERBATIM (full schema) on at least one code path (a dry-run return, an early blob-listing-failure
+      return, or the actual GCS write-back) — projecting would silently truncate the manifest schema on that path, a
+      correctness regression, not a memory win; `_writer_io.py:156` `lookup()` already needs ~25 of the ~30 V8 schema
+      columns to build `ManifestRow` plus any of `_ROW_KEY_COLUMNS` the caller's `row_key` specifies, so a projection
+      would buy negligible memory savings while adding real risk of dropping a column a future schema addition needs.
+      Also fixed a latent test-isolation gap this exposed: `test_manifest_writer_coverage_counts.py`'s
+      `_reset_module_state` fixture cleared `_INDEX_CACHE` but not `_INDEX_SLIM_CACHE` — invisible while
+      `read_capture_status_counts()` used the full-schema path, but once it started resolving through the slim-cache
+      path a stale cached count leaked across tests sharing the `"test-bucket"` name. Added
+      `tests/unit/test_manifest_writer_bare_reads_column_projection.py` pinning the exact `columns=` call signature per
+      fixed site (4 tests). Full `quality-gates.sh` green (149s, 2 runs — pre-commit + post-commit sentinel re-verify),
+      shipped via quickmerge --agent.
 - [x] ✅ [SCRIPT] P1. **DONE 2026-07-27 (slot-12)** — `features-service@e23d4da7`. **features-service** —
       `common/__init__.py:99`, `common/manifest_window_guard.py:115`, `common/manifest_leg_guard.py:98`: projected each
       to its actual column usage, confirmed by direct read (not a mechanical shared list):
