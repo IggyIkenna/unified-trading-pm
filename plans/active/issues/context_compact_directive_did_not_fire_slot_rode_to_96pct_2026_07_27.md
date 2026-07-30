@@ -17,9 +17,9 @@ summary: >-
   directive; (c) the slot's reported context_used_pct not being parsed/compared as expected at high values. Bounded
   impact (client auto-compact is the final safety net underneath), but a slot riding 90→96% unguided risks the
   typed-but-wedged class and wastes context headroom. P2.
-status: open
-assigned_vm:
-resolved_by:
+status: resolved
+assigned_vm: planning
+resolved_by: slot-2
 locked_by:
 nature: issue
 asset_group: [ao]
@@ -33,7 +33,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-30
 priority: P2
 parent_epic: orchestrator_master
 source:
@@ -67,12 +67,36 @@ climbed unguided.
 
 ## Status / next step
 
-Captured only; **not yet diagnosed**. Needs an owner on the agent-orchestrator side to reproduce from `/progress`
-history for slot 11 and confirm which of the candidate causes applies. Low-risk (client auto-compact is the safety net)
-but a real throughput/robustness gap.
+**Diagnosed + fixed 2026-07-30.** None of the three candidate causes applied — `server/context_lifecycle.py`'s
+Tier-1/Tier-2 policy doesn't cover slot 11 at all (that module is scoped to main/review/large-plan-todo workers only;
+slot 11 is a plain backlog worker). The actual `compact_now` directive lives in a separate, newer mechanism:
+`ProgressResponse.directive` in `server/routes/slots_worker.py::progress_slot`, gated on
+`tuning.context_worker_compact_gate_pct` (default 70%), shipped 2026-07-25 (`ao_worker_context_lifecycle_gap` todo 4).
+
+Reproduced slot 11's actual `/progress` history via `GET /api/activity?slot=11` for 2026-07-27: context climbed from 65%
+(01:34) to 96% (04:37) over ~3 hours while the slot was continuously stuck in a hot-branch quickmerge rebase/re-gate
+retry loop, with no compaction until a manual "STOPPED per main directive" intervention at 04:37 and an actual
+compaction at 04:48. The separate `context_burn_suspected` watchdog trigger DID fire correctly at 03:41 (pct=86, 4.85h
+since session reset) — that mechanism worked as designed; its kill escalation never engaged because
+`context_burn_kill_min_pct` (98%) was never reached before the manual intervention (peaked at 96%).
+
+Root cause: `progress_slot`'s `compact_now` emission had **no activity-log record** — unlike `boot_slot`/
+`heartbeat_slot`/`done_slot`, which all log `worker_compact_gated` when they gate on context, the `/progress` hot path
+logged nothing when it set `directive="compact_now"`. The server-side gate computation itself was correct on every tick
+(`context_worker_directive_repeat_gate` defaults `True`, so it's not a once-only dedup guard, and the threshold
+comparison holds at high values) — but with zero audit trail, nobody (review, main, or this diagnosis) could distinguish
+"directive sent, worker too deep in a retry loop to act on it" from "directive never sent". That observability gap — not
+a logic bug in the gate itself — is what let this incident go undetected by anything except a review agent's manual pane
+read.
+
+Fix: `progress_slot` now logs a `progress_compact_directive_issued` activity event (mirroring `worker_compact_gated`)
+every time it returns `directive="compact_now"`, closing the blind spot for future incidents.
 
 ## Todos
 
-- [ ] [ENGINEER] P2. **Diagnose why the `compact_now` directive never fired for slot 11** — reproduce from `/progress`
-      history and confirm which candidate cause (threshold-eval gap, dedup guard, or high-value parsing bug) applies in
-      agent-orchestrator's `context_lifecycle.py`; captured only, not yet diagnosed.
+- [x] ✅ [ENGINEER] P2. **Diagnose why the `compact_now` directive never fired for slot 11** — reproduce from
+      `/progress` history and confirm which candidate cause (threshold-eval gap, dedup guard, or high-value parsing bug)
+      applies in agent-orchestrator's `context_lifecycle.py`; captured only, not yet diagnosed. — RESOLVED: diagnosed as
+      a missing activity-log record in `progress_slot` (not any of the three candidate causes, which were framed around
+      the wrong module — `context_lifecycle.py` doesn't cover plain workers). Fixed + shipped agent-orchestrator@b36f5fa
+      (`progress_compact_directive_issued` activity log + regression test, `quality-gates.sh` green, 2003 passed).

@@ -33,7 +33,7 @@ tags: [prediction, ao-dispatch, close-out, batch-3, satellite-docs, fresh-triage
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
@@ -137,7 +137,7 @@ drift_direction: advance-code
   `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (active, unshipped as of this audit) — drafting a second todo here
   would duplicate an in-flight AO dispatch. No action needed in this batch; re-check on the next iteration if batch5's
   todo has landed.
-- **`plans/active/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`**: mixed
+- **`/plans/archive/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`**: mixed
   disposition across its 3-item "Recommended next step" — item 1 (checkbox flip) is already
   sports_satellite_ao_dispatch_batch5's job; item 2 (uncommitted diff) is stale, the underlying code shipped verified
   (`features-service@0ded2449`); item 3 (re-flag the parent plan's dispatch-track designation) remains genuinely open
@@ -184,10 +184,10 @@ drift_direction: advance-code
   uncovered items are todo 3 and todo 5 in `sports_group_c_execution_backtest_harness_2026_07_21.md`, both explicitly
   tagged [DESIGN] by the source doc's own author. Todo 3: resolve whether `SportsMatchingEngine`
   (execution_service/matching_engine/sports_matching.py, zero callers) is dead code to delete, or was...
-- **`plans/active/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`** (item 3 only):
-  re-flag whether `sports_odds_feature_naming_canonicalization_2026_07_21.md` should stay `assigned_vm: NA`/local-only
-  given real migration code keeps landing against it piecemeal — a dispatch-track designation call, not a
-  worker-executable bounded outcome.
+- **`/plans/archive/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`** (item 3
+  only): re-flag whether `sports_odds_feature_naming_canonicalization_2026_07_21.md` should stay
+  `assigned_vm: NA`/local-only given real migration code keeps landing against it piecemeal — a dispatch-track
+  designation call, not a worker-executable bounded outcome.
 
 ## Deferred — time-gated (re-check on the next batch iteration)
 

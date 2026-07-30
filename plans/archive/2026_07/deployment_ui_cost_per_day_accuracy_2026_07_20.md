@@ -7,7 +7,7 @@ summary: >-
   instead of a fixed window, redefine the 24h projection as the most-recent-complete-day (partial-day-normalised
   fallback) instead of the peak observed day, map AWS ARN/instance-id billing rows to friendly VM names via the AWS
   census, and colour-code (not text-label) the actual-cost figure when it falls back to a partial day.
-status: active
+status: complete # (was: active) 2026-07-30 archival sweep: all 9 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -15,9 +15,9 @@ repos: [deployment-api, deployment-ui]
 scope: [engineer]
 tags: [deployment-ui, cost, billing, observability]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
 created: "2026-07-20"
-last_updated: "2026-07-20"
+last_updated: "2026-07-30"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

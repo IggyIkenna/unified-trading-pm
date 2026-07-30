@@ -21,7 +21,7 @@ assigned_vm: NA
 execution_scope: human
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-29
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 resolved_by:
@@ -165,3 +165,49 @@ prerequisite. The correct re-check trigger is the Track-2 plan's own POST-BACKFI
 checkpoint todo landing — whoever runs that checkpoint should re-read DERIBIT `options_chain`/`futures_chain` af
 specifically (the checkpoint's own scope doesn't name DERIBIT explicitly, per batch2-013's own note) and update this doc
 then.
+
+## 2026-07-29 — `data_pipeline_failure` escalation worker near-miss (agt-79063c): re-ran the banned reclass, caught + reverted same session
+
+A fresh `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page fired for `asset_group=cefi data_type=futures_chain`
+(115,661/115,661 attempted_failed, 100% ratio) and dispatched a one-shot `data_pipeline_failure` escalation worker with
+**no issue doc pre-linked in its boot context** (context said "Filed issue: none — alert carries the details"). Without
+first grepping `plans/active/issues/` for existing futures_chain/DERIBIT coverage, the worker independently re-derived
+the STALE 2026-07-03 premise from `reclass_cefi_futures_chain_no_tardis_source.py`'s own docstring (Tardis has no
+futures_chain channel for CeFi venues) and took two actions that this doc's own 2026-07-18 correction banner explicitly
+prohibits:
+
+1. Removed `futures_chain` from `DATA_LIGHT_PERPS`/`DATA_LIGHT_DERIBIT` in both
+   `deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh` and its AWS twin (shipped
+   `deployment-service@5c172dc`).
+2. Ran `reclass_cefi_futures_chain_no_tardis_source.py --apply` against the live prod cefi manifest, flipping exactly
+   115,661 `attempted_failed` cells to `empty_confirmed/EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` — the SAME script this
+   doc's banner says "must NOT be re-run for futures_chain."
+
+**Caught in the same session** while reading this doc as part of triaging the sibling cluster doc
+(`cefi_high_attempted_failed_batch_cluster_2026_07_23.md`, which cross-links here). Reverted both actions before session
+end:
+
+- **Manifest**: reconstructed the exact revert mask (data_type=futures_chain AND capture_status=empty_confirmed AND
+  error_reason=EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE), gate-checked (rows/captured unchanged, af delta = empty delta
+  = 115,661), applied directly to
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`. Post-revert
+  `capture_status` counts (`attempted_failed=997,332`, `empty_confirmed=1,318,000`) are byte-identical to the
+  pre-mistake baseline read at session start. Original `error_reason` was reconstructed with high confidence for 112,700
+  of the 115,661 rows (exact day+venue match to this doc's own documented 2026-07-03/07-04 DERIBIT 403-storm population
+  → restored `UNCLASSIFIED:Tardis HTTP 403`) and 2,442 rows (exact day+venue match to the sibling doc's documented
+  2026-07-15/07-16 404 tail → restored `UNCLASSIFIED:404 GET https`); the remaining 519 rows (small daily
+  2026-07-26..07-29 batches, newer than any existing investigation) could not be attributed with confidence and were
+  honestly labeled `RECLASS_REVERT_ORIGINAL_REASON_UNKNOWN_2026_07_29` rather than guessed. Snapshot of the post-mistake
+  (pre-revert) state preserved at `_index/snapshots/pre_futures_chain_erroneous_reclass_revert_20260729.parquet` before
+  writing.
+- **Code**: `deployment-service@d6dcb97` (`revert: undo erroneous futures_chain removal from cefi Tardis launchers`,
+  reverts `5c172dc`) — both launchers restored to including `futures_chain` in their light bundles, QG-green, shipped
+  via quickmerge.
+
+**No net change to the manifest or launcher config from this escalation** — this doc's blocker is UNCHANGED and still
+gated on Track-2 exactly as before. **Process gap this exposes**: a `data_pipeline_failure` escalation worker's boot
+context did not include a pre-dispatch check against `plans/active/issues/` for an already-open, already-corrected
+investigation on the exact `(asset_group, data_type)` tuple — this is the SAME gap already filed in
+`dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (there scoped to redundant re-diagnosis; this incident
+additionally shows the gap can lead to a worker actively UN-doing an already-shipped correction, which is a stronger
+argument for that issue's Option A). Cross-linked from there.

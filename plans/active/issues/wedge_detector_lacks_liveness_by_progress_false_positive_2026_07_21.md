@@ -139,3 +139,9 @@ progress-signal half.
 - [ ] [REVIEW] P3. **Operator sign-off on the suppression predicate before it ships** — suppressing too broadly blinds
       genuine wedge detection, the same safety class as the cross-role reply fix. **Gate**: approval recorded before the
       P1/P2 code todo ships.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc explicitly
+  self-declares NA status: modifies the orchestrator's own worker-safety automation where a careless fix could suppress
+  genuine wedge detection; one todo is an explicit operator-sign-off gate.

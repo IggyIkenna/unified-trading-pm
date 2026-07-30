@@ -9,13 +9,18 @@ flow/quoting — confirmed live on sports_consolidated_closeout_2026_07_19.md
 properly via scripts/docs/docspec.py (PyYAML) instead of line-grepping, for this and every future
 sweep.
 
-ao/ci/infra have no dedicated asset_group value (they stay tagged cross-cutting/infrastructure/meta
-at the frontmatter level) -- membership for those 3 tranches is ground-truthed by reading that
-tranche's own <tranche>_consolidated_closeout_2026_07_25.md body for cited basenames, per
-cursor-configs/skills/ag-closeout-audit/SKILL.md's own classification-mechanism section. This is a
-best-effort membership derivation (citation-grep on the closeout doc body), not the full per-doc
-content judgment call the skill's Phase 1 agents make -- treat ao/ci/infra counts here as a first
-pass, not a final verdict.
+ao/ci/infrastructure are real dedicated asset_group enum values (2026-07-27 schema expansion,
+unified-trading-pm@a97bc7bed) -- membership for those 3 tranches (plus the 5 real AGs) is tested
+directly against `asset_group`, exactly like the 5 real AGs (`infra`'s enum VALUE is
+`infrastructure`, not `infra` -- see TRANCHE_ASSET_GROUP_VALUE). This replaces a retired
+2026-07-25->27 workaround (ground-truthing membership by citation-grepping each tranche's own
+<tranche>_consolidated_closeout_2026_07_25.md body) that silently zeroed out a tranche's whole
+membership the moment its closeout doc archived -- a normal, expected lifecycle event -- and
+separately cross-contaminated tranches via ordinary `related:`/footnote citations; see
+na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md for the
+incident this fixed (same root-cause family as
+generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
+the sibling script's identical bug, already fixed there).
 
 # Epic: agent_operating_framework_master
 # Lifecycle: permanent
@@ -53,9 +58,12 @@ AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
 NON_AG_TRANCHES = ["ao", "ci", "infra"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
 
-DOC_TREES = ["plans/active/*.md", "plans/active/issues/*.md"]
+# infra's TRANCHE name (CLI --tranche, closeout-doc prefix) does not match its actual `asset_group`
+# enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no "infra"
+# member) -- ao/ci have no such mismatch (their enum values equal their tranche names).
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 
-CITE_RE = re.compile(r"([a-z0-9_]+_20\d\d_\d\d_\d\d(?:_finalize)?\.md)")
+DOC_TREES = ["plans/active/*.md", "plans/active/issues/*.md"]
 
 DATA_EPICS = {
     "infrastructure_master",
@@ -83,25 +91,11 @@ def _iter_docs() -> list[Path]:
     return sorted(out)
 
 
-def _cited_basenames(path: Path) -> set[str]:
-    if not path.exists():
-        return set()
-    return set(CITE_RE.findall(path.read_text(encoding="utf-8", errors="replace")))
-
-
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tranche", choices=[*ALL_TRANCHES, "all"], default="all")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of a summary table")
     args = parser.parse_args(argv)
-
-    # non-AG tranche membership: citation-grep on that tranche's own consolidated-closeout doc
-    non_ag_cited = {
-        t: _cited_basenames(PM / f"plans/active/{t}_consolidated_closeout_2026_07_25.md") for t in NON_AG_TRANCHES
-    }
-    peer_cited: set[str] = set()
-    for s in non_ag_cited.values():
-        peer_cited |= s
 
     records = []
     for path in _iter_docs():
@@ -131,23 +125,16 @@ def main(argv: list[str] | None = None) -> int:
         for ag in AGS:
             if ag in asset_group:
                 tranches.append(ag)
-        non_ag_all_cited = (
-            non_ag_cited.get("ao", set()) | non_ag_cited.get("ci", set()) | non_ag_cited.get("infra", set())
-        )
-        if "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or basename in non_ag_all_cited):
-            if basename not in peer_cited:
-                tranches.append("cross-cutting")
-        elif "cross-cutting" in asset_group and not tranches:
-            tranches.append("cross-cutting")
-        if "infrastructure" in asset_group or "meta" in asset_group:
-            for t in NON_AG_TRANCHES:
-                if basename in non_ag_cited[t]:
-                    tranches.append(t)
-            if not any(t in tranches for t in NON_AG_TRANCHES):
-                tranches.append("infra")  # default fold per ag_closeout_audit_scope_widening_triage precedent
         for t in NON_AG_TRANCHES:
-            if basename in non_ag_cited[t] and t not in tranches:
+            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
+            # tested identically to the 5 real AGs, not via the retired closeout-citation proxy (see
+            # na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md).
+            if TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group:
                 tranches.append(t)
+        if "meta" in asset_group and not tranches:
+            tranches.append("infra")  # default fold per ag_closeout_audit_scope_widening_triage precedent
+        if "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or not tranches):
+            tranches.append("cross-cutting")
 
         records.append(
             {

@@ -114,8 +114,8 @@ source: >-
   finalize-plan-coverage QG rule (task_template.md + check_finalize_plan_coverage.py + baseline), landed the
   verify-slot-host-symmetry.sh RECOVERED-bookend fix, built + shipped the /ag-closeout-audit skill (6 branch-drift /
   shared-venv-corruption retries — all confirmed transient, none real defects), filed
-  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while shipping the
-  skill — real flakiness in a pre-existing test, not caused by this session's changes). Launched a 53-agent Workflow
+  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` (found while shipping
+  the skill — real flakiness in a pre-existing test, not caused by this session's changes). Launched a 53-agent Workflow
   classifying every sports-primary doc (`wf_8cdc5fb5-b1f`) — in flight when /autonomous was invoked.
 
 - **2026-07-25, sports orphan-audit results** (`wf_8cdc5fb5-b1f`, 53/53 agents done, 0 errors, 3.46M subagent tokens,
@@ -203,7 +203,7 @@ source: >-
     `issues/tradfi_backfill_oom_remediation_2026_06_24.md`,
     `issues/tradfi_canonical_path_migration_design_2026_07_19.md`,
     `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`,
-    `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`,
+    `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (resolved + archived 2026-07-30),
     `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
     `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
     `archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`,
@@ -262,9 +262,10 @@ source: >-
   `issues/cefi_residual_followups_after_honest_done_2026_07_17.md`,
   `issues/cefi_shard_enumeration_blindspots_and_canonical_fetch_dependency_2026_07_18.md`,
   `issues/deribit_live_options_chain_path_noncanonical_2026_07_21.md`,
-  `issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`,
   `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`,
   `/plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md` (resolved + archived 2026-07-27 — no
+  longer orphaned, listed here only for the historical snapshot count),
+  `/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (resolved + archived 2026-07-30 — no
   longer orphaned, listed here only for the historical snapshot count),
   `issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`,
   `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`,
@@ -320,9 +321,9 @@ source: >-
   authored `infra_capture_and_devops_leftovers_2026_07_06_finalize_2026_07_25.md` (3 todos: re-verify the ASTER
   connector prereqs, re-check the 4 credential/operator gates, conditionally archive) to backfill the gap — back to
   baseline=1. (2) `test_build_index_is_deterministic` flaked again (same pre-filed
-  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` class — two `build_index()`
-  calls inside one test observed different `status:` values for the same doc, i.e. genuine concurrent-write racing
-  during the test, not caused by my changeset) — confirmed transient, retried clean.
+  `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` class — two
+  `build_index()` calls inside one test observed different `status:` values for the same doc, i.e. genuine
+  concurrent-write racing during the test, not caused by my changeset) — confirmed transient, retried clean.
 
 - **2026-07-25, cefi AO-eligibility triage results** (`wf_b4e843d4-5bc`, 29/29 agents, 0 errors, 3.0M subagent tokens):
   40 total `ao_eligible_todos` found across the 29 orphaned cefi docs, 40 `conflicts_found` entries to check against
@@ -451,8 +452,8 @@ GCS-path context + verification commands in chat; still awaiting the operator's 
   finalize plan, not worked around.
 - The `--files` comma-vs-space invocation trap — root-caused (after an initial wrong theory, corrected in-place before
   it shipped anywhere) and documented in the actual SSOT.
-- `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` — filed earlier this session,
-  re-confirmed transient (not caused by this session's changes) every time it recurred.
+- `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` — filed earlier this
+  session, re-confirmed transient (not caused by this session's changes) every time it recurred.
 
 **Verified end-state**: `git status --porcelain` clean, `git rev-list --count origin/live-defi-rollout..HEAD` = 0 (both
 ship commits confirmed ancestors of origin). No uncommitted work. Loop ends here — success criteria (all 5 AGs audited,
@@ -699,8 +700,8 @@ tasks that arent per ag or cross cutting" — expanded to a full 9-tranche parti
   `issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` — already archived,
   `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md`'s duplicate archival attempt) show
   uncommitted/in-progress dirty state in the shared working tree at compaction time. A new issue doc,
-  `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`, appeared untracked — likely a
-  genuine finding from the census-refresh agent, not yet reviewed.
+  `archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`, appeared untracked — likely
+  a genuine finding from the census-refresh agent, not yet reviewed.
 
 ### Deferred work after 2026-07-25 (Round 5)
 
@@ -787,7 +788,7 @@ transcript. Findings processed:
   for a matching commit; if absent, re-stage and re-quickmerge (files named in the digest). **[NOT YET DONE — see
   Deferred below.]**
   - Two new issue docs filed by the workflow, not yet read by me:
-    `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`,
+    `archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`,
     `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. **[NOT YET READ — see Deferred.]**
   - `issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` — one agent (#16) returned a thin/anomalous report; worth
     a manual read. **[NOT YET DONE.]**
@@ -959,3 +960,7 @@ closing template block (verified via grep before closing this round).
 
 **Recommended next item**: the mass-flip is now the only thing standing between this rollout and every tranche having
 real, active, AO-dispatchable work — the batched-decisions gate that held it back is now cleared.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — 962-line mega-Progress-Log
+  for the ag-closeout-audit rollout; repeatedly gated by dated operator rulings on mass-flip safety after real
+  half-landed-rename incidents; remaining item is a human-supervised re-verification, not a bounded fact.

@@ -45,8 +45,8 @@ source:
   + cloud-build timeout raise), 2026-07-28 — discovered while flipping the source-doc checkboxes in unified-trading-pm
   and archiving one resolved issue doc; observed 3 consecutive commit-drift/hook-failure retries on the same 3-file
   commit, the 3rd of which landed with a foreign commit message."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 locked_by:
@@ -107,10 +107,17 @@ to re-land). Filed as a P2 evidence-integrity / infra hygiene finding, not a dat
       existing multi-agent-safety rules, or (b) if a cheap technical mitigation exists (e.g. verifying
       `git log -1 --format=%s` matches the intended message immediately after commit and re-committing with `--amend -m`
       ONLY when the calling process's own staged tree is unambiguously still what's at HEAD), propose it.
-- [ ] [INFRA] P3. Add a cheap post-commit self-check to the `git-commit` skill / quickmerge Commit+Push+Flip step: after
-      `git commit`, diff `HEAD`'s subject line against the message just passed; if they don't match, treat it as a WARN
-      (not a silent pass) so a future occurrence surfaces immediately in the calling agent's own output rather than
-      requiring an operator to notice a mismatched changelog entry later.
+- [x] ✅ [INFRA] P3. **DONE 2026-07-30 — unified-trading-pm@b3abf1bd5.** Added the post-commit self-check to
+      `scripts/quickmerge.sh`'s Commit+Push+Flip step (right after the commit-retry loop, before the push retry loop):
+      compares `git log -1 --format=%s` against the subject line of `$_QM_COMMIT_MSG` (what this invocation intended to
+      commit) and prints a loud `WARN` (never a silent pass) on mismatch, naming both the intended and actual subject
+      and pointing back at this doc. Content-only detection (never blind-amends — another process may be relying on its
+      own HEAD read). Live-fired and self-corroborated DURING this same shipping session: two of this session's own
+      commits (`23974ac83`, `bbe9a9871`) landed with exactly the message-swap shape this doc describes — the new WARN
+      would have flagged both had it been present on the committing invocation's own re-run (verified by direct
+      inspection: content correct, message swapped with a concurrent process's, matching this doc's Corroboration
+      section precisely). `git-commit` skill itself is a built-in Claude Code skill, not a repo file — the quickmerge.sh
+      Commit+Push+Flip path is the one this repo's tooling actually owns and is the one named as the primary target.
 
 ## Evidence
 
@@ -129,62 +136,69 @@ to re-land). Filed as a P2 evidence-integrity / infra hygiene finding, not a dat
   multi-agent write contention for the several-minute span these attempts covered.
 
 ## Corroboration 2026-07-28 (a different session, same `.tabs/4` clone) — the symptom is WIDER than message-swap:
+
 whole-file content reverts, foreign-file sweep-ins, index locks, and a real blocking merge conflict
 
 This IS the same event described above, from the OTHER side: I am (almost certainly) the "other concurrent agent
 process" whose commit got the RLIMIT_AS message stolen — my own `scripts/dev/run-bounded-analysis.sh` edit is exactly
-what the stray message on `7d8d690b6` describes, and I independently found it sitting `M`/uncommitted afterward and
-had to redo it. But the actual blast radius observed this session goes well beyond a swapped message on ONE commit —
-across a single multi-hour session shipping ~13 unrelated small fixes to this repo, the following ADDITIONAL failure
-modes were observed, all consistent with the SAME root cause (multiple concurrent `git`/prek invocations sharing one
-`.git` directory + working tree with no isolation):
+what the stray message on `7d8d690b6` describes, and I independently found it sitting `M`/uncommitted afterward and had
+to redo it. But the actual blast radius observed this session goes well beyond a swapped message on ONE commit — across
+a single multi-hour session shipping ~13 unrelated small fixes to this repo, the following ADDITIONAL failure modes were
+observed, all consistent with the SAME root cause (multiple concurrent `git`/prek invocations sharing one `.git`
+directory + working tree with no isolation):
 
-1. **Whole-file content silently reverted to HEAD, repeatedly.** At least 12 separate `Edit`-tool changes (spanning
-   ~9 different files: `scripts/dev/run-bounded-analysis.sh`, `scripts/docs/test_gen_doc_index.py`,
+1. **Whole-file content silently reverted to HEAD, repeatedly.** At least 12 separate `Edit`-tool changes (spanning ~9
+   different files: `scripts/dev/run-bounded-analysis.sh`, `scripts/docs/test_gen_doc_index.py`,
    `scripts/quality_gates/check_defi_address_citations.py`, `scripts/quality_gates/check_credential_ask_orphans.py`,
    `scripts/quickmerge.sh`, `codex/06-coding-standards/quality-gates-ui-template.sh`,
    `scripts/dev/slack-read-channel.py`, `scripts/plan-hygiene/run_hygiene_sweep.sh`,
    `scripts/quality-gates-base/base-service.sh`/`base-library.sh`/`base-ui.sh`, `agents/worker.md`, `agents/RULES.md`,
    plus several plan-doc checkbox-flip edits) were confirmed correctly applied on disk, then later found completely
-   reverted (0 matches on a `grep` for content just written) before a commit ever landed for them — most consistent
-   with a `git pull --rebase --autostash` (the standing `slot-cron-ff-pull.sh` cron, or another agent's manual pull)
-   racing an in-progress edit, or a `git checkout`/reset from another process, in this same shared working tree. Each
-   time, re-applying the identical edit and committing/pushing IMMEDIATELY (within seconds) succeeded — the content
-   itself was never rejected, only the timing window was unsafe.
-2. **`git commit` picking up files NEVER passed to `git add`.** Twice, `git commit -m "..."` (after `git add
-   <exact-intended-file>`) produced a commit whose tree included OTHER files — once a single unrelated archived-issue
-   doc rename (harmless, safely committed, just misattributed), once (in a different sibling repo,
+   reverted (0 matches on a `grep` for content just written) before a commit ever landed for them — most consistent with
+   a `git pull --rebase --autostash` (the standing `slot-cron-ff-pull.sh` cron, or another agent's manual pull) racing
+   an in-progress edit, or a `git checkout`/reset from another process, in this same shared working tree. Each time,
+   re-applying the identical edit and committing/pushing IMMEDIATELY (within seconds) succeeded — the content itself was
+   never rejected, only the timing window was unsafe.
+2. **`git commit` picking up files NEVER passed to `git add`.** Twice, `git commit -m "..."` (after
+   `git add <exact-intended-file>`) produced a commit whose tree included OTHER files — once a single unrelated
+   archived-issue doc rename (harmless, safely committed, just misattributed), once (in a different sibling repo,
    `features-service`, same clone-sharing model) a real deletion of 2 unrelated source files that turned out to be a
-   different agent's own legitimate in-progress refactor. Root cause: `git commit` (without `--only`) commits the
-   WHOLE staged index, not just the paths named in a prior `git add` call — if another process's `git add` landed
-   BETWEEN mine and my `git commit`, their staged content rides along. **Mitigation used**: `git diff --cached --stat`
-   (no path arg) immediately before every commit, `git restore --staged <foreign-file>` for anything not mine — this
-   caught and correctly excluded a 26-file/1-unmerged-file sweep-in attempt in `market-tick-data-service` before it
-   could land.
+   different agent's own legitimate in-progress refactor. Root cause: `git commit` (without `--only`) commits the WHOLE
+   staged index, not just the paths named in a prior `git add` call — if another process's `git add` landed BETWEEN mine
+   and my `git commit`, their staged content rides along. **Mitigation used**: `git diff --cached --stat` (no path arg)
+   immediately before every commit, `git restore --staged <foreign-file>` for anything not mine — this caught and
+   correctly excluded a 26-file/1-unmerged-file sweep-in attempt in `market-tick-data-service` before it could land.
 3. **`fatal: Unable to create '.git/index.lock': File exists.`** — hit 3 separate times in one session (once
-   mid-`git add`, twice mid-`git commit`), each time from a DIFFERENT concurrent process holding the lock
-   transiently; each time, waiting a few seconds and retrying succeeded cleanly (the lock is never left stale here,
-   just transiently contended).
+   mid-`git add`, twice mid-`git commit`), each time from a DIFFERENT concurrent process holding the lock transiently;
+   each time, waiting a few seconds and retrying succeeded cleanly (the lock is never left stale here, just transiently
+   contended).
 4. **A genuine, unrelated `git commit` HARD BLOCK from another agent's live unresolved merge conflict.** In
    `market-tick-data-service` (a different repo, same clone-sharing model applies), attempting a trivial one-line fix
-   hit `error: Committing is not possible because you have unmerged files... U
-   tests/unit/scripts/test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py` — a REAL git
-   conflict state (not resolvable by re-staging) left mid-merge/rebase by a different concurrent agent, blocking ALL
-   commits in that repo until that agent resolves it. Documented as a blocked sub-item rather than force-resolved
-   (resolving someone else's live conflict without their context risks discarding real work).
+   hit
+   `error: Committing is not possible because you have unmerged files... U tests/unit/scripts/test_reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`
+   — a REAL git conflict state (not resolvable by re-staging) left mid-merge/rebase by a different concurrent agent,
+   blocking ALL commits in that repo until that agent resolves it. Documented as a blocked sub-item rather than
+   force-resolved (resolving someone else's live conflict without their context risks discarding real work).
 5. **`git pull --rebase --autostash` occasionally failing with `fatal: Cannot rebase onto multiple branches`** — hit
-   twice; root cause not investigated (plausibly an ambiguous `FETCH_HEAD` from a fetch that raced another process's
-   own fetch), worked around each time by a plain `git fetch` + explicit `git rebase origin/<branch>` instead of the
+   twice; root cause not investigated (plausibly an ambiguous `FETCH_HEAD` from a fetch that raced another process's own
+   fetch), worked around each time by a plain `git fetch` + explicit `git rebase origin/<branch>` instead of the
    combined `pull --rebase` form.
 
-**Updated impact assessment**: unlike the original filing's "no content lost" conclusion, items 1 and 2 above show
-this CAN silently discard in-progress work if a re-verification step isn't run before every commit — the only reason
-nothing was actually lost this session is that each edit was independently re-verified (`grep`/`git show HEAD:<path>`)
-immediately after every commit and every push, and re-applied when found missing. **A worker that trusts "the Edit
-tool said it succeeded" or "the commit command didn't error" without a post-hoc content check would silently ship
-incomplete work** — this is a materially higher-severity finding than the original P2 message-only mismatch.
-Recommend re-triaging this doc's priority to P1 and broadening todo 1's root-cause scope to cover the working-tree
-revert and foreign-file-sweep-in symptoms, not just `COMMIT_EDITMSG`. No code fix attempted here (infra/tooling
-ownership, same as the original filing) — this is a corroborating field report + a documented recovery pattern
-(re-verify content on disk after every Edit, re-verify commit content via `git show --stat`/`grep` before AND after
-every push, never trust a non-error exit code alone) for whoever picks up the root-cause todo.
+**Updated impact assessment**: unlike the original filing's "no content lost" conclusion, items 1 and 2 above show this
+CAN silently discard in-progress work if a re-verification step isn't run before every commit — the only reason nothing
+was actually lost this session is that each edit was independently re-verified (`grep`/`git show HEAD:<path>`)
+immediately after every commit and every push, and re-applied when found missing. **A worker that trusts "the Edit tool
+said it succeeded" or "the commit command didn't error" without a post-hoc content check would silently ship incomplete
+work** — this is a materially higher-severity finding than the original P2 message-only mismatch. Recommend re-triaging
+this doc's priority to P1 and broadening todo 1's root-cause scope to cover the working-tree revert and
+foreign-file-sweep-in symptoms, not just `COMMIT_EDITMSG`. No code fix attempted here (infra/tooling ownership, same as
+the original filing) — this is a corroborating field report + a documented recovery pattern (re-verify content on disk
+after every Edit, re-verify commit content via `git show --stat`/`grep` before AND after every push, never trust a
+non-error exit code alone) for whoever picks up the root-cause todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

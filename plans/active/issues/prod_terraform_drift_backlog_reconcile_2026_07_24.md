@@ -179,9 +179,26 @@ todo below.
       run completed clean: **zero `PERMISSION_DENIED`/`Error:` lines, 17 to add / 71 to change / 0 to destroy**. The
       "112 unreadable resources" gap is closed; the drift set itself (a fresh, different composition from both the
       2026-06-23 and 2026-07-26 findings) is now fully visible for the next classification pass.
-- [ ] [INFRA] P2. **Add `lifecycle { ignore_changes = [client, client_version] }`** to
+- [x] ✅ [INFRA] P2. **Add `lifecycle { ignore_changes = [client, client_version] }`** to
       `deployment-service/terraform/modules/container-job/gcp`'s `google_cloud_run_v2_job` resource, so the 65 cosmetic
       client/client_version diffs stop appearing on every `tofu plan` (they reflect out-of-band `backends/cloud_run.py`
       deploys, not real terraform-managed drift). **Done when**: a fresh `tofu plan` shows 0 changes for every
       `module.*_job.google_cloud_run_v2_job.job` / `google_cloud_run_v2_job.vm_log_archival` resource. Repo:
       deployment-service.
+
+      **DONE 2026-07-30 — deployment-service@f57c96e.** Added the `ignore_changes = [client, client_version]` lifecycle
+                                                              block to BOTH the shared `terraform/modules/container-job/gcp/main.tf` `google_cloud_run_v2_job.job` resource
+                                                              (covers every `module.*_job` consumer — the 65-diff bulk) AND the standalone
+                                                              `terraform/gcp/vm_log_archival_scheduler.tf` `google_cloud_run_v2_job.vm_log_archival` resource (which is NOT
+                                                              built via the shared module, so it needed its own copy — it already had an `ignore_changes = [launch_stage]`
+                                                              block, extended rather than duplicated). Code-only change (no `tofu apply` run — that remains this doc's still-open
+                                                              P1 item's job once it applies the fleet); `tofu fmt -check` confirmed no formatting issues in the added lines
+                                                              (pre-existing unrelated fmt drift elsewhere in both files, untouched, out of this todo's scope). Full
+                                                              `quality-gates.sh` green.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Dominant remaining item is
+  a live, moving-target prod-terraform review (diff grew from 10/67 to 17/71 after a permission grant, needs fresh
+  three-way classification) — stays NA as a whole; the smaller lifecycle-ignore-changes item is an individually
+  plausible future RECLASSIFY candidate, not actioned this run.

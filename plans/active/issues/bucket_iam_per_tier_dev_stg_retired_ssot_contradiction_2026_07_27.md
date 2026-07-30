@@ -145,11 +145,18 @@ that is mid-execution against a **live production GCP project**. Two consequence
       verified via `gcloud projects get-iam-policy central-element-323112` (4 conditional objectAdmin + 5 unconditioned
       objectViewer, all present with the expected condition titles). Shipped via quickmerge:
       `deployment-service@44002342`.
-- [ ] [DOCS] P3. **Document GCP IAM Condition CEL's real function support** — confirmed live 2026-07-29: `resource.name`
-      conditions support only `startsWith`/`endsWith`; both `contains()` and `matches()` are undeclared references,
-      rejected only at real `apply` time (never caught by `tofu validate`/`plan`, which don't compile CEL server-side).
-      Not documented anywhere in this workspace yet. Add to `/codex/05-infrastructure/bucket-isolation-model.md` or a
-      dedicated IAM-conditions note, so the next per-tier/ per-env condition doesn't rediscover this the hard way.
+- [x] ✅ [DOCS] P3. **Document GCP IAM Condition CEL's real function support** — confirmed live 2026-07-29:
+      `resource.name` conditions support only `startsWith`/`endsWith`; both `contains()` and `matches()` are undeclared
+      references, rejected only at real `apply` time (never caught by `tofu validate`/`plan`, which don't compile CEL
+      server-side). Not documented anywhere in this workspace yet. Add to
+      `/codex/05-infrastructure/bucket-isolation-model.md` or a dedicated IAM-conditions note, so the next per-tier/
+      per-env condition doesn't rediscover this the hard way.
+
+      **DONE 2026-07-30** — added new § 8.1 "GCP IAM Condition CEL — real function support" to
+                                                              `/codex/05-infrastructure/bucket-isolation-model.md` (§ 8, "Prod Bucket IAM Write-Protection"), documenting the
+                                                              `startsWith`/`endsWith`-only constraint + the safe single-`startsWith` pattern for a per-tier/per-suffix bucket
+                                                              match, citing this doc + `deployment-service@44002342` as the live-confirmed source.
+
 - [x] ✅ [DOCS] P2. **DONE 2026-07-28** — Cross-referenced `bucket_iam_write_protection_per_tier_2026_06_09.md` and the
       (now-archived) `bucket_estate_consolidation_to_sub100_2026_07_13.md`: this issue doc's own `related:` already
       carried both (added 2026-07-27); fixed `bucket_iam_write_protection_per_tier_2026_06_09.md`'s `related:` entry for

@@ -238,7 +238,7 @@ the post-`--apply` id-form reality (nuance: paths/catalogue canonical since this
       KEPT until the gated GCS purge completes / suppressing is not optional" mandate to a historical note — "Massive
       GCS pu — applied unified-trading-pm@1dd1a22fd
 
-### `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md` — 1 (P2)
+### `plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md` — 1 (P2)
 
 - [x] **[P2 L125]** C2a parked as an OPERATOR-RULING-NEEDED open question: 'instrument_type COLUMN case — UPPER vs
       lowercase ... REC: confirm UPPERCASE column (it shipped) -> then → FIX: Add a resolution banner to C2a mirroring

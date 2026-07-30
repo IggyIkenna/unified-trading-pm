@@ -88,14 +88,26 @@ backfill).
       out to N slots (intra-plan concurrency is the default, matching `task_template.md` §4). **Operator sign-off
       required before editing a codex SSOT** (workspace HARD RULE — codex edits are never autonomous). **Gate**: neither
       doc describes unconditional pinning; both cite the sequential gate + the shipping sha.
-- [ ] [BACKEND] P1. **Verify the fix + migration landed on the live orchestrator VM** after the pipeline promotes it
-      (LDR→staging via the Tier-C drain ~15min, then `ao-self-pull` FF-pull + restart picks up `server/**.py`). Confirm
-      three things on `i-0c9b283b31d6b5ca7` (EIP 13.113.200.22, the planning VM): (a) the deployed HEAD contains
-      `867b1731e` (`git merge-base --is-ancestor`); (b) the `sequential` column exists on the live `tasks` table (the
-      migration ran at `create_all_tables()` on restart); (c) a non-sequential plan's tasks actually dispatch to
-      different slots. **Gate**: all three confirmed, evidenced. **Cannot be done until the pipeline promotes the commit
-      and the VM restarts** — not actionable immediately. **Re-opened 2026-07-26 (slot 4) — BLOCKED-CREDENTIALS, not
-      re-attempted "too early".** The two-day promotion wait has cleared, but neither
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-29 (self-serviced — credential re-triage pass).** This session's ambient AWS
+      identity (`assumed-role/uts-orchestrator-epic-role`) is NOT the same identity previously denied `ssm:SendCommand`
+      (`ikenna-worker`) — live-tested `aws ssm send-command` against `i-0c9b283b31d6b5ca7` and it worked immediately, no
+      grant needed. Ran all three checks directly: (a) **HEAD contains `867b1731e`** —
+      `git merge-base --is-ancestor 867b1731e HEAD` → confirmed ancestor. Deployed HEAD =
+      `9efcb5f81752536ebeb80fe7e57afc9b79117513` on branch `live-defi-rollout` (crontab confirms `ao-self-pull.sh`
+      tracks `live-defi-rollout` via a `*/15 * * * *` cron, not a systemd unit). (b) **`sequential` column exists on the
+      live `tasks` table** — `.schema tasks` shows `sequential INTEGER NOT NULL DEFAULT 0`, live data has both values
+      populated (570 rows sequential=0, 45 rows sequential=1) against the REAL runtime DB (`data/state/state.db`, 73MB,
+      actively written — NOT `data/orchestrator.db`, a 0-byte stale file at the repo root that `config.db_path()` never
+      actually resolves to). (c) **A non-sequential plan's tasks dispatch to different slots** — confirmed:
+      `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` (`sequential=0`) has 7 tasks with `dispatched_to` set
+      across 5 distinct slots. **All three checks pass.** Verify the fix + migration landed on the live orchestrator VM
+      after the pipeline promotes it (LDR→staging via the Tier-C drain ~15min, then `ao-self-pull` FF-pull + restart
+      picks up `server/**.py`). Confirm three things on `i-0c9b283b31d6b5ca7` (EIP 13.113.200.22, the planning VM): (a)
+      the deployed HEAD contains `867b1731e` (`git merge-base --is-ancestor`); (b) the `sequential` column exists on the
+      live `tasks` table (the migration ran at `create_all_tables()` on restart); (c) a non-sequential plan's tasks
+      actually dispatch to different slots. **Gate**: all three confirmed, evidenced. **Cannot be done until the
+      pipeline promotes the commit and the VM restarts** — not actionable immediately. **Re-opened 2026-07-26 (slot 4) —
+      BLOCKED-CREDENTIALS, not re-attempted "too early".** The two-day promotion wait has cleared, but neither
       `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` nor a direct `aws ssm send-command` against
       this instance/region can run: both return
       `AccessDeniedException: User: arn:aws:iam::427895769566:user/ikenna-worker is not authorized to perform:     ssm:SendCommand on resource: arn:aws:ec2:ap-northeast-1:427895769566:instance/i-0c9b283b31d6b5ca7`.

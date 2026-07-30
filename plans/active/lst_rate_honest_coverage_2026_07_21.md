@@ -155,17 +155,15 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
 
 ## Phase 3 — Sample-download test on the `-test-` bucket (runtime verification, no prod write)
 
-- [ ] [MTDS] P3. **Prove force + skip per surface** — sample download for the AAVE oracle (and DEX where endpoint
-      available) against the `-test-` bucket: force-leg writes the canonical parquet + manifest `captured`; skip-leg
-      fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested for sample data downloads"
-      requirement. **BLOCKED-CREDENTIALS (2026-07-22)**: the `market-data-tick-defi-test-central-element-323112`
-      `-test-` bucket this proof needs does not exist (or `unified-trading-sa` lacks `storage.buckets.get` to confirm
-      either way — same account also lacks `storage.buckets.create`). The operator's own second GCP-credentialed account
-      (`ikenna@odum-research.com`) is present but its token needs an interactive `gcloud auth login`/reauth this session
-      can't perform non-interactively. Needs either (a) an operator with bucket-create IAM to provision it (mirror
-      `market-data-tick-cefi-test-…`'s region `asia-northeast1` / `STANDARD` class per
-      `deployment-service/configs/bucket_config.yaml`), or (b) a fresh interactive gcloud login for the admin account.
-      Not a data/day problem — operator already approved `--auto-day` for the day-selection question.
+- [ ] [MTDS] P3. **Retagged 2026-07-29: resolved-by-reference — live-verified this session
+      `gs://market-data-tick-defi-     test-central-element-323112` already exists (created 2025-11-12, actively used)
+      and `unified-trading-sa` already holds `roles/storage.admin` + `roles/storage.objectAdmin` (confirmed via
+      `gcloud`); the described blocker no longer holds.** Prove force + skip per surface — sample download for the AAVE
+      oracle (and DEX where endpoint available) against the `-test-` bucket: force-leg writes the canonical parquet +
+      manifest `captured`; skip-leg fires the freshness skip. Read the VM `run.log` as ground truth. This is the "tested
+      for sample data downloads" requirement. ~~**BLOCKED-CREDENTIALS (2026-07-22)**: bucket doesn't exist / SA lacks
+      access; needs operator bucket-create IAM or a fresh interactive gcloud login.~~ Not a data/day problem — operator
+      approved `--auto-day`.
 
 ## Phase 4 — Daily-download / MVP gate
 
@@ -361,9 +359,13 @@ FIRST so no permanent-false-RED cell is seeded. Shard atom identical writer→ma
       blocking): `SANCTUM_INF_POOL_ACCOUNT`'s exact multi-year creation date via `getSignaturesForAddress` pagination
       needs paid archive-RPC access, not attempted this session — documented as a known limitation in the code comment,
       not silently dropped.
-- [ ] [MTDS] P3. **#2 DEX fill** — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
-      `BLOCKED-CREDENTIALS`). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped this
-      session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
+- [ ] [MTDS] P3. **Retagged 2026-07-29: credential/launch gate confirmed cleared (not `BLOCKED-CREDENTIALS`) — NOT
+      flipping to done though: live-reverified right now
+      (`gcloud compute instances list     --filter="name~mtds-dex-swaps-backfill"`) shows `-1`/`-2` still RUNNING,
+      matching this doc's own last status check (2026-07-26, multi-day-to-multi-week runway remaining). Genuinely still
+      open.** #2 DEX fill — deep-backfill `dex_pool_swaps` once the endpoint lands (else remains
+      ~~`BLOCKED-CREDENTIALS`~~). **Endpoint confirmed live since Phase 0** (2026-07-21) and the `price` column shipped
+      this session (`market-tick-data-service@869e46cd`) — this is NOT actually `BLOCKED-CREDENTIALS` any more; ready to
       launch as a normal backfill. **LAUNCHED (2026-07-22, operator-acked)** — see Progress Log entry.
 
 ## Phase 6 — Interest PnL on honest data (the payoff; see pnl_interest_accrual doc)

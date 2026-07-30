@@ -25,7 +25,7 @@ scope: [engineer]
 tags: [sports, canonical, honest-coverage, data-completion, ml-readiness, leakage, codex, close-out]
 related:
   [
-    /plans/active/sports_consolidated_audit_2026_07_19.md,
+    /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
     /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
@@ -328,6 +328,12 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       columns are structurally null in every row. Live-confirmed across 3 dates, 0/12 sampled non-null. No commit.
 - [x] [DATA] P2. ✅ Purged — `batch1_ao_ready` todo 14. `features-service@bf088de1` (verified via `git log`), 16,868
       rows purged (snapshotted first). Post-purge census: 0 rows for all 4 groups.
+- [ ] [DIAG] P1. Root-cause why the features-service `sfi_progressive` manifest group is corpus-empty (1 manifest row in
+      `features-sports-prd`) despite a documented 2020→today backfill window — confirm whether it's a real
+      unexecuted/failed backfill or a recording artifact of the CLI calculator-grain mismatch tracked in
+      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §C1, fix or fold into that doc's scope. Source:
+      `plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md` §1.4/§2.6 (relocated here per that now-archived
+      snapshot doc's own convention that actionable work lives in this closeout).
 
 ## Track C — CANON: data_type LOWER-case + venue/instrument_type/chain + manifest atom · P0
 
@@ -340,12 +346,18 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       **PARTIAL — 282,231/337,464 legacy rows restamped; 55,233 dedup-key collisions could NOT be safely restamped** —
       tracked open: `issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md` +
       `issues/fixtures_manifest_legacy_backfill_2026_07_24.md` (both open, correctly not resolved).
-- [ ] [VERIFY] P0. **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**: After the writer populates Q5/Q6
-      columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9 HT/ET/PEN phase-timestamp columns and
-      `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for completed fixtures (regulation /
-      ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field). Spot-check on real GCS rows for a
-      completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the deployment-ui schema modal renders both
-      entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
+- [x] ✅ [VERIFY] P0. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — the cited BLOCKED-UPSTREAM
+      condition (entity-split writer commit `254fb843` reaching main + an IS Docker rebuild) is resolved: the writer
+      cutover completed by 2026-07-14, and `entity=fixtures_schedule`/`entity=fixtures_outcomes` objects are referenced
+      as live, post-cutover data in newer docs (`features_sports_fixtures_split_reader_gap_2026_07_15.md`,
+      `sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md`). This resolves only the reason the
+      todo was blocked — the actual Q5/Q6 spot-check re-run described below was never explicitly re-executed and remains
+      a genuine small open todo (not claimed done here).** **BLOCKED-UPSTREAM (2026-06-24 — slot-23 GCS spot-check)**:
+      After the writer populates Q5/Q6 columns + the entity-split lands, confirm `FIXTURES_SCHEDULE` carries the 9
+      HT/ET/PEN phase-timestamp columns and `FIXTURES_OUTCOMES` carries the 11 score-distinction columns populated for
+      completed fixtures (regulation / ET-only / ET+PEN cases; NEVER collapse pen-shootout score into a single field).
+      Spot-check on real GCS rows for a completed matchweek across the Top-5 EU leagues. **[VERIFY][UI]** the
+      deployment-ui schema modal renders both entity schemas — this touches a UI repo, so any tick requires `pw:L2 ✓`
       (`npx playwright test     --project=chromium tests/smoke/`) + a cited regression spec per CLAUDE.md UI
       playwright-gate HARD RULE; on a fleet VM with no dev server, keep `[BLOCKED-PLAYWRIGHT]`.
       <!-- BLOCKED-UPSTREAM evidence (2026-06-24 slot-23): GCS check: entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST in gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/ — only entity=fixtures. Q5/Q6 columns absent from ALL sampled parquets: EPL 2026-05-17, Ligue1 2026-05-17, SerieA 2026-05-09, LaLiga 2026-05-09, Bundesliga 2026-05-10, Norway 2026-06-21 (written 2026-05-23 before Q5/Q6 deploy). Root cause: entity-split writer commit 254fb843 ("entity-split fixtures→fixtures_schedule+fixtures_outcomes; writegate strict mode") is on origin/live-defi-rollout as of 2026-06-24 but NOT yet on main. Q5/Q6 additive write path (48c54805, 2026-06-05) IS on main — but existing entity=fixtures parquets were all written before 2026-06-05 and the "old-path-copy" branch does not re-process them. Unblock: 254fb843 promotes main → IS Docker rebuild + VM relaunch → migrate_fixtures_split.py runs on real sports buckets → new entity=fixtures_schedule+fixtures_outcomes paths appear → re-run VERIFY. -->

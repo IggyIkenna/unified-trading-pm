@@ -36,6 +36,6 @@ Every service and library must have integration tests that **import and exercise
 
 ## Cross-Refs
 
-- Integration layers: `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
+- Integration layers: `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
 - Test quality: `test-quality-standards.mdc`
 - Audit prompt: `unified-trading-pm/plans/audit/trading_system_audit_prompt.md` §10

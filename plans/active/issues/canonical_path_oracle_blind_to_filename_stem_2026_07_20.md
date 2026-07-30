@@ -72,7 +72,7 @@ resolved_by:
 > filenames with `sanitize_file_stem` (preserves the id's literal `:`), so they emit canonical stems and the default
 > all-class oracle call passes — **no caller was softened.** The migration population was measured at **0** (§ 6.1a).
 > The batch=live filename divergence this exposed is tracked as its own finding:
-> `plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
+> `plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
 
 ## 1. Measured evidence (reproduced before any change)
 
@@ -236,7 +236,7 @@ determinism** concern (`/codex/09-strategy/operational/paper-batch-live-reconcil
 
 **Fixing § 6.2 is what makes § 6.1 disappear** — it is the canonical-SSOT-and-migrate move, not a softening. **DONE.**
 Full write-path treatment (the verbatim-write + no-guard + `validate=False` family) is tracked in
-`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
+`plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`.
 
 ## 7. Residual risk / open work
 

@@ -144,7 +144,7 @@ source: >-
 
 > Pre-migration drain per the VM runbook; direct-canonical-index mutation MUST pause the consolidator or use CAS /
 > additive per-VM-shard writes (the EU floor-clip only "got lucky on timing" —
-> `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`).
+> `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`).
 
 > **✅ CASING FREEZE LIFTED 2026-07-20, operator ruling D1.** The Phase-B `instrument_type` case-migration script's
 > `--apply` was frozen pending the contested manifest COLUMN-case axis (C2a) — this plan's Phase-B said UPPERCASE while

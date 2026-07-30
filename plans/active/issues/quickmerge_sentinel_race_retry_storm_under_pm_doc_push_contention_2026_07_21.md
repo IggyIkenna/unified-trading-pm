@@ -114,3 +114,9 @@ instruction not to dispatch a change to `quickmerge.sh` blind.
       only if 1+2 prove insufficient — both remain unimplemented; fix 1 is "the biggest win" (skip the full
       `quality-gates.sh` re-run on a lost sentinel race when the staged content is unchanged since the last green gate),
       deliberately deferred pending careful review since `quickmerge.sh` is high-blast-radius shared ship infra.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole remaining todo is
+  explicitly gated for operator/careful review on shared, high-blast-radius ship infrastructure (quickmerge.sh) — a
+  fast-path predicate error could bypass a genuinely-needed gate.

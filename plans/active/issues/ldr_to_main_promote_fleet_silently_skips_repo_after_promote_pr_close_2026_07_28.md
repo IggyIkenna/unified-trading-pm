@@ -34,7 +34,9 @@ summary: >-
   fine; it is specifically the `process_repo` PR-create/arm stage that appears to silently drop deployment-service.
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [meta]; content is ldr-to-main-promote-fleet.yml
+  # automation bug, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-workspace content.
 stage: [meta]
 repos: [unified-trading-pm, deployment-service]
 scope: [engineer, admin]
@@ -45,13 +47,13 @@ related:
   - /codex/08-workflows/ci-cd-flow.md
 created: 2026-07-28
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.12
-assigned_role: devops-engineer
+assigned_role: cicd
 drift_direction: none
 depends_on: []
 locked_by:
@@ -72,23 +74,22 @@ resolved_by:
 
 ## What's still open (this doc's scope)
 
-- [ ] [CI] P2. **Retagged from [OPERATOR] 2026-07-28** — this is plain CI-diagnosis monitoring, any AO worker can do it
-      the same way any other `gh run list`/`gh pr list` observation todo works, no operator judgment call needed.
-      Confirm whether `ldr-to-main-promote-fleet.yml`'s `process_repo` step genuinely no-ops for deployment-service (vs.
-      a timing/eventual-consistency artifact that resolves on a later tick with no code change needed) — watch the next
-      few scheduled (`*/15`) ticks and confirm a `promote/deployment-service/ed2691f*` PR appears and auto-merge arms.
-      If it does NOT self-resolve within a few ticks, the bug is real and needs a fix in
-      `unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml`'s `process_repo` function (likely something
-      swallowing an error via a `2>/dev/null || true` in the PR-create/list path for this specific repo — worth adding
-      non-silenced diagnostic output to the bounded-parallel per-repo log capture, since `2>&1 &` backgrounding + a
-      `gh run view --log` fetch may also just be truncating/dropping some per-repo output rather than the step never
-      running at all; both are worth ruling in/out before assuming a code bug).
-- [ ] [SCRIPT] P3. If confirmed a real bug: harden `process_repo`'s error paths (the multiple `2>/dev/null || true`
-      swallows around `gh pr create`/`gh pr list` in the PR-arm section) to at least emit a non-silenced diagnostic line
-      per repo so a silent no-op is visible in the run log without needing to diff branch listings by hand, as was
-      necessary here.
-- Once resolved, `deployment-service` LDR→main promotion should proceed normally on the standing 15-min cadence with no
-  further manual intervention.
+- [x] ✅ [CI] P2. **Self-resolved — confirmed via merged-PR history, 2026-07-30 (slot-11).** NOT a persisting per-repo
+      bug in `process_repo`: `gh pr list --repo IggyIkenna/deployment-service --search promote --state all` shows
+      deployment-service promote PRs `#586`–`#603` all `MERGED` cleanly on the standing cadence, spanning
+      `2026-07-28T12:31:43Z`–`2026-07-29T16:20:03Z` (10 consecutive successful promotes after the 2 no-op ticks this doc
+      originally observed, incl. `#594`/`#595` shortly after the stale-PR-close). The 2-tick no-op was a
+      timing/eventual-consistency artifact, not a code defect — no fix needed in `process_repo`.
+- [ ] [SCRIPT] P3. **Condition not triggered — optional/discretionary only.** The bug this todo was conditioned on ("if
+      confirmed a real bug") was NOT confirmed (see todo 1) — general hardening of the `2>/dev/null || true` swallows in
+      `process_repo`'s PR-arm section remains a reasonable low-priority robustness improvement on its own merits, but is
+      no longer blocking or urgent.
+- Resolved: `deployment-service` LDR→main promotion proceeded normally on the standing cadence with no further manual
+  intervention, through 2026-07-29T16:20:03Z.
+- **Separate, currently-ACTIVE incident found while confirming the above** (NOT the same bug — a distinct, much larger
+  outage discovered 2026-07-30): both fleet promote workflows have been returning `startup_failure` on every tick since
+  2026-07-29T18:30:03Z, blocking the entire `ldr_main` fleet. Tracked separately, do not conflate:
+  `/plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md`.
 
 ## Evidence
 
@@ -101,3 +102,14 @@ resolved_by:
   both show deployment-service absent from Promoted/Blocked/Conflicted.
 - Closed stale PR: https://github.com/IggyIkenna/deployment-service/pull/576 (closed by this worker, comment references
   this doc).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot-11)**: confirmed todo 1 self-resolved via merged-PR history (`#586`-`#603`); flipped. Todo 2's
+  trigger condition was never met, downgraded to discretionary. Filed a SEPARATE issue doc for a much bigger, currently
+  active fleet-wide `startup_failure` outage discovered while confirming this — see the note above the Evidence section.
+  Escalated to main via chat.

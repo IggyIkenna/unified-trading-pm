@@ -303,7 +303,7 @@ would only raise if someone wrongly routed it through the Databento fetch path, 
 
 **⚠️→✅ CORRECTED 2026-07-25** — this section previously described Barchart as a live VIX 15m source; Barchart was
 RETIRED 2026-06-24 (operator ruling, plan-reconcile finding 375, §A2 B-queue — see
-`/plans/active/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
+`/plans/archive/tradfi_massive_dual_source_2026_05_28.md` line 64) and is no longer wired anywhere. Ground-truth
 `SOURCE_PRIORITY` for `("tradfi", "ohlcv_15m")` is now `["databento", "massive", "yahoo"]` (was:
 `["databento", "yahoo", "barchart"]`).
 
@@ -311,6 +311,16 @@ The CFE feed (`XCBF.PITCH` dataset) gives **VX futures** (the VIX futures curve)
 index** at 15m. The VIX 15m **index** gap remains Yahoo-rolling-60d + honest gap (Barchart-preload is retired, no longer
 part of this picture; see `registry/data_source_continuity.py` and the VIX 15m one-liner in CLAUDE.md). Adding CFE does
 **not** close that index gap; it adds the futures.
+
+**Retired manifest rows — disposition (operator ruling 2026-07-20, re-verified 2026-07-30): quarantine-with-tracking,
+NOT purge.** The live tradfi manifest still carries 9,119 `venue=BARCHART` rows, 100% `capture_status=empty_confirmed`
+(0 captured — no real historical VIX data at risk); 4,655 of those carry the retired `source=barchart` stamp from a
+single stale pre-databento-flip seed (`enumerator_run_id=enum-universe-tradfi-20260507-144921`), the rest are
+current-source (`databento`/`yahoo`) honest-absence rows for the same venue. Unlike the `massive` orphan class, these
+rows sit in the terminal `empty_confirmed` state (not `expected_unattempted`), so they are outside the wave-launcher's
+`NEEDS_WORK` set and cause zero wasted compute — they are inert. KEEP as-is; do not purge. Full audit trail:
+`/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`,
+`/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`.
 
 ## Source provenance is WRITE-STAMPED by the FETCHING adapter — SOURCE_PRIORITY is READ-time only (operator 2026-06-19)
 

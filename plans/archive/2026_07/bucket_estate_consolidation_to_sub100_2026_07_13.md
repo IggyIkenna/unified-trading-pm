@@ -314,8 +314,8 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
       manifest/consolidator wiring, BQ `feature_external` external tables (M-1 A11 — root-mounted URIs), IAM
       write-protection re-gating ([[bucket_iam_write_protection_per_tier_2026_06_09]] Phase 2 re-gates on this),
       lifecycle rules (prefix-scoped where retention differs). — DONE 2026-07-13 (autonomous dispatch):
-      plans/active/bucket_estate_fold_design_2026_07_13.md (status: draft, never ingested; 5 folds with per-site
-      file:line cutover tables, 18-todo sequencing, estate math 139→~100, \_KIND_ALIASES soft-transition
+      plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md (status: draft, never ingested; 5 folds with
+      per-site file:line cutover tables, 18-todo sequencing, estate math 139→~100, \_KIND_ALIASES soft-transition
       recommendation). Successor-plan destination + portfolio-state human-only + lifecycle-ladder confirm are parked as
       that doc's operator-decisions section.
 - [x] ✅ [DATA] P2. Execute the folds per design — **ALL 5 WAVE-3 FOLDS COMPLETE 2026-07-19** (bucket_fold_{features,ml,

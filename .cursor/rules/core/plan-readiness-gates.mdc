@@ -89,4 +89,4 @@ infrastructure gaps owned by separate plans. A plan that "implements X" but skip
 not done. A plan that needs deployment infra that doesn't exist yet isn't blocked — it just
 needs the right gates declared. This model makes blocking relationships explicit.
 
-CODEX: unified-trading-codex/06-coding-standards/README.md
+CODEX: unified-trading-pm/codex/06-coding-standards/README.md

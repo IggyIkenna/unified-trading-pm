@@ -17,7 +17,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-1, finalize]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -89,8 +89,10 @@ source: >-
       before batch 1 ran (`ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md` and
       `orchestrator_slots_context_directive_issued_missing_migration_2026_07_25.md`) plus any source doc batch 1 emptied
       (`slot_double_reset_dataloss_race_2026_07_25.md` is the likeliest). **Every one of these is cited as a Source in
-      `/plans/active/ao_consolidated_closeout_2026_07_25.md`, so the same commit MUST repoint that doc's Track entries
-      at `plans/archive/`** or the tranche reference is silently orphaned. **Done when**:
+      `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md`** (archived 2026-07-30 by
+      `ao_consolidated_closeout_2026_07_25_finalize_2026_07_30.md`'s own todo — its 2 `## Todos` items were done and it
+      carried zero others; archiving the digest itself does not close the tranche), **so the same commit MUST repoint
+      that doc's Track entries at `plans/archive/`** or the tranche reference is silently orphaned. **Done when**:
       `grep -rl <slug> plans/ codex/` returns only the archived copy's own path for each archived doc, the AO closeout's
       Sources resolve, and `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero hard failures.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner

@@ -524,45 +524,51 @@ live API keys + the HTTP client injection). Not a wizard/manifest defect — the
 
 ### F47 — Verdict-matrix declares venue cells AVAILABLE that the v2 slot-label venue-token registry rejects
 
-**Status**: OPEN (surfaced by EXECUTION, 2026-06-13 — the Wave-2 #3 config-space fuzzer
-`e2e-testing/scripts/strategy/config_space_fuzzer.py`). The committed verdict matrix
-(`unified-api-contracts/openapi/capability-verdict-matrix.json`) declares AVAILABLE leg cells for **9 venue ids whose
-alnum-stripped form is NOT in `KNOWN_VENUE_TOKENS`** (`unified_api_contracts.internal.architecture_v2.venue_tokens`):
-`balancer_v2`, `balancer_v3`, `betfair_direct`, `gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`,
-`sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled; `gmx_v2`'s
-entry is now MOOT — GMX REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, so it
-should drop out of the verdict matrix rather than need a token-registry fix). When the fuzzer compiles such a cell to a
-v2 slot label (`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser `split_scope_tokens` raises
-`ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can be constructed for those
-venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the capability wizard can
-present a config (venue × archetype) the strategy engine literally cannot instantiate — a mechanical dead-end between
-the manifest/verdict surface and the slot-identity grammar. Reproduced as a typed `unbuildable_slot` dead-end across 20
-sampled configs (3/archetype run; deterministic). **Recommended decision**: align the two SSOTs — either add the missing
-venue tokens (with their `_vN`/`_direct` suffix normalisation) to `KNOWN_VENUE_TOKENS` + `split_scope_tokens`, OR have
-the verdict-matrix generator + the wizard venue-eligibility list exclude venues that have no slot-label token (compose
-with F39 "wizard offers ~13 venues; manifest has 183" — eligible lists are already hand-named subsets). Not fixed in
-this dispatch (LOGIC-FREEZE on strategy-service + collision boundary on UAC); recorded for a successor alignment plan.
-Companion smoke test: `e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
+**Status**: FIXED — verified 2026-07-30, no further code change needed. The original finding (surfaced by EXECUTION,
+2026-06-13 — the Wave-2 #3 config-space fuzzer `e2e-testing/scripts/strategy/config_space_fuzzer.py`) was that the
+committed verdict matrix (`unified-api-contracts/openapi/capability-verdict-matrix.json`) declared AVAILABLE leg cells
+for 9 venue ids whose alnum-stripped form was NOT in `KNOWN_VENUE_TOKENS`
+(`unified_api_contracts.internal.architecture_v2.venue_tokens`): `balancer_v2`, `balancer_v3`, `betfair_direct`,
+`gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`, `sushiswap_v3` — compiling any of these to a v2
+slot label made the strategy-service parser `split_scope_tokens` raise
+`ValueError: scope tokens (…) start with a non-venue token`, an unbuildable dead-end the wizard presented as reachable.
+**Resolution (already landed, LOGIC-FREEZE confirmed lifted per the F27 precedent above)**: all 8 real venues'
+alnum-folded tokens (`balancerv2`, `balancerv3`, `betfairdirect`, `jupiter`, `pancakeswapv3`, `smarketsdirect`,
+`sommelier`, `sushiswapv3`) are registered in `KNOWN_VENUE_TOKENS` — `unified-api-contracts@7565c0cb` ("Phase V",
+2026-06-15) wired the initial batch, `unified-api-contracts@60b7417a` (2026-07-24) registered later additions. `gmx_v2`
+is fully removed from both the token registry and the verdict matrix — `unified-api-contracts@18d53d63` (2026-07-25, GMX
+venue removal, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) — so it correctly no longer appears at
+all rather than needing a token fix. Verified directly against the current tree (2026-07-30):
+`capability-verdict-matrix.json` has zero `gmx` occurrences and zero `"venue_buildable": false` cells; `venue_tokens.py`
+lines 88-93/148/181-182 carry all 8 folded tokens. The generator
+(`unified-trading-pm/scripts/openapi/generate_capability_verdict_matrix.py`) also hardened the pipeline so an
+unregistered token can never again silently read AVAILABLE — it demotes to `blocked(unbuildable_slot_venue)` instead —
+and a regression test pins the invariant:
+`unified-trading-pm/tests/unit/test_capability_verdict_matrix.py::test_f47_unbuildable_venue_cells_are_not_available`
+asserts zero unbuildable cells. Companion smoke test: `e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
 
 ### F48 — Verdict-matrix declares 22 archetypes reachable that have NO v2 engine registered (all VOL\_\* + MARKET_MAKING\_\*)
 
-**Status**: OPEN (surfaced by EXECUTION, 2026-06-13 — the Wave-2 #3 config-space fuzzer). The verdict matrix enumerates
-AVAILABLE `(venue × instrument_type × algo)` cells for **22 archetypes for which `V2BatchHarness` / the v2 engine
-registry has NO engine** — every `VOL_*` family (`VOL_0DTE_GAMMA_SCALPING`, `VOL_ARB_RV_IV`, `VOL_CARRY`,
-`VOL_CROSS_ASSET_SPREAD`, `VOL_DISPERSION`, `VOL_LEAPS_CONVEXITY`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`,
-`VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`, `VOL_RATIO_SPREAD`, `VOL_SPREAD_STRUCTURES`, `VOL_STRADDLE`,
-`VOL_SYNTHETIC_DELTA`, `VOL_TERM_STRUCTURE_ARB`, `VOL_TERM_STRUCTURE_SLOPE`, `VOL_VARIANCE_SWAP`) plus every
-`MARKET_MAKING_*` family (`MARKET_MAKING_INVENTORY_SKEW`, `MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_PASSIVE_SPREAD`,
-`MARKET_MAKING_PREDICTION`, `MARKET_MAKING_QUEUE_MICROSTRUCTURE`). Compiling + stepping a sampled config for any of them
-raises `KeyError: 'no v2 engine registered for archetype <X>'` at the first `on_tick`. **Why it matters**: the wizard's
+**Status**: FIXED — verified 2026-07-30, no further code change needed for the surface-correctness half of this finding
+(see the todo checkbox below for the full verification). The original finding (surfaced by EXECUTION, 2026-06-13 — the
+Wave-2 #3 config-space fuzzer). The verdict matrix enumerates AVAILABLE `(venue × instrument_type × algo)` cells for
+**22 archetypes for which `V2BatchHarness` / the v2 engine registry has NO engine** — every `VOL_*` family
+(`VOL_0DTE_GAMMA_SCALPING`, `VOL_ARB_RV_IV`, `VOL_CARRY`, `VOL_CROSS_ASSET_SPREAD`, `VOL_DISPERSION`,
+`VOL_LEAPS_CONVEXITY`, `VOL_MARKET_MAKING`, `VOL_ML_LEAN`, `VOL_OVERLAY_COVERED_CALLS`, `VOL_OVERLAY_PROTECTIVE_PUT`,
+`VOL_RATIO_SPREAD`, `VOL_SPREAD_STRUCTURES`, `VOL_STRADDLE`, `VOL_SYNTHETIC_DELTA`, `VOL_TERM_STRUCTURE_ARB`,
+`VOL_TERM_STRUCTURE_SLOPE`, `VOL_VARIANCE_SWAP`) plus every `MARKET_MAKING_*` family (`MARKET_MAKING_INVENTORY_SKEW`,
+`MARKET_MAKING_ML_LEAN`, `MARKET_MAKING_PASSIVE_SPREAD`, `MARKET_MAKING_PREDICTION`,
+`MARKET_MAKING_QUEUE_MICROSTRUCTURE`). Compiling + stepping a sampled config for any of them raises
+`KeyError: 'no v2 engine registered for archetype <X>'` at the first `on_tick`. **Why it matters**: the wizard's
 reachability surface (derived from leg-structure / selector capability declarations) is WIDER than the runnable v2
 engine set — a wizard user could configure + "promote" a VOL or market-making strategy that has no engine behind it, a
 silent mechanical dead-end. Reproduced as a typed `no_v2_engine` dead-end across 63 sampled configs (deterministic).
 **This is expected if VOL / market-making are intentionally out-of-scope for the v2 engine today** — but then the
 verdict matrix (and the wizard) should mark those archetypes `not_registered` / blocked, not AVAILABLE. **Recommended
 decision**: gate the verdict-matrix `available` verdict (and the wizard archetype list) on v2-engine-registration, OR
-register the missing engines. Not fixed in this dispatch (LOGIC-FREEZE + collision boundary on UAC); recorded for the
-successor alignment plan alongside F47.
+register the missing engines. **The gate branch has since landed** (`unified-trading-pm@d0f66d732` + `@362f90404`,
+verified 2026-07-30 — see the todo checkbox below); the "register the missing engines" branch (build 22 real v2 strategy
+engines) remains a separate, much larger, un-dispatched strategy-service feature build, not part of this fix.
 
 ### F49 — Custody/signing-surface dimension entirely unmodeled + `custody_provider` node-kind is a dumping ground
 
@@ -619,25 +625,26 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 **LOGIC-FREEZE** (engine fix gated on the strategy-service freeze lifting; surface-ready) · **BLOCKED-CREDENTIALS** ·
 **BLOCKED-OPERATOR-DECISION**. Verified-in-code 2026-06-15 (grep-then-read).
 
-| Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                      |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
-| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                  | UAC registry                                                                                                                  |
-| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
-| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
-| Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
-| Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
-| Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                             |
-| Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                    |
-| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                               | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                     |
-| Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                     | strategy-service (3 files)                                                                                                    |
-| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                             | agent-orchestrator                                                                                                            |
-| Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                  | —                                                                                                                             |
-| Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                             | —                                                                                                                             |
-| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                     | strategy-service                                                                                                              |
-| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                              | —                                                                                                                             |
-| Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                            | —                                                                                                                             |
-| Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                      | manifest 574/2433                                                                                                             |
+| Domain                         | Findings                                                                                                                                                      | Status                                           | Evidence                                                                                                                            |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                       |
+| Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                  | UAC registry                                                                                                                        |
+| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                      | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                       |
+| Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | FIXED (verified 2026-07-30)                      | verdict-matrix demotes to `not_registered(no_v2_engine)` + `test_f48_engineless_archetypes_are_not_registered` — see F48 todo above |
+| Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                                |
+| Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                                     |
+| Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%)       |
+| Collateral + movements         | F7 (policy was derivation)                                                                                                                                    | FIXED (registry backfilled)                      | —                                                                                                                                   |
+| Trader ledger                  | `transfer_purpose` + COLLATERAL_POSTED/MARGIN_RELEASED                                                                                                        | UAC surface FIXED; **no emitter** (LOGIC-FREEZE) | symbols only in UAC `crosscutting/transfer_events.py` + `ledger/_enums.py`, zero consumers                                          |
+| PnL / attribution              | **F45 (exposure netting — primitives exist, no service owns the pipeline)**, multi-leg inter-leg delta = no owner                                             | FIXED (2026-06-15)                               | canonical netting in UTL `risk/net_delta.py`; `engine_findings_remediation_2026_06_15.md`                                           |
+| Balances                       | margin: `margin_event_emitter.py:98` hardcodes `venue_type="defi"`; `venue_balance_tracker.py` is sports-only; `margin_health.py:32` Phase-1 stub `return []` | LOGIC-FREEZE                                     | strategy-service (3 files)                                                                                                          |
+| Balances                       | F40 (AO writes runtime state into tracked `accounts.json`)                                                                                                    | OPEN                                             | agent-orchestrator                                                                                                                  |
+| Reconciliation                 | F1/F2/F3 (service-set truths; coverage warns-not-fails; v2 enums invisible)                                                                                   | FIXED (Phase-0)                                  | —                                                                                                                                   |
+| Reconciliation                 | F12 (config-registry regen empties destructively on non-workspace-venv host)                                                                                  | OPEN (environmental)                             | —                                                                                                                                   |
+| Circuit breakers / kill-switch | F17 (predicates runtime-fired, not engine-introspectable), F16 (`log_event(service_name=)` TypeError on GCS-config path)                                      | LOGIC-FREEZE                                     | strategy-service                                                                                                                    |
+| Circuit breakers / kill-switch | F49 (`custody_provider` node-kind was a dumping ground incl. kill_switch)                                                                                     | FIXED (Waves A/B/C)                              | —                                                                                                                                   |
+| Redundancy / duplication       | F6, F41, F44, F51, F52                                                                                                                                        | FIXED                                            | —                                                                                                                                   |
+| Registry under-coverage        | F50 (fund_structure), F52 (data_source split), F53 (ml_model 1→8 + signal-grounded edges)                                                                     | FIXED (Wave B/C 2026-06-14)                      | manifest 574/2433                                                                                                                   |
 
 ## Open findings — tracked todos (2026-06-15, operator-requested capture)
 
@@ -712,10 +719,32 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       added `tests/unit/engine/strategies/v2/test_carry_staked_basis_f27_venue_case.py` (5 tests: lowercase/mixed/upper
       all resolve to `LST_AS_MARGIN`, lowercase output exactly matches uppercase, haircut pinned to the real 0.075
       F28-reconciled value). 150 sibling staked-basis tests + the new 5 all green at strategy-service.
-- [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
-      LOGIC-FREEZE. Target: strategy-service.
-- [ ] [LOGIC] P2. _*F48 — 22 VOL*\*/MARKET_MAKING_\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
-      strategy-service.
+- [x] ✅ [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
+      LOGIC-FREEZE. Target: strategy-service. — **DONE — already fixed, no new code needed.** FREEZE STATUS: verified
+      lifted (same basis as F27 above). Verified 2026-07-30 against the current tree: all 8 real venues' alnum-folded
+      tokens (`balancerv2`/`balancerv3`/`betfairdirect`/`jupiter`/`pancakeswapv3`/`smarketsdirect`/`sommelier`/
+      `sushiswapv3`) are registered in `unified-api-contracts` `venue_tokens.py`'s `KNOWN_VENUE_TOKENS`
+      (`unified-api-contracts@7565c0cb` Phase V 2026-06-15 + `@60b7417a` 2026-07-24); `gmx_v2` is fully removed
+      (`unified-api-contracts@18d53d63` 2026-07-25). Committed `capability-verdict-matrix.json` has 0 `gmx` occurrences
+      and 0 `"venue_buildable": false` cells. Regression test
+      `unified-trading-pm/tests/unit/test_capability_verdict_matrix.py::test_f47_unbuildable_venue_cells_are_not_available`
+      pins the invariant at zero unbuildable cells. See F47 section above for full detail.
+- [x] ✅ [LOGIC] P2. _*F48 — 22 VOL*\*/MARKET_MAKING_\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
+      strategy-service. — **DONE — already fixed, no new code needed.** Verified 2026-07-30 against the current tree:
+      the "gate the verdict-matrix on v2-engine-registration" branch of the recommended decision landed at
+      `unified-trading-pm@d0f66d732` ("verdict-matrix stops over-claiming AVAILABLE for ... engineless
+      VOL__/MARKET_MAKING__ archetypes (F48)") + `unified-trading-pm@362f90404` (refactored to probe
+      `ARCHETYPE_ENGINE_REGISTRY` LIVE via strategy-service's own `.venv`, never a transcribed copy — same idiom as the
+      exec-algo/feature-group probes). Both commits are ancestors of the current `live-defi-rollout` HEAD. Confirmed
+      directly against the committed `unified-api-contracts/openapi/capability-verdict-matrix.json`: all 22
+      originally-named archetypes (`VOL_0DTE_GAMMA_SCALPING` … `VOL_VARIANCE_SWAP`, `MARKET_MAKING_INVENTORY_SKEW` …
+      `MARKET_MAKING_QUEUE_MICROSTRUCTURE`) are demoted from `available` to `not_registered(no_v2_engine)` — 22/22, zero
+      exceptions (checked programmatically, not by inspection). Regression test
+      `unified-trading-pm/tests/unit/test_capability_verdict_matrix.py::test_f48_engineless_archetypes_are_not_registered`
+      passes (along with the sibling `test_f47_...` test). The "register the missing engines" branch (build 22 real v2
+      strategy engines) remains explicitly NOT done — that is a separate, much larger strategy-service feature build,
+      out of scope here; the wizard/matrix now honestly reports these archetypes as unbuildable instead of silently
+      over-claiming AVAILABLE, which was the actual correctness defect this finding raised.
 - [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
       heuristic-bypass/no-SSOT). LOGIC-FREEZE. Target: execution-service.
 - [ ] [BUG] P2. **F16 — latent `log_event(service_name=)` TypeError on the GCS-config path.** LOGIC-FREEZE. Target:

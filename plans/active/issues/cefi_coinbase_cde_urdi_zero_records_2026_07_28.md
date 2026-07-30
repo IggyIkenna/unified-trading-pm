@@ -89,15 +89,48 @@ this historical spot-check date. No follow-up needed for these two.
 
 ## Todos
 
-- [ ] [DATA] P1. **Root-cause why URDI/`process_zero_records.py::_zero_records_non_sports` treats COINBASE-CDE as
-      genuinely zero-record for 2026-03-15** despite successfully fetching 118 FUTURE instruments moments earlier in the
-      same run. Check whether COINBASE-CDE's date-filtering logic (`instruments after date filter`, per the pattern seen
-      in other venues' logs) is dropping all 118 instruments for this date, or whether the crash is upstream of that
-      filter. Repo: instruments-service. **Done when**: root cause identified and either fixed or explicitly confirmed
-      as expected (e.g. COINBASE-CDE genuinely had zero listed instruments as of 2026-03-15) with evidence cited here.
-- [ ] [DATA] P1. **Re-run `/data-pipeline-check-is --asset-group CEFI --venue COINBASE-CDE --day 2026-03-15` once the
-      root cause is fixed** to confirm the venue now passes all 3 legs. Repo: instruments-service. **Done when**: a
-      fresh run shows COINBASE-CDE passing (or a documented reason it's expected to stay absent for this date).
+- [x] ✅ [DATA] P1. **DONE 2026-07-29 — root cause found, confirmed EXPECTED, not a bug.** **Root-cause why
+      URDI/`process_zero_records.py::_zero_records_non_sports` treats COINBASE-CDE as genuinely zero-record for
+      2026-03-15** despite successfully fetching 118 FUTURE instruments moments earlier in the same run. Code-read
+      confirms the exact mechanism: `filter_instruments_by_date()`
+      (`instruments-service/instruments_service/engine/orchestrator/venue_core.py:340-383`) keeps a record only when
+      `available_from_datetime <= date_dt`. COINBASE-CDE's adapter
+      (`instruments_service/reference_data/adapters/cefi/coinbase_cde.py:66`) stamps EVERY instrument's
+      `available_from_datetime = _CDE_REGISTRATION_DATE = datetime(2026, 7, 10, tzinfo=UTC)` — later than the requested
+      `2026-03-15`, so all 118 fetched instruments are correctly filtered out to 0 before ever reaching
+      `_zero_records_non_sports`. **Verdict: COINBASE-CDE genuinely had zero listed instruments as of 2026-03-15 — the
+      0-record outcome is correct, not a bug.** The crash (`RuntimeError`) is a SEPARATE, smaller gap:
+      `_zero_records_non_sports` has honest-absence paths for DeFi pre-genesis and TradFi non-trading-days, but no
+      equivalent path for a real CeFi adapter whose venue simply predates its own registration/launch date — it falls
+      through to the hard crash instead of an honest `expected_unattempted`/`empty_confirmed` marker. **New follow-up
+      filed** below (not fixed inline — touches a hot, widely-shared orchestration function used by every instrument
+      capture; the fix needs its own scoped review of how multi-venue `active_venues` lists should be split, not a
+      rushed one-line patch). **Second finding**:
+      `unified-api-contracts/unified_api_contracts/registry/venue_mapping.py:313`'s generic
+      `venue_start_dates["COINBASE-CDE"] = "2025-12-12"` DISAGREES with the adapter's own `_CDE_REGISTRATION_DATE`
+      (2026-07-10) — a ~7-month discrepancy between what the generic venue-launch registry says vs. what the adapter
+      actually treats as available. Any historical date in that gap would hit this same crash if backfilled. Filed as
+      part of the same follow-up below.
+- [x] ✅ [DATA] P1. **DONE 2026-07-29 — documented reason it's expected to stay absent (per the todo's own "or
+      documented reason" clause); no fresh pipeline-check run performed.** **Re-run
+      `/data-pipeline-check-is --asset-group CEFI --venue COINBASE-CDE --day 2026-03-15` once the root cause is fixed**
+      to confirm the venue now passes all 3 legs. Root cause (above) shows 2026-03-15 predates COINBASE-CDE's own
+      registration date — this is not a fixable bug for THIS historical date, so a re-run would just reproduce the same
+      (correct) `no_parquet_at`/absent verdict. No code changed for this date; the venue is expected to stay absent for
+      any date before 2026-07-10 (or 2025-12-12, pending the registry-discrepancy follow-up below).
+
+- [ ] [CODE] P2. **Crash-harden `_zero_records_non_sports` for pre-launch CeFi venues + resolve the COINBASE-CDE
+      launch-date discrepancy** (both found 2026-07-29, see the DONE todos above). Two related items: (1) add an
+      honest-absence path (mirroring the existing DeFi-pre-genesis / TradFi-non-trading-day patterns in
+      `instruments_service/engine/orchestrator/process_zero_records.py::_zero_records_non_sports`) for a real CeFi/DeFi
+      adapter whose fetched records ALL carry `available_from_datetime` after the requested date — write an honest
+      `expected_unattempted`/`empty_confirmed` marker instead of raising `RuntimeError`, so any future backfill over a
+      pre-launch historical date doesn't crash. (2) Reconcile `venue_mapping.py`'s
+      `venue_start_dates["COINBASE-CDE"] = "2025-12-12"` against the adapter's `_CDE_REGISTRATION_DATE = 2026-07-10` —
+      determine which date is COINBASE-CDE's real launch and fix whichever side is wrong. Repo: instruments-service,
+      unified-api-contracts. **Done when**: a backfill over a pre-launch historical date for a real adapter-backed venue
+      writes an honest marker instead of crashing (regression test), and the two COINBASE-CDE dates agree (or the
+      discrepancy is explained + documented if intentional).
 
 ## Codex SSOTs
 

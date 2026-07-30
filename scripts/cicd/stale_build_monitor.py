@@ -184,6 +184,47 @@ def main_head(repo: str, ref: str = "main") -> tuple[str, dt.datetime] | None:
     return str(sha)[:7], when
 
 
+def active_trigger_repos(project_id: str) -> set[str] | None:
+    """Repo names with at least one non-disabled Cloud Build trigger; None if the query failed.
+
+    A repo whose `cloudbuild.yaml` resolves a `:latest` image but has NO active trigger wired up
+    (e.g. `unified-trading-system-ui`, confirmed 2026-07-29 via `gcloud builds triggers list`) has
+    no continuous-build mechanism for this check to verify in the first place — its AR `:latest`
+    entry is whatever was last pushed manually/one-off, and will read as stale forever regardless
+    of how recently `main` committed. That is a monitor-config artifact, not a live incident
+    (cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md). None (not an empty
+    set) on a query error — fail-open, never silently exempt every repo because the call broke.
+    """
+    proc = subprocess.run(
+        ["gcloud", "builds", "triggers", "list", "--project", project_id, "--format=json"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode != 0 or not proc.stdout.strip():
+        return None
+    try:
+        triggers = cast("list[object]", json.loads(proc.stdout))
+    except json.JSONDecodeError:
+        return None
+    out: set[str] = set()
+    for t in triggers:
+        if not isinstance(t, dict):
+            continue
+        td = cast("dict[str, object]", t)
+        if td.get("disabled") is True:
+            continue
+        rec = cast("dict[str, object]", td.get("repositoryEventConfig") or {})
+        repo_path = str(rec.get("repository") or "")
+        if repo_path:
+            out.add(repo_path.rsplit("/", 1)[-1])
+        gh = cast("dict[str, object]", td.get("github") or {})
+        gh_name = str(gh.get("name") or "")
+        if gh_name:
+            out.add(gh_name)
+    return out
+
+
 def list_ar_images(repo_path: str) -> list[dict[str, object]]:
     """Raw `gcloud artifacts docker images list <repo_path> --include-tags` JSON; [] on any error."""
     proc = subprocess.run(
@@ -234,10 +275,17 @@ def latest_push_time(images: list[dict[str, object]], image_name: str) -> dt.dat
 
 
 def check_repo(
-    repo: str, project_id: str, thresh_s: float, now: dt.datetime, ar_cache: dict[str, list[object]]
+    repo: str,
+    project_id: str,
+    thresh_s: float,
+    now: dt.datetime,
+    ar_cache: dict[str, list[object]],
+    trigger_repos: set[str] | None,
 ) -> str | None:
     """One finding line if `repo` is stale; None if not-stale OR the repo/query is ambiguous
     (fail-open — never page on a repo we could not affirmatively measure)."""
+    if trigger_repos is not None and repo not in trigger_repos:
+        return None  # no active Cloud Build trigger — nothing continuous to verify (fail-open scope)
     cloudbuild_text = _fetch_text(repo, "cloudbuild.yaml", "main")
     if cloudbuild_text is None:
         return None  # no cloudbuild.yaml on main (or transient gh error) — not this check's scope
@@ -328,10 +376,12 @@ def main() -> int:
         print("stale-build-monitor: no GCP project id ($GCP_PROJECT_ID/--project unset) — fail-open, skipping")
         return 0
 
+    trigger_repos = active_trigger_repos(project_id)
+
     findings: list[str] = []
     ar_cache: dict[str, list[object]] = {}
     for repo in repos:
-        line = check_repo(repo, project_id, thresh_s, now, ar_cache)
+        line = check_repo(repo, project_id, thresh_s, now, ar_cache, trigger_repos)
         if line:
             findings.append(line)
 

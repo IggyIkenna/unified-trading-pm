@@ -23,7 +23,7 @@ tags: [infra, close-out, consolidation, repo-hygiene, cve, terraform, plan-hygie
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/ao_consolidated_closeout_2026_07_25.md,
+    /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -102,7 +102,7 @@ fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern
 staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §5#39) ·
 [issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md](/plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md)
 (prod terraform drift backlog — 21 add / 18 change — reconcile-apply) ·
-[issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
+[issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
 (VM startup/helper scripts have no auto-rollout to GCS) ·
 [issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/active/issues/managed_by_label_launcher_standardization_2026_07_13.md)
 (generic VM/Cloud-Run launcher "managed-by" label convention for deployment-api provenance) ·
@@ -123,7 +123,7 @@ the billing-waste pre-flight gate designed + shipped.
 this whole `/ag-closeout-audit` rollout — self-referential, included for completeness) ·
 [issues/autonomous_session_operator_decisions_2026_07_25.md](/plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md)
 (operator-decisions log companion to the rollout plan) ·
-[issues/issue_docs_zero_checkbox_sweep_2026_07_24.md](/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md)
+[issues/issue_docs_zero_checkbox_sweep_2026_07_24.md](/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md)
 (corpus-wide sweep for prose-only, zero-checkbox issue docs) ·
 [issues/plan_quality_four_line_defense_architecture_2026_07_23.md](/plans/active/issues/plan_quality_four_line_defense_architecture_2026_07_23.md)
 (plan-quality four-line-of-defense architecture: task_template/QG hygiene/reconcile skills) ·
@@ -251,7 +251,8 @@ phases ship.
   in this hub — the exact gap `ag_closeout_audit_scope_widening_triage_2026_07_26.md` already tracks (this tranche's own
   asset_group coverage widened 2026-07-26 to include `meta`/`infrastructure`, but the discoverability index here was
   never backfilled for it). Added here for future tranche-sweep discoverability:
-  `docker_artifact_registry_cleanup_policy_2026_07_24.md`, `issues/stranded_prek_stash_patch_2026_07_23.md`,
+  `docker_artifact_registry_cleanup_policy_2026_07_24.md`,
+  `/plans/archive/issues/stranded_prek_stash_patch_2026_07_23.md` (archived 2026-07-30),
   `issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md` (archived — resolved,
   deployment-service@5690ad3, now at
   `/plans/archive/issues/deployment_service_ungated_revision_delete_no_rollback_target_2026_07_26.md`),
@@ -264,7 +265,9 @@ phases ship.
   instruments-service@f7e64c54, now at
   `/plans/archive/issues/instruments_service_run_tag_flag_not_applied_2026_07_08.md`),
   `issues/qg_workspace_root_template_drift_12_repos_2026_07_24.md`,
-  `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`,
+  `issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md` (archived — resolved,
+  unified-trading-system-ui@ff811a8c, now at
+  `/plans/archive/issues/ui_repos_eslint_base_config_never_wired_no_explicit_any_unenforced_2026_07_21.md`),
   `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
   `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
   `assigned_vm: planning` and live in the AO backlog.

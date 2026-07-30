@@ -55,7 +55,7 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
+    /plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md,
     /plans/archive/issues/tradfi_databento_ohlcv_silent_zero_rows_2026_07_12.md,
     /plans/archive/issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,

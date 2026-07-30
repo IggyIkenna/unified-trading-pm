@@ -15,7 +15,12 @@ summary: >-
   workspace's "big finding" rule (cross-repo + data-correctness).
 status: open
 nature: issue
-asset_group: [cefi, tradfi, sports, tradfi]
+asset_group:
+  [cefi, tradfi, sports] # deduped 2026-07-30 by /ag-closeout-audit Phase 0.3 -- `tradfi` was listed twice. Found
+  # independently by BOTH the tradfi and the cefi tranche run (this doc is tagged for both, so it is in both candidate
+  # sets). Set membership is UNCHANGED, so no tranche's candidate set moves and no new closeout-linkage orphan can
+  # result (check_ag_closeout_linkage.py re-run: 0 orphans). The duplicate slot was NOT re-pointed at another AG --
+  # that would be a scope judgement, so only the provable duplicate was removed.
 stage: [data]
 repos: [features-service, unified-trading-library, market-data-processing-service, deployment-service]
 scope: [engineer, admin]
@@ -330,11 +335,12 @@ automatically once A is fixed and TRADFI:delta_one's force leg produces real out
   hit root cause A (TRADFI:delta_one dependency-check gap, on a different day) and the timeout/duplicate-VM pattern (on
   the same TRADFI:volatility shard) — filed as
   `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` and
-  `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` respectively. Cross-referenced all
-  four docs so root causes A and the timeout defect each have exactly ONE tracked fix-todo, not two competing ones. That
-  slot also corroborated root causes C (OOM) and E (commodity 404) independently, and confirmed (for their own run) that
-  no PROD-pollution occurred for volatility/cross_instrument/multi_timeframe/commodity — matching this session's own
-  direct PROD-safety verification for sports/calendar.
+  `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved 2026-07-30)
+  respectively. Cross-referenced all four docs so root causes A and the timeout defect each have exactly ONE tracked
+  fix-todo, not two competing ones. That slot also corroborated root causes C (OOM) and E (commodity 404) independently,
+  and confirmed (for their own run) that no PROD-pollution occurred for
+  volatility/cross_instrument/multi_timeframe/commodity — matching this session's own direct PROD-safety verification
+  for sports/calendar.
 - 2026-07-27 (interactive session, operator-directed): operator asked "are EIA/CFTC commodities features" + ruled that a
   vendor with no Secret Manager credentials AND no free tier isn't MVP. Investigation (live curl probes against
   api.eia.gov, cftc.gov, publicreporting.cftc.gov, rigcount.bakerhughes.com + `gcloud secrets describe`) found the

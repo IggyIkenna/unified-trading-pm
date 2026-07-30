@@ -116,3 +116,9 @@ each of the 24 sibling repos has independently accumulated that I did not audit 
       per-line judgment call, not a blind template overwrite in either direction.
 - [ ] [VERIFY] P3. Once the template is reconciled, re-run `--dry-run` (post-fix) across all 25 repos and manually spot-
       check 3-4 diffs before trusting it enough to actually ship a fleet sync.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Central remaining item
+  (reconciling the template against PM's live .gitignore) is explicitly self-described as real diffing/merging work
+  needing human judgment, not mechanical.

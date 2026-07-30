@@ -483,3 +483,15 @@ ML-baseline item, the `## Operator-gated infra` section's other 2 items (`tofu a
 tarball-cleanup/vm-log-archival schedulers), and the `## BLOCKED clusters` section (DeFi/TradFi backfill VM cluster,
 stash-archive purge). This session's mandate was the infra-relevant slice only — the rest is unaffected and stays
 tracked here.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — confirmed the 5 items the
+  2026-07-27 `/plan-vintage-audit` Archive-readiness verdict already marked as duplicated/rehomed into
+  `infra_satellite_ao_dispatch_batch1_2026_07_26.md` (UAC D8 Starknet rename, deployment-api/UI GAP G-TRACE,
+  execution-service `service_name` drift, SIT's 2 QG failures, deployment-scripts bucket lifecycle rules) — no new
+  citation needed, that verdict already carries the correct cross-references. Doc stays NA overall
+  (`locked_by: live-defi-rollout`, no unlock grant, plus genuinely open non-infra work outside this session's scope).
+  Zero `assigned_vm` or backlog impact from this pass. Not re-verdicting the 3 items flagged as future RECLASSIFY
+  candidates (MTDS liquidations/risk_params reconciliation, strategy-service staked-lend additions) — that's a targeted
+  future pass, not this incremental check.

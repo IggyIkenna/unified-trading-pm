@@ -12,7 +12,7 @@ summary: >-
   `StopIteration` on `next(c for c in resp.conditions if "failed in the last 7 days" in c.condition)` -- the fixture
   date is one day outside the now-current window. Discovered incidentally while shipping an unrelated sleep()-based
   test-waste fix in the same repo (small-1 of
-  `/plans/active/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
+  `/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`); confirmed pre-existing/unrelated by
   re-running the same test against a `git stash`-clean HEAD (5d157d6) -- same failure, same StopIteration. Not fixed as
   part of that dispatch (out of its narrow scope); filed here per the outside-every-plan findings-triage rule.
 status: open
@@ -36,7 +36,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 source: >-
   Discovered incidentally while shipping small-1 (deployment-api sleep()-based test-waste fix) from
-  /plans/active/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md -- the full quality-gates.sh run
+  /plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md -- the full quality-gates.sh run
   surfaced this unrelated pre-existing failure, confirmed by reproducing it against a clean HEAD.
 resolved_by:
 locked_by:
@@ -77,6 +77,6 @@ string. Low-risk, mechanical — no production behavior change, test-only.
 ## Scope note
 
 Discovered incidentally while shipping `small-1` (deployment-api sleep()-based test-waste fix) from
-`/plans/active/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`. That dispatch was narrowly scoped to 3
+`/plans/archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md`. That dispatch was narrowly scoped to 3
 named sleep() fixes across 3 repos and explicitly did not include this file; filing here rather than expanding scope
 mid-dispatch.

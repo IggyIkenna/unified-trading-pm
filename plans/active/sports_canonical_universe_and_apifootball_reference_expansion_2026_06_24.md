@@ -151,15 +151,22 @@ satisfies every requirement:
       (`gcs_paths.py:96`) carry a stale parallel layout. For each: canonicalise the bare→per-league (in-retention) OR
       DELETE (pre-retention). Distinguish from the _by-design_ bare entities (XG/WEATHER/player_values-bulk) which stay
       bare.
-- [ ] [DATA] P0. **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete (corrected
-      2026-06-24).** The genesis SSOT already exists + is populated: UAC `canonical/domain/sports/league_data.py`
-      `SOURCE_COVERAGE_START` = understat **2014-01-01**, api_football **2015-01-01**, footystats/transfermarkt/SFI
-      **2019-01-01**, open_meteo 2019-03-02, odds_api/mdps_odds **2020-06-06**; + per-`(source,data_type)` overrides
-      (SFI_PROGRESSIVE_STATS 2020-01-01) + per-`(source,league)` (UNDERSTAT_COVERED_LEAGUES, bookmaker-league). Consumed
-      by honest coverage via `clip_dates_to_source_coverage()` / `is_before_source_ln`. **Implication: 2015-2017 is
-      VALID understat(2014)/api_football(2015) history — KEEP it** (the operator's "don't need 2015" is overridden by
-      the SSOT, which deliberately retains it for ML training). Earliest real day = 2015-01-01, **0 pre-2014
-      partitions**. So retention cleanup is SMALL, not a blanket delete:
+- [x] ✅ [DATA] P0. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — this bullet's own nested
+      2026-07-25 banner already says the premise is superseded by the 2026-07-21 2020-06-06 data-floor ruling; the
+      checkbox here just never got updated to match. The real remaining blocker is a genuine human-only hard-stop for an
+      irreversible prod GCS delete (the `day=all` fold), tracked in
+      `sports_day_all_teams_venues_fold_key_scheme_mismatch_2026_07_25.md` / the AO-dispatched copy in
+      `sports_satellite_ao_dispatch_batch2_2026_07_24.md` — confirmed still the correct `[OPERATOR]` hard-stop in
+      `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md` item (8), not IAM/credential. Remaining work lives in
+      those docs, not here.** **Retention floor = the EXISTING per-source genesis registry — NOT a blanket 2015 delete
+      (corrected 2026-06-24).** The genesis SSOT already exists + is populated: UAC
+      `canonical/domain/sports/league_data.py` `SOURCE_COVERAGE_START` = understat **2014-01-01**, api_football
+      **2015-01-01**, footystats/transfermarkt/SFI **2019-01-01**, open_meteo 2019-03-02, odds_api/mdps_odds
+      **2020-06-06**; + per-`(source,data_type)` overrides (SFI_PROGRESSIVE_STATS 2020-01-01) + per-`(source,league)`
+      (UNDERSTAT_COVERED_LEAGUES, bookmaker-league). Consumed by honest coverage via `clip_dates_to_source_coverage()` /
+      `is_before_source_ln`. **Implication: 2015-2017 is VALID understat(2014)/api_football(2015) history — KEEP it**
+      (the operator's "don't need 2015" is overridden by the SSOT, which deliberately retains it for ML training).
+      Earliest real day = 2015-01-01, **0 pre-2014 partitions**. So retention cleanup is SMALL, not a blanket delete:
   - **`day=all`** is NOT a stray to delete — it holds `entity=teams` + `entity=venues` (~974KiB), date-invariant
     REFERENCE data. But `teams` also appears per-day-per-league → possible dual storage. RECONCILE: canonical home for
     date-invariant reference is `SportsLayout.FLAT` (`sports_reference/{F}/{F}.parquet`); fold `day=all` into FLAT (or
@@ -302,7 +309,21 @@ backfill (records newly-observed enrichment), (b) promote it to a recurring CLI 
       (`market-tick-data-service@08439787` + `@236d945e`, verified real commits). Checkbox stays unchecked — the actual
       irreversible `--apply`/`--drop-stale` firing remains **BLOCKED-OPERATOR** pending explicit sign-off (a 2026-07-27
       re-check flagged it's likely just a finding-T/U soft-delete-retention re-tag away from qualifying, not yet
-      re-tagged). Re-run once the operator authorizes the delete.
+      re-tagged). Re-run once the operator authorizes the delete. **Partial progress 2026-07-29 (credential/self-service
+      re-triage pass)**: ran the fresh same-run `gcs_bucket_soft_delete_retention_seconds()`-equivalent check
+      (`gcloud storage buckets describe ...     softDeletePolicy.retentionDurationSeconds`) on both target buckets —
+      `instruments-store-sports-prd-central-element-323112` = 604800s,
+      `market-data-tick-sports-prd-central-element-323112` = 604800s — **both meet the ≥604800s finding-T/§3a
+      threshold**. This clears ONE of the two conditions the 2026-07-27 re-check named. **NOT clearing the operator gate
+      myself**: this is delete-safety hard-stop #2 (legacy-delete-after-copy), and per the still-open contradiction
+      filed in `plans/active/issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md` (codex says
+      hard-stop #2 is §3a-qualifiable once Part 5's 100%-twin-coverage proof clears; a sibling CeFi plan explicitly
+      reaffirmed "no carve-out... regardless of pre-checks" for the same hard-stop class), the reversibility-qualified
+      path is not being treated as settled workspace-wide yet. Also unverified here: whether Part 5's PROOF (100%
+      canonical-twin coverage, content-verified corpus-wide, not the tool's dry-run-correctness) has actually been
+      measured for this full corpus, vs. just the delete mechanism being unit/dry-run tested. Recommend: operator
+      resolves the hard-stop #2 contradiction once (it blocks this AND the CeFi sweep identically), then this specific
+      delete needs its own Part-5 100%-coverage measurement before either a human or an agent fires `--apply`.
 - [x] ✅ [DATA] P0. **`_index` CF-2/3/4 stamp DONE — BOTH sports surfaces now CF-GREEN 2026-06-24** via the new
       `instruments-service/scripts/canonicalize_sports_index_cf234_2026_06_24.py` (in-place, preserves everything;
       source = `pipeline_mode` minus its `{mode}_` prefix, `expected_unattempted` source-exempt; asset_group=sports;
@@ -332,13 +353,21 @@ incremental calls no-force for 2019+, scaling modestly for 2015-2018. Unblocks [
 The big quota sink (~4 calls/fixture: lineups/stats/events/players) + downstream (weather/footystats/understat/SFI per
 eligibility + season/transfer windows).
 
-- [ ] [DATA] P1. Enrichment backfill 2015→present for the 94 leagues, then annotate per-(league,entity) availability.
-      **[2026-07-12 note — finding 257, §A2 B-queue ruling]** A nominal counterpart of this item is checked `[x]` in
-      `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (Todo 5, "Backfill enrichment + core
-      2020-06→present"), but that checkbox represents LAUNCH not gate-passed — its own defined gate was still FAILING as
-      of that plan's most recent Progress Log entry (2026-07-06 session 19: Total EU 415,064, "Gate: FAILS"). The real
-      enrichment-completion tracker there is its Todo 9 (BLOCKED-OPERATOR-DECISION, correctly unflipped). Do not treat
-      either as evidence this [D] item is done; check `sports_p2_history...` Todo 9 status before dispatching.
+- [x] ✅ [DATA] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — the note below cites
+      `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` Todo 9 as "correctly unflipped/BLOCKED-OPERATOR-
+      DECISION", but that archived plan's Todo 9 was actually flipped GREEN on 2026-07-14 (see its line 87 banner "Todo
+      9 GW gate GREEN, checkbox flipped" and its line 199 `[x]` checkbox) — 2 weeks before this note was written.
+      Separately, the pre-2020-06-06 portion of "2015→present" is moot per the 2026-07-21 data-floor ruling, and the
+      post-floor portion is tracked elsewhere (5/6 sources VERIFIED DONE per
+      `sports_closeout_track_s2_foldin_2026_07_25.md`, odds_api gap tracked in
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`).** Enrichment backfill 2015→present for the 94 leagues,
+      then annotate per-(league,entity) availability. **[2026-07-12 note — finding 257, §A2 B-queue ruling]** A nominal
+      counterpart of this item is checked `[x]` in `sports_p2_history_apifootball_2015_to_present_2026_06_27.md` (Todo
+      5, "Backfill enrichment + core 2020-06→present"), but that checkbox represents LAUNCH not gate-passed — its own
+      defined gate was still FAILING as of that plan's most recent Progress Log entry (2026-07-06 session 19: Total EU
+      415,064, "Gate: FAILS"). The real enrichment-completion tracker there is its Todo 9 (BLOCKED-OPERATOR-DECISION,
+      correctly unflipped). Do not treat either as evidence this [D] item is done; check `sports_p2_history...` Todo 9
+      status before dispatching.
 
 **SEQUENCING:** [A]+[B] now in parallel (code vs data-layer, independent) → [C] once [A] season-window lands → [D] after
 [C]. Biggest single unblock = [B] (resolves dual-SoT + stamps) and [A] (correct+cheap backfills) — both start now.

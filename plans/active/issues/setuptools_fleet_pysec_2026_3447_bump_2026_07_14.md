@@ -99,9 +99,9 @@ Bump setuptools 82.0.1 → 83.0.0 across the affected repos:
 
 > Added 2026-07-26 by `/plan-reconcile` (infra shard). This doc was `status: open` with **zero checkboxes** —
 > prose-only, so none of its work was visible to the hygiene/dispatch surface (the class
-> `/plans/active/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3 exists to sweep). No decision was invented:
-> the todos below are the doc's own "The proper fix" 3 steps, with the current per-repo state MEASURED this turn so a
-> worker starts from facts rather than the 2026-07-14 snapshot.
+> `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` todo 3 exists to sweep). No decision was
+> invented: the todos below are the doc's own "The proper fix" 3 steps, with the current per-repo state MEASURED this
+> turn so a worker starts from facts rather than the 2026-07-14 snapshot.
 >
 > **Measured 2026-07-26** (`grep -A1 '^name = "setuptools"' <repo>/uv.lock`): e2e-testing → **83.0.0** (already fixed);
 > instruments-service → **82.0.1** (still vulnerable); market-tick-data-service → **82.0.1** (still vulnerable). And
@@ -123,3 +123,16 @@ Bump setuptools 82.0.1 → 83.0.0 across the affected repos:
       own — e2e-testing's lock is at 83.0.0, so the ignore is currently masking nothing. **Done when**:
       `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing and e2e-testing's QG is green.
       Repo: e2e-testing.
+
+**CROSS-REFERENCED 2026-07-30 (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: all 3 todos above are
+already extracted verbatim, together as a single consolidated todo, in
+`infra_satellite_ao_dispatch_batch1_2026_07_26.md`'s own "sweep every repo... re-run QG... remove the ignore-vuln"
+`[INFRA]` P1 item (Source: this doc). Not checked off here — the extracting doc's todo is not yet done; tracked there
+going forward.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE (downgraded from this run's
+  own Phase 1 hunter's initial RECLASSIFY verdict — Phase 2's conflict-check found
+  `infra_satellite_ao_dispatch_batch1_ 2026_07_26.md` already carries a single consolidated todo covering all 3 items
+  here verbatim, citing this exact doc). Cross-reference added above. Zero `assigned_vm`/backlog impact from this pass.

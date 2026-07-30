@@ -90,7 +90,7 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -235,9 +235,13 @@ against the reproduction script.
       ratio-climbing / error-reason-recurring condition this todo was gating on has not recurred. Confirms both fix
       halves (`unified-api-contracts@8db188fe` + `market-tick-data-service@339ca767`) are effective in production, not
       just in the regression test.
-- [ ] [DATA] P3. If/when `derivative_ticker` capture is ever routed through `finalise_rows_and_path` with
-      `validate=True`, it will need the same `ts_event`-derivation treatment as this doc's fix -- currently dormant, not
-      urgent.
+- [x] ✅ [DATA] P3. **DONE — market-tick-data-service@6bf568ee (2026-07-30).** `derivative_ticker` capture DID start
+      routing through `finalise_rows_and_path` with `validate=True` (LIGHTER-ZKSYNC's first real production write hit
+      `missing_column:ts_event`, per
+      `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`).
+      Fixed with the same treatment this doc's book_snapshot_5 fix used: added `"derivative_ticker": {}` to
+      `_WIRE_COLUMN_RENAMES` in `tardis_shared.py` (verified live, 2026-07-30 — `funding_rate`/`open_interest`/
+      `mark_price`/`index_price` already match the contract, only the `ts_event` derivation step needed to run).
 - [ ] [SERVICE] P3. `features-service`'s `CrossInstrumentRawDataLoader.load_book_snapshots` expects a third,
       non-existent `l2_book_checkpoints`-shaped input -- a separate, pre-existing reader/writer design gap, unrelated to
       this write-time-validation fix; needs its own scoping (design decision: build the missing writer, or change the
@@ -269,3 +273,8 @@ against the reproduction script.
   normal deploy-lag window, not a fix failure) — not a live process still failing. Flipped the P2 verification todo with
   this finding. No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (my `AUTHORING_SLOT`) with the duplicate-escalation outcome.
+- **2026-07-30 (slot-12, `/ag-closeout-audit cefi`):** Flipped the false-unchecked `derivative_ticker` P3 todo — it was
+  provably already shipped (`market-tick-data-service@6bf568ee`, verified live in `tardis_shared.py`'s
+  `_WIRE_COLUMN_RENAMES`), found via
+  `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
+  1 todo remains open (features-service reader design gap) — not archiving this doc yet.

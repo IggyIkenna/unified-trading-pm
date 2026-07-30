@@ -160,8 +160,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       rate rose from 0% — verify the `MANIFEST_COLUMN_FILL_REGRESSION` guardrail did NOT trip and total row count is
       unchanged before declaring success. (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the prediction
-      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. (repo:
-      market-tick-data-service)
+      consolidator cron; record the before/after fill-rate evidence in this plan's Progress Log. **Retrofit 2026-07-30**
+      (dp_watcher_003 issue's 2nd todo): resume via `scripts/mtds_available_at_backfill_resume_prediction_2026_07_30.py`
+      (maintenance-window-aware), not raw `gcloud`. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P1. **NEW — 2026-07-14 correction**: query the tradfi canonical index (via `read_availability_index()` —
       single-walk-safe, NOT a raw GCS walk) for the bundled (`options_chain`/`futures_chain`/`event_contract`) vs
       non-bundled row-count split on `capture_status=captured` rows, so the true post-apply fill-rate ceiling is known
@@ -287,7 +288,9 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
       near 85% instead would mean the dead-code theory is wrong and needs re-investigation before declaring success.
       (repo: market-tick-data-service, unified-trading-library)
 - [ ] [DATA] P1. **No longer gated on an operator decision (retagged 2026-07-28, same ruling)** — Resume the tradfi
-      consolidator cron; record evidence in the Progress Log. (repo: market-tick-data-service)
+      consolidator cron; record evidence in the Progress Log. **Retrofit 2026-07-30** (dp_watcher_003 issue's 2nd todo):
+      resume via `scripts/mtds_available_at_backfill_resume_tradfi_2026_07_30.py` (maintenance-window-aware), not raw
+      `gcloud`. (repo: market-tick-data-service)
 - [x] ✅ [DATA] P2. Audit each `market_tick_data_service/cli/handlers/*_handler.py` DeFi collector (~30 files) for how
       (or whether) it currently derives `available_at` at live-capture time — map the per-data_type derivation formula
       each already uses, since a retroactive backfill must reuse the SAME formula per data_type rather than one blanket
@@ -325,25 +328,18 @@ verify the guardrail did not trip + row counts are unchanged before resuming the
 
 ## Progress Log
 
-**Dispatch-order finding #2 — 2026-07-29 (slot 14, data_engineering)**: dispatched task
-`mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron", line 162) while `-001` ("Apply
-`rebuild_prediction_manifest.py`", line 157, `-006`'s direct predecessor/prerequisite) was still `queued` on the live
-backlog (`GET /api/backlog`), never dispatched to anyone — the exact same failure class as the 2026-07-14
-"Dispatch-order finding" below, despite `sequential: true` already being set on this plan's frontmatter (the fix that
-closed THAT instance). Declined to execute `-006` (nothing to resume — the backfill hasn't been applied yet; resuming
-the cron now would defeat the pause/apply/resume sequence this plan's sports-CF8-precedent HARD constraint exists to
-enforce). Filed `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` for a backend_engineer to
-root-cause why `sequential: true`'s prereq-wiring didn't hold for this specific pair (out of data_engineering craft
-scope). No production writes made; no cron touched; task released via `/skip-current-task {"reason_code": "GATED"}`.
-
-**Dispatch-order finding #3 — 2026-07-29T15:2xZ (slot 15, data_engineering)**: dispatched `-006` again (same task as
-finding #2 above), same result: the "Apply `rebuild_prediction_manifest.py`" todo (line ~157, `-006`'s direct
-prerequisite) is STILL unchecked — confirmed by reading this plan's current content, no apply/force-consolidate run
-recorded anywhere in the Progress Log since finding #2.
-`issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` is still `status: open` / `resolved_by:`
-blank — the root-cause fix has not landed yet. Declined to execute (nothing to resume). No production writes made; no
-cron touched; task released via `/skip-current-task {"reason_code": "GATED"}` citing this entry + the open issue doc —
-not re-filing a duplicate issue for the same still-open bug.
+**Dispatch-order findings #2-#4 — 2026-07-29/30 (slots 14, 15, 11, data_engineering; consolidated 2026-07-30 for line
+cap, nothing lost)**: `-006` ("Resume the prediction consolidator cron", line 162) has now been dispatched 3 times while
+its direct predecessor/prerequisite `-001` ("Apply `rebuild_prediction_manifest.py`", line 157) remained unexecuted each
+time — the same failure class as the 2026-07-14 finding below, despite `sequential: true` already being set (the fix
+that closed that earlier instance). #2 (slot 14, 2026-07-29): found `-001` still `queued`, never dispatched to anyone;
+filed `issues/mtds_backfill_sequential_true_dispatch_order_violated_2026_07_29.md` for backend_engineer to root-cause
+the prereq-wiring gap (out of data_engineering craft scope). #3 (slot 15, 2026-07-29T15:2xZ) and #4 (slot 11,
+2026-07-30T00:45Z): re-confirmed line 157 still `[ ]` and the issue doc still `status: open` / `resolved_by:` blank each
+time — no fix landed, no new evidence to add. All three declined execution (nothing to resume — the backfill hasn't been
+applied, so resuming the cron now would defeat the pause/apply/resume sequence this plan's sports-CF8-precedent HARD
+constraint exists to enforce); none touched production or the cron; each released via
+`/skip-current-task {"reason_code": "GATED"}` without re-filing a duplicate issue.
 
 **2026-07-14 (ICE-purge session, cross-plan note)**: the operator AUTHORIZED and USED a tradfi consolidator-cron pause
 window today for the ICE non-24h purge (`purge_tradfi_ice_non_24h_2026_07_14.py`, market-tick-data-service@fffd7f82):

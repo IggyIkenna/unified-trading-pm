@@ -185,7 +185,7 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
       execution since ≥2026-07-23** — 3 days of zero manifest writes. Fixed by bumping memory 8Gi→16Gi + a verification
       run (full 10m2s success, measured `peak_rss=8646.5MB`). Capture flowing again as of 2026-07-25T01:44Z. Root-cause
       attribution + a permanent bound remain open follow-ups (not blockers) — full detail:
-      `/plans/active/issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`.
+      `/plans/archive/issues/cefi_batch_download_oom_crashloop_capture_halt_2026_07_24.md`.
 
 ## Track 2 — CeFi backfill COVERAGE reopened · FORKED to its own gated plan · P0
 

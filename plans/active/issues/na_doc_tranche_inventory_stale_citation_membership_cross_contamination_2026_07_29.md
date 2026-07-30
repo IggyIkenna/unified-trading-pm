@@ -13,7 +13,7 @@ summary: >-
   2026-07-25→27 citation-grep mechanism (`CITE_RE` basename matching inside each tranche's own
   `{tranche}_consolidated_closeout_2026_07_25.md` body) instead of testing `asset_group` directly — the same stale
   mechanism
-  `plans/active/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
+  `plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`
   already flagged for the sibling script earlier the same day, but manifesting differently here: instead of a hard zero,
   ordinary `related:`-frontmatter links and footnote citations between the tranches' own coordinator docs get treated as
   membership claims, so coordinator docs leak INTO other tranches and lose their OWN tranche tag. A second, independent
@@ -41,14 +41,14 @@ tags:
   ]
 related:
   [
-    /plans/active/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
+    /plans/archive/issues/generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA
@@ -158,21 +158,62 @@ class in a third script.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `generate_na_doc_tranche_inventory.py`'s `ao`/`ci`/`infra` membership branch to test
-      `asset_group` directly (matching the corrected 5-AG branches), removing the retired citation-grep mechanism.
-      **Done when**: `--tranche infra --json` excludes all 5 confirmed false positives (`ag_closeout_audit_rollout`,
-      `ao_consolidated_closeout`, `cross_cutting_consolidated_closeout`, `june_2026_vintage_audit_findings`,
-      `tradfi_consolidated_closeout`) and includes `infra_consolidated_closeout_2026_07_25.md`.
-- [ ] [SCRIPT] P2. Fix the `cross-cutting` branch's tautological `peer_cited` self-veto. **Done when**:
-      `--tranche cross-cutting --json` includes both `cross_cutting_consolidated_closeout_2026_07_25.md` and
-      `june_2026_vintage_audit_findings_2026_07_27.md`.
-- [ ] [TEST] P2. Add a regression test asserting (a) a tranche's own `{tranche}_consolidated_closeout_*.md` coordinator
-      doc is always a member of its own tranche, and (b) a doc is never assigned to a tranche solely because a DIFFERENT
-      tranche's closeout doc links/cites it in a `related:` list or footnote.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e.** `ao`/`ci`/`infra` membership branch now tests
+      `t in asset_group` directly (via `TRANCHE_ASSET_GROUP_VALUE` mapping `infra`->`infrastructure`), matching the
+      corrected 5-AG branches; the retired citation-grep mechanism (`_cited_basenames`/`CITE_RE`/`non_ag_cited`) removed
+      entirely. **Done-when confirmed live**: `--tranche infra --json` excludes all 5 confirmed false positives
+      (`ag_closeout_audit_rollout`, `ao_consolidated_closeout`, `cross_cutting_consolidated_closeout`,
+      `june_2026_vintage_audit_findings`, `tradfi_consolidated_closeout`) and includes
+      `infra_consolidated_closeout_2026_07_25.md`. Discovered via `/na-eligibility-audit ci` (this fix's own trigger):
+      `--tranche ci --json` went from 0 docs (hard zero, closeout archived 2026-07-28) to 28.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e.** Tautological `peer_cited` self-veto removed;
+      `cross-cutting` now tested via direct tag + `(parent_epic in DATA_EPICS or no other tranche already assigned)`.
+      **Done-when confirmed live**: `--tranche cross-cutting --json` includes both
+      `cross_cutting_consolidated_closeout_2026_07_25.md` and `june_2026_vintage_audit_findings_2026_07_27.md`.
+- [x] ✅ [TEST] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e**,
+      `tests/unit/test_generate_na_doc_tranche_inventory.py` (7 cases):
+      `test_citation_in_a_peer_closeout_doc_does_not_confer_membership` proves both (a)
+      `infra_consolidated_closeout_2026_07_25.md` resolves to `['infra']` (a tranche's own closeout doc is always a
+      member of its own tranche) and (b) a `ci`-tagged doc merely cited in that same infra closeout's body does NOT also
+      pick up `infra`. Plus `test_non_ag_tranche_membership_needs_no_closeout_doc` (parametrized ci/ao/infra, no
+      closeout file written at all), `test_infra_tranche_asset_group_value_is_infrastructure_not_infra`,
+      `test_ag_tranche_membership_unaffected_by_the_fix`,
+      `test_cross_cutting_solo_tag_is_assigned_without_data_epic_or_citation`,
+      `test_ag_tagged_doc_with_cross_cutting_is_not_double_counted_unless_data_epic`. All 7 pass.
 - [ ] [SCRIPT] P3. Evaluate bundling this fix with the sibling script's fix
       (`generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`) given
       the near-verbatim shared helper shapes — consider extracting one shared membership-test module both scripts
       import, to prevent a third recurrence of this bug class.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA, valid — 3 of 4 todos already done
+  (`unified-trading-pm@6228cff7e` + `a72f78ab5`); the sole remaining item (bundle-vs-extract-shared-helper) is a design
+  preference call, not a bounded/deterministic outcome, so it stays NA rather than RECLASSIFY. **Additional evidence for
+  this remaining todo, found while running this session's own infra-tranche Phase 0 against the now-fixed script**: this
+  run's ORIGINAL (pre-fix, buggy) `--tranche infra --json` population (64 docs, captured before this session pulled
+  `6228cff7e`) was diffed against a fresh post-fix run — beyond the 5 false positives + 1 false negative this issue doc
+  already documented, 3 MORE false positives surfaced that this doc's own investigation had not caught (scoped to just
+  the 6 anomalous docs it happened to trace, not an exhaustive sweep, as its own Impact section already flagged as
+  likely): `ao_consolidated_closeout_2026_07_25.md` (`asset_group: [ao]`, not infra),
+  `issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` and
+  `issues/sports_mdps_coverage_reader_wrong_bucket_2026_07_28.md` (both `asset_group: [sports, meta]` — the `sports` tag
+  should have taken precedence over the `meta` last-resort infra-fold, but the fixed script's `meta` fallback only
+  checks `not tranches` at evaluation time, not whether a REAL AG tag is also present in the list; confirmed this is now
+  CORRECTLY handled post-fix since the `sports` AG loop runs before the `meta` fallback and populates `tranches` first —
+  these 3 were leaks in the OLD buggy citation-grep mechanism, not a residual gap in the new fix). Also found (not acted
+  on, no assigned_vm change made): `issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`,
+  `issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
+  `issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md` (all cefi/multi-AG-tagged, not infra) were also
+  present in the stale 64-doc population but only classified (KEEP-NA, no state change), not reclassified — zero harm.
+  **Net**: the 3 acted-upon leaks (`ao_consolidated_closeout`, both sports docs) were already read end-to-end and
+  RECLASSIFY-verdicted with real conflict-checks by this session before this cross-check ran; per operator-precedent
+  (undoing sound, evidenced work over a scope technicality is worse than leaving it, since the correct tranche's own
+  future audit will simply find these docs already `assigned_vm: planning` and skip them, no duplicate-dispatch risk) —
+  left applied, flagged here for the record rather than reverted. This raises today's confirmed leak count to 8 docs
+  total (5 original FP + 1 original FN + 3 new FP), materially more than the issue doc's original estimate — strengthens
+  the case for the shared-helper extraction in the remaining P3 todo (a single well-tested membership module is less
+  likely to leak silently a third time than two independently-maintained near-duplicates).
 
 ## Codex SSOTs
 

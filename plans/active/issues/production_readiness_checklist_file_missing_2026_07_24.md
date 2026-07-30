@@ -101,3 +101,6 @@ risks papering over a real broken tool-chain reference with a cosmetically-consi
 
 - 2026-07-24 — Filed by docs-reconcile self-consistency hunter follow-up. Not fixed inline (see "Why I did not fix this
   myself" above) — genuinely needs a human decision on which checklist is authoritative, not a mechanical edit.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo requires a human
+  decision among stated options with no mechanical way to determine the correct answer from the repo alone; doc's own
+  Progress Log states this explicitly.

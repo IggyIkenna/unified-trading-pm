@@ -17,7 +17,7 @@ PLANS go only in:
 
 NEVER create plans or execution docs in:
 - Workspace root (`unified-trading-system-repos/*.md`)
-- Codex root (`unified-trading-codex/*.md`)
+- Codex root (`unified-trading-pm/codex/*.md`)
 - Service repo root or `docs/`
 - `unified-trading-pm/scripts/`, `.cursor/rules/`
 

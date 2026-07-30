@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 ---
 
 # Capability wizard — gap discovery tracker
@@ -516,29 +516,198 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       of "(no reason recorded)") — left their checkboxes un-flipped since they weren't this todo's scope; a future pass
       on those should find real reasons already populated once regenerated. (auto-emitted by
       generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:deribit** (distance 1, status partial) —
-      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ibkr** (distance 1, status partial) —
-      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance
-      1, status partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap
-      #10).. (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp** (distance 1, status
-      partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry missing from UAC
-      (gap #3).. (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (data_pipeline_failure escalation worker, agt-79063c, resumed as
+      capability_wizard_gap_discovery-020) — already fixed by the sibling `venue:cboe` todo above, no new code needed.**
+      That todo's root-cause fix (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`) explicitly predicted it
+      would also resolve this todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from
+      the already-committed, already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py --output-dir /tmp/cap-unlock-check`, scratch dir — no repo files mutated)
+      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports--> venue:cme` edge now carries
+      `reason="IBKR smart-router absorbs most intra-TradFi spot arb."` (from the `(TRADFI, spot)` cell's `notes` in
+      `archetype_capability_manifest.json` — status stays `partial`, correctly, since IBKR-routed spot arb is a real,
+      narrower capability than full cross-venue price dispersion). Same pre-existing classifier-keyword quirk noted on
+      the `venue:cboe` todo applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of
+      `needs-config` once a real reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as
+      that todo's own note. No code changed this pass; this is a checkbox-only verification flip.
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (slot-12, capability_wizard_gap_discovery-021) — already fixed by the
+      sibling `venue:cboe`/`venue:cme` todos above, no new code needed.** That todo's root-cause fix
+      (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`) explicitly predicted it
+      would also resolve this todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from
+      the already-committed, already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py     --output-dir <scratch>`, scratch dir — no repo files mutated) and
+      confirmed the `ARBITRAGE_PRICE_DISPERSION     --supports--> venue:deribit` edge now carries
+      `reason="UAC lacks funding_arb flag distinct from price-arb (gap     #2)."` (status stays `partial`, correctly — a
+      real, narrower capability gap, not a venue-integration gap). Deribit sits in TWO `ARBITRAGE_PRICE_DISPERSION`
+      cells in `archetype_capability_manifest.json` — CEFI/perp (this reason) and CEFI/option
+      (`"vol_arb not a separate capability; multi-leg vol-arb algo pending."`), both PARTIAL;
+      `compute_unlock_entries()`'s edge-key dedup (`_capability_unlock.py` — keeps first-encountered on a status tie,
+      only overwrites on a strictly more-available status) deterministically resolves to the CEFI/perp cell's reason
+      because it's iterated first in the manifest's cell order — the documented, pre-existing, already-tested dedup
+      rule, not a new bug. Same pre-existing classifier-keyword quirk noted on the `venue:cboe`/`venue:cme` todos
+      applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of `needs-config` — the reason text
+      contains the substring "gap #", which `_REASON_CLASSIFIER` matches to `PIECE_REGISTRY` before any config-shaped
+      needle) — not a new bug, not fixed here, same as those todos' own notes. No code changed this pass; this is a
+      checkbox-only verification flip.
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-29 (slot-16, capability_wizard_gap_discovery-022) — already fixed by the
+      sibling `venue:cboe`/`venue:cme`/`venue:deribit` todos above, no new code needed.** That todo's root-cause fix
+      (`_capability_extract.py`'s `--supports-->` venue edge now passes
+      `reason=(cell.notes or None) if cell.notes else None`, matching the sibling `trades_instrument` edge — shipped
+      `unified-trading-pm@1e97a608f`, manifest regenerated `unified-api-contracts@c4f42fbc`, confirmed ancestor of
+      current UAC HEAD `f909e112` via `git merge-base --is-ancestor`) explicitly predicted it would also resolve this
+      todo. Verified rather than re-diagnosed: regenerated `capability-unlock-report.json` from the already-committed,
+      already-fresh `capability-manifest.json`
+      (`generate_capability_unlock_report.py --output-dir <scratch>     --dry-run`, scratch dir — no repo files mutated)
+      and confirmed the `ARBITRAGE_PRICE_DISPERSION --supports-->     venue:ibkr` edge now carries
+      `reason="IBKR smart-router absorbs most intra-TradFi spot arb."` (status stays `partial`, correctly — IBKR is a
+      real, narrower smart-router capability, not a missing venue integration). Traced to source:
+      `archetype_capability_manifest.json`'s single `(TRADFI, spot)` cell lists BOTH `ibkr` and `cme` as `venue_ids`
+      sharing this one `notes` string — the identical reason text on the sibling `venue:cme` todo above is not a
+      coincidence, it is literally the same cell (IBKR is the smart-router venue that also routes CME-listed
+      instruments). Same pre-existing classifier-keyword quirk noted on the `venue:cboe`/`venue:cme`/`venue:deribit`
+      todos applies here too (`missing_pieces` relabeled `needs-registry-entry` instead of `needs-config` once a real
+      reason populates the blunt keyword classifier) — not a new bug, not fixed here, same as those todos' own notes. No
+      code changed this pass; this is a checkbox-only verification flip.
+- [x] ✅ [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --supports--> venue:ice** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py) —
+      unified-api-contracts@c92cf034: the "(no reason recorded)" text was stale — the committed
+      `capability-manifest.json` already carried a real reason ("Cross-product routing policy not declared in UAC (gap
+      #10)."), which was itself FALSE: `unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`
+      already declares `cme_wti_ice_brent_spread` (CROSS_VENUE_ROUTING_POLICIES), closing the UAC-declaration half of
+      gap #10 since 2026-05-08. The manifest cell (`archetype_capability_manifest.json`, TRADFI/dated_future,
+      venue_ids=[cme, ice]) just never got updated to reflect that. Grepped execution-service + strategy-service for any
+      consumer of `CROSS_VENUE_ROUTING_POLICIES`/`CrossVenueRoutingPolicy`/`policies_for_venue_pair` — 0 hits, so the
+      capability is still genuinely not end-to-end usable (kept status PARTIAL, not flipped to SUPPORTED). Corrected the
+      cell's `notes` to name the real remaining gap (execution-service/strategy-service router integration, not UAC
+      declaration) and propagated the fix through the committed derived artifacts (`capability-manifest.json`,
+      `capability-unlock-report.json`, `prospectus/ARBITRAGE_PRICE_DISPERSION.md`) — hand-patched rather than
+      full-regenerated, since a from-scratch regen in this slot picked up unrelated environment noise (missing
+      sibling-service `.venv`s skewing unrelated edges/leg-venue lists); verified the 3-edge diff (`supports→venue:ice`,
+      `supports→venue:cme`, `trades_instrument→instrument_type:dated_future`, all sourced from the same cell) was the
+      only change via `git diff`. QG green (sentinel `a86be26d`); `tests/unit/test_capability_unlock.py` (PM) +
+      `tests/internal/unit/test_archetype_capability_manifest_parity.py` +
+      `tests/unit/test_archetype_capability_may_23_coverage.py` (UAC) all pass. Follow-up (not in this task's scope):
+      actually wiring `CROSS_VENUE_ROUTING_POLICIES` into `execution-service/execution_service/v2/router.py` is the real
+      unlock for this cell — left as a future SCRIPT/BACKEND todo, not fabricated here.
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-30 (slot-16, capability_wizard_gap_discovery-024) — already fixed by the
+      sibling `venue:cboe`/`venue:cme`/`venue:deribit`/`venue:ibkr`/`venue:ice` todos above, no new code needed.**
+      **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance 1, status
+      partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap #10)..
+      (auto-emitted by generate_capability_unlock_report.py) — Verified directly against
+      `unified-api-contracts@c92cf034` ("fix(architecture-v2): correct stale gap#10 notes on ARBITRAGE_PRICE_DISPERSION
+      CME/ICE cell", already HEAD == `origin/live-defi-rollout`, 0 ahead/0 behind): that commit's own diff shows all
+      THREE edges sourced from the single `(TRADFI, dated_future)` cell were corrected together — `supports→venue:ice`,
+      `supports→venue:cme`, and THIS todo's `trades_instrument→instrument_type:dated_future` — across every derived
+      artifact (`unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json` source cell,
+      `openapi/capability-manifest.json`, `openapi/capability-unlock-report.json`, and
+      `openapi/prospectus/ARBITRAGE_PRICE_DISPERSION.md`'s TRADFI/dated_future row). Confirmed via `git show c92cf034`:
+      the `trades_instrument→instrument_type:dated_future` edge in `capability-unlock-report.json` now carries
+      `reason="Cross-venue routing policy IS declared in UAC (cross_venue_routing_policy.py: cme_wti_ice_brent_spread,     gap #10 registry closed) but execution-service/strategy-service do not yet consume     CROSS_VENUE_ROUTING_POLICIES — routing policy not wired into the SOR."`
+      (status stays `partial`, correctly — the UAC-declaration half of gap #10 is closed but the SOR-wiring half is a
+      real, still-open gap, same classifier-keyword quirk noted on the sibling todos, not fixed here). This checkbox was
+      simply never flipped when the shared root-cause fix landed (the fixing todo's own scope note said it left the
+      sibling checkboxes un-flipped). No code changed this pass; checkbox-only verification flip.
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot-13, capability_wizard_gap_discovery-025) — stale cell reason corrected;
+      edge correctly stays `partial`.** **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp**
+      (distance 1, status partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry
+      missing from UAC (gap #3).. (auto-emitted by generate_capability_unlock_report.py) —
+      **unified-api-contracts@f8d266ab** (shipped earlier in this same task, already on `origin/live-defi-rollout`):
+      UAC's `FlashLoanReceiverRegistry` (gap #3, `unified_api_contracts/internal/architecture_v2/flash_loan_receiver.py`
+      — `FLASH_LOAN_RECEIVER_REGISTRY`) already exists with 10 real per-(chain, protocol) entries including an Arbitrum
+      Uniswap V3 flash-swap row — the UAC-declaration half of gap #3 was already closed, so the cell's "registry
+      missing" reason was stale/wrong. The real remaining gap is execution-wiring, not registry absence — independently
+      re-verified every factual claim against current code before flipping: grepped execution-service directly and
+      confirmed only `execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` (a DIFFERENT
+      archetype, `kind=recursive_leverage`) calls `flash_loan_receiver_for()` (2 call sites, both non-test); the live
+      AAVE connector (`defi_execution/protocols/aave.py`/`aave_live.py`) resolves receivers only via config override or
+      the testnet-only `TestnetContractRegistry`, never the UAC registry; and `engine/handlers/flash_loan_handler.py`
+      (the paper/backtest simulator) has ZERO `receiver_address`/`receiver_kind` references — no receiver-address
+      concept at all. Status correctly stays `partial` (registry now exists, but no live flash-loan-arb execution path
+      consumes it) — the commit corrected the (DEFI, lp) cell's `notes` in the source
+      `archetype_capability_manifest.json` and propagated the fix through the derived `capability-manifest.json`,
+      `capability-unlock-report.json`, and the `ARBITRAGE_PRICE_DISPERSION` prospectus to name the real remaining gap
+      (execution-wiring) instead of the closed one (registry declaration). No further code change needed this pass —
+      checkbox flip only.
+- [x] ✅ [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
       status partial) — missing: needs-leg-spec. Why blocked: vol_arb not a separate capability; multi-leg vol-arb algo
-      pending.. (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:cme** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ibkr** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
-- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+      pending.. (auto-emitted by generate_capability_unlock_report.py) — Verified accurate + current, not stale (unlike
+      several sibling todos above): `ArbitragePriceDispersionEngine`
+      (`strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py`), the SOLE
+      `ARCHETYPE_ENGINE_REGISTRY`-mapped engine for this archetype (`factory.py:76`), exhaustively dispatches on
+      `dispersion_type ∈ {price-dispersion, funding-rate-dispersion, cross-venue-prediction-dispersion}`
+      (`_KNOWN_DISPERSION_TYPES`) — no vol/IV-dispersion branch exists for trading the same option at different IVs
+      across Deribit vs OKX. Confirmed no CEFI options slot config for this archetype in `archetype_slots_cefi.py` (only
+      spot/perp/funding-rate-disp slots). `vol_trading/dispersion.py` exists but solves a DIFFERENT problem
+      (index-vs-component correlation dispersion, `VOL_TRADING` family, not reusable here — the codex archetype for that
+      space, `VOL_ARB_RV_IV`, is itself still `implementation_status: design`). Cross-checked execution-service:
+      `execution_service/engine/multi_leg_orchestrator.py` already provides generic multi-leg
+      routing/compensation/unwind (used today by this archetype's OWN price-dispersion and funding-rate-dispersion paths
+      via `AtomicInstruction`/`LEADER_HEDGE`) — so the gap is specifically the STRATEGY-layer dispatch branch +
+      options-IV-computation/leg-construction logic, not a missing execution-side capability. Status correctly stays
+      `partial` (not fabricated to `supported`). No code change this pass (matches the sibling `-024` precedent) —
+      building the actual multi-leg vol-arb dispatch branch is real strategy-engineering design work (IV surface
+      comparison methodology, strike/expiry matching, margin/greeks treatment), not a scriptable manifest fix; it stays
+      recorded here as the durable, structured artifact for that gap rather than a fabricated new todo (CLAUDE.md
+      dispatch-scope-eligibility: an open-ended design call isn't AO-eligible without a design decision first).
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot-13, capability_wizard_gap_discovery-027) — stale cell note corrected;
+      edge correctly stays `partial`.** **unlock CARRY_BASIS_DATED --supports--> venue:cme** (distance 1, status
+      partial) — missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by
+      generate_capability_unlock_report.py) — **unified-api-contracts@f8515eb7**: the (TRADFI, dated_future) cell's
+      `notes` claimed "IBKR ↔ CME cross-venue routing policy not declared (UAC gap #10)" — false. UAC's
+      `CROSS_VENUE_ROUTING_POLICIES` (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`)
+      already declares three IBKR↔CME policies (`ibkr_spy_cme_es_basis`, `ibkr_qqq_cme_nq_basis`,
+      `ibkr_iwm_cme_rty_basis`) — the UAC-declaration half of gap #10 IS closed for the CME leg. Independently
+      re-verified: grepped `execution-service` + `strategy-service` for `CROSS_VENUE_ROUTING_POLICIES` /
+      `cross_venue_routing_policy` / `routing_policy_for` / `policies_for_venue_pair` — **zero call sites** in either
+      repo, despite the UAC module's own `CONSUMER_CALL_SITES` metadata claiming four (execution-service `v2/router.py`,
+      `algo_library/sor_cross_chain.py`, `algo_library/sor_twap.py`; strategy-service `portfolio_allocator/service.py`)
+      — none of those actually import it. So the real remaining gap is SOR-wiring, not registry absence. Status
+      correctly stays `partial` (not fabricated to `supported`) — corrected the note in the source
+      `archetype_capability_manifest.json` cell and propagated through `capability-manifest.json`,
+      `capability-unlock-report.json`, and the `CARRY_BASIS_DATED` prospectus to name the real gap. **Also confirmed the
+      sibling `venue:ice` edge (below) has a genuinely DIFFERENT, still fully-open gap** — no IBKR↔ICE routing policy
+      exists at all (`policies_for_venue_pair('ibkr','ice')` returns empty; only `cme_wti_ice_brent_spread` pairs
+      CME↔ICE, both future legs, not usable for the IBKR spot leg) — so the corrected note distinguishes the
+      closed-registry/open-SOR-wiring state (CME/IBKR legs) from the still-open-registry state (ICE leg). No further
+      code change needed this pass — checkbox flip + note correction only.
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot-14, capability_wizard_gap_discovery-028) — stale cell note already
+      corrected by the sibling CME fix; edge correctly stays `partial`.** **unlock CARRY_BASIS_DATED --supports-->
+      venue:ibkr** (distance 1, status partial) — missing: needs-config. Why blocked: (no reason recorded).
+      (auto-emitted by generate_capability_unlock_report.py) — **unified-api-contracts@f8515eb7** (already shipped, on
+      `origin/live-defi-rollout`): that single-cell fix (source `archetype_capability_manifest.json` cell) propagated to
+      ALL THREE derived edges (`venue:cme`, `venue:ibkr`, `venue:ice`) simultaneously — confirmed via
+      `git show     f8515eb7 -- openapi/capability-unlock-report.json`, whose diff shows the same corrected `reason`
+      string landing on all three `to_node_id` blocks in one commit. Independently re-verified both halves for the
+      `ibkr` edge specifically (not just trusted the sibling's claim): (1) UAC's `CROSS_VENUE_ROUTING_POLICIES`
+      (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`) declares four IBKR-leg policies
+      with `leg_venues=("ibkr","cme")` (`ibkr_spy_cme_es_basis`, `ibkr_qqq_cme_nq_basis`, `ibkr_iwm_cme_rty_basis`,
+      `ibkr_spy_option_cme_es_hedge`) — the UAC-declaration half of gap #10 IS closed for IBKR↔CME; (2) grepped
+      execution-service (`v2/router.py`, `algo_library/sor_cross_chain.py`, `algo_library/sor_twap.py`) and
+      strategy-service (`portfolio_allocator/service.py`) for `CROSS_VENUE_ROUTING_POLICIES` /
+      `cross_venue_routing_policy` / `routing_policy_for` / `policies_for_venue_pair` — **zero call sites in either
+      repo**, matching the CME sibling's finding despite the module's own `CONSUMER_CALL_SITES` metadata claiming four.
+      So the real remaining gap for this edge is SOR-wiring (routing policy declared but not consumed), not registry
+      absence. Status correctly stays `partial` (not fabricated to `supported`). No further code change needed this pass
+      — checkbox flip only (the note correction already shipped bundled with the CME fix).
+- [x] ✅ [SCRIPT] P2. **CONFIRMED 2026-07-30 (slot-13, capability_wizard_gap_discovery-029) — note already correct; edge
+      correctly stays `partial`.** **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) —
+      missing: needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py) —
+      the cell's `notes` (corrected already, bundled into the sibling CME fix `unified-api-contracts@f8515eb7`) claims
+      "IBKR ↔ ICE has no declared policy yet (gap #10 registry still open for that leg)" — independently re-verified
+      this specific claim rather than trusting the sibling's note: ran `policies_for_venue_pair('ibkr','ice')` directly
+      against the live `CROSS_VENUE_ROUTING_POLICIES` registry
+      (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`) — returns an empty tuple, vs. 4
+      for `('ibkr','cme')`. Read the registry source to confirm WHY: the only entry touching ICE at all is
+      `cme_wti_ice_brent_spread` (`leg_venues=("cme","ice")`, both legs `FUTURE_LEG` — a CME-WTI-vs-ICE-Brent commodity
+      spread), which cannot serve `CARRY_BASIS_DATED`'s `CARRY_BASIS_DATED@ibkr-ice-brent-fixed-feb26-usd-prod` slot (an
+      IBKR SPOT leg vs. an ICE dated future) — no `leg_roles` combination matches, and no `("ibkr","ice")` pair exists
+      in the registry at all. So this edge's gap is a genuine registry absence (no UAC declaration to wire up), unlike
+      the sibling CME/IBKR edges (already-declared policy, just unconsumed by the SOR) — status correctly stays
+      `partial`, not fabricated to `supported`. No code change this pass (the note was already corrected in `f8515eb7`);
+      checkbox flip + independent verification only.
 
 ### 2026-06-13 — Wave-2 #9 follow-on (wizard sessions as reproducible artifacts)
 
@@ -547,11 +716,30 @@ nightly-replay reconciler (`replay_wizard_sessions.py`, smoke `test_wizard_sessi
 re-evaluates each saved session's archetype edge-availability claims against the FRESH committed manifest and ALERTS on
 a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash diff). Remaining thin follow-on:
 
-- [ ] [UI] P2. **uts-ui "save session" surface** (target repo: `unified-trading-system-ui`) — wire the live wizard to
-      WRITE the `WizardSession` JSON (answers + manifest_commit + manifest_edge_hash + config + prospectus_hash) at
-      sign-off, into the sessions dir the nightly `replay_wizard_sessions.py --sessions-dir` reads. The Python schema +
-      deterministic serialisation (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact
-      (`lib/wizard/output.ts`) is the config payload. Doubles as the client-onboarding compliance record.
+- [x] ✅ [UI] P2. **DONE 2026-07-30 (slot-9)** — **uts-ui "save session" surface** (target repo:
+      `unified-trading-system-ui`) — wire the live wizard to WRITE the `WizardSession` JSON (answers + manifest_commit +
+      manifest_edge_hash + config + prospectus_hash) at sign-off, into the sessions dir the nightly
+      `replay_wizard_sessions.py --sessions-dir` reads. The Python schema + deterministic serialisation
+      (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact (`lib/wizard/output.ts`) is the
+      config payload. Doubles as the client-onboarding compliance record. — `unified-trading-system-ui@bdb4a72e`.
+      `POST /api/wizard/save-session` computes `manifest_commit` / `recorded_claims` / `manifest_edge_hash` server-side
+      from the bundled capability manifest (never trusts a client-cached snapshot) and persists via a pluggable store
+      (`lib/wizard/session-store.ts`, mirrors `lib/onboarding/doc-store.ts`'s local-disk/GCS dispatch pattern) — local
+      disk under `.local-dev-cache/wizard-sessions/` in dev/mock (the literal directory `--sessions-dir` reads),
+      `gs://odum-${env}-     wizard-sessions/` in staging/prod. `lib/wizard/session.ts` mirrors `wizard_session.py`'s
+      `edge_key`/ `archetype_claim_statuses`/canonical-JSON hashing exactly (verified byte-for-byte: a session saved by
+      the route replays through the REAL `replay_wizard_sessions.py` with `edge_hash_match: true`). Found + fixed in the
+      same commit: `WizardSession.archetype_id` (Python) reads `config["archetype_id"]`, a `ScenarioConfigRef`-era key
+      the actual `StrategyConfigArtifact` never carries (it uses `archetype`) — every session this route would otherwise
+      write raised `KeyError` in the nightly reconciler. Fixed by aliasing `archetype_id` onto the persisted `config`
+      copy only (the live `StrategyConfigArtifact` TS contract used by download/copy/portfolio is untouched). Also
+      allowlisted `/api/wizard/` in `lib/api/mock-handler.ts`'s real-route passthrough (the global mock-fetch
+      interceptor was silently swallowing the POST with a fake `{}` 200 otherwise, matching the same class of gap the
+      onboarding/questionnaire/strategy-evaluation routes needed). "Save session" button added to `ConfigOutput.tsx`
+      (Stage J_REVIEW). 36 new Vitest unit tests (`tests/unit/wizard/session.test.ts`) + full existing wizard suite (267
+      tests) green. **pw:L2 ✓** | regression: `tests/smoke/wizard-save-session.spec.ts` (drives the wizard to sign-off,
+      clicks Save session, asserts the real POST response + "Session saved!" state — not mocked). tsc/ESLint clean; full
+      `quality-gates.sh` green (sentinel=2319b519, amended to bdb4a72e by quickmerge's trailer).
 
 ### 2026-06-13 — Under-registration audit ("what can the system do that the registry doesn't capture", common-sense pass)
 

@@ -294,7 +294,7 @@ picture.
       AAVE_V3 chain-axis question.
     - **[DATA] P3.** Publish an explicit key-mapping table between the two registries' key schemes — prerequisite for
       the P1 falsifier todo.
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     (3 open)
     - **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing on
       prod MDPS backfills?
@@ -626,7 +626,7 @@ picture.
       non-blocking.
     - **19. [SCRIPT] P2.** Fix `_copy_verify_delete()`'s retry-idempotency gap — a verification-FAILED destination is
       never re-copied on a subsequent run; source data was never at risk.
-  - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+  - [`plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
     — 0 open todos (closed/archived/record-only).
   - [`/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md`](/plans/archive/issues/mdps_derivative_ticker_candle_schema_violation_2026_07_20.md)
     (2 open)

@@ -41,7 +41,7 @@ related:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-07-25"
@@ -268,12 +268,11 @@ drift_direction: advance-code
       stays operator-gated on a paused-consolidator-cron window (this plan's separate `[OPERATOR]` todo). Repo:
       market-tick-data-service. Source:
       `market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md`.
-- [ ] [CHORE] P1. Replace the stale `onchain/__init__.py` module docstring with the corrected text already drafted and
-      verified in the source issue doc §2.2 (documents `GlassnodeAdapter` as `PLANNED_VENUES`-parked and
-      `HeliusSolanaAdapter` as `BLOCKED-CREDENTIALS`-gated, replacing a stale 2026-04 "all adapters deleted" claim) —
-      first confirm via `git status`/mtime that no other session has live uncommitted WIP in this file/package. Repo:
-      market-tick-data-service. **Done when**: `market_interface/adapters/onchain/__init__.py`'s docstring matches the
-      issue doc's §2.2 text verbatim, committed via quickmerge with `quality-gates.sh` green. Source:
+- [x] ✅ [CHORE] P1. **DONE 2026-07-30.** Replaced the stale `onchain/__init__.py` module docstring with the corrected
+      text drafted and verified in the source issue doc §2.2 (documents `GlassnodeAdapter` as `PLANNED_VENUES`-parked
+      and `HeliusSolanaAdapter` as `BLOCKED-CREDENTIALS`-gated, replacing the stale 2026-04 "all adapters deleted"
+      claim), verbatim. Confirmed no concurrent WIP in the file/package before editing (clean `git status`). Shipped
+      `market-tick-data-service@0cd76b93`, `quality-gates.sh` green (sentinel-verified). Source:
       `issues/defi_adapter_dead_code_audit_2026_07_24.md`.
 - [x] ✅ [DIAG] P1. **DONE 2026-07-27 (slot-11) — no code shipped (diagnostic-only todo).** Traced whether
       `market_interface/adapters/defi/curve_adapter.py::_download_liquidity`'s broad `except Exception: ... return []`
@@ -375,18 +374,18 @@ drift_direction: advance-code
       composite-venue object population. Repo: market-tick-data-service (read-only measurement, no code change).
 
       **Method**: a bounded, prefix-scoped `gcloud storage ls` per each of the 9 already-known composite venue names
-                                                                                                                                                                                                                                                                                                                                  (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
-                                                                                                                                                                                                                                                                                                                                  discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
+                                                                                                                                                                                                                                                                                                                                                                      (`.../day=*/asset_group=defi/venue={V}/**`), run in parallel — NOT a fresh whole-corpus walk (single-walk
+                                                                                                                                                                                                                                                                                                                                                                      discipline preserved; the scan is pruned to exactly the 9 already-identified composite `venue=` directories).
 
-                                                                                                                                                                                                                                                                                                                                  **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
-                                                                                                                                                                                                                                                                                                                                  ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
-                                                                                                                                                                                                                                                                                                                                  UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
-                                                                                                                                                                                                                                                                                                                                  objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
-                                                                                                                                                                                                                                                                                                                                  the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
-                                                                                                                                                                                                                                                                                                                                  Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
-                                                                                                                                                                                                                                                                                                                                  decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
-                                                                                                                                                                                                                                                                                                                                  "2026-07-28 update — true corpus-wide scale measured" section. Source:
-                                                                                                                                                                                                                                                                                                                                  `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
+                                                                                                                                                                                                                                                                                                                                                                      **Result: 5,332 objects total** — AAVEV3-ETHEREUM=632, CURVE-ETHEREUM=631, ETHENA-ETHEREUM=631,
+                                                                                                                                                                                                                                                                                                                                                                      ETHERFI-ETHEREUM=631, LIDO-ETHEREUM=631, MORPHO-ETHEREUM=557, UNISWAPV2-ETHEREUM=632, UNISWAPV3-ETHEREUM=628,
+                                                                                                                                                                                                                                                                                                                                                                      UNISWAPV4-ETHEREUM=359. **Corrects the issue doc's "full 2020-2026 defi date range" framing**: every venue's
+                                                                                                                                                                                                                                                                                                                                                                      objects cluster in a ~20-month window (2024-05-02..2026-01-24, UNISWAPV4 narrower still from 2025-01-30) — not
+                                                                                                                                                                                                                                                                                                                                                                      the full ~6.5-year corpus, consistent with the already-confirmed single one-time 2026-05-12 migration batch.
+                                                                                                                                                                                                                                                                                                                                                                      Combined with the prior distribution finding, both prerequisite facts for the `[OPERATOR]` fold-vs-migrate
+                                                                                                                                                                                                                                                                                                                                                                      decision are now in hand. Full writeup: `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`
+                                                                                                                                                                                                                                                                                                                                                                      "2026-07-28 update — true corpus-wide scale measured" section. Source:
+                                                                                                                                                                                                                                                                                                                                                                      `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md`.
 
 - [x] ✅ [DIAG] P1. Sample and directly read parquet content from a broader set of DeFi legacy composite-venue objects —
       downloaded + read all 9 venues x 5 sample days (43 objects, `2024-06-15`/`2025-01-15`/`2025-03-15`/`2025-06-01`/
@@ -878,12 +877,13 @@ drift_direction: advance-code
     doc's explicit sequencing, this MUST run only AFTER the writer fix ships (never before, or the still-live bug
     resurrects the rows) — do not run it until the 4 files above are committed+pushed.
   - **Root-caused, filed, and shipped a separate finding along the way**:
-    `issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared host's `/tmp`
-    tmpfs was at 100% (accumulated since 2026-07-14 across many slots) AND `scripts/quality-gates-base/base-service.sh`
-    has 25 `>/tmp/<name>_qg.log`-redirected QG steps sharing a FIXED (non-PID-unique) filename, so two slots' concurrent
-    `quality-gates.sh` runs collide and produce spurious step failures — reproduced repeatedly (a step fails inline, the
-    SAME checker invoked standalone with the same args passes clean). Did not attempt the 25-site fix itself (each has a
-    paired write+read-back reference; too large for this todo's scope) — filed as a P2 todo in that issue doc instead.
+    `/plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (unified-trading-pm@f7982c1a1, pushed) — the shared
+    host's `/tmp` tmpfs was at 100% (accumulated since 2026-07-14 across many slots) AND
+    `scripts/quality-gates-base/base-service.sh` has 25 `>/tmp/<name>_qg.log`-redirected QG steps sharing a FIXED
+    (non-PID-unique) filename, so two slots' concurrent `quality-gates.sh` runs collide and produce spurious step
+    failures — reproduced repeatedly (a step fails inline, the SAME checker invoked standalone with the same args passes
+    clean). Did not attempt the 25-site fix itself (each has a paired write+read-back reference; too large for this
+    todo's scope) — filed as a P2 todo in that issue doc instead.
   - **UPDATE 2026-07-27: code shipped, manifest cleanup EXECUTED AND VERIFIED.** QG passed (497s, sentinel written);
     code shipped `market-tick-data-service@2aa23de5`. The cleanup script's ORIGINAL pandas-based implementation then hit
     a severe, real production incident while running for real: the DEFI manifest is ~26.5M rows (~1GB on disk) and both

@@ -795,8 +795,8 @@ authorization. Confirms this ruling's direction; no further action needed.
 
 The 9-tranche partition only sweeps `asset_group: cross-cutting`, but `plans/PLAN_FORMAT.md:88` also declares
 `infrastructure` and `meta` as valid values — sweeping those returns ~48 unlisted docs, 4 unambiguously ci (one,
-`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`, has zero referrers corpus-wide).
-`check_ag_closeout_linkage.py` doesn't catch this class either.
+`/plans/archive/issues/check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md` (archived 2026-07-30), had
+zero referrers corpus-wide). `check_ag_closeout_linkage.py` doesn't catch this class either.
 
 A: Widen the skill's rule to sweep all 3 values, run one corpus-wide triage plan for all ~48. [WORKER REC] — the
 partition's stated value is total coverage, and that claim is currently false by ~48 docs. B: Fix only the 4 ci-obvious
@@ -908,6 +908,11 @@ Track close-out criteria to `infra_consolidated_closeout_2026_07_25.md` as verif
       mandatory, an enforcement gap, not a policy choice — shipped the mechanism fix (commit-msg-stage
       `check-locked-plan-deletion.sh`), and its own retro-clean todo is done: the archived copy's
       `locked_by:`/`locked_since:` are empty, independently re-verified here. See entry 11 above for the full citation.
+- [ ] [DOC] P3. Confirm whether the 2026-07-25 `/autonomous` closeout-audit rollout
+      (`ag_closeout_audit_rollout_2026_07_25.md`) is still active/generating new operator-decision-caliber questions. If
+      concluded: flip this doc's frontmatter `status:` from `open` to `resolved` (all 38 logged entries + the item above
+      are currently resolved with citations) before running the archival ritual. If still ongoing: leave this doc
+      `status: open` in `plans/active/issues/` as the standing decision-queue home per its own stated purpose.
 
 This doc will accumulate entries as genuine judgment calls surface during the cefi/defi/tradfi/prediction/sports
 closeout-audit rollout. Format for each entry:

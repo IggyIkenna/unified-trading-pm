@@ -17,7 +17,7 @@ stage: [data]
 repos: [market-tick-data-service, instruments-service, unified-api-contracts, unified-trading-pm]
 scope: [engineer]
 tags: [sports, canonical, league-id, namespace, manifest, coverage, migration]
-related: [../sports_consolidated_closeout_2026_07_19.md, ../sports_consolidated_audit_2026_07_19.md]
+related: [../sports_consolidated_closeout_2026_07_19.md, /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md]
 created: "2026-07-20"
 source: operator decision 2026-07-20 (canonicalise at the write path)
 resolved_by:

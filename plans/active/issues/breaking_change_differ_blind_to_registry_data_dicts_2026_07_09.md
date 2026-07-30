@@ -34,7 +34,7 @@ tags:
   ]
 related:
   [
-    plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
+    /plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/integration-testing-layers.md,
   ]
@@ -183,6 +183,8 @@ Close Layer 1 (make the gate fire) AND Layer 2 (give it teeth when it does):
 
 ## Cross-reference
 
-Downstream symptom + interim Option-B revert (and the still-open Option-A DESIGN decision on OKX-SPOT venue declaration)
-live in `instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`. That doc = "IS is red, unblock shipping"; **this
-doc = "the CI gate that should have stopped it didn't, and here's the reusable fix."** Resolve the CI-gate fix here.
+Downstream symptom + interim Option-B revert (and the since-resolved Option-A DESIGN decision on OKX-SPOT venue
+declaration, shipped `unified-api-contracts@0ab1074a` + `instruments-service@c0f5529c`) live in
+`/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md` (resolved + archived 2026-07-30). That
+doc = "IS is red, unblock shipping"; **this doc = "the CI gate that should have stopped it didn't, and here's the
+reusable fix."** Resolve the CI-gate fix here.

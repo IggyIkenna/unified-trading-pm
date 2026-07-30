@@ -18,7 +18,7 @@ summary: |
   here. LOCAL track — operator-driven, never dispatched.
 status: active
 nature: process
-asset_group: [meta]
+asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [meta]; a real AO covering plan, not generic
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm, deployment-ui]
 scope: [engineer, admin]

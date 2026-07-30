@@ -10,9 +10,9 @@ globs:
 # Unified API Contracts Usage
 
 RULE: Use unified-api-contracts for all external API schemas and VCR mocks. Never duplicate contract logic in services.
-CODEX: unified-trading-codex/02-data/contracts-scope-and-layout.md
+CODEX: unified-trading-pm/codex/02-data/contracts-scope-and-layout.md
 
-**Full specification (codex):** `unified-trading-codex/02-data/contracts-scope-and-layout.md`, `05-infrastructure/contracts-integration.md`
+**Full specification (codex):** `unified-trading-pm/codex/02-data/contracts-scope-and-layout.md`, `05-infrastructure/contracts-integration.md`
 
 ---
 

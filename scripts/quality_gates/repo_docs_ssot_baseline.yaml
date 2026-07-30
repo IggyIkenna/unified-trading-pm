@@ -1,0 +1,45 @@
+# Baseline for the repo-docs-defer-to-codex check (check_repo_docs_ssot.py).
+#
+# SHRINKING ratchet, same convention as doc_body_link_baseline.yaml. `known_violations`
+# is the exact set of "<repo-rel-doc>::<rule>::<literal>" keys tolerated today. A key NOT
+# in this set (a NEW mirror-ref or hardcoded resolver-owned literal in a repo doc) fails
+# the gate. A key IN this set that no longer reproduces (the drift got fixed) is harmless
+# dead weight — remove it by re-running --update-baseline after a cleanup pass.
+#
+# NEVER add an entry here to silence a check you introduced yourself — this baseline is for
+# PRE-EXISTING debt found at seed time (Phase 5 of codex_vs_repo_docs_ssot_audit_2026_06_01),
+# not a way to launder new drift.
+known_violations:
+  - "agent-orchestrator/docs/AUTH_INVENTORY.md::hardcoded-literal::central-element-323112"
+  - "agent-orchestrator/docs/ENV_VARS.md::hardcoded-literal::central-element-323112"
+  - "deployment-service/docs/E2E_SPECS.md::mirror-ref::unified-trading-codex/"
+  - "deployment-service/docs/INDEX.md::mirror-ref::unified-trading-codex/"
+  - "deployment-service/docs/LIVE_MODE.md::mirror-ref::unified-trading-codex/"
+  - "deployment-service/docs/STANDARDIZED_EVENT_LOGGING.md::mirror-ref::unified-trading-codex/"
+  - "deployment-service/docs/dev-environment.md::hardcoded-literal::central-element-323112"
+  - "deployment-service/docs/hybrid-live-seam.md::mirror-ref::unified-trading-codex/"
+  - "deployment-service/docs/local-dev/local-run-guide.md::mirror-ref::unified-trading-codex/"
+  - "e2e-testing/README.md::hardcoded-literal::central-element-323112"
+  - "e2e-testing/docs/VM_BACKFILL_GUIDE.md::hardcoded-literal::central-element-323112"
+  - "e2e-testing/docs/defi/research_data_canonical_sources_2026_06_18.md::hardcoded-literal::central-element-323112"
+  - "e2e-testing/docs/sports/progress.md::hardcoded-literal::central-element-323112"
+  - "execution-service/docs/UNIFIED_BATCH_LIVE_ARCHITECTURE.md::mirror-ref::unified-trading-codex/"
+  - "instruments-service/README.md::mirror-ref::unified-trading-codex/"
+  - "instruments-service/docs/ADAPTER_ARCHITECTURE.md::hardcoded-literal::central-element-323112"
+  - "instruments-service/docs/CEFI_INSTRUMENTS.md::hardcoded-literal::central-element-323112"
+  - "instruments-service/docs/DEFI_INSTRUMENTS.md::hardcoded-literal::central-element-323112"
+  - "instruments-service/docs/PREDICTION_INSTRUMENTS.md::hardcoded-literal::central-element-323112"
+  - "instruments-service/docs/SPORTS_INSTRUMENTS.md::hardcoded-literal::central-element-323112"
+  - "market-data-processing-service/README.md::mirror-ref::unified-trading-codex/"
+  - "market-tick-data-service/README.md::mirror-ref::unified-trading-codex/"
+  - "market-tick-data-service/docs/GCS_PATHS.md::hardcoded-literal::central-element-323112"
+  - "strategy-service/docs/TESTING.md::mirror-ref::unified-trading-codex/"
+  - "system-integration-tests/README.md::hardcoded-literal::central-element-323112"
+  - "unified-api-contracts/README.md::mirror-ref::unified-trading-codex/"
+  - "unified-api-contracts/docs/SCHEMA_CHANGELOG.md::mirror-ref::unified-trading-codex/"
+  - "unified-api-contracts/docs/UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY.md::mirror-ref::unified-trading-codex/"
+  - "unified-trading-system-ui/docs/FIREBASE_ENVIRONMENTS.md::hardcoded-literal::central-element-323112"
+  - "unified-trading-system-ui/docs/audits/playbooks-personas-2026-04.md::hardcoded-literal::central-element-323112"
+  - "unified-trading-system-ui/docs/core/DEPLOYMENT.md::hardcoded-literal::central-element-323112"
+  - "unified-trading-system-ui/docs/under-review/build lifecycle
+    tab/ML_MODELS_TAB_SPEC.md::mirror-ref::unified-trading-codex/"

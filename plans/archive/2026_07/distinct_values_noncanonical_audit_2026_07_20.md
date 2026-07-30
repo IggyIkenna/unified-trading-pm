@@ -30,7 +30,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/market_tick_data_service_lending_instrument_type_historical_restamp_2026_07_24.md,
     /plans/archive/2026_07/distinct_values_noncanonical_audit_history_2026_07_24.md,
-    /plans/active/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md,
+    /plans/archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/active/issues/sports_instrument_type_market_token_ssot_gap_2026_07_28.md,
     /plans/active/issues/tradfi_distinct_values_net_new_clusters_2026_07_28.md,
@@ -256,7 +256,7 @@ market-type suffixes (the composite IS the venue) and cefi matched 22/24.
       above, dated, with a delta-vs-2026-07-20 note. **DONE 2026-07-25** — table refreshed above (175 → 45 total
       non-canonical across all 5 AGs × 4 axes), delta table added, full method + caveats in the "2026-07-25 — census
       refresh" Progress Log entry below. Real-time gotcha found + filed, not silently worked around:
-      `/plans/active/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`.
+      `/plans/archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`.
 
 ## Progress Log
 
@@ -720,7 +720,7 @@ manifest re-stamp is now its own plan,
   the actual newest date (2026-07-25) turned out to be a scoped `asset_groups_requested=['cefi']`-only re-run that would
   have silently returned `0/0` (false-clean) on every defi axis. That exact hazard is real, current, and not specific to
   my own script — the SHIPPED endpoint has the identical blind spot — so it is filed rather than quietly worked around:
-  `/plans/active/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`.
+  `/plans/archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`.
 
 **Numbers.** See the refreshed "Ground truth" table + delta table above. Headline: **175 (2026-07-20) → 115 (2026-07-22
 detector-fix milestone) → 45 (today)** total non-canonical count across all 5 AGs × 4 axes — roughly a further 61%

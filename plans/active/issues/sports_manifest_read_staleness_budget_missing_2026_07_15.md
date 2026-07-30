@@ -35,10 +35,11 @@ source:
   (mirrors cefi launchers) so the healthy consolidated blob is served."
 locked_by:
 resolved_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 model_tier: sonnet-doable
 drift_direction: advance-code
-assigned_vm: NA
+assigned_vm: planning
 depends_on: []
 ---
 
@@ -126,3 +127,10 @@ Evidence (current code, re-read 2026-07-23):
 The finding stands exactly as written. Not touched by any of the K1/K2 casing work, the pre-floor registry fix, the
 api_football wrong-source wipe, or the shard-enumeration/honest-coverage remediation — this is an orthogonal read-path
 gate, unaffected by any of those. No conflicting doc found.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

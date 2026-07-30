@@ -43,6 +43,15 @@ ds = _load_docspec()
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
 NON_AG_TRANCHES = ["ao", "ci", "infra"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
+# The `infra` TRANCHE name (CLI --tranche, SKILL.md, closeout-doc prefix) does not match the actual
+# `asset_group` enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no
+# "infra" member) -- found while fixing this script's membership test to read asset_group directly
+# (generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md):
+# a naive `t in asset_group` for t="infra" would silently match zero docs (every real doc is tagged
+# `infrastructure`), reproducing the exact silent-zero-candidates failure class this fix exists to
+# close, just via a different root cause. `ao`/`ci` have no such mismatch (their enum values equal
+# their tranche names).
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 
 CLOSEOUT_NAME = {
     t: (
@@ -74,18 +83,55 @@ def _iter_docs() -> list[Path]:
 
 def _closeout_paths(tranche: str) -> list[Path]:
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
-    return sorted(PM.glob(f"plans/active/{prefix}_consolidated_closeout_*.md"))
+    return sorted(
+        p for p in PM.glob(f"plans/active/{prefix}_consolidated_closeout_*.md") if "aggregated_sources" not in p.name
+    )
+
+
+def _resolve_depends_on(path: Path) -> list[Path]:
+    """Resolve a doc's frontmatter `depends_on:` slugs to real `plans/active/` file paths.
+
+    A `*_finalize*` doc's `depends_on:` names its paired MAIN plan by bare slug (PLAN_FORMAT.md
+    convention) -- for a line-cap-split fork of a consolidated closeout (e.g.
+    `cefi_misc_audits_and_hygiene_2026_07_25.md`) that main doc's OWN filename does not match the
+    `(dispatch_batch|satellite|_finalize)` regex below, so without this resolution step it is
+    invisible to `_covering_paths()` even though SKILL.md Phase 0.2 path (b) requires counting it as
+    covering. A slug whose target has since archived (e.g. a finalize whose main plan is already done
+    and moved to `plans/archive/`) resolves to nothing under `plans/active/` -- harmless, since an
+    archived doc can never appear in `_iter_docs()`'s candidate scan either.
+    """
+    if not path.exists():
+        return []
+    try:
+        fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8", errors="replace"))
+    except yaml.YAMLError:
+        return []
+    if fm is None:
+        return []
+    deps = fm.get("depends_on") or []
+    if isinstance(deps, str):
+        deps = [deps]
+    out: list[Path] = []
+    for slug in deps:
+        out.extend(PM.glob(f"plans/active/{slug}.md"))
+        out.extend(PM.glob(f"plans/active/issues/{slug}.md"))
+    return out
 
 
 def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     """Real covering docs: the consolidated closeout(s) + every dispatch_batch/finalize doc for this
-    tranche. Excludes *_aggregated_sources* (digest, non-covering per skill) and *_history_* (archive).
+    tranche, PLUS (Phase 0.2 path (b)) every plan a discovered `*_finalize*` doc's `depends_on:`
+    resolves to. Excludes *_aggregated_sources* (digest, non-covering per skill -- see
+    `_closeout_paths()`) and *_history_* (archive).
 
-    For ao/ci/infra, membership itself is DEFINED by citation in the closeout doc (see main()) -- so
-    counting the closeout as a "covering" doc there would make every member trivially "cited"
-    (tautology). Callers computing coverage for ao/ci/infra must pass include_closeout=False so only
-    a REAL batch/finalize citation (actual dispatch, not just being listed in the closeout's own
-    Sources/Tracks digest) counts as covered.
+    ao/ci/infra membership is now tested the SAME way as the 5 real AGs (`t in asset_group`, see
+    main()) -- as of the 2026-07-27 asset_group schema expansion (`unified-trading-pm@a97bc7bed`),
+    ao/ci/infrastructure are real dedicated asset_group enum values, so there is no more tautology
+    risk in counting a tranche's own closeout doc as a covering doc for it (this function used to be
+    called with include_closeout=False for these 3 tranches for exactly that reason -- see
+    generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md
+    for the incident this fixed: once a tranche's closeout doc archives, the OLD citation-based
+    membership mechanism silently returned zero members for that tranche).
     """
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
     paths = list(_closeout_paths(tranche)) if include_closeout else []
@@ -95,6 +141,9 @@ def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
             continue
         if re.search(r"(dispatch_batch|satellite|_finalize)", name):
             paths.append(p)
+    for p in list(paths):
+        if re.search(r"_finalize", p.name):
+            paths.extend(_resolve_depends_on(p))
     return sorted(set(paths))
 
 
@@ -113,12 +162,8 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     t = args.tranche
 
-    covering_paths = _covering_paths(t, include_closeout=(t not in NON_AG_TRANCHES))
+    covering_paths = _covering_paths(t)
     cited = _cited_basenames(covering_paths)
-
-    non_ag_member_sets = (
-        {nt: _cited_basenames(_closeout_paths(nt)) for nt in NON_AG_TRANCHES} if t in NON_AG_TRANCHES else {}
-    )
 
     candidates = []
     for path in _iter_docs():
@@ -155,12 +200,14 @@ def main(argv=None) -> int:
             asset_group = [asset_group]
         parent_epic = fm.get("parent_epic") or ""
 
-        if t in AGS:
-            member = t in asset_group
+        if t in AGS or t in NON_AG_TRANCHES:
+            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
+            # tested identically to the 5 real AGs, not via a closeout-citation proxy (the retired
+            # 2026-07-25->27 workaround; see _covering_paths()'s docstring for the incident this fixed).
+            # infra's enum VALUE is "infrastructure", not "infra" -- see TRANCHE_ASSET_GROUP_VALUE.
+            member = TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group
         elif t == "cross-cutting":
             member = "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or basename in cited)
-        else:  # ao/ci/infra
-            member = basename in non_ag_member_sets.get(t, set())
 
         if not member:
             continue

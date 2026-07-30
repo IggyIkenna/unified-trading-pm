@@ -326,4 +326,4 @@ touching defi MTDS capture / honest-cov.
    method. Fixed segment order in `_make_base` + the module docstring (`reader.py:26-28`) + the `TestDefiChainAxis`
    unit-test contract's hardcoded mock paths (`tests/market_interface/unit/test_canonical_parquet_reader.py`,
    `TestDefiChainAxis` class), which had asserted the wrong order and would otherwise have locked in the bug. See
-   `/plans/active/issues/gcs_path_resolution_centralization_audit_2026_07_28.md`.
+   `/plans/archive/issues/gcs_path_resolution_centralization_audit_2026_07_28.md`.

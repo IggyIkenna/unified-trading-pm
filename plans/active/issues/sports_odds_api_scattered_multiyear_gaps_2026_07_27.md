@@ -151,15 +151,28 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [DATA] P1. UNBLOCKED 2026-07-29 — the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has
-      since rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a
-      5,000,000-credits/month subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) —
-      see `sports_odds_api_key_deactivated_2026_07_26.md`. No longer `[OPERATOR]`-gated. Backfill all 635 missing days
-      via `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>`
-      per contiguous range (idempotent/manifest-skip by default, no `--force` needed — will not re-fetch the 1,608
-      already-present days). (repo: deployment-service)
-- [ ] [VERIFY] P2. UNBLOCKED 2026-07-29 — depends on the P1 backfill above, which is now credential-unblocked (same key
-      fix) but not yet executed. Once the backfill lands, re-run this same census (single manifest read, filter
+- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION 2026-07-29 — credential blocker resolved (key rotated, see below) and the
+      actual backfill VM work was executed (3 launches, ~2.5h), but discovered a NEW, more fundamental blocker: the
+      consolidator for `instruments-store-sports-prd-central-element-323112` is not absorbing new manifest rows at all
+      right now (`rows_out` byte-identical across every real merge cycle for 47+ minutes of Cloud Logging evidence,
+      confirmed via `/blocked` escalation `BLK-62e1dc42`) — filed as
+      `plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (P0). This means NO amount of
+      further VM relaunches can be verified as effective via the standard census methodology until that consolidator
+      issue is root-caused and fixed — retag away from this marker back to a dispatchable one once that P0 doc resolves.
+      Concrete deliverables actually shipped this session: two real launcher bugs found + fixed (stale pre-floor
+      `START_DATE` default; `e2-standard-4` OOM on the odds backfill launcher, bumped to `e2-highmem-4` — see
+      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s 2026-07-29 addenda for the full OOM investigation,
+      including that the machine-type bump alone was insufficient and per-day memory variance is fundamentally
+      unpredictable for this venue too). Original credential-unblock context (superseded as the active blocker, kept for
+      history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since rotated
+      `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a 5,000,000-credits/month
+      subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) — see
+      `sports_odds_api_key_deactivated_2026_07_26.md`. Backfill launcher:
+      `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>`
+      (idempotent/manifest-skip by default). (repo: deployment-service)
+- [ ] [VERIFY] P2. BLOCKED-OPERATOR-DECISION 2026-07-29 — depends on the P1 backfill above, which is now blocked on the
+      SAME P0 consolidator issue (`sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`), not credentials. Once
+      that P0 doc resolves and P1's backfill genuinely lands, re-run this same census (single manifest read, filter
       `source == "odds_api"`, `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days,
       then close this doc.
 
@@ -188,6 +201,79 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   than mass-editing every file — several other occurrences are legitimately same-corpus todo dependencies needing
   `sequential`/`depends_on`, not a text-marker fix, so that needs real per-case triage. Not running the backfill (still
   BLOCKED-CREDENTIALS); skipping this task.
+- 2026-07-29 (slot 16, IN PROGRESS — not done, do not re-flip the P1 checkbox until the final census below confirms it):
+  Picked up the now-unblocked P1 backfill todo. Summary for anyone resuming this:
+  1. **Two small launcher bugs found + fixed en route** (both shipped, both documented in their own right):
+     `deployment-service@862408578e476a9f0506b7f8091bd7bd69924e538`-era commit (`ca40857`→`bbce1b6` range this session)
+     clamped `launch-mtds-sports-odds-backfill-vm.sh`'s stale `START_DATE` default (was 2020-06-01, 5 days before the
+     ruled floor — odds_api has no defense-in-depth venue-epoch clamp unlike api_football/soccerfootball_info/
+     footystats) and bumped `MACHINE_TYPE` default `e2-standard-4`→`e2-highmem-4` after a live OOM-kill (same root-cause
+     family as `/plans/active/issues/mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s CEFI incident, which that
+     fix never covered for this separate sports launcher). **Full OOM investigation, all data, and both follow-up P1/P2
+     code-fix todos live in that issue doc — read it before touching this launcher again.**
+  2. **Confirmed done via manifest evidence (both attempts independently reached the same point before OOMing)**: the
+     full `2020-06-06..2025-11-26` span (chunks 1-8 of the original 250-day-chunk run) plus `2025-11-27..2026-04-15`
+     (the first part of chunk 9) are captured — **this includes the biggest documented gap, `2026-02-22..2026-03-28` (35
+     days)**, i.e. every NAMED multi-day range from this doc's original findings table is now closed. Do not re-run this
+     portion of the range; the pre-flight skip logic will correctly no-op it, but there's no need to pay even that cost
+     — a resumed session should scope any further work to `--start 2026-04-16` onward.
+  3. **Remaining scope turned out to be BIGGER than the original day-level census implied.** The original
+     `635/595 missing days` count only checked "does ANY manifest row exist for (date, source=odds_api)" — but the live
+     launcher runs surfaced
+     `Pre-flight: venue=ODDS_API date=X — fully covered, skipping data_types=[...]; still fetching=[...]` lines showing
+     PARTIAL, data_type-level gaps (e.g. `odds_horizon_bucket` present but `ODDS`, `arbitrage_opportunity`, `markets`,
+     `odds_movement`, `odds_snapshot`, `outcomes`, `settlements` still missing) on dates my census would have counted as
+     "present" (it only checked day-level any-row presence, not per-data_type completeness). **This is why the
+     `2026-04-16..2026-07-29` tail needed FAR more real-fetch days than the ~20-30 isolated single-day gaps the original
+     census's un-enumerated "141 isolated single-day gaps" bucket would suggest** — closer to most/all ~105 days in that
+     window needing some real fetch. Anyone re-running this census for the final VERIFY todo should check
+     data_type-level completeness, not just day-level row presence, or it will under-report remaining gaps the same way
+     mine did.
+  4. **OOM mitigation history for this tail** (see the issue doc's 2026-07-29 addenda for full detail + evidence):
+     `--chunk-size 5` on `e2-highmem-4` → 3/3 chunks OOM-killed (`mtds-backfill-odds-gapfill-tail2-20260729`, deleted
+     early after the 3rd failure rather than grinding through 18 more likely-doomed chunks). `--chunk-size 1` (VM
+     `mtds-backfill-odds-gapfill-tail3-20260729`, still RUNNING as of this checkpoint) isolates damage to individual
+     days but does NOT fully eliminate the risk — chunk 2 (`2026-04-17` alone, a fresh single-day process) also
+     OOM-killed, confirming per-day memory variance is genuinely unpredictable (same conclusion the CEFI incident
+     already reached), not something a chunk-size parameter can fully solve. The durable fix is the issue doc's P1
+     root-cause todo (profile the retained-memory object across date iterations) — out of scope to land in this session.
+  5. **State AT THIS CHECKPOINT (2026-07-29T21:15Z, session about to compact)**:
+     `mtds-backfill-odds-gapfill-tail3-20260729` RUNNING in `asia-northeast1-c`,
+     `--start 2026-04-16 --end 2026-07-29 --chunk-size 1` (105 single-day chunks), `e2-highmem-4`. As of chunk 3/105: 1
+     real day captured clean (`2026-04-16`), 1 chunk OOM-failed (`2026-04-17`, isolated — the loop correctly continued
+     per the fail-loud+continue design), 0 skips seen yet (this window is real-fetch-dense per finding 3 above). Logs:
+     `gs://deployment-scripts-central-element-323112/vm-logs/ mtds-backfill-odds-gapfill-tail3-20260729/run.log`. **Next
+     steps for whoever resumes**: let it keep running (self-deletes on completion, `VM_SHUTDOWN_ON_COMPLETION=true`), or
+     check status via
+     `gcloud compute instances describe mtds-backfill-odds-gapfill-tail3-20260729 --zone=asia-northeast1-c`. Once
+     terminal, re-run a data_type-aware census against
+     `gs://instruments-store-sports-prd-central-element-323112/_index/ availability_index.parquet` for
+     `source=odds_api, date>=2020-06-06` — if genuinely 0 gaps (or only structurally unfillable ones, e.g. no fixtures
+     that day), flip the P1 checkbox with the manifest evidence, then do the P2 VERIFY todo's own re-census, then
+     archive-eligible. If isolated single-day OOM losses remain (like `2026-04-17`), a final narrow single-day-targeted
+     relaunch (`--start <date> --end <date> --chunk-size 1`) closes them individually — do NOT default back to
+     `--chunk-size 5`+ for this venue, per finding 4.
+- 2026-07-29 (slot 16, SESSION END — real blocker found, do not re-flip P1 until it clears): Superseding the entry
+  above. Deleted the hung `tail3` VM (confirmed genuine hang via serial console: kernel OOM-killed exactly 2 prior PIDs,
+  chunk 4's process was never OOM-killed, just silently frozen — same "global-thrash stall" failure mode the CEFI OOM
+  doc hypothesized but hadn't independently confirmed). Ran a fresh day-level census expecting to see the
+  `2020-06-06..2026-04-15` range closed — it was **byte-identical to the census from before any backfill work this
+  session**: still 595 missing days, all 27 named ranges unchanged, including the 35-day `2026-02-22..2026-03-28` range
+  that 2 independent VM runs' logs both show being processed with real `Processed date=...`/`ManifestWriter` lines.
+  Traced this via Cloud Logging to a **separate, more fundamental P0 finding**: the
+  `instruments-store-sports-prd-central-element-323112` manifest consolidator's `rows_out` is byte-identical (9,411,982)
+  across every real merge cycle for 47+ minutes while shards/dedup_dropped fluctuate — it is not absorbing new content
+  at all right now, for anyone, not just this task's writer. Filed
+  `plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (P0) with the full log evidence,
+  escalated via `/blocked` (`BLK-62e1dc42`, recommendation C: stop further backfill VM churn on this task AND get live
+  investigation given the fleet-wide blast radius). **Retagged both P1 and P2 checkboxes above from credential-blocked
+  to `BLOCKED-OPERATOR-DECISION`** pointing at that P0 doc — this is the actual current blocker, not credentials (the
+  key rotation fix from earlier in this doc's history is still correct and unrelated). Real, verified deliverables from
+  this session despite the backfill itself not landing: (1) `deployment-service`'s stale pre-floor `START_DATE` default
+  fix, (2) the `e2-highmem-4` OOM machine-type fix + extensive documented investigation (2 further OOM findings:
+  machine-type-bump-alone insufficient, per-day memory variance genuinely unpredictable), (3) this P0 consolidator
+  finding itself, which may explain silent under-reporting fleet-wide for sports coverage, not just odds_api. Do NOT
+  interpret the unflipped P1 checkbox as "no progress" — read this entry + the P0 doc before re-attempting the backfill.
 
 ## Codex SSOTs
 

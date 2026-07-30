@@ -86,3 +86,10 @@ depends_on: []
 ## Codex SSOTs
 
 - `/codex/05-infrastructure/billing-cost-observability.md` — the API row contract + provider behaviour these extend.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Mix of 2 explicitly
+  operator-gated items (awaiting operator's own evaluation / awaiting Ikenna) plus 4 unscheduled P3 items the doc itself
+  frames as a deliberately-parked backlog, not a defaulted bucket — stays NA as a whole; the 4 P3 items are individually
+  plausible future RECLASSIFY candidates for a dedicated split, not actioned this run.

@@ -3,8 +3,8 @@ doc_type: cursor-rule
 description: Block absolute machine-specific paths in documentation in both codex and PM repos
 priority: 50
 globs:
-- unified-trading-codex/**/*.md
-- unified-trading-codex/**/*.yaml
+- unified-trading-pm/codex/**/*.md
+- unified-trading-pm/codex/**/*.yaml
 - unified-trading-pm/docs/**/*.md
 - unified-trading-pm/plans/**/*.md
 alwaysApply: false
@@ -13,7 +13,7 @@ alwaysApply: false
 
 CODEX: 13-codex-governance/SSOT-BOUNDARY.md
 
-**Rule:** All file paths in documentation in unified-trading-codex and unified-trading-pm must be workspace-relative. Absolute paths are never acceptable.
+**Rule:** All file paths in documentation in unified-trading-pm (including `codex/`) must be workspace-relative. Absolute paths are never acceptable.
 
 ## Forbidden patterns
 
@@ -45,4 +45,4 @@ python market-tick-data-service/scripts/validate.py
 
 Absolute paths make documentation machine-specific and stale the moment they are written. Any developer or agent running the same command will get errors unless they happen to have the identical path structure.
 
-See: `unified-trading-codex/13-codex-governance/SSOT-BOUNDARY.md` for the full governance rules.
+See: `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.md` for the full governance rules.

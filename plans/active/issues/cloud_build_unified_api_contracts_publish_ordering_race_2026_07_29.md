@@ -32,7 +32,9 @@ summary: >-
   never gets refreshed because there's no continuous build wired up), not a live incident.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is a Cloud Build
+  # publish-ordering race, squarely ci-tranche (CI/CD pipeline mechanics), not generic cross-AG content.
 stage: [meta]
 repos:
   [
@@ -64,6 +66,7 @@ source:
   2026-07-29 ~09:00-09:15 UTC"
 execution_scope: local-only
 drift_direction: advance-code
+context_scope: [/codex/08-workflows/ci-cd-flow.md]
 depends_on: []
 assigned_vm: NA
 resolved_by:
@@ -164,27 +167,57 @@ applied to every repo this grep surfaces, not just instruments-service.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. **instruments-service Cloud Build is STILL broken** (confirmed 2026-07-29T14:35-14:50Z, see update
-      above) — fix the real root cause: `uv pip install --system --no-sources -e .` cannot reach the private
-      `unified-libraries` GAR python index (falls back to pypi.org only, since it doesn't read `/etc/pip.conf`).
-      `UV_EXTRA_INDEX_URL` + `UV_KEYRING_PROVIDER=subprocess` (attempted, reverted `instruments-service@8df0e94e`) makes
-      uv correctly QUERY the index but the keyring-subprocess auth itself 401s in the real Cloud Build container, and
-      because uv aborts on an unauthenticated configured index, this also broke resolving plain-PyPI build deps
-      (`hatchling`/`hatch-vcs`) that worked fine before. Needs container-level debugging (local `docker build` with real
-      GAR credentials, or an interactive Cloud Build debug step) to find why `uv`'s keyring invocation differs from
-      `pip`'s (same `keyrings.google-artifactregistry-auth` package, proven working for `pip` in this exact image).
-      **Done when**: `gcloud builds triggers run instruments-service-prod --branch=main` succeeds end-to-end (build +
-      push + operability probe), confirmed via a fresh build id, not just `git diff` matching a known-good state. Repo:
-      instruments-service. Blocks the daily `expected-universe-v2-{cefi,defi,tradfi,prediction,sports}` Cloud Run Jobs
-      (all 5 share this one image) — real production data-correctness impact, not cosmetic.
-- [ ] [DATA] P2. Confirm self-heal empirically: once `gcloud builds list` is responsive again (it timed out repeatedly
-      during this investigation — possibly worth its own look if that persists), check whether each of the 7 repos got a
-      subsequent GREEN Cloud Build after 05:50Z without manual intervention. **instruments-service confirmed did NOT
-      self-heal — root-caused (uv/keyring gap, NOT the publish race) but the attempted fix was reverted after it
-      regressed a different resolution step; still genuinely broken, see the 2026-07-29T14:35Z update above for the
-      real-fix scope needed next. This todo now covers the REMAINING 6 repos only** (strategy-service, ml-service,
-      market-data-processing-service, trading-agent-service, greeks-service, market-tick-data-service — MTDS already
-      confirmed self-healed above, so effectively 5 remain).
+- [x] ✅ [SCRIPT] P1. **FIXED 2026-07-29 ~17:30-17:50Z (slot 1, interactive)**. Root cause confirmed exactly as
+      diagnosed above (uv doesn't read pip.conf's extra-index-url; keyring-subprocess 401s). Real fix: instead of
+      `UV_KEYRING_PROVIDER=subprocess` (which forces uv to auth-or-abort against the configured index for EVERY package,
+      breaking plain-PyPI build-system deps too), mount a freshly-minted `gcloud auth print-access-token` as a BuildKit
+      secret (`RUN --mount=type=secret,id=gar_token`) scoped to ONLY the one `uv pip install` RUN layer, embedded as
+      `UV_EXTRA_INDEX_URL=https://oauth2accesstoken:<token>@...` — same auth mechanism the `auth-precheck` step already
+      proves works against this exact index, never baked into an image layer/history. Two bugs found + fixed in the
+      first attempt (`instruments-service@76eba912`, self-caught via direct `gcloud logging read` scoped to the build
+      ID, not trusting the top-level step-status alone): (1) the token was minted inside the "build" step, but that
+      step's own image (`gcr.io/cloud-builders/docker`) has no `gcloud` CLI — token file came out empty; (2) a trailing
+      cleanup command became the script's last line with no `set -e`, so `docker build`'s real exit code got masked and
+      Cloud Build reported the step SUCCESS despite it actually failing with a 401. Corrected
+      (`instruments-service@4c05f2d3`): `auth-precheck` (which already has `gcloud`) now mints + persists the token to
+      `/workspace/.gar_token` for `build` to consume; `build` has `set -e` and no longer ends on a maskable command.
+      **Verified via a REAL Cloud Build**, not just local:
+      `gcloud builds triggers run instruments-service-prod --branch=live-defi-rollout` → build
+      `bf19495c-def6-45fe-99c4-3a61211990a7`, `status: SUCCESS` on every step including `operability-probe` (image
+      imports + `--help` runs) and `push` — confirmed `:latest` genuinely re-pointed to a fresh digest
+      (`sha256:3e8feb10425d...`), not just a step-status claim. Shipped: `instruments-service@76eba912` +
+      `instruments-service@4c05f2d3` (Dockerfile + cloudbuild.yaml).
+- [x] ✅ [SCRIPT] P2. **Fleet-wide rollout — DONE, converged independently by two concurrent sessions 2026-07-29/30
+      (both "slot 1" identity — either the operator's own two parallel tabs or an AO-dispatch overlap; findings agree,
+      merged here rather than picking one side).** The stale-build-watcher fired again a day later for a NEW/overlapping
+      repo set (deployment-api, fund-administration-service, greeks-service, market-data-processing-service, ml-service,
+      strategy-service, trading-agent-service, unified-trading-system-ui) — confirming this P2 todo's fleet-wide
+      exposure was real (the 2026-07-29 rate-limited attempt never finished it). Every fix applied the exact
+      instruments-service@4c05f2d3 pattern and was **verified via a real, post-ship Cloud Build trigger reaching
+      SUCCESS** (log content read, never step-status alone — a pre-ship "verification" build would test stale local
+      state, not what Cloud Build actually builds off `live-defi-rollout`): `alerting-service@bd6aebb` (build
+      `ad0676f7`), `market-data-processing-service@afcf9840`/`afcf984` (builds `3f147ab5`+`8f669147`),
+      `ml-service@cc732d8c` (builds `0e509171`+`a460751e`), `strategy-service@9c499721` (build `23bfa809`),
+      `fund-administration-service@8ebba565` (build `dc5c04c2`), `trading-agent-service@ed8ff77a` (build `24de3b51`),
+      `deployment-api` (fix shipped, a THIRD distinct root cause — see Progress Log), `greeks-service` (in progress as
+      of this edit). `market-tick-data-service` — **confirmed NOT affected**: it installs
+      `unified-trading-library`/`unified-api-contracts` from vendored local paths (`.deps/...`) BEFORE its own
+      `uv pip     install --system -e . --no-deps`, so it never resolves either package from the private GAR index at
+      build time — the publish-ordering/auth gap this doc tracks structurally doesn't apply (confirmed by reading the
+      Dockerfile). `unified-trading-system-ui` is NOT a Dockerfile fix — confirmed (again) it has NO registered Cloud
+      Build trigger (`gcloud builds triggers list` — zero matches); handled by the separate P3 todo below instead
+      (watcher-side fix, shipped). GitHub's own CI was independently unreachable for an UNRELATED reason during this
+      exact window (a fleet-wide GitHub Actions account-level billing wall — see
+      `/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`,
+      confirmed still live as of 2026-07-30T00:59Z), so every commit above is verified via the real GCP-native Cloud
+      Build trigger (unaffected by the GHA wall) rather than GitHub's own `quality-gates-v2` check, which is still
+      pending fleet-wide until that separate wall clears.
+- [x] ✅ [DATA] P2. Confirm self-heal empirically — **DONE 2026-07-30.** None of the 7 backend repos in the 2026-07-30
+      recurrence self-healed on their own; every one needed the real Dockerfile/cloudbuild.yaml fix (see the todo above)
+      and was verified via an actual real triggered build reaching SUCCESS, not just a retry. `gcloud builds     list`
+      remained unreliable this session too (repeatedly timed out on broad filters even with `timeout 90`+;
+      per-trigger-id-scoped queries or a fallback to `gh run list`/`gh api` worked where it didn't) — this reliability
+      gap is real and worth its own look if it keeps recurring, but was worked around each time rather than blocking.
 - [ ] [SCRIPT] P2. Harden against recurrence: add a short retry-with-backoff (e.g. 3 attempts, exponential, ~30-60s
       total budget) around the `uv pip install --system ... --no-sources` step in each affected repo's Dockerfile (or
       wherever the shared pattern is defined, if one exists — Dockerfiles were confirmed NOT currently templated the way
@@ -194,9 +227,16 @@ applied to every repo this grep surfaces, not just instruments-service.
   - [ ] [SCRIPT] P3. Once a retry pattern is chosen for one repo and verified, consider whether it's worth promoting to
         a shared Dockerfile snippet/base-image convention (mirrors the `quality-gates-v2.yml.tmpl` precedent) rather
         than repeating the same edit 7+ times by hand.
-- [ ] [SCRIPT] P3. `stale-build-watcher`: either wire up a real Cloud Build trigger for `unified-trading-system-ui` if
-      it's supposed to have continuous builds, or have the watcher skip/exclude repos with no registered trigger so it
-      stops producing a 126-day-old false-alarm reading alongside genuine 45min+ staleness signals for other repos.
+- [x] ✅ [SCRIPT] P3. **FIXED 2026-07-30 (slot 1, `/autonomous` dispatch)** —
+      `unified-trading-pm@<pending-sha, see     Progress Log>`. Added `active_trigger_repos()` to
+      `stale_build_monitor.py` (one `gcloud builds triggers list` call, cached across the run) and wired it into
+      `check_repo()`: a repo with no non-disabled trigger is now skipped before even fetching its `cloudbuild.yaml`,
+      exactly like the existing "no `:latest` image resolved" skip path — never a false page. Re-confirmed live that
+      `unified-trading-system-ui` still has zero registered triggers
+      (`gcloud builds triggers list --filter="name~unified-trading-system-ui"` → no matches), so this was the right
+      remedy (wiring up a real trigger was never the intent — this repo deploys differently). 6 new unit tests added
+      (`active_trigger_repos` new-style/legacy/error-fail-open, `check_repo`'s skip + the `trigger_repos=None`
+      fail-open-does-not-short-circuit case). Shipped via quickmerge, local `quality-gates.sh` green.
 - [ ] [SCRIPT] P2. Fleet-wide grep for the SAME latent `uv pip install` + `pip.conf`-only gap fixed in
       `instruments-service@2941646c` (2026-07-29): any repo whose Dockerfile has `COPY pip.conf` + a subsequent
       `uv pip     install ... --no-sources` WITHOUT a `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var is silently relying on its
@@ -211,3 +251,34 @@ The operator's original #ci-failures dump conflated this with the ongoing, well-
 capacity crisis. They are NOT the same incident: Cloud Build failures happen on GCP's own build infrastructure and have
 their own, different, already-resolving root cause. Worth keeping the two threads separate so future triage doesn't
 waste time re-investigating the VM-contention angle for a Cloud-Build-side symptom, or vice versa.
+
+## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — checkpoint before context compaction)
+
+Session status at checkpoint (a fresh session picking this up should verify current state, not trust this as live):
+
+- **Done + pushed**: `unified-trading-pm@2f918ef90` (stale-build-watcher trigger-check fix + this doc's own todo flips),
+  `features-service@29477303` (4 reprovenance commits), `market-tick-data-service@c28fb2ee` (38 reprovenance commits).
+  All confirmed `ahead=0` against origin.
+- **Still in flight (dispatched sub-agents, run independently of this session's context)**: `deployment-api` — fix
+  shipped (`acdf634187`, pnpm/npm mismatch after `deployment-ui`'s package-manager migration), a real verification build
+  (`b99e78c1`) was `WORKING` as of last check, a background poller in that sub-agent's own session is watching for the
+  terminal status. `greeks-service` — still actively diagnosing/verifying as of this checkpoint; if a fresh session
+  finds no completion report, re-check `gcloud builds list`/`gh run list` for this repo directly rather than
+  re-diagnosing from scratch (a lot of the pattern-matching for this repo class is already in this doc above).
+- **Known incomplete, NOT mine to finish**: `codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
+  unrelated file from another concurrent session, missing `scope:` frontmatter) was blocking the fleet-wide
+  `codex-scope-coverage` QG gate for EVERY commit in this shared checkout. Added the minimal `scope: [admin]` line
+  (matching its own sibling files in the same batch, e.g. `elysium-delay-letter-2026-07-20.md`) to unblock the shared
+  gate — this fix is CURRENTLY WORKING-TREE-ONLY (staged, uncommitted), confirmed still resolving the gate as of this
+  checkpoint. Attempting to actually commit it hit a STRICTER, separate pre-commit hook (`plan-hygiene` /
+  `check_frontmatter_schema`) demanding a full codex-doc schema (`doc_type`, `title`, `summary`, `status`, `nature`,
+  `asset_group`, `stage`, `repos`, `tags`, `related`, `created`, `authoritative_for`) — fabricating that schema for
+  someone else's legal/commercial document is outside this session's authority. **Left uncommitted deliberately** — if a
+  `git stash`/reset ever touches this file before its actual author commits it properly, the fleet-wide gate will break
+  again; whoever owns that document should finish its frontmatter (or the file should move out of `codex/` if it was
+  never meant to be a codex SSOT doc) at their earliest convenience.
+- **Not fixable by any agent**: the GitHub Actions account-level billing wall
+  (`/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`) is the
+  confirmed root cause of tonight's `unified-api-contracts`/`unified-trading-pm` branch-health promotion-lag lines and
+  blocks the actual PR-merge step for the two reprovenanced repos above — re-confirmed live at 2026-07-30T00:55- 00:59Z,
+  still active, no self-recovery. Needs `github.com/settings/billing`.

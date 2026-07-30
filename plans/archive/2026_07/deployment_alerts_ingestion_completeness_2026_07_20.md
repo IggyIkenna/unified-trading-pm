@@ -20,7 +20,7 @@ repos: [alerting-service, deployment-api, deployment-service, unified-trading-pm
 scope: [engineer]
 tags: [alerts, observability, ingestion, deployment-ui]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
   - /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md
 created: "2026-07-20"

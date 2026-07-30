@@ -14,9 +14,10 @@
 #   MIN_COVERAGE  — e.g. 99
 #
 # Optional caller variables:
-#   PYTEST_WORKERS — explicit worker count override; default is max(1, cpu_count // 4)
-#   LOCAL_DEPS     — array of sibling repo names to install locally
-#   MAX_DURATION   — duration limit in seconds (default: 300)
+#   PYTEST_WORKERS         — explicit worker count override; default is max(1, cpu_count // 4)
+#   PYTEST_TIMEOUT_SECONDS — per-test wall-clock timeout override; default 150
+#   LOCAL_DEPS             — array of sibling repo names to install locally
+#   MAX_DURATION           — duration limit in seconds (default: 300)
 #
 # Version guard (optional): declare EXPECTED_BASE_VERSION="1.0" in stub before sourcing.
 #
@@ -388,7 +389,13 @@ if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     else
         _PYTEST_N="1"
     fi
-    PARGS="-n ${_PYTEST_N} --timeout=60 -q -r a --tb=short --no-header --durations=25"
+    # Wall-clock per-test timeout. Explicit PYTEST_TIMEOUT_SECONDS wins; default raised
+    # 60→150 to absorb GH-Actions-xdist + shared-host scheduling variance without
+    # meaningfully delaying detection of a genuinely hung test (2026-07-29:
+    # pytest_timeout_60s_flaky_under_contention_2026_07_29.md — a 0.04s offline-only
+    # test hit the 60s deadline under sibling-xdist-worker contention on hosted CI).
+    PYTEST_TIMEOUT_SECONDS="${PYTEST_TIMEOUT_SECONDS:-150}"
+    PARGS="-n ${_PYTEST_N} --timeout=${PYTEST_TIMEOUT_SECONDS} -q -r a --tb=short --no-header --durations=25"
 
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").

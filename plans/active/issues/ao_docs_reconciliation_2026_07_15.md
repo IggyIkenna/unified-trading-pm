@@ -32,8 +32,8 @@ priority: P1
 source:
   - operator-requested 2026-07-15 ("reconcile the AO plans / issue docs / codex / AO docs; find drift, contradictions,
     gaps")
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 resolved_by:
 locked_by:
 locked_since:
@@ -493,3 +493,7 @@ post-pivot re-sweep.
       Progress Log claiming "0 dead links" that never covered that batch. Filed 2026-07-23 as
       [`ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md`](ao_repo_docs_deleted_against_instructions_dead_code_refs_2026_07_23.md).
       **Gate**: that doc reaches 0 open todos; this line closes with it.
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

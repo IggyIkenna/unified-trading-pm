@@ -26,12 +26,12 @@ isProject: false
 
 ## Deferred work — migrated to: `plans/active/sports_data_sources_canonical_completion_2026_07_13.md`,
 
-`plans/active/sports_consolidated_audit_2026_07_19.md` — successor: sports_data_sources_canonical_completion_2026_07_13,
-sports_consolidated_audit_2026_07_19 (all 6 open items — per-league sharding for STANDINGS/FIXTURE_STATS/
-FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/INJURIES, the WEATHER/XG re-smoke, and the forward-poll Bugs-1-3 re-smoke —
-are superseded: the per-league sharding pattern shipped + is proven live at production scale, and 3 months of continuous
-instruments-service operation supersede the one-off manual VM smokes. NOTE: `locked_by: live-defi-rollout` was never
-cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
+`plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md` — successor:
+sports_data_sources_canonical_completion_2026_07_13, sports_consolidated_audit_2026_07_19 (all 6 open items — per-league
+sharding for STANDINGS/FIXTURE_STATS/ FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS/INJURIES, the WEATHER/XG re-smoke, and
+the forward-poll Bugs-1-3 re-smoke — are superseded: the per-league sharding pattern shipped + is proven live at
+production scale, and 3 months of continuous instruments-service operation supersede the one-off manual VM smokes. NOTE:
+`locked_by: live-defi-rollout` was never cleared at archival — flagged for operator `[unlock-plan]` cleanup.)
 
 ## Context
 

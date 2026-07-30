@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [ci-cd, self-hosted-runners, cost, github-actions, wave-2, audit, operator-gated]
 related:
   [
-    /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md,
+    /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
   ]
 created: "2026-07-28"
@@ -40,7 +40,7 @@ superseded_by:
 depends_on: []
 source:
   - "slot-1 (tabs/1), /autonomous dispatch fulfilling the P1 REVIEW todo in
-    /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's 'Fleet-wide re-audit
+    /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's 'Fleet-wide re-audit
     results' section (2026-07-28 NEW FINDING) — operator explicitly chose 'human plan' when asked
     agent-orchestrator-vs-human per the plan-destination hard rule, specifically because several of the 39
     MOVE-classified files are core CI/CD pipeline automation with real blast radius (cloud-build-router.yml above all —
@@ -52,7 +52,7 @@ source:
 
 # PM's own 39 MOVE-classified workflows — bucket (a)/(b) triage + core-pipeline operator sign-off
 
-> **Origin.** `/plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`'s 2026-07-28
+> **Origin.** `/plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`'s 2026-07-28
 > "Fleet-wide re-audit results" section found that unified-trading-pm's OWN `.github/workflows/` directory had never
 > been run through its own `bash scripts/self-hosted-runners/classify-glue-workflows.sh` classifier as a directed audit
 > (that plan's earlier work covered the 24 OTHER repos only). Doing so found **39 workflows classified MOVE** vs **19
@@ -184,7 +184,7 @@ re-audit doesn't have to re-derive this risk read from scratch.
 ## Codex SSOTs
 
 - `/codex/08-workflows/ci-cd-flow.md` — gate set / self-hosted-runner rollout mechanism this plan extends.
-- `/plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md` — origin issue doc (Wave-2
+- `/plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md` — origin issue doc (Wave-2
   re-audit); its P1 REVIEW todo is fulfilled by this plan.
 - `/plans/active/github_actions_operator_gated_followups_2026_07_17.md` — sibling PM self-hosted-runner cost-followup
   plan (same epic, same `nature`/`asset_group` convention mirrored here).

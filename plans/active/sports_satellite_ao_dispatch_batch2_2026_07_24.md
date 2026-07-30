@@ -801,7 +801,14 @@ source: >-
       the vendor quota clears). Only ~13 days of the range remain. Full detail in
       `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not completable this turn. Released via
       `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: confirm quota reset + resumed progress, or
-      `/blocked` if still stuck at `2026-07-12` many hours from now.
+      `/blocked` if still stuck at `2026-07-12` many hours from now. — **Health-checked 2026-07-29T20:14Z (slot 4,
+      data_engineering)**: the VM (`af-backfill-20260728-141821`) was stop+deleted by the interactive operator session
+      at 15:00Z-15:10Z (already documented, independently corroborated via `gcloud compute operations list`); a VM-free
+      `/status` quota probe still reads exhausted. Sharpened the reset estimate to `2026-07-30T00:00Z` (the launcher's
+      own documented daily-quota reset time) rather than another blind hourly probe. Full detail in
+      `issues/sports_fixture_events_refetch_progress_2026_07_25.md`. Not completable this turn. Released via
+      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: not before `2026-07-30T00:00Z`; then re-probe once
+      and relaunch (without `--force`) on a clean response.
 - [x] ✅ [CODE] P2. **Writer-side de-dup + schema-conformance gate** so neither defect re-accrues — the `player_stats`
       writer rejects/dedupes rows on write; the `fixture_events` writer validates/enforces the canonical 13-col schema
       before accepting new objects. — `instruments-service@f5fa9f8a`. Added a `player_stats` de-dup gate (drop

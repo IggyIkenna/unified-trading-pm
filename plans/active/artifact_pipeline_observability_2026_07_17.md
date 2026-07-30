@@ -927,3 +927,9 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
 | Issue doc for the pipeline bugs                                                           | ✅ **DONE 2026-07-21** — `issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md`; only #4/#7 (AWS-deferred) + #3 (GCP, minor) open — **#1 RESOLVED 2026-07-24** (semver-agent confirmed deliberately dead; issue doc itself still needs the same correction as a follow-up) | Ikenna (his active CI files)          |
 | Stale "Staging-first" quickmerge.sh messaging                                             | ✅ **RESOLVED — no action needed (operator 2026-07-24)**: cosmetic only, left as-is unless it starts causing real problems                                                                                                                                                                        | —                                     |
 | AWS resume (App Runner + ECS + ECR)                                                       | **Cannot be done yet — operator-owned** — AWS intentionally parked; deferred until AWS credits are available                                                                                                                                                                                      | AWS credits                           |
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit human/local-plan
+  banner, dense ongoing operator sign-off history; remaining 12 items are either operator-paused, explicitly-optional
+  stretch items, or follow-on cleanup tied to the same operator-reviewed design track.

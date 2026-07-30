@@ -108,7 +108,7 @@ related:
 created: 2026-07-18
 last_updated: 2026-06-27
   2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27
-  2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
+  2026-06-27 2026-06-27 2026-06-27 2026-06-27 2026-06-27 "2026-07-25" # AO-readiness pass: related: reachability (6 new docs), 2 stale line-number
   # cross-refs -> content refs, defi.2 resume-crons split (operator ruling, task_template.md finding P),
   # write_defi_rows DoD, Split-notice table +2 rows, 2nd extraction pass into the history doc -- was:
   # "2026-07-24"; "2026-07-27" session-3 lending-resolver close-out (todo 18)
@@ -552,14 +552,22 @@ file, not here.
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
       market-tick-data-service, execution-service)
-- [ ] [CONFIG] P2. **F4 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was
-      falsely cited "0 open todos" there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph.**
-      `mtds-dex-pools-backfill` VM: `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph;
-      the gateway subgraph ID returns "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive
-      but current-snapshot-only, not historical `dex_pool_state`. **BLOCKED-CREDENTIALS**: needs either a current
-      indexer-allocated Curve subgraph ID (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`,
-      Alchemy) for historical block-level state — or accept honest-absence for Curve pools until a source is wired.
-      (repo: market-tick-data-service)
+- [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
+      credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
+      (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned
+      `alchemy-api-key`; UAC (`_defi.py` `SUBGRAPH_IDS["curve"]`) already carries live Curve subgraph IDs for
+      ETHEREUM/OPTIMISM/AVALANCHE (only ARB/POLY lack one, per the UAC comment "ARB/POLY only on hosted service
+      (deprecated)"), and Alchemy already supports Arbitrum/Polygon (`_defi_chain_data.py` chain configs) — so the
+      remaining work is wiring the adapter's RPC path to the correct per-chain Alchemy URL (it currently hardcodes
+      `eth-mainnet.g.alchemy.com` in `_ensure_web3`) for ARB/POLY, not a new credential.** F4 (rehomed from
+      `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0 open todos"
+      there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph. `mtds-dex-pools-backfill` VM:
+      `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph; the gateway subgraph ID returns
+      "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive but current-snapshot-only, not
+      historical `dex_pool_state`. ~~**BLOCKED-CREDENTIALS**: needs either a current indexer-allocated Curve subgraph ID
+      (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`, Alchemy) for historical block-level
+      state~~ — the RPC-fallback path is already built and keyed; extend it to ARB/POLY (code-only), or accept
+      honest-absence for Curve pools on those 2 chains until wired. (repo: market-tick-data-service)
 - [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
       correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
       `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for
@@ -649,11 +657,13 @@ file, not here.
 - [ ] [BACKEND] P2. **Async fan-out + executor-offload for the DeFi write path — duplicate of the Track 5 item above**
       (same 4 upload sites, same design sketch, same 2026-07-24 correction re: the knobs NOT being a safe standalone
       step — see that item for full evidence). (repo: market-tick-data-service)
-- [ ] [DATA] P2. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — cite finding W (ambient self-service
-      IAM identity; no different-identity credential requirement) plus the already-decided Q3 ruling: "ship code + I run
-      the canary" was the operator resolving the judgment call as "yes, run the canary", not a standing human-only
-      execution requirement. **2-VM TheGraph canary** — code is already shipped; launch the 2-VM canary via the standard
-      SPOT VM launcher process (monitored, no fire-and-forget) as a normal AO-dispatchable VM-launch todo.
+- [x] ✅ [DATA] P2. **DONE 2026-07-29 (slot-5) — duplicate of `defi_mvp_backfill_optimization_ready_2026_07_20.md`'s
+      canary todo, resolved there with full evidence.** Summary: SATISFIED by existing production evidence rather than a
+      fresh launch — `mtds-dex-swaps-backfill-1`/`-2` have been running concurrently against TheGraph for 6 days (since
+      2026-07-23) with 0 genuine HTTP 429s and 0 `attempted_failed` shard corruption across 92,317+43,913 run.log lines,
+      proving the shared TheGraph key pool holds at N=2. Full evidence + the companion pagination-fix re-backfill
+      validation (which also surfaced an unrelated COMPOUND_V3 regression, filed separately) in
+      `plans/active/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md`'s corresponding todo.
 - [ ] [DATA] P1. **Resume paused DeFi crons NOT scoped to `dex_pool_state`** + fix the honest-coverage-nightly
       right-size + codex-drift doc — gated on Track 1 (LENDING migration + canon walk above) + Track 2 (path-shape-pin
       code half) + the currently-running per-instrument migration VM finishing first (resuming now would race live

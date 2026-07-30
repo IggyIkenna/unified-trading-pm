@@ -83,7 +83,7 @@ drift_direction: advance-code
       `infra_consolidated_closeout_2026_07_25.md`'s Sources list per that doc's own convention) — read each doc's real
       content first to confirm before retagging (do not blind-apply), then re-run
       `scripts/plan-hygiene/check_ag_closeout_linkage.py` after each retag. (2) Archive
-      `plans/active/bucket_estate_fold_design_2026_07_13.md` via the standard 6-step ritual. (3) **⚠️ CORRECTED
+      `plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md` via the standard 6-step ritual. (3) **⚠️ CORRECTED
       2026-07-26 (`/ag-closeout-audit cross-cutting` re-invocation) — do NOT run the archival ritual on
       `gcs_data_access_audit_log_cost_2026_07_24.md`; DELETE the stale active duplicate instead.** Measured: that
       filename exists in BOTH `plans/active/issues/` (364L, `status: open`, 1 open `[DEVOPS] P2`) AND

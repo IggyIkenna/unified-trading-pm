@@ -123,7 +123,8 @@ drift_direction: advance-code
       `execution_cost_estimator.py`/`sor.py`/`venue_mapping.py`/`expected_start_dates.yaml`.
     - **[BACKEND] P3.** Grep `trade_handler.py`/`serializer.py` for bare COINBASE usage; re-key if lookup, leave if
       label/comment.
-  - [`plans/active/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`](/plans/active/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md)
+  - [`plans/archive/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md`](/plans/archive/issues/cefi_future_instrument_type_no_candle_schema_contract_2026_07_21.md)
+    (archived — path updated 2026-07-29, was pointing at the pre-archival `active/issues/` location)
     - 1. **[DATA] P1.** Decide the CEFI `future` candle policy — standalone contract vs chain-bundle-only routing.
     - 2. **[DATA] P2.** Corpus-wide scan: which CEFI venues/instrument_types besides DERIBIT hit this.
     - 3. **[SCRIPT] P2.** Once ruled, register the contract (or fix routing) + add a regression test.
@@ -214,7 +215,7 @@ drift_direction: advance-code
     - **[DATA] P1.** Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source.
   - [`plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`](/plans/archive/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
+  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
     - **[SERVICE] P1.** Add a write-time canonical-path guard to the Tardis cefi lane (currently has none).
     - **[SERVICE] P1.** Fix `tardis_shared.py:671` to escape `/` in the stem (`sanitize_file_stem`); migrate 48+
       KRAKEN-SPOT corrupt objects.
@@ -252,7 +253,7 @@ drift_direction: advance-code
     - **[BACKEND] P2.** Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation
       item 1.
 - **Manifest / data-status / honest-coverage**:
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - 1. **[DATA] P0.** VERIFY the prod projection before sizing the win — is `_publish_emission_check` actually firing
          on prod MDPS backfills.
     - 5. **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller on defi
@@ -295,7 +296,7 @@ drift_direction: advance-code
     - **[DATA] P1.** Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict.
     - **[DATA] P2.** The legitimately-unresolvable objects need a quarantine/honest-absence disposition (separate
       design).
-  - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+  - [`plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/active/issues/estate_orphan_assessment_2026_07_21.md`](/plans/active/issues/estate_orphan_assessment_2026_07_21.md)
     - 3. **[INFRA] P1.** Run the orphan sweep for defi/cefi/tradfi/prediction on a VM — only tradfi completed;
@@ -405,9 +406,10 @@ drift_direction: advance-code
     - **[DOCS] P2.** Once landed, update the breaking-differ section of `/codex/08-workflows/ci-cd-flow.md`.
     - **[VERIFY] P1.** Reproduce end-to-end: differ on `23fa3a99` returns `is_breaking: true` post-fix; the new SIT
       invariant goes RED.
-  - [`plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/active/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
-    - **[DESIGN] P1.** BLOCKED-OPERATOR-DECISION — confirm keeping Option B as shipped OR do the Option-A follow-up
-      (declare `OKX-SPOT` its own cefi venue).
+  - [`plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md`](/plans/archive/issues/instruments_service_cefi_qg_red_on_ldr_head_2026_07_08.md)
+    — 0 open todos (Option A shipped `unified-api-contracts@0ab1074a` + `instruments-service@c0f5529c`, per
+    `instruments_remaining_work_audit_2026_07_10.md`'s 2026-07-10 decision-ledger entry #1; resolved + archived
+    2026-07-30).
   - [`plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md`](/plans/archive/issues/deployment_api_cefi_venue_canonical_compare_test_regression_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`](/plans/active/issues/two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md)

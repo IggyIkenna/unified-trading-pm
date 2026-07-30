@@ -50,7 +50,11 @@ STALE — report or fix it, do not act on it. SSOT: `codex/05-infrastructure/per
   launch time (`$!`, or the child PID) — **never** `pkill -f <script-basename>` / `pkill -f "quality-gates.sh --no-fix"`
   / any pattern lacking a slot-specific discriminator (full absolute cwd, or PID/PGID). Every slot invokes shared
   scripts with identical argv, so a name-based pattern is host-wide, not slot-scoped, and will kill a DIFFERENT slot's
-  live QG run — confirmed incident: `plans/active/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
+  live QG run — confirmed incident (now resolved + archived, two recurrences):
+  `plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`. **Mechanically enforced** on any host
+  where `scripts/dev/install-pkill-guard-shell-env.sh` has run: a `pkill`/`pgrep` shell function REFUSES a bare
+  name-only pattern instead of executing it host-wide — see `/codex/05-infrastructure/per-tab-worktrees.md` §
+  "pkill/pgrep cross-slot-kill guard".
 
 ---
 
@@ -73,7 +77,13 @@ via the service repo — it's a sibling git tree at `.tabs/<your-slot>/unified-t
 #    quickmerge two-pass for code; raw push only for the ff-pull-in + this flip).
 cd "${WORKSPACE_ROOT}/.tabs/${SLOT}/${SERVICE_REPO}"
 git add <your-files>
-git commit -m "feat(...): your work"
+# Pre-stamp the Quickmerge trailer NOW, in the original commit — quickmerge.sh's Stage 5
+# only late-amends it in when missing, and that amend re-triggers the check-branch-drift
+# pre-commit hook AFTER Pass-1 QG has already run, which reliably loses the final push race
+# under high branch churn (quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md).
+git commit -m "feat(...): your work
+
+Quickmerge: agent"
 SHA_CODE=$(git rev-parse --short HEAD)
 # ...ship via quickmerge --agent --files <your-files> (see CLAUDE.md Git discipline)
 
@@ -104,6 +114,14 @@ the flip in the verification window either way.
 
 **Enforcement**: `slot_done_no_plan_flip` when the check IS applicable and neither pattern fired. ≥3 in 4 h from one
 slot escalates to `slot_dual_flip_pattern_violation` — the review agent chats main about you.
+
+**Never combine the checkbox flip with a `git mv` archival in ONE commit (2026-07-30 incident).** If a todo's own
+completion also makes its doc archival-eligible (all todos done, no lock), a single commit that both edits the checkbox
+AND `git mv`s the file to `plans/archive/...` makes the diff AT THE ORIGINAL `plan_ref` PATH show only a file deletion —
+no `[ ] → [x]` transition is visible there (git's rename pairing isn't applied when a path-scoped `git show`/`git log`
+query is run against just the old path), so `/done`'s M3 check (`cross_repo_pm_flip_verified`) rejects it with
+`cross_repo_pm_file_touched_no_checkbox_flip` even though the flip genuinely happened. Fix: commit the flip FIRST as a
+plain edit at the still-active path, THEN `git mv` to the archive location as a separate follow-up commit.
 
 **Pre-shutdown self-check** before you walk away:
 

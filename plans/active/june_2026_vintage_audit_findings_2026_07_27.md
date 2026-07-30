@@ -514,8 +514,9 @@ needed.
    of the enrichment backfill are BLOCKED-OPERATOR-DECISION.
 7. `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` — regression-test-deletion discrepancy (Todo 2/3) +
    canonical-namespace conflict vs closeout Track C/V both need explicit rulings.
-8. `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — keep-vs-purge 4,655 stale barchart manifest rows, a human
-   data-correctness call, unowned across all July batches.
+8. `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — keep-vs-purge 4,655 stale barchart manifest
+   rows — **RESOLVED 2026-07-30**: the decision was already made by the operator 2026-07-20 (quarantine-with-tracking,
+   not purge), re-verified live unchanged; doc archived.
 9. `data_completion_to_100_all_ag_2026_06_21.md` — BYBIT futures_chain legacy-object delete is [OPERATOR]-gated
    (hard-stop #2).
 10. `monitoring_control_plane_master_2026_06_10.md` — G4/G5 panels "BLOCKED-ON: verdict-store OR operator OK on a
@@ -653,9 +654,10 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
     of which reconciles with the catalog's short-root-code convention ("HO"/"PL") — the present-set rollup fix IS doing
     real work here (1.1M+ rows re-keyed, confirmed via direct probe) but the resulting `underlying` values still don't
     match what the seed expects; filed as
-    `plans/active/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`, a genuine
-    follow-up design question, not guessed at here). G5 ownership + the 5-per-AG-plan staleness check remain open (out
-    of this task's scope — that's the G4/backfill-plan half of this item, unrelated to the G1-ENUM present- set fix).
+    `plans/archive/issues/tradfi_combo_underlying_naming_mismatch_blocks_g1_enum_present_rollup_2026_07_28.md`, a
+    genuine follow-up design question, not guessed at here). G5 ownership + the 5-per-AG-plan staleness check remain
+    open (out of this task's scope — that's the G4/backfill-plan half of this item, unrelated to the G1-ENUM present-
+    set fix).
 15. citadel_paper_batch_live P2.7.3/P7.3 — stands, human-only custody gate, external.
 16. live_mode_event_sink_topic — **Option A chosen**: repoint UTL `_sink_factory.py` to canonical
     `service-lifecycle-events`; delete the interim unmanaged `market-tick-data-service-events` topic after.
@@ -907,3 +909,7 @@ during §2-§4 execution should be treated the same way, not re-parked on a huma
   not this task's scope). **The June-2026 vintage-audit execution task, including this autonomous extension, is
   complete** — every actionable item discussed this session either shipped, is a live VM run tracked forward by its own
   checkpoint, or is a real, evidenced, filed follow-up.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Large actively-maintained
+  P1 audit-tracking doc; all 7 remaining items are genuinely gated on external, not-yet-resolved state (live SPOT VMs,
+  unresolved merge conflicts, pending batch runs), not defaulted/never-assessed work.

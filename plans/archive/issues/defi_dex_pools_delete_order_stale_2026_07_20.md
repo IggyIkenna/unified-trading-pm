@@ -63,7 +63,7 @@ Two live, unchecked P0/P1 items still instruct a delete:
 - `plans/active/defi_consolidated_closeout_2026_07_18.md:467-470` — Track 2, first todo: _"**Pin the flat canonical path
   shape** …; DELETE the dead top-level Solana `dex_pools/`+`lending_indices/` prefixes (frozen 2026-04-14, 'Shape-B')…
   **Snapshot-before-delete**"_. Still `- [ ]`.
-- `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md` §A6 (pre-amendment `:77-79`) — _"**[P1,
+- `plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md` §A6 (pre-amendment `:77-79`) — _"**[P1,
   IRREVERSIBLE — snapshot-first] — GCS deletes**: the dead Shape-B `dex_pools/`+`lending_indices/` top-level prefixes…
   **REC: authorize as a batch with the pre-delete snapshot.**"_ — and §A8 sequences A6 into the start order and asks the
   operator to **authorize** it.

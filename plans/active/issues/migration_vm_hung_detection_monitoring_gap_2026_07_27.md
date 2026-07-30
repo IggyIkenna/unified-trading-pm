@@ -21,7 +21,13 @@ summary: >-
   agent-orchestrator-dispatched, for now.
 status: open
 nature: issue
-asset_group: [infrastructure, cefi]
+asset_group:
+  [infrastructure] # corrected 2026-07-30 (/ag-closeout-audit infra, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [infrastructure, cefi], a genuine mistag: `cefi` is the PROVENANCE of the incident (it surfaced during the cefi
+  # Script-1 campaign), not this doc's scope. All 3 documented gaps and all 4 shipped fixes are generic fleet VM
+  # monitoring/observability in deployment-api + deployment-service (`repos:` names no cefi service, parent_epic is
+  # infrastructure_master), and todo 2's `_is_backfill_vm()` fix explicitly spans the sports/tradfi/prediction/kalshi
+  # launcher family too -- the doc itself states "This is a monitoring/observability gap, not a data-correctness issue".
 stage: [data, meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer]
@@ -48,21 +54,21 @@ related:
     /plans/archive/issues/cefi_content_migration_vm_wedged_worker_2026_07_23.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/issues/vm_launcher_class_b_no_stall_kill_gap_2026_07_27.md,
-    /plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
+    /plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md,
   ]
 created: 2026-07-27
 parent_epic: infrastructure_master
 priority: P2
 estimate_class: infra
-assigned_role: infrastructure
+assigned_role: infra
 source:
   "Found live during interactive `/autonomous` session monitoring of the cefi Script-1
   (migrate_cefi_content_instrument_id_catalogue_2026_07_17.py) corpus-wide --apply campaign under
   /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md, 2026-07-27 — 10/42 VMs found hung
   only via a manual staleness-vs-wallclock sweep of the fleet. All code-path claims in this doc were independently
   re-verified this session by direct file read (not trusted from any prior summary)."
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 locked_by:
@@ -410,6 +416,32 @@ automatic, and depends entirely on someone deciding to look and knowing to look 
       or explicitly rejected with reasoning), and `launch-batch-live-recon-cron-vm.sh` routes to the correct
       (backfill/run-log- freshness) liveness signal without regressing any genuinely-live VM whose name legitimately
       contains `-live-`.
+- [x] [SCRIPT] P2. **A genuinely NEW instance of this exact bug class, live-observed 2026-07-29**:
+      `launch-cefi-funding-timestamp-fix-vm.sh` (built during a later session, after this doc's todo 5 audit had already
+      run — not one of the ~35 unverified launchers, a brand-new one) hit the identical Gap-2 failure mode. A
+      BINANCE-FUTURES `canonical-migration-cefi-fts-*` VM's migration script printed its own final
+      `=== SUMMARY (APPLIED) ...` line, then the process never actually exited — the VM sat GCE-`RUNNING` for 3+ hours
+      with zero real progress (only the always-on `PIPELINE_HEARTBEAT` emitter kept the tee'd log growing) before being
+      noticed manually and killed. Confirmed via direct log read: `VM_TASK=canonical-migration` metadata means this
+      launcher DOES already route through the shared `_launch_with_tee()` → `vm-exec-with-gcs-tee.sh` stall-kill (no
+      Gap-2-style total non-invocation), but `STALL_PROGRESS_REGEX` was never set for it, so it fell back to the exact
+      byte-growth-only default this doc's todo 4 already proved is defeated by heartbeat noise. — **FIXED:
+      deployment-service@727e3ca**. Set `STALL_PROGRESS_REGEX=action=` (matches
+      `reprocess_bulk_tardis_derivative_ticker_funding_timestamp_2026_07_28.py`'s real per-object progress line,
+      confirmed via direct grep of every `logger.info`/`action=` call site in that script; no "wedged worker" warning
+      string exists in it to accidentally exclude). Proof mirrors todo 4's exact shape
+      (`TestCefiFundingTimestampFixStallDetection`, `tests/unit/test_vm_launcher_scripts.py`, deployment-service): the
+      launcher wires the key for both the N=1 and `--shards N` paths; the regex matches the real line shapes and not the
+      heartbeat/summary noise; and — against the REAL shipped `vm-exec-with-gcs-tee.sh`, not a reimplementation — a
+      simulated post-completion hang is killed within the timeout with the regex set and is NOT killed under the
+      byte-growth-only default (the exact incident, reproduced small-scale). **A second, unrelated real bug was found
+      and fixed in the same commit while building this proof**: this session's own earlier sharding refactor
+      (`deployment-service@bf51669`) had left the launcher's tail-end as `$DRY_RUN && exit 0` — since `$DRY_RUN` holds
+      the literal string `"true"`/`"false"`, this line EXECUTES that string as a real command (`/bin/true` or
+      `/bin/false`); with `DRY_RUN=false` (every actual, non-dry-run launch), the real `false` binary ran and exited 1,
+      so the script returned exit code 1 on every SUCCESSFUL launch, even though the VM was created correctly — caught
+      only because writing a real subprocess-based proof test surfaced it, not by inspection. Fixed with an explicit
+      `if $DRY_RUN; then exit 0; fi` + trailing `exit 0`, matching the pre-refactor script's own safe idiom.
 
 ## Evidence / how to reproduce
 
@@ -473,7 +505,7 @@ distinct from todo 6): `RelaunchStalledVm` (`deployment-service/scripts/recovery
 this session (`grep -n "checkpoint\|PROGRESS\|resume\|START_DATE"` → zero hits), in contrast to `RelaunchPreemptedVm`,
 which already has this logic. This affects every VM `_is_backfill_vm()` matches, not just canonical-migration ones, and
 it was previously only mentioned in passing inside todo 2's own evidence text, never tracked as its own item. Filed as
-`/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md` per findings-triage (a cross-cutting
+`/plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md` per findings-triage (a cross-cutting
 actuator gap, out of this doc's exact Gap-1/2/3 scope).
 
 **Status**: left as `open`, not `resolved` — todo 7 (new, tracking the audit's own flagged-but-unfiled follow-up) is
@@ -501,4 +533,11 @@ resolution); todo 5's audit deliverable is complete but its own follow-up tracki
   regardless of any PROGRESS.json checkpoint that exists. So a stall-triggered relaunch of a canonical-migration VM — or
   any other `_is_backfill_vm()`-matched VM — still does **not** resume from where it left off today. This is a genuine,
   broader, pre-existing gap (not introduced or fixed by any of this doc's 6 todos), filed separately at
-  `/plans/active/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md`.
+  `/plans/archive/issues/relaunch_stalled_vm_no_checkpoint_resume_gap_2026_07_27.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.

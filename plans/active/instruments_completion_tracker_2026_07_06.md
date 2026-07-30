@@ -273,13 +273,13 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       2021-25=684), `expected_unattempted` +0 (zero downloads), fresh full-window scan **→ 0 candidates** (≥1M
       enumerator halt cleared), consolidator merged into the canonical defi manifest. Scan-gate hit EXACTLY 1,380,376 +
       1-day smoke verified first. No enumerator edit (read/run only). **CORRECTION (2026-07-25, per
-      `issues/canonical_closeout_open_questions_2026_07_18.md` C2c):** the 1,380,376-row figure above (and the 62.06%
-      Layer-2 defi coverage_pct derived from it at line ~634) is the **retired v1 grain**. The v2 SSOT (locked issue
-      `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
+      `archive/issues/canonical_closeout_open_questions_2026_07_18.md` C2c):** the 1,380,376-row figure above (and the
+      62.06% Layer-2 defi coverage_pct derived from it at line ~634) is the **retired v1 grain**. The v2 SSOT (locked
+      issue `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
       `defi_consolidated_closeout_2026_07_18.md`'s ~63.9M seed figure) puts the real DeFi `expected_unattempted` backlog
       at **~63.9M cells**, not 1.38M — this DONE checkbox and the 62.06% figure are the v1 milestone only, not the final
       denominator; the v2 backlog is open work tracked under Track-3 in
-      `issues/canonical_closeout_open_questions_2026_07_18.md`.
+      `archive/issues/canonical_closeout_open_questions_2026_07_18.md`.
 - [x] ✅ [VERIFY] P2. **2e follow-on** (was bundled into 2e): the cross-AG never-seeded backlog check on **cefi / tradfi
       / pred** (scan-only investigation — dispatch separately). **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,
@@ -448,12 +448,12 @@ reconciling + signing off, not redoing.)_
 
 ## Stage 5 — Capture to 100% (Layer-2 — only after Layer-1 is honest)
 
-- [ ] [INFRA] P1. `data_completion` operator-gated items: pyth `collect-oracle-prices` launch · Live ODDS quota · MANTLE
-      paid RPC · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, + HYPERLIQUID/ASTER —
-      operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI holds chain
-      classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` Update §3) ·
-      rate-limit probe VM. **STILL OPEN (reconciled 2026-07-28)** — genuinely credential/operator-gated
-      (BLOCKED-CREDENTIALS class), not covered by any named archived child; expected to stay open.
+- [ ] [INFRA] P1. `data_completion` operator-gated items: ~~pyth `collect-oracle-prices` launch~~ · Live ODDS quota ·
+      ~~MANTLE paid RPC~~ · CLOB-on-chain asset_group classification (**Lighter/Pacifica/Extended-Starknet, +
+      HYPERLIQUID/ASTER — operator-confirmed 2026-07-07 same hybrid pattern: CEFI holds instrument definitions, DEFI
+      holds chain classification**, see `issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`
+      Update §3) · rate-limit probe VM. **STILL OPEN (reconciled 2026-07-28)**, credential/operator-gated, not covered
+      by any archived child. **Retagged 2026-07-29**: pyth+MANTLE resolved (see struck clauses above).
 - [x] ✅ [DATA] P1. Reconcile the DEDUP-flagged folded-in tail (from merged `path_to_100pct`) — **do not double-run**.
       **DONE — reconciled 2026-07-28 against `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md`
       (`status: complete`, own todo `[x]`, 2026-07-06, Opus slot-3).** Both DEDUP-flagged items in

@@ -274,7 +274,7 @@ _(no plans currently assigned at this priority)_
       purpose was migrating away from / auditing / purging that now-deleted legacy bucket — expected historical residue
       of already-completed one-off tooling (source plan `prediction_manifest_canonicalisation_2026_06_01.md` E7/E8/E8b,
       also DONE), not an open migration gap. No operator decision needed — the migration itself is already complete.
-      Source: `plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 1.
+      Source: `plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md` todo 1.
 - [ ] [AGENT] P2. **Workspace-grep audit for legacy bucket references** — run workspace-wide grep to verify zero inline
       `gs://` f-strings remain after bucket SSOT rollout. Generate audit table confirming all call sites use
       `resolve_bucket_name()`. Update QG ratchet baseline.

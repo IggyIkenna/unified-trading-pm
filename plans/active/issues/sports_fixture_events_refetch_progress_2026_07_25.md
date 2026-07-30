@@ -484,3 +484,57 @@ expected on that cadence; no VM launched (none needed for this check). Not a new
 changed since the last entry. Releasing via `/skip-current-task {"reason_code": "GATED"}`, respecting the established
 hourly probe cadence rather than re-checking again immediately. Next dispatch: re-probe once ~1h has elapsed since the
 15:09Z check (i.e. not before ~16:09Z), or sooner only if there's reason to think the vendor's reset window is closer.
+
+**Checked 2026-07-29T20:14Z (slot 4, data_engineering)**: ran the same VM-free `/status` probe (well past the 16:09Z
+next-check window, ~5h05m since the 15:09Z probe) — still exhausted, identical `errors.requests` payload. Also
+independently confirmed via `gcloud compute operations list` (before finding this doc) that
+`af-backfill-20260728-141821` was `stop`ped at `07:47:44-07:00` (=`14:47:44Z`) then `delete`d at `07:48:59-07:00`
+(=`14:48:59Z`), both by the ambient compute default SA — consistent with this doc's own 15:00Z-15:10Z note that the
+interactive operator session did the stop+delete (not a watchdog reap or a code bug); no new information there, just
+independent corroboration of an already-documented action. **Sharpening the reset estimate**: the launcher's own comment
+(`launch-api-football-backfill-vm.sh:88-89`) documents the daily quota as resetting `00:00 UTC` — so the real earliest
+useful re-probe time is **`2026-07-30T00:00Z`** (~3h45m from this check), not just "another hourly probe" which will
+predictably still read exhausted until then. No VM launched (none needed/useful pre-reset). Releasing via
+`/skip-current-task {"reason_code": "GATED"}`. Next dispatch: do not bother re-probing before `2026-07-30T00:00Z`; once
+past that time, re-probe once, and on a clean (non-`errors`) response relaunch WITHOUT `--force` per the 15:00Z-15:10Z
+note (plain skip-if-fresh re-run — the fixed adapter code already correctly recorded `2026-07-12`'s failures as
+`attempted_failed`, so a normal run retries them naturally; only ~13 days of the `2020-06-06→2026-07-25` range remain).
+
+**Checked 2026-07-29T23:25Z (slot 9, data_engineering)**: bare check only, no probe run (per this doc's own prior
+guidance — "do not bother re-probing before `2026-07-30T00:00Z`"). Current time is still ~35min short of that gate. No
+VM running, nothing new to observe. Releasing via `/skip-current-task {"reason_code": "GATED"}` without a redundant
+probe. Next dispatch: unchanged from the 20:14Z entry — wait for `2026-07-30T00:00Z`, then re-probe once and relaunch
+WITHOUT `--force` on a clean response.
+
+**RESET CONFIRMED + RELAUNCHED 2026-07-30T00:03Z-00:20Z (interactive session, operator-present, `/autonomous`)**: probed
+right at the predicted `00:00Z` reset window — clean response (`errors: []`,
+`response.requests: {current: 12, limit_day: 150000}`), confirming the launcher comment's `00:00 UTC` daily-reset claim
+precisely. Verified both fixes (`instruments-service@5a6deafd`, `unified-api-contracts@f3ae871c`) still ancestors of
+current HEAD before relaunching. Tarballs already fresh for instruments-service/deployment-service (unchanged since last
+publish); UAC drifted one commit further (`f909e112` deployed vs `c92cf03499c4` HEAD) between the tarball check and the
+actual launch — confirmed `f3ae871c` still an ancestor of the deployed `f909e112` sha before proceeding (safe, unrelated
+newer commit). Relaunched WITHOUT `--force` per the established plan: `af-backfill-20260730-012007`,
+`--entity FIXTURE_EVENTS --recovery-fixture-ids gs://.../recovery_fixture_ids.parquet 2020-06-06 2026-07-25` (no
+`--force`) — skip-if-fresh will naturally retry every `attempted_failed` cell from yesterday's quota exhaustion plus
+continue the ~13 remaining days. Verifying it's running cleanly now; will monitor to genuine completion, then re-census,
+then move to the queued FIXTURE_STATS/FIXTURE_LINEUPS all-leagues backfill.
+
+**Health-checked 2026-07-30T00:45Z-00:47Z (slot 10, data_engineering), RUNNING, confirms clean post-relaunch progress**:
+`gcloud compute instances list` confirms exactly one `af-backfill-*` VM present, `af-backfill-20260730-012007`, status
+`RUNNING` in `asia-northeast1-c` (the 3 others listed are prior campaigns' VMs, all `TERMINATED`). 2-read
+progress-metric check over ~2min: heartbeat blob `vm-heartbeat/af-backfill-20260730-012007.txt` fresh at both reads
+(epoch `1785372272`→`1785372519`, ~4min apart, consistent with the poll gap); `run.log` grew 2,438→2,737 lines (+299);
+`date=` boundary advanced `2020-07-13`→`2020-07-19` (+6 days, ~3 days/min — the expected fast skip-if-fresh pace through
+already-captured 2020-era dates; log shows the per-fixture recovery-allowlist filter actively narrowing, e.g.
+`119 → 30 fixtures (89 skipped — not in allowlist)`, i.e. genuinely skip-if-fresh, not a `--force` redo); no error/stall
+signature beyond the expected benign `CANONICAL_LEAGUE_ID_LOOKUP_MISS` warnings (already documented elsewhere in this
+doc as non-lossy passthrough); `grep -c 'DEPLOYMENT_COMPLETED\|exit_code'` = 0 (no terminal marker — note: this grep
+legitimately exits 1 on zero matches, which is the healthy/expected outcome here, not a script failure). Genuine forward
+progress, no stall. Not completable this turn — skip-if-fresh should accelerate further once past the ~13 real-fetch
+days near `2026-07-12`→`2026-07-25` (per the 00:03Z-00:20Z relaunch note), but the full `2020-06-06→2026-07-25` walk is
+still gated on VM completion. Releasing via `/skip-current-task {"reason_code": "GATED"}`, not duplicate-launched. Next
+dispatch: repeat this health-check (2-read progress-metric check — a new `date=` boundary OR continued in-date
+fixture-fetch advance both count as live); once terminal (`DEPLOYMENT_COMPLETED`/`exit_code` marker, VM
+self-deleted/TERMINATED), re-run `census_fixture_events_schema_variants_2026_07_25.py` (full, no `--limit`) before
+flipping this checkbox + `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s `sports_satellite_ao_dispatch_batch2-002`
+todo.

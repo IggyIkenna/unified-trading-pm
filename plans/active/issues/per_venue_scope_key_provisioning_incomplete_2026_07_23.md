@@ -10,7 +10,14 @@ summary: >-
   owns finishing this rollout.
 status: open
 nature: issue
-asset_group: [cefi, infrastructure]
+asset_group:
+  [cefi] # corrected 2026-07-30 (/ag-closeout-audit infra, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [cefi, infrastructure], a genuine mistag: every one of the 10 named venues (Binance/Deribit/Bybit/OKX/Hyperliquid/
+  # Aster/Upbit/Kraken/Bitfinex/Bitget) is a CeFi venue, `repos:` is execution-service, `parent_epic` is
+  # execution_master, and `tags:` already carries `cefi`. `infrastructure` read as a second peer-tranche marker only
+  # because the mechanism is Secret Manager; the infra tranche's own charter is generic repo/dependency/terraform/org
+  # hygiene, not per-venue trading credentials. Already covered by cefi_satellite_ao_dispatch_batch3_2026_07_26.md, so
+  # this retag creates no new orphan (linkage check re-run, still 0).
 stage: [meta]
 repos: [execution-service, unified-trading-pm]
 scope: [engineer, admin]
@@ -147,3 +154,9 @@ All three are real design/priority calls, not something determinable from code o
 - `/codex/05-infrastructure/secret-manager-naming.md` § 2.2 — the live read/trade/write split pattern for
   Binance/Deribit, and the note distinguishing this real pooled/house pattern from the dead per-client
   `exec-{client}-{venue}-{read,trade,withdraw}-*` design the archived plan originally also described.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — One item is genuinely
+  human-only (operator's own exchange-login credential creation, doc-confirmed); other two are explicit design/priority
+  judgment calls the doc itself labels as such.

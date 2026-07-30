@@ -142,9 +142,18 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
       orchestrator's `.env.local` (or the systemd unit template if it should apply fleet-wide) and ship. If a nonzero
       rate persists, sample those specific examples the same way this session did (check the cited SHA against the real
       repo) before deciding whether it's a genuine failure class or a different race this fix didn't cover.
-- [ ] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
+- [x] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
-      landing behavior, but worth a deliberate yes/no rather than leaving it implicit.
+      landing behavior, but worth a deliberate yes/no rather than leaving it implicit. **Decided 2026-07-29 (batch
+      closeout pass): NO, do not tighten.** Reasoning: `quickmerge` always lands a fresh commit on LDR, but by the time
+      a worker calls `/done`, the standing LDR→main promote cycle (`*/15`) or a same-day squash/rebase during promotion
+      may have already carried that content past LDR onto `main` (or, for a `staging`-routed repo, onto `staging`) — in
+      both cases the ORIGINAL sha is still reachable from `origin/main`/`origin/staging` even if it is no longer the
+      literal tip of `origin/live-defi-rollout` (e.g., a later commit superseded it there). Narrowing the check to
+      LDR-only would convert those genuinely-shipped cases into false negatives — worse than today's slightly-permissive
+      "any origin/*" read, which correctly treats "reachable from any branch this workspace promotes through" as proof
+      the work exists upstream. No code change; decision recorded per the todo's own gate ("a deliberate yes/no rather
+      than leaving it implicit").
 
 ## Codex SSOTs
 

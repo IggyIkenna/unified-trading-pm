@@ -339,10 +339,67 @@ Two independently scoped, mechanically-determinable fixes (neither is a design c
       `git log --since="2026-07-29T00:00:00Z" --all -- '*urdi_reference_provider*' '*active_venues*'` in
       instruments-service (HEAD `42dd7a14`) returns zero commits. Current time (`15:19Z`) still well before the day-plus
       fallback gate (`2026-07-30T01:31Z`, ~10h away). No change since the 14:12Z check. Releasing via
-      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above.
-- [ ] [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
+      `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above. — **Checked
+      2026-07-29T20:07Z (slot 4, data_engineering): item-2 IS now confirmed landed AND deployed — correcting the prior 5
+      bare checks' false negative — but the day-plus gate is still open (reset to a later target).** All 5 prior "item-2
+      NOT landed" checks (03:50Z-15:19Z) used `git log ... -- '*urdi_reference_provider*' '*active_venues*'`, which
+      never matches the file item-2 actually touched (`instruments_service/engine/orchestrator/process_fetch.py` —
+      confirmed via `git show --stat 12c176f8`); those checks' own tooling was too narrow for the real fix location, not
+      a sign the fix was actually absent. Re-ran with `-- '*process_fetch*'` and it finds `12c176f8`, committed
+      **2026-07-29T14:20:16Z** — i.e. item-2 landed BEFORE even the 15:19Z check; that check's negative was a
+      glob-pattern gap, not reality. **Deploy confirmed**: the currently running
+      `uts-prod-instruments-service-sports-fixtures` Cloud Run Job image (tag `4c05f2d`, digest `sha256:3e8feb1…`, built
+      **2026-07-29T18:02:00Z**) has `12c176f8` as an ancestor (`git merge-base --is-ancestor 12c176f8 4c05f2d` → yes),
+      and a fresh execution (`…-wnnl6`, started `20:06:33Z`) confirms that image is actively running now — so item-2's
+      real redeploy cutoff is **`2026-07-29T18:02:00Z`**, not the item-1 fallback used above. **Day-plus gate reset**:
+      only ~2h05m elapsed since that cutoff at check time (`20:07Z`) — nowhere near "a full day-plus of live operation
+      post-that-fix". New target: **not before `2026-07-30T18:02Z`** (supersedes the old item-1-fallback target of
+      `2026-07-30T01:31Z`, which no longer applies now that item-2 has a real cutoff of its own). Did NOT re-run the
+      Step-3 manifest query or the `gcloud logging read` sweep for the 5 enrichment-venue error lines — with only ~2h of
+      post-deploy operation, either would be a very-early checkpoint at best, not a verdict, and the doc's own
+      established pattern (03:50Z entry) already covers what an early checkpoint looks like. Releasing via
+      `/skip-current-task     {"reason_code": "GATED"}`. Next dispatch: once `2026-07-30T18:02Z` passes, re-run BOTH the
+      Step-3 manifest query AND the `gcloud logging read` sweep for real — this is the first check where both gates
+      (item-2 landed AND item-2 deployed) are actually satisfied, so the next check is positioned to deliver the real
+      verdict, not another bare/early checkpoint. — **Checked 2026-07-29T23:25Z (slot 9, data_engineering): still
+      premature, bare check only (no manifest re-query, per the prior check's own guidance).** Confirmed no further
+      relevant change: `instruments-service` HEAD (`7f272911`) has zero commits touching `*process_fetch*` since
+      `2026-07-29T18:00:00Z` — nothing has moved past the already-confirmed `12c176f8`/`4c05f2d` deploy. Current time
+      (`23:25Z`) is still ~18.6h before the day-plus gate (`2026-07-30T18:02Z`). No change since the 20:07Z check.
+      Releasing via `/skip-current-task {"reason_code": "GATED"}`. Next dispatch: same condition as above — once
+      `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
+      verdict. — **Checked 2026-07-30T00:29Z (slot 11, data_engineering): still premature, bare check only (no manifest
+      re-query, per the prior check's own guidance).** Confirmed no further relevant change: instruments-service HEAD
+      (`7f272911`, `origin/live-defi-rollout`) unchanged since the 23:25Z check — zero commits touching
+      `*process_fetch*` since `2026-07-29T18:00:00Z`. Current time (`2026-07-30T00:29Z`) is still ~17.5h before the
+      day-plus gate (`2026-07-30T18:02Z`). No change since the 23:25Z check. Releasing via
+      `/skip-current-task {"reason_code":     "GATED"}`. Next dispatch: same condition as above — once
+      `2026-07-30T18:02Z` passes, re-run both the Step-3 manifest query and the `gcloud logging read` sweep for the real
+      verdict.
+- [x] ✅ [INFRA] P2. Persist `FirstSuccessPoller._pending` across `--one-shot` invocations (state-bucket-backed, same
       pattern as `PeriodicTierState`) so `first_success=True` / genuine `fetched_rows` confirmations become structurally
       possible. Lower urgency than the two todos above (observability/confirmation only — does not gate the real
       dispatch). Add a regression test proving a pending entry registered in one `SportsTriggerScheduler` instance is
       picked up and resolved by a FRESH instance reading the same persisted state (simulating the one-shot restart).
       Repo: deployment-service.
+
+      **DONE 2026-07-30 — deployment-service@a172915.** `FirstSuccessPoller` (`sports_latency_observation.py`) now
+                                                              accepts `bucket`/`key`/`storage` (mirrors `PeriodicTierState`'s exact adapter shape — `default_state_storage()`
+                                                              promoted from module-private to shared-public for this reuse); loads persisted `_pending` on construction,
+                                                              persists after every real mutation in `register_from_event()` (only when at least one entity was actually
+                                                              registered) and `poll()` (only when something was removed/updated) — best-effort, `except Exception` (broadened
+                                                              from the initially-narrower `(OSError, ValueError)` after discovering it could crash the live dispatch path on a
+                                                              transient storage failure; persistence must never block a real trigger fire). `SportsTriggerScheduler.__init__`
+                                                              wires it via a new `_build_first_success_poller()` (same `state_bucket or resolve_state_bucket()` + full-failure
+                                                              fallback-to-in-memory-only shape as the existing `_build_periodic_state()`). **The regression test asked for is
+                                                              exactly `test_first_success_poller_survives_fresh_instance_across_one_shot_restart`** (registers on instance A,
+                                                              discards it, constructs a brand-new instance B against the same bucket/storage, asserts B's `.pending` already
+                                                              contains the entry with no `register_from_event` call) — plus persist-on-register, persist-on-poll-removal,
+                                                              malformed-state-starts-fresh, and no-bucket-stays-in-memory-only (back-compat) tests, 5 new tests total in
+                                                              `tests/unit/test_sports_latency_observation.py`. Found + fixed a real test-isolation gap while wiring this in:
+                                                              the shared `_make_scheduler_with_recorder()` test helper (used by ~10 pre-existing tests) never overrode
+                                                              `state_bucket`, so every test sharing the default `resolve_state_bucket()` bucket name was reading/writing the
+                                                              SAME `CLOUD_MOCK_MODE=true` mock-storage-backed state file — invisible before this change because no prior code
+                                                              path actually persisted real content there; now scoped to a per-test-unique bucket
+                                                              (`f"deployment-scripts-test-{uuid.uuid4().hex}"`), fixing a latent cross-test-pollution risk for
+                                                              `PeriodicTierState` too, not just this new code. Full `quality-gates.sh` green (2967 passed).

@@ -224,6 +224,46 @@ bigger machine, so the global OOM path is never entered at all).
       deeper, durable fix for the underlying unboundedness, same relationship as tradfi's own P2 memray follow-up to its
       machine-type-bump unblock.
 
+## 2026-07-29 second recurrence — sports/odds_api launcher (slot-16, `data_engineering`, task `sports_odds_api_scattered_multiyear_gaps-001`)
+
+**Same bug class, different launcher.** While running a live gap-fill backfill
+(`launch-mtds-sports-odds-backfill-vm.sh --start 2020-06-06 --end 2026-07-29`, VM `mtds-backfill-odds-gapfill-20260729`,
+`--asset-group SPORTS`) to close 595 scattered missing odds_api calendar days, chunk 9/9 (`2025-11-27→2026-07-29`, the
+most-recent-history chunk containing several of the real gaps) OOM-killed:
+
+```
+mtds_chunk_loop.sh: line 56: 12932 Killed  ... python -m market_tick_data_service --operation download ...
+CHUNK_FAILED: chunk=9/9 range=2025-11-27→2026-07-29 exit=137 reason=OOM_KILLED
+```
+
+`RESOURCE_SAMPLE` lines show the same climbing-RSS signature as the original CEFI incident, just slower (across one real
+fetch day's write-out rather than within 32 seconds): mem=52.2%→66.0%→85.0%→90.2% (rss
+6558MiB→9557MiB→12586MiB→13468MiB) on `e2-standard-4` (16GB), immediately after a real odds_api fetch day (2026-04-15)
+that fanned out over 63 distinct `(bookmaker, league, fixture)` shards for a single date. This is the identical root
+cause already diagnosed above for CEFI Tardis (no aggregate byte-budget cap, only task-count caps) — the odds_api
+adapter's per-date fan-out over many bookmaker/league/fixture combinations is the sports-side equivalent of CEFI's
+per-symbol fan-out. **Confirms this is a general `mtds_chunk_loop.sh`-family risk, not CEFI/Tardis-specific**, exactly
+as the root-cause section above already suspected but had not yet observed recur on a different asset_group/venue.
+
+**Why the CEFI fix didn't cover this**: the 2026-07-26 fix bumped `MACHINE_TYPE` in `launch-mtds-backfill-vm.sh`
+specifically for `--asset-group CEFI` (other asset groups explicitly kept `e2-standard-4`). The sports odds backfill
+uses a SEPARATE, dedicated launcher (`launch-mtds-sports-odds-backfill-vm.sh`) that was never touched by that fix and
+still defaulted to `e2-standard-4`.
+
+**Fix applied (same precedent, this launcher)**: `deployment-service@bbce1b6` bumps
+`launch-mtds-sports-odds-backfill-vm.sh`'s `MACHINE_TYPE` default to `e2-highmem-4` (32GB), same ~2.2x headroom margin
+over the observed peak that the CEFI fix validated. The `mtds_chunk_loop.sh` fail-loud `CHUNK_FAILED` logging (part 2 of
+the original fix) is shared infrastructure and already worked correctly here — it's what surfaced this recurrence
+immediately instead of a silent short-fall. Relaunching the same range on the bumped machine type to close the remaining
+tail (chunk 9's unprocessed dates).
+
+- [ ] [DATA] P2. **Audit every OTHER `deployment-service/scripts/vm/launch-mtds-*-backfill-vm.sh` launcher for the same
+      `e2-standard-4` default** — the CEFI fix and this sports fix were both reactive (applied only after an actual
+      OOM-kill was observed). Given the shared `mtds_chunk_loop.sh` fan-out-with-no-byte-budget root cause is
+      demonstrably NOT asset-group-specific, a proactive sweep of every sports/tradfi/defi MTDS backfill launcher's
+      default machine type (vs. its typical per-chunk fan-out width) would catch the next recurrence before it burns a
+      VM launch, instead of after. Repo: deployment-service.
+
 ## 2026-07-27 recent-CEFI-backfill claimed-vs-actual completion audit (slot-5, `data_engineering`, task `cefi_satellite_ao_dispatch_batch1-026`)
 
 **Scope**: every `mtds-backfill-cefi-*` VM launch, cross-checked two ways — (a)
@@ -258,3 +298,69 @@ above: "an audit of recent CEFI backfill VMs' actual completion vs claimed compl
 case to flag. The 2026-07-26 fix already shipped (machine-type bump + fail-loud `CHUNK_FAILED` logging) is the correct
 thing to validate on the NEXT real CEFI backfill launch — no new follow-up todo is warranted from this audit beyond the
 P2 byte-budget item already tracked above.
+
+## 2026-07-29 machine-type bump alone insufficient — cross-day accumulation, not single-day fan-out (slot-16, `data_engineering`, task `sports_odds_api_scattered_multiyear_gaps-001`)
+
+**The `e2-highmem-4` bump (documented above, same session) did NOT fix the sports/odds_api recurrence — it OOM-killed
+again, in the identical chunk, on the doubled machine.** Relaunching `mtds-backfill-odds-gapfill-retry1-20260729` on
+`e2-highmem-4` (32GB) reproduced `CHUNK_FAILED: chunk=9/9 range=2025-11-27→2026-07-29 exit=137 reason=OOM_KILLED` a
+second time. Critically, this run's `RESOURCE_SAMPLE` trail shows the failure mechanism is **different from the CEFI
+root cause**:
+
+```
+20:33:41  mem=27.2% rss=6571MiB   (chunk 9 bootstrap, before any real fetch)
+20:34:44  mem=31.6% rss=8513MiB   (during date=2026-04-15's fetch — one real day)
+20:35:24  mem=46.6% rss=13266MiB
+20:35:55  mem=55.2% rss=16346MiB
+20:36:29  mem=46.4% rss=25599MiB  (date=2026-04-15 write-out ends; 2026-04-16 pre-flight starts)
+20:37:00  mem=61.2% rss=17542MiB
+20:37:34  mem=73.0% rss=21526MiB
+20:38:05  mem=74.5% rss=23788MiB
+20:39:27  OOM-killed (exit 137)
+```
+
+RSS kept climbing through the SECOND real-fetch day (2026-04-16) on top of whatever the first day (2026-04-15) had
+already allocated — it never dropped back toward baseline between dates the way chunks 1-8's all-skip days did (compare
+the ~660-700MiB baseline `RESOURCE_SAMPLE`s seen throughout chunks 1-8, vs. this chunk never returning below ~6.5GB once
+a real fetch started). **This is memory accumulating ACROSS multiple real-fetch days within one long-lived
+`--start-date/--end-date` subprocess invocation, not (only) CEFI's "one day's uncapped concurrent fan-out" mechanism** —
+though the two may compound (both lack an admission-control ceiling; CEFI's is per-request concurrency, this looks like
+inter-request retention). Doubling the machine size only bought roughly one extra real-fetch day before hitting the new,
+higher ceiling — for a chunk containing enough real-fetch days (chunk 9 is the tail of the range, where scattered
+recent-history gaps cluster), NO machine size fixes this without bound, since the accumulation is a function of
+real-fetch-day COUNT per chunk, not a fixed per-day peak.
+
+**Silver lining confirmed both times**: the crash happens only AFTER successfully completing every date from 2025-11-27
+through 2026-04-15 — including the 2026-02-22..2026-03-28 (35-day) gap, the largest of the 6 multi-week ranges this
+whole task exists to close. That portion is genuinely captured (verify via a fresh census after the tail lands, not
+assumed).
+
+**Mitigation applied (operational, not a code fix)**: relaunch scoped to just the unprocessed tail
+(`--start 2026-04-16 --end 2026-07-29`) with a small `--chunk-size` (5 days) — forcing a fresh subprocess (and therefore
+a fresh, empty memory baseline) every 5 days caps how many real-fetch days can accumulate in any one process lifetime,
+regardless of the underlying retention mechanism. This is the same lever the CEFI incident's `--chunk-days 1` experiment
+used, but where CEFI's per-day peak was itself unpredictable (6GB vs 14.6GB for consecutive identical-scope days,
+disproving a pure date-span explanation there), this sports case has a much cleaner signature — cumulative, monotonic
+growth across sequential real-fetch days — so a small fixed chunk size should be a reliable mitigation here even though
+it wasn't a reliable one for CEFI.
+
+- [ ] [DATA] P1. **Root-cause the actual retained-memory object(s) across date iterations in the sports odds_api
+      download path** (`market_tick_data_service`, the code path `--operation download --asset-group SPORTS` walks
+      per-date inside one process — likely `TickDataHandler.process()`'s date loop or the `odds_api` adapter/finalizer
+      holding a growing cache/buffer keyed across dates instead of per-date). A memray/tracemalloc profile across 2-3
+      consecutive real-fetch days would show whether it's an unbounded cache, an un-drained event-sink buffer, or
+      accumulating asyncio/aiohttp session state. This is the durable fix; the small-chunk-size mitigation above is a
+      workaround, not a repair. Repo: market-tick-data-service.
+- [ ] [DATA] P2. **Consider an adaptive/smaller default `--chunk-size` specifically for "recent history" chunks** (the
+      tail nearest the current date, where live-capture dormancy windows and scattered small gaps cluster densely) vs.
+      the 250-day default that's proven safe for older, mostly-skip-dense history — either launcher-side (detect via a
+      pre-flight gap count per chunk) or just a documented operator convention ("scope a small `--chunk-size` explicitly
+      when re-running a tail that's known to have a high real-fetch-day density"). Repo: deployment-service.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 4 items are genuine
+  investigation/design work (byte-budget estimator design, cross-launcher audit, unresolved profiling investigation,
+  chunk-size design choice), none with a worker-determinable checkable outcome today. NOTE: this doc's real asset_group
+  is [cefi, meta], not infra — a residual scope-leak from this session's pre-fix Phase 0 population; classified here for
+  completeness, no state changed, cefi tranche's own future audit owns this doc.

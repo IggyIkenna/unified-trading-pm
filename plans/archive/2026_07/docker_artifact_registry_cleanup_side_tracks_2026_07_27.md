@@ -1,0 +1,183 @@
+---
+doc_type: plan
+title: Artifact Registry / ECR cleanup — side-tracks (other repos, AWS ECR, legacy GCR bucket, GCS tarball bucket)
+summary:
+  Satellite plan split out of docker_artifact_registry_cleanup_policy_2026_07_24.md on 2026-07-27 so this work can run
+  IN PARALLEL with that plan's Phase B-D `unified-trading-system` spine instead of being serialized behind it by the
+  parent's sequential flag. Extends the same deployed-digest-keep + keep-5-floor + delete-older-than-3d pattern to
+  `unified-trading-library` and the remaining ~73 GCP Artifact Registry repos, designs the equivalent AWS ECR lifecycle
+  policy for 20 ECR repos, deletes the legacy (GCR-era) GCS bucket, documents the pattern in codex, and adds a GCS
+  lifecycle rule for the separate code-tarball bucket (a different artifact class, GCS not AR). Local-only — AR/ECR
+  image-version deletes stay human-gated (no undelete mechanism exists for AR image versions — untouched by the
+  2026-07-28 §3a extension); the legacy GCR bucket delete is a whole-bucket destroy that IS now reversibility-qualified
+  (2026-07-28 ruling, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md §3a extended) provided a fresh same-run
+  soft-delete-retention check clears.
+status: complete
+nature: process
+asset_group: [infrastructure]
+stage: [meta]
+repos:
+  [
+    unified-trading-pm,
+    unified-trading-library,
+    deployment-service,
+    market-tick-data-service,
+    instruments-service,
+    strategy-service,
+    execution-service,
+    ml-service,
+    features-service,
+    market-data-processing-service,
+  ]
+scope: [engineer]
+tags: [artifact-registry, ecr, docker-images, storage-cost, cleanup-policy, retention, cicd, gcs-lifecycle]
+related: [/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md]
+created: 2026-07-27
+last_updated: 2026-07-28
+parent_epic: infrastructure_master
+assigned_vm: harsh_pc
+execution_scope: orchestrator-agent
+sequential: true
+priority: P3
+estimate_class: infra
+estimate_baseline_ai_days: 1.8
+estimate_calibrated_ai_days: 1.4
+assigned_role: infra
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source:
+  Split from docker_artifact_registry_cleanup_policy_2026_07_24.md on 2026-07-27 — that plan's Phase E/F todos were
+  genuinely independent of its Phase B-D `unified-trading-system` spine (different repos/cloud/bucket) but were being
+  serialized behind it by the parent plan's sequential flag, blocking the operator's request to run this work in
+  parallel with the main spine once Phase A's audit was done. See the parent plan's Progress log for the split
+  rationale.
+---
+
+# Artifact Registry / ECR cleanup — side-tracks
+
+> **🗄️ ARCHIVED 2026-07-29** — status=complete, 0 open todos (7 of 7 Phase E/F items done, incl. the executed legacy GCR
+> bucket delete and the applied tarball lifecycle cleanup). Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md. Todo 12's AWS ECR lifecycle policy DESIGN is done
+> and presented for operator sign-off; the live-apply step is a separate, not-yet-created follow-up, not part of this
+> plan's scope.
+
+> **Split plan, not standalone** — the diagnosis, policy shape, and safety rules all live in the parent,
+> [docker_artifact_registry_cleanup_policy_2026_07_24.md](/plans/archive/2026_07/docker_artifact_registry_cleanup_policy_2026_07_24.md)
+> (§ Diagnosis, § Why audit-first, § Policy shape, § Operator decisions — all still apply here, this doc does not repeat
+> them). **`sequential: true`** — todos 15-17 are a real chain (16 needs 15's referenced-tarball-set output; 17 needs
+> 16's drafted rule); todos 10-13 don't depend on each other or on 15-17, but are kept in the same top-to-bottom order
+> for the same reason the parent plan added the flag — avoid AO reaching a gated delete/apply todo (17) before its real
+> prerequisites exist; todo 13 was `[OPERATOR]`-gated at the time of this split but was downgraded to AO-dispatchable
+> 2026-07-28, see its own text below. **Todo numbers (10-13, 15-17) are preserved from the pre-split single plan** for
+> cross-doc traceability — not renumbered, and not contiguous with each other (14 stayed in the parent plan as the
+> codex-stub todo). No AR soft-delete/undelete exists — deletion of an AR image version is permanent and stays
+> human-gated (untouched by the 2026-07-28 §3a extension, which covers only stores WITH an undelete mechanism). The
+> legacy GCR bucket delete (todo 13) is a whole-bucket destroy — **operator ruling 2026-07-28** (codex
+> `gcs-and-manifest-delete-safety-protocol.md` §3a extended) made this class reversibility-qualified too, the same way
+> object deletes already were, provided a fresh same-run `gcs_bucket_soft_delete_retention_seconds()` check on the
+> target bucket clears (>=604800s) — see todo 13 for the dispatch shape.
+
+## Plan
+
+### Phase E — Extend to the rest of the estate
+
+- [x] ✅ 10. [INFRA] P3. Repeat Phases A-D (of the parent plan) for `unified-trading-library` (928 GB) — profile it
+      sub-path-by-sub-path first, then apply the same deployed-digest-keep + floor + 3-day pattern. —
+      unified-trading-pm@75e21803 (policy + dry-run report). **Phases A-C complete 2026-07-29.** Phase A: 4 packages
+      (e2e-audit=4, paper-signal-engine=9, paper-trading-engine=12, unified-trading-library=1,241), 1,266 images, ~1,024
+      GB. All 6 live Cloud Run Jobs use `:latest` tags → inherently protected by keep-5-recent (confirmed: each
+      `:latest` digest is at position #1 in its package). Zero non-`:latest` pinned consumers → no explicit
+      keep-deployed-digests entries needed. `vm-serial-capture-prd` references `deployment-service:latest` under this
+      repo — that package doesn't exist (broken job, not blocking). Phase B: 2-rule policy committed (keep-5-recent +
+      delete-older-than-3d/259200s). Phase C: dry-run applied live + verified via `describe`
+      (`cleanupPolicyDryRun: true`); replicated logic against 1,266 live images → 19 kept, 1,247 flagged;
+      zero-intersection PASSES (all :latest digests at position #1, inherently within keep-5). Phase D (flip
+      non-dry-run) is operator-gated — same as parent plan's todo 8, AR has no soft-delete. Policy file:
+      `docker_artifact_registry_cleanup_policy_unified_trading_library.json`; dry-run report:
+      `docker_artifact_registry_cleanup_policy_dryrun_report_unified_trading_library_2026_07_29.json`.
+- [x] ✅ 11. [DATA] P3. Profile the remaining ~73 GCP Artifact Registry repos (see
+      `docker_artifact_storage_audit_2026_07_24.csv`) and apply the same pattern to any showing the
+      unbounded-CI-retention shape. — unified-trading-pm@d836194 (classification + 5 policy files + 18 repos policied).
+      **Complete 2026-07-29.** Classification report: `docker_artifact_registry_repo_classification_2026_07_29.json`.
+      **Policies applied (dry-run) to 18 repos:** (a) 4 priority repos with live consumers — `deployment-dashboard` (720
+      imgs, 112 GB, SHA-pinned service needs keep-deployed-digests), `market-data-tick-handler` (6 imgs, 6 live
+      `:latest` jobs), `quota-broker` (3 imgs, SHA-pinned service), `market-data-handler` (0 imgs per CSV, `:v2` job);
+      (b) 14 remaining service repos — standard 2-rule policy applied. **Out-of-scope:** GCP-managed repos
+      (cloud-run-source-deploy×5, gcf-artifacts×3, firebaseapphosting-images×2, container-registry, gae-standard,
+      gcr.io×3 — cannot apply custom policies); `unified-libraries` (PYTHON format, not Docker); 20 zero-artifact repos
+      (policy unnecessary but available). AWS ECR (18 repos) → todo 12. Legacy GCR bucket → todo 13. Policy files
+      committed: `deployment_dashboard.json` (3-rule), `quota_broker.json` (3-rule), `market_data_handler.json`
+      (3-rule), `standard_2rule.json` (reusable template).
+- [x] ✅ 12. [INFRA] P3. Design the AWS ECR lifecycle policy for the 20 ECR repos — ECR syntax differs (JSON
+      rule-priority list, `countType`/`tagStatus`), and its dry-run analog is `aws ecr start-lifecycle-policy-preview` /
+      `get-lifecycle-policy-preview`; apply the same deployed-digest-keep principle. — unified-trading-pm@<SHA> (policy
+      JSON + design doc). **Complete 2026-07-29.** Designed 2-rule ECR policy (`ecr_lifecycle_policy_keep5_3day.json`):
+      (1) expire untagged images older than 3 days, (2) keep-5 most recent tagged images per repo. Policy design
+      documented with GCP AR→ECR mapping, key differences (per-repo not per-package, no explicit Keep action, no
+      keep-deployed-digests equivalent), and operator sign-off checklist. Preview run on `execution-service` (COMPLETE,
+      0 affected — existing keep-30 policy already trimmed). All 20 ECR repos currently have identical keep-30/7-day
+      policy; this design tightens to keep-5/3-day matching GCP AR. **Presented for operator sign-off** per parent
+      plan's Phase C gate before any live application.
+- [x] ✅ 13. [INFRA] P3. Delete the legacy GCR bucket `gs://artifacts.central-element-323112.appspot.com` (8.9 GiB, GCR
+      is shut down). — **EXECUTED 2026-07-29** (slot 1). Fresh same-run retention check:
+      `soft_delete_policy.retentionDurationSeconds=604800` (>=604800s, reversibility-qualified per §3a extended). All
+      307 objects (9.53 GB) deleted via Python GCS SDK (`bucket.delete_blobs()`), then bucket deleted via
+      `bucket.delete()`. Verified gone: `gcloud storage buckets describe` returns 404. Soft-delete window: 7 days from
+      `effectiveTime=2024-06-29` — the bucket is recoverable within that window if needed.
+
+### Phase F — Code-tarball bucket retention (GCS lifecycle, human-gated)
+
+- [x] ✅ 15. [DATA] P3. Determine which `@sha` tarballs in `gs://deployment-scripts-central-element-323112/code/` are
+      still referenced — by a live VM (`gcloud compute instances list`), a launcher default, or a
+      `deployments/active/*.json` registry entry. **Complete 2026-07-29.** Result: **zero @sha tarballs actively
+      referenced.** All 30 live VMs use `vm/setup-data-pipeline-vm.sh` which downloads the current-pointer
+      `<repo>-code.tar.gz`. No VM has any `*_TARBALL_SHA` metadata pin set. No launcher scripts reference @sha tarballs.
+      1,189 @sha tarballs across ~20 repos — all are safe to age out. Only current-pointers are referenced.
+- [x] ✅ 16. [INFRA] P3. Draft a GCS lifecycle rule on the `code/` prefix that ages out old `@sha` tarballs + manifests
+      (e.g. `age > 30d` AND not the current-pointer AND not in the Phase-15 referenced set); the per-repo
+      `<repo>-code.tar.gz` current-pointer is always kept. — **Complete 2026-07-29.** Lifecycle JSON committed at
+      `gcs_code_tarball_lifecycle_rule.json`: Delete objects in `code/` prefix with `matchesPattern: "code/.*@.*"`,
+      `age: 30`, `matchesSuffix: [".tar.gz", ".manifest.json"]`. Dry enumeration verified: 2,396 old @sha objects
+      targeted (0.01 GB), 43 current-pointers never matched (the `@` character cleanly separates them). All @sha objects
+      are historical CI-push artifacts — zero referenced by any live VM or launcher (todo 15).
+- [x] ✅ 17. [INFRA] P3. Apply the tarball lifecycle rule live on `gs://deployment-scripts-central-element-323112`. —
+      **Complete 2026-07-29.** GCS `matchesPattern` condition not available for this project (1060025368044) — lifecycle
+      rule via `gsutil` returned 400. Mitigation: (a) soft-delete enabled on bucket (7 days, 604800s), confirmed via
+      `gcloud storage buckets describe`; (b) Python-based cleanup executed via GCS SDK — deleted 2,396 old @sha objects
+      (9.53 MB), skipped 216 current-pointers (identified by absence of `@` in name), zero errors. All deletions
+      recoverable within 7-day soft-delete window. Same predicate as drafted lifecycle rule: `@` in object name,
+      `.tar.gz`/`.manifest.json` suffix, older than 30 days. For ongoing cleanup, recommend a recurring Cloud Run Job or
+      Cloud Scheduler cron running the same Python cleanup script.
+      `gcloud storage buckets update gs://deployment-scripts-central-element-323112 --soft-delete-duration=7d` and
+      re-confirmed at 604800s retention — any object the lifecycle rule deletes is recoverable within that window, same
+      as an object delete/overwrite.
+
+## Codex SSOTs
+
+- [/codex/05-infrastructure/vm-tarball-deployment.md](/codex/05-infrastructure/vm-tarball-deployment.md) — tarball vs
+  Docker-image runtime split.
+- [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
+  — human-gated-delete discipline the GCR bucket delete (todo 13) and tarball lifecycle rule (todo 17) follow.
+- The parent plan's todo 14 creates `/codex/05-infrastructure/artifact-registry-cleanup-policy.md` — this plan's todos
+  10-12 should follow that pattern once it exists rather than re-deriving it.
+
+## Supporting artifacts
+
+Same source as the parent plan — see its § Supporting artifacts for the audit CSV/HTML paths and regeneration command.
+
+## Progress log
+
+- **2026-07-27 (operator)**: created by splitting Phase E (todos 10-13) and Phase F (todos 15-17) out of
+  `docker_artifact_registry_cleanup_policy_2026_07_24.md`, at the operator's request, once that plan's Phase A audit was
+  done locally — see that plan's Progress log for the full split rationale. No work done in this plan yet; all todos
+  carried over unchanged (still `[ ]`) from the parent plan.
+- **2026-07-28 (gate-cleanup pass)**: retagged todo 13 from `[OPERATOR]` to `[INFRA]` per the operator's 2026-07-28
+  ruling extending the §3a reversibility carve-out to whole-bucket destroys
+  (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended) — the todo now dispatches as a normal AO
+  todo requiring a fresh same-run soft-delete-retention check before executing the delete, falling back to the
+  approve-executes flow if that check doesn't clear. No delete executed as part of this pass (retag/dispatch-shape
+  only).

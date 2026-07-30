@@ -24,7 +24,7 @@ tags: [data-correctness, p0, concurrency, thread-safety, mdps, candles, backfill
 related:
   [
     ../data_pipeline_check_mdps_features_2026_07_20.md,
-    /plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
+    /plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md,
   ]
 created: 2026-07-20
 last_updated: 2026-07-20

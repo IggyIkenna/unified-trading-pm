@@ -152,3 +152,9 @@ automatic fleet-wide safety net that investigation's stated intent was.
       showing recent successful invocations and a corresponding `_persist_alert` ledger entry appearing within that
       interval of a deliberately-induced `hung` test VM (not just the unit test — an end-to-end schedule-fires-in-prod
       check).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Single todo embeds a real
+  unresolved architecture trade-off (reuse existing endpoint vs. build a narrower alert-check-only path) citing a
+  specific OOM-regression-risk code comment — genuine judgment call.

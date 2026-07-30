@@ -94,3 +94,9 @@ Someone with access to the live AO backend (planning VM) and the reporter cron s
       transition" field alongside the existing hysteresis-gated `not_clean_since` so worktree-health consumers
       (review.md § 3d) can reliably distinguish a fresh edit from a genuinely long-stuck worktree (repo:
       agent-orchestrator).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Doc's own 'Recommended
+  decision' section frames the remaining step as a field-design choice (new field vs. hysteresis bugfix) — genuine
+  judgment call, diagnostic todos feed directly into it.

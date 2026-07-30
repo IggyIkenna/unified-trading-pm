@@ -63,5 +63,5 @@ bash scripts/quickmerge.sh "feat: add rule for X"
 
 ## Reference
 
-Codex: `unified-trading-codex/05-infrastructure/workspace-setup.md`
+Codex: `unified-trading-pm/codex/05-infrastructure/workspace-setup.md`
 CODEX: 05-infrastructure/workspace-root-variable.md

@@ -135,13 +135,17 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
 
 ## Todos
 
-- [ ] 1. [INFRA] P2. In `unified-trading-pm/scripts/quality-gates-base/base-library.sh`, make the pytest `--timeout=`
+- [x] ✅ 1. [INFRA] P2. In `unified-trading-pm/scripts/quality-gates-base/base-library.sh`, make the pytest `--timeout=`
       value follow the same override pattern as its `PYTEST_WORKERS`/`PYTEST_UNIT_DIR` neighbors on the same line block
       — e.g. `PYTEST_TIMEOUT_SECONDS="${PYTEST_TIMEOUT_SECONDS:-60}"` feeding `--timeout=${PYTEST_TIMEOUT_SECONDS}` —
       AND raise the workspace default to a value that absorbs realistic GH-Actions-xdist + shared-host scheduling
       variance (120-180s, per the precedent issue's 60→300 for the analogous `run_timeout`) without meaningfully
       delaying detection of a genuinely hung test. Verify on a real GH Actions `quality-gates-v2` run (not just local)
-      since that is where this instance actually fired.
+      since that is where this instance actually fired. — unified-trading-pm@cedef544b: added
+      `PYTEST_TIMEOUT_SECONDS="${PYTEST_TIMEOUT_SECONDS:-150}"` feeding `--timeout=${PYTEST_TIMEOUT_SECONDS}` at
+      `scripts/quality-gates-base/base-library.sh:394-395` (default raised 60→150) + documented the new override in the
+      file's header comment block. GH-Actions verification is the separate todo 3 (watch the next 5-10
+      `quality-gates-v2` runs), not re-done here.
 - [ ] 2. [INFRA] P3. Grep `unified-trading-pm/` + every repo's `scripts/quality-gates.sh` for other hardcoded wall-clock
       literals lacking an env-var override (pattern: `run_timeout <N>` / `--timeout=<N>` / similar) to check whether
       this "no override, unlike its sibling knobs" gap is a one-off or a recurring authoring pattern worth a lint rule.
@@ -175,3 +179,8 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   history) reproduces the same class independent of runner type. Still unresolved: todo 1 (the actual
   `PYTEST_TIMEOUT_SECONDS` override + raised default) has not landed — every future occurrence still costs a full ~20min
   CI cycle + a cicd-role escalation until it does.
+- **2026-07-30** — Todo 1 shipped: `unified-trading-pm@cedef544b` (`scripts/quality-gates-base/base-library.sh`) adds
+  `PYTEST_TIMEOUT_SECONDS="${PYTEST_TIMEOUT_SECONDS:-150}"` feeding `--timeout=${PYTEST_TIMEOUT_SECONDS}`, matching the
+  `PYTEST_WORKERS`/`PYTEST_UNIT_DIR` override pattern, default raised 60→150s. Local `quality-gates.sh` green (sentinel
+  verified at HEAD), shipped via `quickmerge --agent --files`. Todos 2 (workspace-wide hardcoded-timeout sweep) and 3
+  (watch next 5-10 GH Actions `quality-gates-v2` runs for recurrence) remain open, unassigned to this task.

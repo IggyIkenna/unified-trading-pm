@@ -64,8 +64,8 @@ related:
     /plans/active/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
@@ -229,8 +229,10 @@ source: the same-day `/data-pipeline-reconciliation` four-surface pass against `
 `/plans/audit/results/data_pipeline_reconciliation_prediction_2026_07_20.md`.
 
 - **Prediction's own `instrument_type` axis** (745,136-row manifest census): `PREDICTION_MARKET` 741,029 (99.46%,
-  canonical-cased) · `prediction_market` (lower) 4,001 (0.54%, **C2a REFUSED** — unruled axis, no migration proposed) ·
-  `prediction` 76 + `None` 30 (F2 — malformed VALUE, not casing — **106/745,136 = 0.014%**).
+  canonical-cased) · `prediction_market` (lower) 4,001 (0.54%, **C2a RULED** UPPERCASE-target, `migration_pending` —
+  operator D1, 2026-07-20; compared case-insensitively, no casing finding emitted during the migration_pending window;
+  see `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1 — NOT refused/unruled) · `prediction` 76 + `None` 30 (F2
+  — malformed VALUE, not casing — **106/745,136 = 0.014%**).
 - **Cross-AG comparison, each AG's own 2026-07-20 reconciliation result doc (not a joint census — categories aren't
   always the same measurement)**:
   - cefi: C2a `PERPETUAL` 7,220,102 vs `perpetual` 9,146 (0.127% lower-case tail); separately, 130,130 rows (1.27% of
@@ -351,7 +353,12 @@ fixture-linked before MVP backfill.
     — 0 open todos (ARCHIVED 2026-07-29; both re-based via decision 338 and shipped — `unified-api-contracts@283d7449` +
     `instruments-service@38e393de` + `market-tick-data-service@5bf8a3c7`).
   - [`plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`](/plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md)
-    — 0 open todos (closed/archived/record-only)
+    — **1 open** (corrected 2026-07-30, batch2 finalize re-triage; was wrongly marked 0 open — `status: open` on the doc
+    itself). **[DATA] P2.** market-tick-data-service — investigate the KALSHI-venue scaffold-row provenance mislabel
+    (129,227 rows carrying `venue=KALSHI` with `pipeline_mode`/`source` stamped
+    `polymarket_clob`/`polymarket_gamma_api`, spanning dates back to 2018; NOT the already-fixed captured-row defect).
+    The doc's own bundle-atom root-cause remediation (items 1-6) and its combined residual close-out (a/b/c/d) are all
+    done/superseded — only this one residual todo remains open.
   - [`plans/archive/issues/phantom_captures_prediction_2026_06_28.md`](/plans/archive/issues/phantom_captures_prediction_2026_06_28.md)
     — 0 open todos (writer-fix done; final re-fetch/backfill todo SUPERSEDED 2026-07-29 into Phase-D MVP-backfill gate +
     data_completion_prediction; archived)
@@ -519,7 +526,12 @@ sports's own consolidated closeout plan; short digest only:
 this section)**:
 
 - [`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`](/plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md)
-  — 0 open todos (closed/archived/record-only)
+  — **1 open** (corrected 2026-07-30, batch2 finalize re-triage; was wrongly marked 0 open — `status: open` on the doc
+  itself). **[BACKEND] P1.** Build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor` via the UTL
+  `EventTransport` facade — the architecture question is **RULED (operator, 2026-07-28)**, so this is now build-ready
+  work, not an open operator decision; the doc's separate paper-vs-live promotion + Betfair account/credential/
+  jurisdiction sign-off items remain OPERATOR-GATED (per the doc's own "OPERATOR DECISIONS" list) but do not block
+  building this specific routing plumbing.
 
 ## Queued audits + reviews — forked out (2026-07-25 consolidated-closeout split)
 
@@ -566,8 +578,10 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   `trades`, empty `source`, `base_asset` whitespace) + the fixture-attr backfill — needs a pre-migration VM drain the
   concurrent tradfi/cefi migrations currently occupy. **`instrument_type`→`PREDICTION_MARKET` is effectively DONE**
   (99.46% per the 2026-07-20 census in "Distinct Values / axis-value census" above, up from the stale 11.70% dry-run
-  baseline this bullet previously cited) — only the 0.54% C2a-REFUSED lowercase tail (no migration proposed) and the
-  0.014% malformed-value residual remain, neither gated on this drain window.
+  baseline this bullet previously cited) — only the 0.54% C2a lowercase tail (RULED UPPERCASE-target,
+  `migration_pending` — operator D1, 2026-07-20; the harness case-robustness gate is resolved/archived, see
+  `/codex/02-data/reconciliation-finding-taxonomy.md` §5.1) and the 0.014% malformed-value residual remain, neither
+  gated on this drain window.
 - **Phase C/D/E remainders** gated on the above (data-status dimensions view is partly already-served by
   `catalogue-filter-options`; smoke-test needs the MTDS prediction `-test-` bucket; arb-path unification needs the
   materialized columns + E2 resolution).

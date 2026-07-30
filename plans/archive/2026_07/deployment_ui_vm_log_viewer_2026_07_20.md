@@ -9,7 +9,7 @@ summary: >-
   copies keyed by cron-run date — confirmed 404ing live for real VMs. This plan adds a writer-side durable final-
   snapshot on VM completion (removing date-guessing), a live-first/archive-fallback read path, size+capped-tail+
   signed-URL-download endpoints, a genuinely new log-viewer panel, and an honest rename of the existing events panel.
-status: active
+status: complete # (was: active) 2026-07-30 archival sweep: all 11 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -17,11 +17,11 @@ repos: [unified-trading-library, deployment-service, deployment-api, deployment-
 scope: [engineer]
 tags: [deployment-ui, logs, gcs, observability]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
 created: "2026-07-20"
-last_updated: "2026-07-20"
+last_updated: "2026-07-30"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

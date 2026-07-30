@@ -274,7 +274,7 @@ concurrent workers do not collide on this file.
       ratchet, not a new orphan). Source: this plan's own todo 2 (`check_dispatch_listeners.py`, delivered
       `unified-trading-pm@613f79960`) + `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` ([REVIEW] P3,
       discovered while closing it).
-- [ ] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
+- [x] [INFRA] P2. **F5 vacuous manifest readers render GREEN where they should render "unknown".** Fix the enumerated
       sites so a permanently-empty input renders as unknown/not-applicable, never as a pass — starting with the two the
       doc names first: `_repo_ci_manifest.py:285-289`'s `deployed_versions.get(repo)` shape mismatch (the writer at
       `cloud-build-router.yml:853` writes `[env][repo]`, so the column is permanently blank) and the
@@ -283,16 +283,53 @@ concurrent workers do not collide on this file.
       Copy the correct dormancy-checking pattern the doc already identifies (`promotion_lag_monitor.py:190-199`,
       `_repo_ci_manifest.py:251-258`). **Done when**: each fixed reader renders unknown on empty input, covered by a
       test, and the false comment is corrected. Source: `issues/post_cutover_silent_assumption_sweep_2026_07_23.md` §
-      F5 + its [INFRA] P2.
-- [ ] [INFRA] P2. **`full-workspace-sit.yml`: a cancelled run's status clobbers a real success, and `SIT_VALIDATED`
-      over-claims.** Two bounded fixes in one file. (a) Live-measured 2026-07-25: run `30158515857` reached
-      `conclusion=success` at 12:50:49Z, then the older overlapping run `30158518796` — `cancelled` — POSTed
-      `state=failure` to the SAME commit at 12:51:02Z and became authoritative. Fix per the source doc's first stated
-      direction: a cancelled run has no informative verdict, so its status-post step must no-op. (b) Correct the
-      messaging/naming so `SIT_VALIDATED` cannot be read as "the resolved cross-repo combination was executed" — it is
-      an API-surface check (it installs only UAC and never collects a dependent's tests). **Done when**: an overlapping
-      cancelled dispatch cannot overwrite a fresher success (evidenced by a real overlapping pair or a faithful
-      simulation), and the status string/docs state what SIT actually proves. Sources:
+      F5 + its [INFRA] P2. — **DONE 2026-07-29, of the 4 sub-items 3 are closed and 1 is a genuinely-scoped-larger
+      residual, split out below rather than force-fit here:** 1. ✅ **`deployed_version_for` shape mismatch — FIXED.**
+      Now reads `deployed_versions["prod"][repo]["version"]` (the real writer shape) instead of a flat
+      `deployed_versions.get(repo)`. The pre-existing test fixture used the WRONG flat shape too (so it validated a
+      contract that never matched production) — corrected + added 2 regression tests proving the flat/wrong-env cases
+      correctly resolve to `None`, not silently succeed by accident. `deployment-api@6885fc3`, `quality-gates.sh` full
+      green. 2. ✅ **`repo_ci.py`'s "Promotion blocked" panel — ALREADY FIXED, verified not re-fixed.** Live code at
+      (now) `repo_ci.py:639-667` (`_build_promotion_blocked`) reads real `view.promotion_failures()` +
+      `view.promotion_quarantine()` state, not the vacuous pattern the source issue described — this drifted to a real
+      fix sometime between the issue's 2026-07-23 filing and today, independently of this todo. No code change needed;
+      confirmed via direct read, not assumed. 3. ✅ **False `ldr-to-main-promote-fleet.yml` comment — FIXED.** Corrected
+      to state the true reason `breaking_pending` is currently empty (staging_dormant_mode suppresses the writer
+      fleet-wide, not an ldr_main-specific carve-out) and names the actual load-bearing signal (`sit-gate/fleet-green`
+      required check, Firestore `sit_validated_tree`). `unified-trading-pm@b7605db21`. Comment-only, no behavior
+      change. 4. ⚠️ **`stuck_in_sit` — confirmed still vacuous, but NOT tri-stated here; split into its own todo.**
+      `derive_sit_state`'s `in_pending = repo in breaking_pending` is structurally always `False` while
+      `staging_dormant_mode` is on (same root cause as item 3), so `stuck_in_sit` can never fire — genuinely matches the
+      issue's description. BUT: traced its only consumer (`deployment-ui/src/lib/repoCi.ts:172`,
+      `if (hasGenuineStuck || row.sit.stuck_in_sit) return 2`) and confirmed it is OR'd with other real signals, never
+      gates/suppresses one — so today it can only ever be a false-negative (never contributes a spurious "stuck"), not a
+      false-positive masking a real failure, unlike the promotion-blocked bug this todo's sibling item fixed. Making it
+      a real tri-state (unknown vs. true/false) needs `SitStateDict.stuck_in_sit: bool` → `bool | None` in
+      `deployment-api`'s `_repo_ci_types.py` PLUS the matching `deployment-ui` consumer change — a real type-contract
+      change across 2 repos, not a same-shape reader fix like items 1-3. Per the workspace's dispatch-scope rule this is
+      bigger than a single AO todo; tracked as its own properly-scoped follow-up:
+      `issues/repo_ci_stuck_in_sit_tristate_2026_07_29.md`.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-29 (slot-2, infra)** — `full-workspace-sit.yml`: a cancelled run's status clobbers a
+      real success, and `SIT_VALIDATED` over-claims. **The live-measured incident's actual clobber path was
+      `sit-gate/fleet-green` in `unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml`** (its
+      `SIT_FLEET_LINE` derivation reads `gh run list` — ordered by run CREATION time, newest first — and picked
+      `completed[0]`, which is also true for `conclusion=cancelled`; a run created after a real success but cancelled
+      almost immediately could outrank it, exactly reproducing the cited 30158515857/30158518796 incident). Fixed both
+      real instances of the same bug class, in scope per this plan's own repo list: (a1) `ldr-to-main-promote-fleet.yml`
+      — `unified-trading-pm@2f9646585` + `@466c7621e` (the actual edit landed in a companion commit after prek's
+      stash/restore dropped it from the first) — filters cancelled runs out of the informative candidate set before
+      selecting `[0]`. (a2) `full-workspace-sit.yml`'s own "Report SIT result to PM" step had the identical defect
+      (`job.status != success` → `sit-failed`, so a cancelled job dispatched a false failure to `sit-unlock`) —
+      `system-integration-tests@33cf6f0` — now no-ops on `job.status=cancelled`. (b) Corrected the
+      `full-workspace-sit.yml` header comment (same commit) so `SIT_VALIDATED` cannot be read as "the resolved
+      cross-repo combination was executed" — states plainly it's an API-surface check (installs only UAC, never collects
+      a dependent's tests; a value-only config change can pass while breaking a consumer at runtime). **Evidence**: both
+      fixes proven via regression tests extracting the REAL shipped code (not replicas) —
+      `unified-trading-pm/scripts/quality-gates-base/tests/test-sit-fleet-green-cancelled-run-clobber.sh` (5/5 pass
+      post-fix, 2/5 pass pre-fix — reproduces the exact incident JSON) and
+      `system-integration-tests/tests/abbreviated/test_full_workspace_sit_cancelled_run_noop.py` (cancelled→no-op,
+      success→sit-passed, failure→sit-failed; confirmed dispatching `sit-failed` pre-fix). Full `quality-gates.sh` green
+      on both repos, shipped via `quickmerge --agent --files`. Sources:
       `issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md` ([DEVOPS] P2 sub-finding,
       2026-07-25) + `issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` ([DEVOPS] P2 messaging).
 - [ ] [INFRA] P3. **A repo SIT-BLOCKED for N consecutive promoter ticks must be visible as a stuck gate, not as
@@ -310,7 +347,8 @@ concurrent workers do not collide on this file.
       `/workspace/.sha_tag_preexists`, conditional push, and drop any sha entry from `images:`. **Done when**: both
       files carry the guard, `scripts/validation/validate-cloudbuild.py` +
       `scripts/quality_gates/check_cloudbuild_substitutions.py` are clean on both, and no sha tag remains in `images:`.
-      Source: `issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` ([INFRA] P3, third item).
+      Source: `/plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md` (archived 2026-07-30)
+      ([INFRA] P3, third item).
 - [ ] [INFRA] P2. **Sync `deployment-service/configs/gcp_service_accounts.yaml` against live IAM.** The per-service
       SA/IAM registry has NO entry at all for `unified-trading-sa@central-element-323112` (deployment-api's actual
       runtime SA) and its own footer admits `last_executed: NEVER` — an aspirational registry is worse than none,

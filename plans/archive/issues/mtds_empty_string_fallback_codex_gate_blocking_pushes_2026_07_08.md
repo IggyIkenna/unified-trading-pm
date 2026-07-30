@@ -55,8 +55,9 @@ locked_since:
 > **🟢 ARCHIVED 2026-07-28** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
 > archive-on-resolve rule. Every todo is `[x]`; the STEP 5.101 baseline-ratchet mechanism is built + fleet-wide,
 > `agent-orchestrator`'s recurring over-baseline regression is fixed + commit-anchored, and every repo in
-> `no_empty_string_fallback_baseline.yaml` now carries a `commit:` anchor. One residual finding split into its own
-> doc rather than reopening this one: `/plans/active/issues/deployment_service_empty_string_fallback_ratchet_claim_unlanded_2026_07_28.md`.
+> `no_empty_string_fallback_baseline.yaml` now carries a `commit:` anchor. One residual finding split into its own doc
+> rather than reopening this one:
+> `/plans/archive/issues/deployment_service_empty_string_fallback_ratchet_claim_unlanded_2026_07_28.md`.
 
 > **CI-BLOCKING finding — every quickmerge push to `market-tick-data-service` is currently blocked**, not just the
 > author's own change. Confirmed independently via real remote CI (not just a local run).
@@ -367,14 +368,14 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       `[OK] agent-orchestrator: 25 (== baseline)`, shipped `agent-orchestrator@9a68cd2`. Then stamped the `commit:`
       anchor this todo asks for via `--update-baseline --scope agent-orchestrator`
       (`agent-orchestrator: commit: 78d4b59...`, re-stamped again after 2 more same-day agent-orchestrator commits).
-      **Audit of "which other repos lack one" — extended to a full fleet-wide `--update-baseline` sweep** (all 25
-      repos, no `--scope`): 18 of 25 repos were missing the anchor before this run
+      **Audit of "which other repos lack one" — extended to a full fleet-wide `--update-baseline` sweep** (all 25 repos,
+      no `--scope`): 18 of 25 repos were missing the anchor before this run
       (alerting-service/batch-live-reconciliation-service/client-reporting-api/deployment-api/deployment-ui/
       e2e-testing/execution-service/features-service/fund-administration-service/greeks-service/
       ibkr-gateway-infra/strategy-service/system-integration-tests/unified-api-contracts/unified-trading-api/
       unified-trading-library/unified-trading-pm/unified-trading-system-ui) — all 25 now carry one. Re-verified
-      `check_no_empty_string_fallback.py --workspace-root <ws>` (no scope) exits 0, every repo `[OK] == baseline`
-      after the run; every count movement was DOWN or unchanged (client-reporting-api 230→228, e2e-testing 221→220,
+      `check_no_empty_string_fallback.py --workspace-root <ws>` (no scope) exits 0, every repo `[OK] == baseline` after
+      the run; every count movement was DOWN or unchanged (client-reporting-api 230→228, e2e-testing 221→220,
       execution-service 65→56, unified-trading-pm 319→317 — real fixes landed elsewhere since the last stamp), none
       raised — confirms `write_baseline()`'s hard-clamp held throughout a whole-fleet run, not just a scoped one.
       **Aside (not fixed, out of scope for this todo)**: `deployment-service`'s committed baseline was found at
@@ -383,8 +384,8 @@ zero-tolerance-gate failure class this doc worried about did not replicate fleet
       (91, not blocking), so this is a doc-accuracy discrepancy (possibly lost in this session's observed shared-clone
       git-commit races, see `shared_clone_concurrent_commit_message_swap_2026_07_28.md`), not a live gate failure;
       flagging for whoever next touches this repo's baseline rather than re-chasing it here. **Gate met**:
-      `no_empty_string_fallback_baseline.yaml` — every repo row now carries a `commit:`; a future over-baseline
-      failure git-diffs against a known-good point instead of a positional tail-slice guess, fleet-wide.
+      `no_empty_string_fallback_baseline.yaml` — every repo row now carries a `commit:`; a future over-baseline failure
+      git-diffs against a known-good point instead of a positional tail-slice guess, fleet-wide.
 
 - [x] ✅ [SCRIPT] P1. **LANDED 2026-07-28 — `market-tick-data-service@69738677`.** **Land the durable per-site
       `# noqa: qg-empty-fallback` on the 2 always-flagged sites in

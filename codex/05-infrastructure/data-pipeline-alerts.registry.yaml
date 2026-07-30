@@ -304,6 +304,17 @@ failure_modes:
   - {
       id: DP-VM-007,
       category: VM,
+      severity: WARN,
+      event: DP_CLOUD_RUN_STALE_IMAGE,
+      detector: stale_cloud_run_image_alert,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires: "Cloud Run job running an image older than the latest Artifact Registry build for its service",
+    }
+  - {
+      id: DP-VM-008,
+      category: VM,
       severity: INFO,
       event: DP_VM_PREEMPTED,
       detector: exit_code_fleet_monitor,
@@ -313,7 +324,21 @@ failure_modes:
       fires: "durable PREEMPTED marker present (GCE SPOT reclaim) — benign, routine",
     }
   - {
-      id: DP-VM-008,
+      id: DP-VM-009,
+      category: VM,
+      severity: CRITICAL,
+      event: DP_VM_PREEMPTED_NO_RELAUNCH,
+      detector: relaunch_preempted_vm,
+      kind: scriptable,
+      escalation: page_operator,
+      status: verbose,
+      fires:
+        "a preempted VM's relaunch could NOT proceed (no launcher binding / budget exhausted / launcher guard refusal /
+        launcher error / unresolvable tarball pin / non-monotonic force-run checkpoint) — the backfill would otherwise
+        silently vanish",
+    }
+  - {
+      id: DP-VM-010,
       category: VM,
       severity: WARN,
       event: DP_VM_PARTIAL_UNCONFIRMED,
@@ -324,6 +349,19 @@ failure_modes:
       fires:
         "terminated VM has no durable exit marker (exit_code is None) but captured climbed — ambiguous
         CLEAN-vs-premature-kill",
+    }
+  - {
+      id: DP-VM-011,
+      category: VM,
+      severity: INFO,
+      event: DP_VM_PREEMPTED_RECOVERED,
+      detector: relaunch_preempted_vm,
+      kind: scriptable,
+      escalation: file_issue,
+      status: verbose,
+      fires:
+        "resolved-bookend for DP_VM_PREEMPTED — the relaunch subprocess exited 0 and the preempted backfill is running
+        again",
     }
 
   # --- DP-RATE (class C5) ---

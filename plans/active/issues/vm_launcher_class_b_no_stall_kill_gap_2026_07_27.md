@@ -174,3 +174,9 @@ for n in ['aave-lending-rate-val-20260727', 'amm-golden-shape-20260727', 'cefi-f
     print(n, _is_backfill_vm(n))
 "
 ```
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
+  fleet-wide blast-radius verification/judgment call (avoiding false positives against legitimately-continuous
+  live/paper VM names) that the doc itself says was explicitly rejected as out-of-scope for a prior, narrower fix.

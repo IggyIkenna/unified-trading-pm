@@ -285,7 +285,8 @@ real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consuma
 
 - [ ] [DIAG] P1. Root-cause why ~360 in-window observations on 2025-12-18 and 2025-12-31 fail to bucket while 2025-12-24
       legitimately has none. Likely candidates: a fixture-mapping join dropping them, or a secondary guard beyond
-      `bm<=0`. Do NOT "fix" this by relabelling the manifest.
+      `bm<=0`. Do NOT "fix" this by relabelling the manifest. **2026-07-30 batch8 triage**: extracted as a tracked todo
+      in `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (combined with the item below).
 - [ ] [DATA] P2. 2025-12-24 alone may legitimately become `empty_confirmed` once the above is understood — but only that
       date, and only after the bucketing bug is fixed, so the two questions are not conflated again.
 - [x] [DESIGN] P3. ~~~95% of captured odds are unbucketable~~ **RETRACTED — I generalised from three anomalous dates.**
@@ -454,7 +455,10 @@ identity, not noise.
 
 - [ ] [CODE] P1. Narrow `_is_junk_instrument` so accented Latin characters are NOT rejected (target CJK/emoji ranges, or
       scope the ASCII rule to crypto asset groups); add a regression test pinning `Sanluqueño` / `União` / `Potosí` as
-      KEPT and `龙虾` / `币安人生` as REJECTED.
+      KEPT and `龙虾` / `币安人生` as REJECTED. **2026-07-30 batch8 triage**: extracted as a tracked todo (combined with
+      the item below) in `sports_satellite_ao_dispatch_batch8_2026_07_30.md`, cross-referencing
+      `instruments_foundation_phase0_cross_cutting_2026_07_24.md`'s G1.4 (whose "not implemented" framing is itself
+      stale — live-verified the guard already exists in code).
 - [ ] [DIAG] P1. Quantify corpus-wide loss (the ~9.8% on 2021-11-26 is one sampled date) and re-capture the affected
       date/league range once the guard is narrowed.
 
@@ -510,10 +514,18 @@ a credential ask.
       sample there; re-derive odds_features after.
 - [ ] [CONFIG] P1. FORWARD fix — start capture earlier and poll often enough that every fixture is sampled in every
       declared horizon window (the observed 53-min slice of a 120-min T-24h window shows current polling is too sparse).
-- [ ] [CONFIG] P1. Enable the live in-play connector (`market_tick_data_service/live/connectors/odds_api_ws.py`) now
+      **2026-07-30 batch8 triage note**: `sports_live_availability_and_source_latency_2026_07_24.md` (updated
+      2026-07-29) now describes a Tier-3 `odds_t24h`/`t6h`/`t1h` MTDS snapshot cadence that plausibly addresses this,
+      but it was not confirmed against this item's specific density bar during the triage pass — a dedicated DIAG
+      verify-or-rescope todo is tracked in `sports_satellite_ao_dispatch_batch8_2026_07_30.md`. Leave open until that
+      todo resolves it one way or the other.
+- [x] [CONFIG] P1. Enable the live in-play connector (`market_tick_data_service/live/connectors/odds_api_ws.py`) now
       that credentials exist — this is what populates the HT horizon, which currently emits nothing. HT is already
       declared in `MODEL_HORIZONS` + `FEATURE_HORIZONS`, so it populates with NO contract change. (Its prior
-      "population" was the T-0 fallback living off the post-kickoff bucketing leak — see B1.)
+      "population" was the T-0 fallback living off the post-kickoff bucketing leak — see B1.) — **STALE, superseded,
+      resolved 2026-07-30 batch8 triage**: live-verified already shipped + running (`mtds-live-sports-odds-api-trades`
+      VM, 60s poll) per `sports_live_availability_and_source_latency_2026_07_24.md`'s LIVE_ODDS row and
+      `sports_predictions_live_mode_activation_readiness_2026_07_21.md`'s 2026-07-29 update. No action needed here.
 - [ ] [MODEL] P2. Consider adding T-6h or T-2h as a MODEL horizon: both carry 68 fixtures vs T-24h's 25 (2.7x coverage),
       are safely pre-match, and fall after most team news.
 
@@ -572,9 +584,12 @@ age 173.4s > 120s threshold — falling back to per-VM shards"). The instruments
 own staleness budget, so the audit could not enumerate that bucket at all. Needs its own check — a manifest nobody can
 read is a coverage blind spot.
 
-- [ ] [CODE] P1. Restore the data-status "distinct dimension values present per asset_group" listing in deployment-api +
+- [x] [CODE] P1. Restore the data-status "distinct dimension values present per asset_group" listing in deployment-api +
       deployment-ui (instrument_type / data_type / venue / chain / pipeline_mode / source), so non-canonical naming and
-      duplication are visible again instead of needing an ad-hoc query.
+      duplication are visible again instead of needing an ad-hoc query. — **clear duplicate, resolved 2026-07-30 batch8
+      triage**: already an open, properly-scoped todo in `prediction_phase_c_data_status_ui_2026_07_24.md` Phase C (same
+      feature, generic per-asset_group, explicitly "mirrors the identical tradfi Phase-C todo") — sports is covered
+      automatically once that ships. No separate todo needed here.
 - [x] [DATA] P1. Normalise the F1 case-duplicates to ONE canonical case and rewrite the affected manifest rows. —
       already covered by `plans/active/sports_consolidated_closeout_2026_07_19.md` (Track C's casing reconciliation work
       supersedes this; see that doc for execution).
@@ -597,10 +612,15 @@ read is a coverage blind spot.
       **invalid** as a FINE per-shard/per-row venue stand-in wherever the real bookmaker is already present in the data
       — that was a genuine, now-fixed conflation in `reprocess_sports_odds.py`'s fine manifest rows
       (`market-data-processing-service@6f7422e` forward fix + `@a047b29` backfill migration).
-- [ ] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget?
+- [x] [DIAG] P1. F6 — why is the instruments-sports consolidated index persistently older than its 120s budget? —
+      **clear duplicate, resolved 2026-07-30 batch8 triage**: already fully root-caused in
+      `plans/active/issues/sports_manifest_read_staleness_budget_missing_2026_07_15.md` (no per-AG staleness-budget
+      override for sports while the consolidator cadence is ~11 min vs. the 120s generic default). No new diagnosis
+      needed here; see that issue doc for the fix.
 - [ ] [AUDIT] P2. Extend this audit to leagues / fixtures / betting-market identifiers (operator: "in sports case
       leagues and fixtures and betting market canonicals are relevant too") and fold the result into the migration so
-      everything lands on one SSOT.
+      everything lands on one SSOT. **2026-07-30 batch8 triage**: extracted as a tracked todo in
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md`.
 
 ---
 

@@ -184,40 +184,40 @@ canonical twin's only copy for some cells, same as the dex_pools finding).
       column the fabricated snapshot uses; both schemas coexist under this same legacy path).
 
       **Full scan 2023-01-01..2026-07-28** (1,305 days × 2 venues = 2,610 cells, 1 sample read per present cell, 0
-                                  UNKNOWN/ambiguous cells):
+                                      UNKNOWN/ambiguous cells):
 
-                                  ```
-                                  KAMINO: present 2023-01-01..2026-05-28 (1,231 present days) — 17 FABRICATED, 1,214 GENUINE
-                                  SOLEND: present 2023-01-01..2026-05-28 (1,012 present days) — 16 FABRICATED,   996 GENUINE
-                                  ```
+                                      ```
+                                      KAMINO: present 2023-01-01..2026-05-28 (1,231 present days) — 17 FABRICATED, 1,214 GENUINE
+                                      SOLEND: present 2023-01-01..2026-05-28 (1,012 present days) — 16 FABRICATED,   996 GENUINE
+                                      ```
 
-                                  **The fabricated population is a SHARP, NARROW window: `2025-01-01` through `2025-01-16` (SOLEND) /
-                                  `2025-01-17` (KAMINO) — 16-17 days, NOT the ~21-month range the coarse presence-only probe's phrasing implied.**
-                                  Re-reading that probe's own words confirms it never claimed otherwise ("presence-only, NOT a full sweep" —
-                                  it measured the SHAPE existing across ~21 months, not fabrication on every one of those days; the only actual
-                                  fabrication evidence it had was the 3 spot-checked January-2025 days, which this scan now shows WAS the
-                                  correct signal, just over-generalized in the summary framing). **Verified this isn't a same-day
-                                  sampling blind-spot**: pulled EVERY object (not just 1 sample) for a GENUINE-classified day well inside the
-                                  old presumed-fabricated window (`day=2024-06-15`, 45 KAMINO objects) — 45/45 genuine, 0 fabricated, confirming
-                                  no intra-day mix the single-sample method could have missed. Verified the boundary is sharp via a dense
-                                  2024-12-28..2025-01-25 re-scan: fabrication starts cleanly at `2025-01-01` and ends `2025-01-16/17`, no partial
-                                  days.
+                                      **The fabricated population is a SHARP, NARROW window: `2025-01-01` through `2025-01-16` (SOLEND) /
+                                      `2025-01-17` (KAMINO) — 16-17 days, NOT the ~21-month range the coarse presence-only probe's phrasing implied.**
+                                      Re-reading that probe's own words confirms it never claimed otherwise ("presence-only, NOT a full sweep" —
+                                      it measured the SHAPE existing across ~21 months, not fabrication on every one of those days; the only actual
+                                      fabrication evidence it had was the 3 spot-checked January-2025 days, which this scan now shows WAS the
+                                      correct signal, just over-generalized in the summary framing). **Verified this isn't a same-day
+                                      sampling blind-spot**: pulled EVERY object (not just 1 sample) for a GENUINE-classified day well inside the
+                                      old presumed-fabricated window (`day=2024-06-15`, 45 KAMINO objects) — 45/45 genuine, 0 fabricated, confirming
+                                      no intra-day mix the single-sample method could have missed. Verified the boundary is sharp via a dense
+                                      2024-12-28..2025-01-25 re-scan: fabrication starts cleanly at `2025-01-01` and ends `2025-01-16/17`, no partial
+                                      days.
 
-                                  **Corrected object-count estimate**: at the doc's own measured per-day density (KAMINO ~55 objects/day,
-                                  SOLEND ~595 objects/day), the TRUE fabricated population is roughly `17×55 + 16×595 ≈ 10,455` objects — an
-                                  order of magnitude smaller than the ~21-month framing would have implied (which would have suggested tens of
-                                  thousands more). This materially changes the disposition calculus for todo 1 (a 16-17 day gap is a much
-                                  smaller/cheaper fix surface than ~21 months).
+                                      **Corrected object-count estimate**: at the doc's own measured per-day density (KAMINO ~55 objects/day,
+                                      SOLEND ~595 objects/day), the TRUE fabricated population is roughly `17×55 + 16×595 ≈ 10,455` objects — an
+                                      order of magnitude smaller than the ~21-month framing would have implied (which would have suggested tens of
+                                      thousands more). This materially changes the disposition calculus for todo 1 (a 16-17 day gap is a much
+                                      smaller/cheaper fix surface than ~21 months).
 
-                                  **Absence note** (not fabrication, a separate observation): both venues are also fully ABSENT (no
-                                  `instrument_type=lending` objects at all, not even fabricated ones) for `2023-03-31` through some point before
-                                  `2023-05` (start of the scanned range's early gap) and again from `2026-05-29` onward through the scan's
-                                  `2026-07-28` end — i.e. the legacy shape's total lifetime is `2023-01-01..2026-05-28`(ish) with this one
-                                  narrow fabricated pocket inside it, not fabricated-then-clean-forever or clean-then-fabricated-forever.
+                                      **Absence note** (not fabrication, a separate observation): both venues are also fully ABSENT (no
+                                      `instrument_type=lending` objects at all, not even fabricated ones) for `2023-03-31` through some point before
+                                      `2023-05` (start of the scanned range's early gap) and again from `2026-05-29` onward through the scan's
+                                      `2026-07-28` end — i.e. the legacy shape's total lifetime is `2023-01-01..2026-05-28`(ish) with this one
+                                      narrow fabricated pocket inside it, not fabricated-then-clean-forever or clean-then-fabricated-forever.
 
-                                  Full per-cell report (not committed — regenerable from the committed script + these exact date bounds, same
-                                  pattern as the footystats/CF-11 migration reports in sibling sessions):
-                                  `/tmp/kamino_solend_scan_report.json` (session-local, will not persist). (repo: market-tick-data-service)
+                                      Full per-cell report (not committed — regenerable from the committed script + these exact date bounds, same
+                                      pattern as the footystats/CF-11 migration reports in sibling sessions):
+                                      `/tmp/kamino_solend_scan_report.json` (session-local, will not persist). (repo: market-tick-data-service)
 
 - [x] ✅ [DATA] P1. **Check whether other data_types under `instrument_type=lending` — DONE 2026-07-28 (slot-5),
       VERDICT: NO other data_type exists for KAMINO/SOLEND under this shape; the fabrication is confined to
@@ -225,45 +225,66 @@ canonical twin's only copy for some cells, same as the dex_pools finding).
       `market-tick-data-service/scripts/scan_kamino_solend_lending_other_datatypes_2026_07_28.py`.
 
       **Live GCS enumeration (never guessed a data_type name — per this doc's own "Lesson")**
-          across 91 scanned days: daily coverage of 2024-12-20..2025-02-05 (the confirmed
-          lending_indices fabrication window with margin) + a monthly sweep of the shape's full
-          measured lifetime (2023-01-01..2026-07-01, one day/month) + the 2 known control days
-          (2026-04-14 genuine, 2024-06-15 genuine) — 610 (day, pipeline_mode) cells checked for
-          KAMINO/SOLEND presence, 169 shard-atom sightings found, **zero** carrying any `data_type`
-          other than `lending_indices` (`instrument_type=lending/data_type=lending_indices/` is the
-          ONLY data_type folder ever present under
-          `venue={KAMINO,SOLEND}/chain=SOLANA/instrument_type=lending/`, at any sampled point across
-          the shape's entire lifetime). Of the 169 `lending_indices` sightings, 33 carried the known
-          fabrication epoch signature (`timestamp`/`ts_event` decoding into the 2026-05-04/05
-          migration-run neighborhood on a day it doesn't belong to) — consistent with, not a new
-          finding beyond, the parent todo's 17/16-day fabricated-window result.
+              across 91 scanned days: daily coverage of 2024-12-20..2025-02-05 (the confirmed
+              lending_indices fabrication window with margin) + a monthly sweep of the shape's full
+              measured lifetime (2023-01-01..2026-07-01, one day/month) + the 2 known control days
+              (2026-04-14 genuine, 2024-06-15 genuine) — 610 (day, pipeline_mode) cells checked for
+              KAMINO/SOLEND presence, 169 shard-atom sightings found, **zero** carrying any `data_type`
+              other than `lending_indices` (`instrument_type=lending/data_type=lending_indices/` is the
+              ONLY data_type folder ever present under
+              `venue={KAMINO,SOLEND}/chain=SOLANA/instrument_type=lending/`, at any sampled point across
+              the shape's entire lifetime). Of the 169 `lending_indices` sightings, 33 carried the known
+              fabrication epoch signature (`timestamp`/`ts_event` decoding into the 2026-05-04/05
+              migration-run neighborhood on a day it doesn't belong to) — consistent with, not a new
+              finding beyond, the parent todo's 17/16-day fabricated-window result.
 
-          **Root cause of the "zero elsewhere" result — a structural code guarantee, not just an
-          absence in this scan's sample**: of the 6 lending-family handlers named in
-          `_lending_grain.py`'s doc comment (`lending_indices`/`liquidations`/`liquidation_events`/
-          `flash_loan_events`/`position_data`/`risk_params`), 4 (`liquidations`, `liquidation_events`,
-          `flash_loan_events`, `position_data`) only ever fetch from EVM protocols (Aave V3/
-          Compound V3/Morpho/Uniswap V3 per their own docstrings) — Kamino/Solend never appear in
-          their source protocol lists at all, so they structurally cannot write under
-          `venue=KAMINO|SOLEND`. The 5th, `risk_params_handler.py`, DOES include `kamino_lending` in
-          its `_DEFAULT_PROTOCOLS` — but `resolve_lending_instrument_type()` (the SAME single
-          shard-atom resolver every lending-family writer imports, `_lending_grain.py:45-60`) maps
-          `kamino_lending`/`solend`/`marginfi` protocols to `InstrumentType.SOLANA_LENDING`, NEVER to
-          the legacy `LENDING` type any writer would need to reach the
-          `instrument_type=lending/` path this issue is scoped to. So even a future/backfilled
-          `risk_params` capture for `kamino_lending` would land under `instrument_type=solana_lending`
-          (the CURRENT, verified-clean schema — out of this issue's scope), not the legacy fabricated
-          shape — by construction, not by luck. **The legacy `instrument_type=lending` shape for
-          KAMINO/SOLEND is therefore closed/frozen to `lending_indices` only, both retrospectively
-          (this scan) and going forward (no current writer can ever add to it).**
+              **Root cause of the "zero elsewhere" result — a structural code guarantee, not just an
+              absence in this scan's sample**: of the 6 lending-family handlers named in
+              `_lending_grain.py`'s doc comment (`lending_indices`/`liquidations`/`liquidation_events`/
+              `flash_loan_events`/`position_data`/`risk_params`), 4 (`liquidations`, `liquidation_events`,
+              `flash_loan_events`, `position_data`) only ever fetch from EVM protocols (Aave V3/
+              Compound V3/Morpho/Uniswap V3 per their own docstrings) — Kamino/Solend never appear in
+              their source protocol lists at all, so they structurally cannot write under
+              `venue=KAMINO|SOLEND`. The 5th, `risk_params_handler.py`, DOES include `kamino_lending` in
+              its `_DEFAULT_PROTOCOLS` — but `resolve_lending_instrument_type()` (the SAME single
+              shard-atom resolver every lending-family writer imports, `_lending_grain.py:45-60`) maps
+              `kamino_lending`/`solend`/`marginfi` protocols to `InstrumentType.SOLANA_LENDING`, NEVER to
+              the legacy `LENDING` type any writer would need to reach the
+              `instrument_type=lending/` path this issue is scoped to. So even a future/backfilled
+              `risk_params` capture for `kamino_lending` would land under `instrument_type=solana_lending`
+              (the CURRENT, verified-clean schema — out of this issue's scope), not the legacy fabricated
+              shape — by construction, not by luck. **The legacy `instrument_type=lending` shape for
+              KAMINO/SOLEND is therefore closed/frozen to `lending_indices` only, both retrospectively
+              (this scan) and going forward (no current writer can ever add to it).**
 
-          This materially simplifies the fix surface for the todo below: it is `lending_indices`
-          alone, not a multi-data_type sweep. (repo: market-tick-data-service)
+              This materially simplifies the fix surface for the todo below: it is `lending_indices`
+              alone, not a multi-data_type sweep. (repo: market-tick-data-service)
 
-- [ ] [REVIEW] P2. **Disposition already resolved (todo 1) — no operator wait needed here.** Full scope is now known
-      (todo 2: `lending_indices` only, no other data_type affected). Execute the fix (relabel-forward migration
-      mirroring `market-tick-data-service@67524cbb`'s `relabel_solana_dex_pools_fake_history.py` pattern, per the
-      standing option-b ruling cited in todo 1) + verify with a clean re-scan. (repo: market-tick-data-service)
+- [x] ✅ [REVIEW] P2. **Fix executed + verified clean — 2026-07-30 (slot-11).** Ran
+      `relabel_kamino_solend_lending_fabrication_2026_07_29.py` (already shipped by slot-13,
+      `market-tick-data-service@b5dbb379`) via `deployment-service`'s
+      `launch-canonical-migration-vm.sh defi-relabel-lending` runbook: - **Dry-run**
+      (`canonical-migration-defi-relabel-lending-20260730-032606`): 10,472 objects planned (KAMINO 952 + SOLEND 9,520),
+      0 errors — matches todo 2's ~10,455 estimate. - **Full apply, KAMINO shard**
+      (`canonical-migration-defi-relabel-lending-20260730-034254-kamino`, `--only-venue KAMINO`): 952/952 processed
+      clean, 0 errors. - **Full apply, SOLEND shard**: first attempt (`...-034314-solend`) was SPOT-preempted ~3.5min in
+      with 0 rows committed to the pending-delete report (in-memory row buffer lost on kill, per the script's own
+      documented `finally`-block flush design). Relaunched the SAME command (`...-035025-solend`) — the idempotent
+      `blob_exists` skip-upload design resumed cleanly (re-listed from scratch, skipped already-uploaded dest objects,
+      re-attempted `record_captured` for them) — 9,520/9,520 processed clean, 0 errors on the relaunch. -
+      **Pending-delete report** (`_index/audit/kamino_solend_lending_fabrication_pending_delete.parquet`): 10,472 rows
+      (952 KAMINO + 9,520 SOLEND), all 17 KAMINO + 16 SOLEND claimed days represented, 1,331 distinct dest objects
+      (heavy convergence — many fabricated-day copies of the same market collapse onto the same true_date). Old legacy
+      objects deliberately left in place, unregistered, per the standing never-delete-on-relabel policy — pending a
+      later human delete decision. - **Clean re-scan** (new script `verify_kamino_solend_lending_relabel_2026_07_30.py`,
+      `market-tick-data-service@f9222f78`): re-downloaded all 1,331 distinct relabeled dest objects and confirmed each
+      is GENUINE at its true date — `timestamp` resolves to the dest `day=` partition, `instrument_type=solana_lending`,
+      `instrument_id` embeds `SOLANA_LENDING`. **1,331/1,331 GENUINE, 0 MISMATCH, 0 MISSING.** Evidence:
+      `market-tick-data-service@b5dbb379` (fix script, pre-existing), `@906824c5` + `@f9222f78` (verify script),
+      pending-delete report path above, VM names above (all self-deleted on completion per
+      `VM_SHUTDOWN_ON_COMPLETION=true`). Was `[REVIEW]` (Execute the fix mirroring
+      `relabel_solana_dex_pools_fake_history.py` per the standing option-b ruling cited in todo 1) + verify with a clean
+      re-scan. (repo: market-tick-data-service)
 
 ## Lesson (do not re-learn)
 

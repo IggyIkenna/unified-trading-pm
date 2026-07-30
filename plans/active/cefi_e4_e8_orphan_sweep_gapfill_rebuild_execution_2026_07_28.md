@@ -108,17 +108,20 @@ step.
 
 ## Phase A — E4a(i): PRE-DELETE GUARANTEE copy pass (additive, reversible, VM-launched)
 
-- [ ] [DATA] P0. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — copy-only, additive, idempotent (no
-      delete occurs in this phase), so none of the irreversibility that makes Phases B/F human-only applies here; per
-      `/codex/05-infrastructure/vm-launcher-runbook.md`'s default-dispatchable posture for an ordinary migration VM
-      launch, this is a normal AO-dispatchable monitored VM launch, not an `[OPERATOR]` gate. Launch a fresh
-      full-corpus-range `--apply` COPY-ONLY pass (bare `cefi` category, **NOT** `--drop-stale`) on a SPOT VM:
-      `bash launch-canonical-migration-vm.sh cefi 2019-03-30 <today> full`. This is additive/idempotent (already-copied
-      objects skip) — no delete happens in this phase. Monitor to completion (no fire-and-forget; ≥1 progress line/hr,
-      verify STOPPED/FAILED). **Done when**: the VM's `run.log` reports a clean full-range pass with 0 unexpected errors
-      — this is the "every orphan provably has a migrated dest" guarantee the delete phase below depends on. Cite the VM
-      name + run.log tail as evidence. **Phase B (the actual delete) stays `[OPERATOR]`, hard-stop #2 — unaffected by
-      this retag.**
+- [x] ✅ [DATA] P0. **DONE 2026-07-30 (autonomous session).** Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)
+      — copy-only, additive, idempotent (no delete occurs in this phase), so none of the irreversibility that makes
+      Phases B/F human-only applies here. Launched the full-corpus-range `--apply` COPY-ONLY pass (bare `cefi` category,
+      **NOT** `--drop-stale`) on SPOT: `canonical-migration-cefi-20260730-012546`,
+      `bash launch-canonical-migration-vm.sh cefi 2019-03-30 2026-07-30 full`. **STARTED<60s confirmed**
+      (`gcloud compute instances describe` returned `RUNNING` within seconds). **Completed cleanly ~43 minutes later**
+      (`insert` 2026-07-30T01:25:56 → `delete` 2026-07-30T02:08:36, confirmed via `gcloud compute operations list` — no
+      `compute.instances.preempted` op, a genuine self-delete on completion, not a preemption). `run.log`:
+      `TOTAL planned=5531182 written/moved=275363` (the rest already-copied from prior sessions' work, correctly
+      idempotent-skipped), `command exited rc=0`, `DEPLOYMENT_COMPLETED ... exit_code=0`. Grepped the full log for
+      error/exception/traceback/warning lines beyond the expected launch-time tarball-freshness warnings — zero hits.
+      **Done-when met**: every orphan now provably has a migrated destination. **Phase B (the actual delete) stays
+      `[OPERATOR]`, hard-stop #2 — unaffected by this completion**; still separately gated on the unresolved hard-stop-2
+      contradiction (`issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`).
 
 ## Phase B — E4a(ii): orphan-sweep DELETE (irreversible, `[OPERATOR]`, hard-stop #2)
 

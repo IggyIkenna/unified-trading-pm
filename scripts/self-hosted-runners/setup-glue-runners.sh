@@ -38,7 +38,7 @@
 #   sudo ./setup-glue-runners.sh teardown                        # stop+remove everything
 #   ./setup-glue-runners.sh prune                                # delete leftover OFFLINE EPHEMERAL runners
 #
-# Tunables (env): GLUE_COUNT (5) · WRITER_COUNT (3) · RUNNER_BASE (/opt/github-glue-runners) ·
+# Tunables (env): GLUE_COUNT (1) · WRITER_COUNT (3) · RUNNER_BASE (/opt/github-glue-runners) ·
 #   OWNER (IggyIkenna) · REPO (unified-trading-pm) · RUNNER_VERSION · GCP_PROJECT (optional, pairs
 #   with GH_TOKEN_SECRET) · GH_TOKEN_SECRET | GH_PAT (admin token — see above) · POOL_TAG (see below)
 #
@@ -58,7 +58,14 @@ OWNER="${OWNER:-IggyIkenna}"
 REPO="${REPO:-unified-trading-pm}"
 # 13k/mo ≈ 18/hr at ~3s each is trivial for one writer; 3 is burst headroom (a fleet-wide event can
 # fire ~24 repos at once). The ephemeral pool absorbs the ~37 low-frequency movers.
-GLUE_COUNT="${GLUE_COUNT:-5}"
+# GLUE_COUNT default lowered 5->1 (capacity-planning ruling, orchestrator_vm_disk_io_contention_
+# runner_burst_2026_07_28.md): registering GLUE_COUNT=5 pools per repo across a same-time multi-repo
+# bulk onboarding (23 repos at once, 2026-07-28) drove the shared host into sustained 66-93% iowait
+# and starved the operator's own interactive AO slot-workers (D-state). The fix that actually cleared
+# it (scaling every newly-onboarded pool down to 1 glue runner) is now the standing default, not a
+# one-off mitigation — override explicitly (GLUE_COUNT=2) only for the two original high-traffic
+# pools (unified-trading-pm, agent-orchestrator) that predate this ruling.
+GLUE_COUNT="${GLUE_COUNT:-1}"
 WRITER_COUNT="${WRITER_COUNT:-3}"
 RUNNER_VERSION="${RUNNER_VERSION:-2.335.1}"
 RUNNER_SHA256="${RUNNER_SHA256:-4ef2f25285f0ae4477f1fe1e346db76d2f3ebf03824e2ddd1973a2819bf6c8cf}" # linux-x64 2.335.1

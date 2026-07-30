@@ -113,3 +113,9 @@ is in this cutover's delete scope** (`instruments-store-sports` / `market-data-t
 - [ ] [INFRA] P2. **Pay down the 15 baselined legacy bucket-name TEMPLATE literals** (features-onchain/calendar/
       store/sports + instruments-store-tradfi) — route each through `resolve_bucket_name(...)` and remove its baseline
       entry as that asset group reaches its own legacy-bucket decommission; none has been paid down yet.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo is explicitly
+  timing-gated by the doc's own Disposition section on other asset groups' own legacy-bucket decommission timing, not
+  yet reached.

@@ -119,22 +119,33 @@ rows) is real but small and not urgent.
 - [ ] [DATA] P3. **RULED 2026-07-28 (operator gate-cleanup pass) — retagged from the "either/or" open framing, no longer
       a cross-tranche operator-decision-gated conflict with
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`.** The apparent conflict dissolves once the
-      two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,736 rows) ALREADY
+      two populations are read precisely: this doc's 9,750-row venue breakdown is overwhelmingly (9,743 rows) ALREADY
       market-type-suffixed venues (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/HYPERLIQUID/DERIBIT/BINANCE-SPOT/
-      COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) — only `data_type` is blank, `venue` is unambiguous. The remaining **14 rows
-      (bare `OKX`×7 in this breakdown + bare `COINBASE`×7)** are the SAME 14-row population the cross-cutting doc names
-      at its `_index` COINBASE(7)+OKX(7) line, where `venue` itself is ambiguous (SPOT/FUTURES/SWAP). Applying the
-      operator's general theme (full completions/backfills where determinable, no shortcuts; never fabricate a value
-      when honest-absence/reclassify is the correct disposition) split the disposition instead of picking one: **(a)
-      9,736 rows — BACKFILL** the `data_type` per row: root-cause the writer path that stamps `capture_status=captured`
-      before `data_type` resolution, join each row back to its actual captured GCS object's `data_type=` path segment,
-      and correct the manifest field — this is mechanically determinable (venue is unambiguous) and gets a full
-      backfill, not a diagnose-only close, per the "no partial completion" mandate; cost is not a blocker (a
-      manifest-field correction, no new paid infra). **(b) 14 rows (bare `OKX`/`COINBASE`) — RECLASSIFY**, per
-      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`'s disposition: do NOT fabricate a guessed
-      venue-suffix/`data_type` for these — the real per-market data is already correctly captured under the suffixed
-      venues elsewhere, so the bare-venue row is a malformed/duplicate manifest artifact, not a genuine gap; guessing
-      here would violate the workspace's honest-absence/no-fabricated-placeholder rule. **Done when**: the 9,736-row
-      backfill lands with a re-measured manifest showing blank-`data_type` `captured` rows for those resolved-venue
-      populations at 0, the 14-row bare-venue subset is reclassified (marked malformed/superseded, not backfilled) per
-      the cross-cutting doc's own todo, and both source docs' checkboxes are flipped with the commit(s) cited.
+      COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) — only `data_type` is blank, `venue` is unambiguous. The remaining **7 rows
+      (bare `OKX`×7)** are the population needing reclassification. **CORRECTION (2026-07-30, spot-check per
+      `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`'s audit todo)**: the original 2026-07-28 note
+      claimed a "14-row (bare `OKX`×7 + bare `COINBASE`×7)" population, treating it as "the SAME 14-row population" as
+      the cross-cutting doc's `_index` COINBASE(7)+OKX(7) line — this is factually wrong. Section (3) of THIS doc's own
+      measurement (above) found `venue == "COINBASE"` (bare) = **0 rows** across the full live index, and the venue
+      breakdown in section (5) confirms no bare-COINBASE rows exist within the 9,750-row population either (it sums to
+      9,750 using only `COINBASE-SPOT` (suffixed, 381 rows) + bare `OKX` (7 rows) — no bare-COINBASE line item). The
+      cross-cutting doc's COINBASE(7)+OKX(7) figure is a DIFFERENT, older measurement
+      (`audit_index_vs_gcs_spellings.py`, 2026-06-18 spelling-mismatch pass over captured-cell spellings, not this doc's
+      2026-07-26 blank-`data_type` scan) and should NOT be assumed to describe the same rows without a fresh join —
+      re-verify before treating that doc's figure as satisfied by this one. Applying the operator's general theme (full
+      completions/backfills where determinable, no shortcuts; never fabricate a value when honest-absence/reclassify is
+      the correct disposition) split the disposition instead of picking one: **(a) 9,743 rows — BACKFILL** the
+      `data_type` per row: root-cause the writer path that stamps `capture_status=captured` before `data_type`
+      resolution, join each row back to its actual captured GCS object's `data_type=` path segment, and correct the
+      manifest field — this is mechanically determinable (venue is unambiguous) and gets a full backfill, not a
+      diagnose-only close, per the "no partial completion" mandate; cost is not a blocker (a manifest-field correction,
+      no new paid infra). **(b) 7 rows (bare `OKX`) — RECLASSIFY**: do NOT fabricate a guessed venue-suffix/`data_type`
+      for these — the real per-market data is already correctly captured under the suffixed venues elsewhere, so the
+      bare-venue row is a malformed/duplicate manifest artifact, not a genuine gap; guessing here would violate the
+      workspace's honest-absence/no-fabricated- placeholder rule. Whoever executes (b) should separately confirm whether
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`'s COINBASE(7)+OKX(7) figure is satisfied by
+      this OKX×7 reclassify or needs its own independent handling — do not assume it is closed by this todo alone.
+      **Done when**: the 9,743-row backfill lands with a re-measured manifest showing blank-`data_type` `captured` rows
+      for those resolved-venue populations at 0, the 7-row bare-`OKX` subset is reclassified (marked
+      malformed/superseded, not backfilled), the cross-cutting doc's own COINBASE(7)/OKX(7) figure is independently
+      re-verified (not assumed satisfied), and both source docs' checkboxes are flipped with the commit(s) cited.

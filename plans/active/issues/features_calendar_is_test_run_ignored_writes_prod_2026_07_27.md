@@ -171,14 +171,37 @@ ALL, not even for the success path.
       a silent-placeholder-adjacent correctness bug distinct from the GCS-pollution this todo scoped — filed as its own
       todo rather than fixed inline (different write path than the config-bucket-routing bug; needs its own root cause
       investigation into the calendar `time_features` writer, not touched by this task).
-- [ ] [DATA] P2. **features-service** — investigate the `time_features` manifest-vs-GCS mismatch surfaced by the P1
-      audit above: `features-calendar-prd-central-element-323112`'s manifest claims `capture_status=captured`,
-      `row_count=24`, `available=True` for `feature_family=time_features` on `2026-07-04`/`2026-07-05` (written_at
-      `2026-07-27T07:41:1{8,9}Z`, the same known test-harness incident), but ZERO `calendar/time_features/` objects have
-      ever existed in this bucket. Determine why the `time_features` write path records a manifest "success" without the
-      corresponding GCS object landing (a distinct bug from the `IS_TEST_RUN` bucket-routing fix already shipped — this
-      affects the underlying write-then-record sequencing/atomicity, not which bucket is targeted), then correct or
-      purge the 2 phantom manifest rows once root-caused. (repo: features-service)
+- [x] ✅ [DATA] P2. **DONE 2026-07-30.** Root-caused: `CalendarOrchestrationService._write_via_storage`
+      (`features_service/calendar/engine/calendar_orchestrator.py`) evaluates `FeatureWriteGate` before every write —
+      when the gate rejects (`decision.allow_write=False`), the method logged a warning and **silently `return`ed**
+      instead of raising, unlike the sibling timestamp-alignment check two lines above it (which already raised
+      correctly). `_write_features` then returned `full_gcs_path` as if the write had succeeded (it only checked
+      `self._storage is not None`, never whether a write actually happened), so `_execute_day_pipeline` set
+      `result.success=True` / `result.rows_written=len(df)` for a day whose parquet was **never written to GCS** —
+      exactly the manifest-says-`captured`-but-object-missing mismatch this todo asked to explain. **Fixed**
+      (`features-service@23d03fef`): `_write_via_storage` now raises `WriteGateRejectedError` (the established sports
+      precedent, `features_service/sports/data/writer.py`) on a gate rejection; `process_day` gained a dedicated
+      `except WriteGateRejectedError` branch (extracted into `_handle_write_gate_rejection` to stay under the QG
+      method-size cap) that calls `_record_manifest_empty(reason=EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` instead of
+      falling through to a phantom `captured` row — the DataFrame was computed correctly, it was just too
+      sparse/degraded to write, which is an honest absence, not a pipeline failure. `_record_manifest_empty` gained an
+      optional `reason` param (default `SOURCE_RETURNED_ZERO`, unchanged for the existing 0-event-day call site).
+      Regression test added:
+      `tests/calendar/unit/test_calendar_orchestrator_capture_status.py::TestWriteGateRejectionRecordsEmptyNotPhantomCaptured`
+      (all-NaN frame → WriteGate rejects → `process_day` reports `success=False`/`rows_written=0`,
+      `storage.write_parquet` never called, `record_empty(reason=EXPECTED_WRITE_GATE_NAN_THRESHOLD_EXCEEDED)` fires
+      exactly once, no `record_failed`/phantom `add` call). Full `quality-gates.sh` green (17,998 passed) before
+      shipping; sentinel verified == HEAD; shipped via quickmerge, landed on `live-defi-rollout`. **Not done in this
+      pass**: the 2 existing phantom manifest rows for `feature_family=time_features` / `2026-07-04`,`2026-07-05` in the
+      live prod manifest (`features-calendar-prd-central-element-323112`) still need correcting/purging — filed as its
+      own bounded follow-up below rather than risking an ad-hoc prod-manifest-parquet edit inline.
+- [ ] [DATA] P3. **features-service / operator** — purge (or correct to `capture_status=empty_confirmed`) the 2 known
+      phantom `feature_family=time_features` manifest rows (`date` ∈ `{2026-07-04, 2026-07-05}`,
+      `capture_status=captured`, `row_count=24`) in `features-calendar-prd-central-element-323112`'s
+      `_index/availability_index.parquet` — now root-caused + code-fixed above (the write-gate-rejection bug that
+      produced them cannot recur), this is pure historical-debris cleanup. No GCS object exists for either row
+      (confirmed in the P1 audit above), so this is a manifest-row-only correction, not a `gcs_delete_object` call —
+      find or use the appropriate `ManifestWriter`/consolidator correction path rather than hand-editing the parquet.
 - [x] ✅ [SCRIPT] P2. **features-service** — audit every OTHER feature family's config for the same
       declared-but-unconsumed `is_test_run` pattern (this bug's root cause — a field that LOOKS like it's wired up
       because it's declared with the right description, but isn't consulted anywhere) — `volatility`, `onchain`,
@@ -188,7 +211,8 @@ ALL, not even for the success path.
       broken 2026-07-27 (slot-7)** — a real `/data-pipeline-check-features --family sports` VM run wrote REAL
       (non-empty, 51-fixture) feature data to `features-sports-prd-...` despite `IS_TEST_RUN=true`; strictly worse than
       this doc's own calendar case (real content, not 0 rows). Filed as its own P0:
-      `issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`, which re-files the remaining
-      untested families (`volatility`/`onchain`/`cross_instrument`/`multi_timeframe`/`commodity`) as its own follow-up
-      P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit continues under that
-      doc.
+      `/plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`, which re-filed
+      the remaining untested families (`volatility`/`onchain`/`cross_instrument`/`multi_timeframe`/ `commodity`) as its
+      own follow-up P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit
+      continued under that doc (that doc's own P2 is now also done, 2026-07-30, `features-service@710c1a72` — the doc is
+      archived).

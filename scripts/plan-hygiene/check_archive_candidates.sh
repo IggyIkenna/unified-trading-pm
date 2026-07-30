@@ -32,6 +32,14 @@
 # locked_by docs are excluded from the count (they cannot be archived without [unlock-plan]
 # regardless of todo state, so flagging them would be a false positive the operator can't act on).
 #
+# Docs gating a `depends_on` + `gate_on_depends: true` finalize plan are ALSO excluded (found
+# 2026-07-29, plan_health escalation triage): the `<X>_finalize_<date>.md` companion pattern
+# (cefi/ao/prediction/tradfi/sports satellite_ao_dispatch batches, bucket-fold plans, etc. all use
+# it) makes archiving the base plan ITS OWN gated todo — the finalize plan reconciles source docs
+# + re-checks deferred items FIRST, then archives the base plan as its last step. A base plan with
+# 0 open todos of its own but a still-active finalize companion isn't forgotten, it's mid-chain;
+# flagging it is the same false-positive shape as an un-actionable locked_by doc.
+#
 # Usage: bash scripts/plan-hygiene/check_archive_candidates.sh [--quiet] [--update-baseline]
 # Exit 0 = candidate count <= baseline. Exit 1 = count exceeds baseline (a NEW candidate appeared).
 # --update-baseline: after archiving flagged docs, persist the new (lower) count. Refuses to raise
@@ -55,6 +63,21 @@ BASELINE_COUNT="${BASELINE_COUNT:-0}"
 CANDIDATES=0
 FOUND=()
 
+# Precompute every slug named in some doc's `depends_on: [...]` WHERE that doc also declares
+# `gate_on_depends: true` — a single O(n) pass instead of an O(n^2) nested scan. Space-padded so
+# the main loop's substring test below can't false-match a slug that's a suffix of another.
+GATED_SLUGS=" "
+for g in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
+  [ -f "$g" ] || continue
+  grep -qE '^gate_on_depends:[[:space:]]*true' "$g" 2>/dev/null || continue
+  deps_line="$(grep -E '^depends_on:' "$g" 2>/dev/null | head -1)"
+  [ -z "$deps_line" ] && continue
+  for slug in $(echo "$deps_line" | grep -oE '[A-Za-z0-9_-]+'); do
+    [ "$slug" = "depends_on" ] && continue
+    GATED_SLUGS="${GATED_SLUGS}${slug} "
+  done
+done
+
 for f in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
   [ -f "$f" ] || continue
   name="$(basename "$f")"
@@ -67,6 +90,11 @@ for f in "$PM_DIR/plans/active"/*.md "$PM_DIR/plans/active/issues"/*.md; do
 
   locked_by="$(grep -E '^locked_by:' "$f" 2>/dev/null | head -1 | sed -E 's/^locked_by:[[:space:]]*//')"
   [ -n "$locked_by" ] && continue
+
+  slug="${name%.md}"
+  case "$GATED_SLUGS" in
+    *" ${slug} "*) continue ;;
+  esac
 
   open_count="$(grep -cE '^[[:space:]]*- \[ \]' "$f" 2>/dev/null)"
   open_count="${open_count:-0}"

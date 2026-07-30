@@ -26,7 +26,9 @@ summary: >-
   same window, consistent with a queue that isn't keeping pace with its own inflow rather than one that's merely slow.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group:
+  [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; continuation of the
+  # fleet_wide_qg_self_hosted_runner_capacity_crisis ci-tranche incident, same content class.
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [engineer, admin]
@@ -161,3 +163,112 @@ not just noting.
   ~2min-before-timeout in the failing run), consistent with transient host contention, not a code regression. No fix
   applied (none needed — nothing is currently broken); filed as evidence for the re-measurement todo, not as a fresh
   unresolved occurrence.
+
+- **2026-07-29 ~20:45Z (cicd escalation `agt-eda323`, slot 14)**: a DIFFERENT failure signature than every entry above —
+  not host-contention-during-real-execution (timeouts, uv cache races, worker-teardown crashes), but the gate never
+  starting at all. Dispatched to fix `instruments-service`#1025 (LDR→main promote) `ldr_qg_failure`; found
+  `content-gate` ("content sentinel") + the `quality-gates-v2` aggregation job (both still hardcoded
+  `runs-on: ubuntu-latest` in `python-quality-gates-v2.yml` — never migrated by either Wave-1 or Wave-2, which only
+  touched `qg-slices` and the CALLER template's escalate/notify/dispatch jobs) failing in 2-3s with **zero steps and
+  zero log blob**. Confirmed via `GET .../actions/runs/<id>/timing`: `"billable":{"UBUNTU":{"total_ms":0,...}}` for all
+  4 ubuntu-latest jobs across two separate attempts (PR-triggered `30477967414` @18:00Z and a `workflow_dispatch` retry
+  `30479612102` @18:22Z), while the SAME runs' self-hosted `[self-hosted, glue]` jobs (escalate-ldr-qg-failure,
+  notify-ci-watcher) succeeded normally (runner `glue-ip-172-31-5-118-1`, confirmed online + idle both times).
+  `QG slice` (the job that runs the actual test/lint/type work) was SKIPPED both times — i.e. **the real gate never ran;
+  there is no code defect to fix**. GitHub status page checked live: Actions fully operational (only Copilot degraded) —
+  rules out a platform incident. Widened the check fleet-wide: `agent-orchestrator`, `deployment-service`,
+  `unified-trading-pm`, `market-data-processing-service`, `features-service` all show the SAME pattern on their most
+  recent runs (19:20-20:45Z), and it has escalated over the evening from partial (only the ubuntu-latest jobs within a
+  mixed run fail) to full run-level `startup_failure` with `total_count: 0` jobs (e.g. `unified-trading-pm` run
+  `30489671842`, `agent-orchestrator` run `30487051711`) — nothing is even being scheduled for these workflows now, not
+  just the QG reusable one. Working theory (not yet operator-confirmed): the retry-storm volumes this doc already
+  documents (46 + 78 + many more `ldr_qg_failure` attempts fleet-wide) plus PM's own still-not-migrated Tier-B pipeline
+  files (`ldr-to-main-promote(-fleet)`, `sit-gate`, etc. — all still `ubuntu-latest` per this doc's sibling
+  `gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`) have now burned through the account's GitHub
+  Actions spending limit for GH-hosted (ubuntu-latest) runners specifically — self-hosted jobs are unaffected because
+  GitHub doesn't bill/gate self-hosted runner minutes at all, which is exactly the asymmetry observed. **If confirmed,
+  this blocks EVERY repo's promotion pipeline fleet-wide right now, not just instruments-service#1025** — filed
+  `BLK-21d55fb1` (task `agt-eda323`) to the dashboard for operator/main-agent decision (check/raise the GH Actions
+  spending limit vs. migrate the remaining ubuntu-latest jobs to the already-oversubscribed self-hosted pool) rather
+  than attempting a code "fix" for a gate that was never actually exercised. No code changed on `instruments-service`;
+  slot left clean on `live-defi-rollout`.
+
+- **2026-07-29 ~20:56Z (cicd escalation `agt-0cd704`, slot 9) — corroboration, pins down onset + one more affected PR**:
+  dispatched to fix `ldr_qg_failure` on `unified-api-contracts` promotion PR #796. The ORIGINAL wall (`QG slice (tests)`
+  failing a `uv` build-isolation step, "No such file or directory (os error 2)") was transient host contention, already
+  refuted as a code issue by a same-commit `workflow_dispatch` success 8 min later (16:31:50Z, zero commits in between).
+  Attempting to re-gate the PR head hit the SAME full run-level `startup_failure` (0 jobs) this doc's prior entry
+  describes — 3 separate `workflow_dispatch` attempts on `unified-api-contracts`, plus one on `unified-trading-pm`'s
+  `ldr-to-main-promote-fleet.yml`, all `startup_failure`/0 jobs. Swept `unified-trading-pm`'s run history back through
+  100+ runs to pin the exact onset: **last success `2026-07-29T18:25:50Z` (`repository_dispatch`) → first failure
+  `2026-07-29T18:27:24Z` (`schedule`)** — a hard transition, not a gradual degradation, and every run of every trigger
+  type has failed continuously since. Runners confirmed `online`/idle (not busy) on `unified-trading-pm`,
+  `agent-orchestrator`, `unified-api-contracts` — rules out runner-side unavailability as the mechanism for the
+  full-run-level failures. Not re-filing `BLK-21d55fb1` (same standing condition, already escalated by `agt-eda323`) —
+  adding this only as corroboration + the precise onset timestamp, which the prior entry didn't have. `#796` stays
+  blocked on this fleet-wide incident clearing; no code fix applies. Pinged the authoring slot with this outcome; slot
+  left clean on `live-defi-rollout`, no repo touched beyond this doc.
+
+- **2026-07-29 ~21:00Z (cicd escalation `agt-dfdd5b`, slot 5)**: independent corroboration, escalated for
+  `client-reporting-api` `ldr_qg_failure` (`#0`, no PR — a plain LDR-direct wall). Reproduced locally FIRST per the boot
+  instructions: `bash scripts/quality-gates.sh` at HEAD `ed6586b8` — 665 passed, 4 skipped, 71.56% coverage,
+  `ALL QUALITY GATES PASSED (59s)`, zero failures. The code and tests are clean; the wall is CI-only. Checked the actual
+  failing CI run (`30479590370`, 18:22:09Z, the one that fired this escalation): `content-gate` + both `qg-slices` legs
+  (`checks`, `tests`) all `success`, but the `quality-gates-v2` aggregation job itself failed in 12s despite its
+  `needs.qg-slices.result` being `success` — logs for that job already 404'd (expired) by the time I looked.
+  Re-dispatched fresh (`gh workflow run quality-gates-v2.yml --ref live-defi-rollout`) three times across a ~10min
+  window: all `startup_failure`, 1s, zero jobs. Widened the check myself (independently of `agt-eda323`'s own fleet
+  check above, before finding this doc): `market-tick-data-service` and `instruments-service` fresh dispatches both
+  `startup_failure` identically — and critically, `unified-trading-library` (NOT on the self-hosted-runner allowlist,
+  `self_hosted_runner_labels: ""` i.e. `ubuntu-latest`-only, whose own dispatch succeeded cleanly at 16:31:54Z earlier
+  today) now ALSO fails `startup_failure` on a fresh dispatch — ruling out "self-hosted pool contention" as sufficient
+  explanation on its own (a pure-`ubuntu-latest` repo is affected too) and confirming this is the account-wide
+  GH-hosted-runner spending-limit block `agt-eda323` already diagnosed, not something self-hosted-specific. Checked
+  githubstatus.com independently: Actions component "Operational" (only a Copilot model-provider degradation listed) —
+  platform-side incident ruled out again. **No code or workflow change made or needed on `client-reporting-api`** —
+  filing my own bounded `/blocked` for escalation `agt-dfdd5b` referencing this doc + `BLK-21d55fb1` rather than
+  duplicating the operator page; if unanswered within the 2-min bound, stopping per the one-shot contract. Slot left
+  clean on `live-defi-rollout` (no branch changes made).
+
+- **2026-07-29 ~21:20Z (cicd escalation `agt-614695`, slot 15) — DIFFERENT from every entry above: a real, separate
+  local test regression, not pure infra**. Dispatched for `instruments-service` `ldr_qg_failure` (`#0`). CI showed the
+  same fleet-wide `startup_failure` (0 jobs, 0 billable ms, confirmed via `.../actions/runs/<id>/timing`) this doc
+  already tracks — but per the boot contract I also reproduced locally FIRST, and unlike `agt-dfdd5b`'s clean repro,
+  `bash scripts/quality-gates.sh` at HEAD `4c05f2d3` genuinely failed: 10 failed / 5034 passed. Root-caused as
+  cross-repo editable-dependency drift (`unified-api-contracts@0c0f6953` registered `FRED` as a new tradfi venue +
+  `ohlcv_1d` as a genuine tradfi data_type) breaking two stale instruments-service test-side assumptions: (1) 9 tradfi
+  v2 enumerator tests in `test_enumerate_expected_universe_v2.py` relied on `ohlcv_1d` silently passing through
+  `_row_data_types`' unknown-data_type escape hatch to dodge NASDAQ/ETF's validity matrix + the MVP data_type-narrowing
+  gate — now a real registered data_type, the passthrough no longer applies and row_dts collapsed to empty; (2)
+  `test_pipeline_e2e_prediction.py`'s pinned `_PER_AG_TARGET_COUNTS["TRADFI"]` (7) went stale vs. the real UAC registry
+  (now 8 venues). While diagnosing, discovered `slot-14` had independently found + fixed the identical root cause
+  moments earlier (`instruments-service@7f272911`, "fix(tests): update tradfi test fixtures for FRED's ohlcv_1d/venue
+  registration") — my own from-scratch fix converged on the same data_type swap (`ohlcv_1m`) and the same count bump
+  (7→8), confirming the diagnosis independently. Discarded my redundant local changes in favor of the already-landed,
+  already-verified commit (`git checkout HEAD --` on both files) rather than force a duplicate/conflicting push.
+  Re-verified at current HEAD: `ALL QUALITY GATES PASSED (93s)`, 5044 passed / 0 failed. **This underlying test
+  regression is now fully fixed on `live-defi-rollout`** — the residual CI red on this repo is purely the ongoing
+  fleet-wide `startup_failure` incident this doc already tracks (`BLK-21d55fb1`), not re-filing it. Pinged
+  `AUTHORING_SLOT=ci-reconcile` with the outcome. Slot left clean on `live-defi-rollout`, no branch changes beyond the
+  (already-shipped) fix confirmed.
+
+- **2026-07-29 ~23:38Z (cicd escalation `agt-28375c`, slot 1) — 3rd independent confirmation for `instruments-service`:
+  the `agt-614695` test-regression fix holds, residual red is pure infra**. Re-dispatched against the same standing
+  `instruments-service` `ldr_qg_failure` wall (`#0`, no PR; this escalation alone was already at `attempts: 4` per
+  `GET /api/escalations/active` before this run — one of several duplicate concurrent escalations for this repo,
+  `agt-4b4ba8`/`agt-614695`/`agt-d04227`/`agt-28375c`, all `still_red_reescalated` from prior rounds). Reproduced
+  locally FIRST per the boot contract, backgrounded per the mandatory non-blocking pattern (never foreground — 15-min
+  heartbeat-silence kill risk): `bash scripts/quality-gates.sh` at HEAD `7f272911` (the exact fix commit `agt-614695`
+  already verified) — `5044 passed, 7 skipped`, coverage `88.77% ≥ 88.0%` floor, `ALL QUALITY GATES PASSED (99s)`,
+  sentinel written matching HEAD. Zero failures; nothing left to fix on the code/test side. Fresh CI check: 3 most
+  recent `live-defi-rollout` runs (23:35:55Z, 22:14:38Z, 22:01:22Z) all `startup_failure`; confirmed `jobs: []` +
+  `timing.billable: {}` + `run_duration_ms: 1000` on the newest (`30500040561`) — identical zero-job signature to every
+  other repo this doc and `github_actions_billing_wall_recurrence_2026_07_29.md` track. Also checked the PUSH-triggered
+  run for the fix commit itself (`30492395057`, `headSha=7f272911...`, 21:26:43Z, 0s): same `startup_failure`/`jobs:[]`
+  signature — the fix commit was never able to prove itself green on CI because the wall was already up by the time it
+  landed, not because the fix is incomplete. **No code or workflow change made or needed.** `GET /api/repo-blockers` →
+  `open: []` (none registered for this repo, nothing to fast-path). Not re-filing `/blocked` (same standing
+  `BLK-21d55fb1` condition; the `[OPERATOR] P0` in `github_actions_billing_wall_recurrence_2026_07_29.md` already covers
+  the decision — avoiding the escalation-spam pattern that doc's own P3 todo flags). Not pinging the authoring slot
+  (`AUTHORING_SLOT=ci-reconcile`, the confirmed non-numeric literal that 400s per the entries above and the sibling
+  doc's evidence log). Slot left clean on `live-defi-rollout`, working tree clean, no branch changes.

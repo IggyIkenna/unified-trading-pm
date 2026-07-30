@@ -187,6 +187,16 @@ jobs:
             SIT_LAST_RUN_JSON="[]"
           fi
           rm -f "$SIT_RUN_LIST_ERR"
+          # Cancelled-run clobber fix (2026-07-29, sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md
+          # "Distinct sub-finding"): `gh run list` orders by run CREATION time (databaseId desc), not by
+          # completion time, and `status == "completed"` is also true for `conclusion == "cancelled"` — so
+          # when two full-workspace-sit dispatches overlap (e.g. two promote-fleet ticks inside the
+          # concurrency-group's queue window), a run created AFTER a real success but cancelled almost
+          # immediately can still rank ABOVE that success in the list and get picked as `completed[0]`.
+          # Live-measured 2026-07-25: run 30158515857 reached conclusion=success at 12:50:49Z; run
+          # 30158518796 (created after it, but CANCELLED) became completed[0] and posted state=failure at
+          # 12:51:02Z, clobbering the real green result. A cancelled run has no informative verdict — never
+          # let it be the selected signal; skip past it to the next real (non-cancelled) completed run.
           SIT_FLEET_LINE=$(SIT_LAST_RUN_JSON="$SIT_LAST_RUN_JSON" python3 - <<'PYEOF'
           import json
           import os
@@ -197,10 +207,11 @@ jobs:
           except json.JSONDecodeError:
               runs = []
           completed = [r for r in runs if r.get("status") == "completed"]
-          if not completed:
-              print("failure\tno completed full-workspace-sit run in last 10 — fail-closed\t")
+          informative = [r for r in completed if r.get("conclusion") != "cancelled"]
+          if not informative:
+              print("failure\tno informative (non-cancelled) completed full-workspace-sit run in last 10 — fail-closed\t")
           else:
-              r = completed[0]
+              r = informative[0]
               state = "success" if r.get("conclusion") == "success" else "failure"
               desc = f"full-workspace-sit @ {r.get('createdAt', '?')} conclusion={r.get('conclusion', '?')}"[:140]
               print(f"{state}\t{desc}\t{r.get('url', '')}")
@@ -482,11 +493,17 @@ jobs:
             # ── SIT gate part 1 (LDR→main): breaking_pending block ──────────────────────
             # WS-L Phase-1 SIT-gate relocation. Unlike staging→main (TRIGGERED by SIT's
             # staging-validated dispatch), this cron bot needs an EXPLICIT SIT gate.
-            # breaking_pending is the SIT-green signal: SET by update-repo-version.yml (off the
-            # semver dispatch on staging) and CLEARED by sit-unlock.yml on SIT pass — BOTH stay
-            # live for ldr_main repos (the LDR→staging drain + SIT cascade are untouched), so
-            # this releases when SIT goes green. No deadlock. (Part 2 below closes the race
-            # window BEFORE breaking_pending is set.)
+            # breaking_pending is SET by update-repo-version.yml off the semver dispatch on
+            # STAGING and CLEARED by sit-unlock.yml on SIT pass. CORRECTED 2026-07-29 (post-cutover
+            # sweep F5) — the prior comment here ("BOTH stay live for ldr_main repos") is FALSE:
+            # while `staging_dormant_mode` is on (the current default), NO repo pushes to staging,
+            # so the writer never fires and breaking_pending stays structurally empty fleet-wide —
+            # this block is a genuine no-op during dormancy, not a live SIT-green gate. The
+            # load-bearing SIT check for ldr_main repos today is the `sit-gate/fleet-green` required
+            # check (Firestore `sit_validated_tree`, fed nightly by full-workspace-sit.yml's cron),
+            # not this part-1 block. Reversible: if staging_dormant_mode flips off, this block
+            # becomes live again for whichever repos resume routing through staging. (Part 2 below
+            # closes the race window BEFORE breaking_pending is set, for the repos it IS live for.)
             if echo " $BREAKING_PENDING " | grep -q " $REPO "; then
               echo "SIT GATE BLOCK $REPO: in breaking_pending — awaiting SIT-green on staging before LDR→main"
               _done BLOCKED; return 0

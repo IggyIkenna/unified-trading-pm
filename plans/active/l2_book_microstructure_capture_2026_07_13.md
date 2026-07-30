@@ -15,7 +15,7 @@ stage: [data, features]
 repos: [market-tick-data-service, features-service, unified-api-contracts]
 scope: [engineer]
 tags: [strategy, v2-engine, market-making, orderbook, microstructure]
-related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md]
+related: [/plans/active/v2_engine_venue_buildout_2026_06_15.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-13
 parent_epic: strategy_master
 assigned_vm: NA

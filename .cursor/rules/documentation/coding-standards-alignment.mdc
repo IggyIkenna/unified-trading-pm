@@ -4,13 +4,13 @@ description: Run alignment agent when editing codex 06-coding-standards SSOT doc
 alwaysApply: false
 priority: 30
 globs:
-- unified-trading-codex/06-coding-standards/**
+- unified-trading-pm/codex/06-coding-standards/**
 ---
 # Coding Standards Alignment Rule
 
 ## When Updating Coding Standards
 
-**When you edit any of these SSOT docs** in `unified-trading-codex/06-coding-standards/`:
+**When you edit any of these SSOT docs** in `unified-trading-pm/codex/06-coding-standards/`:
 - `README.md`
 - `config-types.md`
 - `quality-gates.md`
@@ -55,6 +55,6 @@ cd /path/to/unified-trading-system-repos
 
 ## Future: GitHub Workflow
 
-When PRs touch `unified-trading-codex/06-coding-standards/` SSOT files, run the alignment agent in CI to ensure no contradictions are introduced.
+When PRs touch `unified-trading-pm/codex/06-coding-standards/` SSOT files, run the alignment agent in CI to ensure no contradictions are introduced.
 
 CODEX: 06-coding-standards/README.md (§ Document Map), 06-coding-standards/documentation-standards.md (S5.1/S5.2 required docs per repo)

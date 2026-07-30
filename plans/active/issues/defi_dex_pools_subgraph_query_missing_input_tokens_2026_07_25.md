@@ -135,3 +135,8 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
       query missing `inputTokens { symbol }` -- curve/sushiswap/gmx/velodrome_v2/trader_joe_v2 all starve tier-2 symbol
       resolution; needs an operator call on whether to fix the query (add `inputTokens`, switch to `_parse_messari_dex`)
       before DeFi live capture resumes, or deprioritize.
+- [ ] [OPERATOR] P1. Confirm `plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s remaining todo 5
+      (purge the now-superseded old `dex_pool_state` data for curve/sushiswap/velodrome_v2/trader_joe_v2) has landed,
+      then let `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`'s gated reconciliation todo flip this
+      doc's `status: open` → `status: resolved` with a verified `resolved_by` citation — do not archive this issue doc
+      before that finalize plan runs.

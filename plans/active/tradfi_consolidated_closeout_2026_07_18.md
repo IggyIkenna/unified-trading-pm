@@ -253,7 +253,21 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       that no such proof exists yet for that cell. Also re-verify each "Backfill proven" cell against a fresh
       `data-pipeline-check-is`/`data-pipeline-check-mtds` run rather than the last-recorded Progress Log entry.
       Definition-of-done: 0 remaining "NOT VERIFIED IN THIS PASS" cells in the table, each replaced with a real
-      verdict + evidence citation (report path / ledger query / dispatch_id).
+      verdict + evidence citation (report path / ledger query / dispatch_id). **CROSS-REFERENCED 2026-07-30
+      (na-eligibility-audit, infra tranche, dispatch agt-30721a)**: already extracted near-verbatim (source lines
+      218-224 of this doc) as `tradfi_consolidated_native_ao_extract_2026_07_25.md`'s own todo (active,
+      `assigned_vm: planning`). Not checked off here — the extracting doc's todo is not yet done; tracked there going
+      forward.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, dispatch agt-30721a): KEEP-NA-STALE — sole remaining native
+  checkbox is already duplicated near-verbatim in the active `tradfi_consolidated_native_ao_extract_2026_07_25.md`;
+  citation added above, zero `assigned_vm`/backlog impact. NOTE: this doc's real `asset_group` is `[tradfi]`, not
+  `infra` — a residual scope-leak from this session's pre-fix Phase 0 population (see
+  `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s own Progress Log for the full
+  accounting); classified here for completeness, no other state changed, the `tradfi` tranche's own future audit owns
+  this doc going forward.
 
 ---
 
@@ -459,8 +473,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     (done) — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md`](/plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md)
     (done) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`](/plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md)
-    - **[SCRIPT] P2.** Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive
+  - [`plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`](/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md)
+    (done) — 0 open todos (closed/archived/record-only; barchart keep-vs-purge RESOLVED 2026-07-30,
+    quarantine-with-tracking per the 2026-07-20 operator ruling)
 
 - **Throughput / jobs / VMs**:
   - [`plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`](/plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md)
@@ -540,16 +555,17 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md`](/plans/archive/issues/instruments_service_fx_adapter_key_unresolved_2026_07_23.md)
     (`status: resolved`) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/active/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
-    - **[INVESTIGATE] P1.** Root-cause the actual `WithinBoundsTradfiSourceZero` trigger for the live, active
-      `ohlcv_1s`/`ohlcv_1m` population
-    - **[DATA] P2.** Purge or reclassify the 1,242 dead CBOE `ohlcv_15m` rows (frozen since 2026-07-07)
+  - [`plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`](/plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md)
+    (`status: resolved`) — 0 open todos (closed/archived; ohlcv_1s/ohlcv_1m root-cause tracked in
+    `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, the 1,242-row CBOE `ohlcv_15m` reclassify shipped
+    `market-tick-data-service@0cd76b93`)
     - **[DESIGN] P2.** Give `check_high_attempted_failed` a way to mark a cell "known-dead, expected-coverage-narrowed"
   - [`plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`](/plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md)
     - **[DATA] P1.** BLOCKED-OPERATOR-DECISION — legacy-twin bucket DELETES (defi/tradfi/pred), Ikenna's migration
       sign-off gates this
   - [`plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`](/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md)
-    (15 open — capped)
+    (14 open — capped; the tombstone/`_default_csv_path()` item below is done, removed from this count 2026-07-30 —
+    fixed `instruments-service@fc07e6b6`, `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4)
     - **[DATA] P0.** ES CME futures ohlcv 1s+1m — fleet FINISHED, manifest-verify still owed (MEASURED 2026-07-26: all 7
       `tradfi-bf-cme-ohlcv-1m-es-{2020..2026}` shards inserted 2026-07-21T03:42Z and self-deleted by 2026-07-21T09:48Z,
       zero preemptions)
@@ -562,7 +578,6 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DATA] P1.** tradfi CME futures reference gap from 2026-06-08 — Massive `/futures/vX/{products,contracts}` 404
     - **[IS] P1.** Backfill the IS CME (GLBX.MDP3) catalog for 2019-01-01→present
     - **[SCRIPT] P1.** (→ M-1) MTDS tradfi market-data backfill across all 3 datasets (GLBX.MDP3 + DBEQ.BASIC + CFE)
-    - **[SCRIPT] P1.** instruments-service — post tradfi-v9 close-out, tombstone dropped Databento instruments
     - **[UAC] P1.** Unit tests for `databento_subscription_allowlist`
     - **[PM] P1.** QG grep-ratchet — no raw `batch.submit_job` outside the guarded `submit_batch_job`
     - +4 more (P2/P3) — see file for the rest
@@ -638,7 +653,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       skill doc
     - **[DATA] P3.** instruments-service: decide whether `market_lifecycle`/`futures_contracts` are in the canonical
       shard grammar's scope
-  - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+  - [`plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`](/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md)
     - **[DATA] P1.** Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict
@@ -651,7 +666,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[CODE] P3.** `GcsEventSink` never `.shutdown()`s its background `ThreadPoolExecutor`
   - [`plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`](/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md)
     — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
+  - [`plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`](/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md)
     - **[DATA] P0.** VERIFY the prod projection before sizing the win (is `_publish_emission_check` firing on prod MDPS
       backfills)
     - **[DATA] P0.** The 1.58 GB defi-prd index is its own P0 — audit every `read_availability_index` caller for OOM
@@ -719,15 +734,26 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     — 0 open todos (closed/archived/record-only; the follow-up `tradfi_phase_d_terminal_gate_2026_07_24.md` P0 gates on
     this finding)
   - [`/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md`](/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md)
-    (uses a line-referenced audit-finding format, not `[TAG] P<N>.` — quoted as-is)
-    - **P1 (L97).** Ground-truth verdict header needs a supersede banner inserted (superseded by later migration
-      progress)
-    - **P1 (L460).** Phase B migration items still shown unchecked in a stale copy — flip the four false-negative boxes
-    - **P1 (L237).** §4 closing paragraph needs rewriting to match the current migration state
+    — **CORRECTED 2026-07-30 (was stale — listed 3 items below as open after the doc had already closed all 35)**: 0
+    open, `status: resolved`, **35/35 findings applied** (32 on 2026-07-21, final 3 — including these exact
+    P1(L97)/P1(L460)/P1(L237) items — on 2026-07-27, `unified-trading-pm@935de9424` + `@1dd1a22fd`); archived
+    2026-07-28. L97's supersede banner and L237's canonical-cutover-register rewrite are both live; L460's target
+    checkboxes had already moved via the 2026-07-24 fork to `tradfi_manifest_content_recovery_completion_2026_07_24.md`
+    and were found already `[x]` there — disposed as applied-by-decomposition, no parent-doc edit needed.
   - [`plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`](/plans/archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md)
     - **[BACKEND] P1.** Add a manifest-vs-disk consistency check so a `captured` row with no object on disk fails loudly
   - [`plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`](/plans/active/issues/tradfi_manifest_writer_legacy_id_regression_2026_07_21.md)
-    — 0 open todos (closed/archived/record-only)
+    — **CORRECTED 2026-07-30 (was wrongly listed "0 open"; this is exactly the checkbox-grep trap the doc carried
+    PROSE-only remaining work with zero checkboxes at generation time).** `status: open`, 4 open todos added 2026-07-27
+    by the post-drain re-measurement (post-fix equity/etf/index canonicality 99.57%, up from 30.8%, but 3 new live-path
+    residuals found):
+    - **[DATA] P1.** Root-cause + fix the live-path null-`instrument_id` write for tradfi equity/ETF (NASDAQ/NYSE,
+      `ohlcv_1m`+`trades`)
+    - **[DATA] P1.** Root-cause why the FX `SPOT_PAIR` manifest-row `instrument_id` is still bare/null for
+      post-2026-07-25 captures
+    - **[DATA] P2.** Investigate the CBOE `ohlcv_15m` `INDEX`/`OPTION` null-`instrument_id` writes (103 rows)
+    - **[DOC] P3.** Re-verify the `future`/`FUTURE` population characterization (now 9,126 rows and growing, was stale
+      "2,023 static")
   - [`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
     - **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc.** The original 3 todos (DECISION /
       implement / ship) are flipped there; a new **[CODE] P1** concrete implementation todo (VM_MVP_MODE metadata

@@ -160,3 +160,10 @@ source: >-
       `status: active`, un-archived, in `plans/active/`, with this note as the explicit record of why. No files moved,
       no referrer paths touched (the doc did not move). Re-run only once the parent's remaining 4 items clear or the
       coverage-gate design changes.
+
+- [ ] [DOC] P2. Re-run this finalize plan's parent-reconciliation once any of the 4 remaining `BLOCKED-*` items on
+      `infra_capture_and_devops_leftovers_2026_07_06.md` clears (ASTER CeFi live-capture cost-control freeze
+      `BLK-55d45a68`/`BLK-4f52080e`; MANTLE paid-RPC Secret Manager grant; Live-ODDS quota decision; rate-limit-probe VM
+      sanction) — or once an operator decision changes how `check_finalize_plan_coverage.py` should be satisfied for a
+      permanently-blocked parent. Only then run the standard 6-step archival ritual on both this finalize plan and its
+      parent together. (Per this doc's own 2026-07-26 banner: do not re-attempt archival until then.)

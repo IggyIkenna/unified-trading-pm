@@ -239,6 +239,25 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
 
 ## Progress Log
 
+- **2026-07-29 (batch closeout pass) — AF-2-followup re-measured live, NOT closed (honest ambiguous result).** Queried
+  the live orchestrator's `/api/activity` (`plan_health_dispatch_initiated`, 9-day window, read-only via SSM — no DB
+  write) filtered to `mode="report"` (the ONLY mode this todo's gate covers; `reconcile`/`ag_closeout`/`na_eligibility`/
+  `docs_reconcile` are disjoint `agent_kind`s exempt by construction, confirmed 133/49/9/6 dispatches of those vs only 2
+  `report`-mode dispatches in the same window — the generic `plan_health_dispatched` event type does NOT carry `mode`,
+  only `plan_health_dispatch_initiated` does; a naive query against the former silently double-counts every
+  scheduled-job kind as "report"). **Result: only 2 `report`-mode dispatches occurred in 9 days (both on 2026-07-28),
+  389s (6.5 min) apart — under the 7200s (2h) `plan_health_min_interval_seconds` gate**, and
+  `plan_health_dispatch_coalesced` fired ZERO times in the same window (the coalesce guard never engaged). This does NOT
+  confirm the gate holds — it is either (a) a genuine gate gap (an untested code path letting two `report` dispatches
+  through inside one interval), or (b) an explainable exception this pass didn't fully verify (e.g. one of the two used
+  the documented `force=true` escape hatch, which is designed to skip the interval half). A follow-up query for the two
+  dispatches' own `force` field came back empty (likely a pagination/ordering artifact of the read-only endpoint, not
+  re-investigated further — bounded effort). **Per this plan's own "Report the honest number" Safeguards rule, NOT
+  flipping AF-2-followup to done on this evidence** — the todo's gate ("measured dispatch rate ≤1/interval over 24h,
+  zero superseded-plan_health exits") is not cleanly met by what was actually measured, so leaving it open with this
+  real data point rather than declaring success. Whoever picks this up next: confirm whether either 2026-07-28 dispatch
+  carried `force=true` (would fully explain and clear this), and re-run over a longer window once `report`-mode
+  dispatches accumulate more samples (n=2 is too thin to trust either way).
 - **2026-07-27 — AF-1a-followup done, plan fully shipped.** Re-measured on the target date: `ldr_qg_failure` unresolved
   count 46→3, NEVER_FOUND_ROOT_CAUSE 65%→0%. Confirms the AF-1a cicd.md backgrounding fix genuinely fixed the failure
   class it targeted; the 3 remaining unresolved rows split 67% FOUND_ROOT_CAUSE_THEN_SILENT / 33% HIT_BLOCKED_QUESTION —

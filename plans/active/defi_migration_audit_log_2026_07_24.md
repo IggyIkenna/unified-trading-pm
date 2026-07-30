@@ -360,14 +360,25 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       migrator source routing to dedicated dests). vault_share_price is MVP-relevant (carry vault NAV). Repo:
       market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 coverage matrix
       2026-06-09.
-- [ ] [DATA] P2. **DeFi collection gaps — 14 scaffolded data_types with NO GCS data** (eigenlayer_rewards,
+- [ ] [DATA] P2. **Retagged 2026-07-29 (corpus hygiene pass): mostly false-positive — verified
+      `eigenlayer_rewards_handler.py` (Alchemy RPC + free DefiLlama), `native_staking_handler.py` (free public Solana
+      RPC + free Jito Kobe MEV API) and `staking_yields_handler.py` (free Lido/EtherFi/DefiLlama APIs) are ALL complete,
+      non-stub implementations already reusing existing free/already-provisioned credentials —
+      `staking_yields_handler.py`'s own docstring states "this operation has ZERO scheduled Cloud Scheduler jobs as of
+      2026-07-24", confirming its gap is SCHEDULING, not credential. Only a narrow sub-feature of
+      `native_staking_handler.py` (per-validator staking breakdown, vs. the aggregate rate it already produces)
+      genuinely needs a new `helius-api-key` — Helius has a FREE tier (instant self-signup), so even that is not a
+      paid-credential blocker.** DeFi collection gaps — 14 scaffolded data_types with NO GCS data (eigenlayer_rewards,
       staking_yields, native_staking_rates, bridge_events, flash_loan_events, flash_loan_availability,
       governance_events, liquidation_events, mev_events, position_data, token_transfers, rewards, vault_apy, vault_tvl).
       Handlers exist but produce nothing — per external-data-always-available these are COLLECTION gaps (wire the source
-      / credential-ask to the operator), NOT migration gaps. Triage: MVP-relevant (eigenlayer_rewards restaking yield +
-      native_staking_rates for carry_staked_basis) → BLOCKED-CREDENTIALS source-ask; the rest → confirm in/out of MVP
-      scope. Each gets a migrator spec ONLY once it produces data. Repo: market-tick-data-service + UAC. Owner: vm-defi.
-      parent_epic: defi_master. Provenance: slot-2 coverage matrix 2026-06-09.
+      / credential-ask to the operator), NOT migration gaps. ~~Triage: MVP-relevant (eigenlayer_rewards restaking
+      yield + native_staking_rates for carry_staked_basis) → BLOCKED-CREDENTIALS source-ask~~ — revised triage:
+      eigenlayer_rewards + the aggregate native_staking_rates are code-complete and need only a Cloud Scheduler job
+      wired to start producing (no credential); only the per-validator native_staking_rates breakdown needs a free-tier
+      `helius-api-key` self-signup; the rest → confirm in/out of MVP scope. Each gets a migrator spec ONLY once it
+      produces data. Repo: market-tick-data-service + UAC. Owner: vm-defi. parent_epic: defi_master. Provenance: slot-2
+      coverage matrix 2026-06-09.
 
 ### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
 

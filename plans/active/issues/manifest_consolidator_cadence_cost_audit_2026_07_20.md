@@ -200,3 +200,8 @@ with a post-change cost verification showing the expected reduction and zero new
       `/codex/05-infrastructure/manifest-consolidator-ssot.md` + a follow-up cost check after one full billing cycle,
       (4) correct the codex SSOT's stale "every other consolidator = 86400s" claim. ~$3,270/mo confirmed addressable
       savings. (repo: market-tick-data-service + terraform)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo carries an
+  explicit dated operator citation ('RULED 2026-07-29 — proceed') on a live prod cost/paging system change.

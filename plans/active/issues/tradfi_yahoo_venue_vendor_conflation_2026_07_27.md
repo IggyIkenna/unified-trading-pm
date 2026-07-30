@@ -24,7 +24,7 @@ scope: [engineer]
 tags: [tradfi, yahoo, venue, data-correctness, manifest, vendor-conflation]
 related:
   [
-    /plans/active/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
+    /plans/archive/issues/mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /codex/02-data/venue-availability.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,

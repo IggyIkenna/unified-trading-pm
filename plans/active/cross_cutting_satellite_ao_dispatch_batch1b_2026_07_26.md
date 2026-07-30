@@ -317,7 +317,12 @@ drift_direction: advance-code
       this is an internal/methodological decision, not a discoverable fact). Filed `BLK-a94f446d` with 3 options
       (consult the original operator decision / default to the earliest-real-captured-row date / default to the
       launcher's current default). Full detail in the issue doc's Progress Log (`unified-trading-pm@263739b7c`).
-      Checkbox stays unchecked pending the answer.
+      Checkbox stays unchecked pending the answer. — **Status 2026-07-29T20:19Z (slot 4, data_engineering)**:
+      re-verified `BLK-a94f446d` still unanswered (fresh pull, corpus grep, commit history — no change). No unblocked
+      action available: legs (a/b/d/e) resolved, leg (c)'s only open scope is the disputed 2023-07-22→2023-11-01 window
+      this blocker gates (the uncontested 2023-11-01+ floor is already fully captured). Full detail in
+      `issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Released via
+      `/skip-current-task {"reason_code": "BLOCKED"}`.
 - [ ] [DATA] P2. **Build the GCS-persisted OBSERVED funding-cadence audit script** — the inferred half of Finding 3
       (`perp_funding_data_semantics_and_cadence_2026_06_16.md`) that the canonical `FUNDING_CADENCE_HISTORY`
       versioned-registry todo above did NOT cover. Lift the `n_settlements` counting logic from
@@ -457,18 +462,23 @@ drift_direction: advance-code
       bare-spelling row in the `_index`, and instruments-service QG is green.
 - [ ] [CODE] P2. Ship the two remaining AO-eligible residuals from `mvp_scope_catalogue_tagging_2026_06_08.md`: **(a)**
       implement `FeaturesMvpRule` + `StrategiesMvpRule` in UAC's `mvp_scope.py` (replacing the `FeaturesModelsMvpStub`
-      placeholders for `features`/`strategy` only — leave `models` stubbed, its MVP taxonomy is
-      BLOCKED-OPERATOR-DECISION per the source doc), wire them into a features_service data-status coverage consumer
-      (extend the existing `scope=mvp|could_exist|all` pattern from `deployment-api@3390c98` to features/strategy
-      coverage), and add unit coverage (MVP-scoped group included, non-MVP excluded, stub-untouched for models). **(b)**
-      Re-check the 5 per-AG instruments-consolidator `_index` heartbeat status (already confirmed ENABLED as of
-      `mvp_catalogue_finalization_v10_2026_06_27.md` G0 2026-06-27 — re-verify it's still current, not stale) and then
-      run the real-data MVP-toggle denominator verify: with `scope=mvp` ON, data-status shows ~100% for captured MVP
-      cells and does NOT count non-MVP catalogued instruments as missing; with it OFF, the full could-exist universe
-      renders (gap stays honest, not hidden). Source: `mvp_scope_catalogue_tagging_2026_06_08.md`. Done when: (a)
-      `FeaturesMvpRule`/`StrategiesMvpRule` land in UAC with a features-service data-status consumer reading them +
-      passing tests, and (b) a real-data run against current prod data confirms the mvp ≤ could_exist ≤ all monotonicity
-      holds with the correct MVP-cell readout, both cited with commit SHAs/evidence in the source doc's todo lines.
+      placeholders for `features`/`strategy` only — ~~leave `models` stubbed, its MVP taxonomy is
+      BLOCKED-OPERATOR-DECISION per the source doc~~ **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference
+      — this clause is stale. The models-BLOCKED-OPERATOR-DECISION framing was corrected by the 2026-07-27 operator
+      ruling (`june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 29) and `models` is no longer stubbed:
+      `ModelsMvpRule` shipped `unified-api-contracts@0fb9821b` (2026-07-28), wired into `MVP_SCOPE["models"]`. The
+      `FeaturesMvpRule`/`StrategiesMvpRule` work below remains genuinely open.**), wire them into a features_service
+      data-status coverage consumer (extend the existing `scope=mvp|could_exist|all` pattern from
+      `deployment-api@3390c98` to features/strategy coverage), and add unit coverage (MVP-scoped group included, non-MVP
+      excluded, stub-untouched for models). **(b)** Re-check the 5 per-AG instruments-consolidator `_index` heartbeat
+      status (already confirmed ENABLED as of `mvp_catalogue_finalization_v10_2026_06_27.md` G0 2026-06-27 — re-verify
+      it's still current, not stale) and then run the real-data MVP-toggle denominator verify: with `scope=mvp` ON,
+      data-status shows ~100% for captured MVP cells and does NOT count non-MVP catalogued instruments as missing; with
+      it OFF, the full could-exist universe renders (gap stays honest, not hidden). Source:
+      `mvp_scope_catalogue_tagging_2026_06_08.md`. Done when: (a) `FeaturesMvpRule`/`StrategiesMvpRule` land in UAC with
+      a features-service data-status consumer reading them + passing tests, and (b) a real-data run against current prod
+      data confirms the mvp ≤ could_exist ≤ all monotonicity holds with the correct MVP-cell readout, both cited with
+      commit SHAs/evidence in the source doc's todo lines.
 - [x] ✅ [DOCS] P1. **Reconcile the remaining pipeline_mode/live codex docs to the shipped M1-BREAKING + M5 contract**
       (source doc §#7 doc-coherence audit, REMAINING scope). — **DONE 2026-07-29 (slot 12, data_engineering)**:
       `pipeline-mode-and-batch-live-reconciliation.md` and `availability-manifest-and-data-status.md` (`codex/02-data/`)

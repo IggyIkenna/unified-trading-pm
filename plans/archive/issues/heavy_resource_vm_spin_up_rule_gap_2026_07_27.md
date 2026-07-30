@@ -26,7 +26,7 @@ tags: [infra, ram, memory, oom, shared-host, vm-launcher, heavy-io, cgroup, ad-h
 related:
   [
     /plans/archive/issues/shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md,
-    /plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
+    /plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
@@ -125,7 +125,7 @@ memory on the shared host." That is exactly the shape of `candle_coverage_gap.py
    pattern) on 2026-07-27, confirms: `/` at **96% used** (278G/290G, 12G avail — actually worse than Harsh's "92%"),
    `/tmp` tmpfs at **100%** (2.0G/2.0G), swap 4.2/15Gi used, load average 9.4-13.13. **This is the SAME underlying
    condition already tracked** by two existing, heavily corroborated (10+ independent slot reports each) open P1 issue
-   docs: `/plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` and
+   docs: `/plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` and
    `/plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md`. Not duplicating — added a fresh dated
    corroboration (via an external SSM vantage point, not from an interactive slot session) to both docs' Progress Logs
    instead. **Update (same day, 09:58Z, slot-10's independent entry pulled in during this session's own quickmerge)**:

@@ -106,3 +106,9 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
 ## Codex SSOTs
 
 `/codex/06-coding-standards/ui-testing-layers.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — All 3 todos require a
+  human/design decision on demo-vs-UAT redirect behavior; doc explicitly flags risk of unintended prod login-flow
+  changes if touched carelessly.

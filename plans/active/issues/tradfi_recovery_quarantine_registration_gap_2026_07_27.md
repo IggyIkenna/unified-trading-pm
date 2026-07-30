@@ -85,19 +85,37 @@ wound), but should be tracked rather than silently absorbed.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P2. Write a register-phase script (mirroring `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s
-      register phase) that: for each of the 428 `RECOVERED:*` rows implied by this run's per-shard `apply_outcomes.json`
-      (the aggregate count is known; deriving the EXACT 428 keys requires either re-deriving the recovered root from the
-      CURRENT canonical bundle's content — a targeted read per candidate combo/chain cell already resolved by the
-      sibling migrate/rebundle tooling — or accepting that the exact 428 keys are unrecoverable and instead doing a
-      targeted sweep: for every `A_QUARANTINE` TSV candidate whose OLD key is NOT registered `captured` anywhere, check
-      whether a real-root canonical bundle exists for its (day, venue, instrument_type, data_type) tuple and, if so and
-      no manifest row exists for that canonical key yet, register one additively (no CAS, mirrors
-      `ManifestWriter.add()`/`per_vm_shards=True`)), confirms via targeted (never corpus-walking) `gcs_describe_object`
-      checks, and additively registers the missing canonical rows. Repo: market-tick-data-service. **Done when**: every
-      canonical bundle target reachable from this run's 98,256-row population that (a) physically exists on GCS today
-      and (b) has no manifest row yet, is registered `captured`; count of newly-registered rows reported against the
-      ~428 expected upper bound.
+- [x] ✅ [SCRIPT] P2. Write a register-phase script (mirroring
+      `recover_tradfi_chain_manifest_registration_2026_07_22.py`'s register phase) that: for each of the 428
+      `RECOVERED:*` rows implied by this run's per-shard `apply_outcomes.json` (the aggregate count is known; deriving
+      the EXACT 428 keys requires either re-deriving the recovered root from the CURRENT canonical bundle's content — a
+      targeted read per candidate combo/chain cell already resolved by the sibling migrate/rebundle tooling — or
+      accepting that the exact 428 keys are unrecoverable and instead doing a targeted sweep: for every `A_QUARANTINE`
+      TSV candidate whose OLD key is NOT registered `captured` anywhere, check whether a real-root canonical bundle
+      exists for its (day, venue, instrument_type, data_type) tuple and, if so and no manifest row exists for that
+      canonical key yet, register one additively (no CAS, mirrors `ManifestWriter.add()`/`per_vm_shards=True`)),
+      confirms via targeted (never corpus-walking) `gcs_describe_object` checks, and additively registers the missing
+      canonical rows. Repo: market-tick-data-service. **Done when**: every canonical bundle target reachable from this
+      run's 98,256-row population that (a) physically exists on GCS today and (b) has no manifest row yet, is registered
+      `captured`; count of newly-registered rows reported against the ~428 expected upper bound. —
+      market-tick-data-service@c1e1de71: shipped `register_tradfi_recovery_quarantine_manifest_2026_07_30.py` (13 unit
+      tests green, full quality-gates.sh clean). Implements the SWEEP alternative (the exact 428 keys are unrecoverable
+      per the finding above — the run's own retained artifacts carry no per-row outcome, only the path-based A-category
+      and the aggregate Counter): dedups the 98,256 A_QUARANTINE rows to their distinct
+      (date,venue,instrument_type,data_type) cells, sweeps every recognised real product root per cell (excluding roots
+      already keyed in the live manifest), confirms each candidate target via targeted `gcs_describe_object`, and writes
+      a dry-run mapping TSV (`--apply` for the additive write). NOT yet executed against prod GCS — that dry-run +
+      `--apply` pass is tracked as a new follow-up todo below (VM-scale I/O, out of scope for an interactive session per
+      the heavy-I/O HARD RULE).
+- [ ] [SCRIPT] P2. Run `register_tradfi_recovery_quarantine_manifest_2026_07_30.py` (market-tick-data-service) against
+      prod: first a dry-run (`--out register_mapping.tsv`, no `--apply`) and inspect the confirmed-candidate count
+      against the ~428 upper bound + spot-check a sample of the mapping TSV's `target_uri` column for a real captured
+      bundle; then, once the dry-run count looks sane, `--apply` (additive `ManifestWriter.add()`/
+      `record_captured_from_counts()`, no CAS — safe to re-run) to register the confirmed rows, sharded
+      (`--shard-of`/`--shard-index`) if the unsharded dry-run's candidate-key count makes a single-process
+      `gcs_describe_object` sweep impractically slow. Repo: market-tick-data-service. **Done when**: the dry-run mapping
+      TSV + confirmed count are reported, the `--apply` run completes, and a post-run spot-check confirms a sample of
+      the newly-registered canonical keys read `captured` in the live manifest.
 - [ ] [DATA] P3. Investigate what pruned/reused `_quarantine/raw_tick_data/` between 2026-07-20 and 2026-07-27 (only 9
       unrelated `day=2026-01-*` prefixes remain, from a different quarantine event — full instrument-id-as-underlying,
       not this run's numeric/opaque garbage codes). Not urgent (no destructive-risk signal found — no lifecycle

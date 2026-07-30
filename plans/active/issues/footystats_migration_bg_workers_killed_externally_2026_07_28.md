@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [multi-agent-safety, process-management, incident, shared-host, background-tasks]
 related:
   [
-    /plans/active/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md,
+    /plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
   ]
 created: 2026-07-28
@@ -39,7 +39,7 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 ---
 
 # footystats migration background workers killed externally — 2026-07-28
@@ -306,3 +306,86 @@ signal here (it doesn't lag the way a 15-min load average does), so treated this
 Resumed the dry-run from the 14,538 checkpoint (harness `run_in_background`, no `nohup`, same 8/8 workers, no limit) —
 confirmed running (PID 694347) immediately after launch. Monitoring for whether it now runs to completion or hits the
 same wall again.
+
+## Update 2026-07-29 (slot-15) — same script, same exit code 144, same clean-kill signature — but this time under a
+
+## demonstrably HEALTHY host (low load, ample free swap): the resource-exhaustion theory does not explain every kill
+
+Resumed the SAME category-1 marker-purge dry-run (`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5) from
+its resume-log (5,819/23,588 at start of this session), via the harness's own tracked `run_in_background` mechanism, no
+`nohup` — `--discover-workers 16 --verify-workers 16`. Progress was confirmed healthy across 4 separate check-ins over
+~11 minutes (5,819 → 6,220 → 6,599 → 6,956 → 7,208, process alive, CPU climbing normally each time). Then the harness's
+own task-notification reported `status: "failed"`, **exit code 144** — the exact same code cited in this doc's earlier
+🔴 ESCALATION section — with no traceback, no error, no `SUMMARY` block in the script's own log (identical clean-kill
+signature to every prior incident here).
+
+**New data point, not just a repeat**: checked host state immediately after discovering the kill — `cat /proc/loadavg` →
+`1.39 2.05 3.09` (a 16-core host, so this is LOW, not oversubscribed) and `free -h` → RAM **12Gi free / 55Gi available**
+(of 61Gi total), swap **3.1Gi/47Gi used (only ~7%)** — the healthiest reading of any check-in across this entire
+incident history. Every prior entry in this doc attributed the kill to load/swap pressure (loads of 22-325, swap
+52-100%); this kill happened with essentially none of that pressure present. This does not contradict that resource
+exhaustion CAN cause this class of kill (the swap-exhaustion incidents above are still the most direct evidence for that
+mechanism) — but it does show resource exhaustion is not the ONLY trigger: something else (a session/cgroup-boundary
+reap independent of load, or a targeted external kill this session has no visibility into) can produce the identical
+clean-kill/exit-144 signature even on an otherwise-idle host. No stronger conclusion is possible from this session (no
+root/journalctl/auditd access, same gap as every earlier entry).
+
+**No data lost, resumed via the documented mitigation**: resume-log intact at 7,652 entries. Rather than manually
+re-launching after each future kill, switched to the self-restarting supervisor-loop pattern this doc already recommends
+(bash `for`-loop relaunching the same command against the same `--resume-log` path on any non-zero exit, capped retries,
+itself run under the harness's tracked `run_in_background` so a single kill doesn't require a fresh agent turn to notice
+and relaunch).
+
+## Update 2026-07-30 (slot-15) — SAME script, `--apply` phase this time, 2 MORE exit-144 kills (5th and 6th occurrence
+
+## overall); a DIFFERENT, already-fixed incident (disk-full tmpfs corruption) was initially conflated with this one —
+
+## worth recording the distinction since they looked similar at first glance but have different root causes and fixes.
+
+Continued `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md` todo 5: after the dry-run finished cleanly
+(23,588/23,588, 21,324 SAFE-disposition markers, 2,264 correctly-retained FLAGGED per the already-documented
+catalogue-undercoverage finding), moved to the real `--apply` pass with a fresh resume-log (required — the script's
+`todo = markers not in already_done` filter means reusing the dry-run's fully-populated resume-log would silently no-op
+the apply pass; this project's own leaf-purge launcher hit the identical class of bug earlier in this same plan, see the
+finalize plan's Progress Log). Two DISTINCT failure modes hit during the apply run, easy to conflate but genuinely
+different:
+
+1. **Disk-full tmpfs corruption (root-caused, fixed, NOT this doc's incident class)**: `/tmp` on this host is a small
+   2GB `tmpfs` SHARED across every slot — another slot's `pytest-of-ubuntu` temp dir alone was measured at 862M at one
+   point. The resume-log (a few MB, this script's own footprint) got caught in a moment where the shared tmpfs hit 0
+   bytes free, and the interrupted `fh.write()` mid-append left a truncated, unparseable trailing JSON line —
+   `OSError: [Errno 28] No space left on device` in the traceback. This is NOT a silent/clean kill (has a real Python
+   traceback) and is NOT the same incident class as this doc. **Fixed**: repaired the resume-log (dropped the truncated
+   trailing line, verified via a per-line JSON parse that all remaining entries are valid) and RELOCATED the resume-log
+   off `/tmp` entirely, onto the repo worktree's real disk (`.../market-tick-data-service/apply_resume_state/`, 214G
+   available vs `/tmp`'s 2G) before relaunching. No further disk-space issues after the relocation. **Actionable
+   takeaway for future long-running resumable scripts on this host**: default `--resume-log`/similar state files to a
+   path under the repo worktree, not `/tmp` — the shared 2GB tmpfs is genuinely too small for multi-slot contention on
+   anything longer than a few minutes.
+2. **The clean exit-144 kill (THIS doc's incident class, confirmed recurrence)**: AFTER the disk-relocation fix was in
+   place (so `/tmp` pressure is ruled out as the cause for these two), the apply run was killed cleanly TWICE more —
+   once at ~8,357 markers into the run (13,224 total resume-log entries), once earlier during the tail of the dry-run
+   phase itself (this doc's existing 2026-07-29 slot-15 entry). Both times: `status: "failed"`, exit code 144, zero
+   traceback in the script's own log, resume-log left INTACT and valid both times (no corruption — this is the signature
+   that distinguishes it from incident #1 above). Both relaunches (same `--resume-log` path) resumed cleanly with no
+   data loss, consistent with every prior sighting in this doc. Did not check host load/swap at the exact moment of
+   either of these two kills (was mid-relaunch before thinking to capture it) — a gap for whoever picks this up next:
+   capture `/proc/loadavg` + `free -h` immediately on the NEXT sighting, before relaunching, to keep building the
+   resource-pressure-vs-not dataset this doc has been accumulating.
+
+**Not yet adopted the self-restarting supervisor-loop mitigation this doc recommends** — handled each kill manually via
+periodic agent check-ins + relaunch instead (works, but is more agent-turns than the loop would cost). If this incident
+class keeps recurring across sessions, worth actually building the loop rather than continuing to hand-relaunch.
+
+**Distinct, smaller finding not requiring its own issue doc**: `delete_migrated_defi_markers_2026_07_23.py`'s
+`todo = [m for m in markers if m not in already_done]` filter has no safety check against a `--resume-log` shared
+between a `--dry-run` and `--apply` invocation — if reused, `--apply` will discover `todo=[]` (everything already
+"processed" by the dry-run) and silently do nothing, reporting a false "0 to process, 0 deleted" success rather than
+erroring. Worked around this session by always using separate `.dry.` / `.apply.` resume-log paths (per this file's own
+naming convention, apparently anticipated by whoever built it). A cheap hardening fix for a future session: have the
+script refuse to proceed (or warn loudly) if `--apply` is passed a resume-log where 100% of in-scope markers already
+show `action: "would_delete"` (dry-run dispositions) rather than `action: "deleted"`/`"none"` (apply dispositions) —
+would catch this exact silent-no-op class before it ships a false "nothing to delete" report. Logged here rather than as
+a separate plan todo since it is a small, generalizable script-robustness gap discovered in passing, not blocking
+`defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s todo 5 (which used the separate-paths workaround
+successfully).

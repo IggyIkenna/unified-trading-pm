@@ -15,7 +15,7 @@ SSOT: `unified-trading-pm/plans/PLAN_FORMAT.md`
 RULE: The canonical plan for PM–Codex–Code alignment, deployment topology, and audit is
 `plans_to_deployable_unified_audit.plan.md` in `unified-trading-pm/plans/active/`.
 WHY: Supersedes pm_codex_drift_zero_architecture, other_alignment_plan, PM_CODEX_VS_OTHER_ALIGNMENT_DIFF.
-CODEX: unified-trading-codex/06-coding-standards/feature-branch-workflow.md
+CODEX: unified-trading-pm/codex/06-coding-standards/feature-branch-workflow.md
 
 ## 3-Tier Readiness Gate Model
 

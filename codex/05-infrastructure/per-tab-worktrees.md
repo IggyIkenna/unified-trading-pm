@@ -840,6 +840,31 @@ conflict (e.g. a backfill VM that installs `gcloud` via apt with no snap present
 Provisioned automatically by `setup-tab-worktrees.sh --init` alongside the slot-host crons; re-run by hand on an
 already-provisioned host with `bash scripts/dev/install-gcloud-sdk-path-symlinks.sh`.
 
+## pkill/pgrep cross-slot-kill guard — mechanical shell-level enforcement (codified 2026-07-28/29)
+
+**Rule**: a process kill during a worker session must target an exact PID/PGID captured at background-start time (`$!`,
+or the child PID) — never a bare `pkill -f <script-basename>` / `pkill <name>`. Every slot invokes shared scripts (e.g.
+`quality-gates.sh --no-fix`) with IDENTICAL argv, so a name-only pattern is host-wide, not slot-scoped, and can kill a
+DIFFERENT slot's live QG run. Two same-day recurrences (2026-07-28, slots 13 and 5) proved a RULES.md prose addendum
+alone does not prevent the mistake under time pressure — enforcement moved from documentation to a mechanical guard.
+
+**Fix**: `scripts/hooks/pkill-guard.sh` defines `pkill()`/`pgrep()` shell functions that shadow the real binaries —
+ALLOW an exact numeric `-g/-G/-P/-s/-U/-u/-T` target, or a pattern containing the caller's own `.tabs/<N>/` cwd
+substring (derived from `$PWD`); REFUSE (one-line stderr explanation, exit 1) any bare name/pattern lacking both. This
+is a footgun-guard, not a security boundary — `command pkill ...` / an absolute path deliberately bypasses it (same as
+any bash wrapper function), and it cannot intercept a non-shell caller (e.g. a Python `subprocess.run(["pkill", ...])`).
+
+**Install**: `scripts/dev/install-pkill-guard-shell-env.sh` writes a managed block into `~/.bashrc`/`~/.zshrc` (mirrors
+the uv-cache / gcloud-SDK installers above). Slot-aware: safe to run from inside any `.tabs/<N>/unified-trading-pm`
+clone — it strips the `.tabs/<N>/<repo>` suffix so the sourced guard-lib path always resolves against the CANONICAL root
+clone, staying valid host-wide regardless of which slot ran the installer. Run ONCE per shared host; idempotent (safe to
+re-run — a re-run just replaces the managed block in place). Verify in a NEW interactive shell:
+`pkill -f quality-gates.sh` → `REFUSED: ...`; a `.tabs/<N>/`-scoped `-f` pattern or a numeric `-g` target passes through
+to the real binary unchanged.
+
+Full incident history (two recurrences + root cause + rollout verification):
+`plans/archive/issues/pkill_broad_pattern_cross_slot_qg_kill_2026_07_28.md`.
+
 ## Pre-spawn branch-state + liveness-gated dirty resolution (Phase 4, 2026-06-01)
 
 The orchestrator's spawn paths (`server.py::spawn_slot`, `autospawn._do_spawn`,

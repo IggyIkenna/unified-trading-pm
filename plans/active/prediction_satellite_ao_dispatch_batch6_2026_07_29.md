@@ -51,8 +51,8 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     /plans/active/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/active/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
+    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
     /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
     /plans/active/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
@@ -317,16 +317,19 @@ tranche, excluded here to avoid duplicate dispatch." Re-confirmed by this run, n
   migration + a cross-repo parity test — genuinely uncovered, but should be drafted as a SPORTS-tranche batch item).
 - `plans/active/sports_odds_feature_naming_canonicalization_2026_07_21.md` (residual: 4 checkbox-drift items + 2
   substantively-undone REVIEW todos + a missing codex SSOT note — same as above, sports-tranche scope).
-- `plans/active/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` (1 remaining
+- `/plans/archive/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` (1 remaining
   `[OPERATOR]` reclassification judgment call, not AO-eligible; sports's own active `batch6` already carries the
-  identical item per this run's evidence).
+  identical item per this run's evidence). **CORRECTED 2026-07-30 (`/plan-reconcile`)** — that last `[OPERATOR]` item is
+  no longer remaining: the operator ruled it 2026-07-29 in an interactive decision session,
+  `unified-trading-pm@fcfa0c97b` closed the doc (`status: resolved`, 0 open todos), and it is now archived. Sports
+  `batch6`'s matching `[DOC] P2` close-out todo was flipped in the same sweep.
 - `plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md` — classified `exclude_cross_cutting` by
   Phase 1 (not even a borderline case): 5 of 6 remaining todos build sports-only live-trading infrastructure, the doc's
   own text explicitly carves prediction OUT of scope ("a separate question... prediction hasn't reached 'ML pipeline
   running' yet"), and `parent_epic: sports_master` confirms it.
 
 **Also surfaced, dual-tagged `[sports, prediction]` but content is 100% sports-side**:
-`plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — 2 open `[SCRIPT] P2`
+`plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — 2 open `[SCRIPT] P2`
 todos (fix the live-mode sports-odds writer shape mismatch; delete 5 dead `sports_*` PATH_REGISTRY rows + their dead
 consumer classes), genuinely uncovered by anything in this tranche's covering set, but both items are
 sports-odds/sports-registry content with zero prediction-market-specific work — recommend the sports tranche's own

@@ -30,7 +30,7 @@ tags:
   [gcs, buckets, consolidation, fold, execution-store, strategy-store, migration, env-split, lifecycle, infrastructure]
 related:
   [
-    plans/active/bucket_estate_fold_design_2026_07_13.md,
+    plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/issues/strategy_store_split_brain_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,

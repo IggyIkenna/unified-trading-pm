@@ -108,3 +108,9 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
       `unified-trading-library@c08a8d61b` (`ManifestWriter.record_failed()` now rejects `EXPECTED_*`-prefixed reasons).
       Full evidence: `plans/archive/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md`
       (resolved) + closeout child § "🔴 2026-07-15 (later) — independent re-verification pass".
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Explicit operator
+  instruction to run locally/autonomously, not AO-dispatched; one item is a 24h real-wall-clock observation window that
+  cannot complete in one session.

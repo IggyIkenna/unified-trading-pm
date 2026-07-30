@@ -326,3 +326,9 @@ investigation" guidance) — retrying with real spacing (not back-to-back) per t
       confirmed occurrences, mechanism still not identified (the cascade-step theory — quickmerge's STAGE 0 re-pulling
       ancestor repos before re-running the suite — is the leading candidate); `PYTEST_WORKERS=1` is a stopgap, not a
       fix, and the practical impact (quickmerge blocked) recurred worse than the original "resolved" status claimed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Unresolved root-cause
+  investigation with 14+ occurrences and multiple falsified hypotheses; doc explicitly states the exact mechanism
+  remains genuinely open.

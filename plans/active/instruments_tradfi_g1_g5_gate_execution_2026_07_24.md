@@ -449,15 +449,25 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       sibling ICE/CME-futures-options and CME-futures-reference-gap bullets immediately below, which already track the
       credential/upstream blockers on the actual data recovery. Source:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 3.
-- [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
+- [ ] [DATA] P1. **FINDING — ICE futures ~~+ CME futures-options~~ not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
       `ikenna_orchestrator/pings/slot_5.md` (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). Massive covers CME-group
       only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator ask**: an
-      ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo: instruments-service.
-      assigned_vm: vm-tradfi. (MIGRATED FROM: same.)
-- [ ] [DATA] P1. **tradfi CME futures reference gap from 2026-06-08** — Massive `/futures/vX/{products,contracts}` 404
-      (worked 2026-06-07). `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run
-      `--asset-group TRADFI --source massive` for missing days so `venue=CME` refills, then regen the tradfi catalogue.
-      Repo: instruments-service. (MIGRATED FROM: same.)
+      ICE-futures ~~+ CME-futures-options~~ reference source, or unblock Databento billing. Repo: instruments-service.
+      assigned_vm: vm-tradfi. (MIGRATED FROM: same.) **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference
+      — the struck CME-futures-options half is already covered by the existing GLBX.MDP3 Databento subscription
+      (`/codex/02-data/tradfi-databento-sourcing-ssot.md` line 80 lists "options-on-futures" under GLBX.MDP3); the
+      sibling replacement-path todo at `data_completion_tradfi_2026_07_15.md:426-433` already directs running IS
+      reference-data capture via `--source databento` for this — no new billing/credential needed, that was stale
+      Massive-era framing. The ICE-futures half remains genuinely open — a paid ICE/OPRA vendor subscription the
+      operator already declined once (2026-06-18 ruling, "requires an explicit ICE/OPRA subscription").**
+- [x] ✅ [DATA] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — Massive was removed entirely as
+      a tradfi source (operator ruling 2026-07-19, `uac@a2beed46`), subscription terminated, `source='massive'` writes
+      now hard-reject. The replacement path already exists at `data_completion_tradfi_2026_07_15.md:421-433` (run IS
+      instrument capture with `--source databento` → regenerate the tradfi catalogue) — that replacement todo is NOT yet
+      executed, only correctly targeted; tracking for the actual re-run continues there, not here.** tradfi CME futures
+      reference gap from 2026-06-08 — Massive `/futures/vX/{products,contracts}` 404 (worked 2026-06-07).
+      `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run `--asset-group TRADFI --source massive` for missing days so
+      `venue=CME` refills, then regen the tradfi catalogue. Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [CODE] P2. **FINDING — MTDS Massive connector uses the wrong futures endpoint.**
       `massive_tradfi_rest_connector.py` maps futures→`/v3/reference/futures/contracts` (404s); working path is
       `/futures/vX/contracts` (+ `/futures/vX/products` for contract size). Repo: market-tick-data-service. assigned_vm:
@@ -508,8 +518,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       clean. **Also found a real bug**: `reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` resolves
       `Path(__file__).parents[4]` assuming a non-slotted checkout — under the Path-B per-slot topology this lands on the
       READ-ONLY root PM clone (`unified-trading-system-repos/unified-trading-pm/`), not the slot's own PM clone. Worked
-      around via `--output-csv` for this run; the path bug itself is a residual follow-up (not fixed here — out of this
-      todo's scope).
+      around via `--output-csv` for this run. **FIXED 2026-07-27 — `instruments-service@fc07e6b6`**
+      (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4): `_default_csv_path()` now walks up from the script
+      to the invoking repo's own `.git` root (Path-B or non-slotted, any nesting depth) and derives the
+      `unified-trading-pm` sibling from that identity instead of the fixed `parents[N]` hop; raises loudly instead of
+      silently falling back when no sibling clone resolves. 4 new unit tests in
+      `tests/scripts/test_reconcile_manifest_entity_change_default_csv_path.py`, `quality-gates.sh --no-fix` green
+      (sentinel-verified). No checkbox added here per batch4's own scope guard (this paragraph's parent checkbox is
+      owned by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s combined todo) — nothing remains open on this
+      residual.
 - [x] ✅ [UAC] P1. **DONE — already shipped pre-2026-07-25 (verified 2026-07-26, slot-5, review).** Unit tests for
       `databento_subscription_allowlist` already exist at `tests/unit/test_databento_subscription_allowlist.py`
       (introduced by `uac` commit `4ad54282`, already on `main` — verified via `git merge-base --is-ancestor` and a live

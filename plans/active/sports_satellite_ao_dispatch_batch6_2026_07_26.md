@@ -277,9 +277,22 @@ otherwise-independent P3 todos over one soft file-overlap risk).
       authoring rule to every AG's finalize plans stays parked for the operator (see Deferred; the 2 DeFi docs above are
       fresh supporting evidence for approving that generalisation).
 
-- [ ] [DOC] P2. **Close out `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` — 2 of its 3
-      prose steps are now satisfied by shipped commits.** This doc has zero checkboxes and expresses its remaining work
-      as a 3-item prose "Recommended next step" list (the confirmed prose-only trap). Step 1 (flip
+- [x] ✅ [DOC] P2. **DONE 2026-07-30 (`/plan-reconcile` autonomous sweep) — all three steps closed, doc archived to
+      `/plans/archive/issues/sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md`.** Evidence,
+      each measured this run, not inherited: **step 1** already flipped at
+      `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s `[DATA] P1` line citing `features-service@b03a6de4`;
+      **step 2** — this todo's own verification command was RUN:
+      `git -C features-service merge-base --is-ancestor 0ded2449 origin/live-defi-rollout` exits 0 (subject
+      `feat(sports): migrate ODDS_COLUMNS to the decided naming scheme`), and the parent plan's matching
+      `odds_columns.py` / `ODDS_COLUMNS` migration todo is already `[x]`, so the sha is CONFIRMED, not assumed; **step
+      3** — the `assigned_vm` re-designation question the paragraph below reserves for the operator was answered: the
+      target doc's own second `[OPERATOR]` todo records "Operator-ruled 2026-07-29 (interactive decision session):
+      formalize via the satellite …" and `unified-trading-pm@fcfa0c97b` closed the doc on that ruling
+      (`status: resolved`, 0 open todos). The paragraph below is retained verbatim as the original instruction/reasoning
+      — it is history now, not an open gate. **Close out
+      `sports_odds_naming_migration_uncommitted_wip_and_checkbox_drift_2026_07_25.md` — 2 of its 3 prose steps are now
+      satisfied by shipped commits.** This doc has zero checkboxes and expresses its remaining work as a 3-item prose
+      "Recommended next step" list (the confirmed prose-only trap). Step 1 (flip
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s todo 2 for the shipped per-bookmaker decimal-odds
       compute) was executed 2026-07-26 by `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s `[DATA] P3` todo, citing
       `features-service@b03a6de4`. Step 2 (decide whether to commit the uncommitted todo-4 features-service rename diff

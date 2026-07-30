@@ -3,14 +3,14 @@ doc_type: cursor-rule
 description: Update codex documentation when establishing new patterns — always apply, same PR as code
 priority: 70
 globs:
-- '**/unified-trading-codex/**/*.md'
+- '**/unified-trading-pm/codex/**/*.md'
 tags:
 - documentation
 - codex
 ---
 # Codex Maintenance Rule
 
-RULE: Update unified-trading-codex in the same PR as any architectural code change. Code change without codex update = incomplete task.
+RULE: Update `unified-trading-pm/codex/` in the same PR as any architectural code change. Code change without codex update = incomplete task.
 WHY: Codex is the single source of truth for all patterns — stale docs cause divergence across 30+ repos.
 CODEX: 06-coding-standards/contribution-guide.md
 

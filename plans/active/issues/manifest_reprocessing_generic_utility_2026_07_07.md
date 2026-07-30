@@ -117,18 +117,93 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
 
 ## Todos
 
-- [ ] [DESIGN] P2. Design `select_shards_for_reprocess()` + the flip-and-write helper signature; confirm placement
-      (`unified-trading-library/manifest_writer/_queries.py` vs. a new `manifest_reprocess.py`).
-- [ ] [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
-      existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks).
-- [ ] [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
-      `script-homes.md`'s production-verb rule.
+- [x] ✅ [DESIGN] P2. Design `select_shards_for_reprocess()` + the flip-and-write helper signature; confirm placement
+      (`unified-trading-library/manifest_writer/_queries.py` vs. a new `manifest_reprocess.py`). —
+      `unified-trading-library@abeebede`. Placement: new top-level `unified_trading_library/manifest_reprocess.py`
+      (sibling to `manifest_completeness.py`/`manifest_consolidator.py`/`manifest_freshness.py` — the established
+      convention for a standalone manifest concern, not a fragment of the split monolith), re-exported via the top-level
+      package `__init__.py`. Rejected `_queries.py` (read-side-only by its own docstring; the flip-and-write half is a
+      real mutation) and `_maintenance.py` (already 891 lines against the 900-line file-size ratchet) and
+      `manifest_migrations/` (schema-migration-specific, a different axis). `select_shards_for_reprocess()` is fully
+      implemented (pure/stateless filter: capture_status + optional asset_group/venue-or-data_type/date_range/
+      error_reason_predicate) with 13 unit tests. `reprocess_shards()`'s signature + the 3-gate safety contract (per-VM
+      shard isolation, idx-only mutation, captured-count invariant) are pinned in its docstring; the body is a
+      documented `NotImplementedError` stub — implementing it is the separate `[CODE] P2` todo below, unchanged.
+- [x] ✅ [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
+      existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks). —
+      `unified-trading-library@4b6a13cf`.
+- [x] ✅ [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
+      `script-homes.md`'s production-verb rule. — `instruments-service@e9eac282`.
 - [ ] [SCRIPT] P3. Retire the 13 one-off scripts above (was: 11 — verify-rerun-2 finding 151, 2026-07-14: title/summary
       were corrected 2026-07-12 to 13, but this todo's count was never updated) once the generic tool covers their use
       cases (or leave the already-run ones as historical record — they don't need deletion if inert, just no new ones
       going forward).
 
 ## Progress Log
+
+- **2026-07-30 (slot 7, infra)** — Dispatched `manifest_reprocessing_generic_utility-003` (the third `[CODE] P2` todo,
+  wiring the CLI). Added `--operation reprocess-shards` to `instruments-service/instruments_service/cli/main.py`,
+  following the existing `--operation=status` / `--operation=refresh-league-entity-coverage` pattern: it bypasses
+  `ServiceBootstrap`'s date-loop (a maintenance verb, not a date-fetch) and dispatches from `main_service_cli()` before
+  the daily-recon date-default logic. New `_run_reprocess_shards()` parses `--asset-group`, `--bucket` (resolves via
+  `get_write_bucket_name("instruments", asset_group)` when omitted — one of the two is required, fails loud otherwise),
+  `--venue`, `--capture-status` (default `attempted_failed`, validated against the `CaptureStatus` enum — an unknown
+  value fails loud rather than silently matching zero rows), `--error-reason-contains` (case-insensitive substring,
+  wired to `select_shards_for_reprocess`'s `error_reason_predicate`), `--date-start`/`--date-end`, `--target-status`
+  (default `expected_unattempted`, also enum-validated), `--target-error-reason`, and `--apply` (dry-run by default).
+  Calls `read_availability_index` → `select_shards_for_reprocess` → `reprocess_shards` (all three imported from
+  `unified_trading_library`'s top-level re-export) and prints one JSON object to stdout with the match/flip counts +
+  captured-count invariant values — matches the plan's own worked example:
+  `instruments-service --operation reprocess-shards --asset-group cefi --venue ASTER --capture-status attempted_failed --error-reason-contains "404" --date-start 2024-10-01 --date-end 2026-05-14 [--apply]`.
+  6 new unit tests in `tests/unit/cli/test_reprocess_shards_cli.py` covering: unknown capture-status rejection, missing
+  bucket/asset-group rejection, dry-run default with venue + error-reason-contains filtering (case-insensitive), the
+  `--apply` abort when `MANIFEST_PER_VM_SHARDS`/`VM_NAME` are unset (surfaces `reprocess_shards`'s own
+  `MissingReprocessShardIsolationError`), and bucket resolution from `--asset-group` when `--bucket` is omitted. All 27
+  tests in `tests/unit/cli/` pass; `bash scripts/quality-gates.sh` green. Shipped `instruments-service@e9eac282` via
+  quickmerge.
+
+- **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-002` (the second `[CODE] P2` todo).
+  Implemented `reprocess_shards()`'s body in `unified_trading_library/manifest_reprocess.py`, replacing the
+  `NotImplementedError` stub, porting all three pinned safety gates verbatim from
+  `retry_transient_cefi_failures_2026_06_28.py`: (1) per-VM shard isolation — `dry_run=False` requires
+  `MANIFEST_PER_VM_SHARDS=true` + non-empty `VM_NAME` in the environment, checked via a new
+  `_has_reprocess_shard_isolation()` (raw env reads mirroring the template's `_validate_apply_env` and the identical
+  `manifest_migrations.v7_to_v8` pattern — deliberately NOT `UnifiedCloudConfig`, since this asks "did the operator
+  declare isolation for THIS run", not "what's the shared default"), aborting via a new
+  `MissingReprocessShardIsolationError` before any mutation; (2) idx-only mutation — `df.loc[idx, ...]` never re-derives
+  a selection; (3) captured-count invariant — computed before/after via a new `_captured_row_count()` helper, raising
+  `RuntimeError` (no partial write) on mismatch. The write path re-uses the established `ManifestWriter._INDEX_PATH`
+  canonical-index constant (matching how `_maintenance.py`/`_read_index.py`/existing tests already reference it
+  cross-module) and resolves its storage client lazily via
+  `unified_trading_library.cloud_interface.get_storage_client()` with no explicit provider (matching
+  `read_availability_index`'s own resolution pattern, rather than hardcoding `provider="gcp"` like the CeFi-specific
+  template did). Dry-run (the default) and the zero-matched-rows case both short-circuit before any env-gate check or
+  write — mirrors the template's own early-return. Replaced the prior stub-only test
+  (`test_reprocess_shards_not_yet_implemented`) with 5 real tests covering: zero-matched no-op, dry-run (no mutation/no
+  write, isolation env not required), missing-isolation abort (row untouched), a full apply that flips only the matched
+  row and writes the parquet back (verified via a `_StubStorageClient` patched onto
+  `unified_trading_library.cloud_interface.get_storage_client`), and the captured-count-invariant abort (no write
+  attempted). All 17 tests in `tests/unit/test_manifest_reprocess.py` pass; `bash scripts/quality-gates.sh` green (one
+  iteration caught a real false-positive: a docstring line containing the literal substring `os.environ` with no `noqa`
+  tripped the codex-compliance grep check even though the actual code lines already carried the correct
+  `qg-os-environ`/`config-bootstrap` markers — reworded the prose to avoid the banned literal, no logic change). Shipped
+  `unified-trading-library@4b6a13cf` via quickmerge.
+
+- **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-001` (the `[DESIGN] P2` todo).
+  Resolved the placement question and shipped `unified_trading_library/manifest_reprocess.py`: `CaptureStatus` +
+  `pd.Index`-shaped
+  `select_shards_for_reprocess(df, *, asset_group=None, venue=None, capture_status=CaptureStatus.ATTEMPTED_FAILED.value, date_start=None, date_end=None, error_reason_predicate=None)`
+  fully implemented (pure filter, no I/O — mirrors the template script's `_identify_transient_rows`, generalized with
+  asset_group/venue-or-data_type/date-range/reason-predicate filters);
+  `reprocess_shards(bucket, df, idx, *, target_status=..., target_error_reason="", dry_run=True) -> ReprocessResult`
+  signature + its 3-gate safety contract (per-VM shard isolation before any write, mutate ONLY the given `idx`,
+  captured-count invariant) pinned in the docstring, body a documented `NotImplementedError` — implementing it is the
+  next `[CODE] P2` todo, deliberately left untouched. Re-exported through the top-level `unified_trading_library`
+  `__init__.py` (`ReprocessResult`, `reprocess_shards`, `select_shards_for_reprocess`) so market-tick-data-service and
+  instruments-service can import it once the CLI-wiring todo lands. 13 new unit tests in
+  `tests/unit/test_manifest_reprocess.py` covering every filter dimension + combinations, plus one asserting the
+  `reprocess_shards` stub still raises (so a future partial implementation can't silently skip the documented safety
+  gates without a test failure). `bash scripts/quality-gates.sh` run before shipping.
 
 - **2026-07-07** — Filed from the ASTER/CEFI instrument-service data-status audit, prompted by the operator asking
   whether the 2026-05-14 ASTER base-URL fix needed a follow-up reprocessing run. No files edited.

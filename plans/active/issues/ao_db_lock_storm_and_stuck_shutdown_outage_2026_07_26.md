@@ -25,8 +25,9 @@ related:
 created: 2026-07-26
 last_updated: 2026-07-27
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: backend_engineer
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
@@ -131,32 +132,42 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
 
 ## Todos
 
-- [ ] [BACKEND] P1. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an instance
-      of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then inside it:
-      (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess) per row,
-      plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot — `reap_dead_slot_worker_tree(...)`
-      (more subprocess work); (2) loops every `AgentRow` with a `tmux_session` set, calling `has_session(name)` again
-      per row. All of this — potentially dozens of subprocess calls — runs with the SQLite write lock held the whole
-      time, scaling with fleet size (15+ slots + several one-shot agent rows at the time of the storm). This is the
-      exact class already fixed once in `ensure_review_agents` (`ao_review_agent_spawn_db_lock_under_load_2026_07_26`,
-      agent-orchestrator@222a4be) — same repo, same session, not yet applied here. Corroborating LIVE evidence
-      (2026-07-27, separate from the original storm): 3 one-shot `cicd` agents (`agt-b3f1d1`, `agt-cf325c`,
-      `agt-def412`) sitting `ACTIVE` with `0%` context and no progress message for 1-9 minutes — `TmuxPruner`'s own
-      dead-session reaper (`GRACE_PERIOD=30s`, `tmux_prune_interval_seconds=60` default) should catch and archive a
-      genuinely-dead one-shot agent's session within ~90s (`server/tmux_pruner.py:328-357`, the
-      `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute lingering `ACTIVE` state is consistent
-      with this exact tick either failing/timing out under load or being starved by lock contention, though it could
-      also just be a slow cold-start; not independently confirmed via a live tmux-pane check in this session.
-  - [ ] [BACKEND] P1. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in a
-        read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
+- [x] ✅ [BACKEND] P1. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an
+      instance of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then
+      inside it: (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess)
+      per row, plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot —
+      `reap_dead_slot_worker_tree(...)` (more subprocess work); (2) loops every `AgentRow` with a `tmux_session` set,
+      calling `has_session(name)` again per row. All of this — potentially dozens of subprocess calls — runs with the
+      SQLite write lock held the whole time, scaling with fleet size (15+ slots + several one-shot agent rows at the
+      time of the storm). This is the exact class already fixed once in `ensure_review_agents`
+      (`ao_review_agent_spawn_db_lock_under_load_2026_07_26`, agent-orchestrator@222a4be) — same repo, same session, not
+      yet applied here. Corroborating LIVE evidence (2026-07-27, separate from the original storm): 3 one-shot `cicd`
+      agents (`agt-b3f1d1`, `agt-cf325c`, `agt-def412`) sitting `ACTIVE` with `0%` context and no progress message for
+      1-9 minutes — `TmuxPruner`'s own dead-session reaper (`GRACE_PERIOD=30s`, `tmux_prune_interval_seconds=60`
+      default) should catch and archive a genuinely-dead one-shot agent's session within ~90s
+      (`server/tmux_pruner.py:328-357`, the `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute
+      lingering `ACTIVE` state is consistent with this exact tick either failing/timing out under load or being starved
+      by lock contention, though it could also just be a slow cold-start; not independently confirmed via a live
+      tmux-pane check in this session.
+  - [x] ✅ [BACKEND] P1. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in
+        a read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
         `reap_dead_slot_worker_tree()` calls WITHOUT a session open, then open a fresh `session_scope()` only for the
         actual field writes + activity logging — mirroring the `ensure_review_agents` fix's shape. This function is
         larger and more stateful than `ensure_review_agents` was (task-release, resume classification, orphan reaping,
         context-saturation event logging all interleave with the row mutations) — read the WHOLE function first, plan
         the read/act/write split before editing, and re-run the existing `tmux_pruner` test suite plus add a regression
         asserting no `session_scope()` is open during the `has_session()` calls (patch `has_session` to assert
-        `db.in_transaction()` is False, or equivalent).
-- [ ] [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
+        `db.in_transaction()` is False, or equivalent). — agent-orchestrator@b6f95a0 (2026-07-27T02:36:34+01:00, already
+        an ancestor of current LDR HEAD, pre-dates this dispatch). Verified this session (slot-9): read the shipped
+        `prune_once()` and confirmed it matches this todo's exact prescription (read-only pass → session-free
+        `has_session()`/`reap_dead_slot_worker_tree()` acts → fresh write session for mutations); the regression test
+        this todo calls for already exists
+        (`tests/test_tmux_pruner_agent_reap.py::test_prune_once_never_holds_a_session_across_has_session_or_reap`,
+        asserts `has_session()` is never called while a `session_scope()` is open) — re-ran the full
+        `test_tmux_pruner_agent_reap.py` suite fresh (`TMPDIR` routed to scratchpad around the unrelated,
+        separately-tracked `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition): 5/5 passed. No new code
+        change needed; checkbox was stale relative to already-shipped work.
+- [x] ✅ [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
       SIGKILL. Check whether any of the orphaned processes found on the next start (`sh`, `node`, `npm exec prettier` —
       PIDs 2961831/2961834/2958093 at the time) correlate with a specific in-flight operation (a worker's own
       quickmerge/prettier run, dispatched from inside this same orchestrator process's tmux sessions) that the shutdown
@@ -165,7 +176,58 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       is interacting with the reload/shutdown sequence in a way that makes the PARENT uvicorn process wait on children
       it shouldn't be waiting on. Definition of done: either a concrete root cause + fix, or a documented conclusion
       that the shutdown hang is inherent to `KillMode=process`'s tradeoff (protects workers, costs shutdown latency) and
-      not worth changing.
+      not worth changing. — **agent-orchestrator@ee98ccb.** Caught a FRESH live recurrence
+      (`2026-07-30T01:00:06-01:01:36 UTC`, exactly the full 90s `TimeoutStopSec` before SIGKILL) via direct
+      `journalctl -u orchestrator.service` access on this VM (I'm running on it) and isolated the hang to a
+      previously-unexamined 15s window: the ASGI worker (`pid 246276`) fully completes its OWN shutdown at `01:01:21`
+      (connection-drain, 24s state-snapshot write + S3 upload — both accounted for, not the mystery), the reload
+      supervisor then logs its own `"Stopping reloader process [pid]"` (uvicorn's `BaseReload.shutdown()`,
+      `uvicorn/supervisors/basereload.py:103-115` — the function's LAST line), and then **zero further log output for
+      15s** until SIGKILL. Not the orphaned-process theory this todo named (no correlating in-flight quickmerge/prettier
+      process found this time) — the hang is specifically in Python/uvicorn's post-`shutdown()` interpreter-teardown
+      path for the RELOAD SUPERVISOR's `multiprocessing.get_context("spawn")` child (confirmed via
+      `uvicorn/_subprocess.py`: `get_subprocess()` uses `spawn.Process`, which starts a `resource_tracker` subprocess —
+      found one live, parented directly under the reloader PID, on this VM right now). **Fix**: removed
+      `--reload --reload-dir server` from `scripts/orchestrator.service`'s `ExecStart` entirely, rather than chasing the
+      exact interpreter-teardown mechanism further — confirmed via `scripts/ao-self-pull.sh:207,228`
+      (`systemctl restart orchestrator`) that the reload-cron already runs an EXPLICIT, strictly more complete restart
+      on every FF pull that changes HEAD (plus a stale-process self-heal branch `--reload` can't provide), making
+      `--reload`'s own file-watcher pure redundant overhead — it never added restart coverage, only a race (two
+      independent restart triggers on the same file-change event) and this extra process-supervision layer.
+      Corroborating evidence beyond the shutdown hang itself: `--reload`'s excess restart cadence ("every 15-70min in
+      prod", far more than any reasonable expectation) was already the CONFIRMED root cause of two prior, separately
+      fixed bugs — the SQLite-backup wall-clock-cadence gap and the daily-summary boot-fire dedup bug
+      (`tests/test_sqlite_backup_wallclock_cadence.py`, `tests/test_daily_summary.py`) — both fixed by making state
+      survive a restart rather than by addressing the restart frequency itself. `orchestrator-demo.service` (the sibling
+      unit) never used `--reload`; `scripts/dev.sh` keeps its OWN separate `--reload` for local dev, unaffected. Full
+      repo QG green (2003 passed, 1 skipped, 78.97s + dashboard 165 passed), shipped via quickmerge --agent. **Honest
+      caveat**: this does not 100%-prove the exact bytecode-level cause of the 15s interpreter-teardown stall — but
+      removing the entire redundant reload-supervisor layer is correct on its own architectural merits regardless, and
+      it eliminates the precise layer where the hang was isolated. **Also not yet live**: the fix is on
+      `live-defi-rollout` in the repo, but the DEPLOYED `/etc/systemd/system/orchestrator.service` on this VM is a
+      separately-installed copy (substituted paths/user at install time via `install-orchestrator-service.sh`) that does
+      not auto-sync from the repo — I do not have privileged access from this sandboxed session (`NoNewPrivileges=yes`
+      on the very unit I'd need to edit; confirmed via `sudo -n true` failing with "no new privileges flag is set").
+      **Applying it live needs an operator/infra action**: re-run `install-orchestrator-service.sh` (or manually update
+      the `ExecStart` line + `daemon-reload` + `restart`) — safe to do at any time per `KillMode=process` (confirmed:
+      kills only the uvicorn main PID, tmux/claude worker sessions survive). Added the `[REVIEW]` follow-up below to
+      verify the live deploy + confirm the hang stops recurring.
+- [ ] [OPERATOR] P2. **Apply `agent-orchestrator@ee98ccb`'s `--reload` removal to the LIVE deployed
+      `/etc/systemd/system/orchestrator.service`** on this VM — re-run `install-orchestrator-service.sh` (or manually
+      remove `--reload --reload-dir server` from the `ExecStart` line), then
+      `sudo systemctl daemon-reload && sudo     systemctl restart orchestrator`. Safe per `KillMode=process` (kills only
+      the uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
+      worker has privileged access to do this from a sandboxed slot session (`NoNewPrivileges=yes`). (repo:
+      agent-orchestrator, infra action)
+- [ ] [REVIEW] P2. **Once the live unit is updated (prior todo), confirm via `journalctl` that the
+      `"Started reloader process"` / `"Stopping reloader process"` log lines stop appearing on future restarts** (proves
+      `--reload` is actually off in the running process, not just the repo), then watch the next several
+      `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
+      `"State 'stop-sigterm' timed out.     Killing."` pattern — if it stops recurring across several restarts, close
+      this issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is
+      elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
+      becomes the next thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
+      agent-orchestrator)
 
 ## Recurrence + memory-footprint evidence — 2026-07-27 (main agt-498659)
 
@@ -203,3 +265,51 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   spawned workers from a restart, cited above as a possible interaction).
 - `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` — background-loop model
   (TmuxPruner/WorkerLivenessKicker/AgentKeeper/HealthMonitor) this incident spans.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot-9, `backend_engineer` craft for this todo)**: dispatched the P1 `prune_once()` todo. Found the fix
+  ALREADY SHIPPED — `agent-orchestrator@b6f95a0` (2026-07-27T02:36:34+01:00, an ancestor of current LDR HEAD) implements
+  exactly the prescribed read/act/write split, and the prescribed regression test already exists
+  (`test_prune_once_never_holds_a_session_across_has_session_or_reap`). Re-ran the full
+  `tests/test_tmux_pruner_agent_reap.py` suite fresh this session: 5/5 passed (TMPDIR routed around the unrelated,
+  separately-owned `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition, not touched here). No code change
+  needed — flipping both checkboxes as stale-relative-to-shipped-work. The P2 shutdown-hang todo remains open and
+  untouched (out of this dispatch's scope).
+- **2026-07-30T05:00-05:25Z (slot 16, `backend_engineer`)**: dispatched the P2 shutdown-hang todo. Running directly on
+  the orchestrator VM gave direct `journalctl -u orchestrator.service` + live `systemctl status` access — caught a fresh
+  recurrence today (`01:00:06-01:01:36 UTC`) and, unlike prior sessions, had enough log detail this time to isolate the
+  ~15s unexplained gap to a SPECIFIC location: after uvicorn's reload supervisor (`BaseReload.shutdown()`) logs its own
+  final line and returns, with nothing further until SIGKILL — i.e. Python/uvicorn interpreter-teardown for the
+  reload-supervisor's `multiprocessing.get_context("spawn")` child, not app code. Traced this to `--reload` being
+  architecturally redundant (`ao-self-pull.sh` already does an explicit, more-complete `systemctl restart` on every
+  code-changing pull) and shipped its removal (`agent-orchestrator@ee98ccb`), also fixing the excess restart-cadence
+  root cause behind two OTHER previously-fixed bugs in this same repo. Full QG green, shipped via quickmerge. Could NOT
+  apply the fix to the LIVE deployed systemd unit myself (`NoNewPrivileges=yes` blocks `sudo` from this sandboxed
+  session) — filed a `[OPERATOR]` todo for that + a `[REVIEW]` todo to verify post-deploy that the hang actually stops.
+- **2026-07-30 (slot-15, `review` craft)**: dispatched the `[REVIEW]` `-005` todo. Re-confirmed directly on the
+  orchestrator VM (ip-172-31-5-118) that the live `/etc/systemd/system/orchestrator.service` `ExecStart` still carries
+  `--reload --reload-dir server` — the `[OPERATOR]` `-004` todo is genuinely undeployed, and this session hit the exact
+  same `NoNewPrivileges=yes`/root-owned-file blocker the prior session (slot 16) already documented, so there was
+  nothing new to confirm yet. Filed `BLK-eb2ee2ff`; main answered **B — park it**. Registered prerequisite
+  `ao_orchestrator_reload_removed_live=false` via `POST /api/prerequisites/...`, hand-tuned the derived
+  `ao_db_lock_storm_and_stuck_shutdown_outage-005` backlog.yaml entry (`priority: 999`, `priority_override: true`,
+  `prereqs.prerequisites: [ao_orchestrator_reload_removed_live]`), and verified the park survived a live
+  `POST /api/backlog/regen` tick (not just `/reload`, which doesn't exercise the historical revert path) — the entry
+  still shows all three fields set after regen. `-005` will not re-dispatch until the condition flips `true`, which
+  should happen once `-004` is applied + verified live.
+- **2026-07-30 (slot-15, correction, same session)**: the park above initially prepended the "PARKED..." annotation
+  INSIDE this todo's own bold lead-in text. That changed the checkbox's content fingerprint, so `skip-current-task` /
+  the next regen tick treated it as remove-old-add-new: `-005` (with my priority/prereqs gate) vanished from
+  `backlog.yaml` and a fresh, UN-gated `-006` appeared with the annotation text itself as its `title`/`brief` — silently
+  defeating the park (any worker landing on `-006` would have hit the exact same wall again, undetected). **Fixed**:
+  reverted this todo's checkbox text to its exact original wording (the annotation now lives ONLY in this Progress Log,
+  which regen doesn't fingerprint) and re-applied the same `priority: 999` / `priority_override: true` /
+  `prereqs.prerequisites: [ao_orchestrator_reload_removed_live]` gate to whatever id regen restores for this todo,
+  verified to survive a fresh `POST /api/backlog/regen`; deleted the stray `-006` row. Lesson for future parks: annotate
+  in the Progress Log or a note OUTSIDE the checkbox's own text, never inside the todo's own bold lead-in — editing that
+  text is indistinguishable from editing the todo itself.

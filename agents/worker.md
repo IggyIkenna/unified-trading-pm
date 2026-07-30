@@ -314,6 +314,14 @@ ITSELF and, the moment it reads green, sends you an outbox message ("<repo> is G
    planner text left in your input box. The green signal arrives as a message on your next /progress or /heartbeat — act
    on it immediately (fresh-pull, re-run QG, ship via the normal flow).
 
+**Caution**: the resolution message validates a SPECIFIC commit, not "this repo is fixed forever." `ci_status()` now
+applies its staleness gate fleet-wide (2026-07-30 fix for `repo_blocker_resolution_signal_false_positive_2026_07_28.md`
+— previously only the watcher's own poll loop checked it, so both `watcher_green` and a `reporter` fast-path resolve
+could fire off a run that was `success` but already superseded by a newer push), but LDR still moves fast — a fresh,
+unrelated commit CAN land between resolution and your own fresh-pull and reintroduce a similar-looking red. That's
+ordinary trunk drift, not a signal bug: act on "resume" immediately (no need to preemptively re-run a full local QG
+first) and let your own quickmerge Pass-1 catch it if the trunk moved again.
+
 ### 4.5) FINDINGS CLOSURE (HARD RULE — codified 2026-06-10)
 
 If your task PRODUCES FINDINGS you are NOT fixing inline in this same task (an audit, review, consistency-check,
@@ -337,17 +345,19 @@ issue doc + actionable todos.
 ### 5) DONE — when the task meets its done_definition
 
 a) Commit your code with a conventional commit. The task brief usually tells you the exact message format. Do NOT
-`git push` yet — shipping goes through the v2 quality-gate flow in (a2), never a raw direct push.
+`git push` yet — shipping goes through the v2 quality-gate flow in (a2), never a raw direct push. **Include the
+`Quickmerge: agent` trailer in this same commit message** (blank line, then the trailer — see RULES.md § 2's ship-loop
+example) so Pass 2 doesn't need a late `git commit --amend` to add it, which re-triggers the branch-drift pre-commit
+hook after Pass 1 QG has already run and reliably loses the push race under high branch churn.
 
 a2) SHIP via the v2 canonical quality-gate flow (MANDATORY — two passes):
 
-- **Run Pass 1 AFTER committing (step a), never before.** The sentinel Pass 1 writes is keyed to
-  the exact HEAD SHA at the moment it finishes — running QG on a dirty/uncommitted tree, then
-  committing afterward, moves HEAD past the sentinel's recorded SHA, so Pass 2's `--agent` sentinel
-  check refuses (mismatch) and forces an avoidable full re-run. Commit first, so the one QG pass
-  you pay for lands on the SHA you're actually shipping
-  (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — this exact ordering mistake
-  compounded a real shared-host contention incident into extra wasted re-run cycles).
+- **Run Pass 1 AFTER committing (step a), never before.** The sentinel Pass 1 writes is keyed to the exact HEAD SHA at
+  the moment it finishes — running QG on a dirty/uncommitted tree, then committing afterward, moves HEAD past the
+  sentinel's recorded SHA, so Pass 2's `--agent` sentinel check refuses (mismatch) and forces an avoidable full re-run.
+  Commit first, so the one QG pass you pay for lands on the SHA you're actually shipping
+  (`shared_host_ram_exhaustion_kills_background_qg_2026_07_27.md` — this exact ordering mistake compounded a real
+  shared-host contention incident into extra wasted re-run cycles).
 - **Pass 1 — LOCAL QUALITY GATES** (full, no skip flags): `bash scripts/quality-gates.sh`. This MUST exit 0. A clean
   full run writes a `.qg_last_passed_sha` sentinel = your committed HEAD. A partial run (`--skip-tests` / `--skip-codex`
   / `--quick`) does NOT write the sentinel and CANNOT ship. If QG fails: fix it, re-commit, re-run until green. Do NOT

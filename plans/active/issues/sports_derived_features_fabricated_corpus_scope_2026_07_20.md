@@ -17,7 +17,7 @@ stage: [data]
 repos: [features-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, data-correctness, features, season-context, fabrication, ml-readiness, backfill]
-related: [../sports_consolidated_closeout_2026_07_19.md, ../sports_consolidated_audit_2026_07_19.md]
+related: [../sports_consolidated_closeout_2026_07_19.md, /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md]
 created: "2026-07-20"
 source: sports_consolidated_closeout_2026_07_19.md Track F corpus census (2026-07-20)
 resolved_by:

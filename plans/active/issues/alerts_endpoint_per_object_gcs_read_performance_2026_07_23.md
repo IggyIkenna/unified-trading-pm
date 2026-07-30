@@ -31,8 +31,8 @@ related:
   - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
 created: 2026-07-23
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -138,14 +138,40 @@ become its own plan — this issue doc is the durable record of the finding and 
       steps" above); the root cause is still unfixed and `_MAX_DAYS=30` would still reproduce the original OOM if a user
       requests it.
 
-- [ ] [CODE] P1. **Ship reader-side concurrent/batched GCS fetch** in `deployment-api`'s `_read_alerting_service_sync` —
-      durable stopgap that bounds the OOM risk for any date range, independent of the writer-side fix below. Done when:
-      a request for the full `_MAX_DAYS` range completes without the memory/latency profile that caused the 2026-07-22
-      incident.
-- [ ] [CODE] P2. **Batch alerting-service's writes into one JSONL-per-day object**, matching the already-proven
-      cicd-events pattern, as the real root-cause fix — needs either migrating the ~277k existing per-event objects or
-      the reader supporting both shapes during a transition. Sequenced after the reader-side fix (todo above), not
-      blocking on it.
+- [x] ✅ [CODE] P1. **Ship reader-side concurrent/batched GCS fetch** in `deployment-api`'s
+      `_read_alerting_service_sync` — durable stopgap that bounds the OOM risk for any date range, independent of the
+      writer-side fix below. Done when: a request for the full `_MAX_DAYS` range completes without the memory/latency
+      profile that caused the 2026-07-22 incident. — `deployment-api@79a1d36`: listing stays a sequential per-date walk
+      (cheap), but downloads across the whole requested window now run on a `_GCS_FETCH_MAX_WORKERS=32`-bounded
+      `ThreadPoolExecutor` instead of one sequential HTTP round-trip per object — the same bounded-fan-out pattern
+      already used for bulk GCS ops elsewhere in deployment-api and in `unified_trading_library.manifest_consolidator`.
+      A single object's download failure no longer aborts the rest of its date's batch (per-object try/except,
+      best-effort merge preserved). Unit-verified: `TestReadAlertingServiceSync::test_concurrent_fetch_merges_all_blobs`
+      (50 concurrently-fetched blobs all merge, none dropped by the fan-out) and
+      `::test_single_object_failure_does_not_drop_other_blobs` (one failing download doesn't blank the rest); full
+      `quality-gates.sh` green on the shipped SHA.
+- [x] 🚫 WONT-DO / superseded [CODE] P2. ~~Batch alerting-service's writes into one JSONL-per-day object, matching the
+      already-proven cicd-events pattern~~ — **the cited pattern no longer exists.** `cicd-events` was migrated OFF
+      one-JSONL-per-day onto one-object-per-event on 2026-07-21, specifically because the daily-shared-object writer
+      (unlocked `gsutil cp` down → local append → `cp` up) silently dropped rows under concurrent writers (measured
+      ~1/145 writer-runs survived — see
+      `/plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` +
+      `/plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md`). Implementing this todo literally
+      would reintroduce that exact data-loss race class — banned per the data-pipeline-correctness hard rule — and
+      alerting-service has multiple concurrent in-process writer call sites (`alerting_service/notifiers/router.py:539`,
+      `alerting_service/core/alert_store.py:46`) exposed to the identical race. The driving symptom (OOM/504) is already
+      fixed by the reader-side todo above (`deployment-api@79a1d36`, shipped + live) — remaining per-event object volume
+      is a cost/list-latency concern, not correctness, so there's no forcing urgency to rebuild the write path now.
+      Closed on its own merits per main's ruling 2026-07-30 (BLK-ac45347a), agreeing with the investigating agent's
+      recommendation; the 2026-07-29 `[OPERATOR]` approval above was premised on the now-defunct cicd-events pattern.
+      Full evidence: Progress Log below (`unified-trading-pm@ec23016ab`). Escalation carve-out: if per-event object
+      volume is later shown to cause a genuine correctness/availability problem (not just cost/list-latency), reopen as
+      its own plan — do not silently proceed.
+- [ ] [CODE] P3. **If/when alerting-service object-count reduction is pursued, re-scope it as its own reviewed plan**
+      (not a snap-built todo) using a GCS generation-precondition CAS design: read current generation, append in-memory,
+      write with `ifGenerationMatch`, retry-on-412 with backoff, plus concurrency-safety tests proving zero dropped rows
+      under concurrent writers (model the tests on the two cicd-events race-incident docs cited above). MUST NOT use the
+      abandoned cp-down/append/cp-up shape. (repo: alerting-service)
 
 ## Codex SSOTs
 
@@ -153,3 +179,37 @@ become its own plan — this issue doc is the durable record of the finding and 
   coverage table (predates this issue; does not yet document the performance characteristics found here).
 - `deployment_alerts_ingestion_completeness_2026_07_20.md` — the plan that added `_read_alerting_service_sync` and
   measured the 277,684-object scale (2026-07-21) without flagging the per-object read cost at that scale as a risk.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **backend_engineer (slot 8) 2026-07-30 — STOP, premise is stale, escalating via /blocked**: investigated implementing
+  the still-open P2 todo ("batch alerting-service's writes into one JSONL-per-day object, matching the already-proven
+  cicd-events pattern") and found the cited pattern no longer exists. `cicd-events` was ITSELF migrated OFF
+  one-JSONL-per-day onto one-object-per-event on 2026-07-21 — specifically because the daily-shared-object writer
+  (`gsutil cp` down → local append → `cp` up) was an unlocked read-modify-write race that silently dropped rows under
+  concurrent writers: measured ~1 row survived out of ~145 writer-runs on the PM repo's shared daily events file. See
+  `/plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md` (root cause + measurement) and
+  `/plans/archive/issues/alerts_ledger_race_two_remaining_writers_2026_07_21.md` (same fix applied to the sibling
+  `cicd/alerts/{date}/` ledger). The CURRENT `.github/actions/persist-event/action.yml` writer header says verbatim:
+  "ONE OBJECT PER EVENT (root-cause fix, not a mitigation — 2026-07-21)... writing each event straight to its OWN
+  never-overwritten object eliminates the race with zero reader changes" — i.e. cicd-events today is structurally the
+  SAME shape alerting-service already has (one-object-per-event), not the batched shape this todo asks alerting-service
+  to adopt. Implementing this todo literally would REINTRODUCE the exact data-loss race class that was root-caused out
+  of cicd-events nine days before the 2026-07-29 operator ruling approved this todo — that ruling cited "matching the
+  already-proven cicd-events pattern," which no longer describes cicd-events' live code. alerting-service also has
+  multiple concurrent in-process writer call sites (`alerting_service/notifiers/router.py:539` per delivery record,
+  `alerting_service/core/alert_store.py:46` per fired alert), so a naive daily-batch write is exposed to the identical
+  race. One piece of the plan IS still sound and unaffected by this finding: the reader
+  (`_read_alerting_service_sync`/`_read_ledgers_sync` in `deployment-api/deployment_api/routes/_repo_ci_alerts.py`) is
+  already a pure prefix-walk-then-parse-every-blob, so it would absorb a mixed corpus of per-event + daily-batch objects
+  with zero reader changes — same as how it absorbed cicd-events' writer-shape change with zero reader edits. Posted
+  `/blocked` (options: (A) implement daily batching safely via GCS generation-precondition CAS + retry-on-412 instead of
+  the abandoned cp-down/append/cp-up shape; (B) treat the premise as stale, mark this todo WON'T-DO / superseded since
+  the reader-side fix already shipped+live (`deployment-api@79a1d36`) and solved the user-facing OOM/504 symptom, the
+  remaining per-event volume is a cost/list-latency concern not a correctness one; (C) in-memory buffer +
+  periodic/shutdown flush per alerting-service process, trading the read-modify-write race for a crash-before-flush loss
+  risk instead — recommended B). NOT implementing pending the operator's re-decision; not silently skipping either.

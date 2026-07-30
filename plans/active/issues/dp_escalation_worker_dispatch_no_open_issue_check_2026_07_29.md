@@ -114,3 +114,11 @@ regression) is worse.**
   escalation-worker spawn for the same static DP-FETCH-009 condition already fully diagnosed by two prior sessions. Did
   not implement a fix (design decision + wrong-repo for this one-shot's target repo). Cross-referenced from
   `cefi_derivative_ticker_tardis_resolver_aiodns_hardfail_2026_07_28.md`'s Progress Log.
+- **2026-07-29 (data_pipeline_failure escalation worker, agt-79063c) — stronger evidence for Option A.** A separate
+  DP-FETCH-009 re-page for `(cefi, futures_chain)` dispatched a worker with no pre-linked issue doc, which (without
+  checking `plans/active/issues/` first) re-derived a stale premise and shipped a code change + a prod manifest write
+  that an existing, already-open issue doc (`deribit_options_chain_af_g4_blocker_2026_07_03.md`, 2026-07-18 correction
+  banner) had explicitly ruled out. Caught and reverted in the same session (full account in that doc's 2026-07-29
+  Progress Log entry) — no lasting damage, but this is a materially worse failure mode than redundant re-diagnosis: a
+  missing dedup check let a worker actively UNDO a standing correction. Reinforces Option A (check for an OPEN issue doc
+  on the exact tuple before spawning / before taking any write action) over B or C.

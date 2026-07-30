@@ -156,15 +156,14 @@ green, shipped via quickmerge.
 
 - [x] 1. [CODE] P2. **Add the unknown-top-level-prefix exclusion to `backfill_orphan_class_e.py`** — DONE, see "Fix
       shipped" above. `instruments-service@9a491b23`.
-- [ ] 2. [SCRIPT] P3. **Prod-bucket delete of the 8 `agent-sample-test-jupiter/` objects** — confirmed test artifacts,
-      not production data, sitting in `gs://market-data-tick-defi-prd-central-element-323112/agent-sample-test-jupiter/`
-      (exact 8 object paths listed in this doc's "What I found" section). Downgraded from human-gated 2026-07-27
-      (reversibility-verified, finding T, `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a): a fresh
-      check on `market-data-tick-defi-prd-central-element-323112` confirms 604800s GCS Soft Delete retention (effective
-      2026-05-12) — recoverable within that window like an object delete/overwrite; this is a prefix-scoped delete of an
-      exact, named 8-object list, not a whole-bucket destroy. Low urgency (8 objects, ~KB scale, already safely excluded
-      from the backfill) — batch with the next prod-bucket cleanup pass rather than a dedicated VM/session; this
-      reclassification does not itself execute the delete, that remains separate production work.
+- [x] ✅ 2. [SCRIPT] P3. **DONE 2026-07-29 — deleted.** **Prod-bucket delete of the 8 `agent-sample-test-jupiter/`
+      objects** — confirmed test artifacts, not production data, sitting in
+      `gs://market-data-tick-defi-prd-central-element-323112/agent-sample-test-jupiter/` (exact 8 object paths listed in
+      this doc's "What I found" section). Reversibility-verified per finding T (604800s GCS Soft Delete retention
+      confirmed live on `market-data-tick-defi-prd-central-element-323112`), a prefix-scoped delete of an exact, named
+      8-object list, not a whole-bucket destroy. Live-listed the prefix first (confirmed exactly 8 objects, matching
+      this doc's list byte-for-byte), deleted each via UTL `gcs_delete_object` (never subprocess gcloud/gsutil), then
+      re-listed the same prefix: **0 objects remaining.**
 - [x] 3. [DATA] P3. **Spot-check whether the same leak class exists in cefi/tradfi/prediction's completed orphan
       sweeps** — DONE. tradfi (`orphan_sweep_tradfi`) and prediction (`orphan_sweep_prediction`) both show
       `unknown_prefixes=0` — clean. **cefi shows `unknown_prefixes=170`, ALL under `unknown:_remediation_backups/`** —

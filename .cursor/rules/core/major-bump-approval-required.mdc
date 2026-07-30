@@ -79,4 +79,4 @@ On 0.x.x repos:
 - MINOR can grow: 0.9.0 → 0.10.0 → 0.11.0 (this is correct, NOT 1.0.0)
 - The 1.0.0 cross always requires human approval — semver-agent.yml enforces this
 
-CODEX: unified-trading-codex/06-coding-standards/semver.md
+CODEX: unified-trading-pm/codex/06-coding-standards/semver.md

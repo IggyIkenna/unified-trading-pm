@@ -88,8 +88,8 @@ drift_direction: advance-code
     — archived alongside its parent (0 open todos, pure history).
 
 - **Audit / doc-health reconciliation**:
-  - [`plans/active/sports_consolidated_audit_2026_07_19.md`](/plans/active/sports_consolidated_audit_2026_07_19.md) — 0
-    open todos (the 6-agent audit that fed this closeout; fully absorbed).
+  - [`plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md`](/plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md)
+    — 0 open todos (the 6-agent audit that fed this closeout; fully absorbed).
   - [`plans/active/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md`](/plans/archive/issues/sports_plan_and_docs_reconcile_findings_2026_07_24.md)
     (13 open — doc-corpus self-consistency findings):
     - **[DOC] P0.** `authoritative_for` collision, code-verified (`sports-batch-live.md` in-play claim)
@@ -152,7 +152,7 @@ drift_direction: advance-code
     - **[BACKEND] P2.** Migrate the legacy `sports_feature_subscriber.py`
     - **[REVIEW] P3.** FSS-output ↔ ml-service-input ↔ strategy-service-input parity test (after todos 2-6)
     - **[REVIEW] P3.** Cross-reference against the "wire sports end-to-end" plan
-  - [`plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`](/plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md)
+  - [`plans/active/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md`](/plans/archive/issues/sports_odds_ownership_registry_split_brain_and_bogus_api_football_denominator_2026_07_15.md)
     (2 open):
     - **[DOCS] P3.** Codex: state odds=MTDS-domain (footystats exception in IS is PREDICTIONS, not ODDS)
     - **[VERIFY] P2.** Reconcile the post-07-13 rebuild delta (`PLAYER_VALUES` −10,934, `ODDS` −3,180 cells)
@@ -174,7 +174,7 @@ drift_direction: advance-code
     - **[DATA] P0.** T2.10 — 47,253 phantom `api_football × trades` `captured` rows in the MDT canonical index
   - [`plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`](/plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md)
     — 0 open todos.
-  - [`plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`](/plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md)
+  - [`plans/active/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md`](/plans/archive/issues/sports_odds_team_name_alias_gap_south_america_2026_07_09.md)
     — 0 open todos.
   - [`plans/active/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md`](/plans/archive/issues/sports_odds_capture_pipeline_scheduling_status_unknown_2026_07_23.md)
     — 0 open todos.
@@ -385,7 +385,7 @@ drift_direction: advance-code
   `/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
   `/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`,
   `/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`,
-  `/plans/active/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
+  `/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,
   `/plans/active/issues/mdps_features_deadcode_consolidation_2026_07_20.md`,
   `/plans/archive/issues/mdps_prior_seed_context_thread_unsafe_2026_07_20.md`,
   `/plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md`,

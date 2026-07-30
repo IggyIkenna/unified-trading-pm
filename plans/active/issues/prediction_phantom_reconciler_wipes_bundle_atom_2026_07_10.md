@@ -267,10 +267,10 @@ stranded in `plans/archive/` where the backlog regen (active-plans-only) would n
 
 > Read-only live re-diagnosis against `market-data-tick-pred-prd-central-element-323112`'s
 > `_index/availability_index.parquet` (786,644 rows, fresh single-walk read — not cached), per
-> `plans/active/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`'s "Combined residual-row diagnosis" todo. Script:
-> `instruments-service/scripts/diagnose_blank_data_type_and_polymarket_source_residuals_2026_07_27.py` (lifecycle:
-> oneoff, delete after this diagnosis's gate is confirmed GREEN). No writes were made — both predicates measured 0 rows,
-> so the snapshot-then-write purge/backfill machinery was never exercised.
+> `plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md`'s "Combined residual-row diagnosis"
+> todo. Script: `instruments-service/scripts/diagnose_blank_data_type_and_polymarket_source_residuals_2026_07_27.py`
+> (lifecycle: oneoff, delete after this diagnosis's gate is confirmed GREEN). No writes were made — both predicates
+> measured 0 rows, so the snapshot-then-write purge/backfill machinery was never exercised.
 
 - **(a) 17 blank-`data_type` phantom aggregate-marker rows — ALREADY RESOLVED, 0 remain.** `df["data_type"]` has exactly
   5 distinct values across all 786,644 rows (`book_snapshot_5`, `trades`, `prediction_canonical_question_group`,

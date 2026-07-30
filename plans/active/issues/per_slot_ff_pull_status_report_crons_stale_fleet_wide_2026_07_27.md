@@ -22,11 +22,11 @@ summary: >-
   per-slot clones may carry their own crontab); and the github-glue-slot-refresh.timer that IS firing is unrelated (it
   refreshes the GitHub-glue runner's clone to main, not worker-slot LDR ff-pull). P2.
 status: open
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao] # corrected 2026-07-30 (/ag-closeout-audit ao) -- was [cross-cutting]; per-slot AO crons, not multi-AG
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
@@ -44,7 +44,7 @@ tags:
   ]
 related: [/codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-30
 priority: P2
 parent_epic: orchestrator_master
 source:
@@ -91,14 +91,59 @@ urgent, but it is a real observability/robustness blind spot rather than a cosme
 
 ## Status / next step
 
-Captured only; **not yet diagnosed on the slot side.** Needs an owner on the agent-orchestrator / infra side to (1)
-confirm from a slot vantage (readable per-slot crontab / systemd timer) whether the two crons are actually firing, (2)
-correlate against the disk-resize + orchestrator-restart timeline, and (3) re-arm the cron wiring if it was dropped.
-Low-risk today, but re-check the 19/19 trend — if it keeps climbing or drift/dirty counts start rising, escalate.
+**RESOLVED for 2 of 3 hosts; residual localized to the human-planning VM (2026-07-30 update, slot 4).**
+
+Diagnosed from a slot vantage (`.tabs/4` on host `ip-172-31-5-118`):
+
+1. **Direct live evidence on this host**: both cron children were caught actually RUNNING mid-tick via `ps aux`
+   (`/usr/sbin/cron -f -P` spawning `slot-cron-ff-pull.sh --all-slots --quiet` at the `:30` boundary), and the actual
+   log files (`/run/user/1000/slot-cron-ff-pull.1000.log`, `/run/user/1000/slot-git-status-report.1000.log` — NOT
+   `/tmp/*.log` as the script header's example install line suggests; the real cron line redirects to `/run/user/1000/`)
+   show **continuous, successful 5-min ticks through 05:27-05:30Z with zero gap**, `[ok] slot N — 25 repos reported` for
+   every slot 0-16 on this host. The user crontab itself is unreadable from this session (`fopen: Permission denied` on
+   `/var/spool/cron/crontabs/ubuntu`, and `sudo` is blocked by `no_new_privs`), so the cron-table wiring itself couldn't
+   be inspected directly — but the live process + log evidence is stronger proof of "is it firing" than reading the
+   crontab text would be.
+2. **Fleet-wide current state** (`GET /api/fleet/git-health`, queried live): `reporter_stale_slots: 3`,
+   `ff_cron_stale_slots: 3` out of **36 total slots across 3 hosts** — down from the reported 19/19. Both my own host
+   (`ip-172-31-5-118`, slots 1-16) and the `hk` host show **zero** stale slots. The near-universal 07-27 staleness has
+   **self-resolved** on both actual worker-fleet hosts — plausibly it WAS the disk-resize/restart disruption, and it
+   cleared once that settled (this host's `journalctl --list-boots` only retains back to 2026-07-29 18:15, so the 07-27
+   event itself couldn't be directly re-confirmed from here, but the before/after count (19/19 → 0/16 on the hosts
+   checked) is itself strong evidence the disruption was transient, not a dropped/broken cron wiring).
+3. **The 3 remaining stale slots are NOT fleet-wide** — all 3 (`slot 0, 1, 2`) are on a single host, resolved via
+   `aws ec2 describe-instances` to `i-0dd9812a96cdda5dc` (private IP `172.31.0.185`) = the **human-planning VM**
+   (CLAUDE.md: "interactive only", not a worker-fleet host). `slot 0` has been stale since **2026-07-25** (predates the
+   07-27 disk-resize event entirely) and `slot 1`/`slot 2` since **2026-07-28T14:02Z**. This looks like a characteristic
+   of that VM (an interactive box whose `.tabs/0-2` clones aren't kept warm by a standing cron the same way the
+   always-on worker hosts are) rather than a re-run of the same fleet-wide incident — but it's still worth a human eye
+   on that VM specifically since it's a genuinely different situation than what was originally reported.
+4. **Could not directly re-arm/inspect cron on the human-planning VM**: attempted `aws ssm send-command` against
+   `i-0dd9812a96cdda5dc` — denied (`AccessDeniedException`, my session's AWS identity is IAM user `ikenna-worker`, not
+   the ambient `uts-orchestrator-epic-role`). Also attempted `sts assume-role` onto `uts-orchestrator-epic-role` —
+   denied. Per `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, the self-grant rule applies only
+   when already acting AS `uts-orchestrator-epic-role`/`unified-trading-sa`; `ikenna-worker` is a genuinely different
+   identity this worker cannot assume, so this is a legitimate escalation rather than a self-service gap — see the new
+   todo below.
+
+Bottom line: **no fleet-wide cron-wiring breakage exists today** — this closes the original "is it still fleet-wide"
+question. The one open thread is operator/human-planning-VM-side: confirm whether slots 0-2 there need re-arming or
+whether that stalenesss is an accepted characteristic of an interactive-only VM.
 
 ## Todos
 
-- [ ] [INFRA] P2. **Diagnose + re-arm the per-slot ff-pull/git-status-report crons** — confirm from a slot vantage
+- [x] [INFRA] P2. **Diagnose + re-arm the per-slot ff-pull/git-status-report crons** — confirm from a slot vantage
       whether `slot-cron-ff-pull.sh`/`slot-git-status-report.sh` are actually firing fleet-wide, correlate against the
       2026-07-27 disk-resize + orchestrator-restart timeline, and re-arm the cron wiring if it was dropped (see "Status
-      / next step" above).
+      / next step" above). — ✅ 2026-07-30, slot 4: confirmed firing (live process + log evidence) on both worker-fleet
+      hosts (`ip-172-31-5-118`, `hk`); fleet-wide 19/19 has self-resolved to 3/36, all 3 isolated to the human-planning
+      VM, not the worker fleet — nothing to re-arm on the hosts this worker could reach.
+- [ ] [OPERATOR] P3. **Check cron/ff-pull health on the human-planning VM (`i-0dd9812a96cdda5dc`) for slots 0-2** —
+      `slot 0` stale since 2026-07-25, `slot 1`/`slot 2` since 2026-07-28T14:02Z per `GET /api/fleet/git-health`. Needs
+      either (a) SSM/direct access to that VM to confirm whether `slot-cron-ff-pull.sh`/ `slot-git-status-report.sh` are
+      wired there at all (plausibly they're not, since it's an interactive-only VM per CLAUDE.md, not a standing worker
+      host) and re-arm if genuinely dropped, or (b) a ruling that this staleness is expected/accepted for that VM's
+      slots and the git-health aggregator should exclude/label them differently. A worker session here (AWS IAM user
+      `ikenna-worker`) could not reach it: `ssm:SendCommand` and `sts:AssumeRole` onto `uts-orchestrator-epic-role` were
+      both denied — this is a genuinely different identity than the ambient orchestrator role, so it doesn't qualify for
+      the IAM self-service rule (repo: `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`).

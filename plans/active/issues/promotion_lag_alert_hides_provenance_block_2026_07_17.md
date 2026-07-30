@@ -109,9 +109,37 @@ about the alert that reports the residue.
 
 ## Todos
 
-- [ ] [DEVOPS] P2. **Ship the "Fix direction" items** — none of the 3 fixes above (reclassify the branch-health alert as
-      `PROVENANCE-BLOCKED` instead of `PROMOTION LAG`, clear the 2 current blocks at source, confirm the `_backmerge`
-      merge-commit carve-out exemption) has been implemented yet.
+- [x] ✅ [DEVOPS] P2. **Ship the "Fix direction" items — CONFIRMED ALREADY SHIPPED, this todo was stale.** Verified
+      2026-07-30 (slot 1, `/autonomous` dispatch): `scripts/cicd/promotion_lag_monitor.py` (git blame: `f9b64f15d`,
+      2026-07-17) already implements fix #1 exactly — a forward `LDR→main` pair checks `_provenance_blocked(repo)` and,
+      when true, emits
+      `⛔ BLOCKED by the provenance gate — non-quickmerge CODE on LDR     (N change(s), oldest Mm). NOT a stuck pipeline. If the bypass is the LDR tip: quickmerge --agent --files it. If     it is MID-HISTORY: scripts/cicd/reprovenance_bypass.sh <sha> --push. Do NOT hand-arm auto-merge.`
+      — this is the EXACT wording the operator saw in tonight's `#ci-failures` alert for
+      `features-service`/`market-tick-data-service`. Fix #3 (`_backmerge` merge-commit carve-out) is confirmed in
+      `check_strict_quickmerge.py::commit_violates` (a 2-parent commit is exempt unconditionally,
+      `"merge/reconcile commit"`). Fix #2 (clear the two blocks named in this doc, `market-tick-data-service@d302f07a` +
+      `deployment-ui`) is STALE — those specific 2026-07-17 offenders are 13 days old now and long since superseded by
+      many more bypasses on both repos; **cleared the CURRENT (2026-07-30) blocks instead** — see this session's real
+      todo below, this doc's original offenders are moot/overtaken, not separately re-chased.
+- [x] ✅ [DEVOPS] P1. **Cleared the LIVE 2026-07-30 provenance blocks for `features-service` (4 bypassing commits) and
+      `market-tick-data-service` (38 bypassing commits)** — both MID-HISTORY (not the LDR tip), so per this doc's own
+      fix #2 remedy, re-shipped via `scripts/cicd/reprovenance_bypass.sh <sha>` (one empty, provenanced
+      `Reprovenance: <sha>` blessing commit per bypass, verified via the REAL `check_strict_quickmerge.py` scan — never
+      a re-implemented heuristic) rather than reverting real shipped feature/bugfix work spanning back to
+      2026-07-13/07-18. `features-service` pushed clean (`origin/live-defi-rollout` fast-forward).
+      `market-tick-data-service` hit a genuine concurrent-push conflict from another slot mid-session (`cb6331ba`,
+      unrelated OpenBB-adapter deletion) — resolved via `git rebase --autostash` (preserved an unrelated foreign
+      dirty-WIP file untouched throughout), then pushed clean. Both repos'
+      `check_strict_quickmerge.py --range origin/main..HEAD` now report `✅ no bypassed code commits`. **Did NOT
+      hand-arm auto-merge on either** (per this doc's own explicit warning) — the actual PR merge for both is now
+      additionally gated on the separate, unrelated, currently-active GitHub Actions billing wall
+      (`/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`) — the provenance
+      block is cleared, but neither promote PR can complete until that operator-only wall lifts. No workflow/alerting
+      code change was needed for this todo (the alert already says what it means); the actual `PROMOTION LAG CLEARED`
+      Slack recovery message for these two pairs will fire automatically once (a) the billing wall lifts and (b) the
+      promote PR actually merges — the recovery-bookend mechanism itself (`branch-health.yml`'s `lag-notify-resolved` +
+      `promotion_lag_monitor.py`'s per-pair clear-diff) was independently verified this session to be correctly
+      implemented, not missing.
 
 ## Provenance
 

@@ -37,7 +37,7 @@ related:
     /codex/04-architecture/backtest-groups.md,
     plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_live_availability_and_source_latency_2026_07_24.md,
-    /plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
+    /plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md,
     /plans/archive/2026_07/data_completion_sports_history_2026_07_24.md,
     /plans/active/issues/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
   ]
@@ -205,7 +205,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
       `launch-mtds-live.sh --asset-group sports --shard-spec sports:odds_api:trades` —
       `/plans/archive/2026_07/data_completion_sports_history_2026_07_24.md`). No follow-up scoping plan is needed. The
       genuinely remaining work is tracked in 2 other docs, not here: **(a)** the P0 todo in
-      `/plans/active/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — "Fix MTDS's
+      `/plans/archive/issues/gcs_path_resolution_centralization_audit_sports_prediction_2026_07_28.md` — "Fix MTDS's
       live-mode sports odds writer shape mismatch BEFORE the live connector runs" (`live/websocket_runner.py`'s non-CeFi
       `live_tick_blob_path` + `live/connectors/odds_api_ws.py::_parse_fixture_response` must write one shard per
       (bookmaker, league, fixture) matching the batch `venue_fetch.py::_build_sports_shard_path` shape, instead of one
@@ -284,7 +284,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   exec-dispatch bug, not 2 new per-asset-group scripts). **Major finding**: the "FSS live handler" todo's premise was
   factually wrong — `features_service/sports/cli/handlers/live_handler.py` is already shipped, CLI-wired, and
   unit-tested (confirmed by direct code read + git history back to 2026-05-08), and
-  `codex/04-architecture/features-service-architecture.md` already documents this correctly; only
+  `/codex/04-architecture/features-service-architecture.md` already documents this correctly; only
   `batch-live-architecture.md` §4's row + its broken `p1-todo-10` cross-reference were stale. Did NOT file the requested
   new "scope a LiveHandler" design doc (its premise — that no handler exists — is false; filing it would have introduced
   a new incorrect claim into the corpus) — instead corrected §4's row/pointer and flipped this todo to done, since the

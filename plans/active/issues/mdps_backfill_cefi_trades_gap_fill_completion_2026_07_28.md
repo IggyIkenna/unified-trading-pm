@@ -29,8 +29,9 @@ scope: [engineer, admin]
 tags: [cefi, mdps, backfill, hyperliquid, manifest-reconciliation, heavy-io, iam-permission]
 related:
   [
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/issues/heartbeat_stall_watcher_autokill_never_works_in_production_2026_07_27.md,
-    /plans/active/issues/lighter_zksync_trades_generic_tardis_path_bypasses_no_batch_source_2026_07_29.md,
+    /plans/archive/issues/lighter_zksync_trades_generic_tardis_path_bypasses_no_batch_source_2026_07_29.md,
   ]
 created: 2026-07-29
 parent_epic: cefi_master

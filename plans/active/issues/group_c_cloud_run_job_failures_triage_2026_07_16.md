@@ -59,7 +59,7 @@ related:
     ./dp_catalog_not_running_sports_prediction_2026_07_15.md,
     ./recon_bucket_missing_nightly_recon_failing_2026_07_13.md,
     ./defi_scheduled_collection_outage_paused_crons_2026_07_16.md,
-    ./mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
+    /plans/archive/issues/mutable_git_sha_tag_restamping_cloudbuild_2026_07_13.md,
     ./aws_consolidator_batch_logstream_iam_gap_2026_07_16.md,
     ../tradfi_v9_stage1_finish_2026_07_06.md,
   ]
@@ -367,3 +367,11 @@ batch dates to yesterday UTC (`unified-trading-library@3485c4d0`), propagated to
 (`market-tick-data-service@b8365c9d`, image `@b92a8680`). Unblocks the 11 DeFi daily-batch collectors (verified
 SUCCEEDED) and the MTDS `*-t1-recon` jobs that hit the same crash. The cefi/defi catalogue `CATALOGUE_SHRINK_BLOCKED`
 sub-finding remains a separate open owner-decision (unchanged).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Sole todo carries an
+  explicit dated operator ruling ('RULED 2026-07-29 — proper rewrite, not a shrink-allowance flag') plus
+  still-undiagnosed adjacent failures. NOTE: this doc's real asset_group spans
+  [cefi,defi,tradfi,prediction,sports,meta], not infra — a residual scope-leak from this session's pre-fix Phase 0
+  population; classified here for completeness, no state changed.

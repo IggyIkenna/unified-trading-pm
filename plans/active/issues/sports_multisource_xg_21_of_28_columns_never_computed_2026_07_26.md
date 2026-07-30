@@ -111,10 +111,23 @@ NOT attempting to improvise 21 formulas here.
       from `MULTISOURCE_XG_COLUMNS`. For each group kept, scope a properly-sized follow-up todo (source data location,
       formula, done-when) before dispatching as AO work — this doc intentionally stops at diagnosis, per the "figure out
       how X should look" dispatch-scope rule.
-- [ ] [REVIEW] P3. Check whether the same `= pd.NA`-then-never-filled idiom exists elsewhere in
-      `features_service/sports/` (the investigation that found this bug also flagged `writer.py`'s `season_context`
-      columns as using an identical "initialized to pd.NA" pattern per its own code comment — not independently verified
-      as dead here, just flagged as worth the same check).
+- [x] ✅ [REVIEW] P3. **DONE 2026-07-30 — checked, NOT the same bug.** Read
+      `features_service/sports/calculators/season_context.py` (433 lines) in full. `writer.py`'s comment ("initialized
+      to pd.NA and only filled when matchday/standings data is available") describes real, deliberate honest-absence
+      design, not dead placeholder code: `compute_season_context`/`compute_season_context_for_fixture` initialize
+      `out[col] = pd.NA` (line 255) as a pre-fill default, then `_apply_round_and_phase_columns`/
+      `_apply_regime_feature_columns` conditionally OVERWRITE every column with a real computed value whenever the
+      upstream `matchday`/`total_matchdays`/`round_name` inputs are present — genuine assignment sites exist for
+      `matchday`, `round_name`, `competition_phase` (via `_competition_phase`, which returns `None` — not a fabricated
+      value — on NaN input, the fix for the season-context fabrication bug tracked separately in
+      `sports_derived_features_fabricated_corpus_scope_2026_07_20.md`), `games_remaining`, `points_at_stake`
+      (`_points_at_stake`), and all 7 home/away regime-feature pairs (`matches_played_current_season_*`,
+      `season_start_flag_*_*`, `history_depth_*_*`, `prior_blend_weight_*`, each via `_regime_row_from_history`/
+      `_apply_regime_feature_columns`). Every one of the 20 `SEASON_CONTEXT_COLUMNS` has a real, grep-confirmed
+      assignment site — unlike `multisource_xg`'s 21 dead columns (zero assignment sites anywhere in the repo), this is
+      complete, working honest-absence computation, not unimplemented placeholder schema. **Verdict: the dead-idiom
+      pattern this doc's finding warned about does NOT recur in `season_context.py`** — no code change needed, no
+      follow-up filed.
 
 ## Codex SSOTs
 

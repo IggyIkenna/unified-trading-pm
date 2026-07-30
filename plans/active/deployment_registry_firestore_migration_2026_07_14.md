@@ -28,8 +28,8 @@ related:
 created: "2026-07-14"
 last_updated: "2026-07-14"
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 16
@@ -114,7 +114,7 @@ heartbeat
 
 ## Todos
 
-- [ ] [DEVOPS] P0. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — self-service, no operator sign-off
+- [x] ✅ [DEVOPS] P0. **Retagged from `[OPERATOR]` (2026-07-28 gate-cleanup pass)** — self-service, no operator sign-off
       required: deploy `deployment-api` carrying the dual-write flag (`utl@bf56debe` + `deployment-api@8e93a82`,
       `543860c`), enable `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` (typed config, not `os.getenv`) on the fleet,
       and soak per the operator's 2026-07-14 checklist already on record in
@@ -125,9 +125,25 @@ heartbeat
       the full per-VM record from Firestore for a sampled set of live VMs; (4) parity — for N sampled live deployments
       the Firestore doc equals the GCS blob (status, `last_heartbeat_at`, counters, resource fields). P3 (GCS
       decommission) is self-halted on this real data-loss guard (prod Firestore `deployments` measured EMPTY
-      2026-07-17); the GCS blob delete stays blocked until all 4 criteria measure true, and P5 (verify + codex-sync)
-      stays `draft` behind it. **If any of the 4 measured criteria fails, re-open to a human** — do not proceed to P3's
-      drop-GCS-write / snapshot-then-delete todos regardless.
+      2026-07-17); the GCS blob delete stays blocked until all 4 criteria measure true, and P5 (verify + codex-sync) —
+      **DONE, deploy verified + GO/NO-GO measured FAIL, evidence + finding filed 2026-07-30 (slot 12).** Deploy
+      confirmed live: `uts-shared-deployment-api` revision `uts-shared-deployment-api-00332-8gl`, image
+      `deployment-api:acdf634`, Cloud Build `b99e78c1-f5fe-449a-ab49-01ffd70f7b31` SUCCESS (commit
+      `acdf634187bf7967bd36c983824cb4316a47435d`, descendant of both cited commits), Cloud Run env carries
+      `DEPLOYMENT_REGISTRY_FIRESTORE_DUALWRITE=true` — the literal ask is done. GO/NO-GO measured directly against prod:
+      criterion 1 FAILS (Firestore `deployments` = 192 docs, all reap-created failed/completed, 0 `status=running`, 0/16
+      overlap with live GCE VMs); criteria 2 + 4 untestable as a direct consequence; criterion 3's read-path plumbing
+      verified working (`GET /vm-deployments/{id}` correctly serves a Firestore-resident record). Root cause: the Cloud
+      Run env flag only governs deployment-api's OWN process (its reads + its own `reap_stale()` sweep, which is what
+      produced those 192 docs) — the real write source (`deployment_heartbeat.py`, run ON each VM) reads the flag from
+      GCE **instance** metadata, and no real production VM launcher (only a non-prod benchmark launcher) passes it — so
+      "on the fleet" was never actually achieved by this deploy alone. Filed as its own scoped finding + fix-todos
+      (root-caused, two fix options given, NOT a same-turn fix — 137+ launcher scripts, no single safe choke point):
+      `unified-trading-pm@157be4812f4253585cbb96aa365e64fc7d1fad9b`,
+      `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md`. **P3's
+      HALT stays correctly in force** — per this todo's own instruction, re-opened to a human/tracked follow-up rather
+      than proceeding to any GCS-write-drop/delete step. stays `draft` behind it. **If any of the 4 measured criteria
+      fails, re-open to a human** — do not proceed to P3's drop-GCS-write / snapshot-then-delete todos regardless.
 
 ## Migration invariants (hold across every phase)
 
@@ -172,3 +188,28 @@ heartbeat
   provisioning before P1 exists, `eb2a87e56`). Switched P1–P5 to `status: draft` (ironclad not-ingested) + a draft-gated
   handoff (each phase's last todo activates the next); removed P3's `[OPERATOR]` gates (snapshot-before-delete is the
   safeguard, no human in the loop). Only P0 is dispatchable now (`4efa7502c` + this follow-up).
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY, conflict-cleared (infra tranche, dispatch agt-30721a) —
+  bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
+  `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
+  `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+  Companion gated finalize plan authored: `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md`.
+- **2026-07-30 (slot 12, infra)** — Worked the only open todo. Deploy confirmed already live (`deployment-api:acdf634`,
+  build `b99e78c1-f5fe-449a-ab49-01ffd70f7b31` SUCCESS, dual-write flag `true` on Cloud Run env) — the literal deploy
+  ask was done before I picked this up. Measured all 4 GO/NO-GO criteria directly against prod (Firestore REST API, full
+  pagination + `gcloud compute instances list`): criterion 1 FAILS (0/192 Firestore docs have `status=running`; zero
+  overlap with the 16 live GCE VMs) because the Cloud Run flag only reaches deployment-api's own process, not the
+  VM-side heartbeat writer (which reads GCE instance metadata that no real launcher sets). Filed
+  `/plans/active/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md` with root
+  cause + two fix options + follow-up todos (deliberately NOT fixed inline — touches 137+ VM launcher scripts, no safe
+  single choke point, needs its own scoped + soaked change). Todo flipped done with this honest FAIL result; P3's HALT
+  is unaffected and stays correctly in force.
+- **2026-07-30 (slot 7, infra)** — Worked the gated
+  `deployment_registry_firestore_migration_2026_07_14_finalize_2026_07_30.md` twin: independently re-measured GO/NO-GO
+  criterion 1 with fresh live data (193 Firestore docs, 0 `status=running`, 0 overlap with 50 currently-live GCE VMs —
+  same FAIL, confirmed not stale), added a Progress Log entry to
+  `deployment_registry_firestore_p3_cutover_2026_07_14.md` re-confirming its HALT stays in force. **This doc's own
+  single todo has been `[x]` since slot-12's pass, but it is intentionally NOT being archived here** — its archival is
+  reserved for `deployment_registry_firestore_p5_verify_2026_07_14.md`'s own final todo (own 2026-07-14 Progress Log:
+  "the codex/CLAUDE.md doc updates + master archival ... stay BLOCKED on P3 ... completing"), which is still correctly
+  blocked. The finalize plan itself archived (its own todo done, no lock); this overview stays `active` until P3
+  unblocks and P5 runs.

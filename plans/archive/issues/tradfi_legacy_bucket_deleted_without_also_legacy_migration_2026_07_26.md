@@ -326,8 +326,9 @@ Over a **120-day** window it returns **exactly ONE** event and no create:
    bucket's **generation**, which is obtainable solely from the 403-denied list call. A worker cannot close this loop;
    an operator (or any principal with `storage.buckets.list`) can, in one command.
 
-Folding this correction into the doc's own summary and the `[OPERATOR]` P0's arithmetic is drafted as todo 1 of
-`/plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (`status: draft`, awaiting operator approval).
+Folding this correction into the doc's own summary and the `[OPERATOR]` P0's arithmetic was drafted as todo 1 of
+`/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` (shipped + archived 2026-07-30, all 9 todos
+done).
 
 ## 2026-07-26 operator recovery-window verdict — CLOSED, both `[OPERATOR]` items resolved
 
