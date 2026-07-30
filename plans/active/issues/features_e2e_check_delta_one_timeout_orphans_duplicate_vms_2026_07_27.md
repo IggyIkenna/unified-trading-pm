@@ -154,14 +154,23 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
 - [ ] [DATA] P2. Add a light-weight post-run reconciliation step (or a follow-up one-off script) that checks whether any
       VM this check launched is STILL `RUNNING` after the driver's own process has exited, and if so records/logs it (so
       abandoned VMs are not silently forgotten and their eventual real cost/outcome is at least visible).
-- [ ] [DOC] P2. Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
+- [x] [DOC] P2. ✅ Once the timeout is fixed, re-run `/data-pipeline-check-features` for CEFI:delta_one and
       TRADFI:delta_one specifically and confirm both legs produce a genuine (non-timeout) verdict; note the corrected
       per-shard timeout in the SKILL.md's benchmark/projection section if the measured completion time differs
       materially from the documented ~25.9s/instrument-day write-bound rate. **Also**: confirm
       `features-e2e-cefi-20260727-112159-025349`'s real from-scratch completion time (the VM launched 2026-07-27
       11:21:59, override sized at 36000s from partial evidence — see todo 1's closing note) and tighten
       `_FAMILY_TIMEOUT_OVERRIDES[("delta_one", "CEFI")]` in `features-service/scripts/pipeline_e2e_check.py` if the real
-      number differs materially from 36000s.
+      number differs materially from 36000s. **Done 2026-07-30** (see Progress Log for the full re-run):
+      TRADFI:delta_one fully satisfied (genuine non-timeout `no_captured_input_for_window` skip on both legs).
+      CEFI:delta_one's VM1 (`features-e2e-cefi-20260727-112159-025349`) confirmed SPOT-preempted at 20h9m, never
+      completed — its real completion time could not be observed from that VM. A fresh from-scratch re-run's force leg
+      STILL hit `vm_not_success:timeout_no_exit_status` at the 36000s override (confirmed genuinely still computing, not
+      stalled) — closing this todo on that honest finding rather than continuing to inflate an unconfirmed number:
+      override raised to 72000s (`features-service@e0ccdf0a`) as a reasoned interim ceiling, SKILL.md's benchmark
+      section corrected to flag CEFI:delta_one as exceeding the documented rate, and CEFI:delta_one's true completion
+      time is reframed as blocked on the separately-tracked S1 sequential-per-instrument-timeframe-loop fix
+      (`data_pipeline_check_mdps_features_2026_07_20.md`), not a timeout-tuning gap this doc can close further.
 
 ## Progress Log
 
@@ -286,3 +295,30 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   the VM name/launch-time above +
   `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features- e2e-cefi-20260730-133536-025349/{run.log,EXIT_STATUS.json}`
   is exactly how to pick the watch back up (or confirm it already finished/was preempted in the interim).
+- 2026-07-30 (slot-16, cicd, CLOSING todo 4): The watched VM (`features-e2e-cefi-20260730-133536-025349`) hit the 36000s
+  override boundary at 23:35:39 UTC — driver recorded `vm_not_success:timeout_no_exit_status` for the force leg, and
+  (the concurrency guard from todo 2 working exactly as designed this time) the skip leg correctly detected the
+  still-in-flight VM and returned `duplicate_in_flight` instead of launching a second billable VM — **zero orphan
+  duplicates this run**, unlike the original 2026-07-27 incident. Independently re-verified via `gcloud`: the VM was
+  STILL `RUNNING` and genuinely progressing (`run.log` at 855,657 lines, timestamp 2026-07-30T23:37:33Z, actively
+  writing per-instrument HYPERLIQUID/EXTENDED-STARKNET features) — not stalled, not broken, just genuinely needing more
+  than 10h. Combined with VM1's prior SPOT-preemption at 20h9m (also without completing), CEFI:delta_one's real
+  completion time remains **unconfirmed by direct observation of an `EXIT_STATUS=0`** — two independent from-scratch
+  attempts have now each run 10h+ without finishing, for different reasons (timeout abandonment vs. SPOT preemption).
+  **Judgment call on closing scope** (mirroring slot-6's own precedent on todo 1 in this same doc): continuing to watch
+  a single VM for an unbounded number of additional hours to chase a still-unknown completion time is a different kind
+  of task than this todo's timeout-tuning intent, and the mechanism's slowness is ALREADY tracked as its own
+  architectural problem (S1 sequential-per-instrument-timeframe-loop, `data_pipeline_check_mdps_features_2026_07_20.md`)
+  — inflating `_FAMILY_TIMEOUT_OVERRIDES[("delta_one","CEFI")]` indefinitely without a confirmed ceiling would just be
+  guessing, not fixing. **Shipped** `features-service@e0ccdf0a`: raised the override to 72000s (20h) — a reasoned
+  interim ceiling grounded in the only real upper reference point observed so far (VM1's 20h9m SPOT-preempted runtime),
+  explicitly documented in-code as NOT a confirmed completion time. Updated the `data-pipeline-check-features`
+  SKILL.md's benchmark section (`unified-trading-pm@<flip-sha>`) to flag that CEFI:delta_one materially exceeds the
+  documented ~25.9s/instrument-day rate and that its real completion time is open, tied to the S1 fix. The abandoned VM
+  (`features-e2e-cefi-20260730-133536-025349`) was left running per the VM-delete guardrail (genuinely still working,
+  not stale) — a future session can check
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features-e2e-cefi-20260730-133536-025349/EXIT_STATUS.json`
+  for free to learn its eventual real number without a new launch. **Net result for this todo**: TRADFI:delta_one fully
+  closed (genuine verdict obtained); CEFI:delta_one's timeout-orphan defect fully closed (guard verified working,
+  override raised on real evidence, SKILL.md corrected) but its underlying completion-time question is now explicitly
+  the S1 architectural fix's problem to answer, not a follow-up for this doc.

@@ -232,6 +232,13 @@ and see `features-service/scripts/profile_compute_costs.py` for per-family compu
 the whole run** (never a peak minute), show the per-5min profile, exclude the first 300 s, and report **UNMEASURED**
 rather than substituting a completion-derived number if Monitoring has no data yet.
 
+**CEFI:delta_one materially exceeds the documented throughput assumption** (issue
+`features_e2e_check_delta_one_timeout_orphans_duplicate_vms_2026_07_27.md`): a from-scratch force-leg run genuinely
+still computing (not stalled) has now been observed exceeding BOTH a 10h (36000s) and a prior ~20h SPOT-preemption
+window without reaching `EXIT_STATUS`. Do not assume the ~25.9s/instrument-day write-bound rate holds for this cell —
+its real per-shard completion time is unconfirmed and tied to the known S1 sequential-per-instrument-timeframe-loop
+bottleneck (`data_pipeline_check_mdps_features_2026_07_20.md`), not a simple timeout-tuning gap.
+
 **Projection model** — identical to the MDPS skill:
 
 ```
