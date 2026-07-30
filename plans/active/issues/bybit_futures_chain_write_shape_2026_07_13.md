@@ -100,7 +100,21 @@ workspace).
 
 ## Todos
 
-- [ ] [DATA] P2. **Backfill/re-shape BYBIT `futures_chain` historical writes to the correct `underlying=` hive form** —
-      confirm the exact affected date range, then reshape the flat glued-symbol files (2026-01→2026-07-09 window) and
-      the legacy flat-sibling era (2023-06/2025-01) to canonical `underlying=` hive paths; not started, no GCS objects
-      modified yet.
+- [x] ✅ [DATA] P2. **[already covered by
+      `/plans/archive/2026_07/bybit_futures_chain_write_shape_migration_2026_07_13.md`, see that doc for execution]** —
+      closed 2026-07-30 (`/na-eligibility-audit` tranche=cefi, stale-citation correction). Backfill/re-shape BYBIT
+      `futures_chain` historical writes to the correct `underlying=` hive form. **The owning agent-orchestrator plan
+      named in this doc's own 🟡 TRACKED banner has since reached `status: complete` (0 open / 11 done) and was ARCHIVED
+      2026-07-15**, so the banner's own release condition ("leave `status: open` here until the plan reports the fix
+      complete") is satisfied. That plan's phases record the full day-by-day audit, the reshape script, the dry-run
+      parity check, the `--apply`, the post-apply verification (0 non-canonical shapes remaining), and the manifest-row
+      rewrite. The "not started, no GCS objects modified yet" text above was written before that plan ran and was never
+      updated.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA-STALE, citation corrected - the owning plan
+  named in this doc's own TRACKED banner (`bybit_futures_chain_write_shape_migration_2026_07_13.md`) reached
+  `status: complete` (0 open / 11 done) and was ARCHIVED 2026-07-15, so the banner's "leave open until the plan reports
+  the fix complete" condition is met. Todo closed with that evidence; doc is now ARCHIVE-worthy but
+  `locked_by: live-defi-rollout` blocks autonomous archival.

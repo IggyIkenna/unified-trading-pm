@@ -242,6 +242,7 @@ against the reproduction script.
       Fixed with the same treatment this doc's book_snapshot_5 fix used: added `"derivative_ticker": {}` to
       `_WIRE_COLUMN_RENAMES` in `tardis_shared.py` (verified live, 2026-07-30 — `funding_rate`/`open_interest`/
       `mark_price`/`index_price` already match the contract, only the `ts_event` derivation step needed to run).
+      Verified live there (VM `mtds-smoke-lighter-dt-fix-v4-20260730`: zero schema failures, ~987K real rows written).
 - [ ] [SERVICE] P3. `features-service`'s `CrossInstrumentRawDataLoader.load_book_snapshots` expects a third,
       non-existent `l2_book_checkpoints`-shaped input -- a separate, pre-existing reader/writer design gap, unrelated to
       this write-time-validation fix; needs its own scoping (design decision: build the missing writer, or change the
@@ -273,8 +274,14 @@ against the reproduction script.
   normal deploy-lag window, not a fix failure) — not a live process still failing. Flipped the P2 verification todo with
   this finding. No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (my `AUTHORING_SLOT`) with the duplicate-escalation outcome.
+<<<<<<< HEAD
 - **2026-07-30 (slot-12, `/ag-closeout-audit cefi`):** Flipped the false-unchecked `derivative_ticker` P3 todo — it was
   provably already shipped (`market-tick-data-service@6bf568ee`, verified live in `tardis_shared.py`'s
   `_WIRE_COLUMN_RENAMES`), found via
   `/plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md`.
   1 todo remains open (features-service reader design gap) — not archiving this doc yet.
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, stale item closed - the P3
+  `derivative_ticker` ts_event todo is provably already shipped (`market-tick-data-service@6bf568ee`); the remaining
+  features-service P3 is a genuine design gap (build the missing writer vs change the calculators). Reached the same
+  verdict independently of the slot-12 `/ag-closeout-audit cefi` run above; the two runs' identical closures were merged
+  into one item.
