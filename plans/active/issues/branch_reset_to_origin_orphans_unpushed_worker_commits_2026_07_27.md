@@ -49,7 +49,7 @@ related:
     /plans/active/issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md,
   ]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-30
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -104,9 +104,15 @@ worktree reflog or re-derive from this doc.)
 - [x] slot-14 `0aa00b715` (docs) — cherry-picked onto origin tip + pushed by main, landed
       `unified-trading-pm@ae03d60ab`.
 - [x] slot-0 root PM staged WIP (distinct sub-case) — recovered `unified-trading-pm@7a5ffbd44`.
-- [ ] [WORKER] P1. slot-13 `207afd62` (features-service CODE) — cherry-pick the orphaned commit (still in
-      `.tabs/13/features-service` reflog; patch saved above) onto current `origin/live-defi-rollout`, then SHIP VIA
-      QUICKMERGE
+- [x] ✅ **SUPERSEDED 2026-07-30 (bounded recovery sweep, infra role) — do NOT cherry-pick; it would REGRESS origin.**
+      The same worker re-landed this feature **27 minutes later** as `features-service@a90256f5` (2026-07-27T17:17:50Z,
+      "feat(sports): always write stable derived_features residue census manifest") — origin's version is the same
+      capability with better naming (`_STABLE_CENSUS_MANIFEST_PATH` / `_write_stable_census_manifest()` vs the orphan's
+      `_CENSUS_MANIFEST_PATH` / `_write_census_manifest()`) and a sharper docstring. A `git diff` of origin against
+      `207afd62` is net-negative on `scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py`, so
+      applying the orphan would undo the rename and the docstring. The stated dependency is satisfied: the follow-up
+      purge todo's stable census-manifest GCS path exists on origin today. Original instruction preserved: cherry-pick
+      the orphaned commit onto current `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE
       (`bash scripts/quickmerge.sh "feat(scripts): persist stable census manifest on purge invocation     (recovered orphaned slot-13 commit 207afd62)" --agent --files 'scripts/purge_sports_derived_features_post_floor_residue_2026_07_27.py'`).
       Code MUST go through quickmerge (QG + provenance trailer); a raw push is banned and would be rejected by the
       strict-quickmerge pre-push hook. This enhancement is a dependency of the sports derived-features residue purge
@@ -171,22 +177,48 @@ The runtime/operator had already dispatched a task to fix this very bug — **`s
     the stale `3becc9ede` sha. Data point: the TOCTOU reset race is INTERMITTENT (it rebased cleanly here,
     reset-orphaned the PM docs earlier) — consistent with a check-then-act window that only sometimes loses the race.
 
-- [ ] [WORKER] P1. Recover the confirmed dead-orphan CODE commits — **REVISED PRIORITY ORDER 2026-07-28 (slot-5 DROPPED
-      — see SUPERSEDED banner above; its fix targeted a misdiagnosed cause):** (1) slot-13 `d1c1ad8a`
-      (features-service), (2) slot-9 `unified-api-contracts` `724bd9be` (`fix(registry)` VENUE_ORDER_SEMANTICS CCXT
-      live-routed), (3) slot-12 `agent-orchestrator` `559452e` (`feat` `/api/backlog/{id}/reconcile-brief` route +
-      240-line test, +417). Do NOT recover slot-5 `3becc9ede`/`28ee61192` (superseded by audit `408a92200`). Do NOT
-      recover slot-11 `ffc02a8c` while slot-11 is alive (reclassified LIVE-owned blocked-WIP above). For each:
-      cherry-pick from `.tabs/<n>/<repo>` reflog (or apply the saved backstop patch) onto current
-      `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE (`--agent --files <the named file(s)>`). All clean + complete
-      (review-verified where noted). Code MUST go through quickmerge (QG + provenance trailer). Backstops for slot-9/12
-      saved this session (`slot9_724bd9be_*.patch`, `slot12_559452e_*.patch`).
+- [x] ✅ **ALL THREE SUPERSEDED 2026-07-30 (bounded recovery sweep, infra role) — none recovered, none needed; each
+      would have REGRESSED origin.** Verdicts, measured on `ip-172-31-5-118` read-only over SSM: **(1) slot-13
+      `d1c1ad8a`** (features-service) → re-landed by the same slot **35 minutes later** as `a9429cba`
+      (2026-07-27T23:27:46Z, "fix(delta_one): make universe-filter quote gate venue-aware"). Origin keeps the
+      `@functools.cache _sorted_quotes_for_venue()` helper delegating to `accepted_quotes_for_venue` — which the orphan
+      _deleted_ in favour of a flat `_SORTED_QUOTES`. `git diff --stat origin d1c1ad8a` on the test file is **+24/−49**;
+      applying it would delete 49 lines of landed tests. Origin's per-venue accepted-quote wiring is confirmed present
+      (`accepted_quotes_for_venue` at `mvp_universe_filter.py` lines 48/61/64/71/97/111). **(2) slot-9 `724bd9be`**
+      (unified-api-contracts) → landed on origin as `698b5b6f` with the **identical subject** and **byte-identical
+      content**: both `order_semantics.py` and `test_order_semantics_sim_backfill.py` have the same blob sha in the
+      orphan and on origin. `.tabs/9/unified-api-contracts` now measures `ahead=0`. **(3) slot-12 `559452e`**
+      (agent-orchestrator) → the route shipped independently as `09cda29` ("feat(backlog): add POST
+      /api/backlog/{id}/reconcile-brief escape hatch"); origin carries the live route at `server/routes/backlog.py:391`
+      plus a 225-line `tests/test_backlog_reconcile_brief.py`. `git diff --stat origin     559452e` across the 4 files
+      is **+290/−347**, i.e. recovering it would overwrite the shipped implementation with the orphan's earlier one. The
+      backstop patches under `.orch-orphan-commits-recovery/` can be retired. Original instruction preserved below for
+      context: recover the confirmed dead-orphan CODE commits — **REVISED PRIORITY ORDER 2026-07-28 (slot-5 DROPPED —
+      see SUPERSEDED banner above; its fix targeted a misdiagnosed cause):** (1) slot-13 `d1c1ad8a` (features-service),
+      (2) slot-9 `unified-api-contracts` `724bd9be` (`fix(registry)` VENUE_ORDER_SEMANTICS CCXT live-routed), (3)
+      slot-12 `agent-orchestrator` `559452e` (`feat` `/api/backlog/{id}/reconcile-brief` route + 240-line test, +417).
+      Do NOT recover slot-5 `3becc9ede`/`28ee61192` (superseded by audit `408a92200`). Do NOT recover slot-11 `ffc02a8c`
+      while slot-11 is alive (reclassified LIVE-owned blocked-WIP above). For each: cherry-pick from `.tabs/<n>/<repo>`
+      reflog (or apply the saved backstop patch) onto current `origin/live-defi-rollout`, then SHIP VIA QUICKMERGE
+      (`--agent --files <the named file(s)>`). All clean + complete (review-verified where noted). Code MUST go through
+      quickmerge (QG + provenance trailer). Backstops for slot-9/12 saved this session (`slot9_724bd9be_*.patch`,
+      `slot12_559452e_*.patch`).
 
-> **⚠️ DISPATCH GAP (main, 2026-07-27T23:54Z):** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc,
-> so they are NOT auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan
-> (`assigned_vm: planning`), (b) a worker is explicitly routed to them, or (c) main is authorized to run the quickmerge
-> recovery directly. Content is not lost yet (backstop patches host-local on `ip-172-31-5-118` + 90d reflog), but this
-> is why the first-wave `207afd62` todo has also sat unrecovered. Escalated to operator for routing.
+> **✅ DISPATCH GAP CLOSED 2026-07-30 — route (a) authorized and executed; all recovery todos above are now flipped
+> SUPERSEDED.** The operator authorized a single named infra-role worker to run one bounded, liveness-gated recovery
+> sweep. Outcome across the whole cross-doc inventory: **8 SUPERSEDED, 1 PROTECTED-LIVE, 1 GONE, 0 recovered — because 0
+> needed recovering.** Every orphan this doc chased had already been re-landed on origin (twice by the same worker
+> within 35 minutes of the orphaning), and 4 of them would have REGRESSED origin if cherry-picked blind. The content was
+> never at risk; what the 3-day unrouted escalation cost was 3 days of carrying a false P1 data-loss exposure. The
+> durable fix is therefore a cheap read-only "is this orphan still orphaned?" verifier, not recovery authority — filed
+> as `[SCRIPT] P2` in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, which also
+> carries the full per-item evidence, the liveness-gate results, and two further findings (a 25-strong fleet-wide
+> `refs/wip-preserve/**` population, and a liveness discriminator that trusts `.agent-claim` age too much). **Original
+> banner, preserved:** these `[WORKER]` recovery todos live in an `assigned_vm: NA` issue doc, so they are NOT
+> auto-dispatched to any worker — they will rot unless (a) migrated into a dispatched plan (`assigned_vm: planning`),
+> (b) a worker is explicitly routed to them, or (c) main is authorized to run the quickmerge recovery directly. Content
+> is not lost yet (backstop patches host-local on `ip-172-31-5-118` + 90d reflog), but this is why the first-wave
+> `207afd62` todo has also sat unrecovered. Escalated to operator for routing.
 
 ### Third wave — the branch-reset dropped the runtime's OWN orphan-wip inheritance commit (main agt-4d8de7, 2026-07-28T00:25Z)
 

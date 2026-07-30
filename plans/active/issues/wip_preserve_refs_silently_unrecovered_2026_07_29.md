@@ -28,6 +28,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-29
+last_updated: 2026-07-30
 priority: P2
 parent_epic: orchestrator_master
 source:
@@ -91,10 +92,20 @@ closing the "then what" gap:
 
 ## Todos
 
-- [ ] [DATA] P2. Check whether `strategy-service`'s `staging-lock-check.yml` self-hosted-runner migration
-      (`refs/wip-preserve/cascade-strategy-service-a77eb6d170ca`, 2026-07-28) was independently superseded by a later
-      rollout; if not, recover + re-ship it the same way `unified-trading-library`'s was recovered in this doc's sibling
-      task. Repo: strategy-service.
+- [x] ✅ **ANSWERED 2026-07-30 (bounded recovery sweep, infra role): SUPERSEDED — nothing to recover, ref is safe to
+      delete.** Measured on `ip-172-31-5-118` `.tabs/15/strategy-service` (this ref lives in slot 15, not slot 9/10/11
+      which each hold a DIFFERENT `cascade-strategy-service-*` ref): `.github/workflows/staging-lock-check.yml` at
+      `refs/wip-preserve/cascade-strategy-service-a77eb6d170ca` is **byte-identical** to
+      `origin/live-defi-rollout:.github/workflows/staging-lock-check.yml` (same blob sha), i.e. the self-hosted-runner
+      migration WAS independently re-applied by a later rollout. Original ask: check whether the migration was
+      superseded; if not, recover + re-ship it the way `unified-trading-library`'s was. Repo: strategy-service.
+- [ ] [DATA] P3. **The fleet carries 25 `refs/wip-preserve/**` refs, not 1** — found by the 2026-07-30 sweep's
+      fleet-wide `for-each-ref` (dated 2026-07-26..07-29, across slots 2/3/4/6/9/10/11/12/15). This doc named only the
+      `strategy-service` one. Triage the other 24 to a recorded SUPERSEDED / RECOVER / DELETE verdict; first-pass
+      blob-compare says ~16 are already content-identical to origin and most of the rest would REGRESS origin if
+      applied. Full first-pass breakdown + the one substantive residual (`slot-12 unified-trading-library c927ec58`, a
+      2-line docstring) are in `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`. Do
+      this with the verifier that doc's `[SCRIPT] P2` specifies, not by hand. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P3. Add a fleet-wide `refs/wip-preserve/**` sweep (age-thresholded alert or a documented runbook check)
       so a preserved-but-unrecovered commit surfaces instead of sitting forgotten. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P3. Consider a post-push content-verification step in quickmerge's success path (or worker RULES.md's

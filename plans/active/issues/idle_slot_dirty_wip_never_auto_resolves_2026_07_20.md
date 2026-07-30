@@ -27,7 +27,7 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-25
+last_updated: 2026-07-30
 locked_by:
 locked_since:
 ---
@@ -167,12 +167,17 @@ Timeline (all verified read-only on host `ip-172-31-5-118`):
 is broken (just dead fixtures left behind). Filed so it is a decision, not a silent GC loss. Main is charter-barred from
 recovery (cannot push code or edit another slot's git).
 
-- [ ] [OPERATOR/BACKEND] P3. **Decide + (if worth it) recover slot 6's 2 orphaned GMX-cleanup commits before GC.**
-      Recovery recipe: from `.tabs/6/unified-api-contracts`, `git branch preserve-gmx-cleanup 11ed7f09` (un-orphans both
-      — `44de0cf0` is its parent), then a worker cherry-picks onto `live-defi-rollout` + `quickmerge`s, or an
-      FS-holder/operator does the same. Low value (dead-fixture cleanup) so a legitimate NO-recover is fine — but record
-      the choice. **Done when**: either the commits are on `origin/live-defi-rollout`, or a note here states they were
-      deliberately let go.
+- [x] ✅ **DONE 2026-07-30 (bounded recovery sweep, infra role) — GC-SAFED, and the content turned out to be already on
+      origin.** Created `refs/heads/preserve-gmx-cleanup-slot6` → `44de0cf0bd7ae48a5d1a8e90ce4d901e2ceed201` in
+      `.tabs/6/unified-api-contracts` on `ip-172-31-5-118`; `git fsck --unreachable | grep -cE '44de0cf0|11ed7f09'` is
+      now **0** (was 2). **Both objects are off the `gc.pruneExpire` clock permanently.** No cherry-pick was needed:
+      `tests/test_ws_cassette_coexistence.py` is byte-identical between `44de0cf0` and `origin/live-defi-rollout`, both
+      `gmx/__init__.py` and `gmx/mocks/gmx_arbitrum_ws.yaml` are already absent from origin, and
+      `git ls-tree -r --name-only origin/live-defi-rollout | grep -i gmx` returns zero paths — the GMX cleanup is
+      complete upstream. **⚠️ This todo's own recipe was WRONG and is corrected here**: it said
+      "`git branch     preserve-gmx-cleanup 11ed7f09` (un-orphans both — `44de0cf0` is its parent)". Measured parentage
+      is the reverse — `44de0cf0`'s parent is `11ed7f09` (→ `18d53d63` → origin). Branching at `11ed7f09` as written
+      would have preserved only `11ed7f09` and silently let `44de0cf0` GC. Branch at the TIP (`44de0cf0`) to reach both.
 - [ ] [BACKEND] P2. **Extend the dirty-resolution sweep (P2 above) to also catch committed-but-unpushed commits orphaned
       by realignment**, not just dirty-tree WIP — before realigning a dead slot's worktree to origin, detect local
       commits not on origin and preserve them to a `wip-preserve/` ref. **Gate**: a dead slot with a local commit ahead
@@ -200,13 +205,24 @@ Review (agt) git-health sweep flagged dead-slot drift; main (agt-52bb99) did a r
 multi-day 5-repo dirt are real unpushed work. Main is charter-barred from recovery (cannot push code / edit foreign
 worktrees).
 
-- [ ] [BACKEND/OPERATOR] P3. **Recover slot 10 `4d235caf` selectively**: inherit `.tabs/10/market-tick-data-service`,
-      rebase (it's 1-behind), DROP the shard-count hunk if redundant vs `0ce00dbe`, KEEP the 3 dead-script deletions,
-      quickmerge. **Done when**: the 3 scripts are deleted on `origin/live-defi-rollout` (or a note states they were let
-      go) and no duplicate shard-count re-pin was pushed.
-- [ ] [BACKEND/OPERATOR] P3. **Recover slot 11 `unified-trading-pm` 8-ahead** (top `c6610a36c`): inherit worktree,
-      `git fetch` + rebase, push the unpushed doc commits (dedup any already on origin via content). **Done when**: slot
-      11's unique PM doc work is on origin or recorded as superseded.
+- [x] ✅ **SUPERSEDED 2026-07-30 (bounded recovery sweep) — the stated done-when is already met on origin; nothing to
+      recover.** All 3 dead scripts are **absent** from `origin/live-defi-rollout`
+      (`verify_v1_archive_row_coverage_2026_06_27.py`, `migrate_legacy_tick_buckets_to_canonical.py`,
+      `patch_l6_legacy_manifest_mtds_2026_06_29.py` — the deletions landed independently), and the shard-count re-pin is
+      also already on origin (`_PER_AG_SHARD_COUNTS["DEFI"] = 2538`, carrying a better-attributed comment crediting
+      `uac@18d53d63`) — so the "no duplicate shard-count re-pin was pushed" half is satisfied by not acting. This todo's
+      caution against blind-pushing the shard-count hunk was correct and is now moot.
+      `.tabs/10/market-tick-data-     service` measures `ahead=0 behind=0 dirty=0`; `4d235caf` is no longer stranded.
+      Original ask preserved: recover `4d235caf` selectively, dropping the shard-count hunk if redundant vs `0ce00dbe`,
+      keeping the 3 deletions.
+- [x] ✅ **SUPERSEDED 2026-07-30 (bounded recovery sweep) — recorded as superseded, per this todo's own done-when.** The
+      "8 unpushed commits" is really **1**: 7 of the 8 (`24878e802`, `962a38f26`, `40f3c5b65`, `bf094341d`, `37e92c6f6`,
+      `db253f0c9`, `51e3e82d6`) are already ancestors of `origin/live-defi-rollout`. The 8th, `c6610a36c`, is NOT on
+      origin — but it is **regressive**: `git diff --stat origin/live-defi-rollout c6610a36c` is **+31/−143** on
+      `plans/active/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md`, because origin's copy
+      already carries both the 287-league enumeration AND the later 2026-07-25T12:54Z `af-backfill-20260725-125405`
+      launch narrative that `c6610a36c` predates. Pushing it would delete 143 lines of landed work. Deliberately NOT
+      recovered. `.tabs/11/unified-trading-pm` now measures `ahead=0 behind=0 dirty=0`.
 - [x] [DIAG] P2. **Eyeballed live 2026-07-27 (classification sweep) — direct `git status --short` on all 5 repos named
       in the 2026-07-25 recurrence, run directly on `ip-172-31-0-185` (this IS the human-planning VM; instance-ID match
       confirmed via `aws ec2 describe-instances`).** Result: `strategy-service`, `system-integration-tests`, and
@@ -242,11 +258,18 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
   archived 2026-07-26)), a diff-check is warranted before any worktree reset. Neither review nor main can push from slot
   3's worktree (charter-barred).
 
-- [ ] [BACKEND/OPERATOR] P3. **Recover slot 3's `features-service` WIP** (host ip-172-31-5-118, `.tabs/3`, 19 files
-      722+/714-): liveness-gate first (confirm slot 3 still dead), then a live worker inherits — `git stash`/commit the
-      WIP under a clear message, **diff it against what slot 11 lands for batch2-001** to determine unique-vs-duplicate,
-      push only the unique delta (or record it as superseded). **Done when**: the WIP is committed/pushed or recorded as
-      fully superseded by slot 11's landed batch2-001, with the diff-check noted.
+- [x] ✅ **CLOSED 2026-07-30 (bounded recovery sweep) — the WIP no longer exists; recorded as GONE, not recovered.** The
+      liveness gate this todo asks for was run first and says **slot 3 is now LIVE** (`.agent-claim` mtime 1 min,
+      `orch-slot-3` up, `worker_alive=true`, `status=working`) — a different worker than the 2026-07-25 one, on a fresh
+      respawn. Independently of that, the content is gone: `.tabs/3/features-service` measures
+      `dirty=0 ahead=0     behind=0`, and the only stash present is `stash@{0}`, an unrelated 2-file
+      `cross_instrument/cli/handlers/batch_handler.py` + test WIP dated **2026-06-16** (+77/−1), not the 19-file
+      722+/714- sports refactor. The 2026-07-25 content is not in the worktree, the index, the stash, or any ref, so the
+      requested diff-against-batch2-001 is not performable. Per this doc's own contemporaneous prediction ("slot 11 will
+      redo batch2-001 fresh, so the stranded slot-3 WIP is likely _duplicated_ rather than lost"), it is recorded as
+      presumed-duplicated. **Honest caveat**: duplication is inferred from that prediction plus slot-11's landed
+      batch2-001, NOT proven by a diff — the source content no longer exists to diff against. If any sports
+      curated-universe gap later traces to 2026-07-25, this is the one place it could have come from.
 
 ## Progress Log
 
