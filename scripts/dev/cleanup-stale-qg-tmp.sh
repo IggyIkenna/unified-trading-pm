@@ -46,10 +46,7 @@ done
 # Candidate roots: the new QG scratch target (primary) + legacy /tmp pytest dirs
 # (belt-and-suspenders — covers a tool that still defaults to /tmp, ignoring TMPDIR).
 QG_TMP_ROOT="${HOME}/.cache/qg-tmp"
-CANDIDATE_PATTERNS=(
-    "${QG_TMP_ROOT}/pytest-of-*"
-    "/tmp/pytest-of-*"
-)
+CANDIDATE_ROOTS=("${QG_TMP_ROOT}" "/tmp")
 
 log() {
     # $1=kind: "removal"/"summary" always print; "live" (skip-live noop) suppressed by --quiet.
@@ -83,10 +80,11 @@ is_in_use() {
 
 removed=0
 skipped_live=0
-for pattern in "${CANDIDATE_PATTERNS[@]}"; do
-    root_dir="$(dirname "${pattern}")"
-    name_glob="$(basename "${pattern}")"
-    [ -d "${root_dir}" ] || continue
+
+sweep_dir() {
+    # $1 = existing directory to scan; $2 = name glob for its immediate children.
+    local scan_dir="$1" name_glob="$2"
+    [ -d "${scan_dir}" ] || return 0
     while IFS= read -r -d '' stale_dir; do
         if is_in_use "${stale_dir}"; then
             skipped_live=$((skipped_live + 1))
@@ -100,7 +98,27 @@ for pattern in "${CANDIDATE_PATTERNS[@]}"; do
             removed=$((removed + 1))
             log removal "[removed] ${stale_dir}"
         fi
-    done < <(find "${root_dir}" -maxdepth 1 -name "${name_glob}" -mmin "+${MIN_AGE_MIN}" -print0 2>/dev/null)
+    done < <(find "${scan_dir}" -maxdepth 1 -name "${name_glob}" -mmin "+${MIN_AGE_MIN}" -print0 2>/dev/null)
+}
+
+for root in "${CANDIDATE_ROOTS[@]}"; do
+    # Level 1: the pytest-of-<user> bucket itself, gated on ITS OWN mtime — kept as
+    # belt-and-suspenders, but on a busy shared host this almost never fires: every
+    # sibling slot creating/removing a session subdir underneath keeps the bucket's own
+    # mtime perpetually fresh, so a real stale run inside it never ages the PARENT past
+    # the threshold. (confirmed live 2026-07-30: 9 individual per-session dirs under
+    # /tmp/pytest-of-ubuntu were >60min stale while the bucket itself read <1min old,
+    # so this level-1 sweep alone silently caught nothing on this exact host — the fill
+    # to 100% that motivated this fix. See
+    # plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md.)
+    sweep_dir "${root}" "pytest-of-*"
+    # Level 2 (the actual fix): each per-session pytest-<N> dir one level down, gated on
+    # ITS OWN mtime — this is where disk usage actually accumulates and where individual
+    # dirs genuinely do go stale even while the parent bucket looks perpetually fresh.
+    for bucket in "${root}"/pytest-of-*/; do
+        [ -d "${bucket}" ] || continue
+        sweep_dir "${bucket%/}" "pytest-*"
+    done
 done
 
 log summary "[done] removed=${removed} skipped_live=${skipped_live} min_age_min=${MIN_AGE_MIN} dry_run=${DRY_RUN}"
