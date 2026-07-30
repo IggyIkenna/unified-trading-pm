@@ -220,6 +220,52 @@ jobs:
           IFS=$'\t' read -r SIT_FLEET_STATE SIT_FLEET_DESC SIT_FLEET_URL <<< "$SIT_FLEET_LINE"
           echo "SIT fleet-green signal: state=$SIT_FLEET_STATE desc=\"$SIT_FLEET_DESC\" (context=$SIT_FLEET_CONTEXT) url=$SIT_FLEET_URL"
 
+          # ── Auto-retrigger full-workspace-sit on a RED/stale fleet-green signal (2026-07-30 fix) ──
+          # Finding (sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md): codex docs this gate as
+          # "the PR stays BLOCKED until a later tick reads a green SIT", which reads as passive — and it
+          # WAS: the ONLY existing full-workspace-sit repository_dispatch in this file (in process_repo,
+          # below) fires for a SIT-COVERED repo's own unvalidated BREAKING/unknown delta, a condition
+          # completely independent of SIT_FLEET_STATE. A transient full-workspace-sit failure (e.g. the
+          # confirmed 2026-07-28 recurrence: downstream ci-status-update dispatches finishing success
+          # just past cross-repo-invariants' 90s poll budget) with no repo currently carrying a pending
+          # BREAKING delta therefore had NOTHING that re-drove SIT — observed stuck RED 2h+ across 2
+          # promoter ticks with zero new full-workspace-sit runs in that window. Fix: dispatch a fresh
+          # full-workspace-sit run whenever the fleet-green signal reads red, so a transient flake
+          # self-heals on this bot's own next ~5-15 min tick instead of waiting on the SIT repo's own
+          # (much sparser) nightly cron. Debounced by construction: skip the dispatch when a
+          # full-workspace-sit run is already queued/in_progress (this bot's own prior dispatch, the
+          # nightly cron, or the process_repo BREAKING-delta dispatch below) — that run IS the retry
+          # already in flight, so a same-tick or next-tick re-dispatch would only pile up duplicate runs
+          # without getting the signal green any sooner.
+          sit_fleet_green_auto_retrigger() {
+            if [ "$SIT_FLEET_STATE" != "failure" ]; then
+              return 0
+            fi
+            SIT_INFLIGHT=$(printf '%s' "$SIT_LAST_RUN_JSON" | python3 -c '
+          import json, sys
+          try:
+              runs = json.load(sys.stdin)
+          except json.JSONDecodeError:
+              runs = []
+          print(sum(1 for r in runs if r.get("status") != "completed"))
+          ' 2>/dev/null || echo "0")
+            if [ "${SIT_INFLIGHT:-0}" != "0" ]; then
+              echo "  sit-gate/fleet-green auto-retrigger: RED but $SIT_INFLIGHT full-workspace-sit run(s) already queued/in_progress — not piling on another dispatch"
+              return 0
+            fi
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would dispatch full-workspace-sit (sit-gate/fleet-green auto-retrigger, no run in flight)"
+              return 0
+            fi
+            echo "  sit-gate/fleet-green auto-retrigger: RED and no full-workspace-sit run in flight — dispatching a fresh run"
+            if ! curl -sf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/$OWNER/system-integration-tests/dispatches" \
+              -d '{"event_type": "full-workspace-sit", "client_payload": {"reason": "fleet-green-red-retrigger"}}' >/dev/null 2>&1; then
+              echo "::warning::sit-gate/fleet-green auto-retrigger dispatch FAILED for system-integration-tests (nightly full-workspace-sit cron is the fallback) — investigate the App token's dispatch permission on system-integration-tests"
+            fi
+          }
+          sit_fleet_green_auto_retrigger
+
           # Topological order (T0 first) — promote deps before dependents.
           REPOS=$(python3 - <<'PYEOF'
           import json
