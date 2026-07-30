@@ -1,0 +1,79 @@
+---
+doc_type: issue
+title: instruments-service QG RED — FOOTYSTATS overlaps UAC sports venues, golden EXPECTED matrix drift
+status: open
+nature: issue
+asset_group: [sports]
+stage: [data]
+repos: [instruments-service, unified-api-contracts]
+scope: [engineer]
+tags: [qg-red, sports, footystats, golden-fixture, uac-invariant]
+related: []
+created: "2026-07-30"
+assigned_vm: planning
+parent_epic: sports_master
+resolved_by:
+source: >-
+  Discovered while shipping todo 1 of /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md (a DeFi
+  instruments-service task, unrelated to sports) — full `quality-gates.sh` run surfaced 2 pre-existing RED tests,
+  verified byte-identical on a clean `git stash` tree at LDR HEAD `cccc6ef5` before this session's DeFi diff.
+summary:
+  "`bash scripts/quality-gates.sh` on `instruments-service` fails 2 tests, both pre-existing (reproduced on a clean
+  stash of LDR HEAD, unrelated to any DeFi/adapter work):"
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
+---
+
+## What I found
+
+`bash scripts/quality-gates.sh` on `instruments-service` fails 2 tests, both pre-existing (reproduced on a clean stash
+of LDR HEAD, unrelated to any DeFi/adapter work):
+
+1. `tests/unit/test_orchestrator_helpers.py::TestVenueProducerUACInvariant::test_sports_exempt_is_disjoint_from_uac_sports`
+   — `AssertionError: IS sports and UAC sports must be disjoint (two-registry model): overlap={'FOOTYSTATS'}`. IS's
+   `get_venues_for_asset_groups(["SPORTS"])` and UAC's `VENUES_BY_ASSET_GROUP["sports"]` are supposed to be disjoint
+   sets by design (Decision C, operator 2026-06-29: IS sports = reference-data providers; UAC sports = market-data/odds
+   venues) — `FOOTYSTATS` now appears in both.
+2. `tests/unit/scripts/test_expected_universe_golden.py::TestGoldenByteIdentical::test_expected_matches_golden[sports]`
+   — golden fixture drift: `golden=27, actual=31`, 4 extra `(venue, data_type, shard)` tuples: `BET888SPORT`,
+   `FOOTYSTATS`, `LADBROKES`, `SMARKETS` (all `odds`/`trades`).
+
+Both point at the same root cause: UAC's sports venue registry (`VENUES_BY_ASSET_GROUP["sports"]`) picked up
+`BET888SPORT` / `FOOTYSTATS` / `LADBROKES` / `SMARKETS` since the golden fixture was last regenerated, and `FOOTYSTATS`
+specifically collides with IS's own reference-provider registry (`FOOTYSTATS` is one of IS's sports reference-data
+adapters — see `factory._ADAPTERS["footystats"]`), violating the disjoint two-registry invariant.
+
+## Why it matters
+
+This is a QG-blocking RED on `instruments-service` — any worker shipping ANY change through this repo's
+`quality-gates.sh` (regardless of what they're actually working on) hits these 2 failures and cannot get a green
+sentinel, per the HARD RULE "commit only from a `quality-gates.sh`-green tree." Declaring a repo-blocker so the
+backend's `RepoHealthWatcher` tracks resolution and un-sticks waiters.
+
+## Recommended decision
+
+Two real options, an operator/data-engineering call (not picked here — outside this session's DeFi-adapter scope):
+
+1. **If the 4 new UAC sports venues are intentional** (a real onboarding of BET888SPORT/LADBROKES/SMARKETS as odds
+   venues + FOOTYSTATS legitimately needing dual roles): regenerate the golden fixture per its docstring recipe, AND
+   resolve the `FOOTYSTATS` disjointness violation — either by giving IS's reference-provider role a distinct venue
+   spelling from UAC's odds-venue `FOOTYSTATS`, or by widening the disjointness invariant's documented exemption (like
+   the existing sports-exempt carve-out) if dual-role venues are now an intended pattern.
+2. **If this is accidental UAC registry drift** (e.g. a recent UAC commit widened `VENUES_BY_ASSET_GROUP["sports"]`
+   without the corresponding IS-side reconciliation): revert/scope the UAC addition instead.
+
+## Todos
+
+- [ ] [DATA] P1. Diagnose which UAC commit introduced BET888SPORT/FOOTYSTATS/LADBROKES/SMARKETS into
+      `VENUES_BY_ASSET_GROUP["sports"]` (repo: unified-api-contracts) and determine intentional vs. drift per the two
+      options above.
+- [ ] [DATA] P1. Resolve the `FOOTYSTATS` IS/UAC disjointness violation
+      (`test_sports_exempt_is_disjoint_from_uac_sports`) per whichever option is chosen (repo: instruments-service or
+      unified-api-contracts).
+- [ ] [DATA] P1. Regenerate/reconcile the sports golden EXPECTED-matrix fixture
+      (`tests/unit/scripts/test_expected_universe_golden.py`) so `test_expected_matches_golden[sports]` passes (repo:
+      instruments-service).
