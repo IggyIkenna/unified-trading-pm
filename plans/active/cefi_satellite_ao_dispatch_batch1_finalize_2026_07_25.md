@@ -83,7 +83,12 @@ drift_direction: advance-code
       reaches 0 open todos (checkbox AND prose-form). **Done when**: all 21 source docs' corresponding
       checkboxes/sections are flipped with verified evidence, and any doc that genuinely reaches 0 open todos is flipped
       to `status: resolved`.
-- [ ] [REVIEW] P1. **Re-check the 3 too-large-doc exclusions for a batch2 pass.** For each of
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-9, `review`).** All 3 too-large-doc exclusions re-checked against current
+      state. **Verdict: 1 doc settled but needs NO new batch2 candidate** (its 2 AO-eligible items are already active
+      elsewhere — a fresh candidate would duplicate live dispatched work), **2 docs still genuinely not
+      batch2-extractable** (real work remains but is human/operator-gated, not a batch2 scoping gap). See this plan's
+      Progress Log for the full per-doc evidence trail — no fabricated batch2 candidates were created just to satisfy
+      the todo's literal wording. **Re-check the 3 too-large-doc exclusions for a batch2 pass.** For each of
       `cefi_4surface_migration_execution_log_2026_07_24.md`,
       `issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`, and
       `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md` (all flagged
@@ -147,3 +152,51 @@ drift_direction: advance-code
     batch1's premature flip. The sibling HYPERLIQUID phantom-re-census item in the same doc WAS genuinely done and is
     flipped accordingly.
   - No commits shipped in any service repo — this todo is doc-reconciliation only, entirely within `unified-trading-pm`.
+
+- **2026-07-30 (slot-9, `review`) — todo 2, the 3 too-large-doc exclusions re-checked; verdicts recorded, no new batch2
+  candidates fabricated.**
+  - **Doc 1 — `cefi_4surface_migration_execution_log_2026_07_24.md`: SETTLED, but no new batch2 candidate warranted.**
+    The fast-moving activity that got it excluded (Track 1 dedup / LATE renames / Surface C v2 apply) has substantially
+    completed since the doc's last DELTA (2026-07-24 ~13:35Z): Track 1 dedup is DONE 2026-07-27 (parent
+    `cefi_consolidated_closeout_2026_07_18.md`'s Track 1 checkbox); Surface C v2 apply is DONE (Finding 7 in
+    `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` — `V2 APPLY COMPLETE + GATE GREEN`); the LATE
+    renames bulk landed via Range A/B/C (Finding 10, 504,280 renamed) with LIGHTER-ZKSYNC (this doc's item 6) confirmed
+    fully subsumed. **This doc's own Deferred-work table (items 2b/2c/3/6) is now STALE** — the sibling issue doc is the
+    current SSOT and says so explicitly ("table below is STALE, see Finding 8/9/10"). The one remaining sliver
+    (2,962-object safe-venue residual + final re-proof + archive) is already tracked as a SINGLE todo in that sibling
+    doc, independently re-audited **today** by the na-eligibility-audit skill (KEEP-NA valid: "resumes a migration
+    explicitly PAUSED 2026-07-25 on operator request... involves cron pause/resume around prod GCS"). Of this doc's own
+    2 AO-eligible candidates named in the original batch-1 exclusion note (BITGET-FUTURES catalogue rollup re-run; the
+    `_DRYRUN_COLS` dry-run blind-spot confirm/fix) — **both are already drafted AND currently ACTIVE** in
+    `cefi_consolidated_native_ao_extract_2026_07_25.md` (`assigned_vm: planning`, `status: active`, both still `- [ ]`),
+    which independently re-derived them from the parent closeout's own (stable, non-excluded) Deferred-work table rather
+    than this excluded doc. **Conclusion**: creating a fresh `batch2` candidate here would dispatch a duplicate of
+    already-live AO work — the correct action is "nothing to extract, it's already extracted," not force-fitting a new
+    item to satisfy the todo's literal "scope a batch2 candidate" wording.
+  - **Doc 2 — `issues/cefi_backfill_per_day_catalogue_reload_2026_07_20.md`: STILL NOT batch2-extractable.** The OOM
+    outage that was one of the two original blockers is resolved (Track 1b, `cefi_consolidated_closeout_2026_07_18.md`,
+    🟢 RESOLVED 2026-07-25). But the doc's sole remaining todo — implement the proper fix for the per-day catalogue
+    reload waste — is still an **undecided 2-option architecture fork** (range-loop-in-one-process vs. a cross-process
+    `CeFiCatalogReader` cache), one option of which changes the shared VM startup script fleet-wide. This is a design
+    decision, not a scoping gap; no batch2 candidate can be safely drafted until the operator/main picks a direction.
+    Independently reconfirmed by today's na-eligibility-audit (KEEP-NA valid, same reasoning). **Recorded for next
+    cycle**: re-check after the architecture decision is made — at that point the CHOSEN option's implementation likely
+    becomes a clean, bounded batch2 candidate.
+  - **Doc 3 — `issues/onchain_venues_mislabeled_batch_tardis_lane_2026_07_20.md`: STILL NOT batch2-extractable, but the
+    original exclusion reason (cross-doc disagreement) is itself resolved.** The sibling doc that used to cross-correct
+    this one (`cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`) is now archived + `status: resolved`, and its
+    own correction record shows the two docs' PACIFICA-SOLANA disagreement converged on this doc's original
+    recommendation (quarantine, not purge) — no live conflict remains. Of this doc's 4 closure-action todos: **2 are
+    DONE** (LIGHTER-ZKSYNC repartition — `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`, DONE 2026-07-27, slot-2;
+    fix-the-writer — `unified-trading-library@ffce0fa6`, DONE 2026-07-26). The other **2 remain genuinely blocked on a
+    human call, not a scoping gap**: EXTENDED-STARKNET's re-partition needs an operator decision on which of the two
+    content-divergent copies is authoritative before any merge (characterization done 2026-07-27,
+    `market-tick-data-service@4346f587` — "no authoritative copy named (operator decision, per scope)"); PACIFICA-SOLANA
+    quarantine registration was explicitly kept human by `cefi_consolidated_native_ao_extract_2026_07_25.md`'s own
+    2026-07-25 triage ("no defined target mechanism cited... needs human disambiguation, not a fresh independent AO
+    guess"). Both freshly reconfirmed by today's na-eligibility-audit (KEEP-NA valid: "3 of 4 todos are prod GCS
+    pipeline_mode re-partitions requiring de-dup MERGE semantics against a live split-brain; delete/move-safety gated").
+    **Conclusion**: no batch2 candidate drafted — the remaining work needs an operator ruling (authoritative copy) and a
+    human disambiguation (quarantine mechanism), not mechanical extraction.
+  - No commits shipped in any service repo — this todo is doc-reconciliation/verdict-recording only, entirely within
+    `unified-trading-pm`.
