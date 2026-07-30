@@ -94,10 +94,17 @@ mock parity — the drift is historical, not systemic.
 
 ## Todos
 
-- [ ] [SERVICE] P2. **Fix `/api/data-status/coverage-summary` mock to match the live contract** — populate
+- [x] ✅ [SERVICE] P2. **Fix `/api/data-status/coverage-summary` mock to match the live contract** — populate
       `asset_groups` and rename `totals.dates_across_asset_groups` → `dates_across_categories`, plus
       `capture_status_counts` / `completion_pct` / `unique_instruments`. Highest-value: this is the endpoint the Data
-      Status UI work of 2026-07-16 sits on.
+      Status UI work of 2026-07-16 sits on. — **DONE 2026-07-30 (slot 5), `deployment-api@d7546e6`.** An earlier
+      "Cherry-pick D" commit (2026-07-20, `349946a`) had already populated `asset_groups` + renamed the field to
+      `dates_across_categories` for CEFI/DEFI/SPORTS/TRADFI, and `capture_status_counts`/`completion_pct` were already
+      present per-venue in `_mock_venue_entry` — but the default (instruments-service, unrestricted) live path iterates
+      all 5 `MarketCategory` values while `_MOCK_COVERAGE_SEED` only carried 4, leaving a live-only key gap on
+      `asset_groups.PREDICTION`. Added the missing PREDICTION seed entry (mirrors `build_mock_turbo_response`'s existing
+      PREDICTION seed shape: event-driven, high-attempt/low-capture). `unique_instruments` already present at the
+      per-response level. Regression test updated; full `quality-gates.sh` green, `quickmerge --agent` landed clean.
 - [ ] [SERVICE] P2. **Diagnose `ImportError: artifactregistry_v1`** driving the `/api/builds/history` +
       `/api/fixtures/upcoming` 500s — venv-only, or a real missing dependency that reaches Cloud Run?
 - [ ] [SERVICE] P3. **Bring `/api/repo-ci/overview` mock up to the staging-dormant contract** (`promotion_model`,
