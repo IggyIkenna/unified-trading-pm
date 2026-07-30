@@ -275,6 +275,26 @@ walk — the exact path set is fully known) and calls `ManifestWriter.record_cap
       the launcher's `VM_TARDIS_CONSUMER=1` metadata stamp is unconditional (not gated on the buggy pre-flight check),
       so the live blast radius was narrower than a fully-blind gap, but a second concurrent LIGHTER-ZKSYNC-only launch
       would have also skipped its own pre-flight check.
+- [x] [DATA] P2. **NEW finding (post-archival, 2026-07-30).** 677 `attempted_failed` manifest rows from the ORIGINAL
+      pre-fix backfill attempt (2026-07-29) were confirmed permanently dead: keyed on the raw numeric Tardis market_id
+      (e.g. `"0"`, `"102"`) rather than the real ticker, so the manifest's "captured outranks any status" dedup rule
+      (`unified_trading_library/manifest_writer/_read_index.py::_merge_shard_frames`) can never retire them — the real
+      captured rows use a different key entirely, so these sit as permanent noise. Confirmed via code
+      (`finalise_rows_and_path` raises `ValueError` BEFORE returning a `FinalisedShard` on schema violation — no
+      partial/malformed GCS write ever happens) and empirically (0 GCS objects match a bare-numeric filename under this
+      venue/data_type prefix) that this is a PURE manifest-metadata cleanup, no data migration needed. **DONE —
+      `market-tick-data-service@3d38b7bf`** (new script
+      `scripts/purge_lighter_derivative_ticker_prefix_schema_violation_rows_2026_07_30.py`, dry-run default + `--apply`
+      snapshot-then-write, modeled on the `reclass_cefi_no_batch_source_phantom_rows_2026_07_29.py` precedent). **Per
+      the heavy-I/O HARD RULE** (a full `_index/availability_index.parquet` rewrite — confirmed 9.5M rows
+      workspace-wide, not a "known enumerable scope" like the P2 reconciliation above), the `--apply` write did NOT run
+      locally (a local dry-run measured 7.5 minutes just to download the index over a flaky home connection — real
+      evidence for exactly why this rule exists) — dispatched via AWS SSM to the human-planning VM
+      (`i-0dd9812a96cdda5dc`, already-cloud-hosted, exempt) instead: same download there took **13 seconds**. Verified
+      post-apply from the VM: `attempted_failed` fully gone for this combo (0 rows), `captured` unchanged at 15,639,
+      `empty_confirmed`/`expected_unattempted` unchanged (33,323 / 25,249), pre-purge snapshot confirmed on GCS
+      (`_index/snapshots/pre_lighter_derivative_ticker_schema_violation_purge_20260730T112932Z.parquet`, 195MB, fully
+      reversible).
 
 ## Progress Log
 
