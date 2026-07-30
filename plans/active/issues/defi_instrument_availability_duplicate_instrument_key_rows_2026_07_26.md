@@ -89,17 +89,49 @@ that determination is the actual next step, not yet done.
       inline — determining the right disambiguation scheme without breaking existing `instrument_key` consumers needs
       its own scoped pass).
 
-- [ ] [CODE] P2. **Fix the DeFi pool `instrument_key` collision** for pool-heavy DEX venues (confirmed real 2026-07-29,
-      see the DONE todo above) — the key format `VENUE:TYPE:BASE-QUOTE:FEE_TIER` does not uniquely identify a pool when
-      multiple real on-chain pools share the same base/quote/fee-tier (observed on `PANCAKESWAP_V3-BSC`,
-      `UNISWAP_V3-OPTIMISM`, and likely the other 3 venues this doc names). Scope: add `pool_address` (or an equivalent
-      on-chain disambiguator already present as a column, e.g. a short hash suffix) to the key derivation for DEX-pool
-      instrument_types, verify no downstream consumer keys off the OLD collision-prone format in a way that would break,
-      and backfill/relabel historical rows. Repo: instruments-service. **Done when**: a fresh duplicate-key scan across
-      the 5 named venues (+ any others sharing the same key-builder path) returns 0 genuine collisions, with a
-      regression test proving 2 same-base/quote/fee-tier pools now get distinct keys.
+- [x] ✅ [CODE] **WON'T-DO-per-operator-2026-07-18-ruling** (was P2, "Fix the DeFi pool `instrument_key` collision" by
+      changing the symbol grammar). **Superseded by the narrow consumer-side fix below** (BLK-b3379171, worker slot 8,
+      2026-07-30): the originally-scoped fix (append `pool_address`/a hash disambiguator INTO the symbolic
+      `instrument_key`/`glued_pair_id` grammar) is exactly the id-folding the operator already REJECTED —
+      `codex/02-data/defi-canonical-naming-ssot.md` § "POOL identity is a two-id / dual-key model (Option A,
+      operator-ruled 2026-07-18)" states verbatim that a POOL row's `instrument_id`/`canonical_instrument_id` (machine
+      key, bare `pool_address.lower()`, the MTDS/manifest join key) and `glued_pair_id` (symbolic
+      `<VENUE>-<CHAIN>:POOL:<BASE>-<QUOTE>[-<FEE_BPS>]`, the human-readable/UI form) "MUST keep diverging for POOL rows"
+      — collapsing them (suffixing the symbol with an address/hash) breaks the MTDS content-join and was already
+      superseded once (`defi_pool_id_chain_uniqueness_2026_07_18.md`). It would also have broken confirmed real
+      consumers in unified-api-contracts (`parse_glued_pool_id`), 2 instruments-service migration scripts, the
+      catalogue's byte-identical `glued_pair_id` invariant, and MTDS's independent key reconstruction — investigation +
+      full citations in BLK-b3379171 (dashboard) / worker slot-8 session, 2026-07-30.
+- [x] ✅ [CODE] P2. **Resolving fix (Option B, operator-directed 2026-07-30)** — the SSOT's own documented remediation
+      for a colliding symbolic key is fixing the DOWNSTREAM CONSUMER, not the key. Audited every consumer of the raw
+      `instrument_availability/by_date/.../instruments.parquet` shard for naive `instrument_key`-uniqueness assumptions:
+      (1) the production catalogue builder (`instruments-service/scripts/build_instrument_catalogue.py`,
+      `_aggregate_key()`) was ALREADY SAFE — it keys DEX POOL rows on `pool::<chain>::<pool_address>`, never the raw
+      symbolic `instrument_key`, so two same-symbol/different-address pools already get distinct catalogue lifecycles,
+      never collapse; (2) the ONE consumer that WAS naive — the null-aware flat-vs-hive shape comparator that surfaced
+      this bug (`defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`'s 2026-07-26 entry) — was a session-local
+      scratchpad script that "no longer exist[s]" per that doc's own words; nothing to patch there; (3) no other naive
+      per-key `.loc[]`/`set_index`/dict-keyed consumer found via repo-wide search of instruments-service. Shipped a
+      regression test (`test_rollup_defi_pool_same_symbol_different_address_stay_distinct_lifecycles`,
+      `instruments-service/tests/unit/scripts/test_build_instrument_catalogue.py`) proving 2 pools sharing one
+      `glued_pair_id` (real example: `PANCAKESWAP_V3-BSC:POOL:USDT-USDC-100`) survive as 2 distinct
+      `instrument_id`/lifecycle rows — belt-and-suspenders proof the collision is already contained. Documented the
+      known non-uniqueness of the raw shard's `instrument_key` column inline in the adapters (see Progress Log). **Done
+      when** (met): audit complete, 0 live buggy consumers found + 1 fixed-by-confirming-already-safe + regression test
+      proves the real machine key never collides. No cross-repo grammar change, no backfill, no MTDS coordination (per
+      operator ruling — none needed). Shipped `instruments-service@30fe4511`.
 
 ## Progress Log
 
 - 2026-07-26 (worker, slot 6): Filed while running the shape-B null-aware reconciliation; not investigated further (out
   of that todo's scope).
+- 2026-07-30 (worker, slot 8): Investigated the open CODE fix todo; found it conflicts with the operator-ruled two-id
+  pool model (2026-07-18) and breaks confirmed cross-repo consumers (unified-api-contracts `parse_glued_pool_id`, 2
+  instruments-service scripts, the catalogue's byte-identical `glued_pair_id` invariant, MTDS's independent key
+  reconstruction). Filed BLK-b3379171; operator ruled **Option B** — narrow consumer-side fix, no grammar change.
+  Audited every raw-shard consumer: `build_instrument_catalogue.py::_aggregate_key()` was already safe
+  (`pool::<chain>::<pool_address>` key for POOL rows, confirmed by code read); the one naive consumer (the shape
+  comparator that surfaced the bug) is a vanished scratchpad script, nothing to patch. Shipped a regression test proving
+  the catalogue never collapses same-symbol/different-address pools + inline adapter docstring notes on the known
+  non-uniqueness of the raw shard's `instrument_key` column. Both CODE todos above closed (one WON'T-DO, one DONE with
+  the actual resolving change). instruments-service@30fe4511.
