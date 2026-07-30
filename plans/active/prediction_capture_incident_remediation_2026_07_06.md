@@ -308,7 +308,9 @@ orchestrator-dispatched).
 
 ### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
 
-- [ ] [CODE] P1. Fix `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
+- [x] ✅ [CODE] P1. **DONE 2026-07-30 — `instruments-service@e0f7aaad` (via
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 1).** Fix
+      `instruments-service/instruments_service/engine/orchestrator/prediction.py:95`
       (`_extract_prediction_canonical_group`): `ticker = str(row.get("instrument_key", "") or "")` passes the FULL
       `"KALSHI:PREDICTION_MARKET:{ticker}"` string into `classify_kalshi_to_canonical_group(ticker=...)` instead of the
       bare ticker, so every override/prefix-table lookup fails (they match against the string START) and 100% of Kalshi
@@ -320,7 +322,10 @@ orchestrator-dispatched).
       `venue=KALSHI/canonical_question_group=OTHER` parquet's rows through the fixed extraction yields the same ~30 real
       named-group split this VERIFY's diagnostic already measured client-side (30 groups, ~7,510/9,513 rows, not
       9,513/9,513 OTHER); a new unit test asserts `_extract_prediction_canonical_group` on a `KALSHI` row with a real
-      named-series ticker (e.g. `KXBTCD-...`) returns that group, not `OTHER`; `quality-gates.sh` green.
+      named-series ticker (e.g. `KXBTCD-...`) returns that group, not `OTHER`; `quality-gates.sh` green. **Verified**:
+      `tests/unit/test_prediction_canonical_group_shard.py::test_kalshi_composite_instrument_key_still_classifies_correctly`
+      asserts a `KXBTC-26MAR-90000`-style composite key now classifies to `BTC_PRICE_RANGE_DAILY`, not `OTHER`; 3/3
+      Kalshi CQG tests pass at HEAD.
 - [ ] [DATA] P2. Once the Phase 6 CODE fix ships + is verified live for ≥1 day, assess whether the historical
       `OTHER`-bucketed Kalshi rows (2026-07-12 onward, ~9,500/day, ~30 days) are worth a one-off backfill/reclassify
       pass into their correct CQG buckets, or whether forward-only correctness is sufficient (per

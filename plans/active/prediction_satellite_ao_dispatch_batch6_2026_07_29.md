@@ -109,23 +109,27 @@ sports-tranche-owned).
 
 ## Todos
 
-- [ ] [CODE] P0. **Fix the write-time `canonical_question_group` mis-bucketing bug — 79% of daily Kalshi volume silently
-      routes to `OTHER`.** Root cause (confirmed via Phase 6 of the source doc, added 2026-07-26):
-      `instruments-service`'s `_extract_prediction_canonical_group` (in the `prediction.py` classifier module, around
-      line 95) passes the FULL `instrument_key` instead of the bare Kalshi ticker into the CQG classifier, so the
-      classifier fails to match the real canonical group and every affected row falls into the `OTHER` catch-all —
-      silently, with no error, every day since at least 2026-07-12 (17+ days of ongoing corruption as of this audit).
-      Fix: pass the bare ticker (mirror the Polymarket path's already-correct extraction), add a regression test
-      asserting a representative Kalshi ticker classifies to its real CQG (not `OTHER`), and confirm `quality-gates.sh`
-      green in instruments-service. This is a live, ongoing data-correctness defect — per CLAUDE.md "Data pipeline
-      correctness is the heartbeat," fix in full, no deadline deferral. **Source**:
+- [x] ✅ [CODE] P0. **DONE 2026-07-30 — `instruments-service@e0f7aaad`.** Fix the write-time `canonical_question_group`
+      mis-bucketing bug — 79% of daily Kalshi volume silently routes to `OTHER`. Root cause (confirmed via Phase 6 of
+      the source doc, added 2026-07-26): `instruments-service`'s `_extract_prediction_canonical_group` (in the
+      `prediction.py` classifier module, around line 95) passes the FULL `instrument_key` instead of the bare Kalshi
+      ticker into the CQG classifier, so the classifier fails to match the real canonical group and every affected row
+      falls into the `OTHER` catch-all — silently, with no error, every day since at least 2026-07-12 (17+ days of
+      ongoing corruption as of this audit). Fix: pass the bare ticker (mirror the Polymarket path's already-correct
+      extraction), add a regression test asserting a representative Kalshi ticker classifies to its real CQG (not
+      `OTHER`), and confirm `quality-gates.sh` green in instruments-service. This is a live, ongoing data-correctness
+      defect — per CLAUDE.md "Data pipeline correctness is the heartbeat," fix in full, no deadline deferral.
+      **Verified**: the fix + its `test_kalshi_composite_instrument_key_still_classifies_correctly` regression test were
+      already shipped (`instruments-service@e0f7aaad`, slot-4, 2026-07-30 14:37:50 — landed on `live-defi-rollout`
+      before this todo was picked up); confirmed the diff matches this todo's spec exactly and re-ran
+      `tests/unit/test_prediction_canonical_group_shard.py -k kalshi` at HEAD — 3/3 pass. **Source**:
       `prediction_capture_incident_remediation_2026_07_06.md` (Phase 6, the sole open P1 CODE item — its gated P2
       "assess historical backfill" follow-on is a separate, explicit operator/architect judgment call, NOT included in
       this todo). **Done when**: the fix ships (instruments-service commit SHA cited), the regression test passes, and
-      Phase 6's checkbox in the source doc is flipped citing this todo + SHA. (Housekeeping note, not part of this
-      todo's scope: `prediction_phase_ab_residuals_2026_07_24.md`'s A1 item is a stale, pre-Phase-6, generic reference
-      to "harden the capture path" — whoever executes this todo should also correct A1 to point at Phase 6 /this todo
-      instead of leaving it as a confusing duplicate-looking reference.)
+      Phase 6's checkbox in the source doc is flipped citing this todo + SHA — both done, see
+      `unified-trading-pm@<this-commit>`. (Housekeeping note on `prediction_phase_ab_residuals_2026_07_24.md`'s A1 item:
+      already corrected by a separate 2026-07-30 reconciliation pass — A1 now correctly points at Phase 6 instead of the
+      stale generic "harden the capture path" reference; no further action needed here.)
 
 - [ ] [BACKEND] P1. **Build the paper-LIVE routing seam: `AtomicInstruction` → `AtomicLegExecutor` via the UTL
       `EventTransport` facade.** Architecture was RULED 2026-07-28 (use the codex-mandated live=batch
@@ -351,3 +355,13 @@ sports-odds/sports-registry content with zero prediction-market-specific work �
   covering-plan set (see the 6 Deferred sections above for the excluded population's disposition); drafted this batch's
   13 todos across 9 conflict-clear source docs. `status: draft` per CLAUDE.md — awaiting operator review before flip to
   `active`.
+- 2026-07-30 (slot 8, data_engineering, dispatch `prediction_satellite_ao_dispatch_batch6-001`): todo 1 (the P0 Kalshi
+  CQG mis-bucketing fix) was ALREADY SHIPPED by a different worker (`instruments-service@e0f7aaad`, slot-4, 14:37:50 —
+  landed on `live-defi-rollout` moments before this task dispatched, evidently via a separate route into the same source
+  doc's Phase 6 item). Verified the shipped diff matches this todo's spec exactly (bare-ticker extraction via
+  `.rsplit(":", 1)[-1]`, mirroring the Polymarket path) and re-ran
+  `tests/unit/test_prediction_canonical_group_shard.py -k kalshi` at HEAD — 3/3 pass including the new
+  `test_kalshi_composite_instrument_key_still_classifies_correctly` regression test. Flipped this todo + Phase 6's
+  checkbox in `prediction_capture_incident_remediation_2026_07_06.md` to reflect reality; no new code required.
+  Confirmed the A1 housekeeping note (pointing `prediction_phase_ab_residuals_2026_07_24.md`'s A1 item at Phase 6) was
+  already handled by a separate 2026-07-30 reconciliation pass — no action needed there.
