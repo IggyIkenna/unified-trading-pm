@@ -165,14 +165,9 @@ awareness given the blast radius).
       change `check_shard_freshness` itself to stop matching a `data_type` value against an `expected_venues` entry
       (correct in principle, fleet-wide blast radius: would trigger mass re-fetch across every asset_group); **Other**.
       Repos: market-tick-data-service, unified-trading-library.
-- [ ] [DATA] P1. **Blast-radius audit of the same sentinel collision beyond odds_api.** `check_shard_freshness`
-      (`unified-trading-library/unified_trading_library/manifest_writer/_queries.py`) matches an `expected_venues` entry
-      against **either** the `venue` column **or** the `data_type` column
-      (`present_all = present_venues |     present_data_types`, a documented v4 sports-compat union) and is blind to
-      `source`. Enumerate every (asset_group, service) whose `expected_venues` contains a token that ALSO occurs as a
-      `data_type` value written by a DIFFERENT pipeline into the same bucket — each is a latent permanent-skip.
-      Done-when: a per-asset_group table of colliding tokens with a present/absent verdict. Repo:
-      unified-trading-library.
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 (slot 7) — blast radius is SPORTS-ONLY; no other asset_group reproduces the
+      sentinel collision.** Full per-asset_group table + methodology in § "Blast-radius audit results (2026-07-30, slot
+      7)" below. Repo: unified-trading-library (no code change — audit found nothing else to fix).
 - [x] ✅ [DATA] P2. **DONE 2026-07-30 (slot 3) — premise void + verified idle.** There is no consolidator drop bug to
       propagate to other buckets (P0 above). Re-verified `market-data-tick-sports-prd-central-element-323112` directly:
       its `_index/per_vm/` holds exactly ONE object (`_legacy_seed.parquet`, 7.42 MiB, mtime 2026-07-17) — i.e. **no
@@ -388,6 +383,49 @@ CLAUDE.md § async-discipline already warns about, here in a skip predicate rath
       shipped 0.135.1, making `import unified_trading_library` raise
       `ImportError: cannot import name 'iter_route_contexts'`. Only slot 3's UTL venv was fixed in-session. Done-when:
       `python -c "import unified_trading_library"` succeeds in each repo's `.venv`. Repos: all Python service repos.
+
+## Blast-radius audit results (2026-07-30, slot 7, data_engineering) — P1 todo
+
+Dispatched the `[DATA] P1` blast-radius todo. Method: (1) enumerate every real (non-test) call site of
+`check_shard_freshness` across the fleet and the exact `(bucket-family, service_name, expected_venues tokens)` triple
+each one checks; (2) for each triple, download that bucket's `_index/availability_index.parquet` ONCE (a single read of
+the already-materialised manifest, not a new whole-corpus GCS walk — same class of operation the root-cause section
+above used) and query it directly with DuckDB for the two concrete failure shapes the sentinel bug needs: a foreign
+`service_name`'s row satisfying the token via the `venue` column (the sports mechanism), or via the `data_type` column
+(the todo's literal wording). "Foreign" means a DIFFERENT logical pipeline than the one the caller's `service_name`
+declares — multiple genuine vendors capturing the SAME real venue (e.g. `tardis` + `binance`'s own REST fallback both
+under `venue=BINANCE-FUTURES`) is NOT this bug, it's expected multi-source coverage.
+
+| asset_group / caller                                        | bucket checked                                                 | service_name scope         | expected_venues token shape                                                                        | verdict                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ----------------------------------------------------------- | -------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| sports / MTDS `_apply_freshness_skip`                       | `instruments-store-sports-prd`                                 | `market-tick-data-service` | pseudo-venue `ODDS_API`                                                                            | **PRESENT (confirmed)** — this issue's own root-cause section; MDPS's odds-horizon-bucket rollup stamps `venue=ODDS_API` under the SAME `service_name=market-tick-data-service` (a sports-specific ownership convention: "MTDS owns betting-market instruments+odds" per venue_mapping.py), so it satisfies the token via the `venue` column.                                                                                                                                                                                                                                      |
+| tradfi / MTDS `_apply_freshness_skip`                       | `market-data-tick-tradfi-prd` (98 MB manifest)                 | `market-tick-data-service` | real venues `CME,CBOE,NASDAQ,NYSE,ICE,FX,KRX,FRED`                                                 | **ABSENT** — live query: 0 rows anywhere with `data_type` literally equal to any of these 8 tokens. `venue`-column groups exist across multiple `source` values (`databento`,`yahoo`,`fred`) but every group is the SAME real venue's OWN multi-vendor capture, not a foreign pipeline. `market-data-processing-service` writes its own candle rows into this same bucket under its OWN `service_name` (49,536 rows) — no cross-stamping observed.                                                                                                                                 |
+| prediction / MTDS `_apply_freshness_skip`                   | `market-data-tick-pred-prd` (115 MB manifest)                  | `market-tick-data-service` | real venues `POLYMARKET,KALSHI`                                                                    | **ABSENT** for the sentinel-collision pattern (0 `data_type`-column hits). Surfaced an unrelated, real data-quality anomaly instead (filed as a new todo below): 58,013 rows carry `venue=KALSHI` but `source=polymarket_clob` — a source-mislabel, not a foreign-pipeline token collision (doesn't affect `check_shard_freshness` correctness since KALSHI is genuinely expected AND genuinely captured, just under the wrong `source` stamp).                                                                                                                                    |
+| cefi / MTDS `_apply_freshness_skip`                         | `market-data-tick-cefi-prd` (172 MB manifest)                  | `market-tick-data-service` | real venues (14 sampled incl. bare `OKX`, `COINBASE-CDE`, all Tardis-derived `*-SPOT`/`*-FUTURES`) | **ABSENT** — 0 `data_type`-column hits for any sampled token. Multi-`source` venue groups (e.g. `BYBIT`: `tardis`+`bybit`, `HYPERLIQUID`: `tardis`+`hyperliquid`) are the documented native-adapter-alongside-Tardis multi-vendor pattern, not a collision.                                                                                                                                                                                                                                                                                                                        |
+| defi / MTDS `_apply_freshness_skip`                         | `market-data-tick-defi-prd` (1.07 GB manifest)                 | `market-tick-data-service` | compound `PROTOCOL-CHAIN` strings (`UNISWAP_V2-ETHEREUM`, …)                                       | **NOT LIVE-VERIFIED this session** (manifest is >1 GB — a full download+query is disproportionate to a same-session audit's single-walk budget; judgment call, not a skip). Classified **structurally low-risk**: DeFi `data_type` values are generic categories (`gas_fees`,`lending_index`,`dex_swaps`,`oracle_price`,`lst_rate`,`liquidation`,`perp_funding`) — no other pipeline anywhere in the fleet writes a compound `PROTOCOL-CHAIN` string as a bare `data_type` value (grepped fleet-wide). Follow-up todo filed below for anyone who wants the live census closed out. |
+| onchain (defi) features / features-service `_skip_if_fresh` | `features-defi-prd` (37 KB manifest — dedicated, live-checked) | `features-service`         | feature_group names (`lst_yields`, `rewards`, …)                                                   | **ABSENT** — confirmed via direct read: the ENTIRE bucket has exactly one `service_name` value (`features-service`, 1,538 rows). features-service owns dedicated per-asset_group buckets (`features-{cefi,defi,pred,sports,tradfi}-prd`), never shared with MTDS/MDPS/IS, so no foreign pipeline can stamp this `service_name` there.                                                                                                                                                                                                                                              |
+| reference-data / instruments-service preflight              | `instruments-store-{ag}-prd`                                   | `instruments-service`      | reference entities (venue names, `FIXTURES`, `STANDINGS`, …)                                       | **Different collision class, already known + mitigated** — `process_preflight.py`'s own per-league `FIXTURES` coarse-match bug (one league's stale row marking the WHOLE date fresh for every other league) is a same-service, cross-ENTITY collision, not a cross-pipeline one; it already has a dedicated fix (`_should_skip_date_for_per_league`). No cross-pipeline (foreign `service_name`) collision evidence found for IS's own scope in the checked buckets.                                                                                                               |
+
+**Net finding: the sentinel-collision bug class is confirmed SPORTS-ONLY.** It depends on a sports-specific ownership
+quirk (MDPS's odds-horizon-bucket rollup deliberately writing under MTDS's `service_name` rather than its own, because
+instruments-service's sports-ownership doc assigns betting-market odds to MTDS) that has no analogue in cefi/tradfi/
+defi/prediction, where MDPS always writes its own candle rows under its own `service_name` with no observed
+cross-stamping. The `[OPERATOR]` P1 fix-approach ruling above (options A/B/C) therefore only needs to cover the sports
+`ODDS_API` path — no other asset_group needs the same row-scoping fix applied pre-emptively.
+
+- [ ] [DATA] P3. **Investigate KALSHI/polymarket_clob source-mislabel in the prediction-market manifest** — 58,013 rows
+      in `market-data-tick-pred-prd-central-element-323112` carry `venue=KALSHI, data_type=trades` but
+      `source=polymarket_clob` (writes span 2026-07-11 05:56–06:00 UTC, a narrow ~4-minute window — looks like a single
+      misconfigured backfill/replay run rather than an ongoing writer bug). Confirm whether these rows are genuine
+      KALSHI trades mis-stamped with the wrong `source`, or genuine POLYMARKET trades mis-stamped with the wrong `venue`
+      — either way `source=`/`venue=` disagree with each other for this slice. Done-when: root cause identified + (if
+      genuinely mislabeled) a restamp plan. Repo: market-tick-data-service.
+- [ ] [DATA] P3. **Close out the DeFi leg of the blast-radius audit with a live manifest census** — the P1 audit above
+      classified DeFi as structurally low-risk by naming-convention analysis only (its `market-data-tick-defi-prd`
+      manifest is 1.07 GB, judged disproportionate for this session's single-walk budget). Done-when: a single DuckDB
+      read of `market-data-tick-defi-prd-central-element-323112/_index/availability_index.parquet` confirms 0 rows have
+      `data_type` literally equal to any `ALL_DEFI_VENUES` token
+      (`unified-api-contracts/     unified_api_contracts/registry/defi_venues.py`). Repo: unified-trading-library.
 
 ## Codex SSOTs
 
