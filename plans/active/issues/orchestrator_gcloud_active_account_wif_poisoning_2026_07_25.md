@@ -150,6 +150,19 @@ workflow job step runs `google-github-actions/auth` on this host, which happens 
   CI job that runs on this host, not a narrow bugfix.
 - The VM stop this incident was blocking on succeeded once the manual repoint above completed; no data-correctness
   impact from the auth failure itself (the underlying VM-stop urgency was about a separate bug, not this one).
+- **2026-07-30 corroborating evidence (slot-15)**: hit this exact mechanism THREE times in one session while running
+  `gcloud compute instances create/delete/list` for `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`'s VM
+  fleet recovery — each time `gcloud config get-value account` showed a poisoned account instead of
+  `unified-trading-sa`. Two occurrences were `github-actions-deploy@...` (matches this doc); the THIRD was a **different
+  SA, `github-deploy@central-element-323112.iam.gserviceaccount.com`** — a second glue-workflow identity poisoning the
+  shared config the same way, not previously named in this doc's root-cause section (worth checking which workflow's
+  `service_account:` maps to `github-deploy` vs `github-actions-deploy` when scoping fix option (a)).
+  `gcloud config set account unified-trading-sa@...` fixed it each time (this incident's stopgap, not the
+  activate-service-account recipe — the ADC key/token itself was never invalid in my case, only the active-account
+  pointer). Did not hit the todo-3 `CLOUDSDK_AUTH_ACCESS_TOKEN` per-command stopgap this session; a bare
+  `gcloud config set account` sufficed each time (worth noting as a lighter-weight alternative fix for the
+  active-account-pointer-only poisoning case, vs. the todo-3 workaround's presumed scope of a fully invalid/expired
+  credential).
 
 ## na-eligibility-audit verdict
 
