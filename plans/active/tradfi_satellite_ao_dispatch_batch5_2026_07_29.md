@@ -36,8 +36,8 @@ tags: [tradfi, ao-dispatch, close-out, batch-5, satellite-docs, mvp-mode, confli
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
     /plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
     /plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
