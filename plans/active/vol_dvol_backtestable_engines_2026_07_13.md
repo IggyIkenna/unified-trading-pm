@@ -158,17 +158,19 @@ what's missing.
       (`(date(2026,7,30)-date(2021,3,24)).days+1 == 1955`, verified programmatically). Both boundaries (`day=2021-03-24`
       DVOL-launch day and `day=2026-07-30` today) independently spot-checked in raw GCS before the full-distribution
       manifest check. **No partial runs, no gaps, no re-run needed.**
-- [ ] [SCRIPT] P1. **Gate resolved 2026-07-28 (was BLOCKED-OPERATOR-DECISION — the operator decision is now RULED, see
-      the `[DATA]` todo immediately above)**: the remaining prerequisite is a REAL data dependency, not an operator gate
-      — DO NOT WORK THIS TODO until the `[DATA]` todo above is actually complete and the full DVOL history pull has
-      landed. Check the manifest for `data_type=volatility_index` rows spanning the FULL 2021-03-24→now window BEFORE
-      picking this up; if the range is incomplete, pick up the `[DATA]` todo instead rather than re-verifying from
-      scratch (3 slots already burned a dispatch on the old operator-gate confusion — see Progress Log). Once the full
-      history is available: wire it + the underlying's realised-vol close series as `GroupBRunner` backtest input for
-      **VOL_CARRY** and run the backtest.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-07-30 (slot-7, `backend_engineer`).** Wired the DVOL implied-vol index + the
+      underlying's realised-vol close series as `GroupBRunner` backtest input for **VOL_CARRY** and ran the backtest —
+      strategy-service@`18d7e775`. See Progress Log below for the full methodology + real results (both underlyings'
+      backtests came back NON-passing — near-zero/slightly-negative Sharpe — so the next todo should leave VOL_CARRY
+      `not_available` and file the `BLOCKED-*` naming this, not register it).
 - [ ] [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
       `ARCHETYPE_ENGINE_REGISTRY`. If it does not pass, leave `not_available` and file a new `BLOCKED-*` todo naming the
-      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service.
+      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service. **Real backtest already run
+      (see Progress Log 2026-07-30, slot-7) — result is NON-passing for both BTC and ETH (near-zero/slightly-negative
+      Sharpe, near-zero PnL, ~23-25% win rate). Do NOT re-run the backtest — go straight to: leave `not_available` +
+      file the `BLOCKED-*` todo citing the recorded metrics** (unless you have a specific, stated reason to challenge
+      the methodology — e.g. a genuinely better param sweep — in which case say so explicitly rather than silently
+      re-deriving).
 - [ ] [SCRIPT] P1. Same backtest-then-conditionally-register sequence for **VOL_ARB_RV_IV**
       (`vol_trading/arb_rv_iv.py`). Repo: strategy-service.
 - [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
@@ -253,3 +255,34 @@ what's missing.
   in ~10.5min (no contention running unopposed): manifest-verified 3910/3910 `capture_status=captured` rows (1955 dates
   × {BTC,ETH}, exactly 2021-03-24→2026-07-30, 0 failures/empties). Todo flipped `[x]`. Next: the `[SCRIPT]`
   backtest-wiring todo below is now genuinely dispatchable (its manifest prerequisite is fully satisfied).
+
+- 2026-07-30 (slot-7, `backend_engineer`): Wired + ran the VOL_CARRY DVOL backtest — strategy-service@`18d7e775`
+  (`scripts/vol_carry_dvol_backtest.py` + `tests/unit/scripts/test_vol_carry_dvol_backtest.py`, full `quality-gates.sh`
+  green before ship, 6 new unit tests). **Methodology**: `iv_atm` from the already-captured DVOL parquet
+  (`data_type=volatility_index`, last hourly bar/day, vol-points→fraction); realised vol from a SECOND already-captured
+  real series — BINANCE-FUTURES perpetual `derivative_ticker` `index_price` (Tardis batch capture; confirmed via direct
+  GCS probe this codebase already holds this data 2021-03-24→2026-05-22, i.e. it predates the current Tardis-credentials
+  block — no new external calls made), 20-day rolling annualised close-to-close log-return vol (same formula as
+  features-service's `realized_vol_calculator.py`, reimplemented locally per the no-service-to-service-imports rule
+  rather than importing it). **Honest window**: backtest run over 2021-03-24→2026-05-22 — the real, GCS-probe-confirmed
+  INTERSECTION of both series' coverage (not the full DVOL range, which runs 45 days further to 2026-07-30 with no
+  matching underlying-close data yet) — 1866/1886 candidate days had both series (the 20-day gap is the RV lookback
+  warmup, not a data hole). **GroupBRunner wiring**: VOL_CARRY is not yet in `ARCHETYPE_ENGINE_REGISTRY` (that is the
+  NEXT todo's decision), so the script injects a process-local registry entry before constructing the runner (never
+  touches the committed `factory.py`) — the backtest genuinely runs through the real v2 orchestrator + benchmark-fill
+  engine, not a bypass. Each ATM CALL/PUT leg's `MarketStateSnapshot.mid_price` is set to the DVOL level itself (no
+  per-strike premium series exists — that's precisely what the other 15 VOL_* engines are `BLOCKED-CREDENTIALS` on), so
+  the runner's benchmark P&L measures vega P&L (IV-level moves between entry/exit), the economically meaningful quantity
+  here. **Real results (both underlyings, full window, no synthetic data)**:
+  - BTC: 29 open+flatten cycles (58 fills), `total_pnl=-119.76`, `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`,
+    `win_rate=22.8%`.
+  - ETH: 51 cycles (102 fills), `total_pnl=-191.40`, `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`, `win_rate=24.75%`.
+    Full JSON in the commit's script output (re-runnable:
+    `python scripts/vol_carry_dvol_backtest.py --underlyings BTC,ETH`). **Verdict against the HARD CONTRACT bar**: this
+    does NOT clear it — both Sharpes are indistinguishable-from-noise (an order of magnitude below any defensible-edge
+    threshold), PnL is flat-to-negative for both assets, and win rate ~23-25% with no compensating asymmetric payoff.
+    Flipped this todo `[x]`; annotated the next `[SCRIPT]` (register-or-not) todo above so it does NOT re-run the
+    backtest — it should go straight to `not_available` + file the `BLOCKED-*` finding citing these numbers, unless a
+    worker has a concrete, stated reason to try a different param sweep (entry_vrp/exit_vrp were left at carry.py's
+    defaults 0.04/0.01 — untested whether a different threshold pair would clear the bar; that would be a legitimate
+    reason to re-run, not a silent do-over).
