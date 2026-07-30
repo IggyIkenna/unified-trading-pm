@@ -113,9 +113,12 @@ in this read-only audit pass (time-bounded scope).
 
 ## Recommended decision
 
-- [ ] [DIAG] P1. Trace which writer/consolidator path produces the 9 chain-shaped and 5 cefi-exchange-shaped values on
+- [x] ✅ [DIAG] P1. Trace which writer/consolidator path produces the 9 chain-shaped and 5 cefi-exchange-shaped values on
       `defi.venues` — sample a handful of the actual manifest rows (venue, chain, source, pipeline_mode columns
       together) to distinguish "writer defaults venue to chain when unresolved" from "cross-AG bleed". Source: this doc.
+      — market-tick-data-service@fed5cd97 + see "ROOT-CAUSE TRACE (2026-07-30)" in Progress Log below: the two
+      classes are DIFFERENT bugs — 9 chain-shaped venues = confirmed writer mis-stamp; 5 cefi-exchange venues =
+      confirmed cross-AG bleed (single ~27ms write burst of genuine cefi rows into the defi bucket's index).
 - [ ] [DIAG] P1. Trace which writer stamps `chain="FUTURES"` for defi + cefi rows — sample the actual rows (venue,
       instrument_type, data_type alongside chain) to determine if this is the bundle-grain `futures_chain`/`FUTURES`
       instrument_type leaking into the chain column, or an unrelated mis-stamp. Check whether this is a NEW regression
@@ -126,6 +129,58 @@ in this read-only audit pass (time-bounded scope).
       venue-as-chain fix on this same plan. Source: this doc.
 
 ## Progress Log
+
+- **ROOT-CAUSE TRACE (2026-07-30, worker slot-11, market-tick-data-service@fed5cd97)**: ran a single-walk sampling
+  script (`market-tick-data-service/scripts/audit_defi_cefi_venue_chain_contamination_2026_07_30.py`) against the LIVE
+  prod defi (29,082,549 rows) and cefi (9,488,864 rows) availability manifests — one slim `read_availability_index()`
+  call per bucket (columns=`venue,chain,source,pipeline_mode,written_at,instrument_type,data_type`), no fresh GCS
+  corpus walk. Findings resolve todo-1 and materially advance todo-2:
+
+  **defi.venues, 9 chain-shaped values (ARBITRUM/AURORA/AVALANCHE/BASE/BSC/ETHEREUM/LINEA/OPTIMISM/POLYGON) — CONFIRMED
+  wrong-axis writer mis-stamp (candidate class 1), NOT cross-AG bleed.** Every sampled row has `chain` IDENTICAL to
+  `venue` (e.g. venue=ETHEREUM, chain=ETHEREUM), `source=onchain_rpc`, `pipeline_mode=batch_onchain_rpc` — pure DeFi
+  onchain identity columns, not a cefi shape. 11,662 total rows across the 9 values (739-1,857 rows each), spread over
+  a 21-hour window (2026-07-23T13:13:35Z .. 2026-07-24T10:46:21Z) — an ONGOING writer behavior across many capture
+  cycles, not one-off historical residue. Root cause: a defi onchain-RPC writer sets `venue` = the chain id itself
+  (conflates venue with chain) when the real DeFi protocol/venue is unresolved for these 9 chains. Next step (todo-3,
+  P2): find the onchain_rpc writer path that defaults `venue` this way (analogous to the already-fixed
+  `onchain_perp_batch_handler.py` venue-as-chain bug, `mtds@accd8aa4`, but that fix was for the CHAIN column on cefi
+  rows — this is a DIFFERENT bug: the VENUE column on defi rows) and re-stamp the 11,662 affected rows.
+
+  **defi.venues, 5 cefi-exchange-shaped values (BITFINEX/BITGET/BYBIT/KRAKEN/OKX) — CONFIRMED cross-AG bleed (candidate
+  class 2), matching the resolved `cross_ag_prediction_rows_bleed_into_sports_instruments_index_2026_07_20.md` shape.**
+  Exactly 7 rows per venue (35 total) landed in the DEFI bucket's canonical index in a single ~27ms write burst
+  (2026-07-24T20:06:38.622716Z .. .649777Z) carrying pure-CEFI identity columns: `chain=FUTURES`, `source=tardis`,
+  `pipeline_mode=batch_tardis`, `instrument_type=perpetual`, `data_type=perp_daily_ctx` — Tardis is the CEFI market-data
+  vendor (per `/codex/05-infrastructure/vm-launcher-runbook.md` § Tardis cap), never a defi source. **BINANCE (also 7
+  rows, same microsecond batch, same columns) bled in alongside the 5 flagged values but wasn't in the original
+  census's non-canonical list** — worth a follow-up on why the census didn't flag it (possibly a
+  `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` fold quirk masking it in the defi context). This is a genuine, discrete
+  cross-bucket leak event — one write, one moment — not gradual/ongoing contamination, consistent with a consolidator
+  TOCTOU-class race rather than a per-row writer bug. NOT YET confirmed whether this is a live regression of the
+  `unified-trading-library@14301571` fix or residue from before it (the fix shipped 2026-07-24, and this batch is
+  timestamped 2026-07-24T20:06:38 — SAME DAY as the fix; needs the Cloud Logging correlation the resolved doc's method
+  #4 describes, not done here — time-bounded to this todo's sampling scope).
+
+  **defi.chains "FUTURES" (todo-2 supporting evidence) — SUBSUMED by the cross-AG bleed above, not a separate bug.**
+  The 42 defi rows carrying `chain=="FUTURES"` are the EXACT SAME 2026-07-24T20:06:38 batch as the 6 bled cefi venues
+  (BINANCE + the 5 flagged exchanges, 7 rows each = 42) — same source/pipeline_mode/instrument_type/data_type. Once the
+  cross-AG bleed is fixed/re-stamped, this defi.chains entry resolves as a side effect — no separate defi-side fix
+  needed.
+
+  **cefi.chains "FUTURES" (todo-2 supporting evidence) — a SEPARATE, still-live cefi writer defect, NOT the bled rows
+  and NOT the already-resolved `onchain_perp_batch_handler.py` fix.** cefi's OWN bucket independently carries 8
+  genuinely-native rows: `venue=BITFINEX-FUTURES`, `chain=FUTURES`, `instrument_type=PERPETUAL` (uppercase — cefi's own
+  casing convention, per the C2a instrument_type casing ruling), `data_type=trades`/`liquidations`, `source=tardis`,
+  `pipeline_mode=batch_tardis`, written 2026-07-27T18:07:13Z..18:16:57Z — a DIFFERENT date than the bleed batch, so
+  these are cefi's own writes, not leaked-in defi rows. Root cause not yet found: some cefi/Tardis-futures ingestion
+  path is stamping a market-segment-shaped string ("FUTURES") into the `chain` column even though cefi has no chain
+  axis (RESULT 3, 2026-07-20). Todo-2's remaining work: find that writer (likely in the cefi Tardis-futures capture
+  path handling `BITFINEX-FUTURES`-style venue tokens) — NOT done in this pass (out of todo-1's scope; flagging for the
+  next worker on todo-2).
+
+  Script: `market-tick-data-service/scripts/audit_defi_cefi_venue_chain_contamination_2026_07_30.py` (kept per the
+  script-homes lifecycle marker until this doc resolves + todo-3's re-stamp ships).
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
   unchanged). all 3 todos are bounded manifest-row sampling traces with stated discriminants; conflict-check clear
