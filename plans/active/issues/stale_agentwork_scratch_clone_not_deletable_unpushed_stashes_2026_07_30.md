@@ -87,14 +87,25 @@ so nothing is blocked on this decision; the only remaining cost is 1.2 GB of dis
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Rule on how to retire `.tabs/3/instruments-service-agentwork-sports-2026-07-13/`. **Options:** **A
-      [WORKER REC]: bundle-then-delete** — `git bundle create <archive>.bundle --all refs/stash` plus the reflog'd stash
-      commits into a durable location, verify the bundle lists all 10 stash objects, THEN delete the directory. Reclaims
-      the 1.2 GB, keeps every byte recoverable, and costs a few MB. **B: delete outright** — accept losing 10 stashes of
-      3-week-old WIP on the reasoning that anything that mattered shipped through the real clone weeks ago (defensible,
-      but unprovable, and irreversible). **C: leave it** — zero risk, keeps paying 1.2 GB and leaves a directory that
-      future tooling must keep remembering to exclude. **Other**: operator can type a custom answer. **Done when**: the
-      directory is either gone (A or B) or explicitly recorded as KEEP with a re-review date (C).
-- [ ] [SCRIPT] P3. If option A is ruled: write the bundle, verify it (`git bundle verify` + confirm all 10 stash commits
-      are listed), record the bundle path here, and only then delete the directory. **Done when**: the bundle verifies,
-      its path is cited in this doc, and the source directory no longer exists.
+- [x] [OPERATOR] P2. Rule on how to retire `.tabs/3/instruments-service-agentwork-sports-2026-07-13/`. **Ruled
+      2026-07-30: option A, bundle-then-delete.**
+- [x] [SCRIPT] P3. Bundle + verify. `git bundle create --all refs/stash` was tried FIRST and found to only capture
+      `stash@{0}` — `refs/stash` is a single ref, and entries 1-9 exist only in its reflog, which plain `git bundle`
+      does not walk. Fixed by materialising a temporary named ref per entry (`refs/stash-preserve/0..9`, one
+      `git update-ref` per `git rev-parse stash@{N}`), bundling those 10 refs explicitly, then deleting the temporary
+      refs (the objects stay reachable via the bundle regardless; the source repo's real `refs/stash` reflog is
+      untouched either way). **Verified independently**, not just via `git bundle verify` (which only checks internal
+      consistency, not which commits are actually payload): unbundled into a disposable fresh repo and ran
+      `git cat-file -e <sha>` for all 10 stash commit SHAs — all 10 PRESENT. Bundle path:
+      `.tabs/3/stash-bundles/instruments-service-agentwork-sports-2026-07-13-stashes.bundle` (67.8 MB, local-only, not
+      git-tracked — a 94% reduction from the 1.2 GB source directory). **Done when** criteria met: bundle verifies, path
+      is cited here (above), all 10 stash SHAs confirmed present by direct unbundle-and-cat-file test (not just
+      `bundle verify`).
+- [ ] [OPERATOR] P2. Delete `.tabs/3/instruments-service-agentwork-sports-2026-07-13/` now that its 10 stash entries are
+      durably bundled + verified above. **This step cannot be done by an agent**: the workspace's own
+      `agent-orchestrator/scripts/hooks/block_destructive_commands.py` PreToolUse guardrail unconditionally blocks any
+      `rm -rf`/recursive delete for autonomous workers (by design, with no override — its own docstring says not to
+      circumvent it), and this is exactly the "filesystem command, no SDK equivalent" case its own block message names
+      as an operator-escalation, not a workaround. Run:
+      `rm -rf     .tabs/3/instruments-service-agentwork-sports-2026-07-13/`. **Done when**: directory is gone,
+      `du -sh .tabs/3/stash-bundles/` confirms the bundle is the only remaining trace.
