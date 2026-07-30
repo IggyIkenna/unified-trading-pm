@@ -15,7 +15,7 @@ summary: >-
   (`7224165`), meaning no fully-green `quality-gates.sh` run has landed since whatever commit last touched that sentinel
   — the tree has drifted red since then, most likely from a wave of new/changed components shipped without matching test
   coverage (consistent with the heavy concurrent multi-agent load this repo is under).
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -41,8 +41,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "deployment-ui@3c7e2a8"
 ---
+
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, 0 open todos. Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s archive-on-resolve rule.
 
 # deployment-ui vitest coverage gate is broadly red — blocks ALL quickmerges into this repo right now
 
@@ -93,13 +96,12 @@ will hit the same wall.
 
 ## Todos
 
-- [ ] [UI] P1. Root-cause how the coverage threshold got this far behind (bisect for the commit(s) that pushed it below
-      70%/67%/70%/64% — likely a batch of new components landed without tests) and either (a) write the missing test
-      coverage for the worst-offending files until the global thresholds pass again, or (b) if a broad rewrite genuinely
-      added many low-risk/presentational components, consider whether the global threshold itself needs a one-time,
-      deliberate, documented adjustment (NOT a silent ratchet-down) — a decision for whoever picks this up, not
-      pre-judged here. Done when: `bash scripts/quality-gates.sh` is green end-to-end on `live-defi-rollout` HEAD,
-      confirmed via a fresh `.qg_last_passed_sha` write matching HEAD. Repo: deployment-ui.
+- [x] ✅ [UI] P1. Root-cause how the coverage threshold got this far behind — deployment-ui@3c7e2a8. Bisect found the
+      "broad coverage collapse" was **not a real test-coverage regression** — it was a broken local dependency install
+      caused by a mis-authored `pnpm-workspace.yaml`. See Progress Log for the full root-cause writeup + evidence. Done:
+      `bash scripts/quality-gates.sh` ran green end-to-end on `live-defi-rollout` HEAD with a fresh
+      `.qg_last_passed_sha` matching HEAD (`352598d2132d560f9b6e18b85bfc7a963e47dff3` at commit time, superseded by
+      `3c7e2a8` after the Quickmerge-trailer amend).
 
 ## Progress Log
 
@@ -107,3 +109,25 @@ will hit the same wall.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot 16, ui_developer craft)**: ROOT-CAUSED + FIXED — the broad coverage collapse was an **environment
+  artifact, not a real test gap**.
+  - This slot's fresh `.tabs/16/deployment-ui` clone had no `node_modules` at all. `bash scripts/setup.sh` /
+    `pnpm install` failed outright: `ERROR packages field missing or empty`. Traced to `pnpm-workspace.yaml` (added by
+    `de5b7af`, the 2026-07-29 npm→pnpm migration commit) declaring only `ignoredBuiltDependencies:` with **no
+    `packages:` field** — pnpm 9.15.9 (this host's globally-installed pnpm) hard-refuses ANY install once a
+    `pnpm-workspace.yaml` exists without `packages:`.
+  - CI stayed green through this the whole time (`gh run list --repo IggyIkenna/deployment-ui` shows unbroken
+    `quality-gates-v2` successes since `de5b7af`) because `ui-quality-gates-v2.yml` pins `pnpm/action-setup@v6` at major
+    version `"10"` — pnpm 10.x tolerates the missing `packages:` field; pnpm 9.x does not. Verified directly:
+    `npx pnpm@9` reproduces the error against the unmodified file, `npx pnpm@10` installs clean against the same file.
+  - This means the original issue-reporting session almost certainly ran `npx vitest run --coverage` against a
+    **stale/partial pre-migration `node_modules`** (pnpm install would have failed for them too, under whatever pnpm
+    major they had) rather than a correctly-resolved dependency tree — producing the reported 24-25% numbers from broken
+    module resolution/transforms, not from genuinely uncovered components.
+  - Fix shipped: added an explicit `packages: ["."]` to `pnpm-workspace.yaml` — verified to install cleanly under BOTH
+    pnpm 9.15.9 and pnpm 10.34.5, so this stops depending on which pnpm major a given dev/agent host happens to have.
+  - With a correct install, coverage is and was fine — no test-writing or threshold adjustment was needed:
+    `Statements 72.32%|Branches 64.5%|Functions 68.79%|Lines 74.49%` (all ≥ the 70/64/67/70 thresholds), 101 test files
+    / 1101 tests passing. `bash scripts/quality-gates.sh` ran green end-to-end post-fix, sentinel written matching HEAD.
+  - Shipped: `deployment-ui@3c7e2a8` (`fix(deps): declare packages: in pnpm-workspace.yaml so pnpm 9.x can install`),
+    landed on `live-defi-rollout` via quickmerge --agent.

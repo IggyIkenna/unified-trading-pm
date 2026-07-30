@@ -68,13 +68,19 @@ drift_direction: advance-code
       `.next/cache` and skips; `deployment-ui` correctly runs a real cold `pnpm run build` (tsc + vite build) to
       completion and regenerates `node_modules/.tmp/tsconfig.tsbuildinfo`. **Shipped to unified-trading-system-ui
       only**: `unified-trading-system-ui@42439593`, `quality-gates.sh` green (341s), landed `live-defi-rollout`.
-      **`deployment-ui`'s copy could NOT ship** — `quickmerge.sh`'s re-gate step hit a pre-existing, unrelated
+      **`deployment-ui`'s copy could NOT ship at the time** — `quickmerge.sh`'s re-gate step hit an apparent
       `vitest --coverage` failure (24-25% vs the 64-70% thresholds across all 4 metrics), confirmed via `git stash` to
-      exist independently of this change on `live-defi-rollout` HEAD; filed as
-      `issues/deployment_ui_vitest_coverage_gate_broadly_red_2026_07_29.md` (new, P1) since it blocks EVERY quickmerge
-      into deployment-ui right now, not just this one. `unified-trading-pm/scripts/setup.sh` (the template) carries the
-      change; re-run `cp unified-trading-pm/scripts/setup.sh deployment-ui/scripts/setup.sh` + commit once that issue
-      doc's gate is green again — the deployment-ui copy is currently NOT in sync with the template pending that fix.
+      reproduce independently of this change on `live-defi-rollout` HEAD; filed as
+      `/plans/archive/issues/deployment_ui_vitest_coverage_gate_broadly_red_2026_07_29.md` (P1, now archived-resolved).
+      **RESOLVED 2026-07-30 (`deployment-ui@3c7e2a8`)**: root-caused as an environment artifact, not a real coverage gap
+      — a `pnpm-workspace.yaml` missing `packages:` broke local/agent `pnpm install` under pnpm 9.x (CI stayed green
+      only because it pins pnpm 10.x); the reporting session's coverage numbers came from a broken/stale install, not
+      genuinely uncovered components. Fixed + verified green
+      (`Statements 72.32%|Branches 64.5%|Functions     68.79%|Lines 74.49%`, all ≥ threshold) — see the issue doc (now
+      archived) for the full writeup. `deployment-ui`'s gate is unblocked; the deployment-ui copy of `setup.sh` is STILL
+      not in sync with the template's pre-warm-cache step —
+      `cp unified-trading-pm/scripts/setup.sh deployment-ui/scripts/setup.sh` + commit + ship is the remaining open work
+      on this todo.
 - [ ] [INFRA] P3. **Migrate to pnpm's global content-addressable store** for UI repos: hardlinked node_modules →
       identical inodes across ALL slot clones → OS page cache warm fleet-wide while deps are unchanged (npm copies
       per-clone: N× disk + N× cold reads). **Operator decision 2026-07-27
