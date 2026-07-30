@@ -27,7 +27,7 @@ scope: [engineer, admin]
 tags: [quality-gates, flaky-gate, timeout, pytest-timeout, ci, shared-host-contention, xdist]
 related: [/plans/active/issues/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -184,3 +184,27 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   `PYTEST_WORKERS`/`PYTEST_UNIT_DIR` override pattern, default raised 60→150s. Local `quality-gates.sh` green (sentinel
   verified at HEAD), shipped via `quickmerge --agent --files`. Todos 2 (workspace-wide hardcoded-timeout sweep) and 3
   (watch next 5-10 GH Actions `quality-gates-v2` runs for recurrence) remain open, unassigned to this task.
+- **2026-07-30** — 4th/5th confirmed instance, revealing todo 1 only covered HALF the fleet: `cicd` escalation
+  `agt-41a9d1` (instruments-service promotion PR #1026, run `30519066074`, `07:07:52Z`) hit the identical
+  `Failed: Timeout (>60.0s) from pytest-timeout.` → `worker_internal_error` → `AssertionError` in `dsession.py` crash,
+  even though `--timeout=60` should already have been dead per todo 1 (shipped 05:39:50). Root cause: `base-service.sh`
+  (sourced by every SERVICE repo — instruments-service, execution-service, features-service, market-tick-data-service,
+  deployment-api, ~20 repos — NOT `base-library.sh`, which only library-repo callers like unified-api-contracts source)
+  carries its OWN separate, un-deduplicated copy of the `PARGS --timeout=` line that todo 1 never touched — exactly the
+  "recurring authoring pattern" todo 2 asks to sweep for, found reactively instead of proactively. Fixed by the
+  `agt-41a9d1` worker at `unified-trading-pm@d4aaaf666` (07:14:18Z; landed on LDR ~07:12:17Z), same 60→150 default, same
+  `PYTEST_TIMEOUT` override name (kept as-is — already live/documented elsewhere, e.g.
+  `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md` — not renamed to `PYTEST_TIMEOUT_SECONDS`).
+  Immediately followed by `unified-trading-pm@ca548de83` (07:17:46Z, unrelated QG hard-gate-zone fix). — A SEPARATE,
+  near-simultaneous `cicd` escalation `agt-cc97ce` (this session, instruments-service promotion PR #1027, run
+  `30521486911`) hit the exact same signature: job "QG slice (tests)" cloned `unified-trading-pm` at live-defi-rollout
+  HEAD `07:08:04Z` — 6 minutes BEFORE `d4aaaf666` landed (07:14:18Z) — so it still got the stale `--timeout=60`
+  base-service.sh copy despite todo 1's base-library.sh fix having been on LDR since 05:39:50; a pure timing race, not a
+  new gap. By the time of investigation: `d4aaaf666`+`ca548de83` both confirmed present on current LDR HEAD
+  (`git merge-base --is-ancestor`); PR #1027 had already **self-merged** at `07:01:23Z` (7s after opening — the required
+  `quality-gates-v2` check was satisfied by an independent, already-green check run for the same head SHA, not by the
+  later `pull_request`-triggered run that went on to fail at `07:18-07:25Z`); zero open PRs and zero
+  `/api/repo-blockers` entries for instruments-service. No instruments-service code/test action taken — same
+  no-action-needed pattern as the doc's two prior entries. Neither #1026 nor #1027's failing runs count as POST-fix
+  evidence for todo 3 (both predate `07:14:18Z`) — todo 3's clock effectively restarts from `d4aaaf666`, not
+  `cedef544b`, for the service-repo fleet.
