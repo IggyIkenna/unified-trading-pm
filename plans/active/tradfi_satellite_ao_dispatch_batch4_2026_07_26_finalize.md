@@ -9,7 +9,7 @@ summary: >-
   counts), then re-check batch4's own Deferred conflict-gated / too-large-or-risky items for any that have since
   cleared, then archive batch4 via the standard 6-step ritual. Stays `status: draft` until batch4 itself is approved and
   dispatched, per task_template.md section 4's finalize-plan-coverage rule.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]

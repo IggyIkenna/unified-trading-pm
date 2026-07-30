@@ -8,7 +8,7 @@ summary: >-
   correct prediction_consolidated_closeout_2026_07_18.md's stale claims discovered during batch2's re-triage — the "C2a
   REFUSED — unruled" framing (superseded by the codex D1 ruling) and the "0 open todos" index entries for 3 docs where
   re-check found that claim factually wrong.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]

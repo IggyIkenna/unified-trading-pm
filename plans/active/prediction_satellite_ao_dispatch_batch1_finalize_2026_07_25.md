@@ -7,7 +7,7 @@ summary: >-
   (reconcile each of the 4 distinct source docs' checkboxes/Progress-Log entries independently), plus a batch1-specific
   addition: re-check the excluded item 9 and the 12 fully-deferred docs once the operator has ruled on the queued
   decision in autonomous_session_operator_decisions_2026_07_25.md.
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
