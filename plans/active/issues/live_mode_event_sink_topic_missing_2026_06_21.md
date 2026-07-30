@@ -37,12 +37,14 @@ assigned_vm: planning
 resolved_by:
   "alerting-service@47890b3 (_ALERT_SUBSCRIPTIONS + regression test), deployment-service@dd9eac6c (missing
   google_pubsub_subscription_iam_member IAM grant), unified-trading-library@9bdcf7a2 (build_event_sink() pubsub branch),
-  per this doc's own Progress Log (autonomous session 2026-07-30, Wave 2 doc-count-reduction)"
+  deployment-service@0aad9a37 (removed the dead t1_batch_market_tick_events_publisher HCL block after slot-4's real
+  tofu-destroy + gcloud topic-delete), per this doc's own Progress Log (autonomous session 2026-07-30, Wave 2
+  doc-count-reduction + concurrent rulings-closeout sweep)"
 locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 ---
 
 # Live-mode event sink → missing `{service_name}-events` Pub/Sub topics (all AGs)
@@ -170,10 +172,34 @@ Options:
       `gcloud pubsub topics delete market-tick-data-service-events` →
       `Deleted topic     [projects/central-element-323112/topics/market-tick-data-service-events]`. Confirmed no other
       MTDS live VM was running that might still be on pre-fix code before deleting (only the one already-verified VM was
-      live). (repo: deployment-service)
+      live). (repo: deployment-service — real infra actions via tofu/gcloud; see the concurrent-session addendum below
+      for the actual committed HCL diff.)
+
+      **Independently corroborated + the HCL diff actually shipped (concurrent rulings-closeout session, 2026-07-30):**
+      a separate session re-ran the same checks fresh and reached the same live-ground-truth answer from a different
+      angle — live-mode MTDS + prediction VMs (`mtds-live-cefi-consolidated-20260730-010147`,
+      `prediction-live-{kalshi,polymarket}-{trades,book-snapshot-5}-*`) all `RUNNING`, and a direct Cloud Monitoring
+      `timeSeries.list` query for `pubsub.googleapis.com/subscription/num_undelivered_messages` on
+      `service-lifecycle-events-sub` showed real, actively GROWING message counts (122 → 3746 across a ~10min window) —
+      hard proof of live publish throughput with no 404/crash. `gcloud pubsub topics describe
+      market-tick-data-service-events` → `NOT_FOUND` (the destroy above had already landed) and a fresh
+      `ENV=prod ./tofu.sh state list` found the IAM-member resource ALREADY ABSENT from state too — but the `.tf`
+      SOURCE still declared the now-dead block (that HCL edit had not yet been committed/pushed to
+      `deployment-service`). Removed it and shipped for real: `deployment-service@0aad9a37` (quality gates green 187s;
+      pushed directly per the dirty-deps carve-out — an unrelated concurrent slot had a live uncommitted edit in the
+      path-dependency `unified-api-contracts`, mtime <20s, correctly left untouched). Net: two independent sessions
+      confirmed the same live ground truth and closed this todo from complementary angles (real infra destroy/delete +
+      the actual committed HCL cleanup); no conflicting actions, no double-delete attempted.
 
 ## Progress Log
 
 - **autonomous session 2026-07-30 (Wave 2 doc-count-reduction)**: closed the last open todo (interim-topic cleanup),
   verified live-first per the todo's own gate. All todos now checked; status `open` → `resolved`. Doc is
   archive-eligible.
+- **rulings-closeout sweep 2026-07-30 (concurrent session)**: independently re-verified the same live ground truth,
+  found the topic + state entry already gone (the entry above's actions), and shipped the actual `deployment-service`
+  commit removing the now-dead HCL block (`deployment-service@0aad9a37` — the state/topic destroy alone doesn't remove
+  the source declaration). Merge-resolved a genuine concurrent-edit conflict on this file (both sessions closed the
+  same todo independently, on a genuinely shared working tree — confirmed via a live git reflog showing interleaved
+  commits from another process while resolving this very conflict); kept both evidence trails since they are
+  complementary, not contradictory. `resolved_by` frontmatter extended to include `deployment-service@0aad9a37`.
