@@ -86,74 +86,92 @@ drift_direction: advance-code
       ("check if it has since shipped") anticipates.
 
       **Provenance first**: batch1's own Deferred section already documents that a 2026-07-25 re-check (same-day
-          follow-up) cleared 20 of the original 38 candidates into `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`
-          (now `status: active`, dispatched), leaving 8 genuinely conflict-gated across 5 docs in batch2's own Deferred
-          section, plus the always-excluded `tradfi_manifest_content_recovery_completion_2026_07_24.md`. Independently
-          spot-verified today that the other 9 original items (across `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`,
-          `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (resolved+archived),
-          `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (resolved+archived)) are genuinely accounted
-          for via batch2's active dispatch — not silently dropped. This todo's real remaining job was to fresh-re-check the
-          8-item/5-doc residual + the excluded doc against TODAY's corpus state (5 days and 3 more batches — batch3
-          archived, batch4 archived, batch5 active — have landed since 2026-07-25).
+              follow-up) cleared 20 of the original 38 candidates into `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`
+              (now `status: active`, dispatched), leaving 8 genuinely conflict-gated across 5 docs in batch2's own Deferred
+              section, plus the always-excluded `tradfi_manifest_content_recovery_completion_2026_07_24.md`. Independently
+              spot-verified today that the other 9 original items (across `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md`,
+              `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (resolved+archived),
+              `issues/tradfi_todo_cells_below_vendor_discovery_floor_2026_07_20.md` (resolved+archived)) are genuinely accounted
+              for via batch2's active dispatch — not silently dropped. This todo's real remaining job was to fresh-re-check the
+              8-item/5-doc residual + the excluded doc against TODAY's corpus state (5 days and 3 more batches — batch3
+              archived, batch4 archived, batch5 active — have landed since 2026-07-25).
 
-          **Per-doc re-check (2026-07-30, live-verified against current HEAD)**:
-          1. `data_completion_tradfi_2026_07_15.md` — **still genuinely conflict-gated.** Both competing closeout claims
-             (Phase C "Denominator/catalogue-completeness" todo, line 232; the BLOCKED-INFRA P0 "Certify tradfi Layer-1"
-             gate, line 302) live in `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`, confirmed still `[ ]` open
-             AND that whole doc is still `status: draft` (undispatched) — the competing claim has not shipped. Left
-             deferred.
-          2. `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (the ES CME futures ohlcv + ES_OPT lock candidates) —
-             **still genuinely conflict-gated.** The competing claim (re-verify every MVP cell via a fresh
-             `data-pipeline-check-is`/`-mtds` run) is now tracked in `tradfi_consolidated_native_ao_extract_2026_07_25.md`
-             (status: active, dispatched) but its own todo (line 104) is confirmed still `[ ]` open — unshipped. Left
-             deferred.
-          3. `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (purge/reclassify 1,242 dead CBOE `ohlcv_15m`
-             rows) — **still genuinely conflict-gated**, same Phase C denominator todo as item 1, confirmed still open.
-             Left deferred.
-          4. `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` — **conflict CLEARED, already covered
-             (no new todo needed).** The competing closeout claim is now `[x]` in
-             `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (line 160): the ICE/KRX/FX source-mislabeling root
-             cause is fixed (`unified-trading-library@f237b75a`, 2026-07-26, regression-tested, green QG) and the FX
-             `SPOT_PAIR` manifest-`instrument_id` write path for new captures is fixed
-             (`market-tick-data-service@020b703e`, 2026-07-25); the billing-guard sub-question was separately
-             operator-closed 2026-07-28 (P0→P3). The only genuinely remaining work — backfilling the historically
-             mis-stamped rows — is **already** tracked as its own open todo in the same doc ("NEW 2026-07-29 — execute
-             the two historical backfills..."), so extracting a duplicate new todo here would create redundant tracking;
-             noting the clearance is the correct resolution per this todo's own "redundant/already-covered" clause.
-          5. `tradfi_multisource_backfill_2026_06_22.md` (FX yahoo backfill-to-completion) — **left conflict-gated, WITH
-             a flagged evidence discrepancy for whoever picks this up next.** `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s
-             own Deferred section (authored 2026-07-29/30) asserts "the FIX HASN'T SHIPPED yet, so the sequencing risk is
-             unchanged" — but per finding 4 immediately above, the write-path root-cause fix this candidate's risk
-             actually depends on (mis-stamping NEW writes) shipped 2026-07-25/26, predating batch5's own authoring date.
-             batch5's phrasing appears to conflate that already-shipped write-path fix with the still-open *historical*
-             re-stamp (a different, non-blocking concern for NEW writes). Given this is a real GCS-writing VM launch
-             (blast radius + CLAUDE.md's VM-launch-justification gate), I am NOT unilaterally clearing it — flagging the
-             discrepancy here with citations rather than silently resolving it, per the operator's standing
-             never-silently-resolve-a-conflict instruction. Left explicitly deferred; batch5's Deferred section itself
-             (a separate active plan, out of this todo's edit scope) should be corrected by whoever next re-triages tradfi.
+              **Per-doc re-check (2026-07-30, live-verified against current HEAD)**:
+              1. `data_completion_tradfi_2026_07_15.md` — **still genuinely conflict-gated.** Both competing closeout claims
+                 (Phase C "Denominator/catalogue-completeness" todo, line 232; the BLOCKED-INFRA P0 "Certify tradfi Layer-1"
+                 gate, line 302) live in `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`, confirmed still `[ ]` open
+                 AND that whole doc is still `status: draft` (undispatched) — the competing claim has not shipped. Left
+                 deferred.
+              2. `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (the ES CME futures ohlcv + ES_OPT lock candidates) —
+                 **still genuinely conflict-gated.** The competing claim (re-verify every MVP cell via a fresh
+                 `data-pipeline-check-is`/`-mtds` run) is now tracked in `tradfi_consolidated_native_ao_extract_2026_07_25.md`
+                 (status: active, dispatched) but its own todo (line 104) is confirmed still `[ ]` open — unshipped. Left
+                 deferred.
+              3. `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` (purge/reclassify 1,242 dead CBOE `ohlcv_15m`
+                 rows) — **still genuinely conflict-gated**, same Phase C denominator todo as item 1, confirmed still open.
+                 Left deferred.
+              4. `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` — **conflict CLEARED, already covered
+                 (no new todo needed).** The competing closeout claim is now `[x]` in
+                 `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (line 160): the ICE/KRX/FX source-mislabeling root
+                 cause is fixed (`unified-trading-library@f237b75a`, 2026-07-26, regression-tested, green QG) and the FX
+                 `SPOT_PAIR` manifest-`instrument_id` write path for new captures is fixed
+                 (`market-tick-data-service@020b703e`, 2026-07-25); the billing-guard sub-question was separately
+                 operator-closed 2026-07-28 (P0→P3). The only genuinely remaining work — backfilling the historically
+                 mis-stamped rows — is **already** tracked as its own open todo in the same doc ("NEW 2026-07-29 — execute
+                 the two historical backfills..."), so extracting a duplicate new todo here would create redundant tracking;
+                 noting the clearance is the correct resolution per this todo's own "redundant/already-covered" clause.
+              5. `tradfi_multisource_backfill_2026_06_22.md` (FX yahoo backfill-to-completion) — **left conflict-gated, WITH
+                 a flagged evidence discrepancy for whoever picks this up next.** `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`'s
+                 own Deferred section (authored 2026-07-29/30) asserts "the FIX HASN'T SHIPPED yet, so the sequencing risk is
+                 unchanged" — but per finding 4 immediately above, the write-path root-cause fix this candidate's risk
+                 actually depends on (mis-stamping NEW writes) shipped 2026-07-25/26, predating batch5's own authoring date.
+                 batch5's phrasing appears to conflate that already-shipped write-path fix with the still-open *historical*
+                 re-stamp (a different, non-blocking concern for NEW writes). Given this is a real GCS-writing VM launch
+                 (blast radius + CLAUDE.md's VM-launch-justification gate), I am NOT unilaterally clearing it — flagging the
+                 discrepancy here with citations rather than silently resolving it, per the operator's standing
+                 never-silently-resolve-a-conflict instruction. Left explicitly deferred; batch5's Deferred section itself
+                 (a separate active plan, out of this todo's edit scope) should be corrected by whoever next re-triages tradfi.
 
-          **Recommendation for the large/risky doc** — `tradfi_manifest_content_recovery_completion_2026_07_24.md`: **it
-          already got its own dedicated pass**, so no new batch is warranted. It was reclassified `assigned_vm: NA` →
-          `planning` on 2026-07-27 by `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 1 (bounded/
-          deterministic, conflict-free against active AO plans), is `status: active`/dispatched, has shipped 17 of 20
-          todos, and already carries its own gated finalize plan
-          (`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md`, `depends_on` +
-          `gate_on_depends: true`) to reconcile + archive once its remaining 3 todos land. Nothing further needed from
-          this todo.
+              **Recommendation for the large/risky doc** — `tradfi_manifest_content_recovery_completion_2026_07_24.md`: **it
+              already got its own dedicated pass**, so no new batch is warranted. It was reclassified `assigned_vm: NA` →
+              `planning` on 2026-07-27 by `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` Phase 1 (bounded/
+              deterministic, conflict-free against active AO plans), is `status: active`/dispatched, has shipped 17 of 20
+              todos, and already carries its own gated finalize plan
+              (`tradfi_manifest_content_recovery_completion_2026_07_24_finalize_2026_07_27.md`, `depends_on` +
+              `gate_on_depends: true`) to reconcile + archive once its remaining 3 todos land. Nothing further needed from
+              this todo.
 
-          **Done-when verified**: all 13 conflict-gated docs (+ 1 special-cased 0-candidate doc, `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
-          already fully RULED+shipped 2026-07-29/30 — see batch5's todo 1) have either (a) a shipped/redundant-already-tracked
-          resolution (`tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`, mvp_mode, + the 9 items that cleared
-          into batch2 on 2026-07-25) or (b) an explicit, freshly re-verified confirmation the conflict is still open
-          (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
-          `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`, `tradfi_multisource_backfill_2026_06_22.md` — the
-          last one with a flagged evidence discrepancy for correction); the large/risky doc has a recorded recommendation
-          (already covered, no action needed). No repo code changed by this todo — doc-only reconciliation.
+              **Done-when verified**: all 13 conflict-gated docs (+ 1 special-cased 0-candidate doc, `tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
+              already fully RULED+shipped 2026-07-29/30 — see batch5's todo 1) have either (a) a shipped/redundant-already-tracked
+              resolution (`tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`, mvp_mode, + the 9 items that cleared
+              into batch2 on 2026-07-25) or (b) an explicit, freshly re-verified confirmation the conflict is still open
+              (`data_completion_tradfi_2026_07_15.md`, `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+              `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`, `tradfi_multisource_backfill_2026_06_22.md` — the
+              last one with a flagged evidence discrepancy for correction); the large/risky doc has a recorded recommendation
+              (already covered, no action needed). No repo code changed by this todo — doc-only reconciliation.
 
-- [ ] [DOC] P1. **Archive `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
-      CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
-      should have already resolved all of them — verify none remain) → add the archive banner → run the codex-alignment
-      check → grep the corpus for every referrer of `tradfi_satellite_ao_dispatch_batch1_2026_07_25` and fix each path
-      to point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan is
-      moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself
-      gets archived alongside it in the same commit.
+- [x] ✅ [DOC] P1. **DONE 2026-07-30 (slot-13, data_engineering) — Archived
+      `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per CLAUDE.md's
+      plan-archival rule / `plan-completion-and-archival-discipline.md`): (1) confirmed no Deferred item needs a new
+      tracked todo — todo 2 above already verified every one of the 38 original conflict-gated candidates is accounted
+      for (20 cleared into the already-dispatched `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, the remaining
+      genuinely-open items each independently tracked in their own live source doc,
+      `tradfi_manifest_content_recovery_completion_2026_07_24.md` has its own dedicated finalize plan) — nothing
+      orphaned by archiving; (2) added the 🟢 ARCHIVED banner + flipped `status: complete` to both docs; (3)
+      codex-alignment check: batch1's own "Codex SSOTs" section states no new durable contract is created (every todo
+      executed an already-decided spec from its source doc) — confirmed nothing to update; (4) grepped the corpus for
+      every leading-slash `/plans/active/tradfi_satellite_ao_dispatch_batch1(_finalize)?_2026_07_25` referrer and fixed
+      each to `/plans/archive/2026_07/...` (9 files: `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`,
+      `tradfi_consolidated_closeout_2026_07_18.md`, this finalize doc's own `related:`,
+      `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`, `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`,
+      `tradfi_consolidated_native_ao_extract_2026_07_25.md`,
+      `plans/archive/2026_07/defi_satellite_ao_dispatch_batch1_2026_07_25.md`,
+      `plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch3_2026_07_26.md`,
+      `plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md`; bare-filename/relative prose citations
+      without a leading slash — incl. `plans/active/INDEX.md`'s auto-generated links — left as-is, out of
+      `check_reference_paths.py`'s leading-slash-only scope); (5) `locked_by` confirmed empty on both docs; (6) this
+      checkbox flip committed FIRST as a plain edit at this doc's still-active path (per RULES.md's 2026-07-30
+      flip-vs-mv-same-commit incident note), with the `git mv` of both docs to `plans/archive/2026_07/` landing as a
+      separate follow-up commit in the same turn. **Done when**: the plan is moved to `plans/archive/2026_07/`, every
+      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it (follow-up
+      commit).
