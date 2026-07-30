@@ -29,7 +29,7 @@ related:
   ]
 created: 2026-07-29
 parent_epic: manifest_master
-assigned_vm:
+assigned_vm: planning
 locked_by:
 priority: P2
 source: >-

@@ -152,8 +152,10 @@ def test_status_enum_is_per_type_soft():
     assert "status" in _fields(vs, Sev.SOFT)
 
 
-def test_optional_assigned_vm_empty_is_ok():
-    # issue assigned_vm is OPTIONAL -> empty is fine (neither HARD nor SOFT)
+def test_blank_assigned_vm_is_a_hard_violation_on_an_issue():
+    # blank_assigned_vm_dispatch_classification_gap_2026_07_26.md: assigned_vm on an issue is now
+    # REQUIRED (was OPTIONAL, which let 58 active docs sit genuinely unclassified LOCAL-vs-AO-
+    # dispatchable and invisible to this gate). NA and a real vm-id are both valid; blank is not.
     issue = {
         "doc_type": "issue",
         "title": "x",
@@ -173,8 +175,53 @@ def test_optional_assigned_vm_empty_is_ok():
         "assigned_vm": None,
     }
     vs = validate_frontmatter("issue", issue, REG)
+    assert "assigned_vm" in _fields(vs, Sev.HARD)
+
+
+def test_na_assigned_vm_is_ok_on_an_issue():
+    issue = {
+        "doc_type": "issue",
+        "title": "x",
+        "summary": "s",
+        "status": "open",
+        "nature": "notes",
+        "asset_group": ["meta"],
+        "stage": ["meta"],
+        "repos": [],
+        "scope": ["engineer"],
+        "tags": [],
+        "related": [],
+        "created": "2026-06-24",
+        "parent_epic": "defi_master",
+        "priority": "P2",
+        "source": ["audit"],
+        "assigned_vm": "NA",
+    }
+    vs = validate_frontmatter("issue", issue, REG)
     assert "assigned_vm" not in _fields(vs, Sev.HARD)
     assert "assigned_vm" not in _fields(vs, Sev.SOFT)
+
+
+def test_assigned_vm_key_absent_entirely_is_a_hard_violation_on_an_issue():
+    issue = {
+        "doc_type": "issue",
+        "title": "x",
+        "summary": "s",
+        "status": "open",
+        "nature": "notes",
+        "asset_group": ["meta"],
+        "stage": ["meta"],
+        "repos": [],
+        "scope": ["engineer"],
+        "tags": [],
+        "related": [],
+        "created": "2026-06-24",
+        "parent_epic": "defi_master",
+        "priority": "P2",
+        "source": ["audit"],
+    }
+    vs = validate_frontmatter("issue", issue, REG)
+    assert "assigned_vm" in _fields(vs, Sev.HARD)
 
 
 def test_assigned_role_absent_is_ok():

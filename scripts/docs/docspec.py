@@ -147,7 +147,12 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("parent_epic", Req.R, "registry", registry="epic"),
         FieldSpec("priority", Req.R, "enum", PRIORITY),
         FieldSpec("source", Req.R, "free_list"),
-        FieldSpec("assigned_vm", Req.O, "registry_or_na", registry="vm"),
+        # blank_assigned_vm_dispatch_classification_gap_2026_07_26.md: was Req.O, which let 58
+        # active docs (198 open todos) sit with a genuinely blank assigned_vm -- never classified
+        # LOCAL vs AO-dispatchable, structurally eligible for AO pickup the moment someone filled
+        # the field in, but invisible to this gate the whole time. NA and planning are both valid
+        # values (registry_or_na already accepts NA); blank/absent is not.
+        FieldSpec("assigned_vm", Req.R, "registry_or_na", registry="vm"),
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
     ],

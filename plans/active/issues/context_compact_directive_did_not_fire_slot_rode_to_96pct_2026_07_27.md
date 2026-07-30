@@ -18,7 +18,7 @@ summary: >-
   impact (client auto-compact is the final safety net underneath), but a slot riding 90→96% unguided risks the
   typed-but-wedged class and wastes context headroom. P2.
 status: open
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 nature: issue

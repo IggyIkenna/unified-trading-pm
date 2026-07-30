@@ -22,7 +22,7 @@ summary: >-
   per-slot clones may carry their own crontab); and the github-glue-slot-refresh.timer that IS firing is unrelated (it
   refreshes the GitHub-glue runner's clone to main, not worker-slot LDR ff-pull). P2.
 status: open
-assigned_vm:
+assigned_vm: planning
 resolved_by:
 locked_by:
 nature: issue

@@ -39,7 +39,7 @@ created: 2026-07-13
 parent_epic: sports_master
 priority: P1
 source: oscillation investigation 2026-07-13 (operator task "lets fix it")
-assigned_vm: ""
+assigned_vm: planning
 resolved_by: ""
 locked_by: ""
 execution_scope: orchestrator-agent

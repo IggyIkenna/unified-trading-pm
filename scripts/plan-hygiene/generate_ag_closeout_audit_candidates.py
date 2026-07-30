@@ -43,6 +43,15 @@ ds = _load_docspec()
 AGS = ["cefi", "defi", "tradfi", "prediction", "sports"]
 NON_AG_TRANCHES = ["ao", "ci", "infra"]
 ALL_TRANCHES = [*AGS, "cross-cutting", *NON_AG_TRANCHES]
+# The `infra` TRANCHE name (CLI --tranche, SKILL.md, closeout-doc prefix) does not match the actual
+# `asset_group` enum VALUE, which is `infrastructure` (plans/PLAN_FORMAT.md's ASSET_GROUP enum has no
+# "infra" member) -- found while fixing this script's membership test to read asset_group directly
+# (generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md):
+# a naive `t in asset_group` for t="infra" would silently match zero docs (every real doc is tagged
+# `infrastructure`), reproducing the exact silent-zero-candidates failure class this fix exists to
+# close, just via a different root cause. `ao`/`ci` have no such mismatch (their enum values equal
+# their tranche names).
+TRANCHE_ASSET_GROUP_VALUE = {"infra": "infrastructure"}
 
 CLOSEOUT_NAME = {
     t: (
@@ -81,11 +90,14 @@ def _covering_paths(tranche: str, include_closeout: bool = True) -> list[Path]:
     """Real covering docs: the consolidated closeout(s) + every dispatch_batch/finalize doc for this
     tranche. Excludes *_aggregated_sources* (digest, non-covering per skill) and *_history_* (archive).
 
-    For ao/ci/infra, membership itself is DEFINED by citation in the closeout doc (see main()) -- so
-    counting the closeout as a "covering" doc there would make every member trivially "cited"
-    (tautology). Callers computing coverage for ao/ci/infra must pass include_closeout=False so only
-    a REAL batch/finalize citation (actual dispatch, not just being listed in the closeout's own
-    Sources/Tracks digest) counts as covered.
+    ao/ci/infra membership is now tested the SAME way as the 5 real AGs (`t in asset_group`, see
+    main()) -- as of the 2026-07-27 asset_group schema expansion (`unified-trading-pm@a97bc7bed`),
+    ao/ci/infrastructure are real dedicated asset_group enum values, so there is no more tautology
+    risk in counting a tranche's own closeout doc as a covering doc for it (this function used to be
+    called with include_closeout=False for these 3 tranches for exactly that reason -- see
+    generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md
+    for the incident this fixed: once a tranche's closeout doc archives, the OLD citation-based
+    membership mechanism silently returned zero members for that tranche).
     """
     prefix = "cross_cutting" if tranche == "cross-cutting" else tranche
     paths = list(_closeout_paths(tranche)) if include_closeout else []
@@ -113,12 +125,8 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
     t = args.tranche
 
-    covering_paths = _covering_paths(t, include_closeout=(t not in NON_AG_TRANCHES))
+    covering_paths = _covering_paths(t)
     cited = _cited_basenames(covering_paths)
-
-    non_ag_member_sets = (
-        {nt: _cited_basenames(_closeout_paths(nt)) for nt in NON_AG_TRANCHES} if t in NON_AG_TRANCHES else {}
-    )
 
     candidates = []
     for path in _iter_docs():
@@ -155,12 +163,14 @@ def main(argv=None) -> int:
             asset_group = [asset_group]
         parent_epic = fm.get("parent_epic") or ""
 
-        if t in AGS:
-            member = t in asset_group
+        if t in AGS or t in NON_AG_TRANCHES:
+            # ao/ci/infra are real dedicated asset_group enum values (2026-07-27 schema expansion) --
+            # tested identically to the 5 real AGs, not via a closeout-citation proxy (the retired
+            # 2026-07-25->27 workaround; see _covering_paths()'s docstring for the incident this fixed).
+            # infra's enum VALUE is "infrastructure", not "infra" -- see TRANCHE_ASSET_GROUP_VALUE.
+            member = TRANCHE_ASSET_GROUP_VALUE.get(t, t) in asset_group
         elif t == "cross-cutting":
             member = "cross-cutting" in asset_group and (parent_epic in DATA_EPICS or basename in cited)
-        else:  # ao/ci/infra
-            member = basename in non_ag_member_sets.get(t, set())
 
         if not member:
             continue
