@@ -12,7 +12,7 @@ summary:
   via f9222f78, unrelated defi verify-script fix) — neither file is one I touched. My own Pass-1 quality-gates.sh had
   run clean moments earlier; these commits landed on live-defi-rollout in between and the quickmerge auto-rebase (STAGE
   0.4) picked them up before the Pass-1 re-gate."
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -28,7 +28,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by: ""
+resolved_by: "data_pipeline_alert_substrate_residual-001 (slot 7), 2026-07-30 — market-tick-data-service@6efb252b"
 locked_by: ""
 ---
 
@@ -64,18 +64,25 @@ tradfi manifest-registration correctness fix (slot 14) from landing.
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. Annotate the 4 new sites in
+- [x] ✅ [SCRIPT] P1. Annotate the 4 new sites in
       `market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py` (lines 710, 716, 717, 718 as of
       2026-07-30 — re-verify line numbers before editing, the file may have moved) with `# noqa: qg-empty-fallback` + a
       one-line reason (each field is read from a manifest-recording row_key dict where an absent key legitimately means
       "not applicable to this shard" and the empty-string fallback is the existing, intentional not-present sentinel) OR
       rewrite to fail fast if the field is actually required at that call site — read the surrounding function to judge
-      which. Repo: market-tick-data-service. **Done when**: `check_no_empty_string_fallback.py` no longer flags these 4
-      sites and no new violation is introduced elsewhere in the same file.
-- [ ] [SCRIPT] P1. Same treatment for the 2 sites in `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py` (lines
-      67-68 as of 2026-07-30). Repo: market-tick-data-service. **Done when**: same as above.
-- [ ] [SCRIPT] P1. After both fixes land, `bash scripts/quality-gates.sh` STEP 5.101 must report the repo-wide count
+      which. Repo: market-tick-data-service. — DONE `market-tick-data-service@6efb252b`. Confirmed via
+      `tardis_batch_download.py:58` (the literal row_key builder) that venue/data_type/instrument_type/instrument_id are
+      set unconditionally, so the `.get(key, "")` fallbacks are defensive-typing only for the `dict(_rk_tuple)`
+      round-trip (mirrors the pre-existing `date` noqa on the same function) — annotated all 4 sites accordingly.
+- [x] ✅ [SCRIPT] P1. Same treatment for the 2 sites in `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py`
+      (lines 67-68 as of 2026-07-30). Repo: market-tick-data-service. — DONE `market-tick-data-service@6efb252b`. A
+      genuinely absent column here correctly falls through to the script's own MISMATCH branch
+      (`"" != "solana_lending"`) — the intended honest-failure signal, not a masked one — so annotated rather than
+      rewritten.
+- [x] ✅ [SCRIPT] P1. After both fixes land, `bash scripts/quality-gates.sh` STEP 5.101 must report the repo-wide count
       back at or below the current ratchet baseline (89, per
       `unified-trading-pm/scripts/quality_gates/no_empty_string_fallback_baseline.yaml` — confirm the live value at fix
-      time, never raise it). Repo: market-tick-data-service. **Done when**: a clean `quality-gates.sh` run confirms the
-      count is back at/under baseline and the sentinel is written.
+      time, never raise it). Repo: market-tick-data-service. — DONE. `check_no_empty_string_fallback.py` now reports
+      `87 < baseline 89` (WARN to ratchet the baseline down, non-blocking) and the full `quality-gates.sh` run's STEP
+      5.101 line is green (confirmed in the same run that also cleared the sibling STEP 5.83 adapter-contract-baseline
+      blocker, `mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md`).

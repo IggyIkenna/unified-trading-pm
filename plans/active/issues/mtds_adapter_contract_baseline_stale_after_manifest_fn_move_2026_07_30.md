@@ -76,20 +76,26 @@ shipping, and by extension keeps the existing repo-blocker `RB-88a81995` (condit
 
 ## Recommended decision
 
-- [ ] [SCRIPT] P1. Confirm no contract calls were silently dropped (not just moved) by diffing `064f872a` for both files
-      — grep
+- [x] ✅ [SCRIPT] P1. Confirm no contract calls were silently dropped (not just moved) by diffing `064f872a` for both
+      files — grep
       `classify_venue_error|ADAPTER_FETCH_FAILED|record_captured|record_empty|record_zero_rows|record_failed|record_catalog_unavailable|record_shard_failure`
       counts in `tardis_cefi_shards.py` pre/post the move landed elsewhere, and confirm the sum of
       (`tardis_batch_download.py` new count) + (`tardis_cefi_shards.py` new count) is >= the old
-      `tardis_batch_download.py` baseline (11). Repo: market-tick-data-service. **Done when**: counts reconciled and
-      stated in the commit message of the next todo.
-- [ ] [SCRIPT] P1. Run
+      `tardis_batch_download.py` baseline (11). Repo: market-tick-data-service. — VERIFIED via the checker's own
+      `CONTRACT_PATTERNS` regex: pre-move `tardis_batch_download.py` (at `064f872a~1`) = 13 matches; post-move
+      `tardis_batch_download.py` = 7, `tardis_cefi_shards.py` = 11, sum 18 >= 13 (the commit's own new self-record calls
+      account for the increase) — nothing dropped.
+- [x] ✅ [SCRIPT] P1. Run
       `.venv/bin/python scripts/quality_gates/check_adapter_contract_regression.py --workspace-root <ws> --regenerate-baseline`
       from `unified-trading-pm` to pick up the new per-file counts (lowers `tardis_batch_download.py`, adds/raises
       `tardis_cefi_shards.py`), then commit the updated `adapter_contract_baseline.yaml` via `docs(plans):`-equivalent
       conventional commit (this is a QG baseline file, not a plan — use a `chore(qg):` prefix) + quickmerge. Repo:
-      unified-trading-pm. **Done when**: `bash quality-gates.sh` in market-tick-data-service STEP 5.83 reports OK and
-      the full quality-gates.sh run exits 0.
+      unified-trading-pm. — DONE `unified-trading-pm@83737bd99`. The full-workspace `--regenerate-baseline` flag was NOT
+      used as-is (it rewrote counts across dozens of unrelated files fleet-wide, risking masking a real regression
+      elsewhere mid-flight from other slots) — instead hand-patched only the 2 affected lines
+      (`tardis_batch_download.py` 11→7, `tardis_cefi_shards.py` added at 11) using the checker's exact regex, then
+      re-ran the checker (no `--regenerate-baseline`) to confirm `OK — 330 baselined file(s) at or above minimum.`
+      exit 0. `bash quality-gates.sh` STEP 5.83 now reports OK (verified in the same run as the STEP 5.101 fix).
 - [ ] [SCRIPT] P2. Once green, verify repo-blocker `RB-88a81995` (`repo-market-tick-data-service-qg-green`) actually
       flips green (both this issue's fix AND the sibling STEP 5.101 fix must have landed) — if the watcher doesn't
       auto-resolve within its normal poll window, escalate. Repo: agent-orchestrator (verification only, no code change
