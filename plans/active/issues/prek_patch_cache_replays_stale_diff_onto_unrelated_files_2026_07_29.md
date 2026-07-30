@@ -28,6 +28,7 @@ scope: [engineer, admin]
 tags: [prek, quickmerge, git, corruption, tooling-bug, ci-cd]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-07-29
+last_updated: "2026-07-30" # 6th confirmed reproduction, 2nd landed-on-origin occurrence, plus the concrete 9-patch-file forensic evidence (see Progress Log)
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -83,10 +84,15 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
 
 ## Recommended next step (not done here — needs prek/tooling-level investigation, not a doc fix)
 
+**Start from the evidence already gathered** — the 2026-07-30 (slot-1) Progress Log entry below names the exact 9
+candidate patch files in `~/.cache/prek/patches/` (2 confirmed-unrelated, 7 confirmed-culprit by content match), with
+timestamps, so root-causing doesn't need to re-derive the candidate set from a 160-file directory.
+
 1. Identify why prek's stash-patch mechanism is replaying a stale patch instead of a fresh working-tree snapshot —
    likely a patch-file lookup/cleanup bug (e.g. picking the most-recent-by-mtime file in a shared directory rather than
    the one it just wrote, or never invalidating/deleting consumed patches so a later run's glob still matches an old
-   one).
+   one). Also check the self-perpetuating hypothesis in the same Progress Log entry: do failed/corrupted runs themselves
+   seed NEW stale patches with the same bad content, making this a growing cycle rather than fixed debris?
 2. Confirm the actual blast radius: is `~/.cache/prek/patches/` scoped by repo path anywhere in its lookup, or genuinely
    global? If global, this needs to move to a per-repo-clone-scoped cache path.
 3. Once root-caused, purge `~/.cache/prek/patches/` of stale entries as part of the fix (do NOT do this blind before
@@ -133,3 +139,43 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
   moments later (unrelated file) re-corrupted the same field a THIRD time locally (reverted to a stale pre-fix value,
   `last_updated: 2026-06-27`, caught before staging). Re-fixed properly this time; re-verified byte-for-byte against
   `git show origin/<branch>:<path>` after shipping, not just schema/conflict-marker checks.
+
+- **2026-07-30 (slot-1, harsh_pc) — CORRECTION to the entry directly above, plus new forensic evidence.** The "re-fixed
+  properly, re-verified byte-for-byte" claim in the prior entry was **premature** — the byte-for-byte diff WAS clean at
+  the moment it was taken, but the very next `quickmerge.sh` run on this same slot (shipping a completely unrelated
+  file) corrupted this field **a second time on origin** — the shipped commit (`unified-trading-pm@36fe18966`) again
+  carried the garbled value. This is the **6th confirmed reproduction overall** and the **2nd to actually land on
+  `origin/live-defi-rollout`** (not just caught pre-commit), both landed occurrences from consecutive commits by the
+  same slot within ~20 minutes of each other, both on the exact same field of the exact same file. A third party's
+  follow-up commit (`unified-trading-pm@16ff874e8`) has since cleaned it to a valid (if stale) plain value — current
+  state is clean, but this was NOT this session's own fix holding; it was luck of a later, unrelated commit's own prek
+  run landing a clean copy.
+
+  **New forensic evidence — the actual stale patch files identified, not just the mechanism described abstractly.** Of
+  160 total files in `~/.cache/prek/patches/` (home-level, shared across every slot on this host), filtering for ones
+  containing an actual diff hunk header `+++ b/plans/active/defi_consolidated_closeout_2026_07_18.md` narrows to exactly
+  9:
+  - `1784558226594-3097283.patch`, `1784558229375-3099512.patch` (both 2026-07-20 ~20:07 IST) — **not culprits**:
+    legitimate, already-landed historical diffs (`last_updated: 2026-07-18` → `2026-07-20`), unrelated content.
+  - `1785396516865-2725083.patch`, `1785396524946-2725720.patch`, `1785396528024-2725977.patch`,
+    `1785396539486-2726325.patch`, `1785396547491-2726768.patch` (all today, 12:58:36–12:59:07 IST) — **confirmed
+    culprits**: each contains the same garbled `last_updated:` block (the multi-repeated-`2026-06-27`-date runaway
+    string) as either context or diff content, timestamps matching exactly when this session's own quickmerge runs were
+    executing.
+  - `1785399735300-3150463.patch`, `1785399743321-3155622.patch` (today, 13:52:15–13:52:23 IST) — **confirmed
+    culprits**: same signature, captured during the second failed-fix run.
+
+  **Mechanistic implication worth flagging for whoever root-causes this**: the culprit patches are not one single piece
+  of old debris that will eventually age out — they cluster in tight bursts that line up with THIS session's own
+  repeated fix attempts, i.e. each failed fix appears to leave behind a fresh stale patch carrying the same bad content,
+  which then becomes available for the _next_ run to wrongly replay. If confirmed, this makes the condition
+  self-perpetuating rather than a fixed, shrinking population of old junk — purging today's known-bad patches would stop
+  the CURRENT cycle but a future corruption event would seed new ones the same way, until the actual patch-selection bug
+  in `prek` itself is fixed.
+
+  **Decision NOT made this session, flagged for the operator/next investigator**: did not delete the 7 identified stale
+  patches. Reasoning: `~/.cache/prek/patches/` is genuinely shared host-wide infrastructure (every slot's sessions write
+  into it), and while this session's forensic evidence strongly indicates these 7 specific files are stale/superseded
+  garbage (their content matches an already-known-corrupted, already-superseded state — not anyone's live legitimate
+  work), deleting from a shared cache used by other concurrently-running sessions is a step beyond this task's own scope
+  and was left for an explicit operator call rather than done unilaterally.
