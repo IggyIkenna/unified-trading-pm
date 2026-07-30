@@ -155,24 +155,36 @@ drift_direction: advance-code
       rows, "either backfill or confirm honest-absence") and
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449`'s `[DATA] P2` (COINBASE(7)+OKX(7),
       "reclassify") dissolves once read precisely — they are different-sized, only-partially-overlapping populations:
-      **(a) 9,736 rows** where `venue` is ALREADY market-type-suffixed (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/
+      **(a) 9,743 rows** where `venue` is ALREADY market-type-suffixed (BYBIT/BINANCE-FUTURES/OKX-SWAP/UPBIT/
       HYPERLIQUID/DERIBIT/BINANCE-SPOT/COINBASE-SPOT/OKX-SPOT/OKX-FUTURES) and only `data_type` is blank — **BACKFILL**:
       root-cause the writer path that stamps `capture_status=captured` before `data_type` resolution, join each row back
       to its actual captured GCS object's `data_type=` path segment, correct the manifest field. This is mechanically
       determinable (venue unambiguous) so it gets a full backfill per the no-partial-completion mandate, not a
       diagnose-only close; well under the $100 cost-is-not-a-blocker threshold (manifest correction, no new paid infra).
-      **(b) 14 rows** (bare `OKX`×7 + `COINBASE`×7, the literal overlap between the two docs) where `venue` itself is
-      ambiguous (SPOT/FUTURES/SWAP) — **RECLASSIFY**, exactly as
+      **(b) 7 rows** (bare `OKX`×7 — the ONLY literal overlap between the two docs; see **CORRECTION 2026-07-30** below)
+      where `venue` itself is ambiguous (SPOT/FUTURES/SWAP) — **RECLASSIFY**, exactly as
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` already prescribes: do not fabricate a
       guessed venue-suffix/`data_type`, since the real per-market data is already captured correctly under the suffixed
       venues elsewhere — the bare-venue row is a malformed/duplicate manifest artifact, and inventing a value would
-      violate the workspace's honest-absence/no-fabricated-placeholder rule. Repo: market-tick-data-service. Sources:
-      `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md` (ruling recorded there too) and
-      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` (disposition confirmed, unchanged). **Done
-      when**: a re-measured manifest read shows blank-`data_type` `captured` rows at 0 for the 9,736-row resolved-venue
-      population (backfilled with the correct `data_type` per row, verified against each row's actual GCS object), the
-      14-row bare-venue subset is reclassified (marked malformed/superseded — NOT backfilled with a guessed value), and
-      both source docs' checkboxes are flipped `[x]` with the commit(s) cited.
+      violate the workspace's honest-absence/no-fabricated-placeholder rule. **CORRECTION (2026-07-30, spot-check per
+      `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`'s audit todo)**: the "14 rows (bare `OKX`×7 +
+      `COINBASE`×7)" figure previously stated here was wrong — the cefi doc's own §(3) measured bare
+      `venue == "COINBASE"` at 0 rows across the FULL live index (see the `[DOCS] P3` todo above), so no bare-COINBASE
+      subset can exist within this narrower 9,750-row population either; its own venue breakdown literally sums to 9,750
+      using only `COINBASE-SPOT` (suffixed) + bare `OKX`×7, with no bare-COINBASE line. Only the `OKX`×7 rows are a
+      confirmed literal overlap with the cross-cutting doc's COINBASE(7)+OKX(7) figure — the COINBASE(7) half of that
+      figure comes from a DIFFERENT, older measurement (`audit_index_vs_gcs_spellings.py`, 2026-06-18) and is NOT shown
+      to be satisfied by this todo; re-verify independently before closing
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` on the strength of this backfill alone.
+      Repo: market-tick-data-service. Sources: `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`
+      (ruling + this same correction recorded there too) and
+      `instruments_mtds_consistency_remediation_residuals_2026_07_24.md:449` (disposition confirmed, unchanged for the
+      OKX×7 slice; COINBASE(7) slice unconfirmed). **Done when**: a re-measured manifest read shows blank-`data_type`
+      `captured` rows at 0 for the 9,743-row resolved-venue population (backfilled with the correct `data_type` per row,
+      verified against each row's actual GCS object), the 7-row bare-`OKX` subset is reclassified (marked
+      malformed/superseded — NOT backfilled with a guessed value), the cross-cutting doc's COINBASE(7) half is
+      independently re-verified (not assumed satisfied), and both source docs' checkboxes are flipped `[x]` with the
+      commit(s) cited.
 
 ## Deferred — BLOCKED-OPERATOR-DECISION (a genuine conflict, parked not guessed)
 
@@ -192,8 +204,9 @@ this section is retained only as the original conflict record for provenance:
   lowercase "blank data_type" and the exact row count, while the cross-cutting doc writes "BLANK
   data_type/instrument_type". Two todos, different prescribed fixes, same manifest rows, no evidence that settles which
   is right — resolved above by observing the two docs actually name different-sized, only-partially-overlapping
-  populations (9,736 resolved-venue rows vs. 14 bare-venue rows), so both prescriptions were correct for their own
-  slice.
+  populations (9,743 resolved-venue rows vs. 7 bare-`OKX` rows that are a confirmed literal overlap — see the 2026-07-30
+  CORRECTION above; the cross-cutting doc's separate COINBASE(7) half is a different, older measurement, not shown to
+  overlap this population), so both prescriptions were correct for their own slice.
 
 ## Deferred — operator-gated (re-verified 2026-07-26, all still closed)
 

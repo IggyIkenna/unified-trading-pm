@@ -123,15 +123,11 @@ past tense rather than deleting it outright.
       bytes to spare). If (b) or (c) above is chosen, add the "never restate the literal BLOCKED-* token past-tense"
       rule to CLAUDE.md's existing resolve-and-retag hard rule (Governance + safety HARD RULES § Findings triage) so
       future retag passes don't reintroduce this.
-- [ ] [DATA] P1. **Spot-check the other 23 of the 24 mentions rephrased by `unified-trading-pm@6edd4486a`** for the same
-      false-positive class found in `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md` item 1
-      (2026-07-29, this doc's own Progress Log): that commit rephrased a todo whose credential block was NOT actually
-      resolved — only a separate launch-decision ruling on the same todo was, and the text-pattern heuristic
-      ("RETAGGED/RULED/RESOLVED language in the same block") didn't distinguish the two gates. For each of the other 14
-      files `6edd4486a` touched (see its diff stat), re-verify the underlying fact the old `BLOCKED-*` marker described
-      (not just re-read the prose) is actually resolved — if any operator-decision ruling was conflated with a
-      still-open technical/credential/data block the same way, restore that item's marker the same way this one was
-      restored. (repo: unified-trading-pm)
+- [x] ✅ [DATA] P1. **Spot-check the other 23 of the 24 mentions rephrased by `unified-trading-pm@6edd4486a`** — DONE
+      2026-07-30 (slot 13, data_engineering). Fanned out 7 parallel research agents (one per file-pair, 14 files, all 23
+      remaining mentions) to independently re-verify the underlying fact behind each rephrased marker — not just re-read
+      the prose. Result: **2 genuine findings, 21 mentions confirmed clean.** See Progress Log for the full breakdown
+      and the fixes shipped. (repo: unified-trading-pm)
 
 ## Progress Log
 
@@ -157,3 +153,48 @@ past tense rather than deleting it outright.
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot 13, data_engineering): full 23-mention spot-check complete.** Dispatched 7 parallel research
+  agents, one per file-pair, covering all 14 remaining files `6edd4486a` touched (excluding the sports file already
+  handled above). Each agent independently traced the rephrased "RULED"/"retagged"/"no longer BLOCKED-*" claim back to
+  its real evidentiary basis — a specific operator quote, a codex standing rule, a cross-referenced commit SHA, or a
+  live code/data check — rather than trusting the prose. Also checked whether any file was further touched by the two
+  LATER commits `dae3f1341` (odds-api-key rotation) or `1be175ce8` (2026-07-30 credential/external-blocked re-triage),
+  since those could have superseded the state `6edd4486a` captured.
+  - **CONFIRMED-RESOLVED / CORRECT-AS-IS (12 files, 21 items)**: `cefi_satellite_ao_dispatch_batch3_2026_07_26.md`,
+    `infra_capture_and_devops_leftovers_2026_07_06.md`,
+    `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+    `mtds_available_at_cross_asset_backfill_2026_07_13.md` (8 items — all trace to the same real CLAUDE.md
+    maintenance-window ruling), `prediction_phase_ab_residuals_2026_07_24.md`,
+    `sports_live_availability_and_source_latency_2026_07_24.md` (correctly updated in-place by the later key-rotation
+    commit), `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`,
+    `tradfi_manifest_content_recovery_completion_2026_07_24.md` (2 items),
+    `issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md` (already shipped + independently verified),
+    `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` (2 items),
+    `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`, `defi_migration_audit_log_2026_07_24.md` (2 items — the
+    per-venue source mapping's technical premise was independently re-verified against
+    `market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py`: Marginfi/Solend really do
+    fetch via DeFiLlama and Orca/Raydium via their own REST APIs as claimed, so this is a mechanically-determinable
+    label-correction, not a fabricated operator ruling). One file, `v2_engine_venue_buildout_2026_06_15.md`, had a minor
+    doc-hygiene gap (not a false positive): the Smarkets `DEFERRED-BY-DESIGN` item was still `[ ]` even though
+    `_PERMANENT_NON_DISPATCHABLE_RE` already keeps it non-dispatchable regardless of checkbox state — flipped to `[x]`
+    (`unified-trading-pm`, this commit).
+  - **FALSE-POSITIVE (1 file, 1 item, FIXED this commit)**:
+    `issues/cefi_e6_cf7_relabel_and_attempted_failed_remeasure_2026_07_26.md`'s `[DATA] P3` blank-`data_type` reclassify
+    item. The "RULED 2026-07-28" note claimed a "14-row (bare `OKX`×7 + bare `COINBASE`×7)" population was "the SAME
+    14-row population" as a cross-cutting doc's COINBASE(7)+OKX(7) figure — but this doc's OWN §(3) measurement (same
+    file) found bare `venue == "COINBASE"` = **0 rows** across the full live index, and its own §(5) venue breakdown of
+    the 9,750-row population sums exactly using only `COINBASE-SPOT` (suffixed) + bare `OKX`×7 — no bare-COINBASE row
+    exists anywhere in this population. Unlike the sports case, this wasn't an operator-decision-vs-technical-gate
+    conflation (the decision to split backfill/reclassify per the operator's general theme is real and correctly
+    applied) — it was a plain arithmetic/data error baked into the ruling text that would have misled whoever executes
+    the reclassify step into hunting for 7 nonexistent bare-COINBASE rows. Corrected the row counts (9,743 backfill / 7
+    reclassify, not 9,736/14) and added an explicit correction note in BOTH this doc and its cross-referencing sibling
+    `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which had copied the same wrong figures into its own promoted
+    todo + its provenance-record "Deferred" section) — the cross-cutting doc's separate COINBASE(7) half is now flagged
+    as a DIFFERENT, older measurement (`audit_index_vs_gcs_spellings.py`, 2026-06-18) not shown to be satisfied by this
+    todo, rather than silently assumed closed. No `BLOCKED-*` marker restoration was needed since the underlying
+    operator-decision gate itself was never wrong — only the row-count math was.
+  - **Net result**: of the full 24 originally-rephrased mentions (23 here + the 1 sports item from the prior pass), 2
+    needed a correction (1 credential-marker restoration done previously, 1 numeric-fact correction done this session)
+    and 1 file got a minor doc-hygiene checkbox flip; the remaining 21 mentions across 13 files are genuinely
+    dispatchable as rephrased. Shipped: `unified-trading-pm` (this commit, files listed above).

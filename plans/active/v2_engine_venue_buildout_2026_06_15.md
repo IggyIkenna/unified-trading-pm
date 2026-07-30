@@ -97,20 +97,25 @@ regenerate + commit the verdict matrix; (7) `split_scope_tokens` no longer raise
       (this todo's verdict-matrix scope) COMPLETE. **Live execution adapter = BLOCKED-CREDENTIALS** (no Smarkets order
       path today — only Betfair/Matchbook adapters exist) → tracked in the [ADAPTER] todo below + ping
       `ikenna_orchestrator/pings/slot_1.md`.
-- [ ] [ADAPTER] P2. **DECOMMISSIONED — DEFERRED-BY-DESIGN (2026-07-13): operator ruled Smarkets not useful, do not
-      pursue.** ~~Build the **Smarkets** live execution adapter in execution-service~~
-      (`sports_execution/adapters/exchanges/smarkets.py` mirroring `matchbook.py` — OddsAdapter+BettingAdapter, session
-      auth/retry, UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED`, add `smarkets_direct` to
-      `SupportedDataSource` + `_build_smarkets` in `routing.py`) + UAC `external/smarkets/schemas.py` response models +
-      `BOOKMAKER_REGISTRY["smarkets"]`. Repo: execution-service (+ unified-api-contracts schema). **Found 2026-06-15
-      (Phase V wiring)**: Smarkets is leg-eligible (`archetype_leg_spec_seeds`) + token-wired in `KNOWN_VENUE_TOKENS`
-      (that part stays — already shipped, harmless), but has NO execution order path (only Betfair + Matchbook adapters
-      exist; Smarkets has UAC reference data only) and was BLOCKED-CREDENTIALS per the external-data-always-available
-      rule. **Superseded 2026-07-13**: do not build this adapter absent a future operator reversal; the Smarkets
-      credential ask in `ikenna_orchestrator/pings/slot_1.md` should be withdrawn (not yet done — separate action). NOTE
-      — `matchbook_direct` + `trader_joe` were ALSO surfaced as matrix-unbuildable and were token-wired in the SAME
-      Phase V batch; matchbook already has an execution adapter; trader_joe routes through the generic DEX SwapHandler —
-      both fully clear, no adapter gap, UNAFFECTED by this decommission.
+- [x] ✅ [ADAPTER] P2. **DECOMMISSIONED — DEFERRED-BY-DESIGN (2026-07-13): operator ruled Smarkets not useful, do not
+      pursue.** Checked off 2026-07-30 (doc-hygiene fix, spot-check per
+      `ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`): `DEFERRED-BY-DESIGN` is already matched by
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_PERMANENT_NON_DISPATCHABLE_RE`, so this item was never
+      dispatchable regardless of checkbox state — leaving it `[ ]` just read as unfinished work. No code change; a
+      future operator reversal should re-open a NEW todo, not un-check this one. ~~Build the **Smarkets** live execution
+      adapter in execution-service~~ (`sports_execution/adapters/exchanges/smarkets.py` mirroring `matchbook.py` —
+      OddsAdapter+BettingAdapter, session auth/retry, UAC `classify_venue_error()` + `ADAPTER_FETCH_FAILED`, add
+      `smarkets_direct` to `SupportedDataSource` + `_build_smarkets` in `routing.py`) + UAC
+      `external/smarkets/schemas.py` response models + `BOOKMAKER_REGISTRY["smarkets"]`. Repo: execution-service (+
+      unified-api-contracts schema). **Found 2026-06-15 (Phase V wiring)**: Smarkets is leg-eligible
+      (`archetype_leg_spec_seeds`) + token-wired in `KNOWN_VENUE_TOKENS` (that part stays — already shipped, harmless),
+      but has NO execution order path (only Betfair + Matchbook adapters exist; Smarkets has UAC reference data only)
+      and was BLOCKED-CREDENTIALS per the external-data-always-available rule. **Superseded 2026-07-13**: do not build
+      this adapter absent a future operator reversal; the Smarkets credential ask in
+      `ikenna_orchestrator/pings/slot_1.md` should be withdrawn (not yet done — separate action). NOTE —
+      `matchbook_direct` + `trader_joe` were ALSO surfaced as matrix-unbuildable and were token-wired in the SAME Phase
+      V batch; matchbook already has an execution adapter; trader_joe routes through the generic DEX SwapHandler — both
+      fully clear, no adapter gap, UNAFFECTED by this decommission.
 
 ## Phase E1 — `MARKET_MAKING_*` engines (5) — gated on an L2 orderbook microstructure feed
 
