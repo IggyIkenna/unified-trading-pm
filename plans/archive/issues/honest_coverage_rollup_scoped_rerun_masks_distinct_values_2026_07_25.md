@@ -14,7 +14,7 @@ summary: >-
   human or dashboard reading the badge. This is the exact drift-detection panel this plan audits; while the hazard is
   live, the panel is a false negative for every asset_group the day's scoped run excluded, until the next full 5-AG
   nightly run overwrites it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -28,6 +28,7 @@ related:
     /codex/02-data/reconciliation-census-and-compute-tiers.md,
   ]
 created: "2026-07-25"
+resolved: "2026-07-29"
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -38,7 +39,7 @@ estimate_calibrated_ai_days: 0.4
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: instruments-service@21083716
 locked_by:
 source: >-
   Found while re-running the distinct_values_noncanonical_audit_2026_07_20.md census-refresh todo (2026-07-25): fetching
@@ -47,6 +48,12 @@ source: >-
   `enumerate_distinct_values(coverage, 'defi')` against that same payload returned 0/0 on every axis, which would read
   as "DeFi is now fully canonical" rather than "no data was measured for DeFi today."
 ---
+
+> **🗄️ ARCHIVED 2026-07-29** — `status: resolved`, `resolved_by: instruments-service@21083716`. The RULED Option-B
+> writer-side merge guard was found already shipped (`_read_existing_payload()` + `_merge_with_existing()` in
+> `instruments-service/scripts/measure_honest_coverage.py`, committed 2026-07-27 for the sibling issue
+> `deployment_api_honest_coverage_regression_2026_07_26.md`'s identical root cause) — verified live, no further action
+> needed. Archived per `/codex/11-project-management/issue-doc-lifecycle.md` (ACKED-INTO-CODE).
 
 ## The mechanism, exact code cites
 
@@ -114,9 +121,14 @@ call -- not guessed past here.
 
 ## Todos
 
-- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — Option B, writer-side guard.**
-      `measure_honest_coverage.py` must never overwrite a wider existing `coverage.json` with a narrower one for the
-      same date — merge the new asset_group's section into the existing payload (read-modify-write), or write scoped
-      runs to a per-asset_group path (e.g. `{date}/coverage.{asset_group}.json`) and have
-      `_read_honest_coverage_rollup()` union across same-day files. Fixes the data loss at the source rather than
-      routing around observed gaps. (repos: instruments-service, deployment-api)
+- [x] ✅ [DATA] P1. **ALREADY DONE — verified 2026-07-29 (found shipped, not implemented by this pass).** RULED
+      2026-07-29 (operator direct answer) — Option B, writer-side guard. `measure_honest_coverage.py` must never
+      overwrite a wider existing `coverage.json` with a narrower one for the same date — merge the new asset_group's
+      section into the existing payload (read-modify-write), or write scoped runs to a per-asset_group path. Checked
+      `instruments-service/scripts/measure_honest_coverage.py` directly: the exact Option-B read-modify-write merge
+      guard is already implemented (`_read_existing_payload()` + `_merge_with_existing()`, `_write_output()` calls the
+      merge before writing) — `instruments-service@21083716` ("fix(honest-coverage): same-day merge-on-write so a
+      narrower asset-group run never clobbers a same-day full measurement", committed 2026-07-27, shipped for the
+      sibling issue `deployment_api_honest_coverage_regression_2026_07_26.md`'s identical root cause). Confirmed via
+      `git log` the commit is on `live-defi-rollout`, tree clean, no further action needed. (repos: instruments-service,
+      deployment-api)

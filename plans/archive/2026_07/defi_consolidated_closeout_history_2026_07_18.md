@@ -1380,7 +1380,7 @@ source: >-
     validator, retire-LENDING-from-builder; and the operator-gated DATA ops (63.9M `expected_unattempted` seed after the
     phantom+duplicate purge; the snapshot-first GCS deletes of the Shape-B prefixes + culled-venue data; the historical
     reclass migrations). These are code+data changes the operator sequenced AFTER the SSOT — see the tracks above + the
-    consolidated questions doc `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`.
+    consolidated questions doc `plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`.
   - **/plan-reconcile (autonomous) IN FLIGHT**: Phase 0 done — corpus mechanically GREEN (`run_hygiene_sweep.sh --ci`: 0
     hard failures; 1 soft = 17 plans >1000L, splitting operator-gated). Phase-0 flags: 9 unlocked terminal-superseded
     docs = archival candidates (mostly DRIFT-cull issues), 1 locked (`gcs_hive_partition_malformed_paths_remediation`,

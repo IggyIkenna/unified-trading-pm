@@ -273,13 +273,13 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
       2021-25=684), `expected_unattempted` +0 (zero downloads), fresh full-window scan **→ 0 candidates** (≥1M
       enumerator halt cleared), consolidator merged into the canonical defi manifest. Scan-gate hit EXACTLY 1,380,376 +
       1-day smoke verified first. No enumerator edit (read/run only). **CORRECTION (2026-07-25, per
-      `issues/canonical_closeout_open_questions_2026_07_18.md` C2c):** the 1,380,376-row figure above (and the 62.06%
-      Layer-2 defi coverage_pct derived from it at line ~634) is the **retired v1 grain**. The v2 SSOT (locked issue
-      `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
+      `archive/issues/canonical_closeout_open_questions_2026_07_18.md` C2c):** the 1,380,376-row figure above (and the
+      62.06% Layer-2 defi coverage_pct derived from it at line ~634) is the **retired v1 grain**. The v2 SSOT (locked
+      issue `issues/defi_expected_unattempted_backlog_1m_2026_07_03.md`, corroborated by
       `defi_consolidated_closeout_2026_07_18.md`'s ~63.9M seed figure) puts the real DeFi `expected_unattempted` backlog
       at **~63.9M cells**, not 1.38M — this DONE checkbox and the 62.06% figure are the v1 milestone only, not the final
       denominator; the v2 backlog is open work tracked under Track-3 in
-      `issues/canonical_closeout_open_questions_2026_07_18.md`.
+      `archive/issues/canonical_closeout_open_questions_2026_07_18.md`.
 - [x] ✅ [VERIFY] P2. **2e follow-on** (was bundled into 2e): the cross-AG never-seeded backlog check on **cefi / tradfi
       / pred** (scan-only investigation — dispatch separately). **DONE — reconciled 2026-07-28 against
       `plans/archive/2026_07/foundation_gates_and_capture_to_100_2026_07_06.md` (`status: complete`, own todo `[x]`,

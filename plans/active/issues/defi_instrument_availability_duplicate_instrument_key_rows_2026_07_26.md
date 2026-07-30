@@ -73,12 +73,31 @@ that determination is the actual next step, not yet done.
 
 ## Recommended decision
 
-- [ ] [DATA] P3. Determine whether the duplicate `instrument_key` rows within a single flat-shape shard are
-      byte-identical re-writes (harmless) or carry differing field values (a real dedup/write-time bug), for the 5
-      affected venues above. If genuinely differing, root-cause why the writer emits the same `instrument_key` more than
-      once per day-shard and fix at the source; if harmless re-writes, consider a light de-dup pass at read time or
-      write time. Repo: instruments-service. **Done when**: a verdict (harmless vs real) is recorded for a
-      representative sample of the affected venues, with a fix todo filed if real.
+- [x] ✅ [DATA] P3. **DONE 2026-07-29 — verdict: REAL bug, not harmless.** Determine whether the duplicate
+      `instrument_key` rows within a single flat-shape shard are byte-identical re-writes (harmless) or carry differing
+      field values (a real dedup/write-time bug), for the 5 affected venues above. Live-read the flat-shape
+      `instrument_availability/by_date/day=<D>/venue=<V>/instruments.parquet` for 3 representative samples: (1)
+      `UNISWAP_V3-OPTIMISM`/`2023-11-22` (289 rows, matches this doc's own cited number exactly) — 16 duplicate-key
+      groups, **all 16 differing** (distinct `pool_address`/`base_asset_contract_address`/etc per duplicate); (2)
+      `PANCAKESWAP_V3-BSC`/`2023-08-19` — 3 duplicate groups, all 3 differing; (3) `PANCAKESWAP_V3-BSC`/`2023-12-15` — 9
+      duplicate groups, all 9 differing. **0 of 28 sampled duplicate groups across 3 samples were byte-identical.**
+      Concrete example: `instrument_key=PANCAKESWAP_V3-BSC:POOL:USDT-USDC:10000` maps to TWO genuinely different
+      on-chain pools (`pool_address=0x846d...` vs `0x1750...`, same base/quote/fee-tier) — the `instrument_key` format
+      (`VENUE:TYPE:BASE-QUOTE:FEE_TIER`) does not disambiguate multiple real pools sharing the same base/quote/fee-tier
+      combination. **Root cause**: the key builder for DEX-pool venues omits `pool_address` (or an equivalent
+      disambiguator), so distinct on-chain pools legitimately collide. **Follow-up fix todo filed** below (not fixed
+      inline — determining the right disambiguation scheme without breaking existing `instrument_key` consumers needs
+      its own scoped pass).
+
+- [ ] [CODE] P2. **Fix the DeFi pool `instrument_key` collision** for pool-heavy DEX venues (confirmed real 2026-07-29,
+      see the DONE todo above) — the key format `VENUE:TYPE:BASE-QUOTE:FEE_TIER` does not uniquely identify a pool when
+      multiple real on-chain pools share the same base/quote/fee-tier (observed on `PANCAKESWAP_V3-BSC`,
+      `UNISWAP_V3-OPTIMISM`, and likely the other 3 venues this doc names). Scope: add `pool_address` (or an equivalent
+      on-chain disambiguator already present as a column, e.g. a short hash suffix) to the key derivation for DEX-pool
+      instrument_types, verify no downstream consumer keys off the OLD collision-prone format in a way that would break,
+      and backfill/relabel historical rows. Repo: instruments-service. **Done when**: a fresh duplicate-key scan across
+      the 5 named venues (+ any others sharing the same key-builder path) returns 0 genuine collisions, with a
+      regression test proving 2 same-base/quote/fee-tier pools now get distinct keys.
 
 ## Progress Log
 

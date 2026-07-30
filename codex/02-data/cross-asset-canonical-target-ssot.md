@@ -212,7 +212,7 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 > [`plans/active/defi_consolidated_closeout_2026_07_18.md`](../../plans/active/defi_consolidated_closeout_2026_07_18.md)
 > :685 ("REVERSED (un-retire `wn12e7itc`): making `build_instrument_id(...LENDING...)` raise OVER-REACHED"), :698, :1469
 > and :1496;
-> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
 > :177-182 (the break + the un-retire), :64 (the `marginfi`/`fluid` guard `if instrument_type not in (None, LENDING)`
 > minting A_TOKEN/DEBT_TOKEN → returning **zero** rows) and :73 (the **~16.7M** `lending` rows to migrate); and the
 > already-accepted-exception rationale in
@@ -259,7 +259,7 @@ Decision rule (a validator SHOULD enforce this for defi — none exists yet, tra
 > UNRULED — this doc does NOT pick a side.~~ The operator RULED the FULL retire (all lending data_types). The option
 > analysis below is retained as history. Options A (keep market-level `LENDING`; current interim; worker-recommended), B
 > (key each to the reserve's `A_TOKEN`), and C (split per side) are stated with their costs in
-> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+> [`issues/canonical_closeout_open_questions_2026_07_18.md`](../../plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
 > § D (:173-202). B or C each require a full 5+-writer MTDS migration, a Wave-D historical re-key and a shard-atom fix
 > on both axes. Until the operator rules: `lending` on a market/event data_type is **NOT a canonicalisation finding**,
 > and the §11 operator-log line "retire legacy LENDING → A_TOKEN/DEBT_TOKEN" reads **holdings-only**.

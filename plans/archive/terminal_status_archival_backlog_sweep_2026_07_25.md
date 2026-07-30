@@ -352,7 +352,7 @@ item, it becomes a `BLOCKED-OPERATOR-DECISION` Progress Log entry (see Procedure
   cite). **But the doc itself still carries `locked_by: live-defi-rollout`** in its frontmatter — per CLAUDE.md's plan-
   locking HARD RULE, a locked doc is never autonomously archived, only via an explicit `[unlock-plan]` from the
   operator. This exact blocker was already surfaced (not yet acted on) by
-  `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`'s own C1 entry: "locked plans are never
+  `plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`'s own C1 entry: "locked plans are never
   autonomous-archived; needs `[unlock-plan]`. REC: unlock + archive." Not archiving; leaving the checkbox unflipped and
   skipping this task (reason_code GATED) until the operator authorizes `[unlock-plan]`.
 - **2026-07-25 (slot-2): BLOCKED-OPERATOR-DECISION — todo

@@ -8,7 +8,7 @@ summary: >-
   on the operator saying "start"), and (B) the small open sub-decisions defaulted-with-a-flag. Plus any /plan-reconcile
   parked rulings appended as that sweep lands. Nothing here BLOCKS the shipped doc/SSOT work; it gates the code+data
   migration phase the operator sequenced AFTER the SSOT.
-status: open
+status: resolved
 nature: process
 asset_group: [defi, cefi, tradfi]
 stage: [meta]
@@ -24,12 +24,13 @@ related:
     /codex/02-data/cross-asset-canonical-target-ssot.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-20
+last_updated: 2026-07-29
+resolved: "2026-07-29"
 parent_epic: defi_master
 priority: P1
 assigned_vm: NA
 execution_scope: local-only
-resolved_by:
+resolved_by: unified-trading-pm (docs-only verification, no code sha — see resolution banner)
 locked_by:
 locked_since:
 drift_direction: none
@@ -38,6 +39,11 @@ source:
   Autonomous canonical-target close-out session (slot-4, 2026-07-18) — operator directed docs+SSOT first, migrations
   after; away 2h on /autonomous, so genuine decisions are parked here per AUTONOMOUS_AGENT_RULES rule 2.
 ---
+
+> **🗄️ ARCHIVED 2026-07-29** — `status: resolved`, 0 open todos. Every open question/parked decision here was ruled by
+> the operator directly in-doc (A8/C2b, 2026-07-29) or verified already-satisfied (C2c/C2d/C2e — confirmed already
+> reflected in `instruments_completion_tracker_2026_07_06.md` and `/codex/05-infrastructure/gcs-lifecycle-policies.md`,
+> no edit needed). Archived per `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 # Canonical close-out — open questions + parked decisions (2026-07-18)
 
@@ -240,16 +246,15 @@ item holdings-only-done and drop the UTL/MTDS market-level migration.
       always specified. (2) C2b: resume the cefi Track-2 backfill — restore the operator's original 50.79% coverage
       acceptance; the autonomous reopen/reversal in `cefi_consolidated_closeout:119` is overridden. (repos:
       instruments-service, market-tick-data-service)
-- [ ] [DOCS] P2. **C2c/C2d/C2e — lower-stakes, docs-only follow-ups, still need action** (not covered by the A8/C2b
-      ruling above, which addressed only the two consequential forks): C2c — add a correction note to
-      `instruments_completion_tracker:242` that its 1.38M/62.06% figure is the retired v1 grain, the real v2 backlog is
-      63.9M (open, tracked under Track-3); C2d — align `/codex/05-infrastructure/gcs-lifecycle-policies.md` with the
-      operator's 2026-07-13 STANDARD→COLDLINE@60d ruling (already provisioned on ml-store) and confirm the exact ladder;
-      C2e — checked 2026-07-29: `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` is still `status: active`,
-      `locked_by: live-defi-rollout` since 2026-06-20, and is NOT referenced anywhere under
-      `plans/epics/sports_master.md` or its closeout docs — the 28-unmapped-league-tier work has not migrated elsewhere,
-      this doc remains its genuine live home. No unlock/archive action needed; this item is resolved as "confirmed still
-      live," not parked.
+- [x] ✅ [DOCS] P2. **DONE 2026-07-29 — all 3 already satisfied, verified not (re)written.** **C2c/C2d/C2e —
+      lower-stakes, docs-only follow-ups**: **C2c** — checked `instruments_completion_tracker_2026_07_06.md:276-282`
+      directly: the correction note already exists ("CORRECTION (2026-07-25, per
+      `issues/canonical_closeout_open_questions_2026_07_18.md` C2c): the 1,380,376-row figure above... is the retired v1
+      grain... the v2 backlog... ~63.9M cells... open work tracked under Track-3"), verbatim covering this item — no
+      edit needed. **C2d** — checked `/codex/05-infrastructure/gcs-lifecycle-policies.md:101-107` directly: the
+      `STANDARD → COLDLINE @ 60d` ruling is already documented (the folded Group-B buckets section), including the
+      `portfolio-state` confirm-before-COLDLINE exception — already aligned, no edit needed. **C2e** — per this doc's
+      own text above, already resolved as "confirmed still live," no action required. All 3 verified current, not stale.
 
 ## Progress Log
 

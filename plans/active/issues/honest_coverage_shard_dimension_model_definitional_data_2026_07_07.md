@@ -410,11 +410,13 @@ longer has its own download button.
       (the dir exists but doesn't cover this component), so `pw:L2` is N/A rather than run-and-green — verified instead
       via an earlier live browser check against a captured real API payload (documented in this doc's Update §1) plus
       the unit-level regression spec above.
-- [ ] [CODE] P1. **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM** (Update §2 above) — the blank
-      `instrument_type` bug found on DERIBIT also hits `DRIFT-SOLANA`, `KAMINO-SOLANA`, `MARGINFI-SOLANA`,
-      `MARINADE-SOLANA`, `ORCA-SOLANA`, `RAYDIUM-SOLANA`, `SOLEND-SOLANA`, and `CURVE-OPTIMISM` — all have real captured
-      dates but zero `instrument_types` breakdown. Same fix (split the manifest row by instrument_type instead of
-      writing one blended row per venue-day), applied wherever this recurs, not a Deribit-only patch.
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 5) — premise stale,
+      writer already venue-agnostic, no fix needed.** **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM**
+      (Update §2 above). Audited: `_split_by_instrument_type`
+      (`instruments-service/instruments_service/engine/orchestrator/writers.py:131`) is already applied unconditionally
+      to every venue (cefi/tradfi/defi alike), so no per-venue "widen" was ever needed. Verified all 8 named venues (raw
+      manifest + live prod API) already carry a clean, fully-accounted per-type split with zero blank rows among
+      genuinely captured data. Full evidence in the batch doc.
 - [x] ✅ [CODE] P2. **CLOSED 2026-07-27 (na-eligibility-audit) — already shipped elsewhere, checkbox never flipped.**
       Extend the "CLOB-on-chain asset_group classification" item (tracker Stage 5, currently scoped to
       Lighter/Pacifica/Extended-Starknet) to explicitly include **HYPERLIQUID and ASTER** (Update §3 above) —
@@ -424,20 +426,25 @@ longer has its own download button.
       `_route_hyperliquid`/`_route_aster` chain-annotation wrappers mirroring the existing Pacifica/Extended/Lighter
       ones, 181 unit tests green, full quality-gates green. Not a new bug; just widening an existing todo's scope to
       match reality — and that widening is done.
-- [ ] [CODE] P1. Pull the real per-instrument_type breakdown for DERIBIT live (the comparison built for this doc used
-      illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a live gap
-      once visible.
-- [ ] [CODE] P1. **Add `missing_dates`/`dates_found_list` to the per-instrument_type and per-underlying breakdown
-      entries** (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` —
-      `_build_instrument_type_breakdown` entry dict at ~405-409, `_build_underlying_breakdown` at ~508-512; mirror
-      `_build_data_type_breakdown`'s entry shape at ~629-643, which already carries this). Found 2026-07-07, verifying
-      the D6 plan: today the per-instrument_type entry carries only `dates_found`/`dates_expected`/ `completion_pct` —
-      no list of WHICH dates are missing. Invisible today because ASTER/OKX-SPOT/OKX-SWAP/UPBIT are single-type venues,
-      so the venue-level `missing_dates` (which does exist) happens to equal the type-level one. The moment DERIBIT has
-      4 real instrument_types, the venue-level list blends all 4 together — you'd see DERIBIT missing a day but not
-      whether it was OPTION, FUTURE, PERPETUAL, or COMBO that was missing. This is the same class of blind spot the
-      whole audit started from, one level deeper; the writer fix (stamping `instrument_type` per row) is necessary but
-      not sufficient without this. Needs a matching `deployment-ui/src/components/DataStatusTab.tsx` render tweak (the
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 3) — read-only, no
+      code change.** Pull the real per-instrument_type breakdown for DERIBIT live (the comparison built for this doc
+      used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a
+      live gap once visible. Pulled live prod deployment-api data (30-day window): OPTION 2,676/2,677 dates (99.96%),
+      near-identical to FUTURE/PERPETUAL/COMBO/SPOT_PAIR. **Verdict: OPTION coverage is healthy — not a live gap.** Full
+      evidence in the batch doc.
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 2) —
+      deployment-api@554cde9, deployment-ui@8f6c4bc.** **Add `missing_dates`/`dates_found_list` to the
+      per-instrument_type and per-underlying breakdown entries**
+      (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` — `_build_instrument_type_breakdown`
+      entry dict at ~405-409, `_build_underlying_breakdown` at ~508-512; mirror `_build_data_type_breakdown`'s entry
+      shape at ~629-643, which already carries this). Found 2026-07-07, verifying the D6 plan: today the
+      per-instrument_type entry carries only `dates_found`/`dates_expected`/ `completion_pct` — no list of WHICH dates
+      are missing. Invisible today because ASTER/OKX-SPOT/OKX-SWAP/UPBIT are single-type venues, so the venue-level
+      `missing_dates` (which does exist) happens to equal the type-level one. The moment DERIBIT has 4 real
+      instrument_types, the venue-level list blends all 4 together — you'd see DERIBIT missing a day but not whether it
+      was OPTION, FUTURE, PERPETUAL, or COMBO that was missing. This is the same class of blind spot the whole audit
+      started from, one level deeper; the writer fix (stamping `instrument_type` per row) is necessary but not
+      sufficient without this. Needs a matching `deployment-ui/src/components/DataStatusTab.tsx` render tweak (the
       `TurboInstrumentTypeStatus`/ `TurboUnderlyingStatus` types at `api/client.ts:1156-1169` also need the field added
       — they don't carry it today, unlike `TurboDataTypeStatus` at `client.ts:984-999`).
 - [ ] [DESIGN] P3. Clarify or rename the "Instrument breakdown" venue-detail link (`DataStatusTab.tsx:5493-5499`,
@@ -454,14 +461,27 @@ longer has its own download button.
       (`mtds.py:143-215,182-196,618-623`) onto the `reference_scope`-based model — either drop it from
       `PREDICTION_DATA_TYPE_META` entirely (per UAC's own "not separate" disclaimer) or route its presence-tracking
       through the genesis/day-scope catalogue mechanism instead.
-- [ ] [VERIFY] P2. Audit whether the same MTDS/reference-data conflation risk exists anywhere else — e.g. the TradFi
-      `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at `market_data_categories.py:1279-1286` (not
-      confirmed live; flagged as a follow-up, not a confirmed bug).
-- [ ] [VERIFY] P1. Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read as
+- [ ] [VERIFY] P2. **NOT closed here — genuinely contested, actively being investigated concurrently as of
+      2026-07-29/30, left open rather than force a premature verdict.** Two independent investigations this session
+      reached DIFFERENT conclusions: one found `corporate_action_confirmed`/`earnings_result` (POLYGON) registered with
+      no real MTDS capture code (real writer in features-service's calendar module) produced a real orphan population,
+      independently fixed via `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s corporate_action/ earnings cleanup
+      (`instruments-service@03f71c81`, `market-tick-data-service@c24db4cf`); a second, independently more thorough pass
+      found `enumerate_expected_universe.py`'s own code comment states **"TRADFI IS DELIBERATELY NOT GATED"** (unlike
+      CeFi) — meaning corporate_action_confirmed/earnings_result seeded as `empty_confirmed` placeholders under the real
+      trading venues may be operator-ratified design, not a conflation bug — and found `FRED` was being actively added
+      to `VENUES_BY_ASSET_GROUP["tradfi"]` in `unified-api-contracts` on 2026-07-29 (same day), i.e. genuinely live,
+      in-flight ground truth, not settled fact. Audit whether the same MTDS/reference-data conflation risk exists
+      anywhere else — e.g. the TradFi `POLYGON`/`FRED` reference-data-in-the-wrong-registry smell noted at
+      `market_data_categories.py:1279-1286`. Whoever picks this up next: re-verify current live state of
+      `VENUES_BY_ASSET_GROUP["tradfi"]` + `enumerate_expected_universe.py`'s gating comment before recording a final
+      verdict, since both were observed changing during this exact session.
+- [x] ✅ [VERIFY] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 1) — read-only,
+      no code change.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read as
       likely hitting the same multi-type blank-collapse: `OKX-FUTURES`, bare `BYBIT`, `BINANCE-FUTURES`,
-      `KRAKEN-FUTURES`, `BINANCE-DELIVERY` — same method used on DERIBIT/ASTER (download `availability_index.parquet`,
-      check `instrument_type` distribution). Confirms whether the writer fix's benefit is as wide as the registry
-      evidence suggests.
+      `KRAKEN-FUTURES`, `BINANCE-DELIVERY`. Result: 2 of 5 genuinely hit the DERIBIT-class bug (bare `BYBIT`,
+      `BINANCE-DELIVERY` — both resolved by the writer fix going forward), 3 of 5 (`OKX-FUTURES`, `BINANCE-FUTURES`,
+      `KRAKEN-FUTURES`) never had the bug. Full evidence in the batch doc.
 - [ ] [CODE] P1. Backfill historical CeFi/TradFi manifest rows with the corrected per-instrument_type split — the
       2026-07-07 writer fix only affects NEW writes going forward; every pre-fix DERIBIT/CME/etc. row is still
       blended+blank until reprocessed. Likely a candidate for the generic reprocessing utility proposed in

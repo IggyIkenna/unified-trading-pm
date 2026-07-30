@@ -48,7 +48,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/cross-asset-rescan-protocol.md,
     ../../plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    ../../plans/active/issues/canonical_closeout_open_questions_2026_07_18.md,
+    ../../plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md,
   ]
 created: 2026-07-20
 authoritative_for:
@@ -523,7 +523,7 @@ Three standing qualifiers:
   `build_instrument_id(...LENDING...)` raise, which broke 5+ MTDS writers into `attempted_failed`/zero-data via their
   shard-level `except ValueError`, and the partial A_TOKEN work-around created a shard-atom desync (GCS
   `instrument_type=a_token` vs manifest `lending`). Sources: `/codex/02-data/defi-canonical-naming-ssot.md:82` and
-  `:117-118`; `plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:158-171`.
+  `:117-118`; `plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md:158-171`.
 - **Ruled by / when** — reversal was shipped in code; the FORWARD decision is now **RULED 2026-07-20 (operator D2 — FULL
   retire)** (CORRECTION 2026-07-20: was "PARKED for the operator, decision D, 2026-07-19"). The retire is gated on
   `plans/archive/2026_07/defi_lending_writer_retire_prerequisite_2026_07_20.md`, so the interim flat `LENDING` is
@@ -640,8 +640,8 @@ re-opening a settled ruling.
 - **Why it was undecidable from documents (before D1)** — both sides cited the SAME operator on the SAME date
   (2026-07-18); the scripts that UPPERCASE the column had ALREADY SHIPPED on both cefi and tradfi. The issue register
   recorded this as a self-caught inconsistency in the freshly-shipped SSOT
-  (`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md:111-115`, which carried a REC toward UPPERCASE —
-  a recommendation later ADOPTED as the D1 ruling).
+  (`plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md:111-115`, which carried a REC toward UPPERCASE
+  — a recommendation later ADOPTED as the D1 ruling).
 - **Stakes** — the direction determines >12M row rewrites.
 
 ### 5.2 [decision D] DeFi market/event `LENDING` keying — RULED full retire, migration_pending

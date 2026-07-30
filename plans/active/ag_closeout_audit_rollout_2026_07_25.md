@@ -699,8 +699,8 @@ tasks that arent per ag or cross cutting" — expanded to a full 9-tranche parti
   `issues/honest_coverage_harness_instrument_type_case_break_on_d1_migration_2026_07_20.md` — already archived,
   `plans/active/issues/gcs_data_access_audit_log_cost_2026_07_24.md`'s duplicate archival attempt) show
   uncommitted/in-progress dirty state in the shared working tree at compaction time. A new issue doc,
-  `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`, appeared untracked — likely a
-  genuine finding from the census-refresh agent, not yet reviewed.
+  `archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`, appeared untracked — likely
+  a genuine finding from the census-refresh agent, not yet reviewed.
 
 ### Deferred work after 2026-07-25 (Round 5)
 
@@ -787,7 +787,7 @@ transcript. Findings processed:
   for a matching commit; if absent, re-stage and re-quickmerge (files named in the digest). **[NOT YET DONE — see
   Deferred below.]**
   - Two new issue docs filed by the workflow, not yet read by me:
-    `issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`,
+    `archive/issues/honest_coverage_rollup_scoped_rerun_masks_distinct_values_2026_07_25.md`,
     `issues/aave_rate_impact_structural_zero_defillama_borrow_gap_2026_07_26.md`. **[NOT YET READ — see Deferred.]**
   - `issues/cross_ag_never_seeded_backlog_scan_2026_07_06.md` — one agent (#16) returned a thin/anomalous report; worth
     a manual read. **[NOT YET DONE.]**

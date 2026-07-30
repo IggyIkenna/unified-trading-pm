@@ -652,7 +652,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
       skill doc
     - **[DATA] P3.** instruments-service: decide whether `market_lifecycle`/`futures_contracts` are in the canonical
       shard grammar's scope
-  - [`plans/active/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/active/issues/canonical_closeout_open_questions_2026_07_18.md)
+  - [`plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md`](/plans/archive/issues/canonical_closeout_open_questions_2026_07_18.md)
     — 0 open todos (closed/archived/record-only)
   - [`plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`](/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md)
     - **[DATA] P1.** Re-run CeFi surface-A reconciliation with the fixed oracle and restate the verdict
