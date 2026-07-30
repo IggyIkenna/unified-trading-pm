@@ -14,7 +14,7 @@ summary: >-
   data provider (Decision C, operator 2026-06-29: two disjoint registries by design). The two registries are no longer
   disjoint, breaking the invariant test and the golden fixture. Verified pre-existing (byte-identical failure on the
   tree before my unrelated 1-file diff, confirmed via git checkout of the parent commit).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [data]
@@ -34,7 +34,7 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 source: ["discovered while shipping instruments-service@2cec0ab2 (unrelated cleanup() fix), slot-11, 2026-07-30"]
-resolved_by:
+resolved_by: "slot-6 (cicd escalation agt-57430c), 2026-07-30"
 locked_by:
 ---
 
@@ -88,12 +88,28 @@ match, and the golden fixture regenerated per its own docstring recipe).
 
 ## Todos
 
-- [ ] [DATA] P1. **Resolve the FOOTYSTATS two-registry disjoint-invariant break** — decide + implement per "Recommended
+- [x] [DATA] P1. **Resolve the FOOTYSTATS two-registry disjoint-invariant break** — decide + implement per "Recommended
       decision" above, then regenerate `tests/unit/scripts/test_expected_universe_golden.py`'s sports golden fixture per
-      its docstring recipe so `quality-gates.sh` goes green again. (repo: instruments-service, unified-api-contracts)
+      its docstring recipe so `quality-gates.sh` goes green again. (repo: instruments-service, unified-api-contracts) —
+      ✅ unified-api-contracts@c022a60e + instruments-service@5f7b8136
 
 ## Progress Log
 
 - **slot-11 2026-07-30**: Filed while blocked shipping an unrelated instruments-service fix (`cleanup()` AttributeError
   suppress, `2cec0ab2`). Declared repo-blocker via `/api/repo-blockers` for `instruments-service` (kind=`qg_red`) so the
   backend's RepoHealthWatcher pages me when green.
+- **slot-6 2026-07-30 (cicd escalation agt-57430c)** — dispatched to fix `quality-gates-v2` RED on `instruments-service`
+  promotion PR #1031 (same underlying root cause). Took option (a) from "Recommended decision": FOOTYSTATS stays IS-
+  owned/exempt; UAC's addition was the bug. Moved FOOTYSTATS out of `VENUES_BY_ASSET_GROUP["sports"]` into
+  `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` instead (same treatment as the other reverted ODDS_API fan-out
+  bookmakers — silences the distinct-values census finding without re-claiming canonical status) —
+  `unified-api-contracts@c022a60e`. Regenerated the sports golden fixture (27→30 tuples: +LADBROKES/BET888SPORT/
+  SMARKETS, FOOTYSTATS correctly excluded) — `instruments-service@5f7b8136`. While re-gating, hit a SECOND, unrelated
+  real failure surfaced by a concurrent commit (`unified-api-contracts@c64d2b2c`, slot-8): 6 new DeFi venue→adapter-key
+  mappings (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER-ETHEREUM) with no matching adapter class yet in this tree. Root
+  cause: slot-15 already had the matching `instruments-service` adapter commit (`cebead3d`, todo 1 of
+  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`) built and QG-green locally, but blocked on
+  shipping by this exact repo-blocker (`RB-ecfc50de`) — a circular cross-slot dependency (my fix needed theirs to
+  re-gate green; theirs needed mine to un-block). Cherry-picked slot-15's non-conflicting, additive-only commit into
+  this session's worktree (verified clean merge-base, zero file overlap with my diff) and shipped both together —
+  `instruments-service@6c193a19`. Full `quality-gates.sh`: 5093 passed, 0 failed. Repo-blocker `RB-ecfc50de` resolved.
