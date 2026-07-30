@@ -18,7 +18,7 @@ summary: >-
   trading-safety-blast-radius reasons. This is a genuinely single-todo plan — per `task_template.md`'s explicit
   single-todo carve-out, no separate finalize plan is authored; the archival step is folded into this one todo's own
   "Done when".
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]

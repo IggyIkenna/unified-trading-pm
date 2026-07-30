@@ -14,7 +14,7 @@ summary: >-
   (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage`'s DEVOPS P1) is the same "highest-value
   now-actionable orphan" the prior 2026-07-30 audit identified but did not batch (no operator was reachable that run).
   Every todo below targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: draft
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]

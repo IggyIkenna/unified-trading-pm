@@ -15,7 +15,7 @@ summary: >-
   BLOCKED-OPERATOR-DECISION in the Deferred section. The remaining 24 orphaned-but-not-AO-eligible docs are
   non-batchable (operator-gated / time-gated / too-large-or-risky / human-only per the skill's taxonomy) and are listed
   in the Deferred section for the next iteration or an explicit operator ruling.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]
@@ -44,7 +44,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-27"
+last_updated: "2026-07-30"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

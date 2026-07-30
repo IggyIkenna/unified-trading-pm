@@ -17,7 +17,7 @@ summary: >-
   distinct-dimension-values UI listing already tracked generically in prediction's Phase C, and the manifest-staleness
   DIAG already fully root-caused in its own issue doc) and are reconciled in the source doc directly rather than
   re-drafted.
-status: draft
+status: active
 nature: process
 asset_group: [sports]
 stage: [data]

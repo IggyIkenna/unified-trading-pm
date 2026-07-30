@@ -14,7 +14,7 @@ summary: >-
   underlying fix were merged into one todo each to avoid a duplicate-dispatch collision); the remaining orphaned docs
   are non-batchable (operator-gated / time-gated / too-large-or-risky / human-only per the skill's taxonomy) and are
   listed in the Deferred section for the next iteration or an explicit operator ruling.
-status: draft
+status: active
 nature: process
 asset_group: [defi]
 stage: [data]

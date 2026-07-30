@@ -15,7 +15,7 @@ summary: >-
   respectively. This is a deliberately thin batch, and the audit's own conclusion is that a batch4 could not extract
   anything new: after these two land, every remaining orphaned infra doc's open work is PURELY non-batchable, which is
   the skill's explicit stop-iterating condition.
-status: draft
+status: active
 nature: process
 asset_group: [infrastructure]
 stage: [meta]

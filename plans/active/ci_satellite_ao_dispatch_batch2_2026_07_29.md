@@ -19,7 +19,7 @@ summary: >-
   conflict-check found `scripts/quality-gates-base/base-service.sh` claimed by 3 candidates and `base-library.sh` by 2 —
   rationed to one todo per file, same discipline as batch1. 14 conflict-cleared bounded todos below; the rest deferred
   by taxonomy (file-contention / operator-gated / duplicate-of-self-dispatched / too-large / role-mismatch).
-status: draft
+status: active
 nature: process
 asset_group: [ci]
 stage: [meta]

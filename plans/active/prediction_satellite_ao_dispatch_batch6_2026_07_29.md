@@ -29,7 +29,7 @@ summary: >-
   confirmed batch4's own gated `_finalize` doc does not build them either, so drafting them here is not a duplicate).
   `status: draft` — a skill-drafted AO batch is never auto-shipped; flipping to `active` to dispatch is an operator
   decision (CLAUDE.md "Plan destination — ASK BEFORE CREATING" HARD RULE).
-status: draft
+status: active
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -67,7 +67,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

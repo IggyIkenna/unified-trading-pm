@@ -21,7 +21,7 @@ summary: >-
   `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` is 8/8 done and unlocked but its gated finalize is still `status:
   draft`, undispatched; `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` is still `status: draft` (1/15 done)
   despite carrying a live 2026-07-29 todo for the FX/ICE/KRX historical re-stamp.
-status: draft
+status: active
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -46,7 +46,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
