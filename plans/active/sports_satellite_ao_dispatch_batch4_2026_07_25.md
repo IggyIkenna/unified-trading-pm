@@ -84,7 +84,7 @@ drift_direction: advance-code
       production; (3) edit the doc's last `[DATA] P0` todo: change it from an open action-item to a status note stating
       the restamp action shipped (cite the 3 SHAs) and the Done- when (census-zero) remains genuinely unmet purely
       because of the 55,233 residual rows, which are tracked and gated on a human delete-vs-leave decision entirely in
-      the sibling doc `plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`; (4) leave
+      the sibling doc `plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md`; (4) leave
       `status: open` on this doc (do not resolve it) until that sibling doc's todo closes — add a dated Update section
       recording this reconciliation pass. **Conflict-check clearance (2026-07-25 re-check):** the flagged "conflict"
       against `sports_consolidated_closeout_2026_07_19.md`'s own Track C1 (checked `[x]`, already documents the
@@ -99,15 +99,15 @@ drift_direction: advance-code
       unchanged. Source: `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`.
 
       **Evidence + a genuine new finding beyond scope**: re-ran the census live — `FIXTURES` is 100,801 (NOT the
-                                                      expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
-                                                      (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
-                                                      the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
-                                                      call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
-                                                      map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
-                                                      (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
-                                                      findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
-                                                      pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
-                                                      `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
+                                                                      expected stable 55,233), because it's actively GROWING: 44,889 of the 100,801 rows were written TODAY
+                                                                      (2026-07-26, single burst ~01:30 UTC) via `enumerator_run_id='enum-universe-sports-20260726-013031'` —
+                                                                      the sports expected-universe enumerator (`enumerate_expected_universe.py`) has a 10th, previously-missed
+                                                                      call site that seeds legacy `"FIXTURES"` `expected_unattempted` rows (its `_SPORTS_MANIFEST_DATA_TYPE_OVERRIDE`
+                                                                      map had `ODDS_HORIZON_BUCKET` but no `FIXTURES` entry). This is a genuine, small, clear root-cause fix
+                                                                      (one dict entry, directly analogous to the existing pattern) — fixed inline (not just documented) per
+                                                                      findings-triage: added `"FIXTURES": "FIXTURES_SCHEDULE"` to the override map + a regression test (184/184
+                                                                      pass) — `instruments-service@ca8bd7b3ab`. Full writeup + census output in the target doc's new
+                                                                      `## Update (2026-07-26)` section (the doc's original `[DATA] P0` todo also flipped `[x]` citing the 3 SHAs).
 
 - [x] ✅ [DIAG] P1. **DONE 2026-07-27 (data_engineering slot-10) — market-tick-data-service@76ca401f.** Sweep executed
       via a new read-only script

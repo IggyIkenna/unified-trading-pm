@@ -61,7 +61,7 @@ tags:
 related:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/active/bucket_estate_fold_design_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
     /plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,

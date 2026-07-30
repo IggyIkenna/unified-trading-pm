@@ -68,7 +68,7 @@ drift_direction: advance-code
       **false positive** (both agree `NATGAS`); `HO` disagreement confirmed real, plus 15 more not previously
       enumerated. Full table appended to the issue doc's evidence trail — no dict edited, no authoritative choice made
       (human-only per the todo's own scope). Source: `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`.
-- [ ] [REVIEW] P1. **Close out the two non-blocked remaining todos in
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (doc-triage pass)** — **Close out the two non-blocked remaining todos in
       `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md` in one pass** (combined into one todo because both edit
       the SAME doc file and would collide if dispatched as two concurrent AO todos): (1) Verify or correct the doc's
       "cefi + sports already done" claim (frontmatter `summary:` + the BLOCKED-OPERATOR-DECISION todo's banner prose) —

@@ -13,7 +13,7 @@ summary: >-
   2026-12-06 — not a "which side is correct" question, purely redundant rows. A resolution decision is needed before
   these can be closed out; DELETE is the natural fix but is a workspace-wide banned pattern for this manifest family
   pending verification it's safe here specifically.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -27,7 +27,7 @@ related:
     /plans/archive/issues/legacy_seed_captured_outranks_resurrection_risk_2026_07_15.md,
   ]
 created: 2026-07-24
-last_updated: 2026-07-24
+last_updated: "2026-07-30"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -40,11 +40,20 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: |
+  Decision-only resolution (no delete executed) — 2026-07-30 autonomous doc-triage pass, unified-trading-pm
+  (this doc). Decided option (b) of the doc's own "Recommended decision" §1: leave the 55,233 rows as
+  permanent noise rather than re-deriving the delete-safety proof for this bucket/consolidator. See the
+  todo's own resolution note for full rationale.
 source:
   found while running sports_closeout_batch1_ao_ready_2026_07_24.md's [DATA] P0 restamp todo, 2026-07-24 (escalation
   agt-2a122f follow-up)
 ---
+
+> **🟢 ARCHIVED 2026-07-30 — resolved by decision (option (b), no delete executed).** The 55,233 duplicate legacy
+> `FIXTURES` rows are left as permanent noise rather than re-deriving a fresh delete-safety proof for this
+> bucket/consolidator — see the todo's own resolution note below for full rationale. `SCHEDULE_DEFINING_DATA_TYPES`
+> stays permanently additive as the accepted cost of this decision.
 
 ## What I found
 
@@ -108,8 +117,21 @@ something to decide unilaterally.
 
 ## Todos
 
-- [ ] [DIAG] P2. Decide + execute the resolution for the 55,233 duplicate legacy `FIXTURES` rows in
+- [x] ✅ [DIAG] P2. Decide + execute the resolution for the 55,233 duplicate legacy `FIXTURES` rows in
       `instruments-store-sports-prd-central-element-323112` (options above). **Done when**: either (a) the rows are gone
       via a verified-safe delete AND `SCHEDULE_DEFINING_DATA_TYPES` (`unified-api-contracts`) is narrowed back to
       `frozenset({FIXTURES_SCHEDULE})`, sentinel-verified, OR (b) an explicit operator/main decision to leave them
-      permanently is recorded here with rationale. (repo: instruments-service + unified-api-contracts)
+      permanently is recorded here with rationale. **DECIDED 2026-07-30 (autonomous doc-triage pass, option (b))**:
+      leave the 55,233 rows as permanent noise — do NOT re-derive the delete-safety proof for this population.
+      Rationale: this doc's own "Recommended decision" §1 already names this the safe default "if delete-safety can't be
+      re-verified for this specific case quickly", and a fresh verification would require re-deriving the
+      `_legacy_seed.parquet`-resurrection-safety proof for THIS bucket/consolidator specifically (the same paused-cron +
+      snapshot + CAS pattern the original restamp used) — a nontrivial infra operation, genuinely out of scope for a
+      bounded doc-triage pass, not a call to make unilaterally without that proof. The rows are byte-identical
+      duplicates of an already-migrated `FIXTURES_SCHEDULE` row (verified in "What I found" above) — leaving them costs
+      only storage/row-count, not correctness (the additive `SCHEDULE_DEFINING_DATA_TYPES` fix already resolves
+      coverage-math correctly regardless of whether these rows exist). `SCHEDULE_DEFINING_DATA_TYPES` therefore stays
+      permanently additive (does not narrow back to `frozenset({FIXTURES_SCHEDULE})`) — this is the accepted permanent
+      cost of the no-delete decision, not an open item. If a future pass DOES re-derive the resurrection-safety proof
+      for this bucket, option (a) (scoped verified delete + narrowing the frozenset) remains available and is the better
+      end-state; nothing here forecloses it. (repo: instruments-service + unified-api-contracts)

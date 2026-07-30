@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    plans/active/bucket_estate_fold_design_2026_07_13.md,
+    plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/bucket_iam_write_protection_per_tier_2026_06_09.md,
     plans/active/bucket_fold_closeout_2026_07_17.md,

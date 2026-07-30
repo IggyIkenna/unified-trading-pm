@@ -35,7 +35,7 @@ related:
   [
     sports_closeout_batch1_ao_ready_2026_07_24,
     deployment_registry_reaper_not_draining_stale_entries_2026_07_24,
-    /plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
+    /plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md,
     /plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
@@ -127,6 +127,6 @@ once the corpus census confirms zero remaining rows) was tracked in `sports_clos
 (`/plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md`) — that todo's own Done-when was RESCOPED
 2026-07-24 (282,231/337,464 legacy rows safely restamped; 55,233 could not be, being exact-duplicate collisions needing
 a DELETE-safety decision) and split into
-`/plans/active/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (status: open, live tracker for the
+`/plans/archive/issues/fixtures_manifest_duplicate_collision_residual_2026_07_24.md` (status: open, live tracker for the
 55,233 residual rows) — see also `/plans/active/issues/fixtures_manifest_legacy_backfill_2026_07_24.md` for the full
 analysis. `SCHEDULE_DEFINING_DATA_TYPES` stays additive until that issue's todo closes.

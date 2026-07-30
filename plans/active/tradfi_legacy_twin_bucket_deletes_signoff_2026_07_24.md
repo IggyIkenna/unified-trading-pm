@@ -165,6 +165,24 @@ restated here.
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 
+- **2026-07-30 (doc-triage pass, `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s REVIEW todo)** — Ran the dry-run
+  (default no-`--apply` mode; the `--dry-run` flag named in the todo text does not actually exist on this script's CLI —
+  `parser.add_argument`s are `--asset-group`/`--report-uri`/`--cloud`/`--apply`/`--i-understand` only; omitting
+  `--apply` IS the dry-run, confirmed via the script's own docstring "Default `--dry-run`"):
+  `GCP_PROJECT_ID=central-element-323112 DEPLOYMENT_ENV=prod .venv/bin/python instruments-service/scripts/cleanup_legacy_twins.py --asset-group tradfi --report-uri _index/audit/orphan_sweep_tradfi.parquet`
+  against the live prod report
+  (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet`, confirmed present
+  before running). **Result: 900 class-B legacy twins loaded from the report (not the 995 cited in this doc's own text
+  as of 2026-07-24 — the report has evidently shrunk by 95 rows in the interim, not re-investigated here) → 0 deletable,
+  900 blocked.** Every one of the 900 was blocked with reason "canonical twin NOT captured in manifest - would delete
+  the only copy" — i.e. Part 5's twin-coverage proof is **0% for this candidate set right now**, not the 100% the gated
+  delete todo (below) requires. This is a FRESH, same-session negative result: the delete gate does NOT clear today —
+  deletes correctly stay blocked, no `--apply` was run. Full stdout (900 BLOCKED lines) captured in the executing
+  session's log; not reproduced here in full — the summary counts above are the load-bearing evidence. Part (1) of the
+  combined REVIEW todo ("verify/correct the cefi+sports claim") was already resolved by this doc's own todo 1 (✅ done
+  2026-07-25, cites `sports_legacy_duplicate_triage_2026_07_22.md`) — re-confirmed current, no further correction
+  needed.
+
 - **2026-07-28 (gate-cleanup pass)** — retagged the legacy-twin bucket delete todo: the 2026-07-27 note's flagged
   ambiguity (whether §3a's reversibility carve-out reaches hard-stop #2) was resolved by operator ruling 2026-07-28
   (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a, extended) — hard-stop #2 is now

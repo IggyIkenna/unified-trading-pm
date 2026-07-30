@@ -19,7 +19,7 @@ scope: [engineer, admin]
 tags: [gcs, buckets, consolidation, fold, codex, estate-recount, alias-sunset, lifecycle, infrastructure]
 related:
   [
-    plans/active/bucket_estate_fold_design_2026_07_13.md,
+    plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/bucket_fold_ml_2026_07_17.md,
     plans/active/bucket_fold_features_2026_07_17.md,

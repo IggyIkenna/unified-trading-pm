@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 253 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 252 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -730,7 +730,7 @@ by hand._
   asset_group=prediction so a plan is READY, not to activate live trading now — both asset groups are deliberately
   backtest-only today per…
 
-### cross-cutting (64)
+### cross-cutting (63)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -747,9 +747,6 @@ by hand._
 - [`bucket_estate_consolidation_closeout_2026_07_24`](./bucket_estate_consolidation_closeout_2026_07_24.md) — "Forks the
   6 still-open todos from bucket_estate_consolidation_to_sub100_2026_07_13.md (15/21 done, archived 2026-07-24 per the
   plan line-cap remediation triage) into a small standalone closeout plan: recon-bucket end-to-end chain…
-- [`bucket_estate_fold_design_2026_07_13`](./bucket_estate_fold_design_2026_07_13.md) **[draft]** — "DESIGN doc for
-  Wave-3 of bucket_estate_consolidation_to_sub100_2026_07_13. Specifies the five structural folds that take the
-  post-Wave-2 estate (~139) to ~100 total (~80 non-GCP-system): features 25 per-AG/kind buckets → 5 per-AG (kind…
 - [`bucket_fold_execution_strategy_2026_07_17`](./bucket_fold_execution_strategy_2026_07_17.md) — "Executes Folds C + D
   of the Wave-3 fold design in ONE plan (same services, same cutover window). Fold C collapses the per-AG
   execution-store buckets (cefi/defi/tradfi/sports + the execution-store-prediction kind) into a single…

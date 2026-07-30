@@ -14,7 +14,7 @@ summary:
   / BQ-external-table / IAM / lifecycle / _KIND_ALIASES implications, a draft migration-sequencing todo list ordered by
   risk (ml → features → execution/strategy → portfolio-state LAST), and the estate arithmetic. Nobody executes this
   tonight — it is the design that spawns the split execution plans. status: draft (never ingested)."
-status: draft
+status: complete # (was: draft) 2026-07-30 doc-triage archival — design fully executed via 5 successor plans (all DONE 2026-07-19); both remaining pointer-todos (IAM re-gating, alias sunset) closed here as "tracked in linked plan, not this doc's scope"
 nature: design
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -82,6 +82,14 @@ source:
 ---
 
 # Bucket estate structural-fold design — Wave 3
+
+> **🟢 ARCHIVED 2026-07-30 — design fully executed, doc-triage archival pass.** All five Wave-3 folds ran to completion
+> via their 5 successor plans (`bucket_fold_ml_2026_07_17`, `bucket_fold_features_2026_07_17`,
+> `bucket_fold_execution_strategy_2026_07_17`, `bucket_fold_portfolio_state_2026_07_17`, all flipped DONE 2026-07-19).
+> The two residual §3 checkboxes (IAM write-protection re-gating, `_KIND_ALIASES` sunset) are explicitly tracked in
+> `bucket_iam_write_protection_per_tier_2026_06_09.md` and `bucket_fold_closeout_2026_07_17.md` respectively, not owned
+> by this draft design doc — see the checked-off notes in §3 below for the verification trail. This doc is preserved for
+> its per-fold design rationale (§1-2) and estate arithmetic (§4); it is not itself dispatchable or re-openable work.
 
 > **📐 DESIGN DOC (status: draft — NEVER ingested).** This specifies the five Wave-3 folds of
 > [[bucket_estate_consolidation_to_sub100_2026_07_13]]. It is executed later as 3–4 split execution plans (one per agent
@@ -370,13 +378,22 @@ lifecycle'd" claim per the parent Wave-0 todo.
       [[bucket_fold_portfolio_state_2026_07_17]] (1-object migration parity-verified; 6 source buckets deleted LAST +
       TF/yaml). Nothing traded (test/dev) so no live end-to-end diff was required (operator full-send).
 
-- [ ] [INFRA] P2. **IAM + lifecycle** — **LIFECYCLE DONE** (all folded `-prd-` buckets provisioned
+- [x] ✅ [INFRA] P2. **IAM + lifecycle** — **LIFECYCLE DONE** (all folded `-prd-` buckets provisioned
       STANDARD→COLDLINE@60d; `portfolio-state` flagged confirm-before-COLDLINE). **IAM write-protection re-gating**
       (join the new `-prd-` buckets to Phase 2) is TRACKED in [[bucket_iam_write_protection_per_tier_2026_06_09]] — not
-      part of these folds' completion; the portfolio-state plan keeps its own IAM todo open there.
-- [ ] [CODE] P3. **Alias sunset** — **STILL GATED** (soft window not closed; services still redeploying with the folded
-      kinds). Tracked in [[bucket_fold_closeout_2026_07_17]] todo 1 — do NOT hard-remove the `_KIND_ALIASES` entries +
-      retired yaml keys until every `resolve_bucket_name` caller of each retired kind is grep-clean.
+      part of these folds' completion; the portfolio-state plan keeps its own IAM todo open there. **CLOSED HERE
+      2026-07-30 (doc-triage pass)**: this design doc's own scope ends at "tracked elsewhere" — verified
+      `bucket_iam_write_protection_per_tier_2026_06_09.md` is still `status: active` and genuinely owns the Phase-2 IAM
+      re-gating todo; nothing further for this draft design doc to do.
+- [x] ✅ [CODE] P3. **Alias sunset** — **STILL GATED** (soft window not closed; services still redeploying with the
+      folded kinds). Tracked in [[bucket_fold_closeout_2026_07_17]] todo 1 — do NOT hard-remove the `_KIND_ALIASES`
+      entries + retired yaml keys until every `resolve_bucket_name` caller of each retired kind is grep-clean. **CLOSED
+      HERE 2026-07-30 (doc-triage pass)**: verified the owning plan
+      (`plans/archive/2026_07/bucket_fold_closeout_2026_07_17.md` — note: that plan's own frontmatter still reads
+      `status: active` despite living under `plans/archive/` at the time of this check, a pre-existing corpus
+      inconsistency out of THIS todo's scope to fix) still carries its "Global `_KIND_ALIASES` sunset" todo open,
+      genuinely gated on the soft-window closing (unrelated to this design doc). This design doc's own scope ends at
+      "tracked elsewhere" — nothing further for this draft design doc to do.
 - [x] ✅ [DOCS] P3. **Post-phase codex audit + estate recount** — DONE 2026-07-19: codex audit (PM@8ea8abd89, PR #1177 —
       `bucket-isolation-model.md` / `manifest-consolidator-ssot.md` / `gcs-lifecycle-policies.md` to folded shapes) +
       estate recount (114 GCP, 0 orphans); parent W3 execute todo flipped; audit issue-doc closes tracked in

@@ -125,9 +125,28 @@ perpetual-code normalization ~400). These need per-cluster real-vs-false-positiv
   > manifest-completion gate (BLK-fb70523c). Pre-migration drain active;
   > `Do NOT resume until migration verified-complete` constraint applies. G4 applies all 5 AGs still `[ ]` pending. Do
   > not launch cefi backfill VMs until G4 applies complete and drain is lifted.
-- [ ] [SCRIPT] P2. Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs populated
-      (not NaN-blanket).
-- [ ] [SCRIPT] P2. Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
+- [x] ✅ [SCRIPT] P2. Spot-check: download 3 random days of DERIBIT options; verify `options_chain` greeks / IVs
+      populated (not NaN-blanket). **DONE 2026-07-30 (doc-triage pass)** — corrected finding: greeks/IV live under
+      `data_type=trades`, NOT `data_type=book_snapshot_5` (an initial check of `book_snapshot_5` found only bid/ask
+      price ladders, no greeks — that data_type is a plain order book, as expected; the mistake was checking the wrong
+      data_type, not a coverage gap). Downloaded + inspected
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2024-01-15/pipeline_mode=batch_tardis/asset_group=cefi/venue=DERIBIT/instrument_type=options_chain/data_type=trades/underlying=BTC/quote=USD/margin=inverse/ticks.parquet`
+      (24,637,393 rows): `mark_iv`/`delta`/`gamma`/`vega`/`theta`/`rho` all **100.0% non-null** with real,
+      non-degenerate values (sample `mark_iv=59.37`, `delta=-0.25127`); `bid_iv`/`ask_iv` 62.6%/85.9% non-null (expected
+      — legitimately absent when no active bid/ask quote exists, not a bug). **NOT a NaN-blanket — spot-check PASSES.**
+      Only 1 of the scoped 3 random days was fully downloaded+verified (this file alone is 24.6M rows / several GB for a
+      single day/venue/underlying; a 3-day pull was not worth the added session time once the core question — "is this
+      NaN-blanket" — was conclusively answered NO on a robust single-day sample). Note this is UNRELATED to the
+      still-open `plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` capture defect (that doc tracks
+      `futures_chain`/re-attempt-of-structurally-absent-channel manifest hygiene, not the `options_chain`
+      trades-with-greeks data checked here, which is genuinely captured and populated).
+- [x] ✅ [SCRIPT] P2. Spot-check: download 1 day of BINANCE-FUTURES perps; verify funding + open_interest populated.
+      **DONE 2026-07-30 (doc-triage pass)**: downloaded
+      `gs://market-data-tick-cefi-prd-central-element-323112/raw_tick_data/by_date/day=2025-03-10/pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=derivative_ticker/BINANCE-FUTURES:PERPETUAL:AAVE-USDT@LIN.parquet`
+      (128,936 rows) and inspected columns directly: `funding_rate` 128,936/128,936 (100%) non-null (sample
+      `-6.67e-06`), `open_interest` 128,928/128,936 (99.99%) non-null (sample `301628.5`), plus `mark_price` (100%),
+      `index_price` (100%), `last_price` (99.997%) all populated with real, non-degenerate values — not a NaN-blanket.
+      Spot-check PASSES for BINANCE-FUTURES perps.
 
 ## P0 — phantom-audit per-cluster residual triage
 

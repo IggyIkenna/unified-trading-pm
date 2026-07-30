@@ -147,6 +147,10 @@ Do not assume it works because the loop is "running". Verify an actual cycle:
   this loop does NOT participate in.
 - [`ao_failover_multi_vm_readiness_2026_07_20.md`](../../plans/active/ao_failover_multi_vm_readiness_2026_07_20.md) —
   the plan that produced this checklist + the paused-slot fix + the gate tests.
+- [`central-vm-relaunch-glue-runner-reinstall.md`](./central-vm-relaunch-glue-runner-reinstall.md) — the sibling
+  central-VM runbook for a DIFFERENT concern (a from-scratch `launch-central-brain-aws.sh` relaunch does not
+  re-provision the self-hosted CI glue-runner pool that also lives on this box); linked here purely for discoverability
+  since both are central-VM relaunch/recovery runbooks.
 
 ## Reviewer enforcement
 

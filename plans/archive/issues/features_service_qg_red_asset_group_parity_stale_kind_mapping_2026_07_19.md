@@ -84,7 +84,7 @@ retired (folded into `features`) — drop them from `_KIND_TO_FAMILY` in the gat
 `asset_group_choices` accordingly if they're also stale.
 
 **I did not make this judgment call** — it requires reading the Fold design doc
-(`plans/active/bucket_estate_fold_design_2026_07_13.md`) + the actual current CLI/cloud-providers.yaml state to
+(`plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md`) + the actual current CLI/cloud-providers.yaml state to
 determine whether (a) or (b) is correct, which is out of scope for this dispatch (data_engineering craft, a
 features-service sports-fixture status-filter fix, not bucket-fold/infra work).
 
@@ -213,10 +213,11 @@ suite) — a blind edit risks a worse regression than the one it fixes. Filed as
 
 - [x] [INFRA] P1. Determine the correct current state for the 5 folded families
       (features-delta-one/mtf/onchain/volatility/xinstrument): read
-      `plans/active/bucket_estate_fold_design_2026_07_13.md` + current `cloud-providers.yaml` `features:` folded key +
-      each CLI's `asset_group_choices` to decide whether these 5 families are genuinely retired (folded into `features`)
-      or whether cloud-providers.yaml lost declarations it should still carry. (repo: unified-api-contracts /
-      features-service) — ✅ determination: (b), see "Determination (todo 1)" above (this doc, slot-5, 2026-07-19).
+      `plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md` + current `cloud-providers.yaml` `features:`
+      folded key + each CLI's `asset_group_choices` to decide whether these 5 families are genuinely retired (folded
+      into `features`) or whether cloud-providers.yaml lost declarations it should still carry. (repo:
+      unified-api-contracts / features-service) — ✅ determination: (b), see "Determination (todo 1)" above (this doc,
+      slot-5, 2026-07-19).
 - [x] [INFRA] P1. Apply the determined fix: drop the 5 retired families from `check_asset_group_parity.py`'s
       `_KIND_TO_FAMILY` dict and replace with union-of-families coverage for the folded `"features"` kind (CEFI/TRADFI/
       DEFI/PREDICTION) — see "Fix shape for todo 2" above. Do NOT touch the 5 families' `asset_group_choices` (they are

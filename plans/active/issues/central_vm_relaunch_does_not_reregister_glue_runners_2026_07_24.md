@@ -84,18 +84,34 @@ Two options, not mutually exclusive:
       up), so a relaunch is complete DR with no manual follow-up required at all. Do this even though the incident has
       never been exercised — the theme explicitly prioritizes full-recovery robustness over "hasn't happened yet"
       deferral for exactly this class of gap. Retagged `[OPERATOR]` → the two execution todos below.
-- [ ] [DOCS] P2. **Ship the interim safety net**: write the manual glue-runner-reinstall step into a
-      `codex/15-runbooks/` doc (new or folded into `agent-orchestrator-failover-re-enable-checklist.md`) with
-      `owner`/`cadence`/`verifier` declared (missing = review-blocking per CLAUDE.md runbook convention). **Done when**:
-      the runbook doc exists, is discoverable from the failover checklist, and states the exact
-      `setup-glue-runners.sh install` command + expected post-install verification.
+- [x] ✅ [DOCS] P2. **DONE 2026-07-30 (doc-triage pass)** — **Ship the interim safety net**: write the manual
+      glue-runner-reinstall step into a `codex/15-runbooks/` doc (new or folded into
+      `agent-orchestrator-failover-re-enable-checklist.md`) with `owner`/`cadence`/`verifier` declared (missing =
+      review-blocking per CLAUDE.md runbook convention). **Done when**: the runbook doc exists, is discoverable from the
+      failover checklist, and states the exact `setup-glue-runners.sh install` command + expected post-install
+      verification. Shipped: `codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md` (new doc, declares
+      `owner`/`cadence`/`verifier`/`last_executed`, states the exact
+      `sudo GH_TOKEN_SECRET=GH_PAT     ./setup-glue-runners.sh install` command + the `./setup-glue-runners.sh status`
+      post-install verification step); cross-linked from `agent-orchestrator-failover-re-enable-checklist.md`'s §
+      Cross-references for discoverability. Both land in unified-trading-pm's docs-triage batch commit this session.
 - [ ] [SCRIPT] P2. **Ship the full-completion fix**: wire `setup-glue-runners.sh install` into
       `launch-central-brain-aws.sh`'s bootstrap sequence (after `bootstrap_vm.sh --role planning` brings AO up), so a
       from-scratch relaunch re-provisions both the AO backend AND the glue/glue-writer runner pool with no manual step
       required. No shortcuts — cover both `glue` (JIT-ephemeral) and `glue-writer` (long-lived). **Gate**: a real or
       simulated relaunch where a glue-routed workflow (e.g. `reconcile-release-tags`, the documented canary) picks up a
       runner on the NEW box automatically, with no manual intervention beyond what the runbook above states as the
-      fallback path.
+      fallback path. **CODE WRITTEN, NOT YET SHIPPED (2026-07-30, doc-triage pass)** — the wiring itself is done in
+      `deployment-service/scripts/vm/launch-central-brain-aws.sh` (bash-syntax-verified via `bash -n`) but could not be
+      committed this session: `deployment-service`'s working tree has 4 files
+      (`deployment_service/data_pipeline_monitors/     {cli,consolidator_scheduler_watcher,meta_targets}.py` +
+      `tests/unit/test_data_pipeline_monitors.py`) in an UNRESOLVED merge-conflict state (`git status` shows
+      `both modified`/unmerged) from a different, unidentified agent session — confirmed genuinely live/recent (all 4
+      files' mtimes ~41 min old at check time, not a stale dead claim), so per multi-agent safety rules this was
+      correctly left untouched rather than force-resolved or worked around. `quality-gates.sh` cannot run cleanly on
+      that tree until whoever owns that conflict resolves it. The diff sits uncommitted in the deployment-service
+      working tree, unrelated to and not colliding with the conflicted files — pick up and ship once that tree is clean
+      (`bash scripts/quality-gates.sh --no-fix` then
+      `quickmerge.sh     ... --files 'scripts/vm/launch-central-brain-aws.sh'`).
 
 ## Progress Log
 
