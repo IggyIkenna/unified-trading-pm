@@ -63,14 +63,14 @@ resolved_by:
   [
     "instruments-service@24f84e86 (sports)",
     "deployment-service@6bfa284 (prediction)",
-    "re-verified live 2026-07-23 -- cefi addendum STILL OPEN, see RE-TRIAGE",
+    "instruments-service@5c1c3ccb (cefi dedup-aware guard, RULED 2026-07-28, shipped 2026-07-30)",
   ]
 locked_by:
 locked_since:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 ---
 
 ## Regression check against same-session instruments-service@03f71c81a — CLEARED
@@ -255,7 +255,7 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       The real mechanism is cefi-only post-merge dedup passes correctly collapsing already-delisted duplicate rows.
       Live-verified `CATALOGUE_PROMOTED` 2026-07-28 (429293 rows, `decision=ACCEPT`) satisfies this todo's literal
       done-when. Repo: instruments-service (diagnosis only, no commit).
-- [ ] [DATA] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — make the guard dedup-aware; ship option (b), not (a).**
+- [x] ✅ [DATA] P3. **RULED 2026-07-28 (was `[OPERATOR]`) — make the guard dedup-aware; ship option (b), not (a).**
       Reasoning applied from the operator's standing general ruling: "Opt for full completions, no shortcuts, full
       functionality... if it's about canonicalisation rather than a hack, do it properly" — leaving a production
       monotonic guard producing recurring, already-diagnosed cosmetic `CATALOGUE_SHRINK_BLOCKED` noise (07-16, 07-23
@@ -277,6 +277,21 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       (i) a dedup-only-driven shrink no longer trips `CATALOGUE_SHRINK_BLOCKED`, and (ii) an injected genuine active-row
       drop still does. Full `quality-gates.sh` green before shipping — this touches a production reference-data safety
       guard, so no shortcuts on test coverage. Repo: instruments-service.
+
+      **SHIPPED 2026-07-30**: `instruments-service@5c1c3ccb` (quickmerge, quality gates green 172s). Extracted the 3
+              cefi-only Phase D dedup passes into a shared `_apply_cefi_phase_d_dedups()` helper (used identically by
+              `run_rollup`'s Phase D and by the guard); `promote_catalogue` now takes a required `asset_group` kwarg and, for
+              `asset_group == "cefi"`, re-runs that same helper over the CURRENT prod catalogue (in `_read_current_row_count`)
+              before computing `current_count` for `evaluate_monotonic_guard`'s comparison — so a dedup-only-driven shrink no
+              longer trips `CATALOGUE_SHRINK_BLOCKED`. Added `tests/unit/scripts/test_promote_catalogue_dedup_aware_guard.py`
+              (own file, mirrors `test_shrink_drop_diagnostics.py`'s convention) proving both halves of the mandate exactly as
+              specified: (i) a dedup-only shrink (2-row un-collapsed off-by-one pair → 1 already-deduped row) is now ACCEPTED
+              (`test_dedup_only_shrink_does_not_trip_guard`), and (ii) a genuine active-row drop (2 distinct instruments, no
+              dedup pass touches the pair, one dropped for real) still trips the guard
+              (`test_genuine_active_row_drop_still_trips_guard`) — plus a control proving non-cefi asset groups are unaffected
+              (`test_non_cefi_asset_group_unaffected_by_dedup_aware_guard`) and a proof the extraction is a pure refactor
+              (`test_extracted_helper_matches_run_rollups_own_pass_order`). `_shrink_drop_diagnostics`'s
+              `dropped_active`/`dropped_delisted` split is untouched, staying the safety cross-check as the ruling required.
 
 ## Progress Log
 
@@ -481,3 +496,17 @@ when a proper one is available and — critically — verified NOT to weaken the
 (re-running the same dedup passes over the current baseline makes the comparison more precise, not looser). Retagged the
 todo from `[OPERATOR]` to `[DATA]` with the ruling + reasoning + a concrete implementation + regression-test mandate
 written in. Docs-only, no code changed.
+
+## 2026-07-30 update — cefi dedup-aware-guard P3 todo SHIPPED
+
+Dispatched (rulings-closeout sweep across `plans/active/issues/`) against the 2026-07-28-ruled dedup-aware-guard todo
+per its own written mandate. `instruments-service@5c1c3ccb` (quickmerge, quality gates green 172s) — see the todo's own
+entry above for the full implementation + test evidence. This also resolves the same underlying mechanism that
+`group_c_cloud_run_job_failures_triage_2026_07_16.md`'s Decision-A todo ("proper duplicate-key-aware rewrite, not a
+shrink-allowance flag", operator-ruled 2026-07-29) was pointed at — that doc's literal "rewrite `_merge_incremental`"
+framing predates this doc's own 2026-07-28 corrected diagnosis (Finding 1-4 above: no frozen-tail/merge gap exists for
+cefi; the real mechanism is the Phase D dedup vs. the guard baseline). The dedup-aware-guard fix shipped here honors the
+07-29 ruling's INTENT (a proper fix, never a permissive `--allow-catalogue-shrink` paper-over) via the mechanism this
+doc's own deeper live investigation actually found — see the cross-reference note added to that doc. Only the low-
+priority P3 IAM-403 events-sink grant remains open in this doc (untouched — out of scope for this dispatch, no operator
+ruling attached, doc's own text already flags it "low priority, Cloud Logging already carries the same signal").
