@@ -237,11 +237,20 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
 - [ ] [DATA] P0. Migration/purge pass: for every CME + CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` row keyed by the retired `instrument_id=<parent>.FUT`/`.OPT`
       grain, verify a real `captured` row exists at `(date, venue, data_type, instrument_type, underlying)` and retire
-      the stale row if so (snapshot-before-write, dry-run default). Repo: `market-tick-data-service`.
-- [ ] [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
+      the stale row if so (snapshot-before-write, dry-run default). Repo: `market-tick-data-service`. **Script shipped +
+      dry-run executed 2026-07-30 (see Progress log) — measured counts recorded. `--apply` NOT run — this is a
+      destructive ~81K-row live-manifest mutation the script's own docstring gates on a recorded operator go-ahead
+      (mirrors the `tradfi_manifest_content_recovery_completion_2026_07_24.md` retire-phase hard-stop). Checkbox stays
+      open until the operator approves and `--apply` actually runs + self-verifies 0 remaining.**
+- [x] ✅ [SCRIPT] P1. Harden `market_tick_data_service/scripts/_rebuild_tradfi_cf11.py::_handle_srz_tradfi_row` to check
       for an existing correctly-keyed captured shard before reclassifying a historical
       `empty_confirmed[SOURCE_RETURNED_ZERO]` row to `attempted_failed` — prevents this false-positive class recurring
-      for future stale rows. Repo: `market-tick-data-service`.
+      for future stale rows. Repo: `market-tick-data-service`. — `market-tick-data-service@11be9cfe` (2026-07-30):
+      `_handle_srz_tradfi_row` now resolves a retired CME/CBOE parent symbol to its bundle-grain shadow target via the
+      static `TRADFI_DATABENTO_INSTRUMENTS` registry and suppresses reclassification when a real captured shard already
+      exists for the same underlying/date; 6-tuple `covered_keys` (added `underlying`) in both
+      `rebuild_tradfi_manifest.py` and `_rebuild_tradfi_cf11.py`. Regression coverage:
+      `tests/unit/test_rebuild_tradfi_manifest_cf11.py` (14 tests, re-verified green 2026-07-30).
 - [ ] [DATA] P2. Reconcile the `BASE_ASSET`/manifest `underlying` string-naming drift found incidentally during the
       cross-check (`HEATING-OIL`/`HEATINGOIL`/`HO`, `NAT-GAS`/`NAT-GAS-HH`/`NATGAS`, and similar) if it is found to
       cause its own denominator/accounting issues. Repo: `market-tick-data-service` / `unified-api-contracts`.
@@ -265,3 +274,31 @@ population — the "elsewhere" gap that doc pointed at is this manifest bookkeep
   rows, and its directly-analogous sibling (the 50,520-row retire-phase `--apply` in
   `/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`) is a standing operator-review hard stop.
   See the note added above the todos.
+
+- **2026-07-30 (batch5 dispatch, slot 5)**: Shipped both the hardening fix and the migration/purge script
+  (`market-tick-data-service@11be9cfe`, landed independently by slot 11 just before this dispatch — verified live, diff
+  matches this doc's remediation plan items 1-2 exactly). This session ran the dry-run
+  (`scripts/retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py`, no `--apply`) against the LIVE
+  `gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` (6,021,751 rows at read
+  time; a second confirmatory read ~40s later saw 6,075,313 — the manifest is actively being written by other in-flight
+  backfills, expected, handled safely by the script's CAS write). **Measured results** (supersedes this doc's earlier
+  ~198K/2,489 upper-bound estimate with the actual defect-signature count):
+
+  | venue | candidates | dropped (real captured twin found) | unresolved (no twin — genuine failure or commodity naming-drift) |
+  | ----- | ---------: | ---------------------------------: | ---------------------------------------------------------------: |
+  | CME   |    111,829 |                             78,965 |                                                           32,864 |
+  | CBOE  |      2,489 |                              2,489 |                                                                0 |
+  | Total |    114,318 |                             81,454 |                                                           32,864 |
+
+  CBOE matches the doc's original evidence chain exactly (100% false-positive — every VX.FUT row has a real captured
+  twin). CME's 32,864 unresolved rows are the expected mix of genuine failures plus the already-documented
+  commodity-symbol naming-drift tail (todo 3 below) — left untouched by design, never guessed. Self-verify
+  (post-simulated-drop, still dry-run): 0 candidate rows would retain a captured twin — confirms the transform is
+  internally consistent. `stop_on_surprise` bounds `[0, 300000]` held (114,318 well inside). Regression suite
+  (`tests/unit/scripts/test_retire_tradfi_cf11_bundle_grain_shard_atom_mismatch_2026_07_30.py` +
+  `tests/unit/test_rebuild_tradfi_manifest_cf11.py`, 23 tests) re-verified green in a fresh `.venv`.
+  `market-tick-data-service` `quality-gates.sh` was already green on this HEAD (no code changed this session — dry-run
+  execution + doc updates only). **`--apply` was deliberately NOT run** — per the script's own docstring gate and this
+  doc's na-audit finding above, a ~81K-row live-manifest CAS mutation needs a recorded operator go-ahead citing these
+  measured counts before the real write. Flagged to the operator via this session's `/blocked` on
+  `tradfi_satellite_ao_dispatch_batch5-002`; todo 1 above stays unchecked pending that approval.

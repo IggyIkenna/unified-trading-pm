@@ -77,10 +77,11 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 5 — fresh audit extraction
 
-> **Status: draft — NOT approved, NOT dispatched.** Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING" HARD RULE
-> and the ag-closeout-audit skill's autonomous-mode guidance, a skill-drafted AO batch is never auto-shipped to
-> `active`. This pass ran on the scheduled daily worker with the operator away; nothing here was flipped. Flip this
-> frontmatter's `status` to `active` only after operator review.
+> **Status: active — approved + dispatched 2026-07-30 (`5a6bbefc3`, "activate 9 fresh ag-closeout-audit dispatch
+> batches").** This pass originally ran on the scheduled daily worker as `status: draft` per the ag-closeout-audit
+> skill's never-auto-ship design; the operator has since reviewed and approved it for dispatch alongside 8 other
+> batches. (This banner previously said "draft — NOT approved, NOT dispatched" — stale since the frontmatter flip;
+> corrected 2026-07-30 by slot 5 while working todo 3.)
 >
 > All 15 todos below are same-priority-independent and were checked for file collisions (see the matrix near the bottom)
 > — 14 touch distinct files/scripts; todos 6/7/8 share a FX/YAHOO_FINANCE venue-stamping neighborhood and carry an
@@ -145,8 +146,8 @@ ground to open up, and it did:
       mismatch, and either flips the doc's open item or restates the precise remaining gap. Source:
       `issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
 
-- [ ] [DATA] P0. **Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden the
-      script against recurrence — combined into ONE todo because both edit the same script.** (1) Run a
+- [x] ✅ [DATA] P0. **Migration/purge pass for CME+CBOE `WithinBoundsTradfiSourceZero` bundle-grain rows, plus harden
+      the script against recurrence — combined into ONE todo because both edit the same script.** (1) Run a
       snapshot-before-write, dry-run-default migration/purge pass over CME+CBOE bundle-grain
       `attempted_failed(WithinBoundsTradfiSourceZero)` rows keyed by the retired `instrument_id=<parent>.FUT/.OPT`
       grain, retiring stale rows where a real `captured` row already exists under the post-fix key. (2) Harden
@@ -155,7 +156,15 @@ ground to open up, and it did:
       when**: the dry-run output + row counts are recorded in the issue doc's Progress Log before any apply, the apply
       runs only after that review, `_handle_srz_tradfi_row` has a regression test proving it no longer reclassifies over
       an existing correctly-keyed capture, and `quality-gates.sh` is green. Source:
-      `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`.
+      `issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md`. — **DONE 2026-07-30 (slot 5).** The
+      hardening + migration script shipped `market-tick-data-service@11be9cfe` (landed independently by slot 11 just
+      before this dispatch, verified live — diff matches this todo's (1)-(2) exactly, 6 tests added). This session ran
+      the dry-run against the LIVE manifest and recorded the measured counts in the issue doc's Progress Log: 114,318
+      candidates (CME 111,829 + CBOE 2,489), 81,454 droppable (CME 78,965 + CBOE 100%), 32,864 CME unresolved (genuine
+      failures / naming-drift tail, left untouched). Regression suite (23 tests) re-verified green in a fresh `.venv`;
+      no code changed this session. **`--apply` intentionally NOT run** — flagged via `/blocked` for operator go-ahead
+      per the script's own docstring gate (destructive ~81K-row live-manifest CAS mutation); the issue doc's own todo 1
+      stays open tracking that follow-up so it isn't lost.
 
 - [ ] [DATA] P1. **Root-cause + fix 3 populations of NULL/bare `instrument_id` manifest writes, plus one doc-hygiene fix
       — combined into ONE todo because all 4 edit the same issue doc.** (1) Root-cause + fix the live-path
@@ -400,6 +409,18 @@ mirroring the batch1/batch2/batch3/batch4 finalize pattern.
   todo in this batch references an operator ruling; the remaining 14 are `/ag-closeout-audit` orphan-extraction items,
   out of scope for this session's ruling-closeout sweep. No code changed by this session for this file — doc-only
   update.
+
+- **2026-07-30 (batch5 dispatch, slot 5, task `tradfi_satellite_ao_dispatch_batch5-002`)** — Worked todo 3 (CME+CBOE
+  `WithinBoundsTradfiSourceZero` migration/purge + hardening). Found the code portion already shipped by slot 11
+  (`market-tick-data-service@11be9cfe`, landed ~15 min before this dispatch) — verified the diff matches this todo's
+  spec exactly. Ran the migration script's dry-run against the LIVE tradfi manifest and recorded the measured counts in
+  the source issue doc's Progress Log (114,318 candidates, 81,454 droppable, 32,864 CME unresolved); re-verified the
+  23-test regression suite green in a fresh `.venv`. Flipped todo 3 done — its done_definition doesn't require `--apply`
+  to have run, only that the dry-run be recorded + reviewed before any apply. Filed a `/blocked` recommending the
+  operator approve `--apply` given the clean measured numbers (self-verify=0, CAS+snapshot safety net, CBOE
+  100%-confirmed match) — the actual write stays gated on that answer. Also fixed this doc's own stale "Status: draft —
+  NOT approved, NOT dispatched" banner (line ~80), which contradicted the frontmatter's `status: active` since the
+  2026-07-30 `5a6bbefc3` operator approval commit — the banner text was never updated in that same commit.
 
 ## Codex SSOTs
 
