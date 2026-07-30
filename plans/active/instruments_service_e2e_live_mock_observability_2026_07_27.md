@@ -57,38 +57,38 @@ before assuming any of the below is still accurate — 4+ months have passed.
       alignment): N/A, architecture doesn't implement it** — not a regression, this was never built for this service.
 
       **5.3/5.4 — actually run + verified** via `main_service_cli()` with `--operation instruments --mode live
-                          --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
-                          logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
-                          LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
-                          documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
-                          `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
-                          `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
-                          swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
-                          **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
-                          a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
-                          ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
-                          suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
-                          broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)`. **Correction 2026-07-30
-                          (slot-11): the `<pending>` SHA above was never actually shipped — the suppress tuple was still
-                          `(RuntimeError, ValueError)` in the live tree when Phase 6 started, and the crash reproduced exactly
-                          as described (confirmed live: `--mode live --asset-group cefi` under `CLOUD_MOCK_MODE=true` crashed
-                          cleanup with the uncaught `AttributeError`).** Actually fixed + verified now: instruments-service@
-                          `518cc7a7` (shipped) broadens both suppress
-                          tuples; re-verified live against BYBIT-SPOT (clean cleanup, no traceback) and again via a mid-run
-                          SIGTERM against HYPERLIQUID (`SystemExit code=0`, no traceback). **Cross-cutting root
-                          cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
-                          `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
-                          fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
-                          `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
-                          protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
-                          `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
-                          exposed to the identical crash. Filed:
-                          `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
+                              --asset-group cefi` under `CLOUD_MOCK_MODE=true`: confirmed `ServiceRuntime` STARTED log line, per-venue fetch
+                              logging (URDI[...] fetched N instruments across BYBIT-SPOT/COINBASE-SPOT/KRAKEN-SPOT/KRAKEN-FUTURES/
+                              LIGHTER-ZKSYNC/KALSHI-PERP/POLYMARKET-PERP/EXTENDED-STARKNET/ASTER), and defaults to today's UTC date as
+                              documented. **Real bug found + fixed**: a SIGTERM/Ctrl-C mid-run did NOT exit cleanly — `cleanup()`'s
+                              `publish_coordination_event("DATA_READY", ...)` call (instruments_handler.py:399, and the sibling
+                              `SPORTS_LIVE_STATS` call at :419) is guarded with `contextlib.suppress(RuntimeError, ValueError)` (intended to
+                              swallow the batch-mode `ValueError` `publish_coordination_event` raises when `_mode != "live"`), but in
+                              **live+`CLOUD_MOCK_MODE=true`**, UTL's `service_framework/_sink_factory.py::build_event_sink()` hands the process
+                              a plain `LocalFsEventSink` (write_event-only, no `publish_coordination_event`/`subscribe_coordination_events`) for
+                              ANY `runtime.is_mock` case regardless of batch/live mode — so the call raises `AttributeError`, which the
+                              suppress tuple didn't catch, crashing the whole shutdown with `SystemExit code=1` ("Service failed"). **Fixed**:
+                              broadened both suppress tuples to `(RuntimeError, ValueError, AttributeError)`. **Correction 2026-07-30
+                              (slot-11): the `<pending>` SHA above was never actually shipped — the suppress tuple was still
+                              `(RuntimeError, ValueError)` in the live tree when Phase 6 started, and the crash reproduced exactly
+                              as described (confirmed live: `--mode live --asset-group cefi` under `CLOUD_MOCK_MODE=true` crashed
+                              cleanup with the uncaught `AttributeError`).** Actually fixed + verified now: instruments-service@
+                              `518cc7a7` (shipped) broadens both suppress
+                              tuples; re-verified live against BYBIT-SPOT (clean cleanup, no traceback) and again via a mid-run
+                              SIGTERM against HYPERLIQUID (`SystemExit code=0`, no traceback). **Cross-cutting root
+                              cause flagged, not fixed here** (out of this plan's `repos: [instruments-service]` scope, and the shared UTL
+                              `events`/`events_interface` module pair looks like an in-progress migration — too risky to touch blind): the real
+                              fix belongs in `unified-trading-library/unified_trading_library/service_framework/_sink_factory.py` (or
+                              `event_sink.py`'s `LocalFsEventSink`) so mock+live mode gets a sink that implements the coordination-event
+                              protocol (the existing `MockEventSink` in `events/sink.py` already does, but nothing wires it into
+                              `build_event_sink()`) — every OTHER service following this same `cleanup()`+`contextlib.suppress` pattern is
+                              exposed to the identical crash. Filed:
+                              `plans/active/issues/utl_mock_mode_event_sink_missing_coordination_protocol_2026_07_30.md`.
 
-                          One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
-                          `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
-                          expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
-                          counter-based success signal is a legitimate design, just not what this todo assumed).
+                              One additional, smaller finding: no per-venue `COMPLETED` UEI event exists in code (only `WRITE_FAILED`,
+                              `writers.py:429-436`) — success is implicit via a `processed`/`failed` counter dict, not a discrete event. 5.3's
+                              expectation of "per-venue COMPLETED" doesn't match the shipped event taxonomy; noted, not treated as a bug (a
+                              counter-based success signal is a legitimate design, just not what this todo assumed).
 
 - [x] ✅ [SCRIPT] P2. **Phase 6 — Mock-mode failure scenarios. DONE 2026-07-30 (slot-11) — premise corrected (same
       pattern as Phase 5) + real bug fixed + shipped.** The literal `--scenario default/stress/missing_data` flag does
@@ -113,10 +113,57 @@ before assuming any of the below is still accurate — 4+ months have passed.
       `plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md`, declared repo-blocker
       `RB-ecfc50de`, resolved once `unified-api-contracts` shipped the golden-fixture regen (`5f7b8136` in the rebased
       history) — full `quality-gates.sh` green, shipped clean.
-- [ ] [SCRIPT] P2. **Phase 7 — Observability.** Verify: (7.1) ServiceRuntime log line has all dimensions; (7.2) UEI
-      STARTED/COMPLETED/per-venue events fire; (7.3) shard-level isolation (one venue failure doesn't crash others);
-      (7.4) dry-run warning logged ("DRY RUN" + "UCI dry-run mode ACTIVE"); (7.5) `ADAPTER_FETCH_FAILED` events classify
-      failed venues correctly; (7.6) "Memory watchdog started" logged.
+- [x] ✅ [SCRIPT] P2. **Phase 7 — Observability. DONE 2026-07-30 (slot-6) — all 6 sub-checks run live against
+      instruments-service, all PASS with 2 premise notes (same pattern as Phases 5/6), zero code changes needed.** Runs:
+      `CLOUD_MOCK_MODE=true GCP_PROJECT_ID=mock-project .venv/bin/instruments-service --operation instruments     --mode live --asset-group cefi --venues <...> --dry-run --log-level INFO`
+      (single-venue BYBIT-SPOT baseline, then multi-venue BYBIT-SPOT+HYPERLIQUID+LIGHTER-ZKSYNC, then
+      BYBIT-SPOT+FAKE-EXCHANGE-SPOT for isolation), plus inspection of the mock-mode `LocalFsEventSink` jsonl
+      (`.local-dev-cache/events/instruments-service.jsonl`). - **7.1 (ServiceRuntime log line, all dimensions):
+      VERIFIED, premise note.** `service_runtime.py:202-211` logs
+      `ServiceRuntime: op=%s mode=%s provider=%s env=%s data=%s testnet=%s dry_run=%s` — confirmed live twice (once at
+      the `__bootstrap__` preliminary-mode phase, once at the real `op=instruments` phase after full arg resolution).
+      This covers 7 of the dataclass's fields; `asset_group`, `scenario`, `log_level`, `requested_mode`,
+      `gcp_project_id`, `storage_protocol`, `messaging_protocol`, `force`, `service_name` are NOT in this specific log
+      line (though `asset_group` is separately visible via the "Venue override from CLI" line and other call sites).
+      "All dimensions logged" is true for the CLI/env axes this line documents itself as covering, not literally every
+      `ServiceRuntime` field — not treated as a bug (a wider log line is a legitimate but separate observability
+      enhancement, out of a "verify current behavior" SCRIPT todo's scope). - **7.2 (UEI STARTED/COMPLETED/per-venue
+      events): VERIFIED, premise note matching Phase 5's finding.** Confirmed via the local event sink: `STARTED` and
+      `STOPPED` fire per run (service lifecycle taxonomy is STARTED/STOPPED/FAILED, not STARTED/COMPLETED — same
+      correction Phase 5 already made). A domain-level `PROCESSING_STARTED` → `PROCESSING_COMPLETED` pair also fires per
+      run with an aggregate `venues`/`total_records` count (not one event per venue). Per-venue signal on the SUCCESS
+      path comes via `PUBLISHED_OK`/ `PUBLISHED_DEGRADED` (`completeness_fraction`, `missing: [...]` naming the absent
+      venues) and `PIPELINE_HEARTBEAT` (`venues_ok` count), not a discrete "per-venue COMPLETED" event; per-venue signal
+      on the FAILURE path is `ADAPTER_FETCH_FAILED` (see 7.5). Confirms + extends Phase 5's "no per-venue COMPLETED
+      event" finding — the counter/completeness-fraction based design is consistent across both phases' evidence. -
+      **7.3 (shard-level isolation, one venue failure doesn't crash others): VERIFIED live, two independent
+      reproductions.** (a) `--venues BYBIT-SPOT HYPERLIQUID LIGHTER-ZKSYNC`: HYPERLIQUID hit real
+      `429 Too Many       Requests` (classified `RATE_LIMIT`, `action=retry`, `retry_safe=true`) and retried for ~2 min
+      while BYBIT-SPOT (3314 instruments) and LIGHTER-ZKSYNC (220 instruments) fetched and wrote independently; run
+      finished exit=0, `Shard completeness OK: 3/3 venues written` once HYPERLIQUID's retries succeeded. (b)
+      `--venues BYBIT-SPOT       FAKE-EXCHANGE-SPOT` (no registered URDI adapter for the fake venue — logged
+      `No URDI adapter for 1 venue(s)`): BYBIT-SPOT still fetched + wrote (3314 instruments), run finished exit=0 with
+      **no crash/traceback**, and the gap was reported honestly via
+      `SHARD COMPLETENESS FAILURE date=... 1/2 venues written (50% complete)` + event-sink
+      `SHARD_INCOMPLETE`/`PUBLISHED_DEGRADED` (`completeness_fraction: 0.5`, `missing:       ['FAKE-EXCHANGE-SPOT']`) —
+      never a silent partial-success. Both cases confirm one venue's failure (transient or total) does not crash the
+      batch; the working venues complete and the gap is surfaced, not hidden. - **7.4 (dry-run warning, "DRY RUN" + "UCI
+      dry-run mode ACTIVE"): VERIFIED, exact match.** Every `--dry-run` run logged both
+      `WARNING DRY RUN — no cloud writes will be performed` (`service_runtime.py:201`) and
+      `WARNING UCI       dry-run mode ACTIVE — all data sinks redirected to local` (`cloud_interface/factory.py:448`). -
+      **7.5 (`ADAPTER_FETCH_FAILED` classifies failed venues correctly): VERIFIED live.** The HYPERLIQUID 429 in 7.3 run
+      (a) produced an `ADAPTER_FETCH_FAILED` event in the local sink:
+      `{"venue": "hyperliquid", "endpoint":       "meta", "error_code": "RATE_LIMIT", "action": "retry", "retry_safe": true}`
+      — correct classification via UAC's `classify_venue_error()`, matching the shard-level-failure-isolation contract
+      (classify then continue, never crash the shard loop). Note: a venue with NO registered adapter at all (7.3 run
+      (b)) does not emit `ADAPTER_FETCH_FAILED` (there's no fetch attempt to classify) — it surfaces via
+      `SHARD_INCOMPLETE`/ `PUBLISHED_DEGRADED` instead; these are two distinct, correctly-separated failure modes
+      (missing coverage vs. a failed fetch attempt), not a gap in classification. - **7.6 ("Memory watchdog started"
+      logged): VERIFIED, exact match.** Every run logged
+      `Memory watchdog started       for instruments-service (threshold=85.0%)` (`core/memory_monitor.py:253`) during
+      `ServiceBootstrap`. - **No code changes shipped this phase** — no crash, silent placeholder, or misclassification
+      found; both premise notes (7.1, 7.2) describe legitimate existing design, consistent with how Phase 5/6 treated
+      equivalent gaps. Nothing to ship; this todo is evidence-only.
 - [ ] [VALIDATE] P3. **Re-verify the 6 bugs from the 2026-03-23 DEFI E2E audit are still real** (Balancer 400, Aster
       lowercase-category bug, Hyperliquid 0-instruments, missing data-catalogue entries, a Pydantic warning,
       CFE-not-in-UAC) before re-filing any of them — 4 months have passed and some may already be fixed incidentally.
@@ -185,3 +232,21 @@ before assuming any of the below is still accurate — 4+ months have passed.
     `plans/active/issues/instruments_service_qg_red_uac_sports_venue_overlap_2026_07_30.md` + declared repo-blocker
     `RB-ecfc50de`. Resolved once `instruments-service@5f7b8136` regenerated the sports golden fixture; rebased my local
     commit onto it, re-ran `quality-gates.sh` (ALL GREEN), and shipped via quickmerge to `instruments-service@518cc7a7`.
+
+- **slot-6 2026-07-30 — Phase 7 DONE, all 6 sub-checks verified live, no code changes needed.** Ran
+  `CLOUD_MOCK_MODE=true GCP_PROJECT_ID=mock-project instruments-service --operation instruments --mode live --asset-group cefi --venues <...> --dry-run`
+  three ways (single-venue baseline, a 3-venue run that hit a real HYPERLIQUID 429 rate-limit, and a valid-venue +
+  no-adapter-registered "fake venue" run) plus inspected the mock-mode local event sink
+  (`.local-dev-cache/events/instruments-service.jsonl`). All 6 items PASS with 2 premise notes (same pattern as Phases
+  5/6): (7.1) the `ServiceRuntime:` log line logs 7 of ~15 dataclass fields (op/mode/provider/env/ data/testnet/dry_run)
+  — not literally every field, though the ones it documents itself as covering are all present; (7.2) service lifecycle
+  is STARTED/STOPPED/FAILED (not STARTED/COMPLETED) plus a PROCESSING_STARTED/ PROCESSING_COMPLETED pair with aggregate
+  venue counts — confirms + extends Phase 5's "no per-venue COMPLETED event" finding. (7.3) shard isolation confirmed
+  via two independent live reproductions — a transient-but-recoverable HYPERLIQUID 429 and a total no-adapter-registered
+  fake venue both left the OTHER venues fetching/writing normally, batch exit=0, gap surfaced honestly via
+  `SHARD_INCOMPLETE`/`PUBLISHED_DEGRADED`, never a crash or silent partial-success. (7.4)/(7.6) dry-run +
+  memory-watchdog log lines match the plan's exact expected strings. (7.5) `ADAPTER_FETCH_FAILED` fired with correct UAC
+  classification (`error_code=RATE_LIMIT, action=retry, retry_safe=true`) for the HYPERLIQUID case; the no-adapter case
+  correctly does NOT emit it (nothing was fetched to classify) — two distinct failure modes, not a classification gap.
+  Full per-item detail in the todo above. Nothing to ship this phase — no crash, silent placeholder, or
+  misclassification found.
