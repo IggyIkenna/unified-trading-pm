@@ -101,3 +101,8 @@ source: >-
 
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED: todo 1 (land the preserved CF-5 relabel
+  fix from `origin/wip-preserve/mtds-346-cf5-trades`) is genuinely AO-eligible, but todo 2 is explicitly labelled
+  'operator-gated' (extend the UAC `SOURCE_COVERAGE_START` windows and re-backfill 10,345 objects, OR ratify the corpus
+  permanently outside-window) — flipping the doc dispatches both, so it stays NA. Extraction of todo 1 into a batch doc
+  is the right next move and is a plan-authoring call, parked

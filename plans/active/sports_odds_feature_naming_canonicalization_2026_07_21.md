@@ -256,3 +256,8 @@ work doesn't reintroduce a 5th convention.
   fresh full run green (17823 passed). **Lesson**: a column-rename grep must verify which SCHEMA a `df` actually carries
   before renaming a read of it, not just match the string — a scheme-compliant name colliding with an unrelated raw-data
   column of the same old name is a real trap, not a hypothetical one.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries a dated operator ruling that keeps it
+  NA by name — '**Dispatch model formalized, 2026-07-29 (operator ruling)**: `assigned_vm: NA` stays as declared, but
+  remaining bounded todos on this plan are sanctioned to land via the satellite AO-dispatch-batch pattern'. The
+  mechanism for landing its work is already chosen and is NOT a flip of this doc; re-litigating it would contradict a
+  ruling 1 day old

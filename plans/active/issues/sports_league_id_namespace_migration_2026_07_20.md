@@ -811,3 +811,10 @@ offered to the queue once these are the only real blockers.
       canonical `league_id` shape) and the `batch_footystats` copy+swap apply script (neither exists yet) are the only
       two prerequisites left; the STOP condition holds until both ship (re-verified 2026-07-28, slot-10 — see
       "RE-DISPATCH CHECK" sections above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is explicitly gated — 'ship
+  Track H's registry-aware honest-coverage denominator ONCE its 2 remaining blockers land' — and the doc's own
+  2026-07-28 re-dispatch checks (slot-7, then slot-10) confirm both blockers still unshipped. It also carries an
+  unanswered 'OPERATOR DECISION NEEDED — China Super League + Russia Premier League' section

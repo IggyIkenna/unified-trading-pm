@@ -139,3 +139,13 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
 
 `/codex/02-data/sports-2020-06-data-floor.md`, `/codex/02-data/sports-gcs-path-ssot.md`,
 `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, `/codex/02-data/availability-manifest-and-data-status.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — STRONG reclassify candidate on content — all 7
+  todos carry explicit done-whens and the P2 delete is already reversibility-verified (finding T, soft-delete 604800s) —
+  but PARKED, not flipped: it is a strict dependency chain (census -> schema check -> script+dry-run -> --apply ->
+  remove fallback -> delete -> doc) with same-file overlap, and its frontmatter has no `sequential: true`. Flipping
+  as-is would fan 4 same-priority P1s at the same `sports_fixtures.py`/migration script concurrently. Adding
+  `sequential: true` is outside the skill's stated Phase-3 edit set, and dispatching a P0 prod data migration + delete
+  is an authority call — parked with a recommendation

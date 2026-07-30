@@ -239,3 +239,10 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
       fire for historical `trades` data — only `odds_snapshot`, `odds_movement`, `arbitrage_opportunity` are enforced.
       Either register `trades` in `BUNDLED_DATA_TYPES` for live enforcement, or formally accept that the validation gate
       for `trades` relies on this static audit path instead.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries a 🔒 'NOT a clean auto-archive
+  candidate' banner explicitly forbidding an `[unlock-plan]` without an operator ruling, `locked_by: live-defi-rollout`,
+  and a flagged regression-test-deletion discrepancy on todos 2/3 that 'needs an operator call before those checkboxes
+  can be trusted at face value'

@@ -35,8 +35,9 @@ related:
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+assigned_role: data_engineering
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1
@@ -367,3 +368,14 @@ The forward-path instrumentation is now LIVE in code (deployment-service@9a5387b
    for the affected sources would be its own bounded single-walk over the sports corpus — out of scope.)
 5. **Re-doc:** flip the P2 re-pin todo + re-label this section's Step-2 verdict table from UNVALIDATABLE-FROM-BACKFILL
    to the empirical VALIDATED verdict, citing the observation sample size per source.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` + paired finalize twin authored
+  (`/plans/active/sports_live_availability_and_source_latency_2026_07_24_finalize_2026_07_30.md`, `depends_on` +
+  `gate_on_depends: true`) since this is a `doc_type: plan` and finalize-plan coverage applies. The sole remaining
+  `[DATA] P2` stopped being a judgment call on 2026-07-28, when the operator directly ruled 'picked a paid quota tier,
+  proceed with the resume', and on 2026-07-29, when a new `odds-api-key` on a 5,000,000-credit/month subscription was
+  provisioned and live-verified. What is left is bounded wiring (api_football `/odds` in-play as a second source) plus a
+  stated production verification. Conflict-check CLEAR against `sports_satellite_ao_dispatch_batch5_2026_07_26.md` and
+  `sports_consolidated_closeout_2026_07_19.md`.

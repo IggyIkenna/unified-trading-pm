@@ -909,3 +909,8 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
   maintenance window. The doc's engineering-side todos are genuinely done; the operational/data-state claim in its title
   and summary stands unchanged.
 - No conflicting doc found.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is under an explicit
+  operator STOP (`BLK-d9137d48`) enforced by a live backlog parking gate (`sports-cf8-maintenance-window-scheduled`,
+  still false), requires a scheduled maintenance window, and its own text says the correct fix is 'new, unreviewed
+  engineering — a design + review step, not a batch-size judgment call' (group target rows by their OWN `service_name`).
+  Its dated RE-TRIAGE (2026-07-23) re-confirmed all of this unchanged

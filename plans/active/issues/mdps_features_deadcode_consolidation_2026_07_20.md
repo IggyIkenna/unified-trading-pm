@@ -111,3 +111,8 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - S1-a/S1-b/S3-b are explicit operator
   keep/delete (A/B/C) decisions with self-heal + registered-live-launcher blast radius. Reached independently of the
   cefi tranche above; both agree.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — carries an explicit unanswered 'Big findings —
+  operator keep/delete decision (options) A/B/C' block; todos 1, 2 and 8 each say 'pending operator' / 'operator-design
+  adjudication' in their own text. Todos 3-7 are bounded but cannot be dispatched without the doc, and the
+  launcher-deletion blast radius is exactly what the A/B/C ask covers

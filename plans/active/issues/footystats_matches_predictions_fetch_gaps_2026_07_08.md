@@ -385,3 +385,11 @@ code-fix task). A data_engineering slot with a full session budget should:
   by todo #1's confirmed mechanism, partially a distinct, still-open gap, plus one wholly separate known category); did
   not attempt a code fix myself since `footystats.py` was being actively edited by slots 8/13 concurrently (same-file
   collision risk) and todo #1's own fix is the template to extend, not something to duplicate from scratch.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo carries a live
+  `BLOCKED-PREREQUISITES` marker (which `_NON_DISPATCHABLE_RE` already excludes from dispatch) and its 2026-07-27
+  Progress Log records a genuine REGRESSION that re-blocked it on a NEW doc
+  (`footystats_matches_predictions_odds_pending_fetch_universe_expansion_2026_07_27.md`), explicitly instructing 'this
+  doc's own checkbox #4 stays `- [ ]` — not flipped'. NOTE for a future pass: the in-checkbox un-block sequence text is
+  itself stale (it says 'only todo #6 remains', but #6 is `[x]`); the real blocker is the 2026-07-27 doc. Also
+  `execution_scope: orchestrator-agent` contradicts `assigned_vm: NA` — left alone, since Phase 3 only corrects
+  `execution_scope` on a RECLASSIFY

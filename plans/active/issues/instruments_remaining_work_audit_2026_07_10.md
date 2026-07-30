@@ -981,3 +981,7 @@ Script:
       monotonicity guard alerting (live incident), is-daily-enum cloud crash, the 59-bug smoketest master record, the
       Instruments Completion Tracker (33/37 open), and Layer-1 tradfi's `tradfi_v9_stage1_finish` block (per the final
       `wf_60ecfd13-752` Progress Log entry).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is an umbrella 'close the 6
+  remaining Headline P0s not covered by any in-flight workflow' across a 979-line, 5-asset-group audit — a portfolio of
+  independently-scoped P0s, not a single determinable outcome, and several of its constituents are themselves
+  operator-gated (e.g. the HUOBI/BITSTAMP SSOT contradiction)

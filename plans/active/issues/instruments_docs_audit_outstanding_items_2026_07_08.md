@@ -635,3 +635,7 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an open-ended
   tracking meta-item over dozens of prose-only findings in sections B-F; no bounded outcome.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole todo is a meta-tracking ask spanning
+  dozens of prose bullets across sections B-F and 5 asset groups, and section E is literally titled 'Operator decisions
+  required (not engineer fixes)' — converting that corpus to checkboxes requires per-item triage including those
+  operator calls, so the outcome is not determinable by a worker alone

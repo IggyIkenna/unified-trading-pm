@@ -181,3 +181,10 @@ same CLI path would hit the identical wall.
       not produce a meaningful model. Both filed with full diagnostic evidence in
       `/plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md`.
       The 3 quarantined artifacts remain untouched/unpromoted. This todo stays open, now blocked on that new doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — todo 1 is EXPLICITLY DEFERRED in its own text
+  as 'a genuine design decision, not a mechanical fix' (wire `--family` to actually scope SPORTS training vs drop the
+  vestigial required-arg), and todo 2 (the CLV retrain) is blocked one layer deeper on
+  `sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`, which this pass reclassified instead

@@ -291,3 +291,9 @@ dead-code removals) are already marked `[x]` in this doc and remain shipped (ins
 The `sports_fixtures.py:356` per-(entity×league) fixture-id set-membership fix and the real backfill-timing verification
 are also still open, matching the doc as written. No status change — this doc's core, still-open claim (the ONE function
 it's titled after never consults the manifest) is unchanged today.
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole remaining todo states its own blocker
+  verbatim: 'needs an operator/architecture decision on whether the mapping should use the broader
+  Prediction+Features+Reference set or whether `fixture_ids_override`'s real callers only ever pass fixture_ids that
+  already have a working non-GCS league source' — and its dated RE-TRIAGE (2026-07-23) re-confirmed the finding
+  unchanged

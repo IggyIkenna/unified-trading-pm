@@ -91,12 +91,20 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
   becomes a `ui_developer` hand-off — decide that from the actual diff, don't assume either way from this note.
   **Finalize-plan coverage**: not required — `doc_type: issue` under `plans/active/issues/` is structurally exempt
   (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).
-- **⚠️ CONTESTED `assigned_role` — integrator note 2026-07-30.** All three tranches (cefi, defi, prediction) agree on
-  the RECLASSIFY verdict, so `assigned_vm: planning` is settled. They do NOT agree on the owning role: cefi and defi set
-  `assigned_role: ui_developer`; prediction set `assigned_role: infra`, reasoning that the work's dominant leg is
-  running a PM Python propagation script plus a UAC-side grep, and that the `ui_developer` role card explicitly excludes
-  running Python tooling. The merge would have produced a duplicate `assigned_role` key with conflicting values; the
-  integrator kept the already-committed `ui_developer` (status quo, minimal change) and did **not** adjudicate — the
-  prediction tranche's own note concedes the call depends on whether the regen changes rendered UI behaviour or only
-  generated constants, which is only knowable from the actual diff. **Operator/executing worker: pick the role from the
-  real diff before dispatch.**
+- **na-eligibility-audit 2026-07-30** (tranche=sports, autonomous): RECLASSIFY -> `assigned_vm: planning` (flipped in
+  place, name unchanged, codex ao-dispatch-batch-naming §1(b)) — the sole todo is bounded, deterministic work with a
+  self-contained done-when (re-run `sync-archetype-capability-to-ui.sh --write`, keep the UI's `quality-gates.sh` green,
+  grep UAC `architecture_v2` enums against the UI mirror). Its own blocker (the UI-side rename) landed at
+  `unified-trading-system-ui@7900f560`, and `execution_scope` was ALREADY `orchestrator-agent` while `assigned_vm` said
+  NA — a defaulted-and-never-assessed classification, not a judgment call. Conflict-check CLEAR: no active
+  `assigned_vm: planning` doc carries an open todo claiming the coverage.ts regen. Issue doc -> structurally exempt from
+  finalize-plan coverage.
+- **⚠️ CONTESTED `assigned_role` — integrator note 2026-07-30.** All FOUR tranches that audited this doc (cefi, defi,
+  prediction, sports) agree on the RECLASSIFY verdict, so `assigned_vm: planning` is settled. They do NOT agree on the
+  owning role: cefi, defi and sports set `assigned_role: ui_developer` (3); prediction set `assigned_role: infra` (1),
+  reasoning that the work's dominant leg is running a PM Python propagation script plus a UAC-side grep, and that the
+  `ui_developer` role card explicitly excludes running Python tooling. The merge would have produced a duplicate
+  `assigned_role` key with conflicting values; the integrator kept `ui_developer` — both the status quo and the 3-1
+  majority — and did **not** adjudicate the substance, because the prediction tranche's own note concedes the call
+  depends on whether the regen changes rendered UI behaviour or only generated constants, which is only knowable from
+  the actual diff. **Operator/executing worker: pick the role from the real diff before dispatch.**

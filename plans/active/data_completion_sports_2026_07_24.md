@@ -812,3 +812,8 @@ watches the relaunched 3 for repeat-137. Codified lesson candidate: backfill mon
 - Stale `features_sports_service`-tarball class bug (2 other launchers, line ~709): N/A — no migration. Already fixed +
   shipped within this plan (deployment-service@5075a3e + e2e-testing@fbcdc45, QG green); "DEFERRED" in the item text
   describes the discovery, not an open gap.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED, left NA: the `[SCRIPT] P1` ramp-to-429
+  calibration probe is now explicitly de-gated ('Downgraded from operator-gated 2026-07-27 ... no further human step is
+  needed to fire it') and is a strong extraction candidate, but the `[DATA] P2` enrichment-ceiling todo is an operator
+  spend decision by construction ('to exceed ~34% needs operator bump to 1.5M/day OR multi-day skip-fresh re-runs').
+  Flipping the doc dispatches that too

@@ -158,3 +158,11 @@ leg yet at this gate — it fires BEFORE promotion, using pure paper data).
 `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md` (P&L factor taxonomy the realized-edge statistic
 must map into, not invent a parallel "other" bucket for), `/codex/04-architecture/promote-workflow-architecture.md`
 (where this gate fits in the paper→live promotion sequence).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — explicit dated operator ruling BLK-b567ce7d
+  (2026-07-21) in `source:` — 'author a scoped design-only plan, assigned_vm: NA, NOT AO-dispatched — brand-new
+  undefined feature work needs operator/spec sign-off on acceptance criteria + thresholds BEFORE any implementation
+  dispatches'. All 8 todos are `[DESIGN]` spec-writing, plus an unanswered operator sign-off section (p25-vs-mean risk
+  appetite, provisional threshold). Citation confirmed by grep; not re-litigated

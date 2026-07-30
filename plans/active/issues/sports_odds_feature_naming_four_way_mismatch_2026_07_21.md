@@ -144,3 +144,10 @@ parity test) are still unchecked `[ ]` — the migration itself has not started.
 cross-service enforcement") is still 100% true in the live codebase; only the decision + ownership/scoping half is done.
 No status flip — leaving `status: open` since the underlying problem this doc reports is not fixed yet, and execution
 should be tracked via the (still all-open) canonicalization plan.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — its own dated RE-TRIAGE (2026-07-23, corrected
+  2026-07-25) already ruled 'STILL OPEN, ACCURATE — no status flip', and the sole remaining checkbox is a status pointer
+  at `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s unstarted 3-repo migration rather than independent
+  work. Established ruling, not re-derived

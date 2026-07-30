@@ -27,8 +27,9 @@ related:
   ]
 created: 2026-07-26
 parent_epic: sports_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+assigned_role: data_engineering
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 drift_direction: advance-code
@@ -281,3 +282,12 @@ the ~25-min worker-staleness threshold (not the 30-min interval this session ini
 `WorkerLivenessWatchdog`'s unpushed-commits sweep has no awareness of an open sign-off-gating `/blocked` question and
 will auto-push a held commit the moment it reclaims a session it considers dead (this happened once already, to
 `[DATA] P2`, in this exact chain).
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` — every design/authority question on this
+  doc is already RULED and ratified (`BLK-8f8b862f` Option (b), `BLK-ec018203`, `BLK-fb01cd29`), the implementation
+  shipped (`uac@5b57f6d2`, `features-service@332ea5d5`, `ml-service@f107176`+`655b87e`), and target-generation was
+  real-data-verified non-degenerate (flat=2370/up=80/down=61 vs 100%-flat before). The single remaining `[ML] P2` is the
+  literal 3-variant retrain with the exact CLI command written out and a stated non-degenerate-distribution gate —
+  mechanical execution against an already-ruled decision. Conflict-check CLEAR: the sibling
+  `sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` (planning) claims the FAMILY-route column
+  check, a different, adjacent claim.

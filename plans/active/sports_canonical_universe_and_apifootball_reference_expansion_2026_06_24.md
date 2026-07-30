@@ -542,3 +542,8 @@ materialized.
   paused 2026-06-24 so it can't re-merge the numeric-laden `_legacy_seed.parquet` shard back into the freshly
   canonicalized consolidated `_index`. **Re-enable gate**: resume ONLY after P0b (seed-canonicalize) is done. Resume:
   `gcloud scheduler jobs resume uts-prod-manifest-consolidator-instruments-sports-cron --location=asia-northeast1`.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — `locked_by: live-defi-rollout` (archival
+  blocked) plus a 🟡 do-not-re-archive banner; among the 6 open todos, the E8 legacy-delete is explicitly
+  BLOCKED-OPERATOR pending sign-off and is entangled in the still-open hard-stop-#2 carve-out contradiction
+  (`cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`), 'define the curated ~300-league reference set'
+  is a design call, and the curated backfill is a deliberate ~6M-API-call budget burn

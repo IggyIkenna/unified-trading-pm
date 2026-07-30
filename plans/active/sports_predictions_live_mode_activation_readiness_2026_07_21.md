@@ -305,3 +305,7 @@ Per the SSOT-direction rule, these stay owned by their existing docs — this pl
   checked `[x]` with "decision: YES, genuinely needed", which spawned
   `sports_group_c_execution_backtest_harness_2026_07_21.md` (now added to `related:`). Also corrected Todo 5's "Group-C
   if Todo below rules one is needed" phrasing, which assumed the same stale undecided state.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — explicit dated operator ruling BLK-9d3a208c in
+  `source:` — 'human plan, assigned_vm: NA, NOT AO-dispatched — a plan whose terminal action is a human go/no-go on live
+  trading activation is the human-plan class by construction' — reinforced by a 2026-07-29 operator banner (continue to
+  hold the live go-ahead) and a permanent `[OPERATOR]` hard-stop todo reviewed + reaffirmed 2026-07-28

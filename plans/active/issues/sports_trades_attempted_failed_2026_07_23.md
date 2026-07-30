@@ -212,13 +212,37 @@ population, and not evidence anything broke.**
       rows no longer exist to have a timestamp. Original text (was: "Execute the still-open historical `attempted_at`
       restore for the sports/trades dead residue, now unblocked and low-risk per
       `sports_trades_venue_fetch_failed_2026_07_15.md`'s 2026-07-20 correction... Repo: `market-tick-data-service`.")
-- [ ] [DESIGN] P3. Flag to whoever owns `check_high_attempted_failed` (deployment-service): a same-day manifest
-      canonicalization swap that relocates `captured` rows to a new casing/key can inflate an UNRELATED still-open
-      cell's `DP_RUN_MOSTLY_EMPTY` ratio purely as a denominator side-effect. Not urgent (the underlying cell being
-      dead/already-tracked means no action was actually needed here), but worth a one-line runbook note so a future
-      on-call doesn't re-diagnose this from scratch. Repo: `deployment-service`.
-- [ ] [VERIFY] P3. **UNBLOCKED 2026-07-28** — the K1/K2 casing-revert migration + the DELETE of old non-canonical
-      objects have both landed and been independently verified complete (`sports_consolidated_closeout_2026_07_19.md`
-      Track V K1/K2 todo, `market-tick-data-service@26201c44`, 345,852/345,852 deleted, 0 failed, 0 remaining
-      post-delete). Re-check this cell's ratio settles back down as expected now that the legacy lowercase
-      `data_type=="trades"` population's dead-residue rows are no longer an orphaned denominator-shrunk remnant.
+- [x] ✅ [DESIGN] P3. **EXTRACTED, not done here — citation fixed 2026-07-30 by `/na-eligibility-audit` (sports
+      tranche), KEEP-NA-STALE class.** This exact claim was already extracted verbatim into an active
+      `assigned_vm: planning` doc and is dispatchable there:
+      `plans/active/sports_consolidated_native_ao_extract_2026_07_25.md`'s open `[DATA] P3` — _"Track S2 — write the
+      `check_high_attempted_failed` runbook note for deployment-service, documenting the sports/trades
+      `DP_RUN_MOSTLY_EMPTY` 87.2% ratio spike as a K1/K2 denominator artifact"_. Flipping this duplicate closed (rather
+      than leaving it open, or reclassifying THIS doc to `planning`) prevents the backlog dispatcher from queuing the
+      same runbook note twice — same precedent as `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`'s own
+      duplicate-retirement. Execution + evidence live in that doc, not here. Original text: Flag to whoever owns
+      `check_high_attempted_failed` (deployment-service): a same-day manifest canonicalization swap that relocates
+      `captured` rows to a new casing/key can inflate an UNRELATED still-open cell's `DP_RUN_MOSTLY_EMPTY` ratio purely
+      as a denominator side-effect. Not urgent, but worth a one-line runbook note so a future on-call doesn't
+      re-diagnose this from scratch. Repo: `deployment-service`.
+- [x] ✅ [VERIFY] P3. **EXTRACTED, not done here — citation fixed 2026-07-30 by `/na-eligibility-audit` (sports
+      tranche), KEEP-NA-STALE class.** This exact re-check was already extracted verbatim into an active
+      `assigned_vm: planning` doc and is dispatchable there:
+      `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md`'s open `[DATA] P3` — _"UNBLOCKED 2026-07-28 —
+      sports/trades `DP_RUN_MOSTLY_EMPTY` post-DELETE re-check"_, citing the same landed K1/K2 casing-revert + delete
+      evidence. Flipping this duplicate closed prevents a duplicate dispatch of the same manifest re-query; execution +
+      evidence live in that doc. Original text: **UNBLOCKED 2026-07-28** — the K1/K2 casing-revert migration + the
+      DELETE of old non-canonical objects have both landed and been independently verified complete
+      (`sports_consolidated_closeout_2026_07_19.md` Track V K1/K2 todo, `market-tick-data-service@26201c44`,
+      345,852/345,852 deleted, 0 failed, 0 remaining post-delete). Re-check this cell's ratio settles back down as
+      expected now that the legacy lowercase `data_type=="trades"` population's dead-residue rows are no longer an
+      orphaned denominator-shrunk remnant.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (already-duplicated) — citations fixed, `assigned_vm` deliberately
+  NOT flipped. Both remaining checkboxes describe work an active `assigned_vm: planning` doc already extracted verbatim:
+  the runbook note -> `sports_consolidated_native_ao_extract_2026_07_25.md`'s open `[DATA] P3` (Track S2), and the
+  post-DELETE ratio re-check -> `sports_closeout_track_s2_foldin_2026_07_25.md`'s open `[DATA] P3`. Per the
+  conflict-check protocol step 4 this is a stale-checkbox correction, not a reclassification — flipping `assigned_vm`
+  here would dispatch both items twice. Both closed with the extracting doc cited; execution stays there.

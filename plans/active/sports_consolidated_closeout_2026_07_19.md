@@ -294,13 +294,22 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`deployment-service@78a0aa4`, 2026-07-21, part of the same 212,519-object `features-sports-prd` deletion cited
       above), not regenerated. Regenerating fabricated pre-floor data would have re-created fabrication-by-construction
       — the floor ruling's whole point is that this population should not exist at all. No further action needed here.
-- [ ] [DATA] P0. **PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06 2020
-      are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
-      post-floor scope** — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no
-      output for, so a fabricated object on a zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete
-      gives a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet still carrying a
-      PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already handled by the wipe's
-      own snapshot+delete. Honest absence beats an invented `competition_phase`
+- [x] ✅ [DATA] P0. **DONE — verified NO-OP; closed 2026-07-30 by `/na-eligibility-audit` (sports tranche) as an
+      evidence-backed stale checkbox, per the fix named in
+      `/plans/active/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
+      Finding 2.** The purge this todo asks for was executed and resolved as a verified no-op by
+      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (verified this pass:
+      archived, `status: complete`, both todos `[x]`): its exhaustive Tier-2 SPOT census covered the exact scope named
+      here — **2400/2400 in-scope days (Jun-Dec 2020 + 2021-2026), 26,891 objects** — and returned `total_delete=0` /
+      `total_keep=26891` / `total_unparseable=0`, i.e. **zero POST-FLOOR `derived_features` objects still carry a
+      pre-`2026-07-19` creation timestamp**, so there was nothing left to delete. The reversibility framing below stays
+      accurate and re-usable but was never load-bearing, because no delete was needed. Sibling checkbox in
+      `/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed in the same pass on
+      the same evidence. Original text follows. — overwriting alone is provably insufficient (a re-run never rewrites a
+      day it produces no output for, so a fabricated object on a zero-output day survives). Snapshot the delete list
+      FIRST (GCS soft-delete gives a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet
+      still carrying a PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already
+      handled by the wipe's own snapshot+delete. Honest absence beats an invented `competition_phase`
       (`/codex/02-data/honest-absence-downstream-handling.md`). **⚠️ Corrected 2026-07-27 — the prior "Not
       `[OPERATOR]`-gated ... reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative
       example `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a cites, alongside this same todo's
@@ -910,3 +919,14 @@ section above, which conflated answered and open items):
   `issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md`, was ALSO reclassified this session but no
   longer needs a Sources mention — a real AO worker already claimed, resolved, and archived it mid-session, per
   `unified-trading-pm@4be5cf08f`.)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sports tranche's flagship multi-track
+  closeout (30 open todos across Tracks C/E/F/H/S/V). Stays NA: it carries operator-gated prod GCS DELETEs (Track V
+  raw-keyed league_id objects), the CF-8 maintenance-window item under the same `BLK-d9137d48` STOP, and several
+  cross-track design calls. One stale item WAS closed in this pass — the `[DATA] P0` PURGE of the fabricated post-floor
+  `derived_features` remainder, provably a verified no-op per
+  `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (2400/2400 days, 26,891
+  objects, `total_delete=0`). Its sibling `[DATA] P0` census-re-verify checkbox is satisfied by the same artifact but
+  was left open and filed as a P3 follow-up rather than closed on an unnamed inference

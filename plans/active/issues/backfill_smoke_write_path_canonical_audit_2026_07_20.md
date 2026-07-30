@@ -299,3 +299,8 @@ The same trap already bit `market_lifecycle` (row 10): `partition={"group","day"
   VERBATIM into `infra_satellite_ao_dispatch_batch2_2026_07_27.md` (active, assigned_vm:planning), which cites this doc
   by name as their `Source:`. Citations fixed below; todos 3 and 6 remain genuinely NA. No `assigned_vm` change
   (flipping would dispatch duplicates).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED and left NA: todos 3, 4 and 5 are bounded
+  doc/skill fixes, but todo 6 is a scope DECISION ('decide whether `market_lifecycle` and `futures_contracts` are in the
+  canonical shard grammar's scope'). 5-tranche `infrastructure_master` doc whose content is cross-AG rather than
+  sports-primary, so extraction of the 3 bounded items belongs to the cross-cutting/infra tranche

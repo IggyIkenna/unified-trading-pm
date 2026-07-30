@@ -95,3 +95,6 @@ Parent plan's P10-B (operator round-3, 2026-07-17) already shipped: `CATALOG_COL
   `FixturesBrowser.tsx` window note + `MAX_SPAN_DAYS=120` warning are now stale and should be relabeled/dropped) — it is
   not yet its own AO-dispatched todo anywhere; whoever picks up sports UI work next should add it. The `[DATA] P2`
   freshness-caveat todo also remains open (regen-cadence decision, unrelated to this backend change).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open `[DATA] P2` is an explicit
+  either/or design call ('confirm the regen cadence and EITHER accept + label it, OR keep a live-day overlay for today's
+  fixtures') — a judgment call wearing a todo's clothes, per the dispatch-scope eligibility bar

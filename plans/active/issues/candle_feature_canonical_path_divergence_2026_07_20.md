@@ -548,3 +548,9 @@ remain genuinely open content-level work, distinct from the path-migration infra
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - residual todos are entangled with the
   in-flight candle-path migration owned by `candle_canonical_path_migration_execution_2026_07_24.md` (todo 9 gated on
   its P5 dedup phase; todo 19 includes a prod mop-up pass).
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — todo 9 is gated ('Pending P5 executor (dedup
+  phase)') and todo 3's ~7.1M quarantined TradFi candle objects need 'either a real leaf-id resolution pass or an
+  explicit operator ruling to accept the loss' — an unanswered authority call on the largest open item in the doc. Also
+  a 5-tranche `infrastructure_master` doc whose remaining content is cefi/tradfi/defi candle-migration work, not sports
+  (sports has no `processed_candles/` tree at all, per the doc's own measurement)

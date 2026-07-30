@@ -877,3 +877,12 @@ overwrite.
       from what it shows if the job is dead?"_ Plus the three concrete guards: resolve buckets via `resolve_bucket_name`
       (never trust a launcher's printed hint), prefer creation-time counts over inventory counts (inventory is blind to
       overwrite), and take a baseline at arm time so "flat" is measured against a known-live number.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — 3 of the 4 open todos are explicitly owned
+  elsewhere — two duplicate `[DIAG] P0`s annotated 'Owned by `sports_consolidated_closeout_2026_07_19.md` Track E ...
+  Not duplicated here', and a `[CODE] P2` annotated 'Owned by `sports_satellite_ao_dispatch_batch6_2026_07_26.md` todo 3
+  ... Left open here intentionally; do not flip it from this doc'. The 4th (`[PROCESS] P1`, codify an
+  entity-rename/split consumer-migration rule) needs a codex authoring ruling. NOTE: the two `[DIAG] P0`s at ~line 387
+  and ~line 440 are literal duplicates of each other within this same doc

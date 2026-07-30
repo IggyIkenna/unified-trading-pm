@@ -252,3 +252,10 @@ Evidence (current code, re-read 2026-07-23):
 
 No new evidence found that changes this file's own already-correct self-assessment. Not touched by K1/K2 (data_type
 casing), the pre-floor registry fix, or the shard-enumeration/honest-coverage work — orthogonal MDPS-side gap.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole remaining `[DATA] P3` bundles a
+  bounded re-run of `verify_ml_readiness.py` with an open judgment ('then reassess whether the strict per-day gate vs
+  the aggregate >=95% bar is still the right pass criterion for near-empty international-break days') plus a two-part
+  gate redesign — the reassessment is the dispatch blocker, not the re-run

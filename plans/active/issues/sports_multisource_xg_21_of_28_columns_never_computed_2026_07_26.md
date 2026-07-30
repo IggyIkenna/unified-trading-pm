@@ -133,3 +133,10 @@ NOT attempting to improvise 21 formulas here.
 
 None directly on point — this is a features-service-internal feature-engineering gap, not a cross-cutting data pipeline
 contract.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is tagged
+  `[OPERATOR/DESIGN]` and the doc itself cites the dispatch-scope rule for why: 'how should each of these 21 features
+  actually be computed' is a design/domain decision, and it deliberately stops at diagnosis rather than improvising 21
+  formulas

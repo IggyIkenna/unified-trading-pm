@@ -259,3 +259,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole open todo is an explicit
   `[DECISION]` on reconciliation cadence across 58 remaining findings.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is tagged `[DECISION]` and
+  is one — 'decide the reconciliation cadence for the remaining 58 findings: full trace per finding (expensive,
+  thorough) vs a lighter spot-check pattern' — a portfolio-cost tradeoff, not a determinable fact, even though its
+  AAVE_V3 pilot prerequisite is now `[x]`

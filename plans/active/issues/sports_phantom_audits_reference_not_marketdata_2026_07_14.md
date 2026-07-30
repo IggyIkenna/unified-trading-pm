@@ -53,10 +53,10 @@ priority: P2
 source:
   Interactive session 2026-07-14 (slot-3·hk) — running phantom+reprobe across all consolidators to populate cockpit
   audit lines; discovered the sports split when the two signals landed on different cards.
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
@@ -290,3 +290,12 @@ unverified" down to a fully-explained 99.8% (two confirmed tool-limitation class
       (300), WEATHER (106), MATCHES (7), FIXTURES (2) rows are not explained by either confirmed false-positive class
       (unregistered data_type / cache-hit day-vs-trigger-date mismatch) and were left unexamined per the 2026-07-23
       RE-TRIAGE.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> `assigned_vm: planning` — the operator's 2026-07-14 'leave code
+  as-is, document only' ruling scopes CODE changes, and the sole remaining todo is not one: it is a read-only spot-check
+  of a precisely-enumerated 1,335-row residual (STANDINGS 460 / TEAMS 460 / XG 300 / WEATHER 106 / MATCHES 7 /
+  FIXTURES 2) left unexamined after the 2026-07-23 RE-TRIAGE explained 99.8% of the original 721,154 as two confirmed
+  tool false-positive classes. Bounded population, bounded method, no `--apply`. Conflict-check CLEAR:
+  `sports_satellite_ao_dispatch_batch5_2026_07_26.md` (active, planning) carries no open todo claiming this residual.

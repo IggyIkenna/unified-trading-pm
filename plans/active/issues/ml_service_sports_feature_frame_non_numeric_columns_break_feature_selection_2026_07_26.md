@@ -214,11 +214,20 @@ here — flagging so the eventual retrain attempt checks target-class balance be
       `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md` with 3 candidate directions and a
       `[DESIGN] P1` decision todo. Did not attempt a features-service code "fix" — removing/weakening the PIT gate would
       be a real leakage regression for every other `odds_features` consumer.
-- [ ] [ML] P2. **SUPERSEDED — see `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s
-      `[ML] P2`.** The blocker is no longer "the fix above" (there is no features-service fix); it's that new doc's
-      `[DESIGN] P1` architecture decision. Once implemented, re-attempt the 3 CLV model variant retrain
-      (`training-period-2026-04`, `pregame_clv_family`, `timeframes=fixture`) and confirm the target class distribution
-      is non-degenerate before promoting/citing. The 3 quarantined artifacts stay untouched.
+- [x] ✅ [ML] P2. **SUPERSEDED — checkbox closed 2026-07-30 by `/na-eligibility-audit` (sports tranche) as an
+      evidence-backed stale duplicate.** This item's own text already declared itself SUPERSEDED but was left `- [ ]`,
+      so the backlog still read it as open work. The successor is live and genuinely open at its own doc:
+      `/plans/active/issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s `[ML] P2` ("Run the
+      literal 3-variant CLV model retrain"), which carries the exact command and the non-degenerate-distribution gate —
+      and which that same audit pass reclassified `assigned_vm: NA -> planning` so the retrain is now dispatchable.
+      Closing the duplicate here prevents the dispatcher queuing the same retrain twice. **Note**: this doc now has ZERO
+      open todos and is unlocked — an archival candidate; not archived in this pass (see this run's parked list). No
+      work is lost by this flip. Original text: **SUPERSEDED — see
+      `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s `[ML] P2`.** The blocker is no
+      longer "the fix above" (there is no features-service fix); it's that new doc's `[DESIGN] P1` architecture
+      decision. Once implemented, re-attempt the 3 CLV model variant retrain (`training-period-2026-04`,
+      `pregame_clv_family`, `timeframes=fixture`) and confirm the target class distribution is non-degenerate before
+      promoting/citing. The 3 quarantined artifacts stay untouched.
 
 ## Progress Log (append-only)
 
@@ -254,3 +263,9 @@ here — flagging so the eventual retrain attempt checks target-class balance be
   ml-service, filed as `issues/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`. `[ML] P2` now
   points there instead of "the fix above". NOTIFIED OPERATOR per the cross-repo big-finding rule (this doc + the new
   one).
+- **na-eligibility-audit 2026-07-30**: KEEP-NA -> ARCHIVE-ELIGIBLE (stale item closed). Its sole remaining `[ML] P2`
+  declared itself SUPERSEDED in its own text but was left `- [ ]`, so the backlog still counted it as open work; closed
+  with the successor cited (`sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md`'s `[ML] P2`, which
+  this same pass reclassified to `planning` so the retrain is genuinely dispatchable). Every other todo on this doc is
+  `[x]` with a shipped sha. Now ZERO open todos and unlocked -> archival candidate; archive NOT run this pass
+  (concurrent-tranche + referrer blast radius), parked for the operator.

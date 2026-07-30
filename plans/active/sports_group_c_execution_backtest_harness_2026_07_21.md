@@ -95,3 +95,10 @@ CLI wiring, same shape as the 3 domains that already have it.
 ## Codex SSOTs
 
 `/codex/04-architecture/backtest-groups.md` (Group C definition + output contract this harness must satisfy).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — self-declared scope note that explicitly says
+  'sits for operator review; flip to assigned_vm: planning if/when approved for dispatch', plus an 'Open questions for
+  operator sign-off before implementation dispatches' section (craft split + priority) — an established,
+  still-unanswered gate; not re-litigated

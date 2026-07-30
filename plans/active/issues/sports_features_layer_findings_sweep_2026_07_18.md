@@ -645,3 +645,10 @@ A-F, 24 in Part 2 § G-N, 31 in Part 3 § O-AA) — unchanged from the pre-split
 Any todo count/citation elsewhere in the corpus referencing "this doc" as one 1,843-line file with 73 open todos is
 still accurate in aggregate (same 73 total, now split across 3 files) — only the file path for a specific finding may
 have moved; use the section index above to locate it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — MIXED, left NA: 10 of the 12 open todos are
+  bounded engineering, but `[MODEL] P2` ('consider adding T-6h or T-2h as a MODEL horizon') is a modelling judgment call
+  and `[AUDIT] P2` ('extend this audit to leagues / fixtures / betting-market identifiers and fold the result into the
+  migration') is open-ended by construction — neither has an outcome a worker can settle alone

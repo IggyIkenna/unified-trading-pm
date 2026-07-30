@@ -244,3 +244,10 @@ behavior for `FIXTURES` — removed it from the identity list) and added a new
 `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) rather than continuing to grow. Re-verify with the same
 census command after the next `enum-universe-sports-*` run + ≥2 consolidator cycles. `status: open` left unchanged — the
 underlying 55,233 collision-residual decision (delete vs. leave) is still unresolved in the sibling doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the sole open todo is a delete-vs-leave
+  DECISION on the stable 55,233-row collision residual (tracked in
+  `fixtures_manifest_duplicate_collision_residual_2026_07_24.md`) plus a census re-run gated on it — a manifest-delete
+  disposition, not a determinable fact

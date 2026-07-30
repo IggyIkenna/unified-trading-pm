@@ -650,3 +650,7 @@ the todos already promised.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the FLUID coverage gap needs research
   into an alternate historical read path (resolver address / storage-slot reads / subgraph) that the doc itself says is
   not a bounded fix.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (sports tranche) — the 3 remaining todos are (a) FLUID's ~18-month
+  pre-resolver coverage gap, which the doc itself says 'needs research into an alternate historical read path ... NOT a
+  <=30-min fix', (b) an untraced root-cause on 273 mistagged DERIBIT/COMBO rows, and (c) 'update both drilldown mockups'
+  with no done-when. Research + an under-specified deliverable, not bounded work
