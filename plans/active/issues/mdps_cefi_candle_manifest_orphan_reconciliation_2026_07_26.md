@@ -19,7 +19,7 @@ scope: [engineer]
 tags: [mdps, candle, manifest, cefi, reconciliation, backfill, oom]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md,
   ]
 created: "2026-07-26"

@@ -602,8 +602,8 @@ pick it up. 9th distinct plan pair, ≥13 documented bounces total.
 Freshly dispatched the exact same task (`cefi_satellite_ao_dispatch_batch1_finalize-004`) the "NINTH distinct plan pair"
 note above already covers. Independently re-verified before declining:
 
-- Doc ground truth unchanged: `plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:355` is still `- [ ]`
-  unchecked (the BYBIT futures_chain shape-2 duplicate-verification audit, source
+- Doc ground truth unchanged: `plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:355` is still
+  `- [ ]` unchecked (the BYBIT futures_chain shape-2 duplicate-verification audit, source
   `issues/bybit_futures_chain_write_shape_2026_07_13.md`) — 32/33, not 33/33.
 - `GET /api/state` → `server_started: "2026-07-30T17:49:40.316854Z"`, i.e. the live server process restarted AFTER both
   root-cause fixes (`agent-orchestrator@13a5dd8`, `@bd522d0`) landed on `live-defi-rollout` earlier the same day

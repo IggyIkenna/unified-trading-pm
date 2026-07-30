@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [cefi, ao-dispatch, close-out, batch-1, satellite-docs, archival]
 related:
   [
-    /plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
   ]

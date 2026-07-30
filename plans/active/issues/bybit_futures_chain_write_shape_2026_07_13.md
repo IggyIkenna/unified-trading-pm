@@ -110,6 +110,16 @@ workspace).
       parity check, the `--apply`, the post-apply verification (0 non-canonical shapes remaining), and the manifest-row
       rewrite. The "not started, no GCS objects modified yet" text above was written before that plan ran and was never
       updated.
+- [ ] [DATA] P1. **MIGRATED 2026-07-30 from `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 (never shipped)**
+      — **Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope.** Extend the archived
+      migration plan's 5-day sample to every day the existing Phase-1 scope-audit output
+      (`_index/audit/bybit_futures_chain_shape_scope_2026_07_13.parquet`, `market-tick-data-service@5e367479`)
+      classified `bare_flat_only`/`bundled_flat_only`/`mixed` — row-level diff each bare_flat/bundled_flat object
+      against its hive/canonical counterpart using the same columns Phase 1 Todo 2 used, and write a per-day
+      duplicate-verdict audit parquet. Read-only verification only — does NOT delete anything (the actual cleanup stays
+      BLOCKED-OPERATOR-DECISION). Repo: market-tick-data-service. **Done when**: a new audit parquet gives a per-day
+      duplicate/not-duplicate verdict for every day the Phase-1 scope audit classified
+      bare_flat_only/bundled_flat_only/mixed, closing the "sample-based, not exhaustive" caveat.
 
 ## Progress Log
 
@@ -118,3 +128,14 @@ workspace).
   `status: complete` (0 open / 11 done) and was ARCHIVED 2026-07-15, so the banner's "leave open until the plan reports
   the fix complete" condition is met. Todo closed with that evidence; doc is now ARCHIVE-worthy but
   `locked_by: live-defi-rollout` blocks autonomous archival.
+- **2026-07-30 (slot-11, `data_engineering`, `cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 4, archival
+  ritual)**: `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 dispatched this exact extended
+  duplicate-verification scope as an AO todo (`assigned_vm: planning`) and it was never shipped — the ONLY one of that
+  plan's 33 todos left undone (flagged 2026-07-30 by the finalize plan's own todo-1 reconciliation pass). Per the
+  archival discipline ("split it, or fold the remnant" for a near-complete plan with a genuine open item —
+  `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), the remnant is folded back into this, its own
+  named Source doc, as a fresh open todo above (never marked done — the work itself still needs doing) rather than
+  silently evaporating inside the archived batch1 plan. This doc stays correctly active (not archive-eligible) as long
+  as this todo is open, superseding the prior entry's ARCHIVE-worthy note above. Kept `assigned_vm: NA` here (no
+  operator ruling taken on re-promoting it to AO-dispatched) — a future `/na-eligibility-audit` or operator call can
+  reclassify it.
