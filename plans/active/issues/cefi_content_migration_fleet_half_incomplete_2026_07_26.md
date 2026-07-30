@@ -163,7 +163,18 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       log line — no manual kill needed. Done when: the memory growth mechanism is identified (not just worked around by
       machine size) and a fix (bounded worker count / periodic pool recycle / explicit pyarrow pool release / smaller
       per-invocation date-range scope) is verified to run a full 271k-file shard (14, the largest) to the terminal
-      `SCRIPT 1 CONTENT MIGRATION SUMMARY` without a mid-run stall.
+      `SCRIPT 1 CONTENT MIGRATION SUMMARY` without a mid-run stall. **CORROBORATION (slot-15, same day)**: TWO more
+      independent instances of the identical signature — shard 44
+      (`canonical-migration-cefi-content-44-relaunch20260730-132900`, `run.log`/heartbeat both silent at `14:09:30Z`
+      /`14:10:07Z`, deleted `14:55:57Z` = ~46min stale, 21,000/73,965=28.4% progress at freeze) and shard 19
+      (`canonical-migration-cefi-content-19-relaunch20260730-135500`, heartbeat silent `14:15:57Z`, deleted `15:04:49Z`
+      = ~49min stale) — both via the SAME `unified-trading-sa`/`python-requests` RB-INFRA-RELAUNCH actor, both
+      `e2-standard-16` on-demand (ruling out preemption AND the `e2-standard-8` OOM as causes for these two). **Three
+      independent shards, three different date ranges, same freeze signature — this is now a strongly-confirmed systemic
+      issue in the migration script itself**, not shard-16-specific. Relaunched both per RB-INFRA-RELAUNCH's
+      ≤2/(vm-prefix,day) bound (1st genuine runtime failure for each, within policy); adopting the SAME policy going
+      forward for any further occurrence — 2nd failure on any single shard gets relaunched once more, a 3rd gets the
+      shard-16 treatment (stop, leave to in-VM stall-kill, root-cause instead of relaunch).
 - [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
       `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
       `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
