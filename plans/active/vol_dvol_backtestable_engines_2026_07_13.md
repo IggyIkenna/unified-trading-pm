@@ -163,14 +163,30 @@ what's missing.
       strategy-service@`18d7e775`. See Progress Log below for the full methodology + real results (both underlyings'
       backtests came back NON-passing — near-zero/slightly-negative Sharpe — so the next todo should leave VOL_CARRY
       `not_available` and file the `BLOCKED-*` naming this, not register it).
-- [ ] [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
+- [x] ✅ [SCRIPT] P1. If VOL_CARRY's backtest passes the HARD CONTRACT bar above, register it in
       `ARCHETYPE_ENGINE_REGISTRY`. If it does not pass, leave `not_available` and file a new `BLOCKED-*` todo naming the
-      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service. **Real backtest already run
-      (see Progress Log 2026-07-30, slot-7) — result is NON-passing for both BTC and ETH (near-zero/slightly-negative
-      Sharpe, near-zero PnL, ~23-25% win rate). Do NOT re-run the backtest — go straight to: leave `not_available` +
-      file the `BLOCKED-*` todo citing the recorded metrics** (unless you have a specific, stated reason to challenge
-      the methodology — e.g. a genuinely better param sweep — in which case say so explicitly rather than silently
-      re-deriving).
+      specific failure (e.g. degenerate PnL, insufficient sample). Repo: strategy-service. — **DONE 2026-07-30 (slot-14,
+      `backend_engineer`).** Confirmed the recorded 2026-07-30 (slot-7) backtest result stands (no new methodology
+      challenge, no re-run per the plan's own instruction): BTC `sharpe_ratio=-0.0063`, ETH `sharpe_ratio=+0.0461`, both
+      PnL flat-to-negative (-119.76 / -191.40), win rate 22.8%/24.75% — an order of magnitude below any defensible-edge
+      threshold. **Verified VOL_CARRY is NOT in `ARCHETYPE_ENGINE_REGISTRY`**
+      (`strategy_service/engine/strategies/v2/factory.py` — zero hits for `VOL_CARRY`), so `not_available` is already
+      the live state; no registry code change needed (nothing to revert). Filed the `BLOCKED-*` todo below naming the
+      specific failure + citing the exact metrics. No code shipped this todo (a leave-as-is decision, not a
+      registration) — plan-only commit.
+- [ ] [SCRIPT] P3. **BLOCKED-INSUFFICIENT-EDGE — VOL_CARRY fails the HARD CONTRACT bar, no further work planned unless a
+      concrete param-sweep candidate is proposed.** The 2026-07-30 (slot-7) real backtest — `iv_atm` from the captured
+      DVOL series, realised vol from the captured BINANCE-FUTURES `derivative_ticker` `index_price` series, full honest
+      intersection window 2021-03-24→2026-05-22, `entry_vrp=0.04`/`exit_vrp=0.01` (carry.py defaults, untested) — came
+      back non-passing for both underlyings: BTC `sharpe_ratio=-0.0063`, `sortino_ratio=-0.0052`, `total_pnl=-119.76`,
+      `win_rate=22.8%` (29 cycles/58 fills); ETH `sharpe_ratio=+0.0461`, `sortino_ratio=+0.0360`, `total_pnl=-191.40`,
+      `win_rate=24.75%` (51 cycles/102 fills). Both Sharpes are indistinguishable-from-noise, PnL is flat-to-negative,
+      and win rate ~23-25% has no compensating asymmetric payoff — this is a genuine "no edge at the default thresholds"
+      result, not a methodology gap (real captured data both legs, real `GroupBRunner` wiring, full available window).
+      **Not scheduling a param sweep here** — `entry_vrp`/`exit_vrp` were left at defaults and a different threshold
+      pair MIGHT clear the bar, but that is a fresh trading-judgment hypothesis the operator/quant_dev should decide to
+      pursue, not a mechanical follow-up. VOL_CARRY stays `not_available`; re-open only if a specific alternative
+      parameterization is proposed with a stated rationale. Repo: strategy-service (no code — decision record).
 - [ ] [SCRIPT] P1. Same backtest-then-conditionally-register sequence for **VOL_ARB_RV_IV**
       (`vol_trading/arb_rv_iv.py`). Repo: strategy-service.
 - [ ] [SCRIPT] P2. Regenerate + commit `capability-verdict-matrix.json`; cite the regenerated-matrix commit as evidence
@@ -286,3 +302,11 @@ what's missing.
     worker has a concrete, stated reason to try a different param sweep (entry_vrp/exit_vrp were left at carry.py's
     defaults 0.04/0.01 — untested whether a different threshold pair would clear the bar; that would be a legitimate
     reason to re-run, not a silent do-over).
+
+- 2026-07-30 (slot-14, `backend_engineer`): Closed the register-or-not todo per the plan's own instruction (no re-run,
+  no new methodology challenge). Verified live: `VOL_CARRY` has zero hits in
+  `strategy_service/engine/strategies/v2/factory.py` (`ARCHETYPE_ENGINE_REGISTRY`'s wiring point), confirming
+  `not_available` is already the actual state — nothing to revert, nothing to register. Filed the
+  `BLOCKED-INSUFFICIENT-EDGE` todo (new, P3) directly above citing the exact slot-7 metrics, scoped as a decision record
+  (not a code task) so it doesn't silently vanish from the plan. Next: the VOL_ARB_RV_IV todo below runs the same
+  backtest-then-conditionally-register sequence independently (separate engine, separate verdict expected).
