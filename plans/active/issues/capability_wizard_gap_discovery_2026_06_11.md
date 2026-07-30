@@ -716,11 +716,30 @@ nightly-replay reconciler (`replay_wizard_sessions.py`, smoke `test_wizard_sessi
 re-evaluates each saved session's archetype edge-availability claims against the FRESH committed manifest and ALERTS on
 a silent `available`↔`blocked` flip (reuses the Wave-2 #5 edge-status-hash diff). Remaining thin follow-on:
 
-- [ ] [UI] P2. **uts-ui "save session" surface** (target repo: `unified-trading-system-ui`) — wire the live wizard to
-      WRITE the `WizardSession` JSON (answers + manifest_commit + manifest_edge_hash + config + prospectus_hash) at
-      sign-off, into the sessions dir the nightly `replay_wizard_sessions.py --sessions-dir` reads. The Python schema +
-      deterministic serialisation (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact
-      (`lib/wizard/output.ts`) is the config payload. Doubles as the client-onboarding compliance record.
+- [x] ✅ [UI] P2. **DONE 2026-07-30 (slot-9)** — **uts-ui "save session" surface** (target repo:
+      `unified-trading-system-ui`) — wire the live wizard to WRITE the `WizardSession` JSON (answers + manifest_commit +
+      manifest_edge_hash + config + prospectus_hash) at sign-off, into the sessions dir the nightly
+      `replay_wizard_sessions.py --sessions-dir` reads. The Python schema + deterministic serialisation
+      (`WizardSession.to_json`) is the contract to mirror; the StrategyConfigArtifact (`lib/wizard/output.ts`) is the
+      config payload. Doubles as the client-onboarding compliance record. — `unified-trading-system-ui@bdb4a72e`.
+      `POST /api/wizard/save-session` computes `manifest_commit` / `recorded_claims` / `manifest_edge_hash` server-side
+      from the bundled capability manifest (never trusts a client-cached snapshot) and persists via a pluggable store
+      (`lib/wizard/session-store.ts`, mirrors `lib/onboarding/doc-store.ts`'s local-disk/GCS dispatch pattern) — local
+      disk under `.local-dev-cache/wizard-sessions/` in dev/mock (the literal directory `--sessions-dir` reads),
+      `gs://odum-${env}-     wizard-sessions/` in staging/prod. `lib/wizard/session.ts` mirrors `wizard_session.py`'s
+      `edge_key`/ `archetype_claim_statuses`/canonical-JSON hashing exactly (verified byte-for-byte: a session saved by
+      the route replays through the REAL `replay_wizard_sessions.py` with `edge_hash_match: true`). Found + fixed in the
+      same commit: `WizardSession.archetype_id` (Python) reads `config["archetype_id"]`, a `ScenarioConfigRef`-era key
+      the actual `StrategyConfigArtifact` never carries (it uses `archetype`) — every session this route would otherwise
+      write raised `KeyError` in the nightly reconciler. Fixed by aliasing `archetype_id` onto the persisted `config`
+      copy only (the live `StrategyConfigArtifact` TS contract used by download/copy/portfolio is untouched). Also
+      allowlisted `/api/wizard/` in `lib/api/mock-handler.ts`'s real-route passthrough (the global mock-fetch
+      interceptor was silently swallowing the POST with a fake `{}` 200 otherwise, matching the same class of gap the
+      onboarding/questionnaire/strategy-evaluation routes needed). "Save session" button added to `ConfigOutput.tsx`
+      (Stage J_REVIEW). 36 new Vitest unit tests (`tests/unit/wizard/session.test.ts`) + full existing wizard suite (267
+      tests) green. **pw:L2 ✓** | regression: `tests/smoke/wizard-save-session.spec.ts` (drives the wizard to sign-off,
+      clicks Save session, asserts the real POST response + "Session saved!" state — not mocked). tsc/ESLint clean; full
+      `quality-gates.sh` green (sentinel=2319b519, amended to bdb4a72e by quickmerge's trailer).
 
 ### 2026-06-13 — Under-registration audit ("what can the system do that the registry doesn't capture", common-sense pass)
 
