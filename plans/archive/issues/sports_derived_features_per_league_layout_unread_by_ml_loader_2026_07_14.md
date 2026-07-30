@@ -165,12 +165,14 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
       (features-service@76f234ce). ⚠️ The instruments-service precedent `scripts/delete_phantom_rows_from_shards.py`
       carries the SAME hazard (`_backup_path` writes `.bak.parquet` next to the shard under `_index/per_vm/`) —
       annotated here per findings-triage (fits instruments-service scope; do not fix from this plan).
-- [ ] [DOC] P3. **Write the features-bucket path SSOT** (codex/02-data) documenting: odds day-level; derived/fixture
-      per-league with RAW af-id keys (historical, addressable); manifest key = canonical league NAME; readers must
-      handle both layouts. Cite `writer.py:26-27` + `batch_handler.py:300-323`. **STILL OPEN as of 2026-07-25** —
-      tracked in `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos
-      digest (this doc's entry) so it stays visible after this doc archives; not migrated to a new doc since it already
-      has an owner.
+- [x] ✅ [DOC] P3. **DONE 2026-07-27 (`sports_satellite_ao_dispatch_batch3_2026_07_25.md` todo 5, slot-13).** Write the
+      features-bucket path SSOT (codex/02-data) documenting: odds day-level; derived/fixture per-league with RAW af-id
+      keys (historical, addressable); manifest key = canonical league NAME; readers must handle both layouts. Cite
+      `writer.py:26-27` + `batch_handler.py:300-323`. Shipped as `/codex/02-data/sports-features-bucket-path-layout.md`
+      (unified-trading-pm), citing `features-service/features_service/sports/data/writer.py:26-27`,
+      `.../sports/cli/handlers/batch_handler.py:93-112,299-361,639-648`, and
+      `ml-service/ml_service/training/app/core/sports_feature_loader.py:52-146` — verified live to exist at that path.
+      Registered in `sports_consolidated_closeout_2026_07_19.md`'s Codex SSOTs list (verified present).
 - [x] [CODE] P2. **ml-service: odds_features cannot join the fixture matrix — join-key mismatch** (found during the P1
       real-bucket runtime verify, 2026-07-14): the real `odds_features` parquet keys rows on **`event_id`** (columns:
       `event_id, home_implied_prob, …`), but `_merge_sports_groups_for_date`
@@ -198,14 +200,16 @@ resolved_by: ["ml-service@360da40", "features-service@4f83f8db", "features-servi
       deterministically-mappable set (`home/draw/away_implied_prob`, `market_vig`, `best_odds_home` each 13 non-NULL;
       sparse `clv_home` 4); 30/31 odds rows mapped, kept row per fixture = T-24h (pre-existing keep="first" dedup
       semantics unchanged).
-- [ ] [DATA] P3. **instruments-service: odds_api_team_mapping coverage gap** (found during the P2 fix, 2026-07-14): the
-      IS crosswalk `sports_reference/mappings/odds_api_team_mapping.parquet` (658 rows) has no row for `Burgos CF`
-      (SEGUNDA_DIVISION) — the sole unmappable odds event on 2025-10-20 (event `81fcdc22656530bb4daca2deb3f1845f`,
-      Burgos CF vs Córdoba). Smaller-league od spellings are likely under-covered; audit mapping coverage against the
-      distinct od team names in MDPS bucketed odds and extend the table (IS owns reference data). Until then those
-      fixtures' odds rows drop at merge time (honest absence, logged). **STILL OPEN as of 2026-07-25** — tracked in
-      `/plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md`'s residual-todos digest
-      (this doc's entry) so it stays visible after this doc archives.
+- [x] ✅ [DATA] P3. **DONE 2026-07-27 (`sports_satellite_ao_dispatch_batch3_2026_07_25.md` todo 6, slot-2) —
+      instruments-service@dd3ecff1 (verified ancestor of current HEAD).** instruments-service: odds_api_team_mapping
+      coverage gap (found during the P2 fix, 2026-07-14): the IS crosswalk
+      `sports_reference/mappings/odds_api_team_mapping.parquet` (658 rows) had no row for `Burgos CF` (SEGUNDA_DIVISION)
+      — the sole unmappable odds event on 2025-10-20. Ran a stride-sampled coverage census (204 days, 2,193 shard reads)
+      against MDPS's bucketed-odds shards: 734 distinct team names observed, 131 gaps vs the 658-row table. Resolved 59
+      with confirmed identity (incl. `Burgos CF` → `af_team_id=9580`) and applied them (658 → 717 rows); 72 residual
+      names are genuinely unmappable today (no alias / not in team_mapping_v2 / no league vote) and are left dropping at
+      ml-service merge time per this todo's own accepted behavior (honest absence, logged). Full breakdown:
+      `/plans/archive/issues/odds_api_team_mapping_coverage_audit_2026_07_27.md`.
 
 ## Non-actions (explicit)
 

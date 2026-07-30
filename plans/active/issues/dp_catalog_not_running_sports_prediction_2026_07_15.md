@@ -57,13 +57,14 @@ source:
     "operator report: CRITICAL DP_CATALOG_NOT_RUNNING x2 (sports, prediction) at 2026-07-15 ~03:47",
     "Group-C Cloud Run job-failure triage, 2026-07-16 (utl_uac_skew_fleet_audit_2026_07_15.md follow-up)",
   ]
-status: open
+status: resolved
 assigned_vm: planning
 resolved_by:
   [
     "instruments-service@24f84e86 (sports)",
     "deployment-service@6bfa284 (prediction)",
     "instruments-service@5c1c3ccb (cefi dedup-aware guard, RULED 2026-07-28, shipped 2026-07-30)",
+    "deployment-service@48d5e0d (P3 IAM-403 events-sink grant, sports_satellite_ao_dispatch_batch3_2026_07_25.md todo 8)",
   ]
 locked_by:
 locked_since:
@@ -244,10 +245,14 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       `prod/catalog.parquet` mtime advanced from the frozen 2026-07-14T00:58:37Z to 2026-07-15T10:10:05Z (row count
       unchanged at 2,673,230 since the by_date window itself had 0 new rows that day — the promote-write succeeding, not
       a row-count change, is what fixes the staleness alert). Repo: deployment-service.
-- [ ] [INFRA] P3. Grant `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com`
-      `storage.objects.create` on `central-element-323112-events` (or the correct events-sink bucket) so
-      `CATALOGUE_SHRINK_BLOCKED`/similar structured events stop silently 403ing out of the event-log sink. Repo:
-      deployment-service (IAM) — low priority, Cloud Logging already carries the same signal.
+- [x] ✅ [INFRA] P3. **DONE 2026-07-26 (`sports_satellite_ao_dispatch_batch3_2026_07_25.md` todo 8, slot-7) —
+      deployment-service@48d5e0d (verified ancestor of current HEAD).** Grant
+      `lifecycle-catalogue-regen@central-element-323112.iam.gserviceaccount.com` `storage.objects.create` on
+      `central-element-323112-events` (confirmed the exact bucket name — no ambiguity) so
+      `CATALOGUE_SHRINK_BLOCKED`/similar structured events stop silently 403ing out of the event-log sink. Codified in
+      `deployment-service/terraform/gcp/live_event_log/events_bucket_iam.tf` (`roles/storage.objectCreator` ==
+      `storage.objects.create`), live-applied, and verified with a synthetic impersonated-SA write that landed HTTP 200
+      (no 403), then cleaned up. Repo: deployment-service (IAM).
 - [x] ✅ [DATA] P1. **cefi `CATALOGUE_SHRINK_BLOCKED` — added per RE-TRIAGE (2026-07-23) recommendation.** **RE-TRIAGE'S
       OWN PREMISE WAS STALE/INCORRECT, corrected 2026-07-28** — see "2026-07-28 update" below: the frozen-tail merge is
       NOT missing for cefi (it already runs generically via `_merge_incremental` on every incremental-mode run,
@@ -279,19 +284,19 @@ pair. `cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md` covers th
       guard, so no shortcuts on test coverage. Repo: instruments-service.
 
       **SHIPPED 2026-07-30**: `instruments-service@5c1c3ccb` (quickmerge, quality gates green 172s). Extracted the 3
-                                                                                                                                                                                                                                                                                                      cefi-only Phase D dedup passes into a shared `_apply_cefi_phase_d_dedups()` helper (used identically by
-                                                                                                                                                                                                                                                                                                      `run_rollup`'s Phase D and by the guard); `promote_catalogue` now takes a required `asset_group` kwarg and, for
-                                                                                                                                                                                                                                                                                                      `asset_group == "cefi"`, re-runs that same helper over the CURRENT prod catalogue (in `_read_current_row_count`)
-                                                                                                                                                                                                                                                                                                      before computing `current_count` for `evaluate_monotonic_guard`'s comparison — so a dedup-only-driven shrink no
-                                                                                                                                                                                                                                                                                                      longer trips `CATALOGUE_SHRINK_BLOCKED`. Added `tests/unit/scripts/test_promote_catalogue_dedup_aware_guard.py`
-                                                                                                                                                                                                                                                                                                      (own file, mirrors `test_shrink_drop_diagnostics.py`'s convention) proving both halves of the mandate exactly as
-                                                                                                                                                                                                                                                                                                      specified: (i) a dedup-only shrink (2-row un-collapsed off-by-one pair → 1 already-deduped row) is now ACCEPTED
-                                                                                                                                                                                                                                                                                                      (`test_dedup_only_shrink_does_not_trip_guard`), and (ii) a genuine active-row drop (2 distinct instruments, no
-                                                                                                                                                                                                                                                                                                      dedup pass touches the pair, one dropped for real) still trips the guard
-                                                                                                                                                                                                                                                                                                      (`test_genuine_active_row_drop_still_trips_guard`) — plus a control proving non-cefi asset groups are unaffected
-                                                                                                                                                                                                                                                                                                      (`test_non_cefi_asset_group_unaffected_by_dedup_aware_guard`) and a proof the extraction is a pure refactor
-                                                                                                                                                                                                                                                                                                      (`test_extracted_helper_matches_run_rollups_own_pass_order`). `_shrink_drop_diagnostics`'s
-                                                                                                                                                                                                                                                                                                      `dropped_active`/`dropped_delisted` split is untouched, staying the safety cross-check as the ruling required.
+                                                                                                                                                                                                                                                                                                              cefi-only Phase D dedup passes into a shared `_apply_cefi_phase_d_dedups()` helper (used identically by
+                                                                                                                                                                                                                                                                                                              `run_rollup`'s Phase D and by the guard); `promote_catalogue` now takes a required `asset_group` kwarg and, for
+                                                                                                                                                                                                                                                                                                              `asset_group == "cefi"`, re-runs that same helper over the CURRENT prod catalogue (in `_read_current_row_count`)
+                                                                                                                                                                                                                                                                                                              before computing `current_count` for `evaluate_monotonic_guard`'s comparison — so a dedup-only-driven shrink no
+                                                                                                                                                                                                                                                                                                              longer trips `CATALOGUE_SHRINK_BLOCKED`. Added `tests/unit/scripts/test_promote_catalogue_dedup_aware_guard.py`
+                                                                                                                                                                                                                                                                                                              (own file, mirrors `test_shrink_drop_diagnostics.py`'s convention) proving both halves of the mandate exactly as
+                                                                                                                                                                                                                                                                                                              specified: (i) a dedup-only shrink (2-row un-collapsed off-by-one pair → 1 already-deduped row) is now ACCEPTED
+                                                                                                                                                                                                                                                                                                              (`test_dedup_only_shrink_does_not_trip_guard`), and (ii) a genuine active-row drop (2 distinct instruments, no
+                                                                                                                                                                                                                                                                                                              dedup pass touches the pair, one dropped for real) still trips the guard
+                                                                                                                                                                                                                                                                                                              (`test_genuine_active_row_drop_still_trips_guard`) — plus a control proving non-cefi asset groups are unaffected
+                                                                                                                                                                                                                                                                                                              (`test_non_cefi_asset_group_unaffected_by_dedup_aware_guard`) and a proof the extraction is a pure refactor
+                                                                                                                                                                                                                                                                                                              (`test_extracted_helper_matches_run_rollups_own_pass_order`). `_shrink_drop_diagnostics`'s
+                                                                                                                                                                                                                                                                                                              `dropped_active`/`dropped_delisted` split is untouched, staying the safety cross-check as the ruling required.
 
 ## Progress Log
 
@@ -510,3 +515,12 @@ cefi; the real mechanism is the Phase D dedup vs. the guard baseline). The dedup
 doc's own deeper live investigation actually found — see the cross-reference note added to that doc. Only the low-
 priority P3 IAM-403 events-sink grant remains open in this doc (untouched — out of scope for this dispatch, no operator
 ruling attached, doc's own text already flags it "low priority, Cloud Logging already carries the same signal").
+
+## 2026-07-30 update (slot-11, `review`) — last remaining P3 IAM-403 events-sink grant closed, doc now genuinely 0 open
+
+Reconciling `sports_satellite_ao_dispatch_batch3_2026_07_25.md` todo 8 (its named Source doc, via the
+`sports_consolidated_closeout_aggregated_sources_2026_07_24.md` digest's residual-todos pointer) against this doc's own
+IAM-grant P3 todo, which the 2026-07-30 update above already named as the sole remaining open item. Flipped it with
+`deployment-service@48d5e0d` (verified ancestor of current HEAD), matching the batch3 todo's own evidence exactly.
+Flipping `status` to `resolved` — genuinely 0 open todos remain (checkbox and prose both agree). `locked_by` is empty;
+archival to `plans/archive/2026_07/` is out of this todo's scope (a separate finalize-plan todo owns the archive step).

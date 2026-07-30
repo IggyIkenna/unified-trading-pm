@@ -165,7 +165,15 @@ cell into out_of_scope / pre_coverage_date / known_gap / genuine_gap. Findings:
   observed-coverage maps in UAC** (mirror `sports_league_entity_coverage`, derived from ≥1 captured row) so denominators
   are honest.
 - **Enumeration grain inconsistency**: 2026 seeds ~10× the prior-year cell count per data_type — investigate why + make
-  grain consistent + frontier-bounded.
+  grain consistent + frontier-bounded. **INVESTIGATED 2026-07-27** (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`
+  todo 10, slot-9): measured against the live `-prd-` manifest over a matched H1 window — overall ratio **3.13x**
+  (363,842 → 1,137,706 cells; most data_types 2.2x-3.6x; `FIXTURES` 16.6x, `FIXTURES_OUTCOMES` 15.7x, `ODDS` 6.0x
+  outliers). **STILL PERSISTS, but via a DIFFERENT mechanism than this over-seeding hypothesis** — root cause is the v2
+  expected-universe enumerator's `--start-date` being a static, never-overridden Terraform default (`"2026-02-20"`), so
+  the entire 2025 H1 window structurally never gets `expected_unattempted` seeded at all (a bounded-window design
+  artifact, not a live over-seeding regression). Full measurement + root-cause + 2 follow-up todos (1 `[OPERATOR]`
+  window-policy decision, 1 `[DATA]` league-count-growth investigation) filed:
+  `issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md`.
 
 ### Execution strategy + blocker resolutions (operator 2026-06-23): 3-MONTH GOLDEN WINDOW
 
