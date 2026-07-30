@@ -647,3 +647,26 @@ accordingly.
   — it simply didn't hit the leak's tipping point this run. Second confirmed full success this session (after shard 28).
   Fleet at 2 shards (14, 42) once this self-delete completes. Also hit the `gcloud` identity-poisoning issue again
   (config-flip variant), fixed the same way.
+- **2026-07-30T19:54Z (data_pipeline_failure escalation `agt-9bcc1c`, slot 4)**: dispatched via a DP-VM-003
+  heartbeat-stall alert on `canonical-migration-cefi-content-42-relaunch20260730-152000`
+  (`deployment_id=2fd61aeb-8762-4564-81fa-e3ba437d3a29`, per `rb_infra_relaunch.md`). Registry archive check found this
+  is already the **5th relaunch attempt of shard 42 today** (archived: `-122417` exit_code=125/`vm_not_running`,
+  `-130600` exit_code=125/`vm_not_running`, `-132600` exit_code=137/SIGKILL, `-143200` exit_code=137/SIGKILL; this one
+  started `15:18:11Z`) — already far past both RB-INFRA-RELAUNCH's `≤2/(vm-prefix,day)` bound and this doc's own "3rd
+  instance → stop, leave to in-VM stall-kill" policy (line ~178-180 above). **Did NOT relaunch a 6th time.**
+  `run.log`/heartbeat/PIPELINE_HEARTBEAT all went silent together at `19:16:57Z`/`19:17:15Z` (last recorded
+  `mem_pct=88.4%`) — the identical whole-VM-freeze signature this doc already diagnosed. Confirmed this VM was launched
+  (`15:18:11Z`) **before** the fix landed (`market-tick-data-service@9f4098b1`, committed `18:04:44Z` same day,
+  confirmed merged onto `origin/live-defi-rollout`) — so, same as shard 14's still-live pre-fix attempt noted above,
+  this run cannot be credited to the fix and its outcome doesn't verify it either way. **New observation not yet in this
+  doc**: as of `19:54:55Z` (~38min past last activity, ~8min past its own `STALL_TIMEOUT_SEC=1800` in-VM stall-kill
+  deadline) GCE still reports `RUNNING` and neither `EXIT_STATUS` nor `STALL_BREADCRUMB` exist yet in
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-42-relaunch20260730-152000/`
+  — the `STALL_PROGRESS_REGEX=progress:|files/sec` self-reap that killed shards 17/18/41/etc. on schedule has NOT yet
+  fired here past its own deadline. Did not SSH in to investigate further (out of this one-shot escalation's scope);
+  flagging as a possible second watchdog-timing gap worth a follow-up look if it recurs, but could equally just be a few
+  more minutes of measurement lag — not asserting a firm diagnosis. **Recommendation**: once this VM is confirmed dead
+  (self-reaped or naturally exits), shard 42 should get the SAME one-time fix-verification relaunch already queued for
+  shard 14 above (fresh tarball pull = post-fix code) rather than being folded into the existing shard-14-only todo
+  silently — posted a bounded `/blocked` question to main/operator per RB-INFRA-RELAUNCH's bound-exceeded escalation
+  rule instead of deciding this alone.
