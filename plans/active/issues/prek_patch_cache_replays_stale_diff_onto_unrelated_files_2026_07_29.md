@@ -26,7 +26,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [prek, quickmerge, git, corruption, tooling-bug, ci-cd]
-related: [/codex/08-workflows/ci-cd-flow.md]
+related:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/archive/issues/quickmerge_help_flag_misparsed_as_commit_message_2026_07_30.md,
+  ]
 created: 2026-07-29
 last_updated: "2026-07-30" # 6th confirmed reproduction, 2nd landed-on-origin occurrence, plus the concrete 9-patch-file forensic evidence (see Progress Log)
 parent_epic: plan_hygiene_master
