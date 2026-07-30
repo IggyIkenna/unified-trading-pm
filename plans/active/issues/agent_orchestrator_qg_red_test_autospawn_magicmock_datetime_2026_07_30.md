@@ -117,11 +117,17 @@ small+clear gets its own issue doc).
       skipped) — fixing this one crash was sufficient to turn the whole gate green again for every worker, since the
       other two signatures below turned out to be silently caught/logged at their call sites (`_resume_pass`'s outer
       `try/except` in `_run_one_tick`) and never actually failed a test assertion once this crash stopped masking them.
-- [ ] [ENGINEER] P1. Root-cause + fix `sqlite3.OperationalError: no such table: escalation_queue` in the
+- [x] ✅ [ENGINEER] P1. Root-cause + fix `sqlite3.OperationalError: no such table: escalation_queue` in the
       `test_autospawn.py` fixture path (likely a missing `create_all_tables()` call or a schema-migration gap for the
       escalation-queue table in the test DB setup) (repo: agent-orchestrator). No longer QG-blocking (see todo above —
       it's silently caught + logged by `_drain_escalations`'s call-site `try/except`, so it doesn't fail any test), but
-      the underlying gap is still real and still open.
+      the underlying gap is still real and still open. — `agent-orchestrator@296e5e4`. Root cause: the 5 affected tests
+      drive `_run_one_tick` with a bare `MagicMock` DB session for the main flow, but never mocked `_drain_escalations`
+      — which opens its OWN real `session_scope()` (`server.escalation` imports it independently of the `autospawn_mod`
+      reference these tests patch), so that real session hit `no such table: escalation_queue` against the test's fresh,
+      empty tmp_path sqlite file. Fix: `patch.object(loop, "_drain_escalations")` in each of the 5 tests, matching the
+      pattern already used by the two sibling tick tests that don't hit this signature. Scoped to the escalation_queue
+      signature only — the AttributeError signature (3rd todo below) is a separate, still-open root cause.
 - [ ] [ENGINEER] P1. Root-cause + fix `AttributeError: 'list' object has no attribute 'all'` at
       `server/autospawn.py:2478` in `_resume_pass` — affects `test_tick_caps_spawns_at_queue_depth`,
       `test_tick_respects_fleet_worker_cap` (repo: agent-orchestrator). No longer QG-blocking (see todo above — it's
