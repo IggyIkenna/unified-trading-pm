@@ -19,7 +19,7 @@ summary: >-
   fixed/verified/unaffected by this). All prior "ruled out" analysis in the original version of this doc (retry logic,
   asyncio.gather concurrency, DNS/ThreadedResolver hypothesis) was diagnostically sound but chasing the wrong layer —
   the actual answer was one level up, in manifest-read pre-flight, not the FRED HTTP client at all.
-status: resolved
+status: open
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -49,7 +49,13 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: "slot 6, same session, via SSH + py-spy live inspection"
+resolved_by:
+  "slot 6 retracted the original FredAdapter-hang hypothesis via SSH + py-spy live inspection (root cause: a legitimate
+  consolidator-lock wait, not a bug) -- but this doc's status was set to resolved while 3 real follow-up todos remained
+  open, a mismatch caught by check_archive_candidates.sh's 2026-07-29 hard-gate upgrade. Corrected back to status:open
+  2026-07-30; todo 2 (logger.info visibility line) implemented same-day, unified-trading-library@a0546d68. Todos 1
+  (measure real TRADFI cadence, do not guess) and 3 (relaunch the actual FRED backfill VM and let it run past the wait)
+  remain genuinely open -- not something to close via a doc-hygiene pass."
 ---
 
 # FRED backfill "stall" was a live TRADFI consolidator lock, not a bug
@@ -124,10 +130,12 @@ minute once actually applied.
       `unified_trading_library/manifest_writer/_staleness_budget.py`, sized the same way `defi`/`sports` were (measure
       TRADFI's real consolidation cadence from Cloud Logging/consolidator run history first, then set the horizon with
       margin — do NOT guess a number). Repo: unified-trading-library.
-- [ ] [BACKEND] P3. Add a `logger.info` (or `.warning`, given it can legitimately run for minutes) immediately on entry
+- [x] [BACKEND] P3. Add a `logger.info` (or `.warning`, given it can legitimately run for minutes) immediately on entry
       to `_wait_for_in_flight_cycle_then_reread` stating the lock age and horizon, so this state is visible in
       `run.log`/Cloud Logging without needing SSH+py-spy to distinguish "legitimate wait" from "actually stuck." Repo:
-      unified-trading-library.
+      unified-trading-library. — unified-trading-library@a0546d68: added a `logger.warning` on entry citing
+      `bucket`/`lock_age_sec` (via the existing read-only `read_consolidator_lock_age_sec`)/`horizon_sec`, explicitly
+      stating this is a legitimate by-design wait. `quality-gates.sh` green.
 - [ ] [DATA] P1. Resume `macro_micro_econ_data_capture_audit-003`: relaunch the full `1962-01-02..today` FRED production
       backfill and this time let it run past this wait (up to the 1h horizon if needed, or until the consolidator lock
       clears, whichever comes first) rather than killing it prematurely. Verify real captured rows once it progresses
