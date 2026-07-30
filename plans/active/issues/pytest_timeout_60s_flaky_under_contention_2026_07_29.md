@@ -232,6 +232,38 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       when**: either (a) this exact test recurs again and the unmocked GCS-probe path is confirmed/ruled out as the
       mechanism, or (b) 5+ more clean GH Actions `quality-gates-v2` runs pass with no new recurrence, closing this as
       noise.
+- [ ] 6. [INFRA] P3. **NEW 2026-07-30.** Todo 4's closing text left one door open: "Whether
+      `github-glue-runners-instruments-service` is ALSO systematically more contended than other runners (independent of
+      this one test) remains genuinely open." This occurrence supplies the first real evidence FOR that broader claim:
+      `cicd` escalation `agt-dcbfa1`, instruments-service promotion PR #1039 (LDR→main), failing run `30584685103`
+      (`QG slice (tests)` job, started `21:46:09Z`) —
+      `TestUnderstatFetchErrorTracking::test_get_fixtures_     resets_error_count` — the EXACT test todo 4 root-caused
+      and fixed via the `_throttle` no-op mock (instruments-service@66c9f23c, confirmed present on this run's head SHA
+      `85ca0b73`) — timed out AGAIN (153.53s), in the SAME job as a SECOND, DIFFERENT test in the same file
+      (`TestUnderstatGetFixtures::test_get_fixtures_with_     matches`, 278.67s, well past even the 150s budget).
+      Investigated a candidate mechanism (both share the generic `get_fixtures()` call path: 6 real per-league
+      `_make_session()` calls each, each constructing a real un-mocked
+      `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` before the mocked
+      `aiohttp.ClientSession(...)` discards it) but RULED IT OUT as distinguishing: several sibling tests in the same
+      file
+      (`test_get_fixtures_no_matches`/`test_get_fixtures_season_detection_pre_august`/`test_get_fixtures_invalid_year_     falls_back`/`test_get_fixtures_invalid_month_falls_back`)
+      share the exact identical pattern and did NOT fail this run — so it cannot be what separates these 2 failures from
+      the many passes (`1 failed, 5104 passed` originally, corrected to 2 failed same run). With todo 4's real-timer
+      mechanism confirmed already closed (mock verified present in the file) and no per-test anti-pattern distinguishing
+      these 2 specific failures from their unaffected siblings, the more parsimonious read is genuine runner-level
+      contention: on a sufficiently oversubscribed self-hosted runner, ANY awaited step (even a fully-mocked one —
+      throttle-await, `session.get` `__aenter__`/`__aexit__`, `resp.json()`) is a nonzero attack surface for
+      OS-scheduler descheduling, not only the specific real timers found so far. No code action taken this pass — by
+      investigation time PR #1039 had already **merged** (`21:46:11Z`, 2s after opening, `mergedBy=IggyIkenna`,
+      `autoMergeRequest=null` — the promotion automation's own merge path, not gated on this slow
+      `pull_request`-triggered run which went on to fail ~43-54 min later) and `live-defi-rollout` HEAD (`134d1133`)
+      already reflects the merged state; zero open `/api/repo-blockers` entries for instruments-service at investigation
+      time — the same "orphaned noise against an already-resolved wall" pattern as every prior entry in this doc. **Done
+      when**: either (a) `github-glue-runners-instruments-service`'s actual provisioning/concurrent-job-count is checked
+      directly (is it shared with other repos' jobs? how many vCPUs vs this repo's ~5100-test `-n auto` xdist fan-out?)
+      and a capacity fix applied/ruled out, or (b) the failure pattern shifts to a DIFFERENT self-hosted runner once
+      evidence accumulates, which would point back at the test suite's xdist fan-out width rather than this one runner
+      specifically.
 
 ## Progress Log
 
@@ -369,3 +401,24 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   in every prior entry of this doc (zero open PRs, zero `/api/repo-blockers` entries for instruments-service at
   investigation time). Per this doc's own established precedent, no `live-defi-rollout` code/test change was made; todo
   5 tracks whether the unmocked GCS-probe path is the real mechanism if this exact test recurs again.
+- **2026-07-30** — New todo 6 filed: `cicd` escalation `agt-dcbfa1` (`WALL_TYPE=ldr_qg_failure`), instruments-service
+  promotion PR #1039 (LDR→main), failing run `30584685103` (`QG slice (tests)` job, started `21:46:09Z`, head SHA
+  `85ca0b7350d2ff0a4ce91c5b4e8bcdc68fa4f4f1`). Two tests timed out in the SAME run:
+  `TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count` (153.53s) — the exact test todo 4 root-caused
+  and fixed via the `_throttle` no-op mock, confirmed present on this head SHA
+  (`git merge-base --is-ancestor 66c9f23c HEAD` true, and the mock verified present in the live tree at all 7 call
+  sites) — and a second, different test, `TestUnderstatGetFixtures::test_get_fixtures_with_matches` (278.67s).
+  Investigated whether the shared un-mocked `_make_session()` real-`TCPConnector`-construction path (both tests call
+  `get_fixtures()`, which builds 6 real `aiohttp.TCPConnector(resolver=aiohttp.resolver.ThreadedResolver())` objects,
+  one per league, before the mocked `aiohttp.ClientSession(...)` discards each) distinguishes the 2 failures — ruled
+  out: 4 sibling tests in the same file share the identical pattern and did not fail this run, so it isn't what
+  separates failures from passes. Filed todo 6 reopening todo 4's own left-open question (is
+  `github-glue-runners-instruments-service` systematically contended, independent of any one test's anti-pattern) since
+  2 different tests failing simultaneously, one of them a confirmed-fixed test recurring, is stronger evidence for
+  genuine runner contention than for a remaining per-test real- timer bug. No code/test action taken: by investigation
+  time PR #1039 had already merged (`21:46:11Z`, 2s after opening — the promotion automation's own merge path, not gated
+  on this specific slow run) and `live-defi-rollout` HEAD (`134d1133`, confirmed via
+  `gh api .../commits/live-defi-rollout` matching local clone HEAD) already reflects the merged state; zero open
+  `/api/repo-blockers` entries for instruments-service — the same "orphaned noise against an already-resolved wall"
+  pattern as every prior entry in this doc. Slot left clean (both repos confirmed on `live-defi-rollout`, zero diff vs
+  `origin` before this doc edit).
