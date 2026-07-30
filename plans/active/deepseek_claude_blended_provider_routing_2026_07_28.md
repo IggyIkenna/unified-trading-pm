@@ -31,12 +31,19 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 supersedes:
 superseded_by:
 source:
+context_scope:
+  [
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
+    /codex/06-coding-standards/model-tier-selection.md,
+  ]
 ---
 
 # DeepSeek/Claude blended provider routing for agent-orchestrator
@@ -496,6 +503,49 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
     `data/config/accounts.json`.
   - **Step 7 (monitor)**: After step 6 — watch first real DeepSeek fleet spawns.
 
+## Phase 2 — multi-provider generalization + external-ideology reconciliation (2026-07-30)
+
+Operator shared an external "AI Compute Optimisation Strategy" doc (generic, not written for this fleet) proposing 7→2
+Claude Max accounts via free/open-provider routing + retrieval-based context reduction, and asked for its ideas to be
+merged into "our plan doc." This plan — not the narrow, unrelated OmniRoute pilot doc
+(`omniroute_llm_gateway_pilot_design_2026_07_30.md`) — is the real home: it already ships almost exactly the router the
+external doc describes (opus/fable hard-pinned to Claude; sonnet-tier default-routed to a cheaper provider with
+quota-adaptive, mutual-fallback routing), just generalized to one provider (DeepSeek) instead of several.
+
+**Reconciling the external doc's numbers against this fleet's real state (operator-confirmed 2026-07-30):** actual count
+is **6** Claude Max accounts today (this plan's own Progress Log/rollout text says "4" — stale as of 2026-07-29/30;
+ratio any of the external doc's figures — $2,800/mo, ~560M output-token value/mo — against 6, not the external doc's
+generic 7, if a baseline dollar figure is ever needed). Critically, **the goal is not "shrink to 2 accounts" as an end
+in itself** — the operator reports real outages/rate-limit exhaustion still happening AT 6 accounts (directly consistent
+with this plan's own 2026-07-29 pilot finding: _"all 4 real Claude Max accounts are currently genuinely rate-limited"_ —
+the same failure mode, now at a higher account count). Desired effective throughput is **~7-Claude-account-equivalent**
+— so the actual target is: eliminate quota outages at 6 (or fewer) real Claude subscriptions by offloading enough work
+to free/cheap providers that effective capacity matches ~7 accounts' worth, without necessarily buying a 7th. The
+external doc's "2 accounts" is a stretch/upper-bound aspiration worth keeping as a long-term direction, not the
+near-term target this section's todos below are scoped against.
+
+**Why the mechanism should be generalized, not replaced.** `select_account_for_spawn()` + `AccountProvider` (Progress
+Log 2026-07-29) already implement the external doc's "Router Rules" (free/cheap provider first, escalate to Claude on
+low confidence/repeated failure/architectural work) — with real safety properties an OmniRoute-style opaque gateway
+would not have for free: a hard, unconditional opus/fable pin, quota-adaptive fair-share splitting, mutual fallback, and
+a `provider: claude` per-plan override. Broadening this from `Literal["anthropic", "deepseek"]` to an open provider set
+(OpenRouter, Gemini, Groq, SambaNova, per the external doc's candidate list) reuses a proven, tested design instead of
+introducing a second, parallel routing mechanism that would compete with it. This is also the concrete resolution of the
+OmniRoute plan's own guardrail (never extend that pilot to the worker fleet without a fresh model-tier-risk review) —
+the fresh review's conclusion is: **don't use OmniRoute for the fleet; generalize the mechanism already built here
+instead.**
+
+**Retrieval-layer reconciliation.** The external doc's retrieval pipeline (vector search → symbol graph → dependency
+graph → file ranking, targeting ~500k→200k token code context) is a DIFFERENT retrieval domain than this workspace's
+existing grep-native L0-L4 system (`context_scout`/`context_scope`, targets plan/codex/frontmatter retrieval, not
+general source-code symbol lookup) — so there's no direct doc-vs-doc conflict. But this workspace has an explicit,
+broadly-worded governing principle on record: _"The whole retrieval design is grep-native, NOT vector-RAG... embeddings
+rejected"_ (`codex/11-project-management/doc-frontmatter-schema.md:49`). Any code-context-reduction work should evaluate
+grep/symbol-based techniques (ripgrep, ctags/AST-grep-style symbol lookup, import/dependency graphs derivable from
+existing tooling) FIRST, consistent with that principle — a vector-embedding code-retrieval layer is its own separate,
+explicitly-flagged decision if grep/symbol-based reduction proves insufficient, never something to adopt by default from
+an external reference.
+
 ## Todos
 
 - [x] [INFRA] P0. ✅ Add a `provider: Literal["anthropic", "deepseek"] = "anthropic"` field to the `Account` model
@@ -572,3 +622,30 @@ verifiable from a dev checkout. See each todo's own "Done when" below for what u
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid (infra tranche, dispatch agt-30721a) — Touches
   agent-orchestrator's own live routing/billing/credential infra; repeated dated operator holds + 2 documented real
   safety incidents from testing this code; highest-stakes remaining items need operator-supervised rollout.
+
+### Phase 2 todos (2026-07-30, added — none of the above touched or re-ordered)
+
+- [ ] [DATA] P1. Ratio-check the account-count/cost assumptions against real `accounts.json` + `/usage` data (6 real
+      Claude Max accounts as of 2026-07-30, not the stale "4" elsewhere in this doc or the external doc's generic "7") —
+      produce a real current cost-per-month and effective-token-value baseline before any further optimization work,
+      since every number in the external doc was generic/assumed, not measured against this fleet. Done when: a dated
+      Progress Log entry states the real per-account tier/cost and a computed monthly total.
+- [ ] [INFRA] P2. Generalize `AccountProvider` (`server/accounts.py`) from `Literal["anthropic", "deepseek"]` to an open
+      provider set (e.g. `openrouter`, `gemini`, `groq`, `sambanova`), reusing `select_account_for_spawn()`'s existing
+      eligibility/quota-adaptive/health-gate/mutual-fallback design rather than a new routing mechanism — and explicitly
+      NOT via OmniRoute or any other opaque gateway (see reconciliation note above). Done when: a second non-DeepSeek
+      provider can be registered and routed to under the same policy shape (opus/fable still hard-pinned to Claude),
+      proven the same way the DeepSeek pilot was — a real, isolated local pilot dispatch, not just unit tests.
+- [ ] [DATA] P2. Generalize the DeepSeek-specific health-gate ring (`_recent_spawn_failures`) to a per-provider map, so
+      a failing/rate-limited free provider degrades to the next-priority free provider before falling back to Claude
+      (the external doc's "alternate free provider" priority step, ahead of Claude escalation). Done when: a simulated
+      single-provider outage routes to a second free provider before falling back to Claude, with an activity-log event
+      recording the fallback chain.
+- [ ] [REVIEW] P2. Investigate grep/symbol-based code-context reduction for implementation-tier work (ripgrep,
+      ctags/AST-grep-style symbol lookup, import/dependency graphs) — per the retrieval-layer reconciliation note above,
+      evaluate this BEFORE any vector-embedding approach, consistent with the standing grep-native governing principle.
+      Done when: a measured before/after context-size comparison exists for at least one real implementation task class.
+- [ ] [OPERATOR] P3 (stretch). Evaluate self-hosted open-weight models (Kimi, Qwen Coder, DeepSeek open-weights) as a
+      further execution-cost layer once the multi-provider generalization above is proven — a GPU-hosting/infra-cost
+      business decision, tagged `[OPERATOR]` per the business/spend-judgment carve-out, not something to build
+      speculatively ahead of that decision.

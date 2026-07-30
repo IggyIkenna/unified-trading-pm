@@ -29,6 +29,7 @@ cadence: event-driven — read before EVERY local pilot/experiment launch, not o
 verifier:
   manual checklist below; the env-var table is verified against server/config.py's actual Field definitions, not assumed
 last_executed:
+  2026-07-29 pilot (the incident this runbook documents) — the checklist below did not exist yet at that time
 last_reviewed: 2026-07-30
 code_refs:
   [
@@ -45,7 +46,8 @@ execution:
     verifier:
       "manual checklist below; the env-var table is verified against server/config.py's actual Field definitions, not
       assumed",
-    last_executed: NEVER,
+    last_executed:
+      "2026-07-29 pilot (the incident this runbook documents) — the checklist below did not exist yet at that time",
   }
 ---
 
