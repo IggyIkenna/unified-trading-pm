@@ -48,7 +48,7 @@ related:
     /plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-29"
+last_updated: "2026-07-30"
 parent_epic: agent_operating_framework_master
 priority: P2
 assigned_vm: NA
@@ -158,17 +158,28 @@ class in a third script.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `generate_na_doc_tranche_inventory.py`'s `ao`/`ci`/`infra` membership branch to test
-      `asset_group` directly (matching the corrected 5-AG branches), removing the retired citation-grep mechanism.
-      **Done when**: `--tranche infra --json` excludes all 5 confirmed false positives (`ag_closeout_audit_rollout`,
-      `ao_consolidated_closeout`, `cross_cutting_consolidated_closeout`, `june_2026_vintage_audit_findings`,
-      `tradfi_consolidated_closeout`) and includes `infra_consolidated_closeout_2026_07_25.md`.
-- [ ] [SCRIPT] P2. Fix the `cross-cutting` branch's tautological `peer_cited` self-veto. **Done when**:
-      `--tranche cross-cutting --json` includes both `cross_cutting_consolidated_closeout_2026_07_25.md` and
-      `june_2026_vintage_audit_findings_2026_07_27.md`.
-- [ ] [TEST] P2. Add a regression test asserting (a) a tranche's own `{tranche}_consolidated_closeout_*.md` coordinator
-      doc is always a member of its own tranche, and (b) a doc is never assigned to a tranche solely because a DIFFERENT
-      tranche's closeout doc links/cites it in a `related:` list or footnote.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e.** `ao`/`ci`/`infra` membership branch now tests
+      `t in asset_group` directly (via `TRANCHE_ASSET_GROUP_VALUE` mapping `infra`->`infrastructure`), matching the
+      corrected 5-AG branches; the retired citation-grep mechanism (`_cited_basenames`/`CITE_RE`/`non_ag_cited`) removed
+      entirely. **Done-when confirmed live**: `--tranche infra --json` excludes all 5 confirmed false positives
+      (`ag_closeout_audit_rollout`, `ao_consolidated_closeout`, `cross_cutting_consolidated_closeout`,
+      `june_2026_vintage_audit_findings`, `tradfi_consolidated_closeout`) and includes
+      `infra_consolidated_closeout_2026_07_25.md`. Discovered via `/na-eligibility-audit ci` (this fix's own trigger):
+      `--tranche ci --json` went from 0 docs (hard zero, closeout archived 2026-07-28) to 28.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e.** Tautological `peer_cited` self-veto removed;
+      `cross-cutting` now tested via direct tag + `(parent_epic in DATA_EPICS or no other tranche already assigned)`.
+      **Done-when confirmed live**: `--tranche cross-cutting --json` includes both
+      `cross_cutting_consolidated_closeout_2026_07_25.md` and `june_2026_vintage_audit_findings_2026_07_27.md`.
+- [x] ✅ [TEST] P2. **DONE 2026-07-30 — unified-trading-pm@6228cff7e**,
+      `tests/unit/test_generate_na_doc_tranche_inventory.py` (7 cases):
+      `test_citation_in_a_peer_closeout_doc_does_not_confer_membership` proves both (a)
+      `infra_consolidated_closeout_2026_07_25.md` resolves to `['infra']` (a tranche's own closeout doc is always a
+      member of its own tranche) and (b) a `ci`-tagged doc merely cited in that same infra closeout's body does NOT also
+      pick up `infra`. Plus `test_non_ag_tranche_membership_needs_no_closeout_doc` (parametrized ci/ao/infra, no
+      closeout file written at all), `test_infra_tranche_asset_group_value_is_infrastructure_not_infra`,
+      `test_ag_tranche_membership_unaffected_by_the_fix`,
+      `test_cross_cutting_solo_tag_is_assigned_without_data_epic_or_citation`,
+      `test_ag_tagged_doc_with_cross_cutting_is_not_double_counted_unless_data_epic`. All 7 pass.
 - [ ] [SCRIPT] P3. Evaluate bundling this fix with the sibling script's fix
       (`generate_ag_closeout_audit_candidates_ao_ci_infra_membership_stale_after_closeout_archival_2026_07_29.md`) given
       the near-verbatim shared helper shapes — consider extracting one shared membership-test module both scripts
