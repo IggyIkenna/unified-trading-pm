@@ -138,10 +138,18 @@ become its own plan — this issue doc is the durable record of the finding and 
       steps" above); the root cause is still unfixed and `_MAX_DAYS=30` would still reproduce the original OOM if a user
       requests it.
 
-- [ ] [CODE] P1. **Ship reader-side concurrent/batched GCS fetch** in `deployment-api`'s `_read_alerting_service_sync` —
-      durable stopgap that bounds the OOM risk for any date range, independent of the writer-side fix below. Done when:
-      a request for the full `_MAX_DAYS` range completes without the memory/latency profile that caused the 2026-07-22
-      incident.
+- [x] ✅ [CODE] P1. **Ship reader-side concurrent/batched GCS fetch** in `deployment-api`'s
+      `_read_alerting_service_sync` — durable stopgap that bounds the OOM risk for any date range, independent of the
+      writer-side fix below. Done when: a request for the full `_MAX_DAYS` range completes without the memory/latency
+      profile that caused the 2026-07-22 incident. — `deployment-api@79a1d36`: listing stays a sequential per-date walk
+      (cheap), but downloads across the whole requested window now run on a `_GCS_FETCH_MAX_WORKERS=32`-bounded
+      `ThreadPoolExecutor` instead of one sequential HTTP round-trip per object — the same bounded-fan-out pattern
+      already used for bulk GCS ops elsewhere in deployment-api and in `unified_trading_library.manifest_consolidator`.
+      A single object's download failure no longer aborts the rest of its date's batch (per-object try/except,
+      best-effort merge preserved). Unit-verified: `TestReadAlertingServiceSync::test_concurrent_fetch_merges_all_blobs`
+      (50 concurrently-fetched blobs all merge, none dropped by the fan-out) and
+      `::test_single_object_failure_does_not_drop_other_blobs` (one failing download doesn't blank the rest); full
+      `quality-gates.sh` green on the shipped SHA.
 - [ ] [CODE] P2. **Batch alerting-service's writes into one JSONL-per-day object**, matching the already-proven
       cicd-events pattern, as the real root-cause fix — needs either migrating the ~277k existing per-event objects or
       the reader supporting both shapes during a transition. Sequenced after the reader-side fix (todo above), not
