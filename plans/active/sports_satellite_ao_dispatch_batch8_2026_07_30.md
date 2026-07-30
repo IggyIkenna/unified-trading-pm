@@ -130,20 +130,27 @@ Read in full (2026-07-30). Parts 2 and 3 (the 2026-07-26 line-cap split siblings
 
 ## Todos
 
-- [ ] [DIAG] P1. **Root-cause the 2025-12-18 / 2025-12-31 in-window bucketing failure (§B1 residual)** — ~360 in-window
-      (0-24h-to-kickoff) odds observations on EACH of 2025-12-18 and 2025-12-31 fail to bucket into any `TIER1_HORIZONS`
-      slot, while the structurally-similar quiet date 2025-12-24 legitimately has zero. Likely candidates per the source
-      doc: a fixture-mapping join dropping them, or a secondary guard beyond `bm<=0`. Do **NOT** "fix" this by
-      relabelling the manifest — root-cause first. Once understood: if 2025-12-24 is confirmed to have no genuine
-      data-corruption cause of its own, relabel ONLY 2025-12-24 as `empty_confirmed` (2025-12-18 and 2025-12-31 stay
-      `attempted_failed` — that is the honest signal of the real bug). Note: `2025-12-18` is already the pinned
-      `SPORTS_SMOKE_DATES.known_buggy_odds` reference constant (`features-service@84cb4613`) — that pin documents the
-      date as known-bad for smoke tests, it does NOT root-cause or fix the underlying bug; this todo is the
-      still-missing root-cause step. **Done when**: the root cause is identified and documented (not just re-labelled),
-      2025-12-24 is correctly relabelled if the investigation supports it, and 2025-12-18/2025-12-31 stay
-      `attempted_failed` with the root cause noted inline. (repo: market-data-processing-service or features-service,
-      whichever owns the bucketer/loss-guard code path — confirm from `odds_loss_guard.py`/`loss_guard.py`). Source:
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B1 (lines 286, 289).
+- [x] [DIAG] P1. ✅ **Root-caused 2026-07-30** — NOT a fixture-mapping join drop, NOT a hidden secondary guard. Pulled
+      the real raw `batch_odds_api` parquet for 2025-12-18/12-24/12-31 from
+      `market-data-tick-sports-prd-central-     element-323112` and replayed `SportsBucketAssignmentAdapter`'s exact
+      guard chain (fixture-identity resolve → causality → 48h zombie-staleness cap → 7-day kickoff-past cap →
+      `assign_horizon_buckets_vectorised`). Every one of the 316 (12-18) / 310 (12-31) in-window
+      (`0<=bm_minutes_to_kickoff<=1440`) rows survives every secondary guard untouched and reaches horizon assignment,
+      where 0/316 and 0/310 get a valid `horizon_idx`. Root mechanism: BOTH dates have exactly ONE `fetch_utc` value
+      that day (noon UTC), and the only in-window fixtures are 2 A-League matches per date whose `bm_minutes_to_kickoff`
+      (~1144.5-1266.4 for 12-18, ~964.7-1206.7 for 12-31) fall squarely in the 615-minute dead zone (765-1380min)
+      between `TIER1_HORIZONS`' T-12h `[675,765]` and T-24h `[1380,1500]` acceptance windows — a genuine capture-cadence
+      (single daily fetch, vs. the working control date 2025-12-20's 114 distinct fetch times) × sparse-target-grid
+      interaction, not a bug in the join or an extra guard. Manifest-state check (both `market-data-tick-sports-prd`'s
+      `odds_horizon_bucket` + `features-sports-prd`): NO `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` row of any
+      `capture_status` exists for any of the 3 dates — the source doc's quoted `attempted_failed` log line was almost
+      certainly from `reprocess_sports_odds.py --dry-run` (which only persists to the manifest `if not dry_run`), never
+      actually written. Relabeling was therefore NOT performed — nothing live exists to relabel; the original
+      2025-12-24-only relabel guidance still stands as correct for whenever a real (non-dry-run) run happens. Full
+      writeup + evidence: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B2 (DIAG + DATA todos, both
+      flipped 2026-07-30). Note: `2025-12-18` remains the pinned `SPORTS_SMOKE_DATES.known_buggy_odds` reference
+      constant (`features-service@84cb4613`) — that pin still just documents known-bad, this todo supplies the root
+      cause. Source: `issues/sports_features_layer_findings_sweep_2026_07_18.md` §B1 (lines 286, 289).
 
 - [ ] [CODE] P1. **Narrow the cross-asset-group junk-symbol guard so it stops rejecting legitimate non-ASCII sports team
       names (§D).** `instruments-service/instruments_service/engine/orchestrator/venue_core.py:394-408`

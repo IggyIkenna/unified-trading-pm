@@ -283,12 +283,47 @@ A second hypothesis was also eliminated on the way: that the 18,480 rows were th
 `venue=ODDS_API` meta shape (`instrument_type=sport`). Measured — the raw is 468+ files of `instrument_type=odds` under
 real bookmaker venues (BOVADA/PINNACLE/LADBROKES_UK/…), i.e. the fully consumable shape.
 
-- [ ] [DIAG] P1. Root-cause why ~360 in-window observations on 2025-12-18 and 2025-12-31 fail to bucket while 2025-12-24
-      legitimately has none. Likely candidates: a fixture-mapping join dropping them, or a secondary guard beyond
-      `bm<=0`. Do NOT "fix" this by relabelling the manifest. **2026-07-30 batch8 triage**: extracted as a tracked todo
-      in `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (combined with the item below).
-- [ ] [DATA] P2. 2025-12-24 alone may legitimately become `empty_confirmed` once the above is understood — but only that
-      date, and only after the bucketing bug is fixed, so the two questions are not conflated again.
+- [x] [DIAG] P1. ✅ ROOT-CAUSED 2026-07-30 (`sports_satellite_ao_dispatch_batch8_2026_07_30.md` todo 1) — **NOT a
+      fixture-mapping join drop and NOT a hidden secondary guard.** Pulled the real raw `batch_odds_api` parquet for all
+      3 dates from `market-data-tick-sports-prd-central-element-323112` and replayed the adapter's exact guard chain
+      (`_materialise_fixture_identity` → causality → 48h zombie-staleness cap → 7-day kickoff-past cap →
+      `assign_horizon_buckets_vectorised`). Every one of the 316 (2025-12-18) / 310 (2025-12-31) in-window
+      (`0<=bm_minutes_to_kickoff<=1440`) rows survives ALL secondary guards intact (0 dropped by causality/staleness/
+      kickoff-past on either date) and reaches the per-bucket horizon-cap check — where 0/316 and 0/310 get assigned a
+      valid `horizon_idx`. Root mechanism: on BOTH dates `fetch_utc` has exactly **1 distinct value** (2025-12-18 12:00
+      UTC / 2025-12-31 12:00 UTC — a single daily fetch, confirmed live), and the ONLY fixtures kicking off within the
+      following 24h are exactly **2 A-League (`A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE`) matches per date** (12-18:
+      Macarthur FC v Brisbane Roar ko 2025-12-19T07:00Z + Western Sydney Wanderers v Auckland FC ko 2025-12-19T09:00Z;
+      12-31: Auckland FC v Newcastle Jets FC ko 2026-01-01T04:00Z + Western Sydney Wanderers v Macarthur FC ko
+      2026-01-01T08:00Z). Their `bm_minutes_to_kickoff` clusters at **~1144.5-1146.4 / ~1264.5-1266.4** (12-18) and
+      **~964.7-967 / ~1204.7-1206.7** (12-31) — all squarely inside the **615-minute dead zone (765-1380 min) between
+      `TIER1_HORIZONS`' T-12h window `[675,765]` and T-24h window `[1380,1500]`** (`bucket_assignment_     adapter.py`
+      `TIER1_HORIZONS`/`_HORIZON_CAPS` — 8 narrow accept-windows totaling ~235 of the 1440 pre-match minutes, by
+      design). Control date 2025-12-20 (working, 83.6% raw-bucketable) has **114 distinct `fetch_utc` values** spread
+      across the day vs these 2 dates' single noon snapshot — with many more snapshots-per-fixture, far more land inside
+      SOME target's narrow cap by chance. So the "REAL BUG" framing holds exactly as originally measured: real, valid
+      pre-match odds WERE captured for those A-League fixtures, but the single-fetch cadence on these 2 quiet dates
+      combined with `TIER1_HORIZONS`' sparse target grid means literally none of it could ever land in a bucket — a
+      genuine capture-cadence/target-density interaction, not a join bug or an extra guard. **Manifest-state
+      correction**: queried the live availability manifest directly in BOTH candidate buckets
+      (`market-data-tick-sports-prd-...` `odds_horizon_bucket` data_type, and `features-sports-prd-...`) for
+      `A_LEAGUE`/`SOCCER_AUSTRALIA_ALEAGUE` on all 3 dates — **no row of ANY capture_status exists** (not `captured`,
+      not `attempted_failed`, not `empty_confirmed`); the shard is simply unregistered.
+      `scripts/reprocess_sports_     odds.py` only writes `attempted_failed` to the manifest `if not dry_run:` (script
+      L958/L980) and its own docstring's usage example (L40) is a `--dry-run` invocation — so the `attempted_failed`
+      state quoted in this doc's §B2 repro log was very likely a **dry-run diagnostic that was never persisted**, not a
+      live manifest row. There is therefore currently nothing live to relabel for EITHER date — see the P2 item below.
+- [x] [DATA] P2. ✅ 2026-07-30 — **premise revisited, not executed.** The plan was to relabel 2025-12-24 alone to
+      `empty_confirmed` once the bucketing question above was understood. Live-checked both candidate manifests
+      (`market-data-tick-sports-prd`'s `odds_horizon_bucket` + `features-sports-prd`) for an `A_LEAGUE`/
+      `SOCCER_AUSTRALIA_ALEAGUE` row on 2025-12-24: **none exists** (see the DIAG finding above — the shard was never
+      registered, `attempted_failed` or otherwise, for any of the 3 dates). There is nothing live to relabel today. If
+      `reprocess_sports_odds.py` is next run for real (non-dry-run) against these dates: 2025-12-24 has **0** in-window
+      rows at all (genuinely nothing to bucket — honest absence, `empty_confirmed` is correct) while
+      2025-12-18/2025-12-31 have 316/310 in-window rows that are legitimately `attempted_failed`-worthy per the root
+      cause above (real data existed but landed in the T-12h/T-24h dead zone) — so the ORIGINAL guidance (2025-12-24
+      only, never 12-18/12-31) still stands as the correct rule for whenever that real run happens; it just doesn't
+      apply to any manifest state that exists right now.
 - [x] [DESIGN] P3. ~~~95% of captured odds are unbucketable~~ **RETRACTED — I generalised from three anomalous dates.**
       Operator challenged the number as implausible ("seems weird thats data corruption? we need to refetch odds!?").
       They were right that it did not add up. Measured against normal match days:
