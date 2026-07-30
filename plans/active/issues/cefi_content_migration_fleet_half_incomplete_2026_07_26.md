@@ -461,3 +461,10 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   (44,600/312,875 files, 3839s elapsed, clean `VM_SHUTDOWN_ON_COMPLETION` self-delete) — a fourth instance of this
   session's OOM class on a relaunch, further corroborating the machine-type fix isn't reliably applying/holding across
   relaunches. Fleet now at 17 shards. No action taken (monitoring-only, per standing self-correction).
+- **2026-07-30 update (slot-15, ~50 min later, 15:44Z)**: shards 17 and 21 (both `-134500`) both hit the freeze-class
+  failure (NOT `rc=137` — `run.log` object `Update time` frozen at 14:54:30Z/14:54:44Z respectively, confirmed via
+  `gsutil stat`, silent for ~50 min at check time) — the same slow whole-VM freeze signature slot-7/slot-3/slot-15 have
+  independently confirmed multiple times already this session. Shard 17 was already gone (self-reaped) by the time this
+  check ran; shard 21 caught mid-`STOPPING`. Both were making real progress before freezing (17: 19,400/157,497 files;
+  21: 31,400/158,501 files). Fleet now at 15 shards. Per standing self-correction: **no relaunch/kill action taken** —
+  documenting only, deferring to the `data_pipeline_failure` fleet-monitor.
