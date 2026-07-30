@@ -479,11 +479,31 @@ terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-a
   join — against a stale index: ran green, wrote nothing) · `stale_output` (index older than budget while shards wait) ·
   `empty` (genuinely empty bucket) · `unknown`. When `latest.json` is present its verdict is authoritative; absent, the
   endpoint derives it from index freshness + the Cloud Run execution join (`latest_execution_by_job`).
-- **Per-(kind, AG) cadence staleness budget** — the Cloud Scheduler cron is a uniform `*/1` for every consolidator, so
-  the real budget is the `MANIFEST_CONSOLIDATED_STALENESS_SEC` each producer VM sets: **live market-data ticks
-  (defi/tradfi/sports/prediction) = 120s; every other consolidator = 86400s** (matches all producer launchers + cefi's
-  daily batch). Carried per catalog entry (`gen_consolidator_catalog.py` `_staleness_budget`), read by `_entry_budget`;
-  each job is judged against its own cadence, not a uniform 120s.
+- **Per-(kind, AG) cadence staleness budget — CORRECTED 2026-07-30
+  (manifest_consolidator_cadence_cost_audit_2026_07_20.md).** The "every other consolidator = 86400s" claim below was
+  WRONG — it never matched the actual enforcement code. The REAL code-level override,
+  `unified_trading_library.manifest_writer._staleness_budget.AG_STALENESS_BUDGET_SEC` (read by
+  `read_availability_index()`/`assert_consolidator_healthy()` via `_state.py`'s `_resolve_consolidated_staleness_sec()`
+  — this is the gate every REAL caller hits, not just the cockpit display), is
+  `{"cefi": 86400, "sports": 1800, "defi": 3600}` (sports added 2026-07-24, defi added 2026-07-29). Every OTHER
+  asset_group/bucket — tradfi, prediction, and every asset-group-less flat bucket (`strategy-store`, `execution-store`,
+  `ml-store`, `features-calendar`) — falls through to the Pydantic field default of **120s**, unless the SPECIFIC
+  reading process happens to export `MANIFEST_CONSOLIDATED_STALENESS_SEC` itself (set ad hoc by ~25 one-off backfill-VM
+  launchers, `deployment-service/scripts/vm/launch-*-backfill-vm.sh`, all `=86400` — NOT a durable per-bucket guarantee
+  for every reader, e.g. a dashboard or health check that never sets it). `deployment-api`'s cockpit-only
+  `_AG_STALENESS_BUDGET_SEC` (`deployment_api/routes/health_consolidator.py`) mirrors the SAME 3-entry dict (duplicated,
+  not imported — deployment-api depends on UTL, not vice versa).
+
+  The Cloud Scheduler cron is **NO LONGER a uniform `*/1`** either (RULED 2026-07-29 "proceed", shipped 2026-07-30): 12
+  of the 18 consolidator jobs (`manifest_consolidator_cadence_cost_audit_2026_07_20.md` found cost tracks INVOCATION
+  COUNT, not data volume — ~$180/day on a uniform per-minute cadence) now run **hourly** (`0 * * * *`) instead of
+  `*/1 * * * *`: `instruments-{cefi,tradfi,defi,prediction}`, `market-data-cefi`,
+  `features-{cefi,defi,tradfi,calendar}`, `strategy`, `execution`, `ml-training-artifacts`
+  (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`'s `manifest_consolidator_schedule` local). The
+  4 live market-data buckets (defi/tradfi/sports/prediction) and `instruments-sports`/`features-sports` (an
+  actively-written bucket at audit time) stay on `*/1`. The liveness watchdog (below) was split into a matching
+  fast/slow tier pair so the hourly-cadence buckets don't false-trip `CONSOLIDATOR_DOWN` ~5min into every gap.
+
 - **Backlog + oldest-pending** — `per_vm_shard_backlog` returns `(pending, total, oldest_pending_at)` from ONE prefix
   list: pending shards, fan-in width, and the oldest un-absorbed shard's age ("how long has the merge been behind").
 - **Absolute index snapshot** — row count (cheap parquet-footer ranged read, never downloads the whole index) + file
@@ -650,6 +670,11 @@ removed.
   (`ManifestConsolidatorStaleError` / `CONSOLIDATOR_DOWN`), recovery is tracked via the autonomous-recovery matrix, and
   alert routing still uses the same `CRITICAL` → PagerDuty + Telegram channel path. The registry-keyed `refetch_action`
   pattern does NOT apply to the consolidator (it is infrastructure, not a data source, and has its own watchdog).
+  **STALE as of 2026-07-30 — see the corrected § above** ("Per-(kind, AG) cadence staleness budget"): sports (1800s,
+  2026-07-24) and defi (3600s, 2026-07-29) have SINCE gained their own code-level overrides too, so "every OTHER
+  asset_group keeps the 120s default" no longer holds for those two — only tradfi/prediction/the flat Group-B buckets
+  still fall through to 120s (absent a reader-side env override). Kept this entry's original 2026-07-12 finding intact
+  above (historically accurate at the time) rather than rewritten, per this doc's own dated-finding convention.
 
 ## Verification recipe
 
