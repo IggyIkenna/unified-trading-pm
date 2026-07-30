@@ -84,3 +84,10 @@ EXEMPT reasons accordingly.
 
 > **Decision (operator, 2026-07-02):** not needed right now. Captured here so the parent plan can archive without losing
 > the finding. Revive by scheduling these todos.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — carries an explicit dated operator decision ('**Decision
+  (operator, 2026-07-02):** not needed right now. … Revive by scheduling these todos') and is additionally
+  `locked_by: live-defi-rollout`, which blocks autonomous archival/reclassification without an `[unlock-plan]`. Same
+  ruling in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.

@@ -114,3 +114,12 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
   (memory/CPU contention) is a shared driver with the host-oversubscription flag.
 - Sibling: /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md (the orphaned
   commit terminal state); this doc adds the specific reaper-vs-in-flight-quickmerge mechanism that produces it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are held by established rulings in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`: the `[INFRA] P1` reaper fix is named in the conflict-gated
+  worker-liveness cluster, the `[INFRA] P1` `/done` on-origin gate 'must land as one change' with
+  `orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`'s `/done` item and interacts with the unresolved
+  operator-merge-gate question, and the `[INFRA] P1` slot-8/slot-9 commit recovery is in the operator-decision list
+  ('needs foreign-worktree access plus a judgment call on whether specific commits are superseded').

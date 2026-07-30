@@ -247,3 +247,12 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
       WIP under a clear message, **diff it against what slot 11 lands for batch2-001** to determine unique-vs-duplicate,
       push only the unique delta (or record it as superseded). **Done when**: the WIP is committed/pushed or recorded as
       fully superseded by slot 11's landed batch2-001, with the diff-check noted.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 6 open todos are covered by two established rulings in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`. The 2 sweep todos are conflict-gated ('adding a NEW automatic caller
+  of `commit_and_push_dirty_repos` … while the operator-merge-gate bypass is unresolved is exactly the compounding this
+  skill's non-batchable taxonomy warns about'); the 4 per-slot recovery todos are in the operator-decision list ('each
+  needs foreign-worktree access plus a judgment call on whether specific commits are superseded'). Slot-6's 2 dangling
+  GMX objects are GC-eligible ~2026-08-08 — see the orphaned-commit-recovery issue doc filed by this run.

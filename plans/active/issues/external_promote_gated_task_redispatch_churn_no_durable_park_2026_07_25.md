@@ -93,6 +93,40 @@ condition fires.
       that is a separate bug; if not, workers should stop using them for anything that must outlast a re-derivation
       tick.
 
+## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
+
+**BLOCKED-OPERATOR-DECISION — file-collision overlap on the durable-park mechanism. Recommend option A.**
+
+Both open `[BACKEND] P3` todos were verdicted **RECLASSIFY** in Phase 1: they are bounded, with stated done-whens, no
+operator gate and no undecided authority call — todo 1 even names the proven mechanism to reuse (the
+`auto_unpark__<task-id>` prereq that `sports_satellite_ao_dispatch_batch2-011` already uses and the dispatcher already
+honors), and todo 2 is a pure code-read-and-document with a determinable outcome.
+
+**They were NOT flipped, because Phase 2's conflict-check did not clear them.** Both sides:
+
+- **This doc** would change the dispatcher/park path so an external-ref gate produces a durable park, and would document
+  why a `priority_override` park does not survive re-derivation while a named `auto_unpark__` prereq does.
+- **`/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`** (ACTIVE, `assigned_vm: planning`) carries an OPEN
+  `[BACKEND] P3`: "Audit every `/skip-current-task` `reason_code` for a silent, unpaged durable park … Read the skip
+  handler in `agent-orchestrator/server/routes/slots_ops.py` and `server/auto_park.py::maybe_auto_park` (plus
+  `_ESCALATING_REASON_CODES`)". It is **AUDIT-ONLY** by its own wording ("do NOT change `auto_park.py` in this todo") —
+  so this is a file-collision + sequencing overlap rather than a verbatim duplicate claim, the same class batch1 itself
+  used to defer the AutoSpawn no-eligible-worker gap ("FILE-COLLISION-gated only").
+
+Notably, batch1's audit todo ends "if the audit finds an uncovered code, file it as a NEW tracked todo in the source doc
+instead" — an external-promote gate is plausibly exactly such an uncovered code, so the two could converge into one item
+rather than two.
+
+- **A: Sequence — let batch1's audit-only pass land first, then dispatch this doc against its findings. [WORKER REC]**
+  The audit is read-only and cheap, it enumerates every `reason_code`'s park/paging coverage, and its output is the
+  natural specification for this doc's fix. Zero collision risk and it may fold both todos into one well-scoped change.
+- **B: Flip this doc to `planning` now** and rely on the two workers not colliding (batch1's todo is read-only, so the
+  risk is moderate rather than severe) — faster, but two agents would be reasoning about `auto_park.py` concurrently
+  with no shared conclusion.
+- **C: Fold these two todos into `ao_satellite_ao_dispatch_batch1_2026_07_26.md`** so one plan owns the whole
+  `auto_park.py` surface.
+- **Other**: operator may specify a different sequencing.
+
 ## Triage / charter note
 
 Main (agt-52bb99) diagnosed read-only (per-task `/api/backlog` + `/blockers` + `git merge-base` ancestry) and is
@@ -102,3 +136,10 @@ DEVOPS-owned treadmill fix will do), but a real, repeatable dispatch-noise + thr
 up other work" guidance by handing the SAME gated task back to each freed worker. Filed per the big-finding triage rule
 (cross-cutting dispatch gap, recurred 3x in one window). The durable-park mechanism already exists (auto_unpark) — this
 is about routing external-gate tasks through it instead of through the churn path.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: Both todos RECLASSIFY-verdicted in Phase 1 but **HELD at Phase 2 (conflict) —
+  parked as BLOCKED-OPERATOR-DECISION**, see the `## Deferred — HELD by the /na-eligibility-audit ao conflict-check`
+  section above for both sides, the three options and the marked recommendation. `assigned_vm` deliberately left `NA`
+  pending that ruling.

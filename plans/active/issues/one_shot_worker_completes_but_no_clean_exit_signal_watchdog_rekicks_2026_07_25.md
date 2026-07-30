@@ -140,3 +140,10 @@ inspection of slot 2 and is charter-barred from tmux send-keys to worker panes, 
 and from editing AO runtime state — so the fix is **BACKEND/DEVOPS-owned**. Severity **P3**: every kick self-healed and
 nothing was blocked (bounded blast radius = wasted kick churn + masked idleness on one slot), but the pattern is
 confirmed, recurrence-prone, and points at a real one-shot-lifecycle exit-signal gap worth closing when cycles allow.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the sole open `[REVIEW] P3` is explicitly observation-gated
+  ('Not observed in the original incident … worth its own scoped fix **if it's ever observed live**'), and the doc sits
+  inside the worker-liveness / watchdog-escalation cluster that `ao_satellite_ao_dispatch_batch1_2026_07_26.md` holds in
+  its conflict-gated Deferred list. Its `[BACKEND]` half already shipped `agent-orchestrator@0e9ce0b`.

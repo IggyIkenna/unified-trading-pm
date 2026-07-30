@@ -39,9 +39,10 @@ source:
   "operator relayed the slot-host-symmetry DRIFT alert (17 consecutive 15-min pages, 2026-07-24 17:45-21:15 UTC) and the
   full agent-orchestrator-alerts Slack history same session; root-caused live via SSM against the orchestrator VM
   (i-0c9b283b31d6b5ca7), live-remediated, and a real code gap (missing RECOVERED bookend) fixed same session"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: infra
+assigned_role: infra
 drift_direction: advance-code
 resolved_by:
 locked_by:
@@ -159,3 +160,19 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
       off-VM operator laptop is unaffected even if it happened to have something on local port 8765. Combined fix +
       evidence detailed in the sibling doc's matching todo:
       `/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — the highest-value now-actionable item
+  in this tranche. The sole open `[DEVOPS] P1` (pin `ORCHESTRATOR_JWT_SECRET_GCS`, mirroring the already-pinned internal
+  secret/keypair) was explicitly retagged out of `[OPERATOR]` on 2026-07-28: its only blocker was an operator-chosen
+  maintenance window, which CLAUDE.md's 2026-07-28 Governance ruling removed ('Maintenance-window restarts (e.g.
+  orchestrator) skip operator scheduling pre-live-trading — group + do now, brief downtime OK'). The doc itself now
+  instructs 'Dispatch directly'. Root cause of a measured ~4.5h fleet-wide 17-slot outage that recurs on EVERY deploy
+  (the unit runs uvicorn `--reload --reload-dir server`). Done-when is crisp and machine-checkable (capture a token,
+  restart, re-use it, confirm it still validates + `/api/healthz` healthy). Cloud identities are IAM-self-service.
+  **Phase-2 conflict-check**: the only hit is `ao_consolidated_closeout_2026_07_25.md`'s Progress-Log prose naming it
+  'Highest-value now-actionable orphan … sitting unclaimed by any covering plan' — a digest observation, and that doc
+  states outright that 'being listed as a Source below is discoverability, NOT dispatch'. No competing todo exists.
+  CLEAR. Set `assigned_role: infra`, `execution_scope: orchestrator-agent`. Creates a GCS secret object and restarts a
+  service — no delete, no VM launch, so no `[OPERATOR]` delete-safety gate applies.

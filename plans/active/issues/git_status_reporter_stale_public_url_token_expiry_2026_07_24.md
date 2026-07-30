@@ -114,3 +114,12 @@ the public URL + token, so the fix must be conditional, not a blanket default fl
 - Non-blocking / no-page disposition confirmed with review (agt-af7186, msg 1867) and main on 2026-07-24.
 - Sibling reporter issue (different failure mode — mid-FF-pull dirty flicker):
   /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the one open `[INFRA] P3` is re-minting `~/.orch_token`, a
+  credential operation, already ruled 'a distinct credential operation' in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred list. Noted but NOT verified this run (no live orchestrator
+  access from an offline audit worktree): the durable loopback fix shipped `unified-trading-pm@421262a` on 2026-07-26
+  removes the on-VM token dependency entirely, so this stopgap may already be moot for the central host — confirm
+  `reporter_stale=false` live before closing it.

@@ -121,8 +121,54 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       then) is `dispatched`/`done` before its downstream "Resume cron" sibling ever leaves `queued`. (repo:
       agent-orchestrator)
 
+## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
+
+**BLOCKED-OPERATOR-DECISION — same-file, causally-entangled overlap. Recommend option A.**
+
+This doc's `[BACKEND] P1` was verdicted **RECLASSIFY** in Phase 1 (contrary to the doc's own `Recommended decision`
+paragraph): "root-causing unfamiliar dispatch logic" is normal `backend_engineer` work, not an operator judgment call,
+and the todo carries a crisp machine-checkable done-when (`quality-gates.sh` green + a new regression test that fails
+pre-fix and passes post-fix) plus three enumerated hypotheses. The doc's own NA rationale conflates "I, a
+`data_engineering` worker, cannot do this" with "no AO worker can" — the doc even names the right craft.
+
+**It was NOT flipped, because Phase 2's conflict-check did not clear it.** Both sides:
+
+- **This doc** wants a worker in `agent-orchestrator/server/regen_backlog_from_plan.py` to root-cause + fix
+  `_wire_sequential_prereqs`. Its own hypothesis #1 is that the prereq wiring "keys off stale ordinals rather than
+  re-deriving the live document-order chain on every regen".
+- **`/plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md`** (ACTIVE,
+  `assigned_vm: planning`) carries an OPEN `[BACKEND] P2`, RULED 2026-07-28 into normal fully-scoped AO work, to replace
+  positional task-ids with content-derived ids across the FULL blast radius — explicitly including
+  "`existing_ids`/`existing_briefs` bookkeeping in `regen_backlog_from_plan.py`".
+
+That is the same file AND the same ordinal-derivation machinery this doc's hypothesis #1 suspects. Dispatching both
+concurrently violates the concurrent-todos-must-touch-different-files rule, and the id rewrite could independently fix
+or invalidate hypothesis #1 — so which lands first changes what the other worker even finds. Per the conflict-check SSOT
+§ 3, a conflict is never resolved by guessing which claim wins.
+
+**Urgency is real and should weigh on the sequencing decision, not be lost:** this doc's own Progress Log records the
+stall blocking a SECOND in-flight plan (`prediction_satellite_ao_dispatch_batch4_2026_07_26.md`'s `-023`, stuck since
+2026-07-29T01:37Z) with 3+ slots burning ~14h on the same root cause, and the
+`uts-prod-manifest-consolidator-market-data-prediction-cron` still PAUSED.
+
+- **A: Sequence — land the content-hash task-id rewrite first, then re-test this prereq chain against the new ids.
+  [WORKER REC]** Cheapest and lowest-risk: the rewrite is already ruled and scoped, one worker owns the file, and the
+  re-test may show the bug is already gone (hypothesis #1 would be resolved by construction). Pair it with the pragmatic
+  unblock this doc's own Progress Log already proposes — have any `data_engineering` worker directly execute
+  `mtds_available_at_cross_asset_backfill-001` (its prerequisites are all already checked done), which unblocks both
+  stalled plans immediately without touching AO code at all.
+- **B: Flip this doc to `planning` now and accept the same-file collision risk**, relying on `sequential: true` in each
+  doc separately (which does NOT serialise ACROSS docs — the collision would be real).
+- **C: Fold this doc's todo INTO `regen_positional_task_ids_not_content_stable_2026_07_17.md`** as an additional
+  same-file todo so one `sequential: true` plan owns the whole file. Cleanest long-term, but rewrites another active
+  plan's scope.
+- **Other**: operator may specify a different sequencing.
+
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY-verdicted in Phase 1 but **HELD at Phase 2 (conflict) — parked as
+  BLOCKED-OPERATOR-DECISION**, see the Deferred section directly above for both sides, the three options and the marked
+  recommendation. `assigned_vm` deliberately left `NA` pending that ruling.
 - 2026-07-29 (slot 14, data_engineering): found + filed. Declined to execute `-006` as dispatched (documented in the
   parent plan's own Progress Log). Not yet root-caused in AO code — out of data_engineering craft scope; needs a
   backend_engineer pass per the Recommended decision above.

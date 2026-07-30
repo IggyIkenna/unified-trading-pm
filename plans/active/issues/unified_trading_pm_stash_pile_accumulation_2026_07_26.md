@@ -63,3 +63,10 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 ## Codex SSOTs
 
 `/codex/05-infrastructure/per-tab-worktrees.md` (multi-agent safety — inherited-dirty-WIP liveness gating).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the single `[DATA] P2` self-declares the disqualifying property
+  verbatim: 'This is a genuinely open-ended judgment call (per-entry content review), not a bounded fact-check — best
+  done interactively, not blind-dispatched.' Correct on its merits: it requires per-entry drop/keep decisions on
+  possibly-foreign WIP, which the multi-agent safety HARD RULE protects ('never `git stash drop` a foreign WIP').

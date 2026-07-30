@@ -262,3 +262,12 @@ evidence must cite the SHA it authored, verified against the task's touched file
 resets worker branches to origin is a silent data-loss surface — the worker reports DONE, the session dies, and the
 commit evaporates with no error. Belongs under `/codex/05-infrastructure/per-tab-worktrees.md` invariants (HEAD is
 ancestor-or-equal of origin — the fix is to PUSH-then-reconcile, never reset-over-unpushed).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid **but flagged as this run's top finding** — the doc's own
+  `⚠️ DISPATCH GAP` banner escalates routing to the operator as a three-way choice ((a) migrate into a dispatched plan,
+  (b) route a worker explicitly, (c) authorize main to run the recovery), which is exactly the authority call this audit
+  must not make unilaterally. Execution also needs cross-slot worktree access to `.tabs/{9,12,13}/**` on
+  `ip-172-31-5-118`, which the multi-agent safety HARD RULE bars. The P1 data-loss exposure is real and ageing — see
+  `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.

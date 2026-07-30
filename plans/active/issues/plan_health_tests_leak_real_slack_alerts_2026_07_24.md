@@ -160,12 +160,25 @@ whole suite (1609 passed).
       here): `AutoSpawn`'s tmux-spawn call could explicitly `unset AGENT_ORCHESTRATOR_SLACK_WEBHOOK` before launching a
       new slot session, so a FUTURE test class that forgets to mock Slack doesn't inherit a working webhook either — but
       the current fix already prevents the concrete flood this issue was filed for.
-- [ ] [SCRIPT] P3. Add a `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback to `scripts/dev/slack-read-channel.py` (gcloud
-      ADC stays primary; env var is the degraded path) — every gcloud identity available in this session hit either
-      `PERMISSION_DENIED` on `secretmanager.versions.access` or a stale-token reauth prompt that can't run
-      non-interactively, and the operator supplied the token directly from `.act-secrets` instead. Attempted 2026-07-24
-      (diff written, syntax-validated) but blocked shipping by an UNRELATED pre-existing `quality-gates.sh` failure:
-      STEP 5.101 (`no_empty_string_fallback_baseline`) reports 320 sites > baseline 319, citing
+- [ ] [SCRIPT] P3. **⚠️ BLOCKER CLEARED + DIRECTION SUPERSEDED — this todo is NOT dispatch-ready as written (citation
+      added by `/na-eligibility-audit ao` 2026-07-30; doc deliberately left `assigned_vm: NA` for that reason).** Two
+      corrections recorded in `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred section: **(1)
+      the stated blocker has CLEARED** — measured 2026-07-26,
+      `check_no_empty_string_fallback.py --scope unified-trading-pm` reports `319 (== baseline)`, so the 320>319 ratchet
+      breach that forced the revert is resolved and no longer blocks shipping. **(2) The prescribed fix direction is
+      superseded** — adding an `os.getenv()`-backed env-var fallback is a QG-BANNED pattern
+      (`codex/06-coding-standards/`), so shipping this todo as written would breach the gate it is waiting on. The ruled
+      direction instead: grant `secretmanager.versions.access` on the relevant secret to `unified-trading-sa` via the
+      self-service IAM path (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`), verify a live read
+      succeeds in-process, and REMOVE the env-var fallback path entirely — which is the script's own stated design and
+      leaves no compliance conflict. **Re-scope this todo to that direction before dispatching**; the rewrite is a real
+      scope change, not a mechanical citation fix, so it was not applied autonomously. Original text follows. Add a
+      `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback to `scripts/dev/slack-read-channel.py` (gcloud ADC stays primary;
+      env var is the degraded path) — every gcloud identity available in this session hit either `PERMISSION_DENIED` on
+      `secretmanager.versions.access` or a stale-token reauth prompt that can't run non-interactively, and the operator
+      supplied the token directly from `.act-secrets` instead. Attempted 2026-07-24 (diff written, syntax-validated) but
+      blocked shipping by an UNRELATED pre-existing `quality-gates.sh` failure: STEP 5.101
+      (`no_empty_string_fallback_baseline`) reports 320 sites > baseline 319, citing
       `scripts/sports/migrate_player_mappings_to_canonical.py:63` — a file this todo never touched. Reverted the
       uncommitted diff cleanly rather than force it through; retry once that unrelated ratchet is resolved. **Gate**:
       same as the existing script's own conventions — the fallback is documented as secondary, never touches disk/argv.
@@ -198,3 +211,10 @@ whole suite (1609 passed).
   (fake `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` set, `_post`/`httpx.Client` spied — 0 real calls, 1609/1609 passed full
   suite). Shipped `agent-orchestrator@a545800` via quickmerge (landed on LDR). 3 todos remain open (operator env-
   var-scope decision, the deferred script fallback, and the unrelated ratchet breach) — none block the production fix.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[SCRIPT] P3`'s stated
+  ratchet blocker has CLEARED (measured 2026-07-26: `check_no_empty_string_fallback.py --scope unified-trading-pm` =
+  `319 == baseline`), but its prescribed direction is SUPERSEDED: adding an `os.getenv()` env-var fallback is a
+  QG-banned pattern, and `ao_satellite_ao_dispatch_batch1_2026_07_26.md` ruled the correct fix is the self-service
+  `secretmanager.versions.access` grant to `unified-trading-sa` plus REMOVING the fallback. Deliberately NOT
+  reclassified: dispatching the todo as written would ship banned-pattern code, and rewriting its substance is a scope
+  change beyond a mechanical citation fix.

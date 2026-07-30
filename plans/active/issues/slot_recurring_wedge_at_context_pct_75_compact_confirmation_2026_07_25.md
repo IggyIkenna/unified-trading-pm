@@ -127,3 +127,11 @@ reads of the AO context-lifecycle/worker-liveness code, and is charter-barred fr
 spawning/killing/respawning slots, and from editing AO runtime state — so the fixes are BACKEND/DEVOPS-owned. Severity
 **P2**: episode 2 self-recovered (bounded blast radius = one slot's throughput), but the pattern is confirmed +
 recurrence-prone and episode 1 needed manual intervention.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — named directly in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s conflict-gated Deferred entry for the worker-liveness / watchdog
+  kick+escalation cluster ('its second todo also reorders the kill+resume-vs-`spawn_retry_cap` escalation'). All 3 todos
+  touch that same kick/escalation mechanism, whose directional ordering was an operator call; do not draft competing
+  work against it.

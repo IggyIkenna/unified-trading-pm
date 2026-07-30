@@ -27,9 +27,10 @@ parent_epic: infrastructure_master
 source:
   "Surfaced while ruling on the epic-VM code-artifact deletion (operator 2026-07-24) — operator asked for the planning
   VM's failover story specifically to include re-registering GH-workflow runners, not just relaunching AO"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: infra
+assigned_role: infra
 drift_direction: advance-code
 resolved_by: deployment-service@d49767d
 locked_by:
@@ -124,16 +125,16 @@ Two options, not mutually exclusive:
       `quickmerge.sh     ... --files 'scripts/vm/launch-central-brain-aws.sh'`).
 
       **DONE 2026-07-30 — shipped: `deployment-service@d49767d`.** Resolved the blocking merge conflict (it was the
-                                                              SAME session's own earlier `feat(monitors): make DP-WATCHER-003 maintenance-window-aware` work colliding with a
-                                                              re-attempted redo after a context reset — the "different, unidentified agent session" was this same lineage;
-                                                              kept the already-complete "Updated upstream" side wholesale, discarded the duplicate redo, verified no content
-                                                              loss). Full `quality-gates.sh` green (2967 passed). The `setup-glue-runners.sh install` step (covers both `glue`
-                                                              and `glue-writer`, best-effort — a failure only WARNs + falls back to the runbook, never fails the whole VM
-                                                              bootstrap) is now live in `launch-central-brain-aws.sh`. **Gate not independently exercised this session** (a
-                                                              real or simulated central-VM relaunch + glue-routed-workflow-picks-up-a-runner verification is an operational
-                                                              action against the live planning VM, out of this doc-triage pass's bounded scope) — the code is shipped and
-                                                              QG-verified; the live DR-drill confirmation remains a genuine residual for whoever next performs (or simulates)
-                                                              a central-VM relaunch.
+                                                                  SAME session's own earlier `feat(monitors): make DP-WATCHER-003 maintenance-window-aware` work colliding with a
+                                                                  re-attempted redo after a context reset — the "different, unidentified agent session" was this same lineage;
+                                                                  kept the already-complete "Updated upstream" side wholesale, discarded the duplicate redo, verified no content
+                                                                  loss). Full `quality-gates.sh` green (2967 passed). The `setup-glue-runners.sh install` step (covers both `glue`
+                                                                  and `glue-writer`, best-effort — a failure only WARNs + falls back to the runbook, never fails the whole VM
+                                                                  bootstrap) is now live in `launch-central-brain-aws.sh`. **Gate not independently exercised this session** (a
+                                                                  real or simulated central-VM relaunch + glue-routed-workflow-picks-up-a-runner verification is an operational
+                                                                  action against the live planning VM, out of this doc-triage pass's bounded scope) — the code is shipped and
+                                                                  QG-verified; the live DR-drill confirmation remains a genuine residual for whoever next performs (or simulates)
+                                                                  a central-VM relaunch.
 
 ## Progress Log
 
@@ -145,3 +146,12 @@ Two options, not mutually exclusive:
 - **2026-07-24**: Filed while ruling on the epic-VM code-artifact deletion — the operator's actual ask ("we just need
   failover protection... also register that vm for the github workflows") surfaced this gap, which is real and
   previously undocumented. Not resolved here; awaiting operator decision on shape.
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — the blocking `[OPERATOR] P2` shape
+  decision was RULED 2026-07-28 ('DO BOTH, full automation is the real bar') and retagged; the interim runbook half
+  shipped 2026-07-30. The sole remaining `[SCRIPT] P2` is a bounded wiring change to
+  `deployment-service/scripts/vm/launch-central-brain-aws.sh` with a stated gate, and the code is already written and
+  `bash -n`-verified — it only failed to ship because an unrelated agent's merge conflict left the `deployment-service`
+  tree unbuildable. **Phase-2 conflict-check**: the only real hit is `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s
+  Deferred entry, which is an explicit HAND-OFF rather than a competing claim ('not batched into THIS batch
+  (file-scope), pick up as a normal execution todo from the issue doc directly'). CLEAR. Set `assigned_role: infra`,
+  `execution_scope: orchestrator-agent`. No GCS delete and no VM launch, so no `[OPERATOR]` delete-safety gate applies.

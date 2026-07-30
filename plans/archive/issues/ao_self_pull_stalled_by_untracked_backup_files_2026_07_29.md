@@ -31,8 +31,9 @@ parent_epic: agent_operating_framework_master
 source: "Found while live-verifying dispatch_sequential_gate_fix_2026_07_24.md's [BACKEND] P1 todo via SSM, 2026-07-29"
 resolved_by: agent-orchestrator@b5fb9fc, agent-orchestrator@61b7a4f
 locked_by:
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
@@ -109,3 +110,13 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
 - 2026-07-29: Found + root-caused + fixed in one session (credential/self-service re-triage pass). Live-verified the fix
   landed and unstuck the VM. Filed the alerting-gap follow-up as its own low-priority todo rather than fixing it in the
   same pass (a genuinely separate, larger piece of work — an alerting mechanism, not a one-line gitignore fix).
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — the original incident is already fixed;
+  the one open `[INFRA] P3` is a bounded, self-contained addition to `ao-self-pull.sh`: count consecutive
+  `dirty (non-churn) — skip` ticks and page/Slack-notify at N (the doc names N=4 ≈ 1 hour). Determinable by the worker
+  alone, no operator gate, no design fork; the alerting contract is already SSOT'd in
+  `/codex/04-architecture/agent-orchestrator-alerting.md` (state-transition dedup, not every tick). **Phase-2
+  conflict-check**: the only `ao-self-pull` hit on the active planning surface is
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s todo 6, which merely READS which ref the script tracks (explicitly
+  'READ-ONLY') as part of the sequential-gate verification — no competing change to the script. CLEAR. Set
+  `assigned_role: infra`, `execution_scope: orchestrator-agent`. The todo's own instruction to cross-reference
+  `ao_residuals_after_dispatch_hardening_2026_07_17.md`'s dirty-gate design before building stands.

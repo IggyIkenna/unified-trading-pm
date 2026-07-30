@@ -168,3 +168,11 @@ orchestrator's own dispatch correctness (cross-cutting: affects every repo any e
 backlog worker is also active there), not scoped to any single asset_group. No code changed in agent-orchestrator by
 this sub-agent — the investigation and this issue doc are the full deliverable for this pass, per the "stop and write up
 the ambiguity" branch of the dispatching instructions.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the Todos heading itself reads
+  `(for a BACKEND owner + an operator design decision — NOT for autonomous dispatch as-is)`; todo 1 is
+  `[OPERATOR-DECISION]` on directionality (a)/(b)/(c) and todo 2 is labelled 'blocked on the decision above'. The doc's
+  `Why this needs a design decision, not a mechanical patch` section adds an explicit urgency-vs-safety product/ops
+  policy call. Same ruling in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.

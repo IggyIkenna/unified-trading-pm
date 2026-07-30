@@ -160,3 +160,11 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
 - None directly own `/done`'s verification internals. If `done_require_origin` gets enabled fleet-wide, add a reference
   here and to `/codex/12-agent-workflow/commit-push-flip-rule.md` (which currently documents the _intended_ discipline —
   commit+push+flip in the same turn — but not that the orchestrator can/does mechanically verify the push half of that).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the single open todo is explicitly calendar-gated on its own
+  terms ('re-measure over a window AFTER `25d497f` has been live for a few days'; the fix shipped 2026-07-29, i.e. ~1
+  day ago) AND volume-gated (the doc records that normal dispatch volume is suppressed and 'some accounts are
+  rate-limited through 2026-08-02'). Its terminal action is flipping `done_require_origin=true` in production, which the
+  doc itself warns must not be done 'blind'.

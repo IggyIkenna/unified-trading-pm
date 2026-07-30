@@ -112,3 +112,11 @@ Not a functional bug in the sense of lost work or incorrect state — `cicd1-sho
 this session (and independently, throughout the earlier CI-cost-reduction work) are genuinely doing real work while
 reading 0%. This is purely a monitoring/display accuracy gap, but a real one worth closing since it actively misleads an
 operator glancing at the dashboard into suspecting stuck/idle workers that are not stuck.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — not dispatchable as one unit: the `[UI] P2` explicitly depends
+  on the `[DATA] P3`'s representation decision ('needs a way to detect this — see DATA todo below'), and a plan's
+  independent same-priority todos run CONCURRENTLY by default, so flipping would dispatch the dependant and its
+  prerequisite in parallel — partial-parallelism is not expressible in one doc (CLAUDE.md § Plans). The `[BACKEND] P3`
+  is additionally declared 'not actionable today' pending an upstream Claude Code CLI change.

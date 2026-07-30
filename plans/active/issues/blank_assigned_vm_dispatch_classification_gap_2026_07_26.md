@@ -33,7 +33,7 @@ related:
 created: "2026-07-26"
 last_updated: "2026-07-26"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
+assigned_vm: planning
 priority: P2
 locked_by:
 resolved_by:
@@ -41,7 +41,8 @@ source: >-
   Found while re-auditing the 2026-07-26 mass-flip's real coverage after an operator challenge ("~600 docs, only ~250
   tasks — sure the sweep ran properly?") — that challenge correctly predicted a real gap; this doc + the batch-flip
   naming-convention miss are the two concrete findings it produced.
-execution_scope: local-only
+execution_scope: orchestrator-agent
+assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
@@ -116,3 +117,14 @@ re-check `check_frontmatter_schema.py` passes after any bulk frontmatter edit be
       Phase-3 methodology) — flipping `assigned_vm` makes them backlog-eligible, it does not itself verify no other
       active plan already covers the same file/ground. Not done in this pass; flagged for the next tranche audit or a
       dedicated follow-up.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — the one remaining `[REVIEW] P2` is a
+  bounded, mechanical audit with a fixed input set and an SSOT'd procedure: run the shared conflict-check
+  (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` § 3) over the 30 docs this doc's own
+  sweep flipped to `planning`, and record a per-doc clear/conflict verdict. Outcome determinable by the worker alone; no
+  operator authority involved. Its 3 sibling todos are already `[x]`, including the root-cause gate fix
+  (`unified-trading-pm@e88c41727`, `assigned_vm` now `Req.R` for issue docs). **Phase-2 conflict-check**: zero hits for
+  a competing claim on this ground anywhere on the active planning surface. CLEAR. Set `assigned_role: infra`,
+  `execution_scope: orchestrator-agent`.

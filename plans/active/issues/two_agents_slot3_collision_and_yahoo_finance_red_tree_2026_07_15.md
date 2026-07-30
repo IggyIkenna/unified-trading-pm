@@ -149,3 +149,13 @@ is not complete until the counterpart's files build again, not just until your o
       hunk-level staging (`git add -p` / a restricted `git diff <path> | git apply --cached`) so shipping a hot shared
       file no longer silently sweeps a concurrent agent's uncommitted WIP into the commit; not attempted in this doc
       ("outside this plan's scope and risks its own regressions under contention").
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the one open `[INFRA] P2` changes `quickmerge.sh --files`
+  staging semantics, i.e. the fleet-wide SSOT shipping tool that every repo symlinks. The doc itself declines it as
+  'outside this plan's scope and risks its own regressions under contention', and frames the primary ask as an operator
+  policy call ('each slot = ONE agent, or explicit non-overlapping file ownership … not something either concurrent
+  session can enforce on its own'). Same too-high-blast-radius class as
+  `utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 5, which batch1 already deferred for needing 'its own
+  scoped plan with operator sign-off'.

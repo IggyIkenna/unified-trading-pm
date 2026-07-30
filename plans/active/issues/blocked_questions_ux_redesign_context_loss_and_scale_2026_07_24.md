@@ -100,6 +100,10 @@ exists" section together before scoping the workstream.
 - **2026-07-24**: Filed verbatim from operator context, prompted by clarifying `/api/escalation/{id}`'s scope. Grounded
   the "jump to session" idea against `transcript_log.py` (retrieval already works) and `BlockedRow`'s schema (the
   missing link is `claude_session_id` capture at creation time). Deliberately deferred per operator instruction.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the doc carries a section titled `Explicitly NOT actioned`
+  recording an explicit operator deferral ('pick this up again afterwards, not now'), and its one todo is a `[DESIGN]`
+  scoping task (an open-ended design call, not a bounded outcome). Same ruling already recorded in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.
 
 ## Todos
 

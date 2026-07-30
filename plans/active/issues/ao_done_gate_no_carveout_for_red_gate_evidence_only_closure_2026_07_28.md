@@ -33,9 +33,11 @@ created: 2026-07-28
 priority: P2
 parent_epic: orchestrator_master
 source: "worker, slot 12, hit live while closing out data_completion_cefi-011 per main's BLOCKED-Q ruling"
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: refactor
+assigned_role: backend_engineer
+sequential: true # all 4 todos change the same file (server/verify.py) — same-file overlap, must serialise
 drift_direction: advance-code
 depends_on: []
 resolved_by:
@@ -185,3 +187,18 @@ forces an operator/main manual DB patch outside the normal flow.
   precedent: task LEFT in-progress, NOT skipped/redispatched, checkbox flip NOT re-attempted. This is now the SECOND
   confirmed self-archival-variant recurrence (after the phantom_captures_prediction-002 case above) — reinforces the
   [BACKEND] P2 fix below is worth prioritizing (rename-following in `_pm_log_commits_touching_plan_ref`).
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY → planning, conflict-cleared — all 4 open todos are
+  precisely-specified, bounded changes to `agent-orchestrator/server/verify.py` with named functions, named accepted
+  `reason=` values and machine-checkable done-whens (a 4th `_diff_blocks_checkbox` disposition; the Mode-2
+  empty-`pm_shas` fallback reading current on-disk marker text; rename-following in `_pm_log_commits_touching_plan_ref`;
+  plus a `plans/active/task_template.md` convention note — a PLAN file, not codex). No operator gate, no undecided
+  design fork anywhere in the doc; the `assigned_vm: NA` + `execution_scope: local-only` pair was an unassessed default.
+  Recurrence evidence is strong (4 logged occurrences across 3 slots). **Phase-2 conflict-check**: run against every
+  active `assigned_vm: planning` doc in `parent_epic: orchestrator_master`, the sibling
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md` + `ao_consolidated_closeout_2026_07_25.md`, and the tranche digest.
+  The only `verify.py`/`check_plan_flip` hits are in `issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`,
+  and reading them confirms they are a `- [x]` SHIPPED record (`agent-orchestrator@85eb84b`, `_diff_defers_checkbox` +
+  the 10→30 min window widening), not an open competing claim — this doc's todos build ON that work. CLEAR. Set
+  `sequential: true` (all 4 todos change the same file), `assigned_role: backend_engineer`,
+  `execution_scope: orchestrator-agent`. No finalize twin: `doc_type: issue` is structurally exempt
+  (`check_finalize_plan_coverage.py` globs `plans/active/*.md` only).

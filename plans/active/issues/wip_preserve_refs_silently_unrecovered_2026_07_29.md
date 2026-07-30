@@ -100,3 +100,12 @@ closing the "then what" gap:
 - [ ] [SCRIPT] P3. Consider a post-push content-verification step in quickmerge's success path (or worker RULES.md's
       ship loop) — fetch + diff the pushed file(s) against `origin/<branch>` after a reported-successful push, so a
       "SHIPPED" log line is never trusted without a fresh confirming read. Repo: unified-trading-pm.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the `[SCRIPT] P3` post-push verification item is a 'Consider'
+  fork against the fleet-wide `quickmerge.sh` success path (same too-high-blast-radius class as this tranche's other
+  quickmerge items), and the `[SCRIPT] P3` sweep offers a codex-documented-runbook option that is never autonomous. The
+  `[DATA] P2` is bounded but needs cross-slot access to `refs/wip-preserve/cascade-strategy-service-a77eb6d170ca` in
+  another slot's clone. **Flagged**: that ref has now sat unrecovered since 2026-07-28 — folded into
+  `/plans/active/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`, filed by this run.

@@ -101,3 +101,10 @@ described work was already done, complete, and separately documented.
 - [ ] [BACKEND] P3. Consider whether `regen_backlog_from_plan.py` / the issue-doc-lifecycle sweep can catch an issue doc
       whose own todo is stale-open while a `related:`-linked sibling doc (created later) already records the same work
       done — a design question for whoever owns backlog-regen, not a prescribed fix. (repo: unified-trading-pm)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the single open `[BACKEND] P3` labels itself 'a design question
+  for whoever owns backlog-regen, not a prescribed fix', and the body repeats it ('not scoped/executed here — a design
+  question, not this todo's job… not proposing a specific mechanism here'). No mechanism is specified, so the outcome is
+  not determinable by a worker alone — the dispatch-scope eligibility bar excludes it.

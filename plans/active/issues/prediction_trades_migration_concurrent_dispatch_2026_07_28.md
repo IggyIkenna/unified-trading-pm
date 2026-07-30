@@ -116,3 +116,13 @@ solution.
   `issues/prediction_closeout_tag_and_batch_claim_findings_2026_07_30.md` Finding 4, has recurred at least twice more
   since filing. Genuinely `ao`-tranche scope (`parent_epic: orchestrator_master`); flagged for adoption there, not
   claimed here.
+- **na-eligibility-audit 2026-07-30** (tranche=ao, autonomous): KEEP-NA, valid — **zero `- [ ]` checkboxes**; its
+  remaining work exists only as prose under
+  `Recommended fix (not actioned here — dispatcher/process change, out of a single todo's scope)`. Deliberately NOT
+  archived: the finding (no shared task-id-keyed checkpoint location; no dispatcher-side in-flight check) is live and
+  unfixed. Converting prose-only remaining work into tracked todos is the corpus-wide job that was owned by
+  `issue_docs_zero_checkbox_sweep_2026_07_24.md` — routed there rather than duplicated here. Reached independently of
+  the prediction tranche above; both agree. **Integrator correction 2026-07-30**: that owning doc was ARCHIVED to
+  `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` (`unified-trading-pm@17ba71f10`) the same day, so
+  the routing target no longer exists as an active doc — the zero-checkbox class currently has no active owner (see
+  `/plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` Progress Log for the standing follow-up).

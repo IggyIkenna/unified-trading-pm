@@ -213,3 +213,12 @@ single canonical clone per repo and behaves incorrectly under multi-clone (workt
       fix: either the PM identity test should derive repo identity from `git remote get-url origin` (worktree-safe)
       instead of `Path.cwd().name`, or `PROJECT_ROOT` should scope ONLY the identity-string check and never the
       file-scan/sentinel-write basis.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — items 4 and 5 are already held in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s conflict-gated Deferred list as QG-harness worktree-isolation
+  defects ('Item 5 … changes what "QG green" MEANS — the per-repo quality boundary itself. Too high blast-radius for a
+  batch todo; needs its own scoped plan with operator sign-off'). Item 8 is an open design fork on the same fleet-wide
+  `quickmerge.sh` shipping tool ('**consider** a stronger prevention fix … arguably never the right default behavior'),
+  and item 3's audit is bundled with them.

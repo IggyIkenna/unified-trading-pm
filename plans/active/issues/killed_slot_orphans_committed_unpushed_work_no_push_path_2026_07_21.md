@@ -81,15 +81,24 @@ it never reaches `origin/live-defi-rollout` on its own.
 
 ## Proposed fixes
 
-- [ ] [INFRA] P2. **Gated 2026-07-26** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option
-      A — soften first): do NOT land this hard-kill-escalation ahead of
-      `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s two-window/completion-signal
-      fix. That doc has MEASURED evidence the current classifier already fires falsely on live, progressing workers
-      (zero fleet completions for over an hour, 2026-07-26) — landing faster hard-kill escalation on top of a
-      known-wrong classifier turns false kicks into false hard-kills, strictly worse. Re-scope N/timing against the
-      CORRECTED classifier once that fix lands, not before. Escalate the watchdog from soft-kick to hard-kill + respawn
-      after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min) instead of soft-kicking
-      indefinitely; the daily hard-kill budget (50) is ample. SSOT:
+- [ ] [INFRA] P2. **⚠️ ALREADY CLAIMED by an active `assigned_vm: planning` doc — do NOT dispatch from here (citation
+      added by `/na-eligibility-audit ao` 2026-07-30).** `/plans/active/ao_consolidated_closeout_2026_07_25.md` carries
+      an OPEN `[INFRA] P2` todo that cites this doc's spec verbatim and owns execution ("Escalate the watchdog from
+      soft-kick to hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3,
+      ~15-20 min) … per `killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec"). Flipping
+      this doc's `assigned_vm` would duplicate that dispatch. **Also: the gate below has now CLEARED** — the
+      `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` fix this todo waits on SHIPPED as
+      `agent-orchestrator@64b5310` (progress-marker kick shield + zero-kick regression test), so the sequencing
+      precondition is satisfied and the closeout's todo is unblocked. Re-scope N/timing against that CORRECTED
+      classifier, as both docs require. Original gating note follows. **Gated 2026-07-26** (resolved
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #21, option A — soften first): do NOT land this
+      hard-kill-escalation ahead of `issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s
+      two-window/completion-signal fix. That doc has MEASURED evidence the current classifier already fires falsely on
+      live, progressing workers (zero fleet completions for over an hour, 2026-07-26) — landing faster hard-kill
+      escalation on top of a known-wrong classifier turns false kicks into false hard-kills, strictly worse. Re-scope
+      N/timing against the CORRECTED classifier once that fix lands, not before. Escalate the watchdog from soft-kick to
+      hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
+      instead of soft-kicking indefinitely; the daily hard-kill budget (50) is ample. SSOT:
       `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [INFRA] P2. Add a reclaim-and-push (or inherit) path for a killed/idle slot that git-health reports as
       ahead/diverged with `unpushed_plans`: either (a) AutoSpawn prioritises re-occupying a slot with a standing
@@ -145,3 +154,13 @@ review(slot1)'s behalf per the async-wait/stuck-recovery watchdog guidance.
   unbuilt `[INFRA] P2` reclaim-and-push todo would automate; main is barred from push/respawn, so remediation routes
   through that todo + operator action. Second same-day recurrence (slot 10 ~02:33Z, slot 5 ~04:48Z) — the gap is
   actively recurring.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE (citation fixed, no reclassification) — the `[INFRA] P2`
+  hard-kill-escalation todo is already claimed verbatim by an OPEN todo in the active `assigned_vm: planning` doc
+  `/plans/active/ao_consolidated_closeout_2026_07_25.md`; flipping this doc would duplicate that dispatch. Also recorded
+  that the todo's stated gate has CLEARED — the
+  `host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` two-window fix it waits on shipped as
+  `agent-orchestrator@64b5310`, so the closeout's todo is now unblocked. The second `[INFRA] P2` reclaim-and-push item
+  stays in the deferred worker-liveness cluster.

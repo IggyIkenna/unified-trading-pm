@@ -93,3 +93,8 @@ defeated by automation, not by any agent or operator decision. This is a governa
   held (no repoint, no further push, no self-authorized revert); operator paged with a recommendation to revert the two
   commits from LDR to restore the pre-ratification state before the next `*/15` cycle reaches main. This doc captures
   the watchdog root cause so the fix is tracked independently of that specific merge decision.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — this doc's `[BACKEND] P1` gate-aware-sweep decision is the
+  **prerequisite** that `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s whole `/done`-acceptance-semantics cluster is
+  explicitly waiting on ('Re-triage once that doc's gate-aware sweep decision exists'), and it is a governance call
+  (when may automation ship work a human deliberately held behind a merge gate). Its `[DOC] P2` sibling is an edit to
+  the orchestrator watchdog codex SSOT, which is never autonomous.

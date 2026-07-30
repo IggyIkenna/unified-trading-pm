@@ -323,6 +323,12 @@ is **`details_json`** (not `detail`/`payload`) — a grep for the wrong name ret
   documented in `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md` § "2. Task lifecycle" ("Skip /
   cooldown / park"), which is now the SSOT for this mechanism. **AF-1b is unblocked** — build the escalation backoff
   directly on `register_cooldown`, do not write a second cooldown/backoff engine.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — doc carries an explicit dated LOCAL declaration
+  (`assigned_vm: NA # LOCAL execution — operator-assigned agents on this host, NOT AO-dispatched (2026-07-20)` + an
+  `Execution environment — LOCAL` section); `/plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s Deferred
+  list already ruled that extracting its todos needs the operator to lift that declaration. Its one open item
+  (AF-2-followup) is additionally sample-gated — the 2026-07-29 re-measure returned n=2, explicitly recorded as too thin
+  to act on.
 
 ## Deferred work — migrated to:
 

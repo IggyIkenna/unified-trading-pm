@@ -110,3 +110,10 @@ Once pushed, the foreign content is the other agent's only committed copy of tha
 up" the attribution **deletes their uncommitted work** — turning a cosmetic problem into real data loss, and
 force-pushing a shared branch is independently banned. The correct response is: leave it, tell the operator, and let the
 owning agent carry on (their tree simply shows those files as already-committed after their next pull).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — the 4 open items sit under a section literally titled
+  `Candidate fixes (not yet decided)`, and one (`[DOCS] P2`) is a `/codex/05-infrastructure/per-tab-worktrees.md` +
+  CLAUDE.md edit, which is never autonomous. Already ruled the same way in
+  `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s operator-decision Deferred list.

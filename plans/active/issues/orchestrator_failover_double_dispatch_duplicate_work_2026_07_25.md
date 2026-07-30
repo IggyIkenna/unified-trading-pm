@@ -168,3 +168,12 @@ Doc-only this time (no code collision), but a clean example of the SAME task_id 
   showed no visible silence/ping-staleness trigger from slot 6's side; the SAME task_id was simply live on two slots at
   once, discovered only because slot 6 happened to ask a question before acting rather than starting an implementation
   blind.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — all 3 open todos are held by established conflict-gated rulings
+  in `ao_satellite_ao_dispatch_batch1_2026_07_26.md`: the `[BACKEND] P2` release-signal/liveness re-check 'turns on the
+  same "is a silent worker actually dead" judgment as the [worker-liveness] cluster … so it must be sequenced after that
+  ordering is ruled', and the `[BACKEND] P3` `/done` idempotency item shares `server/routes/slots_worker.py`'s `/done`
+  handler with `reaper_kills_inflight_detached_quickmerge_false_done_2026_07_24.md` ('must land as one change') and
+  interacts with the unresolved operator-merge-gate governance question.

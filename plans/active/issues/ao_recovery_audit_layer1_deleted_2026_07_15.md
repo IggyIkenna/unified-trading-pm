@@ -155,6 +155,11 @@ function.
   `/codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 1 (replacing the 2026-07-15 banner that never
   landed) + scope-clarifier on `/codex/04-architecture/agent-orchestrator-overview.md`'s "removed end-to-end" line. This
   doc stays `open` as the rewire's tracking item. No code/contract changed.
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid — two established rulings, both confirmed present in the doc: an
+  explicit dated **operator ruling 2026-07-16 (Option B, re-home the producer) scheduled LAST** ('we are going to rewire
+  it but we will do it at last, not right now'), and a `🟢 EXECUTION CONSOLIDATED 2026-07-17` banner routing execution
+  through `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` ('Do NOT start work from this doc alone').
+  Not re-litigated.
 
 ## Todos
 
