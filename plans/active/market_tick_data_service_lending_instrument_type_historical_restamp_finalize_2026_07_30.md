@@ -77,11 +77,19 @@ source:
       `date/venue/data_type/service_name/timeframe/league_id/chain/instrument_type/underlying/feature_group/     model_family/training_period/strategy_id/client_id/instruction_type/instrument_id`,
       independently re-derived, not imported from the restamp script) within the candidate subset: **0**. All three
       properties hold — the re-stamp (a genuine no-op on a 0-affected corpus) landed honestly.
-- [ ] [INFRA] P1. **Confirm the MTDS manifest-consolidator cron is back at `state=ENABLED`.** The source plan's apply
-      todo pauses it for the CAS-contention-free write window; a left-paused cron is a silent, corpus-wide staleness
-      bug. Cite the live `gcloud scheduler jobs describe` output. If it is still PAUSED, resume it immediately — this is
-      exactly the maintenance-window shape CLAUDE.md's 2026-07-28 governance ruling covers, no operator round-trip
-      needed.
+- [x] [INFRA] P1. ✅ **DONE 2026-07-30 (slot-3)** — Confirmed the MTDS manifest-consolidator cron for the DEFI tick
+      bucket is `state=ENABLED`, live. Identified the exact job name from
+      `deployment-service/terraform/gcp/     manifest_consolidator_scheduler.tf`
+      (`${env_prefix}-manifest-consolidator-${each.key}-cron`, `each.key =     "market-data-defi"` for the
+      `market-data-tick-defi-prd-central-element-323112` bucket this restamp touched), then queried it live (not the
+      terraform state, not the source plan's self-report):
+      `gcloud scheduler jobs describe uts-prod-manifest-consolidator-market-data-defi-cron --location=asia-northeast1 --project=central-element-323112`
+      → `state: ENABLED`, `schedule: '*/1 * * * *'`, `lastAttemptTime: '2026-07-30T13:24:01.793611Z'` (≈1 minute before
+      this check, i.e. actively firing on schedule right now, not stalled). This is consistent with — and independently
+      confirms — the source plan's own 2026-07-30 Progress Log finding that the cron was never paused for this restamp
+      in the first place: the `--apply` run measured `safe_idx` empty (0 rows to re-stamp), and `try_once()` returns
+      `"nothing_to_do"` before any CAS write on an empty `safe_idx`, so there was no write-vs-consolidator-cron race to
+      protect and no pause was taken. Nothing to resume; the live infra state matches the narrative exactly.
 - [ ] [DATA] P2. **Confirm the distinct-values panel no longer badges `liquidation` for this writer path** and
       cross-link the result into `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`'s Progress
       Log, per the source plan's own closing todo.
@@ -92,6 +100,12 @@ source:
 
 ## Progress Log
 
+- **2026-07-30 (slot-3)** — Picked up todo 2 (AO task
+  `market_tick_data_service_lending_instrument_type_historical_restamp_finalize-002`). Resolved the exact GCP Scheduler
+  job name from terraform (not guessed) and queried it live: `state: ENABLED`, `lastAttemptTime` ≈1 min old, firing on
+  its `*/1 * * * *` schedule. Confirms the source plan's own account (no pause was ever taken, since the apply was a
+  provable no-op with nothing to protect against). Flipped todo 2. Todos 3-4 (distinct-values cross-link, archival
+  eligibility) remain open for the next dispatch.
 - **2026-07-30 (slot-12)** — Picked up todo 1 (AO task
   `market_tick_data_service_lending_instrument_type_historical_restamp_finalize-001`). Wrote a standalone,
   independently-derived verification read (column-projected + predicate-pushdown, footer-metadata row count, own
