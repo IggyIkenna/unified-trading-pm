@@ -219,10 +219,18 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       the uvicorn main PID; tmux/claude worker sessions in the cgroup survive, confirmed in this doc's Progress Log). No
       worker has privileged access to do this from a sandboxed slot session (`NoNewPrivileges=yes`). (repo:
       agent-orchestrator, infra action)
-- [ ] [REVIEW] P2. **Once the live unit is updated (prior todo), confirm via `journalctl` that the
-      `"Started reloader process"` / `"Stopping reloader process"` log lines stop appearing on future restarts** (proves
-      `--reload` is actually off in the running process, not just the repo), then watch the next several
-      `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
+- [ ] [REVIEW] P2. **PARKED 2026-07-30 (slot-15) — gated on prerequisite `ao_orchestrator_reload_removed_live=false`
+      (backlog.yaml: `priority: 999`, `priority_override: true`,
+      `prereqs.prerequisites: [ao_orchestrator_reload_removed_live]`; survived a live `/api/backlog/regen` tick).**
+      Verified directly on the orchestrator VM (ip-172-31-5-118): the live `/etc/systemd/system/orchestrator.service`
+      `ExecStart` still carries `--reload --reload-dir server` — the `[OPERATOR]` todo above (`-004`) is genuinely
+      undeployed, and no worker can apply it (root-owned unit file, `sudo` blocked by `NoNewPrivileges=yes`). Do NOT
+      retry this todo until `ao_orchestrator_reload_removed_live` flips `true` (flip it via
+      `POST /api/prerequisites/ao_orchestrator_reload_removed_live {"value": true}` once `-004` is applied + verified
+      live, then this todo re-dispatches automatically). Once unparked: **Once the live unit is updated (prior todo),
+      confirm via `journalctl` that the `"Started reloader process"` / `"Stopping reloader process"` log lines stop
+      appearing on future restarts** (proves `--reload` is actually off in the running process, not just the repo), then
+      watch the next several `ao-self-pull.sh`-triggered or explicit restarts for the previously-observed
       `"State 'stop-sigterm' timed out.     Killing."` pattern — if it stops recurring across several restarts, close
       this issue with that evidence; if it still recurs even without the reload-supervisor layer, the root cause is
       elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
@@ -291,3 +299,14 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   root cause behind two OTHER previously-fixed bugs in this same repo. Full QG green, shipped via quickmerge. Could NOT
   apply the fix to the LIVE deployed systemd unit myself (`NoNewPrivileges=yes` blocks `sudo` from this sandboxed
   session) — filed a `[OPERATOR]` todo for that + a `[REVIEW]` todo to verify post-deploy that the hang actually stops.
+- **2026-07-30 (slot-15, `review` craft)**: dispatched the `[REVIEW]` `-005` todo. Re-confirmed directly on the
+  orchestrator VM (ip-172-31-5-118) that the live `/etc/systemd/system/orchestrator.service` `ExecStart` still carries
+  `--reload --reload-dir server` — the `[OPERATOR]` `-004` todo is genuinely undeployed, and this session hit the exact
+  same `NoNewPrivileges=yes`/root-owned-file blocker the prior session (slot 16) already documented, so there was
+  nothing new to confirm yet. Filed `BLK-eb2ee2ff`; main answered **B — park it**. Registered prerequisite
+  `ao_orchestrator_reload_removed_live=false` via `POST /api/prerequisites/...`, hand-tuned the derived
+  `ao_db_lock_storm_and_stuck_shutdown_outage-005` backlog.yaml entry (`priority: 999`, `priority_override: true`,
+  `prereqs.prerequisites: [ao_orchestrator_reload_removed_live]`), and verified the park survived a live
+  `POST /api/backlog/regen` tick (not just `/reload`, which doesn't exercise the historical revert path) — the entry
+  still shows all three fields set after regen. `-005` will not re-dispatch until the condition flips `true`, which
+  should happen once `-004` is applied + verified live.
