@@ -25,7 +25,7 @@ summary: >-
   and same for other repos" — full fleet-wide authorization to migrate everything found here to self-hosted, mirroring
   the Wave-1 playbook exactly (verify blast radius on one consumer before fleet rollout, per AUTONOMOUS_AGENT_RULES.md
   rule 11).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 repos:
@@ -71,9 +71,16 @@ drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
 resolved_by:
+  slot-4 (2026-07-30) — flipped the last open todo (MTDS Wave-2 deferral, already shipped 2026-07-29 by slot-1 as
+  market-tick-data-service@d24437e4, checkbox left unflipped) and archived per the all-todos-done rule
 locked_by:
 locked_since:
+supersedes:
+superseded_by:
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — status=resolved, 0 open todos. Archived per
+> /codex/12-agent-workflow/plan-completion-and-archival-discipline.md.
 
 # Wave-2 self-hosted-runner migration — the shared templates + bespoke workflows Wave-1 missed
 
@@ -209,14 +216,20 @@ once):**
       `canary-offline.yml`/`pr-watcher.yml`/`schema-health.yml`/`weekly-validation.yml`, `execution-service`'s
       `benchmarks.yml`. — unified-api-contracts@882dabb6 (all 4, QG green 212s), execution-service@(quickmerge landed on
       live-defi-rollout, QG green 164s).
-- [ ] [INFRA] P2. **market-tick-data-service Wave-2 deferral** — its 6 pending Category C `plan-alignment-agent.yml`
+- [x] [INFRA] P2. **market-tick-data-service Wave-2 deferral** — its 6 pending Category C `plan-alignment-agent.yml`
       migrations are the only repo in that batch NOT shipped: `bash scripts/quality-gates.sh` fails on 3 pre-existing
       test failures in `tests/unit/test_databento_enrichment_combo_underlying.py`, confirmed via `git stash` to fail
       identically on unmodified HEAD (unrelated to this change). No sanctioned QG skip-flag exists
       (`SUB_AGENT_MANDATORY_RULES.md`), so the commit-only-from-green-tree rule blocks this repo's ship until either
       those 3 tests are fixed (a separate, undiagnosed task — no Databento domain context gathered here) or the repo's
       owner resolves them. `plan-alignment-agent.yml`'s local diff (hand-edited, uncommitted) is sitting in the
-      market-tick-data-service checkout pending this. **STILL OPEN as of the 2026-07-28 re-audit below.**
+      market-tick-data-service checkout pending this. **Resolved 2026-07-29 by slot-1**: the 3 pre-existing failures
+      were stale-vs-cross-repo-UAC-change fixes (unified-api-contracts@b9f4b6b9 combo-underlying naming + @ee7cb341
+      coinbase funding-cadence registration), reconciled against two parallel independent fixes in flight
+      (slot-16@4fdbcb0d, slot-5@85cc1b33); QG went green and the migration shipped bundled with the fix —
+      market-tick-data-service@d24437e4 (`plan-alignment-agent.yml` Category C + `quality-gates-v2.yml` Category B both
+      confirmed `runs-on: [self-hosted, glue]` on live-defi-rollout, verified 2026-07-30). Checkbox was left unflipped
+      after that ship; flipping now (slot-4) — no further code change needed.
 - [x] [REVIEW] P2. Once all of the above land, re-run the SAME fleet-wide `md5sum` + `grep     runs-on` sweep this issue
       doc's own audit used, confirm zero remaining `ubuntu-latest` lines outside a deliberately-kept exemption list (if
       any workflow has a real reason to stay hosted — e.g. needing GitHub's own build images for something the

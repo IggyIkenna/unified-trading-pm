@@ -936,7 +936,7 @@ by hand._
   runs on Phase 0 completion.
 - [`pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28`](./pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28.md)
   — Forked from the [REVIEW] P1 todo in
-  /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
+  /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
   unified-trading-pm's OWN `.github/workflows/` had never been run through…
 - [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md)
   — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation,

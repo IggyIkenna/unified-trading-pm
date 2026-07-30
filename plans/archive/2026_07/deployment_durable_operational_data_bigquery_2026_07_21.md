@@ -489,8 +489,8 @@ something that doesn't fit — an honest "unclassified" bucket beats a wrong gue
     `unified-trading-system-ui` (~$71) that led to discovering a SEPARATE, real finding — Wave-1's self-hosted-runner
     fan-out missed several shared templates (`staging-lock-check.yml`, `image-build-gate.yml`) and
     `unified-trading-system-ui`'s own bespoke `ubuntu-latest` workflows fleet-wide. Operator authorized the fix; filed
-    as its own issue doc (`plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`) since
-    it's a different plan's lifecycle (the GHA fan-out, not this BQ plan) — not tracked here beyond this pointer.
+    as its own issue doc (`plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md`)
+    since it's a different plan's lifecycle (the GHA fan-out, not this BQ plan) — not tracked here beyond this pointer.
 
 ## Post-archival addendum (2026-07-28, `/autonomous`)
 

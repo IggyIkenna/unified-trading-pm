@@ -3,7 +3,7 @@ doc_type: plan
 title: unified-trading-pm's own 39 MOVE-classified workflows — self-hosted-runner migration scoping
 summary: >-
   Forked from the [REVIEW] P1 todo in
-  /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
+  /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md's "NEW FINDING" section —
   unified-trading-pm's OWN `.github/workflows/` had never been run through `classify-glue-workflows.sh` as a directed
   audit. Re-ran it 2026-07-28: 39 MOVE / 19 KEEP (unchanged from the issue doc's count). Triages the 39 MOVE workflows
   into Tier A (21 — genuinely low-risk dispatch/notify/schedule-only automation, safe for a quick batch flip mirroring
@@ -23,7 +23,7 @@ repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [ci-cd, self-hosted-runners, cost, github-actions, fleet-rollout, wave-2, trading-safety]
 related:
-  - /plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md
+  - /plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md
   - /plans/active/github_actions_operator_gated_followups_2026_07_17.md
 created: "2026-07-28"
 last_updated: 2026-07-28
@@ -182,7 +182,7 @@ the review doesn't silently drop them into either bucket without a look):**
 
 - `/codex/08-workflows/ci-cd-flow.md` — gate set / quickmerge / self-hosted-runner rollout mechanism this plan operates
   within.
-- `/plans/active/issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md` — the parent issue doc /
+- `/plans/archive/2026_07/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28.md` — the parent issue doc /
   source finding this plan was forked from.
 - `/plans/active/github_actions_operator_gated_followups_2026_07_17.md` — Wave-1, the original fan-out whose playbook
   (verify on one consumer before fleet rollout) this plan mirrors for Tier A and deliberately does NOT mirror
