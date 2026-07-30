@@ -131,6 +131,22 @@ which of the 3 hypotheses above (or another) is the actual cause — then fix + 
       then) is `dispatched`/`done` before its downstream "Resume cron" sibling ever leaves `queued`. (repo:
       agent-orchestrator)
 
+      **2026-07-30 (slot-3, data_engineering craft) — STILL VIOLATED live, ~2h+ after the fix commit.** Dispatched
+          `mtds_available_at_cross_asset_backfill-006` ("Resume the prediction consolidator cron") directly via `/boot`.
+          Confirmed via `git merge-base --is-ancestor 77769ab HEAD` in this session's `agent-orchestrator` worktree —
+          `77769ab` IS an ancestor of current `live-defi-rollout` HEAD (`41f69878e`), so the fix is present in the repo. But
+          a fresh `GET /api/backlog` query against the LIVE orchestrator server (the same one that dispatched `-006` to me)
+          shows `mtds_available_at_cross_asset_backfill-001` (Apply `rebuild_prediction_manifest.py`, the true predecessor)
+          still `status: queued`, `dispatched_to: null` — never assigned to anyone — while `-006` (its downstream "resume
+          cron" sibling) was `dispatched` to this slot. The exact violation this VERIFY todo asks to check for is still
+          reproducing in production. Did not dig further into whether this is (a) the fix genuinely present in code but the
+          running orchestrator SERVER PROCESS not yet restarted/redeployed to pick it up (repo-merge ≠ live-deploy for a
+          long-running server), or (b) a residual gap in the fix itself — that root-cause split needs `backend_engineer`
+          craft + the server's own deploy/restart history, out of scope for a `data_engineering` task. Declined `-006`
+          itself (nothing to resume — the backfill still hasn't been applied) per the established precedent in the
+          source plan's Progress Log (dispatch-order findings #2–#5). Leaving this checkbox unflipped — the fix is not yet
+          confirmed live-effective.
+
 ## Deferred — HELD by the `/na-eligibility-audit ao` conflict-check (2026-07-30)
 
 **BLOCKED-OPERATOR-DECISION — same-file, causally-entangled overlap. Recommend option A.**
