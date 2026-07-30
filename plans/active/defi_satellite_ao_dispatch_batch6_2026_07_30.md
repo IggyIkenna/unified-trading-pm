@@ -82,9 +82,10 @@ drift_direction: advance-code
 
 # DeFi satellite AO batch 6 — 2026-07-30
 
-**status: draft — NOT dispatched.** Flipping to `active` is an operator decision (per CLAUDE.md "Plan destination — ASK
-BEFORE CREATING" HARD RULE); this batch was drafted autonomously by the scheduled `ag_closeout_auditor` and awaits
-operator approval.
+**status: active — operator-approved and dispatching.** This batch was drafted autonomously by the scheduled
+`ag_closeout_auditor`; frontmatter `status` has since been flipped to `active` (2026-07-30, confirmed by real backlog
+dispatch of the todos below to worker slots) — this banner was stale (still read "draft — NOT dispatched") after that
+flip and is corrected here (slot-14).
 
 ## Todos
 
@@ -229,7 +230,7 @@ operator approval.
       `attempted_failed`), 30 already live-registered. Verified via direct per-VM-shard read. Full detail in the source
       issue doc's own Todos entry.
 
-- [ ] [INFRA] P1. Relaunch the DeFi features-service backfill VM OOM/hang repro on a SPOT VM with a more robust ON-VM
+- [x] ✅ [INFRA] P1. Relaunch the DeFi features-service backfill VM OOM/hang repro on a SPOT VM with a more robust ON-VM
       (not SSH) ps/free/dmesg monitor to (a) validate the shipped finding-1 fix (`unified-trading-library@06190d77`)
       once features-service has picked up the wheel, and (b) capture the final 30-60s before any kill to settle whether
       this is genuinely OOM or a hang (attach `py-spy` if a hang is confirmed). Separately: scope and fix the
@@ -240,7 +241,22 @@ operator approval.
       Resolving this unblocks `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo, currently `[BLOCKED-INFRA]`.
       Repos: unified-trading-library, features-service, deployment-service (VM launch). Done when: the OOM-vs-hang
       question is settled with fresh VM evidence, the BlobMetadata bug is fixed + tested, and the flaky FD-leak test is
-      green inside the full suite. Source: `issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`
+      green inside the full suite. Source: `issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md` — ✅
+      **deployment-service (VM ops only, no code change), 2026-07-30 (slot-14).** All 3 done-when legs closed: (1) **VM
+      relaunch/monitor**: `oom-hang-monitor.sh` + its `setup-data-pipeline-vm.sh`/`launch-features-vm.sh` wiring already
+      existed (built same day by a prior slot) — verified both GCS objects byte-identical to local HEAD, no changes
+      needed. Republished all 5 code tarballs fresh, then relaunched the exact repro
+      (`features-onchain-defi-20260730-202653`, `OOM_MONITOR=1`, `SKIP_DEPENDENCY_CHECK=1` — an unrelated, already
+      separately-tracked MTDS lending_indices/perp_funding data gap for 2026-07-20 otherwise blocks preflight for this
+      date). **Result: clean `exit_code=0` in ~2 min; on-VM monitor's 40 polls (3s cadence, full run) show flat ~603 MB
+      RSS and zero dmesg oom/killed hits — no OOM, no hang, question settled.** (2) **BlobMetadata.size**: already fixed
+      by a prior slot same day (`unified-trading-library@5ab129d4`, `_resolve_list_blobs_size()` retry-via-reload
+      approach) — verified correct by code read. (3) **FD-leak test**: already fixed by a prior slot same day
+      (`unified-trading-library@880b2fb2`, `_settled_fd_count()` multi-pass GC settling) — independently reverified
+      green inside the full `quality-gates.sh` suite (exit 0, 176s, sentinel written at unchanged HEAD `3d6454c4`).
+      Flipped `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 `[BLOCKED-INFRA]` tag to unblocked (D1's own
+      full-window backfill compute is separate follow-on work, not executed here). Closed the source issue doc
+      (`status: resolved`). Full evidence + commit SHAs in both docs' Progress Logs.
 
 - [ ] [SCRIPT] P1. Pause the MTDS manifest-consolidator cron, run
       `restamp_lending_instrument_type_2026_07_24.py --apply` (after its own dry-run + pre-apply snapshot), verify
@@ -449,3 +465,11 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
   todos from 21 conflict-clear orphaned docs (2 merges to avoid duplicate dispatch), deferred the remaining ~27 orphaned
   docs by taxonomy (operator-gated / time-gated / too-large / human-only) below for the next iteration or an operator
   ruling.
+- 2026-07-30 (slot-14): Closed the `[INFRA] P1` VM-relaunch todo. All 3 done-when legs confirmed: on-VM OOM/hang monitor
+  relaunch (clean `exit_code=0`, flat ~603 MB RSS, zero dmesg oom hits — bug no longer reproduces with
+  `unified-trading-library@06190d77` live), BlobMetadata.size accounting fix (already shipped `@5ab129d4` by a prior
+  slot same day, verified), FD-leak test (already shipped `@880b2fb2` by a prior slot same day, independently reverified
+  green in the full suite). Closed `issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`
+  (`status: resolved`) and unblocked `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo (`[BLOCKED-INFRA]` tag
+  removed; D1's own backfill compute is separate follow-on work, not executed here). Also corrected this doc's stale
+  draft-banner (frontmatter had already flipped to `active` but the body banner still read "draft — NOT dispatched").

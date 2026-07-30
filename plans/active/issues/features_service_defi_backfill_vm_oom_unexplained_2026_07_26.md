@@ -21,7 +21,7 @@ summary: >-
   backfill should improvise -- and because `e2-standard-8` is the hardcoded DEFAULT machine type for EVERY
   feature-family VM launch, so if this really is memory-bound rather than shard-bloat-bound, it likely affects any
   sufficiently-loaded features-service backfill, not just DeFi onchain/delta_one.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -44,8 +44,8 @@ drift_direction: advance-code
 depends_on: []
 source: [self-investigation-2026-07-26, blocks defi_satellite_ao_dispatch_batch3_2026_07_26.md-D1]
 locked_by:
-last_updated: "2026-07-27"
-resolved_by:
+last_updated: "2026-07-30"
+resolved_by: slot-14 (2026-07-30) — features-onchain-defi-20260730-202653, exit_code=0
 ---
 
 # What I found
@@ -229,17 +229,36 @@ candidates, or the still-open OOM-vs-hang question needs the more robust on-VM m
 
 ## Recommended next steps (none done yet -- do NOT re-attempt the same repro without one of these)
 
-- [ ] [DATA] P1. Re-run the exact same repro
+- [x] ✅ [DATA] P1. Re-run the exact same repro
       (`--feature-family onchain --asset-group DEFI --start-date 2026-07-20     --end-date 2026-07-25 --feature-group lst_yields`)
       with a MORE ROBUST monitor: a `nohup`'d polling loop running **on the VM itself** (not over SSH from an
       interactive session that can die mid-run) writing `ps`/`free`/`dmesg` snapshots to a local file every 2-5s,
       fetched via `gcloud compute scp` (or uploaded to GCS) after the VM self-deletes or is paused before its
       `VM_SHUTDOWN_ON_COMPLETION` fires -- specifically to capture the final 30-60 seconds before the kill and settle
       the OOM-vs-hang question with a real dmesg line or RSS curve. (repo: deployment-service for the monitor script, no
-      code change)
-- [ ] [DATA] P1. If the next repro confirms a genuine hang (not OOM): attach `py-spy dump` to the stuck PID during the
-      silent window to get a real Python stack trace of what it's blocked on (network read, lock, retry-forever loop) --
-      this would point directly at the true root cause instead of further code-reading guesses.
+      code change) — **deployment-service `oom-hang-monitor.sh` (2026-07-30, slot-14).** Monitor already existed (wired
+      into `setup-data-pipeline-vm.sh` via `VM_OOM_MONITOR=true`/`OOM_MONITOR=1`, built by a prior slot same day) —
+      verified both GCS objects (`vm/oom-hang-monitor.sh`, `vm/setup-data-pipeline-vm.sh`) byte-identical (md5-compared)
+      to local HEAD before use, no changes needed. Relaunched the exact repro command on a fresh SPOT VM
+      (`features-onchain-defi-20260730-202653`, after republishing all 5 stale code tarballs via
+      `create-code-tarballs.sh --include <repo>` x5 to guarantee fresh code) with `OOM_MONITOR=1`. First attempt
+      (`features-onchain-defi-20260730-202225`, without `SKIP_DEPENDENCY_CHECK`) failed fast on an unrelated,
+      already-tracked data gap (no MTDS `lending_indices`/`perp_funding` for 2026-07-20 — confirmed via
+      `gcloud storage ls`, matches this same batch's own separate `collect-perp-funding` DIAG todo) — not a dispatch
+      collision, just a preflight gate this specific date range now trips; bypassed with `SKIP_DEPENDENCY_CHECK=1`
+      (documented launcher override, appropriate for a diagnostic repro) to reach the actual manifest-read code path.
+      **Result: clean success, exit_code=0, ~2 minutes total, all 6 days processed and written** — no OOM, no hang, no
+      per-VM-shard-fallback log line even appeared (the read never needed it). On-VM monitor captured 40 polls (every
+      3s, full run duration): peak `features_service` RSS 617,820 KB (~603 MB) out of 32 GB, flat/no spike; zero `dmesg`
+      oom/killed matches across the entire run. **This settles the OOM-vs-hang question: with
+      `unified-trading-library@06190d77` (finding 1) live, the bug does not reproduce at all** — it was the unbounded
+      full-schema manifest read, exactly as finding 1 diagnosed; there is no separate hang to chase. Evidence:
+      `gs://deployment-scripts-central-element-323112/vm-logs/features-onchain-defi-20260730-202653/{run.log,     oom-hang-monitor.log}`.
+- [x] ✅ [DATA] P1. If the next repro confirms a genuine hang (not OOM): attach `py-spy dump` to the stuck PID during
+      the silent window to get a real Python stack trace of what it's blocked on (network read, lock, retry-forever
+      loop) -- this would point directly at the true root cause instead of further code-reading guesses. — **N/A, moot
+      (2026-07-30, slot-14)**: the repro above completed cleanly with no hang and no OOM, so there is no stuck PID to
+      attach `py-spy` to. Not executed — nothing to investigate.
 - [x] ✅ [SCRIPT] P2. Add `filters=[("date", "==", date_str)]` (or the bucket's real date-partition column) to the
       `read_availability_index(bucket)` call in `unified_trading_library/feature_service_base/manifest_discovery.py:59`
       -- mirrors the already-fixed sibling pattern (`mtds_backfill_vm_startup_oom_rc137_2026_07_14`) and is safe
@@ -271,14 +290,39 @@ candidates, or the still-open OOM-vs-hang question needs the more robust on-VM m
       `--skip-tests` escape hatch exists). Not investigated further here (out of scope for the task that found it) —
       needs its own fix: either a stronger cleanup (retry `gc.collect()`, explicit fd-holding-object teardown between
       the 5000 iterations) or loosening the baseline/after tolerance to absorb full-suite jitter honestly instead of
-      assuming a single GC pass zeroes it.
-- [ ] [DESIGN] P2. Scope a fix for the `BlobMetadata.size: int` vs GCS's genuinely-`None`-until-eventually-consistent
+      assuming a single GC pass zeroes it. **RESOLVED 2026-07-30**: `unified-trading-library@880b2fb2` (same day, prior
+      slot) replaced the single `gc.collect()` with `_settled_fd_count()` (polls up to 5 GC passes until two consecutive
+      samples agree, instead of assuming one pass suffices). Verified independently (slot-14): full `quality-gates.sh`
+      on unchanged HEAD `3d6454c4` exited 0 in 176s (sentinel written) — the FD-leak test is confirmed green inside the
+      full suite, no longer blocking commits.
+- [x] ✅ [DESIGN] P2. Scope a fix for the `BlobMetadata.size: int` vs GCS's genuinely-`None`-until-eventually-consistent
       size (`cloud_interface/providers/gcp.py:301`, `blob.size or 0`) -- decide whether `size` becomes `int | None`
       workspace-wide (audit every consumer) or whether `list_blobs` should instead retry/refresh metadata for
       very-recently-written objects before returning. This is a real accounting hole in the 2026-07-23 per-VM-shard
-      budget fix, independent of whether it's the cause of this specific OOM. (repo: unified-trading-library)
+      budget fix, independent of whether it's the cause of this specific OOM. (repo: unified-trading-library) —
+      **unified-trading-library@5ab129d4 (2026-07-30, prior slot; verified by slot-14).** Scoped decision: retry via
+      `.reload()` on `blob.size is None` (mirrors `get_blob_metadata`'s own fresh-fetch), NOT the `int | None`
+      type-contract widening — avoids the broader blast radius across the dozens of `BlobMetadata.size` consumers
+      workspace-wide for what is a narrow, rare listing-API eventual-consistency race. New `_resolve_list_blobs_size()`
+      helper wired into `list_blobs()`; logs a WARNING (not a silent 0) if size is still `None` after reload. Confirmed
+      present + correct via code read and a clean `quality-gates.sh` run on the same HEAD.
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [DESIGN] P2 on a workspace-wide
   BlobMetadata.size type-contract change; the diagnostics are gated on a UTL wheel release landing
+- **2026-07-30 (slot-14) — RESOLVED, all 3 remaining items closed, issue closed out**: Correction to the entry above —
+  the "gated on a UTL wheel release" premise doesn't hold for VM launches: `launch-features-vm.sh` installs from a
+  SHA-pinned code TARBALL (`deployment-service/scripts/vm/lib/launcher_common.sh`'s `lc_verify_tarball_freshness`,
+  auto-republished from the local LDR-tip clone), not a published PyPI wheel — so any fix already on `live-defi-rollout`
+  reaches the next VM launch as soon as its tarball is (re)published, no wheel-release wait needed. All 3 open items
+  closed this session: (1) BlobMetadata.size fix — already shipped by a prior slot same day
+  (`unified-trading-library@5ab129d4`), verified correct + tested. (2) FD-leak test — already fixed by a prior slot same
+  day (`unified-trading-library@880b2fb2`), independently reverified green inside the full `quality-gates.sh` suite
+  (176s, exit 0). (3) VM relaunch-to-validate — executed fresh (`features-onchain-defi-20260730-202653`,
+  `SKIP_DEPENDENCY_CHECK=1` after confirming an unrelated pre-existing MTDS lending_indices/perp_funding data gap for
+  2026-07-20, `OOM_MONITOR=1` on-VM ps/free/dmesg poller, all 5 code tarballs freshly republished first): clean
+  `exit_code=0` in ~2 min, 40 monitor polls show flat ~603 MB RSS and zero dmesg oom/killed hits — the bug does not
+  reproduce with `06190d77` live. Flipped `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo from
+  `[BLOCKED-INFRA]` to unblocked (D1's actual full-window backfill execution is separate, out-of-scope follow-on work,
+  not re-dispatched here). Closing this issue (`status: resolved`).
