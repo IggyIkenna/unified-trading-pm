@@ -403,3 +403,18 @@ not just noting.
   framing didn't cover and which this session did NOT quantify (opened as a new `[DATA] P2` follow-up todo above rather
   than assumed away). No code/infra change made; read-only SQLite + `gh api`/`gh run list` queries only; slot left clean
   on `live-defi-rollout`.
+
+- **2026-07-30 ~08:44Z (cicd escalation `agt-08a769`, slot 9) — corroboration, `client-reporting-api` promotion PR
+  #609**: dispatched for `ldr_qg_failure` (`quality-gates-v2` red on the LDR→main promote PR, run
+  [30526015130](https://github.com/IggyIkenna/client-reporting-api/actions/runs/30526015130)). Diagnosed the exact
+  failure: `QG slice (checks)` job's `QG_SLICE=typecheck` selector hit the hard 120s basedpyright timeout
+  (`Type check FAILED/timeout (exit=124)`, `08:20:25Z→08:22:25Z`) — same signature this doc already tracks fleet-wide.
+  Reproduced locally FIRST: `QG_SLICE=typecheck bash scripts/quality-gates.sh --no-fix` at the same HEAD completed
+  cleanly and fast (133 pre-existing basedpyright warnings, no error ceiling set, `QG_SLICE=typecheck PASSED`) —
+  confirms the code is clean and the wall is CI-host-contention only, not a regression. By the time this was diagnosed
+  the pipeline had already self-healed with no code change: PR #609 merged at 08:16:02Z (merge commit `d5ebf83a`), a
+  fresh `workflow_dispatch` retrigger on `live-defi-rollout` (`30526108370`, 08:17:26Z) went green, the next promote PR
+  #610 merged cleanly at 09:16:04Z, and the current `live-defi-rollout` HEAD (`e1b3106`) is green (`30535642575`,
+  10:41:33Z). No open PRs, no open repo-blockers for this repo. **No code or workflow change made or needed** — filing
+  as another corroborating data point for the box-contention root cause, not a fresh unresolved occurrence. Slot left
+  clean on `live-defi-rollout`.
