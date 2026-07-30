@@ -119,9 +119,23 @@ Migrate these ~40 files to import `BASE_URL`/`API` from `E2E_CONFIG` (`tests/e2e
       live uvicorn API for this slot" case (would need `E2E_USE_REAL_API=1`, out of scope for this UI-only todo per the
       ui_developer craft boundary), not a wrong-port or cross-slot-reuse hit. tsc/ESLint/full quality-gates.sh all green
       (sentinel `db918e1c`); quickmerge shipped to `live-defi-rollout`.
-- [ ] [UI] P2. Batch 2 — migrate the "no env-var path" BASE_URL-only widget/strategy specs (~19 files under
+- [x] ✅ [UI] P2. Batch 2 — migrate the "no env-var path" BASE_URL-only widget/strategy specs (~19 files under
       `tests/e2e/widgets/defi/*.spec.ts` and `tests/e2e/strategies/**/*.spec.ts`) to import `E2E_CONFIG.baseURL` instead
-      of the literal `"http://localhost:3100"`. Same done-when pattern as Batch 1. (repo: unified-trading-system-ui)
+      of the literal `"http://localhost:3100"`. Same done-when pattern as Batch 1. (repo: unified-trading-system-ui) —
+      unified-trading-system-ui@bb8f0b84. Actual count was 22 files, not ~19 (all 9 `tests/e2e/widgets/defi/*.spec.ts` +
+      `tests/e2e/strategies/detail-view.spec.ts` + `tests/e2e/strategies/defi-observation.spec.ts` + all 11
+      `tests/e2e/strategies/defi/*.spec.ts`) — all had the identical `const BASE_URL = "http://localhost:3100";` shape,
+      now `const BASE_URL = E2E_CONFIG.baseURL;` with `import { E2E_CONFIG } from "<relative>/_shared/config"` added
+      (relative depth: `../../_shared/config` for `widgets/defi/*` and `strategies/defi/*`, `../_shared/config` for the
+      2 direct `strategies/*.spec.ts`). `rg -n '"http://localhost:3100"' tests/e2e/widgets/defi tests/e2e/strategies`
+      returns 0 hits. Manual run
+      (`npx playwright test --project=chromium tests/e2e/widgets/defi/bundle-builder-widget.spec.ts     tests/e2e/strategies/detail-view.spec.ts`)
+      on slot 7 confirmed the dev server spawn line
+      `[playwright.config] slot=7 next-dev @ http://localhost:3107 -- not up, will be freshly SPAWNED` (3107 = 3100+7,
+      not the old fixed 3100) and 8/49 tests passed; the 9 failures were `beforeAll`/element-visibility timeouts under
+      measured host load 17.71 on a 16-core host (the same pre-existing environment-blocker class Batch 1 and
+      `ui_hardcoded_colour_and_localhost_debt_2026_07_21.md` documented), not ECONNREFUSED or wrong-port/cross-slot
+      hits. tsc/ESLint/full quality-gates.sh all green (sentinel `bb8f0b84`); quickmerge shipped to `live-defi-rollout`.
 - [ ] [UI] P3. Batch 3 — migrate the 6 "env-var with hardcoded fallback" specs (`permission-catalogue.spec.ts`,
       `user-management.spec.ts`, `admin-strategy-assignments.spec.ts`, `warmup.setup.ts`,
       `full-site-link-crawler.spec.ts`, `regulatory-onboarding.spec.ts`) so their fallback reads `E2E_CONFIG.baseURL`
