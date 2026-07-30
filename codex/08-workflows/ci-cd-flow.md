@@ -202,6 +202,26 @@ promoting, confirm scheduled runs actually resume for the re-entered repo
 two-pass QG, stamps the `Quickmerge:` provenance trailer, and the promote bots gate on it). The closed carve-out for
 direct LDR pushes is narrow: `docs(plans):` flips, PM `scripts/**` + any `.github/**`, dirty-deps, and the FF-pull-in.
 
+**Dirty-deps direct push — stamp the trailer, don't just narrate it (ruled 2026-07-29,
+`check_strict_quickmerge_blind_to_dirty_deps_carveout_2026_07_23.md`)**: `check_strict_quickmerge.py`'s provenance check
+is `"Quickmerge:" in msg` — value-agnostic, it only checks the trailer's PRESENCE. A dirty-deps direct push that only
+narrates the carve-out in prose (no trailer at all) touches real source and is correctly-per-the-checker's-own-rule
+flagged as a bypass, producing false-positive provenance-gate walls. The fix is not a code change to the checker — it is
+that every dirty-deps direct-push commit MUST carry a THIRD accepted trailer value,
+`Quickmerge: direct-carveout-dirty-deps` (alongside today's `Quickmerge: agent`/`Quickmerge: human`), e.g.:
+
+```
+fix(infra): <what shipped>
+
+Direct-push dirty-deps carve-out: quickmerge pre-flight blocked on foreign uncommitted WIP in <repo>
+(concurrent agent). <repo> QG green (<n> passed, cov <pct>%).
+
+Quickmerge: direct-carveout-dirty-deps
+```
+
+Reuses the checker's already-trusted trailer-presence mechanism (no new spoofable free-text heuristic); the prose
+"Direct-push dirty-deps carve-out: ..." line stays as human-readable context, the trailer is what the gate reads.
+
 ### PM repo — main-direct, NO staging (Option B, operator decision 2026-06-03)
 
 `unified-trading-pm` is **not a deployed package**, and PM is the **SIT debouncer** (it is not itself SIT-covered), so a

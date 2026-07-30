@@ -10,7 +10,7 @@ summary:
   (features-e2e-tradfi-20260727-112901-b1a99f) for the same shard/window/sink bucket. Both VMs were independently
   confirmed RUNNING simultaneously, each running its own features_service compute process against the identical TRADFI
   2026-01-29..2026-01-30 volatility window, both writing to features-tradfi-test-central-element-323112."
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -28,12 +28,17 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 assigned_vm: planning
-resolved_by:
+resolved_by: features-service@dcf8a3d0 (root-cause fix) + 2026-07-30 spot-check closed as moot (test bucket now empty)
 locked_by:
 locked_since:
 ---
 
 # Duplicate concurrent VM launch for the same shard (2026-07-27)
+
+> **🟢 ARCHIVED 2026-07-30** — status=resolved, both todos done. Root cause fixed 2026-07-27
+> (`features-service@dcf8a3d0`, `_find_inflight_duplicate_vm` concurrency guard). The remaining spot-check todo closed
+> 2026-07-30 as verified-moot — `gs://features-tradfi-test-central-element-323112/` is now completely empty (ephemeral
+> `-test`-tier bucket, no standing consolidator, periodically cleared), so there is no corruption risk left to check.
 
 ## What happened
 

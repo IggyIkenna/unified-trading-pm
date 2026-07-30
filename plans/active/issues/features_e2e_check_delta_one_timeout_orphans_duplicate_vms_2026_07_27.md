@@ -97,10 +97,10 @@ iteration, e.g. `ECNG`/`ECNQ`/`ECRTY`, plus an active `PIPELINE_HEARTBEAT` line)
 **This rules out "CEFI:delta_one specifically" as the scope** — the defect hit a second, unrelated family/AG
 (TRADFI:volatility) with the identical mechanism. **Independently corroborated on a THIRD occurrence** by a DIFFERENT
 slot's parallel day=2026-07-19 run, which hit the byte-identical pattern on the SAME `TRADFI:volatility` shard (see
-`issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`, which traces the root cause to the
-same class of bug already fixed for MDPS in `unified-trading-library@137e219c`). The universe-size hypothesis
-(small/fast-covered windows are immune) remains PLAUSIBLE but is not proven by any example within this doc —
-TRADFI:delta_one's fast exit was a different bug, not evidence either way.
+`/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved 2026-07-30),
+which traces the root cause to the same class of bug already fixed for MDPS in `unified-trading-library@137e219c`). The
+universe-size hypothesis (small/fast-covered windows are immune) remains PLAUSIBLE but is not proven by any example
+within this doc — TRADFI:delta_one's fast exit was a different bug, not evidence either way.
 
 ## Why it matters
 
@@ -224,9 +224,9 @@ TRADFI:delta_one's fast exit was a different bug, not evidence either way.
   lesson. Does NOT change the diagnosis or the shipped fix (`features-service@4d71b1b5`, which correctly targeted the
   two CONFIRMED-affected cells on their own merits, independent of this now-corrected framing) — only the incidental
   "negative control" claim, which had no bearing on the fix itself. Also cross-linked this doc with
-  `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (a different slot's independent
-  discovery of the identical duplicate-launch mechanism, on the same `TRADFI:volatility` shard, via a parallel
-  day=2026-07-19 run) so the two don't track the same fix separately.
+  `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved 2026-07-30)
+  (a different slot's independent discovery of the identical duplicate-launch mechanism, on the same `TRADFI:volatility`
+  shard, via a parallel day=2026-07-19 run) so the two don't track the same fix separately.
 - 2026-07-27 (slot-2): Picked up todo 2 ([SCRIPT] P1, loud warning on abandoned-VM duplicate launch). **Found the
   underlying refuse-to-launch mechanism already shipped**: `features-service@6981b2b8` (earlier this same day, before
   this todo was dispatched) added `_find_inflight_duplicate_vm` — called at the top of both `_run_force_leg` and
@@ -241,10 +241,11 @@ TRADFI:delta_one's fast exit was a different bug, not evidence either way.
   satisfying the todo's "at minimum ... log line" bar on top of the already-shipped refusal. 2 new regression tests
   (`tests/unit/test_pipeline_e2e_check_duplicate_vm_warning.py`) assert the warning fires (via `caplog`) and the leg
   still resolves to `skipped`/`duplicate_in_flight` for both `_run_force_leg` and `_run_skip_leg`. QG green on the
-  shipped SHA. This also satisfies `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`'s
-  todo 1 ("add a concurrency guard") — that doc's own todo already reflects `_find_inflight_duplicate_vm` as the answer;
-  not editing that doc's checkbox here since it wasn't this task's assignment, but flagging the overlap for whoever
-  picks it up next.
+  shipped SHA. This also satisfies
+  `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved
+  2026-07-30)'s todo 1 ("add a concurrency guard") — that doc's own todo already reflects `_find_inflight_duplicate_vm`
+  as the answer; not editing that doc's checkbox here since it wasn't this task's assignment, but flagging the overlap
+  for whoever picks it up next.
 - 2026-07-27 (slot-3, todo 10 benchmark work): **THIRD confirmed-affected family: `SPORTS:sports`.** Running the
   `--legs benchmark --benchmark-days 30` leg (day=2026-07-19), the driver reported `timeout_no_exit_status` at exactly
   2400s (the `_DEFAULT_TIMEOUT_SEC` floor — `sports` has no `_FAMILY_TIMEOUT_OVERRIDES` entry). Directly observed via

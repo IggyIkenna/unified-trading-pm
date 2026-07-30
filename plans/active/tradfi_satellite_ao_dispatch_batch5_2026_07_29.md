@@ -234,7 +234,8 @@ ground to open up, and it did:
       concurrent writes to the same sink — the doc's determinism argument (concurrent writes should converge
       byte-identically) is currently an unverified assumption. Repo: features-service. **Done when**: the spot-check is
       recorded with a pass/fail verdict on the determinism assumption. Source:
-      `issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md`.
+      `/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved
+      2026-07-30).
 
 - [ ] [DATA] P2. **Trace the corrupted `58317-01-15` timestamp to its raw source and classify one-off vs. systemic.**
       Trace back to the raw source object (NASDAQ:EQUITY:IBIT/ETHA, day=2026-05-07) to determine whether the overflow is

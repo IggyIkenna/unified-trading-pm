@@ -729,12 +729,12 @@ entry above asked "next session" to pick up (delta_one/volatility/multi_timefram
 calendar day (07-19 vs slot-7's 07-05) — do NOT merge into slot-7's report file as-is, the day mismatch would
 misrepresent it. 2 new real driver bugs found+fixed+shipped:
 `issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md` (P2) and
-`issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (P2 — root cause independently also
-fixed by slot-6's `features-service@6981b2b8`). Also incidentally answers the sports `IS_TEST_RUN` issue's own P2
-audit-todo for volatility/cross_instrument/multi_timeframe/commodity: every cell that produced real output wrote to the
-correct `-test-` bucket (no PROD-pollution bug found); `onchain` never got real output to check. Real findings not
-separately filed given time: OOM kill (rc=137) on `cross_instrument:CEFI` loading a 115,584×4,476 dataset for
-`regime_detection`; genuine upstream 404 (`baker_hughes_rig_count`) on `commodity:TRADFI`.
+`/plans/archive/issues/features_pipeline_e2e_check_duplicate_vm_launch_same_shard_2026_07_27.md` (resolved 2026-07-30)
+(P2 — root cause independently also fixed by slot-6's `features-service@6981b2b8`). Also incidentally answers the sports
+`IS_TEST_RUN` issue's own P2 audit-todo for volatility/cross_instrument/multi_timeframe/commodity: every cell that
+produced real output wrote to the correct `-test-` bucket (no PROD-pollution bug found); `onchain` never got real output
+to check. Real findings not separately filed given time: OOM kill (rc=137) on `cross_instrument:CEFI` loading a
+115,584×4,476 dataset for `regime_detection`; genuine upstream 404 (`baker_hughes_rig_count`) on `commodity:TRADFI`.
 
 **Discovered mid-session**: slots 6/7/10 were concurrently working this SAME todo without my awareness (see their
 entries above). Slot-7's day=2026-07-05 non-CEFI driver (PID 3665121) confirmed STILL RUNNING at this check, so per
