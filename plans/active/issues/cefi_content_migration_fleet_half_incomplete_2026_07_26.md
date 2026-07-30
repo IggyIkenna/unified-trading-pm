@@ -505,3 +505,10 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   not attempt a fix — confirming the actual mechanism needs a profiler attached to a live run, which is the P1 todo's
   own scope, not something to guess at from log/registry evidence alone. Pinged the authoring fleet-monitor slot with
   this outcome; no code changed, no VM launched (relaunch bound already breached at dispatch time).
+- **2026-07-30 update (slot-15, ~35 min later, 16:27Z)**: shard 23 (`-151700`) hit the freeze-class failure — `run.log`
+  `Update time` frozen at 15:39:38Z, ~48 min silent at check time, no `rc=137`. Was at 17,200/218,799 files (1324s
+  elapsed) before freezing. Fleet at 10 shards. Also hit the `gcloud` identity-poisoning issue again mid-check (both the
+  active-config-flip-to-`slot11-work` AND `slot15-work`-account-mutated-to-`github-deploy@…` variants together, same as
+  the prior occurrence) — fixed via `gcloud config configurations activate slot15-work` +
+  `gcloud config set account unified-trading-sa@…` (already logged in the poisoning issue doc; not re-duplicating here).
+  No relaunch/kill action taken on shard 23 (monitoring-only).
