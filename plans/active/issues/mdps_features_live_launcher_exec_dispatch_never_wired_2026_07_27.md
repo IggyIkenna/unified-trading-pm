@@ -200,6 +200,11 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       investigated further here since it's a different code path (the tee wrapper, not `_self_delete_on_setup_failure`);
       worth auditing once Gap 1/2 above are resolved and a real live launch exists to observe its failure-signaling
       behavior against.
+- [x] ✅ [INFRA] P2. Executed the 2026-07-30 operator ruling on BLK-fd70b57c: forked the undecided shard-discovery
+      mechanism into a gated UAC prerequisite doc and gated this doc's remaining `[SCRIPT]` todos on it (they stay open
+      — the exec-dispatch code itself is not shippable until the enumerator lands) — unified-trading-pm@d55b1aa01. See
+      `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` + this doc's `depends_on` /
+      `gate_on_depends: true` frontmatter + the Progress Log entry below.
 
 ## Progress Log
 
