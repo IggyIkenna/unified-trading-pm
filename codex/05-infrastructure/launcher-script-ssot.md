@@ -35,9 +35,9 @@ referenced_by:
     /codex/05-infrastructure/live-deployment-monitoring.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-18
 code_refs:
-last_reviewed_note: Phase 9 audit 2026-05-15
+last_reviewed_note: re-verified against deployment-service/scripts/vm/ + e2e-testing/scripts/ on 2026-07-31
 ---
 
 # VM launcher script SSOT — `deployment-service/scripts/vm/`
@@ -266,7 +266,7 @@ Source repo bucket counts (baseline 30):
 | 5   | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh`        | `launch-sports-instruments-reference-vm.sh`               | shipped — deployment-service@fc9211e + e2e-testing@db7ace3     |
 | 6   | `e2e-testing/scripts/defi/launch_dex_pools_vm.sh`                      | `launch-mtds-dex-pools-backfill-vm.sh`                    | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
 | 7   | `e2e-testing/scripts/defi/launch_eigenlayer_rewards_vm.sh`             | `launch-mtds-eigenlayer-rewards-backfill-vm.sh`           | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
-| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | `launch-mtds-solana-drift-backfill-vm.sh`                 | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
+| 8   | `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`                   | ⚠️ see note below — target name not on disk                | shipped — deployment-service@5778811 + e2e-testing@43d8e49     |
 | 9   | `e2e-testing/scripts/common/launch_cefi_migration_vm.sh`               | `launch-cefi-migration-vm.sh`                             | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
 | 10  | `e2e-testing/scripts/common/launch_defi_backfill_vm.sh`                | `launch-defi-backfill-vm.sh`                              | shipped — deployment-service@ce99d43 + e2e-testing@4f1f92b     |
 
@@ -274,6 +274,14 @@ Source repo bucket counts (baseline 30):
 path, register new prefix in `VM_PREFIX_TO_BUCKET`, smoke-test `--dry-run` (or `bash -n` syntax check), single-relaunch
 of watchdog VM at end of cycle. **Watchdog VM** relaunched as `vm-zombie-watchdog-20260508-121344` after all 17 new
 prefix entries landed.
+
+> **⚠️ Row 8 unverifiable (2026-07-31 re-review).** Neither the source `e2e-testing/scripts/defi/launch_solana_drift_vm.sh`
+> nor the claimed destination `launch-mtds-solana-drift-backfill-vm.sh` exists on disk today. The Solana launchers
+> actually present are `launch-mtds-solana-defi-backfill-vm.sh`, `launch-mtds-solana-gas-backfill-vm.sh`,
+> `launch-jito-solana-backfill-vm.sh` and `launch-marinade-solana-backfill-vm.sh`; none of them mentions `drift`. So the
+> row's "shipped" claim cannot be confirmed against the tree — either the destination was renamed/folded after the
+> Tab-11 cycle, or Drift coverage was dropped. **Do not cite this row as evidence that Drift has a canonical launcher.**
+> Resolve before relying on it: `grep -ri drift deployment-service/scripts/vm/` returns nothing today.
 
 ### Deferred (20 launchers — documented reasons)
 
@@ -301,8 +309,34 @@ prefix entries landed.
 | `e2e-testing/scripts/sports/launch_oddspapi_vm_backfill.sh`       | DEFERRED — odds API specific; defer post-cutover.                                                                                                      |
 
 **Intra-repo move not in the e2e-testing list** (separate item): `deployment-service/scripts/deploy-dashboard-gce-vm.sh`
-→ `deployment-service/scripts/vm/launch-dashboard-vm.sh`. DEFERRED — already inside deployment-service repo so callsite
-drift risk is contained; intra-repo move ships in a follow-up cycle.
+→ `deployment-service/scripts/vm/launch-dashboard-vm.sh`. ✅ **DONE** — verified 2026-07-31: the old path no longer
+exists and `deployment-service/scripts/vm/launch-dashboard-vm.sh` is present. (Listed DEFERRED here until this
+re-review.)
+
+## Current state of the consolidation (verified 2026-07-31)
+
+The tables above are the **historical migration record** — keep them for provenance, but read this block for today's
+truth.
+
+- `deployment-service/scripts/vm/` now holds **209 entries** (launchers + libs + templates + watchdog/monitor helpers),
+  up from the ~30-launcher baseline the migration started against.
+- **Only 6 scripts outside `deployment-service/scripts/vm/` still create a VM** — down from the 20 deferred rows above.
+  Measured with `rg -l 'gcloud compute instances create|aws ec2 run-instances' e2e-testing/scripts`:
+
+  | Still-violating script                                       | Deferred reason (unchanged)                       |
+  | ------------------------------------------------------------ | ------------------------------------------------- |
+  | `e2e-testing/scripts/sports/launch_instruments_reference_v3.sh` | superseded-by-canonical, source not yet deleted  |
+  | `e2e-testing/scripts/sports/launch_mdps_phase3_bucketing.sh`   | partially superseded by `launch-mdps-sports-bucket-vm.sh` |
+  | `e2e-testing/scripts/sports/launch_fss_phase3_backfill.sh`     | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/sports/launch_fss_features_vm.sh`         | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/sports/launch_fss_features_v3.sh`         | partially superseded by `launch-features-sports-backfill-vm.sh` |
+  | `e2e-testing/scripts/prediction/setup-backfill-vm.sh`          | prediction-surface collision risk                 |
+
+  Every other deferred row either no longer creates a VM or no longer exists. The remaining six are all sports- or
+  prediction-surface, and all are "superseded but source not yet deleted" rather than genuinely-unmigrated work.
+
+- Current `launch*.sh` counts in the source repo: `common/` 4 · `defi/` 9 · `prediction/` 3 · `sports/` 9. (The
+  "Source repo bucket counts (baseline 30)" table above is the **2026-05-07 baseline**, not a current inventory.)
 
 **Per-asset-group rename intentions for follow-up cycles** (canonical-shape patterns; not single migrations):
 
@@ -318,7 +352,7 @@ drift risk is contained; intra-repo move ships in a follow-up cycle.
 | `features-service (cross-instrument family)/scripts/launch-*.sh`     | `launch-features-cross-instrument-vm.sh`               | folds into features-service consolidation |
 | `features-service (sports family)/scripts/launch-*.sh`               | `launch-features-sports-vm.sh`                         | folds into features-service consolidation |
 | `features-service (prediction family)/scripts/launch-*.sh`           | `launch-features-prediction-vm.sh`                     | folds into features-service consolidation |
-| `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | intra-repo move (deferred)                |
+| `deployment-service/scripts/deploy-dashboard-gce-vm.sh` (intra-repo) | `deployment-service/scripts/vm/launch-dashboard-vm.sh` | ✅ DONE (verified 2026-07-31)             |
 
 > **Folded in from `launcher-script-consolidation-2026-05-07.md`** (deleted by `codex_refactor_2026_05_08.md` Phase
 > C.3).
@@ -327,7 +361,8 @@ Once a row is migrated:
 
 1. The new launcher under `deployment-service/scripts/vm/` is canonical.
 2. Its VM-name prefix is registered in `VM_PREFIX_TO_BUCKET`
-   ([`vm-zombie-watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py)).
+   ([`vm_zombie_watchdog.py`](../../deployment-service/scripts/vm/vm_zombie_watchdog.py) — underscores, not hyphens;
+   the AWS twin is `vm_zombie_watchdog_aws.py`).
 3. The script is registered in `_SERVICE_LAUNCHER_SCRIPTS` in `deployment-api/deployment_api/services/deploy_missing.py`
    so the UI's Deploy-Missing button surfaces it.
 4. The old path is removed from its home repo.

@@ -4,8 +4,9 @@ title: MTDS Download API — CanonicalParquetReader
 summary: >-
   CanonicalParquetReader — the canonical GCS reader for MTDS parquet shards; validates against the availability manifest
   (raises ShardNotFoundError before any GCS read), supports full-bundle vs per-instrument pyarrow predicate-pushdown
-  reads (162M-row Deribit options_chain: per-instrument peak RSS 1.3GB vs >7GB bundle) plus column projection and
-  list_instruments.
+  reads (162M-row Deribit options_chain: per-instrument peak RSS 1.3GB vs >7GB bundle) plus list_instruments and
+  chain / canonical_question_group / pipeline_mode narrowing. Import from market_tick_data_service.reader — the package
+  root exports nothing.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +24,7 @@ created: 2026-04-24
 authoritative_for: [CanonicalParquetReader MTDS shard read API]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-12
 code_refs: [market-tick-data-service/market_tick_data_service/reader.py]
 ---
 
@@ -52,54 +53,87 @@ and had no manifest validation.
 
 ## API
 
-```python
-from market_tick_data_service import CanonicalParquetReader, ShardNotFoundError
+Verified against `market_tick_data_service/reader.py` on 2026-07-31.
 
-reader = CanonicalParquetReader()  # uses default catalogue bucket
+```python
+from market_tick_data_service.reader import CanonicalParquetReader, ShardNotFoundError
+
+reader = CanonicalParquetReader()  # takes no arguments; resolves buckets internally
 
 # Full bundle
 df = reader.read_shard(
     venue="DERIBIT",
-    target_date=date(2026, 4, 17),
     data_type="options_chain",
     instrument_type="option",
+    target_date=date(2026, 4, 17),
 )
 
 # Per-instrument (predicate pushdown — O(matching rows))
 df = reader.read_shard(
     venue="DERIBIT",
-    target_date=date(2026, 4, 17),
     data_type="options_chain",
     instrument_type="option",
+    target_date=date(2026, 4, 17),
     instrument_id="BTC-25MAR26-50000-C",
 )
 
-# Column projection + filter (combine for minimal I/O)
+# Optional narrowing arguments (all default None)
 df = reader.read_shard(
-    venue="DERIBIT",
+    venue="UNISWAP_V3",
+    data_type="pool_state",
+    instrument_type="amm_pool",
     target_date=date(2026, 4, 17),
-    data_type="options_chain",
-    instrument_type="option",
-    instrument_id="BTC-25MAR26-50000-C",
-    columns=["timestamp", "bid", "ask", "mark_price"],
+    chain="ethereum",                    # validated → InvalidChainError
+    pipeline_mode="backfill_tardis",     # prefix-matched partition selector
 )
 
-# List available symbols without loading data
+# List available symbols without loading data (symbol-column-only I/O)
 symbols = reader.list_instruments(
     venue="DERIBIT",
-    target_date=date(2026, 4, 17),
     data_type="options_chain",
     instrument_type="option",
-    underlying="BTC",  # optional filter
+    target_date=date(2026, 4, 17),
 )
 # → ["BTC-25MAR26-50000-C", "BTC-25MAR26-50000-P", ...]
+# Returns [] (not an error) when no blob paths resolve.
 
 # Missing shard raises ShardNotFoundError
 try:
-    df = reader.read_shard(venue="DERIBIT", target_date=..., ...)
+    df = reader.read_shard(venue="DERIBIT", data_type="trades", instrument_type="PERPETUAL", target_date=...)
 except ShardNotFoundError as e:
     logger.warning("Shard not in manifest: %s %s %s", e.venue, e.target_date, e.data_type)
 ```
+
+### Full signatures
+
+```python
+def read_shard(
+    self, venue: str, data_type: str, instrument_type: str, target_date: date,
+    instrument_id: str | None = None, chain: str | None = None,
+    canonical_question_group: str | None = None, pipeline_mode: str | None = None,
+) -> pd.DataFrame: ...
+
+def list_instruments(
+    self, venue: str, data_type: str, instrument_type: str, target_date: date,
+    chain: str | None = None, canonical_question_group: str | None = None,
+    pipeline_mode: str | None = None,
+) -> list[str]: ...
+```
+
+**There is no public `columns=` projection argument** and **no `underlying=` filter on `list_instruments`** — both were
+documented here until the 2026-07-31 re-review and neither has ever existed on these signatures. Column selection is an
+internal `pq.read_table(..., columns=[...])` detail of the symbol-scan path; `underlying` is a GCS *path partition*
+(`underlying={ROOT}/…`) that the reader derives itself from `instrument_id` for `options_chain` / `futures_chain` reads.
+To project columns, slice the returned DataFrame.
+
+### Errors
+
+| Exception                            | Raised when                                                              |
+| ------------------------------------ | ------------------------------------------------------------------------ |
+| `ShardNotFoundError(KeyError)`       | No blob paths resolve for the shard. Attrs: `venue`, `data_type`,        |
+|                                      | `instrument_type`, `target_date`                                         |
+| `InvalidChainError(ValueError)`      | `chain` not in UAC `MAINNET_CHAIN_IDS` / `CHAIN_RPC_TEMPLATES`           |
+| `InvalidCanonicalQuestionGroupError` | `canonical_question_group` not a recognised group                        |
 
 ## Manifest dependency
 
@@ -143,7 +177,7 @@ This gives them:
 
 - Manifest validation (early `ShardNotFoundError` instead of silent empty DataFrame)
 - Automatic predicate pushdown when `instrument_id` is set
-- Column projection via `columns=` parameter
+- Validated `chain` / `canonical_question_group` narrowing instead of ad-hoc post-filtering
 - Consistent GCS path resolution from manifest metadata
 
 Search for direct calls to migrate: `rg "pd\.read_parquet" market-tick-data-service/market_tick_data_service --type py`
@@ -151,7 +185,9 @@ Search for direct calls to migrate: `rg "pd\.read_parquet" market-tick-data-serv
 ## Import path
 
 ```python
-from market_tick_data_service import CanonicalParquetReader, ShardNotFoundError
-# or
 from market_tick_data_service.reader import CanonicalParquetReader, ShardNotFoundError
 ```
+
+This is the **only** working import. `market_tick_data_service/__init__.py` declares `__all__: list[str] = []` and
+re-exports nothing, so the package-root form `from market_tick_data_service import CanonicalParquetReader` raises
+`ImportError`. That form was documented here until the 2026-07-31 re-review.

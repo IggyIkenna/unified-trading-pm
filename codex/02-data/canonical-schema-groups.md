@@ -22,7 +22,7 @@ referenced_by:
     /codex/06-coding-standards/documentation-standards.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-09
 code_refs:
 ---
 
@@ -156,39 +156,50 @@ absence is part of the contract.
 
 ## Module Location
 
-> **Refresh provenance (2026-05-12 codex audit D-10):** regenerated from
-> `ls unified-api-contracts/unified_api_contracts/internal/`. Earlier table listed `positions/` / `risk/` / `orders.py`
-> / `regulatory/` at the top level; actual top-level subpackages + modules below. Per the canonical-vs-internal split
-> banner at the top of this doc, "internal" types live in `unified_api_contracts/internal/`; canonical normaliser-output
-> types (CanonicalTrade / CanonicalOrderBook / CanonicalOHLCV / CanonicalLiquidation / CanonicalOptionsChainEntry) live
-> under `unified_api_contracts/canonical/` per [`contracts-scope-and-layout.md`](./contracts-scope-and-layout.md) §
+> **Refresh provenance (re-verified 2026-07-31):** regenerated from
+> `ls unified-api-contracts/unified_api_contracts/internal/`. Per the canonical-vs-internal split banner at the top of
+> this doc, "internal" types live in `unified_api_contracts/internal/`; canonical normaliser-output types
+> (CanonicalTrade / CanonicalOrderBook / CanonicalOHLCV / CanonicalLiquidation / CanonicalOptionsChainEntry) live under
+> `unified_api_contracts/canonical/` per [`contracts-scope-and-layout.md`](./contracts-scope-and-layout.md) §
 > "Canonical type ownership".
+>
+> Drift corrected at this re-review: `ml.py` is now the `ml/` package (with a separate `ml_backup.py`); `events/` and
+> `features/` are modules (`events.py`, `features.py`), not packages; `orders.py` and `regulatory/` do not exist at this
+> level — the order/regulatory schema groups tabled above live under `canonical/domain/` and `domain/` respectively.
+> Seventeen modules/packages that had never been listed are added below.
 
-Internal-side top-level subpackages + modules (`unified-api-contracts/unified_api_contracts/internal/`):
+Internal-side top-level subpackages (`unified-api-contracts/unified_api_contracts/internal/`):
 
+- `alerting/` — internal alert payload contracts
 - `architecture_v2/` — strategy registry / family / archetype enums (StrategyFamily, StrategyArchetype,
   InstructionActionV2)
 - `connectivity/` — venue + transport capability declarations
 - `domain/` — domain-typed records (instruments, sports, prediction, etc.)
-- `events/` — internal event payloads
-- `execution.py` — `BatchExecutionMode` + execution-side internal types
-- `features/` — feature-row contracts
-- `inter_service_events.py` — cross-service event payloads
-- `instrument_volatility.py` — internal vol surface payloads
-- `manual_audit_paths.py` — audit-trail surfaces
-- `market_category.py` + `market_data/` — internal market-data + asset-group enums
-- `ml.py` — ML training / inference internal contracts
-- `position_protocol.py` + `position_types.py` + `positions/` — internal position-shape contracts
-- `pubsub.py` — Pub/Sub topic registry
-- `reconciliation.py` — reconciliation event contracts
+- `market_data/` — internal market-data shapes (pairs with `market_category.py`)
+- `ml/` — ML training / inference internal contracts
+- `positions/` — internal position-shape contracts (with `position_protocol.py` + `position_types.py`)
 - `reference/` — internal reference-data shapes
 - `registry/` — registry-side schemas
 - `reporting/` — internal reporting contracts
-- `risk.py` — internal risk types
-- `schema_definition.py` — `SchemaDefinition` / `ColumnSchema` (per `schema-governance.md`)
 - `schemas/` — additional internal schema definitions
-- `sports.py` — internal sports contracts
 - `testing/` — internal testing helpers
+- `validation/` — internal validation contracts
 
-For canonical (normaliser-output) types, see `unified-api-contracts/unified_api_contracts/canonical/` —
-`domain/market_data/`, `domain/sports/`, `crosscutting/` etc.
+Internal-side top-level modules:
+
+- `agent_inference_cache.py` · `base.py` · `defi.py` · `deployment.py` · `env_canon.py` · `event_topics.py` ·
+  `events.py` — internal event payloads · `execution.py` — `BatchExecutionMode` + execution-side internal types ·
+  `features.py` — feature-row contracts · `index_utils.py` · `instrument_volatility.py` — internal vol surface payloads
+- `inter_service_events.py` — cross-service event payloads · `manual_audit_paths.py` — audit-trail surfaces ·
+  `market_category.py` — asset-group enums · `messaging.py` · `ml_backup.py` · `modes.py` ·
+  `paper_execution_targets.py` · `pubsub.py` — Pub/Sub topic registry · `reconciliation.py` — reconciliation event
+  contracts · `risk.py` — internal risk types
+- `schema_definition.py` — `SchemaDefinition` / `ColumnSchema` (per `schema-governance.md`) · `sports.py` — internal
+  sports contracts · `strategy_directives.py` · `strategy_pnl_stream.py` · `timeframes.py` · `unity_child_books.py` ·
+  `unity_commercial_terms.py`
+
+For canonical (normaliser-output) types, see `unified-api-contracts/unified_api_contracts/canonical/` — top-level
+`gcs_paths.py`, `instrument_key.py`, `partition_paths.py`, `asset_group_registry.py`, `canonical_mappings.py`,
+`coverage_exclusions.py`, `coverage_starts.py`, `quarantine.py`, plus `crosscutting/` and `domain/`
+(`market/`, `sports/`, `derivatives/`, `execution/`, `features/`, `onchain/`, `position/`, `prediction/`,
+`predictions/`, `reference/`, `strategy/`, `infrastructure/`).
