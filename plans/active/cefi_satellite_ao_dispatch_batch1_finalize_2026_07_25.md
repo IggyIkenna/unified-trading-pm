@@ -100,7 +100,16 @@ drift_direction: advance-code
       record why it's still too volatile and re-check again at the next batch cycle. **Done when**: each of the 3 docs
       has an explicit settled-vs-still-volatile verdict recorded, with a scoped batch2 candidate item for any doc found
       settled.
-- [ ] [DIAG] P1. **Re-verify the LATE colliding-venue renames exclusion.** Re-read
+- [x] ✅ [DIAG] P1. **DONE 2026-07-30 (slot-4, `data_engineering`).** Verdict: Range A/B/C landed (rc=0 net of 10
+      retried transient stragglers, 504,280 renamed) but do NOT qualify as "landed cleanly" under this todo's own gate —
+      STOP-ON-SURPRISE grew 1114→1292 with collisions spreading from the original 6 dates to 16+ (DERIBIT, a root-caused
+      same-run-order artifact per Finding 10, not new corruption, but genuinely new collisions beyond the 6 dates). The
+      session was PAUSED (not stalled) 2026-07-25 on operator request (host contention); the remaining scope
+      (2,962-object safe residual + loop-until-dry + 4-surface re-proof + archival) is already its own tracked open todo
+      inside the source issue doc — not an extraction gap — and has independently been ruled NOT batch2/AO-extractable
+      TWICE (`cefi_satellite_ao_dispatch_batch3_2026_07_26.md` + today's na-eligibility-audit sweep, both KEEP
+      dedicated-session / KEEP-NA). No new batch2 candidate created — see Progress Log for full evidence trail.
+      **Re-verify the LATE colliding-venue renames exclusion.** Re-read
       `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` and
       `cefi_4surface_migration_execution_log_2026_07_24.md` for the current state of the Range A/B/C `--apply` LATE
       colliding-venue rename passes (excluded from batch-1 on evidence they were "actively in progress via a live
@@ -198,5 +207,45 @@ drift_direction: advance-code
     pipeline_mode re-partitions requiring de-dup MERGE semantics against a live split-brain; delete/move-safety gated").
     **Conclusion**: no batch2 candidate drafted — the remaining work needs an operator ruling (authoritative copy) and a
     human disambiguation (quarantine mechanism), not mechanical extraction.
+
+- **2026-07-30 (slot-4, `data_engineering`) — todo 3, LATE colliding-venue renames exclusion re-verified: landed-vs-
+  pending verdict recorded, no new batch2 candidate created.**
+  - **Range A/B/C did land** (`issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` Finding 10,
+    2026-07-25): 504,280 objects renamed across 3 date-range passes (Range A `2025-11-03..2025-12-31` 4,386/0 errors;
+    Range B `2026-01-04..2026-07-10` 499,119 renamed + 1,333 dup-sources deleted + 10 transient-503 `copyTo` stragglers,
+    all retried and confirmed renamed; Range C `2026-07-12..2026-07-24` 765/0 errors) — rc=0 net of the retried
+    stragglers. LIGHTER-ZKSYNC (batch1 item 6, ~11,283 objects) confirmed fully subsumed within this same run.
+  - **But the todo's own "landed cleanly" gate is NOT met.** The post-apply full-range verification dry-run (also
+    Finding 10) shows STOP-ON-SURPRISE grew from the original 1114 to **1292**, and those collisions are no longer
+    confined to the original "6 pre-known excluded dates" — the DERIBIT share (10→188) is a root-caused, understood
+    same-run-order artifact (Range A/B's own successful PERPETUAL renames created canonical targets that a pre-existing
+    mislabeled SPOT wire object now genuinely collides with) spread across **16+ distinct dates** in Nov 2025-Apr 2026
+    per the source doc's own sample — not new corruption, but genuinely "new collisions beyond the 6 dates" under the
+    todo's literal wording. So this is NOT the "landed cleanly → mark DONE" branch.
+  - **Nor is it the "session stalled / never ran" branch.** It ran to a real, understood midpoint and was explicitly
+    **PAUSED** (not abandoned) 2026-07-25 on direct operator instruction (host contention on the shared session machine,
+    not a failure), with an already-recorded resume sequence. As of today (2026-07-30) it remains un-resumed — the issue
+    doc's own todo (`- [ ] [DATA] P1. Resume the paused migration...`) is still open.
+  - **The remaining scope is already tracked, not an extraction gap.** The issue doc's own open todo already names the
+    exact remaining work: pause cron → 4 sequential venue-scoped `cefi-late-renames --apply` passes for the 2,962-object
+    safe residual (EXTENDED-STARKNET 704 / LIGHTER-ZKSYNC 177 / BYBIT-SPOT 1561 / COINBASE-FUTURES 520, zero collision
+    risk — none of these venues appear in the STOP-ON-SURPRISE breakdown) → resume cron → loop-until-dry full-range
+    verifier (2 consecutive clean passes, confirming `colon_wire`'s ~1,697 objects along the way) →
+    `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof → archive. Nothing here needs a NEW tracked item.
+  - **That exact remaining scope has independently been ruled NOT batch2/AO-extractable twice already**, closing off any
+    argument that a fresh batch2 candidate is overdue: (1) `cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (dated the
+    day after the pause) explicitly excludes this doc, calling it "a live, actively-draining migration... [that] needs
+    its own dedicated session, not a batch slot"; (2) today's (2026-07-30) na-eligibility-audit sweep independently
+    re-verdicted the same open todo **KEEP-NA valid** ("resumes a migration explicitly PAUSED 2026-07-25 on operator
+    request... involves cron pause/resume around prod GCS renames" — genuine operator/live-session-gated work, not a
+    scoping gap).
+  - **Verdict recorded, no new todo spun.** Creating a fresh `cefi_satellite_ao_dispatch_batch2` candidate for this
+    scope today would duplicate an already-tracked todo AND directly contradict two independent same-corpus rulings
+    (2026-07-26 and 2026-07-30) that this work needs a dedicated live/human-directed session, not mechanical AO
+    extraction. Marking this finalize-plan todo DONE reflects that the verdict itself (not the underlying migration) is
+    now definitively recorded — the underlying migration stays correctly open, tracked, and `assigned_vm: NA` right
+    where it already is (`issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`).
+  - No commits shipped in any service repo — this todo is doc-reconciliation/verdict-recording only, entirely within
+    `unified-trading-pm`.
   - No commits shipped in any service repo — this todo is doc-reconciliation/verdict-recording only, entirely within
     `unified-trading-pm`.
