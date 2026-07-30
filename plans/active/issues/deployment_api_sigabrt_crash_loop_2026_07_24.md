@@ -211,6 +211,29 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
+- **2026-07-30T03:59Z (slot 6, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
+  todo, 7th+ dispatch). Re-checked both precondition branches: (1) `git log -- deployment_api/gunicorn.conf.py` /
+  `gunicorn.conf.py` / `deployment_api/main.py` on `origin/live-defi-rollout` shows no new commit since `3fea307` — the
+  fresh `[BACKEND] P1` todo (diagnose why faulthandler produces zero dumps) has NOT shipped yet; (2)
+  `gcloud run revisions list` confirms `uts-shared-deployment-api-00332-8gl` (created `2026-07-30T01:09:57Z`) is still
+  the live revision, 100% traffic, and actively serving requests (`run.googleapis.com%2Frequests` entries every ~1-2min
+  as of `03:59Z`) — so this isn't an idle/unused revision going quiet by default. `gcloud logging read` for
+  `"Uncaught signal"` scoped to `00332-8gl` specifically: **zero occurrences**, meaning **~2h49m with no SIGABRT at all
+  on this revision** (deploy `01:09:57Z` → check `03:58Z`), and **~5h49m since the last SIGABRT anywhere**
+  (`00331-wzz`'s `2026-07-29T22:09:12Z`, the most recent of the 8 confirmed post-`3fea307` occurrences slot 13
+  catalogued). This quiet window is substantially longer than any gap previously observed even during a
+  CONFIRMED-still-broken period (slot 5's `07:08Z` entry found 50-71min gaps mid-crash-loop, so a sub-2h window alone
+  wouldn't be conclusive — but ~2h49m/5h49m is well past that precedent). **Not asserting this as "fixed"** — no code
+  changed between `00331-wzz` and `00332-8gl` that touches signal handling or the `_compute_inventory` cold path (the 3
+  intervening commits, `5783a5b`/`b364ea9`/`e23328d`, are a reap-tick endpoint, resource-history endpoints, and a
+  version-coherence panel — none plausibly related), so if the crash rate has genuinely dropped it's not attributable to
+  any shipped fix and could just be traffic-pattern variance; flagging as an observation for whoever picks this up next,
+  not a conclusion. Neither precondition branch is met (no BACKEND fix shipped, no new SIGABRT to read a dump from) —
+  the original ask ("read the dump, report the stuck call site") remains unanswerable. Not flipping the checkbox.
+  Releasing via `skip-current-task` (`reason_code: GATED`) per the established pattern (slots 4/10×2/2/5/8/13 all hit
+  this same unmet-precondition wait and released the same way) rather than idling the slot on a stochastic external
+  event.
+
 - **2026-07-30T03:34Z (slot 13, review)** — Dispatched `deployment_api_sigabrt_crash_loop-003` (the `[REVIEW] P2` todo,
   now its 6th+ dispatch). Did NOT just re-check "is the fix live" (already established) — went further and checked
   whether it's actually WORKING as a diagnostic. Confirmed via `gcloud run revisions list` the current live revision is
