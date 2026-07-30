@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 242 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 240 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -299,7 +299,7 @@ by hand._
   gate_on_depends: true until all of that plan's todos are done. Reconciles the source doc's own checkboxes/prose once
   its AO-dispatched todo…
 
-### tradfi (30)
+### tradfi (28)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -390,13 +390,6 @@ by hand._
   **[draft]** — Gated closeout for tradfi_satellite_ao_dispatch_batch2_2026_07_25.md — machine-held via depends_on +
   gate_on_depends: true until all 11 of that plan's todos are done. Mirrors the batch1_finalize pattern (reconcile each
   of the 11 distinct…
-- [`tradfi_satellite_ao_dispatch_batch4_2026_07_26`](./tradfi_satellite_ao_dispatch_batch4_2026_07_26.md) — Fourth
-  AO-dispatch batch for tradfi, produced by a second `/ag-closeout-audit tradfi` pass on 2026-07-26 (autonomous mode),
-  run AFTER batch3 was activated and 5 of its 9 todos had already executed. Re-audited all 27 tradfi-primary…
-- [`tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize`](./tradfi_satellite_ao_dispatch_batch4_2026_07_26_finalize.md)
-  — Gated closeout for tradfi_satellite_ao_dispatch_batch4_2026_07_26.md — machine-held via depends_on plus
-  gate_on_depends: true until all 8 of that plan's todos are done. Mirrors the batch1/batch2/batch3-finalize pattern:
-  reconcile each…
 - [`tradfi_satellite_ao_dispatch_batch5_2026_07_29`](./tradfi_satellite_ao_dispatch_batch5_2026_07_29.md) **[draft]** —
   Fifth AO-dispatch batch for tradfi, produced by a fresh `/ag-closeout-audit tradfi` pass on 2026-07-29 (autonomous
   mode, scheduled daily worker), run via a 32-agent Workflow classifying every tradfi-primary non-covering doc against
