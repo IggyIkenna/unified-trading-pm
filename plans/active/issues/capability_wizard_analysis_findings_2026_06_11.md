@@ -524,25 +524,28 @@ live API keys + the HTTP client injection). Not a wizard/manifest defect — the
 
 ### F47 — Verdict-matrix declares venue cells AVAILABLE that the v2 slot-label venue-token registry rejects
 
-**Status**: OPEN (surfaced by EXECUTION, 2026-06-13 — the Wave-2 #3 config-space fuzzer
-`e2e-testing/scripts/strategy/config_space_fuzzer.py`). The committed verdict matrix
-(`unified-api-contracts/openapi/capability-verdict-matrix.json`) declares AVAILABLE leg cells for **9 venue ids whose
-alnum-stripped form is NOT in `KNOWN_VENUE_TOKENS`** (`unified_api_contracts.internal.architecture_v2.venue_tokens`):
-`balancer_v2`, `balancer_v3`, `betfair_direct`, `gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`,
-`sushiswap_v3` (11 of 43 AVAILABLE venues fail the alnum-strip token test; the 9 above were the ones sampled; `gmx_v2`'s
-entry is now MOOT — GMX REMOVED 2026-07-25, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`, so it
-should drop out of the verdict matrix rather than need a token-registry fix). When the fuzzer compiles such a cell to a
-v2 slot label (`{archetype}@{venue}-{instr}-usdt-prod`) the strategy-service parser `split_scope_tokens` raises
-`ValueError: scope tokens (…) start with a non-venue token` — so **no v2 strategy slot can be constructed for those
-venues at all**, even though the wizard would offer them as reachable. **Why it matters**: the capability wizard can
-present a config (venue × archetype) the strategy engine literally cannot instantiate — a mechanical dead-end between
-the manifest/verdict surface and the slot-identity grammar. Reproduced as a typed `unbuildable_slot` dead-end across 20
-sampled configs (3/archetype run; deterministic). **Recommended decision**: align the two SSOTs — either add the missing
-venue tokens (with their `_vN`/`_direct` suffix normalisation) to `KNOWN_VENUE_TOKENS` + `split_scope_tokens`, OR have
-the verdict-matrix generator + the wizard venue-eligibility list exclude venues that have no slot-label token (compose
-with F39 "wizard offers ~13 venues; manifest has 183" — eligible lists are already hand-named subsets). Not fixed in
-this dispatch (LOGIC-FREEZE on strategy-service + collision boundary on UAC); recorded for a successor alignment plan.
-Companion smoke test: `e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
+**Status**: FIXED — verified 2026-07-30, no further code change needed. The original finding (surfaced by EXECUTION,
+2026-06-13 — the Wave-2 #3 config-space fuzzer `e2e-testing/scripts/strategy/config_space_fuzzer.py`) was that the
+committed verdict matrix (`unified-api-contracts/openapi/capability-verdict-matrix.json`) declared AVAILABLE leg cells
+for 9 venue ids whose alnum-stripped form was NOT in `KNOWN_VENUE_TOKENS`
+(`unified_api_contracts.internal.architecture_v2.venue_tokens`): `balancer_v2`, `balancer_v3`, `betfair_direct`,
+`gmx_v2`, `jupiter`, `pancakeswap_v3`, `smarkets_direct`, `sommelier`, `sushiswap_v3` — compiling any of these to a v2
+slot label made the strategy-service parser `split_scope_tokens` raise
+`ValueError: scope tokens (…) start with a non-venue token`, an unbuildable dead-end the wizard presented as reachable.
+**Resolution (already landed, LOGIC-FREEZE confirmed lifted per the F27 precedent above)**: all 8 real venues'
+alnum-folded tokens (`balancerv2`, `balancerv3`, `betfairdirect`, `jupiter`, `pancakeswapv3`, `smarketsdirect`,
+`sommelier`, `sushiswapv3`) are registered in `KNOWN_VENUE_TOKENS` — `unified-api-contracts@7565c0cb` ("Phase V",
+2026-06-15) wired the initial batch, `unified-api-contracts@60b7417a` (2026-07-24) registered later additions. `gmx_v2`
+is fully removed from both the token registry and the verdict matrix — `unified-api-contracts@18d53d63` (2026-07-25, GMX
+venue removal, see `/plans/archive/2026_07/defi_gmx_venue_removal_2026_07_25.md`) — so it correctly no longer appears at
+all rather than needing a token fix. Verified directly against the current tree (2026-07-30):
+`capability-verdict-matrix.json` has zero `gmx` occurrences and zero `"venue_buildable": false` cells; `venue_tokens.py`
+lines 88-93/148/181-182 carry all 8 folded tokens. The generator
+(`unified-trading-pm/scripts/openapi/generate_capability_verdict_matrix.py`) also hardened the pipeline so an
+unregistered token can never again silently read AVAILABLE — it demotes to `blocked(unbuildable_slot_venue)` instead —
+and a regression test pins the invariant:
+`unified-trading-pm/tests/unit/test_capability_verdict_matrix.py::test_f47_unbuildable_venue_cells_are_not_available`
+asserts zero unbuildable cells. Companion smoke test: `e2e-testing/scripts/strategy/test_config_space_fuzzer_smoke.py`.
 
 ### F48 — Verdict-matrix declares 22 archetypes reachable that have NO v2 engine registered (all VOL\_\* + MARKET_MAKING\_\*)
 
@@ -623,7 +626,8 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
 | Unfinished adapters            | F46 (binance/bybit/okx perp `place_order`)                                                                                                                    | BLOCKED-CREDENTIALS                              | `binance_native.py:326`/`bybit_native.py:318`/`okx_native.py:329` `raise NotImplementedError`                                 |
 | Unfinished adapters            | F42 (6 adapter-backed venues absent from VENUE_CATEGORY_MAP) — F43 RESOLVED uac@61ba5239 (2026-07-15, plan-reconcile §10)                                     | FIXED uac@f3440731 (2026-07-28)                  | UAC registry                                                                                                                  |
-| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects), F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                         | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
+| Catalogue ↔ engine             | F47 (verdict-matrix venues v2 slot-token registry rejects)                                                                                                    | FIXED (verified 2026-07-30)                      | `KNOWN_VENUE_TOKENS` + verdict-matrix regression test — see F47 section above                                                 |
+| Catalogue ↔ engine             | F48 (22 VOL*\*/MARKET_MAKING*\* archetypes, no v2 engine)                                                                                                     | LOGIC-FREEZE                                     | `e2e-testing/scripts/strategy/config_space_fuzzer.py` dead-ends                                                               |
 | Catalogue ↔ engine             | F27 (carry-staked-basis `deribit`≠`DERIBIT` case mismatch), F33–F37 (execution-algo selector contradictions)                                                  | LOGIC-FREEZE                                     | strategy-service / execution-service                                                                                          |
 | Catalogue ↔ engine             | F22 (multi-leg collapsed to one cell)                                                                                                                         | FIXED (leg-spec registry)                        | derive-from-legs follow-up open                                                                                               |
 | Collateral + movements         | **F28 (two collateral SSOTs disagree on LST haircuts — 4 conflicts)**                                                                                         | OPEN                                             | `venue_collateral.py` vs `lst_collateral_resolver.py:51-82` (HL wstETH; Bybit 10%vs15%; Deribit 7.5%vs20%; OKX absent vs 15%) |
@@ -712,8 +716,16 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
       added `tests/unit/engine/strategies/v2/test_carry_staked_basis_f27_venue_case.py` (5 tests: lowercase/mixed/upper
       all resolve to `LST_AS_MARGIN`, lowercase output exactly matches uppercase, haircut pinned to the real 0.075
       F28-reconciled value). 150 sibling staked-basis tests + the new 5 all green at strategy-service.
-- [ ] [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
-      LOGIC-FREEZE. Target: strategy-service.
+- [x] ✅ [LOGIC] P2. **F47 — verdict-matrix declares venues the v2 slot-token registry rejects** (unbuildable slot).
+      LOGIC-FREEZE. Target: strategy-service. — **DONE — already fixed, no new code needed.** FREEZE STATUS: verified
+      lifted (same basis as F27 above). Verified 2026-07-30 against the current tree: all 8 real venues' alnum-folded
+      tokens (`balancerv2`/`balancerv3`/`betfairdirect`/`jupiter`/`pancakeswapv3`/`smarketsdirect`/`sommelier`/
+      `sushiswapv3`) are registered in `unified-api-contracts` `venue_tokens.py`'s `KNOWN_VENUE_TOKENS`
+      (`unified-api-contracts@7565c0cb` Phase V 2026-06-15 + `@60b7417a` 2026-07-24); `gmx_v2` is fully removed
+      (`unified-api-contracts@18d53d63` 2026-07-25). Committed `capability-verdict-matrix.json` has 0 `gmx` occurrences
+      and 0 `"venue_buildable": false` cells. Regression test
+      `unified-trading-pm/tests/unit/test_capability_verdict_matrix.py::test_f47_unbuildable_venue_cells_are_not_available`
+      pins the invariant at zero unbuildable cells. See F47 section above for full detail.
 - [ ] [LOGIC] P2. _*F48 — 22 VOL*\*/MARKET_MAKING_\* archetypes reachable with no v2 engine.** LOGIC-FREEZE. Target:
       strategy-service.
 - [ ] [LOGIC] P2. **F33–F37 — reconcile the 5 execution-algo selector contradictions** (iceberg/SOR/ghost-algos/
