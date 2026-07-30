@@ -176,10 +176,19 @@ tick objects vs. features/fixtures rows) — verified no path overlap.
       findings as a new `plans/active/issues/<slug>_2026_07_27.md` (or fold into the existing OR-1/ player_stats-union
       issue doc's RE-TRIAGE section if one already exists and is still open) with the mechanism identified and a
       recommended fix scoped as a follow-up todo, not executed here. Detail: the OR-1/ player_stats-union issue doc's
-      own RE-TRIAGE (2026-07-23) has partial context — read it first before re-deriving from scratch. **Done when**:
-      both anomalies have an identified root cause (or a documented reason root-cause could not be established from
-      available logs/manifest evidence) written into an issue doc, cited by this todo's evidence line. Source:
-      `sports_consolidated_closeout_2026_07_19.md` Track E (decision 16 loose ends).
+      own RE-TRIAGE (2026-07-23) has partial context — read it first before re-deriving from scratch. **Fold-in added
+      2026-07-30 per operator ruling** (`autonomous_session_operator_decisions_2026_07_25.md` entry #8, option A): while
+      investigating anomaly (1)'s day-partition root cause, ALSO pull in
+      `plans/active/issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`'s still-unexamined ~1,335-row
+      (0.19%) STANDINGS/TEAMS/XG/MATCHES/FIXTURES phantom residual as a corroborating data point (not a separate
+      classification pass) — a write-side day-mismatch producing anomaly (1) would plausibly produce exactly that
+      residual's exact-day phantom flags, so check whether the same root cause explains both before writing up either
+      finding independently. **Done when**: both anomalies have an identified root cause (or a documented reason
+      root-cause could not be established from available logs/manifest evidence) written into an issue doc, cited by
+      this todo's evidence line, AND that write-up states explicitly whether the phantom-audit residual shares the same
+      root cause or is confirmed unrelated. Source: `sports_consolidated_closeout_2026_07_19.md` Track E (decision 16
+      loose ends); phantom-residual fold-in source:
+      `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`.
 
 ## Deferred (orphaned, but not AO-eligible today — do not draft, re-check next batch)
 

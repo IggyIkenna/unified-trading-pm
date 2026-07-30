@@ -93,24 +93,15 @@ drift_direction: advance-code
       plan drives to a terminal status remains under `plans/active/`,
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures, and every corpus referrer resolves
       to the archived path. Source: `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
-- [ ] [REVIEW] P1. **Resolve the conflict-gated Deferred section from batch3's own doc**, now that the operator has
-      (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For each of
-      the 6 conflict-gated docs (`data_completion_sports_2026_07_24.md` 2 items,
-      `sports_legacy_fixtures_path_migration_2026_07_24.md` 1 item,
-      `issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md` 1 item,
-      `issues/fixtures_manifest_legacy_backfill_2026_07_24.md` 1 item,
-      `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md` 1 item,
-      `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` 1 item): re-read the specific conflicting
-      todo in `sports_consolidated_closeout_2026_07_19.md` to check if it has since shipped (which would resolve the
-      conflict by making the narrower item redundant/already-covered) or if the operator's ruling clarified which side
-      should execute — if either, either mark the item covered (cite the shipped commit) or extract it as a new tracked
-      todo in a follow-up batch. If still genuinely unresolved, leave it explicitly deferred (not speculative). Also
-      separately review the 2 `doc_too_large_or_risky_for_batch` docs
-      (`sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`,
-      `issues/sports_features_layer_findings_sweep_2026_07_18.md`) and recommend whether they warrant their own
-      dedicated batch4 triage pass. **Done when**: each of the 6 conflict-gated items has either (a) a new tracked
-      todo/plan created because the conflict cleared, or (b) an explicit re-verified confirmation the conflict is still
-      open; and a recommendation is recorded for whether the 2 large/risky docs need their own batch4 pass.
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-8, `review` craft).** Resolved the conflict-gated Deferred section from
+      batch3's own doc — see Progress Log for full per-item disposition + citations. Summary: of the 6 docs / 7
+      candidates, 3 (footystats, fixtures_manifest_legacy_backfill, sports_odds_stale_fixture_reinjection) were already
+      confirmed dispatched + shipped in `sports_satellite_ao_dispatch_batch4_2026_07_25.md` (real commits cited there);
+      the remaining 4 (both `data_completion_sports_2026_07_24.md` items, the legacy-fixtures census, the phantom-audit
+      spot-check) had all been operator-ruled (entries #5-8, all `resolved`) but 2 were never actually converted into
+      tracked work despite a stale `[DECISION] P2` claim in batch4 that they had been — now genuinely closed out. The 2
+      `doc_too_large_or_risky_for_batch` docs' recommendation was already answered and executed:
+      `sports_satellite_ao_dispatch_batch8_2026_07_30.md` ran the dedicated triage/design pass (part 1 of 3).
 - [ ] [DOC] P1. **Archive `sports_satellite_ao_dispatch_batch3_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 3 above
       should have already resolved all 6 — verify none remain) → add the archive banner → run the codex-alignment check
@@ -187,3 +178,64 @@ drift_direction: advance-code
     plan-flip commit", and the error_reason census's fix write-up already lives in its own "§2.5 Update 2026-07-27"
     section; doc already `status: resolved`).
   - No commits shipped in any service repo — this todo is doc-reconciliation only, entirely within `unified-trading-pm`.
+
+- **2026-07-30 (slot-8, `review` craft) — todo 3 resolved: the 6 conflict-gated docs / 7 candidates from batch3's own
+  Deferred section.**
+  - **3 of 7 already cleared and shipped, confirmed not re-work**: batch3's own re-check note (in this doc's source
+    plan) already recorded that footystats (`issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md`),
+    `issues/fixtures_manifest_legacy_backfill_2026_07_24.md`, and
+    `issues/sports_odds_stale_fixture_reinjection_2026_07_14.md` cleared on re-check and became dispatchable todos in
+    `sports_satellite_ao_dispatch_batch4_2026_07_25.md`. Independently re-verified this is true and shipped: all 3 are
+    checked `[x]` in that plan with real commits (`instruments-service@ca8bd7b3ab` for the fixtures-manifest legacy
+    enumerator-map fix, `market-tick-data-service@76ca401f` for the odds-horizon-bucket zombie sweep, plus a same-batch
+    footystats reconciliation done 2026-07-26). No further action needed on these 3.
+  - **Remaining 4 — operator-ruled but 2 never actually converted into tracked work (real gap found).** All 4 map to
+    `autonomous_session_operator_decisions_2026_07_25.md` entries #5-8, all `Status: resolved`. But batch4's own
+    `[DECISION] P2 Retagged 2026-07-29` checkbox claimed all 4 were resolved-by-reference via entries #5-8 PLUS
+    `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s "wider-corpus re-audit" — checking batch5 directly showed this
+    over-claimed: batch5's `data_completion_sports_2026_07_24.md` section discusses two DIFFERENT candidates (a
+    rate-limit calibration probe + an API-Football quota bump), never the Transfermarkt re-attempt / ODDS+PREDICTIONS
+    blank-reason items batch3/4 actually deferred. Flagged + corrected batch4's checkbox in the same pass (addendum
+    added, not un-checked — the retag's core citation to entries #5-8 was right, only the batch5-covers-everything claim
+    was wrong).
+    1. **Transfermarkt PLAYER_VALUES re-attempt (256 cells)** [entry #5, resolved — dispatch as originally scoped]: was
+       prose only ("Remaining unaddressed gaps (follow-on todos)") in `data_completion_sports_2026_07_24.md`, never a
+       tracked checkbox — violates CLAUDE.md's "every follow-up is a `- [ ]` todo, never prose" rule on its own terms.
+       Added a new `- [ ] [DATA] P2` todo in that doc citing entry #5's ruling.
+    2. **ODDS+PREDICTIONS blank-reason golden-window measurement** [entry #6, resolved — dispatch the measure-and-file
+       as scoped]: same prose-only gap. Added a new `- [ ] [DATA] P2` todo in the same doc citing entry #6.
+    3. **`sports_legacy_fixtures_path_migration_2026_07_24.md` fixtures-path census** [entry #7, resolved — dispatch
+       as-is, the scope-correction the conflict required was already present in the todo's own Done-when]: the census
+       already exists as this doc's own P0 todo (not prose) — no new todo needed, only confirmation the conflict (Track
+       S/E/C1) is cleared. Added that confirmation directly under the census todo. Found + closed an unrelated loose end
+       while there: the doc's most recent Progress Log entry (a 2026-07-30 na-eligibility-audit park) ended mid-sentence
+       ("parked with a recommendation" — nothing after); completed it factually (`sequential: true` + operator
+       AO-authorization is the actual parked recommendation, consistent with the rest of that entry's own reasoning)
+       rather than leaving a dangling sentence.
+    4. **`issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md` STANDINGS/TEAMS spot-check** [entry #8,
+       resolved — merge into Track S2's "decision 16" investigation as a corroborating data point, NOT a separate
+       classification pass]: `sports_satellite_ao_dispatch_batch7_2026_07_27.md` had already dispatched decision 16's
+       day-partition root-cause `[DIAG] P2` todo (2026-07-27), but its text never actually named the fold-in the
+       operator ruled for. Amended that todo to explicitly require checking the phantom residual as a corroborating data
+       point and to state in its Done-when whether the two share a root cause. **Second, freshly-introduced collision
+       found and fixed in the same pass**: a same-day (2026-07-30), unrelated na-eligibility-audit session had
+       reclassified this doc's own spot-check checkbox to `assigned_vm: planning` with a "Conflict-check CLEAR" note —
+       but that check only grepped batch5 by name and missed this exact, already-resolved operator ruling, so as written
+       the doc's own checkbox and batch7's amended todo would have raced as two independent AO dispatch targets
+       investigating the same ground. Corrected in place: the doc's own checkbox now explicitly says "DO NOT
+       dispatch/investigate this item independently", points at batch7's todo as the actual execution vehicle, and the
+       na-eligibility-audit's Progress Log note got a dated correction rather than being silently overwritten.
+  - **Large/risky docs recommendation**: already answered and executed — no new recommendation needed.
+    `sports_satellite_ao_dispatch_batch8_2026_07_30.md` (`status: active`) is exactly the dedicated triage/design pass
+    this todo asked whether to recommend, already run for
+    `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` (0 new AO-eligible candidates,
+    confirmed fresh) and part 1 of 3 of `issues/sports_features_layer_findings_sweep_2026_07_18.md` (5 candidates
+    extracted + 3 reconciled). Confirmed via direct read, not just citation.
+  - **Files touched (all `unified-trading-pm`, doc-only, no service-repo commits)**: this plan (todo 3 flip + this Log
+    entry), `data_completion_sports_2026_07_24.md` (2 new todos), `sports_legacy_fixtures_path_migration_2026_07_24.md`
+    (conflict-clear note + completed dangling sentence), `sports_satellite_ao_dispatch_batch7_2026_07_27.md`
+    (decision-16 todo amended), `issues/sports_phantom_audits_reference_not_marketdata_2026_07_14.md`
+    (do-not-dispatch-independently note + na-eligibility-audit correction),
+    `sports_satellite_ao_dispatch_batch4_2026_07_25.md` (addendum on the `[DECISION] P2` over-claim),
+    `sports_satellite_ao_dispatch_batch4_finalize_2026_07_25.md` (its own identical todo 3 flipped done, same evidence —
+    avoids a future duplicate pass re-doing this exact reconciliation).

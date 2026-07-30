@@ -148,4 +148,19 @@ Cross-verified with direct `gcloud storage ls` spot-checks of the true bare `ent
   remove fallback -> delete -> doc) with same-file overlap, and its frontmatter has no `sequential: true`. Flipping
   as-is would fan 4 same-priority P1s at the same `sports_fixtures.py`/migration script concurrently. Adding
   `sequential: true` is outside the skill's stated Phase-3 edit set, and dispatching a P0 prod data migration + delete
-  is an authority call — parked with a recommendation
+  is an authority call — parked with a recommendation to add `sequential: true` + reclassify `assigned_vm: planning`
+  once an operator explicitly authorizes AO dispatch of the P0 census + the gated P2 delete.
+
+- **sports_satellite_ao_dispatch_batch3_finalize todo-3 re-check (2026-07-30)**: the Phase-1 census todo above
+  (line 101) was also independently flagged `conflict_gated` by the 2026-07-25 sports satellite triage (batch3/batch4
+  Deferred sections) against `sports_consolidated_closeout_2026_07_19.md`'s Track S (legacy write-path elimination),
+  Track E (stale-consumer repoint), and Track C1 (55,233-row dedup-collision residual, still open, no operator
+  DELETE-policy ruling). **Conflict resolved 2026-07-25** —
+  `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #7: operator ruled the census's own
+  Done-when (line 101-106 above) already requires a real GCS object read rather than trusting the manifest
+  `data_type=="FIXTURES_SCHEDULE"` label alone, which is exactly the scope-correction the conflict required — "dispatch
+  as-is" — no todo-text edit needed, the census was already correctly scoped. Tracks S/E/C1 themselves remain open on
+  the closeout's side (unaffected by this ruling), so a future migration `--apply` (todo at line 111) still needs its
+  own re-check once those land, but the CENSUS specifically (todo 101) is no longer conflict-gated — its only current
+  blocker is the na-eligibility-audit's separate AO-dispatch-authority parking noted directly above, not the
+  Track-S/E/C1 conflict.

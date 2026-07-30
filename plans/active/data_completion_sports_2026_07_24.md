@@ -465,6 +465,25 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       **Remaining unaddressed gaps (follow-on todos):** ODDS+PREDICTIONS blank-reason relabeling (3,062+3,078 cells),
       PLAYER_VALUES Transfermarkt failures (256), XG genuine absence (documented). (instruments-service +
       deployment-service)
+- [ ] [DATA] P2. **Re-launch the instruments-service Transfermarkt PLAYER_VALUES backfill scoped to the golden window**
+      (2025-09-01→2025-11-30) with skip-fresh enabled so only the 256 `attempted_failed` cells (as of the 2026-06-24
+      measurement above) are re-attempted; re-measure after. Cheap (256 cells, one launcher run), read-write only to
+      already-known-failed cells. **Cleared for dispatch 2026-07-30**: was conflict-gated against
+      `sports_consolidated_closeout_2026_07_19.md`'s Sports P2b (full-history 2015→present extension of the same recipe,
+      still `[ ]` open, unstarted) — operator ruled (option A) in
+      `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md` entry #5 (2026-07-25): dispatch this
+      narrow relaunch now regardless of P2b's timeline, since P2b's smart-skip logic will simply no-op these cells once
+      it eventually runs — no correctness conflict, only a handful of redundant re-attempts at worst.
+      (instruments-service + deployment-service)
+- [ ] [DATA] P2. **Re-measure the golden-window (2025-09-01→2025-11-30) ODDS+PREDICTIONS blank-reason `empty_confirmed`
+      residual** (~3,062/3,078 as of the 2026-06-24 measurement above, later ~3,255 combined per the 2026-06-24 DONE
+      entry below) against the live manifest, and file (not implement) a scoped issue doc capturing the root cause + fix
+      options. Read-only/diagnosis-only — no code or manifest change. **Cleared for dispatch 2026-07-30**: was
+      conflict-gated against `sports_consolidated_closeout_2026_07_19.md`'s open "FINAL full-history zero-missing
+      (R1/R2/R3)" gate (still `[ ]`, BLOCKED-PREREQUISITES) — operator ruled (option A) in
+      `autonomous_session_operator_decisions_2026_07_25.md` entry #6 (2026-07-25): dispatch now since it's a strict
+      superset of useful input for whoever eventually re-runs R1/R2/R3, cannot regress or race that gate.
+      (instruments-service)
 - [x] [DATA] P0. ✅ **POST-00:00-UTC-RESET RAMP — relaunch the api_football golden-window fleet at FULL 1200/min on the
       fresh Custom300 daily quota (300,000/day)** to COMPLETE 2025-09-01..2025-11-30 (the pre-reset ~85.7k budget only
       covers a fraction). After 00:00 UTC: re-run the 7-entity fleet via
