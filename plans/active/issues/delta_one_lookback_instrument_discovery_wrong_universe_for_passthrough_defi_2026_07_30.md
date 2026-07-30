@@ -149,6 +149,25 @@ discovers oracle-price/perp-funding-shaped instrument ids, not DEX-pool ids. Onc
 MTDS manifest already has real, dense, zero-`attempted_failed` data for both `perp_funding` (`2023-05-12..2023-10-31`)
 and (need a similar clean-window check) `oracle_prices` to backfill against.
 
+## Todos
+
+- [ ] [BACKEND] P1. Fix `LookbackValidator._discover_instruments()`
+      (`features_service/delta_one/app/core/     dependency_checker.py:679`) so that when `candle_data_types` (resolved
+      via `resolve_data_type_for_feature_group`) are ALL pass-through per
+      `unified_api_contracts.registry.market_data_categories.needs_candle_processing()`, it sources its instrument list
+      from the MTDS availability-manifest rows matching those `candle_data_types` (same manifest
+      `_build_captured_index()` already reads) instead of walking `processed_candles`. Do NOT change behavior for
+      candle-processed data_types (`dex_pool_swaps`/`dex_swaps`/`liquidations`) — this is DEFI-scoped only unless the
+      same mismatch is confirmed elsewhere. Repo: features-service. Done when: a DEFI `funding_oi`/`returns` lookback
+      check discovers oracle-price/perp-funding-shaped instrument ids (not DEX-pool ids), verified by a new unit test,
+      and `bash scripts/quality-gates.sh` green.
+- [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 todo's delta_one
+      leg: launch `features-service --feature-family delta_one --asset-group DEFI --feature-group funding_oi` (and
+      `returns`) with `TIMEFRAME=15m`, over a clean window verified against the live MTDS manifest for the resolved
+      pass-through data_type (`perp_funding` has a confirmed clean block `2023-05-12..2023-10-31`; `oracle_prices` needs
+      the same clean-window check before picking dates). Repo: features-service. Done when: `features-delta-one-defi`
+      has a populated index, and D1's checkbox is flipped citing this evidence.
+
 # Progress Log
 
 - 2026-07-30 (slot-3): filed, root-caused via live 2-attempt repro + code trace + manifest spot-checks. D1's onchain leg

@@ -123,6 +123,20 @@ clearly + recommend every caller who only needs specific groups launch with `--f
 to avoid being blocked by unrelated calculator gaps. Separately, root-cause the 4 failing groups'
 `calculator_produced_base_columns_only` gap as its own follow-on (not scoped here).
 
+## Todos
+
+- [ ] [DESIGN] P2. Decide the onchain batch exit-code policy: partial-success-distinct-from-total-failure (align with
+      delta_one's existing `_process_groups()` ANY-succeeded policy) vs.
+      document-and-recommend-`--feature-group`-scoping. Repo: features-service. Done when: an operator/main ruling is
+      recorded here and the chosen behavior is implemented in `features_service/onchain/cli/handlers/batch_handler.py`
+      (or the launcher's usage docs are updated if option (b) is chosen), with a regression test covering the chosen
+      exit-code contract.
+- [ ] [BACKEND] P3. Root-cause `calculator_produced_base_columns_only` for the `rewards`/`flash_loan_availability`/
+      `health_factor`/`liquidation_events` onchain DEFI feature groups (confirmed reproducing on
+      `2023-06-01..2023-06-07`, a clean dependency window — not a data-availability gap for THIS finding's window, but
+      unexamined further). Repo: features-service. Done when: root cause identified + either fixed or documented as a
+      genuine data/design limitation with an issue-doc update.
+
 # Progress Log
 
 - 2026-07-30 (slot-3): filed while executing D1's onchain leg. Fixed the co-discovered `perp_funding_rates` symbol bug
