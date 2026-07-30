@@ -485,3 +485,23 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
 - **2026-07-30 update (slot-15, ~15 min later)**: shard 22 (`-135900`) OOM-killed (`rc=137`, clean self-delete) at
   58,600/165,453 files (8093s elapsed — one of the longer-running survivors before dying). Fleet at 11 shards. No action
   taken (monitoring-only).
+- **2026-07-30 update (slot-2, `data_pipeline_failure` escalation agt-7e8519, DP-VM-001 `DP_VM_EXIT_NONZERO`)**:
+  dispatched by the fleet monitor for `canonical-migration-cefi-content-19-relaunch20260730-150600` (`exit_code=137`),
+  with the runbook (`rb_infra_relaunch.md`) instructing a registry-driven relaunch. **Confirmed via
+  `DeploymentsRegistry` this is the IDENTICAL death slot-15 already logged above at ~16:09Z** (started `15:08:56Z`,
+  completed `16:09:10Z`, 19,600/153,655 files at last progress line, `rc=137`) — the alert and slot-15's own monitoring
+  converged on the same VM, not a new event. Registry-verified relaunch count for this vm-prefix TODAY (queried
+  `list_recent_archive`, not just `gcloud compute operations list` — the exact under-counting trap slot-15 flagged
+  above): **5** attempts (`-122417` exit_code=125, `-130600` exit_code=137, `-133500` exit_code=125, `-135500`
+  exit_code=125, `-150600` exit_code=137) — well past `RB-INFRA-RELAUNCH`'s `≤2/(vm-prefix,day)` bound. Per the
+  runbook's own bound plus this doc's established monitoring-only policy (see slot-15's self-correction entry above),
+  did **not** relaunch. Read the `-150600` `run.log` tail for corroborating diagnostic value: `host_metrics_window`
+  shows `mem_pct` climbing 70.2%→93.7% over the final ~9 sampled minutes with a consistently POSITIVE `mem_slope`
+  throughout (never negative or flat) — a continuous per-file growth pattern, not a one-time upfront allocation. This
+  weighs against the `ThreadPoolExecutor`'s upfront `{pool.submit(...) for p in all_files}` futures dict as the primary
+  driver (that would front-load memory once at submission time, then stay flat as files complete) and is more consistent
+  with the P1 todo's existing hypotheses (a) PyArrow native buffer retention across repeated `pd.read_parquet` calls, or
+  (b) some per-file allocation (e.g. `df.copy()` in `patch_instrument_id_column`) not being released back to the OS. Did
+  not attempt a fix — confirming the actual mechanism needs a profiler attached to a live run, which is the P1 todo's
+  own scope, not something to guess at from log/registry evidence alone. Pinged the authoring fleet-monitor slot with
+  this outcome; no code changed, no VM launched (relaunch bound already breached at dispatch time).
