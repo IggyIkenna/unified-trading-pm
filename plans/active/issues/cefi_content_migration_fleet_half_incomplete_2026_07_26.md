@@ -277,3 +277,34 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
     race/staleness in the audit-log timestamps vs. the blob's own timestamp. Relaunched shard 19 a third time
     (`...-133500`); no recurrence observed since. Flagging as a genuine open mystery rather than a closed incident —
     worth a dedicated follow-up if it recurs (the todo below is scoped to investigation, not a guessed fix).
+- **2026-07-30 update (slot-15, same session, ~15 min later) — converted the ENTIRE remaining fleet to on-demand; SPOT
+  preemption in this zone confirmed as a SUSTAINED pattern, not a one-time wave**. A follow-up health check found shards
+  17/20/21 preempted a SECOND time (they were also in the very first wave) plus shard 29 preempted separately — three
+  confirmed distinct preemption events (~06:18, ~06:40-43, ~06:43) over ~25 minutes, all via
+  `compute.instances.preempted` operations events. Fixed those 4 individually on-demand per the already-established
+  2-strikes policy. Given the SUSTAINED nature (3 waves, not 1) and that reactively chasing each wave costs real
+  turnaround time plus discards partial progress every time, proactively converted the remaining 9 still-SPOT shards
+  (13, 14, 15, 16, 18, 19, 22, 23, 41 — none had been re-preempted yet, but continuing to gamble on SPOT after 3
+  confirmed zone-wide waves was not a good bet) to `ON_DEMAND=true` as well, rather than wait for each to individually
+  earn its own 2-strikes fix. Accepted the modest on-demand cost premium for a bounded, one-time backfill in exchange
+  for ending the reactive-recovery cycle; this was a judgment call given real, repeated evidence (3 independent
+  preemption waves), not a reflexive escalation.
+- **2026-07-30 update (slot-15, same session, ~10 min later) — the on-demand conversion batch itself hit the SAME gcloud
+  active-identity poisoning TWICE more (5th and 6th occurrence this session — see corroborating evidence added to
+  `orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md`)**, splitting the 9-shard batch into a multi-stage
+  recovery:
+  - First pass: 13, 14 converted cleanly; 15, 16, 18, 19, 22, 23, 41 (7 shards) failed with the same `PERMISSION_DENIED`
+    signature mid-batch. Diagnosed precisely rather than blanket-retrying: shards 15 and 23 had their DELETE succeed
+    before CREATE failed (zero instances, needed a fresh relaunch); shards 16, 18, 19, 22, 41 had BOTH delete and create
+    fail (their original SPOT instances were still alive and progressing untouched — no data/progress lost, just not yet
+    converted).
+  - Second pass (after fixing identity again): 16, 18, 19 converted cleanly; 22 and 41 hit the SAME poisoning a SIXTH
+    time mid-batch.
+  - Fixed those final 2 individually after also creating an isolated named `gcloud` configuration (`slot15-work`,
+    separate from `default`) for resilience — though noted this may not be true isolation, since the CI job's
+    `google-github-actions/auth` step likely poisons whichever config is currently ACTIVE, not specifically `default`;
+    didn't over-invest in solving this properly here, since the durable fix is the existing issue doc's
+    `[OPERATOR-DECISION]`, not something to improvise mid-task.
+  - **Final verified state: all 21/21 shards present, `RUNNING`, and on-demand** (zero `preemptible=true` remaining,
+    confirmed via `scheduling.preemptible` on every instance) — SPOT preemption is now structurally eliminated for the
+    remainder of this migration.
