@@ -199,22 +199,26 @@ import both).
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Build the paper-LIVE routing seam for `AtomicInstruction` → `AtomicLegExecutor` via the UTL
-      `EventTransport` facade — RULED 2026-07-28 (see ruling above), no operator decision remains.** No live tick
-      runtime currently routes an emitted `AtomicInstruction` to the executor (`AtomicLegExecutor` and
-      `V2InstructionRouter` are both unwired in production). Build: (1) strategy-service publishes each emitted
-      `AtomicInstruction` as an event envelope via `unified_trading_library.streaming.event_facade`'s `EventTransport`;
-      (2) execution-service subscribes and routes each atomic to `AtomicLegExecutor.execute`; (3) wire
-      `InMemoryTransport` for the paper/colocated tick runtime (default, matches every other paper producer/consumer
-      pair on this spine — must NOT change `paper(W)==batch-rerun(W)` determinism), Pub/Sub for a real live deployment
-      (not exercised until live trading is separately authorized, per this doc's own OPERATOR DECISIONS list —
-      paper-vs-live promotion and Betfair account/credential/jurisdiction sign-off stay gated exactly as already
-      documented above; only the paper-LIVE routing plumbing itself is unblocked by this ruling). Repos: strategy-
-      service, execution-service, unified-trading-library. Cross-repo integration test in `e2e-testing`/
-      `system-integration-tests`. **Done when**: a strategy-emitted `AtomicInstruction` (via `InMemoryTransport`)
-      reaches `AtomicLegExecutor.execute` end-to-end in a new test proving the full round trip (mirroring the existing
-      `test_prediction_arb_3venue_paper_proof.py` benchmark-fill proof pattern), and `quality-gates.sh` is green across
-      both repos.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-30 — `unified-api-contracts@7eb56a5f`, `strategy-service@baccf22a`,
+      `execution-service@968e9857`, `e2e-testing@8d31206`.** Built the paper-LIVE routing seam for `AtomicInstruction` →
+      `AtomicLegExecutor` via the UTL `EventTransport` facade — RULED 2026-07-28 (see ruling above). Shipped: (1) UAC —
+      `source="strategy"` registered on `CanonicalPersistEnvelope` + a new `(*, "atomic_instruction")` SINK_MATRIX shard
+      (`STREAM_ONLY`); (2) strategy-service —
+      `strategy_service/engine/strategies/v2/live_routing.py::publish_atomic_instruction` publishes each emitted
+      `AtomicInstruction` as a `CanonicalPersistEnvelope` via `unified_trading_library.streaming.event_facade` (module
+      default `InMemoryTransport` for the paper/colocated topology, matching every other paper producer/consumer pair on
+      this spine — `paper(W)==batch-rerun(W)` determinism unaffected since publish is an explicit caller action, not a
+      change to `V2EngineOrchestrator.on_tick`'s own I/O-free contract); (3) execution-service —
+      `execution_service/v2/atomic_instruction_router.py::route_atomic_instructions` subscribes (filtering on
+      `source == "strategy"`, mirroring MDPS's `_FacadeTickFetcher` "source must be MTDS" pattern) and routes each
+      parsed atomic to `AtomicLegExecutor.execute`; a real live deployment threads Pub/Sub instead, not exercised here —
+      paper-vs-live promotion and Betfair account/credential/jurisdiction sign-off stay gated exactly as documented
+      above. Cross-repo integration test in `e2e-testing` (`tests/unit/test_atomic_instruction_live_routing_seam.py`, 3
+      tests, mirroring `test_prediction_arb_paper_loop.py`'s direct-call proof pattern): a REAL strategy-engine-emitted
+      `AtomicInstruction` (via `GroupBRunner`, same crossed 3-venue fixture as the sibling proof) is published via
+      `InMemoryTransport`, routed, and reaches `AtomicLegExecutor.execute` end-to-end, settling `COMPLETE` with both
+      legs placed — matching the sibling direct-call proof's outcome. **Done when**: the round-trip test passes (yes)
+      and `quality-gates.sh` is green across all four touched repos (yes — SHAs above).
 
 ## Progress Log
 

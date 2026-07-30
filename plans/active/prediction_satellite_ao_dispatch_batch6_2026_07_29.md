@@ -131,15 +131,23 @@ sports-tranche-owned).
       already corrected by a separate 2026-07-30 reconciliation pass — A1 now correctly points at Phase 6 instead of the
       stale generic "harden the capture path" reference; no further action needed here.)
 
-- [ ] [BACKEND] P1. **Build the paper-LIVE routing seam: `AtomicInstruction` → `AtomicLegExecutor` via the UTL
-      `EventTransport` facade.** Architecture was RULED 2026-07-28 (use the codex-mandated live=batch
-      `unified_trading_library.streaming.event_facade` spine — `InMemoryTransport` for paper/colocated; no operator
-      decision remains). Build: strategy-service publish side, execution-service subscribe+route side,
-      `InMemoryTransport` wiring, and a round-trip proof test (a strategy-emitted `AtomicInstruction` via
-      `InMemoryTransport` reaches `AtomicLegExecutor.execute`). **Source**:
-      `plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (sole `## Todos` item). **Done when**:
-      the round-trip test passes and `quality-gates.sh` is green across both repos; flip the source doc's checkbox
-      citing the SHAs.
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-30 — `unified-api-contracts@7eb56a5f`, `strategy-service@baccf22a`,
+      `execution-service@968e9857`, `e2e-testing@8d31206`.** Built the paper-LIVE routing seam: `AtomicInstruction` →
+      `AtomicLegExecutor` via the UTL `EventTransport` facade. Architecture was RULED 2026-07-28 (use the codex-mandated
+      live=batch `unified_trading_library.streaming.event_facade` spine — `InMemoryTransport` for paper/colocated; no
+      operator decision remains). Shipped: (1) UAC — registered `source="strategy"` + a `(*, "atomic_instruction")`
+      SINK_MATRIX shard (STREAM_ONLY); (2) strategy-service —
+      `engine/strategies/v2/live_routing.py::publish_atomic_instruction` wraps an emitted `AtomicInstruction` into a
+      `CanonicalPersistEnvelope` and publishes it via the facade; (3) execution-service —
+      `v2/atomic_instruction_router.py::route_atomic_instructions` reads matching envelopes (filtered on
+      `source="strategy"`) and drives each through `AtomicLegExecutor.execute`; (4) e2e-testing — the round-trip proof
+      (`tests/unit/test_atomic_instruction_live_routing_seam.py`, 3 tests): a REAL strategy-engine-emitted
+      `AtomicInstruction` published via `InMemoryTransport` reaches `AtomicLegExecutor.execute` end-to-end and settles
+      `COMPLETE` with both legs placed — plus a shard-identity round-trip check and a non-strategy-source filter check.
+      **Source**: `plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (sole `## Todos` item,
+      flipped in the same commit set). **Done when**: the round-trip test passes and `quality-gates.sh` is green across
+      all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
+      execution-service, and e2e-testing (SHAs above).
 
 - [ ] [BACKEND] P2. **Two-sided Betfair odds — persist back+lay, not just one side.** Item `[5]` under the source doc's
       "Smaller open items (documented, not blocking paper)" — items `[1]`-`[4]` shipped 2026-07-20, this one is still
