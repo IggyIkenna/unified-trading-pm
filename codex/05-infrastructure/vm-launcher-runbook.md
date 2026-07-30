@@ -100,6 +100,20 @@ tails), read/write git and plan docs, and do single-object `gsutil stat`/small-f
 for VM selection/naming: this doc's rule above; for Spot provisioning:
 `/codex/05-infrastructure/spot-vms-for-backfill.md`.
 
+**HARD RULE — a killed local launcher process does NOT mean the VM create call was cancelled; verify before assuming
+failure OR before retrying.** `gcloud compute instances create` is issued as one HTTP call inside the launcher's local
+bash process; if that local process is killed (a tool-call timeout, Ctrl-C, a background-job cutoff) AFTER the call was
+already sent but BEFORE the launcher printed its own success confirmation, the create request itself keeps executing
+server-side and the VM is very likely to come up anyway — the kill only stopped the WATCHER, not the launch. Real
+instance, 2026-07-30 (`cefi_content_migration_fleet_half_incomplete_2026_07_26.md`): a foreground batch of 21 sequential
+launches hit a 120s tool timeout mid-launch; re-running the launcher for the in-flight shard immediately after produced
+`ERROR: ... already exists` — the VM the timeout appeared to have killed had, in fact, already been created. **Before
+treating a timed-out/killed launch as failed-and-safe-to-retry**, check
+`gcloud compute instances describe <name> --zone=<zone>` (or `instances list --filter="name~<prefix>"`) for the exact
+name the launcher was about to use — a `RUNNING` result means it succeeded despite the local kill; only retry with the
+SAME name if it genuinely does not exist (an `already exists` retry error is itself the confirmation, not a new problem
+— no action needed beyond verifying the existing instance is healthy).
+
 ## Heavy COMPUTE/MEMORY on the shared planning-vm (HARD RULE, added 2026-07-27)
 
 **The Heavy I/O exemption above is I/O-only — it is NOT a blanket pass for heavy COMPUTE/MEMORY.** The rule above
