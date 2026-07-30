@@ -115,10 +115,19 @@ not just noting.
 
 ## Todos
 
-- [ ] [DATA] P1. Quantify actual cost impact: pull attempt-count distribution across all `ldr_qg_failure` escalations
+- [x] ✅ [DATA] P1. Quantify actual cost impact: pull attempt-count distribution across all `ldr_qg_failure` escalations
       over the incident's full 2026-07-27→present window (not just the 6h sample here) and estimate GH-Actions-minute
       waste from cancelled/timed-out/retried runs vs. the self-hosted migration's original projected savings — the
-      operator asked for this audit's numbers to be real, not assumed.
+      operator asked for this audit's numbers to be real, not assumed. **DONE 2026-07-30T10:54-11:05Z (slot 5,
+      data_engineering) — real numbers pulled from the AO SQLite state.db directly (bypasses the
+      `/api/escalations/active` API's hardcoded `.limit(100)` rows, confirmed too small to cover the full window) + real
+      GH Actions run history via `gh api`/`gh run list`. See Progress Log entry below for the full breakdown and
+      methodology. Verdict: the retry storm's GH-Actions-DOLLAR waste is real but small
+      (~$10 over the sampled 3.5-day window, ≈$90/mo if sustained) — roughly 2-3% of the migration's ~$350-450/mo
+      projected fleet savings, not big enough to threaten it. The bigger, genuinely unquantified-here cost is AWS EC2
+      wall-clock/compute on the oversubscribed shared host from the 815 real agent-dispatch attempts — a different cost
+      bucket than what this todo asked about (GH-Actions-minutes), flagged as a new follow-up rather than
+      assumed-covered.**
 - [x] ✅ [OPERATOR] P1. **Operator-ruled 2026-07-29 (interactive decision session)**: keep protected-6 on self-hosted,
       relying on the just-applied host fix (instance resize + added swap) to cut retry-storm frequency, re-measured
       before any further change. Revisit the 2026-07-28 "protected-6 stay self-hosted, accept recurring reds, resolve
@@ -141,6 +150,17 @@ not just noting.
 - [ ] [SCRIPT] P2. Once `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s Recommended-fix-path section
       is next revisited, consider splitting that doc (archive the day-1 Progress Log, keep an active continuation) so
       future corroborations have somewhere to land instead of spawning sibling docs like this one.
+- [ ] [DATA] P2. **New, opened by the P1 cost-quantification finding above.** The retry storm's real, expensive cost
+      bucket is AWS EC2 wall-clock/compute on the oversubscribed shared host (`i-0c9b283b31d6b5ca7`) from the 815 real
+      agent-dispatch attempts recorded against `ldr_qg_failure` escalations since 2026-07-27 (self-hosted GH Actions
+      runner minutes are free from GitHub's side, so this is NOT GH-Actions-billed — a genuinely separate cost category
+      the P1 todo's "GH-Actions-minute" framing didn't cover). Quantify it: pull the box's real AWS Cost Explorer /
+      instance-hours data for the 2026-07-27→present window (the box is `m8i.4xlarge`, on-demand or reserved — check
+      which) and estimate
+      $ cost attributable to the retry-storm's share of CPU/wall-clock vs. steady-state baseline
+      usage. Done when: a real $
+      figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can
+      be compared side-by-side.
 
 ## Evidence
 
@@ -309,9 +329,77 @@ not just noting.
   real production-topology decision (which repos' CI moves back to GH-hosted, cost/perf tradeoff), not a mechanical
   follow-up of an already-made ruling, so left for the operator per this session's own scope (execute already-decided
   rulings, don't make new policy calls). No code/infra change made; read-only SSM queries only.
+
 - **na-eligibility-audit 2026-07-30** (tranche=cross-cutting, autonomous): RECLASSIFY NA → planning — the 4 remaining
   todos are bounded measurements/diagnostics (attempt-count distribution over a stated window, post-resize protected-6
   re-measure, plan_health-queue root-cause split, doc split); the one operator call is already `[x]` ruled. **Note
   (integrator, same day)**: the close-out pass recorded immediately above already executed the post-resize protected-6
   re-measure and returned a NEGATIVE verdict, so that particular todo is answered even though its checkbox is untouched
   here.
+
+- **2026-07-30T10:54-11:05Z (slot 5, data_engineering) — P1 cost-quantification todo, real numbers**. Two real,
+  independently-sourced datasets, not assumed:
+
+  **(1) Escalation attempt-count distribution — pulled directly from the AO's SQLite `state.db`
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, read-only query), NOT the
+  `/api/escalations/active` HTTP endpoint.** Confirmed via code read (`server/escalation.py:list_active_escalations`,
+  line ~1804) that the endpoint hard-caps at `.limit(100)` rows ordered by `created_at DESC` REGARDLESS of the
+  `include_resolved_within_hours` window passed — verified empirically too (`include_resolved_within_hours=72` and
+  `=200` both returned exactly 100 rows, earliest `created_at` unchanged at `2026-07-29T06:27:48Z` either way). This
+  means the endpoint structurally CANNOT answer "full 2026-07-27→present window" once total escalation volume (all
+  wall_types) exceeds 100 in that window — which it does (100 rows only reached back ~28h, not the ~83h this todo
+  needs). Querying `escalation_queue` directly instead: **168 `ldr_qg_failure` escalations created since
+  2026-07-27T00:00:00Z** (status: 125 `resolved`/`qg_v2_green`, 28 `unresolved`/`still_red_past_deadline`, 9
+  `dispatched`/`still_red_reescalated`, 6 `dispatched` mid-flight). Attempts: **min 1, max 224, mean 4.85, sum 815**
+  across the 168 rows. Distribution is heavily right-skewed: 76 rows at exactly 1 attempt, 51 at 2, 22 at 3, tapering to
+  a long tail of 12 escalations at ≥5 attempts including the extremes already known from prior entries in this doc
+  (`trading-agent-service`#364 = 78, `market-tick-data-service`#0 = 46) PLUS one NEW extreme not previously surfaced:
+  **`instruments-service`#1009 (`agt-1b4cc2`) hit 224 attempts** before resolving `qg_v2_green` at 2026-07-29T09:59:49Z
+  (created 2026-07-29T01:05:15Z, ~8h54m to resolve).
+
+  **Attempts ≠ CI re-triggers — confirmed by direct cross-check, an important methodology correction.** Sampled the
+  224-attempt `instruments-service`#1009 case against real GH Actions history
+  (`gh run list --workflow=quality-gates-v2.yml --created "2026-07-29T01:00:00Z..2026-07-29T10:00:00Z"`): only **19
+  actual CI runs** occurred in that ~9h window (11 success, 7 failure, 1 cancelled) — nowhere near 224. So
+  `escalation.attempts` (incremented once per fix-worker DISPATCH, `escalation.py:647`) measures agent-RESPAWN churn,
+  not CI-run churn; a naive "attempts × CI-run-cost" formula would have overstated GH-Actions waste by ~12×. Corrected
+  the estimate below to use REAL CI run counts instead of escalation attempt counts.
+
+  **(2) Real fleet-wide `quality-gates-v2` CI run volume since 2026-07-27, via `gh run list`/`gh api`** across the 25
+  distinct repos carrying a `ldr_qg_failure` escalation in this window (queried per-repo with
+  `--created "2026-07-27T00:00:00Z..2026-07-30T23:59:59Z"`; `unified-trading-pm` hit the 500-row page cap on a single
+  query so it was re-split into 5 sub-windows and re-summed to get its true count — every other repo stayed under the
+  cap on the first pass). **Grand total: 2,893 `quality-gates-v2` runs fleet-wide** — 2,269 success (78.4%), 322
+  cancelled (11.1%), 255 failure (8.8%), 40 `startup_failure` (1.4%, the account-wide GH-hosted-runner spending-limit
+  incident this doc's earlier entries already traced — `BLK-21d55fb1`), 7 queued/pending. Non-success (real retry churn)
+  = 624 runs (21.6%).
+
+  **GH-Actions-dollar estimate.** Confirmed via `gh api .../actions/runs/<id>/jobs` on a sample run (`30441834008`) that
+  the residual, still-not-self-hosted-migrated jobs are 3 short `ubuntu-latest` jobs per run (`content sentinel`,
+  `quality-gates-v2` aggregator, `Record QG result` — all ≤10s wall-clock but per the pre-existing migration doc's own
+  established finding, `github_actions_self_hosted_runner_migration_2026_07_15.md:1386`, GitHub bills a **1-minute
+  minimum PER JOB** regardless of the sub-10s actual duration the `timing` API rounds to `0ms`). Confirmed
+  `startup_failure` runs bill
+  **$0** (0 jobs ever scheduled, matching this doc's earlier `billable: {}`/`jobs:
+  []` findings). At the confirmed **$0.006/min**
+  rate (`github_actions_cost_reduction_options_analysis_2026_07_15.md`): real-dispatched non-success runs (cancelled
+  322 + failure 255 = 577; excluding the 40 zero-job `startup_failure` runs) × 3 jobs × 1 min × $0.006/min = **~$10.39**
+  in GH-Actions-dollar waste from actual retry/cancel churn over this ~3.5-day sampled window — extrapolated (if this
+  rate held for a full month, which it may not since this is an active incident, not steady-state): **≈$85-95/mo**.
+
+  **Verdict vs. the migration's original projected savings.** The archived migration plan's own stated target: fleet
+  **~$1,000/mo → ~$550-650/mo** (i.e.,
+  **~$350-450/mo projected savings**,
+  `github_actions_self_hosted_runner_migration_2026_07_15.md` Progress Log). The retry storm's GH-Actions-dollar waste
+  (~$85-95/mo
+  if sustained) is **real but small — roughly 2-3% of the projected savings, not big enough to threaten or erase the
+  migration's net benefit in GH-Actions-billing terms.** This is the mechanical, non-obvious reason: the migration moved
+  the expensive, long-running `qg-slices` (test/typecheck) work to self-hosted runners, which GitHub does not bill at
+  all — so even a large volume of RETRIED runs only re-bills the tiny residual 3-job hosted overhead, not the real
+  compute. The operator's original framing ("retry churn may be burning more wall-clock/compute than the GH minutes it
+  saved") is directionally correct, but the expensive resource it's pointing at is **AWS EC2 wall-clock/compute on the
+  oversubscribed shared host** (`i-0c9b283b31d6b5ca7`, real cost, NOT GitHub-Actions-billed) from the 815 real
+  agent-dispatch attempts — a genuinely different cost bucket than "GH-Actions-minutes," which this todo's literal
+  framing didn't cover and which this session did NOT quantify (opened as a new `[DATA] P2` follow-up todo above rather
+  than assumed away). No code/infra change made; read-only SQLite + `gh api`/`gh run list` queries only; slot left clean
+  on `live-defi-rollout`.
