@@ -673,8 +673,25 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       CME↔ICE, both future legs, not usable for the IBKR spot leg) — so the corrected note distinguishes the
       closed-registry/open-SOR-wiring state (CME/IBKR legs) from the still-open-registry state (ICE leg). No further
       code change needed this pass — checkbox flip + note correction only.
-- [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ibkr** (distance 1, status partial) — missing:
-      needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot-14, capability_wizard_gap_discovery-028) — stale cell note already
+      corrected by the sibling CME fix; edge correctly stays `partial`.** **unlock CARRY_BASIS_DATED --supports-->
+      venue:ibkr** (distance 1, status partial) — missing: needs-config. Why blocked: (no reason recorded).
+      (auto-emitted by generate_capability_unlock_report.py) — **unified-api-contracts@f8515eb7** (already shipped, on
+      `origin/live-defi-rollout`): that single-cell fix (source `archetype_capability_manifest.json` cell) propagated to
+      ALL THREE derived edges (`venue:cme`, `venue:ibkr`, `venue:ice`) simultaneously — confirmed via
+      `git show     f8515eb7 -- openapi/capability-unlock-report.json`, whose diff shows the same corrected `reason`
+      string landing on all three `to_node_id` blocks in one commit. Independently re-verified both halves for the
+      `ibkr` edge specifically (not just trusted the sibling's claim): (1) UAC's `CROSS_VENUE_ROUTING_POLICIES`
+      (`unified_api_contracts/internal/architecture_v2/cross_venue_routing_policy.py`) declares four IBKR-leg policies
+      with `leg_venues=("ibkr","cme")` (`ibkr_spy_cme_es_basis`, `ibkr_qqq_cme_nq_basis`, `ibkr_iwm_cme_rty_basis`,
+      `ibkr_spy_option_cme_es_hedge`) — the UAC-declaration half of gap #10 IS closed for IBKR↔CME; (2) grepped
+      execution-service (`v2/router.py`, `algo_library/sor_cross_chain.py`, `algo_library/sor_twap.py`) and
+      strategy-service (`portfolio_allocator/service.py`) for `CROSS_VENUE_ROUTING_POLICIES` /
+      `cross_venue_routing_policy` / `routing_policy_for` / `policies_for_venue_pair` — **zero call sites in either
+      repo**, matching the CME sibling's finding despite the module's own `CONSUMER_CALL_SITES` metadata claiming four.
+      So the real remaining gap for this edge is SOR-wiring (routing policy declared but not consumed), not registry
+      absence. Status correctly stays `partial` (not fabricated to `supported`). No further code change needed this pass
+      — checkbox flip only (the note correction already shipped bundled with the CME fix).
 - [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ice** (distance 1, status partial) — missing:
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 
