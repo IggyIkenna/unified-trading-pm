@@ -610,9 +610,27 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       real, still-open gap, same classifier-keyword quirk noted on the sibling todos, not fixed here). This checkbox was
       simply never flipped when the shared root-cause fix landed (the fixing todo's own scope note said it left the
       sibling checkboxes un-flipped). No code changed this pass; checkbox-only verification flip.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp** (distance 1, status
-      partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry missing from UAC
-      (gap #3).. (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **FIXED 2026-07-30 (slot-13, capability_wizard_gap_discovery-025) — stale cell reason corrected;
+      edge correctly stays `partial`.** **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp**
+      (distance 1, status partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry
+      missing from UAC (gap #3).. (auto-emitted by generate_capability_unlock_report.py) —
+      **unified-api-contracts@f8d266ab** (shipped earlier in this same task, already on `origin/live-defi-rollout`):
+      UAC's `FlashLoanReceiverRegistry` (gap #3, `unified_api_contracts/internal/architecture_v2/flash_loan_receiver.py`
+      — `FLASH_LOAN_RECEIVER_REGISTRY`) already exists with 10 real per-(chain, protocol) entries including an Arbitrum
+      Uniswap V3 flash-swap row — the UAC-declaration half of gap #3 was already closed, so the cell's "registry
+      missing" reason was stale/wrong. The real remaining gap is execution-wiring, not registry absence — independently
+      re-verified every factual claim against current code before flipping: grepped execution-service directly and
+      confirmed only `execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py` (a DIFFERENT
+      archetype, `kind=recursive_leverage`) calls `flash_loan_receiver_for()` (2 call sites, both non-test); the live
+      AAVE connector (`defi_execution/protocols/aave.py`/`aave_live.py`) resolves receivers only via config override or
+      the testnet-only `TestnetContractRegistry`, never the UAC registry; and `engine/handlers/flash_loan_handler.py`
+      (the paper/backtest simulator) has ZERO `receiver_address`/`receiver_kind` references — no receiver-address
+      concept at all. Status correctly stays `partial` (registry now exists, but no live flash-loan-arb execution path
+      consumes it) — the commit corrected the (DEFI, lp) cell's `notes` in the source
+      `archetype_capability_manifest.json` and propagated the fix through the derived `capability-manifest.json`,
+      `capability-unlock-report.json`, and the `ARBITRAGE_PRICE_DISPERSION` prospectus to name the real remaining gap
+      (execution-wiring) instead of the closed one (registry declaration). No further code change needed this pass —
+      checkbox flip only.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
       status partial) — missing: needs-leg-spec. Why blocked: vol_arb not a separate capability; multi-leg vol-arb algo
       pending.. (auto-emitted by generate_capability_unlock_report.py)
