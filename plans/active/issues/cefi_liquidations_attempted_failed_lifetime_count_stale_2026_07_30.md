@@ -35,6 +35,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
+    /plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md,
   ]
 created: 2026-07-30
 parent_epic: observability_master
@@ -172,3 +173,16 @@ not lost if the bound expires unanswered.
   `6a067cf1`); ruled out one hypothesis for the residual trickle via Cloud Logging + launcher-doc read; no code changed
   (nothing left to fix — both major root causes are already shipped). Escalated the alert-design question
   (lifetime-count vs recency-window) via `/blocked` per the role's genuinely-ambiguous-decision path.
+- **2026-07-30 (data_pipeline_failure escalation worker, `agt-d36d2a`, slot 2) — 2nd dispatch, re-fire confirmed
+  static.** Re-page carried `44,422 attempted_failed of 749,123 attempted` (ratio 5.9%) vs this doc's original reading
+  of `44,422 / 749,121` — the `attempted_failed` numerator is byte-identical; only `attempted` (denominator) grew by 2,
+  consistent with the boot context's own `attempted_failed_staleness` label "no new attempted_failed activity in 1d".
+  Per the skip-condition this corpus has converged on (see
+  `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s 2026-07-30 entries — "no new
+  activity since the doc's last verified reading", not a fresh full manifest read every time), did a cheap git-ancestor
+  check instead of re-deriving the diagnosis: `market-tick-data-service@6a067cf1` (aiodns fix) is still an ancestor of
+  `origin/live-defi-rollout`, and `deployment-service/scripts/vm/tardis-concurrency-guard.sh` still caps
+  `TARDIS_MAX_CONCURRENT_VMS=1`. Both root-cause fixes remain in place; no new failure class observed; the operator
+  decision on lifetime-count-vs-trailing-window (options A/B/C above) is still open and unaffected by this re-fire. No
+  code changed. Also filed `/plans/active/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (if
+  not already cross-linked) as the standing meta-issue this repeat dispatch itself is an instance of.

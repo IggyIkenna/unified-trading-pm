@@ -155,3 +155,15 @@ regression) is worse.**
   file reads + one `git merge-base` check + a Progress Log append, no GCS read. Further corroborates Option A: this
   condition has now consumed 6 full orchestrator-agent dispatches for a backlog that has not moved in any
   root-cause-relevant way since 2026-07-28.
+- **2026-07-30 (data_pipeline_failure escalation worker, agt-d36d2a, slot 2) — a second condition,
+  `(cefi, liquidations)`, shows the identical pattern.**
+  `cefi_liquidations_attempted_failed_lifetime_count_stale_2026_07_30.md` (filed earlier the same day by `agt-029155`)
+  re-fired with `attempted_failed` byte-identical (44,422) and `attempted` up only 2 (749,121→749,123) — the boot
+  context's own `attempted_failed_staleness` annotation already labeled it "no new attempted_failed activity in 1d".
+  Skipped the live manifest re-read and did only a git-ancestor check on the two referenced fixes
+  (`market-tick-data-service@6a067cf1` + `tardis-concurrency-guard.sh`'s `TARDIS_MAX_CONCURRENT_VMS=1`), both still in
+  place; appended a Progress Log entry to that doc instead of a fresh diagnosis. Confirms this is not isolated to one
+  cell — at least two independent `(asset_group, data_type)` DP-FETCH-009 conditions are now each consuming repeat
+  full-worker dispatches for backlogs that already have an OPEN issue doc and zero new root-cause-relevant activity,
+  reinforcing that Option A's dedup check belongs at the dispatch layer (would save this exact session's spawn) rather
+  than being re-derived per-condition by convention alone.
