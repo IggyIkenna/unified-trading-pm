@@ -489,6 +489,33 @@ same session both inherit), they will clobber each other's intermediate files wi
 scratch artifacts by a unique per-agent token (agent id / PID / `mktemp -d`), never by a name two concurrent workers can
 both derive.
 
+**3. `.git/COMMIT_EDITMSG` is a single unlocked file per `.git` directory — `git commit` invocations racing in the same
+clone can swap MESSAGES across each other while each keeps its OWN correct tree (root-caused 2026-07-30,
+`plans/active/issues/shared_clone_concurrent_commit_message_swap_2026_07_28.md`).** Every `git commit`, including a
+non-interactive `git commit -m "..."`, still writes its message to `.git/COMMIT_EDITMSG` early (right after the
+`pre-commit` hook) and only reads it back — to actually build the commit object — after the `prepare-commit-msg` and
+`commit-msg` hooks finish. Unlike the index (`index.lock`, exclusive) and `HEAD` (compare-and-swap; a losing writer gets
+`fatal: cannot lock ref 'HEAD': is at ... but expected ...`), **that message file has no locking at all.** If a second
+`git commit` in the same clone — including one that ultimately FAILS (a branch-drift rejection, a prettier/plan-hygiene
+auto-fix forcing a re-stage) — writes to `COMMIT_EDITMSG` while a first, slower invocation is still inside its own hook
+chain (prek's formatter/linter/checker set commonly runs hundreds of ms–seconds), the first invocation's final commit
+object gets ITS OWN tree (built from the index it already staged) but the SECOND process's message. Confirmed by direct
+reproduction (a scratch repo + an artificial slow `prepare-commit-msg` hook): a clean `index.lock`/ref-CAS failure rules
+out the index and `HEAD` as the culprit, and prek's own patch-stash tempfiles are PID-namespaced (`<ts>-<pid>.patch` —
+not shared), leaving `COMMIT_EDITMSG` as the confirmed, reproduced root cause.
+
+- **HARD RULE — one `git commit` in flight at a time per clone.** Do not run two `git commit` invocations (yours + a
+  sub-agent's, or two sub-agents sharing this slot's index per "Within-slot ergonomics" below) concurrently against the
+  same `.git` directory. Serialize: finish (or cleanly abort) one commit before starting the next.
+- **Detection, not prevention, already ships**: `scripts/quickmerge.sh`'s Commit+Push+Flip step compares
+  `git log -1 --format=%s` against the subject line it intended to commit and prints a loud `WARN` (never silently) on a
+  mismatch — it does not auto-`--amend` (a swapped-in message may belong to a process still relying on its own HEAD
+  read). Treat any such WARN as license to re-verify the SHA before citing it as `- [x] ... — <repo>@<sha>` evidence.
+- This is a distinct mechanism from item 2 in that issue doc's "Corroboration" section (`git commit` silently picking up
+  a FOREIGN process's staged files into the tree) — that one is a real index-sharing hazard requiring
+  `git diff --cached --stat` + `git restore --staged <foreign-file>` before every commit (see "Within-slot ergonomics"
+  below); this one (message-only) can happen even when the tree is provably clean.
+
 ## Within-slot ergonomics
 
 Every slot clone's `.envrc` declares:
