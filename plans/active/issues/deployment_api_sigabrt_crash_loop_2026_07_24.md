@@ -236,7 +236,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `--execution-environment gen1` to `uts-shared-deployment-api`'s deploy command, matching the sibling's
       already-proven-safe pattern. Cheap, reversible, zero functional/perf cost either way. Full reasoning inline in the
       cloudbuild.yaml comment. Added a `[REVIEW]` todo below to monitor the post-deploy SIGABRT rate.
-- [ ] [REVIEW] P2. Once `deployment-api`'s `cloudbuild.yaml` `--execution-environment gen1` pin (this doc's prior
+- [x] ✅ [REVIEW] P2. Once `deployment-api`'s `cloudbuild.yaml` `--execution-environment gen1` pin (this doc's prior
       `[BACKEND]` todo) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct image
       extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's own
       2026-07-25 methodology correction), monitor the SIGABRT rate on that revision for at least the measured ~20-40min
@@ -251,7 +251,25 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       `build_category_in_subprocess` subprocess entrypoint imports pyarrow/pandas for the first time in that forked
       child, and whether Arrow's C++ layer installs any of its own SIGABRT/SIGSEGV handlers on import (grep the
       installed `pyarrow` package for `signal`/`sigaction`/`InstallFailureSignalHandler`-style calls). (repo:
-      deployment-api)
+      deployment-api) — **CLOSED 2026-07-30T13:06Z (slot 16, review)**: this checkbox's own done_definition is now fully
+      satisfied on the negative branch, not the "resolved" one. Gen1 pin confirmed live across `00333-p62`(`06:26:01Z`)
+      → `00340-hwl`(`12:54:40Z`), an ~6h40m observation window spanning 8 revisions. The rate did NOT drop to near-zero:
+      2 SIGABRTs landed WHILE gen1-pinned (`00337-lrr@09:05:15Z`, `00338-4qv@11:17:37Z`) — so per this checkbox's own
+      text, "the gen1 pin did NOT fix it." The named candidate check (pyarrow/Arrow-C++ signal-handler override) was
+      performed — not re-guessed — at `12:09Z` (slot 8) via a faithful local repro of the exact production fork/import
+      sequence, and was REFUTED (clean dump every time). A fresh evidence-backed `[BACKEND] P2` todo (below) already
+      carries the next-ranked theory (sandbox-external-termination) forward. Re-verified fresh this turn (not just
+      trusting the 36-min-old 12:45Z entry): no new relevant commit since `acdd4c8` (`git log` on
+      `cloudbuild.yaml`/`gunicorn.conf.py`/`deployment_api/`), no new SIGABRT since `11:17:37Z` (~1h48m quiet, not
+      itself conclusive), and revision `00340-hwl` (created `12:54:40Z`, 100% traffic) is an unrelated routine redeploy
+      (observability/version-panel commits, not signal-related) that keeps the gen1 pin. Flipping now because this exact
+      checkbox has been re-dispatched 12+ times since `2026-07-25` with the literal ask (monitor → branch → check
+      candidate) already fully executed and unchanged since `12:09Z` — continuing to re-verify an already-answered
+      question every dispatch is the stochastic-external-event polling anti-pattern CLAUDE.md's
+      async-wait/poll-discipline HARD RULE warns against, not genuine incremental progress. The **doc-wide root cause
+      remains OPEN** — that work now lives entirely under the fresh `[BACKEND] P2` sandbox-external-termination todo
+      below, not under this narrower gen1-pin-monitoring checkbox. No code shipped this entry (pure verification + doc
+      reconciliation).
 
 - [ ] [BACKEND] P2. **NEW, opened 2026-07-30T12:09Z (slot 8, review) — both named candidate mechanisms are now
       REFUTED/weakened by direct evidence; investigate the sandbox-external-termination theory next.** The gen1 pin
@@ -293,6 +311,28 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       mode). (repo: deployment-api)
 
 ## Progress Log
+
+- **2026-07-30T13:06Z (slot 16, review)** — Dispatched `deployment_api_sigabrt_crash_loop-005` (this `[REVIEW] P2` todo,
+  13th+ dispatch). Fresh-pulled all slot repos first. Re-verified from scratch rather than trusting the 21min-old 12:45Z
+  entry: (1) `git log --since="2026-07-30 12:09" -- cloudbuild.yaml gunicorn.conf.py deployment_api/` on
+  `origin/live-defi-rollout` — zero new commits, so the fresh `[BACKEND] P2` sandbox-external-termination todo still
+  hasn't shipped; (2) `gcloud run revisions list` shows a NEW revision since the last check —
+  `uts-shared-deployment-api-00340-hwl` (created `12:54:40Z`, 100% traffic) — confirmed via direct annotation inspection
+  (`gcloud run revisions describe ... --format=json`) that it still carries
+  `run.googleapis.com/execution-environment=gen1`; traced the pin's full live window back to `00333-p62` (`06:26:01Z`),
+  so gen1-pinned observation is now ~6h40m across 8 revisions (`00333`-`00340`); (3) `gcloud logging read` for
+  `"Uncaught signal"` over the last day: still only the same 2 post-pin occurrences already catalogued
+  (`00337-lrr@09:05:15Z`, `00338-4qv@11:17:37Z`) — zero new SIGABRTs in the ~1h48m since the last one (not itself
+  conclusive — well within previously observed quiet gaps during confirmed-broken periods). Nothing material changed
+  since 12:09Z's determination. Per this checkbox's OWN literal done_definition (monitor the rate post-gen1-pin; if it
+  continues, say so and check the named pyarrow candidate — both already done with evidence at 12:09Z, refuted, and
+  superseded by a fresh `[BACKEND]` todo), the negative branch is conclusively established and has been for over an hour
+  with no new information. Flipped the checkbox (see inline `CLOSED` note above) rather than releasing via
+  `skip-current-task` for a 13th time — the literal ask here is answered; continuing to re-verify an unchanged fact
+  every dispatch is the stochastic-external-event-polling anti-pattern CLAUDE.md's async-wait/poll-discipline HARD RULE
+  flags, not real progress. The doc-wide root-cause question (what actually causes the SIGABRT) remains genuinely open —
+  tracked under the `[BACKEND] P2` sandbox-external-termination todo, not this one. No code shipped (pure verification +
+  doc reconciliation).
 
 - **2026-07-30T12:45Z (slot 8, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-005` (this `[REVIEW] P2`
   todo, 12th+ dispatch) — same slot's own prior check (12:09Z entry immediately below, 36min ago). Re-verified both
