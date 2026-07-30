@@ -221,22 +221,27 @@ drift_direction: advance-code
       subscription-tier-limit-vs-backfill-bug fork this todo exists to resolve is answered: **subscription-tier limit**
       — any future fix-path decision (e.g., whether to upgrade the API-Football plan) should proceed on that basis. No
       fix implemented; no code changed. (repo: instruments-service, read-only — verified.)
-- [ ] [DATA] P1. UNBLOCKED 2026-07-29 — **Sports P2b — reference sources + odds history, 5 of 6 sources VERIFIED DONE
-      2026-07-27, odds_api genuinely NOT done yet (real gap; root-cause closed-exhausted, credential now fixed, only the
-      actual backfill run remains).** **Scope correction applied first**: this todo's own title says "2015→present," but
-      that framing is stale — the 2026-07-21 operator ruling (`/codex/02-data/sports-2020-06-data-floor.md`) clamped
-      every sports source's `coverage_start` to **2020-06-06** and ruled "any plan/track that backfills sports history
-      before 2020-06 is moot." So "extend to `coverage_start`" today means 2020-06-06→present, not 2015→present;
-      measured against the live `SOURCE_COVERAGE_START` floor. **Method**: single read of
-      `instruments-store-sports-prd-central-element-323112`'s `_index/availability_index.parquet` (6,871,468 rows, one
-      download, bounded columns — no whole-corpus GCS walk), filtered `date >= 2020-06-06`, grouped by `source`. **5/6
-      sources — open_meteo (weather), soccer_football_info, transfermarkt, understat, footystats — genuinely extended**:
-      each has a manifest row for effectively every calendar day since the floor (2243-2248 of 2243 calendar days), **0
-      blank/un-typed `error_reason`** on any `empty_confirmed`/`attempted_failed` row across all 5. **odds_api — NOT
-      extended**: 635 of 2243 calendar days since the floor have **ZERO manifest row of any capture_status** (a true
-      absence, not a typed skip — IS has no `odds_api` adapter/expected-universe seeder, confirmed by sub-agent trace,
-      so no denominator cell was ever materialized for these days). Of the 635, only 19 fall inside the
-      already-documented + already-fixed 2026-06-27..07-15 scheduler-dormancy window
+- [x] ✅ [DATA] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — the checkbox was lagging this
+      todo's own prose, which already reflects the odds-api-key credential fix (same rotation as
+      `sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`); fixing the formal tag to match, not
+      duplicating the note below. Only the gap-fill backfill run remains (tracked in
+      `sports_odds_api_scattered_multiyear_gaps_2026_07_27.md`), not credential-blocked.** UNBLOCKED 2026-07-29 —
+      **Sports P2b — reference sources + odds history, 5 of 6 sources VERIFIED DONE 2026-07-27, odds_api genuinely NOT
+      done yet (real gap; root-cause closed-exhausted, credential now fixed, only the actual backfill run remains).**
+      **Scope correction applied first**: this todo's own title says "2015→present," but that framing is stale — the
+      2026-07-21 operator ruling (`/codex/02-data/sports-2020-06-data-floor.md`) clamped every sports source's
+      `coverage_start` to **2020-06-06** and ruled "any plan/track that backfills sports history before 2020-06 is
+      moot." So "extend to `coverage_start`" today means 2020-06-06→present, not 2015→present; measured against the live
+      `SOURCE_COVERAGE_START` floor. **Method**: single read of `instruments-store-sports-prd-central-element-323112`'s
+      `_index/availability_index.parquet` (6,871,468 rows, one download, bounded columns — no whole-corpus GCS walk),
+      filtered `date >= 2020-06-06`, grouped by `source`. **5/6 sources — open_meteo (weather), soccer_football_info,
+      transfermarkt, understat, footystats — genuinely extended**: each has a manifest row for effectively every
+      calendar day since the floor (2243-2248 of 2243 calendar days), **0 blank/un-typed `error_reason`** on any
+      `empty_confirmed`/`attempted_failed` row across all 5. **odds_api — NOT extended**: 635 of 2243 calendar days
+      since the floor have **ZERO manifest row of any capture_status** (a true absence, not a typed skip — IS has no
+      `odds_api` adapter/expected-universe seeder, confirmed by sub-agent trace, so no denominator cell was ever
+      materialized for these days). Of the 635, only 19 fall inside the already-documented + already-fixed
+      2026-06-27..07-15 scheduler-dormancy window
       (`sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md`, fixed
       `market-tick-data-service@410d7569`), and part of one range overlaps the already-documented 2022-09 canonical
       under-capture outage (`mdt_legacy_canonical_row_gap_2026_07_16.md`, superseded). **616 days are newly found,

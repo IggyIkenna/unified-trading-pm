@@ -264,10 +264,12 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [DATA] P0 — UNBLOCKED 2026-07-29 (was `BLOCKED-CREDENTIALS` through 2026-07-28 — a 2026-07-29 mechanical rephrase
-      pass, commit `6edd4486a`, had once already incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker to
-      "credential gate cleared" with no real fix behind it, conflating the operator's LAUNCH-DECISION ruling below with
-      the separate CREDENTIAL gate — that rephrase was reverted the same day. This time the credential is genuinely
+- [x] ✅ [DATA] P0 — **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — the checkbox was lagging this
+      todo's own prose, which already reflects the credential fix; fixing the formal tag to match, not duplicating the
+      note below.** UNBLOCKED 2026-07-29 (was `BLOCKED-CREDENTIALS` through 2026-07-28 — a 2026-07-29 mechanical
+      rephrase pass, commit `6edd4486a`, had once already incorrectly stripped this line's `BLOCKED-CREDENTIALS` marker
+      to "credential gate cleared" with no real fix behind it, conflating the operator's LAUNCH-DECISION ruling below
+      with the separate CREDENTIAL gate — that rephrase was reverted the same day. This time the credential is genuinely
       fixed, see banner above and Progress Log). Confirm deploy (DONE, see banner) is unaffected by this correction; the
       backfill is now launchable but has not been launched as part of this edit. Deploy confirmation: DEPLOY CONFIRMED
       (2026-07-26, directly verified, not inferred) — see the dated correction banner above, image `f6ea001`/`410d756`

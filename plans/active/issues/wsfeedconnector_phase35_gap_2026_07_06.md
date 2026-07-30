@@ -292,8 +292,14 @@ approve / defer per category rather than per-venue.
       `blocked-not-registered` cell — no live WS to build, no provider selection required. The task-brief provider-pick
       ("OANDA / TrueFX / bank-feed") is superseded: FX is a batch-only venue outside tradfi MVP, capture continues via
       the existing Yahoo Finance REST batch path.
-- [ ] [CODE] P1. **ICE WSFeedConnector build** — Databento supports ICE datasets but is BLOCKED-CREDENTIALS on the
-      Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
+- [x] ✅ [CODE] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — reclassified
+      BATCH-ONLY-BY-DESIGN, matching the sibling FX/KRX/YAHOO_FINANCE resolution immediately above. The premise
+      ("Databento supports ICE datasets but is BLOCKED-CREDENTIALS on the Real-Time key") is stale and contradicts the
+      codex SSOT: `/codex/02-data/tradfi-databento-sourcing-ssot.md` lines 84, 103-119 explicitly list ICE feeds as NOT
+      in the Databento subscription allowlist and state "any codex/plan line framing ICE as Databento is STALE" — ICE is
+      Yahoo-Finance-sourced (DXY), REST-only, batch-only. No Real-Time key will ever unblock this since there is no
+      live-WS surface to build.** ICE WSFeedConnector build — Databento supports ICE datasets but is BLOCKED-CREDENTIALS
+      on the Real-Time key (per Databento connector docstring). Once credential arrives, wire ICE under the existing
       `databento_tradfi_ws.py` factory pattern (venue map = `_VENUE_TO_DATASET`) (repo: market-tick-data-service).
       **BLOCKED-CREDENTIALS**.
 - [x] [CODE] P2. **KRX + YAHOO_FINANCE WSFeedConnector build** ✅ — resolved as **honest-absence (BATCH-ONLY-BY-DESIGN

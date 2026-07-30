@@ -552,14 +552,22 @@ file, not here.
       `adapters/defi_adapter.py`, per `/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md`. Definition of
       done: a written finding per module (kept/fixed/removed + reason). (repos: instruments-service,
       market-tick-data-service, execution-service)
-- [ ] [CONFIG] P2. **F4 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was
-      falsely cited "0 open todos" there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph.**
-      `mtds-dex-pools-backfill` VM: `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph;
-      the gateway subgraph ID returns "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive
-      but current-snapshot-only, not historical `dex_pool_state`. **BLOCKED-CREDENTIALS**: needs either a current
-      indexer-allocated Curve subgraph ID (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`,
-      Alchemy) for historical block-level state — or accept honest-absence for Curve pools until a source is wired.
-      (repo: market-tick-data-service)
+- [ ] [CONFIG] P2. **Retagged 2026-07-29 (corpus hygiene pass): reframed as a code-only extension task, not
+      credential-blocked — verified `curve_adapter.py` already has a fully-wired `_query_curve_pool_at_block`
+      (~line 617) / `_ensure_alchemy_client` (~line 217-228) RPC-fallback path using the same already-provisioned
+      `alchemy-api-key`; UAC (`_defi.py` `SUBGRAPH_IDS["curve"]`) already carries live Curve subgraph IDs for
+      ETHEREUM/OPTIMISM/AVALANCHE (only ARB/POLY lack one, per the UAC comment "ARB/POLY only on hosted service
+      (deprecated)"), and Alchemy already supports Arbitrum/Polygon (`_defi_chain_data.py` chain configs) — so the
+      remaining work is wiring the adapter's RPC path to the correct per-chain Alchemy URL (it currently hardcodes
+      `eth-mainnet.g.alchemy.com` in `_ensure_web3`) for ARB/POLY, not a new credential.** F4 (rehomed from
+      `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, was falsely cited "0 open todos"
+      there — corrected 2026-07-27) — Curve DEX pools dead: decommissioned subgraph. `mtds-dex-pools-backfill` VM:
+      `curve_adapter.py`'s hosted-service subgraph URL was decommissioned by The Graph; the gateway subgraph ID returns
+      "no allocations" (no indexers serve it). Curve REST (`api.curve.finance`) is alive but current-snapshot-only, not
+      historical `dex_pool_state`. ~~**BLOCKED-CREDENTIALS**: needs either a current indexer-allocated Curve subgraph ID
+      (The Graph gateway API key) or an RPC key (`_query_curve_pool_at_block`, Alchemy) for historical block-level
+      state~~ — the RPC-fallback path is already built and keyed; extend it to ARB/POLY (code-only), or accept
+      honest-absence for Curve pools on those 2 chains until wired. (repo: market-tick-data-service)
 - [ ] [DATA] P3. **F6 (rehomed from `/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`, same
       correction) — DeFi lending-indices: heavy instruments-store fallback, ~39% zero-row writes.**
       `mtds-lending-indices-20260628` VM: instruments-store-defi parquet missing for

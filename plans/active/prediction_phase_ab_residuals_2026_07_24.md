@@ -192,25 +192,27 @@ source: >-
 
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 
-- [ ] [BACKEND] P1. **Close the 12 residuals on Kalshi/Polymarket perpetual futures + live CLOB depth/quotes** (funding
-      / basis / dispersion arb inputs). `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (12 open of 85) —
-      **split + archived 2026-07-24** (plan line-cap remediation) into
-      `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (1 open),
+- [x] ✅ [BACKEND] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — this item was split +
+      archived 2026-07-24 into 3 successor docs, and the doc's own text below already directs future work to them; no
+      independent work remains under this checkbox.** **Close the 12 residuals on Kalshi/Polymarket perpetual futures +
+      live CLOB depth/quotes** (funding / basis / dispersion arb inputs).
+      `prediction_venue_perps_and_live_clob_depth_2026_06_20.md` (12 open of 85) — **split + archived 2026-07-24** (plan
+      line-cap remediation) into `prediction_perps_kalshi_polymarket_parked_2026_07_24.md` (1 open),
       `prediction_live_clob_depth_capture_2026_07_24.md` (2 open), and
       `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (9 open + 2 in-progress); the residual-fold above should
       now target those 3 successors, not the archived original. (repos: market-tick-data-service, unified-api-contracts,
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                              `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                              **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                              `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                              2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                              either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                              launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                              operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                              availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                              see its own Progress Log.
+                                                                                                                                                                                  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                                  **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                                  `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                                  2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                                  either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                                  launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                                  operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                                  availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                                  see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 

@@ -449,15 +449,25 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       sibling ICE/CME-futures-options and CME-futures-reference-gap bullets immediately below, which already track the
       credential/upstream blockers on the actual data recovery. Source:
       `tradfi_satellite_ao_dispatch_batch3_2026_07_26.md` todo 3.
-- [ ] [DATA] P1. **FINDING — ICE futures + CME futures-options not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
+- [ ] [DATA] P1. **FINDING — ICE futures ~~+ CME futures-options~~ not on Massive → BLOCKED-CREDENTIALS.** Ping filed:
       `ikenna_orchestrator/pings/slot_5.md` (2026-07-27, slot-5, CREDENTIAL APPROVAL REQUEST). Massive covers CME-group
       only, no options-on-futures product; old databento ~16-18K/day was CME ES futures-options. **Operator ask**: an
-      ICE-futures + CME-futures-options reference source, or unblock Databento billing. Repo: instruments-service.
-      assigned_vm: vm-tradfi. (MIGRATED FROM: same.)
-- [ ] [DATA] P1. **tradfi CME futures reference gap from 2026-06-08** — Massive `/futures/vX/{products,contracts}` 404
-      (worked 2026-06-07). `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run
-      `--asset-group TRADFI --source massive` for missing days so `venue=CME` refills, then regen the tradfi catalogue.
-      Repo: instruments-service. (MIGRATED FROM: same.)
+      ICE-futures ~~+ CME-futures-options~~ reference source, or unblock Databento billing. Repo: instruments-service.
+      assigned_vm: vm-tradfi. (MIGRATED FROM: same.) **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference
+      — the struck CME-futures-options half is already covered by the existing GLBX.MDP3 Databento subscription
+      (`/codex/02-data/tradfi-databento-sourcing-ssot.md` line 80 lists "options-on-futures" under GLBX.MDP3); the
+      sibling replacement-path todo at `data_completion_tradfi_2026_07_15.md:426-433` already directs running IS
+      reference-data capture via `--source databento` for this — no new billing/credential needed, that was stale
+      Massive-era framing. The ICE-futures half remains genuinely open — a paid ICE/OPRA vendor subscription the
+      operator already declined once (2026-06-18 ruling, "requires an explicit ICE/OPRA subscription").**
+- [x] ✅ [DATA] P1. **Retagged 2026-07-29 (corpus hygiene pass): resolved-by-reference — Massive was removed entirely as
+      a tradfi source (operator ruling 2026-07-19, `uac@a2beed46`), subscription terminated, `source='massive'` writes
+      now hard-reject. The replacement path already exists at `data_completion_tradfi_2026_07_15.md:421-433` (run IS
+      instrument capture with `--source databento` → regenerate the tradfi catalogue) — that replacement todo is NOT yet
+      executed, only correctly targeted; tracking for the actual re-run continues there, not here.** tradfi CME futures
+      reference gap from 2026-06-08 — Massive `/futures/vX/{products,contracts}` 404 (worked 2026-06-07).
+      `BLOCKED-UPSTREAM-OUTAGE`: re-probe, on restore re-run `--asset-group TRADFI --source massive` for missing days so
+      `venue=CME` refills, then regen the tradfi catalogue. Repo: instruments-service. (MIGRATED FROM: same.)
 - [x] ✅ [CODE] P2. **FINDING — MTDS Massive connector uses the wrong futures endpoint.**
       `massive_tradfi_rest_connector.py` maps futures→`/v3/reference/futures/contracts` (404s); working path is
       `/futures/vX/contracts` (+ `/futures/vX/products` for contract size). Repo: market-tick-data-service. assigned_vm:
