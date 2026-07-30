@@ -51,7 +51,7 @@ source: >-
 
 ## Todos
 
-- [ ] [DOC] P2. **Verify the parent's 2 todos against their own stated regression-test criteria, then check archival
+- [x] ✅ [DOC] P2. **Verify the parent's 2 todos against their own stated regression-test criteria, then check archival
       eligibility.** Once `ao_consolidated_closeout_2026_07_25.md`'s liveness-kick-host-load-aware and
       soft-kick-to-hard-kill-escalation todos are `[x]`: (1) re-verify each cited commit sha actually lands the
       regression test named in the todo's own "Done when" text — do not trust the parent doc's own copy of the evidence
@@ -62,4 +62,15 @@ source: >-
       `status: active`. (3) Run the standard 6-step archival ritual on THIS finalize plan + its parent once both are
       done. **Done when**: both todos' commits are verified against their stated done-when, the parent's archival
       eligibility is explicitly checked (archived if zero open todos remain, left active with a stated reason
-      otherwise), and this finalize plan + its parent are archived if applicable.
+      otherwise), and this finalize plan + its parent are archived if applicable. — Verified 2026-07-30 (not trusting
+      the parent doc's own evidence copy): both commits confirmed as real ancestors of `live-defi-rollout` HEAD in
+      `agent-orchestrator` — `64b5310` contains `_progress_marker_shields_kick` + the exact regression test
+      `test_pane_read_latency_with_advancing_progress_markers_produces_zero_kicks`; `77fc60a` contains
+      `test_genuinely_wedged_slot_still_escalates_after_grace_fix`. Both tests re-run live
+      (`.venv/bin/pytest tests/test_worker_liveness.py -k "..."`) → **2 passed**, not just cited. Parent's `## Todos`
+      section grep-verified at **zero** remaining `- [ ]` items, `locked_by:` empty — archival-eligible. Per the 6-step
+      ritual: migrated the composed grace-shield + escalation contract into
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` (new § "WorkerLivenessKicker — host-load-aware
+      grace shield + hard-kill escalation"), added archived-banners, fixed corpus referrer paths, updated
+      `ag_closeout_audit_rollout_2026_07_25.md`'s tracker reference, and archived both this finalize plan and its parent
+      to `plans/archive/2026_07/`.
