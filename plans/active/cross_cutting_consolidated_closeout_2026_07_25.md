@@ -414,8 +414,12 @@ shipped independently via `features-service@57f8b45d9`, `smoke_matrix.py` fixed 
 1 needs a schema-contract decision, tracked in
 `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md`; **one residual is a direct deepening
 of the other doc's finding #1**: the bucket-NAME fix landed, but the gas-fee PATH within that bucket still resolves
-nowhere — unfixed, tracked in the same untracked-followups doc, needs a data-pipeline research answer on where gas-fee
-data actually lives) + `distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY;
+nowhere — unfixed, but as of **2026-07-30 no longer tracked in the untracked-followups doc and no longer an open
+research question**: it was split out to
+`/plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` (`assigned_vm: planning`, P0),
+which verified against current code exactly where gas-fee data lives — MTDS writes it to the SAME bucket under the
+canonical `venue=ALCHEMY`/`chain=<CHAIN>`/`data_type=gas_fees` partition path, so it is a reader-prefix fix, not a
+data-location unknown) + `distinct_values_noncanonical_audit_2026_07_20.md` (mostly done, PURGE worklist verified EMPTY;
 **census refresh DONE 2026-07-25**, `unified-trading-pm@b2b170cd6` — 175 → 45 non-canonical distinct values, plus a
 rollup-overwrite gotcha filed; was: "[IN FLIGHT 2026-07-25] … running now". 2 unrelated todos remain open: reconcile
 every drift cluster to an owning plan, and the MDPS `canonical_writer_shaping.py::_type_token_from_canonical_id` bug).

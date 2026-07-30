@@ -348,7 +348,10 @@ drift_direction: advance-code
       question) is NOT resolved here — re-scoped as its own tracked todo in
       `/plans/active/issues/silent_wrong_answer_audit_untracked_followups_2026_07_28.md` (strategy-service repo, out of
       this dispatch's features-service/cross-cutting scope) rather than answered inline in this doc, so it isn't lost.
-      Source: `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (archived 2026-07-28).
+      **Moved again 2026-07-30**: that gas-fee todo now lives in its own dispatchable doc,
+      `/plans/active/issues/strategy_service_gas_fee_reader_hardcodes_1_gwei_2026_07_30.md` — follow that pointer, not
+      the untracked-followups doc, which now holds only the unrelated e2e-testing schema-contract decision. Source:
+      `/plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md` (archived 2026-07-28).
 - [ ] [SCRIPT] P3. Close the stale `strategy_store_split_brain_2026_07_13.md` issue doc — its two remaining reader-code
       legs are already shipped, the doc frontmatter just never flipped. Verify both live: (1)
       `deployment-api/deployment_api/deployment_api_config.py` `effective_strategy_store_{cefi,tradfi,defi}_bucket` all
