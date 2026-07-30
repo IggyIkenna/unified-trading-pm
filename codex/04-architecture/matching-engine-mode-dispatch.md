@@ -28,7 +28,7 @@ authoritative_for:
   ]
 referenced_by: [/codex/04-architecture/matching-engine-assumptions.md, /codex/04-architecture/operational-modes.md]
 owner: topology_qgroup_gap_closure_2026_05_09 Phase 8
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-21
 code_refs:
 updated: 2026-05-15
 closes: GAP-14, GAP-15
@@ -97,7 +97,11 @@ The mode-based fork lives at the execution-service instruction router:
 - BATCH/PAPER → `engine/backtest/node_builder.py` `BATCH_FILL_ALGO_TYPES` gate → `BenchmarkMatcher`
 - LIVE/MANUAL → `engine/live/` → venue adapter → real order
 
-Transfer instructions follow the same fork via `engine/transfers/factory.py` `make_transfer_adapter()`.
+**⛔ Corrected 2026-07-30** — transfers do NOT go through an `engine/transfers/factory.py` `make_transfer_adapter()`;
+neither the module nor the function exists. Transfer instructions are owned by
+`execution-service/execution_service/transfer_coordinator.py` (`TransferCoordinator`), which is also where the
+one-`client_id`-per-transfer isolation invariant is enforced (`CrossClientTransferForbiddenError`) — see
+`/codex/04-architecture/client-funds-isolation.md`.
 
 ## Test Coverage
 

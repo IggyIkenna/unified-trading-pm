@@ -29,9 +29,9 @@ referenced_by:
     /codex/04-architecture/tradfi-batch-live.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-18
 code_refs:
-plan: plans/active/batch_live_symmetry_2026_05_10.md Tab 1
+plan: /plans/archive/2026_05/batch_live_symmetry_2026_05_10.md Tab 1
 ---
 
 # CeFi Batch/Live Architecture
@@ -111,7 +111,7 @@ CeFi shard atom is `(asset_group=cefi, data_type, venue, date)`.
 
 **Shard identity propagation**: the 5-pillar shard atom must be identical across writer atomicity → manifest row key →
 data-status display → downstream preflight gate → deployment-UI drilldown. Drift between any two is a silent correctness
-bug. SSOT: [`../epics/infrastructure_master.md`](../../plans/epics/infrastructure_master.md).
+bug. SSOT: [`../epics/infrastructure_master.md`](//plans/epics/infrastructure_master.md).
 
 ---
 
@@ -126,7 +126,7 @@ adapters are therefore in the live execution path for DeFi archetypes:
 | `arbitrage_price_dispersion` | DEX spot         | All 7 venues (USDC margin)                              | USDC          |
 
 The `LST_AS_MARGIN` eligibility criterion is archetype-driven, not venue-level. Consult
-[`../09-strategy/architecture-v2/archetypes/`](../09-strategy/architecture-v2/archetypes/) for per-archetype margin +
+[`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/) for per-archetype margin +
 venue eligibility matrix.
 
 **Batch/live symmetry for hedge legs**: the CeFi matching engine (`L2Matcher`) simulates the hedge-leg fills in batch
@@ -217,9 +217,9 @@ retried after key renewal. `attempted_failed` keeps the cell in the "retryable" 
 - **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
 - **Pipeline-mode partition**: [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
 - **DeFi archetype hedge legs**:
-  [`../09-strategy/architecture-v2/archetypes/`](../09-strategy/architecture-v2/archetypes/)
+  [`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/)
 - **BatchExecutionMode**: `unified_api_contracts.internal.execution.BatchExecutionMode`
-- **Shard-granularity SSOT**: `plans/epics/infrastructure_master.md`
+- **Shard-granularity SSOT**: `/plans/epics/infrastructure_master.md`
 - **Empty-record rules**:
   [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - **CeFi expiry-window + 401 contract**:

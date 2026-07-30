@@ -24,7 +24,7 @@ created: 2026-04-03
 authoritative_for: [token wrapping rules + venue collateral acceptance matrix]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-24
 code_refs:
 ---
 

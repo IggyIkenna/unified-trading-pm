@@ -27,7 +27,7 @@ referenced_by:
     /codex/15-runbooks/instruments-live/t1-audit-discrepancy.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-20
 code_refs:
 ---
 
@@ -88,9 +88,9 @@ trigger.
 
 ## Cross-references
 
-- Architecture entry-point: [`instruments-live-architecture.md`](instruments-live-architecture.md)
+- Architecture entry-point: [`instruments-live-architecture.md`](/codex/04-architecture/instruments-live-architecture.md)
 - Honest-absence rules:
   [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
-- Alerting taxonomy: [`alerting-batch-live.md`](alerting-batch-live.md) § "Instruments-live failure rules"
+- Alerting taxonomy: [`alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) § "Instruments-live failure rules"
 - Lifecycle events: `unified_api_contracts/internal/events.py` (`INSTRUMENTS_LIVE_PREFLIGHT_FAILED` /
   `INSTRUMENTS_LIVE_UPSTREAM_STALE`)

@@ -22,7 +22,7 @@ authoritative_for:
   [unified service framework (ServiceBootstrap/UnifiedServiceHandler/build_event_sink boilerplate elimination)]
 referenced_by: [/codex/04-architecture/service-control-surface.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-23
 code_refs:
 ---
 

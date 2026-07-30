@@ -33,24 +33,24 @@ referenced_by:
     /codex/04-architecture/strategy-ensemble-topology.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-19
 code_refs:
 ---
 
 # Custody Providers — single SSOT
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** — per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > § R9 RESOLVED: **May-23 cutover ships on `CLOUD_KMS_ENCRYPTED`** (HSM-backed CMK envelope encryption); **June-1 flips
 > per-wallet to `COPPER_MPC` / CEFFU** on POD-provided creds. Per-wallet `signing_surface` field on
-> [`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+> `WalletProvisioningConfig` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
 > supports config-only flips with no recompile.
 >
 > **🟢 Cloud HSM CMKs PROVISIONED 2026-05-12** by slot 4 agent (operator-authorized ADC): 10 HSM-backed CMKs (5
 > asset_groups × `wallets-prod` + `wallets-staging` KeyRings) in `asia-northeast1`, 90-day auto-rotation, IAM Decrypter
 > bound to `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` only. **End-to-end smoke test PASSED**:
 > encrypt + decrypt round-trip on staging CMK returned matching plaintext. Issue doc closed at
-> [`plans/active/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](../../plans/archive/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
+> [`/plans/archive/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md`](/plans/archive/issues/cloud_kms_cmk_provisioning_for_may23_cutover_2026_05_12.md).
 >
 > **🟢 POD client scope clarified 2026-05-12** — see
 > [`/codex/14-customer-journeys/pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium-client-onboarding.md).
@@ -69,7 +69,7 @@ code_refs:
 
 This is the single SSOT for custody integration in the Unified Trading System. It folds in the previous per-provider
 docs (`copper-custody-integration.md` + `ceffu-custody-integration.md`, both deleted 2026-05-08 per
-[`../../plans/active/codex_refactor_2026_05_08.md`](../../plans/active/codex_refactor_2026_05_08.md) Phase D.4) so the
+[`/plans/archive/codex_refactor_2026_05_08.plan.md`](/plans/archive/codex_refactor_2026_05_08.plan.md) Phase D.4) so the
 protocol + every provider implementation + coverage matrix + mode matrix all live in one file.
 
 ---
@@ -160,7 +160,7 @@ avoid importing `web3` / `httpx` / `google-cloud-kms` / `fireblocks-sdk-python` 
 
 **Per-wallet flippability** — each wallet row in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` carries
 its own
-[`WalletProvisioningConfig.signing_surface`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py),
+`WalletProvisioningConfig.signing_surface` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`),
 overriding the top-level `CustodyConfig.provider` default per-call. Operator flips the field in the JSON; deployment-UI
 Live-Cluster button reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
 
@@ -327,7 +327,7 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 ### §2.4 CeffuCustodyProvider — STUB SHIPPED, API spec pending
 
 > **⚪ DEFERRED to June-1+ flip per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 3.C SPLIT (R9 RESOLVED 2026-05-12).** **CEFFU is OUT-OF-SCOPE for the May-23 cutover.** May-23 ships on
 > `CLOUD_KMS_ENCRYPTED` (HSM-backed CMK envelope encryption per § 2.5 / Plan Phase 3.C.1); the per-wallet
 > `SigningSurface` flip to `COPPER_MPC` / CEFFU happens June-1+ when POD (BVI Fund) delivers institutional KYB-approved
@@ -795,6 +795,13 @@ balance-pull against the correct provider per wallet. The routing table hot-relo
 
 Closed set; mirrors the existing alerting taxonomy.
 
+> **⛔ ALERT CODES NOT SHIPPED — verified 2026-07-30.** Both `CUSTODY_HEALTH_DEGRADED` and
+> `CREDENTIAL_ROTATION_OVERDUE` are **absent from the `AlertCode` enum**
+> (`unified_api_contracts/canonical/crosscutting/alerting/codes.py` — it currently has **zero** custody-, rotation- or
+> wallet-prefixed codes). The routing table below is the intended design; the emitters do not exist yet. Anyone wiring
+> custody health alerts must add the codes to the UAC closed set first. (`CUSTODY_ENDPOINT_HALT` **does** exist — but
+> it is a `RiskRuleId`, not an `AlertCode`; don't conflate the two enums.)
+
 | Failure                                                                                                         | Detection                                                  | Action                                                                                                                                                                                                                          |
 | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Single missed health-ping (transient)                                                                           | `last_round_trip_ms is None` on one tick                   | log debug; no alert (de-dup over 600s window per `balance_drift.md` pattern)                                                                                                                                                    |
@@ -849,6 +856,6 @@ SSOT" invariant + slot 8 audit PB-19 deferred QG ratchet).
 - [Wallet Hierarchy and Capital Flow](wallet-hierarchy-and-capital-flow.md) -- treasury/trading wallet architecture
 - [Interface Credential Convention](interface-credential-convention.md) -- how services get API keys
 - [Flash Loan Receiver](flash-loan-receiver.md) -- DeFi atomic execution
-- [`../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](../../plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
+- [`/plans/archive/2026_07/master_to_live_defi_2026_05_23.md`](/plans/archive/2026_07/master_to_live_defi_2026_05_23.md)
   Group F item 19 — live-trading prereq tracking (CEFFU integration)
 - [`/plans/epics/defi_master.md`](/plans/epics/defi_master.md) Fork 1 — Binance perp hedging-leg ownership

@@ -22,11 +22,22 @@ authoritative_for:
   [seamless dual-cloud switch protocol (drain/snapshot/switch/warm-up), cross-cloud preserved-state matrix]
 referenced_by: [/codex/04-architecture/batch-live-architecture.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-23
 code_refs:
 ---
 
 # Seamless cloud switch
+
+> **⛔ DESIGN DOC — NOT IMPLEMENTED. Verified 2026-07-30.** This is the intended protocol, not a runbook you can
+> execute today. A workspace-wide search of execution-service / alerting-service / strategy-service / deployment-service
+> / unified-api-contracts / unified-trading-library found **zero** occurrences of every mechanism this doc names:
+> `validate_cloud_switch_state`, the `CLOUD_SWITCH_PENDING` alert code, and the `cloud_switch_id` snapshot key. There is
+> no drain/snapshot/switch tooling.
+>
+> Read this as the **decision record for how a cloud switch must behave** — in particular the two invariants that stay
+> binding on any future design: (1) **never live in two clouds at once** (order split-brain is unrecoverable), and
+> (2) **in-flight order state is never re-derivable from the manifest**. Anyone implementing this must build the
+> validation helper + alert code first; do not assume they exist.
 
 ## Why
 
@@ -71,7 +82,7 @@ cloud switch boring.
 
 ## Cross-references
 
-- Cloud-agnostic migration overview: [`cloud-agnostic-migration.md`](cloud-agnostic-migration.md)
+- Cloud-agnostic migration overview: [`cloud-agnostic-migration.md`](/codex/04-architecture/cloud-agnostic-migration.md)
 - Build lineage (cross-cloud build provenance):
   [`/codex/05-infrastructure/cloud-agnostic-build-lineage.md`](/codex/05-infrastructure/cloud-agnostic-build-lineage.md)
 - Cloud-agnostic script pattern:
