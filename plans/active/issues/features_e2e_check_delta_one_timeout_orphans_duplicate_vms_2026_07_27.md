@@ -313,7 +313,7 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   guessing, not fixing. **Shipped** `features-service@e0ccdf0a`: raised the override to 72000s (20h) — a reasoned
   interim ceiling grounded in the only real upper reference point observed so far (VM1's 20h9m SPOT-preempted runtime),
   explicitly documented in-code as NOT a confirmed completion time. Updated the `data-pipeline-check-features`
-  SKILL.md's benchmark section (`unified-trading-pm@<flip-sha>`) to flag that CEFI:delta_one materially exceeds the
+  SKILL.md's benchmark section (`unified-trading-pm@d11ff24ef`) to flag that CEFI:delta_one materially exceeds the
   documented ~25.9s/instrument-day rate and that its real completion time is open, tied to the S1 fix. The abandoned VM
   (`features-e2e-cefi-20260730-133536-025349`) was left running per the VM-delete guardrail (genuinely still working,
   not stale) — a future session can check
