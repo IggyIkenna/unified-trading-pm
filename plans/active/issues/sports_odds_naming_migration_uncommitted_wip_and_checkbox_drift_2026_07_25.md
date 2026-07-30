@@ -14,7 +14,7 @@ summary: >-
   LOCAL-human-track (its own text: "author this scoped migration plan... for operator review before any 3-repo dispatch,
   not immediate AO execution") yet real cross-repo migration code is landing against it piecemeal outside that intended
   review gate.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports, prediction]
 stage: [data]
@@ -40,7 +40,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: NA
-resolved_by:
+resolved_by: autonomous-session-2026-07-30
 ---
 
 # sports odds-naming migration: checkbox drift + uncommitted in-progress rename
@@ -125,21 +125,25 @@ HARD RULE this needs an interactive/operator-directed session, not autonomous AO
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Reconcile `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s checkbox drift** — flip
-      its todo 2 `[x]` (already shipped as `features-service@daa373bd`), decide whether to commit the uncommitted todo-4
-      rename diff sitting in slot 3's `features-service` worktree (verify UAC's `OddsFeaturesMixin` field set matches
-      first), and re-confirm whether this plan's `assigned_vm: NA` / LOCAL-only designation still matches how it's
-      actually being executed. **PARTIALLY RESOLVED (2026-07-28, via
+- [x] ✅ [OPERATOR] P2. **Reconcile `sports_odds_feature_naming_canonicalization_2026_07_21.md`'s checkbox drift** —
+      flip its todo 2 `[x]` (already shipped as `features-service@daa373bd`), decide whether to commit the uncommitted
+      todo-4 rename diff sitting in slot 3's `features-service` worktree (verify UAC's `OddsFeaturesMixin` field set
+      matches first), and re-confirm whether this plan's `assigned_vm: NA` / LOCAL-only designation still matches how
+      it's actually being executed. **PARTIALLY RESOLVED (2026-07-28, via
       `sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md`'s reconciliation pass)**: sub-parts 1 and 2 are now
       moot — the target plan's checkboxes were independently reconciled since this doc was filed: todo 2 is flipped
       `[x]` (citing `features-service@b03a6de4`, the actual base commit that added the `odds_decimal_<outcome>_<venue>`
       columns — a more precise citation than this doc's suggested `daa373bd`, which is a later PIT-gating commit on top
       of it), and todo 4 (the previously-uncommitted diff) shipped as `features-service@0ded2449`/`e240eca2`/`0ab873b3`
       and is flipped `[x]`. The plan's downstream todo 8 (4 remaining ml-service files) has now also been flipped `[x]`
-      (`ml-service@10e219f`) in this same pass. Sub-part 3 — re-confirming whether the plan's
-      `assigned_vm: NA`/LOCAL-only designation still matches how it's actually being executed (real cross-repo migration
-      code keeps landing against it) — remains a genuine judgment call for the doc owner/operator, not resolved by this
-      reconciliation pass; left open below.
+      (`ml-service@10e219f`) in this same pass. **Sub-part 3 — RESOLVED 2026-07-30 (autonomous session)**: the operator
+      already ruled on exactly this question via the second todo below (2026-07-29, interactive decision session) —
+      `assigned_vm: NA` stays as declared, but execution formalizes via the satellite AO-dispatch-batch pattern already
+      in use, rather than reclassifying to `assigned_vm: planning` or enforcing a hard stop on an already-repeatedly-
+      bypassed review gate. Confirmed live in the parent plan's own frontmatter/banner
+      (`sports_odds_feature_naming_canonicalization_2026_07_21.md:27,51` — "Dispatch model formalized, 2026-07-29
+      (operator ruling): `assigned_vm: NA` stays as declared..."). All 3 sub-parts now closed; no remaining open
+      question on this doc.
 
 - [x] ✅ [OPERATOR] P2. **Operator-ruled 2026-07-29 (interactive decision session): formalize via the satellite
       AO-dispatch-batch pattern already in use (e.g. batch5/batch6)**, rather than reclassifying to
