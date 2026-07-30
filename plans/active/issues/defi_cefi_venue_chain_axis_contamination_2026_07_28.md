@@ -123,11 +123,14 @@ in this read-only audit pass (time-bounded scope).
       real venue to stamp and reused the chain name, the same "axis mismatch, not garbage" shape as the already-accepted
       `futures_chain`/`options_chain` bundle-grain exceptions. This is a
       **writer-defaults-venue-to-chain-when-unresolved** case (candidate class 1), NOT cross-AG bleed, for this half of
-      the finding.
-- [x] ✅ [DIAG] P1. **ROOT-CAUSED 2026-07-30.** The `chain="FUTURES"` values (+ the 5 cefi-exchange-shaped `defi.venues`
-      values BITFINEX/BITGET/BYBIT/KRAKEN/OKX, plus BINANCE which the census undercounted) are confirmed **genuine
-      cross-AG bleed** (candidate class 2) — and it is a PHYSICAL GCS bucket misfile, not just a manifest-index cosmetic
-      issue. Live evidence: all matching rows share one narrow signature — `data_type=perp_daily_ctx`,
+      the finding. **(Independently corroborated 2026-07-30 by a concurrent slot-15 manifest-column trace — see the
+      Progress Log entry below — same 11,662-row population, same `venue==chain`/`onchain_rpc`/`batch_onchain_rpc`
+      signature, confirmed via a different query path.)**
+- [x] ✅ [DIAG] P1. **ROOT-CAUSED 2026-07-30 — COMPLETED with the exact splitter location (see slot-15 Progress Log
+      below).** The `chain="FUTURES"` values (+ the 5 cefi-exchange-shaped `defi.venues` values
+      BITFINEX/BITGET/BYBIT/KRAKEN/OKX, plus BINANCE which the census undercounted) are confirmed **genuine cross-AG
+      bleed** (candidate class 2) — and it is a PHYSICAL GCS bucket misfile, not just a manifest-index cosmetic issue.
+      Live evidence: all matching rows share one narrow signature — `data_type=perp_daily_ctx`,
       `instrument_type=perpetual`, `source=tardis`, `pipeline_mode=batch_tardis`, exactly 7 rows/venue, dated
       **2026-05-16 → 2026-05-22 only** (a single week; zero rows before or after — this predates and appears already
       stopped by the 2026-07-24 TOCTOU consolidator fix, `unified-trading-library@14301571`, not a new regression).
@@ -145,26 +148,114 @@ in this read-only audit pass (time-bounded scope).
       `PROTOCOL-CHAIN` venue/chain splitter that doesn't validate the suffix against `KNOWN_CHAINS` before splitting —
       the SAME bug _class_ as the already-fixed EXTENDED-STARKNET/LIGHTER-ZKSYNC "-CHAIN-suffix" split
       (`instruments_cefi_g1_g5_gate_execution_2026_07_24.md`), hitting the "-FUTURES" venue family this time instead of
-      an on-chain-perp-CLOB chain suffix — but the actual splitter code path for THIS bucket is MTDS-side
-      (`market-tick-data-service`), not the `instruments-service/writers.py::_canonical_manifest_venue_chain` guard read
-      for this doc's earlier EXTENDED-STARKNET finding (that guard already null-checks `KNOWN_CHAINS` and would NOT
-      reproduce "FUTURES" as a chain — confirmed by reading it — so the MTDS-side equivalent is the next trace target,
-      not yet located to an exact line).
-- [ ] [DATA] P2. **Scope now much narrower than "fix + re-stamp the whole finding":** (a) locate + fix the MTDS-side
-      venue/chain splitter that treats a `-FUTURES` suffix as if it were a `KNOWN_CHAINS` member (repo:
-      market-tick-data-service) — this is a pure forward-looking code fix, no `--apply` needed; (b) decide + execute
-      cleanup of the ~42-row / 7-venue / 1-week (2026-05-16→2026-05-22) DUPLICATE CeFi objects physically stored in the
-      DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]** requires sign-off per delete-safety-protocol before
-      any GCS delete/move (the na-eligibility-audit's 2026-07-30 CONTESTED VERDICT below already flagged this exact
-      gap); confirm row-for-row duplication (not just prefix-existence) against the cefi bucket copy FIRST; (c) decide
-      whether `gas_fees`'s venue==chain shape (candidate-class-1 finding, NOT cross-AG, NOT a writer bug in the "wrong
-      data" sense) needs a `("venues","defi")` accepted-exception registry entry (mirroring `_ACCEPTED_EXCEPTIONS` in
+      an on-chain-perp-CLOB chain suffix. **Splitter location FOUND (slot-15, concurrent session, see Progress Log
+      below) — it is NOT MTDS-side as this entry originally guessed; it's `instruments-service/scripts/
+      migration_orphan_sweep.py:253`'s `shard_key_from_segments()`, missing the `_KNOWN_DEFI_CHAINS` allowlist guard its
+      sibling `market-tick-data-service/scripts/rebuild_defi_manifest.py` already has.** Timestamp reconciliation:
+      this entry's `day=2026-05-16..22` is the ORIGINAL CAPTURE date (from the GCS path partition); the concurrent
+      trace's `written_at=2026-07-24T20:06:38` is the LATER MANIFEST-REGISTRATION timestamp (from
+      `backfill_orphan_class_e.py` sweeping + registering these already-misplaced objects into the manifest, corrupting
+      venue/chain in the process) — the two are consistent, not contradictory: same underlying 35 objects, two
+      different lifecycle timestamps. Not independently re-verified that these are literally the SAME 35 rows (both
+      traces used different query methods) — flagged for whoever executes the fix to spot-check before relying on it.
+- [ ] [DATA] P2. **Scope now much narrower than "fix + re-stamp the whole finding":** (a) **fix
+      `instruments-service/scripts/migration_orphan_sweep.py:253`** — add the missing `_KNOWN_DEFI_CHAINS`-allowlist
+      guard before the unconditional `venue, _sep, chain = venue.partition("-")` split (mirror
+      `market-tick-data-service/scripts/rebuild_defi_manifest.py`'s existing guard exactly) — this is a pure
+      forward-looking code fix, no `--apply` needed, repo: instruments-service (corrected from this entry's original
+      "MTDS-side" guess); (b) decide + execute cleanup of the ~35-42-row / 7-venue / 1-week (2026-05-16→2026-05-22)
+      DUPLICATE CeFi objects physically stored in the DeFi bucket (`market-data-tick-defi-prd-...`) — **[OPERATOR]**
+      requires sign-off per delete-safety-protocol before any GCS delete/move (the na-eligibility-audit's 2026-07-30
+      CONTESTED VERDICT below already flagged this exact gap); confirm row-for-row duplication (not just
+      prefix-existence) against the cefi bucket copy FIRST, AND re-run `backfill_orphan_class_e.py`'s registration
+      logic mentally/in a dry-run against the fixed splitter to confirm the manifest rows self-correct on the next
+      sweep rather than needing a separate re-stamp; (c) decide whether `gas_fees`'s venue==chain shape
+      (candidate-class-1 finding, NOT cross-AG, NOT a writer bug in the "wrong data" sense) needs a `("venues","defi")`
+      accepted-exception registry entry (mirroring `_ACCEPTED_EXCEPTIONS` in
       `deployment-api/deployment_api/routes/data_status/_distinct_values.py`) so it stops badging as drift, OR a schema
       change to leave `venue=""` for chain-only data_types — this is a design decision, not a bug fix, and belongs to
       whoever owns the gas_fees writer + the distinct-values panel's exception policy. Source: this doc,
       na-eligibility-audit 2026-07-30 tranche=defi CONTESTED VERDICT below.
+- [ ] [OPERATOR] P2. **Contested cross-AG architecture question**:
+      `features-service/features_service/cefi/calculators/perp_funding_corpus.py:254-255` deliberately writes
+      CEFI-tagged (`asset_group="cefi"` in the row, `_OUT_ASSET_GROUP`) perp-funding-corpus data into the SHARED
+      **DeFi** tick-data bucket (`dst_bucket = resolve_bucket_name(..., asset_group="defi")`, docstring: "writes ...
+      into the shared DeFi tick-data bucket (the bucket `CanonicalPerpFundingProvider` reads)") — this is intentional
+      architecture (a strategy needs both cefi+defi funding context in one read location), NOT itself a bug. But it
+      means any generic manifest/orphan-sweep tool run with `--asset-group defi` against that shared bucket will
+      encounter cefi-tagged objects and — per the cross-AG finding above — mis-handle them unless it's cefi-aware.
+      Confirm with the operator whether this shared-bucket-cross-tagging design is still wanted (vs. e.g. a dedicated
+      cross-cutting bucket `CanonicalPerpFundingProvider` reads from instead), since it is the root ARCHITECTURAL
+      reason this bug class is even possible — fixing `migration_orphan_sweep.py` closes THIS instance but not the
+      underlying hazard. Not a worker-resolvable design call.
 
 ## Progress Log
+
+- **slot-15 2026-07-30 — todo-1 trace, live query + code read (not whole-corpus — targeted `columns=`/filter read of the
+  already-consolidated index)**:
+
+  Query:
+  `read_availability_index(bucket="market-data-tick-defi-prd-central-element-323112", columns=["venue","chain","source","pipeline_mode"])`,
+  filtered to the 14 known-contaminated venue values. Result — **11,697 rows split cleanly into two DISTINCT patterns**
+  (grouped by all 4 columns, full breakdown):
+
+  **Pattern A (11,662 rows, the 9 chain-shaped venues)**: `venue == chain` EXACTLY (e.g.
+  `venue=ETHEREUM chain=ETHEREUM`, `venue=POLYGON chain=POLYGON`, ... all 9), `source=onchain_rpc`,
+  `pipeline_mode=batch_onchain_rpc`. Consistent with the doc's hypothesis 1 ("writer defaults venue to chain when
+  unresolved") — a DeFi on-chain-RPC capture writer is stamping the chain name as the venue whenever the real
+  protocol/venue can't be resolved, instead of honest-absence/unknown. **NOT yet pinned to an exact file/line** — this
+  session ran out of budget mid-investigation (see the new todo above); do not assume it's fixed, this is real remaining
+  scope.
+
+  **Pattern B (35 rows, the 5 cefi-exchange-shaped venues) — FULLY ROOT-CAUSED, 3-hop chain across 2 repos, confirmed
+  via direct code read (not inference)**:
+
+  1. **`features-service/features_service/cefi/calculators/perp_funding_corpus.py:254-255`** —
+     `compute_cefi_perp_funding_corpus_for_day()` reads real CeFi `derivative_ticker` data from the cefi bucket
+     (`src_bucket = resolve_bucket_name(..., asset_group="cefi")`) and — BY DESIGN, per its own docstring ("writes ...
+     into the shared DeFi tick-data bucket, the bucket `CanonicalPerpFundingProvider` reads") — writes the computed
+     `perp_funding`/`perp_daily_ctx` output into the **DeFi** bucket
+     (`dst_bucket = resolve_bucket_name(..., asset_group="defi")`), while stamping each row's OWN `asset_group` field
+     `"cefi"` (`_OUT_ASSET_GROUP = "cefi"`) and `venue=strategy_venue` (e.g. `"BITGET-FUTURES"`, `"BITFINEX-FUTURES"` —
+     a `RAW_TO_STRATEGY_VENUE` mapping) and an explicit empty-string `"chain": ""`. The raw GCS write path
+     (`asset_group=cefi/venue=BITGET-FUTURES/instrument_type=perpetual/data_type=perp_daily_ctx/...`) has **no `chain=`
+     path segment at all**. This cross-tagging is intentional architecture, not itself the bug (see the new `[OPERATOR]`
+     todo above).
+  2. **`instruments-service/scripts/migration_orphan_sweep.py:253`**, `shard_key_from_segments()` — when an operator
+     runs this generic orphan-sweep tool with `--asset-group defi` against the shared bucket (which now also contains
+     the cefi-tagged objects from step 1), it force-stamps every scanned object's `asset_group` to the CLI-level scan
+     target (`"defi"`, not the object's own embedded tag) and then does:
+     `if asset_group == "defi" and not chain and "-" in venue: venue, _sep, chain = venue.partition("-")` — an
+     UNCONDITIONAL split on the first dash, intended for DeFi's legitimate `PROTOCOL-CHAIN` glued-venue overload (e.g.
+     `EIGENLAYER-ETHEREUM`), but with **no allowlist guard**. Its sibling
+     `market-tick-data-service/scripts/rebuild_defi_manifest.py` does the identical split but GUARDS it with a
+     `_KNOWN_DEFI_CHAINS` frozenset — `migration_orphan_sweep.py` is missing that guard. Run against
+     `venue="BITGET-FUTURES", chain=""`, this produces `venue="BITGET", chain="FUTURES"` — exactly the corrupted values
+     in the manifest.
+  3. **`instruments-service/scripts/backfill_orphan_class_e.py`**, `characterize_object()` (~line 279-280) re-derives
+     the same (already-corrupted) key via `_sweep.shard_key_from_segments(ag, segments)`, validates venue/chain/
+     instrument_type are all non-blank for the `defi` branch (they now ARE, post-split, so it wrongly passes as a
+     legitimate orphan instead of escalating), then the recording loop (~line 805) calls
+     `writer.record_captured(row_key=..., venue=venue, chain=chain, asset_group=asset_group, ...)` — this is the exact
+     call that lands the corrupted `venue=BITGET, chain=FUTURES` row in the manifest. All 35 rows share ONE `written_at`
+     timestamp cluster (`2026-07-24T20:06:38`, ~30ms spread) — one `--apply` run of this tool, one pass over `by_cell`,
+     confirms this was a single backfill execution, not ongoing/recurring corruption.
+
+  **Generality check (not fully verified, flagged)**: the split has no venue allowlist, so any dash-bearing venue
+  landing in the shared bucket without a `chain=` segment would mis-parse the same way. `BINANCE-FUTURES` is in the SAME
+  `RAW_TO_STRATEGY_VENUE` map as the 5 affected venues and would be written by the same cross-tagged path, but did NOT
+  appear in the 14-value contamination list — most likely incidental (no `derivative_ticker` shard existed for
+  BINANCE-FUTURES that specific day, or its cell was already manifested from a prior run) rather than the split logic
+  distinguishing it; NOT independently confirmed against the raw `market-data-tick-cefi` bucket for 2026-07-24
+  BINANCE-FUTURES presence — a gap for whoever picks up the fix todo to close before declaring the fix complete.
+
+  **Correction to this doc's own original hypotheses**: NEITHER of the two candidate root-cause classes stated in "Why
+  it matters" above is exactly right for Pattern B. It is not the TOCTOU manifest-consolidator race (hypothesis 2) — no
+  consolidator CAS-write mechanism is involved at all; the corruption happens entirely inside a manual
+  orphan-sweep/backfill TOOL run, not the always-on consolidator cron. It is also not simply "a writer defaults venue to
+  chain" (hypothesis 1) in the sense the doc meant — the ORIGINAL writer (`perp_funding_corpus.py`) stamps `chain`
+  correctly (empty string); the corruption is introduced by a SEPARATE, downstream, one-off maintenance tool that
+  mis-parses an already-correct venue string. This is a third, previously-unconsidered mechanism class.
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY -> `assigned_vm: planning` (in place, name
   unchanged). all 3 todos are bounded manifest-row sampling traces with stated discriminants; conflict-check clear
