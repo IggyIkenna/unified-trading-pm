@@ -120,7 +120,20 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       directly into the P2 todo below).
 - [ ] [SCRIPT] P2. Once relaunched shards complete, re-run this same corpus-wide `run.log` grep to confirm all 44/44
       show the terminal summary, THEN delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own
-      `# Delete-when:` marker. Repo: market-tick-data-service.
+      `# Delete-when:` marker. Repo: market-tick-data-service. **2026-07-30T22:06Z update**: re-ran this exact grep now
+      that the fleet is fully empty (0 VMs). Result: 26/44 confirmed (was 23/44) — still NOT 44/44, 18 shards remain
+      (13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44). See Progress Log entry above for the
+      full method/evidence. This todo stays open; do NOT delete the script yet.
+- [ ] [SCRIPT] P2. **Relaunch the 18 shards still incomplete after this session's wave** (13, 15, 16, 17, 18, 19, 20,
+      21, 22, 23, 24, 25, 29, 40, 41, 42, 43, 44), now using the fixed tarball (`market-tick-data-service@9f4098b1`,
+      merged 2026-07-30T18:04:44Z) which should clear the memory-leak freeze class that killed most of them. Recover
+      each shard's exact `--start-date`/`--end-date` window from its own most-recent `run.log`'s `[vm-exec] starting:`
+      line (same method as the original 2026-07-30 relaunch above — do NOT re-derive/guess), launch via
+      `launch-canonical-migration-vm.sh cefi-content-apply <start> <end> full` per the shard, SPOT default per HARD
+      RULE. Note shard 29's specific "1 file remaining" freeze signature (Progress Log, 17:53Z entry) may need separate
+      investigation if it recurs — flag rather than silently re-relaunching it a 3rd+ time if so. **No `[OPERATOR]` gate
+      needed** for the same reason as the original P1 todo above (VM launches are AO-dispatchable by default). Repo:
+      deployment-service (launch) + market-tick-data-service (verify).
 - [ ] [BACKEND] P2. Cross-reference with `cefi_content_migration_vm_wedged_worker_2026_07_23.md`'s Recommendation item 1
       (give `classify_no_capture_reason()` a "task never writes the manifest" exemption for this script family) — these
       21 dead VMs are a second, larger, concrete instance of exactly the alerting gap that doc already diagnosed from
@@ -675,3 +688,22 @@ accordingly.
   deadline). Fleet down to 1 shard: 14 (the pre-fix run being tracked by the separate fix-verification todo). No action
   taken (monitoring-only, deferring the shard-42 fix-verification-relaunch recommendation to whoever owns that todo per
   slot-4's note above).
+- **2026-07-30T22:06Z (slot-15)**: shard 14 (`-134900`) **genuinely COMPLETED** — full
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY` terminal banner, `rc=0`, all 335,111/335,111 files (this fleet's single LARGEST
+  shard by file count), ran 29,633s (~8.23h). This run predates the fix (launched 13:49Z, fix landed ~18:20Z) so it
+  can't be credited to the fix, same caveat as shards 26/28 — it simply never hit the leak's tipping point across this
+  run. **The fleet is now fully empty (0 VMs running)** — every one of this session's 21 relaunches has now either
+  completed or died. Per this todo's own done_definition ("once relaunched shards complete, re-run this same corpus-wide
+  `run.log` grep"), re-ran the corpus-wide grep NOW rather than waiting further, since "relaunched shards complete" now
+  literally holds (nothing left running): fetched all 363 `run.log` objects across
+  `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-content-*/` (16-way parallel, same
+  method as the original 2026-07-26 audit) and grepped each for the terminal summary banner. **Result: 26/44 shards now
+  confirmed complete** (added 14, 26, 28 this session on top of the original 23: 01-12, 27, 30-39) — **18 shards still
+  have NO attempt reaching the terminal summary**: 13, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 29, 40, 41, 42, 43,
+  44 (a 45th directory, `canonical-migration-cefi-content-20260719-121302`, is the original unsharded pilot mentioned in
+  this doc's own "What I found" section — not a numbered shard, excluded). **NOT yet 44/44 — this todo's done_definition
+  is not met.** Per standing self-correction: not relaunching the 18 remaining shards myself. Real progress made (23→26,
+  confirmed via direct evidence not assumption) but the corpus is still genuinely incomplete; the natural next action is
+  a relaunch round of the 18 remaining shards using the now-fixed tarball (post-`market-tick-data-service@9f4098b1`),
+  which should be dispatched as its own todo/decision rather than done by me unilaterally given the standing
+  dispatch-deadlock/monitoring-hostage concerns already on record above.
