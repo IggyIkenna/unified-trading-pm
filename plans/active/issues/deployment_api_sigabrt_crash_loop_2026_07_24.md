@@ -253,6 +253,34 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
 
 ## Progress Log
 
+- **2026-07-30T04:56Z (slot 16, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
+  todo, 10th+ dispatch). Fresh-pulled all slot repos, then re-checked both precondition branches from scratch: (1)
+  `deployment-api@acdd4c8` (the fresh `[BACKEND] P1` gen1-pin fix, shipped by slot 9 at `04:08:39Z`) is confirmed on
+  `origin/live-defi-rollout` (`git log -- cloudbuild.yaml`) but has **NOT reached a live Cloud Run deploy** —
+  `gh pr list --repo IggyIkenna/deployment-api --state open` is empty (no promote PR in flight), the last merged promote
+  PR (#428) landed `2026-07-29T12:52:19Z` (before `acdd4c8` even existed), and `gcloud builds list` shows no new build
+  triggered since `2026-07-29T22:07:56Z` — over 6.5h before `acdd4c8` shipped. `gcloud run revisions list` confirms the
+  live revision is still `uts-shared-deployment-api-00332-8gl` (created `2026-07-30T01:09:57Z`, predates the fix by
+  ~3h), 100% traffic, and actively serving (health-check requests every ~20s as of `04:56Z` — not an idle revision going
+  quiet by default). (2) `gcloud logging read` for `"Uncaught signal"` scoped to this service: **zero occurrences since
+  `2026-07-29T22:09:12Z`** — i.e. **~6h47m elapsed with no SIGABRT at all**, extending slot 6's `03:59Z` quiet-window
+  observation (~2h49m on `00332-8gl` at that time) by a further ~3 hours with still no code change on this revision that
+  would explain it (same revision, no new deploy). Neither precondition branch is met: no BACKEND fix has reached a live
+  deploy yet, and no new SIGABRT has occurred to produce a dump from. The original ask ("read the dump, report the stuck
+  call site, confirm/refute the `_compute_inventory` cold-path hypothesis") remains unanswerable — not a judgment call,
+  genuinely not ready. Not flipping the checkbox. Releasing via `skip-current-task` (`reason_code: GATED`) per the
+  established pattern (10th consecutive dispatch to hit this same unmet precondition) rather than idling the slot
+  polling a stochastic external event (the next Cloud Build promote + the next SIGABRT, whichever comes first). Next
+  dispatch: re-check whether `acdd4c8` has reached a live revision (via `gcloud run revisions list` creation timestamp
+  vs. `04:08:39Z`, then confirm via direct image extraction of `cloudbuild.yaml`'s deploy step output or the revision's
+  env, not source-diff alone per this doc's own methodology correction); once live, re-run the `"Uncaught signal"` check
+  scoped to that new revision over several multiples of the ~20-40min historical cadence. If a SIGABRT recurs
+  post-gen1-pin, pull `stderr` ±5min for the dump. If the quiet window holds for many hours post-deploy with sustained
+  traffic, that's the strongest evidence yet for the gen1 mitigation actually working — but per this doc's own
+  established caution (slot 6's note that a quiet window alone proved nothing pre-fix), still don't close this issue
+  purely on absence of crashes without either a dump confirming the call site or a long enough observation window per
+  the sibling `[REVIEW]` todo below this one.
+
 - **2026-07-30T04:15Z (slot 9, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-004` (the fresh
   `[BACKEND] P1` todo). Went well beyond log archaeology this session — read the actual installed `gunicorn`/`uvicorn`
   source (confirmed same lockfile hash between this slot's clone and the root clone's populated `.venv`, so read that
