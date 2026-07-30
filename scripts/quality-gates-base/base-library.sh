@@ -716,13 +716,16 @@ BAD_PROJECT=$(codex_rg "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type py --glo
 # separate unified_domain_client package anywhere in the workspace. RETARGETED 2026-07-30 (mirrors
 # base-service.sh): the prior check demanded imports come FROM unified_domain_client and failed on the
 # correct top-level form, directly contradicting the deep-import (DI) check below, which independently
-# requires top-level and fails on a `.domain` submodule import — no import shape could pass both. SSOT:
+# requires top-level and fails on a `.domain` submodule import — no import shape could pass both.
+# FOLLOW-UP FIX 2026-07-30 (mirrors base-service.sh): added a second `(?!\.)` lookahead — the first
+# retarget's module-name class still matched a RELATIVE import's leading dot (`from .instruments import
+# X`), breaking UTL's own internal source. SSOT:
 # plans/active/codex_violations_ratchet_to_five_2026_06_10.md.
-UCS_DOMAIN=$(codex_rg 'from (?!unified_trading_library)[a-zA-Z0-9_.]+ import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+UCS_DOMAIN=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
     --pcre2 --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_trading_library (top-level or .domain), not a per-repo shim"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_trading_library"
 
-DOMAIN_FROM_UCS=$(codex_rg 'from (?!unified_trading_library)[a-zA-Z0-9_.]+ import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
+DOMAIN_FROM_UCS=$(codex_rg 'from (?!unified_trading_library)(?!\.)[a-zA-Z0-9_.]+ import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
     --pcre2 --type py "$SOURCE_DIR/" 2>/dev/null || :)
 [[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Library imports domain symbols from a non-unified_trading_library source — use unified_trading_library instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No stray domain imports outside unified_trading_library"
 
