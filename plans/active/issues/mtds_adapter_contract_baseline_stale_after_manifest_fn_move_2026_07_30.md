@@ -99,4 +99,16 @@ shipping, and by extension keeps the existing repo-blocker `RB-88a81995` (condit
 - [ ] [SCRIPT] P2. Once green, verify repo-blocker `RB-88a81995` (`repo-market-tick-data-service-qg-green`) actually
       flips green (both this issue's fix AND the sibling STEP 5.101 fix must have landed) — if the watcher doesn't
       auto-resolve within its normal poll window, escalate. Repo: agent-orchestrator (verification only, no code change
-      expected). **Done when**: RB-88a81995 shows `resolved_at` set.
+      expected). **Done when**: RB-88a81995 shows `resolved_at` set. **CHECKED 2026-07-30, still NOT resolved — genuine
+      blocker, not this doc's scope.** Queried the live orchestrator (`curl localhost:8765/api/repo-blockers` via AWS
+      SSM): `RB-88a81995` is still `status: open`, `resolved_at: null`. Confirmed BOTH the STEP 5.83 (this doc) and STEP
+      5.101 (sibling doc) checks are locally green today (`check_adapter_contract_regression.py` →
+      `OK — 330 baselined     file(s) at or above minimum`; `check_no_empty_string_fallback.py` →
+      `market-tick-data-service: 89 (== baseline)`). The blocker hasn't auto-resolved because `RepoHealthWatcher` polls
+      the repo's **CI** state (`quality-gates-v2` on `live-defi-rollout`), not a local re-run — and the most recent
+      `quality-gates-v2` run for market-tick-data-service (`gh run view 30518962033`, 2h13m, 2026-07-30T06:14) genuinely
+      FAILED, with `qg_red_reason=pytest` (a real pytest failure unrelated to either STEP 5.83/5.101 — every other
+      recent run in `gh run list` is `startup_failure`, consistent with the live, separate self-hosted-runner-capacity
+      incident this corpus already tracks). Root-causing that pytest failure is a distinct, deep investigation outside
+      this doc's scope (adapter-contract-baseline specifically) — leaving this todo open rather than falsely flipping
+      it; the correct fix here (the baseline regen) is verified landed and correct.

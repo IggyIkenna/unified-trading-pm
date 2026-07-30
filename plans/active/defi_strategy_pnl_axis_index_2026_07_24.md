@@ -34,7 +34,7 @@ related:
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
     /plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
-    /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
+    /plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
   ]
 created: "2026-07-24"
 last_updated: "2026-07-24"
@@ -113,9 +113,10 @@ source: >-
   `test_collateral_validation.py` has imported a module deleted 2026-05-01 for ~2.5 months, 9/9 scenarios dead, zero CI
   signal; underlying safety property still holds in prod via a newer v2 mechanism. Operator ruling needed: rewrite vs
   delete vs gate-hardening.
-- **`vm_fleet_preemption_autorecovery_gap_2026_07_23.md`** (`issues/`, not defi-scoped itself but directly affects the
-  `dex_pool_swaps` fleet above) — confirmed `launch-mtds-dex-swaps-backfill-vm.sh` is missing the same SPOT-preemption
-  auto-recovery wiring (`lc_write_preemption_signal_file`) as 13+ other launchers.
+- **`/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`** (archived 2026-07-30, all 9 todos done;
+  not defi-scoped itself but directly affected the `dex_pool_swaps` fleet above) —
+  `launch-mtds-dex-swaps-backfill-vm.sh` was missing the same SPOT-preemption auto-recovery wiring
+  (`lc_write_preemption_signal_file`) as 13+ other launchers; fixed 2026-07-30 (`deployment-service`).
 
 **Recommended next action (strategy/PnL axis)**: Phase 1 of the orphaned-archetype build (CARRY_STAKED_BASIS_DATED) is
 running in a background agent as of this addendum — check its result first, then continue Phase 2 (E3, the Aave

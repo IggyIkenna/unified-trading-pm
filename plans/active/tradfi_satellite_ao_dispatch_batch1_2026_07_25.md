@@ -110,7 +110,7 @@ drift_direction: advance-code
       terminal-gate work measured repeatedly on single-shard smoke-test VMs. This is a doc-only scoping addition
       (alongside the already-listed `launch-mtds-dex-swaps-backfill-vm.sh` example) — NOT the code fix itself, which
       remains that issue doc's own future work. Repo: unified-trading-pm. **Done when**:
-      `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8 and/or item 9 candidate list
+      `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`'s item 8 and/or item 9 candidate list
       explicitly names both `mtds-backfill-*-pipelinecheck-*` and `instr-backfill-*-pipelinecheck-*` as candidates for
       the native-shutdown-script pattern rollout. Source: `tradfi_phase_d_terminal_gate_2026_07_24.md`.
 - [x] ✅ [CODE] P1. **DONE 2026-07-27 (slot-8, data_engineering)** — Extend the 1-4 leg hard cap + logged-drop behavior

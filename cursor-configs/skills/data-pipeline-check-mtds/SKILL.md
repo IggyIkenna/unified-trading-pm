@@ -370,11 +370,14 @@ string carefully before assuming which bucket a new failure belongs to:
 
 - **SPOT preemption (`vm_not_success:vm_self_deleted_no_exit_status`)** is real infra noise, not a code bug — verify via
   `gcloud compute operations list --filter="targetLink~<vm-name>"` for a genuine `compute.instances.preempted` event,
-  then just re-run that one leg. **Known gap (2026-07-23):** the fleet's auto-detect+relaunch DOES cover these VM name
-  prefixes by registry match, but its trigger (a systemd-installed `PREEMPTED` signal file) only reliably fires partway
-  through a multi-hour production backfill's boot — a single-shard smoke-test VM is disproportionately likely to die in
-  the early-boot blind window first. Don't wait for auto-recovery on a checker VM; manually re-run it. Tracked:
-  `plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`.
+  then just re-run that one leg. **Gap (2026-07-23), FIXED 2026-07-30:** the fleet's auto-detect+relaunch DOES cover
+  these VM name prefixes by registry match, but its trigger (a systemd-installed `PREEMPTED` signal file) only reliably
+  fired partway through a multi-hour production backfill's boot — a single-shard smoke-test VM was disproportionately
+  likely to die in the early-boot blind window first. `launch-mtds-backfill-vm.sh` (and
+  `launch-instruments-backfill-vm.sh` for the IS-side pipeline-check VMs) now also write the native GCE
+  `shutdown-script` preemption signal (available from t=0, not gated on the systemd unit installing), closing this blind
+  window — manual re-run of a checker VM is still a safe fallback, just no longer the only recourse. Was tracked at
+  `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (archived, all todos done).
 - **An honest-empty shard's skip leg failing (`no_parquet_under`) does NOT mean the skip-leg checker is broken again** —
   but DOES mean re-verify against the currently-shipped fix before assuming it's the same already-fixed bug. Two related
   but DISTINCT code paths both had to be fixed (`mtds@98a81c26`): (1) the skip VM independently re-deriving
