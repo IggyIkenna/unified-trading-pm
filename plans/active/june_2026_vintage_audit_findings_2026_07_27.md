@@ -514,8 +514,9 @@ needed.
    of the enrichment backfill are BLOCKED-OPERATOR-DECISION.
 7. `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md` — regression-test-deletion discrepancy (Todo 2/3) +
    canonical-namespace conflict vs closeout Track C/V both need explicit rulings.
-8. `tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — keep-vs-purge 4,655 stale barchart manifest rows, a human
-   data-correctness call, unowned across all July batches.
+8. `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` — keep-vs-purge 4,655 stale barchart manifest
+   rows — **RESOLVED 2026-07-30**: the decision was already made by the operator 2026-07-20 (quarantine-with-tracking,
+   not purge), re-verified live unchanged; doc archived.
 9. `data_completion_to_100_all_ag_2026_06_21.md` — BYBIT futures_chain legacy-object delete is [OPERATOR]-gated
    (hard-stop #2).
 10. `monitoring_control_plane_master_2026_06_10.md` — G4/G5 panels "BLOCKED-ON: verdict-store OR operator OK on a

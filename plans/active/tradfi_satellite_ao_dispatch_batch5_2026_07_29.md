@@ -314,12 +314,14 @@ ground to open up, and it did:
 
 `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` (which `EXCHANGE_CODE_TO_NAME` registry is
 authoritative — `tradfi_instrument_universe.py` 96 keys vs `tradfi_symbology.py` 61 keys, 17 value-mismatches);
-`issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`'s 4,655 stale barchart rows (keep-vs-purge, real
-historical VIX data risk); `issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s
-`[DESIGN] P2` on whether aggregated 15m/24h TradFi bars are wanted;
-`instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s BLOCKED-CREDENTIALS ICE/CME-futures-options source ask and its
-operator-confirm-gated G1 retirement purge; `canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s residual
-catalogue-script reapplication (the doc's own text calls it "pending operator confirmation"); and the entirety of
+`archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`'s 4,655 stale barchart rows (keep-vs-purge) —
+**RESOLVED 2026-07-30**, no real historical VIX data risk (verified 0 captured rows), quarantine-with-tracking per the
+already-settled 2026-07-20 operator ruling, doc archived;
+`issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`'s `[DESIGN] P2` on whether
+aggregated 15m/24h TradFi bars are wanted; `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s BLOCKED-CREDENTIALS
+ICE/CME-futures-options source ask and its operator-confirm-gated G1 retirement purge;
+`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md`'s residual catalogue-script reapplication (the doc's
+own text calls it "pending operator confirmation"); and the entirety of
 `issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md` (a pure `assigned_vm: NA` human-decision queue by
 design — its own 2 "record the decision inline" checkboxes cannot be batch-dispatched since nothing has been ruled on
 items 1/3/6/8 yet).

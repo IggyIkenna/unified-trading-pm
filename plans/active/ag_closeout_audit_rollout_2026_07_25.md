@@ -203,7 +203,7 @@ source: >-
     `issues/tradfi_backfill_oom_remediation_2026_06_24.md`,
     `issues/tradfi_canonical_path_migration_design_2026_07_19.md`,
     `issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`,
-    `issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`,
+    `archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (resolved + archived 2026-07-30),
     `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md`,
     `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`,
     `archive/issues/tradfi_manifest_rebuild_deletion_resurrection_gap_2026_07_20.md`,

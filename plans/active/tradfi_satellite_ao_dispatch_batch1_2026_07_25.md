@@ -158,7 +158,7 @@ candidates: `data_completion_tradfi_2026_07_15.md` (4 items), `instruments_tradf
 items), `issues/cme_combo_underlying_extraction_garbage_2026_07_19.md` (1),
 `archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md` (1),
 `issues/tradfi_backfill_oom_remediation_2026_06_24.md` (2),
-`issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (1),
+`archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md` (1, resolved + archived 2026-07-30),
 `issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md` (2),
 `issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` (0 AO-eligible but 1 conflict logged against the doc
 generally — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc**),

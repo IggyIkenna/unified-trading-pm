@@ -473,8 +473,9 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     (done) — 0 open todos (closed/archived/record-only)
   - [`plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md`](/plans/archive/issues/tradfi_ice_ohlcv_1m_no_working_fetch_path_2026_07_13.md)
     (done) — 0 open todos (closed/archived/record-only)
-  - [`plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`](/plans/active/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md)
-    - **[SCRIPT] P2.** Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive
+  - [`plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`](/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md)
+    (done) — 0 open todos (closed/archived/record-only; barchart keep-vs-purge RESOLVED 2026-07-30,
+    quarantine-with-tracking per the 2026-07-20 operator ruling)
 
 - **Throughput / jobs / VMs**:
   - [`plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md`](/plans/archive/issues/databento_default_executor_dns_starvation_risk_2026_07_17.md)
