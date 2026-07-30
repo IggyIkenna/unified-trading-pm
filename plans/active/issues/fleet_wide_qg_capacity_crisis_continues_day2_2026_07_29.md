@@ -161,6 +161,13 @@ not just noting.
       usage. Done when: a real $
       figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can
       be compared side-by-side.
+- [ ] [OPERATOR] P2. **New, opened by the 2026-07-30 ~15:09Z tmux-kill-cluster corroboration below.** Confirm (or rule
+      out) OOM-killer involvement in the 14:42-15:01Z AO worker/review tmux-session kill cluster — this session's
+      `dmesg`/`journalctl -k` both returned "Operation not permitted" (no root), so the kernel OOM-killer log could not
+      be checked directly. Needs root on the shared host (`i-0c9b283b31d6b5ca7`):
+      `journalctl -k --since "2026-07-30 14:40:00 UTC" --until "2026-07-30 15:05:00 UTC" | grep -iE "oom|killed process"`
+      (or equivalent `dmesg` read) to confirm whether the kills correlate with real OOM-killer activity vs. some other
+      mechanism (tmux server restart, external supervisor/watchdog, etc).
 
 ## Evidence
 
@@ -418,3 +425,41 @@ not just noting.
   10:41:33Z). No open PRs, no open repo-blockers for this repo. **No code or workflow change made or needed** — filing
   as another corroborating data point for the box-contention root cause, not a fresh unresolved occurrence. Slot left
   clean on `live-defi-rollout`.
+
+- **2026-07-30 ~15:09Z (review, slot 1, `agt-32b84a`) — corroboration: AO worker/review tmux sessions dying outright
+  with forced task-requeue, a distinct symptom of the same host-contention root cause.** This doc's existing entries
+  track CI-escalation retry churn (`ldr_qg_failure` fix-worker dispatch attempts); this entry is about ordinary AO slot
+  tmux sessions — including this review role's own — dying mid-life and losing in-flight work outright. Evidence pulled
+  from `GET /api/activity?type=tmux_session_lost` (this host) for the 14:42-15:01Z window today:
+  - slot1 (this review role) had its tmux session die 4x in ~19min: 14:42:30 (event 242082), 14:54:09 (242214), 14:58:13
+    (242255), 15:01:32 (242278) — respawn gaps shrinking 12min→4min→3min. Two of the four kills ended a live
+    PERSISTENT-lifecycle review-agent session mid-life, not a clean one-shot/scheduled exit (`agt-07e339` @14:54:09
+    event 242219, `agt-c79f12` @14:58:13 event 242258 — both `archived_lifecycle_complete=false` per
+    `tmux_pruner.py`'s `has_session()==False` reap path). Each survived only ~4min before being killed.
+  - Same window, other slots lost tmux and force-requeued their in-flight task: slot4
+    (`prediction_satellite_ao_dispatch_batch6-001`, 14:42:30, event 242083), slot5
+    (`sports_odds_api_scattered_multiyear_gaps-002`, 14:54:09, event 242215), slot9
+    (`mtds_plan_flip_fabricated_commit_sha_evidence-002`, 14:54:09, event 242217), slot11
+    (`mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003`, 14:54:09, event 242218), slot8
+    (`tradfi_satellite_ao_dispatch_batch5-002`, 15:00:14, event 242268), slot10
+    (`mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003` again, 15:01:32, event 242279).
+  - Sharpest concrete-waste example: `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003` was force-requeued TWICE in
+    7min — dispatched to slot11 (killed 14:54:09), re-dispatched to slot10 (also killed 15:01:32) — two consecutive
+    worker attempts killed before completion. This is real rework, not CI retry-churn.
+  - Host signals at observation time (15:07Z): `uptime` load average 26.20 on 16 vCPU; `free -h` showed 16Gi/47Gi swap
+    in use. Consistent with memory pressure; **OOM-mechanism UNCONFIRMED** — this session's `dmesg`/`journalctl -k` both
+    returned "Operation not permitted" (no root), so the kernel OOM-killer log could not be checked directly. New
+    `[OPERATOR]` follow-up todo added above for the root-gated confirmation.
+  - No new `tmux_session_lost` events between 15:01:32 and this entry (15:09Z, ~8min quiet) — reads as a burst, not
+    confirmed steady-state; this is at least the 3rd such burst visible in today's activity log (bursts also around
+    14:42Z and 14:54Z).
+  - Root-cause assessment (concurred by monitor/main-role `agt-fd75de`, chat msg 2739): same host-oversubscription
+    cause this doc already tracks (`i-0c9b283b31d6b5ca7`), a different angle than the existing `[DATA] P2` todo above
+    (that one scopes to CI-escalation dispatch-attempt cost specifically; this is ordinary worker/review tmux-session
+    death with real task loss). **Recommending, not actioning**: given how fast corroboration entries are accumulating
+    on this doc, consider pulling the `[SCRIPT] P2` doc-split todo above forward — leaving that prioritization call to
+    the plan owner/operator.
+  - No operator page sent — this corroborates a P1 already on the operator's radar; monitor/main concurred (msg 2739)
+    that the accelerating-then-quiet burst doesn't yet cross into a fresh page, but flagged that sustained sub-3min
+    respawn gaps + repeated task-holder kills WOULD change that call. No checkbox flipped, no todo reprioritized —
+    Progress Log entry + one new `[OPERATOR]` todo only, per main's ruling (msg 2739).
