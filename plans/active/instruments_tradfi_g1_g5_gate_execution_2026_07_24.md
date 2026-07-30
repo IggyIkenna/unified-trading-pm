@@ -518,8 +518,15 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       clean. **Also found a real bug**: `reconcile_manifest_after_entity_change.py`'s `_default_csv_path()` resolves
       `Path(__file__).parents[4]` assuming a non-slotted checkout — under the Path-B per-slot topology this lands on the
       READ-ONLY root PM clone (`unified-trading-system-repos/unified-trading-pm/`), not the slot's own PM clone. Worked
-      around via `--output-csv` for this run; the path bug itself is a residual follow-up (not fixed here — out of this
-      todo's scope).
+      around via `--output-csv` for this run. **FIXED 2026-07-27 — `instruments-service@fc07e6b6`**
+      (`tradfi_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4): `_default_csv_path()` now walks up from the script
+      to the invoking repo's own `.git` root (Path-B or non-slotted, any nesting depth) and derives the
+      `unified-trading-pm` sibling from that identity instead of the fixed `parents[N]` hop; raises loudly instead of
+      silently falling back when no sibling clone resolves. 4 new unit tests in
+      `tests/scripts/test_reconcile_manifest_entity_change_default_csv_path.py`, `quality-gates.sh --no-fix` green
+      (sentinel-verified). No checkbox added here per batch4's own scope guard (this paragraph's parent checkbox is
+      owned by `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`'s combined todo) — nothing remains open on this
+      residual.
 - [x] ✅ [UAC] P1. **DONE — already shipped pre-2026-07-25 (verified 2026-07-26, slot-5, review).** Unit tests for
       `databento_subscription_allowlist` already exist at `tests/unit/test_databento_subscription_allowlist.py`
       (introduced by `uac` commit `4ad54282`, already on `main` — verified via `git merge-base --is-ancestor` and a live

@@ -58,7 +58,28 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 8 distinct source docs — checkboxes AND prose.** For each of
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-4, review-craft).** Verified all 8 batch4 source docs against the batch4
+      plan's own evidence text (commits spot-checked reachable: `instruments-service@fc07e6b6`,
+      `unified-trading-pm@377efc33b`, `@935de9424`, `@1dd1a22fd`). Five of the 8 were already correctly reconciled
+      in-doc by their executing workers (`tradfi_t1_no_working_mtds_job` — `status: resolved`;
+      `tradfi_legacy_bucket_deleted_without_also_legacy_migration` — `status: resolved`, dates corrected;
+      `tradfi_fx_provenance_and_manifest_id_defects` — write-path fix + comment-currency landed, `status: open`
+      correctly reflects the genuine remaining historical-backfill todo; `tradfi_sp500_ml_and_arb_backtest_readiness` —
+      3 stale BLOCKED- premises re-scoped; `data_completion_tradfi_2026_07_15` — coverage table + base-library.sh
+      checkbox recorded). Found and fixed 2 real gaps matching this batch's own "prose-only trap" warning that had NOT
+      been closed: (1) `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s Path-B `_default_csv_path()` residual
+      (batch4 todo 4) was fixed in code (`instruments-service@fc07e6b6`) but its own prose still read "not fixed here —
+      out of this todo's scope" — corrected the prose in-place (no checkbox touched, per batch4's own scope guard) to
+      state the fix + citation; (2) `tradfi_manifest_writer_legacy_id_regression_2026_07_21.md`'s corresponding closeout
+      digest line still read "0 open todos" — the exact trap this batch names — corrected to list its 4 real 2026-07-27
+      follow-up todos. Also found and fixed a THIRD, adjacent staleness this todo's "for every source doc, re-check
+      0-open-items" instruction covers: `/plans/archive/issues/tradfi_docs_reconciliation_findings_2026_07_21.md` is
+      fully resolved (35/35 findings applied, archived 2026-07-28) but the closeout's aggregated-source digest still
+      listed its 3 findings (P1 L97/L460/L237) as open — corrected to 0-open with the resolution citation. All edits
+      shipped in `unified-trading-pm` (this commit): `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`,
+      `tradfi_consolidated_closeout_2026_07_18.md`. No doc carried a non-empty `locked_by`; no doc's `status` was
+      flipped to `resolved` by this todo (the 2 already `resolved` were flipped by their own executing workers, verified
+      correct as-is). **Reconcile all 8 distinct source docs — checkboxes AND prose.** For each of
       `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`'s now-done todos, flip or update the corresponding
       checkbox/section in its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-4
       commit(s) that shipped it — verify the actual shipped commit exists before citing it. **This batch is unusual and
