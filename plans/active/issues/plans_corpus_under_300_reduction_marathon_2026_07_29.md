@@ -156,6 +156,36 @@ docs — most of the still-309-strong pool are repeats correctly judged too-deep
 MAYBE_DOABLE across agent-orchestrator (5), unified-trading-pm (5, mostly finalize-companion plans), and
 MTDS/instruments-service/deployment-service/unified-trading-library (9). Dispatched 3 agents.
 
+**2026-07-30, archival-only agent + Wave 3 progress (2 of 3 clusters confirmed complete)**: the dedicated archival-only
+agent shipped 13 more archivals (`unified-trading-pm@596aec79b`) + shrank both ratchet baselines
+(`archive_candidates_baseline.yaml` 7→4, `terminal_status_archived_baseline.yaml` 0→1 — the 1 remaining is a
+correctly-`locked_by`-gated doc, not a real violation). It also caught a genuine prose-trap: a checkbox marked done
+whose own "Done when" bar was explicitly unmet in the doc's own text
+(`sports_batch_odds_api_capture_outage_ recurrence_check_2026_07_26.md` — left un-archived). Wave 3's
+**agent-orchestrator cluster**: 1 archived, 2 docs advanced (stay active, 1 genuine todo each), 1 correctly gated
+(cross-slot foreign-worktree recovery, no operator present to authorize), 1 correctly recognized as already-shipped by a
+concurrent agent (reverted its own duplicate work rather than double-emit). Wave 3's **unified-trading-pm cluster**: 0
+archivals (nothing reached 0 todos) but 2 real fixes shipped — a timeout-override fix in market-data-processing-service,
+and a genuine prerequisite bug found
+
+- fixed in agent-orchestrator's repo-blocker backend (`repo_blocker_condition_name()` ignored `kind`, which would have
+  silently cross-wired a future `push_race` blocker onto the same condition `qg_red`-gated tasks depend on) — all 3
+  remaining `_finalize` docs confirmed genuinely gated on deep parent work (a new adapter build, a multi-day DVOL
+  historical pull + backtest). **Still pending**: the
+  MTDS+instruments-service+deployment-service+unified-trading-library cluster (agentId `aaef8da1d8c725851`) was still
+  running as of this write-up — confirm its completion before the next recount/wave-4 decision. Also uncommitted, not
+  lost (independent agent process, not this session's context):
+  `instruments-service/scripts/repair_tradfi_instrument_type_counts_2026_07_17.py` (1 file) and 11 VM-launcher scripts
+  in `deployment-service/scripts/vm/` — that agent's legitimate in-progress WIP for its 2 VM-launcher-adjacent docs
+  (`vm_fleet_preemption_autorecovery_gap_2026_07_23.md`,
+  `setup_data_pipeline_vm_dispatch_gap_batch_live_recon_chaos_ drill_2026_07_30.md`).
+
+**2026-07-30, separately**: cleaned up a leftover instance of the documented prek patch-cache corruption bug
+(`prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`, still open/unresolved) found sitting
+uncommitted in the working tree — `defi_consolidated_closeout_2026_07_18.md`'s `last_updated:` frontmatter field had
+accumulated a runaway multi-line comment scalar; the note it carried was already preserved verbatim in the doc's own
+Progress Log, so reverting the frontmatter to a clean scalar lost nothing. `unified-trading-pm@322b8178f`.
+
 **Standing observation after 2.5 waves**: with the corpus this actively fed by the wider concurrent fleet, "under 300"
 may not be reachable via solo archival effort alone within one continuous session — but each wave still (a) permanently
 removes real done-but-unarchived debt, (b) finds and fixes genuine production bugs along the way (a running tally: 2
