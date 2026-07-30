@@ -397,17 +397,18 @@ unresolved operator decision.
 
 ## Todos
 
-- [x] [DATA] P1. ✅ RULED 2026-07-29 (operator direct answer — both: count them AND build out the real IS universe) —
-      resolved by REDIRECTION, not by shipping the build — unified-trading-pm@cd5198cb0. This todo (as originally
-      written) asked for a single-worker-scoped outcome that is actually a 4-sub-step, 3-repo, multi-day build — not
-      determinable by one dispatched worker per the AO dispatch-scope-eligibility rule, and this doc's own 2026-07-30
-      scope assessment + the independent `defi_satellite_ao_dispatch_batch6_2026_07_30.md` audit both already
-      recommended splitting it out rather than forcing it through in one pass. The real, still-OPEN engineering work
-      (genuine IS adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip +
-      `completeness_pct` re-measurement — 5 sequential todos) now lives at
-      `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`, with a gated finalize companion at
-      `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` that will reconcile evidence back here
-      and archive this doc once the build plan is fully done. Doc `status` stays `open` until then.
+- [x] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — both: count them AND build out the real IS universe.**
+
+  ✅ RESOLVED BY REDIRECTION 2026-07-30, not by shipping the build — unified-trading-pm@30d2c633d. This todo, as
+  originally written, asked for a single-worker-scoped outcome that is actually a 4-sub-step, 3-repo, multi-day build —
+  not determinable by one dispatched worker per the AO dispatch-scope-eligibility rule, and this doc's own 2026-07-30
+  scope assessment + the independent `defi_satellite_ao_dispatch_batch6_2026_07_30.md` audit both already recommended
+  splitting it out rather than forcing it through in one pass. The real, still-OPEN engineering work (genuine IS
+  adapters, cron health fix, 90-day backfill, catalogue registration, `DEFI_VENUE_PHASE` flip + `completeness_pct`
+  re-measurement — 5 sequential todos) now lives at `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md`,
+  with a gated finalize companion at `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` that
+  will reconcile evidence back here and archive this doc once the build plan is fully done. Doc `status` stays `open`
+  until then.
 
 ## 2026-07-30 — scope assessment (operator-ruling close-out pass): NOT executed this pass, todo left open
 
