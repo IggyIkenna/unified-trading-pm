@@ -291,11 +291,17 @@ def main() -> None:
         git_content = gitignore_for_repo(name, central_git, preserved)
         cursor_content = central_cursor + "\n"
 
+        if dry_run:
+            print(f"{name}/: would update (.gitignore, .cursorignore)")
+            continue
         gitignore_path.write_text(git_content)
         cursorignore_path.write_text(cursor_content)
         print(f"Updated {name}/ (.gitignore, .cursorignore)")
 
-    print(f"Done. Synced {len(repos)} repos.")
+    if dry_run:
+        print(f"Done (dry-run). Would sync {len(repos)} repos.")
+    else:
+        print(f"Done. Synced {len(repos)} repos.")
 
     # Purge history before untracking — filter-repo rewrites HEAD so untrack
     # handles any remaining stragglers cleanly.
@@ -324,12 +330,14 @@ def main() -> None:
             print("No paths to purge across all repos.")
 
     # Untrack any files currently in the index that are matched by .gitignore.
+    # In --dry-run mode, pass --dry-run (not --untrack) so the callee also only reports.
     untrack_script = Path(__file__).parent / "untrack-ignored-files.py"
-    untrack_cmd = [sys.executable, str(untrack_script), "--untrack"]
+    untrack_flag = "--dry-run" if dry_run else "--untrack"
+    untrack_cmd = [sys.executable, str(untrack_script), untrack_flag]
     if repo_filter:
         untrack_cmd += ["--repo", repo_filter]
     sys.stdout.flush()
-    print("\nRunning untrack-ignored-files.py --untrack ...")
+    print(f"\nRunning untrack-ignored-files.py {untrack_flag} ...")
     sys.stdout.flush()
     result = subprocess.run(untrack_cmd, check=False)
     if result.returncode != 0:
