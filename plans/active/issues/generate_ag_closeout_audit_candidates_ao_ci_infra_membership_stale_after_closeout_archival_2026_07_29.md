@@ -142,13 +142,23 @@ membership test feeding it.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `generate_ag_closeout_audit_candidates.py`'s `ao`/`ci`/`infra` membership branch to test
-      `t in asset_group` directly (matching the 5 real AGs), removing the retired `non_ag_member_sets` /
-      `_closeout_paths(nt)`-based citation mechanism. **Done when**: `--tranche ci --json` returns `total_members: 29`
-      (or the then-current live count) instead of 0, and a regression test proves the `ao`/`infra` branches still work
-      correctly both with their closeout doc present AND (synthetically) archived.
-- [ ] [TEST] P2. Add a regression test asserting the script's candidate count for a tranche does not silently drop to
-      zero when that tranche's `_consolidated_closeout_*.md` is archived — the exact failure mode this doc reports.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — unified-trading-pm@e88c41727.** `ao`/`ci`/`infra` membership branch now tests
+      `t in asset_group` directly, matching the 5 real AGs — `non_ag_member_sets`/`_closeout_paths(nt)`-based citation
+      mechanism removed entirely. **Done-when confirmed live**: `--tranche ci --json` now returns `total_members: 30`
+      (current live count, was 0); `--tranche ao` returns 39; `--tranche infra` returns 42 (was 0 — see the second bug
+      below). Adjacent bug found + fixed in the SAME change: the `infra` tranche name does not match its own
+      `asset_group` enum VALUE (`infrastructure`, per `plans/PLAN_FORMAT.md`'s `ASSET_GROUP` enum — there is no `infra`
+      member) — a naive `t in asset_group` for `t="infra"` would have silently reproduced the exact zero-candidates
+      failure this doc reports, just via a different root cause; added
+      `TRANCHE_ASSET_GROUP_VALUE = {"infra":     "infrastructure"}` mapping to close it.
+- [x] ✅ [TEST] P2. **DONE 2026-07-30 — unified-trading-pm@e88c41727**,
+      `tests/unit/test_generate_ag_closeout_audit_candidates.py` (5 cases):
+      `test_non_ag_tranche_membership_survives_closeout_archival` (parametrized ci/ao/infra) builds a synthetic corpus,
+      confirms `total_members >= 1` with the closeout doc present, then deletes it and re-confirms `total_members` is
+      UNCHANGED — the exact regression this doc reports, now guarded. Plus
+      `test_infra_tranche_asset_group_value_is_infrastructure_not_infra` (the adjacent bug) and
+      `test_ag_tranche_membership_unaffected_by_the_fix` (regression guard on the untouched 5-real-AG branch). All 5
+      pass.
 
 ## Codex SSOTs
 

@@ -134,14 +134,10 @@ ways the same hardcoded-shared-filename design fails.
 
 ## Todos
 
-- [ ] [INFRA] P2. Apply the identical `${TMPDIR:-/tmp}` fix to `scripts/quality-gates-base/base-library.sh` — grep it
-      for the same literal-`/tmp/` checker-capture pattern (`uac_instrument_validator_qg.log`,
-      `uac_source_capability_qg.log`, `uac_cassette_linkage_qg.log`, `uac_prod_url_coverage_qg.log`,
-      `bar_edge_open_ingestion_qg.log`, `canonical_model_regressions_qg.log`, `no_fallback_imports_qg.log`,
-      `ruff_rule_ratchet_qg.log`, `no_blank_asset_group_qg.log`, `no_empty_string_fallback_qg.log`, `act-output.XXXXXX`,
-      at minimum — confirm the full list via grep, don't assume this enumeration is exhaustive), verify `bash -n`, and
-      re-run `quality-gates.sh` on a library-tier repo (e.g. unified-api-contracts) to confirm no regression. (repo:
-      unified-trading-pm)
+- [x] ✅ [INFRA] P2. **DONE — already shipped, unified-trading-pm@f2f227ff9** ("fix(qg): make base-library.sh
+      TMPDIR-aware, mirrors base-service.sh fix"). Verified live 2026-07-30: every checker-capture site in
+      `scripts/quality-gates-base/base-library.sh` (all sites named in this todo, plus the AST import-order checker and
+      pip-audit's JSON output) routes through `${TMPDIR:-/tmp}` — zero bare `/tmp/` literals remain. `bash -n` clean.
 - [x] ✅ [OPS] P2. **DONE 2026-07-28 — operator personally registered both crons on ip-172-31-5-118.** RULED 2026-07-28
       (operator direct answer: "Yes, happy to do this now"), retagged from `[OPERATOR]` to `[OPS]`, and executed the
       same day — the operator ran both install commands themselves (the only path available, since this account has no
