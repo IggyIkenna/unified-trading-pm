@@ -468,3 +468,7 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   check ran; shard 21 caught mid-`STOPPING`. Both were making real progress before freezing (17: 19,400/157,497 files;
   21: 31,400/158,501 files). Fleet now at 15 shards. Per standing self-correction: **no relaunch/kill action taken** —
   documenting only, deferring to the `data_pipeline_failure` fleet-monitor.
+- **2026-07-30 update (slot-15, ~5 min later)**: shards 24 (`-132600`) and 41 (`-151900`) both OOM-killed (`rc=137`,
+  clean self-delete) — 24 at 67,600/155,419 files (8249s elapsed), 41 at 9,600/77,941 files (1547s elapsed). Fleet now
+  at 14 shards. Death rate has accelerated sharply this cycle (4 of 16 shards died within one ~10 min window: 17, 21,
+  24, 41 — two freeze-class, two OOM-class). No action taken (monitoring-only).
