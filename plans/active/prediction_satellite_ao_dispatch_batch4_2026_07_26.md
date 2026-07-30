@@ -533,3 +533,14 @@ Phase B itself is a large multi-repo migration that warrants its own dedicated p
   armed. Per-day cost is genuinely substantial (hundreds of `gcs_describe_object` calls per day — 500-800 condition_ids
   × 2 path candidates each), confirmed via a 90s dry-run probe that didn't finish one day — this is why the run takes
   real wall-clock time, not a hang. Still running — see next entry for the outcome.
+- 2026-07-30 (slot 6, `data_engineering`, backlog task `prediction_satellite_ao_dispatch_batch4-023`): re-dispatched to
+  this same 4b-i resume. **No live process found** (`ps aux` clean) — slot-12's day-158 relaunch died again with zero
+  further checkpoint progress recorded (slot-10's later checkpoint copy is byte-identical, same 157/348, confirming no
+  advancement happened in between). Re-verified fresh: cron `uts-prod-manifest-consolidator-market-data-prediction-cron`
+  still `ENABLED` (pinned `--account=unified-trading-sa@...`, per slot-8's documented gotcha). Recovered the 157/348
+  checkpoint (0 anomalies) from slot-12's scratchpad into this slot's own scratchpad. Re-launched
+  `.venv/bin/python scripts/migrate_prediction_trades_legacy_bundle_2026_07_28.py --apply --report <checkpoint>` from
+  day 158/348 via the harness's tracked `run_in_background` (not `nohup`/`setsid`), plus a SEPARATE self-heartbeating
+  watchdog script (`heartbeat_watchdog_4bi.sh`, also harness-tracked `run_in_background`) posting `/progress` every 5
+  min with the live checkpoint line-count, specifically to avoid the `WorkerLivenessWatchdog` collateral-kill this doc's
+  slot-7/slot-8/slot-15 entries already hit repeatedly. Still running — see next entry for the outcome.
