@@ -31,7 +31,7 @@ related:
     /plans/active/issues/orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -199,8 +199,43 @@ investigated further here, out of scope for this doc.
   override/force-dispatch was applied — doing so would have meant killing someone else's real in-progress work, which
   needs explicit operator sign-off on a per-case basis, not a blanket policy.
 
+## Progress Log
+
+- **2026-07-30 (interactive session)**: built durable resource-history logging, closing the gap this doc's own "What's
+  fixed" section left open (dashboard panel is live-only, no history). Shipped in two passes,
+  `agent-orchestrator@3beb04d` (5s CPU/RAM/disk/swap/iowait sampler → local JSONL, mirrored to GCS/S3 on the existing
+  30-min `SnapshotLoop` tick) then `agent-orchestrator@c7faf3f` (found the periodic-tick mirror rarely fires — this VM's
+  `ao-self-pull.sh` restarts `orchestrator.service` on every upstream commit, observed every ~15-25 min while the fleet
+  is shipping, well under the 30-min interval — so folded the mirror into `snapshot_session()` itself, covering the
+  shutdown call site that fires on every restart), then fully externalized in `agent-orchestrator@231125b`: sampling +
+  backup now run as standalone `resource-history-sampler.service` (`Restart=always`) + `resource-history-backup.timer`
+  (10 min), independent of `orchestrator.service` entirely — survives a genuine crash (SIGKILL/OOM-kill), not just a
+  graceful restart, since nothing runs `snapshot_session()`'s shutdown hook on a hard kill. `/ws/vm-resources` now reads
+  the sampler's on-disk JSONL tail instead of sampling `/proc` itself. Live-downloaded + inspected the S3-mirrored log
+  mid-session: 1,344 real samples, iowait averaged 27%, peaked 65.7%.
+
 ## Todos
 
+- [ ] [OPERATOR] P1. **Install the new resource-history systemd units on the live orchestrator VM
+      (`i-0c9b283b31d6b5ca7`)** — shipped in `agent-orchestrator@231125b` (see Progress Log above) but not yet active:
+      installing `/etc/systemd/system/*.service`/`*.timer` needs root, which no current AO-worker identity has (same gap
+      as this doc's own earlier `orchestrator.service` memory-cap drop-in, and the sibling
+      `orchestrator_vm_disk_io_contention_runner_burst_2026_07_28.md`'s still-open `[OPERATOR]` todo). Run on the VM
+      itself: `sudo bash scripts/install-resource-history-sampler.sh --operator ubuntu --start`. **Done when**:
+      `systemctl is-active resource-history-sampler.service` and `resource-history-backup.timer` both report `active`,
+      and a fresh object appears at
+      `s3://uts-orchestrator-state-427895769566/snapshots/planning/<today>/resource_history.jsonl` within 15 min of
+      starting.
+- [ ] [REVIEW] P2. **Unexplained EBS queue-depth spike, 2026-07-30 ~10:45-13:41 UTC** (`vol-0b4f0237fa0f5cd0f`,
+      CloudWatch `VolumeQueueLength` oscillating 8-17, comparable to the worst 2026-07-28 sustained-contention window,
+      but bursty/oscillating rather than pegged) — found live mid-session, never diagnosed against real OS-level
+      swap/iowait because this AO-worker identity's `ikenna-worker` AWS role is denied `ssm:SendCommand` on this
+      instance (confirmed via direct `AccessDeniedException`, same gap as the two `[OPERATOR]` todos above). Predates
+      this session's resource-history log (sampling only started ~14:49 UTC that day), so it's NOT captured in the new
+      JSONL history either — a real, still-open gap in explaining that specific window. Whoever has SSM/root access:
+      check `journalctl`/`vmstat`/`free -h` for that window, or pull `CWAgent` swap metrics if a CloudWatch agent gets
+      installed later (none was running at check time — confirmed via `aws cloudwatch list-metrics --namespace CWAgent`
+      returning empty).
 - [x] [REVIEW] P3. Post-resize, 52 queued AO tasks were observed all blocked on one upstream task,
       `sports_satellite_ao_dispatch_batch2-0*` — real work, not a resource issue, so out of scope for this doc, but not
       yet investigated by anyone. Whoever picks this up: check
