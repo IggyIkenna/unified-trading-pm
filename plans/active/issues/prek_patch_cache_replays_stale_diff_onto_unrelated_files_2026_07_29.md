@@ -118,21 +118,22 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       and auto-`git restore`s any path that is newly dirty AND outside the commit's own `--files` scope. A real, working
       mitigation for the ORIGINAL symptom (collateral damage to a file the commit never touched) — but see the explicit
       gap in the new P1 below.
-- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
-      Confirmed via direct reproduction: this exact field corrupted TWICE MORE on
-      `defi_consolidated_closeout_2026_07_18.md`, hours after `e37b7ab47` (the real fix_frontmatter.py fix above) was
-      already live in this slot's checkout — so that fix, while genuine, does not explain or prevent this recurrence.
-      Both times the file WAS explicitly named in the shipping commit's own `--files` argument (verified against the
-      actual invocations, `unified-trading-pm@33fcd528d` and `@36fe18966`), which `8132dba77`'s safety net structurally
-      cannot catch — it only reverts paths OUTSIDE `--files` scope, by design. Two live hypotheses, neither confirmed:
-      (a) prek's stash/restore has a concurrency blind spot slot 16's single-invocation source read didn't consider —
-      many slots run `prek` concurrently against the same shared `~/.cache/prek/patches/`, so even a
-      per-invocation-correct mechanism could still race; or (b) a second, still-unidentified mechanism produces the same
-      symptom independently of fix_frontmatter.py. Needs a worker to actually stress-test concurrent `prek` invocations
-      against this file, not just read source serially — see the 9-patch forensic list + self-perpetuation hypothesis in
-      the Progress Log below as a starting evidence base. **UPDATE 2026-07-30 (slot-1) — see the new P1 immediately
-      below: the actually-running prek binary on this host turned out to be 5+ months stale and confirmed to predate a
-      real, matching upstream bugfix in this exact code path. Hypothesis (b) now has a concrete, named candidate.**
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-8) — concurrency hypothesis (a) actually stress-tested against a live binary,
+      not just read about; RULED OUT as the cause of the silent content corruption; a distinct, real, lower- severity
+      bug found instead.** Full methodology + results in the Progress Log below. Summary: read
+      `crates/prek/src/cli/run/keeper.rs` (`WorkTreeKeeper`/`UnstagedChangesRestorer`) directly from upstream source —
+      the stash-patch a process restores is held as an in-memory `PathBuf` on the exact struct that wrote it, never
+      re-selected from the shared directory by a rescan/mtime heuristic, so the "picks the wrong stale file" framing in
+      hypothesis (a) is not how the mechanism actually works. Built a scratch git repo reproducing the real hook shape
+      (a `local`/`system` auto-fixer hook that mutates + re-stages a target file, matching `fix_frontmatter.py`'s
+      pattern) and fired genuinely concurrent `prek run` pairs (default/staged-files selection mode — the mode
+      `git     commit` actually uses, confirmed via `FileSelection::requires_clean_worktree()`) against the SAME working
+      directory, 115 rounds total. Result: **zero silent content corruptions.** The real race (confirmed to fire in 43%
+      of tightly-concurrent rounds) is git's own `.git/index.lock` rejecting the second `checkout --`, which makes the
+      losing `prek` invocation abort LOUDLY with a clear `fatal: Unable to create '.git/index.lock'` stderr message and
+      nonzero exit — not a silent bad write. This is consistent with (does not contradict) the already-confirmed
+      #1889-class single-invocation bug from the todo above being the real, sufficient mechanism for the silent
+      corruption symptom this issue is chasing.
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — `~/.local/bin/prek` upgraded 0.3.1 → 0.4.11 on this host, and BOTH
       candidate upstream bugs directly tested against the new binary (not just read about).** Was `0.3.1` (2026-01-31,
       mtime matched the release day exactly — installed once, never touched since; `pip show prek` separately reported
@@ -205,6 +206,22 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       here (kept this change minimal/low-risk): `last_updated` is only a validated field for `doc_type: plan` in the
       current schema, not `issue` — the same corruption on an issue doc's `last_updated` field would still sail through
       undetected.
+- [ ] [SCRIPT] P3. **NEW (2026-07-30, slot-8) — `~/.cache/prek/patches/` has no cleanup path at all, by design; not
+      urgent (6.7MB / 520 files today) but worth a bounded retention decision.** Found while stress-testing concurrency
+      (see Progress Log): `UnstagedChangesRestorer::restore()` in `keeper.rs` never deletes a patch file after
+      successfully applying it — every stash a hook run needed is kept forever, on the happy path, not just on
+      failure/race. Confirmed `prek cache gc` (the one cache-pruning command prek ships) does NOT touch `patches/` — ran
+      it directly against a populated isolated `PREK_HOME`, output was `Nothing to clean` with the patches still present
+      after. This fully explains the large, ever-growing patch population on this host WITHOUT needing the
+      "self-perpetuating corruption" hypothesis from the todo above (that hypothesis isn't disproven, just not required
+      — normal, correct runs also grow this directory unboundedly). Separately, confirmed the race in the todo above's
+      losing side leaves behind a patch file that is structurally _guaranteed_ orphaned:
+      `UnstagedChangesRestorer::clean()` returns `Err` (propagated via `?`) before constructing the
+      `Self { patch: Some(patch_path), .. }` struct when `checkout_working_tree` fails, so that instance's `Drop`-based
+      `restore()` never runs for it. Recommended next step (not done here — a scoped hygiene decision, not a code fix):
+      decide a bounded retention policy for this HOME-level, multi-slot-shared directory (e.g. a low-priority cron
+      deleting `*.patch` files older than N days) and wire it in, since prek itself provides no such mechanism today
+      (repo: `unified-trading-pm`, likely alongside the other host-maintenance cron scripts).
 
 ## Progress Log
 
@@ -362,3 +379,63 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   Reported the full picture to the operator; awaiting their call on scope (remediate other hosts now vs. also build the
   durable version-check vs. pursue an upstream fix for #1889 using the repro we now have) before doing anything beyond
   this host.
+
+- **2026-07-30 (slot-8, host `ip-172-31-5-118`) — the concurrency hypothesis, actually stress-tested.** Picked up the
+  open P1 asking a worker to stress-test concurrent `prek` invocations rather than read source serially. Did both, in
+  that order.
+
+  **Source read first** (`crates/prek/src/cli/run/keeper.rs` + `run.rs`, fetched directly from `j178/prek` upstream via
+  `gh api repos/j178/prek/contents/...?ref=v0.4.11` — this host's actual binary reports `prek 0.4.12`, one patch ahead
+  of the latest tagged GitHub release at investigation time, but the structural pieces below are architectural, not
+  release-note items, and were independently confirmed against the real running 0.4.12 binary in the stress test itself,
+  not just the 0.4.11 source text): `WorkTreeKeeper::clean()` is only invoked when
+  `FileSelection::requires_clean_worktree()` is true, which is `Default`/`Diff` selection (i.e. the mode `git commit`'s
+  installed hook actually uses) — NOT `--all-files`/`--files` (this cost one wasted round of testing: an initial
+  `prek run --all-files` stress pass never triggered the stash path at all, because that selection mode skips it by
+  construction). Once corrected to default selection: the patch a process restores is a `PathBuf` held on the
+  `UnstagedChangesRestorer` struct instance that wrote it — never re-derived from a directory scan/mtime-newest lookup —
+  so the "prek picks up a DIFFERENT, stale patch file" framing in the open hypothesis is not how the code works; there's
+  no file-selection step to race on. Also found (not previously documented): a `LockedFile::acquire()` cross-process
+  lock DOES exist in `fs.rs`, but `store.rs` only takes it for the store's own `.lock` (hook-environment
+  installs/downloads) — nothing locks the `WorkTreeKeeper` git working-tree clean/restore cycle itself, so if two `prek`
+  processes DO run against the same working directory concurrently, nothing in prek serializes them.
+
+  **Then built and ran the actual stress test**, since a race being structurally _possible_ doesn't mean it produces
+  _this_ symptom. Scratch repo (`~/.claude-configs/.../scratchpad/prek-concurrency-test/repo`, deleted nothing from any
+  shared path — all synthetic) with a `local`/`system` `.pre-commit-config.yaml` hook shaped like the real culprit class
+  described in this doc (`fixer.sh`: mutates a `last_updated:`-style field on a target file and re-`git add`s it,
+  mirroring `fix_frontmatter.py`'s auto-fix-and-restage pattern), plus a second file carrying a genuinely unstaged edit
+  to force the stash path. Fired pairs of `prek run --hook-stage pre-commit` (default file-selection) truly concurrently
+  (backgrounded, `wait`ed) against the SAME working directory, snapshotting file content every round: 30 rounds with
+  only the target file's own unstaged diff, then 60 more (115 total incl. an earlier 25-round dry run) with the target
+  file STAGED (matching "file explicitly named in `--files`" from the open todo) plus a second file carrying the
+  unstaged diff, matching the doc's own "hook modifies staged files + unstaged changes elsewhere" phrasing most closely.
+
+  **Result: zero silent content corruptions across all 115 rounds** (verified per-round: exact expected line count +
+  exactly one `last_updated:` occurrence, no duplicated/garbled/truncated content). The race is real and reproducible —
+  26/60 rounds (43%) in the final batch hit it — but it manifests as git's OWN `.git/index.lock` rejecting the second
+  process's `checkout --` with
+  `fatal: Unable to create '.../.git/index.lock': File exists. Another git process seems to be running...`, which
+  propagates as a hard `Err` out of `UnstagedChangesRestorer::clean()` — the losing process aborts LOUDLY (nonzero exit,
+  unmistakable stderr, no hooks even run) rather than silently landing bad content. This is a negative result for
+  hypothesis (a) specifically as an explanation for the SILENT corruption symptom: it doesn't contradict or diminish the
+  already-confirmed #1889-class single-invocation bug two entries above (reproduced independently, on an isolated
+  non-concurrent repo, by slot-1) — if anything it makes that bug look more clearly sufficient on its own, since the
+  concurrency angle doesn't add a silent-failure mode on top of it.
+
+  **One genuine new finding fell out of building this test, unrelated to the corruption symptom itself** — filed as its
+  own new P3 todo above rather than folded into this narrative per the "every follow-up is a todo" rule:
+  `~/.cache/prek/patches/` has no cleanup path at all. `keeper.rs`'s `restore()` never deletes a patch after applying
+  it, even on the fully-successful happy path, and `prek cache gc` (checked directly: ran it against a populated
+  isolated `PREK_HOME`, got `Nothing to clean`, files still there afterward) doesn't touch `patches/` either. This alone
+  explains this host's 520-file / 6.7MB `patches/` population without needing the "self-perpetuating" hypothesis from an
+  earlier entry — though that hypothesis isn't disproven, it's just not required to explain the raw count. Not urgent
+  (6.7MB), filed P3.
+
+  **Cache hygiene note**: my first test pass accidentally pointed `PREK_HOME` at the real shared `~/.cache/prek` (the
+  default) instead of an isolated scratch path, writing 52 synthetic patch files into the same directory every slot on
+  this host shares. Caught it, verified all 52 by exact filename + content (none referenced any real workspace path, all
+  referenced only the synthetic scratch repo), deleted exactly those 52 by explicit filename list (not a directory-tree
+  delete), and re-ran all further rounds against an isolated `PREK_HOME` under scratch. Net effect on the shared cache:
+  zero (back to the pre-test 520-file count before this todo, now 520 again after the P3 finding's own — separately
+  isolated — testing).
