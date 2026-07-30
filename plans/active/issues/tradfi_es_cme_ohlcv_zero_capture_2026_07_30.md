@@ -168,22 +168,22 @@ source:
 > hits a stale blob + a near-continuously-recycling live lock and bounded-waits without ever completing. **This is NOT
 > the same root cause as the original 2026-07-21 zero-capture finding below** (the FRED rows postdate that fleet by 9
 > days) — that earlier question remains open. Full evidence + recommended fix options:
-> `plans/active/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md` (P0, NOTIFY-OPERATOR severity —
+> `/plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md` (P0, NOTIFY-OPERATOR severity —
 > filed this session). **Action taken**: none of the 6 surviving VMs were killed or re-launched a third time — per that
 > new issue's recommendation, they may resume on their own once the consolidator recovers, so a blind third re-launch
 > was deliberately avoided. This todo (verify row capture) stays open, gated on the consolidator issue's resolution, not
 > on any further ES-specific action.
 
 > **FINAL UPDATE 2026-07-30T12:30Z (same session, different agent/pass — closes out UPDATE 3 above) — RESOLVED: the
-> consolidator is fixed, real ES data now captures.** `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s
-> root-cause (above) is exactly right — independently re-confirmed via the same evidence (398 real FRED rows,
-> `span_days=23586`, `chunks=303`). That issue's `[CODE] P1` todo ("fix the consolidator's chunking strategy") is now
-> DONE: tightened `unified_trading_library.manifest_consolidator._DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing
-> widen-safety-valve actually catches this span (verified safe fleet-wide first: cefi/defi/sports real chunk counts
-> 74-89, all `<<` 300) — shipped `unified-trading-library@59ed61c9`, regression test added. Manually rebuilt +
-> redeployed the live consolidator (`market-tick-data-service-live-defi-rollout` Cloud Build
-> `19b20104-9000-44ff-b968-77468617832f`, SUCCESS) since Cloud Run Jobs re-resolve `:latest` per execution, not per
-> revision. **Verified live in the running job's own logs**:
+> consolidator is fixed, real ES data now captures.**
+> `/plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s root-cause (above) is exactly
+> right — independently re-confirmed via the same evidence (398 real FRED rows, `span_days=23586`, `chunks=303`). That
+> issue's `[CODE] P1` todo ("fix the consolidator's chunking strategy") is now DONE: tightened
+> `unified_trading_library.manifest_consolidator._DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing widen-safety-valve
+> actually catches this span (verified safe fleet-wide first: cefi/defi/sports real chunk counts 74-89, all `<<` 300) —
+> shipped `unified-trading-library@59ed61c9`, regression test added. Manually rebuilt + redeployed the live consolidator
+> (`market-tick-data-service-live-defi-rollout` Cloud Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS) since Cloud
+> Run Jobs re-resolve `:latest` per execution, not per revision. **Verified live in the running job's own logs**:
 > `phase=merge_chunk_days_widened ... effective_chunk_days=78` → `phase=duckdb_merge_start ... chunks=303` (down from
 > 787), cycle completed in ~75s despite a heavier-than-normal 54-shard workload — the fix works exactly as designed.
 > That other issue's `[OPERATOR] P0` intervention-decision todo is moot (no manual kill was needed; the fix itself
@@ -285,15 +285,16 @@ root-cause fix.
       consolidator-lock horizon + 300s buffer, vs. the 1800s generic default that was killing legitimately-waiting VMs).
       2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@c1e3dc70`. Repo: deployment-service.
 - [x] ✅ [INFRA/CODE] P1. **DONE 2026-07-30 — closes out
-      `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s `[CODE] P1` todo.** Manifest-consolidator
-      pathological-chunk-count bug (398 genuine FRED macro rows, real history back to 1962, stretching the merge span to
-      64 years — not corruption): tightened `_DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the existing widen-safety-valve
-      actually catches it (787 chunks vs. the ~85 a normal tradfi range needs). Verified safe fleet-wide first
-      (cefi/defi/sports real chunk counts 74-89, all `<<` 300) before touching this shared-across-asset-groups constant.
-      Regression test added. Shipped `unified-trading-library@59ed61c9`. **Rebuilt + redeployed the live consolidator**
-      (`market-tick-data-service-live-defi-rollout` Cloud Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS).
-      Verified live in the running job's own logs: `phase=merge_chunk_days_widened ... effective_chunk_days=78` →
-      `chunks=303` (down from 787), cycle completed in ~75s. Repo: unified-trading-library.
+      `/plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md`'s `[CODE] P1` todo.**
+      Manifest-consolidator pathological-chunk-count bug (398 genuine FRED macro rows, real history back to 1962,
+      stretching the merge span to 64 years — not corruption): tightened `_DUCKDB_MERGE_MAX_CHUNKS` 2000→300 so the
+      existing widen-safety-valve actually catches it (787 chunks vs. the ~85 a normal tradfi range needs). Verified
+      safe fleet-wide first (cefi/defi/sports real chunk counts 74-89, all `<<` 300) before touching this
+      shared-across-asset-groups constant. Regression test added. Shipped `unified-trading-library@59ed61c9`.
+      **Rebuilt + redeployed the live consolidator** (`market-tick-data-service-live-defi-rollout` Cloud Build
+      `19b20104-9000-44ff-b968-77468617832f`, SUCCESS). Verified live in the running job's own logs:
+      `phase=merge_chunk_days_widened ... effective_chunk_days=78` → `chunks=303` (down from 787), cycle completed in
+      ~75s. Repo: unified-trading-library.
 - [x] ✅ [DATA] P1. **DONE 2026-07-30 — RESOLVED, verified real rows now capture.** Read the re-launched fleet's per-VM
       manifest shards directly (not the canonical index, which lags by up to one merge cycle): the 2026 year-shard VM
       shows REAL captured `ohlcv_1m`/`ohlcv_1s` data for 2026-01-02/05/06 — e.g. 4 real per-contract row counts

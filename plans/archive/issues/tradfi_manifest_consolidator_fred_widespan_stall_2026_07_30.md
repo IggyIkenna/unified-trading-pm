@@ -30,7 +30,7 @@ summary: >-
   issue doc investigates (that fleet's 2026-07-21 zero-capture predates this FRED backfill by 9 days, so it's a
   DIFFERENT root cause, not yet re-diagnosed) — this is a fresh, bucket-wide, cross-cutting infra regression discovered
   while working an unrelated todo.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -57,7 +57,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: unified-trading-library@59ed61c9, deployment-service@fee8860b, manual purge 2026-07-30T13:28-13:29Z
 source:
   [
     "discovered 2026-07-30T11:44Z while executing tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md's active P1 todo
@@ -204,7 +204,24 @@ stuck in `_wait_for_in_flight_cycle_then_reread`'s bounded consolidator-lock wai
       (`test_duckdb_merge_max_chunks_widens_on_pathological_date_outlier`). Shipped `unified-trading-library@59ed61c9`;
       rebuilt + redeployed the live consolidator (Cloud Build `19b20104-9000-44ff-b968-77468617832f`, SUCCESS) and
       verified the fix firing in the running job's own logs. Repo: unified-trading-library.
-- [ ] [DIAG] P2. Decide (operator call) whether FRED macro/yield-curve series belong in `market-data-tick-tradfi-prd-*`
-      at all, or should live in a dedicated macro-data bucket with its own consolidation cadence, to decouple it from
-      the high-frequency CME/ICE/etc. OHLCV merge path. Repo: deployment-service / unified-cloud-interface (bucket
-      topology).
+- [x] ✅ [DIAG] P2. **RULED 2026-07-30 (operator direct answer, same day) — FRED stays in this bucket, scoped to the
+      same floor as the rest of tradfi, not moved to a dedicated bucket.** Operator: "it should be since 2019 earliest
+      that we grab the data or whatever rest of tradfi starts." Implemented as a backfill-SCOPE fix (not a
+      bucket-topology change): `deployment-service/scripts/vm/launch-tradfi-bf-fred.sh`'s default `START_FLOOR` changed
+      `1962-01-02` → `2020-01-01` (matches CME/FX/ICE's Databento-group floor per
+      `codex/02-data/tradfi-databento-sourcing-ssot.md`) — `coverage_starts.py`'s `1962-01-02` FRED-availability
+      constant is UNCHANGED (it documents a true fact about FRED's real history, separate from how much of it this
+      bucket chooses to hold). 2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@fee8860b`.
+      **Also purged the already-captured orphaned fragment** this same root cause created: an early FRED backfill VM had
+      walked day-by-day from 1962-01-02 and was interrupted around 1970-01-02 (never reaching the modern era) — 522
+      real, correctly-captured but now-orphaned rows sitting alongside the bucket's actual ~2020-2026 coverage, the
+      exact rows stretching the merge span to 64 years. Found this exact VM STILL RUNNING
+      (`tradfi-bf-fred-full-     20260730-110724`, launched before the launcher fix, at its measured rate would've taken
+      900+ hours to reach 2020) — stopped it (`gcloud compute instances delete`), then ran a snapshot-first
+      manifest-only purge scoped to `venue=FRED, date<2020-01-01`: fresh soft-delete retention check (604800s, qualifies
+      per delete-safety §3a), canonical index snapshotted first, 538 real GCS objects deleted + 642 manifest rows
+      removed (canonical + 2 orphaned per-VM shards from the now-stopped VM), `--verify` confirms 0 remaining.
+      Consolidator scheduler resumed cleanly post-purge; confirmed cycles completing normally (~46-54s). One-off
+      script + its 6 regression tests deleted post-run per their own lifecycle marker (job done, verified). No code
+      change needed in unified-cloud-interface — this was a backfill-scope + manifest-cleanup fix, not a bucket-topology
+      change.
