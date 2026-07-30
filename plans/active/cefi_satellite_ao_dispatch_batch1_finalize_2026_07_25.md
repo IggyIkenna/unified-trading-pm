@@ -52,11 +52,13 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile all 21 distinct source docs' checkboxes.** For each of
-      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 33 now-done todos: flip the corresponding checkbox/section in
-      its named source doc (each todo's text ends with "Source: `<doc>.md`"), citing the batch-1 commit(s) that shipped
-      it — verify the actual shipped commit exists before citing it. The 21 source docs:
-      `aster_and_cefi_rolling_adv_feature_2026_07_21.md`, `data_completion_cefi_2026_07_15.md` (5 todos),
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-9, `review`).** Reconciled all 21 distinct source docs' checkboxes. See
+      this plan's Progress Log below for the per-doc breakdown, the 2 real discrepancies found (one batch1 todo that was
+      never actually done, one batch1 checkbox flipped prematurely), and the 4 edits made. **Reconcile all 21 distinct
+      source docs' checkboxes.** For each of `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s 33 now-done todos: flip
+      the corresponding checkbox/section in its named source doc (each todo's text ends with "Source: `<doc>.md`"),
+      citing the batch-1 commit(s) that shipped it — verify the actual shipped commit exists before citing it. The 21
+      source docs: `aster_and_cefi_rolling_adv_feature_2026_07_21.md`, `data_completion_cefi_2026_07_15.md` (5 todos),
       `issues/aster_mtds_failure_count_regression_2026_07_07.md`,
       `issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`,
       `instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
@@ -112,3 +114,36 @@ drift_direction: advance-code
       `locked_by` (already empty here, confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every
       corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
       commit.
+
+## Progress Log
+
+- **2026-07-30 (slot-9, `review`) — todo 1 reconciliation complete, 2 real discrepancies found and left honest (not
+  papered over).**
+  - **Doc-by-doc outcome**: of the 21 source docs, **4 needed an actual edit** —
+    `aster_and_cefi_rolling_adv_feature_2026_07_21.md` (Phase 2 checkboxes flipped, substantially-done-with-2-residuals
+    framing), `data_completion_cefi_2026_07_15.md` (1 of 5 items — the adapter `_finalize_session_grid` verify sub-ask —
+    still had its checkbox unflipped), `plans/archive/issues/bug_c_normalize_id_collision_options_futures_2026_07_22.md`
+    (added the live-measured PASS numbers batch1 produced, on top of the existing structural resolution),
+    `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (the Phase-2-tail purge checkbox was still `[ ]` despite the
+    `--apply` having actually run), `issues/cefi_chain_tail_v6_canonicalisation_2026_07_21.md` (closed a residual todo 4
+    flagged as a follow-up, citing batch1's `@94b4aff5` fix), and
+    `issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (2 numbered-list items updated — see discrepancy
+    below). The remaining docs were **already correctly reconciled** by other sessions with equal-or-better evidence
+    than batch1's own citations (several via later, more thorough re-verifications that superseded batch1's own
+    findings) — re-editing them would have been redundant churn, not a fix.
+  - **Discrepancy 1 — `issues/bybit_futures_chain_write_shape_2026_07_13.md`'s batch1 todo is genuinely NOT done.**
+    `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` line 355 ("Extend BYBIT futures_chain shape-2 duplicate
+    verification to the full audited scope") is still `- [ ]` unchecked — the ONLY one of the 33 todos not done, despite
+    this finalize plan being machine-gated (`depends_on`+`gate_on_depends: true`) on all 33 being done before dispatch.
+    The dispatcher queued this finalize todo anyway. Did NOT touch the source doc (nothing to flip — no work shipped).
+    **This gate-vs-reality mismatch is itself worth a look** — flagging here rather than silently working around it; the
+    batch1 plan cannot be archived (todo 4 below) while this todo remains open.
+  - **Discrepancy 2 — the HYPERLIQUID recent-tail fill checkbox in `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` was
+    flipped `[x]` despite its own text admitting "Not 100% yet — next check-in confirms `expected_unattempted`→0."**
+    Cross-checked against the source doc (`cefi_residual_followups_after_honest_done_2026_07_17.md`'s own Progress Log):
+    confirms the work is genuinely still in progress (VM launched + healthy, but a subsequent `/done` attempt on this
+    exact batch1 todo was hard-rejected by the AO server's M3 gate for not meeting the done criterion). Did NOT mark the
+    source doc's item done — annotated it "IN PROGRESS, not yet closed" instead, matching the true state rather than
+    batch1's premature flip. The sibling HYPERLIQUID phantom-re-census item in the same doc WAS genuinely done and is
+    flipped accordingly.
+  - No commits shipped in any service repo — this todo is doc-reconciliation only, entirely within `unified-trading-pm`.

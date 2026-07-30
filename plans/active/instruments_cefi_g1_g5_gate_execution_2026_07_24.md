@@ -473,9 +473,22 @@ Coverage is the verification lens — every number flows through `compute_honest
         (HYPERLIQUID/ASTER/LIGHTER) raise. Decide: make EXTENDED raise-on-fetch-failure (honest) vs keep the fallback.
         Target repo: instruments-service `adapters/cefi/extended.py`. Cefi-track (behaviour change w/ manifest
         implications).
-  - [ ] [SCRIPT] P2. **Phase-2 tail: purge orphaned by_date defi snapshots for EXTENDED/PACIFICA/LIGHTER** (~3/day
+  - [x] ✅ [SCRIPT] P2. **Phase-2 tail: purge orphaned by_date defi snapshots for EXTENDED/PACIFICA/LIGHTER** (~3/day
         across history, un-enumerated after Phase 1) + ensure the expected-universe seeder no longer seeds these as defi
-        `expected_unattempted`. DoD: 0 `venue=EXTENDED-STARKNET|PACIFICA-SOLANA|LIGHTER-ZKSYNC` by_date defi blobs.
+        `expected_unattempted`. DoD: 0 `venue=EXTENDED-STARKNET|PACIFICA-SOLANA|LIGHTER-ZKSYNC` by_date defi blobs. —
+        **DONE 2026-07-27 (slot-11, `data_engineering`, `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`
+        `instruments_cefi_g1_g5_gate_execution` todo).** Confirmed real orphan count via prefix-scoped listing (not a
+        whole-corpus walk): EXTENDED-STARKNET=1256, PACIFICA-SOLANA=749, LIGHTER-ZKSYNC=1376, total 3381 objects on
+        `instruments-store-defi-prd-central-element-323112`; confirmed no live writer/reader of this DEFI-bucket-scoped
+        path for these venues. Shipped `instruments-service@4d6c2109` (snapshot-then-delete script), then
+        `instruments-service@dd90a44f` (fixed the script's own missing fresh §3a retention check + a
+        `GCP_PROJECT_ID`-env client bug found before running `--apply`). Ran `--apply`:
+        `soft_delete_retention_seconds=604800` (fresh-checked, at threshold) — EXTENDED-STARKNET 1256, PACIFICA-SOLANA
+        749, LIGHTER-ZKSYNC 1376, **3381/3381 total, VERIFIED 0 remain**. Second DoD half also confirmed: a fresh
+        `enumerate_expected_universe.py --asset-group defi` dry-run (712,815 candidate rows) logged **zero** references
+        to any of the 3 venues; `_build_defi_venues()` independently re-confirmed to still exclude all 3. Snapshots
+        retained at `_purge_snapshots/cefi_perp_defi_blob_contamination_phase3_2026_07_26/` (+ 7-day soft-delete
+        recovery window).
   - [x] ✅ [CEFI-TRACK] P1. **MTDS-cefi capability for PACIFICA/LIGHTER** — only EXTENDED has a UAC cefi
         `SourceCapability` (`_cefi.py`); PACIFICA/LIGHTER have none, so their cefi market-data capture is unbuilt (IS
         instrument-reference is now cefi-correct for all 3). Build their MTDS cefi capture when cefi resumes. Target

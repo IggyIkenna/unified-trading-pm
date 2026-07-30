@@ -170,7 +170,14 @@ papering over them.
       collision (no data corruption, just a coarser coverage-check granularity) and was NOT fixed in this session (out
       of this todo's literal scope — todo 4 names "shard-atom (manifest key)" + "available_at bookkeeping", which most
       directly maps to `_row_counts`/`underlying_counts`, already fixed) — flagging as a residual, smaller finding for a
-      follow-up rather than expanding scope further.
+      follow-up rather than expanding scope further. **RESIDUAL CLOSED 2026-07-27 (slot-5,
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`) — `market-tick-data-service@94b4aff5`**: widened
+      `_update_cluster_and_chain_counts` to promote `_cluster_counts`/`_chain_available_at_max` to the v6 5-tuple
+      `(itype, dt, underlying, quote_asset, margin_type)`. Also found + fixed a previously-latent collision one level up
+      (`venue_fetch.py::_record_venue_shard_counts` + `_state.py`'s `chain_cluster_counts`/`chain_bundle_available_at`
+      were also only 4-tuple-keyed — widened to 6-tuple via a new shared `_widen_chain_key` helper, plus
+      `manifest_finalize.py::_write_bundle_shard_row`). New regression test
+      `test_cluster_counts_same_underlying_different_margin_never_collides`; full `quality-gates.sh` green (6978 tests).
 - [x] 5. [DATA] P1. **[executed 2026-07-27 via plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo]**
       PROVE the fixed W1 emits v6 for a cefi chain on one real day (write + reader round-trip via the v6-first probe at
       `reader.py:402`), with the guard raising on a synthetic v5 path. — **DONE 2026-07-27, real GCS `-test-` bucket

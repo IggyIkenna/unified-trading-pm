@@ -81,11 +81,21 @@ resolved_by:
 1. **[P2] HYPERLIQUID recent-tail fill (~2026-06-24 → now-2).** HL is a DEX venue (non-Tardis, exempt from the N=1 cap)
    so its tail IS fillable — it was simply not run before the close-out. Fill via the HL batch lane (not the Tardis
    fleet). Detail: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Evidence on pickup: manifest rows for HL over the tail
-   range.
+   range. **Status (2026-07-27, `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`): IN PROGRESS, not yet closed** — VM
+   `cefi-hyperliquid-2026-20260727-150820` launched + verified genuinely healthy (real advancing manifest writes, no
+   fire-and-forget); slot-5's `/done` on the batch1 todo was correctly hard-rejected by the AO server's M3 gate since
+   `expected_unattempted`→0 was not yet reached. See the 3 Progress Log entries below (2026-07-27,
+   slot-6/slot-11/slot-5) for the measured before/after counts — genuinely still open, do not re-flip without a fresh
+   `expected_unattempted=0` measurement.
 
 2. **[P2] HYPERLIQUID phantom re-census (1,277 rows → `@LIN` canonical path).** Cosmetic manifest-labelling — does NOT
    affect captured data. Blocked only on box size: the re-census (`reconcile_phantom_manifest_rows_all.py`) OOMs on the
-   15GB VM; needs a 32-64GB box. Detail: `phantom_captures_cefi_2026_06_28.md`. Evidence: phantom count → 0 for HL.
+   15GB VM; needs a 32-64GB box. Detail: `phantom_captures_cefi_2026_06_28.md`. Evidence: phantom count → 0 for HL. —
+   **DONE 2026-07-27 (slot-2, `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`), root cause = box size.** Extended
+   `launch-defi-phantom-recon-vm.sh` (`deployment-service@369c1e3`: `MACHINE_TYPE`/`VENUES` + SPOT); ran
+   `defi-phantom-recon-cefi-20260727-173241` (`e2-highmem-4`, HL-scoped, `--apply`): `Real captures: 104153`,
+   `Phantom captures: 0`. Re-verified via fresh `_index/phantom_audit_latest.json` (`phantom_count: 0`) — live manifest,
+   not exit code.
 
 3. **[P1] Drop eu twins of natively-canonical (non-Tardis) captures — ~10,368 rows (⚠️ superseded estimate, see
    correction below).** The OnchainPerp/native-canonical lane writes canonical `captured` rows but nothing drops the

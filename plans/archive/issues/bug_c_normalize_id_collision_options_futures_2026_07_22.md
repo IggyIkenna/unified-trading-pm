@@ -201,4 +201,11 @@ clears.
       CONSTRUCTION (slot-3, 2026-07-26): the fix lives INSIDE `_normalize_instrument_id_for_match` itself, which every
       listed call site (`missing_instruments`, `normalized_iid_counts`, the `per_instrument` breakdown) already routes
       through — there is no separate normalization implementation at any of those sites to audit independently; all
-      inherit the fix from the one shared function.**
+      inherit the fix from the one shared function.** **Live-measured confirmation added (slot-4, 2026-07-26,
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`):** grepped `instrument_coverage.py` and confirmed all 3 named
+      call sites (lines 574/577, 606/608, plus the 527/545/551 denominator dict) call the SAME shared function; then
+      live-measured it against the real `instruments-store-cefi-prd-central-element-323112/prod/catalog.parquet`
+      (429,129 rows) — **DERIBIT OPTION** raw_unique=264,550 normalized_unique=264,550 ratio=1.00x **PASS**; **DERIBIT
+      FUTURE** raw_unique=1,631 normalized_unique=1,631 ratio=1.00x **PASS**; **OKX-FUTURES FUTURE** raw_unique=5,604
+      normalized_unique=5,604 ratio=1.00x **PASS** (previously 66,137x/135.9x/45.6x pre-fix). No code change; no new
+      findings. unified-trading-pm (batch1 plan, no separate commit needed — verification-only).

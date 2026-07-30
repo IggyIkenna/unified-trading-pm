@@ -162,15 +162,25 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
       (`/codex/02-data/data-lineage-MTDS-features-ml.md`) cross-referenced with the actual module path in the same
       commit as this plan update.
 
-## Phase 2 — extend MDPS candle coverage to on-chain-perp CeFi venues (NOT STARTED — separate future work)
+## Phase 2 — extend MDPS candle coverage to on-chain-perp CeFi venues (DONE for the core ask 2026-07-26, 2 residuals filed separately)
 
-- [ ] [DATA] P2. Extend MDPS's candle-building orchestration to cover `pipeline_mode=batch_aster` / `batch_hyperliquid`
-      / `batch_lighter_api` / `batch_extended` raw trades (MTDS already captures these broadly; MDPS's candle
-      scanner/writer just hasn't been pointed at them). Once this lands, Phase 1's consumer starts returning real ADV
-      values for these venues with no code change.
-- [ ] [DATA] P2. Backfill historical candles for these 4 venues' existing raw trade history (matches whatever range MTDS
-      has already captured — see the ASTER issue doc for that venue's actual backfilled range, 2024-01-01 onward, not
-      the UAC-native 2023-07-22 start until GAP-4 there is separately resolved).
+- [x] ✅ **DONE 2026-07-26 (cefi_satellite_ao_dispatch_batch1_2026_07_25.md todo -001).** No MDPS code change was needed
+      — `pipeline_mode=batch_aster`/`batch_hyperliquid`/`batch_lighter_api`/`batch_extended` were already
+      generic-resolved (venue list is UAC-owned, timeframe list is one flat default, `resolve_pipeline_mode_from_source`
+      is closed-set generic). Real backfill launched + verified live: HYPERLIQUID `trades` candles for 2026-07-19
+      (BTC+ETH) confirmed with real non-zero `volume` (BTC 24h: `volume=28140.06`). ASTER excluded pending its own
+      manifest-registration gap (`issues/aster_raw_capture_manifest_registration_gap_2026_07_26.md`). Repo:
+      market-data-processing-service (no diff needed — infra/VM execution only).
+- [x] ✅ **DONE (substantially) 2026-07-26 — full-range VM in progress, not yet 100%.** Backfill VM
+      `mdps-backfill-cefi-20260726-165959` (`trades`, 2024-01-01→2026-07-25,
+      HYPERLIQUID/LIGHTER-ZKSYNC/EXTENDED-STARKNET) launched and confirmed healthy/advancing per
+      `cefi_satellite_ao_dispatch_batch1_2026_07_25.md`'s Progress Log; a recent-window verification VM independently
+      confirmed real candle output for a recent day. Manifest-verified full-range completion is blocked on the separate
+      universal MDPS candle-manifest-emission bug
+      (`/plans/archive/issues/mdps_cefi_candle_manifest_never_emitted_2026_07_26.md`) — the live write path cannot
+      register these rows in the manifest today for ANY venue, so full-range coverage confirmation must go through that
+      issue's own `rebuild_manifest_from_canonical_paths` reconciliation once fixed, not the live write path. ASTER
+      stays excluded per the item above.
 
 ## Phase 3 — wire ADV into strategy-side volume caps (NOT STARTED — depends on Phase 1 output being usable, does not need Phase 2 to start designing)
 
