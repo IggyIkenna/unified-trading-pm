@@ -71,7 +71,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-07-26"
+last_updated: "2026-07-30"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -691,6 +691,27 @@ criterion; it also carries the `v2_engine_venue_buildout` over-count caveat this
 ## Progress Log
 
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
+
+- **2026-07-30** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous, scheduled `ag_closeout_auditor`
+  dispatch `agt-06bfb0`, slot 10). **A sibling dispatch (slot-7) had already run this exact tranche ~31 min earlier**
+  (`unified-trading-pm@19a014e29`, 04:10 UTC vs this run's 04:41 UTC boot — flagging the apparent double-dispatch for
+  the operator/main-agent to check the scheduler for a double-fire on the same tranche) and filed
+  [`issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md`](/plans/active/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md):
+  `check_ag_closeout_linkage.py`'s "0 orphans" is a false-clean for cross-cutting/ao/ci/infrastructure (hardcoded
+  `REAL_AGS` + a hyphen-vs-underscore glob bug), measuring 29/119 cross-cutting-tagged docs with zero citation anywhere
+  (28 with real open work), ~20 of them `ci`/`ao` content under a habitual `cross-cutting` tag, parked as a
+  BLOCKED-OPERATOR-DECISION (options A/B/C on when/how to retag). Rather than duplicate that sweep, this run
+  independently re-derived the same headline via `generate_ag_closeout_audit_candidates.py` (91 DATA_EPICS-filtered
+  candidates, 7 never-cited) + a direct frontmatter sweep for cross-cutting-tagged docs outside DATA_EPICS (13 more) —
+  Orthogonality HARD CHECK re-run, still clean (0 dual-tag mistags) — then ran a full Phase-1 `Workflow` (one agent per
+  doc) against 7 of the 29 as independent verification: **6/7 confirmed `exclude_cross_cutting`** (real content is
+  CI-runner/Cloud-Build/GH-Actions-billing/AO-slot-policy mechanics — corroborates slot-7's ~20-doc estimate) and **1/7
+  is genuinely cross-cutting, genuinely orphaned, but NOT AO-eligible**:
+  `issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` (shared UTL `ManifestWriter`
+  per-VM-shard flush cost-scaling bug — affects every asset group's long-running backfill VMs — but both its fix options
+  are explicitly design-review/operator-risk-tolerance calls, not a bounded worker todo; stays a pointer, not a batch
+  candidate). **No batch3 drafted** — concur with slot-7: the residual needs the standing-gate fix + the ci/ao retag
+  operator ruling, not fresh AO-dispatch work.
 
 - **2026-07-26** — `/ag-closeout-audit cross-cutting` **re-invocation** (autonomous), run after this tranche's
   batch1/batch1b pair. **Headline: a MEMBERSHIP gap, not a fresh-orphan gap.** Tranche membership re-derived

@@ -228,3 +228,22 @@ reason for every doc they declined to extract, and batch2 even carries a "Not or
 The 28 orphans are almost entirely docs created AFTER those plans were written (2026-07-26), not docs those plans
 missed. This is a cadence problem — the corpus grows faster than the covering family is regenerated — which is the
 strongest argument for fixing the standing gate (todo 1) rather than authoring another batch.
+
+### 2026-07-30 (slot-10, dispatch `agt-06bfb0`) — independent 7-doc verification, corroborates + one refinement
+
+Landed ~31 min after the entry above (same-tranche double-dispatch — see this issue's sibling note in
+`cross_cutting_consolidated_closeout_2026_07_25.md`'s Progress Log). Ran a full Phase-1 `Workflow` (one agent per doc,
+structured verdict, independent reasoning) against 7 of the 29 never-cited docs listed above. Result: **6/7 confirm
+`exclude_cross_cutting`** — `ao_slot_capacity_policy_ci_scheduled_split_2026_07_29` (→ `ao`);
+`issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29`,
+`issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29`,
+`issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27`,
+`issues/github_actions_billing_wall_recurrence_2026_07_29`,
+`pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28` (→ `ci`) — corroborating the "~20 are ci/ao by habitual
+tag" estimate above with full per-doc reasoning (checkbox/prose sweep, citation grep against all 6 covering docs,
+content-vs-tag sanity check). **1 exception worth carrying into whichever option (A/B/C) the operator picks**:
+`manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` is correctly tagged cross-cutting (shared UTL
+`ManifestWriter` per-VM-shard flush cost-scaling bug, affects every asset group's long-running backfill VMs, not
+DeFi-specific despite its discovery context) — **do NOT sweep it into the ci/ao retag pass**; it stays cross-cutting's
+own orphan, just not AO-eligible today (both fix options are self-described design-review/operator-risk-tolerance calls,
+not a bounded worker todo). No new batch drafted; concurs with the conclusion above.
