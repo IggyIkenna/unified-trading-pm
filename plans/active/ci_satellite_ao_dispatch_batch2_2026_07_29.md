@@ -74,9 +74,9 @@ source: >-
 
 # CI satellite AO batch 2
 
-> **⚠️ STATUS: `draft` — NOT dispatched, NOT ingested.** Flipping this (and its finalize sibling) to `status: active` is
-> the operator's call per CLAUDE.md § "Plan destination — ASK BEFORE CREATING" and the `/ag-closeout-audit` skill's
-> autonomous-mode rule. Drafted by a scheduled one-shot audit worker; nothing here has been shipped.
+> **🟢 STATUS: `active` — dispatched 2026-07-30** (`unified-trading-pm@5a6bbefc3`, "activate 9 fresh ag-closeout-audit
+> dispatch batches (operator go-ahead)"). Drafted by a scheduled one-shot audit worker, then reviewed and activated by
+> the operator alongside 8 sibling batches; AO dispatch is now live against the todos below.
 
 > **Why this plan exists.** `ci_satellite_ao_dispatch_batch1_2026_07_26.md` is still active with 16/30 todos open — this
 > is NOT a replacement for it. This is the tranche's SECOND extraction: items batch1 deliberately deferred (now
@@ -105,21 +105,21 @@ concurrent workers do not collide on this file.
 
 ## Todos
 
-- [ ] [INFRA] P1. **Bind configuration into the QG sentinel + align quickmerge/standalone `ENVIRONMENT` resolution + add
-      the `--durations=25` visibility flag.** Three related `scripts/base-service.sh`/`scripts/quickmerge.sh` changes
-      bundled into one todo (same file, avoids a same-priority collision with the other two candidates this round — see
-      § Same-file contention): (a) mix `ENVIRONMENT` (and any other gate-affecting env var) into the QG sentinel hash so
-      a sentinel produced under one configuration cannot satisfy a run under another, with a regression test proving a
-      dev-written sentinel does NOT satisfy a prod-context quickmerge; (b) make quickmerge's and a standalone
-      `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context — do NOT flip
-      quickmerge itself to `production` (that trades this hazard for real prod-credential exposure on every slot's every
-      commit); instead make the standalone entrypoint derive `ENVIRONMENT` from the same branch-conditional logic
-      quickmerge uses, covering every repo's entrypoint, not just the 3-4 currently-affected repos, with a regression
-      test asserting both paths resolve identically for the same branch; (c) add `--durations=25` to the shared pytest
-      invocation in `base-service.sh` (visibility only, zero behavior change). **Done when**: (a) and (b) each have a
-      passing regression test, `quality-gates.sh` is green in every repo touched, and (c)'s duration output is visible
-      on a real PM run. Sources: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist items 2 + 5,
-      RULED 2026-07-28 — no longer operator-gated) ·
+- [x] ✅ [INFRA] P1. **Bind configuration into the QG sentinel + align quickmerge/standalone `ENVIRONMENT` resolution +
+      add the `--durations=25` visibility flag.** Three related `scripts/base-service.sh`/`scripts/quickmerge.sh`
+      changes bundled into one todo (same file, avoids a same-priority collision with the other two candidates this
+      round — see § Same-file contention): (a) mix `ENVIRONMENT` (and any other gate-affecting env var) into the QG
+      sentinel hash so a sentinel produced under one configuration cannot satisfy a run under another, with a regression
+      test proving a dev-written sentinel does NOT satisfy a prod-context quickmerge; (b) make quickmerge's and a
+      standalone `quality-gates.sh --no-fix` run resolve the SAME explicit `ENVIRONMENT` for the same branch context —
+      do NOT flip quickmerge itself to `production` (that trades this hazard for real prod-credential exposure on every
+      slot's every commit); instead make the standalone entrypoint derive `ENVIRONMENT` from the same branch-conditional
+      logic quickmerge uses, covering every repo's entrypoint, not just the 3-4 currently-affected repos, with a
+      regression test asserting both paths resolve identically for the same branch; (c) add `--durations=25` to the
+      shared pytest invocation in `base-service.sh` (visibility only, zero behavior change). **Done when**: (a) and (b)
+      each have a passing regression test, `quality-gates.sh` is green in every repo touched, and (c)'s duration output
+      is visible on a real PM run. Sources: `issues/qg_sentinel_environment_blind_2026_07_23.md` (Resolution checklist
+      items 2 + 5, RULED 2026-07-28 — no longer operator-gated) ·
       `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (`--durations=25` item). **(c) CONFIRMED
       ALREADY SHIPPED 2026-07-30 (this session's rulings-closeout pass)** — verified live: `base-service.sh`'s `PARGS`
       already carries `--durations=25` (`unified-trading-pm@3ed0fc99d`, 2026-07-29, "perf(ci): add pytest --durations,
@@ -129,10 +129,48 @@ concurrent workers do not collide on this file.
       HEAD sha + tracked/untracked diffs + the gate-logic script + ruff version, with NO `ENVIRONMENT`/ `DEPLOYMENT_ENV`
       dimension. Confirmed PM's own `scripts/quality-gates.sh` never exports `ENVIRONMENT` before sourcing
       `base-service.sh` either (standalone runs still fall through to the Python resolver's bare-unset→prod default).
-      **NOT attempted this session**: (a)/(b) require editing the shared, fleet-wide sentinel-hash function every repo's
-      QG run depends on — assessed as too high-blast-radius to implement solo without a dedicated, reviewed session (a
-      subtle bug here breaks `quickmerge --agent`'s fast-path for every repo, not just one), unlike the bounded,
-      single-file fixes elsewhere in this batch. Left open and unclaimed rather than rushed.
+      ~~**NOT attempted this session**: (a)/(b) require editing the shared, fleet-wide sentinel-hash function every
+      repo's QG run depends on — assessed as too high-blast-radius to implement solo without a dedicated, reviewed
+      session (a subtle bug here breaks `quickmerge --agent`'s fast-path for every repo, not just one), unlike the
+      bounded, single-file fixes elsewhere in this batch. Left open and unclaimed rather than rushed.~~ **(a) and (b)
+      SHIPPED 2026-07-30** (`unified-trading-pm@4545df4c6`) — the dedicated, reviewed pass the prior session held out
+      for. New shared single-source-of-truth `scripts/quality-gates-base/qg-environment.sh` (`qg_resolve_environment()`)
+      sourced from BOTH `qg-common.sh` (every base-\*.sh tier — service/library/ui/codex) and `quickmerge.sh`'s own
+      ENVIRONMENT AUTO-DETECT block (no-ops in CI via `GITHUB_ACTIONS=true`, since the v2 gate's `QG_SLICE`-sliced runs
+      never touch the sentinel anyway). `_qg_content_hash()` (base-service.sh + base-library.sh) now folds
+      `ENVIRONMENT`/`DEPLOYMENT_ENV` into the content-sentinel hash. `.qg_last_passed_sha` (base-service.sh,
+      base-library.sh, base-ui.sh) now appends `ENVIRONMENT=`/`DEPLOYMENT_ENV=` lines after the SHA (old bare-SHA
+      sentinels still parse via `head -1`, backward compatible); `quickmerge.sh`'s `_qm_check_agent_sentinel()` now
+      refuses a config mismatch before the SHA/content check. **(a)'s regression test**:
+      `scripts/quality-gates-base/tests/test-qg-sentinel-environment-binding.sh` (content-hash differs across
+      ENVIRONMENT/DEPLOYMENT_ENV, 5/5 assertions) +
+      `scripts/quality-gates-base/tests/test-quickmerge-sentinel-environment-mismatch.sh` (the literal bar: a
+      dev-written sentinel does NOT satisfy a prod-context quickmerge check, and vice-versa, 6/6 assertions incl. the
+      old-bare-SHA-sentinel-fails-closed case). **(b)'s regression test**:
+      `scripts/quality-gates-base/tests/test-qg-environment-resolution-parity.sh` (quickmerge's block and
+      `qg_resolve_environment` resolve identically for main/non-main/arbitrary branches + explicit-override
+      preservation, 6/6 assertions). **Verified live, not just in the extracted-function tests**: a full
+      `bash scripts/quality-gates.sh` run in PM itself wrote `.qg_last_passed_sha` with `ENVIRONMENT=development`
+      appended (branch=live-defi-rollout, matches quickmerge's own resolution); a SECOND full run in
+      `unified-trading-library` (a genuinely different consumer repo/tier, clean worktree, pre-existing bare-SHA
+      sentinel from 2026-07-28) independently reproduced the same correct write, and the real
+      `_qm_check_agent_sentinel()` (extracted from the shipped `quickmerge.sh`) accepted that live sentinel under a
+      matching `ENVIRONMENT=development` check and correctly refused it under `ENVIRONMENT=production` — the exact
+      hazard this todo closes, reproduced and fixed end-to-end against real production code, not a synthetic fixture.
+      Pre-existing-failure baseline confirmed via `git stash`: 3 of the base-tests dir's other `test-*.sh` files
+      (`test-qg-governor-wait-time.sh`, `test-qg-mem-cap.sh`, `test-setup-sh-uv-bootstrap-fallback.sh`) fail identically
+      with my changes stashed out — unrelated, pre-existing (host-timing/systemd-availability/uv-pin drift), not a
+      regression. Full `quality-gates.sh` green in PM (both before and after the codex-doc pass below). **Post-phase
+      codex audit** (this todo's own shared-contract change, per CLAUDE.md): updated `/codex/08-workflows/ci-cd-flow.md`
+      § "Two-Pass Workflow Model" (the sentinel ASCII block was describing the bare-SHA pre-fix format),
+      `/codex/06-coding-standards/quality-gates.md` § "Do-less-work levers" (the green- sentinel hash-input list), and
+      `/codex/05-infrastructure/quickmerge-architecture.md` § "Environment Awareness" / "Sentinel integration" (also
+      fixed a stale `quickmerge.sh` line-number citation while there). Also corrected the matching sentinel-format
+      claims in `/codex/08-workflows/deployment-flow.md` — but that doc's OWN pipeline model (staging-mediated
+      promotion) turned out to be much more broadly stale, pre-dating the LDR-direct MVP migration independent of this
+      fix; filed `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` rather than absorbing that larger,
+      unrelated rewrite into this todo. **(c)** was already confirmed shipped in the 2026-07-30 rulings-closeout pass
+      above; no change needed here.
 - [ ] [DOC] P2. **Correct the "re-run quality-gates.sh --no-fix then retry" recovery guidance** wherever it is taught
       (agent prompts, runbooks) — as written today it is a sentinel-laundering step, not a fix; correct it to describe
       the post-todo-1 behavior (sentinel now binds configuration, so the recovery is genuinely safe). Sequenced after
@@ -398,3 +436,14 @@ Three questions, quotes/locations/options/recommendation, not resolved autonomou
   time-boxed pass without dedicated review, unlike every other bounded single-file fix touched this session. Todos 2, 3,
   6-14 were not re-verified (out of this pass's time budget) and are left exactly as drafted. No status flip attempted;
   this remains an operator-gated draft.
+
+- **2026-07-30 (slot 3, `[INFRA]` dispatch)** — plan activated by the operator earlier the same day
+  (`unified-trading-pm@5a6bbefc3`, alongside 8 sibling batches); this session picked up todo 1 as an AO-dispatched task.
+  Shipped todo 1's parts (a) and (b) in full — the exact gap the 2026-07-30 rulings-closeout pass above deliberately
+  left unclaimed pending a dedicated, reviewed session. See the todo's own inline evidence for the full design (new
+  `qg-environment.sh` single source of truth, config-bound `.qg_content_sentinel` + `.qg_last_passed_sha`, 3 regression
+  tests, 2 independent live end-to-end verifications) and
+  `issues/deployment_flow_doc_stale_pre_ldr_direct_mvp_2026_07_30.md` for a broader, unrelated codex-staleness finding
+  surfaced (and correctly NOT absorbed) along the way. Also corrected this plan's own stale draft-status banner and this
+  Progress Log's prior "operator-gated draft" framing — the plan has been `status: active` since the operator's same-day
+  activation, just never reflected in the body text until now.
