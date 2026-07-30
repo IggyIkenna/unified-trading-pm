@@ -21,6 +21,8 @@ related:
   [
     /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
     /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md,
+    /plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md,
   ]
 created: "2026-07-22"
 parent_epic: infrastructure_master
@@ -395,19 +397,14 @@ unresolved operator decision.
 
 ## Todos
 
-- [ ] [DATA] P1. **RULED 2026-07-29 (operator direct answer) — both: count them AND build out the real IS universe.**
-      Count `phase=="pipeline"` venues with confirmed real capture toward the `defi` `completeness_pct` denominator
-      (data-availability standard) — flip `DEFI_VENUE_PHASE` for the qualifying venues to `"live"`, wire
-      `DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED`'s 6 venues (ANKR/STADER/STAKEWISE/SWELL/MANTLE/MAKER) into
-      `VENUES_BY_ASSET_GROUP["defi"]`, and re-measure `completeness_pct` before/after (report the delta). This is not
-      just a metric-counting flip — it requires the venues to actually earn "live" status: (1) an IS adapter/universe
-      entry for each (not just the MTDS-side capture that exists today), (2) confirm the daily production cron writes
-      real per-day shards going forward (not the one-off manual-invocation samples this doc's investigation found), (3)
-      run the 90-day historical backfill for the 6 shipped venues once the cron is confirmed healthy, (4) register each
-      in the instruments catalogue so downstream consumers see a complete universe, not just a manifest-side capture
-      stream. Full completion — no partial rollout (count-only without the underlying IS/cron/catalogue work would
-      re-create the same false-"already working" premise this doc's adversarial verify caught earlier). (repos:
-      unified-api-contracts, instruments-service, market-tick-data-service)
+- **[DATA] P1.** RULED 2026-07-29 (operator direct answer — both: count them AND build out the real IS universe). SPLIT
+  2026-07-30 into its own dedicated AO build plan (this line is a digest pointer, not a real checkbox — see
+  /plans/PLAN_FORMAT.md finding H — so it is not re-derived into the backlog):
+  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (+ gated finalize companion
+  `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md`). The real dispatch surface — 5 ordered
+  todos covering the genuine IS adapters, cron health fix, 90-day backfill, catalogue registration, and the
+  `DEFI_VENUE_PHASE` flip + `completeness_pct` re-measurement — now lives in that plan. The finalize companion will
+  reconcile evidence back here and archive this doc once the build plan is fully done.
 
 ## 2026-07-30 — scope assessment (operator-ruling close-out pass): NOT executed this pass, todo left open
 
@@ -437,3 +434,11 @@ doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-
   (count them AND build the IS universe) with a 4-part enumerated full-completion mandate. Consistent with the scope
   assessment directly above, which independently recommends this work become a dedicated `assigned_vm: planning`
   multi-todo build plan — that split is NOT done here; only the classification flipped.
+- **2026-07-30 (worker, slot 13)** — executed the split both the scope assessment and the independent
+  `defi_satellite_ao_dispatch_batch6_2026_07_30.md` audit recommended. This doc's oversized single todo (4 real
+  sub-steps across 3 repos, multi-day) is not a bounded single-worker-determinable outcome per the AO
+  dispatch-scope-eligibility rule, so it was converted to a non-ingestable digest pointer (see Todos above) rather than
+  left as a real checkbox that would keep re-dispatching an unscopable mega-task. Real work now tracked in
+  `/plans/active/defi_venue_pipeline_to_live_ao_build_2026_07_30.md` (5 sequential todos) +
+  `/plans/active/defi_venue_pipeline_to_live_ao_build_finalize_2026_07_30.md` (gated finalize, will archive this doc
+  once the build plan lands). `status` stays `open` — no code shipped yet, only re-scoping.
