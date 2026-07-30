@@ -87,9 +87,9 @@ restated here.
       cefi in this pass).
 - [x] ✅ [DATA] P1. **DONE 2026-07-30 — flipped by na-eligibility-audit (tradfi tranche) against this doc's OWN Progress
       Log evidence; the definition-of-done below is met verbatim.** **Evidence (this doc's Progress Log, 2026-07-30
-      doc-triage pass, dispatched from `/plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s REVIEW todo —
-      the same batch1 todo the superseded 2026-07-27 note below said this was waiting on)**: the dry-run WAS run against
-      the live prod report
+      doc-triage pass, dispatched from `/plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s
+      REVIEW todo — the same batch1 todo the superseded 2026-07-27 note below said this was waiting on)**: the dry-run
+      WAS run against the live prod report
       `gs://market-data-tick-tradfi-prd-central-element-323112/_index/audit/orphan_sweep_tradfi.parquet` — **900 class-B
       legacy twins loaded → 0 deletable, 900 blocked**, every one with reason "canonical twin NOT captured in manifest -
       would delete the only copy". Report path + row count are both cited, so the DoD is satisfied. The RESULT is a

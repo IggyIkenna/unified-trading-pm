@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 248 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 246 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -298,7 +298,7 @@ by hand._
   /na-eligibility-audit defi on 2026-07-30. Reconciles the source plan's checkboxes, confirms both ScenarioOverlay
   entries are genuinely…
 
-### tradfi (27)
+### tradfi (25)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -370,13 +370,6 @@ by hand._
   **[draft]** — Housekeeping companion for `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` — gated via
   `depends_on` + `gate_on_depends: true` on that plan's own todos (Phase A2 + the still-open Phase C residue) being
   done, mirroring the…
-- [`tradfi_satellite_ao_dispatch_batch1_2026_07_25`](./tradfi_satellite_ao_dispatch_batch1_2026_07_25.md) — First
-  AO-dispatch batch for tradfi (tradfi has never had one before, unlike sports). Extracted from the 2026-07-25
-  orphan-audit's 21 genuinely-orphaned tradfi satellite docs (of 23 audited; the 91% orphan rate reflects that…
-- [`tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25`](./tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md)
-  — Gated closeout for tradfi_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's todos are done. Mirrors the sports batch2_finalize/ batch3_finalize
-  pattern (reconcile…
 - [`tradfi_satellite_ao_dispatch_batch2_2026_07_25`](./tradfi_satellite_ao_dispatch_batch2_2026_07_25.md) — Second
   AO-dispatch batch for tradfi, produced by the `/ag-closeout-audit` skill's batchN re-check methodology (never a fresh
   Workflow triage) against `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`'s own Deferred section — 33…

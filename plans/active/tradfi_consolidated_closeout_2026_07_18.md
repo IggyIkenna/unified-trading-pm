@@ -55,7 +55,7 @@ related:
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md,
     /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
-    /plans/active/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
+    /plans/archive/2026_07/tradfi_satellite_ao_dispatch_batch1_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch2_2026_07_25.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,

@@ -12,7 +12,7 @@ summary: >-
   this batch contains ONLY the 5 todos that survived review (zero-conflict docs, plus one item whose flagged "conflicts"
   were themselves confirmed non-blocking by the triage agent's own text — see each todo's provenance). The remaining 38
   conflict-gated candidates are preserved and queued for the operator, not dropped.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -51,12 +51,14 @@ drift_direction: advance-code
 
 # TradFi satellite AO batch 1 — conflict-cleared extraction
 
-> **Status: draft.** Per CLAUDE.md's plan-destination rule and the ag-closeout-audit skill's autonomous-mode guidance, a
-> skill-drafted AO batch is never auto-shipped to `active` — flip this frontmatter's `status` to `active` only after
-> operator review. All 5 todos below are same-priority and touch distinct files (verified against the triage journal,
-> `subagents/workflows/wf_92bc129c-2a8/journal.jsonl`) so they are safe to dispatch concurrently once activated. This is
-> a deliberately SMALL first batch — 38 of 43 AO-eligible candidates the triage found were excluded because they carried
-> a flagged conflict against `tradfi_consolidated_closeout_2026_07_18.md`'s own open todos; see the Deferred section.
+> **🟢 ARCHIVED 2026-07-30.** All 5 todos done (verified live in the source repos before citing, per
+> `tradfi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1). The 38 conflict-gated Deferred items below were
+> re-verified 2026-07-30 by that same finalize doc's todo 2 — 20 already cleared into
+> `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` (active, dispatched), the genuinely-still-open residual each
+> independently tracked in its own live source doc (`data_completion_tradfi_2026_07_15.md`,
+> `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`, `issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`,
+> `tradfi_multisource_backfill_2026_06_22.md`), and `tradfi_manifest_content_recovery_completion_2026_07_24.md` already
+> has its own dedicated finalize plan — so no work is orphaned by archiving this batch.
 
 ## Todos
 
