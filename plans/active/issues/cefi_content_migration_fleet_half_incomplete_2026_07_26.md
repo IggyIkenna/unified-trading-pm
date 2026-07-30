@@ -482,3 +482,6 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   system-wide active configuration name AND mutate the account stored inside a DIFFERENT slot's own named config on this
   shared host. Fixed via `gcloud config configurations activate slot15-work` +
   `gcloud config set account unified-trading-sa@…`. No relaunch/kill action taken on shard 19 (monitoring-only).
+- **2026-07-30 update (slot-15, ~15 min later)**: shard 22 (`-135900`) OOM-killed (`rc=137`, clean self-delete) at
+  58,600/165,453 files (8093s elapsed — one of the longer-running survivors before dying). Fleet at 11 shards. No action
+  taken (monitoring-only).
