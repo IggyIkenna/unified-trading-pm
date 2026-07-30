@@ -13,7 +13,7 @@ summary: >-
   is entirely absent (dead subgraph endpoints). (#3) Aave oracle (recursive-staking collateral) is effectively missing —
   the true AaveOracle.getAssetPrice() is captured on zero days (dormant adapter); raw Chainlink proxy exists only for
   stETH/cbETH/rETH, not the actual Aave collateral tokens (wstETH/weETH). Gates the A2 interest build.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, strategy]
@@ -38,8 +38,20 @@ drift_direction: advance-code
 depends_on: []
 source: ["4-rate LST data-availability audit workflow wf_268532e0-323, run 2026-07-21 at operator request"]
 resolved_by:
+  slot-11 (2026-07-30) — market-tick-data-service@672f82f5 (shipped same-day, 2026-07-21) wired the Aave-oracle adapter
+  for all 6 LST reserves; manifest-verified 5,568 captured rows 2023-01-27→2026-07-22
 locked_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30 (slot-11).** This doc's one tracked todo (item #4, wire the Aave-oracle adapter) was already
+> shipped same-day as the audit (`market-tick-data-service@672f82f5`, 2026-07-21) — the "captured on zero days" premise
+> was stale by the time this todo resurfaced in today's NA-eligibility re-triage. Manifest-verified 2026-07-30: 5,568
+> real `capture_status=captured` rows for venue=AAVE data_type=oracle_prices, spanning 2023-01-27→2026-07-22. The other
+> four "Close actions" items in this doc (#1 CEX-spot, #2 DEX, #4-feature lst_yields backfill, #5 Solana) were never
+> this doc's own tracked todos — they are (and remain) tracked in the sibling build plan
+> `/plans/active/lst_rate_honest_coverage_2026_07_21.md`, so nothing here evaporates. A genuinely NEW residual gap found
+> during this closure — `oracle_prices` (all 3 venues) silent for 8 days since 2026-07-22 — is filed separately:
+> `/plans/active/issues/defi_oracle_prices_capture_stalled_since_2026_07_22.md`.
 
 # LST exchange-rate data availability — the four rates
 
@@ -94,12 +106,28 @@ proxy. The mark-to-market basis leg needs the operator's E1 short-funding answer
 
 ## Todos
 
-- [ ] [DATA] P1. **Wire the dormant Aave-oracle adapter (or add the missing Chainlink feeds for
-      wstETH/weETH/rsETH/ezETH)** — per "Close actions" item 4, the true `AaveOracle.getAssetPrice()` is captured on
-      zero days, blocking the recursive-staking collateral leg of the A2 interest build.
+- [x] ✅ [DATA] P1. **Wire the dormant Aave-oracle adapter (or add the missing Chainlink feeds for
+      wstETH/weETH/rsETH/ezETH)** — market-tick-data-service@672f82f5 (2026-07-21, same day as this audit) already wired
+      `OraclePricesHandler` to collect `AaveOracle.getAssetPrice()` for all 6 LST reserves (wstETH, weETH, rETH, cbETH,
+      rsETH, ezETH — the two the todo called out, wstETH/rsETH, included) via `_aave_oracle_collection.py`, plus added
+      the 2 Chainlink weETH/ezETH feeds in the same commit; follow-ups `27e077da`/`51ec9af2` fixed honest-empty gating +
+      `available_at` stamping. **Manifest-verified 2026-07-30** (read from the sanctioned single
+      `_index/availability_index.parquet` DeFi manifest index, no new GCS walk): venue=AAVE data_type=oracle_prices
+      source=aave shows 5,568 `capture_status=captured` rows spanning 2023-01-27→2026-07-22 (written via 3 backfill
+      waves 07-23/07-27/07-28) — the "captured on zero days" premise this todo was written against is now false; the
+      adapter is wired and has produced real historical data. The AAVE-oracle path (the true oracle, not a proxy)
+      already covers wstETH/rsETH, so no additional Chainlink feeds are needed for those two. **Residual gap found and
+      filed separately** (not this todo's scope — see [[defi_oracle_prices_capture_stalled_since_2026_07_22]]): all 3
+      oracle_prices venues (CHAINLINK/PYTH/AAVE) have produced zero new rows since 2026-07-22, an 8-day silence, while
+      the rest of the DeFi manifest keeps writing daily.
 
 ## Progress Log
 
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
   planning docs; no open todo elsewhere duplicates this claim) - single todo wires an EXISTING dormant aave_oracle
   adapter to a named venue/data_type; concrete target, no undecided design fork
+- **slot-11 2026-07-30**: Verified via manifest read (not code re-implementation) that market-tick-data-service@672f82f5
+  - follow-ups already resolved this todo before today's re-triage picked it up — the "dormant, zero days" framing was
+    stale (true at audit time 2026-07-21, resolved same day). Flipped the checkbox with manifest evidence; filed
+    `defi_oracle_prices_capture_stalled_since_2026_07_22.md` for the genuinely-open residual (capture has since stalled
+    fleet-wide for this data_type, unrelated to the AAVE-adapter-wiring ask).
