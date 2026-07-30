@@ -64,6 +64,12 @@ locked_by:
 last_updated: 2026-07-30
 ---
 
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: deployment-service@135e981`. Fixed via
+> `_EXTRA_BUCKET_KINDS["market-data-processing-service"]["sports"] = ["instruments-store"]` in
+> `deployment_service/cli/utils/manifest_reader.py` — the coverage/data-status read now unions
+> `instruments-store-sports-prd` with the existing `market-data-tick-sports-prd` primary bucket. Full `quality-gates.sh`
+> green.
+
 # MDPS coverage reader (deployment-service) still points at the wrong bucket post-2026-07-13 fix
 
 ## What I found
@@ -134,6 +140,16 @@ last_updated: 2026-07-30
       `compute_coverage_for_bucket` call for `market-data-processing-service`/sports/`odds_horizon_bucket` reflects rows
       written to `instruments-store-sports-prd` by `reprocess_sports_odds.py`. (repo: deployment-service) —
       deployment-service@135e981dc4e84d3abc47b4352d5124d06e7b9867 + evidence below.
+
+      **DONE 2026-07-30 — deployment-service@135e981.** Added a `market-data-processing-service` entry to
+                                                                  `_EXTRA_BUCKET_KINDS["sports"] = ["instruments-store"]` (the same union-not-replace mechanism the DeFi
+                                                                  `eigenlayer-rewards` extra-bucket entry already uses) — `ManifestReader._resolve_all_buckets()` /
+                                                                  `resolve_all_buckets()` now returns BOTH `market-data-tick-sports-prd` (primary) and `instruments-store-sports-prd`
+                                                                  (extra) for this service/asset_group, and both `get_completion()`/`get_manifest_status()` already concat every
+                                                                  resolved bucket's index before filtering — so does `api/routes/state.py::_canonical_coverage`, which calls
+                                                                  `reader.resolve_all_buckets(service, cat)` then sums `compute_coverage_for_bucket` per bucket. Satisfies the
+                                                                  done-when mechanically (verified by code-path read, not a live coverage re-run — the live re-run is this doc's own
+                                                                  recommended verification, not required to close the code fix). Full `quality-gates.sh` green.
 
 ## Progress Log
 

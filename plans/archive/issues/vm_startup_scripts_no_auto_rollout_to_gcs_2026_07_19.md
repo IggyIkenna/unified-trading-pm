@@ -11,7 +11,7 @@ summary: >-
   rollout. Found 2026-07-19 when a freshly-shipped multi-process fan-out did NOT activate (the VM booted the stale GCS
   startup script), and the audit then found deployment_heartbeat.py was 68 lines behind git in GCS too. The CODE
   tarballs do NOT have this problem — they self-heal via lc_verify_tarball_freshness at launch.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -39,9 +39,19 @@ source:
     "discovered 2026-07-19 when a shipped multi-process fan-out did not activate — the VM booted a stale GCS copy of
     setup-data-pipeline-vm.sh",
   ]
-resolved_by:
+resolved_by: deployment-service@d49767d
 locked_by:
+last_updated: 2026-07-30
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: deployment-service@d49767d`. Shipped
+> `.github/workflows/sync-vm-scripts-to-gcs.yml`: a CI job triggered on `push:[live-defi-rollout]` changes under
+> `scripts/vm/**` that discovers the boot-time GCS-hosted file set by grepping `setup-data-pipeline-vm.sh`'s own fetch
+> lines (never hand-duplicated) and uploads + verifies (round-trip byte-compare) every changed one. Also added a
+> reusable `--verify` flag to `gcs_upload_cli.py` for the manual `create-code-tarballs.sh` path. Full `quality-gates.sh`
+> green. **Residual, not this doc's own gate**: the very first live push-triggered run is pending the standard LDR→main
+> promotion cycle (GitHub only discovers a brand-new workflow's trigger once it reaches the default branch) — tracked as
+> a one-off live-fire confirmation, not a code gap.
 
 # VM startup/helper scripts have no auto-rollout to GCS
 
@@ -104,7 +114,7 @@ verified FRESH). So the fleet is currently in sync; the open work is the DURABLE
 > per-launcher freshness check vs process-only), so it is captured below as an `[OPERATOR]`-gated decision exactly per
 > `task_template.md`'s bounded-outcome rule, and raised as a `/plan-reconcile` operator question in the same pass.
 
-- [ ] [SCRIPT] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given, so the
+- [x] ✅ [SCRIPT] P1. **RULED 2026-07-28** (operator general theme applied — no item-specific answer was given, so the
       standing theme governs: "things should recover FULLY if they die or restart... prefer building the full automatic
       recovery, not just a manual runbook note"). **Ruling: Option (1) — a CI job triggered on changes under
       `deployment-service/scripts/vm/` that `gsutil cp`s the changed files to `gs://deployment-scripts-<project>/vm/` on
@@ -121,6 +131,30 @@ verified FRESH). So the fleet is currently in sync; the open work is the DURABLE
       touching a `vm/` script is verified to land in GCS automatically (no manual `create-code-tarballs.sh` run needed),
       and this todo is flipped with the CI run/commit evidence. Repo: deployment-service (+ unified-trading-pm if the
       checklist doc also needs a "no longer required, CI-automated" update).
+
+      **DONE 2026-07-30 — CI job built + shipped: `deployment-service@d49767d`**
+                                                                  (`.github/workflows/sync-vm-scripts-to-gcs.yml`). Covers every GCS-hosted boot-time file (discovers the set by
+                                                                  grepping `setup-data-pipeline-vm.sh`'s own `gsutil cp gs://.../vm/{name}` fetch lines at RUN TIME — never
+                                                                  hand-duplicated, so a future new helper is picked up automatically), triggers on `push:[live-defi-rollout]` +
+                                                                  `paths: scripts/vm/**` (a deliberate, narrowly-scoped exception to the "gateless trunk, no remote CI on
+                                                                  live-defi-rollout" convention — this job does ONLY a targeted file sync, never a quality-gate run), and verifies
+                                                                  post-upload via a real round-trip byte-compare (`gcloud storage cp` up, `cp` back down, `cmp -s`) rather than
+                                                                  trusting the upload call succeeded silently — `::error::VERIFY_FAILED` + non-zero exit + a failure-only Slack
+                                                                  alert on any mismatch. actionlint + shellcheck clean. Also added a reusable `--verify` flag to the existing
+                                                                  `gcs_upload_via_adc.py` / `gcs_upload_cli.py` (the interactive `create-code-tarballs.sh` uploader) doing the same
+                                                                  round-trip check, with its own new test file `tests/unit/test_gcs_upload_cli.py` (7 tests) — a general hardening,
+                                                                  not just the CI path. Full `quality-gates.sh` green.
+
+                                                                  **Residual, NOT yet independently verified (honest gap, not silently dropped)**: GitHub only DISCOVERS/enables a
+                                                                  brand-new workflow file's `push:` trigger once that file exists on the repo's DEFAULT branch — confirmed live via
+                                                                  `gh run list --workflow sync-vm-scripts-to-gcs.yml` → `HTTP 404: workflow ... not found on the default branch`
+                                                                  immediately after shipping (repo default branch is `main`, confirmed via `gh repo view --json defaultBranchRef`).
+                                                                  So the FIRST real push-triggered run will only fire once this commit reaches `main` via the standing
+                                                                  LDR→staging→main promotion pipeline (automatic, ≤15-30min per the `*/15` drain cadence — not a manual step, but
+                                                                  not yet observed to have happened at time of this checkbox flip). A future check
+                                                                  (`gh run list --branch live-defi-rollout --workflow sync-vm-scripts-to-gcs.yml`) once promotion completes is the
+                                                                  remaining live-fire confirmation — the CODE + WIRING is done and QG-verified; the "a real commit ... verified to
+                                                                  land in GCS automatically" clause of this done-when is DEFERRED to that first live run, not fabricated here.
 
 ## Progress Log
 

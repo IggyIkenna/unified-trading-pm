@@ -102,7 +102,7 @@ fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern
 staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §5#39) ·
 [issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md](/plans/active/issues/prod_terraform_drift_backlog_reconcile_2026_07_24.md)
 (prod terraform drift backlog — 21 add / 18 change — reconcile-apply) ·
-[issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/active/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
+[issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md](/plans/archive/issues/vm_startup_scripts_no_auto_rollout_to_gcs_2026_07_19.md)
 (VM startup/helper scripts have no auto-rollout to GCS) ·
 [issues/managed_by_label_launcher_standardization_2026_07_13.md](/plans/active/issues/managed_by_label_launcher_standardization_2026_07_13.md)
 (generic VM/Cloud-Run launcher "managed-by" label convention for deployment-api provenance) ·
