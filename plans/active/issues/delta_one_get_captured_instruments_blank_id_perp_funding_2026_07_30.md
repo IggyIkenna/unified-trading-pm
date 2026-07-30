@@ -108,13 +108,13 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `get_captured_instruments()`/`compose_instrument_ids()` (repo: unified-trading-library) to
+- [x] ✅ [BACKEND] P1. Fix `get_captured_instruments()`/`compose_instrument_ids()` (repo: unified-trading-library) to
       synthesize a valid instrument id for a captured manifest row with a blank `instrument_id` (perp_funding's
       venue-level-bundle shape), instead of silently excluding it. Mirror LookbackValidator's `(venue, "")` fallback-key
       precedent (`features_service/delta_one/app/core/dependency_checker.py`, `features-service@8e62dc30`). Repo:
       unified-trading-library. Done when: a DEFI `perp_funding` manifest row with blank `instrument_id` is returned by
       `get_captured_instruments()`, verified by a new unit test; `bash     scripts/quality-gates.sh` green in both
-      unified-trading-library and features-service (post wheel-bump).
+      unified-trading-library and features-service (post wheel-bump). — unified-trading-library@9fb3a73d
 - [ ] [DATA] P2. Once the above lands, resume `defi_satellite_ao_dispatch_batch3_2026_07_26.md`'s D1 delta_one
       `funding_oi` leg: relaunch
       `--feature-family delta_one --asset-group DEFI --feature-group funding_oi     --start-date 2023-05-12 --end-date 2026-06-09 --timeframe 15m`
@@ -137,3 +137,21 @@ row is genuinely `captured`). Add a regression test asserting a DEFI `perp_fundi
   day-1-of-window behave differently" question for whoever picks up todo 1 below — but the DOMINANT,
   confirmed-deterministic blocker on this leg is slot-4's candle-loader finding (no pass-through read branch), NOT this
   one. Do not treat this doc as the primary blocker to fix first.
+- 2026-07-30 (slot-8): shipped todo 1 (`unified-trading-library@9fb3a73d`). Confirmed the underlying defect is real
+  regardless of the day-1-vs-day-20 discrepancy noted above: `compose_instrument_ids()` unconditionally dropped ANY row
+  whose `instrument_id` was blank/an aggregate sentinel (`nan`/`None`/`<aggregate>`/`_AGGREGATE`/`<empty>`) — the
+  25-instrument non-zero count on `2023-06-01` reported by slot-4 must have come from rows carrying a real (non-blank)
+  bare `instrument_id`, not a counter-example to this bug; whichever rows on that date genuinely WERE blank-id bundle
+  rows would have been silently dropped from that 25 too. Fixed to mirror LookbackValidator's `(venue, "")` fallback-key
+  precedent: a row with venue + instrument_type resolvable now synthesizes `"{venue}:{instrument_type}:"` (trailing
+  empty segment) instead of being dropped; only rows with no resolvable venue/instrument_type at all are still dropped.
+  Added a direct DEFI `perp_funding` blank-`instrument_id` regression test
+  (`test_defi_perp_funding_blank_id_venue_bundle_row_not_dropped`) plus updated the two pre-existing tests that asserted
+  the OLD drop behavior (`test_empty_instrument_id_skipped` → renamed
+  `test_blank_instrument_id_synthesizes_bundle_id_when_venue_and_type_resolvable`; `test_aggregate_sentinels_skipped` →
+  renamed `test_aggregate_sentinels_synthesize_bundle_id`). All 29 unit tests + full `quality-gates.sh` green. Did NOT
+  investigate the day-1-vs-day-20 boundary question further — out of this todo's scope (the fix here addresses the
+  blank-id drop unconditionally, which is a real defect independent of whichever specific dates it was masking). Did NOT
+  touch downstream `features-service` DataLoader path-resolution for the now-returned trailing-empty-segment ids
+  (`HYPERLIQUID:perpetual:`) — that's the companion candle-loader-pass-through issue's scope, not this UTL-function
+  fix's.
