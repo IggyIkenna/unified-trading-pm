@@ -27,7 +27,7 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 ---
 
 # Capability wizard — gap discovery tracker
@@ -592,9 +592,24 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       `tests/unit/test_archetype_capability_may_23_coverage.py` (UAC) all pass. Follow-up (not in this task's scope):
       actually wiring `CROSS_VENUE_ROUTING_POLICIES` into `execution-service/execution_service/v2/router.py` is the real
       unlock for this cell — left as a future SCRIPT/BACKEND todo, not fabricated here.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance
-      1, status partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap
-      #10).. (auto-emitted by generate_capability_unlock_report.py)
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-07-30 (slot-16, capability_wizard_gap_discovery-024) — already fixed by the
+      sibling `venue:cboe`/`venue:cme`/`venue:deribit`/`venue:ibkr`/`venue:ice` todos above, no new code needed.**
+      **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:dated_future** (distance 1, status
+      partial) — missing: needs-config. Why blocked: Cross-product routing policy not declared in UAC (gap #10)..
+      (auto-emitted by generate_capability_unlock_report.py) — Verified directly against
+      `unified-api-contracts@c92cf034` ("fix(architecture-v2): correct stale gap#10 notes on ARBITRAGE_PRICE_DISPERSION
+      CME/ICE cell", already HEAD == `origin/live-defi-rollout`, 0 ahead/0 behind): that commit's own diff shows all
+      THREE edges sourced from the single `(TRADFI, dated_future)` cell were corrected together — `supports→venue:ice`,
+      `supports→venue:cme`, and THIS todo's `trades_instrument→instrument_type:dated_future` — across every derived
+      artifact (`unified_api_contracts/internal/architecture_v2/archetype_capability_manifest.json` source cell,
+      `openapi/capability-manifest.json`, `openapi/capability-unlock-report.json`, and
+      `openapi/prospectus/ARBITRAGE_PRICE_DISPERSION.md`'s TRADFI/dated_future row). Confirmed via `git show c92cf034`:
+      the `trades_instrument→instrument_type:dated_future` edge in `capability-unlock-report.json` now carries
+      `reason="Cross-venue routing policy IS declared in UAC (cross_venue_routing_policy.py: cme_wti_ice_brent_spread,     gap #10 registry closed) but execution-service/strategy-service do not yet consume     CROSS_VENUE_ROUTING_POLICIES — routing policy not wired into the SOR."`
+      (status stays `partial`, correctly — the UAC-declaration half of gap #10 is closed but the SOR-wiring half is a
+      real, still-open gap, same classifier-keyword quirk noted on the sibling todos, not fixed here). This checkbox was
+      simply never flipped when the shared root-cause fix landed (the fixing todo's own scope note said it left the
+      sibling checkboxes un-flipped). No code changed this pass; checkbox-only verification flip.
 - [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:lp** (distance 1, status
       partial) — missing: needs-registry-entry. Why blocked: Flash-loan receiver per-chain registry missing from UAC
       (gap #3).. (auto-emitted by generate_capability_unlock_report.py)
