@@ -366,8 +366,21 @@ not a mechanical column-list copy.
       function's own downstream usage exactly (asset_group/capture_status/date drive the CeFi-history mask; venue groups
       the history; date/instrument_count feed the per-venue median groupby — no other column is touched anywhere in the
       function). Not bare; nothing to fix.
-- [ ] [SCRIPT] P2. **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`: project to its
-      actual column usage.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-2)** — `batch-live-reconciliation-service@11cec2c`.
+      **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`
+      `check_manifest_reason_agreement`: projected to `columns=["date","pipeline_mode","capture_status","error_reason"]`
+      — confirmed by direct read of `_get_sides()` (the only reader of the returned DataFrame): `date` for the row
+      filter, `pipeline_mode` for the batch/live split (incl. the `"pipeline_mode" not in manifest_df.columns` pre-v8
+      fallback check), `capture_status` + `error_reason` for the per-side status/reason extraction — no other column is
+      touched anywhere in the module. `asset_group` deliberately excluded (module docstring already states "the bucket
+      is already scoped to one asset_group", and it is not a real schema column per UTL's `_V8_COLUMNS`). No `filters=`
+      added — the real production caller (`stage0_data_pipeline_recon.py`) always passes a single-date list today, but
+      the function's own contract accepts an arbitrary `dates: list[str]` (exercised by the existing
+      `test_multiple_dates_mixed_outcomes` test), so a single-date equality filter would silently break the multi-date
+      case; scope stayed to the todo's literal ask (column projection only). Added
+      `test_read_availability_index_is_column_projected` pinning the exact `columns=` call signature. Full
+      `quality-gates.sh` green (36s, 2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge
+      --agent.
 - [ ] [SCRIPT] P2. **deployment-service** — `cli/utils/manifest_reader.py:245,585,674`: project each to its actual
       column usage (operator-invoked CLI, lower urgency than the live/hot-path findings above).
 - [ ] [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
