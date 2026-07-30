@@ -157,12 +157,18 @@ host/root-clone access (main agent's own session, or the operator).
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Clear the current ao-self-pull.sh wedge on the live orchestrator host: confirm
+- [x] ✅ [OPERATOR] P1. Clear the current ao-self-pull.sh wedge on the live orchestrator host: confirm
       `agent-orchestrator@474d7e0` + `@93862de` have reached the root checkout at
       `/home/ubuntu/unified-trading-system-repos/agent-orchestrator` (`git log -1`), confirm `git status --porcelain` is
       clean, and confirm `orchestrator.service`'s `ExecMainStartTimestamp` moved forward on the next `ao-self-pull.sh`
       tick (or restart manually) — this requires root-checkout + service-restart access outside any slot worker's scope
-      (repo: agent-orchestrator, host-level).
+      (repo: agent-orchestrator, host-level). — Confirmed live 2026-07-30 17:49 UTC via SSM on i-0c9b283b31d6b5ca7: HEAD
+      at `agent-orchestrator@bd522d0` (well past both cited SHAs), `git status --porcelain` empty,
+      `origin/live-defi-rollout` ahead=0/behind=0. A second, DISTINCT wedge had independently developed on top of the
+      original one — the running uvicorn process had fallen 3 consecutive `ao-self-pull.sh` ticks behind HEAD
+      ("stale-process self-heal not resolving") — resolved by the same tick's restart path: new `MainPID=686237`,
+      `ExecMainStartTimestamp=2026-07-30 17:49:27 UTC`, verified serving real data (`GET /api/backlog` → 200, 1029
+      tasks). Root checkout is current and the live service is proven serving current code, not just current on disk.
 - [ ] [OPERATOR] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future
       `ao-self-pull.sh` wedge/drift alerts actually page instead of logging `no webhook` (repo: agent-orchestrator,
       host-level config).

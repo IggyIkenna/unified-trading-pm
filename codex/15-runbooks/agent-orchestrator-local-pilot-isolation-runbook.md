@@ -25,6 +25,10 @@ created: 2026-07-30
 authoritative_for: [what agent-orchestrator local-pilot isolation env vars actually isolate vs. don't]
 referenced_by:
 owner: infra (operator-run; no standing execution owner — event-driven)
+cadence: event-driven — read before EVERY local pilot/experiment launch, not on a schedule
+verifier:
+  manual checklist below; the env-var table is verified against server/config.py's actual Field definitions, not assumed
+last_executed:
 last_reviewed: 2026-07-30
 code_refs:
   [
@@ -34,11 +38,15 @@ code_refs:
     agent-orchestrator/server/notifications/slack.py,
     agent-orchestrator/server/dedup_state.py,
   ]
-cadence: event-driven — read before EVERY local pilot/experiment launch, not on a schedule
-verifier:
-  manual checklist below; the env-var table is verified against server/config.py's actual Field definitions, not assumed
-last_executed:
-  2026-07-29 pilot (the incident this runbook documents) — the checklist below did not exist yet at that time
+execution:
+  {
+    owner: "infra (operator-run; no standing execution owner — event-driven)",
+    cadence: "event-driven — read before EVERY local pilot/experiment launch, not on a schedule",
+    verifier:
+      "manual checklist below; the env-var table is verified against server/config.py's actual Field definitions, not
+      assumed",
+    last_executed: NEVER,
+  }
 ---
 
 # agent-orchestrator local pilot isolation runbook
