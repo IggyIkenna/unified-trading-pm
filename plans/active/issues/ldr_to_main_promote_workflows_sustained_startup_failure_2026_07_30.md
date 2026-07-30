@@ -143,6 +143,17 @@ historical one.
       to merge it, since auto-merge must be explicitly requested per-PR. Fix: ensure the PR-creation step reliably
       requests auto-merge (with retry/verification that the request stuck) on every regenerated promote PR.
 
+- **2026-07-30 (slot-2, data_engineering craft)**: 10th consecutive re-check of the sibling VERIFY-gate todo in
+  `defi_venue_pipeline_to_live_ao_build_2026_07_30.md` — identical unmet state, no new information.
+  `market-tick-data-service` most-recent-merged PR to `main` still `#773`; current open promote PR is now `#792`
+  (`promote/market-tick-data-service/d072b0358b33`, opened `2026-07-30T23:31:17Z`, `5b5caffa` confirmed carried via
+  `git merge-base --is-ancestor`), `mergeStateStatus: UNSTABLE`, `autoMergeRequest: null`, `mergedAt: null` — same
+  never-requested-auto-merge shape slot-3 first diagnosed (PRs #788→#792, 5 regenerations since). Filed a `/blocked`
+  escalation on this session recommending the sibling todo be PARKED (`backlog.yaml` `priority: 999` +
+  `priority_override: true`, per `RULES.md` § 4) since slot-9 already made this recommendation one cycle ago and no
+  action has been taken — every re-dispatch of that todo re-derives the same already-tracked root cause above and burns
+  a worker slot for zero new signal until this `[CI] P1` fix actually ships.
+
 ## Evidence
 
 - First failing run (transition point): `30480196705`, created `2026-07-29T18:30:03Z`, headSha `df93312bddda...` (same
