@@ -285,7 +285,7 @@ drift_direction: advance-code
   divergence is 1/3,045 (0.03%). Verdict: the original 45.2% figure is confirmed almost entirely a
   comparison-methodology artifact; real content divergence is effectively 0%. Full writeup + the duplicate-key discovery
   (filed as its own follow-up,
-  `plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
+  `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`) in Source's new
   2026-07-26 dated section.
 
 - [ ] [DATA] P2. Once `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s P1 [BACKEND]
@@ -686,7 +686,7 @@ drift_direction: advance-code
   Conflict check: grepped the consolidated closeout plan's own todos plus every
   batch1/track01/lending-writer-retire/gmx-venue-removal/dex-pool-symbol-fix/track5(+finalize) doc for overlap on this
   doc's remaining ground. The 4 todos in defi_satellite_ao_dispatch_batch1_2026_07_25.md (lines ~386-419: [DATA] P1...
-- **`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
+- **`plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`**: No conflict with any
   covering-set doc (grep for test_collateral_validation.py, funding_ensemble_engine.py, CollateralValidationMixin,
   defi_enhancements across the full defi covering set returned zero hits — nothing else claims this ground). The blocker
   is a genuine three-way operator decision baked into the source doc...

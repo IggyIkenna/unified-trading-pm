@@ -11,7 +11,7 @@ summary: |
   `blocked-not-registered` cell counts (cefi 104 · defi 1225 · sports 70 · tradfi 40). Filed as an ordered follow-up
   so each remaining venue is either wired to a WSFeedConnector (with a regression test) or classified
   `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BATCH-ONLY-BY-DESIGN`.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -49,7 +49,19 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+  "market-tick-data-service@9d3c1aa1,@2115f867,@6bf4f616,@fd436aea,@a49c0828,@b6d39859,@c1e18918,@0ac6cb74,@cdbbdb9b +
+  unified-api-contracts@1cafb3c5 + instruments-service@94512ec3 (Phase-3.5 rollout: 24/73 venues wired live, remaining
+  49 honestly classified BLOCKED-CREDENTIALS/BATCH-ONLY-BY-DESIGN/CAPTURED-VIA-ODDS_API-AGGREGATOR/DEFERRED-INDEFINITELY
+  per operator rulings — closes the smoke-matrix blocked-not-registered classification for all 73
+  originally-unregistered venues)"
 ---
+
+> **✅ ARCHIVED 2026-07-30** — the Phase-3.5 rollout is complete: every one of the 73 originally-unregistered venues is
+> now either wired live or honestly classified (BLOCKED-CREDENTIALS / BATCH-ONLY-BY-DESIGN / CAPTURED-VIA-ODDS_API-
+> AGGREGATOR / DEFERRED-INDEFINITELY), matching the smoke-matrix `blocked-not-registered` counts exactly. 0 open todos,
+> unlocked. The "routing note" ownership ambiguity below (parent_epic vs epics/instruments_master.md's disclaimed scope)
+> stays flagged in place, unresolved by design — an operator naming/ownership call, not a blocker to this doc's own
+> completed rollout work. Moved to `plans/archive/issues/`.
 
 # WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues
 

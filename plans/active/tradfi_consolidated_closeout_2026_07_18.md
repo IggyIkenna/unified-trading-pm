@@ -496,7 +496,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
   - [`plans/archive/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md`](/plans/archive/issues/tradfi_t1_no_working_mtds_job_2026_07_17.md)
     — 0 open todos; `status: resolved` 2026-07-26 (live-reverified: 6 consecutive scheduled T+1 executions succeeded,
     2026-07-21 through 2026-07-26; archived 2026-07-26 per issue-doc-lifecycle.md)
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI
 
 - **Coverage/data-status/honest**:
@@ -754,7 +754,7 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
     - **[DATA] P2.** Investigate the CBOE `ohlcv_15m` `INDEX`/`OPTION` null-`instrument_id` writes (103 rows)
     - **[DOC] P3.** Re-verify the `future`/`FUTURE` population characterization (now 9,126 rows and growing, was stale
       "2,023 static")
-  - [`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
+  - [`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`](/plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md)
     - **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc.** The original 3 todos (DECISION /
       implement / ship) are flipped there; a new **[CODE] P1** concrete implementation todo (VM_MVP_MODE metadata
       plumbing + opt-in `--mvp-mode` flag on `launch-tradfi-forward-poll.sh` + dry-run regression test) is the remaining

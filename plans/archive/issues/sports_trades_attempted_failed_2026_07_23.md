@@ -31,7 +31,7 @@ summary: >-
   shrinking the denominator far faster than the numerator and swinging the ratio up. Not a new incident; a metric
   artifact of routine, already-tracked manifest-canonicalization work landing on top of an already-open,
   already-deferred stale-residue cell.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -76,10 +76,20 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+  "market-tick-data-service@e9d9dec0 (CAS-safe source=api_football manifest wipe removed the residual rows entirely,
+  root cause fixed via uac@44623d25); remaining 2 follow-ups extracted verbatim into
+  sports_consolidated_native_ao_extract_2026_07_25.md and sports_closeout_track_s2_foldin_2026_07_25.md
+  (na-eligibility-audit 2026-07-30)"
 source: >-
   operator-reported #data-pipeline-alerts DP_RUN_MOSTLY_EMPTY CRITICAL alert, window 2026-07-22 23:46-48Z, triaged
   2026-07-23 (read-only investigation, no changes made).
 ---
+
+> **✅ ARCHIVED 2026-07-30** — all 3 todos done: the residue rows were removed entirely
+> (`market-tick-data-service@e9d9dec0`) making the timestamp-restore ask moot, and the 2 remaining follow-ups were
+> extracted verbatim into their own active `assigned_vm: planning` docs
+> (`sports_consolidated_native_ao_extract_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`) — this doc
+> has no remaining work of its own. 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # sports/trades DP_RUN_MOSTLY_EMPTY — dead 2026-07-13 residue, ratio inflated by today's own K1/K2 casing migration
 

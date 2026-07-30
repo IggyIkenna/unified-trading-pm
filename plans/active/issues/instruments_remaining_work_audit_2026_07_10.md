@@ -184,7 +184,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
    production rows were ever captured to compare); doc archived, `status: resolved`.
 
 8. **WSFeedConnector Phase-3.5 rollout gap — 73 unregistered venues**
-   `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` COINBASE bare-name removal blocked on a
+   `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` COINBASE bare-name removal blocked on a
    drafted-but-unexecuted migration plan; ICE WSFeedConnector blocked on Real-Time Databento credentials; ~46 DeFi
    venues + sports/tradfi venues pending Option-B architectural decision.
 
@@ -205,7 +205,7 @@ Real code fixes / features needed (not backfills, not pure doc drift).
     instruments-service@f7e64c54) 3 todos unchecked at the time of this audit: decide direction, implement, ship.
 
 12. **TradFi's mvp_mode fetch-time filter is unreachable dead code**
-    `plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
+    `plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md` Zero callers workspace-wide; 3 todos
     (operator decision wire-live-vs-delete, implement, ship).
 
 13. **Crypto-venue single-stock perps + tokenized stocks — equity basis/dispersion arb** (CODE_PATH primary; also
@@ -651,9 +651,10 @@ Tooling / infra / ML-training / strategy-research items that don't fit the above
 
 ### P2
 
-8. **No generic manifest-reprocessing mechanism — 11 near-identical one-off reclassify scripts**
-   `plans/active/issues/manifest_reprocessing_generic_utility_2026_07_07.md` 4 unchecked: design + build
-   `select_shards_for_reprocess()`, wire as IS CLI subcommand, retire the 11 one-offs.
+8. **No generic manifest-reprocessing mechanism — 11 near-identical one-off reclassify scripts** — **RESOLVED
+   2026-07-30**, all 4 todos done (design + build `select_shards_for_reprocess()`, wired as IS CLI subcommand, 13
+   one-offs left in place as historical record per the doc's own carve-out). Archived:
+   `/plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md`.
 
 9. **instruments-service GET /api/data-status is dead code**
    `plans/active/issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md` 2 unchecked:

@@ -16,7 +16,7 @@ summary: >-
   Round 2) — those were docs the audit SAW but scoped out or missed by pattern; these are docs the 9-tranche audit
   likely never even considered a dispatch candidate because their frontmatter doesn't cleanly say "LOCAL" or "AO" either
   way.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -37,6 +37,8 @@ assigned_vm: planning
 priority: P2
 locked_by:
 resolved_by:
+  "unified-trading-pm@e88c41727 (docspec assigned_vm Req.O -> Req.R gate, closes root cause); 57-file classification +
+  slot-15 conflict-check annotations landed in-place (2026-07-26/30)"
 source: >-
   Found while re-auditing the 2026-07-26 mass-flip's real coverage after an operator challenge ("~600 docs, only ~250
   tasks — sure the sweep ran properly?") — that challenge correctly predicted a real gap; this doc + the batch-flip
@@ -46,6 +48,10 @@ assigned_role: infra
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-30** — all 3 todos done (57-file classification, `docspec.py` `Req.R` gate fix
+> `unified-trading-pm@e88c41727`, and the shared conflict-check pass over the surviving 13/46-todo population), 0 open
+> todos, unlocked. Moved to `plans/archive/issues/`.
 
 # 58 docs with blank `assigned_vm` — 198 open todos never classified
 

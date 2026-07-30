@@ -144,7 +144,7 @@ drift_direction: advance-code
       confirm the FX KRW cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap — audit-only.**
       Source native todo (lines 245-254), narrowed: the `mvp_mode` dead-gate decision bundled in the same native todo is
       a genuine DESIGN call, already independently tracked as its own doc
-      (`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
+      (`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`) that
       `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md` had classified "0 AO-eligible candidates... genuinely
       operator-gated" — **RULED 2026-07-29: wire via forward-poll opt-in flag, see the issue doc** — NOT included here,
       stays with that classification (the issue doc's own new [CODE] P1 implementation todo is the fresh AO-eligible

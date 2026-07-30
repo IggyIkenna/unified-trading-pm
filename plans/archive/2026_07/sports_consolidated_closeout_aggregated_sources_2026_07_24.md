@@ -333,7 +333,7 @@ drift_direction: advance-code
     - **[DATA] P2.** BLOCKED-PREREQUISITES — re-verify + re-dispatch footystats backfill VM
   - [`plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md`](/plans/archive/issues/mtds_sports_api_football_wrong_source_reaccumulated_post_wipe_2026_07_22.md)
     — `status: resolved`, 0 open todos.
-  - [`plans/active/issues/sports_trades_attempted_failed_2026_07_23.md`](/plans/active/issues/sports_trades_attempted_failed_2026_07_23.md)
+  - [`plans/archive/issues/sports_trades_attempted_failed_2026_07_23.md`](/plans/archive/issues/sports_trades_attempted_failed_2026_07_23.md)
     (2 open):
     - **[DESIGN] P3.** Flag `check_high_attempted_failed` owner (deployment-service) re: same-day manifest
     - **[VERIFY] P3.** Once `sports_master_closeout`'s K1/K2 fully flip + the DELETE lands, re-verify
@@ -382,7 +382,7 @@ drift_direction: advance-code
   `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`,
   `/plans/active/issues/estate_orphan_assessment_2026_07_21.md`,
   `/plans/archive/issues/features_by_date_root_canonicalisation_2026_07_21.md`,
-  `/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
+  `/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`,
   `/plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md`,
   `/plans/active/issues/instruments_remaining_work_audit_2026_07_10.md`,
   `/plans/archive/issues/manifest_completeness_full_corpus_map_build_2026_07_20.md`,

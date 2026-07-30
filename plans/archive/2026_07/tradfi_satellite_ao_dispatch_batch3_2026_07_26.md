@@ -262,25 +262,25 @@ drift_direction: advance-code
       `pd.DataFrame()` at line 447 SILENTLY — no exception, no `failed_per_dt` entry, just a `logger.debug`.
 
       **The actual attempted_failed-vs-empty_confirmed decision is NOT made there — it's one level up**, in
-                          `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
-                          route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
-                          `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
-                          For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
-                          failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
-                          (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
-                          independent of which specific data_type actually failed. If `effective_failure` is truthy →
-                          `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
-                          `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
+                                  `engine/orchestrator/sentinels.py::_emit_nonsports_tier2_tier3_sentinels` (confirmed both `ohlcv_15m`/`ohlcv_24h`
+                                  route through this Tier-2 venue-level branch, not Tier-3: neither is in UAC's
+                                  `_PER_INSTRUMENT_SHARD_DATA_TYPES`, `unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2309-2333`).
+                                  For each expected-but-not-captured `dt` (lines 591-612): `per_dt_reason =
+                                  failed_per_dt_by_venue.get(venue, {}).get(dt)` then `effective_failure = per_dt_reason or failed_reason_raw`
+                                  (line 592) — `failed_reason_raw` is the WHOLE-VENUE failure reason (`failed_shards.get(venue)`, line 542),
+                                  independent of which specific data_type actually failed. If `effective_failure` is truthy →
+                                  `writer_manifest.record_failed(...)` (line 598, → `ATTEMPTED_FAILED`); else →
+                                  `writer_manifest.record_empty(..., reason="SOURCE_RETURNED_ZERO")` (line 600, → `EMPTY_CONFIRMED`).
 
-                          **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
-                          because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
-                          classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
-                          592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
-                          inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
-                          `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
-                          `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
-                          addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
-                          Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
+                                  **This IS a separate write-time decision point from DP-FETCH-009** (not just the alert-persistence mechanism):
+                                  because the silent Databento filter never populates `failed_per_dt` for the dropped data_type, its
+                                  classification rides entirely on whether that SAME VENUE had an unrelated whole-venue failure that day (line
+                                  592's fallback) — a filtered-out `ohlcv_15m`/`ohlcv_24h` cell can be misclassified `ATTEMPTED_FAILED` by
+                                  inheriting an unrelated data_type's failure (e.g. `trades` hitting a 429 that day), or correctly land
+                                  `EMPTY_CONFIRMED` if nothing else failed. This explains HOW the 2026-07-07 stale rows originally got written as
+                                  `attempted_failed`; DP-FETCH-009's no-recency-window count (already documented in this doc's Verification
+                                  addendum) separately explains why they keep PAGING today. Both apply — DP-FETCH-009 is not the whole story.
+                                  Read-only trace, no code changes shipped. Cross-ref added to source doc's Progress Log.
 
 ## Deferred — conflict-gated (genuinely unresolved, do not draft competing todos)
 
@@ -303,7 +303,7 @@ drift_direction: advance-code
   (2026-07-26, finalize todo 2)**: doc is still `status: open`, no operator ruling on either the `EXCHANGE_CODE_TO_NAME`
   SSOT-contradiction question found anywhere in the corpus (grepped, no hits). Gate has not cleared — not re-asking the
   operator a second time, stays deferred.
-- **`plans/active/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`**: Not a fresh finding — already triaged
+- **`plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md`**: Not a fresh finding — already triaged
   repeatedly across the covering-plan corpus. The doc's own first todo is an explicit [DECISION] operator call (wire
   mvp_mode live vs. delete dead code) blocking items 2/3. 5 covering docs independently confirm operator_gated;
   tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md (**`status: draft` — corrected 2026-07-26 by

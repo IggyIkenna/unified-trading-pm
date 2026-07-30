@@ -41,6 +41,11 @@ resolved_by:
 locked_by: ""
 ---
 
+> **✅ ARCHIVED 2026-07-30** — all 3 todos done (both over-baseline sites annotated, STEP 5.101 back at 87 < baseline
+> 89), 0 open todos, unlocked. A prior fabricated-SHA citation in `resolved_by` was corrected in-place with the real
+> commits (see field + `mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md` for the standalone finding on that
+> fabrication). Moved to `plans/archive/issues/`.
+
 # market-tick-data-service empty-string-fallback baseline drift (93 > baseline 89)
 
 ## What I found

@@ -435,7 +435,7 @@ drift_direction: advance-code
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
   - [`plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md`](/plans/archive/issues/vm_backfill_data_correctness_findings_2026_06_29.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     - **[INFRA] P1.** Decide + implement a default-to-yesterday date bridge for MTDS's batch CLI (needs an owner
       decision on which repo).
   - [`plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md`](/plans/archive/2026_07/is_daily_enum_capture_heal_2026_07_07.md)
@@ -603,7 +603,7 @@ drift_direction: advance-code
       reconcile genuinely-permanent blank-instrument_type gaps.
   - [`plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`](/plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
+  - [`plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md`](/plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md)
     — all todos checked, but `status: open` — 2 operator-gated `--apply` production data-mutation sign-offs still
     pending (relabel ~2.59M/3.13M raw-symbol Tardis manifest rows to canonical ids; purge ~49,720 stale-shape
     `expected_unattempted` rows), deliberately never captured as separate checkboxes. NOT closed/archived/record-only.

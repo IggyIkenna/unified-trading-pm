@@ -33,7 +33,7 @@ related:
     /plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md,
     /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
     /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
-    /plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
+    /plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md,
     /plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
   ]
 created: "2026-07-24"

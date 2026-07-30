@@ -243,7 +243,7 @@ CLI is single-codepath; adding `--trigger` as a new axis is additive (Phase A.7)
 - Telegram bot infra and the alerting-service rule engine — owned by `alerting_service_live_rules_2026_05_07`.
 
 > **Routing gap flagged 2026-07-14 (finding 126, unresolved — needs an operator ruling, not fixed here)**: despite the
-> two disclaimers above, `active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` carries
+> two disclaimers above, `archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` carries
 > `parent_epic: instruments_master` (repos: `market-tick-data-service`) yet its content is precisely per-venue MTDS
 > `WSFeedConnector` live-tick capture wiring across cefi/tradfi/sports/defi — including a "### DeFi — 49 venues" section
 > building onchain-protocol connectors (Uniswap/Aave/Compound/Morpho/Lido/GMX etc.) — i.e. exactly both disclaimed

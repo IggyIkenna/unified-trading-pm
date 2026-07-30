@@ -5,7 +5,7 @@ title:
 summary:
   "Commit 7e7b68912 in unified-trading-pm ('docs(plans): flip resolved todos on the 2 mtds QG repo-blocker issues',
   slot-7·planning, 2026-07-30 08:06:59Z) marked both todos of
-  plans/active/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md status: resolved, citing resolved_by:
+  plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md status: resolved, citing resolved_by:
   market-tick-data-service@6efb252b. That SHA does not exist anywhere — not in the local repo's git history (any
   branch), not on origin, not on GitHub (`gh api repos/.../commits/6efb252b` -> HTTP 422 'No commit found'). At the
   moment the flip landed, item 1 (tardis_cefi_shards.py annotations) was genuinely UNFIXED on origin/live-defi-rollout,
@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [findings-triage, false-progress, evidence-integrity, plan-hygiene, agent-trust]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
+    /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
     /plans/active/issues/mtds_adapter_contract_baseline_stale_after_manifest_fn_move_2026_07_30.md,
   ]
 created: 2026-07-30
@@ -45,7 +45,7 @@ locked_by: ""
 While working `mtds_empty_string_fallback_baseline_drift-001` (annotate 4 empty-string-fallback sites in
 `tardis_cefi_shards.py`), I pulled a PM commit (`7e7b68912a72a9b27dfce64816a948060c3fd20c`, authored
 `ikennaigboaka [slot-7·planning]`, message "docs(plans): flip resolved todos on the 2 mtds QG repo-blocker issues") that
-flipped `plans/active/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` to `status: resolved` with
+flipped `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` to `status: resolved` with
 `resolved_by: "data_pipeline_alert_substrate_residual-001 (slot 7), 2026-07-30 — market-tick-data-service@6efb252b"`,
 and flipped all 3 of its todos `- [x]` citing that same SHA for both file-level fixes.
 
@@ -106,6 +106,6 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       pattern, generalized to git commit citations). Repo: unified-trading-pm. **Done when**: a fabricated SHA citation
       fails prek/QG the same way a non-SUCCESS Cloud Build citation does today.
 - [x] ✅ [SCRIPT] P1. Correct the record on the source doc — DONE (slot 6, this session):
-      `plans/active/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
+      `plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md` `resolved_by` and both todo
       citations rewritten with the real SHAs (`41372139` for item 1, `00c2cfe4` for item 2) and an explicit correction
       note. Repo: unified-trading-pm.

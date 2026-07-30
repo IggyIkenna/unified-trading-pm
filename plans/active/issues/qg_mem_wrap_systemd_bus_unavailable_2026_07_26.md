@@ -33,7 +33,7 @@ scope: [engineer, admin]
 tags: [quality-gates, ci-infra, systemd, dbus, basedpyright, mem-wrap, flaky-gate, quickmerge]
 related:
   [
-    /plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
+    /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
     /codex/06-coding-standards/quality-gates-memory-governance.md,
   ]
 created: 2026-07-26

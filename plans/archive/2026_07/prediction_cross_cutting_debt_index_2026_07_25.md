@@ -197,7 +197,7 @@ for the live picture.
   - 6. **[CODE] P2.** Give `backfill_orphan_class_e.py --apply` a batched-incremental `record_cells()` call
   - 8. **[DATA] P2.** Measure prediction's `B_legacy_duplicate` population — never reported anywhere in this doc's
        already-durable sweep report (prediction-specific; other-AG-only todos 7/3c not listed here)
-- [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+- [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
   — 0 open todos (all 6 `[x]`; **corrected 2026-07-26, `/plan-reconcile` prediction shard** — the previously-listed
   `[INFRA] P1` default-to-yesterday date bridge is `[x]` in the target doc, and the artifact is live:
   `unified_trading_library/service_framework/_adapter.py::_default_batch_dates_to_yesterday()` (line 26) is called by

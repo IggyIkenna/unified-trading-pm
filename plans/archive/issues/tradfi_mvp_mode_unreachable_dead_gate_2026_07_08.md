@@ -10,7 +10,7 @@ summary: >-
   mvp_mode=True returns zero hits anywhere — no real caller ever requests the MVP-filtered path. Production always
   downloads the full TRADFI_DATABENTO_INSTRUMENTS universe (93 instruments) unfiltered for every venue including CME,
   regardless of mvp_scope.py's curated TradFi MVP rule (CME + ES/NQ/VX/commodity-root underliers only).
-status: open
+status: resolved
 nature: notes
 asset_group: [tradfi]
 stage: [meta]
@@ -46,7 +46,16 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 resolved_by:
+  "deployment-service@c847395e (opt-in --mvp-mode flag wired onto launch-tradfi-forward-poll.sh, per operator ruling
+  2026-07-29; 3 new regression tests, quality-gates.sh green)"
 ---
+
+> **✅ ARCHIVED 2026-07-30** — every todo done: operator ruled 2026-07-29 (wire, don't delete, via an opt-in flag on the
+> existing forward-poll launcher) and the implementation landed 2026-07-30 (`deployment-service@c847395e`). The
+> 2026-07-30 na-eligibility-audit already marked this ARCHIVE-READY but deferred the physical move + referrer sweep to
+> avoid N-way merge conflicts with concurrent per-tranche workers — this pass executes that deferred sweep, including
+> flipping the stale first todo on `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md` that still asked for this
+> already-shipped wiring. 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 ## The bug
 

@@ -244,7 +244,7 @@ that decision either way; it's now purely a migration-completion / storage-cost 
 `UNISWAP_V3-OPTIMISM`, `UNISWAP_V3-POLYGON`, `UNISWAP_V4-ETHEREUM`, `PANCAKESWAP_V3-BASE`) — up to 23 duplicate rows
 observed in a single shard (`day=2023-11-22`, `UNISWAP_V3-OPTIMISM`, 289 rows / 23 dupes). This is a within-shape
 data-quality question independent of the flat-vs-hive divergence question this todo addresses; filed as
-`plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`.
+`plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`.
 
 Investigation scripts (read-only, nothing written to GCS; session-local scratchpad, not committed, mirroring the prior
 entry's own pattern): `defi_shape_b_null_aware_reconcile.py` (initial 3,045-pair pass) +

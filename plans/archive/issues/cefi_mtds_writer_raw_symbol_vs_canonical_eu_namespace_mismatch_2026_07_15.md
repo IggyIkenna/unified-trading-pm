@@ -29,7 +29,7 @@ summary:
   running with no caveat. NOT the same defect as ../instrument_id_format_canonicalization_2026_07_08.md (that one is the
   CATALOGUE's InstrumentRecord.canonical_instrument_id, already fixed per instruments-service@f90d0e0) — this is MTDS's
   TardisAdapter manifest WRITE path specifically."
-status: open
+status: resolved
 priority: P0
 nature: notes
 asset_group: [cefi]
@@ -68,10 +68,19 @@ source:
 locked_by:
 locked_since:
 resolved_by:
+  "market-tick-data-service@5d44a197,@90ecde17,@bbf6649c (Tardis manifest-write + Tier-3 sentinel canonicalization) +
+  instruments-service@a2468dd9,@7f1aed10,@f021cb2b (enumerator bundle-shape fix + purge + relabel scripts); stale-shape
+  purge --apply executed 2026-07-30 (GATE PASSED, 0 stale-shape eu rows remain); relabel half correctly parked pending
+  the 3-tuple _cefi_canonical_blueprint_2026_07_17.md redesign per operator ruling 2026-07-29"
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-30** — every todo done (manifest-write canonicalization, Tier-3 sentinel fix, enumerator bundle
+> fix + purge, purge `--apply` executed with GATE PASSED); relabel half correctly parked pending
+> `_cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple redesign, not this doc's own remaining scope. 0 open todos,
+> unlocked. Moved to `plans/archive/issues/`.
 
 # CeFi MTDS writer: raw exchange symbol vs canonical instrument_key — eu namespace mismatch
 

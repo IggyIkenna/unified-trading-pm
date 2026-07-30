@@ -537,7 +537,7 @@ picture.
     (1 open)
     - **[DATA] P2.** `lst_yields` sparse coverage (~15 days) — file the coverage extension with features-onchain/MTDS;
       STAKING_REWARD honestly books zero (visible log) outside that window until then.
-  - [`plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`](/plans/active/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md)
+  - [`plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`](/plans/archive/issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md)
     — 0 open todos (closed/archived/record-only) — operator ruling needed (rewrite vs delete vs gate-hardening) before
     this becomes a real todo.
   - [`plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md`](/plans/active/issues/deployment_ui_capability_bundle_stale_drift_pacifica_2026_07_16.md)
@@ -692,7 +692,7 @@ picture.
       11 to cover cefi CEX venues (operator's live-probing-scope theme: broaden, don't narrow) — add cefi CEX venues to
       `_EXTRA_LIVE_PROBE_SOURCES_BY_AG`, relax/rename the RULE-11 test, re-verify the ~35 mis-flagged shards flip to
       captured. See the source issue doc for the full mandate.
-  - [`plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/active/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
+  - [`plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md`](/plans/archive/issues/group_c_cloud_run_job_failures_triage_2026_07_16.md)
     — 0 open todos (recounted live 2026-07-26 by `/plan-reconcile defi`, was "1 open"): the
     default-to-yesterday-date-bridge item flipped `[x] ✅ … FIXED 2026-07-16` at `:271`. Archival candidate — see this
     doc's own `## Archival + consolidation candidates` note.

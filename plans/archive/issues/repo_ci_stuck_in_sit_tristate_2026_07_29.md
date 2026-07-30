@@ -17,7 +17,7 @@ summary: >-
   `deployment-ui` TypeScript type + `rowSeverity`/`repoCi.ts` consumer to treat `None`/`null` distinctly from `False`
   (most likely: suppress the SIT-stuck contribution to severity when unknown, same as the existing `isStagingDormant()`
   suppression pattern already used for other staging-direction signals).
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting], a genuine mistag: forked out
@@ -44,7 +44,12 @@ drift_direction: worsening-slowly
 depends_on: []
 locked_by:
 resolved_by:
+  "deployment-api + deployment-ui (tri-state stuck_in_sit fix — bool|None type, staging_dormant_mode-aware emit, UI
+  null-handling + regression tests both sides), 2026-07-30, both repos' quality-gates.sh green"
 ---
+
+> **✅ ARCHIVED 2026-07-30** — the sole todo done (tri-state fix shipped across deployment-api + deployment-ui, both
+> quality-gates.sh green), 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # `stuck_in_sit` needs a real tri-state, not a same-repo mechanical fix
 

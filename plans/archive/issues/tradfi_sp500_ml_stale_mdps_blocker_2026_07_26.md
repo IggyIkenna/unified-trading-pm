@@ -59,7 +59,7 @@ drift_direction: advance-code
 
 > **🟢 RESOLVED 2026-07-26 (slot-5).** Updated the stale P0 checkboxes + corrected batch3's Deferred-note citation; the
 > underlying pipeline is still blocked but by a different, now-documented issue —
-> `/plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. Archived here
+> `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`. Archived here
 > (plan_health hygiene-sweep hard-gate fix, escalation `agt-d65e83`) per
 > `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-PLAN trigger.
 

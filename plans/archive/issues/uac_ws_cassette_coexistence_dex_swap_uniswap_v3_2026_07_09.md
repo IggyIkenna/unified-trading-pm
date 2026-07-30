@@ -57,7 +57,7 @@ each has a matching `*_ws.yaml` WS cassette under `unified_api_contracts/externa
 `market-tick-data-service/market_tick_data_service/live/connectors/dex_swap_uniswap_v3_ws.py` was added at
 `mtds@d02cf88f` ("feat(defi): real live per-block Uniswap V3 DEX-swap streaming (replaces gap-013 placeholder)",
 2026-07-09 01:26), replacing the `dex_swap_scaffold_ws` BLOCKED-BUILD placeholder tracked in
-`plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` gap-013. No cassette was added alongside it, and the
+`plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` gap-013. No cassette was added alongside it, and the
 connector isn't in `unified-api-contracts/tests/test_ws_cassette_coexistence.py::_CONNECTOR_TO_VENUE` /
 `_REST_POLLER_CONNECTORS` either.
 

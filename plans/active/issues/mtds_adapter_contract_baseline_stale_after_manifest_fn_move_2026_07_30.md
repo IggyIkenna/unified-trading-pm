@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [quality-gates, adapter-contract-regression, ci-blocking, baseline-stale]
 related:
   [
-    /plans/active/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
+    /plans/archive/issues/mtds_empty_string_fallback_baseline_drift_2026_07_30.md,
     /plans/active/issues/lighter_zksync_derivative_ticker_tardis_numeric_market_id_leaks_into_symbol_schema_2026_07_29.md,
     /plans/archive/issues/mtds_adapter_contract_regression_stale_baseline_2026_07_13.md,
   ]

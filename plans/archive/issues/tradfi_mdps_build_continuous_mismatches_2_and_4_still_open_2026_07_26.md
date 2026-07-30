@@ -23,7 +23,7 @@ summary: >-
   Filed so the real remaining engineering work (fix mismatches 2+4, or make and implement a definitive Option A/B call)
   is tracked as concrete work instead of the plan reverting to a vague "needs operator decision" state that already
   looked resolved once and wasn't.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -42,6 +42,11 @@ priority: P1
 source: [tradfi_sp500_ml_stale_mdps_blocker-001, live code + GCS re-verification 2026-07-26]
 assigned_vm: planning
 resolved_by:
+  "market-data-processing-service@62a1255 (bundled-file fix), @e9edb39 (24h/1d timeframe normalization + real
+  launch/verify), @2b7c4dc (subprocess timeout), @22b926c (empty-listing retry mitigation); features-service@65606d26
+  (continuous-future read path), @2e7c2ca1 (buffer_days threading, the actual root cause), @81ab1264 (per-date shard
+  isolation); real tradfi features-delta-one run verified landing (features-delta-one-tradfi-20260726-132027, 4 real
+  feature parquets + 5 manifest rows)"
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -49,6 +54,12 @@ depends_on: []
 last_updated: 2026-07-26
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — every todo done: mismatches 2+4 fixed (via a different real bug than originally diagnosed
+> in each case), the 24h/1d sparse-coverage investigation and the per-date abort-on-first-failure gap both resolved, and
+> a real tradfi features-delta-one-tradfi run verified landing with real feature parquets + manifest rows — the doc's
+> original premise ("no tradfi features run has ever successfully landed") is closed. 0 open todos, unlocked. Moved to
+> `plans/archive/issues/`.
 
 # TradFi MDPS build-continuous mismatches 2+4 still open; no successful run ever landed
 

@@ -21,7 +21,7 @@ scope: [engineer]
 tags: [ml-service, features-service, sports, clv, point-in-time, leakage, architecture]
 related:
   [
-    /plans/active/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
+    /plans/archive/issues/ml_service_sports_feature_frame_non_numeric_columns_break_feature_selection_2026_07_26.md,
     /plans/active/issues/ml_service_sports_clv_training_pipeline_never_functional_2026_07_26.md,
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
   ]

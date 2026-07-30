@@ -7,7 +7,7 @@ summary:
   A test aimed squarely at "does the strategy layer block posting the wrong collateral at the wrong venue" fails at
   import time and has for ~2.5 months; the property it checks does still hold in production, but through a different,
   newer mechanism that nothing in e2e-testing regression-protects.
-status: open
+status: resolved
 nature: issue
 asset_group: defi
 stage: strategy
@@ -26,10 +26,15 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: backend_engineer
 drift_direction: NA
 resolved_by:
+  "e2e-testing@d453bae (rewrote test_collateral_validation.py against the v2 mechanism, operator-ruled Option A
+  2026-07-29; all 9 scenarios verified PASS)"
 locked_by:
 source: agent-discovered (e2e-testing vs prod DeFi corner-case audit, 2026-07-23)
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-30** — the sole todo done (`e2e-testing@d453bae`, operator-ruled Option A rewrite, all 9
+> scenarios verified PASS), 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # e2e-testing collateral-validation test — dead import since 2026-05-01, 9 scenarios never run
 

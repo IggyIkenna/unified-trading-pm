@@ -11,7 +11,7 @@ summary: >-
   `PANCAKESWAP_V3-BASE` -- up to 23 duplicate rows observed in one shard (`day=2023-11-22`, `venue=UNISWAP_V3-OPTIMISM`,
   289 rows / 23 duplicate `instrument_key` values). This is a within-shape data-quality question, independent of the
   flat-vs-hive divergence question the source doc addresses -- not investigated further here (out of that todo's scope).
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -35,8 +35,13 @@ estimate_class: research
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "instruments-service@30fe4511 (Option B consumer-side audit + regression test proving DEX-pool catalogue rollup never
+  collapses same-symbol/different-address pools, operator-ruled 2026-07-30)"
 locked_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — both todos done (real-bug verdict confirmed, then Option B consumer-side audit +
+> regression test shipped per operator ruling), 0 open todos, unlocked. Moved to `plans/archive/issues/`.
 
 # DeFi instrument_availability flat shape: duplicate instrument_key rows within a shard
 

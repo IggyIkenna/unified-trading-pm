@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [plan-hygiene, line-caps, archive-candidates, prose-trap, split-needed]
 related:
   [
-    /plans/active/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
+    /plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md,
     /plans/active/issues/mtds_backfill_vm_startup_oom_rc137_2026_07_14.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]

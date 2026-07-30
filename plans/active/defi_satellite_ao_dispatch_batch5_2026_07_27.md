@@ -90,7 +90,7 @@ operator approval.
       instruments-service writer emits the same `instrument_key` more than once per day-shard and file a follow-up
       root-cause/fix todo against the writer. Repo: instruments-service. Done when: a recorded harmless-vs-real verdict
       exists for each sampled venue, with a fix todo filed if any venue shows real divergence. Source:
-      `plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`
+      `plans/archive/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`
 
 - [x] ✅ [DATA] P2. **ALREADY DONE — discovered stale/duplicate 2026-07-30 while archiving the source issue doc.** Both
       sites this todo describes were already fixed/confirmed in the source issue doc BEFORE this todo was dispatched:

@@ -222,7 +222,7 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Deferred — already claimed by an active plan outside this tranche (conflict-check caught this)
 
-- `/plans/active/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` — its sole open todo (run the
+- `/plans/archive/issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md` — its sole open todo (run the
   standard conflict-check against the 30 docs this doc itself flipped `NA→planning` on 2026-07-26, before their content
   is trusted for dispatch) is mechanically bounded and would otherwise qualify, but it is already a live, unchecked
   `[REVIEW] P2` todo inside `/plans/active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md` (asset_group:

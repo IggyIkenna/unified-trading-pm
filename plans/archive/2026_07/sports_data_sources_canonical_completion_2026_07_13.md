@@ -373,7 +373,7 @@ deliberately left untouched by today's `instruments-service@2f56038e` cleanup, n
 - [x] [DATA] P1. **odds_api source: retirement-status check.** — DONE, no code change (root-caused twice; see Progress
       Log 2026-07-13 "implementation" entry). `odds_api` is NOT retired/superseded: it is the sole `SOURCE_PRIORITY`
       owner of `ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ARBITRAGE` and is a credential-gated (`BLOCKED-CREDENTIALS`) live
-      source, already tracked in `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` +
+      source, already tracked in `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` +
       `sports_odds_bookmaker_coverage_enumeration_2026_06_20.md`. Live-manifest spot-check confirms all 6 legacy
       `attempted_failed` rows carry `error_reason=PipelineModeSourceMismatchError` — i.e. these are the current
       write-safety gate correctly REJECTING a source/data_type-mismatched write, an honest record of the gate firing,
@@ -738,7 +738,7 @@ report written in this plan's Progress Log.
     `EXPECTED_DEPRECATED_DATA_TYPE` (that reason means "this data_type is retired," which `ODDS` is not).
   - `market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py` — the odds_api WSFeedConnector is
     FULLY BUILT (polls The Odds API v4 REST, 60s interval) and REGISTERED (confirmed in
-    `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md`'s 31-venue registered list — odds_api is sports' 1
+    `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md`'s 31-venue registered list — odds_api is sports' 1
     resolved venue, not one of the 7 unresolved). Its own docstring carries a live, standing
     `CREDENTIAL APPROVAL REQUEST — odds-api-live-ws` (existing `odds-api-key` secret needs a paid-tier quota bump,
     ~$10/mo Starter tier, ~43k credits/mo at 60s polling) tied to "Phase 3.5e May-23 gate" — i.e. this is a KNOWN,
@@ -3372,11 +3372,11 @@ it's new adapter work, not a data-audit residual).
       given the real answer was sitting in GCP the whole time.
 
       _Original todo text + Progress Log preserved below for the record:_ every scheduled
-                                                                                                                      driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
-                                                                                                                      trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
-                                                                                                                      self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
-                                                                                                                      live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
-                                                                                                                      tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
+                                                                                                                              driver fixed today is hours-old and has only been confirmed via a single manual `gcloud run jobs execute --wait`
+                                                                                                                              trigger, never a real unattended cron fire. Before calling ANY of these "fixed for good," confirm they actually
+                                                                                                                              self-fire correctly on their own schedule at least once (ideally through one full overnight cycle + the next day's
+                                                                                                                              live matches, per the operator's explicit ask — "let's wait for that overnight cycle... mark plan to check the run
+                                                                                                                              tonight or tomorrow"). Check ALL of the following on the next session touching this plan:
   - `uts-prod-sports-enrichment-footystats-daily` / `uts-prod-sports-enrichment-soccer-football-info-daily` /
     `uts-prod-sports-enrichment-transfermarkt-daily` (new today, `deployment-service@5da4b620`/`@0f862b6e`) — check
     `gcloud scheduler jobs describe <job> --project=central-element-323112 --location=asia-northeast1` for

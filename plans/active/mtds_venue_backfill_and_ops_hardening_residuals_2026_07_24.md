@@ -555,7 +555,7 @@ Two genuine hits in this plan:
    scraper sources, tracked in sports_master DEFERRED-INDEFINITELY scraper set)." **`plans/epics/sports_master.md`** §
    "Scrapers DEFERRED-INDEFINITELY 2026-05-12 per operator" — this is the real, already-documented named successor: a
    formal 2026-05-12 operator ruling that these credentialed/blocked scraper sources are out of scope for the active
-   sports universe indefinitely (see also `plans/active/issues/wsfeedconnector_phase35_gap_2026_07_06.md` for the same
+   sports universe indefinitely (see also `plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md` for the same
    ruling applied to DRAFTKINGS/FANDUEL). Not a B0 gap for this plan.
 2. (line ~1724) "**DEFERRED** — the silent-worker watchdog (already a pending residual) is the systemic fix for the
    gas/sfi 'VM RUNNING but work-process silent' class." **Not yet identified** — no separate successor plan exists; this

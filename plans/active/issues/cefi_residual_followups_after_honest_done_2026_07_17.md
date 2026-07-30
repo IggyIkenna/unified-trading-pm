@@ -43,7 +43,7 @@ related:
   [
     /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/active/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
+    /plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
     /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
   ]
 created: 2026-07-17

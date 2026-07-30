@@ -20,7 +20,7 @@ summary: >-
   0% down) for this exact 2026-04-01..17 window because `pinnacle_closing_odds_home` / `odds_home_avg` are absent from
   the loaded feature set — even after Bug 4 is fixed, this specific date range may not be usable for a meaningful CLV
   retrain without also confirming the closing-odds columns are actually available somewhere in the pipeline.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [backtest]
@@ -48,9 +48,18 @@ source:
     command end-to-end against prod features-sports-prd data.",
   ]
 resolved_by:
+  "ml-service@5a9e3050 (numeric-only guard in _phase_feature_selection); features-service@c54f9eaf (xg_* pd.NA->np.nan
+  fix at source); CLV target-degeneracy re-scoped + retrain moved to
+  sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md's own [DATA] P3/[ML] P2 (na-eligibility-audit
+  2026-07-30 closed the duplicate retrain todo here as a stale-checkbox correction, not a reclassification)"
 locked_by:
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — every todo done (numeric-only guard, xg_* dtype fix at source, CLV target-source
+> availability root-caused, duplicate retrain todo closed with its live successor cited), 0 open todos, unlocked
+> (previously flagged ARCHIVE-ELIGIBLE by na-eligibility-audit 2026-07-30 but parked for a later archival pass — this is
+> that pass). Moved to `plans/archive/issues/`.
 
 # ml-service SPORTS feature frame breaks the generic feature-selection fit
 

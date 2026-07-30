@@ -23,7 +23,7 @@ summary:
   `instrument-catalogue-regen` (PAUSED scheduler since 2026-06-25) and the generic
   `uts-prod-instruments-service-t1-recon` (no scheduler at all — replaced by per-AG jobs per the terraform's own
   retirement comment)."
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, prediction, sports, meta]
 stage: [data, meta]
@@ -89,6 +89,12 @@ assigned_role: infra
 drift_direction: advance-code
 locked_since:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — this doc's own scope (Clusters 1/2/5 + both escalated findings) is fully resolved; the
+> remaining openness noted in its own Status section belongs entirely to Cluster 3's cross-referenced sibling docs
+> (`recon_bucket_missing_nightly_recon_failing_2026_07_13.md`,
+> `defi_scheduled_collection_outage_paused_crons_2026_07_16.md`, the tradfi-full weekly job), not this doc. 0 open
+> todos, unlocked. Moved to `plans/archive/issues/`.
 
 > **NOTIFY-OPERATOR class finding.** Two NEW, unfixed data-correctness / cross-cutting findings below (cefi/defi
 > catalogue duplicate-merge-key shrink; UTL batch-mode missing date default) need an operator/owner decision before
@@ -318,29 +324,29 @@ Two independent judgment calls neither this triage nor a single ≤30min fix sho
       do not paper over a possible real merge bug with a permissive flag.
 
       **Resolved 2026-07-30 — via the CORRECT mechanism, not the literally-described one.** The cross-referenced
-              `dp_catalog_not_running_sports_prediction_2026_07_15.md` doc independently re-diagnosed the SAME cefi/defi
-              `CATALOGUE_SHRINK_BLOCKED` recurrence in more depth (its "2026-07-28 update — cefi RE-TRIAGE premise was WRONG"
-              section) and found there is **no `_merge_incremental`/frozen-tail gap for cefi at all** — cefi's daily incremental
-              job already runs the generic frozen-tail merge unconditionally; the real mechanism is `run_rollup`'s cefi-only
-              Phase D dedup passes (`_dedup_bybit_future_base_asset_parsing`, `_dedup_cefi_expiry_off_by_one`,
-              `_dedup_cefi_margin_type_mislabel`) legitimately collapsing already-delisted duplicate rows AFTER the merge, which
-              the monotonic guard's `current` baseline never accounted for (live-confirmed `dropped_active: 0` on every
-              occurrence — no real data loss, ever). That doc's own follow-up ruling (RULED 2026-07-28, "make the guard
-              dedup-aware") is the properly-scoped fix for this exact finding, and it explicitly rejects the
-              `--allow-catalogue-shrink` paper-over this doc's operator ruling also rejects — same INTENT, correct mechanism.
-              **Shipped**: `instruments-service@5c1c3ccb` — `promote_catalogue`'s monotonic guard now re-runs the same 3 Phase D
-              dedup passes over the CURRENT prod catalogue before comparing row counts (cefi-only), with regression tests
-              proving a dedup-only shrink is now accepted while a genuine active-row drop still blocks. No
-              `_merge_incremental` rewrite was needed or shipped — writing one against the disproven "duplicate merge-key"
-              premise would have been dead code. Full evidence + test detail in that doc's own todo/Progress Log.
+                      `dp_catalog_not_running_sports_prediction_2026_07_15.md` doc independently re-diagnosed the SAME cefi/defi
+                      `CATALOGUE_SHRINK_BLOCKED` recurrence in more depth (its "2026-07-28 update — cefi RE-TRIAGE premise was WRONG"
+                      section) and found there is **no `_merge_incremental`/frozen-tail gap for cefi at all** — cefi's daily incremental
+                      job already runs the generic frozen-tail merge unconditionally; the real mechanism is `run_rollup`'s cefi-only
+                      Phase D dedup passes (`_dedup_bybit_future_base_asset_parsing`, `_dedup_cefi_expiry_off_by_one`,
+                      `_dedup_cefi_margin_type_mislabel`) legitimately collapsing already-delisted duplicate rows AFTER the merge, which
+                      the monotonic guard's `current` baseline never accounted for (live-confirmed `dropped_active: 0` on every
+                      occurrence — no real data loss, ever). That doc's own follow-up ruling (RULED 2026-07-28, "make the guard
+                      dedup-aware") is the properly-scoped fix for this exact finding, and it explicitly rejects the
+                      `--allow-catalogue-shrink` paper-over this doc's operator ruling also rejects — same INTENT, correct mechanism.
+                      **Shipped**: `instruments-service@5c1c3ccb` — `promote_catalogue`'s monotonic guard now re-runs the same 3 Phase D
+                      dedup passes over the CURRENT prod catalogue before comparing row counts (cefi-only), with regression tests
+                      proving a dedup-only shrink is now accepted while a genuine active-row drop still blocks. No
+                      `_merge_incremental` rewrite was needed or shipped — writing one against the disproven "duplicate merge-key"
+                      premise would have been dead code. Full evidence + test detail in that doc's own todo/Progress Log.
 
-              **Not resolved by this fix** (separate, still-open, lower-priority threads from "Not deep-dived this session"
-              below — NOT re-investigated this session, still exactly as originally flagged): `dp-manifest-hygiene-changed`'s
-              signal-9 SIGKILL (unrelated code path, not a catalogue-merge issue) and `lifecycle-catalogue-full-tradfi`'s weekly
-              failure (live-checked 2026-07-30: still FAILING as of its 2026-07-25 execution — tradfi isn't in scope for the
-              cefi-only Phase D dedups above, so this is a genuinely different root cause needing its own diagnosis, not
-              assumed to be fixed by this change). `lifecycle-catalogue-full-defi`'s weekly job, by contrast, is now
-              live-confirmed SUCCEEDING (2026-07-25 execution, `SUCCEEDED_COUNT=1`).
+                      **Not resolved by this fix** (separate, still-open, lower-priority threads from "Not deep-dived this session"
+                      below — NOT re-investigated this session, still exactly as originally flagged): `dp-manifest-hygiene-changed`'s
+                      signal-9 SIGKILL (unrelated code path, not a catalogue-merge issue) and `lifecycle-catalogue-full-tradfi`'s weekly
+                      failure (live-checked 2026-07-30: still FAILING as of its 2026-07-25 execution — tradfi isn't in scope for the
+                      cefi-only Phase D dedups above, so this is a genuinely different root cause needing its own diagnosis, not
+                      assumed to be fixed by this change). `lifecycle-catalogue-full-defi`'s weekly job, by contrast, is now
+                      live-confirmed SUCCEEDING (2026-07-25 execution, `SUCCEEDED_COUNT=1`).
 
 ## Evidence log
 
