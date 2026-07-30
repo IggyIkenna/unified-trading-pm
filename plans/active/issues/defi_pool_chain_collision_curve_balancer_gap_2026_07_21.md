@@ -172,10 +172,15 @@ no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-u
       unaffected). New regression tests in `test_preflight_atom_coverage.py` using the real CURVE collision address
       (`0x004c167d27ada24305b76d80762997fa6eb8d9b2`, AVALANCHE vs OPTIMISM) proving the two chains' shards stay
       distinct, plus a no-chain-column fallback test. `quality-gates.sh` green. — market-tick-data-service@5bf8a3c7.
-      **MDPS half still open** — `market_data_processing_service/app/core/orchestration_scanner.py`'s `existing_outputs`
-      dedup set was not verified/fixed in this pass (different repo, out of this dispatch's scope); re-file as a
-      standalone MDPS-scoped todo if not already covered elsewhere. Repos: market-tick-data-service (done),
-      market-data-processing-service (still open).
+      **MDPS half — CONFIRMED MOOT 2026-07-29**, re-filed and closed as
+      `plans/archive/issues/mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md`: a scoped GCS
+      read of real `processed_candles/` output for 2 of the 6 collision rows (CURVE, both `dex_pool_swaps` and
+      `dex_pool_state`, `day=2026-07-25`) found every real MDPS candle output filename is the FULL canonical
+      chain-embedded id (e.g. `CURVE-AVALANCHE:POOL:USDC-USDT.parquet`), never the bare `pool_address.lower()` — so
+      `orchestration_scanner.py`'s `existing_outputs` dedup key can never collide across chains at this site (chain is
+      already baked into the id string itself), unlike MTDS's raw-tick side which reads the catalogue's bare
+      `instrument_id` verbatim by design. No code change needed. Repos: market-tick-data-service (done),
+      market-data-processing-service (confirmed non-issue, no fix required).
 - [ ] [DATA] P2. Trace Stage 4 (features-service) and Stage 5 (manifest/data-status) for the same bare-`instrument_id`
       -only chain-collision keying gap already confirmed at Stage 2 (MTDS preflight, fixed market-tick-data-service@
       5bf8a3c7) and Stage 3 (MDPS orchestration_scanner, split off to
