@@ -4,14 +4,16 @@ title:
   GCS path resolution is not centralized — recurring "hand-rolled prefix drifts from canonical shape" bug class,
   workspace-wide audit in progress
 summary: >-
-  Root-caused via the MDPS `subprocess-per-date` timeout investigation (2026-07-28): a hand-rolled GCS existence-check
-  prefix silently omitted the `pipeline_mode=` hive segment, making skip-existing/resume logic ALWAYS report "nothing
-  found" for every pipeline_mode-partitioned category. Fixed forward, but a 4-agent audit (CEFI-scoped so far) found
-  this is a genuinely recurring pattern — 3 more confirmed instances, plus a confirmed-stale UTL path-registry template
-  consumed live by multiple services. No single canonical function resolves read/write paths workspace-wide; every
-  service hand-rolls its own. Operator has directed extending the audit to DEFI/TRADFI/SPORTS/PREDICTION (batch + paper
-  + live) and designing genuine centralization, under /autonomous.
-status: open
+  RESOLVED 2026-07-30 — all 27 todos done. Root-caused via the MDPS `subprocess-per-date` timeout investigation
+  (2026-07-28): a hand-rolled GCS existence-check prefix silently omitted the `pipeline_mode=` hive segment, making
+  skip-existing/resume logic ALWAYS report "nothing found" for every pipeline_mode-partitioned category. A 5-round audit
+  (CEFI/DEFI/TRADFI/SPORTS/PREDICTION, batch+paper+live) found this was a genuinely recurring pattern across the
+  workspace — confirmed live bugs fixed, confirmed-dead code deleted (including OpenBB's entire adapter, per operator
+  decision), a centralization design ruling made, and every finding resolved to fix/delete/confirm-safe or spun off into
+  its own tracked issue. See the doc body for the full per-round findings and the batch-fixes resumption doc (archived)
+  for the shipping history. One new issue spun off from a late-stage discovery:
+  `/plans/active/issues/utl_domain_client_market_data_whole_file_dead_2026_07_30.md`.
+status: resolved
 nature: issue
 asset_group: [cefi, defi, tradfi, sports, prediction]
 stage: [meta]
@@ -53,7 +55,11 @@ source: >-
   found while root-causing mdps_t1_recon_job_oom_failing_7_days_2026_07_26.md Update 13's subprocess-per-date timeout;
   4-agent CEFI-scoped audit dispatched 2026-07-28 per operator directive, then scope-expanded to
   defi/tradfi/sports/prediction + batch/paper/live under /autonomous.
-resolved_by:
+resolved_by: >-
+  All 27 todos shipped across unified-api-contracts, unified-trading-library, market-tick-data-service,
+  market-data-processing-service, features-service, and execution-service between 2026-07-28 and 2026-07-30 — see the
+  doc body for the per-todo evidence (repo@sha) and the archived batch-fixes resumption doc
+  (gcs_audit_batch_fixes_in_flight_2026_07_29.md) for the shipping-order history.
 depends_on: []
 ---
 
