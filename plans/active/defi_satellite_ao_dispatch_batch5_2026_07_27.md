@@ -249,9 +249,9 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 - `issues/defi_dexpool_second_writer_path_and_zero_capture_2026_07_10.md` — item 2 fully closed; no remaining action.
 - `issues/defi_legacy_precanonical_composite_venue_objects_2026_07_24.md` — todos 1-2 done, remainder tracked elsewhere
   per the doc's own annotation.
-- `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — prose-only 4-step fix chain, no bounded
-  single todo extractable without first diagnosing the frozen onchain consolidator (a diagnosis task, not a checkable
-  fact).
+- `archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — ✅ RESOLVED 2026-07-30
+  (features-service@d8a643a0, slot-4): both halves of the doc's one todo shipped (orphaned tree deleted + 1508-row
+  backfill registered); doc archived.
 - `issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (see operator-gated above, dual-listed by
   reasoning shape).
 - `issues/defi_morpho_lending_indices_never_wired_2026_07_12.md` — remaining item is a re-run of an existing gate,

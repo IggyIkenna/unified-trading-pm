@@ -527,7 +527,7 @@ picture.
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md`](/plans/active/issues/defi_dead_storage_shape_b_cleanup_candidate_2026_07_10.md)
     — 0 open todos (closed/archived/record-only).
-  - [`plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`](/plans/active/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md)
+  - [`plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`](/plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md)
     — 0 open todos (closed/archived/record-only).
   - [`plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`](/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md)
     — 0 open todos (closed/archived/record-only).

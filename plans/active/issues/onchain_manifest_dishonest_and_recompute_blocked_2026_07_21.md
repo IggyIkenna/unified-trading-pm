@@ -14,7 +14,7 @@ summary: >-
   lending source does NOT collect — so rerunning produces the same empty shards. The producer-honesty fix already
   shipped (features-service@907e17b4) stops NEW runs from writing these as captured; the durable close is fix
   consolidator → mark via API → build the missing MTDS collectors → recompute.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data, features]
@@ -43,8 +43,28 @@ source:
     blocked by a frozen consolidator and a missing MTDS collection gap",
   ]
 resolved_by:
+  slot-4 (2026-07-30) — features-service@d8a643a0, orphaned onchain/_index/ tree deleted (fresh soft-delete-retention
+  check, ≥604800s) plus a 1508-row historical corpus backfill registered (918 captured + 590 attempted_failed), verified
+  via direct per-VM-shard read
 locked_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30 (slot-4).** This doc's one todo (split into halves (a) delete + (b) register) shipped in full
+> — `features-service@d8a643a0`. (a) Fresh `gcs_bucket_soft_delete_retention_seconds()` on
+> `features-defi-prd-central-element-323112` returned `604800` (≥ threshold, delete-safety-protocol §3a finding T) — all
+> 4 objects under `onchain/_index/` deleted + post-delete-verified gone. (b) The doc's own "724 objects, Jan 25–Jul 26"
+> estimate was stale by the time of execution — a live re-scan found **1538** real objects spanning
+> 2021-08-17..2026-07-26 (`lst_yields` alone carries 829, not previously accounted for). Full-date-range schema sampling
+> confirmed the doc's captured-vs-featureless classification holds throughout (not just the one date originally
+> checked): `lst_yields`+`lending_rates` → `captured`; `health_factor`/`rewards`/`liquidation_events`/
+> `risk_params`/`flash_loan_availability` → `attempted_failed(calculator_produced_base_columns_only)`. 1508 gap rows
+> registered (918 captured + 590 attempted_failed; 30 of 1538 were already live-registered). The remaining "Blocker 2"
+> scope this doc named (build missing MTDS chain-field collectors, then recompute the 5 feature-less groups) is
+> genuinely new work, NOT part of this todo — already tracked as its own open todo in
+> `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`, so nothing evaporates.
+> A duplicate todo covering this same delete+register gap in
+> `/plans/active/defi_satellite_ao_dispatch_batch6_2026_07_30.md` was flipped in the same session to prevent a
+> re-dispatch.
 
 # onchain manifest dishonest + mark→recompute blocked
 
@@ -270,7 +290,7 @@ Update is diagnosis-only, per the sourcing todo's own scope).
 
 ## Todos
 
-- [ ] [DATA] P1. **Retagged from [OPERATOR] 2026-07-28, split into the two halves per the doc's own two stated options —
+- [x] [DATA] P1. **Retagged from [OPERATOR] 2026-07-28, split into the two halves per the doc's own two stated options —
       no fresh operator ask needed for either.** (a) **Delete the orphaned `onchain/_index/` tree**
       (`gs://features-defi-prd-central-element-323112/onchain/_index/`, dead migration debris with no live consolidator
       owner, confirmed by the 2026-07-28 slot-12 Update above): run a FRESH `gcs_bucket_soft_delete_retention_seconds()`
@@ -286,7 +306,26 @@ Update is diagnosis-only, per the sourcing todo's own scope).
       anything broken. Mirror the established `record_captured`-per-instrument registration recipe used for the
       2026-07-21 defi dex_pools/lending_indices fold
       (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`) rather than inventing a new
-      registration mechanism.
+      registration mechanism. — ✅ **features-service@d8a643a0**. (a) Fresh
+      `gcs_bucket_soft_delete_retention_seconds('features-defi-prd-central-element-323112')` returned `604800` (≥
+      threshold) — deleted all 4 objects under `onchain/_index/` via UTL `gcs_delete_object` (never subprocess),
+      post-delete `gcs_describe_object` confirmed all 4 gone (recoverable 7 days via GCS soft-delete). (b) The "724
+      objects, Jan 25–Jul 26" estimate was stale — live re-scan found **1538 real objects** spanning
+      2021-08-17..2026-07-26 (`lst_yields` alone has 829, not previously accounted for). Full-date-range schema sampling
+      (not just the single date the original investigation checked) confirmed the classification holds throughout:
+      `lst_yields`+`lending_rates` carry real feature columns (→ `captured`), the other 5 groups
+      (`health_factor`/`rewards`/`liquidation_events`/`risk_params`/`flash_loan_availability`) carry ONLY
+      `(timestamp, instrument_id, timestamp_out)` on every sampled object (→
+      `attempted_failed(calculator_produced_base_columns_only)`, mirroring
+      `OnChainManifestOutcomeMixin._write_feature_group_failed_manifest`'s exact field shape). Registered via
+      `scripts/register_onchain_manifest_backfill_2026_07_30.py` (dry-run verified first): **1508 gap rows** written
+      additively (`per_vm_shards=True`) — 30 of the 1538 were already live-registered (idempotency check correctly
+      skipped them). Applied to prod, verified by directly reading the written per-VM shard
+      (`_index/per_vm/local-1814747-7d21.parquet`): 918 captured (800 lst_yields + 118 lending_rates) + 590
+      attempted_failed (118 × 5 groups), exactly as classified. `rate_impact` (the one pre-existing live row) untouched
+      — out of this todo's scope. Remaining recompute scope (build missing MTDS chain-field collectors for the 5
+      featureless groups) is genuinely new work, already tracked as its own open todo in
+      `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md` — not duplicated here.
 
 ## Progress Log
 
@@ -294,3 +333,10 @@ Update is diagnosis-only, per the sourcing todo's own scope).
   planning docs; no open todo elsewhere duplicates this claim) - retagged from [OPERATOR] 2026-07-28; the delete half
   carries the finding-T FRESH same-run soft-delete-retention check + an explicit STOP-and-escalate branch, and the
   register half cites an established recipe
+- **2026-07-30 (slot-4, `data_engineering`)**: Both halves of the only open todo shipped —
+  **features-service@d8a643a0**. Delete: 4 orphaned `onchain/_index/` objects removed after a fresh ≥604800s
+  soft-delete-retention check. Register: 1508 manifest rows backfilled (918 captured + 590 attempted_failed) covering
+  the real onchain/by_date/ corpus (1538 objects, 2021-08-17..2026-07-26 — the doc's original "724 objects" scope
+  estimate was stale). All todos in this doc are now complete; the one remaining real gap (missing MTDS chain-field
+  collectors for recompute) is out of this todo's scope and already tracked in
+  `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.

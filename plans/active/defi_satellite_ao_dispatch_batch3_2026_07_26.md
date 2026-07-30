@@ -108,38 +108,38 @@ race). Two todos touch code beyond defi and are flagged inline: todo 2 (cefi/tra
       `data_completion_defi_2026_07_15.md`
 
       **BLOCKED 2026-07-26 (slot-8) — real bug found + fixed (unblocked the preflight check), but the actual
-                                                                                                                                                                          compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
+                                                                                                                                                                              compute step is blocked on a separate, unresolved cross-cutting OOM issue:**
 
-                                                                                                                                                                          **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
-                                                                                                                                                                          app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
-                                                                                                                                                                          `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
-                                                                                                                                                                          `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
-                                                                                                                                                                          paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
-                                                                                                                                                                          exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
-                                                                                                                                                                          date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
-                                                                                                                                                                          `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
-                                                                                                                                                                          correctly logged `Upstream dependencies: []`.
+                                                                                                                                                                              **Bug found + FIXED (unblocked, confirmed working)**: onchain's `DependencyChecker` (`features_service/onchain/
+                                                                                                                                                                              app/core/dependency_checker.py`, `UPSTREAM_DEPS`/`UPSTREAM_DEPS_DEFI`) had every `bucket_template` missing the
+                                                                                                                                                                              `-prd-` env-tier segment (`"market-data-tick-{asset_group_lower}-{project_id}"` instead of the canonical
+                                                                                                                                                                              `"market-data-tick-{asset_group_lower}-prd-{project_id}"` — see `unified_trading_library/config_interface/
+                                                                                                                                                                              paths/registry.py`'s own `-prd-`-bearing template). This made the checker always resolve a bucket that doesn't
+                                                                                                                                                                              exist, so it unconditionally reported all 5 DeFi MTDS on-chain deps as missing regardless of the real capture
+                                                                                                                                                                              date. Fixed + regression-tested (`tests/onchain/unit/test_dependency_checker_bucket_templates.py`) + shipped
+                                                                                                                                                                              `features-service@5fb00174`; confirmed working — a post-fix onchain run against `2026-07-20..2026-07-25`
+                                                                                                                                                                              correctly logged `Upstream dependencies: []`.
 
-                                                                                                                                                                          **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
-                                                                                                                                                                          feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
-                                                                                                                                                                          `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
-                                                                                                                                                                          fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
-                                                                                                                                                                          VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
-                                                                                                                                                                          currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
-                                                                                                                                                                          `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
-                                                                                                                                                                          proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
-                                                                                                                                                                          permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
-                                                                                                                                                                          or a local repro with a memory profiler, which is out of scope for a plain backfill session.
+                                                                                                                                                                              **BLOCKING issue (new, unresolved)**: every VM launch attempted AFTER the fix (4 total, varying window size,
+                                                                                                                                                                              feature-group scope, and confirmed-present-upstream-data windows) was OOM-killed (exit 137) on the default
+                                                                                                                                                                              `e2-standard-8` machine. Ruled out the obvious suspect — the already-resolved `defi_manifest_per_vm_shard_
+                                                                                                                                                                              fallback_bloat_2026_07_23.md` issue — by checking the live per-VM shard directory for the exact bucket these
+                                                                                                                                                                              VMs read: only 18.2MB across 4 shards, far under that fix's 200MiB budget cap, so this is a DIFFERENT,
+                                                                                                                                                                              currently-unexplained memory sink. Full writeup + all 4 attempts' details + suggested next steps:
+                                                                                                                                                                              `/plans/active/issues/features_service_defi_backfill_vm_oom_unexplained_2026_07_26.md`. **This todo cannot
+                                                                                                                                                                              proceed to its actual compute step until that issue is resolved** — do not repeat the same window/feature-group
+                                                                                                                                                                              permutations already tried there (documented in full in the issue doc); a real fix requires live-VM profiling
+                                                                                                                                                                              or a local repro with a memory profiler, which is out of scope for a plain backfill session.
 
-                                                                                                                                                                          **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
-                                                                                                                                                                          SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
-                                                                                                                                                                          sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
-                                                                                                                                                                          (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
-                                                                                                                                                                          <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
-                                                                                                                                                                          issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
-                                                                                                                                                                          `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
-                                                                                                                                                                          `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
-                                                                                                                                                                          minimal regardless of whether the OOM issue turns out to be group-count-related.
+                                                                                                                                                                              **Separate, smaller finding also worth knowing before resuming**: MDPS DeFi `processed_candles` coverage is
+                                                                                                                                                                              SPARSE — dense `2026-04-16..2026-05-22`, then a hard gap `2026-05-23..2026-07-17` (zero days), then only 3
+                                                                                                                                                                              sparse days since (`07-18`, `07-22`, `07-25`). `delta_one`'s dependency checker requires MDPS candles
+                                                                                                                                                                              (`required: True`, no DEFI override), so any `--start-date` in that gap fails preflight with `No data for
+                                                                                                                                                                              <date>/DEFI` regardless of the OOM issue. Pick a date from the dense block or the 3 sparse days once the OOM
+                                                                                                                                                                              issue is fixed. Also confirmed onchain's needed groups are `lst_yields` (→ `staking_apy_bps`) and
+                                                                                                                                                                              `perp_funding_rates` (→ `funding_rate_apy_bps`); delta_one's are `funding_oi` and `returns` — use
+                                                                                                                                                                              `FEATURE_GROUP=<group>` (launcher env override, not `ALL`) once compute is unblocked, to keep memory footprint
+                                                                                                                                                                              minimal regardless of whether the OOM issue turns out to be group-count-related.
 
 - [x] ✅ [STRATEGY] P1. **[CROSS-AG: touches cefi/tradfi/sports strategy code]** Sweep `archetype_slots_cefi.py`
       (CEFI_SLOTS), `archetype_slots_tradfi.py` (TRADFI_SLOTS), and `archetype_slots_sports.py` (SPORTS_SLOTS) — the v5
@@ -370,10 +370,11 @@ re-running the audit against them will keep reporting the same until a human act
   the 57 `unified-api-contracts/openapi/prospectus/*.md` generator outputs spans many axes unrelated to DRIFT removal —
   needs a human design decision on how to reconcile generator vs committed copies before any worker todo is
   determinable.
-- **`issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`** — human-only: steps 2-4 (new MTDS
+- **`archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`** — human-only: steps 2-4 (new MTDS
   chain-field collectors for ltv/liquidation_threshold/reward_rate/health-factor inputs + recompute) are "genuinely new
-  scope (upstream collection)... size them as their own work" per the doc author. Already in batch2's human-only
-  Deferred.
+  scope (upstream collection)... size them as their own work" per the doc author (now tracked in
+  `features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`; the doc's own one todo — delete + register —
+  shipped 2026-07-30, features-service@d8a643a0, doc archived). Already in batch2's human-only Deferred.
 
 ## Note — items already covered (skip_covered, NOT re-drafted)
 
@@ -397,9 +398,9 @@ Phase-3 conflict-check confirmed these 4 items are already claimed by a covering
 
 ## Note — 1 mistag (exclude_cross_cutting)
 
-- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but real
-  content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific. Should be retagged `cross-cutting` or `infra`
-  (batch2 already flagged this as a mistag Note).
+- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]`
+  but real content is a fleet-wide QG STEP 5.101 infra/CI issue, not defi-specific. Should be retagged `cross-cutting`
+  or `infra` (batch2 already flagged this as a mistag Note).
 
 ## Deferred work — migrated to: N/A (this plan itself is not deferred/migrated)
 

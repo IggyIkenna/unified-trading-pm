@@ -89,7 +89,7 @@ drift_direction: advance-code
       `issues/mtds_dex_pools_swaps_backfill_verification_2026_07_24.md` (2 todos, 1 shared with the dex_swaps_handler.py
       combine), `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md` (3 todos),
       `issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md` (6 todos),
-      `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` (2 todos),
+      `archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` (2 todos),
       `issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`,
       `issues/phantom_captures_defi_2026_06_28.md` (**partially reconciled 2026-07-27** by the separate
       `june_2026_vintage_audit_findings_2026_07_27.md` §2 pass — its todo 2 "apply reconciliation" is genuinely done,

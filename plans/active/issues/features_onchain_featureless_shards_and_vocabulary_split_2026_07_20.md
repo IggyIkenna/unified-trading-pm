@@ -269,13 +269,18 @@ build-MTDS-collectors → recompute), not a new one.
 
 - [ ] [DATA] P0. **Fix onchain features consolidator → re-derive-index → build-MTDS-collectors → recompute** — the
       mark→recompute fix for the 6 false-`captured` rows and 5 feature-less shard families (ruling #3) is tracked in
-      `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`, not yet executed. **Premise corrected 2026-07-30
+      `archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`. **Premise corrected 2026-07-30
       (/na-eligibility-audit defi)**: the "BLOCKED on the frozen onchain manifest/consolidator" framing is STALE — that
       sibling doc's own 2026-07-28 (slot-12) root-cause update REFUTED it (`_index/latest.json` shows a healthy
       ~1-minute cron; the frozen 13-row index is an ORPHANED migration artifact at `onchain/_index/` with no live
-      consolidator owner, not a broken consolidator). The real remaining work is that doc's own retagged [DATA] P1 todo
-      (delete the orphaned tree under a fresh finding-T reversibility check + bulk-register the 724-object historical
-      corpus into the LIVE root manifest) — this doc adds nothing beyond it.
+      consolidator owner, not a broken consolidator). The sibling doc's own retagged [DATA] P1 todo (delete the orphaned
+      tree under a fresh finding-T reversibility check + bulk-register the historical corpus into the LIVE root
+      manifest) — ✅ **SHIPPED 2026-07-30, features-service@d8a643a0** (sibling doc now archived; real corpus was 1538
+      objects not 724, 1508 rows registered). **This todo's remaining genuine scope is narrower than its own title
+      implies**: only "build-MTDS-collectors → recompute" is left (new upstream MTDS collection for
+      ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor inputs, then rerun the 5 feature-less
+      calculators) — the consolidator/re-derive-index portion is now moot (there was never a broken consolidator to
+      fix).
 
 ## Progress Log
 

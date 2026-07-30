@@ -210,7 +210,7 @@ operator approval.
       the specific broken link named. Source:
       `issues/features_defi_onchain_mtds_ingestion_claim_needs_reverify_2026_07_29.md`
 
-- [ ] [DATA] P1. Delete the orphaned `gs://features-defi-prd-central-element-323112/onchain/_index/` GCS tree (dead
+- [x] [DATA] P1. Delete the orphaned `gs://features-defi-prd-central-element-323112/onchain/_index/` GCS tree (dead
       2026-07-18 bucket-fold migration debris carrying 13 frozen false-captured/feature-less manifest rows) — under a
       FRESH same-run `gcs_bucket_soft_delete_retention_seconds()` reversibility check per delete-safety-protocol finding
       T — then bulk-register the 724-object historical `onchain/by_date/` corpus (2026-01-25..2026-07-26) into the live
@@ -220,7 +220,14 @@ operator approval.
       dispatch. Repo: market-tick-data-service / features-service (whichever owns the manifest-registration call site).
       Done when: the dead tree is deleted (reversibility check cited) and all 724 objects show manifest rows. Sources:
       `issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`,
-      `issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`
+      `archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md` — ✅ **features-service@d8a643a0
+      (slot-4, 2026-07-30).** Shipped as the SAME todo in the source issue doc (this was a duplicate dispatch of that
+      doc's own todo, per this todo's own note above); flipping here too so no other worker re-dispatches it. Fresh
+      `gcs_bucket_soft_delete_retention_seconds()` returned `604800` (≥ threshold) — 4 orphaned `onchain/_index/`
+      objects deleted + post-delete-verified gone. The real live corpus was 1538 objects (not 724 — that estimate was
+      stale; spans 2021-08-17..2026-07-26, not just Jan-Jul 2026): 1508 gap rows registered (918 `captured` + 590
+      `attempted_failed`), 30 already live-registered. Verified via direct per-VM-shard read. Full detail in the source
+      issue doc's own Todos entry.
 
 - [ ] [INFRA] P1. Relaunch the DeFi features-service backfill VM OOM/hang repro on a SPOT VM with a more robust ON-VM
       (not SSH) ps/free/dmesg monitor to (a) validate the shipped finding-1 fix (`unified-trading-library@06190d77`)
