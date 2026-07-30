@@ -258,3 +258,31 @@ within this doc — TRADFI:delta_one's fast exit was a different bug, not eviden
   suggest ~3600-7200s for headroom). The abandoned 30-day VM was left running per the VM-delete guardrail (genuinely
   progressing, not stalled) — not verified to completion this session; a future check should confirm it eventually
   self-deleted per `VM_SHUTDOWN_ON_COMPLETION=true`.
+- 2026-07-30 (slot-16, cicd, IN PROGRESS on todo 4, checkpoint entry): **VM1 confirmed SPOT-preempted, never completed**
+  — re-checked `features-e2e-cefi-20260727-112159-025349` (this doc's own todo-1 override-sizing evidence VM) via
+  `gcloud compute operations describe`: `compute.instances.preempted` fired at `2026-07-28T07:31:05Z` (~20h9m after its
+  11:21:59 launch), matching where its `run.log` last advanced (07:29:05, mid per-instrument HYPERLIQUID processing) —
+  it was cut short by SPOT preemption, not a natural completion, so its real from-scratch completion time is still
+  unconfirmed by direct observation. **Fresh re-run launched to get that confirmation**: ran
+  `python3 scripts/pipeline_e2e_check.py --day 2026-07-30 --family delta_one --asset-group {TRADFI,CEFI} --legs force,skip --require-captured --auto-day --project central-element-323112`
+  (two separate invocations). **TRADFI:delta_one resolved cleanly and genuinely (non-timeout)**: both legs
+  `skipped: no_captured_input_for_window` (auto-day window 2026-07-29..2026-07-30) — confirms the separately-tracked
+  upstream MDPS-TRADFI-candle-gap (`issues/features_require_captured_misses_tradfi_processed_candles_gap_2026_07_27.md`,
+  still open) remains the real blocker for this cell, unrelated to this doc's timeout defect. Also observed one
+  phantom-capture WARNING in the same run
+  (`manifest claims captured but no candle object family=delta_one ag=TRADFI phantom_days=['2026-04-10']`) — the
+  existing phantom-capture guard (`_candle_day_object_exists`, `features-service@696768c7` + reconciliation fixes)
+  correctly excluded it and the run still produced an honest verdict; not filing a new issue for this, it's the guard
+  working as designed against a real manifest anomaly, not a new defect. **CEFI:delta_one force-leg re-launched fresh**:
+  VM `features-e2e-cefi-20260730-133536-025349` (window auto-slid to 2026-07-24..2026-07-25, `timeout_sec=36000` from
+  the existing override), launched 13:35:36 UTC. As of this checkpoint (~19:18 UTC, ~5h42m elapsed) it is CONFIRMED
+  still healthily `RUNNING` (`gcloud compute instances list`) and actively progressing — `run.log` line count climbing
+  the whole way (23,759 → 493,532+ lines over the watch window, monitored every ~10min via a background watchdog, zero
+  stall ticks) — genuinely computing, not stalled, consistent with the doc's own S1
+  sequential-per-instrument-timeframe-loop read. Audit report for this session's runs committed at
+  `unified-trading-pm@468878e7d` (`plans/audit/results/data_pipeline_e2e_check_features_2026_07_30.{md,json}`). **Not
+  yet closing todo 4** — still waiting on this VM's genuine completion (or a timeout at 36000s, whichever comes first)
+  to get the real completion-time number the todo asks for; if a session boundary interrupts this before that happens,
+  the VM name/launch-time above +
+  `gcloud storage cat gs://deployment-scripts-central-element-323112/vm-logs/features- e2e-cefi-20260730-133536-025349/{run.log,EXIT_STATUS.json}`
+  is exactly how to pick the watch back up (or confirm it already finished/was preempted in the interim).
