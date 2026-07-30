@@ -232,11 +232,11 @@ other orphaned candidate considered and why it was NOT drafted.
 
 ## Deferred — time-gated (re-check after the date passes, not a design question)
 
-- `/plans/active/issues/ao_done_require_origin_not_enforced_2026_07_29.md` — its sole open todo (re-measure the
-  `on_origin=False` rate over a fuller-volume window, then flip `done_require_origin=true` if it holds near 0%) is
-  explicitly blocked on normal dispatch volume resuming past **2026-08-02** (some accounts are rate-limited through that
-  date per a separate swap-exhaustion finding). Re-triage this item once that date has passed — it is otherwise bounded
-  and dispatch-eligible (an existing tool + an established near-zero threshold, not a design fork).
+- ~~`/plans/active/issues/ao_done_require_origin_not_enforced_2026_07_29.md`~~ — **RESOLVED + archived 2026-07-30, stale
+  by the time this plan was drafted**: the operator reviewed the 3-spot-check trend (0/151, 0/52, 0/222 false, all 0.0%)
+  directly and explicitly overrode the "wait a few days" gate this note assumed still applied. Flipped + shipped
+  `agent-orchestrator@cf7cd35`. Now at `/plans/archive/issues/ao_done_require_origin_not_enforced_2026_07_29.md` —
+  nothing left to re-triage here.
 
 ## Methodology note — scope of this Phase-1 pass
 

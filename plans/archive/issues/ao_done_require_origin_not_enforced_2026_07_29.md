@@ -15,7 +15,7 @@ summary: >-
   blocks it. Surfaced by the operator directly asking, while reviewing the ao_backlog_done_row_disappearance_2026_07_25
   fix, "as long as agents only mark tasks done once they have actually gone to LDR" -- that assumption does not
   currently hold as an enforced invariant, only as a warned-and-logged one.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -28,7 +28,7 @@ related:
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: "2026-07-30"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -45,7 +45,7 @@ source: >-
   pull side was verified true (ao-self-pull.sh + confirmed live this session: the fix commit reached the orchestrator
   VM's own checkout and reloaded within ~2 minutes of push). The done-side assumption was checked live against the
   actual code + the actual deployed config and found NOT to hold as an enforced guarantee.
-resolved_by:
+resolved_by: agent-orchestrator@cf7cd35 (operator decision 2026-07-30 to flip after the 3-spot-check trend)
 locked_by:
 locked_since:
 ---
@@ -123,34 +123,32 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
       passed), `quality-gates.sh` green. **`done_require_origin` was deliberately NOT flipped to `true` in this same
       pass** — the false rate should be re-measured post-fix before deciding; flipping blind before this fix would have
       started rejecting real legitimate completions on exactly this race.
-- [ ] [BACKEND] P2. Re-measure the `on_origin=False` rate over a window AFTER `25d497f` has been live for a few days
+- [x] [BACKEND] P2. Re-measure the `on_origin=False` rate over a window AFTER `25d497f` has been live for a few days
       (the fallback-fetch fix should collapse most/all of the 2.29% down to genuine failures only). **Tool now exists**:
       `bash agent-orchestrator/scripts/orchestrator/check-on-origin-rate.sh --days N` (promoted 2026-07-29 from the
       one-off script that produced the original 2.29% figure — same read-only SSM pattern as
       `check-ao-backlog-status.sh`). A `--days 1` spot-check on 2026-07-29 already shows an encouraging early signal
-      (0/151 false in the last 24h) but that's too short a window to act on — wait for the "a few days" this todo asks
-      for. **Second spot-check, same day 2026-07-29 (~13.3h after `25d497f` shipped at 2026-07-29T00:45:14Z)**:
-      `--days 1` now shows 0/52 false (0.0%) — encouraging, but still NOT the "a few days" window this todo asks for
-      (the fix has only been live ~half a day, not days), and the event count is noticeably lower than the ~81/day
-      pre-fix average (52 vs ~81) because of the SAME-DAY account-pool exhaustion
-      (`orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29.md`) suppressing normal scheduled-job/worker volume — a
-      thin, possibly-unrepresentative sample. **Deliberately still NOT flipping `done_require_origin=true` on this
-      data** — two spot-checks both at 0% is a good early trend, not yet the sustained multi-day, normal-volume signal
-      this todo's own gate requires. Re-run `check-on-origin-rate.sh --days 3` (or more) once normal dispatch volume
-      resumes (account pool headroom clears; some accounts are rate-limited through 2026-08-02 per the swap-exhaustion
-      doc) — if it holds at/near 0% over that longer, fuller-volume window, set `done_require_origin=true` in the
-      orchestrator's `.env.local` (or the systemd unit template if it should apply fleet-wide) and ship. If a nonzero
-      rate persists, sample those specific examples the same way this session did (check the cited SHA against the real
-      repo) before deciding whether it's a genuine failure class or a different race this fix didn't cover. **Third
-      spot-check, 2026-07-30 (~31.4h after `25d497f` shipped)**: `--days 2` shows 0/222 false (0.0%, window
-      2026-07-28T08:05Z→now — includes ~16.7h of PRE-fix time and ~31.3h of POST-fix time, and the false rate is still
-      0% even mixed). Volume has recovered towards normal (222 events / 2 days ≈ 111/day vs the ~81/day pre-fix
-      baseline). Three consecutive 0%-false measurements is a strong trend, but **still deliberately not flipping** — it
-      is ~1.3 days since the fix shipped, short of the "a few days" this todo's own gate asks for (independently
-      confirmed as still-correctly-gated by the 2026-07-30 na-eligibility-audit below). Next check target: **on/after
-      2026-08-01T00:45Z** (3 full days post-fix) — if `check-on-origin-rate.sh --days 3` (or the exact elapsed window)
-      still reads at/near 0%, flip `done_require_origin=true` and ship; a nonzero rate still needs the same per-example
-      SHA sampling this session used before deciding genuine-failure vs a different race.
+      (0/151 false in the last 24h). **Second spot-check, same day 2026-07-29 (~13.3h after `25d497f` shipped at
+      2026-07-29T00:45:14Z)**: `--days 1` now shows 0/52 false (0.0%). **Third spot-check, 2026-07-30 (~31.4h after
+      `25d497f` shipped)**: `--days 2` shows 0/222 false (0.0%, window includes ~16.7h of PRE-fix time and ~31.3h of
+      POST-fix time, still 0% even mixed) — volume recovered towards normal (222/2 days ≈ 111/day vs the ~81/day pre-fix
+      baseline). **Done 2026-07-30 — operator reviewed the 3-spot-check trend (0/151, 0/52, 0/222, all 0.0%) and
+      explicitly ruled 2 days sufficient to flip** ("2 days is fine to flip adjust that" / "done_require_origin can be
+      true"), overriding this todo's own original "wait a few days" gate — an explicit operator call, not unilaterally
+      decided. **Flipped + shipped**: `agent-orchestrator@cf7cd35`. **Important correction to this todo's own prior
+      instruction**: "set `done_require_origin=true` in the orchestrator's `.env.local`" was WRONG and would have
+      silently no-op'd — `done_require_origin` lives on `TuningDefaults`, which `server/config.py`'s own class docstring
+      documents as **env-free by design** (aliases stripped 2026-07-18, `ao_config_env_var_consolidation`): "NOT
+      populated from any env var (bare / `__`-delimited / `ORCHESTRATOR_`-prefixed all ignored)... tune by editing the
+      default here + redeploy, never via env." The actual mechanism: edited `server/config.py:766`'s
+      `Field(default=False)` → `Field(default=True)`, shipped through the normal quickmerge pipeline. Verified no
+      existing test assumed the old default (full suite green before AND after, 2023/2023 passed either way — nothing in
+      this codebase's test fixtures exercises an unpushed-or-unverifiable sha through the live route without already
+      pushing or using a sentinel sha). Added `tests/test_done_gate_origin_hard_reject.py` (4 new tests) to close the
+      actual coverage gap this flip exposed: a genuine 409 on both gates this flag guards (M9 unpushed-sha, M9b
+      unverifiable-sha), a genuine 200/done on a properly-pushed sha (no false-positive reject), and the flag-disabled
+      legacy-warning path via the `set_tuning` fixture (proves the flag itself gates the behavior, not something else
+      coincidentally). Full `quality-gates.sh` green.
 - [x] [BACKEND] P3. Consider whether `_sha_on_origin`'s "any origin/* branch" check should be tightened to specifically
       `origin/live-defi-rollout` (or configurable per repo's promotion model) — low priority given quickmerge's actual
       landing behavior, but worth a deliberate yes/no rather than leaving it implicit. **Decided 2026-07-29 (batch
@@ -177,3 +175,6 @@ computed and logged on every `/done` call regardless of the flag, via the `slot_
   day ago) AND volume-gated (the doc records that normal dispatch volume is suppressed and 'some accounts are
   rate-limited through 2026-08-02'). Its terminal action is flipping `done_require_origin=true` in production, which the
   doc itself warns must not be done 'blind'.
+- **Resolved + archived 2026-07-30**: operator reviewed this doc's own 3-spot-check trend directly and explicitly
+  overrode the "wait a few days" gate ("2 days is fine to flip adjust that" / "done_require_origin can be true") — every
+  todo is now `[x]`, `locked_by` is empty, archiving per the plan/issue completion-archival discipline.
