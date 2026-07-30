@@ -116,11 +116,46 @@ Install by replacing the binary the hooks actually invoke — check `which prek`
 - Performance: **zero cost on the happy path** — it stores a `String` that was already being computed and thrown away.
   The rollback path gains one argv element on a command that only runs when a conflict already occurred.
 
+## Our fork — the version every host should run
+
+Upstream has **no release that fixes this**: v0.4.11 is the newest and is still affected, as is their `master`. So we
+run our own build and do not upgrade to stock prek until this is merged upstream.
+
+- Fork: **`IggyIkenna/prek`**, branch **`fix/keeper-rollback-baseline-pr`** (the fix + the regression test, on top of
+  upstream `master`).
+- The fork inherits upstream's `cargo-dist` `release.yml`, so **tagging a version on the fork builds binaries for every
+  platform via GitHub Actions** — including `aarch64-apple-darwin`, which cannot be cross-compiled from Linux. That is
+  the distribution path for macOS; hosts download a binary instead of needing a Rust toolchain.
+
+**Linux builds must target musl, not glibc.** A default `cargo build --release` on Ubuntu 24.04 produces a binary
+requiring `GLIBC_2.39`, which will not run on older distros (upstream's official binary needs only `GLIBC_2.16`). Build
+`--target x86_64-unknown-linux-musl` for a fully static binary that runs on any Linux x86_64:
+
+```bash
+sudo apt-get install -y musl-tools
+rustup target add x86_64-unknown-linux-musl
+CC_x86_64_unknown_linux_musl=musl-gcc \
+CARGO_TARGET_X86_64_UNKNOWN_LINUX_MUSL_LINKER=musl-gcc \
+  cargo build --release -p prek --target x86_64-unknown-linux-musl
+```
+
+## CI needs nothing
+
+No workflow in any repo invokes the `prek` binary — verified by grepping every `.github/workflows/*.yml` across the
+workspace, and by following the chain `quality-gates-v2.yml` → `python-quality-gates-v2.yml` →
+`bash scripts/quality-gates.sh --no-fix`, which runs ruff / pytest / basedpyright / docspec / plan-hygiene **directly**,
+never through prek.
+
+Even if CI did run prek, this bug could not fire there: the keeper only arms when `git diff-index` finds unstaged
+changes, and a fresh CI checkout has none, so `patch` is `None` and the restore path is a no-op. Confirmed empirically
+against a stock (unpatched) binary — the corrupting hook ran and no stash was taken.
+
 ## Upstreaming
 
 [#1890] proposed essentially this fix and was closed unmerged because the maintainer could not reproduce the general
-case from the report. `prek-corruption-harness.sh` is exactly the minimal deterministic reproduction that was asked for
-and never supplied. If a PR carrying it is merged, this directory can be deleted and every host simply upgrades.
+case from the report. `prek-corruption-harness.sh` — and the Rust regression test carried on the fork branch — are
+exactly the minimal deterministic reproduction that was asked for and never supplied. `UPSTREAM_PR_BODY.md` in this
+directory is the PR text. If it merges, this directory can be deleted and every host simply upgrades to stock prek.
 
 [#2143]: https://github.com/j178/prek/pull/2143
 [#1890]: https://github.com/j178/prek/pull/1890
