@@ -284,3 +284,30 @@ against the reproduction script.
   features-service P3 is a genuine design gap (build the missing writer vs change the calculators). Reached the same
   verdict independently of the slot-12 `/ag-closeout-audit cefi` run above; the two runs' identical closures were merged
   into one item.
+- **2026-07-30 (slot-10, `data_pipeline_failure` escalation worker, task `agt-ccb54c`):** Received another
+  `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL re-page for the same tuple, labeled "STATIC BACKLOG — no new
+  attempted_failed activity in 1d" (300,671/1,063,183 = 28.3%). Read this doc first per the pre-task plan/issue
+  conflict-check rule, confirmed both fix commits (`unified-api-contracts@8db188fe`,
+  `market-tick-data-service@339ca767`) are still ancestors of `origin/live-defi-rollout` in this worktree, then did an
+  independent live column-projected read of
+  `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` rather than trusting the
+  label alone. Findings: (1) cell-wide max `attempted_failed` `attempted_at` is `2026-07-29T09:07:42Z` — ~25h stale vs.
+  the current manifest write activity (book_snapshot_5 `captured` rows are landing as recently as
+  `2026-07-30T10:00:52Z`, i.e. the pipeline is actively healthy-capturing this data_type right now, just not failing);
+  (2) a previously-undocumented **later, smaller schema-violation tail specific to COINBASE-FUTURES/COINBASE-SPOT** (61
+  rows total, `attempted_at` 2026-07-28T12:xx–2026-07-29T06:09:29Z) extends past the ~18:08Z 2026-07-28 window the prior
+  re-probe (slot-2, `agt-ba5c2f`) checked — that prior check only saw the KRAKEN-SPOT/OKX-SWAP in-flight-run tail (473
+  rows, resolved by 10:49:59Z same day) and correctly called it clean at the time, but COINBASE's stale-code in-flight
+  job(s) evidently ran longer. **Zero schema-contract-violation rows since 2026-07-29T06:09:29Z** (verified against
+  current wall-clock ~2026-07-30 mid-day, so this tail has also been quiet for 24+h) — the fix is holding, this is not a
+  live regression, and the COINBASE tail is the same deploy-lag class already described for KRAKEN/OKX, just a longer
+  straggler. Numerator growth vs. the 2026-07-28 reading (299,467→300,671, +1,204) is consistent with this small tail
+  plus ordinary residual noise, not a mass re-failure. **Conclusion: no code fix needed this session** — both halves of
+  the root-cause fix are shipped and verified holding; the remaining ~300k `attempted_failed` rows are the same
+  historical backlog this doc already documents as requiring a normal idempotent backfill re-attempt (not retroactively
+  cleared by the code fix, and not this one-shot escalation worker's scope to launch — see
+  `cefi_consolidated_closeout_2026_07_18.md` Track-2 / its 2026-07-25 fork for the gated backfill queue). Per
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md`'s Option A recommendation, this session did the
+  cheap deterministic re-check (numerator essentially static, no new fresh mechanism) rather than a full re-diagnosis.
+  No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged `dp-fleet-monitor`
+  (authoring slot) with this outcome.
