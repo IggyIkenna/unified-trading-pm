@@ -129,3 +129,17 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
   correctly gated: todo 1 is explicitly `[OPERATOR]` P1 (review whether isolated incident or a broader pattern); todo 2
   is conditional on todo 1's outcome ("If a process fix is directed..."). Neither is a worker-resolvable bounded fix —
   left open for operator review.
+- **2026-07-30 (cicd escalation, `ldr_qg_failure` on `live-defi-rollout`, gate run 30557780966 / 30561921861)**: the new
+  `check_plan_commit_sha_evidence.py` gate (todo 2 above) went RED on LDR with 0 code changes to the checker itself
+  since its rollout — root-caused to a gap in "checkable against a present sibling clone" that the gate's own rollout
+  testing didn't exercise: CI clones `dep_repos` (`unified-trading-library`, `unified-api-contracts`) with `--depth=1`
+  (`.github/workflows/python-quality-gates-v2.yml:545`), so `git cat-file -t <sha>` fails for every citation to a
+  non-tip commit in those two repos — not because the citation is fabricated, but because the shallow clone simply
+  doesn't have the object. Reproduced locally (real `--depth=1` clone via `file://`, not a local-clone no-op): 347 false
+  "unresolvable" citations vs. the 20 baseline, all `unified-trading-library@...`/`unified-api-contracts@...` tokens
+  that resolve fine against a full clone. Fixed in `check_plan_commit_sha_evidence.py` — `_discover_sibling_repos()` now
+  excludes a shallow sibling clone the same way it already excludes an absent one
+  (`git rev-parse --is-shallow-repository` gate), so those two repos soft-skip in CI instead of producing false
+  positives. Verified against both a real shallow-clone simulation (347 → 8, all `unified-trading-pm@...`, below the 20
+  baseline) and the existing full-history workspace (unchanged: 19, below baseline). —
+  `unified-trading-pm@<sha, this commit>`.

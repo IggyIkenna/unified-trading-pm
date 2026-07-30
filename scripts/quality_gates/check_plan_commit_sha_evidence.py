@@ -19,9 +19,13 @@ not a trust-the-self-report.
 
 Scope (deliberately narrow to avoid false positives):
   - Only `<repo>@<sha>` tokens where `<repo>` is the EXACT directory name of a repo actually
-    present as a sibling clone under `--workspace-root` are checked. Abbreviated forms used
-    informally in plan prose (`mtds@...`, `uac@...`, `IS@...`) are NOT matched — they're
-    inherently ambiguous (mirrors the Cloud Build gate's "can't check it from here" soft-skip,
+    present as a FULL (non-shallow) sibling clone under `--workspace-root` are checked. A shallow
+    (`--depth=1`) sibling clone — e.g. CI's dep_repos fetch for unified-trading-library /
+    unified-api-contracts — is treated the same as "not present": it can only resolve its own tip
+    commit, so checking it against historical citations would flag genuine, non-fabricated commits
+    as violations. Abbreviated forms used informally in plan prose (`mtds@...`, `uac@...`,
+    `IS@...`) are NOT matched — they're inherently ambiguous (mirrors the Cloud Build gate's
+    "can't check it from here" soft-skip,
     implemented here by construction: an unregistered name is simply never a regex alternative).
   - `<sha>` must be a hex string, 6-40 chars (git's own minimum useful abbreviation length through
     a full SHA-1).
@@ -88,14 +92,39 @@ class ShaViolation:
         )
 
 
+def _is_shallow_clone(repo_path: Path) -> bool:
+    """A `--depth=1` sibling clone (CI's dep_repos fetch, for speed) can only ever resolve its
+    own tip commit — `git cat-file -t <sha>` fails for every older, perfectly real commit, which
+    would otherwise read as a mass of fabricated citations. Detected via the plumbing command so
+    it degrades safely (non-shallow) if git itself can't answer."""
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(repo_path), "rev-parse", "--is-shallow-repository"],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            check=False,
+        )
+    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
+        return False
+    return proc.returncode == 0 and proc.stdout.strip() == "true"
+
+
 def _discover_sibling_repos(workspace_root: Path) -> dict[str, Path]:
     """Repo name -> absolute path, for every directory directly under workspace_root that is a
-    git repo (`.git` dir or file — the latter covers a legacy linked-worktree layout)."""
+    git repo (`.git` dir or file — the latter covers a legacy linked-worktree layout).
+
+    A shallow clone is excluded (same soft-skip treatment as a repo not present at all) — it
+    structurally cannot verify a citation to any commit but its own tip, so including it produces
+    false "unresolvable" violations for genuine historical citations rather than catching real
+    fabrication. CI's dep_repos (unified-trading-library, unified-api-contracts) are cloned
+    `--depth=1` for speed; this is what makes those clones untrustworthy for this check
+    specifically, not a general repo-health signal."""
     repos: dict[str, Path] = {}
     for child in sorted(workspace_root.iterdir()):
         if not child.is_dir():
             continue
-        if (child / ".git").exists():
+        if (child / ".git").exists() and not _is_shallow_clone(child):
             repos[child.name] = child
     return repos
 
