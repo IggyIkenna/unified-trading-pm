@@ -106,7 +106,11 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: 2026-06-27
+last_updated:
+  2026-06-27 "2026-07-30" # cleaned up a merge-conflict-corrupted multi-date runaway scalar (prek patch-cache replay bug,
+  # issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md, resolved) — the buried note this
+  # field accidentally carried is already recovered verbatim in this doc's 2026-07-30 (cicd worker, slot 16) Progress
+  # Log entry, not duplicated here.
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -337,7 +341,8 @@ Discriminator = **does a manifest row exist**.
 > Disposition is now FOLD-not-delete.** The "dead prefixes" premise was **overturned by R5 in this same plan**
 > (`:254-262`) — content-verify found PARTIAL-OVERLAP, not duplication: legacy=98 pools, canon=99, **intersection only
 > 66**, with **32 legacy-only high-TVL raydium pools ABSENT from canon** (XMR/USDC $47M, BNB/USDC $18M, USD1/USDC
-> $9.9M, ZEC/USDC $7.5M). A live GCS probe on 2026-07-20 corroborates and sharpens this: on `day=2026-04-14` the
+> $9.9M,
+> ZEC/USDC $7.5M). A live GCS probe on 2026-07-20 corroborates and sharpens this: on `day=2026-04-14` the
 > canonical twin **does** exist for ORCA (14,094 objs) / RAYDIUM (100 objs) / KAMINO lending_indices (47 objs) under
 > `instrument_type=solana_amm_pool`, but **KAMINO `dex_pool_state` = 0 and SOLEND = 0** — for those two cells the legacy
 > objects are the **only copy in existence**. A snapshot-first delete is NOT adequate protection. **Required order: (1)
@@ -722,7 +727,7 @@ file, not here.
 - **2026-07-20/21** — Non-POOL EU terminal-state decision + oracle dead-venue handling shipped; `available_at` broader
   ~20-handler fix shipped; path-shape-pin (code portion) + second dexpool writer kill shipped both halves (MTDS + UAC).
 - **2026-07-22** — SPOT preemption contract shipped for DeFi backfill launchers; residual canon walk C2-C12 scoped (not
-  executed, gated on 2 running migration VMs); checker collect-* fleet-wide real-VM-launch verification DONE.
+  executed, gated on 2 running migration VMs); checker collect-\* fleet-wide real-VM-launch verification DONE.
 - **2026-07-23** — Glued-id manifest rebuild verify + `_migrated_` marker delete tooling shipped (dry-run default, human
   `--apply`-gated); 6th orphan-sweep VM launched; dex_pools fake-history recurrence found + disposition ruled
   (relabel-forward, script not yet written); a live Solana AMM symbol-collision bug verified clean (paused, gated); a

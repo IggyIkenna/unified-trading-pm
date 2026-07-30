@@ -45,6 +45,12 @@ drift_direction: advance-code
 depends_on: []
 ---
 
+> **🗄️ ARCHIVED 2026-07-30** — fully resolved. Root cause diagnosed (missing activity-log record in `progress_slot`'s
+> `compact_now` emission, not a logic bug in the gate) and fixed (`agent-orchestrator@b36f5fa`,
+> `progress_compact_directive_issued` activity event + regression test, `quality-gates.sh` green). No open todos, no
+> Deferred items. Surfaced by `/ag-closeout-audit ao` (2026-07-30) as `assigned_vm: planning`/`status: resolved` but
+> never archived. See `## Status / next step` below for the full diagnosis.
+
 ## Observation
 
 The review-role agent, running its own pre-compact checkpoint on 2026-07-27, reported that slot 11 rode from

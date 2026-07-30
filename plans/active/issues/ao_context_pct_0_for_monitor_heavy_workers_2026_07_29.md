@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dashboard, context-tracking, worker-liveness, monitor-tool, ui, display-bug]
 related:
   [
-    /plans/active/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
+    /plans/archive/issues/context_compact_directive_did_not_fire_slot_rode_to_96pct_2026_07_27.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
   ]
 created: 2026-07-29
