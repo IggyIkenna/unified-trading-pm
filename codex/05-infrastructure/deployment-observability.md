@@ -298,9 +298,19 @@ provisional" signal across the table, not cost-specific. pw:L2 regression: `test
 
 ## Slack parity + alert enrichment
 
-- **Deployment lifecycle** (`DEPLOYMENT_STARTED/COMPLETED/FAILED`, UTL events) routes via
-  `alerting-service/rules/deployment_rules.py` → `#data-pipeline-alerts` with the **umbrella + cloud + a
-  `/deployments/{name}` deep-link** (FAILED=CRITICAL pages; STARTED/COMPLETED=INFO).
+- **Deployment lifecycle** (`DEPLOYMENT_STARTED/COMPLETED/FAILED`, UTL events, plus the `DP_*` data-pipeline family)
+  routes via `alerting-service/rules/deployment_rules.py` → `_route_data_pipeline_event`
+  (`alerting_service/notifiers/router.py`) with a **`/deployments/{name}` deep-link** (FAILED=CRITICAL pages;
+  STARTED/COMPLETED=INFO). **The Slack CHANNEL itself is umbrella-driven (operator 2026-06-23,
+  `alerting-service@f94b3b5`)**, not a single fixed channel: `_is_live_umbrella()` reads the payload's `umbrella` field
+  (case-insensitive leading-`live` match) — `LIVE` → `#uts-live-alerts`, everything else (`BATCH`/`PAPER`/`EXPERIMENT`
+  or no umbrella) → `#data-pipeline-alerts` (the fail-safe default). CRITICAL severity ALSO pages via the existing
+  incident path (PagerDuty/Telegram) for BOTH umbrellas — only the Slack channel mirror differs. **Emitter
+  umbrella-stamping contract** (`deployment-service@94dfcfc`): the payload's `umbrella`+`cloud` fields are stamped by
+  the SSOT resolver `umbrella_for_vm_name()` (`deployment_classification.py`, longest-prefix match via
+  `VM_PREFIX_TO_BUCKET` → `classify_deployment_target`), wired into `deployment_heartbeat._emit`,
+  `exit_code_fleet_monitor`, and `heartbeat_stall_watcher` — every VM/Cloud-Run-job event that reaches the router
+  already carries the umbrella; an emitter that omits it defaults to the batch channel.
 - **Daily estate digest** (`DEPLOYMENT_DIGEST`, UTL event, INFO): a once-a-day per-umbrella rollup (LIVE up / BATCH
   completions+failures / PAPER status + the last-failure per umbrella) so operators get one morning glance instead of
   watching the lifecycle stream. Built by deployment-api `routes/deployment_digest.py` off `_load_inventory` +
