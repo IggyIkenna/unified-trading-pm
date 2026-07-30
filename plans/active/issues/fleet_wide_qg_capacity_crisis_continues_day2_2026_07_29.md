@@ -161,6 +161,11 @@ not just noting.
       usage. Done when: a real $
       figure (not assumed) is added alongside this doc's existing GH-Actions-dollar figure, so the two cost buckets can
       be compared side-by-side.
+- [ ] [OPERATOR] P3. Confirm the OOM-killer mechanism for the 2026-07-30 14:54-15:01Z mass `tmux_session_lost` cluster
+      (slots 1, 4, 5, 9, 10, 11 killed across 3 waves in ~7 min, see Progress Log below) via `dmesg`/`journalctl -k` on
+      `i-0c9b283b31d6b5ca7` (needs root — no agent session has it). Currently UNCONFIRMED: swap (14-16Gi used) + load
+      (peak ~26/16vCPU) are consistent with memory pressure but the kernel OOM-killer log has not been read this session
+      or any prior one in this doc.
 
 ## Evidence
 
@@ -418,3 +423,24 @@ not just noting.
   10:41:33Z). No open PRs, no open repo-blockers for this repo. **No code or workflow change made or needed** — filing
   as another corroborating data point for the box-contention root cause, not a fresh unresolved occurrence. Slot left
   clean on `live-defi-rollout`.
+
+- **2026-07-30 ~15:48Z (review agent `agt-2552a2`, slot 1) — corroboration, mass `tmux_session_lost` cluster
+  (2026-07-30T14:54-15:01Z) + a concrete double-requeue**: independently re-verified (not just relayed from a prior
+  session's chat) via `GET /api/activity?limit=500` against the live orchestrator API. Three back-to-back kill waves in
+  ~7 minutes: **14:54:09Z** — slots 1, 5, 9, 11 all `tmux_session_lost`→`killed` in the same second (slot 5 released
+  `sports_odds_api_scattered_multiyear_gaps-002`, slot 9 released `mtds_plan_flip_fabricated_commit_sha_evidence-002`,
+  slot 11 released `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003`); **14:58:13Z** — slots 1, 4 killed again;
+  **15:01:32Z** — slots 1, 10 killed, slot 10 releasing `mdps_tradfi_ohlcv_15m_24h_conversion_still_zero-003` — the SAME
+  task id slot 11 had just released 7m23s earlier, i.e. a genuine double-requeue-in-7min of one task (real rework, not
+  retry-churn noise). Notably slot 1 itself (this review agent's own slot) was killed in all three waves (14:54:09Z,
+  14:58:13Z, 15:01:32Z) — direct first-hand evidence this session's predecessor review agent (`agt-4daef9`) was a
+  casualty of the same cluster, which is why this is a fresh review session picking the thread back up. **Current host
+  reading** (2026-07-30T15:48:40Z, `uptime`/`free -h` on the box this session runs on): load average 11.94 / 20.27 /
+  21.63 (1/5/15-min) on 16 vCPUs — 1-min has eased under the ~26.20/16vCPU peak cited earlier today, but the 15-min
+  average is still ~135% of core count, so this reads as fluctuating-but-still-elevated contention, not resolved; swap
+  14Gi/47Gi used (same order of magnitude as the ~16Gi cited earlier). **OOM-mechanism stays UNCONFIRMED** — this
+  session has no root and did not check `dmesg`/`journalctl -k`, so the swap+load pressure is "consistent with memory
+  pressure" only, not an asserted OOM-kill cause (see the new `[OPERATOR]` todo above for the kernel-log follow-up this
+  needs). **Recommend** (not actioned — plan-owner's call, not mine): this is the second corroboration entry landed in
+  under 12h (after the 08:44Z one above); the L150 `[SCRIPT] P2` doc-split todo is worth pulling forward given entries
+  keep accumulating. No code or plan-structure change made; slot 1 left clean on `live-defi-rollout`.
