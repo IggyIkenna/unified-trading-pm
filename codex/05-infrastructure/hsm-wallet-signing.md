@@ -34,14 +34,14 @@ referenced_by:
     /codex/05-infrastructure/runtime-tiers-and-deployment.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-26
 code_refs:
 ---
 
 # HSM-grade wallet signing — tier discipline
 
 > **Created 2026-05-12** by slot 4 per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 9.F. Codifies the per-tier security envelope after R9 sub-(a) RESOLVED 2026-05-12.
 
 ---
@@ -49,7 +49,7 @@ code_refs:
 ## § 1 — Tier ladder
 
 5 tiers, ordered loosest → strictest. UAC SSOT:
-[`SigningSurface`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py) StrEnum.
+`SigningSurface` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) StrEnum.
 
 | Tier | `SigningSurface`      | Cryptographic primitive           | Key custody                                | Insurance      | Latency                                       | Acceptable for                                          |
 | ---- | --------------------- | --------------------------------- | ------------------------------------------ | -------------- | --------------------------------------------- | ------------------------------------------------------- |
@@ -217,5 +217,5 @@ Post-June-1 acceptance for COPPER/FIREBLOCKS flip MUST satisfy:
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.
 - [`secret-manager-naming.md`](secret-manager-naming.md) — naming SSOT.
-- [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
   — `SigningSurface` enum SSOT.

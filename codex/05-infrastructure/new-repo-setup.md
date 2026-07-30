@@ -32,7 +32,7 @@ referenced_by:
     /codex/05-infrastructure/workspace-root-variable.md,
   ]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-27
 code_refs:
 ---
 
@@ -54,7 +54,9 @@ workspace integration.
 - GitHub CLI (`gh`) installed and authenticated
 - `uv` package manager installed (Python repos only)
 - Node.js 20+ installed (UI repos only)
-- Workspace venv at `.venv-workspace/` (run `bash .cursor/workspace-configs/setup-workspace-venv-complete.sh` if
+- Workspace venv at `.venv-workspace/` (workspace configs moved to `unified-trading-pm/cursor-configs/`; the old
+  `.cursor/workspace-configs/setup-workspace-venv-complete.sh` no longer exists — use
+  `unified-trading-pm/scripts/workspace/setup-dev-environment.sh` if
   missing)
 
 ## Step 1: Create GitHub Repository
@@ -779,7 +781,7 @@ on:
 
 jobs:
   quality-gates:
-    uses: IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates.yml@<active_branch>
+    uses: IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@<active_branch>
     with:
       dep_repos: "unified-trading-library unified-config-interface" # from manifest dependencies[]
     secrets:
@@ -787,7 +789,12 @@ jobs:
 ```
 
 All CI logic (Python 3.13.9 setup, uv, tools, dep clone, `uv sync`, run QG, record status) lives in
-`unified-trading-pm/.github/workflows/python-quality-gates.yml`. Never inline it here.
+`unified-trading-pm/.github/workflows/python-quality-gates-v2.yml`. Never inline it here.
+
+> **⛔ Workflow names re-verified 2026-07-30.** The reusable template is **`python-quality-gates-v2.yml`** — the
+> un-suffixed `python-quality-gates.yml` no longer exists in PM. The required status check on every repo is
+> `quality-gates-v2`. Live example: `instruments-service/.github/workflows/quality-gates-v2.yml` calls
+> `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout`.
 
 ### What Gets Generated (UI Repos)
 
@@ -808,6 +815,12 @@ jobs:
     secrets:
       GH_PAT: ${{ secrets.GH_PAT }}
 ```
+
+> **⛔ UI repos do NOT use a cross-repo `uses:` call (verified 2026-07-30).** Cross-repo reusable-workflow calls do
+> not work between private *user* repos (GitHub allows them only within an organization), so each UI repo carries a
+> **local copy** named `ui-quality-gates-v2.yml` — see `deployment-ui/.github/workflows/ui-quality-gates-v2.yml`,
+> which states the workaround in its own header. PM currently ships no `ui-quality-gates.yml` template at all
+> (only `python-quality-gates-v2.yml` and `quality-gates-v2.yml`), so the snippet above will not resolve as written.
 
 ### Commit
 
@@ -903,7 +916,7 @@ Use this checklist for each new repo:
 
 ### Issue: `uv lock` fails with dependency conflict
 
-**Solution:** Check dependency versions in codex `06-coding-standards/dependency-management.md`. Align versions across
+**Solution:** Check dependency versions in codex `/codex/06-coding-standards/dependency-management.md`. Align versions across
 all repos.
 
 ### Issue: Workspace venv doesn't have new package
@@ -930,7 +943,7 @@ all repos.
 | [library-setup-checklist.md](library-setup-checklist.md) | Complete library setup by tier |
 | [ui-setup-checklist.md](ui-setup-checklist.md) | Complete UI setup with TypeScript |
 | `unified-trading-pm/workspace-manifest.json` | Workspace manifest |
-| `06-coding-standards/dependency-management.md` | Dependency alignment |
+| `/codex/06-coding-standards/dependency-management.md` | Dependency alignment |
 | `quickmerge-templates/quality-gates.sh` | Quality gates template |
 | `quickmerge-templates/quickmerge.sh` | Quickmerge template |
 | `unified-libraries/LIBRARY-DEPENDENCY-MATRIX.md` | Tier architecture |

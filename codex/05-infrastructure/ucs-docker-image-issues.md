@@ -25,7 +25,7 @@ created: 2026-03-27
 authoritative_for: []
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-27
 code_refs:
 ---
 
@@ -217,6 +217,6 @@ RUN uv pip install --system -e .
 ## References
 
 - Bug Report: `unified-trading-services/.github/ISSUE_BUG_UCS_IMAGE_NOT_AUTO_PUSHING.md`
-- Rollout Plan: `05-infrastructure/ucs-image-rollout-plan.md`
-- Codex: `05-infrastructure/ci-cd.md`
-- Codex: `06-coding-standards/dependency-management.md`
+- Rollout Plan: ~~`05-infrastructure/ucs-image-rollout-plan.md`~~ — **does not exist** (verified 2026-07-30)
+- CI/CD SSOT: `/codex/08-workflows/ci-cd-flow.md` (the old `05-infrastructure/ci-cd.md` was folded into it)
+- Codex: `/codex/06-coding-standards/dependency-management.md`

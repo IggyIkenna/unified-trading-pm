@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [UNIFIED_TRADING_WORKSPACE_ROOT variable pattern]
 referenced_by: [/codex/05-infrastructure/README.md, /codex/05-infrastructure/workspace-setup.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-28
 code_refs:
 ---
 
@@ -157,9 +157,24 @@ source .venv/bin/activate
 
 ## Workspace Configs That Use This Variable
 
+> **⛔ Consumer paths re-verified 2026-07-30 — three of the four below are DEAD.** The variable itself is very much
+> alive (`scripts/quickmerge.sh`, `scripts/workspace/setup-workspace-root.sh`,
+> `scripts/quality_gates/check_removed_symbols.py`, `scripts/cicd/reprovenance_bypass.sh` all read it), and
+> `scripts/setup-workspace-from-manifest.sh` still exists. But:
+>
+> | Cited below                                          | Reality                                                             |
+> | ---------------------------------------------------- | ------------------------------------------------------------------- |
+> | `.cursor/workspace-configs/settings.json`            | moved → `unified-trading-pm/cursor-configs/settings.json`           |
+> | `unified-trading-pm/scripts/check-dependency-alignment.sh` | **deleted** — nearest live equivalent `scripts/workspace/check-import-deps.py` / `aggregate-workspace-deps.py` |
+> | `.cursor/workspace-configs/check-quality-gates.sh`   | **deleted** — run each repo's own `bash scripts/quality-gates.sh`   |
+> | `unified-trading-pm/scripts/sync-workspace.sh`       | **deleted**                                                         |
+>
+> The `unified-trading-services` / `unified-config-interface` entries in the settings example are also retired repos
+> (both folded into `unified-trading-library`).
+
 ### 1. Cursor Workspace Settings
 
-`.cursor/workspace-configs/settings.json` references the variable:
+`unified-trading-pm/cursor-configs/settings.json` references the variable:
 
 ```json
 {

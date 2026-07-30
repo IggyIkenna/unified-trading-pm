@@ -17,7 +17,7 @@ created: 2026-03-27
 authoritative_for: [quickmerge pipeline stages, quickmerge --agent .qg_last_passed_sha sentinel gate]
 referenced_by: [/codex/08-workflows/ci-cd-flow.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-27
 code_refs:
 ---
 
@@ -100,4 +100,4 @@ See also: `/codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Mo
 Running `bash scripts/quality-gates.sh` directly skips dependency validation, environment detection, and PR creation.
 Always use quickmerge.
 
-See also: `06-coding-standards/quality-gates.md`
+See also: `/codex/06-coding-standards/quality-gates.md`

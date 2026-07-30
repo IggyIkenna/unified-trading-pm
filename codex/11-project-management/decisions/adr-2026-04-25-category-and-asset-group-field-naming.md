@@ -12,12 +12,12 @@ stage: [meta]
 repos: [deployment-api, deployment-service, deployment-ui, instruments-service, unified-trading-pm]
 scope: [engineer, admin]
 tags: [adr, asset-group, naming, canonicalisation, hive-key, gcs]
-related: [../../../plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md, ../../../plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md]
+related: [/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md, /plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md]
 created: 2026-04-25
 authoritative_for: [category vs asset_group field-naming decision, category=/asset_group= GCS hive-key coexistence]
 referenced_by:
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-28
 code_refs:
   [
     market-tick-data-service/market_tick_data_service/raw_tick_hive.py,
@@ -99,8 +99,8 @@ instrument-type case-normalization remain as separate small-scope follow-ups.
 
 ## Related
 
-- `unified-trading-pm/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — venue-axis vocabulary in
+- `/plans/archive/venue_axis_asset_group_vocabulary_2026_04_25.plan.md` — venue-axis vocabulary in
   UAC/UTL/MDPS/MTDS.
-- `unified-trading-pm/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — global rename of shard
+- `/plans/archive/shard_dimension_naming_asset_group_ssot_2026_04_25.plan.md` — global rename of shard
   dimension metadata and consumers.
 - Implementation notes: `deployment-api` `DeployRequest` / `DeployMissingRequest` docstrings on the route models.

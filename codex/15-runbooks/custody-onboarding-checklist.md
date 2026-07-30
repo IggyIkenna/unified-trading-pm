@@ -34,7 +34,7 @@ referenced_by:
     /codex/05-infrastructure/secret-manager-naming.md,
   ]
 owner: operator (custody portal logins, KYC + approval flows are human-attended)
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-29
 code_refs:
 execution:
   {
@@ -55,7 +55,7 @@ last_executed: NEVER (May-23 cutover + June-1 client onboarding pending)
 # Custody onboarding operator-action checklist
 
 > **Created 2026-05-12** by slot 4 (`ikenna-keys-wallets-tab`) per
-> [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+> [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
 > Phase 1 — operator-action checklist for the May-23 cutover + June-1 client-credential integration. Pairs with
 > [`/codex/04-architecture/custody-providers.md`](/codex/04-architecture/custody-providers.md) (architectural SSOT) +
 > [`/codex/04-architecture/wallet-hierarchy-and-capital-flow.md`](/codex/04-architecture/wallet-hierarchy-and-capital-flow.md)
@@ -81,7 +81,7 @@ What this means for this checklist:
 - **§ B (Cloud HSM CMK provisioning)**: stays in scope for May-23. Already ✅ DONE (10 HSM-backed CMKs in
   `asia-northeast1` 2026-05-12, smoke PASSED).
 - **§ C (Fireblocks)**: deferred to June-1+. Successor plan
-  [`fireblocks_copper_client_integration_2026_06_01.md`](../../plans/active/fireblocks_copper_client_integration_2026_06_01.md).
+  `fireblocks_copper_client_integration_2026_06_01.md` (**never authored — verified 2026-07-30**; no plan by that name exists anywhere in `plans/`, so § C has no successor plan today).
 - **§ D (CEFFU KYB)**: deferred to June-1+. The 2-4 week SLA does NOT gate May-23 anymore — KYB submission can wait
   until client-credential window is firm.
 
@@ -105,7 +105,7 @@ with them — we need best equivalent to test earlier or use our trust wallet bu
 | **2026-06-01 onwards**         | CEFFU (Binance institutional spot + perp)                   | `COPPER_MPC` _(CEFFU stub-shipped; awaiting API spec)_ | KYB completion + CEFFU API spec ingestion (§ E below)                  |
 
 **Per-wallet flippability**: each
-[`WalletProvisioningConfig`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+`WalletProvisioningConfig` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
 row carries its own `signing_surface` — flips are **config-only, no recompile, no service restart** (factory routing per
 [`custody-providers.md`](/codex/04-architecture/custody-providers.md) § 1).
 
@@ -114,7 +114,7 @@ row carries its own `signing_surface` — flips are **config-only, no recompile,
 ## § A — Copper.co (already wired — verification checklist only)
 
 **Status**: ✅ wired since 2026-05-10 at
-[`execution-service/.../custody/copper.py`](../../execution-service/execution_service/custody/copper.py). HMAC-SHA256
+`execution-service/.../custody/copper.py` (`execution-service/execution_service/custody/copper.py`). HMAC-SHA256
 signing, sandbox + production endpoints configured. Pre-cutover task is **verification of operator-side Copper account
 state**, not new onboarding.
 
@@ -167,7 +167,7 @@ When client delivers Copper creds June-1:
 > **[DELTA 2026-05-22]** **Current state:** GCP Cloud HSM CMKs are DONE — 10 HSM-backed CMKs provisioned in
 > `asia-northeast1` 2026-05-12, smoke PASSED. AWS KMS CMK provisioning and wallet envelope-encryption are PENDING
 > operator-action (pre-cutover). **Planned delta:** AWS KMS + wallet-PK encryption tracked as pre-cutover operator
-> actions under `plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C. **Target architecture:** All
+> actions under `/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C. **Target architecture:** All
 > CMKs provisioned on both clouds; all trading wallet PKs envelope-encrypted at rest.
 
 **Status**: GCP CMKs ✅ DONE (2026-05-12, smoke PASSED). AWS KMS provisioning PENDING. Implementation path:
@@ -389,7 +389,7 @@ controls + post-trade kill-switch triggers — wallet-tier is the FINEST-grain s
 ### E.1 Per-wallet kill-switch binding (operator-runbook)
 
 - [ ] **E.1.1** For every HOT*TRADING wallet, pick a kill_switch_id from the closed set in
-      [`kill_switch.py`](../../unified-api-contracts/unified_api_contracts/canonical/crosscutting/kill_switch.py)
+      `kill_switch.py` (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/kill_switch.py`)
       `KillSwitchId` enum. Typical: `KILL_PER_ARCHETYPE*<ARCHETYPE>`(freezes all wallets for one archetype). Per-wallet
       finer freezes are POST-cutover (no`KILL*PER_WALLET*\*` exists yet — open follow-up).
 - [ ] **E.1.2** Wire wallet-tier button into deployment-UI Live-Cluster button per slot 8 cross_cutting #4 (in progress
@@ -397,12 +397,17 @@ controls + post-trade kill-switch triggers — wallet-tier is the FINEST-grain s
 - [ ] **E.1.3** Operator smoke-tests:
       `python -m execution_service.scripts.kill_switch_smoke --wallet-id=defi-eth-hot-aave-v1     --provenance=OPERATOR_MANUAL`
       → confirm `KILL_SWITCH_ARMED` event + adapter rejects subsequent orders with `WalletKillSwitchActiveError`.
+      **⛔ Prerequisite not built (verified 2026-07-30):** neither the `kill_switch_smoke` entry-point module nor the
+      `WalletKillSwitchActiveError` exception exists anywhere in execution-service / unified-api-contracts /
+      unified-trading-library / strategy-service. `KILL_SWITCH_ARMED` **is** real (`execution_service/cli/run_scenario.py`
+      + integration scenarios). This step cannot be executed as written — build the smoke entry-point + the typed
+      rejection error first, or re-scope the check onto `run_scenario.py`.
 
 ### E.2 Per-wallet spending caps SSOT
 
 - [ ] **E.2.1** Populate `SpendingCaps(per_tx_usd, per_hour_usd, per_day_usd, per_protocol_usd)` per wallet at
       provisioning time. Source: per-archetype risk budget per
-      [`risk_simulations_limits_alerting_2026_05_10.md`](../../plans/archive/risk_simulations_limits_alerting_2026_05_10.md).
+      [`risk_simulations_limits_alerting_2026_05_10.md`](/plans/archive/risk_simulations_limits_alerting_2026_05_10.md).
 - [ ] **E.2.2** Reconcile caps against per-venue / per-archetype caps. Per-wallet must be `≤` per-archetype cap;
       per-archetype must be `≤` per-asset_group cap (closed-set hierarchy).
 - [ ] **E.2.3** Verify position-balance-monitor rolling-window accumulators consume `SpendingCaps`. (Plan Phase 4.A
@@ -448,9 +453,9 @@ Per Plan Phase 8.D.
   — service-side credential injection convention.
 - [`/codex/04-architecture/kill-switch-circuit-breaker.md`](/codex/04-architecture/kill-switch-circuit-breaker.md) —
   kill-switch arm/disarm lifecycle.
-- [`plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md`](../../plans/active/api_keys_wallets_accounts_readiness_2026_05_10.md)
+- [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; this doc operationalizes Phases 3.A + 3.B + 3.C + 4.A.
-- [`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`](../../unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py)
+- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
   — `WalletProvisioningConfig` + `SigningSurface` + `WalletKind` + `SpendingCaps` SSOT.
-- [`unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py`](../../unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py)
+- `unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py` (`unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py`)
   — 27 schema-validation tests.

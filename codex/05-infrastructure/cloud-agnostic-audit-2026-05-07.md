@@ -21,9 +21,9 @@ authoritative_for:
   Workspace-wide audit (snapshot 2026-05-07) of every shell script + every Python script + every Cloud Run service +
   every adapter against the cloud-agnostic-script-pattern. Tracks compliance status + per-violation remediation owner +
   target completion date.
-referenced_by: [plans/active/aws_migration_defi_first_2026_05_07.md]
+referenced_by: [/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md]
 owner:
-last_reviewed: 2026-05-17
+last_reviewed: 2026-08-25
 code_refs:
 ---
 
@@ -33,7 +33,7 @@ code_refs:
 > the audit completes; this is the punch list that drives the AWS migration.
 
 > **🟡 IN-FLIGHT REFACTOR — operator decision (b+) 2026-05-11.** The bucket-naming SSOT operator decision (per
-> [`plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`](../../plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md)
+> [`/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md`](/plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md)
 > Phase 0a) extends the env-tier convention from yaml's Group-B-only (features-\* / ml-\* / strategy-\* / execution-\*)
 > to **ALL buckets** (raw-tick / instruments-store / manifest / etc.) across BOTH clouds × 3 envs
 > (staging/prod/development). Adds a prod → staging/dev sync script with truncated date window (1-2 yrs) + same-region
@@ -67,7 +67,7 @@ migration plan has a concrete punch list rather than "we'll find them as we go."
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`aws_migration_defi_first`](../../plans/active/aws_migration_defi_first_2026_05_07.md).
+  [`aws_migration_defi_first`](/plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md).
 - **Related codex SSOTs:** [`cloud-agnostic-script-pattern`](./cloud-agnostic-script-pattern.md),
   [`cloud-agnostic-build-lineage`](./cloud-agnostic-build-lineage.md).
 - **Code:** TBD audit script — likely `unified-trading-pm/scripts/audit/cloud-agnostic-audit.sh`.
@@ -150,7 +150,7 @@ provisioned shape, (b) `BUCKET_PREFIXES` hardcode in `cloud_interface/constants.
 env-var defaults — none of the three agree on `(market_data, defi)` target bucket. Phase 1 smoke ships TODAY with
 band-aid (`MARKET_DATA_S3_BUCKET_DEFI` env explicit override), but Citadel-grade SSOT alignment requires the operator
 triage call captured in
-[`plans/active/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](../../plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
+[`/plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md`](/plans/archive/issues/aws_phase_1_smoke_blockers_2026_05_08.md).
 
 ### 6. AWS hardcode enumeration (2026-05-22)
 
