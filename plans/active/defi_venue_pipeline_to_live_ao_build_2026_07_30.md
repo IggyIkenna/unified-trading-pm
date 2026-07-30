@@ -109,39 +109,39 @@ splitting into two plans just to parallelize two todos.
       manifest query.
 
       **2026-07-30 (slot-6) — ROOT CAUSE CONFIRMED + FIX SHIPPED, deployment/live-verify portion still pending
-                                      (blocked on a separate, already-tracked infra incident, not this fix).** Confirmed the SAME OOM/timeout root
-                                      cause the gas-fees fix already patched applies here too, via direct code read (not a guess):
-                                      `lst_rates_handler._check_freshness_skip()` called `ManifestFreshnessCache.bulk_load()` completely UNBOUNDED —
-                                      `bulk_load() -> read_availability_index()` can synchronously block for up to
-                                      `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]=4200s` when a defi consolidator merge is in flight
-                                      (`unified-trading-library/manifest_writer/_staleness_budget.py`), and this job's own Cloud Run timeout is
-                                      **1200s** (confirmed live in `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s "lst-rates"
-                                      entry) — exactly the `1800s < 4200s` shape that caused the gas-fees crash-loop, just with an even tighter
-                                      1200s budget here. Fixed the same way: reused the existing `_gas_fee_helpers.bounded_freshness_warmup()` helper
-                                      (90s bound, fail-open — never skip on an untrustworthy/timed-out cache) instead of hand-rolling a new one.
-                                      While validating via full `quality-gates.sh`, found ONE pre-existing unrelated failure blocking a green tree —
-                                      `test_vault_share_price_handler.py::test_process_writes_canonical_partition_per_protocol_chain` (confirmed
-                                      pre-existing via a clean-tree repro before touching it) — root-caused to a stale test assertion
-                                      (`pipeline_mode=batch_onchain_subgraph`) no longer matching this handler's actual, intended, RPC-only
-                                      `batch_onchain_rpc` behavior, now that `unified-api-contracts` corrected
-                                      `SOURCE_PRIORITY[("defi","vault_share_price")]` to `["onchain_rpc"]` today (2026-07-30) — the MTDS-side
-                                      companion fix `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` todo 4 was waiting on. Fixed
-                                      both (the handler's now-stale `_VAULT_SHARE_PRICE_SOURCE` constant + the test's stale path assertion). Full
-                                      `quality-gates.sh --no-fix`: green (exit 0), shipped via quickmerge: `market-tick-data-service@5b5caffa`.
+                                          (blocked on a separate, already-tracked infra incident, not this fix).** Confirmed the SAME OOM/timeout root
+                                          cause the gas-fees fix already patched applies here too, via direct code read (not a guess):
+                                          `lst_rates_handler._check_freshness_skip()` called `ManifestFreshnessCache.bulk_load()` completely UNBOUNDED —
+                                          `bulk_load() -> read_availability_index()` can synchronously block for up to
+                                          `AG_CONSOLIDATOR_INFLIGHT_HORIZON_SEC["defi"]=4200s` when a defi consolidator merge is in flight
+                                          (`unified-trading-library/manifest_writer/_staleness_budget.py`), and this job's own Cloud Run timeout is
+                                          **1200s** (confirmed live in `deployment-service/terraform/gcp/defi_collection_scheduler.tf`'s "lst-rates"
+                                          entry) — exactly the `1800s < 4200s` shape that caused the gas-fees crash-loop, just with an even tighter
+                                          1200s budget here. Fixed the same way: reused the existing `_gas_fee_helpers.bounded_freshness_warmup()` helper
+                                          (90s bound, fail-open — never skip on an untrustworthy/timed-out cache) instead of hand-rolling a new one.
+                                          While validating via full `quality-gates.sh`, found ONE pre-existing unrelated failure blocking a green tree —
+                                          `test_vault_share_price_handler.py::test_process_writes_canonical_partition_per_protocol_chain` (confirmed
+                                          pre-existing via a clean-tree repro before touching it) — root-caused to a stale test assertion
+                                          (`pipeline_mode=batch_onchain_subgraph`) no longer matching this handler's actual, intended, RPC-only
+                                          `batch_onchain_rpc` behavior, now that `unified-api-contracts` corrected
+                                          `SOURCE_PRIORITY[("defi","vault_share_price")]` to `["onchain_rpc"]` today (2026-07-30) — the MTDS-side
+                                          companion fix `issues/defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md` todo 4 was waiting on. Fixed
+                                          both (the handler's now-stale `_VAULT_SHARE_PRICE_SOURCE` constant + the test's stale path assertion). Full
+                                          `quality-gates.sh --no-fix`: green (exit 0), shipped via quickmerge: `market-tick-data-service@5b5caffa`.
 
-                                      **Cannot yet verify the done-when** (3 consecutive real cron-triggered runs against the FIXED code) —
-                                      `image-build-gate.yml` only rebuilds the deployed container on push to `main`, not `live-defi-rollout`, and the
-                                      LDR→main promotion for this repo (and the ENTIRE `promotion_model: ldr_main` fleet) is currently blocked by an
-                                      already-filed, actively-investigated, unrelated incident:
-                                      `plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (both
-                                      `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` have returned `startup_failure` on every tick
-                                      since 2026-07-29T18:30Z — confirmed live via `gh run list`, not stale). Once that incident resolves and this
-                                      commit promotes + rebuilds, re-run: trigger `gcloud scheduler jobs run` against the real `lst-rates` Cloud
-                                      Scheduler job 3x (this counts as "real cron-triggered" per this todo's own parenthetical — it invokes the
-                                      actual Scheduler entity, not a raw `gcloud run jobs execute`), then confirm via Cloud Run execution history +
-                                      a manifest query that all 6 venues get `capture_status=captured` rows on each run. Not flipping this checkbox
-                                      — the done-when genuinely isn't met yet, and this is NOT a code gap, it's an external, already-owned
-                                      deployment-pipeline outage.
+                                          **Cannot yet verify the done-when** (3 consecutive real cron-triggered runs against the FIXED code) —
+                                          `image-build-gate.yml` only rebuilds the deployed container on push to `main`, not `live-defi-rollout`, and the
+                                          LDR→main promotion for this repo (and the ENTIRE `promotion_model: ldr_main` fleet) is currently blocked by an
+                                          already-filed, actively-investigated, unrelated incident:
+                                          `plans/active/issues/ldr_to_main_promote_workflows_sustained_startup_failure_2026_07_30.md` (both
+                                          `ldr-to-main-promote-fleet.yml` and `ldr-to-main-promote.yml` have returned `startup_failure` on every tick
+                                          since 2026-07-29T18:30Z — confirmed live via `gh run list`, not stale). Once that incident resolves and this
+                                          commit promotes + rebuilds, re-run: trigger `gcloud scheduler jobs run` against the real `lst-rates` Cloud
+                                          Scheduler job 3x (this counts as "real cron-triggered" per this todo's own parenthetical — it invokes the
+                                          actual Scheduler entity, not a raw `gcloud run jobs execute`), then confirm via Cloud Run execution history +
+                                          a manifest query that all 6 venues get `capture_status=captured` rows on each run. Not flipping this checkbox
+                                          — the done-when genuinely isn't met yet, and this is NOT a code gap, it's an external, already-owned
+                                          deployment-pipeline outage.
 
 - [ ] [DATA] P1. Run the 90-day historical backfill for all 6 venues via direct local invocation — no VM launch needed
       per the source doc's own estimate (~2,340 lightweight RPC calls, well under a constrained rate limit) — now that
@@ -260,3 +260,23 @@ splitting into two plans just to parallelize two todos.
     instruction. Not attempting a GH-side fix — CLAUDE.md says the v2-never-reported deadlock self-recovers in-band, do
     NOT escalate; per the async-wait/poll HARD RULE, not parking this slot to watch it either. Resume point: re-run
     these same 3 checks once whichever promote PR is current for `market-tick-data-service` actually merges to `main`.
+- **2026-07-30 (slot-10) — re-checked, gate STILL NOT met (2 of 3 unmet); dispatcher keeps recovering,
+  `quality-gates-v2` keeps re-deadlocking on each fresh PR.**
+  - **(a) STILL PASSES.** `gh run list --workflow=ldr-to-main-promote.yml`/`-fleet.yml`
+    `--repo IggyIkenna/unified-trading-pm --limit 5` — both show 5/5 consecutive `success` runs through
+    `2026-07-30T20:00:0{4,6}Z`. No regression.
+  - **(b) STILL FAILS, but the dispatcher produced yet another fresh PR.** Most recent actually-merged PR to `main` for
+    `market-tick-data-service` is still `#773` (`2026-07-28T13:56:40Z`) —
+    `git merge-base --is-ancestor 5b5caffa origin/main` → false, confirmed via fresh `git fetch origin main`. PR `#789`
+    (slot-5's observation) is now superseded by PR `#790` (`promote/market-tick-data-service/fc64e0921d7f`, opened
+    `2026-07-30T20:01:32Z` — only ~2 min old at check time), confirmed
+    `git merge-base --is-ancestor 5b5caffa <PR-790-head>` → true, so `5b5caffa` is still carried forward correctly.
+    `mergeStateStatus: UNSTABLE`; `quality-gates-v2` + `image-build-gate` both `status: queued` (just created);
+    `Plan Alignment Agent` shows `conclusion: failure` (a separate, non-gating check per this fleet's gate set — not one
+    of the 3 blocking checks). `semver-agent/label-check` + `sit-gate/fleet-green` both `success`. Same
+    v2-never-reported-deadlock shape as the prior 2 checks, just on PR #790 now.
+  - **(c) STILL N/A** — gated on (b) merging first.
+  - **Verdict: gate NOT met.** Leaving this checkbox AND the next todo's checkbox unchecked. Not attempting a GH-side
+    fix (self-recovers in-band per CLAUDE.md); not parking this slot to watch a queue that was only 2 min old at check
+    time, per the same async-wait/poll posture as slot-12/slot-5. Resume point unchanged: re-run these 3 checks once
+    whichever promote PR is current for `market-tick-data-service` actually merges to `main`.
