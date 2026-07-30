@@ -216,6 +216,22 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       this one test) remains genuinely open — but with the only 2 confirmed recurrences both explained by this one
       now-fixed anti-pattern, there is no remaining evidence for that broader claim. Re-open with a NEW todo (do not
       reuse this one) if a DIFFERENT test on this runner recurs post-fix.
+- [ ] 5. [INFRA] P3. **NEW 2026-07-30.** Per todo 4's own re-open condition: a DIFFERENT test on
+      `github-glue-runners-instruments-service` recurred post-fix —
+      `test_orchestrator_sports_pipeline.py::TestCF11PerFixtureEntityFailurePath::test_partial_failure_with_league_map_produces_per_league_record_failed`
+      hit `Failed: Timeout (>150.0s)` on promotion PR #1038 (run `30582690478`, started `21:16:56Z`), isolated re-run
+      1.17s (well-mocked adapter — only `_ensure_canonical_fixtures_for_override`'s GCS existence probe is genuinely
+      unmocked in that test, a candidate real-I/O surface distinct from todo 4's `_throttle()` real-sleep mechanism, not
+      yet confirmed as the actual trigger). Unlike todo 4's two recurrences, this is NOT the
+      `test_understat_adapter_     coverage.py` test the 66c9f23c fix targeted — so todo 4's fix is confirmed still
+      effective for ITS test; this is a genuinely new instance. **Not yet root-caused** — this pass (cicd escalation,
+      `ldr_qg_failure` on PR #1038) found the PR had already self-merged (`21:15:57Z`, an independent already-green
+      check on the same head SHA) before the failing `pull_request`-triggered run even completed, and LDR
+      `quality-gates-v2` was already green on the next run (`30583363654`, `21:26:04Z`) — the same "orphaned noise
+      against an already-resolved wall" pattern as every prior entry in this doc, so no code action was taken. **Done
+      when**: either (a) this exact test recurs again and the unmocked GCS-probe path is confirmed/ruled out as the
+      mechanism, or (b) 5+ more clean GH Actions `quality-gates-v2` runs pass with no new recurrence, closing this as
+      noise.
 
 ## Progress Log
 
@@ -329,3 +345,27 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   as an open "investigate the runner" item; see todo 4's own text for the narrowed scope of what remains genuinely open
   (a DIFFERENT test recurring on this runner post-fix, which would actually implicate the runner itself rather than this
   one test's anti-pattern).
+- **2026-07-30** — New todo 5 filed: `cicd` escalation (`ESCALATION_ID=agt-5740ac`, `WALL_TYPE=ldr_qg_failure`),
+  instruments-service promotion PR #1038 (LDR→main), failing run `30582690478` (`QG slice (tests)` job, started
+  `21:16:56Z`). Failing test:
+  `test_orchestrator_sports_pipeline.py::TestCF11PerFixtureEntityFailurePath::test_partial_failure_with_league_map_produces_per_league_record_failed`
+  — `Failed: Timeout (>150.0s)` — `1 failed, 5103 passed, 7 skipped` in `1273.62s`. This is a DIFFERENT test than todo
+  4's `test_understat_adapter_coverage.py` recurrence, on the SAME self-hosted runner
+  (`github-glue-runners-instruments-service`) — exactly the re-open condition todo 4's own closing text named. Isolated
+  local re-runs: whole class (4 tests) `8.40s` total, this specific test's own `call` duration `1.17s` — a >125x margin
+  under the 150s budget, matching every prior entry's profile (legitimate fast work, not a real hang). Read the test's
+  mock setup: `create_sports_reference_adapter`/`get_data_sink`/`_write_team_mapping`/`_write_fixture_mapping`/
+  `_build_fixture_league_map_from_gcs`/`classify_and_emit_error` are all patched, but
+  `fixture_ids_override=[1001, 1002]` routes `_resolve_fixture_ids` (sports_reference_fixtures.py) through
+  `_ensure_canonical_fixtures_for_override`, which is NOT patched and calls the real `_orch.get_storage_client()` + a
+  real `.exists()` blob probe before falling through its own broad `try/except Exception` — a genuinely un-mocked I/O
+  surface, structurally similar in shape to todo 4's real-`_throttle()`-sleep finding (an awaited operation that
+  normally resolves fast but is a nonzero contention-timeout attack surface), though NOT the same mechanism (a
+  storage-client existence probe rather than an `asyncio.sleep`) and not confirmed as the actual trigger in this pass —
+  flagged in todo 5 rather than asserted as root-caused. No fix applied this pass: by investigation time PR #1038 had
+  already **self-merged** at `21:15:57Z` (an independent already-green check on the same head SHA, 1s before the failing
+  `pull_request`-triggered run's job even started) and `live-defi-rollout`'s next `quality-gates-v2` run (`30583363654`,
+  `21:26:04Z`) was already SUCCESS — the identical "orphaned noise against an already-resolved wall" pattern documented
+  in every prior entry of this doc (zero open PRs, zero `/api/repo-blockers` entries for instruments-service at
+  investigation time). Per this doc's own established precedent, no `live-defi-rollout` code/test change was made; todo
+  5 tracks whether the unmocked GCS-probe path is the real mechanism if this exact test recurs again.
