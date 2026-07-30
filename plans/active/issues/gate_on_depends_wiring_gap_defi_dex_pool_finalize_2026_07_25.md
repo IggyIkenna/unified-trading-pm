@@ -596,3 +596,32 @@ established disposition. Cross-referencing against the root-cause note directly 
 history, yet the live dispatch still exhibited the bug — live confirmation of that note's own caveat that the code fix
 landing on `live-defi-rollout` is not the same as the live orchestrator server process having redeployed/restarted to
 pick it up. 9th distinct plan pair, ≥13 documented bounces total.
+
+## 2026-07-30 recurrence note (slot 12, 10th bounce, SAME task_id `cefi_satellite_ao_dispatch_batch1_finalize-004` — first bounce AFTER a confirmed post-fix server restart)
+
+Freshly dispatched the exact same task (`cefi_satellite_ao_dispatch_batch1_finalize-004`) the "NINTH distinct plan pair"
+note above already covers. Independently re-verified before declining:
+
+- Doc ground truth unchanged: `plans/active/cefi_satellite_ao_dispatch_batch1_2026_07_25.md:355` is still `- [ ]`
+  unchecked (the BYBIT futures_chain shape-2 duplicate-verification audit, source
+  `issues/bybit_futures_chain_write_shape_2026_07_13.md`) — 32/33, not 33/33.
+- `GET /api/state` → `server_started: "2026-07-30T17:49:40.316854Z"`, i.e. the live server process restarted AFTER both
+  root-cause fixes (`agent-orchestrator@13a5dd8`, `@bd522d0`) landed on `live-defi-rollout` earlier the same day
+  (confirmed both commits present in this worker's freshly-pulled checkout). Despite that,
+  `GET /api/backlog/cefi_satellite_ao_dispatch_batch1_finalize-004/blockers` → still `"ready (no blockers)"` — the gate
+  did not self-heal even post-restart.
+- **New data point not previously checked**: queried the live `/api/backlog` (1028 total tasks) for every id/plan_ref
+  containing `cefi_satellite_ao_dispatch_batch1_2026_07_25` (the PARENT plan, not the finalize plan) — **zero rows
+  exist**, not even one for the still-open BYBIT todo. Only the finalize plan's own 4 tasks are present. This suggests a
+  plausible third contributing factor distinct from both the 13a5dd8 (stale in-process cache) and bd522d0 (prose
+  masquerading as frontmatter) fixes: if `_wire_gate_on_depends_prereqs` populates `prereqs.completed_tasks` from
+  currently-existing backlog rows for the upstream plan_ref rather than re-deriving/re-parsing the upstream doc's own
+  checkbox list fresh, and the upstream's one remaining open item was never (re-)derived into a backlog row at all
+  (possibly pruned alongside its 32 done siblings, or never derived in the first place), the wiring pass would have
+  nothing to attach as an unmet prerequisite and the gate would read satisfied by omission — worth the
+  `backend_engineer` investigating whether `regen_backlog_from_plan.py`'s derivation step is itself skipping this
+  specific todo (e.g. a markdown-bold-text edge case in "**Extend BYBIT futures_chain...**") rather than assuming the
+  wiring layer alone is at fault.
+- Declining to author the archival (would falsely represent the parent plan as fully complete); not flipping todo 4's
+  checkbox. Skipping via `POST /api/slots/12/skip-current-task` (`reason_code: GATED`) per this doc's established
+  disposition rather than filing a duplicate `/blocked` or issue doc. 10th documented bounce, same task_id as the 9th.
