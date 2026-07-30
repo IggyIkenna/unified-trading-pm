@@ -116,8 +116,11 @@ drift_direction: advance-code
   against the two `depends_on` plans this doc's own `gate_on_depends: true` should have blocked on: **9 of batch1's
   current 19 todos and 11 of batch1b's current 18 todos are still `queued`, not `done`** — 20 still-open backlog tasks
   total (real count now 37 todos across both docs, not the original "31"; both docs grew via mid-flight splits, e.g.
-  batch1's `-017`). The gate did not actually hold — filed as its own finding + follow-up todos:
-  `plans/active/issues/finalize_plan_gate_on_depends_premature_dispatch_2026_07_30.md`.
+  batch1's `-017`). The gate did not actually hold — this is the SAME recurring `gate_on_depends` wiring gap already
+  tracked (this exact batch1/batch1b dual-gate case was already documented twice, by slot 7 and slot 12, with
+  byte-identical 9/19 + 6/18 counts) at
+  `plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` — no new issue doc filed (a
+  first pass here mistakenly created a duplicate, since deleted).
   - **What I did anyway (real, bounded, verified progress)**: identified every todo across both docs that IS currently
     `[x]` done (~15), and for each, verified whether its named `Source:` doc's own checkbox/section was already
     reconciled (most workers already did this inline as part of shipping their todo) or still needed a real edit.
