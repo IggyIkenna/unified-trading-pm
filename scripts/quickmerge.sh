@@ -1679,6 +1679,22 @@ _qm_restage_target_files() {
 # ff-only-then-rebase-autostash-then-QUICKMERGE_BLOCKED contract already
 # trusted elsewhere in this script) so a GENUINE same-file conflict still hard-
 # blocks with the structured error instead of this loop papering over it.
+#
+# prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29: the commit-hook
+# chain (prek) has been observed leaving UNRELATED tracked files (outside --files scope)
+# dirty with corrupted content after a successful commit — e.g. a garbled repeated-date
+# `last_updated:` runaway string, a silently-deleted `author:` line — reproduced twice
+# byte-identical in one session. `_qm_restage_target_files` above already stops that
+# corruption from being STAGED into the commit (scoped re-stage, never `git add -A`), but
+# nothing previously stopped it from lingering DIRTY in the working tree afterward, where
+# it rides along invisibly until some later `git status` catches it (or worse, a future
+# `git add -A` slip commits it). Snapshot the unstaged-diff paths BEFORE any hook runs so
+# we can tell, after the commit, exactly which paths the hook chain newly dirtied — a path
+# that was clean pre-hook and dirty post-hook is proven hook side-effect noise, not
+# pre-existing foreign WIP (which we must never touch per the multi-agent safety rule), so
+# it is safe to auto-revert.
+_QM_PRE_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+_QM_FRESH_COMMIT=0
 _QM_COMMIT_RETRY_MAX=15
 _QM_COMMIT_ATTEMPT=0
 while true; do
@@ -1711,6 +1727,7 @@ while true; do
   fi
 
   if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    _QM_FRESH_COMMIT=1
     break
   fi
 
@@ -1722,6 +1739,7 @@ while true; do
   # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
   _qm_restage_target_files
   if git commit -m "$_QM_COMMIT_MSG" --quiet; then
+    _QM_FRESH_COMMIT=1
     if [ -n "$FILES_ARG" ]; then
       echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
     else
@@ -1758,6 +1776,47 @@ while true; do
   _qm_stage_0_4_not_behind_gate
   _qm_restage_target_files
 done
+
+# prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29 (continued from the
+# baseline snapshot above): only check after a commit ACTUALLY ran hooks this invocation —
+# the _QM_ALREADY_COMMITTED fast path above never called `git commit`, so no hook chain ran
+# and there is nothing new to purge.
+if [ "$_QM_FRESH_COMMIT" = 1 ]; then
+  _QM_POST_HOOK_UNSTAGED="$(git diff --name-only 2>/dev/null || true)"
+  _QM_NEW_FOREIGN_DIRT=""
+  if [ -n "$_QM_POST_HOOK_UNSTAGED" ]; then
+    while IFS= read -r _qm_path; do
+      [ -z "$_qm_path" ] && continue
+      # Already unstaged-dirty before this run's hooks fired — real foreign WIP, not
+      # something our hook chain introduced. Leave it alone (multi-agent safety rule).
+      if printf '%s\n' "$_QM_PRE_HOOK_UNSTAGED" | grep -Fxq -- "$_qm_path"; then
+        continue
+      fi
+      # A path we intentionally staged/committed ourselves (--files scope) — its hook-driven
+      # edits are legitimate and already handled by _qm_restage_target_files, not foreign dirt.
+      _qm_is_target=0
+      if [ -n "$FILES_ARG" ]; then
+        for _qm_f in $FILES_ARG; do
+          [ "$_qm_f" = "$_qm_path" ] && { _qm_is_target=1; break; }
+        done
+      fi
+      [ "$_qm_is_target" = 1 ] && continue
+      _QM_NEW_FOREIGN_DIRT="${_QM_NEW_FOREIGN_DIRT}${_qm_path}
+"
+    done <<EOF
+$_QM_POST_HOOK_UNSTAGED
+EOF
+  fi
+  if [ -n "$_QM_NEW_FOREIGN_DIRT" ]; then
+    echo "[$REPO_NAME] ⚠️  Commit-hook chain left file(s) OUTSIDE this commit's scope newly dirty (clean before the hooks ran, modified after) — reverting them, they were never staged or committed:" >&2
+    printf '%s' "$_QM_NEW_FOREIGN_DIRT" | while IFS= read -r _qm_path; do
+      [ -z "$_qm_path" ] && continue
+      echo "  - $_qm_path" >&2
+      git restore --worktree -- "$_qm_path" 2>&2 || echo "    ❌ restore failed for $_qm_path — inspect manually before proceeding" >&2
+    done
+    echo "[$REPO_NAME]     See plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — this is the known hook-side-effect class, not something you did." >&2
+  fi
+fi
 
 # shared_clone_concurrent_commit_message_swap_2026_07_28: on a shared per-tab clone, two
 # concurrent `git commit` invocations in the SAME .git directory have been observed landing

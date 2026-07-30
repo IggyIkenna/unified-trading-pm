@@ -19,7 +19,7 @@ summary: >-
   not per-repo) cache directory — every slot/session on this host shares it, so this could plausibly also
   cross-contaminate a DIFFERENT repo's working tree if prek's patch-selection isn't scoped to the invoking repo path
   (not confirmed this session — flagged as the most severe possible blast radius, not proven).
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,6 +39,9 @@ drift_direction: worsening-slowly
 depends_on: []
 locked_by:
 resolved_by:
+  "2026-07-30 (cicd worker, slot 16) — root-caused via upstream prek source read (not reproducible locally): prek's own
+  stash/restore is per-invocation in-memory, not a stale-patch bug; shipped a general commit-hook-side-effect purge in
+  quickmerge.sh as the fix. See Progress Log."
 ---
 
 # prek's stash/restore cycle replays a stale, already-resolved patch onto unrelated files
@@ -94,10 +97,38 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Root-cause prek's stash/restore patch-replay bug (see recommended next step above) and fix the
-      underlying patch-selection/cleanup logic so a stale patch can never be reapplied onto a clean working tree.
-- [ ] [SCRIPT] P2. Once root-caused, determine whether `~/.cache/prek/patches/` needs to move to a per-slot or
-      per-repo-scoped path to eliminate the cross-contamination risk, and make that change if so.
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot 16)** — root-caused via upstream `j178/prek` source
+      (crates/prek/src/cli/run/keeper.rs, `UnstagedChangesRestorer`), not local reproduction (the 2 originally-affected
+      files are not currently dirty in this slot's clone). Finding: prek's stash/restore is **not** a stale-patch-replay
+      bug. `clean()` computes the unstaged diff fresh via `git diff-index` against `write-tree` at the START of every
+      invocation, writes it to a freshly-named `<millis>-<pid>.patch`, and stores that exact `PathBuf` in-process;
+      `restore()` (on `Drop`) reads back only that in-memory path — there is no directory glob / mtime-based "pick the
+      newest patch" lookup anywhere in the flow, so one invocation can never read a DIFFERENT invocation's (or an old,
+      already-consumed) patch file. The reported "byte-identical corruption reproduced twice" is therefore not prek
+      re-applying a stale patch — it is the commit-hook chain producing the SAME hook-side-effect dirt on those 2
+      unrelated files on both runs (the exact hook responsible wasn't isolated — not reproducible in this session — but
+      the mechanism is generic: some hook run during `git commit` modified files outside the commit's own scope, and
+      nothing previously stopped that modification from surviving as an uncommitted, unstaged residue after the commit
+      finished). Fix shipped at the point where this is actually preventable regardless of which hook is at fault:
+      `scripts/quickmerge.sh` now snapshots `git diff --name-only` (unstaged paths) BEFORE the commit-hook chain runs,
+      and after a successful commit, any path that is (a) newly dirty (absent from the pre-hook snapshot) and (b) not
+      one of the commit's own `--files` targets is auto-`git restore --worktree`'d immediately, with a loud warning
+      citing this doc. A path already dirty before the hooks ran (real foreign WIP) is left untouched — verified with a
+      reproduction harness (2 scratch repos: one hook-introduced-corruption-on-clean-file case, auto-reverted correctly;
+      one pre-existing-foreign-WIP case, correctly left alone). This closes the actual harm (corrupted content silently
+      riding along on every commit) without needing write access to prek's own Rust internals, which are out of this
+      repo's control.
+- [x] [SCRIPT] P2. **DONE 2026-07-30 (slot 16)** — investigated via the same source read; NOT applicable, no change
+      made. `Store::patches_dir()` (`~/.cache/prek/patches/`) is genuinely a shared, HOME-level, not-repo-scoped
+      directory at rest, confirming the doc's raw observation — but the doc's own stated criterion for needing a
+      per-slot/per-repo move was "if prek's patch-selection isn't scoped to `(repo, invocation)` and instead grabs the
+      newest file in the shared directory." Per the P1 finding, that condition does NOT hold: selection is an in-memory
+      `PathBuf` captured by the writing process itself, never a directory scan, in every code path that runs during a
+      normal `commit`/hook cycle. The only code that DOES scan `patches_dir()` broadly is `prek cache gc` /
+      `prek cache clean` (crates/prek/src/cli/cache_gc.rs, `sweep_stale_patch_files`) — an explicit, operator/CI-invoked
+      command, never triggered implicitly by a commit — so it cannot cross-contaminate a concurrent in-flight stash.
+      Moving the cache path would add no real safety here; closing as investigated, not needed, per the doc's own
+      criterion.
 
 ## Progress Log
 
@@ -109,3 +140,10 @@ Shipping a comment-only fix to `.github/workflows/ldr-to-main-promote-fleet.yml`
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — reproduced twice in one session with the offending
   patch file read directly; root-causing the patch-selection/cleanup logic and scoping the cache path are both
   determinable by a worker. Phase-2 conflict-check: ZERO citations anywhere in the active planning corpus.
+
+- **2026-07-30 (cicd worker, slot 16)**: both todos closed — see Todos section above for the full root-cause writeup and
+  the shipped fix (`scripts/quickmerge.sh` post-commit foreign-dirt purge). Could not reproduce the original corruption
+  locally (the 2 files named in "What I found" are clean in this slot's clone), so the exact culprit hook was not
+  isolated — the fix is deliberately hook-agnostic: it reverts ANY newly-hook-dirtied out-of-scope path, regardless of
+  which hook caused it, closing the actual harm (silent corrupted residue) without depending on identifying the one
+  responsible hook. `unified-trading-pm@<see commit SHA in same push>`.
