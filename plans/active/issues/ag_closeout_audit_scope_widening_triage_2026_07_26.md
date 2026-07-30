@@ -71,28 +71,28 @@ depends_on: []
       `infrastructure`/`meta` cannot silently re-accumulate outside every tranche's membership sweep.
 
       **MEASURED 2026-07-30 (`/ag-closeout-audit ao`, autonomous) — the gap is bigger and sharper than "does not
-      currently catch this class", and it is now a REAL regression rather than a latent one.**
-      `check_ag_closeout_linkage.py:REAL_AGS` is still literally `("cefi", "defi", "tradfi", "prediction", "sports")`,
-      and its main loop skips any doc whose single `asset_group` value is not in that tuple
-      (`if len(ag_values) != 1 or ag_values[0] not in REAL_AGS: continue`). Its module docstring additionally declares
-      `infrastructure` EXEMPT "by construction" — correct when that value was a generic marker, **wrong since the
-      2026-07-27 schema expansion** (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure` real dedicated
-      enum values and the `infra` tranche's own membership signal. Net effect: **the standing linkage gate that
-      `/ag-closeout-audit`'s SKILL.md cites as its safety net runs for only 5 of the 9 tranches** — `ao`, `ci` and
-      `infra` docs are silently skipped, so the check reporting `0 orphan(s)` says nothing at all about them. Measured
-      today by re-running the check's OWN functions with `REAL_AGS` widened (read-only, nothing shipped): `ao` 46
-      single-AG members / **15** would-be orphans; `infrastructure` 45 / **14**; `ci` 30 / **30**. The `ci` 30/30 is a
-      second, independent defect, not a backlog: `closeout_family_for("ci")` resolves to the EMPTY set because
-      `ci_consolidated_closeout_2026_07_25.md` now lives in `plans/archive/2026_07/` while the check only globs
-      `plans/active` — so even with `REAL_AGS` widened, every `ci` doc would fail both signals against a family that
-      does not exist. This is the same closeout-archival failure mode already recorded in
-      `generate_ag_closeout_audit_candidates.py`'s docstring (`…membership_stale_after_closeout_archival_2026_07_29`),
-      recurring in a sibling checker. **So this todo needs three things, not one**: (a) widen `REAL_AGS` to the real
-      enum and drop the now-wrong `infrastructure` exemption from the docstring, (b) make `closeout_family_for` resolve
-      an ARCHIVED closeout family (or fail loudly instead of silently returning an empty set — a family of zero must
-      never read as "nothing to check"), (c) only then re-baseline, using the honest measured counts above rather than
-      today's vacuous `0`. Do NOT simply widen `REAL_AGS` and re-baseline to 59 — that would ratchet in the `ci`
-      family-resolution bug as if it were legitimate pre-existing debt.
+          currently catch this class", and it is now a REAL regression rather than a latent one.**
+          `check_ag_closeout_linkage.py:REAL_AGS` is still literally `("cefi", "defi", "tradfi", "prediction", "sports")`,
+          and its main loop skips any doc whose single `asset_group` value is not in that tuple
+          (`if len(ag_values) != 1 or ag_values[0] not in REAL_AGS: continue`). Its module docstring additionally declares
+          `infrastructure` EXEMPT "by construction" — correct when that value was a generic marker, **wrong since the
+          2026-07-27 schema expansion** (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure` real dedicated
+          enum values and the `infra` tranche's own membership signal. Net effect: **the standing linkage gate that
+          `/ag-closeout-audit`'s SKILL.md cites as its safety net runs for only 5 of the 9 tranches** — `ao`, `ci` and
+          `infra` docs are silently skipped, so the check reporting `0 orphan(s)` says nothing at all about them. Measured
+          today by re-running the check's OWN functions with `REAL_AGS` widened (read-only, nothing shipped): `ao` 46
+          single-AG members / **15** would-be orphans; `infrastructure` 45 / **14**; `ci` 30 / **30**. The `ci` 30/30 is a
+          second, independent defect, not a backlog: `closeout_family_for("ci")` resolves to the EMPTY set because
+          `ci_consolidated_closeout_2026_07_25.md` now lives in `plans/archive/2026_07/` while the check only globs
+          `plans/active` — so even with `REAL_AGS` widened, every `ci` doc would fail both signals against a family that
+          does not exist. This is the same closeout-archival failure mode already recorded in
+          `generate_ag_closeout_audit_candidates.py`'s docstring (`…membership_stale_after_closeout_archival_2026_07_29`),
+          recurring in a sibling checker. **So this todo needs three things, not one**: (a) widen `REAL_AGS` to the real
+          enum and drop the now-wrong `infrastructure` exemption from the docstring, (b) make `closeout_family_for` resolve
+          an ARCHIVED closeout family (or fail loudly instead of silently returning an empty set — a family of zero must
+          never read as "nothing to check"), (c) only then re-baseline, using the honest measured counts above rather than
+          today's vacuous `0`. Do NOT simply widen `REAL_AGS` and re-baseline to 59 — that would ratchet in the `ci`
+          family-resolution bug as if it were legitimate pre-existing debt.
 
 ## Classification record — remaining delta (2026-07-28)
 
@@ -176,7 +176,7 @@ citing file):
 | `issues/qg_5_83_adapter_contract_regression_workspace_scan_timeout_2026_07_27.md (archived)`    | ci            | QG step 5.83 timeout root doc                                              |
 | `/plans/archive/issues/read_availability_index_slim_silent_valueerror_swallow_2026_07_27.md`    | cross-cutting | same UTL-manifest-reader family as the above (resolved 2026-07-28)         |
 | `issues/repo_health_watcher_false_positive_green_recurrence_2026_07_25.md`                      | ao            | AO `RepoHealthWatcher` false-green recurrence                              |
-| `issues/shared_host_tmp_tmpfs_full_2026_07_26.md`                                               | infra         | shared-host `/tmp` capacity incident                                       |
+| `archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md` (archived, 2026-07-30)                | infra         | shared-host `/tmp` capacity incident (resolved, 0 open todos)              |
 | `issues/sit_gate_fleet_green_auto_retrigger_stuck_2026_07_27.md`                                | ci            | `sit-gate/fleet-green` CI gate stuck                                       |
 | `/plans/archive/issues/slot_stale_spawn_base_role_stuck_task_less_2026_07_25.md`                | ao            | AO slot-dispatcher stale-role bug                                          |
 | `archive/issues/test_build_index_deterministic_races_on_concurrent_corpus_writes_2026_07_25.md` | ci            | doc-index determinism test, same flake class                               |

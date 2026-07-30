@@ -142,16 +142,18 @@ rather than deciding unilaterally:
       cause (fleet-wide sweep gap / undersized tmpfs / missing cleanup cron) is recorded. — unified-trading-pm (this
       doc), see 2026-07-27T12:49Z Progress Log entry: confirmed resolved externally between the 09:40Z SSM check and
       this session — no delete/resize performed by this slot.
-- [ ] [SCRIPT] P2. Fix `scripts/quality-gates-base/base-service.sh`'s 25 `>/tmp/<name>_qg.log` redirects (STEP 5.93 and
-      24 siblings — grep `>/tmp/.*_qg\.log` for the full list) to use a PID-or-mktemp-unique path instead of a fixed
+- [x] ✅ [SCRIPT] P2. Fix `scripts/quality-gates-base/base-service.sh`'s 25 `>/tmp/<name>_qg.log` redirects (STEP 5.93
+      and 24 siblings — grep `>/tmp/.*_qg\.log` for the full list) to use a PID-or-mktemp-unique path instead of a fixed
       shared filename, updating each step's paired read-back (`cat`/`grep -q` on the same path) to match. Root cause of
       a real, reproduced race: two slots' concurrent `quality-gates.sh` runs on the same shared host collide on the
       identical `/tmp/*_qg.log` name, causing a spurious gate failure with no content issue (direct re-invocation of the
       same checker with no concurrent QG running passes clean). Repo: unified-trading-pm. **Done when**: none of the 25
       redirects share a filename across two concurrent same-host QG runs (e.g. `$$`/`mktemp` suffixed), every paired
       read-back site is updated to the same variable, and a real concurrent-QG repro (two `quality-gates.sh` runs on the
-      same host hitting the same STEP simultaneously) no longer races. **Note (2026-07-27): slot-11 appears to already
-      be working a fix touching `base-service.sh` and a similarly-named issue doc
+      same host hitting the same STEP simultaneously) no longer races. — unified-trading-pm@68309de03 (slot-8,
+      2026-07-30T01:45Z), see 2026-07-30T~04:xxZ Progress Log entry (slot-12): verified this todo was already shipped
+      but never checkbox-flipped; confirmed live on HEAD + regression-tested, no new code needed. **Note (2026-07-27):
+      slot-11 appears to already be working a fix touching `base-service.sh` and a similarly-named issue doc
       (`qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md`) — check that doc before duplicating work.**
 - [x] ✅ [INFRA] P1. Investigate this VM's sustained oversubscription (2026-07-27 sample: `nproc=8`,
       `load average: 23.66, 36.79, 35.16`, active swap-in up to 5276 KB/s, a dozen-plus concurrent full-CPU processes
@@ -326,3 +328,26 @@ rather than deciding unilaterally:
   that standing question myself (same judgment-call class as before); flagging the recurrence count as evidence for
   whoever eventually picks up #2. Todo 2 (the `base-service.sh` `/tmp/*_qg.log` race) remains open and untouched by this
   entry.
+
+- 2026-07-30T~04:xxZ (slot-12, dispatched to todo 2, `shared_host_tmp_tmpfs_full-002`): dispatched to fix the same
+  PID-collision race this todo describes — found it was **already shipped, just never checkbox-flipped**. Fresh-pulled
+  `unified-trading-pm` to `origin/live-defi-rollout` and found `scripts/quality-gates-base/base-service.sh@68309de03`
+  (slot-8, 2026-07-30T01:45Z; code commit `f0c3d5209` + its quickmerge-push `68309de03`) already routes every one of the
+  28 checker-capture paths through a locally-scoped `.$$`-suffixed variable (`_LOG="${TMPDIR:-/tmp}/<name>_qg.log.$$"`),
+  reused for the write and every paired read-back, then `rm -f`'d after use — mirrors the pre-existing `_bp_out.$$`
+  convention. Confirmed, not assumed: `git merge-base --is-ancestor 68309de03 HEAD` (already an ancestor, no rebase
+  needed), grepped the file for any remaining bare (non-`.$$`) `_qg.log`/`_qg.err` capture path (zero hits — all 28
+  sites confirmed suffixed), and ran the accompanying
+  `scripts/quality-gates-base/tests/test-qg-tmp-log-pid-collision.sh` regression test slot-8 shipped alongside the fix
+  (extracts the real STEP 5.93 block and proves under true concurrency that the current PID-suffixed block never
+  cross-reads, a hand-built pre-fix stand-in reliably DOES cross-read under identical timing, and no bare capture path
+  remains) — `3 passed, 0 failed`. No code change needed from this slot; flipping this todo's checkbox now closes the
+  gap between shipped-and-verified code and plan state (the exact false-duplicate-dispatch risk the "Note (2026-07-27)"
+  on this todo was trying to prevent — the dispatcher re-derived it anyway because the checkbox itself was never
+  flipped, only the archived sibling doc's todos were). Also added a short codex note
+  (`codex/06-coding-standards/quality-gates.md` § "Checker-output capture paths — TMPDIR-aware AND PID-suffixed")
+  recording the convention so a future new STEP checker doesn't reintroduce the same bug class. This session's first
+  attempt at this same work hit a real orchestrator gotcha and died mid-`/done` (see `agents/RULES.md`'s 2026-07-30
+  "never combine the checkbox flip with a `git mv` archival in ONE commit" addition, authored independently by another
+  slot hitting the identical shape) — this commit intentionally flips ONLY the checkbox at the still-active path; the
+  archival (all 3 todos now done, no lock) follows as a separate commit right after, per that fix.

@@ -23,7 +23,7 @@ scope: [engineer, admin]
 tags: [infra, ram, memory, shared-host, fleet-wide, quality-gates, qg-governor, blocking]
 related:
   [
-    /plans/active/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
+    /plans/archive/issues/shared_host_tmp_tmpfs_full_2026_07_26.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
   ]
 created: 2026-07-27
