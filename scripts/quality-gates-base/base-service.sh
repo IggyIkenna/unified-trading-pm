@@ -458,6 +458,17 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     export UV_CACHE_DIR="${UV_CACHE_DIR:-${_uv_ws_common}/.uv-cache}"
     export UV_LINK_MODE="${UV_LINK_MODE:-hardlink}"
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # uv-version drift-guard — WARN-ONLY (never blocking; the fix is a one-line realign, not a gate).
+    # The workspace uv pin is 0.10.8 (uv_lockfile_determinism_2026_06_02.md — committed uv.lock files
+    # are `revision = 3`, the serialization 0.10.8 produces; a `uv lock` run under a drifted 0.11.x can
+    # re-serialize to a different revision, i.e. silent lock churn). setup.sh self-realigns on a FRESH
+    # bootstrap, but this check catches drift on a box that never re-runs setup.sh (a long-lived VM,
+    # a manually-updated uv). SSOT: plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md.
+    _uv_ver="$(uv --version 2>/dev/null | awk '{print $2}')"
+    if [[ -n "$_uv_ver" && "$_uv_ver" != "0.10.8" ]]; then
+        echo "⚠️  uv version drift: running $_uv_ver, workspace pin is 0.10.8 — re-lock output may not match CI. Realign: curl -LsSf https://astral.sh/uv/0.10.8/install.sh | env UV_UNMANAGED_INSTALL=\$HOME/.local/bin sh"
+    fi
+    unset _uv_ver
     # uv.lock freshness — WARN-ONLY, never blocking (stays warn-only per 1.5b: making it blocking
     # treadmills on the semver CI-side `version =` bump). The lock IS now the install SSOT —
     # `uv sync --frozen` (below, 1.5b) installs the committed lock EXACTLY, byte-for-byte with CI — so a
@@ -1312,16 +1323,24 @@ _gcp_id_hits=$(codex_rg --pcre2 "GOOGLE_CLOUD_PROJECT|GCP_PROJECT(?!_ID)" --type
 
 # GCP auth: tests must use google.auth.default() — never pytest.skip for missing credential file
 # Acceptable: pytest.skip inside _skip_integration_without_creds autouse fixture (integration marker pattern)
-# Domain clients must come from unified_domain_client, not unified_trading_library
-# Services should import: InstrumentsDomainClient, ExecutionDomainClient, create_*_client from UDS
-UCS_DOMAIN=$(codex_rg 'from unified_trading_library import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
-    --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
-[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_domain_client, not unified_trading_library"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_domain_client"
+# Domain clients live in unified_trading_library.domain (re-exported at the UTL top level) — there is
+# NO separate unified_domain_client package anywhere in the workspace. RETARGETED 2026-07-30: this check
+# previously demanded imports come FROM unified_domain_client and FAILED on the correct top-level
+# `from unified_trading_library import InstrumentsDomainClient` pattern — which directly contradicted the
+# deep-import check below (DI), which independently requires the top-level form and fails on
+# `from unified_trading_library.domain import X`. No import shape could pass both checks at once. The
+# fix retargets this check to the real invariant: domain-client symbols must come from unified_trading_library
+# (top-level or .domain), never a stray non-unified per-repo shim — DI already owns "top-level, not deep".
+# SSOT: plans/active/codex_violations_ratchet_to_five_2026_06_10.md.
+UCS_DOMAIN=$(codex_rg 'from (?!unified_trading_library)[a-zA-Z0-9_.]+ import[^#]*?(InstrumentsDomainClient|ExecutionDomainClient|MarketCandleDataDomainClient|MarketTickDataDomainClient|create_instruments_client|create_execution_client|create_features_client|create_market_candle_data_client|create_market_tick_data_client)' \
+    --pcre2 --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null || :)
+[[ -n "$UCS_DOMAIN" ]] && { log_fail "Domain clients must come from unified_trading_library (top-level or .domain), not a per-repo shim"; echo "$UCS_DOMAIN" | head -5; V=$(( V + 1 )); } || log_success "Domain clients imported from unified_trading_library"
 
-# No domain imports from UCS (use # noqa: domain-ucs if UDC migration is pending)
-DOMAIN_FROM_UCS=$(codex_rg 'from unified_trading_library import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
-    --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
-[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from UCS — use unified_domain_client instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No domain imports from UCS"
+# No domain imports from a non-unified_trading_library source (retargeted alongside UCS_DOMAIN above —
+# same rationale, same SSOT).
+DOMAIN_FROM_UCS=$(codex_rg 'from (?!unified_trading_library)[a-zA-Z0-9_.]+ import.*(market_category|DomainValidation|UnifiedCloudServicesConfig)' \
+    --pcre2 --type py "$SOURCE_DIR/" 2>/dev/null | grep -v '# noqa' || :)
+[[ -n "$DOMAIN_FROM_UCS" ]] && { log_fail "Service imports domain symbols from a non-unified_trading_library source — use unified_trading_library instead"; echo "$DOMAIN_FROM_UCS" | head -5; V=$(( V + 1 )); } || log_success "No stray domain imports outside unified_trading_library"
 
 # Schema provenance: local BaseModel/TypedDict/dataclass should import from UAC or UIC
 # SCHEMA_PROVENANCE_SKIP: set true for devops/PM repos where local BaseModel in checker scripts is expected
@@ -1464,45 +1483,18 @@ qg_prof start pip-audit
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
-    # CVE-2026-4539: no-fix-version (workspace-global, reviewed 2026-05-20)
-    # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
-    # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
-    # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 (CookieJar.load() RCE, cross-origin cookie
-    #   re-send, the 2026-06-15 OSV batch) — RESOLVED: execution-service (the last holdout, held on aiohttp 3.13.5 via
-    #   a [tool.uv] override for its 8 aioresponses test files) migrated to adapter-boundary mocks and bumped to
-    #   aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES
-    #   (qg-common.sh). See plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
-    # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
-    #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
-    #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
-    #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
-    # CVE-2026-54283 / -54282 (starlette <1.3.1, transitive via fastapi) — RESOLVED 2026-07-28: fastapi/starlette
-    #   floor lifted to fastapi>=0.137.0/starlette>=1.3.1 fleet-wide (the _IncludedRouter route-introspection break
-    #   fixed via UTL service_framework.fastapi_factory.get_route_paths/find_matching_route). Ignore DROPPED from
-    #   QG_PIP_AUDIT_COMMON_IGNORES (qg-common.sh). See
+    # aiohttp cookie-CVE cluster CVE-2026-34993/47265/50269/54273-54280 — RESOLVED: execution-service (the last
+    #   holdout) migrated to adapter-boundary mocks and bumped to aiohttp>=3.14.1 fleet-wide; the 11 ignore-vuln
+    #   entries were dropped from QG_PIP_AUDIT_COMMON_IGNORES. See
+    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # CVE-2026-54283 / -54282 (starlette <1.3.1) — RESOLVED 2026-07-28: fastapi/starlette floor lifted to
+    #   fastapi>=0.137.0/starlette>=1.3.1 fleet-wide. Ignore DROPPED. See
     #   plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md.
-    # GHSA-6v7p-g79w-8964: msgpack <=1.1.2 (TRANSITIVE) — Unpacker re-used AFTER an unpack error can SEGV the process.
-    #   Exploit surface nil for us: we never feed untrusted msgpack to an Unpacker and then re-use it post-error.
-    #   A real fix exists (1.2.1) but msgpack is a transitive pin → bumping is a fleet-wide lock-regen campaign.
-    #   SUCCESSOR (remove this ignore): bump msgpack to >=1.2.1 fleet-wide + lock-regen. Tracked:
-    #   plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md § QG-unblock follow-ups.
-    # GHSA-4xgf-cpjx-pc3j: pydantic-settings <=2.13.x (TRANSITIVE) — NestedSecretsSettingsSource reads secret VALUES
-    #   from files in a configured secrets_dir. Exploit surface nil: services configure secrets_dir to trusted
-    #   Secret-Manager mount paths only, never untrusted input. Fleet-wide transitive lock-bump. MUST mirror
-    #   base-library.sh. SUCCESSOR: bump pydantic-settings to the fixed line + lock-regen fleet-wide (2026-06-19 advisory).
-    # CVE-2026-54911: ujson <=5.12.0 (TRANSITIVE) — ujson.dumps(reject_bytes=False) edge case on bytes encoding.
-    #   Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False. Fleet-wide transitive
-    #   lock-bump. MUST mirror base-library.sh. SUCCESSOR: bump ujson to the fixed line + lock-regen (2026-06-19 advisory).
-    # GHSA-rpj2-4hq8-938g: vcrpy <8.2.1 (TRANSITIVE) YAML deserialization — re-added 2026-06-24: the fleet dropped this on
-    #   the aiohttp/vcrpy bump assuming every repo resolves vcrpy 8.2.1, but repos that pull vcrpy TRANSITIVELY (e.g.
-    #   ibkr-gateway-infra — no direct vcrpy dep) still lock 8.1.1, so the gate red-flagged them. Exploit surface nil:
-    #   VCR cassettes are first-party test fixtures, never untrusted input. SUCCESSOR: lock-regen the transitive-vcrpy repos
-    #   to 8.2.1 (then this is a no-op). MUST mirror base-library.sh.
-    # PYSEC-2026-215: idna <3.18 (TRANSITIVE) — new 2026-06-24 advisory hitting idna 3.11 fleet-wide. Exploit surface nil:
-    #   we parse only controlled/first-party hostnames. SUCCESSOR: add idna>=3.18 to workspace-constraints + lock-regen
-    #   fleet-wide (the FIXED line exists — idna 3.18), then drop this ignore. MUST mirror base-library.sh.
-    # Fleet-wide ignore list now lives in qg-common.sh::QG_PIP_AUDIT_COMMON_IGNORES (item 252).
+    # RE-AUDITED 2026-07-30: every entry currently in QG_PIP_AUDIT_COMMON_IGNORES was re-verified against each
+    # repo's ACTUAL locked version (not the version noted when first added) — 4 entries confirmed fully moot and
+    # dropped with zero repo changes; every remaining entry's real fix version + still-vulnerable repo list is
+    # documented at the ignore list itself (qg-common.sh), the single SSOT — do NOT re-duplicate that detail here.
+    # MUST mirror base-library.sh's equivalent comment.
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} ${QG_PIP_AUDIT_COMMON_IGNORES}"
     # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
     # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the

@@ -180,6 +180,10 @@
       "versionRange": "ib_insync>=0.9.86,<1.0.0"
     },
     {
+      "name": "idna",
+      "versionRange": "idna>=3.15,<4.0.0"
+    },
+    {
       "name": "jinja2",
       "versionRange": "jinja2>=3.0.0,<4.0.0"
     },
@@ -206,6 +210,10 @@
     {
       "name": "matplotlib",
       "versionRange": "matplotlib>=3.9.0,<4.0.0"
+    },
+    {
+      "name": "msgpack",
+      "versionRange": "msgpack>=1.2.1,<2.0.0"
     },
     {
       "name": "mypy",
@@ -281,7 +289,11 @@
     },
     {
       "name": "pydantic_settings",
-      "versionRange": "pydantic-settings>=2.12.0,<3.0.0"
+      "versionRange": "pydantic-settings>=2.14.2,<3.0.0"
+    },
+    {
+      "name": "pygments",
+      "versionRange": "pygments>=2.20.0,<3.0.0"
     },
     {
       "name": "pyright",
@@ -416,6 +428,10 @@
       "versionRange": "types-requests>=2.32.0,<3.0.0"
     },
     {
+      "name": "ujson",
+      "versionRange": "ujson>=5.13.0,<6.0.0"
+    },
+    {
       "name": "urllib3",
       "versionRange": "urllib3>=2.7.0,<3.0.0"
     },
@@ -448,5 +464,5 @@
       "versionRange": "zstandard>=0.22.0,<1.0.0"
     }
   ],
-  "count": 111
+  "count": 115
 }

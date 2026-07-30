@@ -141,12 +141,58 @@ unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 # ── FLEET-WIDE PIP-AUDIT IGNORE LIST (single control point; item 252) ────────
 # Add to base-service.sh _pa_extra / base-library.sh _pa_extra via ${QG_PIP_AUDIT_COMMON_IGNORES}.
 # NEVER duplicate this list inline in a base script — update HERE ONLY.
-# PYSEC-2026-3447: setuptools 82.0.1 (TRANSITIVE build/packaging tool, not a runtime dep) — new
-#   2026-07-14 advisory that red-flagged the whole fleet. Exploit surface nil: setuptools is used
-#   only at image/build time to install first-party packages, never at runtime on untrusted input.
-#   SUCCESSOR (drop this ignore): bump setuptools to the fixed line in workspace-constraints +
-#   lock-regen fleet-wide once the patched release resolves. MUST mirror base-library.sh.
-QG_PIP_AUDIT_COMMON_IGNORES="--ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2024-277 --ignore-vuln PYSEC-2025-183 --ignore-vuln PYSEC-2026-161 --ignore-vuln GHSA-rpj2-4hq8-938g --ignore-vuln PYSEC-2026-215 --ignore-vuln PYSEC-2026-3447"
+#
+# RE-AUDITED 2026-07-30 (slot-21): every entry below was re-verified against the REAL current version
+# in each of the 23 Python repos' uv.lock (not the version noted when the ignore was first added) via
+# direct `pip-audit -r` queries against each observed version, cross-referenced with OSV alias data.
+# Four entries this pass confirmed fully MOOT (the fleet's current versions were never in the affected
+# range, or long past it) and were DROPPED with zero repo changes needed: PYSEC-2024-277 (joblib
+# <=1.4.2, disputed — fleet is 1.5.3 everywhere), PYSEC-2025-183 (pyjwt <=2.10.1, disputed — fleet is
+# 2.13.0 everywhere), PYSEC-2026-161 (starlette, fixed 1.0.1 — fleet's OLDEST is 1.1.0), GHSA-rpj2-4hq8-938g
+# (vcrpy <8.2.1 — fleet is 8.2.1 everywhere, incl. ibkr-gateway-infra, the repo this was re-added for
+# 2026-06-24). CVE-2026-45409 was confirmed an EXACT alias of PYSEC-2026-215 (same GHSA-65pc-fj4g-8rjx) —
+# collapsed to one entry. Every remaining entry below is a REAL, currently-exploitable-per-repo gap (the
+# ignore is doing real work, not masking nothing) with the actual fix version + the actual list of
+# still-vulnerable repos measured this pass — see cve_affected_pinned_deps_remediation_2026_06_18.md for
+# the full audit + per-repo bump tracking.
+#
+# PYSEC-2026-3447: setuptools <83.0.0 (TRANSITIVE build/packaging tool, not a runtime dep). Exploit
+#   surface nil: setuptools runs only at image/build time to install first-party packages, never at
+#   runtime on untrusted input. Fix: setuptools>=83.0.0. Still vulnerable (2026-07-30): 17 of 22 repos —
+#   only e2e-testing/instruments-service/market-tick-data-service/system-integration-tests/
+#   unified-trading-library are on 83.0.0. SUCCESSOR: bump the remaining 17 + drop this ignore.
+# CVE-2026-3219 / CVE-2026-6357 / PYSEC-2026-196: pip <26.1.2 (TRANSITIVE — pip's own dependency-resolver
+#   tar/zip handling + self-update check + console_scripts path sanitization). Fix: pip>=26.1.2. The
+#   "blocked by the pinned vcrpy" note from 2026-06-05 is STALE — vcrpy is 8.2.1 fleet-wide now (see
+#   GHSA-rpj2 above). Still vulnerable (2026-07-30): agent-orchestrator (26.1.1), greeks-service
+#   (26.1.1), batch-live-reconciliation-service (26.0.1) — 3 of 22 repos; everyone else already resolved
+#   to >=26.1.2 organically. SUCCESSOR: bump those 3 + drop these 3 ignores.
+# GHSA-6v7p-g79w-8964: msgpack <1.2.1 (TRANSITIVE) — Unpacker re-used after an unpack error can SEGV.
+#   Exploit surface nil: we never feed untrusted msgpack to an Unpacker and reuse it post-error. Fix:
+#   msgpack>=1.2.1. Still vulnerable (2026-07-30): agent-orchestrator, strategy-service (2 of 22 repos).
+#   SUCCESSOR: bump those 2 + drop this ignore.
+# GHSA-4xgf-cpjx-pc3j: pydantic-settings <2.14.2 (TRANSITIVE) — NestedSecretsSettingsSource reads secret
+#   VALUES from configured secrets_dir files. Exploit surface nil: secrets_dir is always a trusted
+#   Secret-Manager mount, never untrusted input. Fix: pydantic-settings>=2.14.2. Still vulnerable
+#   (2026-07-30): 16 of 21 repos carrying this dep (only e2e-testing/ml-service/system-integration-tests/
+#   unified-trading-api are already >=2.14.2) — the BIGGEST remaining gap by repo count. SUCCESSOR: bump
+#   the remaining 16 + drop this ignore.
+# CVE-2026-54911 (= PYSEC-2026-2294): ujson <5.13.0 (TRANSITIVE) — dumps(reject_bytes=False) edge case
+#   on bytes encoding. Exploit surface nil: we never serialize untrusted bytes with reject_bytes=False.
+#   Fix: ujson>=5.13.0. Still vulnerable (2026-07-30): strategy-service only (1 of 4 repos carrying this
+#   dep). SUCCESSOR: bump strategy-service + drop this ignore.
+# CVE-2026-4539 (= PYSEC-2026-2987): pygments <2.20.0 (TRANSITIVE, NOT "workspace-global" as a prior
+#   note claimed — that was a stale mischaracterization; a real fix has shipped since the 2026-05-20
+#   review) — ReDoS in the archetype.py GUID lexer. Exploit surface nil: we never lex untrusted source
+#   with pygments at runtime (it's a dev/doc-rendering dependency). Fix: pygments>=2.20.0. Still
+#   vulnerable (2026-07-30): ibkr-gateway-infra, market-tick-data-service, unified-api-contracts,
+#   unified-trading-library (4 of 22 repos). SUCCESSOR: bump those 4 + drop this ignore.
+# PYSEC-2026-215 (alias CVE-2026-45409, GHSA-65pc-fj4g-8rjx): idna <3.15 (TRANSITIVE) — crafted input to
+#   idna.encode(). Exploit surface nil: we parse only controlled/first-party hostnames. Fix: idna>=3.15
+#   (NOT 3.18 as a prior note claimed — re-verified via direct pip-audit query: 3.15/3.16/3.18 all clean,
+#   3.11/3.13 both flag this). Still vulnerable (2026-07-30): 13 of 22 repos. SUCCESSOR: bump the
+#   remaining 13 + drop this ignore.
+QG_PIP_AUDIT_COMMON_IGNORES="--ignore-vuln CVE-2026-4539 --ignore-vuln PYSEC-2026-215 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln GHSA-6v7p-g79w-8964 --ignore-vuln GHSA-4xgf-cpjx-pc3j --ignore-vuln CVE-2026-54911 --ignore-vuln PYSEC-2026-196 --ignore-vuln PYSEC-2026-3447"
 
 # ── QG PROFILER (opt-in; inactive unless QG_PROFILE=1) ────────────────────────
 # No-op by default — zero behaviour change for normal runs across all repos. When
