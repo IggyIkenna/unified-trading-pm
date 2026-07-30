@@ -304,18 +304,49 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                                          this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                                          a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                                          `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                                          load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                                          authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                                          own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                                          deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
-- [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
-      again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
-      the plan doc updated (tag stripped / role set / checkbox flipped) — cite fresh evidence, do not reuse this doc's
-      measurements (repo: agent-orchestrator / unified-trading-pm).
+- [x] ✅ [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify
+      and again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed,
+      and the plan doc updated (tag stripped / role set / checkbox flipped) — cite fresh evidence, do not reuse this
+      doc's measurements (repo: agent-orchestrator / unified-trading-pm). — unified-trading-pm@f236b64b9 (reclassify) +
+      @a27c2fae2 (free-text). **Both D3 paths verified end-to-end, fresh, live 2026-07-30 13:22-13:37 UTC**: (1)
+      answered `BLK-op-operator_gated_blocked_answer_is_a_no_op-009` with `ruling_action=reclassify, ruling_role=worker`
+      → regen materialized `-009--ruling` with EMPTY prereqs → dispatched to slot 5 (13:36:14) → executed
+      (`wc -l     agents/worker.md` = 603) → plan doc updated in the SAME commit (`[OPERATOR]` → `[WORKER]`, checkbox
+      flipped, evidence appended) at `f236b64b9`. (2) answered `BLK-op-operator_gated_blocked_answer_is_a_no_op-010`
+      with `ruling_action=instruct, ruling_instruction="Run \`date
+      -u\`..."`→ materialized`-010--ruling` → dispatched to     slot 12 (13:27:08) → executed (`date -u`=`Thu Jul 30
+      13:28:27 UTC
+      2026`) → plan doc updated (`[OPERATOR]`    stripped, checkbox flipped, evidence appended) at`a27c2fae2`. Both original + `--ruling`tasks correctly dropped     out of the backlog once their checkbox flipped (confirmed via`/api/backlog`+ a fresh`/api/backlog/regen`) —     the orphan-prune mechanism retired both cleanly (one via a graceful requeue-then-prune when slot 5's tmux died     post-commit-pre-`/done`, one via an explicit `cancelled`terminal status after a`/done`rejection — see the new     P1 finding below).     **Confounding blockers found + fixed along the way** (not this todo's original scope, but load-bearing for it):     the original fixture A/B`--ruling`tasks (queued in an earlier session) never dispatched — root-caused to a     real regen bug (same-plan`sequential`-chained prereqs never get stripped when a plan flips `sequential:
+      true`→    `false`, `agent-orchestrator@93862de`) compounded by an unrelated ~7h live-orchestrator deploy-currency wedge     (`ao-self-pull.sh`dirty-gated on the main agent's untracked`.orch-main-inbox.json`scratch file,    `agent-orchestrator@474d7e0`) — full writeup at     `/plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`. Worked around by adding     fresh fixture C/D (regen-wired cleanly under the now-`sequential:
+      false` plan) rather than waiting on either fix to reach the live server, since dispatch of C/D didn't require the
+      deploy-wedge to clear.
+- [ ] [INFRA] P1. Fix the M3 checkbox-flip verifier's brief-matching for `--ruling` tasks (`server/verify.py`'s
+      `_brief_is_currently_checked` / `_mode2_disposition`, both invoked from `check_plan_flip`): both match the DONE
+      task's own `brief` field verbatim against a `- [x] <brief>` line in the plan — correct for a normal regen-derived
+      task, whose `brief` IS the plan's own single checkbox line, but a `--ruling` task's `brief` is instead a synthetic
+      multi-paragraph string (`"Operator ruling on ... dispatch to role=...\n\nOriginal todo text:\n..."`), which can
+      never literally equal the actual (much shorter) checkbox line the worker correctly writes. **Measured live
+      2026-07-30**: slot 12's honest, correct `/done` for `operator_gated_blocked_answer_is_a_no_op-010--ruling` (commit
+      `a27c2fae2`, which DID flip the checkbox + strip `[OPERATOR]` + append evidence exactly per this doc's own D3
+      `done_definition`) was REJECTED with `slot_done_rejected_no_plan_flip` /
+      `cross_repo_pm_file_touched_no_checkbox_flip` — the worker burned 5+ minutes investigating a phantom bug in its
+      own honest work before the task was silently resolved a different way (the regen prune path noticed the checkbox
+      was gone from the open-todo set on a later tick and marked the task `cancelled`, not `done`). This is STRUCTURAL,
+      not a one-off: EVERY future real (non-fixture) reclassify/instruct ruling task will hit the exact same false
+      rejection on ITS OWN honest `/done`, every time, since a `--ruling` task's `brief` will never equal a plan
+      checkbox line by construction. Fix direction: the ORIGINAL todo's own checkbox text is recoverable from the ruling
+      brief's own `"Original todo text:\n<line>"` suffix (see `_materialize_operator_ruling_tasks`'s own
+      brief-construction template in `server/regen_backlog_from_plan.py`) — extract and match against THAT instead of
+      the full synthetic brief, or thread the original brief through as a separate stored field on the `--ruling` task
+      so the extraction isn't a string-parse of the brief a second time (repo: agent-orchestrator).
 - [ ] [INFRA] P2. Fix a race in `get_full_todo_text()` (D5): the full-text lookup reads `_pm_repo_path()`'s checkout at
       the exact moment a `BLK-op-*` row is first seeded, but that checkout is only kept current by `pm-pull.timer`
       (external 5-min cron) — a freshly-created `[OPERATOR]` todo (in a plan that itself just landed) can race the seed
@@ -341,34 +372,6 @@ what they were approving. Fixing the question text removes the thing the guard w
       dispatchable `--ruling` task, gated on `done_definition` requiring the plan edit in the same commit so both tasks
       become ordinary orphans together), the dashboard's purple/reclassify/instruct UI, and a note on the
       duplicate-`/api/roles` regression found while building it. `docspec.py --check --soft`: hard=0 soft=0.
-
-## E2E verification fixture for the [REVIEW] todo above (temporary, added 2026-07-30)
-
-The only live `BLK-op-*` row in the corpus right now is a genuinely contested cross-AG architecture question
-(`defi_cefi_venue_chain_axis_contamination-006`) — not appropriate for a reviewer to rule on just to exercise this
-mechanism. These two todos are deliberately bounded, judgment-free, safe-to-dispatch fixtures whose sole purpose is to
-seed real `BLK-op-*` rows to drive through the live reclassify + compound-instruction answer paths. Both todos (and
-their materialized `--ruling` tasks) are removed from this doc once the [REVIEW] todo above cites their evidence.
-
-**Fixture A/B (original, 2026-07-30 11:16) superseded below — do not use for evidence.** Both were regen-wired under
-this plan's OWN `sequential: true` (in effect until this doc's later `eea7e1c06` flip to `false`), so their materialized
-`--ruling` tasks came out permanently prereq-chained to the `[REVIEW]` todo itself (a genuine, separate regen bug —
-same-plan `completed_tasks` links never get stripped when a plan flips `sequential` false, fixed at
-`agent-orchestrator@93862de`, filed as its own issue at
-`/plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` since the fix also turned out to
-be blocked from reaching the LIVE orchestrator by an unrelated ~7h deploy-currency wedge). Fixed or not, using A/B as
-this todo's evidence would be circular: their `--ruling` tasks cannot dispatch until the `[REVIEW]` todo itself is
-marked done. Fixture C/D below were added AFTER the `sequential: false` flip, so they regen with no same-plan chain at
-all, sequential-bug or not.
-
-- [ ] [OPERATOR] P1. E2E fixture A (reclassify test, safe/no-judgment, temp, SUPERSEDED — see note above): print
-      `RULES.md`'s line count.
-- [ ] [OPERATOR] P1. E2E fixture B (free-text test, safe/no-judgment, temp, SUPERSEDED — see note above): print
-      `agent-orchestrator`'s short SHA.
-- [x] ✅ [WORKER] P1. E2E fixture C (reclassify test, safe/no-judgment, temp): print `worker.md`'s line count. — ran in
-      unified-trading-pm worktree: `wc -l agents/worker.md` = 603.
-- [x] ✅ P1. E2E fixture D (free-text test, safe/no-judgment, temp): print the current UTC date via `date -u`. — ran in
-      agent-orchestrator worktree: `Thu Jul 30 13:28:27 UTC 2026`.
 
 # Codex SSOTs
 
