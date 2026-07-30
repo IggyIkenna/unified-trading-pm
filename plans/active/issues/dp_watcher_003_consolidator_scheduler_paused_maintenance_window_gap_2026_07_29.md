@@ -95,10 +95,15 @@ Not urgent (today's page requires no action beyond what `mtds_available_at_cross
 open apply+resume todos already do — completing them clears the page). This is a scoped hardening follow-up, not a live
 incident.
 
-- [ ] [CODE] P2. Wire `consolidator_scheduler_watcher.check_consolidator_scheduler_paused()` to call
+- [x] ✅ [CODE] P2. Wire `consolidator_scheduler_watcher.check_consolidator_scheduler_paused()` to call
       `scheduler_maintenance.maintenance_status(bucket)` before paging — if a live, unexpired window's `scheduler_jobs`
       covers the paused `job_name`, downgrade to INFO (log + skip the page) instead of CRITICAL; an expired/absent
-      window still pages exactly as today. Repo: `deployment-service`.
+      window still pages exactly as today. Repo: `deployment-service` — deployment-service@3a1cf3a. Added a new
+      `maintenance_window_reader` param (default `None`, fully backward-compatible) + the
+      `make_consolidator_maintenance_window_reader()` factory (lives in `consolidator_scheduler_watcher.py`, not
+      `cli.py`, to avoid growing that already-at-cap file) mapping the 10 core per-asset_group consolidator jobs to
+      their buckets. 3 new unit tests (suppressed-by-window / window-doesn't-cover-job / no-live-window-still-pages).
+      Full quality-gates.sh green (2950 passed, lint/typecheck/codex-compliance clean).
 - [ ] [CODE] P2. Retrofit the two known ad-hoc pause/resume call sites (`mtds_available_at_cross_asset_backfill`'s
       remaining prediction/tradfi resume todos in `market-tick-data-service`'s backfill scripts, and any future
       backfill-cron-pause script) to acquire/release via `scheduler_maintenance.pause_for_maintenance()` /
