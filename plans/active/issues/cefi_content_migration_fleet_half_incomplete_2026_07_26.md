@@ -670,3 +670,8 @@ accordingly.
   shard 14 above (fresh tarball pull = post-fix code) rather than being folded into the existing shard-14-only todo
   silently — posted a bounded `/blocked` question to main/operator per RB-INFRA-RELAUNCH's bound-exceeded escalation
   rule instead of deciding this alone.
+- **2026-07-30T20:04Z (slot-15)**: confirming slot-4's flagged watchdog-timing gap resolved on its own — shard 42 now
+  shows `STOPPING` in `gcloud compute instances list` (the delayed in-VM stall-kill fired, just later than its own
+  deadline). Fleet down to 1 shard: 14 (the pre-fix run being tracked by the separate fix-verification todo). No action
+  taken (monitoring-only, deferring the shard-42 fix-verification-relaunch recommendation to whoever owns that todo per
+  slot-4's note above).
