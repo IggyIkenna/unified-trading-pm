@@ -515,9 +515,11 @@ baseline:
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
     count: 4
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py:
-    count: 11
+    count: 7
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_bulk_download.py:
     count: 1
+  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_cefi_shards.py:
+    count: 11
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_csv_transport.py:
     count: 9
   market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tradfi_shared.py:
