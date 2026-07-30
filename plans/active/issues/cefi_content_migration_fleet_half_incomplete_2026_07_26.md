@@ -547,3 +547,8 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   not mine to self-action as the affected worker either, same as it's outside review's remit). Continuing to heartbeat +
   monitor-only per my dispatched task and standing instructions until main/operator acts on the escalation (visible to
   me as a `cancel_task`/`directive`/new dispatch in a future heartbeat response).
+- **2026-07-30T17:08Z (slot-15)**: shard 28 (`-132900`) **genuinely COMPLETED** — full
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY` terminal banner, `rc=0`, all 184,363/184,363 files processed (208 patched, 0
+  errors, `STOP-ON-SURPRISE` bounds satisfied). First confirmed success among this session's relaunched shards. Fleet at
+  7 shards (was 8; shard 40's self-delete from the prior cycle also completed). This shard now counts toward the 44/44
+  corpus-wide total once the final re-verify runs.
