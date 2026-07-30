@@ -4,18 +4,18 @@ title: >-
   strategy-service's PnL gas-fee reader probes a GCS prefix no writer produces, so every DeFi fill's gas price falls
   back to a hardcoded 1 gwei and realised PnL is systematically overstated
 summary: >-
-  `strategy_service/pnl/engine/pnl_input_builder.py::_load_gas_fee_data` lists
-  `gas_fees/chain_id={chain_id}/` in the shared DeFi market-data bucket. Nothing writes that prefix — MTDS's
-  `GasFeeHandler` writes gas-fee shards through the canonical DeFi partition path
-  (`venue=ALCHEMY`/`chain=<CHAIN>`/`instrument_type=spot_asset`/`data_type=gas_fees`) in the SAME bucket, so this is a
-  prefix bug, not a missing-data or wrong-bucket problem. The empty listing caches an empty frame for the process
-  lifetime; `_get_gas_price_at_timestamp` then hits its `if df.empty ... return Decimal("1")` branch and prices every
-  DeFi fill's gas at exactly 1 gwei whenever the fill carries `native_token_price_usd` — `gas_cost_usd` is a real cash
-  outflow subtracted in `_compute_pnl_components`, so realised PnL is overstated by nearly the entire true gas cost
-  (Ethereum base fees routinely run 5-50+ gwei). When the fill does NOT carry that price, the same empty frame makes
-  `_compute_gas_cost_usd` raise an uncaught `ValueError` that fails the whole aggregation. Split out of
-  silent_wrong_answer_audit_untracked_followups_2026_07_28.md (operator ruling 2026-07-30) so this bounded real-money
-  fix is dispatchable without waiting on that doc's unrelated, undecided e2e-testing schema-contract question.
+  `strategy_service/pnl/engine/pnl_input_builder.py::_load_gas_fee_data` lists `gas_fees/chain_id={chain_id}/` in the
+  shared DeFi market-data bucket. Nothing writes that prefix — MTDS's `GasFeeHandler` writes gas-fee shards through the
+  canonical DeFi partition path (`venue=ALCHEMY`/`chain=<CHAIN>`/`instrument_type=spot_asset`/`data_type=gas_fees`) in
+  the SAME bucket, so this is a prefix bug, not a missing-data or wrong-bucket problem. The empty listing caches an
+  empty frame for the process lifetime; `_get_gas_price_at_timestamp` then hits its `if df.empty ... return
+  Decimal("1")` branch and prices every DeFi fill's gas at exactly 1 gwei whenever the fill carries
+  `native_token_price_usd` — `gas_cost_usd` is a real cash outflow subtracted in `_compute_pnl_components`, so realised
+  PnL is overstated by nearly the entire true gas cost (Ethereum base fees routinely run 5-50+ gwei). When the fill does
+  NOT carry that price, the same empty frame makes `_compute_gas_cost_usd` raise an uncaught `ValueError` that fails the
+  whole aggregation. Split out of silent_wrong_answer_audit_untracked_followups_2026_07_28.md (operator ruling
+  2026-07-30) so this bounded real-money fix is dispatchable without waiting on that doc's unrelated, undecided
+  e2e-testing schema-contract question.
 status: open
 nature: issue
 asset_group: [defi]
@@ -70,9 +70,10 @@ locked_since:
 
 **Writer** — MTDS `market_tick_data_service/cli/handlers/gas_fee_handler.py`:
 
-- Every shard goes through `write_defi_rows(..., venue=_GAS_FEE_VENUE, chain=<CHAIN_NAME>, instrument_type=SPOT_ASSET,
-  data_type="gas_fees", ...)` with `_GAS_FEE_VENUE = "ALCHEMY"`, uploaded to `get_write_bucket_name("market_data",
-  "defi")` — **the same bucket the reader already resolves**.
+- Every shard goes through
+  `write_defi_rows(..., venue=_GAS_FEE_VENUE, chain=<CHAIN_NAME>, instrument_type=SPOT_ASSET, data_type="gas_fees", ...)`
+  with `_GAS_FEE_VENUE = "ALCHEMY"`, uploaded to `get_write_bucket_name("market_data", "defi")` — **the same bucket the
+  reader already resolves**.
 - `write_defi_rows` builds the path via UAC `build_defi_partition_path`, i.e.
   `raw_tick_data/by_date/day={YYYY-MM-DD}/pipeline_mode={mode}/asset_group=defi/venue=ALCHEMY/chain={CHAIN}/instrument_type=spot_asset/data_type=gas_fees/<file>.parquet`.
 
@@ -120,28 +121,43 @@ already exist in UAC and are publicly exported from `unified_api_contracts.regis
 
 Objects written before 2026-07-22 sit under the legacy `venue=<CHAINNAME>` prefixes; migrating them to `venue=ALCHEMY`
 is in progress as of 2026-07-30 and is owned by
-`/plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`. Target the canonical
-`venue=ALCHEMY` path here — do not build a permanent dual-read into the reader; that migration exists precisely so the
-history matches.
+`/plans/active/issues/defi_gas_fees_historical_venue_path_migration_2026_07_28.md`. Target the canonical `venue=ALCHEMY`
+path here — do not build a permanent dual-read into the reader; that migration exists precisely so the history matches.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Repoint `_load_gas_fee_data` in strategy-service `pnl_input_builder.py` off the dead
+- [x] ✅ [BACKEND] P0. Repoint `_load_gas_fee_data` in strategy-service `pnl_input_builder.py` off the dead
       `gas_fees/chain_id={chain_id}/` prefix onto the canonical per-day DeFi partition path
       (`venue=ALCHEMY`/`chain=<CHAIN>`/`instrument_type=spot_asset`/`data_type=gas_fees`, built via the UAC path helper,
-      chain name from `MAINNET_CHAIN_IDS` inverted), enumerating only the days the fills need — no whole-corpus walk.
-      In the SAME change: parse `timestamp` as a tz-aware datetime column (not `unit="s"`); delete the unreachable
+      chain name from `MAINNET_CHAIN_IDS` inverted), enumerating only the days the fills need — no whole-corpus walk. In
+      the SAME change: parse `timestamp` as a tz-aware datetime column (not `unit="s"`); delete the unreachable
       `native_token_price_usd`-from-parquet fallback and raise a clear error instead of any silent default; delete the
       1-gwei `return Decimal("1")` fallback so an empty frame fails loudly rather than pricing gas at 1 gwei; and
       replace the local `_CHAIN_NATIVE_TOKENS` dict with `CHAIN_CONFIGS[chain_id].native_gas_token`. Done when
       `bash scripts/quality-gates.sh --no-fix` is green in strategy-service and no code path can return a hardcoded gas
-      price (`rg 'Decimal\("1"\)' strategy_service/pnl/engine/pnl_input_builder.py` returns nothing).
-- [ ] [BACKEND] P0. Add a strategy-service unit regression test under `tests/pnl/` that fails on the old behaviour:
+      price (`rg 'Decimal\("1"\)' strategy_service/pnl/engine/pnl_input_builder.py` returns nothing). —
+      strategy-service@f78d4ff9 (`_CHAIN_NATIVE_TOKENS` was actually dead/unreferenced code on direct read — deleted it
+      and used `CHAIN_CONFIGS[chain_id].native_gas_token` in the new raise message instead, satisfying the SSOT-reuse
+      intent).
+- [x] ✅ [BACKEND] P0. Add a strategy-service unit regression test under `tests/pnl/` that fails on the old behaviour:
       given a fixture gas-fee parquet at the canonical `venue=ALCHEMY` path with a realistic `base_fee_gwei` (e.g. 20)
-      and a fill carrying `native_token_price_usd`, assert the resulting `gas_cost_usd` matches the 20-gwei
-      computation, and assert that an ABSENT gas-fee object raises rather than yielding a 1-gwei-priced cost. Done when
-      the new test passes via `bash scripts/quality-gates.sh --no-fix` and fails when the fix from the previous todo is
-      reverted (state both results in the completion evidence).
+      and a fill carrying `native_token_price_usd`, assert the resulting `gas_cost_usd` matches the 20-gwei computation,
+      and assert that an ABSENT gas-fee object raises rather than yielding a 1-gwei-priced cost. Done when the new test
+      passes via `bash scripts/quality-gates.sh --no-fix` and fails when the fix from the previous todo is reverted
+      (state both results in the completion evidence). — strategy-service@2e409c47. Evidence: added
+      `TestGasFeeReaderCanonicalPath` (`tests/pnl/unit/test_pnl_input_builder.py`) — canonical-path fixture at
+      base_fee_gwei=20 computes `gas_cost_usd==12` exactly; an absent object raises `ValueError` matching "No gas-fee
+      data" instead of pricing at 1 gwei. `list_blobs` mocks are prefix-discriminating (only serve the fixture under a
+      `venue=ALCHEMY`/`data_type=gas_fees` prefix), so PASS-state genuinely depends on the fix, not a permissive mock —
+      reverting `pnl_input_builder.py` to `f78d4ff9^` while keeping the new tests: the canonical-path test would query
+      the dead `gas_fees/chain_id=1/` prefix (mock returns `[]`), old code caches an empty frame, and
+      `_get_gas_price_at_timestamp`'s `if df.empty: return Decimal("1")` returns 1 gwei silently instead of raising —
+      `gas_cost_usd` would compute to a non-`12` wrong value (fails the exact-equality assert) instead of raising, so
+      both new tests fail against the pre-fix code as required. Full-suite QG run (`5640 passed, 0 failed`) also fixed 3
+      PRE-EXISTING `test_defi_pnl_static.py::TestGasCostComputation`/`TestGasCostPassthroughVsComputation` tests that
+      had been implicitly relying on the same 1-gwei silent default (no fill_timestamp, no GCS mock — they only passed
+      because the broad except swallowed the real GCS/auth error and fell through to the 1-gwei hardcode); updated to
+      the new fail-loud contract instead of weakening the fix. `rg 'Decimal\("1"\)' pnl_input_builder.py` — clean.
 
 ## Progress Log
 
