@@ -385,6 +385,38 @@ here to finish the remaining locally-doable todos.**
 - Evidence: `agent-orchestrator@4c5267d` on `live-defi-rollout`, `ahead=0`. 3 files, +191/-1. QG green (2076 passed, up
   from 2068 — the 8 new tests).
 
+**2026-07-30 — `[UI] P1` DeepSeek/Claude provider badge SHIPPED, closing the todo below.**
+
+- **Design**: `SlotView.provider` / `AccountView.provider` are resolved server-side from `accounts.json` against
+  `account_id` — `AccountRow` (the DB-synced ORM row both `_slot_to_view`/`_account_to_view` otherwise read) has no
+  `provider` column. `GET /api/state` builds the `account_id -> provider` map ONCE per request (mirrors the existing
+  `review_ids` one-read-per-request precedent, not once per slot); `GET /api/accounts`'s `_account_provider()` mirrors
+  the existing `_setup_token_view_fields` precedent for the same reason. New `ProviderBadge` component
+  (`components.tsx`) — a distinct cyan-teal "DeepSeek" chip vs. a muted "Claude" label, hue chosen to not collide with
+  any existing status/accent hue — wired into `SlotTable`, `SlotCards`, and the Accounts panel's `AccountRow`.
+- **A real bug caught before shipping, not after**: my first pass blanked the badge on a dead Fleet row
+  (`dead ? null : s.provider`), copying the Task/Plan/Context/Ping dead-row convention — but the sibling
+  `ModelBadge`/operator fields in that SAME cell render unconditionally regardless of dead status, so this was actually
+  inconsistent with its own row. The new Playwright spec caught it immediately (badge genuinely absent on the seeded
+  row) before I'd even committed; fixed to match the correct sibling convention, re-verified.
+- **pw:L2 + regression spec** (this repo has no `tests/smoke/routes.spec.ts`-style L2 harness — its own
+  `tests/e2e/*.spec.ts` + dedicated backend-fixture convention is the real equivalent; satisfied that, not the literal
+  SSOT command): `npx playwright test --project=chromium tests/e2e/provider-badge.spec.ts` — 2 passed, real backend,
+  real HTTP, real render. Fixture: a `deepseek-v4-pro-demo` account added to `data/config/accounts.mock.json` (additive;
+  verified no other spec asserts an exact account count), and `seed_e2e_state.py`'s first-ever `SlotRow` (slot 1, bound
+  to it) — every prior fixture row only set `TaskRow.dispatched_to`, which never creates a `SlotRow`.
+- **9 backend unit tests** (`test_slot_view_provider.py`, `test_account_view_provider.py`): resolves correctly for both
+  providers, `None` when unbound/unknown/omitted (a hypothetical future caller that forgets the lookup dict degrades
+  safely, doesn't crash).
+- **Side-discovery, tracked not fixed**: the full `--project=chromium` run surfaced 2 pre-existing failures in
+  `backlog-detail.spec.ts` (a `queued_at`-ascending sort-order flake) — verified reproducing identically on a clean
+  `git stash`-ed baseline with none of this todo's changes present, so genuinely unrelated. Filed as
+  `plans/active/issues/backlog_detail_spec_queue_lag_sort_order_flake_2026_07_30.md` rather than fixed inline (root
+  cause not yet isolated; out of scope for this plan).
+- Evidence: `agent-orchestrator@12ae7c2` on `live-defi-rollout`, `ahead=0`. 14 files, +320/-6. QG green (2086 passed, up
+  from 2076 — the 9 new backend tests; note the [DATA] P1 spend-guard entry above already added 8, so 2068→2076→2086 is
+  the running total across both todos), dashboard `tsc`/vitest (165 passed) green, 2 new Playwright tests passed.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -444,9 +476,9 @@ here to finish the remaining locally-doable todos.**
       minority experiment, so an unbounded-spend day is a much bigger real-dollar exposure than when this todo was
       written. Done when: a simulated over-ceiling day makes `select_account_for_spawn()` stop offering DeepSeek and
       fall back to Claude, with an activity-log event recording why.
-- [ ] [UI] P1. Surface `provider` next to `account_id` in the dashboard's slot/account views so it's visible at a glance
-      which of the 14 slots are on DeepSeek vs. Claude right now. Done when: the dashboard renders a provider badge per
-      active slot.
+- [x] [UI] P1. ✅ Surface `provider` next to `account_id` in the dashboard's slot/account views so it's visible at a
+      glance which of the 14 slots are on DeepSeek vs. Claude right now. Done when: the dashboard renders a provider
+      badge per active slot.
 - [ ] [REVIEW] P2. Pilot the blended pool for one week at the default split fraction, then compare DeepSeek-routed task
       outcomes (QG pass rate, review-flagged rework rate) against the Claude-routed baseline before raising the split.
       Done when: a dated comparison note with the actual pass/rework numbers for both is added to this plan's Progress
