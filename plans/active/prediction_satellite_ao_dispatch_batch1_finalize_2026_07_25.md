@@ -83,16 +83,57 @@ drift_direction: advance-code
       open / 10 done / 19 total** — 0 open is NOT the outcome, as predicted; the 9 remaining are genuinely outside
       batch1's scope (A1a, A1c reconciled by a different batch, A5, and 6 Phase-B items including the excluded item 9).
       No code changed — doc-only reconciliation across 3 files.
-- [ ] [REVIEW] P1. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
-      (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For item 9
-      (the instrument_type-canonicalization re-verify excluded from batch1 for conflicting with
-      `prediction_consolidated_closeout_2026_07_18.md`'s own casing-gap-to-100% item): check if that master-plan item
-      has since shipped — if so, item 9 becomes conflict-free, extract it into a new tracked todo. For each of the 12
-      fully-deferred docs listed in batch1's own Deferred section: spot-check whether any conflict has cleared or any
-      doc has reached genuine archivability since. If either, extract new tracked todo/plan(s). If not, leave explicitly
-      deferred. **Done when**: item 9's status is re-verified (dispatched or confirmed still gated), and each of the 12
-      deferred docs has an explicit current-state note (still gated / newly dispatchable, with a new todo/plan created
-      if so).
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-13, review craft).** **Re-check the excluded item 9 and the 12
+      fully-deferred docs**, now that the operator has (presumably) ruled on the queued decision in
+      `autonomous_session_operator_decisions_2026_07_25.md`. For item 9 (the instrument_type-canonicalization re-verify
+      excluded from batch1 for conflicting with `prediction_consolidated_closeout_2026_07_18.md`'s own
+      casing-gap-to-100% item): check if that master-plan item has since shipped — if so, item 9 becomes conflict-free,
+      extract it into a new tracked todo. For each of the 12 fully-deferred docs listed in batch1's own Deferred
+      section: spot-check whether any conflict has cleared or any doc has reached genuine archivability since. If
+      either, extract new tracked todo/plan(s). If not, leave explicitly deferred. **Done when**: item 9's status is
+      re-verified (dispatched or confirmed still gated), and each of the 12 deferred docs has an explicit current-state
+      note (still gated / newly dispatchable, with a new todo/plan created if so). — **Result**: found this exact
+      re-check had ALREADY happened, one level removed — `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s own
+      "Re-check status (2026-07-25)" banner records that a subsequent `/ag-closeout-audit` re-triage pass already
+      re-checked item 9 + all 12 deferred docs against current content and extracted
+      `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` (since executed to completion, all 6 todos + wrapper
+      `[x]`). This todo's job became: independently re-verify batch2's re-check is still accurate TODAY (2026-07-30),
+      not stale, given 3+ more days and 4 further batches (batch3-6) have since landed. **Item 9**: batch2 todo 2
+      (2026-07-27) re-ran the case-insensitive live read the C2a ruling mandates and found 176 genuinely-malformed
+      (non-casing) rows — non-zero, so item 9 stayed correctly `[ ]` (explained, not falsely closed) in
+      `prediction_phase_ab_residuals_2026_07_24.md`, with a new `[DIAG] P2` follow-up todo filed for the
+      actively-growing blank-row writer defect (30→70→100 rows, ~10/day). **Re-verified live today**: both lines are
+      still open, unchanged, in the current doc (9 open / 10 done total, matching this same plan's todo-1 citation) —
+      item 9 is CONFIRMED STILL GATED, not silently dropped (the P2 follow-up is itself a real tracked, open todo).
+      **The 12 deferred docs** — batch2's own Deferred section (and Progress Log) already gives each an explicit
+      current-state note; independently re-verified today, none are stale: (1-2) `prediction_phase_ab_residuals` items
+      1-3/5/7 + `prediction_lifecycle_prefetch_gate_and_resolution_day_     catalogue_2026_07_14.md` —
+      DUPLICATE-OF-BATCH1, unchanged. (3) `data_completion_prediction_2026_07_15.md` — still `status: active`, 0
+      AO-eligible, its 21 human-only items + 3 conflicts unchanged — OPERATOR-GATED, unchanged. (4)
+      `issues/prediction_arb_live_execution_bridge_2026_07_20.md` — its design blocker was RULED 2026-07-28 (UTL
+      `EventTransport` facade, no operator decision remains) and is now `[BACKEND]`-tagged, no longer `[OPERATOR]` — but
+      this NEWLY-CLEARED state is already captured downstream: its build todo is already extracted + dispatched as
+      `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`'s own todo (line 130, `status: active`) — no new todo
+      needed from this pass, would be a duplicate. (5-7) `prediction_phase_c_data_status_ui_2026_07_24.md` /
+      `_phase_d_formal_smoke_and_backfill_2026_07_24.md` / `_phase_e_football_arb_live_2026_07_24.md` — still 0
+      AO-eligible each, still machine-gated on `prediction_phase_ab_residuals`'s 9 open items (re-verified count
+      unchanged today) — unchanged. (8)
+      `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md` — CONFIRMED fully resolved +
+      archived (now at `plans/archive/issues/`); its 2 AO-eligible candidates were duplicate-of-batch1 (todo 5), its own
+      operator-gated `prediction_trades`-axis question folded into `prediction_phase_ab_residuals`'s A2 todo. (9)
+      `predictions_ml_walk_forward_and_arb_2026_06_20.md` — its 1 AO-eligible item already shipped via batch2 todo 3; no
+      remaining AO-eligible content. (10) `predictions_other_bucket_and_ui_drilldown_2026_06_20.md` — its 1 AO-eligible
+      item (sentinel fan-out) already shipped via batch2 todo 4; re-checked its other 2 open items directly: the
+      `[VERIFY][UI]` re-walk (line 106) remains genuinely blocked by `[BLOCKED-PLAYWRIGHT]` (fleet VM has no dev server)
+      — unchanged, not this doc's sentinel-fan-out dependency as batch2's Deferred note implied; the Phase 5
+      canonical-groups backfill (line 127, ~24 remaining groups) was never flagged AO-eligible by the original 13-agent
+      triage and stays that way — not re-litigated here (that would be re-running triage, out of this todo's scope).
+      (11) `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` — CONFIRMED fully resolved + archived
+      (now at `plans/archive/issues/`, `status: resolved`, all 3 SHAs verified live-defi-rollout ancestors) via batch2
+      todo 6. No conflict/doc newly cleared beyond what batch2 already captured, except item (4) above — and that
+      clearance is already correctly absorbed into `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, so no new
+      todo/plan is created by this pass (one would duplicate existing dispatched work). No code changed — doc-only
+      re-verification across the cited docs, all read live, no historical snapshot re-cited as current.
 - [ ] [DOC] P1. **Archive `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved what it could — verify none remain unaddressed) → add the archive banner → run the
