@@ -32,6 +32,25 @@ the Phase 1 deliverable of the institutional smoke matrix plan
 
 **Status**: canonical reference for Phase 2 (per-service smoke scripts). Updated post-propagation.
 
+> **⚠️ STALE for features-service (corrected 2026-07-30)**: this doc's "Bucket-resolver helper inventory" table below
+> describes an `output_bucket_template`/`cfg.is_test_run`-manual-swap mechanism for the sports/calendar/onchain/
+> delta-one/volatility/cross-instrument/multi-timeframe/commodity rows — that mechanism is NOT what the current code
+> uses and, per this doc's own "Phase 2 will add the swap at the write-call site as a per-service fix item" caveat,
+> Phase 2 found every one of those families' write path actually BYPASSED `is_test_run` entirely (declared but never
+> consulted). The shipped fix is a DIFFERENT mechanism than this doc describes:
+> `sink = get_data_sink(routing_key=<asset_group-or-family-routing-key>); if isinstance(sink, StorageDataSink) and sink._bucket: return sink._bucket; return resolve_bucket(kind=..., asset_group=...)`
+> — a `get_output_bucket()` (or family-equivalent) method on each family's config, mirroring
+> `FeaturesDeltaOneConfig.get_output_bucket()`. All 7 features-service families are now fixed+verified on this pattern:
+> `calendar` (`features-service@ba5143fd`), `sports` (`features-service@48a255cd`),
+> `volatility`/`onchain`/`cross_instrument`/`commodity` (`features-service@710c1a72`), `multi_timeframe` (audited, needs
+> no change — its `engine/orchestrator.py::_resolve_sink_bucket()` already wraps `config.get_output_bucket()` with the
+> same `get_data_sink` check at the actual write call site). Record:
+> `/plans/archive/issues/features_calendar_is_test_run_ignored_writes_prod_2026_07_27.md`,
+> `/plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`. The per-service
+> rows for non-features-service services (instruments-service / market-tick-data-service /
+> market-data-processing-service / ml-training-service / ml-inference-service) were not re-verified as part of this
+> correction — only the features-service mechanism description is confirmed stale.
+
 **Naming convention** (single SSOT, mirrors `per-asset-group-bucket-layouts.md`):
 
 - PROD: `{prefix}-{category_lower}-{project_id}` — e.g. `instruments-store-cefi-central-element-323112`

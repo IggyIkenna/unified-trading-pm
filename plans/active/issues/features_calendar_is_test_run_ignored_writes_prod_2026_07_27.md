@@ -211,7 +211,8 @@ ALL, not even for the success path.
       broken 2026-07-27 (slot-7)** — a real `/data-pipeline-check-features --family sports` VM run wrote REAL
       (non-empty, 51-fixture) feature data to `features-sports-prd-...` despite `IS_TEST_RUN=true`; strictly worse than
       this doc's own calendar case (real content, not 0 rows). Filed as its own P0:
-      `issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`, which re-files the remaining
-      untested families (`volatility`/`onchain`/`cross_instrument`/`multi_timeframe`/`commodity`) as its own follow-up
-      P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit continues under that
-      doc.
+      `/plans/archive/issues/features_sports_is_test_run_ignored_writes_real_data_to_prod_2026_07_27.md`, which re-filed
+      the remaining untested families (`volatility`/`onchain`/`cross_instrument`/`multi_timeframe`/ `commodity`) as its
+      own follow-up P2 rather than closing this one silently — this todo's own scope (sports) is done, the audit
+      continued under that doc (that doc's own P2 is now also done, 2026-07-30, `features-service@710c1a72` — the doc is
+      archived).
