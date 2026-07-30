@@ -100,10 +100,43 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Root-cause prek's stash/restore patch-replay bug (see recommended next step above) and fix the
-      underlying patch-selection/cleanup logic so a stale patch can never be reapplied onto a clean working tree.
-- [ ] [SCRIPT] P2. Once root-caused, determine whether `~/.cache/prek/patches/` needs to move to a per-slot or
-      per-repo-scoped path to eliminate the cross-contamination risk, and make that change if so.
+- [x] [SCRIPT] P1. **fix_frontmatter.py's stale-continuation-line bug — ROOT-CAUSED + FIXED (slot 16,
+      `unified-trading-pm@e37b7ab47`).** `is_field_empty()` only inspected a date field's own line; a pre-existing
+      YAML-folded continuation (left over from an earlier corruption event) never got stripped, so each fixer run reset
+      the first line while the stale fold kept accumulating underneath it — across enough runs this produces exactly the
+      observed multi-repeated-date runaway string. Fixed by adding `_clear_field_continuations()`, called
+      unconditionally before setting `last_updated`/`execution_scope`. Confirmed via LIVE reproduction, not just
+      source-reading (slot 16's own `quality-gates.sh` Pass-1 run independently corrupted
+      `defi_consolidated_closeout_2026_07_18.md` through this exact path; the patched fixer cleaned it). This is a real,
+      confirmed bug and a real fix — but see the new P1 below: it is demonstrably not sufficient on its own.
+- [x] [SCRIPT] P2. **Out-of-scope collateral-corruption safety net — SHIPPED (slot 16,
+      `unified-trading-pm@8132dba77`).** `quickmerge.sh` now snapshots unstaged paths before the commit-hook chain runs
+      and auto-`git restore`s any path that is newly dirty AND outside the commit's own `--files` scope. A real, working
+      mitigation for the ORIGINAL symptom (collateral damage to a file the commit never touched) — but see the explicit
+      gap in the new P1 below.
+- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
+      Confirmed via direct reproduction: this exact field corrupted TWICE MORE on
+      `defi_consolidated_closeout_2026_07_18.md`, hours after `e37b7ab47` (the real fix_frontmatter.py fix above) was
+      already live in this slot's checkout — so that fix, while genuine, does not explain or prevent this recurrence.
+      Both times the file WAS explicitly named in the shipping commit's own `--files` argument (verified against the
+      actual invocations, `unified-trading-pm@33fcd528d` and `@36fe18966`), which `8132dba77`'s safety net structurally
+      cannot catch — it only reverts paths OUTSIDE `--files` scope, by design. Two live hypotheses, neither confirmed:
+      (a) prek's stash/restore has a concurrency blind spot slot 16's single-invocation source read didn't consider —
+      many slots run `prek` concurrently against the same shared `~/.cache/prek/patches/`, so even a
+      per-invocation-correct mechanism could still race; or (b) a second, still-unidentified mechanism produces the same
+      symptom independently of fix_frontmatter.py. Needs a worker to actually stress-test concurrent `prek` invocations
+      against this file, not just read source serially — see the 9-patch forensic list + self-perpetuation hypothesis in
+      the Progress Log below as a starting evidence base.
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — defensive backstop shipped regardless of root cause.** Whatever the
+      remaining mechanism turns out to be, this corruption can no longer silently land: `scripts/docs/docspec.py`'s
+      `date`-kind field validator (`_validate_value`) was a PREFIX-only check (`len(s)>=10` + dash-position check) that
+      a garbled value like `2026-06-27 "2026-07-30"` — this exact signature — sails straight through, since it merely
+      STARTS with something date-shaped. Tightened to a full-string `re.fullmatch(r"\d{4}-\d{2}-\d{2}", s)`. Verified:
+      zero new violations across the full 1829-doc live corpus (no false positives on legitimately-dated docs), and a
+      direct reproduction test using the exact corrupted value hard-fails with a clear message. Gap noted, not fixed
+      here (kept this change minimal/low-risk): `last_updated` is only a validated field for `doc_type: plan` in the
+      current schema, not `issue` — the same corruption on an issue doc's `last_updated` field would still sail through
+      undetected.
 
 ## Progress Log
 
@@ -179,3 +212,23 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   garbage (their content matches an already-known-corrupted, already-superseded state — not anyone's live legitimate
   work), deleting from a shared cache used by other concurrently-running sessions is a step beyond this task's own scope
   and was left for an explicit operator call rather than done unilaterally.
+
+- **2026-07-30 (slot-1, harsh_pc) — synthesizing the full multi-round history + shipping a defense-in-depth fix.** This
+  doc has now been resolved and reopened twice: slot 16 root-caused a REAL bug in
+  `scripts/plan-hygiene/fix_frontmatter.py` (stale YAML-folded continuation lines never stripped by `is_field_empty()`,
+  accumulating across repeated auto-fixer runs) and shipped a genuine fix (`unified-trading-pm@e37b7ab47`), plus a real,
+  working `quickmerge.sh` safety net for collateral damage to out-of-scope files (`unified-trading-pm@8132dba77`) — then
+  marked this doc resolved with both todos checked. Slot 4 (satellite corpus-hygiene pass) reopened it after reproducing
+  the exact same symptom 2 more times. **This session's own two reproductions (recorded above) happened AFTER
+  `e37b7ab47` was already live** — direct evidence that fix_frontmatter.py's bug, while real and fixed, is not the (or
+  not the only) cause of the recurring corruption. The critical new distinction found this session: every occurrence
+  THIS slot hit had the file explicitly named in the commit's own `--files` argument — the exact case `8132dba77`'s
+  out-of-scope safety net was never designed to catch (it only reverts paths OUTSIDE `--files` scope). So the remaining
+  open question isn't "does the old mitigation work" (it does, for its own scope) — it's "what still corrupts an
+  IN-SCOPE file's content mid-pipeline," and that remains unidentified. Rather than chase that further this session,
+  shipped a root-cause-agnostic backstop instead: `scripts/docs/docspec.py`'s date-field validator now requires a full
+  `YYYY-MM-DD` match instead of a prefix match, so this exact corruption signature (or any future variant with the same
+  shape) hard-fails the commit instead of silently landing, regardless of which upstream mechanism produces it. Verified
+  against the full 1829-doc live corpus (zero new violations) and a direct reproduction test. `status` left `open` — the
+  underlying recurring-corruption mechanism is still not identified; only the silent-landing consequence is now closed
+  off.

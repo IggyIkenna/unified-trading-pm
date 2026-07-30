@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from dataclasses import dataclass, field
 from enum import Enum
@@ -383,8 +384,15 @@ def _validate_value(spec: FieldSpec, v: object, reg: Registries, doc_type: str) 
             out.append(Violation(spec.name, Sev.HARD, msg))
     elif spec.kind == "date":
         s = str(v)
-        if not (len(s) >= 10 and s[4] == "-" and s[7] == "-" and s[:4].isdigit()):
-            out.append(Violation(spec.name, Sev.SOFT, f"'{v}' not YYYY-MM-DD"))
+        # Full-string match, not a prefix check (2026-07-14, fix_2026_07_30_prek_patch_cache_docspec_date_gap):
+        # the OLD prefix-only check (len>=10 + dash positions) only inspected the first 10 chars, so a
+        # garbled runaway value like `2026-06-27 "2026-07-30"` — the exact corruption signature from
+        # plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md —
+        # started with something date-shaped and sailed through undetected, landing corrupted content on
+        # origin twice. A plain unquoted YAML date auto-parses to datetime.date, whose str() is always a
+        # clean 10-char ISO date, so this tightening does not affect any legitimately-dated doc.
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", s):
+            out.append(Violation(spec.name, Sev.SOFT, f"'{v}' not YYYY-MM-DD (full match, not just a prefix)"))
     return out
 
 
