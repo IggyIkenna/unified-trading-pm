@@ -597,15 +597,22 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       and an explicit "classifier trustworthy: yes/no" verdict. Repo: unified-trading-pm. Source:
       `stash_pile_workspace_cleanup_2026_06_03.md`.
 
-- [ ] [INFRA] P3. **Add a stash-pile regrowth signal so the sweep never has to be remembered.** PM's stash pile regrew
-      0→31 in two days after the 2026-06-01 cleanup, so the autostash/foreign-park churn is structural, not a one-off
-      backlog. Fold a `--max-stash-age`-style warning into `scripts/dev/slot-git-status-report.sh` (already running
-      every 5 minutes per slot) so a host surfaces a warning when `refs/stash` exceeds N entries or a stash ages past M
-      days, instead of relying on a manual sweep somebody schedules. Pick N/M from the measured distribution rather than
-      inventing them, and make the signal a WARNING only — it must never fail or slow the status report. Record the
-      chosen thresholds + rationale in `/codex/05-infrastructure/per-tab-worktrees.md`. **Done when**: the warning fires
-      on a synthetic over-threshold pile, is silent on a clean one, cannot fail the report, and the codex doc states the
-      thresholds. Repo: unified-trading-pm. Source: `stash_pile_workspace_cleanup_2026_06_03.md`.
+- [x] ✅ [INFRA] P3. **DONE 2026-07-30 — `unified-trading-pm@59756e802`.** Folded a WARNING-only `--max-stash-age`-style
+      signal into `scripts/dev/slot-git-status-report.sh`: a new standalone detector
+      (`scripts/dev/stash-pile-detect.sh`, mirrors the existing `ff-starvation-detect.sh` pattern) measures each repo's
+      stash count + oldest-entry age; the reporter pings the slot inbox (deduped per episode, reusing
+      `post_starve_ping`, now with a distinguishing log label so it's not confused with the FF-starvation watchdog) when
+      either threshold trips. Never touches `git stash` content — no read of stash payloads, no apply, no drop.
+      Thresholds picked from a measured cross-slot distribution (one laptop, 4 populated slots + main-workspace clone,
+      2026-07-30): normal churn sits at ≤11 entries / ≤10 days oldest, a genuinely regrown pile sits at 33+ entries /
+      5-8 weeks oldest — chose **count>15** and **oldest>14d** (buffer above normal-churn ceiling, below regrown-pile
+      floor). Documented with the full measured table in `/codex/05-infrastructure/per-tab-worktrees.md` § "Stash-pile
+      regrowth signal". **Validated**: fires on the real 45-entry slot-1 pile, silent on a clean repo and on a
+      never-stashed repo, fires on a synthetic age-only trigger (1 entry, backdated 20 days via `GIT_COMMITTER_DATE`)
+      independent of count, correct exit codes on bad args, full end-to-end dry-run against a fabricated workspace
+      (unreachable orch URL) confirms the script never fails/hangs the report. Surfaced by, and shipped alongside, a
+      full stash-pile audit of every populated slot on this laptop —
+      `plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md` has the findings.
 
 - [ ] [REVIEW] P3. **Confirm (or extend) that `/plan-reconcile` catches a doc moving without its referrers being
       updated.** The archival-ritual gap that caused this class was fixed at the RULE level (CLAUDE.md's archival ritual

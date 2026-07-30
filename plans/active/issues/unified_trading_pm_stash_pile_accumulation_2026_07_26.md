@@ -110,6 +110,40 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       this doc was filed against (that one has its own, never-separately-audited pile — out of scope here, would need
       its own pass if still relevant).
 
+- [x] ✅ [DATA] P2. **AUDIT DONE 2026-07-30 — extended to every populated slot on this laptop** (`.tabs/1`, `.tabs/2`,
+      `.tabs/3`; `.tabs/4` covered by the todo above; `.tabs/5`-`.tabs/11` have 0 stashes). Same read-only methodology,
+      via 3 parallel deep-audit agents (one per slot; independent clones, safe to parallelize) — never `apply`/`pop`,
+      each explicitly checked for and worked around any unrelated foreign dirty content already in the tree first.
+      **Verdict: 84/88 entries verified safe to drop outright; the remaining 4 required recovery, now done (see below) —
+      so all 88 are now safe.** - **slot 1 (45 entries): 41 safe, 4 needed review.** Same 3 categories as slot 4's audit
+      (bulk hygiene-sweep/regen noise — traced to the real `context_scope` frontmatter backfill rollout,
+      653-file/1-2-line-per-file diffs; completed-archival renames, all 5 verified now living at their `plans/archive/`
+      path; verified-superseded hand-authored content, incl. one entry whose content was traced to a companion issue doc
+      after a topic-level relocation). **The 4 needing review** (`stash@{13}`,`{14}`,`{15}`,`{21}`) all carried an
+      identical copy of a real, substantive P1 issue doc (`context_scope_consumption_enforcement_2026_07_30.md`, created
+      but never committed) that existed nowhere in the current corpus — **recovered and shipped**
+      (`unified-trading-pm@f0a92cad0`, only the dead `related:` link to a never-committed sibling plan was repointed to
+      the shipped `context-scout` skill; everything else recovered verbatim). All 45 are now safe. - **slot 2 (10
+      entries): 10/10 safe, 0 needing review.** Dominant pattern: the corpus-wide leading-slash cross-reference
+      migration (CLAUDE.md's own "done 2026-07-23" item) plus 2026-07-24's mass line-cap-remediation doc-splitting day
+      (companion `_history_*`/`_part2_*` docs verified present). One edge case (`stash@{3}`, a codex
+      delete-safety-protocol rewrite) resolved via a _different_ shipped mechanism (§3a reversibility-qualified
+      carve-out) achieving the identical intent — confirmed via CLAUDE.md's own citation of that exact mechanism. -
+      **slot 3 (33 entries): 33/33 safe, 0 needing review.** Largest single pattern (13 entries, `stash@{6}`-`{14}`) is
+      one continuously-abandoned formatter/lint sweep re-captured by a new autostash on every failed reapply on
+      2026-07-26 — spot-checked diff content, 100% cosmetic (line-wrap/quote-style only). Remaining 20 verified
+      superseded or archived, including one (`stash@{31}`) where the stash's own fix was superseded by a cleaner, more
+      precise later mechanism achieving the same intent. - **No entry in any of the 88 (slots 1-4 combined) represents
+      content genuinely missing from the corpus today.**
+
+- [ ] [OPERATOR] P3. **Run the mechanical stash drop for slots 1, 2, 3** (same blocked-for-agents situation as the
+      `.tabs/4` todo above — the judgment-call review is done, only the mechanical drop remains):
+      `     cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done     cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done     cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done     `
+      Confirm each with `git stash list` (should print nothing). Note: `slot 3`'s checkout is the SAME repo as, but a
+      DIFFERENT clone from, the original slot-3 checkout this doc was originally filed against in 2026-07-26 (which had
+      26 entries then) — this pass audited the CURRENT slot-3 clone's 33 entries as they stand today, not a re-check of
+      the original 26 (which have almost certainly since regrown/changed given the ~10-day gap).
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/per-tab-worktrees.md` (multi-agent safety — inherited-dirty-WIP liveness gating).
@@ -125,3 +159,14 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
   found anywhere. Attempted the actual `git stash drop` and it was correctly blocked by the local guardrail hook
   (autonomous workers can't drop/clear stashes regardless of justification) — the mechanical cleanup step is left for a
   human to execute directly; the judgment-call part this doc was filed for is done.
+- **2026-07-30 (same session, extended to every populated slot)**: dispatched 3 parallel deep-audit agents (slots 1/2/3;
+  slot 4 already covered above), same read-only methodology. 84/88 entries verified safe outright; the 4 that weren't
+  (slot 1, `stash@{13}/{14}/{15}/{21}`, all carrying an identical never-committed P1 issue doc) were recovered and
+  shipped as `unified-trading-pm@f0a92cad0` (`context_scope_consumption_enforcement_2026_07_30.md`) — so all 88 are now
+  safe. All 4 slots' mechanical drops are blocked the same way (guardrail hook) and left as `[OPERATOR]` todos with the
+  exact commands. Also being shipped this same session, surfaced by the same investigation thread: a WARNING-only
+  stash-pile regrowth signal folded into `slot-git-status-report.sh` (`stash-pile-detect.sh`), implementing this
+  workspace's `stash_pile_workspace_cleanup_2026_06_03.md` Phase 5 — never touches `git stash`, only pings the slot
+  inbox when a pile regrows past a measured threshold (count>15 or oldest>14d), so a future pile like this one surfaces
+  automatically instead of needing another manual sweep. Tracked + evidence-cited separately in that Phase 5 todo's own
+  extraction doc (`infra_satellite_ao_dispatch_batch1_2026_07_26.md`), not duplicated here.
