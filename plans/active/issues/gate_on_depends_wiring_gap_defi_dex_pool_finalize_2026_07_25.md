@@ -318,18 +318,19 @@ distinct plan pair.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`**
-      (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a `gate_on_depends: true` finalize plan's tasks
-      reliably get the upstream plan's real task ids wired into `prereqs.completed_tasks` on every regen tick, not just
-      (maybe) at first-ingestion. Confirmed 9 times across ≥6 distinct plan pairs (defi_dex_pool,
-      prediction_satellite_batch3, mdps_features 11c per-todo shape, cross_cutting_satellite_batch1 dual-gate,
-      cefi_track7_candle_namespace_residual, cefi_track2_coverage_backfill — the last one bounced across at least 3
-      separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers` reports `"ready (no blockers)"` while
-      the real upstream tasks are still non-`done` in the live backlog. Repo: agent-orchestrator. **Done when**: root
-      cause identified (e.g. wiring only running once at ingestion vs. every regen tick, or a
-      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
-      plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
-      plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
+- [x] [BACKEND] P0. **Trace + fix `_wire_gate_on_depends_prereqs`** — ✅ agent-orchestrator@13a5dd8 (see "2026-07-30
+      root cause found + fixed" note below) (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a
+      `gate_on_depends: true` finalize plan's tasks reliably get the upstream plan's real task ids wired into
+      `prereqs.completed_tasks` on every regen tick, not just (maybe) at first-ingestion. Confirmed 9 times across ≥6
+      distinct plan pairs (defi_dex_pool, prediction_satellite_batch3, mdps_features 11c per-todo shape,
+      cross_cutting_satellite_batch1 dual-gate, cefi_track7_candle_namespace_residual, cefi_track2_coverage_backfill —
+      the last one bounced across at least 3 separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers`
+      reports `"ready (no blockers)"` while the real upstream tasks are still non-`done` in the live backlog. Repo:
+      agent-orchestrator. **Done when**: root cause identified (e.g. wiring only running once at ingestion vs. every
+      regen tick, or a `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a
+      `gate_on_depends:     true` plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a
+      regen tick that ingests both plans together (the same-tick-ingestion shape, not just the already-covered
+      empty-upstream cases).
 - [ ] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
       fix, `pick_next_task()` (or the `/blockers` endpoint) should independently verify a `gate_on_depends: true` task's
       cited upstream plan file's own on-disk `- [ ]`/`- [x]` checkbox count before dispatching it, refusing dispatch
@@ -430,3 +431,59 @@ vs P2/P3's 50/80, per main's corroboration in an earlier message this session re
 — the root-cause fix appears to already be in flight, so this bump is a durable-record correction (keeps the doc
 accurate for any future re-queue) rather than a live re-prioritization of already-dispatched work. Todo 2 (the P2
 dispatch-time defense-in-depth check) is intentionally left unchanged — main's ask was scoped to item 1 only.
+
+## 2026-07-30 root cause found + fixed (slot 3, todo 1 — agent-orchestrator@13a5dd8)
+
+Root cause is NOT in `_wire_gate_on_depends_prereqs` itself, and not a parsing/matching defect — confirms the standing
+hypothesis this doc converged on across the 8th-distinct-pair note above ("the wiring gap isn't a one-time 'first
+dispatch after ingestion' race... consistent with this doc's standing 're-wiring across regen ticks' hypothesis").
+`_wire_gate_on_depends_prereqs` DOES re-run on every `regen()` tick, correctly re-derives `gated_plans`/`file_to_ids`
+from the full current backlog every time, and DOES correctly wire `prereqs.completed_tasks` — this is provably true both
+by static reading and by the pre-existing passing test `test_regen_gate_on_depends_wires_completed_task_prereqs`
+(same-tick dual-plan ingestion, exactly this doc's originally-filed shape). `regen()` also correctly calls
+`save_backlog()` whenever `_wire_gate_on_depends_prereqs` reports a change, so `backlog.yaml` ON DISK genuinely does get
+the correct wiring.
+
+The actual bug is one layer up, in `server/server.py`'s `_on_plan_regen` — the callback `PlanRegenLoop` (the UNATTENDED,
+automatic 30-min tick — the only mechanism supposed to self-heal this without any operator/agent action) invokes after
+every `regen()` call to sync the freshly-written YAML into the live server's in-process `_state["backlog"]` + SQLite
+(which `GET /api/backlog/<id>/blockers` and the dispatcher actually read — NOT `backlog.yaml` directly). That callback's
+guard was:
+
+```python
+if summary.new_tasks == 0 and summary.pruned_yaml == 0:
+    return
+```
+
+— added 2026-06-12 to fix an earlier prune-only-tick staleness bug, but STILL incomplete: it never checked `reconciled`,
+`gate_conditions_synced`, or `ruling_tasks_added` (all pre-existing `RegenSummary` fields), and THREE more counters —
+`gated_changed` (the exact one this doc's bug needs), `scrubbed`, `sequential_changed` — were never even carried on
+`RegenSummary` at all, despite being computed every tick and driving `regen()`'s own `save_backlog()` decision
+internally. So a tick whose ONLY reportable effect was gate-wiring correctly persisted to disk but this callback had no
+way to know a refresh was needed, and the live server kept serving a stale pre-wiring in-process snapshot indefinitely —
+exactly the symptom recorded across all 8 distinct plan pairs / 12+ bounces above, and exactly why a manual
+`POST /api/backlog/regen`/`reload` (which both refresh `_state["backlog"]` unconditionally, no guard at all) always
+showed the gate correctly wired whenever anyone checked by hand, while the automatic loop never did.
+
+Fix (agent-orchestrator@13a5dd8): added `gated_changed`/`scrubbed`/`sequential_changed` to `RegenSummary`, threaded them
+through `regen()`'s return, and added a `RegenSummary.has_changes` property that ORs every counter together — a single
+source of truth so a future new counter can't repeat this exact omission again. `_on_plan_regen` now reads
+`if not summary.has_changes: return`. Regression coverage: `test_regen_summary_has_changes_covers_every_counter`
+(parametrized over all 9 counters, proving each independently trips `has_changes`) +
+`test_regen_gate_on_depends_wires_completed_task_prereqs` extended to assert `summary.gated_changed >= 1` and
+`summary.has_changes is True` on the exact same-tick dual-plan-ingestion shape this doc was originally filed against +
+`test_on_regen_guard_covers_prune_only_ticks` (pre-existing, updated) pins the callback's delegation to `has_changes`
+since the closure itself is lifespan-local and not directly unit-testable. Full quality-gates.sh green (2109 passed)
+before shipping.
+
+Caveat (raised by slot 7's 7th-plan-pair note above, answering it here): this fix landing on `live-defi-rollout` is the
+CODE fix; the live orchestrator server process (the "planning" VM) still needs to pick it up via its normal
+redeploy/restart path before the automatic self-heal is live in production — not verified/executed as part of this todo
+(out of scope for a backend_engineer-craft code fix; a restart of the central orchestrator affects every in-flight
+worker fleet-wide, so left for the operator/main's normal deploy cadence rather than executed unilaterally here). Until
+that redeploy happens, existing hand-parked gates (e.g. the defi_dex_pool_symbol_fix_backfill_purge one from earlier in
+this doc) remain correctly held by their hand-set `prereqs.completed_tasks`, and any NEW gate_on_depends-only wiring
+tick still won't reach the live process until the redeploy lands.
+
+Todo 2 (the P2 dispatch-time defense-in-depth re-check) is intentionally left undone — untouched per this doc's own
+scoping note above; a separate backlog task.
