@@ -345,7 +345,10 @@ issue doc + actionable todos.
 ### 5) DONE — when the task meets its done_definition
 
 a) Commit your code with a conventional commit. The task brief usually tells you the exact message format. Do NOT
-`git push` yet — shipping goes through the v2 quality-gate flow in (a2), never a raw direct push.
+`git push` yet — shipping goes through the v2 quality-gate flow in (a2), never a raw direct push. **Include the
+`Quickmerge: agent` trailer in this same commit message** (blank line, then the trailer — see RULES.md § 2's ship-loop
+example) so Pass 2 doesn't need a late `git commit --amend` to add it, which re-triggers the branch-drift pre-commit
+hook after Pass 1 QG has already run and reliably loses the push race under high branch churn.
 
 a2) SHIP via the v2 canonical quality-gate flow (MANDATORY — two passes):
 

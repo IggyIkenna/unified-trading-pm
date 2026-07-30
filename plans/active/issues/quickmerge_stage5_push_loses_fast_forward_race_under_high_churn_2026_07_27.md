@@ -78,13 +78,23 @@ resolved_by:
 
 ## Recommended fix path
 
-- [ ] [INFRA] P2. **Stamp the `Quickmerge: <kind>` trailer at COMMIT time, not amend time.** Either (a) have the
-      documented `--agent` worker flow always include the trailer in the original commit message (a one-line addition to
-      `unified-trading-pm/agents/worker.md`'s ship-loop example), or (b) have quickmerge's own Pass-1 sentinel-write
-      step stamp it via a NON-hook-triggering method (`git notes`, or rewriting via `git commit --amend --no-verify` is
-      banned per CLAUDE.md, so this needs a real design, not a bypass). Option (a) is the low-risk fix. **Done when**: a
-      fresh `--agent` commit without a pre-stamped trailer no longer causes a late pre-commit hook re-invocation at
-      Stage 5.
+- [x] ✅ [INFRA] P2. **DONE 2026-07-30 (slot-12, infra).** Stamped the `Quickmerge: <kind>` trailer at COMMIT time via
+      option (a) (the low-risk fix): the literal `--agent` ship-loop example that produces this exact bug turned out to
+      live in `agents/RULES.md` § 2 (not `agents/worker.md` — grepped both files for `git commit -m` first to confirm;
+      `worker.md` § DONE step (a) carries no literal commit example, only prose). Updated `RULES.md`'s cross-repo
+      ship-loop code block so its `git commit -m "feat(...): your work"` example now stamps `\n\nQuickmerge: agent` in
+      the SAME commit, with a comment explaining why (avoids the late `git commit --amend` at quickmerge.sh Stage 5,
+      which re-triggers the `check-branch-drift` pre-commit hook after Pass-1 QG already ran). Also added a one-line
+      pointer in `worker.md` § DONE step (a) (which every craft inherits, cross-repo or not) referencing the same
+      requirement + RULES.md's example, since that step is the one place ALL workers read before their first commit. Did
+      not touch option (b) (quickmerge.sh's own Pass-1 sentinel-write step) — out of this todo's scope, and the doc
+      itself calls option (a) lower-risk. Dogfooding the fix shipping it: this commit's own message pre-stamps the
+      `Quickmerge: agent` trailer per the updated example, so the `_QM_ALREADY_COMMITTED=1` path at quickmerge.sh:1701
+      should find it via `grep -q '^Quickmerge:'` and skip the late amend on this exact ship — see this todo's own
+      Progress Log entry below for the actually-observed outcome. Repo: unified-trading-pm (`agents/RULES.md`,
+      `agents/worker.md`). **Done when**: a fresh `--agent`-flow commit made per the now-updated ship-loop example
+      already carries the trailer, so quickmerge Stage 5 finds it via `git log -1 --format=%B | grep -q '^Quickmerge:'`
+      and never reaches the late-amend branch at all.
 - [ ] [INFRA] P2. **Add a bounded retry-with-rebase loop AROUND the final `git push` in Stage 5** (not around the whole
       pipeline) — e.g. on a non-fast-forward rejection, `git pull --rebase --autostash` + retry the push up to N times
       (N=3-5) before failing, entirely inside quickmerge.sh, without re-running Pass-1 QG (the content hasn't changed,

@@ -77,7 +77,13 @@ via the service repo — it's a sibling git tree at `.tabs/<your-slot>/unified-t
 #    quickmerge two-pass for code; raw push only for the ff-pull-in + this flip).
 cd "${WORKSPACE_ROOT}/.tabs/${SLOT}/${SERVICE_REPO}"
 git add <your-files>
-git commit -m "feat(...): your work"
+# Pre-stamp the Quickmerge trailer NOW, in the original commit — quickmerge.sh's Stage 5
+# only late-amends it in when missing, and that amend re-triggers the check-branch-drift
+# pre-commit hook AFTER Pass-1 QG has already run, which reliably loses the final push race
+# under high branch churn (quickmerge_stage5_push_loses_fast_forward_race_under_high_churn_2026_07_27.md).
+git commit -m "feat(...): your work
+
+Quickmerge: agent"
 SHA_CODE=$(git rev-parse --short HEAD)
 # ...ship via quickmerge --agent --files <your-files> (see CLAUDE.md Git discipline)
 
