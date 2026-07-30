@@ -131,15 +131,29 @@ drift_direction: advance-code
       exact plan at 0/5 and 3/5 across several recurrence notes; confirmed it has since genuinely reached 5/5, so the
       superseding claim holds and is not itself a stale artifact of that bug. **Net verdict**: no
       `defi_satellite_ao_dispatch_batch2` item drafted — nothing remains to extract from this doc.
-- [ ] [DIAG] P1. **Re-verify the Solana lending_indices path-shape operator ruling has been answered.** Check entry 3
-      (Kamino/Solend `instrument_type` shape: `solana_lending` vs `solana_amm_pool`) in
-      `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`. If the operator has ruled: extract
-      `/plans/archive/issues/defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md`'s deferred
-      candidate into a new tracked `defi_satellite_ao_dispatch_batch2` item scoped per the ruling (probe the
-      operator-confirmed `instrument_type` shape, or both if the ruling says both are live). If still unanswered, leave
-      it queued and do NOT spin a fresh todo — re-check at the next batch cycle. **Done when**: a definitive
-      answered-vs-still-queued verdict is recorded here with the entry-3 status cited, and either a scoped batch2
-      candidate is created (if answered) or the item is confirmed still queued (if not).
+- [x] ✅ [DIAG] P1. **DONE 2026-07-30 (slot-7) — ANSWERED, and already fully extracted + executed + verified + archived;
+      no batch2 item needed.** Entry 3 of `plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md`
+      (Kamino/Solend `lending_indices` `instrument_type` shape conflict): **Operator answer (2026-07-25) = A — widen
+      scope to probe both `solana_lending` and the Track-2-claimed `solana_amm_pool` before concluding**, entry status
+      recorded as `resolved`. Verified the entry's own resolution note against the live plan state rather than trusting
+      it blind: the widened probe was dispatched as `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s todo "Resolve
+      the Kamino/Solend `lending_indices` `instrument_type` shape conflict" (line 806) — confirmed `[x]` done there,
+      **✅ 2026-07-28 (slot-2)**. Result went beyond the ruling's literal scope: `solana_amm_pool` never existed for
+      KAMINO `lending_indices` (Track-2's prose was a mislabeling); the real legacy shape is `instrument_type=lending`,
+      clean on Track 2's own probe day (2026-04-14, 6/6 samples). Probing OTHER days per the widened-scope mandate
+      surfaced a NEW confirmed fabrication (a frozen 2026-05-04/05 migration-script snapshot duplicated across a 16-17
+      day window, `2025-01-01`..`2025-01-16/17` — not the ~21 months the coarse probe implied), filed + fully resolved
+      separately at
+      `/plans/archive/issues/defi_kamino_solend_lending_indices_legacy_shape_fabricated_history_2026_07_28.md`: full
+      day-by-day scan (1,305 days × 2 venues), other-data_type check (fabrication confined to `lending_indices` only, by
+      construction), fix executed via `launch-canonical-migration-vm.sh` (10,472 objects relabeled, 0 errors,
+      `market-tick-data-service@b5dbb379`/`@906824c5`/`@f9222f78`), clean re-scan confirmed 1,331/1,331 distinct
+      relabeled dest objects GENUINE (0 mismatch, 0 missing). That issue doc is `status: resolved`, 0 open todos,
+      unlocked, **archived 2026-07-30**. Source doc
+      `defi_solana_dex_pools_fake_history_recurrence_prd_bucket_2026_07_23.md` is also archived. **Verdict**: entry 3 IS
+      answered (not still-queued); the deferred candidate was already fully extracted, dispatched, executed, and
+      verified through batch1 + its own follow-up issue doc — there is nothing left to spin into a fresh
+      `defi_satellite_ao_dispatch_batch2` item for this conflict.
 - [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch1_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todos 2 and 3
       above should have already resolved the too-large-doc and operator-ruling exclusions — verify none remain
