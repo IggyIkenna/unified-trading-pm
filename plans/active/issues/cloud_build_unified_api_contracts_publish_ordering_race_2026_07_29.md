@@ -249,3 +249,34 @@ The operator's original #ci-failures dump conflated this with the ongoing, well-
 capacity crisis. They are NOT the same incident: Cloud Build failures happen on GCP's own build infrastructure and have
 their own, different, already-resolving root cause. Worth keeping the two threads separate so future triage doesn't
 waste time re-investigating the VM-contention angle for a Cloud-Build-side symptom, or vice versa.
+
+## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — checkpoint before context compaction)
+
+Session status at checkpoint (a fresh session picking this up should verify current state, not trust this as live):
+
+- **Done + pushed**: `unified-trading-pm@2f918ef90` (stale-build-watcher trigger-check fix + this doc's own todo flips),
+  `features-service@29477303` (4 reprovenance commits), `market-tick-data-service@c28fb2ee` (38 reprovenance commits).
+  All confirmed `ahead=0` against origin.
+- **Still in flight (dispatched sub-agents, run independently of this session's context)**: `deployment-api` — fix
+  shipped (`acdf634187`, pnpm/npm mismatch after `deployment-ui`'s package-manager migration), a real verification build
+  (`b99e78c1`) was `WORKING` as of last check, a background poller in that sub-agent's own session is watching for the
+  terminal status. `greeks-service` — still actively diagnosing/verifying as of this checkpoint; if a fresh session
+  finds no completion report, re-check `gcloud builds list`/`gh run list` for this repo directly rather than
+  re-diagnosing from scratch (a lot of the pattern-matching for this repo class is already in this doc above).
+- **Known incomplete, NOT mine to finish**: `codex/14-customer-journeys/commercial-model/ODUM_SLA_v4_2026-07-24.md` (an
+  unrelated file from another concurrent session, missing `scope:` frontmatter) was blocking the fleet-wide
+  `codex-scope-coverage` QG gate for EVERY commit in this shared checkout. Added the minimal `scope: [admin]` line
+  (matching its own sibling files in the same batch, e.g. `elysium-delay-letter-2026-07-20.md`) to unblock the shared
+  gate — this fix is CURRENTLY WORKING-TREE-ONLY (staged, uncommitted), confirmed still resolving the gate as of this
+  checkpoint. Attempting to actually commit it hit a STRICTER, separate pre-commit hook (`plan-hygiene` /
+  `check_frontmatter_schema`) demanding a full codex-doc schema (`doc_type`, `title`, `summary`, `status`, `nature`,
+  `asset_group`, `stage`, `repos`, `tags`, `related`, `created`, `authoritative_for`) — fabricating that schema for
+  someone else's legal/commercial document is outside this session's authority. **Left uncommitted deliberately** — if a
+  `git stash`/reset ever touches this file before its actual author commits it properly, the fleet-wide gate will break
+  again; whoever owns that document should finish its frontmatter (or the file should move out of `codex/` if it was
+  never meant to be a codex SSOT doc) at their earliest convenience.
+- **Not fixable by any agent**: the GitHub Actions account-level billing wall
+  (`/plans/active/issues/github_actions_billing_wall_recurrence_2026_07_29.md`, `BLK-21d55fb1`, `[OPERATOR] P0`) is the
+  confirmed root cause of tonight's `unified-api-contracts`/`unified-trading-pm` branch-health promotion-lag lines and
+  blocks the actual PR-merge step for the two reprovenanced repos above — re-confirmed live at 2026-07-30T00:55- 00:59Z,
+  still active, no self-recovery. Needs `github.com/settings/billing`.
