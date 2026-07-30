@@ -52,15 +52,17 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the 5 distinct source docs.** batch2's 6 todos cite 5 different source docs
+- [x] ✅ [REVIEW] P1. **Reconcile the 5 distinct source docs.** batch2's 6 todos cite 5 different source docs
       (`issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`, `prediction_phase_ab_residuals_2026_07_24.md`,
       `predictions_ml_walk_forward_and_arb_2026_06_20.md`, `predictions_other_bucket_and_ui_drilldown_2026_06_20.md`,
       `issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`,
       `issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md` — todo 5's combined sub-items both cite the
       phantom-reconciler doc). Confirm each source doc's checkbox/Progress Log was actually updated by its corresponding
       batch2 todo's execution (they should already be, per each todo's own Done-when), citing the batch-2 commit(s).
-      **Done when**: all 6 source-doc updates are verified present with commit citations recorded in this plan's own
-      Progress Log.
+      **Done 2026-07-30 (slot 16, review craft)** — all 6 verified independently (not just trusting batch2's
+      self-reported "Result:" annotations); see this plan's own Progress Log for the full per-doc citation trail. **Done
+      when**: all 6 source-doc updates are verified present with commit citations recorded in this plan's own Progress
+      Log.
 - [ ] [DOC] P1. **Correct `prediction_consolidated_closeout_2026_07_18.md`'s stale claims discovered during batch2's
       re-triage** (deferred here rather than into a batch2 todo, to avoid two same-priority todos editing the same
       target file concurrently): (a) the "Distinct Values / axis-value census" section's "C2a REFUSED — unruled axis, no
@@ -87,3 +89,40 @@ drift_direction: advance-code
       path to point at the archived location → clear `locked_by` (already empty here, confirm). **Done when**: the plan
       is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new path, and this finalize doc itself
       gets archived alongside it in the same commit.
+
+## Progress Log
+
+### 2026-07-30 (slot 16, review craft) — Todo 1 done: all 6 source-doc updates independently verified
+
+Picked up todo 1 via `/boot`. Confirmed batch2's gate was satisfied (all 6 real work todos + the draft→active
+bookkeeping todo in `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` are `[x]`) before starting. Independently
+re-read each of the 6 named source docs on disk (not trusting batch2's own "Result:" self-report) and, where a
+production commit was cited, verified the SHA exists and is an ancestor of `origin/live-defi-rollout`:
+
+1. **`plans/epics/manifest_master.md`** (batch2 todo 1, bucket naming migration) — P2 "Prediction bucket naming
+   migration" line confirmed `[x]` with the grep-result citation in place. Docs-only, no commit to verify.
+2. **`prediction_phase_ab_residuals_2026_07_24.md`** (batch2 todo 2, item 9) — confirmed the P0 "instrument_type
+   casing/canonicalisation" item (line 347) is correctly left `[ ]` (open, not falsely closed) with an inline note
+   citing the 2026-07-27 Progress Log entry (176 genuinely-malformed rows, non-zero) — matches batch2 todo 2's own
+   done-when ("flip if 0, explain if non-zero"). The cited Progress Log entry (2026-07-27T15:28:46Z, slot-4) is present
+   verbatim. New `[DIAG] P2` follow-up todo for the actively-growing blank count also confirmed present (line 362).
+3. **`predictions_ml_walk_forward_and_arb_2026_06_20.md`** (batch2 todo 3, completion-% slice) — checkbox flipped `[x]`,
+   Progress Log entry present with full method + results. Commit `unified-trading-pm@9df4924c0` verified: exists,
+   touches exactly this file (66 insertions).
+4. **`predictions_other_bucket_and_ui_drilldown_2026_06_20.md`** (batch2 todo 4, sentinel fan-out) — checkbox flipped
+   `[x]`, correctly scoped (explicit note that the UI-facing success criteria are NOT covered by this todo — no
+   over-claim). Commit `market-tick-data-service@9a8b96c1` verified: exists, is an ancestor of `live-defi-rollout`.
+5. **`issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`** (batch2 todo 5, combined a+b) — "Update
+   2026-07-27 (slot-16)" section present with both sub-items' live-measured 0-residual results. Commit
+   `instruments-service@70cf5c24` verified: exists, is an ancestor of `live-defi-rollout`.
+6. **`issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`** (batch2 todo 6) — `status: resolved`,
+   `resolved_by` cites all 3 SHAs exactly as batch2 todo 6 claimed. All 3 verified: `market-tick-data-service@a664511f`,
+   `instruments-service@1fa9177f`, `market-tick-data-service@d2040f8f` — all exist and are ancestors of
+   `live-defi-rollout`. (Doc already archived to `plans/archive/issues/` — fully resolved, correctly moved.)
+
+**Minor note (not actioned, cosmetic only)**: this plan's own todo-1 header says "6 todos cite **5** different source
+docs" while listing 6 distinct paths — an off-by-one in the plan's own prose (todo 5's two sub-items citing one doc
+doesn't reduce the total below 6). Left as-is; doesn't affect the verification outcome, all 6 listed docs were checked.
+
+All 6 source-doc updates verified present with commit citations. Todo 1's own checkbox flipped above. No code shipped —
+read-only cross-doc verification, as scoped. Repo: unified-trading-pm only.
