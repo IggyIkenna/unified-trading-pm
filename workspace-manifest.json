@@ -536,7 +536,7 @@
         "qg_red_reason": "basedpyright",
         "coverage_pct": 85.99
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0"
     },
     "fund-administration-service": {
@@ -1308,7 +1308,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "large_file_count": 0,
         "warn_file_count": 0,
