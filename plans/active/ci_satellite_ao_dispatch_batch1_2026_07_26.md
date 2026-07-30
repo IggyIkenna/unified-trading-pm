@@ -217,7 +217,7 @@ concurrent workers do not collide on this file.
 - [x] ✅ [INFRA] P2. **`workspace-quickmerge-validation` logs `❌ Dependency alignment FAILED` yet concludes
       `success`.** Make the workflow exit non-zero when it emits a failure line. **Done when**: a run that logs the
       failure concludes `failure`, and a genuinely-aligned run still concludes `success`. —
-      unified-trading-pm@8b151aa38: removed the blanket `|| true` on the validation step
+      unified-trading-pm@6f898f930: removed the blanket `|| true` on the validation step
       (`.github/workflows/workspace-quickmerge-validation.yml`) so the job's exit code is the script's real exit code,
       added `if: always()` to the artifact-upload + summary steps so they still run on a failing validation; also fixed
       a latent `set -e` early-exit bug in `scripts/validate-workspace-quickmerge.sh` where a failing repo's subshell

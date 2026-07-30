@@ -276,10 +276,6 @@ BE_EXCLUDE_GLOBS+=("**/reconcile_release_tags.py")
 # and _parse_ts() (malformed timestamp) — best-effort fallback, never blocks the alert.
 # Documented in QUALITY_GATE_BYPASS_AUDIT.md §2.9 (added 2026-06-27)
 BE_EXCLUDE_GLOBS+=("**/cron_liveness_watchdog.py")
-
-# requests CVE-2026-25645: no fix version available yet (fix in requests>=2.33.0, not released)
-# urllib3 PYSEC-2026-141/142: fix in urllib3>=2.7.0 (transitive dep, not yet updated upstream)
-PIP_AUDIT_EXTRA_ARGS="--ignore-vuln CVE-2026-25645 --ignore-vuln CVE-2026-34515 --ignore-vuln CVE-2026-34513 --ignore-vuln CVE-2026-34516 --ignore-vuln CVE-2026-34517 --ignore-vuln CVE-2026-34519 --ignore-vuln CVE-2026-34518 --ignore-vuln CVE-2026-34520 --ignore-vuln CVE-2026-34525 --ignore-vuln CVE-2026-22815 --ignore-vuln CVE-2026-34514 --ignore-vuln CVE-2026-4539 --ignore-vuln PYSEC-2026-141 --ignore-vuln PYSEC-2026-142"
 # sync-catalogue-yaml.py: B608 (SQL injection) is a false positive — bucket param comes from CLI arg, not user input
 BANDIT_EXTRA_ARGS="--exclude scripts/catalogue/sync-catalogue-yaml.py"
 # PM is not a service — ServiceBootstrap (5.61) and Health API (5.62) don't apply.

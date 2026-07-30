@@ -102,7 +102,7 @@ enforces the equivalent for Cloud Build SHAs; the same integrity expectation app
       isolated-incident or directs a process fix.
 - [x] ✅ [SCRIPT] P2. Added a QG post-gate check that any `resolved_by:` / `- [x] ... — <repo>@<sha>` citation resolves
       via `git cat-file -t <sha>` in the cited repo's sibling worktree (mirrors `check_evidence_backed_completion.py`'s
-      Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@d7db4b089`:
+      Cloud Build SHA verification pattern, generalized to git commit citations) — `unified-trading-pm@62b0ec76c`:
       `scripts/quality_gates/check_plan_commit_sha_evidence.py` (new), wired into `scripts/quality-gates.sh` as a
       baselined-ratchet post-gate, documented at `plans/PLAN_FORMAT.md` § 8c. Scope is deliberately narrow: only
       `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked (abbreviated forms like
