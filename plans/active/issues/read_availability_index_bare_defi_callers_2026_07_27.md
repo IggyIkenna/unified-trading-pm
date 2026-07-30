@@ -310,9 +310,31 @@ not a mechanical column-list copy.
       existing production behavior, not a regression. Added a regression test per call site
       (`test_read_availability_index_is_column_projected`) pinning the exact `columns=` call signature. Full
       `quality-gates.sh` green (2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge --agent.
-- [ ] [SCRIPT] P2. **features-service** — `volatility/engine/orchestrator.py:276`,
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-3)** — `features-service@edf80c88`. **features-service** —
+      `volatility/engine/orchestrator.py:276` (now `:286`, line shifted),
       `volatility/core/orchestration_service.py:168`, `volatility/core/data_loader.py:364`,
-      `delta_one/app/core/dependency_checker.py:619`: project each to its actual column usage.
+      `delta_one/app/core/dependency_checker.py:619` (now `:756`, line shifted): projected each to its actual column
+      usage, confirmed by direct read (not a mechanical shared list) — `volatility/engine/orchestrator.py`
+      `_list_chain_files` → `columns=["date","venue","data_type","instrument_type","capture_status","instrument_id"]` +
+      a `date` filter (`asset_group` deliberately excluded: confirmed by direct read of UTL's `_read_index.py`
+      `_V8_COLUMNS` that `asset_group` is absent from the schema in ANY version and never synthesized by the reader, so
+      the function's own `"asset_group" in row.index` check is unreachable regardless of projection — unlike the
+      `strategy-service` sibling fix's precedent where `asset_group` was a real functional filter, here it is dead
+      weight); `orchestration_service.py` `_list_chain_files` (a near-identical twin with no `asset_group` logic) → same
+      columns + filter; `data_loader.py` `_resolve_spot_perp` →
+      `columns=["venue","instrument_type","instrument_id","data_type",     "capture_status","date"]` + a `date` filter
+      (matches the function's own existing post-read column-select exactly; simplified that now-redundant reselection to
+      `index.astype(str)` as part of the same change, which also brought the method back under the 50-line QG
+      method-size cap); `dependency_checker.py` `_build_captured_index` →
+      `columns=["date","venue","instrument_id","data_type","capture_status"]`, deliberately **no** `filters=` (unlike
+      this doc's other date-scoped fixes) since this call scans ALL dates to build a reusable lookback index, not one
+      specific date. Added a regression test per call site (`test_read_availability_index_is_column_projected`,
+      mirroring the established naming convention) pinning the exact `columns=`/`filters=` call signature; the
+      `orchestration_service.py` call site had zero prior test coverage at all, so a new
+      `tests/volatility/unit/test_core_orchestration_service.py` was added rather than folding into the
+      similarly-named-but-unrelated `test_orchestration_service.py` (which tests a different class,
+      `feature_group_service.VolatilityOrchestrationService` — see the follow-up todo below). Full `quality-gates.sh`
+      green (17979 passed, 209 skipped, 2 runs — pre-commit + post-commit sentinel re-verify).
 - [x] [SCRIPT] P1. ✅ **DONE 2026-07-27 (slot-3)** — `strategy-service@b26bb306`. **strategy-service** —
       `manifest_allocation_guard.py:170` `check_allocation_manifest`: projected to
       `columns=["date", "asset_group",     "capture_status", "schema_version"]` + `filters=[("date", "==", date_str)]`.
@@ -352,3 +374,17 @@ not a mechanical column-list copy.
       non-scripts) code, baseline-ratcheted against the current corpus so existing bare calls don't block CI but no NEW
       ones can land silently. This closes the "no enforcing gate exists" gap for good, not just this one-time audit's
       findings.
+- [ ] [SCRIPT] P3. **features-service** — investigate whether
+      `features_service/volatility/core/orchestration_service.py`'s `VolatilityFeaturesOrchestrator` class is dead code:
+      it defines a near-identical (but simpler, no `asset_group`/ `pipeline_mode` derivation) twin of
+      `features_service/volatility/engine/orchestrator.py`'s class of the SAME name. Grepped the whole repo (excluding
+      tests/`__pycache__`): nothing outside its own file + `core/__init__.py`'s re-export imports it — every sibling
+      caller (`cli/handlers/batch_handler.py`, `engine/feature_group_service.py`, etc.) imports
+      `data_loader`/`feature_writer`/`dependency_checker` from `core/`, never `orchestration_service`. Found while
+      fixing todo above (2026-07-30, slot-3) — this file's `_list_chain_files` had ZERO existing test coverage,
+      consistent with genuinely-unreferenced code. Not deleted here (out of scope for a column-projection fix, and
+      grep-based "unused" is not proof — `FeatureProcessingResult` in this same file WAS deliberately collapsed to a
+      cross-import from `engine/orchestrator.py` back in 2026-05-11 per `features_service_qg_cleanup` Phase 1.2e, so the
+      class itself may be a leftover the same cleanup missed). **Done when**: confirmed genuinely dead (no dynamic
+      import / plugin-registry / CLI entry-point reference beyond static grep) and deleted, OR confirmed it has a real
+      caller and this todo is closed as not-applicable.
