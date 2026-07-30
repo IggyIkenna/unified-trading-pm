@@ -18,7 +18,7 @@ repos: [deployment-ui, deployment-api]
 scope: [engineer]
 tags: [deployment-ui, fleet, consolidation, cleanup, observability, idle-spend]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
 created: "2026-07-21"

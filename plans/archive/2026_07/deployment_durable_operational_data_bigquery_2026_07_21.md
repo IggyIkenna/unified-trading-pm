@@ -26,7 +26,7 @@ repos: [deployment-service, deployment-api, unified-trading-library, deployment-
 scope: [engineer]
 tags: [observability, bigquery, event-spine, resource-metrics, run-history, idle-spend, process-categorization]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md
   - /plans/active/github_actions_operator_gated_followups_2026_07_17.md
 created: "2026-07-21"
@@ -163,7 +163,7 @@ and fix those as part of the plan too — otherwise I just want the best, most r
       resource-sample event stays its own event/topic rather than reusing `DEPLOYMENT_PROGRESS`, since the flat-schema
       requirement (typed BQ columns) is easier to keep clean on a purpose-built payload than by carving fields back out
       of the general lifecycle event.
-- [x] ✅ _\*PR-6 DONE 2026-07-27 (peak_* deferred, see below)_* — run-ledger: `started_at`/`completed_at` now flow
+- [x] ✅ _\*PR-6 DONE 2026-07-27 (peak__ deferred, see below)\__ — run-ledger: `started_at`/`completed_at` now flow
       through both the daemon's default builder and `heartbeat_cli.py`'s `_vm_run_summary_payload`; `peak_*` resources
       are NOT built (only instantaneous-at-completion `cpu_pct`/`mem_pct`/`disk_pct`, honestly documented in the code
       comment as a follow-up — real peak-tracking needs a running-max mechanism this pass didn't add). Idle-spend: the

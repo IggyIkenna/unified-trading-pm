@@ -8,7 +8,7 @@ summary: >-
   Run SERVICES carry no timestamp at all (an asymmetry vs their AWS ECS twin); several kinds (Job/Scheduler/Disk) have
   only a single timestamp or none. Also folds in the kind filter becoming multi-select, plus the previously-scoped
   service dropdown + target search box (WS-3) since they share the same filter bar.
-status: active
+status: complete # (was: active) 2026-07-30 archival sweep: all 15 todos [x], evidence cited inline on each checkbox
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -16,10 +16,10 @@ repos: [deployment-api, deployment-ui, unified-trading-library]
 scope: [engineer]
 tags: [deployment-ui, filters, search, date-range, observability]
 related:
-  - /plans/active/deployment_ui_observability_ux_tracker_2026_07_17.md
+  - /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md
   - /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md
 created: "2026-07-20"
-last_updated: "2026-07-20"
+last_updated: "2026-07-30"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

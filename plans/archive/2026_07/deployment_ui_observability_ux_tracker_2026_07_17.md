@@ -14,7 +14,7 @@ summary: >-
   resource-metrics timeline — persist the 30s host-metric samples every VM already produces (like logs, same lifecycle),
   for historic CPU/RAM/disk analysis and VM right-sizing per service × asset_group × mode; design decision deliberately
   deferred.
-status: draft
+status: complete # (was: draft) 2026-07-30 archival: all 6 workstreams split + their child plans complete/archived
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -29,8 +29,10 @@ related:
   - /plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md
   - /plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md
   - /plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md
+  - /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md
+  - /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md
 created: "2026-07-17"
-last_updated: "2026-07-17"
+last_updated: "2026-07-30"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -51,6 +53,38 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 ---
 
 # deployment-ui observability & UX — workstream TRACKER
+
+> **🗄️ ARCHIVED 2026-07-30 (plan-hygiene sweep) — all 6 workstreams split, all 7 child plans complete.** Verified
+> directly against each child (not from this tracker's own prior status notes): WS-1
+> [`deployment_ui_cost_per_day_accuracy_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md),
+> WS-2/3
+> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md),
+> WS-4 [`deployment_ui_vm_log_viewer_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md),
+> WS-5A
+> [`deployment_alerts_ingestion_completeness_2026_07_20.md`](/plans/archive/2026_07/deployment_alerts_ingestion_completeness_2026_07_20.md),
+> WS-5B
+> [`deployment_ui_alerts_page_rebuild_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_alerts_page_rebuild_2026_07_20.md),
+> WS-6
+> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md),
+> plus the related Fleet-tab consolidation
+> [`deployment_ui_fleet_tab_consolidation_2026_07_21.md`](/plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md)
+> — all `locked_by:` empty, all zero remaining `- [ ]` todos, all already physically archived. The 3 that still read
+> `status: active` in this tracker's own body/notes (WS-1, WS-2/3, WS-4) were a stale frontmatter artifact,
+> independently corrected to `complete` in this same sweep.
+>
+> **The `- [ ]` checkboxes still visible inside each WS section below are NOT open work.** They are the original
+> pre-split todo lists, explicitly superseded the moment each workstream split (each WS section already banners "✅
+> SPLIT ... Section below stays as the ... record" above its own list) — the live, now-fully-checked todo lists live in
+> the child plans linked above. Left unstruck deliberately, as the historical record this tracker was built to preserve;
+> do not read them as a pending backlog.
+>
+> One separate, genuinely open item surfaced by WS-5's own scale-up work but tracked independently (not a child of this
+> tracker, so not resolved by this archival):
+> [`alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md`](/plans/active/issues/alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md)
+> (`status: open`) — an N+1 GCS-read performance issue in the alerts ledger at scale.
+>
+> Per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`. Original tracker banners kept below for
+> history.
 
 > **🟡 TRACKER — DO NOT DISPATCH THIS FILE, EVER.** Operator 2026-07-17 — _"its going to be a tracker for now and we
 > will split them once we are done."_ This file exists to capture every workstream NOW so nothing is missed; it stays
@@ -73,9 +107,9 @@ source: operator dictation 2026-07-17 (interactive session — six deployment-ui
 ## WS-1 — Cost/day column accuracy (root cause CONFIRMED — ready to split first)
 
 > **✅ SPLIT 2026-07-20** — all four open decisions confirmed with the operator; the executable plan is
-> [`deployment_ui_cost_per_day_accuracy_2026_07_20.md`](deployment_ui_cost_per_day_accuracy_2026_07_20.md) (kept
-> `status: draft` deliberately — operator is mid-change on AO, dispatch held until that settles). The section below
-> stays as the root-cause record; decisions + todos now live in the split plan.
+> [`deployment_ui_cost_per_day_accuracy_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md)
+> (kept `status: draft` deliberately — operator is mid-change on AO, dispatch held until that settles). The section
+> below stays as the root-cause record; decisions + todos now live in the split plan.
 
 ### The symptom (operator, 2026-07-17)
 
@@ -206,7 +240,7 @@ Path:
 
 > **✅ SPLIT 2026-07-20** — live audit run (not gated as a separate plan, per operator decision), combined with WS-3
 > into
-> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](deployment_ui_date_range_filter_and_search_2026_07_20.md)
+> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md)
 > (kept `status: draft` — dispatch held pending AO changes settling). Audit found the archive is 30-day-TTL'd (not the
 > endpoint's self-imposed 7-day cap), a heartbeat-staleness gap in the naive "still running" formula (219 registry rows
 > read `running` vs 12 actually running), and that `CLOUD_RUN_SERVICE` carries no timestamp field at all. Section below
@@ -252,7 +286,7 @@ write clear instructions in the plan.
 ## WS-3 — Service filter + Target search box (Deployments tab)
 
 > **✅ SPLIT 2026-07-20** — folded into the WS-2 plan above (same filter bar, same surface):
-> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](deployment_ui_date_range_filter_and_search_2026_07_20.md).
+> [`deployment_ui_date_range_filter_and_search_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_date_range_filter_and_search_2026_07_20.md).
 > Also picked up a new item from this session: the existing `kind` filter becomes multi-select.
 
 ### Operator ask (2026-07-17)
@@ -280,11 +314,11 @@ A **filter on top for Service** and a **search bar for the Target column**.
 ## WS-4 — VM drill-down logs (populate · size · capped tail · download)
 
 > **✅ SPLIT 2026-07-20** — live repro audit run, findings reframed the whole workstream:
-> [`deployment_ui_vm_log_viewer_2026_07_20.md`](deployment_ui_vm_log_viewer_2026_07_20.md) (kept `status: draft` —
-> dispatch held pending AO changes settling). The audit found `run.log` content is **never fetched into the browser at
-> all today** — the "Live log tail" panel is a mislabeled lifecycle-events stream from a different bucket, and
-> "Download" saves those events as CSV, not the log. The archive-path lookup 404s live for real VMs (dated by
-> `completed_at`, but the archiver actually keys by cron-run date). Section below stays as the pre-audit record.
+> [`deployment_ui_vm_log_viewer_2026_07_20.md`](/plans/archive/2026_07/deployment_ui_vm_log_viewer_2026_07_20.md) (kept
+> `status: draft` — dispatch held pending AO changes settling). The audit found `run.log` content is **never fetched
+> into the browser at all today** — the "Live log tail" panel is a mislabeled lifecycle-events stream from a different
+> bucket, and "Download" saves those events as CSV, not the log. The archive-path lookup 404s live for real VMs (dated
+> by `completed_at`, but the archiver actually keys by cron-run date). Section below stays as the pre-audit record.
 
 ### Operator ask (2026-07-17)
 
@@ -383,7 +417,7 @@ thorough alert coverage** — do that audit first, then write the plan.
 > genuinely open items are: the systemd timer for the process-category sampler failing to start unattended (root-cause
 > not yet found, safety-net bridge cron still running), the process-category UI wiring in deployment-ui, the
 > analysis-path doc, and one codex cross-ref. Executable plan:
-> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](deployment_durable_operational_data_bigquery_2026_07_21.md).
+> [`deployment_durable_operational_data_bigquery_2026_07_21.md`](/plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md).
 > Section below stays as the pre-decision record + the three write-path options originally considered — no longer live,
 > kept for history only.
 
@@ -633,6 +667,20 @@ phases where a build depends on an audit/decision.
     believed it wasn't deleted; it is). The WS-6 run-ledger fixes this.
   - **Operator laptops (harsh-pc/Ikenna) are standalone/isolated** — no `ORCHESTRATOR_VM_ID` ⇒ never in the central
     fleet view; the extra IP the operator saw was their own locally-run AO backend.
+
+- **2026-07-30 (archival sweep, operator-directed)** — Operator asked whether this tracker + all 7 child plans were
+  ready to archive. Verified each child directly (frontmatter `status`/`locked_by`, remaining `- [ ]` count) rather than
+  trusting this tracker's own Split-map/Deferred-work notes: all 7 (WS-1, WS-2/3, WS-4, WS-5A, WS-5B, WS-6, Fleet-tab
+  consolidation) were already physically archived, unlocked, zero open todos. Found + fixed two hygiene gaps before
+  archiving this file: (1) WS-1/WS-2-3/WS-4 still carried a stale `status: active` despite being fully done and already
+  archived — flipped to `complete` in each; (2) this tracker's own Split-map/WS-section links used bare relative
+  filenames that assumed a `plans/active/` sibling — now dangling since the children moved to `plans/archive/2026_07/` —
+  rewritten to full repo-root-relative paths. Also cross-checked `plans/active/issues/` for anything still open against
+  this tracker's scope: found one genuinely open, unrelated-lifecycle item —
+  `alerts_endpoint_per_object_gcs_read_performance_2026_07_23.md` (an N+1 GCS-read perf bug WS-5A's own scale
+  measurement surfaced) — left open and untouched, flagged in the archival banner rather than silently resolved by this
+  sweep. This tracker's own 25 `- [ ]` lines were confirmed to be pre-split historical record only (each WS section
+  already banners its own supersession) — not live work, left unstruck deliberately. No code changed; docs-only.
 
 ## Codex SSOTs
 
