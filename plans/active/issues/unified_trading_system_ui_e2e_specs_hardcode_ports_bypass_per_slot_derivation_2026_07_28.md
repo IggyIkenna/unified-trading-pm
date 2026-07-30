@@ -99,7 +99,7 @@ Migrate these ~40 files to import `BASE_URL`/`API` from `E2E_CONFIG` (`tests/e2e
 
 ## Todos
 
-- [ ] [UI] P2. Batch 1 — migrate the "no env-var path" API-only specs (21 files: `indicators.spec.ts`,
+- [x] ✅ [UI] P2. Batch 1 — migrate the "no env-var path" API-only specs (21 files: `indicators.spec.ts`,
       `data-freshness.spec.ts`, `flows.spec.ts`, `lifecycle.spec.ts`, `responsive.spec.ts`, `instruments.spec.ts`,
       `reset-demo.spec.ts`, `admin-flow.spec.ts`, `org-isolation.spec.ts`, `observe-flow.spec.ts`,
       `strategy-scale.spec.ts`, `reports-flow.spec.ts`, `export-tests.spec.ts`, `research-flow.spec.ts`,
@@ -109,7 +109,16 @@ Migrate these ~40 files to import `BASE_URL`/`API` from `E2E_CONFIG` (`tests/e2e
       to `E2E_CONFIG` alongside `apiPort` if it doesn't already read cleanly). Done-when:
       `rg -n     '"http://localhost:8030"' tests/e2e/*.spec.ts` returns 0 hits for these 21 files; `pw:L2 ✓` unaffected
       (these aren't in the gate population, so cite a manual run of a sample of these specs against this slot's derived
-      port instead). (repo: unified-trading-system-ui)
+      port instead). — unified-trading-system-ui@db918e1c. Added `E2E_CONFIG.apiUrl` (slot-derived
+      `http://localhost:${apiPort}`) in `tests/e2e/_shared/config.ts`; all 21 files now
+      `import { E2E_CONFIG } from     "./_shared/config"` and use `const API = E2E_CONFIG.apiUrl;`.
+      `rg -n '"http://localhost:8030"'` over the 21 files returns 0 hits. Manual run
+      (`npx playwright test --project=chromium tests/e2e/indicators.spec.ts     tests/e2e/reset-demo.spec.ts`) on slot 7
+      confirmed the API constant resolves to this slot's derived port (`http://localhost:8037` = 8030+7, per the
+      `apiRequestContext.post` connect log) instead of the old fixed `:8030` — the ECONNREFUSED seen is the expected "no
+      live uvicorn API for this slot" case (would need `E2E_USE_REAL_API=1`, out of scope for this UI-only todo per the
+      ui_developer craft boundary), not a wrong-port or cross-slot-reuse hit. tsc/ESLint/full quality-gates.sh all green
+      (sentinel `db918e1c`); quickmerge shipped to `live-defi-rollout`.
 - [ ] [UI] P2. Batch 2 — migrate the "no env-var path" BASE_URL-only widget/strategy specs (~19 files under
       `tests/e2e/widgets/defi/*.spec.ts` and `tests/e2e/strategies/**/*.spec.ts`) to import `E2E_CONFIG.baseURL` instead
       of the literal `"http://localhost:3100"`. Same done-when pattern as Batch 1. (repo: unified-trading-system-ui)
