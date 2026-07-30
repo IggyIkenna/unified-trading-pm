@@ -36,6 +36,7 @@ supersedes:
 superseded_by:
 source: "autonomous session 2026-07-30, VM launch + monitoring for infra_capture_and_devops_leftovers_2026_07_06.md"
 resolved_by:
+drift_direction: advance-code
 ---
 
 # CeFi consolidated VM — ASTER data-landing re-check after 13:30 UTC
