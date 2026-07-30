@@ -274,7 +274,6 @@ against the reproduction script.
   normal deploy-lag window, not a fix failure) — not a live process still failing. Flipped the P2 verification todo with
   this finding. No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged
   `dp-fleet-monitor` (my `AUTHORING_SLOT`) with the duplicate-escalation outcome.
-<<<<<<< HEAD
 - **2026-07-30 (slot-12, `/ag-closeout-audit cefi`):** Flipped the false-unchecked `derivative_ticker` P3 todo — it was
   provably already shipped (`market-tick-data-service@6bf568ee`, verified live in `tardis_shared.py`'s
   `_WIRE_COLUMN_RENAMES`), found via
