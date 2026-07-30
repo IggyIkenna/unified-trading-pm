@@ -130,7 +130,44 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       per-invocation-correct mechanism could still race; or (b) a second, still-unidentified mechanism produces the same
       symptom independently of fix_frontmatter.py. Needs a worker to actually stress-test concurrent `prek` invocations
       against this file, not just read source serially — see the 9-patch forensic list + self-perpetuation hypothesis in
-      the Progress Log below as a starting evidence base.
+      the Progress Log below as a starting evidence base. **UPDATE 2026-07-30 (slot-1) — see the new P1 immediately
+      below: the actually-running prek binary on this host turned out to be 5+ months stale and confirmed to predate a
+      real, matching upstream bugfix in this exact code path. Hypothesis (b) now has a concrete, named candidate.**
+- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the actually-invoked `prek` binary is `0.3.1` (2026-01-31), 5+ months
+      and ~15 releases stale, and upstream has since fixed a confirmed corruption bug in the exact stash/restore code
+      path this issue is about.** `which prek` → `/home/hk/.local/bin/prek` → `prek --version` reports `0.3.1`; its
+      mtime (`2026-01-31 18:52:26`) matches 0.3.1's release day exactly, i.e. it was installed once and never touched
+      since — no deliberate pin anywhere in the workspace (grepped `.pre-commit-config.yaml`/`*.toml`/codex, zero hits).
+      Note `pip show prek` separately reports `0.4.10` — a SEPARATE pip-managed install that is NOT the one on `PATH`;
+      the two install channels have drifted and the stale one is the one every hook actually runs through. **Confirmed
+      via `gh` against `j178/prek` upstream (the real repo, verified via `gh api repos/j178/prek`):** -
+      [j178/prek#2142](https://github.com/j178/prek/issues/2142) / [#2143](https://github.com/j178/prek/pull/2143) ("Fix
+      intent-to-add stash restore", merged 2026-06-03, shipped in **v0.4.4**) — a **CONFIRMED, reproducible, fixed**
+      bug: when the stash-restore patch fails to apply cleanly, the OLD code (identical in structure to what our 0.3.1
+      binary still runs) restored files in the wrong order, corrupting file content on rollback. The PR touches
+      `crates/prek/src/cli/run/keeper.rs` — the exact file/mechanism this whole issue is about. Our binary predates this
+      fix by 2 major bugfix releases. - [j178/prek#1889](https://github.com/j178/prek/issues/1889) /
+      [#1890](https://github.com/j178/prek/pull/1890) ("Stash conflict rollback corrupts git index, causing newly added
+      files to be committed empty") — describes a **near-exact match** to our symptom class: an auto-fixing hook (their
+      repro used `end-of-file-fixer` / `trailing-whitespace`; ours is `fix_frontmatter.py` — same role) modifies staged
+      files while unstaged changes exist elsewhere, prek detects a stash conflict, rolls back via
+      `checkout_working_tree(root)` — which checks out from the **current index**, not a saved pre-hook tree snapshot —
+      and the rollback can leave a mix of old/new content instead of cleanly one or the other. **This PR was CLOSED
+      WITHOUT MERGING** (2026-05-03) after the maintainer said they could not reproduce the general (non-intent-to-add)
+      case with a minimal repro; verified directly by fetching current upstream master's `keeper.rs`
+      (`gh api repos/j178/prek/contents/...`) — as of today it is STILL the single-arg `checkout_working_tree(root)` (no
+      tree-ish parameter), i.e. this fix was never applied upstream in any version, including current `0.4.11`.
+      Calibration: treat this as a **plausible, not confirmed** contributing mechanism — the maintainer's inability to
+      reproduce it generally (vs. the narrower, confirmed, FIXED intent-to-add case above) means it should not be cited
+      as proven. - v0.4.6 ([#2130](https://github.com/j178/prek/pull/2130)) added `--no-stash` / `PREK_NO_STASH=1` / a
+      `no_stash` config key — an explicit opt-out for the entire stash/restore mechanism, also unavailable on our stale
+      0.3.1 binary. **Recommendation (not executed — host-wide shared binary used by every concurrent slot, needs an
+      explicit call, not a unilateral change mid-session):** upgrade `~/.local/bin/prek` to current (`0.4.11` at time of
+      writing). This is a strict improvement regardless of which exact mechanism (confirmed #2142 class, or unconfirmed
+      #1889 class, or something else) is producing our specific corruption — it cannot make things worse, and it closes
+      at least one CONFIRMED bug in the exact code path. If corruption recurs even after upgrading,
+      `--no-stash`/`PREK_NO_STASH=1` is available as a stronger fallback that bypasses the risky mechanism entirely (at
+      the cost of prek erroring instead of auto-stashing when unstaged changes are present).
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — defensive backstop shipped regardless of root cause.** Whatever the
       remaining mechanism turns out to be, this corruption can no longer silently land: `scripts/docs/docspec.py`'s
       `date`-kind field validator (`_validate_value`) was a PREFIX-only check (`len(s)>=10` + dash-position check) that
@@ -236,3 +273,36 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   against the full 1829-doc live corpus (zero new violations) and a direct reproduction test. `status` left `open` — the
   underlying recurring-corruption mechanism is still not identified; only the silent-landing consequence is now closed
   off.
+
+- **2026-07-30 (slot-1, harsh_pc) — the stale-binary finding.** Prompted to go back and investigate what was left
+  unresolved after the docspec.py backstop shipped. Checked the actual prek binary in use rather than continuing to
+  treat it as an opaque black box: `which prek` resolves to `/home/hk/.local/bin/prek`, and `prek --version` reports
+  `0.3.1` — released 2026-01-31, with the binary's own mtime matching that exact date, meaning it was installed once
+  (the day 0.3.1 shipped) and never upgraded since. Separately, `pip show prek` reports `0.4.10` — a second, unused
+  install channel that drifted independently; the one on `PATH`, the one every hook actually runs through, is the
+  ~6-month-stale one. No deliberate version pin exists anywhere in the workspace (checked `.pre-commit-config.yaml`,
+  `*.toml`, codex — zero hits), so this is simple staleness, not an intentional choice.
+
+  Used `gh api`/`gh pr`/`gh issue` against the real upstream repo (`j178/prek`, confirmed via `gh api repos/j178/prek`,
+  8.1k stars, MIT) to read every release's changelog between 0.3.1 and 0.4.11 and grep the commit history of
+  `crates/prek/src/cli/run/keeper.rs` (the exact file this whole issue is about) for anything touching stash/restore.
+  Found two directly relevant upstream items, cited with full detail in the two new P1 todos above:
+  1. **j178/prek#2142/#2143** — a CONFIRMED, reproducible bug ("Content of 'intent to add' files lost after stashed
+     changes conflicted with changes made by hook") in this exact code path, fixed in v0.4.4 (2026-06-04). Our binary
+     predates the fix.
+  2. **j178/prek#1889/#1890** — a proposed fix for a near-exact match to our symptom class (auto-fixing hook modifies
+     staged files + unstaged changes elsewhere + stash conflict → rollback checks out from the current, possibly
+     already-drifted index instead of a saved pre-hook tree snapshot, mixing old/new content). Confirmed via a direct
+     fetch of current upstream master's `keeper.rs` that this fix was **never merged** — `checkout_working_tree()` is
+     still single-arg (no tree-ish) in `0.4.11` today, so if this is a real general-case bug (the maintainer said they
+     personally could not reproduce it outside the narrower, since-fixed intent-to-add case), it remains open in the
+     latest available version too, not just our stale 0.3.1.
+
+  **What this changes about the open P1 above**: hypothesis (b) — "a second, still-unidentified mechanism" — now has a
+  concrete, named, evidence-backed candidate instead of being a total unknown. It is not a slam-dunk confirmed root
+  cause (the #1889 half is explicitly maintainer-unreproduced), but the #2142 half alone is enough to justify upgrading
+  regardless: our binary is definitively missing a fix for a real, confirmed corruption bug in the exact mechanism this
+  issue is chasing. **Did not perform the upgrade this session** — `~/.local/bin/prek` is shared, host-wide, non-git-
+  tracked infrastructure that every concurrently-running slot depends on; swapping it mid-session without the operator's
+  awareness is a materially different kind of action than shipping a scoped code fix inside one repo, so it was left as
+  an explicit recommendation (see the todo above) rather than done unilaterally. `status` stays `open`.
