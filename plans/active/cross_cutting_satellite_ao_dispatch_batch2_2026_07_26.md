@@ -255,15 +255,25 @@ drift_direction: advance-code
       duplicate alert alongside the existing `DP_NOT_V9` WARN). Both source checkboxes in
       `data_pipeline_alert_substrate_residual_2026_07_24.md` flipped in the same turn. Both repos' `quality-gates.sh`
       green.
-- [ ] [CODE] P2. **Add the two missing UTL event-string constants and the per-source rate-limit health event.** (a) UTL
-      `events/event_types.py` + `events/__init__` export: add `DP_DAILY_DIGEST` and `DP_HYGIENE_SUMMARY` (verified
+- [x] ✅ [CODE] P2. **Add the two missing UTL event-string constants and the per-source rate-limit health event.** (a)
+      UTL `events/event_types.py` + `events/__init__` export: add `DP_DAILY_DIGEST` and `DP_HYGIENE_SUMMARY` (verified
       absent 2026-07-26 — the routing already works via the UAC rule matching the event string, so this is cleanliness,
       but the constants genuinely do not exist yet). (b) MTDS: emit a per-source
       `SOURCE_RATE_LIMITED{source, venue,     http_429_count}` and `SOURCE_KEY_POOL_EXHAUSTED` event to
       `data-pipeline-alerts` (C5 — the TheGraph 9-key pool, Databento, etc.). Source:
       `data_pipeline_alert_substrate_residual_2026_07_24.md`. **Done when**: both constants exist and are exported with
       UTL QG green, the MTDS emit lands with a test asserting the 429-count payload, and both source checkboxes are
-      flipped.
+      flipped. — **ALREADY-LANDED, found during finalize todo-1 reconciliation (2026-07-30, this commit) — NOT shipped
+      by this batch.** Both halves landed via the sibling
+      `data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md` gated-twin plan, dated AFTER this
+      batch's own 2026-07-26 "verified absent" premise: (a) `unified-trading-library@0f851fd6` (2026-07-30) adds
+      `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` to `events/event_types.py` + `events/__init__` export. (b)
+      `market-tick-data-service@7f42c557` (2026-07-30) — `DP_SOURCE_RATE_LIMITED{source,venue,http_429_count}` extended
+      to Databento's `DatabentoIPRateLimiter` (TheGraph's half already existed via `477de66c`); `DP_KEY_POOL_EXHAUSTED`
+      correctly does not apply to Databento post-cutover (single canonical key, no pool to exhaust). Both source
+      checkboxes in `data_pipeline_alert_substrate_residual_2026_07_24.md` are flipped there (verified — that doc is now
+      archived at `/plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md`). This batch's own
+      checkbox was simply never re-synced after the sibling plan shipped; flipping now closes that gap.
 - [x] ✅ [CODE] P1. **RESOLVED 2026-07-28 — root cause was NOT alerting-service code (none of the doc's 3 named
       hypotheses); it was a project-wide Cloud Logging sink exclusion.** `gcloud logging read` on the live
       `dp-alerting-subscriber` (project `central-element-323112`) returned **zero** `run.googleapis.com/stdout` or
