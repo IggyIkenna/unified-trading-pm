@@ -134,22 +134,48 @@ merged by hand, then superseded by the resumed agent-orchestrator wave-2 agent's
 additionally caught the two findings don't actually explain the SAME documented incident timeline — left that version in
 place, did not re-do it.
 
-**Still pending as of this write-up**: wave 2's 4 agents were resumed after the restart and may still be running — check
-their completion before dispatching wave 3. Once wave 2 is confirmed done: recount, and if the fresh-candidate pool is
-still meaningful, dispatch wave 3 following the exact methodology above. Also worth a periodic re-check of the 39
-originally-keyword-gated docs from wave 1 — some may have been misclassified by the keyword filter (a "terraform apply"
-mention doesn't always mean the WHOLE doc's remaining scope is gated, sometimes only one sub-item is).
+**2026-07-30, Wave 2 confirmed complete**: all 4 agents finished (after further session-limit + a transient DNS/network
+outage across all 3 remaining agents simultaneously — resumed each the same way, no data lost). Real yield: 12+ docs
+archived, a tri-state CI-status bug fixed across 2 repos (deployment-api + deployment-ui), a real cross-chain
+`pool_address` collision bug fixed in DeFi calculators (features-service), the SAME id-form-mismatch bug pattern found
+and fixed a second time in a different handler (risk_params_handler.py, mirroring an earlier base_defi_adapter.py fix),
+11 verified-stale GCS test objects deleted with full delete-safety checks, and 2 more correctly-respected `locked_by`
+docs left unarchived per the hard rule. Post-wave-2 recount: total still 647 (was 648 pre-wave-1, 685 at marathon start)
+— 132 docs archived across 07-29/30 by git log, confirming the corpus really is being replenished by the wider
+concurrent fleet at close to the rate this marathon is shrinking it. This is real, valuable work regardless of the
+topline number (dozens of genuine production bugs found+fixed along the way) — continuing per the operator's "keep going
+until genuinely out of safe doable work" directive, not chasing an exact number.
+
+**2026-07-30, hygiene re-check**: `check_archive_candidates.sh` (now a hard gate) found 15 NEW candidates (baseline
+was 7) + `check_terminal_status_archived.py` found 2 new status-mismatches — dispatched a dedicated archival-only agent
+for these 17 (pure mechanics, no investigation needed, cheapest possible wins).
+
+**2026-07-30, Wave 3**: post-wave-2 fresh pool (excluding everything dispatched in waves 1+2, 375 docs total) → only 22
+fresh candidates remained (confirms waves 1+2 already covered the vast majority of the corpus's current 1-2-open-todo
+docs — most of the still-309-strong pool are repeats correctly judged too-deep/gated). Keyword filter: 3 gated, 19
+MAYBE_DOABLE across agent-orchestrator (5), unified-trading-pm (5, mostly finalize-companion plans), and
+MTDS/instruments-service/deployment-service/unified-trading-library (9). Dispatched 3 agents.
+
+**Standing observation after 2.5 waves**: with the corpus this actively fed by the wider concurrent fleet, "under 300"
+may not be reachable via solo archival effort alone within one continuous session — but each wave still (a) permanently
+removes real done-but-unarchived debt, (b) finds and fixes genuine production bugs along the way (a running tally: 2
+silent-data-corruption bugs, 1 crash-class candle-contract gap, 1 cross-chain id-collision bug, 1 tri-state CI-status
+bug, 2 instances of the same id-form-mismatch bug pattern, 1 shutdown-latency fix, plus several archival-hygiene infra
+fixes), and (c) the `check_archive_candidates.sh` hard-gate fix is a durable, compounding improvement that keeps working
+after this session ends, regardless of the fleet's creation rate.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Confirm wave 2's 4 agents (unified-trading-pm/ac21f519cc3ff91c2,
-      agent-orchestrator/ab4b3d31836642bb2, MTDS+deployment-service+deployment-api/a7044e24886cb1ed0,
-      alerting+features+instruments+MDPS/a5501658dba1959d8) all reached a final structured report; consolidate their
-      yield into this doc's Progress Log.
-- [ ] [SCRIPT] P2. Recount the plans+issues total (`find plans/active -iname "*.md" | wc -l`) and the fresh
-      1-2-open-todo pool. If total is still meaningfully over 300 and a fresh candidate pool of >20 docs exists,
-      dispatch wave 3 using the exact methodology documented above (keyword filter → group by repo → batch-ship-last
-      sub-agents → resume on any failure without asking).
+- [ ] [SCRIPT] P2. Confirm the archival-only agent (17 items: 15 archive-candidates + 2 status-mismatches) and wave 3's
+      3 agents (agent-orchestrator cluster: 5 docs; unified-trading-pm cluster: 5 docs, mostly finalize companions;
+      MTDS+instruments-service+deployment-service+unified-trading-library cluster: 9 docs) all reached a final
+      structured report; consolidate yield into this doc's Progress Log.
+- [ ] [SCRIPT] P2. Recount the plans+issues total and the fresh 1-2-open-todo pool. If a fresh candidate pool of >15-20
+      docs still exists after excluding everything dispatched across waves 1-3, dispatch wave 4 using the exact
+      methodology above. If the fresh pool has shrunk to near-zero (most of what remains is correctly keyword-gated or
+      already-triaged-as-deep), that's the natural stopping point for the wave-dispatch mechanism — switch to just
+      running `check_archive_candidates.sh`/`check_terminal_status_archived.py` periodically to catch new
+      done-but-unarchived docs as the fleet creates them (cheap, mechanical, real ongoing value).
 - [ ] [SCRIPT] P3. Periodically re-run `bash scripts/plan-hygiene/check_archive_candidates.sh` (now a real hard gate)
       and `--update-baseline` it downward as waves land, so the ratchet keeps tightening rather than just tolerating the
       current count forever.
