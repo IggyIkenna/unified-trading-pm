@@ -115,24 +115,54 @@ locked_since:
 - [x] ✅ [VERIFY] P2. Post-fix: re-measure prediction attempted/captured trajectory on a sampled window; append
       before/after counts here and to the coverage docs if the model description changes. — `unified-trading-pm` (this
       doc's Progress Log below). Verdict: **improvement CONFIRMED, no model-description change needed.**
-- [ ] [INFRA] P1. **RULED 2026-07-28 — GO. Retagged away from its prior operator-decision gate.** Applying the
-      operator's general theme ("full backfills, full migrations... as long as an item isn't superseded by more recent
-      work, DO IT"; "cost under $100 is not a concern"; "do not allow anything to partially complete"): launch the
-      historical prediction re-backfill under the widened catalogue, **SHARDED ACROSS SEVERAL SPOT VMs** (the ~2-3-day
-      option, not the ~9-11-day single-process option) — cost estimate in `## Re-backfill cost quantification` below
-      (≈16.1M additional (conditionId × day) fetch attempts over 2025-03-14→2026-07-14; expected NEW captured cells
-      order 10^6). This is a real, quantified, closeable data-correctness gap (the historical corpus is
-      resolution-day-scoped, not active-window-scoped, per this issue's own Finding 2) and nothing since 2026-07-14 has
-      superseded or replaced the need for it. **Full-completion mandate for whoever dispatches this**: cover the ENTIRE
-      2025-03-14→today range in one pass — do not stop at a bounded recent window and call it done; launch via a
-      sanctioned VM launcher (grep `deployment-service/scripts/vm/`'s `VM_PREFIX_TO_BUCKET` registry first, never
-      hand-roll a name), default `--provisioning-model=SPOT` per the backfill-VM HARD RULE, wire the PROGRESS-checkpoint
-      contract so a preemption resumes from measured progress rather than replaying `START_DATE`, and re-run this
-      issue's own P2 VERIFY methodology (`read_capture_status_counts`, manifest-only, no GCS walk) once the backfill
-      completes to confirm the captured-fraction improvement holds at full historical-corpus scale, not just the sampled
-      live-window scale already measured above.
+- [~] [INFRA] P1. **IN PROGRESS 2026-07-30 — launched, healthy, not yet complete (see Progress Log).** RULED 2026-07-28
+  — GO. Retagged away from its prior operator-decision gate. Applying the operator's general theme ("full backfills,
+  full migrations... as long as an item isn't superseded by more recent work, DO IT"; "cost under $100 is not a
+  concern"; "do not allow anything to partially complete"): launch the historical prediction re-backfill under the
+  widened catalogue, **SHARDED ACROSS SEVERAL SPOT VMs** (the ~2-3-day option, not the ~9-11-day single-process option)
+  — cost estimate in `## Re-backfill cost quantification` below (≈16.1M additional (conditionId × day) fetch attempts
+  over 2025-03-14→2026-07-14; expected NEW captured cells order 10^6). This is a real, quantified, closeable
+  data-correctness gap (the historical corpus is resolution-day-scoped, not active-window-scoped, per this issue's own
+  Finding 2) and nothing since 2026-07-14 has superseded or replaced the need for it. **Full-completion mandate for
+  whoever dispatches this**: cover the ENTIRE 2025-03-14→today range in one pass — do not stop at a bounded recent
+  window and call it done; launch via a sanctioned VM launcher (grep `deployment-service/scripts/vm/`'s
+  `VM_PREFIX_TO_BUCKET` registry first, never hand-roll a name), default `--provisioning-model=SPOT` per the backfill-VM
+  HARD RULE, wire the PROGRESS-checkpoint contract so a preemption resumes from measured progress rather than replaying
+  `START_DATE`, and re-run this issue's own P2 VERIFY methodology (`read_capture_status_counts`, manifest-only, no GCS
+  walk) once the backfill completes to confirm the captured-fraction improvement holds at full historical-corpus scale,
+  not just the sampled live-window scale already measured above.
 
 ## Progress log
+
+- **2026-07-30 (slot 4, infra, dispatch `prediction_satellite_ao_dispatch_batch6-004`) — LAUNCHED, IN PROGRESS, not
+  complete.** Sharded across 4 concurrent SPOT VMs via
+  `deployment-service/scripts/vm/launch-mtds-prediction-backfill-vm.sh --force` (the sanctioned launcher; `--force`
+  needed to bypass its Polymarket singleton lock for legitimate parallel shards — see the finding below):
+  `mtds-prediction-polymarket-20260730-161607` (2025-03-14→2025-12-09), `-161641` (2025-12-10→2026-03-04), `-161707`
+  (2026-03-05→2026-04-27), `-161832` (2026-04-28→2026-06-15) — covers the full mandate range up to the day before the
+  live-cron fix (2026-07-14); days after that are already correctly captured by the post-fix live cron per this doc's
+  own 2026-07-27 VERIFY measurement, so re-running them would be a redundant (though safe, skip-if-fresh) no-op — not
+  launched as a 5th shard to avoid adding more concurrent load to an already-contended API for zero new coverage. All
+  `--provisioning-model=SPOT`, `e2-standard-4`, zone `asia-northeast1-c`, PROGRESS-checkpoint contract active (per-VM
+  manifest shards). **Verified no fire-and-forget**: all 4 STARTED <60s (confirmed via
+  `gcloud compute instances describe` creation timestamps + immediate run.log activity), and at T+~25min all 4 show
+  fresh `PIPELINE_HEARTBEAT` lines (<2 min old) plus real `Processed date=...` progress lines with captured record
+  counts (up to 861,763 records for a single busy day) — genuinely live, not stalled. **Finding — real 429 contention
+  under 4-way concurrency, but non-fatal.** The launcher's singleton lock exists specifically to prevent this
+  (`codex/05-infrastructure/vm-tarball-deployment.md` "Original 3 anchors"), and its stated rationale ("concurrent VMs
+  share the project egress NAT") was checked live and found WRONG — each VM gets its own distinct external IP
+  (`gcloud compute instances describe` on all 4 confirmed 4 different ephemeral public IPs) — but the underlying 429
+  collision it warns about IS real regardless of the wrong mechanism: 392-668 HTTP 429 responses observed per VM over
+  ~25 minutes. Corrected the codex doc's rationale in the same commit. Because the adapter's existing retry/backoff (3
+  attempts) absorbed every 429 with **0 recorded `failed` outcomes across all 4 shards**
+  (`grep "Processed date=" ... | grep -v ": 0 failed"` → none), this is a real but tolerable throughput cost, not a
+  correctness risk — proceeded rather than falling back to the ~9-11-day single-VM option the source todo explicitly
+  disfavored. **Not flipping to done**: this todo's own "Done when" bar requires the backfill to REACH a terminal
+  STOPPED/FAILED state plus a post-completion VERIFY re-run at full-corpus scale — neither has happened yet (all 4
+  shards are still RUNNING). Marked `[~]` in-progress rather than `[x]`. **Follow-up needed** (not a new todo — this
+  same item, to be picked up by a future dispatch/check): confirm all 4 shards reach STOPPED with 0 `attempted_failed`
+  pileup, then run this issue's own P2 VERIFY methodology (`read_capture_status_counts`, manifest-only) at full-corpus
+  scale, then flip this checkbox to `[x]` citing the VERIFY numbers.
 
 - **na-eligibility-audit 2026-07-30 (prediction tranche)**: KEEP-NA, valid — 1 open ([INFRA] P1, the RULED-GO historical
   prediction re-backfill). CONFLICT: `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` todo 4 claims it verbatim,
