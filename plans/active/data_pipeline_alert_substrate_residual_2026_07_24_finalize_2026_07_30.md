@@ -89,11 +89,35 @@ This twin holds that verification plus the archival ritual.
       page) in `alerting-service/tests/unit/rules/test_data_pipeline_rules.py`, plus a registry-lookup test asserting
       the `DP-RATE-001`/`DP-RATE-002` registry ids. 16/16 tests green (5 new); full `quality-gates.sh` green, shipped
       via `quickmerge --agent`.
-- [ ] [UI] P2. **Confirm the streaming-events pane renders a real VM event stream.** The source plan's `[UI] P0` ships
-      the pane; this verifies it against live data rather than mock — per-AG/per-VM tail, honest empty-state when a VM
-      has emitted nothing (never a fabricated row). `[UI]` gate applies: needs `pw:L2 ✓` plus a cited regression spec
-      per [`/codex/06-coding-standards/ui-testing-layers.md`](/codex/06-coding-standards/ui-testing-layers.md). **Done
-      when**: the pane is verified against a live stream and the regression spec is cited. Repo: deployment-ui.
+- [x] ✅ [UI] P2. **Confirm the streaming-events pane renders a real VM event stream.** The source plan's `[UI] P0`
+      ships the pane; this verifies it against live data rather than mock — per-AG/per-VM tail, honest empty-state when
+      a VM has emitted nothing (never a fabricated row). `[UI]` gate applies: needs `pw:L2 ✓` plus a cited regression
+      spec per [`/codex/06-coding-standards/ui-testing-layers.md`](/codex/06-coding-standards/ui-testing-layers.md). —
+      **deployment-ui@228ccb0** | `pw:L2 ✓` | regression: `tests/smoke/cockpit-streaming-logs-live-contract.spec.ts`.
+      Verified LIVE (not just by code-reading): brought up the real, non-mock deployment-api backend
+      (`CLOUD_MOCK_MODE=false`, via `unified-trading-pm/scripts/dev/restart-deployment-stack.sh --api`) and curled
+      `GET /api/logs/stream/{ref}` directly. A genuinely running VM (`cefi-hyperliquid-2024-20260727-071055`) streamed
+      real `vm_event` frames — actual `PIPELINE_HEARTBEAT` / `RESOURCE_PROFILER_SAMPLE` telemetry carrying real
+      `asset_group=cefi` data, confirming the per-AG/VM tail is genuine, not fabricated. A never-existed VM ref streamed
+      ONLY `heartbeat`/`ping` frames for 35s straight — zero `vm_event`, never a synthesized row (backend trace:
+      `deployment-api/routes/log_stream.py` `_vm_sse_generator`'s `_collect_blob_names` returns `([], [])` on an empty
+      GCS prefix; the loop simply never yields, it does not invent one). Locked that proven contract into a new hermetic
+      Playwright spec (`cockpit-streaming-logs-live-contract.spec.ts`, 2 tests, `page.route()`-fulfilled SSE responses
+      shaped exactly like the live-observed payloads — EventSource issues a real network request unlike the app's
+      `fetch` calls, so Playwright's route layer can intercept it) + a `data-testid="streaming-logs-empty"` on
+      `StreamingLogsPanel.tsx`'s honest-empty-state div for reliable assertion. Both new tests + the directly-related
+      `cockpit-alerts-logs-ag-vm-picker.spec.ts` + `cockpit.spec.ts` (40 tests total) pass 100%. The whole-suite
+      `npx playwright test --project=chromium tests/smoke/` run shows 407 passed / 17 failed — confirmed by
+      `git stash`-ing both my touched files and re-reproducing an identical failure list on the pristine tree, so all 17
+      are pre-existing and unrelated to this change; documented + 5 newly-surfaced clusters added as tracked todos in
+      the already-open
+      [`/plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`](/plans/active/issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md)
+      rather than duplicating a new issue doc. Also discovered `deployment-api/routes/log_stream.py`'s
+      `_vm_sse_generator`/`_live_cluster_sse_generator` have zero direct test coverage of the honest-empty-stream
+      behavior (verified true by code trace + my live curl, but not by an executable backend test) — out of scope for
+      this UI-scoped todo (different repo, different craft; `deployment-api` isn't in this plan's `repos:`), filed as
+      [`/plans/active/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md`](/plans/active/issues/deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md)
+      (2 concrete `[BACKEND]` todos) rather than silently crossing craft lines.
 - [ ] [PLANNING] P3. **Archive the source plan per the 6-step ritual.** Once the two verifications above are done and
       the source plan has zero open todos and no `locked_by:`, run the standard archival ritual from
       [`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`](/codex/12-agent-workflow/plan-completion-and-archival-discipline.md)
@@ -124,3 +148,14 @@ This twin holds that verification plus the archival ritual.
   correctly registered (DP-RATE-001/DP-RATE-002); added the missing router-level injected-429-storm regression tests
   proving the routed mirror post. 2 todos remain open (streaming-events pane pw:L2 verification, source-plan archival) —
   plan stays active.
+- **2026-07-30 (slot-3, ui_developer)** — Shipped todo 2 (streaming-events pane live verification) —
+  deployment-ui@228ccb0. Verified LIVE against the real (non-mock) deployment-api backend: a genuinely running VM
+  streamed real telemetry (per-AG/VM tail confirmed genuine), a never-existed VM ref streamed heartbeats-only (honest
+  empty-state confirmed, never fabricated). Added `cockpit-streaming-logs-live-contract.spec.ts` (2 tests, `pw:L2 ✓`)
+  locking the proven contract in. Along the way: fixed an unrelated pre-existing environment defect in this slot's
+  `node_modules` (a stray `npm install` had left `happy-dom` missing; corrected with `pnpm install`, this repo's actual
+  package manager — no lockfile drift). Also found the whole-suite `pw:L2` gate carries 17 pre-existing failures
+  (confirmed unrelated via stash-diff) — updated the already-open `deployment_ui_l2_smoke_gate_red_2026_07_17.md` rather
+  than duplicating it, and filed `deployment_api_log_stream_sse_generator_no_test_coverage_2026_07_30.md` (2 `[BACKEND]`
+  todos) for a real, out-of-craft/out-of-repo coverage gap the verification surfaced. 1 todo remains open (source-plan
+  archival) — plan stays active.

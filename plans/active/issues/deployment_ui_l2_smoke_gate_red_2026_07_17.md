@@ -28,7 +28,7 @@ related:
     /plans/active/issues/deployment_api_live_mock_parity_2026_07_17.md,
   ]
 created: 2026-07-17
-last_updated: 2026-07-17
+last_updated: 2026-07-30
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -156,10 +156,24 @@ correct-and-failing, not stale.
       established): `cadence_badge_drilldown.spec.ts:39`, `mobile_responsive.spec.ts:178`,
       `needs-attention-panel.spec.ts:40` + `:56`, `repos-tab.spec.ts:272` (name mentions "fleet" cross-link — check
       against the same removal first), `stateful-flows.spec.ts:236`, `venue_year_coverage.spec.ts:173`.
+- [ ] [UI] P3. **Diagnose the 5 NEWLY-surfaced 2026-07-30 failure clusters** (measured fresh this session, not present
+      in the 2026-07-28 breakdown above — the gate has drifted further, not just stayed at 19):
+      `venue_credentials.spec.ts` (4 failures: `:22` heading render, `:30` tardis-api-key EXPIRED status, `:43` refresh
+      button, `:50` no-JS-error guard — all 4 failing suggests the panel/mock contract drifted, not a locator nit),
+      `venue_date_ranges.spec.ts` (2 failures: `:31` binance free/paid date counts, `:52` no-JS-error guard — same
+      pattern, panel-level not locator-level), `url-sync.spec.ts` (4 failures: `:10`/`:24`/`:37`/`:49` — service-view
+      URL sync, epics deep-link, browser-back — possibly connected to the same nav/routing drift as the already-tracked
+      `nav-menu-dedup.spec.ts`/fleet-removal cluster, worth checking together), `repos-codebase-health.spec.ts` (3
+      failures: `:10` header help toggles, `:27` FAILING-repo red coverage chip, `:35` qg-reason chip),
+      `prediction_v9_breakdown.spec.ts:106` (OTHER CQG bucket hover tooltip). Also 2 additional
+      `needs-attention-panel.spec.ts` failures beyond the previously-tracked `:40`/`:56` pair: `:82` (collapse/expand)
+      and `:99` (row-click scopes category selector) — same file, different subtests, so likely the same underlying root
+      cause as the already-tracked pair but not confirmed.
 - [ ] [UI] P2. **Re-baseline + green the gate, then state it in the codex** — once the above land,
       `npx playwright test --project=chromium tests/smoke/` must exit 0 so `pw:L2 ✓` becomes truthful evidence again.
-      **Not a quick job**: as of 2026-07-28 the gate carries 19 failures (up from 12 on 2026-07-17, the suite itself
-      grew to 425 tests) — see the dated log entry below for the full current breakdown.
+      **Not a quick job**: as of 2026-07-30 the gate carries 17 failures on the SAME 424-test suite size as 2026-07-28
+      (down from 19 — the fleet-tab-removal `cockpit.spec.ts` fix landed — but 5 clusters newly surfaced in the same
+      window, so net drift is sideways, not converging) — see the dated log entries below for the full breakdowns.
 
 ## 2026-07-28 update (slot-3, ui_developer) — the 5 row-mismatch failures are RESOLVED; a bigger, different regression is now the blocker
 
@@ -204,6 +218,44 @@ from 355+12 — the suite grew substantially) shows **19 failures**, almost none
 **Net for the "Re-baseline + green the gate" P2 todo**: was 12 failures (2026-07-17), is 19 failures today (16 after
 this session's fix), of which the fleet-removal cluster (8 remaining) + the ~7 unrelated ones need their own diagnosis
 passes — this is NOT a quick re-baseline, the gate has drifted meaningfully since this doc was filed.
+
+## 2026-07-30 update (slot-3, ui_developer) — measured while verifying an unrelated todo; gate drift is sideways, not converging
+
+Surfaced incidentally while verifying
+[`data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md`](/plans/active/data_pipeline_alert_substrate_residual_2026_07_24_finalize_2026_07_30.md)
+todo 2 (streaming-events pane, an unrelated deployment-ui change touching only `StreamingLogsPanel.tsx` + a new
+`tests/smoke/cockpit-streaming-logs-live-contract.spec.ts`). Ran the full
+`npx playwright test --project=chromium tests/smoke/` suite for my own `pw:L2 ✓` evidence: **407 passed, 17 failed**
+(same 424-test suite size as the 2026-07-28 update). Confirmed ALL 17 are unrelated to my diff by
+`git stash push --include-untracked` on my two touched paths + re-running a sample of the failing spec files on the
+now-pristine tree — identical failures reproduced with zero of my changes present (the "baseline by stashing, never by
+reasoning" lesson below, applied).
+
+**Net change since 2026-07-28(19 failures)**: down to 17, but NOT the same 17 minus 2 — the composition shifted:
+
+- **Confirmed still-open, already-tracked**: `nav-menu-dedup.spec.ts:158` (1 of its prior 5 — the fleet-removal
+  redirect-target cluster tracked in `deployment_ui_fleet_git_nav_entry_regression_2026_07_28.md`; the other 4
+  `nav-menu-dedup` failures from 2026-07-28 no longer reproduce, not investigated further here — not needed for this
+  todo's purpose).
+- **2 of the previously-tracked "~7 unrelated" cluster still fail**: `needs-attention-panel.spec.ts` — but at DIFFERENT
+  line numbers (`:82`, `:99` today vs `:40`, `:56` on 2026-07-28), i.e. the file itself is still broken, just not
+  necessarily the same assertions — not diagnosed which.
+- **5 clusters not present in the 2026-07-28 breakdown at all**: `venue_credentials.spec.ts` (4/4 tests in the file
+  failing), `venue_date_ranges.spec.ts` (2 failures), `url-sync.spec.ts` (4 failures), `repos-codebase-health.spec.ts`
+  (3 failures), `prediction_v9_breakdown.spec.ts` (1 failure). None reference anything in my diff (`StreamingLogsPanel`,
+  `AlertsLogsTab`, the new spec file) by name or by shared component. Added as new todos above rather than investigated
+  — out of scope for the dispatched todo, per this doc's own established pattern of filing-not-fixing to avoid scope
+  creep.
+- **No longer reproducing** (present 2026-07-28, clean today, not bisected): `cadence_badge_drilldown.spec.ts:39`,
+  `mobile_responsive.spec.ts:178`, `repos-tab.spec.ts:272`, `stateful-flows.spec.ts:236`,
+  `venue_year_coverage.spec.ts:173`, plus 4 of the 5 `nav-menu-dedup.spec.ts` failures. Likely fixed as a side effect of
+  other work landing in the interim (matches this doc's own precedent of fixes landing without this doc being flipped) —
+  not independently verified, since re-confirming a PASS isn't the same actionable-finding bar as a FAIL.
+
+**My own `pw:L2` evidence for the dispatched todo**: the new spec (`cockpit-streaming-logs-live-contract.spec.ts`, 2
+tests) plus the directly-related `cockpit-alerts-logs-ag-vm-picker.spec.ts` + `cockpit.spec.ts` (40 tests total) all
+pass 100% — cited on the finalize-plan checkbox rather than a whole-suite exit code, per this doc's own standing finding
+that a truthful whole-suite `pw:L2 ✓` is not currently achievable through no fault of any single UI todo.
 
 ## Lessons (carry these; they each cost real time)
 
