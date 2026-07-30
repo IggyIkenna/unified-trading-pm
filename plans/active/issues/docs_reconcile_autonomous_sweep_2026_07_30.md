@@ -216,3 +216,29 @@ from both scanners' corpora), with the slot ff-pull cron bringing those commits 
 1897/1851. Nothing was lost. The practical consequence for future runs: **any corpus count in a `/docs-reconcile` report
 is a sample, not a stable measurement**, and the tightened link ratchets were deliberately re-verified against the
 post-merge state (still green) rather than only against the pre-merge state they were generated from.
+
+## Incidental blocker found while shipping — PM `quality-gates.sh` is RED for everyone right now
+
+Not a `/docs-reconcile` finding (recorded here because it was found by this run and it currently blocks the normal
+`quickmerge` ship path for **every** agent in this repo, so the next worker will hit it immediately).
+`bash scripts/quality-gates.sh --no-fix` exits 1 with **7 failures, none in any file this run touched**, in two
+unrelated clusters:
+
+1. **6 × `tests/unit/test_capability_param_schema.py` + `test_capability_verdict_matrix.py`** — root cause is a broken
+   sibling venv, not PM code:
+   `param schema GAP: ImportError: cannot import name 'iter_route_contexts' from 'fastapi.routing'` in
+   `strategy-service/.venv`. The exporter probes strategy-service's own venv by design, so a fastapi version skew there
+   fails PM's gate. Fix belongs in strategy-service's dependency set.
+2. **1 × `scripts/quality_gates/test_check_repo_docs_ssot.py::test_live_corpus_has_zero_new_drift`** — all 6 flagged
+   files live in `instruments-service-agentwork-sports-2026-07-13/`, a **stale agent scratch clone** sitting in the
+   workspace root since 2026-07-13, untracked by PM. This looks like the same bug class `check_frontmatter_schema.py`
+   already guards against with its explicit `.claude/` worktree exclusion ("would otherwise sweep up a live agent's
+   worktree copy and false-flag it"): `check_repo_docs_ssot.py` has no equivalent scratch-clone exclusion, so a leftover
+   `*-agentwork-*` directory turns the PM gate red. **Do not "fix" this with `--update-baseline`** — that would
+   permanently bake a transient scratch directory's debt into the shared baseline. The right fix is either deleting the
+   stale clone or teaching the checker to skip `*-agentwork-*`/scratch clones.
+
+Because of (1)+(2) this run shipped under the CLAUDE.md closed carve-out (dirty-deps + PM `docs(plans):`); every path in
+the commit is a strict-quickmerge carve-out file and no source file was involved. Worth noting for the skill itself:
+`quickmerge --agent` has **no doc-only bypass** of the Pass-1 QG sentinel, so a docs-only skill like this one is fully
+blocked from its documented ship path whenever any unrelated repo in the workspace is red.
