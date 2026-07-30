@@ -90,7 +90,8 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-30 (4th duplicate-dispatch confirmation, agt-606bbf)
+last_updated:
+  2026-07-30 (5th dispatch, agt-c271de -- found + confirmed self-resolved a genuinely fresh short-lived tail)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -343,3 +344,32 @@ against the reproduction script.
   dispatch path needs an "already has an OPEN issue doc, numerator unchanged" dedup check to stop spending full worker
   sessions on a condition nothing new is happening to. No GCS/manifest write, no VM launch, no code change this session
   (PM plan-doc edit only). Pinged `dp-fleet-monitor` (authoring slot) with this outcome.
+- **2026-07-30 (slot-10, `data_pipeline_failure` escalation worker, task `agt-c271de`):** 5th `DP_RUN_MOSTLY_EMPTY`
+  (DP-FETCH-009) CRITICAL re-page for `(cefi, book_snapshot_5)`, 300,643/1,067,498 = 28.2%. Read this doc first per the
+  pre-task plan/issue conflict-check rule; re-verified both fix commits (`unified-api-contracts@8db188fe`,
+  `market-tick-data-service@339ca767`) are still ancestors of `origin/live-defi-rollout`. Went one step further than the
+  prior "numerator static, skip re-diagnosis" checks: pulled a fresh column-projected manifest read and isolated
+  `error_reason` containing `"schema contract violated"` by `attempted_at` hour, rather than just checking the cell-wide
+  max. Found a genuinely NEW, previously-undocumented short-lived tail: **39 rows, `attempted_at`
+  2026-07-30T16:21:25Z-18:45:24Z (2.5h), spanning OKX-SWAP/BINANCE-FUTURES/KRAKEN-SPOT/BITFINEX-FUTURES, every row
+  targeting `date` in 2020-01 or 2020-02** (a historical-backfill retry sweep working through the 2020 Q1 backlog, not a
+  live-capture failure). A second fresh manifest pull ~1h later (19:41Z) confirmed **zero new schema-contract-violation
+  rows since 18:45:24Z** — the tail had already self-resolved before this investigation finished, the same "stale
+  in-flight process using pre-fix code, self-resolving once it exits" shape as the KRAKEN-SPOT/OKX-SWAP (2026-07-28) and
+  COINBASE (2026-07-28/29) tails documented above. Tried to identify the producing compute unit: no running GCP VM or
+  AWS instance matches a cefi book_snapshot_5/2020-dated backfill (checked the full running fleet both clouds; the two
+  `canonical-migration-cefi-content-*` VMs currently running target `--start-date 2026-02-14 --end-date 2026-03-27`, not
+  2020); Cloud Logging shows zero invocations of the `market-tick-cefi-{binance-futures,okx, daily-download}` Cloud Run
+  jobs in the last 7 days, so those are not the source either. Could not conclusively identify the producer within this
+  one-shot task's time budget — not chased further given the tail had already stopped and matches the known
+  self-resolving deploy-lag class, not a new mechanism. **Separate finding, flagged not fixed** (out of this doc's
+  book_snapshot_5 scope, filed as its own doc): while checking those Cloud Run jobs, found their shared image
+  `market-data-tick-handler:latest` (asia-northeast1-docker.pkg.dev) was last pushed 2026-02-11T11:05:09Z — 5.5 months
+  stale, missing every fix since including this doc's own 2026-07-28 schema-contract fix. Not confirmed as this tail's
+  cause (those specific jobs are dormant, not the active source) but a real, independent staleness risk if any of them
+  is ever re-triggered — see `/plans/active/issues/mtds_cefi_docker_image_stale_5mo_2026_07_30.md`. **Conclusion: no
+  code fix needed this session** — the root-cause fix continues to hold under production load; the ~300k
+  `attempted_failed` total is still the same historical backlog requiring a normal idempotent re-attempt, and the one
+  fresh signal found this session was itself already resolved by the second check. No GCS/manifest write, no VM launch,
+  no code change (PM plan-doc edits only: this entry + the new sibling issue doc). Pinged `dp-fleet-monitor` (authoring
+  slot) with this outcome.
