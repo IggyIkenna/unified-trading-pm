@@ -96,7 +96,13 @@ pip_audit = "pip-audit>=2.7.0,<3.0.0"
 playwright = "playwright>=1.40,<2.0"
 plotly = "plotly>=6.4.0,<7.0.0"
 polars = "polars>=1.37.0,<2.0.0"
-prek = "prek>=0.3.0,<1.0.0"
+# FLOOR RAISED 2026-07-30: prek>=0.4.4 closes j178/prek#2142 (confirmed content-loss bug in the
+# stash/restore mechanism for intent-to-add files, fixed upstream 2026-06-04). The other candidate
+# mechanism this workspace hit (j178/prek#1889-class stash-conflict-rollback index corruption)
+# remains open in every released version incl. latest — no version floor closes it; the
+# docspec.py date-field validator is the durable backstop for that class. SSOT:
+# plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
+prek = "prek>=0.4.4,<1.0.0"
 prometheus_client = "prometheus-client>=0.20.0,<1.0.0"
 psycopg2_binary = "psycopg2-binary>=2.9.9,<3.0.0"
 pyarrow = "pyarrow>=23.0.1,<24.0.0"
