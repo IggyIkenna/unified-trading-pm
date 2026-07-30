@@ -96,12 +96,17 @@ resulting writes failed** the schema contract, for every symbol, on every date a
 range quickly (no real data ever got network-fetched for MOST dates before this failure mode was hit repeatedly) and
 self-terminated (`--instance-termination-action=DELETE`) with **zero real rows captured**.
 
-**Manifest impact — confirmed benign, no cleanup needed.** The schema-validation failures did NOT produce false
-`attempted_failed` or false `captured` manifest rows — a fresh read shows the VM's ~10-minute run only wrote legitimate
-`empty_confirmed` rows (18,616 `EXPECTED_PRE_SOURCE_COVERAGE_START` for genuinely pre-2026-04-17 dates the enumeration
-pass touched, + 50 `SOURCE_RETURNED_ZERO`) — the schema-rejected cells were simply never written at all (neither as a
-false success nor a false failure), leaving them in their prior state. No manifest-row cleanup is needed as a result of
-this VM's activity.
+**Manifest impact — CORRECTED 2026-07-30, this claim was WRONG.** Originally assessed as benign (schema-validation
+failures thought to leave the cell unwritten, neither false success nor false failure). A later, more complete manifest
+query (2026-07-30, prompted by an operator question — "does manifest need purge") found this was incomplete: the VM DID
+write 677 real `attempted_failed` rows for this exact combo,
+`error_reason="schema contract violated for cefi/LIGHTER-ZKSYNC/perpetual/derivative_ticker"`, `written_at`
+2026-07-29T16:02–22:36Z, keyed on the raw numeric Tardis market_id (not the real ticker) — these went through the
+standalone handler's `_emit_per_symbol_manifest` exception branch (`record_failed`, which has always existed, unlike the
+missing success-recording path this doc's own fix addresses). They were permanently dead (the manifest's
+captured-outranks dedup rule can't retire a row whose key no real captured row shares) and have since been purged — see
+the new P2 todo below for full evidence. The original `empty_confirmed` counts quoted above (18,616 + 50) were real but
+not the whole picture.
 
 ## Why this matters
 
