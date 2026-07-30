@@ -631,9 +631,27 @@ available (lowest `unlock_distance`) — the_ _highest-leverage roadmap items. D
       `capability-unlock-report.json`, and the `ARBITRAGE_PRICE_DISPERSION` prospectus to name the real remaining gap
       (execution-wiring) instead of the closed one (registry declaration). No further code change needed this pass —
       checkbox flip only.
-- [ ] [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
+- [x] ✅ [SCRIPT] P2. **unlock ARBITRAGE_PRICE_DISPERSION --trades_instrument--> instrument_type:option** (distance 1,
       status partial) — missing: needs-leg-spec. Why blocked: vol_arb not a separate capability; multi-leg vol-arb algo
-      pending.. (auto-emitted by generate_capability_unlock_report.py)
+      pending.. (auto-emitted by generate_capability_unlock_report.py) — Verified accurate + current, not stale (unlike
+      several sibling todos above): `ArbitragePriceDispersionEngine`
+      (`strategy_service/engine/strategies/v2/arbitrage_structural/price_dispersion.py`), the SOLE
+      `ARCHETYPE_ENGINE_REGISTRY`-mapped engine for this archetype (`factory.py:76`), exhaustively dispatches on
+      `dispersion_type ∈ {price-dispersion, funding-rate-dispersion, cross-venue-prediction-dispersion}`
+      (`_KNOWN_DISPERSION_TYPES`) — no vol/IV-dispersion branch exists for trading the same option at different IVs
+      across Deribit vs OKX. Confirmed no CEFI options slot config for this archetype in `archetype_slots_cefi.py` (only
+      spot/perp/funding-rate-disp slots). `vol_trading/dispersion.py` exists but solves a DIFFERENT problem
+      (index-vs-component correlation dispersion, `VOL_TRADING` family, not reusable here — the codex archetype for that
+      space, `VOL_ARB_RV_IV`, is itself still `implementation_status: design`). Cross-checked execution-service:
+      `execution_service/engine/multi_leg_orchestrator.py` already provides generic multi-leg
+      routing/compensation/unwind (used today by this archetype's OWN price-dispersion and funding-rate-dispersion paths
+      via `AtomicInstruction`/`LEADER_HEDGE`) — so the gap is specifically the STRATEGY-layer dispatch branch +
+      options-IV-computation/leg-construction logic, not a missing execution-side capability. Status correctly stays
+      `partial` (not fabricated to `supported`). No code change this pass (matches the sibling `-024` precedent) —
+      building the actual multi-leg vol-arb dispatch branch is real strategy-engineering design work (IV surface
+      comparison methodology, strike/expiry matching, margin/greeks treatment), not a scriptable manifest fix; it stays
+      recorded here as the durable, structured artifact for that gap rather than a fabricated new todo (CLAUDE.md
+      dispatch-scope-eligibility: an open-ended design call isn't AO-eligible without a design decision first).
 - [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:cme** (distance 1, status partial) — missing:
       needs-config. Why blocked: (no reason recorded). (auto-emitted by generate_capability_unlock_report.py)
 - [ ] [SCRIPT] P2. **unlock CARRY_BASIS_DATED --supports--> venue:ibkr** (distance 1, status partial) — missing:
