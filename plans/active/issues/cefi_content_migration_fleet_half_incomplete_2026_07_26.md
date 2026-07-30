@@ -174,7 +174,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       issue in the migration script itself**, not shard-16-specific. Relaunched both per RB-INFRA-RELAUNCH's
       ≤2/(vm-prefix,day) bound (1st genuine runtime failure for each, within policy); adopting the SAME policy going
       forward for any further occurrence — 2nd failure on any single shard gets relaunched once more, a 3rd gets the
-      shard-16 treatment (stop, leave to in-VM stall-kill, root-cause instead of relaunch).
+      shard-16 treatment (stop, leave to in-VM stall-kill, root-cause instead of relaunch). **FOURTH instance (slot-15,
+      ~10 min later)**: shard 40 (`canonical-migration-cefi-content-40-relaunch20260730-132900`) — identical signature,
+      heartbeat silent `14:15:49Z`, deleted `15:06-15:08Z` (~50min stale), froze at 23,000/76,685=30.0% progress.
+      **Critical new observation: all 4 instances (16, 19, 40, 44) froze within a similar ~45-50 MINUTE elapsed-runtime
+      window, regardless of shard size (63k-137k files) or date range** — this points toward a TIME-based resource leak
+      (e.g. slot-7's PyArrow-pool-retention hypothesis accruing per-call, or a connection/handle leak), not a
+      size/volume-based one. This is a strong, actionable diagnostic clue for the root-cause investigation — worth
+      testing directly (does a deliberately small, fast-completing shard's canary run finish within the ~45min window
+      before any other symptom appears, or does the same script hang at ~45min even on a trivially small input?).
+      Relaunched shard 40 (1st genuine failure, within policy).
 - [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
       `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
       `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
