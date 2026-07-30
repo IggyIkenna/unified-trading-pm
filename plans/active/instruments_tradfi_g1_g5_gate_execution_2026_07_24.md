@@ -34,7 +34,7 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-07-30" # ES manifest-count check executed: ZERO capture found (not "proven"), filed as tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md; ES_OPT launch attempted, deferred (singleton lock genuinely held by a live concurrent backfill, not stale)
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only
@@ -114,16 +114,23 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       is nothing left to launch. REMAINING: manifest-verify per-year only (VM completion is not row-capture proof — per
       `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`, count TARGET artifacts, not activity).
       Billing-fail-closed (Databento PAYG, shared singleton lock).
-- [ ] [DATA] P0. **Run the manifest-count check for ES CME ohlcv_1s/1m (per the 2026-07-29 operator ruling above) and
-      record the result in `tradfi_consolidated_closeout_2026_07_18.md`.** Single live read of the
-      `market-data-tick-tradfi-prd` `_index` (`availability_index.parquet`), scoped to venue=CME × root=ES ×
-      data_type∈{ohlcv_1m,ohlcv_1s} × year 2020-2026 — mirrors the manifest-count-only method already used for the
-      NASDAQ/NYSE precedent in `data_completion_tradfi_2026_07_15.md` (per-year `capture_status` breakdown, no bucket
-      walk). Record the resulting per-year breakdown in `plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s
-      MVP-cell table, "S&P index futures (ES)" row — **explicitly note the result satisfies the interim count-check
-      only**, NOT the closeout's heavier fresh-pipeline-check (`data-pipeline-check-mtds`/`data-pipeline-check-is`).
-      Done when: that row's "Backfill proven" cell cites the live query + counts and carries the interim-only caveat
-      verbatim.
+- [x] ✅ [DATA] P0. **DONE 2026-07-30 — ran the manifest-count check; result is NOT "backfill proven," it's a concerning
+      zero-capture finding, filed as its own issue.** Single live read of the `market-data-tick-tradfi-prd` `_index`
+      (`availability_index.parquet`, 5,894,011 rows, no bucket walk), scoped to venue=CME × instrument_id=ES.FUT (the
+      launcher's row-key atom for the ES parent-symbol chain) × data_type∈{ohlcv_1m,ohlcv_1s} × year 2020-2026 — same
+      manifest-count-only method as the NASDAQ/NYSE precedent in `data_completion_tradfi_2026_07_15.md`. **Result: 4,855
+      scoped rows, 100% `attempted_failed` (3,048, `error_reason=WithinBoundsTradfiSourceZero`) or `empty_confirmed`
+      (1,807, `error_reason=SOURCE_RETURNED_ZERO`) — ZERO rows have `row_count>0`, zero are `captured`.** Isolating just
+      the 718 rows the 2026-07-21 fleet itself wrote (`written_at` date 2026-07-21, spanning `date`
+      2021-01-04..2026-04-15): 100% `empty_confirmed`/ `SOURCE_RETURNED_ZERO` — the fleet ran cleanly (VM-lifecycle
+      proof: 7 shards, zero preemptions) but captured literally 0 real ES ohlcv bars across the entire attempted window.
+      This is the activity-vs-target-artifact trap the async-wait-discipline codex SSOT warns about: "fleet FINISHED"
+      was VM-completion proof, not data-capture proof. Full evidence + recommended root-cause diagnosis steps (not
+      executed here — this is a genuine, uniform zero-yield pattern that needs adapter-level investigation, not a
+      mechanical re-run): `plans/active/issues/tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md`. **Did NOT update
+      `tradfi_consolidated_closeout_2026_07_18.md`'s MVP-cell row this session** — that file had an uncommitted
+      in-progress edit (mtime <120s) from another active session at the time of this check; whoever owns that edit
+      should fold this measured result into the "S&P index futures (ES)" row next (cite this todo + the new issue doc).
 - [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): launch ES_OPT now AND wire its
       manifest-verify into Phase-D gate tracking — the singleton Databento lock blocker cleared (confirmed 2026-07-26,
       zero `tradfi-bf-*` instances in any state).** ES CME OPTIONS (ES_OPT) ohlcv 1s+1m — NOT yet launched; the stated
@@ -146,6 +153,18 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
       dedicated run). Re-verify the singleton lock is still clear immediately before launch
       (`gcloud compute instances list --filter='name~"^tradfi-bf-" AND status=RUNNING'`). Done when: the VM(s) are
       STARTED (<60s) + confirmed RUNNING at T+10min, per async-wait-and-poll-discipline (no fire-and-forget).
+      **ATTEMPTED 2026-07-30 — NOT launched, singleton lock genuinely held (not stale).** `--dry-run` confirmed the plan
+      (5 year-shard VMs, `e2-standard-4`, SPOT, `data_types=ohlcv_1m`, `asia-northeast1-c` — matches the ES futures
+      precedent that completed cleanly). Re-verified the lock per this todo's own instruction:
+      `gcloud compute instances list --filter='name~"^tradfi-bf-"'` shows `tradfi-bf-fred-full-20260730-052935` RUNNING
+      (started 2026-07-29T22:29:37-07:00, SPOT). Checked its `PROGRESS.json`/`run.log` before assuming staleness (per
+      the script's own CAUTION — do not force past a live dispatch): heartbeats + resource samples current to within the
+      last minute, `last_completed_date` advancing from 1962 forward — this is a genuinely live, in-progress FRED
+      full-history backfill from another session, not a dead claim. The launcher's singleton lock is account-wide
+      (shared Databento quota protection, not ES-specific), so launching ES_OPT now would either be refused by the lock
+      or require `--force`, which the script itself warns is for "legitimate parallel investigation" only — did not
+      force past someone else's live job. **Re-attempt once `tradfi-bf-fred-full-*` completes** (re-check via the same
+      `gcloud compute instances list` filter).
 - [ ] [DATA] P1. **Wire the ES_OPT post-launch manifest-verify into Phase-D gate tracking** (per the 2026-07-29 operator
       ruling above) — once the ES_OPT launch todo above completes, run the same manifest-count-only check used for ES
       futures (mirrors the NASDAQ/NYSE precedent, `data_completion_tradfi_2026_07_15.md`) scoped to venue=CME ×
