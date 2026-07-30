@@ -89,10 +89,11 @@ whether this is the first real invocation.
 
 ## Todos
 
-- [ ] [INFRA] P2. Add the missing `VM_TASK=batch-live-recon` dispatch branch to
+- [x] ✅ [INFRA] P2. Add the missing `VM_TASK=batch-live-recon` dispatch branch to
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh` (curl `VM_BACKFILL_CMD` + `_launch_with_tee`, mirroring
       the datapoint-validation/orphan-sweep branches) so `launch-batch-live-recon-cron-vm.sh` VMs actually run the
-      nightly reconciliation instead of self-deleting on SETUP FAILED (repo: deployment-service).
+      nightly reconciliation instead of self-deleting on SETUP FAILED (repo: deployment-service). —
+      deployment-service@fef5168
 - [ ] [INFRA] P2. Register `chaos-drill`'s correct `VM_TASK`/`VM_SERVICE` pairing in `setup-data-pipeline-vm.sh`'s
       tarball-selection + dispatch logic (currently falls through to "Unknown VM_SERVICE — installing all available
       tarballs" then SETUP FAILED with no logged reason); re-run with `set -x` if the root cause isn't obvious once the
