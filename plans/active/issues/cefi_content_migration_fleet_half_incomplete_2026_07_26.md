@@ -552,3 +552,8 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   errors, `STOP-ON-SURPRISE` bounds satisfied). First confirmed success among this session's relaunched shards. Fleet at
   7 shards (was 8; shard 40's self-delete from the prior cycle also completed). This shard now counts toward the 44/44
   corpus-wide total once the final re-verify runs.
+- **2026-07-30T17:22Z (slot-15)**: shard 20 (`-134500`) OOM-killed (`rc=137`, clean self-delete) at 95,600/154,859 files
+  (61.7%, 12,727s elapsed — one of the longest-running survivors before dying, close but not close enough). Fleet at 5
+  shards. Also hit the `gcloud` identity-poisoning issue again — this time a THIRD account variant,
+  `github-actions-deploy@…`, poisoning the already-active `slot15-work` config directly (not a config-flip this time).
+  Fixed the same way. No action taken on shard 20 (monitoring-only).
