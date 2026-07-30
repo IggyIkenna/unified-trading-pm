@@ -187,7 +187,7 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       surfaces a NEW diagnostic gap — filed as a fresh `[BACKEND]` todo below rather than re-guessing a call site with
       no dump to read. Not flipping this checkbox: the original ask ("read the dump, report the stuck call site") still
       has no dump to read.
-- [ ] [BACKEND] P1. Diagnose why `faulthandler.enable()` (confirmed live + correctly armed in `post_worker_init`,
+- [x] ✅ [BACKEND] P1. Diagnose why `faulthandler.enable()` (confirmed live + correctly armed in `post_worker_init`,
       verified via direct image extraction on `uts-shared-deployment-api-00331-wzz` and `-00332-8gl`) produces ZERO
       stderr dumps across 8 confirmed post-fix `Uncaught signal: 6` occurrences (`00317-zmv@2026-07-28T03:39:17Z`,
       `00330-tth@2026-07-28T19:51:14Z`,
@@ -207,9 +207,119 @@ cancellation-timeout fix and already shipped). Suggested next steps for whoever 
       getting a chance to run at all; check Cloud Run's per-revision memory/CPU utilization metrics (Cloud Monitoring,
       `run.googleapis.com/container/memory/utilizations` + `.../cpu/utilizations`) in a ±5min window around one of the 8
       timestamps above for a spike that would support the sandbox-kill theory over the arbiter-timeout theory. (repo:
+      deployment-api) — `deployment-api` (`cloudbuild.yaml`). Both candidate angles resolved with evidence (full chain
+      in the Progress Log entry below): angle (1) is MOOT — no `sys.stderr`/`sys.stdout` rebinding found anywhere in
+      `deployment_api/`, and moot regardless once angle (2) is established, since gVisor's own sentry source
+      (`pkg/sentry/kernel/task_signals.go::deliverSignal`) only emits the "Uncaught signal" log on the
+      `SignalActionTerm`/`Core` branch — i.e. ONLY when the tracked disposition is `SIG_DFL` at delivery; a genuinely
+      -armed handler routes to `SignalActionHandler` instead and this log line could not appear at all, independent of
+      stderr-fd state. Angle (2)'s arbiter half is **DEFINITIVELY REFUTED**: gunicorn's `Arbiter.murder_workers()` MUST
+      log `"WORKER TIMEOUT (pid:%s)"` synchronously before sending SIGABRT (`gunicorn/arbiter.py:504-506`) —
+      `gcloud logging read` for that exact phrase over 30 days returns **zero rows** despite 106+ SIGABRTs, so the
+      arbiter is not the source. Also **empirically proved** the faulthandler fix's ordering is correct in isolation via
+      a local repro (reset all `Worker.SIGNALS` to `SIG_DFL` then `faulthandler.enable()` then self-`SIGABRT` → full
+      dump, exit 134) and ruled out `multiprocessing`/`concurrent.futures` fork-bootstrap resetting SIGABRT (read the
+      stdlib source directly — neither touches signal state). New leads found instead: (a) `"Memory limit"` log entries
+      show `00331-wzz` (carrying 6/8 post-fix SIGABRTs) hit 16513-17004 MiB against its 16384 MiB limit 6× on 2026-07-29
+      — weak temporal correlation (2/8 within ~20-30min) but confirms chronic near-ceiling memory pressure; (b) this
+      repo's OWN `cloudbuild.yaml` history documents a directly-relevant precedent — the retired `${_ROLLUP_JOB}` Cloud
+      Run Job comment: "Cloud Run Jobs are gen2-only and the native pyarrow/pandas compute crashes on gen2 (R7 follow-up
+      #4); the gen1 service runs it fine" — and `data_status/manifest.py`'s `_dispatch_category_builds` (reachable from
+      the MAIN service's `GET /api/data-status/manifest`, not just the isolated rollup path) runs the same kind of
+      native pyarrow/pandas compute via a `multiprocessing.get_context("fork")` `ProcessPoolExecutor`.
+      `uts-shared-deployment-api` had NO explicit `--execution-environment` pin (confirmed via the Cloud Run Admin API
+      v2 directly — the resolved value isn't echoed back when unset, so the actual running environment couldn't be
+      conclusively determined), unlike the sibling rollup service already proven safe under an explicit gen1 pin for
+      this exact code shape. **Shipped** (mitigation, not a 100%-confirmed fix — flagged honestly as such): added
+      `--execution-environment gen1` to `uts-shared-deployment-api`'s deploy command, matching the sibling's
+      already-proven-safe pattern. Cheap, reversible, zero functional/perf cost either way. Full reasoning inline in the
+      cloudbuild.yaml comment. Added a `[REVIEW]` todo below to monitor the post-deploy SIGABRT rate.
+- [ ] [REVIEW] P2. Once `deployment-api`'s `cloudbuild.yaml` `--execution-environment gen1` pin (this doc's prior
+      `[BACKEND]` todo) reaches a live Cloud Run deploy of `uts-shared-deployment-api` (verify via direct image
+      extraction or `gcloud run revisions list` creation timestamp — content-diff, not ancestry, per this doc's own
+      2026-07-25 methodology correction), monitor the SIGABRT rate on that revision for at least the measured ~20-40min
+      cadence × several cycles (several hours, matching the precedent set by slot 6's 2026-07-30T03:59Z entry below —
+      note a multi-hour quiet window is suggestive but NOT conclusive on its own; that same entry found a quiet
+      `00332-8gl` window with no code change to explain it). If the rate drops to near-zero and stays there across a
+      real observation window, this issue is resolved — close it out with the evidence. If SIGABRTs continue at the same
+      cadence on the gen1-pinned revision, the gen1 pin did NOT fix it — do not re-guess; the leading remaining
+      candidate (documented in the cloudbuild.yaml comment and this todo's parent) is a native-library (pyarrow/Arrow
+      C++) fatal-signal handler installed at first-lazy-import time (well after `post_worker_init` already armed
+      faulthandler) silently overriding it — check whether `deployment_api/services/data_status/manifest.py`'s
+      `build_category_in_subprocess` subprocess entrypoint imports pyarrow/pandas for the first time in that forked
+      child, and whether Arrow's C++ layer installs any of its own SIGABRT/SIGSEGV handlers on import (grep the
+      installed `pyarrow` package for `signal`/`sigaction`/`InstallFailureSignalHandler`-style calls). (repo:
       deployment-api)
 
 ## Progress Log
+
+- **2026-07-30T04:15Z (slot 9, backend_engineer)** — Dispatched `deployment_api_sigabrt_crash_loop-004` (the fresh
+  `[BACKEND] P1` todo). Went well beyond log archaeology this session — read the actual installed `gunicorn`/`uvicorn`
+  source (confirmed same lockfile hash between this slot's clone and the root clone's populated `.venv`, so read that
+  directly rather than `uv sync`ing a fresh one) and gVisor's own sentry source to get ground-truth mechanics instead of
+  re-guessing from log patterns alone.
+  - **Angle (1) — sys.stderr fd rebind — MOOT.** Grepped `deployment_api/` for any `sys.stderr =`/`sys.stdout =`/
+    `CloudLoggingHandler`/`StructuredLogHandler` — none found; `logging.basicConfig()` only attaches a `StreamHandler`,
+    doesn't touch the stream object itself. This turned out to be moot regardless — see below.
+  - **Angle (2) — sandbox-kill vs arbiter — the arbiter half is DEFINITIVELY REFUTED, not just weakened.** Pulled
+    `gunicorn/arbiter.py` directly: `murder_workers()` calls `self.log.critical("WORKER TIMEOUT (pid:%s)", pid)`
+    (line 504) SYNCHRONOUSLY, immediately BEFORE `self.kill_worker(pid, signal.SIGABRT)` (line 506) — this critical log
+    is unconditional on that code path, no branch skips it.
+    `gcloud logging read '"WORKER TIMEOUT" AND resource.labels.service_name="uts-shared-deployment-api"' --freshness=30d`
+    (all log streams, not stream-restricted) returns **ZERO rows**, despite 106+ historical SIGABRTs plus the 8
+    post-`3fea307` ones this doc already catalogued, and despite gunicorn's own stderr pipeline confirmed reaching Cloud
+    Logging for OTHER lines (the 2026-07-24 entry's unrelated `CancelledError` traceback). This is a clean,
+    unconditional refutation — not "weakened," which is how the hypothesis had been treated since 2026-07-24 — of the
+    theory that's motivated this issue doc's diagnostic work from the start. Whatever sends these SIGABRTs, it is not
+    gunicorn's arbiter.
+  - **Read gVisor's sentry source directly** (`google/gvisor`'s `pkg/sentry/kernel/task_signals.go`, via
+    `gh api search/code` to locate it then fetched via raw GitHub) to understand what "Uncaught signal: N, pid=X, tid=X,
+    fault_addr=0" actually means at the mechanism level — this line was never a gunicorn/Python log line at all, it's
+    gVisor's own `deliverSignal()`. The `UncaughtSignal` event/log ONLY fires on the
+    `SignalActionTerm`/`SignalActionCore` branch of `computeAction(sig, act)` — i.e. only when the tracked signal
+    disposition (`act.Handler`) resolves to `SIG_DFL` at the moment of delivery. A signal with a real registered handler
+    takes the `SignalActionHandler` branch instead and would never produce this log line — meaning IF `faulthandler`'s
+    handler were genuinely still armed when a SIGABRT actually arrived, we should see NO "Uncaught signal" line at all
+    (we'd instead see either a dump or total silence-then-restart), not a dump-less "Uncaught signal" line. This
+    directly resolves angle (1) as moot: stderr-fd state is irrelevant if the handler path is never entered to begin
+    with.
+  - **Empirically verified the fix's ordering is correct in isolation** (didn't just trust the prior sessions' code
+    read): wrote a local repro mimicking the EXACT sequence — reset every `Worker.SIGNALS` entry (incl. SIGABRT) to
+    `SIG_DFL` (mimicking `UvicornWorker.init_signals`), then `faulthandler.enable()` (mimicking `post_worker_init`),
+    then `os.kill(self, signal.SIGABRT)`. Result: full `Fatal Python error: Aborted` dump with the correct frame,
+    process exit 134. So the Python-level fix (`deployment-api@3fea307`) is proven correct in isolation on real Linux —
+    this isn't a bug in the fix itself. Also read `multiprocessing/process.py`'s `_bootstrap()` and
+    `concurrent.futures/process.py` directly (stdlib, via the venv's own python) to rule out fork-bootstrap resetting
+    SIGABRT for `ProcessPoolExecutor`/`multiprocessing` children — neither touches signal state at all.
+  - **New leads, both flagged honestly as leads, not proven causes**: (a) `gcloud logging read` for `"Memory limit"`
+    shows `uts-shared-deployment-api-00331-wzz` (the revision carrying 6 of the 8 post-fix SIGABRTs) exceeded its 16384
+    MiB limit 6× on 2026-07-29 (16513-17004 MiB used each time) — temporal correlation to the SIGABRT timestamps is WEAK
+    (only 2 of 8 within ~20-30min of an OOM event; the rest are hours apart), so NOT asserted as the proven cause, but
+    it does confirm the service runs chronically close to its memory ceiling. (b) Cross-referencing this repo's OWN
+    `cloudbuild.yaml` surfaced a directly relevant, already-litigated precedent: the retired `${_ROLLUP_JOB}` Cloud Run
+    Job's comment states verbatim "Cloud Run Jobs are gen2-only and the native pyarrow/pandas compute crashes on gen2
+    (R7 follow-up #4); the gen1 service runs it fine." `deployment_api/services/data_status/manifest.py`'s
+    `_dispatch_category_builds` runs the SAME class of native pyarrow/pandas compute via a
+    `multiprocessing.get_context("fork")` `ProcessPoolExecutor` (`build_category_in_subprocess`), and it's reachable
+    from the MAIN service's `GET /api/data-status/manifest` route (`deployment_api/routes/data_status/_status_core.py`),
+    not just the isolated rollup path. Checked whether `uts-shared-deployment-api` has an explicit
+    `--execution-environment` pin: it did NOT (`cloudbuild.yaml`'s `gcloud run deploy uts-shared-deployment-api` had no
+    such flag) — confirmed via the Cloud Run Admin API v2 directly (`GET .../services/uts-shared-deployment-api`) that
+    neither the service spec nor the live revision echo a resolved `executionEnvironment` value when it's unset, so I
+    could NOT conclusively determine which environment is actually running today. The sibling rollup SERVICE is already
+    proven safe for this exact code shape (per the same comment) — but querying its live config the same way ALSO
+    returned no explicit value, so even that precedent's "gen1" description isn't independently re-verifiable via the
+    API today; treating the cloudbuild.yaml comment as the source of truth for that service's proven-safe history.
+  - **Shipped**: `deployment-api@acdd4c8` (`cloudbuild.yaml`) — added `--execution-environment gen1` to
+    `uts-shared-deployment-api`'s deploy command, matching the sibling rollup service's documented-safe pattern. This is
+    a MITIGATION shipped on strong-but-circumstantial evidence, explicitly not claimed as a 100%-confirmed root cause —
+    the doc and the new `[REVIEW]` todo both say so. It's cheap, reversible (a one-line revert), and has zero
+    functional/perf cost regardless of whether the current default already happens to resolve to gen1. Full reasoning
+    documented inline in the cloudbuild.yaml comment for the next reader. Added a `[REVIEW]` todo to monitor the
+    post-deploy SIGABRT rate and, if unchanged, pursue the next-ranked candidate (a native pyarrow/Arrow-C++
+    fatal-signal-handler collision installed at first-lazy-import time, after `post_worker_init` already armed
+    faulthandler). No `quality-gates.sh` run — YAML-only change, no Python touched; validated via
+    `python3 -c "import yaml; yaml.safe_load(open('cloudbuild.yaml'))"`.
 
 - **2026-07-30T03:59Z (slot 6, review)** — Re-dispatched `deployment_api_sigabrt_crash_loop-003` (this `[REVIEW] P2`
   todo, 7th+ dispatch). Re-checked both precondition branches: (1) `git log -- deployment_api/gunicorn.conf.py` /
