@@ -133,41 +133,68 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       the Progress Log below as a starting evidence base. **UPDATE 2026-07-30 (slot-1) — see the new P1 immediately
       below: the actually-running prek binary on this host turned out to be 5+ months stale and confirmed to predate a
       real, matching upstream bugfix in this exact code path. Hypothesis (b) now has a concrete, named candidate.**
-- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the actually-invoked `prek` binary is `0.3.1` (2026-01-31), 5+ months
-      and ~15 releases stale, and upstream has since fixed a confirmed corruption bug in the exact stash/restore code
-      path this issue is about.** `which prek` → `/home/hk/.local/bin/prek` → `prek --version` reports `0.3.1`; its
-      mtime (`2026-01-31 18:52:26`) matches 0.3.1's release day exactly, i.e. it was installed once and never touched
-      since — no deliberate pin anywhere in the workspace (grepped `.pre-commit-config.yaml`/`*.toml`/codex, zero hits).
-      Note `pip show prek` separately reports `0.4.10` — a SEPARATE pip-managed install that is NOT the one on `PATH`;
-      the two install channels have drifted and the stale one is the one every hook actually runs through. **Confirmed
-      via `gh` against `j178/prek` upstream (the real repo, verified via `gh api repos/j178/prek`):** -
-      [j178/prek#2142](https://github.com/j178/prek/issues/2142) / [#2143](https://github.com/j178/prek/pull/2143) ("Fix
-      intent-to-add stash restore", merged 2026-06-03, shipped in **v0.4.4**) — a **CONFIRMED, reproducible, fixed**
-      bug: when the stash-restore patch fails to apply cleanly, the OLD code (identical in structure to what our 0.3.1
-      binary still runs) restored files in the wrong order, corrupting file content on rollback. The PR touches
-      `crates/prek/src/cli/run/keeper.rs` — the exact file/mechanism this whole issue is about. Our binary predates this
-      fix by 2 major bugfix releases. - [j178/prek#1889](https://github.com/j178/prek/issues/1889) /
-      [#1890](https://github.com/j178/prek/pull/1890) ("Stash conflict rollback corrupts git index, causing newly added
-      files to be committed empty") — describes a **near-exact match** to our symptom class: an auto-fixing hook (their
-      repro used `end-of-file-fixer` / `trailing-whitespace`; ours is `fix_frontmatter.py` — same role) modifies staged
-      files while unstaged changes exist elsewhere, prek detects a stash conflict, rolls back via
-      `checkout_working_tree(root)` — which checks out from the **current index**, not a saved pre-hook tree snapshot —
-      and the rollback can leave a mix of old/new content instead of cleanly one or the other. **This PR was CLOSED
-      WITHOUT MERGING** (2026-05-03) after the maintainer said they could not reproduce the general (non-intent-to-add)
-      case with a minimal repro; verified directly by fetching current upstream master's `keeper.rs`
-      (`gh api repos/j178/prek/contents/...`) — as of today it is STILL the single-arg `checkout_working_tree(root)` (no
-      tree-ish parameter), i.e. this fix was never applied upstream in any version, including current `0.4.11`.
-      Calibration: treat this as a **plausible, not confirmed** contributing mechanism — the maintainer's inability to
-      reproduce it generally (vs. the narrower, confirmed, FIXED intent-to-add case above) means it should not be cited
-      as proven. - v0.4.6 ([#2130](https://github.com/j178/prek/pull/2130)) added `--no-stash` / `PREK_NO_STASH=1` / a
-      `no_stash` config key — an explicit opt-out for the entire stash/restore mechanism, also unavailable on our stale
-      0.3.1 binary. **Recommendation (not executed — host-wide shared binary used by every concurrent slot, needs an
-      explicit call, not a unilateral change mid-session):** upgrade `~/.local/bin/prek` to current (`0.4.11` at time of
-      writing). This is a strict improvement regardless of which exact mechanism (confirmed #2142 class, or unconfirmed
-      #1889 class, or something else) is producing our specific corruption — it cannot make things worse, and it closes
-      at least one CONFIRMED bug in the exact code path. If corruption recurs even after upgrading,
-      `--no-stash`/`PREK_NO_STASH=1` is available as a stronger fallback that bypasses the risky mechanism entirely (at
-      the cost of prek erroring instead of auto-stashing when unstaged changes are present).
+- [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — `~/.local/bin/prek` upgraded 0.3.1 → 0.4.11 on this host, and BOTH
+      candidate upstream bugs directly tested against the new binary (not just read about).** Was `0.3.1` (2026-01-31,
+      mtime matched the release day exactly — installed once, never touched since; `pip show prek` separately reported
+      `0.4.10`, a second, unused install channel). Downloaded the official `prek-x86_64-unknown-linux-gnu.tar.gz`
+      release asset for `v0.4.11` directly from `gh api repos/j178/prek/releases/latest`, verified its published sha256,
+      and atomically swapped it into `~/.local/bin/prek` (old binary backed up to scratch first). This is a HOME-level
+      path shared by every slot/tab on this host, so all 30 tabs picked up the upgrade in one action; confirmed via
+      `prek --version` → `0.4.11`. **Test 1 — j178/prek#2142/#2143 (intent-to-add stash restore), fixed in v0.4.4:**
+      reproduced the exact upstream repro (intent-to-add file + conflicting hook rewrite) in an isolated scratch git
+      repo against the new binary. Result: **FIXED** — the intent-to-add file's content survived intact (`preserve me`),
+      the unstaged patch reapplied correctly (`a=1` / `b = 2`), matching the fixed-version's expected behavior exactly.
+      **Test 2 — j178/prek#1889/#1890 (stash-conflict-rollback index corruption), PR closed without merging:**
+      reproduced the exact repro from the unmerged PR's own test (`corrupt-index.py`, which desyncs the git index from
+      the working tree mid-hook via `git update-index --cacheinfo` + a working-tree write) in a separate scratch repo
+      against the same 0.4.11 binary. Result: **STILL BROKEN — CONFIRMED, not just plausible.** `prek run` printed
+      `Failed to restore unstaged changes: ... patch does not apply`, and afterward BOTH the working tree AND the index
+      entry for `new-file.txt` were silently emptied (`git show :new-file.txt` → empty; `cat new-file.txt` → empty) —
+      exactly the "newly added files end up empty" symptom the original issue reported, on the CURRENT latest release.
+      **Correction to my own claim two Progress Log entries ago**: I said v0.4.6 added a `--no-stash`/`PREK_NO_STASH`
+      opt-out ([#2130](https://github.com/j178/prek/pull/2130)) as an available fallback — checked its actual merge
+      state and it is **also CLOSED WITHOUT MERGING**, same as #1890. Verified directly: `prek run --no-stash` on 0.4.11
+      errors `unexpected argument '--no-stash' found`. **There is no built-in opt-out for this mechanism in any released
+      prek version** — that fallback does not exist. Net effect of the upgrade: closes one confirmed bug (#2142-class),
+      does NOT close the other (#1889-class, now confirmed rather than hypothesized), and removes an escape hatch I'd
+      incorrectly believed existed. The docspec.py backstop (already shipped) remains the only concrete protection
+      against this landing silently, regardless of prek version.
+- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — workspace-wide prek version drift: other hosts run different, equally
+      unpatched-for-#1889 versions, and nothing detects this.** Grepped every repo in this workspace for prek install/CI
+      references: **CI is NOT applicable at all** — zero `.github/workflows/*.yml` files anywhere invoke the `prek`
+      binary (confirmed by direct grep across all repos); CI's `quality-gates-v2` runs ruff/pytest/basedpyright/docspec
+      directly against an already-committed SHA, where prek's stash/restore mechanism has nothing to do (no unstaged
+      state exists in a CI checkout). `unified-trading-pm/.github/workflows/ldr-docs-gate.yml`'s only "prek" mention is
+      a comment citing this as the MOTIVATION for why that independent CI-side doc check exists (a different, already
+      resolved/archived issue, `prek_plan_hygiene_hook_fail_open_unhooked_clone_2026_07_17.md`, about the hook being
+      _absent_ on a clone, not about version staleness). **Other hosts, checked live via read-only SSM (same sanctioned
+      pattern as `check-ao-backlog-status.sh`):** - Orchestrator/planning VM (`i-0c9b283b31d6b5ca7`, EIP
+      `13.113.200.22`) — running **prek 0.4.8** (installed ~2026-07-07, per `bin -> .local/share/uv/tools/prek/bin/prek`
+      symlink mtime), 3 releases behind current. Has the #2142 fix (anything ≥0.4.4 does) but is equally exposed to the
+      confirmed-still-open #1889-class bug — version doesn't change that half. This is where most background AO agent
+      commits actually happen. - Human-planning VM (`i-0dd9812a96cdda5dc`) — **prek not installed at all**, checked
+      under both the default SSM execution context and the `ubuntu` user. A different, arguably more urgent gap for that
+      host specifically (zero hook coverage — gitleaks/branch-drift/prettier-autostage all skipped on any commit from
+      there), separate from the version-staleness question. - This laptop (`harsh_pc`) — fixed above. - The other
+      operator's laptop (`…@gmail.com` identity, per the slot/host commit-attribution split) — not reachable via SSM (no
+      agent on a personal machine); needs that operator to run the same check locally. **Root cause of the drift**:
+      `agent-orchestrator/scripts/bootstrap_vm.sh` STEP 4.6 installs prek via `uv tool install 'prek>=0.3.0,<1.0.0'` —
+      ONE TIME at VM bootstrap. The SemVer range is already wide enough to permit `0.4.11` (no manifest edit needed to
+      "unlock" it), but `uv tool install` does not auto-upgrade an already-satisfying install, so every host silently
+      freezes at whatever was current the day IT was bootstrapped. `worker-host-preflight.sh`'s existing prek check
+      (added by the 2026-06 fix below) is presence-only (`command -v prek`) — it never compares the resolved version
+      against anything, so a 5-month-stale binary passes cleanly. A near-identical-sounding but distinct problem was
+      already found and fixed in `plans/archive/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md`
+      (2026-06-03, RESOLVED) — but that investigation was about prek being **absent** on worker VMs, never about
+      installed-but-stale, so this exact dimension was never covered. **Not yet actioned — awaiting an operator decision
+      on scope**: (1) one-time remediation — `uv tool install prek     --reinstall` (or `uv tool upgrade prek`) on the
+      orchestrator VM + human-planning VM (if prek should be installed there at all) + the other operator's laptop; (2)
+      durable prevention — extend `worker-host-preflight.sh`'s presence-only check to an actual version comparison
+      against a floor in `workspace-constraints.toml` (currently `prek>=0.3.0,<1.0.0`, itself just a permissive range,
+      not an enforced floor); (3) since neither (1) nor (2) closes the confirmed-still-open #1889-class bug, the durable
+      protection layer stays the docspec.py backstop already shipped, plus a possible high-leverage option: we now have
+      the exact minimal repro the upstream maintainer asked for on #1889 and never received — contributing it back
+      (reviving #1890 or filing fresh) could get a REAL upstream fix merged rather than us re-deriving one internally.
 - [x] [SCRIPT] P1. **DONE 2026-07-30 (slot-1) — defensive backstop shipped regardless of root cause.** Whatever the
       remaining mechanism turns out to be, this corruption can no longer silently land: `scripts/docs/docspec.py`'s
       `date`-kind field validator (`_validate_value`) was a PREFIX-only check (`len(s)>=10` + dash-position check) that
@@ -306,3 +333,32 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   tracked infrastructure that every concurrently-running slot depends on; swapping it mid-session without the operator's
   awareness is a materially different kind of action than shipping a scoped code fix inside one repo, so it was left as
   an explicit recommendation (see the todo above) rather than done unilaterally. `status` stays `open`.
+
+- **2026-07-30 (slot-1, harsh_pc) — operator approved the upgrade; tested it directly instead of trusting the
+  changelog.** Downloaded and sha256-verified the official `v0.4.11` release asset, atomically swapped
+  `~/.local/bin/prek` (0.3.1 → 0.4.11, covers every tab on this host). Rather than assume the changelog-cited fixes
+  actually apply here, built two isolated scratch-repo reproductions of the two candidate upstream bugs and ran them
+  against the new binary directly: **#2142's intent-to-add case is genuinely fixed**; **#1889's index-corruption case is
+  CONFIRMED still broken** on the very binary now installed (not merely plausible anymore — reproduced the emptied
+  index + working-tree entry directly). Also caught and corrected my own error from the entry above: I'd claimed
+  `--no-stash`/`PREK_NO_STASH` (v0.4.6, #2130) was an available fallback; checking its actual GitHub state shows that PR
+  was **also closed without merging** — `prek run --no-stash` on 0.4.11 errors as an unrecognized flag. No opt-out for
+  this mechanism exists in any released version.
+
+  Followed the operator's next ask (blast radius before a workspace-wide rollout decision) by checking every other host
+  this workspace runs on. **CI needs nothing** — confirmed via full-workspace grep that no `.github/workflows/*.yml`
+  anywhere invokes the `prek` binary; CI validates an already-committed SHA where prek's unstaged-changes mechanism is
+  structurally not in play. **Orchestrator VM** (`i-0c9b283b31d6b5ca7`, checked read-only via SSM, same pattern as
+  `check-ao-backlog-status.sh`): `prek 0.4.8`, 3 releases behind, has the #2142 fix but not immune to #1889. **Human-
+  planning VM** (`i-0dd9812a96cdda5dc`, same SSM check): prek is not installed there at all — a separate, more basic gap
+  (zero hook coverage on any commit from that host), independent of version staleness. **Other operator's laptop**: not
+  reachable via SSM, needs a local check by that operator. Root cause of the drift, confirmed by reading
+  `agent-orchestrator/scripts/bootstrap_vm.sh` + `worker-host-preflight.sh`: prek installs once per host via
+  `uv tool install 'prek>=0.3.0,<1.0.0'` at bootstrap and is never re-checked for freshness — the preflight assertion is
+  presence-only (`command -v prek`), never a version comparison — so every host silently freezes at whatever was current
+  the day it bootstrapped, with nothing detecting the drift. This is a new dimension of a problem already investigated
+  once (`plans/archive/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md`, 2026-06-03, RESOLVED) —
+  but that pass was about prek being _absent_, never about installed-but-stale, so it never built a freshness check.
+  Reported the full picture to the operator; awaiting their call on scope (remediate other hosts now vs. also build the
+  durable version-check vs. pursue an upstream fix for #1889 using the repro we now have) before doing anything beyond
+  this host.
