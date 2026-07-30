@@ -14,7 +14,7 @@ summary: >-
   launch, not guessed.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [cefi] # retagged 2026-07-30 (ag-closeout-audit): was [cross-cutting], ASTER is a cefi venue
 stage: [data]
 repos: [market-tick-data-service, deployment-service]
 scope: [engineer, admin]

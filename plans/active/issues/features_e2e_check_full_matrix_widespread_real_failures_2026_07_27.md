@@ -15,7 +15,7 @@ summary: >-
   workspace's "big finding" rule (cross-repo + data-correctness).
 status: open
 nature: issue
-asset_group: [cefi, tradfi, sports, tradfi]
+asset_group: [cefi, tradfi, sports] # deduped 2026-07-30 (ag-closeout-audit): tradfi was listed twice
 stage: [data]
 repos: [features-service, unified-trading-library, market-data-processing-service, deployment-service]
 scope: [engineer, admin]
