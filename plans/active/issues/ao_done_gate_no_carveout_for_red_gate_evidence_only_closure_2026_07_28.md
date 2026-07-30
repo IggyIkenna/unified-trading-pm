@@ -143,7 +143,7 @@ forces an operator/main manual DB patch outside the normal flow.
 - [ ] [DOC] P3. Once either fix above ships, add the accepted BLOCKED-marker convention to `task_template.md`'s
       "remove/re-state a todo" section (alongside the existing CANCELLED/SUPERSEDED and DEFERRED-BY-DESIGN conventions)
       so future RED-gate todos use a consistent, machine-recognized marker from the start.
-- [ ] [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
+- [x] ✅ [BACKEND] P2. **Self-archival variant** (recurrence 2026-07-29, below): when a `/done`'s commit RENAMES/deletes
       the `plan_ref` out of `plans/active/` (an in-same-commit archival closure) AND the moved content carries an
       accepted disposition marker (`[x]` flip / SUPERSEDED / CANCELLED), Mode-2 must accept it. Today the checker reads
       the old active path with rename-detection effectively off (`git show` of `plans/active/...` shows only a deletion
@@ -153,7 +153,20 @@ forces an operator/main manual DB patch outside the normal flow.
       `rename plans/active/... ->     plans/archive/...` whose new blob carries the marker as
       `reason="plan_ref_self_archived_with_marker"`. This is the previously-seen
       `/plans/archive/issues/ao_done_gate_checkbox_flip_blind_to_self_archived_plan_ref_2026_07_26.md` failure mode,
-      recurring. Repo: agent-orchestrator.
+      recurring. Repo: agent-orchestrator. — agent-orchestrator@3839380: the diff-rename following
+      (`_flips_at_path_or_rename` + `_same_commit_added_path_matching_basename`) already existed from an earlier fix and
+      follows the rename fine, but only proves the flip when the destination path's diff shows a paired removed+added
+      line — a pure `git mv` + heavy content edit renders the destination as a pure "add" with nothing removed, so that
+      path (and the exact-full-brief-string `checkbox_currently_checked` fallback) still 409'd once a real closure
+      annotates the checked line (a `✅` checkmark or a `— <repo>@<sha>: <evidence>` trailer, per this workspace's own
+      archival convention). Added `_archival_rename_disposition` (content-based, not diff-based): confirms the commit's
+      PARENT revision at the old path had this todo genuinely open, then checks the renamed destination BLOB for a real
+      `[x]` flip or a CANCELLED/DEFERRED/BLOCKED marker, both correlated by the todo's `[TAG] P<n>.` prefix (fails
+      closed on an ambiguous same-prefix match) rather than an exact brief-string match. Wired into `_mode2_disposition`
+      as the final, lowest-priority tier, returning the distinct `reason="plan_ref_self_archived_with_marker"` exactly
+      as recommended. 2 new unit tests in `tests/test_done_gate_plan_flip_hard_reject.py` (the annotated-checked-line
+      acceptance case; an ambiguous duplicate-tag+priority fail-closed 409 case). Full `quality-gates.sh` green (2129
+      passed, 2 skipped); shipped via `quickmerge --agent`.
 
 ## Progress Log
 
