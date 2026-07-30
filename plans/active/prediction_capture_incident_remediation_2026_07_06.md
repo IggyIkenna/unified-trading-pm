@@ -296,10 +296,15 @@ orchestrator-dispatched).
 
 ### Phase 5 — guardrail so this class can't recur
 
-- [ ] [CODE] P2. Write-time validation: any `*-PERP` venue record MUST be `instrument_type=PERPETUAL` AND pass a
-      perp-ticker sanity check (reject event-contract patterns, e.g. `KXMVE*`/`KXMVECROSSCATEGORY*`); reject at the
-      writer, not silently. Gate: a synthetic event contract injected into a `-PERP` feed is rejected, not written to
-      the catalogue.
+- [x] ✅ [CODE] P2. **DONE 2026-07-27 (slot-9, `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 3)** —
+      `instruments-service@a4137022`. Shared `validate_perp_instrument_record()` write-time guardrail
+      (`reference_data/adapters/cefi/_perp_write_guard.py`), wired into both `kalshi_perp.py`'s and
+      `polymarket_perp.py`'s `_parse_market` — rejects any record whose `instrument_type` isn't `PERPETUAL`, or whose
+      ticker matches a known event-contract prefix (`KXMVE*`), independent of the venue's own category field. Gate MET:
+      new `test_event_contract_ticker_rejected_even_with_crypto_category` proves a synthetic `KXMVECROSSCATEGORY-*`
+      event contract tagged `category="Crypto"` is rejected, not written to the catalogue; Polymarket's parser
+      (previously NO rejection filter at all) gets the same guard + `test_event_contract_ticker_rejected`.
+      `quality-gates.sh` green.
 
 ### Phase 6 — fix the Kalshi CQG-bucketing write-time bug (found by Phase 3's VERIFY, 2026-07-26)
 
@@ -446,3 +451,9 @@ orchestrator-dispatched).
   follow-up backfill-assessment todo. Also flagged (side-finding, not this gap's root cause): `prd/catalog.parquet` is a
   separate, ~1-month-stale full-history snapshot (not the live capture path) — noted for completeness, not actioned
   here. No code changed this turn — diagnostic + plan-doc updates only.
+- **2026-07-30 (`prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1, reconciliation pass): flipped
+  Phase 5's write-time `*-PERP` guardrail checkbox — it was shipped 2026-07-27 (`instruments-service@a4137022`, batch1
+  todo 3) but never cited/flipped in this doc.** No code changed this turn — doc-only reconciliation. Remaining open
+  work in this plan: Phase 6 (the CQG-bucketing write-time fix at `prediction.py:95` + its backfill-assessment
+  follow-up) plus the 7 `[DESCOPED-NOT-MVP 2026-07-14]` perp-repoint items (Phases 1-4), which stay parked pending an
+  operator ruling on perps prod access, not genuinely dispatchable.

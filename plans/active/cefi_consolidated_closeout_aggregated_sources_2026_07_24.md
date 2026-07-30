@@ -215,7 +215,7 @@ drift_direction: advance-code
     - **[DATA] P1.** Find the WRITER that stamped `batch_tardis` on a non-Tardis venue and fix the derivation at source.
   - [`plans/active/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md`](/plans/archive/issues/cefi_onchain_venues_mislabeled_batch_tardis_2026_07_20.md)
     — 0 open todos (status: open, narrative finding doc — no checkbox-tracked items, see file for recommended fix).
-  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
+  - [`plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md`](/plans/active/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md)
     - **[SERVICE] P1.** Add a write-time canonical-path guard to the Tardis cefi lane (currently has none).
     - **[SERVICE] P1.** Fix `tardis_shared.py:671` to escape `/` in the stem (`sanitize_file_stem`); migrate 48+
       KRAKEN-SPOT corrupt objects.

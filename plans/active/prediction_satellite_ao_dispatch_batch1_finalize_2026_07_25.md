@@ -51,9 +51,10 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile the source doc(s).** `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s 7 todos
-      all cite `prediction_phase_ab_residuals_2026_07_24.md` as Source, but each todo's own Done-when records results
-      into a DIFFERENT sibling doc's Progress Log (`prediction_capture_incident_remediation_2026_07_06.md`,
+- [x] ✅ [REVIEW] P1. **DONE 2026-07-30 (slot-13).** **Reconcile the source doc(s).**
+      `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s 7 todos all cite
+      `prediction_phase_ab_residuals_2026_07_24.md` as Source, but each todo's own Done-when records results into a
+      DIFFERENT sibling doc's Progress Log (`prediction_capture_incident_remediation_2026_07_06.md`,
       `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
       `issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`, plus
       `prediction_phase_ab_residuals_2026_07_24.md` itself for todo 7). Flip the corresponding checkbox in
@@ -67,7 +68,21 @@ drift_direction: advance-code
       exact count live rather than trusting either historical figure, and do not assume those 2 newer items are batch1's
       concern; they are untriaged, not blocked). **Done when**: `prediction_phase_ab_residuals_2026_07_24.md`'s 7
       corresponding checkboxes are flipped with verified evidence, and each of the 3 sibling target docs' Progress Log
-      entries are confirmed present.
+      entries are confirmed present. — **Result**: all 3 sibling docs' Progress Log entries + own checkboxes were
+      already correctly flipped by batch1's own execution (confirmed by direct read); the gap was purely that
+      `prediction_phase_ab_residuals_2026_07_24.md`'s own checkbox list had never cited any of batch1's 7 commit SHAs.
+      Flipped 4 of that doc's checkboxes to DONE: A1b (dead Kalshi host, `e2e-testing@371ac1b`), A2a (canonical-identity
+      migration now 8/8, cron-already-covers-it verdict), A2b (route writer through canonical builder, 3 commits), A2c
+      (POLYMARKET legacy dual-write trees, diagnostic + batch4's separate schema work — issue doc now
+      resolved/archived). A1a (capture-incident remediation) stays open — annotated with todo 2's diagnostic + todo 3's
+      Phase 5 guardrail closure, but that doc's own Phase 6 fix is still unimplemented. Also flipped Phase 5's
+      write-time `*-PERP` guardrail checkbox directly in `prediction_capture_incident_remediation_2026_07_06.md` (it was
+      shipped 2026-07-27 via batch1 todo 3 but never cited there) and struck through a stale prose "suggested next step"
+      in `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md` that batch1 todo 1 already resolved.
+      **Re-verified live** (not trusting historical counts): `prediction_phase_ab_residuals_2026_07_24.md` now has **9
+      open / 10 done / 19 total** — 0 open is NOT the outcome, as predicted; the 9 remaining are genuinely outside
+      batch1's scope (A1a, A1c reconciled by a different batch, A5, and 6 Phase-B items including the excluded item 9).
+      No code changed — doc-only reconciliation across 3 files.
 - [ ] [REVIEW] P1. **Re-check the excluded item 9 and the 12 fully-deferred docs**, now that the operator has
       (presumably) ruled on the queued decision in `autonomous_session_operator_decisions_2026_07_25.md`. For item 9
       (the instrument_type-canonicalization re-verify excluded from batch1 for conflicting with

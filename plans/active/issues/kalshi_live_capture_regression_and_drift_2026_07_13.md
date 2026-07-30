@@ -121,9 +121,12 @@ not sit un-triaged.
 1. ~~Confirm/deny whether `raw_tick_data/by_date/` is genuinely stalled at `day=2026-06-28` (check the live capture
    process/VM logs directly) vs. a path/prefix read artifact.~~ ✅ **GENUINE STALL, confirmed 2026-07-27** (slot-12) —
    see the dated Progress Log entry below.
-2. Fix `e2e-testing@dbf8e78`'s regression at `validate_batch_live_smoke_matrix.py:552` (swap back to the
+2. ~~Fix `e2e-testing@dbf8e78`'s regression at `validate_batch_live_smoke_matrix.py:552` (swap back to the
    elections-subdomain host) and actually build the missing regression check this time so it can't silently reappear a
-   third time.
+   third time.~~ ✅ **DONE 2026-07-27** (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1, slot per that
+   plan) — `e2e-testing@371ac1b` repoints `_fetch_kalshi_instruments()` at `api.elections.kalshi.com`; new
+   `tests/unit/test_validate_batch_live_smoke_matrix.py` scans the module's own source for the dead host string (not
+   just the one call site) so a third reintroduction anywhere in the file fails the build.
 3. ~~Triage the growing `kalshi/markets` / `kalshi/market_lookup` schema-drift GitHub issue chain (#45→#590) — decide
    whether this is a Kalshi-side API change requiring a UAC schema bump, or an endpoint that's been retired.~~ ✅
    **RESOLVED 2026-07-26** (via `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md` todo 1's

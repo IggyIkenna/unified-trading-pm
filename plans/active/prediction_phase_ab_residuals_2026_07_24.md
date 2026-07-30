@@ -52,7 +52,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-27" # was 2026-07-26 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13. 2026-07-27 — batch2 todo-2 conflict-check re-verified item 9's instrument_type residual case-insensitively (still open, 176 genuinely-malformed rows, blank sub-population actively growing ~10/day); added new Phase-B P2 todo for the growing-blank finding; open-todo count 13 -> 14
+last_updated: "2026-07-30" # was 2026-07-26 — /plan-reconcile prediction shard corrected the A1 Kalshi-smoke-matrix todo's per-todo repo attribution (e2e-testing, not MTDS-only); no checkbox changes. 2026-07-25 — consolidated-closeout split pass added 2 todos relocated from the parent (adapter dead-code audit as new A5; merged reconciliation-cadence + duplicate-note in Phase B) + folded the POLYMARKET schema-extension ruling into the existing A2 todo (no new checkbox); open-todo count 11 -> 13. 2026-07-27 — batch2 todo-2 conflict-check re-verified item 9's instrument_type residual case-insensitively (still open, 176 genuinely-malformed rows, blank sub-population actively growing ~10/day); added new Phase-B P2 todo for the growing-blank finding; open-todo count 13 -> 14. 2026-07-30 — `prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1 reconciliation: flipped A1b (dead Kalshi host), A2a (canonical-identity migration, now 8/8), A2b (route writer through canonical builder), and A2c (POLYMARKET legacy dual-write trees) to DONE citing batch1's 7 commits; A1a annotated but stays open (Phase 6 fix still outstanding); open-todo count freshly re-verified live (not trusting either historical figure) at 9 of 19 total (was 14 pre-reconciliation)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -113,14 +113,31 @@ source: >-
 - [ ] [BACKEND] P0. **Finish the prediction capture-incident remediation** — harden the capture path (consolidator utf8
       typing, backfill the 07-01→07-06 missed window) and confirm the KALSHI/POLYMARKET-PERP adapters no longer hit the
       wrong Kalshi host (the fake-PERPETUAL cefi contamination). `prediction_capture_incident_remediation_2026_07_06.md`
-      (9 open). (repos: market-tick-data-service, unified-trading-library, deployment-service)
-- [ ] [BACKEND] P0. **Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix** + add the
-      regression check that the elections-subdomain plan Phase 4 never added; fix the `raw_tick_data/by_date/` drift.
-      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. (repos: **e2e-testing** — the dead host is at
-      `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552`, re-verified still present 2026-07-26 — +
-      market-tick-data-service for the `by_date/` drift leg; **repo list corrected 2026-07-26, `/plan-reconcile`
-      prediction shard**: it previously named only `market-tick-data-service`, which does not contain the smoke matrix,
-      so a dispatched worker would have found nothing for this todo's primary named action)
+      (9 open, but 7 of those are `[DESCOPED-NOT-MVP 2026-07-14]` parked pending the perps prod-access operator ruling —
+      only Phase 6's 2 items are genuinely dispatchable). **Reconciled 2026-07-30
+      (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todos 2+3, via the batch1 finalize plan) — NOT a clean
+      close, still open.** Batch1 closed 2 items in that doc: todo 2 quantified + root-caused the "fake-PERPETUAL
+      contamination" question (the `KXMVE*` event family IS captured correctly; the REAL bug is 79% of Kalshi volume
+      also landing in `canonical_question_group=OTHER` due to a one-line write-time bug at
+      `instruments-service/instruments_service/engine/orchestrator/prediction.py:95` — filed as that doc's new Phase 6,
+      NOT implemented) and todo 3 shipped the Phase 5 write-time `*-PERP` guardrail (`instruments-service@a4137022`, now
+      flipped there). Phase 6's CQG-bucketing fix + its backfill-assessment follow-up are the only genuinely open work
+      remaining; this checkbox stays open until Phase 6 ships. (repos: market-tick-data-service,
+      unified-trading-library, deployment-service)
+- [x] ✅ [BACKEND] P0. **DONE 2026-07-30 (reconciling `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 1).**
+      Kill the dead Kalshi `trading-api.kalshi.com` host reintroduced into the smoke matrix + add the regression check
+      that the elections-subdomain plan Phase 4 never added; fix the `raw_tick_data/by_date/` drift.
+      `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`. **Both legs closed**: (1) the dead-host +
+      regression-check leg — `e2e-testing@371ac1b` repoints `_fetch_kalshi_instruments()` at `api.elections.kalshi.com`
+      (was `trading-api.kalshi.com`, 401s since the 2026-05-20 migration); new
+      `tests/unit/test_validate_batch_live_smoke_matrix.py` scans the module's own source for the dead host string (not
+      just the one call site) so a third reintroduction anywhere in the file fails the build. (2) the
+      `raw_tick_data/by_date/` drift leg — separately confirmed + fixed via that issue doc's own 2026-07-27/28 entries
+      (not batch1's work): the ~29-day live-capture stall was root-caused (no producer VM/Cloud Run running anywhere in
+      the fleet) and relaunched (`prediction_satellite_ao_dispatch_batch5_2026_07_26.md` todo 4 — 4 fresh
+      `prediction-live-{venue}-{data_type}` VMs, manifest-confirmed captures through `day=2026-07-27`). (repos:
+      **e2e-testing** — `e2e-testing/scripts/validation/validate_batch_live_smoke_matrix.py:552` +
+      market-tick-data-service for the `by_date/` drift leg)
 - [ ] [BACKEND] P1. **Adapters must apply lifecycle bounds BEFORE the network call** — today inactive days land as
       `SOURCE_RETURNED_ZERO` instead of an honest `EXPECTED_*`, and the CLOB catalogue scoped to `end_date_iso==day` can
       cap backfills to the resolution day.
@@ -133,42 +150,61 @@ source: >-
 
 ### A2 — Instrument-id / underlying / CQG writers converge (fold: canonical-identity migration)
 
-- [ ] [BACKEND] P0. **Finish the prediction canonical-identity migration — now 7/8 done (confirmed 2026-07-19), only
-      todo 2 open.** Shipped: todos 1/3/4/5 (`instruments-service@0d0c3742` — adapter `underlying` from
+- [x] ✅ [BACKEND] P0. **DONE 2026-07-30 (reconciling `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 7) —
+      8/8 done.** Finish the prediction canonical-identity migration — was 7/8 done (confirmed 2026-07-19), only todo 2
+      open. Shipped: todos 1/3/4/5 (`instruments-service@0d0c3742` — adapter `underlying` from
       `classify_*_to_canonical_group`, cross-venue `canonical_instrument_id`, titles-map decision, Polymarket sports
       `build_fixture_id`) + todo 6 as VERIFY (`unified-trading-pm@16272205a` — downstream `instrument_id` uniqueness
       SAFE, venue embedded by construction) + todo 7 (`unified-api-contracts@511a9c62` — `gcs_paths.py` bucket
       abbreviation flip, migration gate re-confirmed live 2026-07-19: legacy `market-data-tick-prediction-prd-*` 404s,
       `market-data-tick-pred-prd-*` is the sole live SSOT) + todo 8 (MDPS UAC-pin — assessed 2026-07-19, NO bump needed;
       the MDPS→UAC dep is an in-workspace editable range-pin that absorbs the 0.x flip by design; MDPS assertions
-      already reconciled at `market-data-processing-service@27bce46`/`@5febb77`). **Only todo 2 remains open:** full
-      `prod/catalog.parquet` regen (`build_instrument_catalogue.py --asset-group prediction` against real GCS data,
-      manifest-verified row counts) to bake in the shipped `underlying` + cross-venue `canonical_instrument_id` fields.
-      Real scoping/smoke-test/ETA done 2026-07-09 (~21k blobs, ETA ~25-40 min for a full non-dry-run regen); the full
-      run is intentionally NOT executed yet (staged rollout, gated on the in-flight shared canonical-identity migration
-      so it doesn't bake transitional/half-migrated ids into the persisted catalogue — schedule after that migration
-      settles). **NOTE**: a daily/weekly cron (`lifecycle-catalogue-regen-prediction-daily`) already regenerates this
-      catalogue on schedule for OTHER fixes (base_asset whitespace @49ff29ea, `af_fixture_id` propagation) — verify
-      whether it has ALREADY carried the underlying/canonical_instrument_id fields through before treating this as a
-      fresh manual-run requirement. Source: `prediction_canonical_identity_migration_2026_07_08.md` (folded in +
-      archived 2026-07-21, consolidation pass — all other todos resolved, this was its sole remaining open item).
-      **Phase-E Leg-1 seam** = todo 5 (done Polymarket; Kalshi extended in Phase E). (repos: instruments-service,
-      unified-api-contracts)
-- [ ] [BACKEND] P1. **Route every prediction id/underlying/CQG writer through the shared canonical builder + a QG that
-      fails a non-canonical prediction `instrument_id`/`canonical_question_group` on write** — re-drift prevention, so
-      new writes can't reintroduce the dupes A0 enumerates. (repos: instruments-service, market-tick-data-service,
-      unified-api-contracts)
-- [ ] [BACKEND] P1. **NEW 2026-07-24 — POLYMARKET raw-tick data found living under ≥4 structurally-distinct GCS path
-      trees for the SAME shard (content-verified, byte-matching); the UAC oracle passes ALL of them as canonical
-      (structure-only blindness). One tree (10-segment, `data_source=`/`market_category=`/`market_type=`/
-      `resolution_period=`) has NO manifest column at all — genuinely unrepresentable, not just unmigrated — and carries
-      `title`/`slug`/`eventSlug` market-question text the canonical schema drops (metadata-loss risk, no delete
-      suggested). Separately, manifest `data_type=prediction_trades` (2,477 rows, still being written 2 days before the
-      audit) is a genuine non-canonical axis value, not a `migration_pending` case.** No writer identified yet for the
-      legacy shapes (deferred to the issue doc's own todo, a code-read task). Full evidence + 3 open questions (Q1
-      catalogue metadata recoverability, Q2 still-being-written?, **Q3 retro-register vs migrate/purge — RULED
-      2026-07-25 (operator): extend the canonical `trades` schema to preserve the trader-identity + market-question +
-      outcome-label content, then migrate — not drop the metadata, not leave it permanently forked**):
+      already reconciled at `market-data-processing-service@27bce46`/`@5febb77`). **Todo 2 (full `prod/catalog.parquet`
+      regen) is now CLOSED too — RESOLVED-BY-VERDICT, not executed.** The remaining question was whether the
+      daily/weekly `lifecycle-catalogue-regen-prediction` cron already carries the shipped `underlying` + cross-venue
+      `canonical_instrument_id` fields through, making a fresh manual regen redundant.
+      `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 7 (read-only, unified-trading-pm) answered **YES**:
+      code proof (`build_instrument_catalogue.py:2081-2088` carries the fields straight through from whatever the
+      per-date snapshot recorded) + execution proof (the daily job has run clean every day 2026-07-16→2026-07-27; the
+      weekly full re-walk ran 2026-07-11/18/25, all post-fix) + data proof (live `prod/catalog.parquet` read 2026-07-27
+      shows the expected step-change: pre-fix rows 2.0%/0.3% populated for `underlying`/`canonical_instrument_id` vs
+      post-fix rows 78.3%/4.6%). Full evidence in this doc's Progress Log (2026-07-27T18:00Z entry). The staged manual
+      regen adds nothing beyond what the cron already does; the only unresolved residual (permanently-`""` pre-fix
+      legacy rows, since the by-date snapshots themselves are never retroactively regenerated) is a distinct
+      retroactive-backfill question, out of this todo's scope and not something the manual regen would have fixed
+      either. Source: `prediction_canonical_identity_migration_2026_07_08.md` (folded in + archived 2026-07-21,
+      consolidation pass — all other todos resolved, this was its sole remaining open item). **Phase-E Leg-1 seam** =
+      todo 5 (done Polymarket; Kalshi extended in Phase E). (repos: instruments-service, unified-api-contracts)
+- [x] ✅ [BACKEND] P1. **DONE 2026-07-27 (`prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 6, slot-9) —
+      reconciled 2026-07-30.** Route every prediction id/underlying/CQG writer through the shared canonical builder + a
+      QG that fails a non-canonical prediction `instrument_id`/`canonical_question_group` on write — re-drift
+      prevention, so new writes can't reintroduce the dupes A0 enumerates. `unified-api-contracts@08d48757`: new
+      `validate_prediction_instrument_type()` / `validate_canonical_question_group()` guardrail
+      (`canonical/domain/predictions/write_guard.py`), re-exported from the `predictions` facade, mirroring the CeFi
+      `*-PERP` write-guard pattern; new `tests/unit/test_prediction_write_guard.py` — the new QG the todo requires —
+      asserts both functions raise on every A0-enumerated dupe (lowercase `prediction`/`prediction_market`,
+      underlying-asset leakage `BTC`/`ETH`/etc., case-mismatched CQG) and pass on canonical values.
+      `instruments-service@517baeb9`: Kalshi + Polymarket adapters call `validate_canonical_question_group()` at every
+      `canonical_question_group` computation site; Polymarket's `instrument_type` literal now uses the `InstrumentType`
+      enum (matches Kalshi's convention). `market-tick-data-service@b7272103`: the REAL live bug —
+      `kalshi_adapter.py`/`polymarket_adapter.py` previously hand-rolled `instrument_id` as a raw f-string and stamped
+      lowercase `instrument_type="prediction_market"`, diverging from every live WS connector (uppercase
+      `PREDICTION_MARKET`) and the catalogue SSOT; `instrument_id` now routes through `build_canonical_instrument_id()`,
+      `instrument_type` uses `InstrumentType.PREDICTION_MARKET.value`, `canonical_question_group` is validated once per
+      distinct classifier cache key. All 3 repos' `quality-gates.sh` green. (repos: instruments-service,
+      market-tick-data-service, unified-api-contracts)
+- [x] ✅ [BACKEND] P1. **DONE — reconciled 2026-07-30. NEW 2026-07-24 — POLYMARKET raw-tick data found living under ≥4
+      structurally-distinct GCS path trees for the SAME shard (content-verified, byte-matching); the UAC oracle passes
+      ALL of them as canonical (structure-only blindness). One tree (10-segment,
+      `data_source=`/`market_category=`/`market_type=`/ `resolution_period=`) has NO manifest column at all — genuinely
+      unrepresentable, not just unmigrated — and carries `title`/`slug`/`eventSlug` market-question text the canonical
+      schema drops (metadata-loss risk, no delete suggested). Separately, manifest `data_type=prediction_trades` (2,477
+      rows, still being written 2 days before the audit) is a genuine non-canonical axis value, not a
+      `migration_pending` case.** No writer identified yet for the legacy shapes (deferred to the issue doc's own todo,
+      a code-read task). Full evidence + 3 open questions (Q1 catalogue metadata recoverability, Q2
+      still-being-written?, **Q3 retro-register vs migrate/purge — RULED 2026-07-25 (operator): extend the canonical
+      `trades` schema to preserve the trader-identity + market-question + outcome-label content, then migrate — not drop
+      the metadata, not leave it permanently forked**):
       `/plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`. (repos:
       market-tick-data-service, unified-api-contracts, instruments-service) **Schema-extension migration (relocated
       2026-07-25 from the parent's "Queued audits + reviews" section, folded into this todo rather than opened as a new
@@ -188,7 +224,23 @@ source: >-
       docstring). Applying the doc's own "confirm real downstream need first" recommendation as a bounded, checkable
       task rather than an open privacy debate: no consumer exists today, so the trader-identity/PII fields are EXCLUDED
       from the canonical `trades` schema permanently (matches the already-shipped default). No further design/privacy
-      decision is outstanding on this sub-item.
+      decision is outstanding on this sub-item. **All 3 schema-extension steps + the Q1/Q2 diagnostic legs are now
+      checked in the linked issue doc — this bullet's own Done-when is MET.**
+      `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 5 (slot-12, read-only) closed the Q1/Q2 diagnostic
+      legs: (a) all 3 legacy path shapes (#3/#3b/#4) are HISTORICAL, none written by any live code path today (shapes
+      #3/#3b are the pre-2026-04-19 Polymarket-adapter drift, fixed forward by `da270f9b`/`ca246a9b`; shape #4 was
+      produced solely by the now-deleted one-off `migrate_polymarket_canonical.py`, added `da270f9b` 2026-04-19, deleted
+      `bce12993` 2026-06-10); (b) slug is fully recoverable from `instruments-service`'s `catalog.parquet`
+      (`raw_symbol`, 0% NULL), but title/question is NOT reliable (93.2% NULL corpus-wide) and eventSlug is recoverable
+      nowhere (no persisted column). The schema-extension migration itself (design → writer/migrate → register) was
+      completed separately via `prediction_satellite_ao_dispatch_batch4_2026_07_26.md`: `unified-api-contracts@90ddcc01`
+      added `title`/`slug`/`event_slug` as first-class canonical `trades` `ColumnSpec` entries;
+      `market-tick-data-service@84154e1a` stopped the Polymarket writer dropping them at ingest; both registered in
+      `/codex/02-data/canonical-cutover-register.md` §6e + `/codex/02-data/non-canonical-path-inventory.md` row 22. The
+      issue doc is now `status: resolved` and archived. **Residual not closed by this bullet** (tracked separately, not
+      this checkbox's scope): the historical raw-object migration of shapes #3/#3b/#4 themselves is registered
+      `no-migrate-first` and absorbed by `prediction_satellite_ao_dispatch_batch4_2026_07_26.md` todo 4b — this bullet's
+      own done-when (the issue doc showing all 3 schema-extension steps checked) is satisfied regardless.
 
 ### A3 — Venue-perps + live CLOB depth residuals (fold)
 
@@ -204,15 +256,15 @@ source: >-
       features-service)
 
       **2026-07-26 fold-in** (resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #12, option A):
-                                                                                                                                                                                  `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
-                                                                                                                                                                                  **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
-                                                                                                                                                                                  `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
-                                                                                                                                                                                  2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
-                                                                                                                                                                                  either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
-                                                                                                                                                                                  launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
-                                                                                                                                                                                  operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
-                                                                                                                                                                                  availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
-                                                                                                                                                                                  see its own Progress Log.
+                                                                                                                                                                                          `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`'s sole remaining open item folds in here —
+                                                                                                                                                                                          **Polymarket-perp enumerator, BLOCKED-UPSTREAM** (no public perps API exists — `perps-api.polymarket.com` /
+                                                                                                                                                                                          `perps.polymarket.com` / `perp.polymarket.com` all NXDOMAIN, web-UI beta only, CFTC-DCM-approved perps launched
+                                                                                                                                                                                          2026-04-21; re-verified 2026-06-22 that the unified CLOB/Gamma discovery path does not enumerate perp markets
+                                                                                                                                                                                          either). Scaffold shipped at every layer (`PolymarketPerpReferenceDataAdapter` + MTDS adapter/connector +
+                                                                                                                                                                                          launcher gating + strategy honest-absence); real unblock is Polymarket publishing the public perps API or
+                                                                                                                                                                                          operator-provisioned beta credentials — status stays BLOCKED-CREDENTIALS, not descoped, auto-flows on endpoint
+                                                                                                                                                                                          availability. Ping: slot_0. Repo: instruments-service. The shell plan (10 other todos, all shipped) archived —
+                                                                                                                                                                                          see its own Progress Log.
 
 ### A4 — Fixture-attribute WRITERS (Phase E depends on this landing before the Phase-D re-backfill)
 
@@ -480,3 +532,31 @@ source: >-
     wanted, is a distinct retroactive-backfill of historical by-date snapshots — out of scope for this todo and not
     something the parent A2 todo's "full catalogue regen" line was ever going to fix either. Read-only: no code changed,
     no GCS writes.
+- **2026-07-30 (`prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md` todo 1, reconciliation pass) — flipped
+  4 of this doc's checkboxes to DONE citing batch1's 7 commits, annotated a 5th that stays open.** Batch1's 7 todos all
+  cited this doc as Source but wrote their Done-when evidence into 3 different sibling docs' Progress Logs
+  (`prediction_capture_incident_remediation_2026_07_06.md`,
+  `issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md`,
+  `plans/archive/issues/prediction_polymarket_legacy_dual_write_trees_metadata_loss_2026_07_24.md`) plus this doc itself
+  for todo 7 — all 3 sibling docs' Progress Log entries + their own checkboxes were already correctly flipped (confirmed
+  by direct read); the gap was that NONE of batch1's 7 commit SHAs had yet been cited in THIS doc's own checkbox list.
+  Flipped: **A1b** (dead Kalshi host, todo 1, `e2e-testing@371ac1b` — both legs now closed, the second via an unrelated
+  later relaunch); **A2a** (canonical-identity migration, todo 7, now 8/8 — the cron-already-covers-it verdict); **A2b**
+  (route writer through canonical builder, todo 6, 3 commits); **A2c** (POLYMARKET legacy dual-write trees, todo 5
+  diagnostic + batch4's separate schema-extension work — issue doc now resolved/archived). **A1a** (finish
+  capture-incident remediation) stays open — todo 2's diagnostic + todo 3's Phase 5 guardrail closure
+  (`instruments-service@a4137022`, also flipped in that sibling doc directly) are both cited, but that doc's own Phase 6
+  (the `prediction.py:95` CQG-bucketing fix todo 2's diagnostic surfaced) is still unimplemented, so the bundled
+  checkbox correctly stays open. **Also found + fixed while reconciling**:
+  `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`'s own prose "suggested next step" #2 (the e2e-testing
+  host fix) was still un-struck-through despite being resolved by the same batch1 todo 1 commit — struck through with
+  citation, a small adjacent consistency fix, not new scope. **Re-verified live** (not trusting any historical count in
+  this doc's own frontmatter/notes, per this todo's own instruction): fresh `grep -c '^- \[ \]'`/`'^- \[x\]'` over the
+  current file gives **9 open / 10 done / 19 total** — 0 open todos remaining is NOT the outcome (as the finalize plan
+  itself predicted): A1a, A1c (reconciled by a different batch, unrelated to batch1), A5 (adapter dead-code audit, never
+  batch1 scope), and 6 Phase-B items (enumeration-driven migration, fixture-attribute backfill,
+  ambiguous-canonical-value ruling application, instrument_type casing re-verify = the excluded item 9, the
+  growing-blank-instrument_type diagnostic, and the `/data-pipeline-reconciliation` 3x-cadence top-up) remain genuinely
+  open — none of them batch1's scope. No code changed this turn — doc-only reconciliation across 3 files (this doc,
+  `prediction_capture_incident_remediation_2026_07_06.md`,
+  `issues/kalshi_live_capture_regression_and_drift_2026_07_13.md`).
