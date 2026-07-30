@@ -511,21 +511,18 @@ going forward. Still open, tracked as a todo below.
       decision**: IBKR/OpenBB deliberately NOT included in this pass — see new P3 todo below. (repo:
       unified-trading-library, unified-api-contracts)
 
-- [ ] [SCRIPT] P3. **Add IBKR/OpenBB `pipeline_mode` venue-overrides + registration (deferred from the FRED/ECB/OFR fix
-      above)** — the round-3 finding's `_VENUE_OVERRIDES` gap also named `IBKR`/`OpenBB`, but they were deliberately
-      excluded from the fix above: both are genuinely unwired dead code today (grepped `IBKRAdapter`/`OpenBBAdapter`
-      workspace-wide — zero callers outside their own definition + `factory.py` registration; `write_canonical_shard` is
-      never invoked). IBKR's `data_type` is caller-supplied with no real caller to inspect (could be
-      `trades`/`ohlcv_*`/bond quotes — `ibkr_adapter.py` imports `IBKRBar`/
-      `IBKRHistoricalTick(BidAsk/Last)`/`IBKRBondMarketData`, all plausible), so registering a SOURCE_PRIORITY entry
-      would be a guess, not a confirmed fact (unlike FRED/ECB/OFR, where the exact data_type was grep-confirmed in each
-      adapter). OpenBB is more concrete (`write_canonical_shard` always stamps `data_type="quotes"`,
-      `InstrumentType.BOND`) but `"quotes"` isn't yet a `DATA_TYPES_BY_ASSET_GROUP["tradfi"]` data_type either. Add
-      `BATCH_IBKR`/`BATCH_OPENBB` to UAC `PipelineMode`, the `_VENUE_OVERRIDES["IBKR"]`/`["OpenBB"]` entries in UTL, and
-      the SOURCE_PRIORITY/SOURCE_MODE_CAPABILITY/EMISSION_LATENCY_MS_BY_SOURCE/AVAILABILITY_AT_SEMANTICS closed-set
-      entries (mirroring the pattern this todo's fix just established) — first confirm IBKR's real data_type once it has
-      an actual caller (or register a best-effort blanket entry if the operator prefers not to wait). (repo:
-      unified-trading-library, unified-api-contracts)
+- [x] [SCRIPT] P3. **Add IBKR/OpenBB `pipeline_mode` venue-overrides + registration (deferred from the FRED/ECB/OFR fix
+      above)** — RESOLVED 2026-07-30 by deleting OpenBB entirely rather than doing the deferred registration work.
+      OpenBB was confirmed genuinely unwired dead code (zero callers outside its own definition + `factory.py`
+      registration; `write_canonical_shard` never invoked) — operator decision: delete rather than wire a pipeline_mode
+      registration for a feature nobody uses. Deleted the adapter, UAC `external/openbb/` package, normalize_utils
+      re-exports, error-code registry entry, venue freshness SLA + data freshness contract entries, capability
+      declaration, and all associated tests/generated artifacts. Evidence: `unified-api-contracts@8683a1be`,
+      `market-tick-data-service@cb6331ba`. **IBKR is UNCHANGED and still genuinely unwired** (zero callers, `data_type`
+      is caller-supplied with no real caller to inspect — registering a SOURCE_PRIORITY entry would still be a guess) —
+      if IBKR ever gets a real caller, confirm its actual `data_type` first, then add `BATCH_IBKR` to UAC
+      `PipelineMode`, `_VENUE_OVERRIDES["IBKR"]` in UTL, and the matching
+      SOURCE_PRIORITY/SOURCE_MODE_CAPABILITY/EMISSION_LATENCY_MS_BY_SOURCE/AVAILABILITY_AT_SEMANTICS closed-set entries.
 
 - [x] [SCRIPT] P2. **Fix execution-service's TradFi INDEX category mapping (2 independently-wrong mappings)** —
       `execution_service/data/loader.py:127-128`'s `_resolve_trades_category` maps `INDEX`→`"indices"` (plural; real
