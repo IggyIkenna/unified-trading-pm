@@ -125,10 +125,14 @@ not just noting.
       original doc's own Progress Log flagged this exact question ("worth an urgent re-look... rather than treating each
       new instance as just another routine corroboration") before hitting its line cap; it was never answered.
 
-- [ ] [BACKEND] P2. **Re-measure protected-6 retry-attempt counts post-resize** (`i-0c9b283b31d6b5ca7` or successor) —
-      the follow-up the 2026-07-29 ruling above is conditioned on. If 46/78-style escalations recur despite the host fix
-      (instance resize + added swap), that is the trigger to revisit reverting protected-6 to GitHub-hosted runners; if
-      they don't, this posture is confirmed working and this todo can close citing the measurement.
+- [x] ✅ [BACKEND] P2. **Re-measure protected-6 retry-attempt counts post-resize** (`i-0c9b283b31d6b5ca7` or successor)
+      — the follow-up the 2026-07-29 ruling above is conditioned on. If 46/78-style escalations recur despite the host
+      fix (instance resize + added swap), that is the trigger to revisit reverting protected-6 to GitHub-hosted runners;
+      if they don't, this posture is confirmed working and this todo can close citing the measurement. **Re-measured
+      2026-07-30, ~06:20-06:27Z (this session's operator-ruling close-out pass) — the AO escalations API itself could
+      NOT be queried (see Progress Log entry below for the full host-level measurement); host-level evidence answers the
+      todo's underlying question directly: the box remains severely oversubscribed post-resize, closing this todo with a
+      NEGATIVE verdict (the host fix has NOT resolved the contention) rather than a positive confirmation.**
 - [ ] [BACKEND] P2. Diagnose whether PM's `plan_health` escalation queue (44 active, growing, none resolving) shares the
       `ldr_qg_failure` box-contention root cause or has an independent bottleneck — check whether a `plan_health` worker
       type is actually being spawned/claiming slots at all, vs. queuing indefinitely for lack of a matching worker (a
@@ -272,3 +276,35 @@ not just noting.
   the decision — avoiding the escalation-spam pattern that doc's own P3 todo flags). Not pinging the authoring slot
   (`AUTHORING_SLOT=ci-reconcile`, the confirmed non-numeric literal that 400s per the entries above and the sibling
   doc's evidence log). Slot left clean on `live-defi-rollout`, working tree clean, no branch changes.
+
+- **2026-07-30 ~06:20-06:27Z (operator-ruling close-out pass)**: Attempted the P2 "re-measure protected-6 retry-attempt
+  counts post-resize" todo. `curl http://localhost:8765/api/escalations/active?...` via SSM against
+  `i-0c9b283b31d6b5ca7` **timed out** (`curl --max-time 20` → exit 28, `HTTP_STATUS:000`) on both the original unbounded
+  attempt (never returned in ~10min, abandoned) and a bounded 20s retry — the AO escalations API itself is currently
+  unresponsive on this box, so the literal attempt-count metric this todo asks for could not be pulled. Fell back to
+  direct host-level measurement (same SSM channel), which answers the todo's underlying question directly without
+  needing the API: `cat /proc/loadavg` → **97.38, 93.02, 78.15** (1/5/15-min load) on a confirmed **16-vCPU** box
+  (`nproc`) — i.e. ~6x oversubscribed, not a transient spike (5-min and 15-min averages are both severely elevated too).
+  Confirmed this IS the post-resize box, not a stale reading: `aws ec2 describe-instances` shows `i-0c9b283b31d6b5ca7`
+  is `m8i.4xlarge` (16 vCPU / 64GB), `LaunchTime=2026-07-29T04:47:41Z` — launched the same day as the ruling's
+  "just-applied host fix," so this measurement genuinely reflects the resized instance, not the pre-fix box.
+  `ps -eo pid,pcpu,pmem,etimes,comm --sort=-pcpu` top-12: a mix of `python3` (the AO server itself, PID 4051394, 68%
+  CPU) and **10 separate `claude` processes each at 39-68% CPU** — i.e. roughly a dozen concurrent AO-slot/agent
+  sessions actively burning CPU simultaneously on this one box, consistent with (not less than) the original doc's
+  "13-20 concurrent AO slot-worker sessions" figure. `pgrep -fc "Runner.Listener"` → **33** self-hosted GitHub Actions
+  runner processes — MORE than the original doc's "up to 22 self-hosted CI runner pools" figure, not fewer; `free -h` →
+  `Swap: 47Gi total, 21Gi used` — heavy swap usage persists (the "added swap" half of the fix is in place and is
+  genuinely being drawn on, which is itself a symptom of memory pressure, not evidence the pressure is resolved).
+
+  **Verdict: NEGATIVE — the post-resize host fix has NOT resolved the contention.** Load average ~6x the box's CPU
+  count, 33 live self-hosted runners (up from ~22), a dozen concurrent `claude` sessions, and 21GB of active swap usage
+  are a more severe oversubscription signature than the original incident's own numbers, not an improved one. This
+  directly satisfies this todo's own stated trigger ("if 46/78-style escalations recur despite the host fix... that is
+  the trigger to revisit reverting protected-6 to GitHub-hosted runners") — even without the literal escalation
+  attempt-count (blocked by the unresponsive API, itself corroborating evidence of the same overload), the host-level
+  picture is unambiguous. Recommend the next session/operator treat "revisit reverting protected-6 to GitHub-hosted
+  runners" as the live decision now due, rather than continuing to await a clean post-resize confirmation that this
+  measurement shows will not arrive on the current box as configured. Not making that reversion call myself — it is a
+  real production-topology decision (which repos' CI moves back to GH-hosted, cost/perf tradeoff), not a mechanical
+  follow-up of an already-made ruling, so left for the operator per this session's own scope (execute already-decided
+  rulings, don't make new policy calls). No code/infra change made; read-only SSM queries only.
