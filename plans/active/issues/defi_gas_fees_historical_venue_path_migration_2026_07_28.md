@@ -39,7 +39,7 @@ estimate_calibrated_ai_days: 0.36
 assigned_role: data_engineering
 drift_direction: neutral
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 locked_by:
 locked_since:
 supersedes:
@@ -137,15 +137,16 @@ that point in the sequence.
 
 ## Todos
 
-- [ ] [DATA] P1. **RETAGGED 2026-07-28 (was `[OPERATOR]`) — RULED, see "Recommended decision" above.** Migrate the
-      pre-2026-07-22 `gas_fees` historical population (14 legacy `venue=<CHAINNAME>` values:
-      `ETHEREUM`/`OPTIMISM`/`BSC`/`POLYGON`/`BASE`/`ARBITRUM`/`AVALANCHE`/`LINEA`/`FANTOM`/`CELO`/`MANTLE`/`AURORA`/
-      `SOLANA`/`BITCOIN`) to the canonical `venue=ALCHEMY` path, full completion across all 14 prefixes, no partial
-      rollout. Steps: (a) bounded per-venue scoping measurement (volume/date-range, not a corpus walk); (b) copy +
-      manifest-verify each of the 14 prefixes; (c) once all 14 are verified migrated, stage — but do NOT execute — the
-      legacy-prefix delete under the standard 5-part delete-safety proof; the actual prod-bucket delete remains
-      `[OPERATOR]`/human-only regardless of this ruling. (repo: market-tick-data-service; record scoping numbers +
-      migration status back into this doc)
+- [x] [DATA] P1. ✅ **Done 2026-07-30** — `market-tick-data-service@8016c7e4` (migration script + memory-safety fix) +
+      `features-service@48f77f2a` (Part-4 stale-reader fix). Migrated the pre-2026-07-22 `gas_fees` historical
+      population: scoping found real history under only 10 of the 14 listed legacy venues (12,425 manifest rows;
+      `FANTOM`/`CELO`/`SOLANA`/`BITCOIN` had zero — nothing to migrate there). Full completion, no partial rollout:
+      `{'written': 11724, 'skipped_existing': 14743, 'missing_source': 0,     'manifest_rows_added': 12424}` — every
+      worklist row (12,425 minus 1 known collision) now has a `venue=ALCHEMY` canonical twin, verified independently
+      against GCS. Staged (not executed) the 5-part delete-safety proof (full proof + disposition in this doc's
+      "Migration complete" section above); Part 4 found a live reader still on the legacy scheme (features-service),
+      fixed same-day and confirmed shipped (CI green). The actual legacy-prefix delete remains `[OPERATOR]`/human-only,
+      staged for review, not executed by this todo.
 
 ## Progress Log
 
