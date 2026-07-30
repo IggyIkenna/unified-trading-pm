@@ -128,11 +128,31 @@ small+clear gets its own issue doc).
       empty tmp_path sqlite file. Fix: `patch.object(loop, "_drain_escalations")` in each of the 5 tests, matching the
       pattern already used by the two sibling tick tests that don't hit this signature. Scoped to the escalation_queue
       signature only — the AttributeError signature (3rd todo below) is a separate, still-open root cause.
-- [ ] [ENGINEER] P1. Root-cause + fix `AttributeError: 'list' object has no attribute 'all'` at
+- [x] ✅ [ENGINEER] P1. Root-cause + fix `AttributeError: 'list' object has no attribute 'all'` at
       `server/autospawn.py:2478` in `_resume_pass` — affects `test_tick_caps_spawns_at_queue_depth`,
       `test_tick_respects_fleet_worker_cap` (repo: agent-orchestrator). No longer QG-blocking (see todo above — it's
       silently caught + logged by `_resume_pass`'s call-site `try/except` in `_run_one_tick`, so it doesn't fail any
-      test), but the underlying bug is still real and still open.
+      test), but the underlying bug is still real and still open. — `agent-orchestrator@17a6773`. Root cause: line 2478
+      was the ONLY `session.scalars(...)` call site in this file to chain `.all()` — the other 3 (lines 527, 627,
+      2126, 2164) all treat the `ScalarResult` as directly iterable (`list(session.scalars(...))` or a bare `for`). A
+      real `ScalarResult` supports `.all()` fine, so this was harmless in production, but it made the line inconsistent
+      — and it broke against these two tests' `session.scalars.return_value = [MagicMock(...), ...]` fixture, since
+      `session.scalars(...)` there already returns a plain `list`, and `list` has no `.all()`. Confirmed by direct
+      repro: called `_resume_pass` standalone with the exact test fixture shape and reproduced the identical traceback.
+      Fix: dropped `.all()`, matching the file's own established convention — behavior-identical against a real
+      `ScalarResult` (`list(x)` == `list(x.all())`), and now also compatible with the test's mock shape. Dropping
+      `.all()` surfaced a SECOND, pre-existing masked issue one line further into `_resume_pass`: these two tests'
+      `MagicMock(slot_id=N)` slots have no real `resume_attempts` int, so
+      `slot.resume_attempts >= cfg.tuning.resume_max_attempts` raised
+      `TypeError: '>=' not supported between     instances of 'MagicMock' and 'int'` (MagicMock's comparison dunders
+      default to `NotImplemented`) — also silently swallowed by the same `try/except`, so it never failed a test either,
+      and `_resume_pass`'s actual resume logic (attempt-count gating, account selection, spawn) has zero dedicated test
+      coverage anywhere in the suite; these two tests only reach it incidentally, since (unlike 4 sibling
+      `_run_one_tick` tests) they never stubbed it out. Rather than leave a second masked exception in place of the
+      first, stubbed `patch.object(loop, "_resume_pass", return_value=(0, 0))` in both tests, matching the exact pattern
+      already used twice in this file (`_check_and_log_critical_pool_halt`, `_drain_escalations`) for "test drives a
+      dumb MagicMock session that can't back a nested call it doesn't care about." Full `bash scripts/quality-gates.sh`
+      PASSES clean (1990 passed, 1 skipped — same count as after the prior two fixes).
 - [ ] [ENGINEER] P3. Investigate
       `tests/test_worker_liveness_watchdog.py::test_tick_null_tmux_session_falls_back_to_canonical_name` flakiness under
       real concurrent shared-host tmux traffic (passed cleanly in isolation immediately after failing in the full suite)
