@@ -101,12 +101,32 @@ This is the same failure CLASS as the `sit_validated_tree_treadmill_blocks_break
 
 ## Recommended decision
 
-- [ ] [INFRA] P2. Find and read the actual re-dispatch condition in `ldr-to-main-promote.yml` /
+- [x] ✅ [INFRA] P2. Find and read the actual re-dispatch condition in `ldr-to-main-promote.yml` /
       `ldr-to-main-promote-fleet.yml` (repo: unified-trading-pm) — confirm whether it re-fires `full-workspace-sit` via
       `repository_dispatch` on every tick it reads a red/stale `sit-gate/fleet-green`, or only under a narrower
       condition (e.g. only once per red-transition, or gated on a debounce window that hadn't elapsed). If the
       re-dispatch call is present but silently failing (e.g. a `gh api ... dispatches` call erroring without failing the
-      promoter job), fix the error handling so it's loud, not silent.
+      promoter job), fix the error handling so it's loud, not silent. — unified-trading-pm@d0093938a
+  - **Finding**: `ldr-to-main-promote.yml` (PM's own single-repo drain bot) never references `sit-gate/fleet-green` or
+    `full-workspace-sit` at all — irrelevant to this gap. `ldr-to-main-promote-fleet.yml` computes `SIT_FLEET_STATE`
+    each tick (`gh run list` on `system-integration-tests`'s `full-workspace-sit.yml`) but, before this fix, used it
+    **only** to POST the `sit-gate/fleet-green` commit status — there was no code path reacting to a red reading at all.
+    The ONE existing `full-workspace-sit` `repository_dispatch` call in the file (inside `process_repo`, reason
+    `ldr-main-breaking-gate`) fires for a SIT-covered repo's own unvalidated BREAKING/unknown delta on its exact LDR
+    tree — a condition **entirely independent** of `SIT_FLEET_STATE`. So the answer to the question this todo asked is
+    neither "re-fires on every red tick" nor "silently failing" — **the re-dispatch-on-red mechanism did not exist at
+    all**. codex's phrasing ("the PR stays BLOCKED until a later tick reads a green SIT",
+    `/codex/08-workflows/ci-cd-flow.md` line 583) is passive and technically accurate; the issue's opening summary read
+    an active "auto-heal" into it that the code never implemented.
+  - **Fix shipped**: added `sit_fleet_green_auto_retrigger()` to `ldr-to-main-promote-fleet.yml`, called right after
+    `SIT_FLEET_STATE` is computed. When the signal reads `failure`, it dispatches a fresh `full-workspace-sit` run
+    (`event_type: full-workspace-sit`, `reason: fleet-green-red-retrigger`) unless a `full-workspace-sit` run is already
+    `queued`/`in_progress` (debounce, reusing the already-fetched `SIT_LAST_RUN_JSON`) — so a transient flake now
+    self-heals on this bot's own next ~5-15 min tick instead of waiting on the sparser nightly cron or a coincidental
+    BREAKING-delta dispatch elsewhere. A failed dispatch call logs a loud `::warning::`, never silent. Regression test:
+    `scripts/quality-gates-base/tests/test-sit-fleet-green-auto-retrigger.sh` (extracts the real function body, dedents
+    it per the established `textwrap.dedent` technique, proves red+no-run-in-flight dispatches, red+in-flight debounces,
+    green never dispatches, and dry-run never calls `curl`) — 6/6 pass.
   - [ ] [INFRA] P3. Separately: investigate why 4 `ci-status-update` dispatches timed out in the same
         `full-workspace-sit` run (repo: system-integration-tests or unified-trading-pm, wherever `ci-status-update`
         lives) — if this is a recurring flake (not a one-off), it's worth a retry-with-backoff inside
