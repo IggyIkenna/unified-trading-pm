@@ -277,3 +277,8 @@ candidates, or the still-open OOM-vs-hang question needs the more robust on-VM m
       workspace-wide (audit every consumer) or whether `list_blobs` should instead retry/refresh metadata for
       very-recently-written objects before returning. This is a real accounting hole in the 2026-07-23 per-VM-shard
       budget fix, independent of whether it's the cause of this specific OOM. (repo: unified-trading-library)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [DESIGN] P2 on a workspace-wide
+  BlobMetadata.size type-contract change; the diagnostics are gated on a UTL wheel release landing

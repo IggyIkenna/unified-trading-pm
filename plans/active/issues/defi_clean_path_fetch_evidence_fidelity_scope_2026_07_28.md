@@ -150,3 +150,8 @@ below is explicitly gated on a human design call) — a future triage pass shoul
 - `/codex/02-data/honest-absence-downstream-handling.md` (the 4-state capture_status contract this fidelity work sits
   inside).
 - `plans/active/task_template.md` § dispatch-scope eligibility (why this doc exists instead of a rushed 25-site change).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc explicitly self-declares NA at its own frontmatter level and
+  carries a [LOCAL] todo citing dispatch-scope eligibility as a human design call

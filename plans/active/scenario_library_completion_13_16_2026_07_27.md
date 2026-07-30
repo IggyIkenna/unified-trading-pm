@@ -21,8 +21,8 @@ tags: [scenario-injection, uac, defi, execution, lst, game-day]
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: 2026-07-27
 parent_epic: defi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 2
@@ -72,5 +72,9 @@ e.g. `DEFI_CHAIN_RPC_OUTAGE_SOLANA` in `registry/scenarios/defi.py:44-70` — a 
       stay as design provenance, per the pattern set by scenarios 01-10).
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - implement 2 already-DESIGNED scenarios into the UAC
+  ScenarioOverlay registry against an established pattern; design is done, only the build remains
 
 - 2026-07-27: Plan created per operator decision (pre-June-1 stale-plans audit) — implement both, don't drop.

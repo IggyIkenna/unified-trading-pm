@@ -98,3 +98,8 @@ content:
 - [ ] [DOC] P2. Split `mtds_backfill_vm_startup_oom_rc137_2026_07_14.md` (1509L, over cap) into an under-cap
       index/history doc + a small child doc carrying the two real open items (consolidator cron un-pause decision,
       Morpho `lending_indices` live-verify completion confirmation), per the recommended-next-step above.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc's own text declares the index/history split an open-ended
+  judgment call about what goes where

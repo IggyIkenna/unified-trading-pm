@@ -209,3 +209,8 @@ manifest — both prerequisite facts (scale + distribution) are now in hand for 
       sign-off), not this one.
 - [ ] [PM] P2. File a proper migration plan once scale + the fold-vs-migrate decision are both in hand — this issue doc
       is the scoping step per CLAUDE.md's findings triage ("audit-scope → wrapper plan"), not the execution surface.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the [PM] todo is 'file a proper migration plan'
+  (plan-destination operator ask) and the doc's own text calls itself the scoping step, not the execution surface

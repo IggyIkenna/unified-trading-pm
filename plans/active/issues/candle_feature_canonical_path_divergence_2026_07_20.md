@@ -493,6 +493,10 @@ DECLARED template as a **separate** `content_check=non_canonical` verdict collec
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - ~7.1M TRADFI candle objects sit in _quarantine/ pending either a
+  real leaf-id resolution pass or an explicit operator ruling to accept the loss; todo 19's mop-up also performs prod
+  deletes
+
 > **Full chronological narrative extracted 2026-07-25** to two companion docs (split because the combined narrative
 > itself exceeded the 1000-line cap):
 > `/plans/archive/issues/candle_feature_canonical_path_divergence_history_part1_2026_07_25.md` (2026-07-21 writer/reader

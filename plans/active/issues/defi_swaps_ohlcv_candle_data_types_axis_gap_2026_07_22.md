@@ -53,8 +53,8 @@ source: >-
   distinct_values_noncanonical_audit_2026_07_20.md's D5/D6 todo (~line 328), dispatched to a sub-agent under /autonomous
   with an explicit precedent to stop short if the fix requires an unmeasured UAC canonical-set/denominator addition
   (mirrors the sibling perp_daily_ctx todo's own stop-short outcome on this same plan)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 estimate_class: research
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
@@ -270,6 +270,10 @@ in a registry/exception addition without addressing the discrepancy.
       defi_satellite_ao_dispatch_batch1_2026_07_25.md (see that doc for execution).
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - the gating VERIFY was executed 2026-07-28 with a
+  decisive measured verdict (guard REQUIRED, then provably inert) — Path A is now fully specified
 
 ### 2026-07-28 (slot-5) — completeness_pct denominator-delta simulation (bounded, read-only)
 

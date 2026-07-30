@@ -268,6 +268,17 @@ build-MTDS-collectors → recompute), not a new one.
 ## Todos
 
 - [ ] [DATA] P0. **Fix onchain features consolidator → re-derive-index → build-MTDS-collectors → recompute** — the
-      mark→recompute fix for the 6 false-`captured` rows and 5 feature-less shard families (ruling #3) is BLOCKED on the
-      frozen onchain manifest/consolidator (stalled since 2026-07-18); full chain tracked in
-      `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`, not yet executed.
+      mark→recompute fix for the 6 false-`captured` rows and 5 feature-less shard families (ruling #3) is tracked in
+      `onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md`, not yet executed. **Premise corrected 2026-07-30
+      (/na-eligibility-audit defi)**: the "BLOCKED on the frozen onchain manifest/consolidator" framing is STALE — that
+      sibling doc's own 2026-07-28 (slot-12) root-cause update REFUTED it (`_index/latest.json` shows a healthy
+      ~1-minute cron; the frozen 13-row index is an ORPHANED migration artifact at `onchain/_index/` with no live
+      consolidator owner, not a broken consolidator). The real remaining work is that doc's own retagged [DATA] P1 todo
+      (delete the orphaned tree under a fresh finding-T reversibility check + bulk-register the 724-object historical
+      corpus into the LIVE root manifest) — this doc adds nothing beyond it.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's premise ('BLOCKED on the frozen onchain
+  manifest/consolidator') was REFUTED by the cited sibling's own 2026-07-28 root-cause update (orphaned migration
+  artifact, not a broken consolidator). Citation corrected; the work is owned by that sibling's todo

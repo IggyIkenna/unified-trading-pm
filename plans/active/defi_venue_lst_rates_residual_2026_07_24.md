@@ -109,6 +109,9 @@ source: >-
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole residual is the SUSHISWAP classic-vs-V3 alias question,
+  explicitly a genuinely undecided data-semantics call
+
 - 2026-07-24 — plan forked from `migration_verification_orphan_safety_2026_06_10.md` (line-cap remediation split); no
   further work done yet beyond what the parent's archived Progress Log already recorded.
 - 2026-07-26 (slot-2) — both todos closed per the per-todo detail above. `deployment-api@f919c87` (venue-prefix-

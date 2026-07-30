@@ -220,3 +220,8 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
       (`unified-trading-system-ui/lib/registry/ui-reference-data.json`) and the E2E fixture still reference the removed
       `drift` venue / `jito-kamino-drift-sol-usdc-prod` slot label, and the sync generator itself is stale against the
       committed UI shape (see "Recommended next steps" items 2-4 above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - bundles a strategy-domain delete-vs-re-leg decision with a
+  generator/UI structural-skew investigation the doc says likely needs its own plan

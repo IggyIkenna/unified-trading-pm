@@ -23,14 +23,15 @@ related:
   ]
 created: 2026-07-28
 source: ["mvp_backfill_defi_onchain_v10-002 / pyth_oracle_prices_stale_ghost_failure_rows_2026_07_28.md, 2026-07-28"]
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 parent_epic: infrastructure_master
 resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
+assigned_role: infra
 ---
 
 ## What I found
@@ -115,3 +116,9 @@ because it is currently blocking anything urgent.
       file). Reserve the expensive full-frame path for callers that genuinely need to WRITE back the whole index (the
       real `--apply` mutation path, which needs full-frame safety guarantees regardless). (repo: instruments-service,
       unified-trading-library)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - both todos retagged from [OPERATOR] with direction 1
+  adopted; bounded machine-type/Cloud-Run sizing + a column-pruned read path

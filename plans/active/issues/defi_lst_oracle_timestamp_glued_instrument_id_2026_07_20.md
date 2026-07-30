@@ -16,8 +16,8 @@ tags: [defi, instrument-id, per-instrument-model, lst, oracle, glued-key]
 related: [defi_consolidated_closeout_2026_07_18]
 created: 2026-07-20
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 drift_direction: worsening-slowly
@@ -30,6 +30,7 @@ source:
 resolved_by:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+assigned_role: data_engineering
 ---
 
 # lst_rates + oracle_prices write timestamp-glued instrument_ids
@@ -362,3 +363,9 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
 - [ ] [DATA] P2. **Run the single-day (2026-07-22) targeted rebuild pass for the 12 remaining glued liquidations
       objects** — reclassify via the now-fixed N5 path, then re-verify 0 glued ids in the fresh index (excluding the 9
       separately-owned ORCA `dex_pool_state` rows).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - single residual is a bounded single-day (2026-07-22)
+  targeted rebuild pass + a re-verify; the N5 fix it depends on has shipped

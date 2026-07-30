@@ -304,6 +304,9 @@ the whole orphan list; most `0/0` readings ARE honest, a specific minority are n
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - residual is gated on the CEFI/DEFI dual-counting axis decision
+  in a still-open sibling doc; declaring HYPERLIQUID/ASTER without it risks double-counting
+
 - **2026-07-10 (later same day)** — **Root-caused + fixed for real.** Picked up right where the earlier 2026-07-10
   re-verification pass left off (root cause unidentified, PUFFER anomaly unexplained, HYPERLIQUID/ASTER unconfirmed).
   Found and confirmed, all via live GCP ADC reads against the real prod GCS DEFI manifest (never asserted from code

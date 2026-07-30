@@ -27,13 +27,13 @@ related:
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
-assigned_role: backend
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 source: ["4-rate LST data-availability audit workflow wf_268532e0-323, run 2026-07-21 at operator request"]
@@ -97,3 +97,9 @@ proxy. The mark-to-market basis leg needs the operator's E1 short-funding answer
 - [ ] [DATA] P1. **Wire the dormant Aave-oracle adapter (or add the missing Chainlink feeds for
       wstETH/weETH/rsETH/ezETH)** — per "Close actions" item 4, the true `AaveOracle.getAssetPrice()` is captured on
       zero days, blocking the recursive-staking collateral leg of the A2 interest build.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - single todo wires an EXISTING dormant aave_oracle
+  adapter to a named venue/data_type; concrete target, no undecided design fork

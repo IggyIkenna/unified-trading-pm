@@ -22,10 +22,10 @@ priority: P3
 source:
   "Discovered while executing defi_satellite_ao_dispatch_batch1-045 (re-verify LIGHTER-ZKSYNC Tardis fix), slot-12,
   2026-07-28."
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: research
@@ -93,3 +93,9 @@ error in that case, or (b) add a bounded timeout so a misconfigured caller degra
       when**: the exact blocking await is identified and documented (or fixed, if the fix is a clear one-line-class
       bounded-timeout/fail-fast change — otherwise stop at the documented root cause for a human design decision on the
       right fix).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - scoped root-cause diagnostic with an explicit stated
+  done-when (identify the blocking await) — AO-eligible per dispatch-scope eligibility

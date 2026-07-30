@@ -137,3 +137,13 @@ in this read-only audit pass (time-bounded scope).
   does not claim its todos. (Same doc independently verdicted by the cefi tranche above; both reached RECLASSIFY — this
   is the multi-tranche overlap recorded in
   `/plans/active/issues/sharded_per_tranche_audit_stash_race_and_multitranche_marker_gap_2026_07_30.md`.)
+- **⚠️ CONTESTED VERDICT — na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): reached the OPPOSITE verdict
+  from the two tranches above — **KEEP-NA, valid**: "2 DIAG todos are bounded but todo 3 is a historical manifest
+  re-stamp (`--apply`) carrying no `[OPERATOR]` tag or delete-safety cite; doc cannot flip as a unit." This cites the
+  hard AO-authoring rule (an AO todo with an `--apply` needs `[OPERATOR]` + a delete-safety cite OR a stated
+  safe-idempotent justification — `/plans/active/task_template.md` finding O). **Not adjudicated by the integrator**:
+  three independent tranche runs disagree 2-1 and the dissent invokes a hard rule, so this is a genuine judgment call,
+  not an auto-resolvable one. The doc is left in the majority state (`assigned_vm: planning`, as already committed by
+  the cefi + cross-cutting tranches) — the integrator made no active change here — and the dissent is recorded rather
+  than dropped. **Operator/next-toucher: decide whether the P2 `--apply` re-stamp todo needs an `[OPERATOR]` tag (and
+  therefore whether this doc should revert to `assigned_vm: NA`) before a worker picks it up.**

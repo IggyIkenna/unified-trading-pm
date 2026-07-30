@@ -63,3 +63,7 @@ The parent issue's recommended fix had 5 steps. Steps 1/2/4 are done (`unified-t
   enum-mirror grep; conflict-check clear (the one `capability_wizard_analysis_findings` hit is a missing-TEST claim, not
   the regen). Shared conflict-check protocol:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` sect.3 - CLEARED.
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): RECLASSIFY -> `assigned_vm: planning` (conflict-check
+  CLEAR against 231 active planning docs; no open todo elsewhere duplicates this claim) - single todo is a scripted
+  regen + QG-green check + a bounded UAC-vs-UI enum grep — deterministic outcome, no design call. Reached independently
+  of the cefi tranche above; both agree.

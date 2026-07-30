@@ -131,3 +131,8 @@ the parent plan's Track 7 culled-venue ruling.
       enumerate which (venue, instrument_type, data_type) cells are PROVEN wired backfill=paper=live vs. still only
       declared in-scope. Definition of done: a verdict table (here or a linked issue doc), re-derived from the live
       catalogue/manifest at that time. (repos: instruments-service, market-tick-data-service)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - depends_on + gate_on_depends:true on
+  defi_consolidated_closeout_2026_07_18 which still carries 19 open todos — KEEP-NA on the gate citation alone

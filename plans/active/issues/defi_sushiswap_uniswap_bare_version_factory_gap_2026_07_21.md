@@ -162,3 +162,8 @@ original audit and this measurement, not a discrepancy in method; both counts de
 - [ ] [DATA] P2. **Land factory-address capture (Option A or B) + register the missing UAC SushiSwap-Arbitrum venues** —
       the resolver built in this doc resolves 0 of 206,107 bare SUSHISWAP/UNISWAP rows today because no factory-address
       data is captured anywhere and UAC has no `SUSHISWAP_V2-ARBITRUM`/`SUSHISWAP_V3-ARBITRUM` registry entries.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - Option A (subgraph augmentation) vs Option B (on-chain RPC) is
+  an explicitly undecided design fork; A needs a live-schema probe per fork before landing

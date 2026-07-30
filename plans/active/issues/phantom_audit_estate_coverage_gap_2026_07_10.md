@@ -175,3 +175,6 @@ noted here only so the two aren't conflated.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc explicitly files it "for the
   data-pipeline owner to scope", and the fix fans a weekly full-corpus GCS walk over ~20 more buckets (cost/runtime
   design call).
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - widening the audit from 5 to 47
+  buckets adds ~42 new whole-corpus GCS walks — review-blocking under single-walk discipline; doc defers the scoping to
+  the data-pipeline owner. Reached independently of the cefi tranche above; both agree.

@@ -25,8 +25,8 @@ related:
   ]
 created: "2026-07-24"
 parent_epic: manifest_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 1
@@ -109,6 +109,11 @@ operator-authorized-cron-pause, per that plan's own established precedent) — h
       `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`'s Progress Log, and close out this plan.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - all 5 todos bounded against two already-shipped
+  re-stamp precedents; the apply-window todo's operator gate was resolved by the dated 2026-07-28 CLAUDE.md governance
+  ruling
 
 ### 2026-07-24 — forked out of the parent audit
 

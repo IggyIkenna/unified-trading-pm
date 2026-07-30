@@ -30,8 +30,8 @@ related:
 created: 2026-07-28
 parent_epic: defi_master
 source: [data_engineering slot-7, 2026-07-28, dispatched via defi_satellite_ao_dispatch_batch1-017]
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.3
@@ -148,6 +148,10 @@ that point in the sequence.
       migration status back into this doc)
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - operator RULED 2026-07-28 (MIGRATE) + retagged from
+  [OPERATOR]; copy+verify is non-destructive and the prod delete stays explicitly [OPERATOR]-gated inside the todo
 
 - **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: migrate the 14 legacy
   `gas_fees` venue prefixes to canonical `venue=ALCHEMY` (full completion, no permanent 15-value split), while keeping

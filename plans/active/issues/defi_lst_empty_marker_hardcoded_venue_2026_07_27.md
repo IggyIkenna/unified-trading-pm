@@ -191,3 +191,8 @@ architectural-question sub-item stays open).
 Found 2026-07-27 answering an operator question about a specific GCS path; investigated via direct GCS inspection
 (pyarrow row-count/schema check, full-range listing, bucket soft-delete-policy check) plus two parallel Explore agents
 auditing the archived migration plan's execution evidence and sweeping for sibling venue-leak defects elsewhere in DeFi.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - 0 open checkboxes but a real prose-only open architectural
+  question (remove the physical zero-row marker write entirely?); locked_by blocks archival

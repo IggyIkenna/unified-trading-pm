@@ -17,13 +17,13 @@ tags: [testing-gap, defi, staked-basis, collateral, dead-code, ci-gap]
 related: [pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21]
 created: 2026-07-23
 parent_epic: strategy_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
-assigned_role: NA
+assigned_role: backend_engineer
 drift_direction: NA
 resolved_by:
 locked_by:
@@ -135,3 +135,9 @@ severity (exploratory script, not a gated test) — noted here for visibility, n
 - `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py`
 - `strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py`
 - `strategy-service/scripts/quality-gates.sh` (the `log_warn`-wired e2e-testing lint block)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - operator RULED Option A 2026-07-29; rewrite against a
+  named mechanism with two named reference tests

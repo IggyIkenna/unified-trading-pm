@@ -28,13 +28,13 @@ related:
   ]
 created: 2026-07-21
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2.0
 estimate_calibrated_ai_days: 1.6
-assigned_role: backend
+assigned_role: backend_engineer
 drift_direction: advance-code
 depends_on: []
 source:
@@ -287,3 +287,10 @@ Update is diagnosis-only, per the sourcing todo's own scope).
       2026-07-21 defi dex_pools/lending_indices fold
       (`/plans/archive/issues/defi_fold_manifest_registration_pending_2026_07_21.md`) rather than inventing a new
       registration mechanism.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - retagged from [OPERATOR] 2026-07-28; the delete half
+  carries the finding-T FRESH same-run soft-delete-retention check + an explicit STOP-and-escalate branch, and the
+  register half cites an established recipe

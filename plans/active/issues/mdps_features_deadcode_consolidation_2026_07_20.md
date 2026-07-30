@@ -108,3 +108,6 @@ captured → should be pinned False). These are handled by the `/data-pipeline-c
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc's own header puts 3 S1
   findings behind an operator keep/delete A/B/C decision (self-heal rebinding + deleting a registered live launcher),
   and todo 8 is an explicit design adjudication.
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - S1-a/S1-b/S3-b are explicit operator
+  keep/delete (A/B/C) decisions with self-heal + registered-live-launcher blast radius. Reached independently of the
+  cefi tranche above; both agree.

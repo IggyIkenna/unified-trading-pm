@@ -46,6 +46,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
+assigned_role: backend_engineer
 ---
 
 # UAC per-venue seed fallback — removal deferred
@@ -116,3 +117,13 @@ dangling inside a closed plan todo.
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - records an explicit 2026-07-26
   operator DEFERRED ruling with a 4-item revisit trigger; the open todo is the first trigger item and is gated on
   CEFI/TRADFI G1-G5 closing.
+- **⚠️ CONTESTED VERDICT — na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): reached the OPPOSITE verdict
+  from the cefi tranche above — **RECLASSIFY → `assigned_vm: planning`**: "conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim - todo mirrors the existing CEFI live-catalogue-provider
+  branch for 3 more asset groups; the 2026-07-26 operator ruling gates the REMOVAL, not this wiring work." **Not
+  adjudicated by the integrator**: whether the 2026-07-26 operator DEFERRED ruling gates only the removal or also this
+  wiring work is a reading of the operator's intent, not a checkable fact. The defi tranche's frontmatter flip
+  auto-merged silently (the two tranches' edits did not textually collide); the integrator **reverted it to the
+  status-quo `assigned_vm: NA`** — a contested reclassification would make this doc AO-dispatchable and workers would
+  start executing it, whereas leaving it NA has no active consequence. **Operator/next-toucher: rule on the scope of the
+  2026-07-26 DEFERRED ruling, then flip deliberately.**

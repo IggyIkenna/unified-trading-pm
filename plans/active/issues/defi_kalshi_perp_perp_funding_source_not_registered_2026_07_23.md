@@ -119,3 +119,9 @@ concrete, currently-failing symptom; the classification question is the census a
 
 - `/codex/02-data/defi-canonical-naming-ssot.md` (KALSHI_PERP classification)
 - UAC `unified_api_contracts/canonical/crosscutting/source_priority.py` (`SOURCE_PRIORITY` registry)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the doc's central open item is a prose-only (a)/(b)/(c)
+  operator-design decision on 567 already-written manifest-absent objects; the 2 checkbox DIAGs are bounded but
+  secondary

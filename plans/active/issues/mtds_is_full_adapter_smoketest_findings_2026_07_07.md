@@ -422,6 +422,9 @@ the todos already promised.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - master 59-bug findings ledger: dozens of items live as prose
+  only, and one open todo ('update both drilldown mockups') has no determinable done-when
+
 - **2026-07-07** — Filed after a 17-cluster parallel smoke test (each cluster ran real adapter execution against real
   production data / live APIs, not code-reading alone) covering every live CeFi venue, every DeFi protocol category, all
   7 TradFi venues, all 7 Sports providers, and both Prediction venues. Found 59 distinct real bugs plus a full real

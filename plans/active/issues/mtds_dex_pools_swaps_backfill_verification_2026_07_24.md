@@ -41,8 +41,8 @@ estimate_baseline_ai_days: 0.8
 estimate_calibrated_ai_days: 1.0
 assigned_role: data_engineering
 drift_direction: none
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 locked_by:
 locked_since:
 supersedes:
@@ -260,6 +260,10 @@ rule (see Progress Log entry below for the observed outcome).
       VELODROME_V2/OPTIMISM + the other listed pairs.
 
 ## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - all 3 todos are bounded coverage spot-checks /
+  per-venue subgraph diagnostics with named targets; the multi-day re-probe window has now elapsed
 
 - 2026-07-24 — issue filed from a live verification session (closeout plan `defi_consolidated_closeout_2026_07_18.md`
   line 445). See findings + evidence above.

@@ -29,14 +29,15 @@ created: 2026-07-28
 parent_epic: defi_master
 priority: P1
 source: [defi_satellite_ao_dispatch_batch1_2026_07_25.md re-scoped funding-parity todo, slot-6 data_engineering worker]
-assigned_vm: NA
+assigned_vm: planning
 resolved_by:
 locked_by:
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 last_updated: 2026-07-28
 locked_since:
+assigned_role: data_engineering
 ---
 
 # HYPERLIQUID perp_funding vs derivative_ticker funding_rate divergence (2026-07-28)
@@ -143,6 +144,10 @@ script's own instruction: "File any genuine divergence via standard findings-tri
       an ad-hoc variant).
 
 ## Progress log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - operator RULED 2026-07-28 (reverse the retirement); all
+  3 todos are bounded registry/close-out/read-only-reprobe work
 
 - **2026-07-28 (gated-decision retag sweep)** — Applied the operator's general-theme ruling: reverse the 2026-07-08
   `perp_funding` retirement for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC and resume dedicated capture, since the

@@ -131,6 +131,9 @@ rg -n '"venue:drift"|"collateral:drift"|"venue": "drift"' deployment-ui/src/data
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the prospectus generator has drifted from the committed files on
+  multiple unrelated axes so a blind regen is unsafe; which side is authoritative is undecided and the item is unowned
+
 - 2026-07-16: Discovered during the deployment-ui DRIFT/PACIFICA venue sweep (TreasuryTab SUB_ACCOUNT_DRIFT dropdown fix
   session). TreasuryTab dropdown + mocks + specs fixed and shipped separately
   (`deployment-ui@<sha-filled-in-by-quickmerge>`); this capability-bundle finding filed as its own issue per the

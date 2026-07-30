@@ -24,13 +24,13 @@ related:
   ]
 created: "2026-07-22"
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
-assigned_role: data
+assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 resolved_by:
@@ -429,3 +429,11 @@ clearly scoped. Not treating this as newly operator-gated (no new decision is ne
 inventing a different disposition; flagging it here as a scope/sizing finding so the next session picking this up
 doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-todo build plan (one todo per sub-step,
 `assigned_vm: planning`) rather than staying a single all-or-nothing todo inside an issue doc.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): RECLASSIFY -> `assigned_vm: planning` (conflict-check
+  CLEAR against 231 active planning docs; no open todo elsewhere duplicates this claim) - operator RULED 2026-07-29
+  (count them AND build the IS universe) with a 4-part enumerated full-completion mandate. Consistent with the scope
+  assessment directly above, which independently recommends this work become a dedicated `assigned_vm: planning`
+  multi-todo build plan — that split is NOT done here; only the classification flipped.

@@ -128,4 +128,11 @@ independently-startable item any session can pick up without waiting on the phas
 - [ ] [BACKEND] P2. **`LENDING_INTEREST` mismodeling correction for `carry_staked_basis` not implemented** — E4 already
       ruled the row-set should drop it entirely, but per this doc's own text implementation has not started; separately,
       `issues/e2e_testing_collateral_validation_dead_import_2026_07_23.md`'s rewrite-vs-delete-vs-gate-hardening choice
-      still needs an operator ruling.
+      was **RULED 2026-07-29 (operator direct answer): Option A, rewrite against the current v2 mechanism** — that half
+      is no longer pending (citation corrected 2026-07-30, /na-eligibility-audit defi).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its todo says the e2e_testing_collateral_validation
+  rewrite-vs-delete choice 'still needs an operator ruling' — that ruling landed 2026-07-29 (Option A). Citation
+  corrected; doc stays NA (index/entry-point doc, nature: process, drift_direction: none)

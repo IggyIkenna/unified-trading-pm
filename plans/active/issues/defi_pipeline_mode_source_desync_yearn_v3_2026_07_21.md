@@ -157,3 +157,8 @@ vault-share-price collector) end-to-end:
 - [ ] 5. [DATA] P3. Append F10 to the reconciliation register per the audit's own §9 maintenance-contract note (the
       audit run flagged this as not-yet-registered and deferred it) — repo: unified-trading-pm,
       `/codex/02-data/non-canonical-path-inventory.md` or the register doc F10 belongs under.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - todo 4 is an explicit [DECISION] on adding a second
+  SOURCE_PRIORITY source (multi-source cell + backfill call); todo 5 targets codex

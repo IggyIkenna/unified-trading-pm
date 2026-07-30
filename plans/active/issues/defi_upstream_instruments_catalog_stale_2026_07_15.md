@@ -320,6 +320,9 @@ already handles honestly).
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole residual is an explicit [DESIGN] P3 nice-to-have
+  (IS-catalogue completion-signal retry-sweep) with no concrete done-when
+
 - 2026-07-15: Investigated per `data_pipeline_alerts_batch_remediation_2026_07_15.md`'s "New todos" entry for
   `defi/dex_pool_state` + `defi/lst_rates`. Live-requeried the manifest (current counts above, close to but not
   identical to the operator's cited numbers — dex_pool_state's tail is 06-25 not 06-30). Determined root cause via

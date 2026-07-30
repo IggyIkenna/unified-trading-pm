@@ -140,3 +140,8 @@ address-keyed (`0x00836fe5....parquet`) -- direct evidence the bug is live, not 
       then let `defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md`'s gated reconciliation todo flip this
       doc's `status: open` → `status: resolved` with a verified `resolved_by` citation — do not archive this issue doc
       before that finalize plan runs.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open todo is explicitly [OPERATOR]-tagged and gated on
+  defi_dex_pool_symbol_fix_backfill_purge_finalize running first

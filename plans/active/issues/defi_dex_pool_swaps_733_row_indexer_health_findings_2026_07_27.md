@@ -39,7 +39,7 @@ related:
 created: 2026-07-27
 parent_epic: defi_master
 source: [data_engineering slot-2, 2026-07-27, dispatched via mvp_backfill_defi_onchain_v10-003]
-assigned_vm: NA
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
@@ -445,3 +445,9 @@ raised and left `[OPERATOR]`-gated for cefi's `DP_RUN_MOSTLY_EMPTY` cluster
 
 Source: `DP_RUN_MOSTLY_EMPTY` (DP-FETCH-009) CRITICAL page, `data_pipeline_failure` escalation `agt-0afc1b`, slot 3,
 2026-07-28.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: RECLASSIFY -> assigned_vm: planning (conflict-check CLEAR against 231 active
+  planning docs; no open todo elsewhere duplicates this claim) - all 4 todos are bounded re-probes / per-venue
+  diagnostics / a VM restart onto current code; no design or authority call left

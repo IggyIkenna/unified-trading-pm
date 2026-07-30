@@ -388,6 +388,10 @@ Two secondary findings:
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - the k-prefix todo needs the canonical-vs-native HL coin-case
+  convention resolved first (shard-key-mismatch risk); the other 2 are ruled and AO-ready but the doc cannot flip as a
+  unit
+
 - **2026-07-07** — Filed after a 4-agent smoke-test workflow (real adapter-code read + live public-API probes + real GCS
   manifest/object cross-check, one agent per venue) confirmed the operator's suspicion that these 4 bespoke-API venues
   needed independent verification, unlike Tardis-routed venues. Found 4 independent real bugs (LIGHTER-ZKSYNC

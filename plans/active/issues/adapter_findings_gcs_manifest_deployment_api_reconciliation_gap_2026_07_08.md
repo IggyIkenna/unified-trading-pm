@@ -231,6 +231,9 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - sole open todo is an explicit [DECISION] on reconciliation
+  cadence (full trace vs lighter spot-check) for 58 findings
+
 - **2026-07-08** — Filed after the operator asked, while reviewing the drilldown mockup's AAVE_V3 entry, whether this
   session's adapter-level findings have been reconciled against the manifest and deployment-ui/API layers too.
   Confirmed: no, they have not — this session's verification (the full adapter smoke test + the lending investigation)

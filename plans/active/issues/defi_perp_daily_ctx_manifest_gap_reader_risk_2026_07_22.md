@@ -238,6 +238,9 @@ above.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - carries an explicit [OPERATOR-DECISION] P3 todo; the [CODE] P2
+  half is AO-ready but the doc cannot flip as a unit
+
 ### 2026-07-28 — data_engineering (slot-6): data_type-axis denominator trace
 
 Answers this doc's own P2 verify todo + `defi_satellite_ao_dispatch_batch1_2026_07_25.md`'s mirrored todo.

@@ -178,7 +178,18 @@ re-checked once that plan completes.
 
 ## Todos
 
-- [ ] [DATA] P1. **Ship `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos** — the TRADER_JOE_V2/
-      VELODROME_V2/CURVE `dex_pool_state` cluster and the lst_rates MAKER/ETHENA half remain unresolved (query-fix,
-      live-test, re-backfill, and both `[OPERATOR]` purges all unshipped as of 2026-07-26); re-check this doc's overall
-      status once that sibling plan completes.
+- [ ] [DATA] P1. **Tracked elsewhere — do NOT dispatch from here (citation added 2026-07-30, /na-eligibility-audit
+      defi): this item's entire content is owned by the ACTIVE `assigned_vm: planning` plan
+      `/plans/active/defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`, and its gated twin
+      `/plans/active/defi_dex_pool_symbol_fix_backfill_purge_finalize_2026_07_25.md` already carries an open
+      `[REVIEW] P2` todo to reconcile fix/backfill/purge status back into this doc. Reclassifying this doc would
+      dispatch a duplicate.** Ship `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s 5 todos — the
+      TRADER_JOE_V2/ VELODROME_V2/CURVE `dex_pool_state` cluster and the lst_rates MAKER/ETHENA half remain unresolved
+      (query-fix, live-test, re-backfill, and both `[OPERATOR]` purges all unshipped as of 2026-07-26); re-check this
+      doc's overall status once that sibling plan completes.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA-STALE: its sole todo's content is wholly owned by the active
+  assigned_vm:planning plan defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md, whose finalize twin carries an open
+  todo to reconcile status back into this doc. Citation fixed, not reclassified (flipping would dispatch a duplicate)

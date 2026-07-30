@@ -132,3 +132,8 @@ to _also_ unblock the bridge_events historical backfill, and so nobody re-invest
       against live GCS/instruments-catalog — not attempted this session (out of a bounded doc-closeout pass's scope;
       genesis-to-present is a real data-capture operation, not a code check). Left `- [ ]` for whoever schedules the
       actual backfill run.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - locked_by set; residual is a genesis-to-present multi-year
+  production capture backfill with no VM-launch gating stated on the todo

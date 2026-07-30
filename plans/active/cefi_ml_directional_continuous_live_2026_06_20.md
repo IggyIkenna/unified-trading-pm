@@ -185,3 +185,6 @@ This plan's own "Model-improvement backlog" section remains the owner until a su
 
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - live wallet keys + kill-switch arming
   are a PERMANENT human-only hard-stop (re-confirmed 2026-07-28), and the 2-year config-grid run is operator-scheduled.
+- **na-eligibility-audit 2026-07-30** (tranche=defi, autonomous): KEEP-NA, valid - live wallet keys + kill-switch arming
+  are a PERMANENT human-only hard-stop, re-confirmed by the operator 2026-07-28; `locked_by` set. Reached independently
+  of the cefi tranche above; both agree.

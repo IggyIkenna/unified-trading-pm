@@ -165,6 +165,9 @@ Cold-start context: `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - ARCHIVE-eligible by content (all 3 todos now done, incl. todo 1
+  completed 2026-07-28) but locked_by: live-defi-rollout blocks archival — needs [unlock-plan], never autonomous
+
 - **2026-07-28 (slot-15, `data_engineering`, root-cause diagnosis, todo 1):** Read-only git/commit archaeology across
   `market-tick-data-service`, `market-data-processing-service` (MDPS) and `unified-trading-library` (UTL). **Repo
   correction**: `swaps_ohlcv_*` (177,931 of 219,529 phantoms, 81%) is written by MDPS's candle writer, not MTDS —

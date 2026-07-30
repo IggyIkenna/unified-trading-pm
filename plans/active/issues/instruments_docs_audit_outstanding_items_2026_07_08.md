@@ -614,6 +614,9 @@ documented MVP scope doesn't actually restrict day-to-day fetches. Also: US2Y ge
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - index doc whose section E is explicitly 'Operator decisions
+  required (not engineer fixes)'; the single todo is meta-tracking over dozens of prose items
+
 - 2026-07-08: Created from the instruments-service docs-cleanup audit (slot-3). 6 of 7 docs rewritten to spec + all
   outstanding items verified vs code; TRADFI deferred (§H).
 - 2026-07-08: A1 (Sports `UNKNOWN` league_id) root cause **CONFIRMED** — catalogue↔enumerator feedback loop

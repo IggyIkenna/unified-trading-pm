@@ -406,3 +406,8 @@ features-service's `aave_risk_calculator.py` / `lending_features.py` or strategy
       day in the caller's success/failure accounting — **CONFIRMED MASKING**, full caller-chain evidence in § 2.3. Also
       surfaced a broader, systemic version of the same gap affecting ~12 other adapters, filed separately:
       `issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md`.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30**: KEEP-NA, valid - doc's own section-6 header calls each residual 'a real, scoped
+  decision'; 4 of 5 are wire-in-or-delete product calls with registry/billing blast radius
