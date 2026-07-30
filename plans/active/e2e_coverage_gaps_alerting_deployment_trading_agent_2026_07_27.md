@@ -75,11 +75,22 @@ service's own code. That's worth fixing on its own, independent of building the 
       signature in the same commit. Also added `MockCloudClient.file_exists()` (only `list_files` was overridden),
       needed for a passing single-file dependency check without real GCS. Full repo QG green
       (`.qg_last_passed_sha=5ec3eb9`, verified via quickmerge --agent sentinel).
-- [ ] [CODE] P2. **trading-agent-service E2E harness (new — none exists today).** No `tests/e2e/` directory;
-      `tests/integration/` only covers generic UAC/UIC dependency-contract checks, never the trading loop itself. Build:
-      (1) a mock-driven loop test — `engine/orchestrator.py` + `mock_data_provider.py` → a strategy decision → a ledger
-      fill, over a scripted signal sequence; (2) an `app/loops` tick-driven execution test; (3) a `replay/` test against
-      a fixture dataset for deterministic output; (4) a `cli/main.py` one-full-cycle smoke test.
+- [x] ✅ [CODE] P2. **trading-agent-service E2E harness (new — none exists today).** — trading-agent-service@bf95e1f.
+      Added `tests/e2e/test_trading_agent_e2e.py` (+`tests/e2e/__init__.py`), stubbing only the true external-network
+      boundary (execution-service/risk-service HTTP calls) — the queue + kill-switch storage boundaries run the real
+      `LocalQueueProvider`/`LocalStorageProvider` via the real `get_queue_client()`/`get_storage_client()` code paths:
+      (1) `TestMockDrivenLoopToLedgerFill` — a real `MicroLoopOrchestrator` drives real L2/L3/L6 loops, seeded with
+      `mock_data_provider.py`'s own synthetic BTC signal/catalog builders, over a scripted weak-then-strong signal
+      sequence published to a real local queue → strategy decision → ledger fill (FILLED, real fill price). (2)
+      `TestL2SignalLoopTickDrivenExecution` — `BaseLoop.run_forever()`'s real scheduling (not a hand-called
+      `run_once()`, which is all the existing unit tests ever do), proving the loop survives a malformed message and
+      converges across real elapsed ticks. (3) `TestReplayFixtureDeterministicOutput` — `InferenceCache` +
+      `DirectiveLog` + `clamp_to_cutoff` driven together (not in isolation, unlike
+      `tests/unit/test_replay_infrastructure.py`) by one fixture dataset: live record → persisted-fixture →
+      backtest-continuation replay is byte-identical with no recompute, and a forward-looking row is clamped in backtest
+      but passes through in live. (4) `TestCliMainOneFullCycleSmoke` — the real `cli/main.py` `main()` entry point, one
+      full mock-mode cycle, asserting the real risk-gate + ranker output on disk. Full repo QG green
+      (`.qg_last_passed_sha=ecb362c`, verified via quickmerge --agent sentinel; 146 tests passed, coverage 71.50%).
 
 ## Progress Log
 
