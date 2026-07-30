@@ -173,3 +173,18 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   as `canonical-migration-cefi-content-41-relaunch20260730-124900`, verified `RUNNING`. If this ALSO OOMs, the fix is a
   genuine root-cause investigation into this script's memory profile (possibly `--workers` too high for the process's
   actual per-file memory footprint on this shard's date range), not another machine-size escalation.
+- **2026-07-30 update (slot-15, same session, ~5 min later)**: shard 18
+  (`canonical-migration-cefi-content-18-relaunch20260730-122417`) died with the IDENTICAL signature — `rc=137`, worker
+  process killed directly (VM stayed `RUNNING`, clean `delete` op, no preemption event), preceded by several minutes of
+  "No progress in the last poll window" warnings before the kill, at 5,400/148,799 files (3.6%). **This is the SECOND
+  e2-standard-8 shard to OOM-die within ~25-40 minutes of a 21-VM fleet launch** — starting to look systemic (possibly
+  the shared in-memory catalogue this script loads at startup —
+  `Loaded N catalogue rows from instruments-store-cefi-prd-...` — has grown over the 11 days since the original
+  2026-07-19 launch, pushing every e2-standard-8 shard closer to its 32GB ceiling) rather than two isolated incidents.
+  Relaunched shard 18 on `e2-standard-16` (`canonical-migration-cefi-content-18-relaunch20260730-125300`), verified
+  `RUNNING`. **Did NOT** preemptively kill+relaunch the other 18 still-`e2-standard-8` shards on a still-n=2 pattern —
+  that would discard real, accumulating progress (e.g. shard 29 climbing steadily past 13k files) on an unconfirmed
+  hypothesis; a THIRD independent OOM would be strong enough confirmation to justify that broader, more disruptive move.
+  **Watch for more of these** — if the pattern continues, the durable fix belongs in the launcher's own
+  `cefi-content-apply` category comment (default to `e2-standard-16` for this category going forward, not per-incident
+  escalation).
