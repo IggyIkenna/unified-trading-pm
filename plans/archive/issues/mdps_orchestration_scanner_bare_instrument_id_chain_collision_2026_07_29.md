@@ -11,7 +11,7 @@ summary: >-
   audit's own scoped GCS check (whether MDPS output filenames already embed `chain`, which would make this a non-issue
   at this specific site) timed out before completing. Filed as its own MDPS-scoped todo so it does not silently
   disappear now that the sibling MTDS fix is done.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -24,6 +24,7 @@ related:
     /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-29"
+last_updated: "2026-07-29"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -38,11 +39,19 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "confirmed-moot (no code change) -- live GCS evidence, see body"
 source: >-
   Split from defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md's combined MTDS+MDPS todo (2026-07-29, MTDS
   CODE_QUICK backlog closeout pass) after the MTDS half shipped independently.
 ---
+
+> **🟢 ARCHIVED 2026-07-29 — ACKED-AS-INVALID (confirmed non-issue, not a false positive of the finding itself, just not
+> live at this specific site).** The scoped GCS read this doc asked for (timed out on the prior attempt) completed
+> cleanly this pass: real MDPS `processed_candles/` output filenames for CURVE (2 of the 6 known collision addresses,
+> both `dex_pool_swaps` and `dex_pool_state`) are always the FULL canonical chain-embedded id
+> (`CURVE-AVALANCHE:POOL:USDC-USDT.parquet`), never the bare pool address — so `chain` is already baked into the
+> `existing_outputs` dedup key and can never collide across chains here. No code change needed. Evidence folded back
+> into `defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`'s "MDPS half" note.
 
 # MDPS `orchestration_scanner.py` bare-instrument_id chain-collision gap
 
@@ -63,14 +72,19 @@ stands on its own as a credible risk finding regardless.
 
 ## Todos
 
-- [ ] [DATA] P2. **Verify/fix the MDPS `existing_outputs` bare-instrument_id chain-collision gap.** First confirm via a
-      scoped GCS read (not a corpus walk) whether real MDPS output filenames for the 6 known cross-chain collision
-      addresses (`defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md` § "The 6 rows, confirmed live") already
-      embed `chain` — if so, this is a non-issue at this specific site (fold that evidence back into the parent doc and
-      close this one as moot). If not, add `chain` to the `existing_outputs` key tuple (mirroring the MTDS fix's
-      colon-prefix approach or an explicit tuple field), with a regression test for the 2-chain-same-address case using
-      one of the 6 real collision addresses. Repo: market-data-processing-service. **Done when**: either confirmed
-      chain-safe with cited evidence, or fixed + tested + `quality-gates.sh` green.
+- [x] ✅ [DATA] P2. **CONFIRMED MOOT 2026-07-29 — non-issue at this site, cited evidence, no code change needed.** Ran
+      the scoped GCS read the todo asked for (not a corpus walk): sampled real
+      `market-data-tick-defi-prd-central-element-323112/processed_candles/.../venue=CURVE/` output for `day=2026-07-25`
+      across both `dex_pool_swaps` and `dex_pool_state` data_types (2 of the 6 known collision rows' shape,
+      CURVE-AVALANCHE + CURVE-ETHEREUM both present that day). Every real output filename is the FULL canonical
+      chain-embedded id (e.g. `CURVE-AVALANCHE:POOL:USDC-USDT.parquet`, `CURVE-ETHEREUM:POOL:CBBTC-WBTC.parquet`) —
+      never the bare `pool_address.lower()`. Since `extract_instrument_id_from_blob_path` just takes the filename stem,
+      it already returns this chain-embedded string for every real MDPS candle output — `chain` is baked directly into
+      the id itself, so `existing_outputs`'s `(timeframe, instrument_id)` key can never collide across chains at this
+      site (unlike the MTDS raw-tick side, which reads the catalogue's bare `instrument_id` verbatim by design). This
+      matches the todo's own stated resolution path ("if so, this is a non-issue at this specific site"). Folded back
+      into the parent doc — see `defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`'s "MDPS half" note, updated
+      in the same session. No code change; no `quality-gates.sh` run needed (no diff).
 
 ## Progress Log
 
