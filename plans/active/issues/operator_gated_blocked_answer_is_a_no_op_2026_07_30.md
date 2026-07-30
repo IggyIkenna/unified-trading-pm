@@ -304,13 +304,13 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                                                                  this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                                                                  a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                                                                  `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                                                                  load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                                                                  authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                                                                  own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                                                                  deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                                                          this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                                                          a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                                                          `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                                                          load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                                                          authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                                                          own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                                                          deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [x] ✅ [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify
       and again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed,
@@ -377,7 +377,21 @@ what they were approving. Fixing the question text removes the thing the guard w
       row still being unanswered; (b) have the operator-gated seeding step wait for `_pm_repo_path()`'s HEAD to match
       the task's own originating commit before seeding; (c) accept the fallback but make it distinguishable in the UI
       (e.g. a "full text unavailable — refreshing" state) rather than silently rendering a truncated question as if it
-      were complete. Repo: agent-orchestrator.
+      were complete. Repo: agent-orchestrator. **Partial fix shipped 2026-07-30, agent-orchestrator@182f2ff**: this only
+      addressed the PERMANENT half — the "never re-seeded" tail, not the race itself. `DELETE /api/backlog/{task_id}`
+      (previously deleted only the TaskRow, leaving the same-blocked_id `BlockedRow` orphaned — which meant
+      `sync_backlog_to_db`'s existing-row guard silently refused to recreate it even after the checkout caught up) now
+      also deletes the associated unanswered `BlockedRow`, letting the next regen tick re-seed it fresh with a working
+      `get_full_todo_text()` lookup. 3 regression tests added (`tests/test_delete_backlog_task_blocked_row.py`), full QG
+      green. **Verified live**: of the 9 then-pending `BLK-op-*` rows, 3 were confirmed truncated via a fresh-vs-stored
+      line-count diff against the plan files (`ao_self_pull_wedged_by_main_inbox_untracked_file-{001,002}`,
+      `defi_cefi_venue_chain_axis_contamination-006` — the earlier-cited
+      `tradfi_manifest_consolidator_fred_     widespan_stall-001` had since been answered, no longer eligible) — deleted
+      via the live DELETE endpoint + regen'd, all 3 recreated (at new positional ids `-004`/`-005`/`-008`) with full,
+      non-truncated text, reverified against all 9 currently-pending rows (0 remaining truncated). **Still open**: the
+      race itself — a BRAND NEW `[OPERATOR]` todo can still seed truncated on first creation if it loses against
+      `pm-pull.timer`; this fix only makes that state recoverable (via delete+regen), not prevented. Options (a)/(b)/(c)
+      above remain unaddressed for actual prevention.
 - [x] ✅ [DOC] P2. Once the above ship, add the codex SSOT for the operator-gated blocked-row lifecycle end-to-end under
       `codex/12-agent-workflow/` — no doc currently describes it (repo: unified-trading-pm). —
       unified-trading-pm@ed9d02582. New `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`: seeding, the
