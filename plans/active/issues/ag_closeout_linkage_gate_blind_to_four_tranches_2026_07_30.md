@@ -1,0 +1,230 @@
+---
+doc_type: issue
+title: >-
+  check_ag_closeout_linkage.py is structurally blind to 4 of the 9 tranches — its "0 orphans" is not evidence for
+  cross-cutting/ao/ci/infra
+summary: >-
+  `scripts/plan-hygiene/check_ag_closeout_linkage.py` hard-codes `REAL_AGS = (cefi, defi, tradfi, prediction, sports)`
+  and skips every doc whose `asset_group` is anything else, so `cross-cutting`, `ao`, `ci`, `infrastructure` and `meta`
+  are exempt by construction. That exemption was written 2026-07-25 when only the 5 AGs had closeout families; the
+  2026-07-27 schema expansion (`unified-trading-pm@a97bc7bed`) made `ao`/`ci`/`infrastructure` real `asset_group` enum
+  values WITH their own consolidated-closeout docs, and the script was never updated — it is now stale against that
+  ruling. A second, independent layer: `closeout_family_for()` globs `f"{ag}_consolidated_"`, so even adding
+  `cross-cutting` to `REAL_AGS` would glob `cross-cutting_consolidated_` (hyphen) and match ZERO files, because the real
+  doc is `cross_cutting_consolidated_closeout_2026_07_25.md` (underscore) — the snake_case-vs-hyphen exception
+  `ag-closeout-audit`'s own SKILL.md § Phase 0.1 documents. Measured this run: the gate reports "0 orphan(s) (baseline
+  0)" while 29 of 119 cross-cutting-tagged docs (24%) have zero citation in ANY covering plan. The skill's claim that
+  this check "remains the safety net" is therefore false for 4 of the 9 tranches it is invoked for.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer, admin]
+tags: [plan-hygiene, ag-closeout-audit, quality-gates, linkage, orphan-detection, tranche-partition]
+related:
+  [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/issues/ag_closeout_audit_scope_widening_triage_2026_07_26.md,
+    /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md,
+  ]
+created: 2026-07-30
+last_updated: 2026-07-30
+parent_epic: plan_hygiene_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.5
+estimate_calibrated_ai_days: 0.2
+assigned_role: data_engineering
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+source: >-
+  /ag-closeout-audit cross-cutting run, 2026-07-30 (scheduled ag_closeout_auditor tranche dispatch) — found while
+  running the Phase 0.3 Orthogonality HARD CHECK, whose prescribed "re-run check_ag_closeout_linkage.py after every
+  retag" safety step turned out to be a no-op for this tranche.
+depends_on: []
+---
+
+# `check_ag_closeout_linkage.py` is blind to 4 of the 9 tranches (2026-07-30)
+
+## What I found
+
+Three separate, independently-verifiable defects compound into one silent hole.
+
+### 1. `REAL_AGS` is stale against the 2026-07-27 schema expansion
+
+`scripts/plan-hygiene/check_ag_closeout_linkage.py:66` declares:
+
+```python
+REAL_AGS = ("cefi", "defi", "tradfi", "prediction", "sports")
+```
+
+and `:178` skips everything else outright:
+
+```python
+if len(ag_values) != 1 or ag_values[0] not in REAL_AGS:
+    continue
+```
+
+The module docstring (`:20-22`) states the design intent explicitly — a doc tagged
+`cross-cutting`/`meta`/`infrastructure` "is EXEMPT by construction — that is exactly what those values already signal."
+That was a correct reading on 2026-07-25. It is stale now: the 2026-07-27 corpus-wide retag
+(`/plans/archive/2026_07/asset_group_ao_ci_infra_schema_expansion_2026_07_27.md`, `unified-trading-pm@a97bc7bed`) made
+`ao`, `ci` and `infrastructure` **real dedicated `asset_group` enum values** (10 values now), and 3 of the 4 affected
+tranches have a real closeout family the glob would find today:
+
+| tranche          | closeout doc present?                                                          | in `REAL_AGS`? | gated? |
+| ---------------- | ------------------------------------------------------------------------------ | -------------- | ------ |
+| `ao`             | `/plans/active/ao_consolidated_closeout_2026_07_25.md`                          | no             | **no** |
+| `infrastructure` | `/plans/active/infra_consolidated_closeout_2026_07_25.md`                       | no             | **no** |
+| `cross-cutting`  | `/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md`               | no             | **no** |
+| `ci`             | archived only (`/plans/archive/2026_07/ci_consolidated_closeout_2026_07_25.md`) | no             | **no** |
+
+### 2. The glob would silently no-op for `cross-cutting` even after a `REAL_AGS` fix
+
+`closeout_family_for()` (`:140-145`) builds its prefix as `f"{ag}_consolidated_"`. For `ag="cross-cutting"` that is
+`cross-cutting_consolidated_` (hyphen), which matches **0 files** — the doc is `cross_cutting_consolidated_closeout_…`
+(underscore). Verified by direct glob against `plans/active/`. The very next line in `main()` (`:182`) is
+`if not family or path in family: continue` — so the whole tranche would go on silently passing, with no error and no
+signal that the family lookup failed. This is exactly the snake_case-vs-hyphen naming exception that
+`cursor-configs/skills/ag-closeout-audit/SKILL.md` § Phase 0.1 already calls out for humans, never applied to the
+script.
+
+### 3. Measured consequence
+
+Run this session against `plans/active/` + `plans/active/issues/` (643 docs parsed, frontmatter-block-aware parse with
+`#`-comment stripping per SKILL.md Phase 0.3):
+
+- `check_ag_closeout_linkage.py` → **`✅ 0 orphan(s) (baseline 0)`**
+- Same corpus, cross-cutting tranche: **29 of 119** `asset_group: cross-cutting` docs (24%) have their basename appear
+  **zero times** in ANY of the 7 cross-cutting covering plans (the consolidated closeout + batch1/1b/2 + both finalizes
+  + the determinism plan). 28 of those 29 carry genuinely-open remaining work.
+
+The gate's green is not wrong for what it measures; it is simply silent about 4 of the 9 tranches the
+`/ag-closeout-audit` skill invokes it for. SKILL.md's classification-mechanism section tells the operator to trust it
+("`check_ag_closeout_linkage.py` **remains the safety net** for any doc the tag and the Sources lists disagree about") —
+that sentence is false for `cross-cutting`/`ao`/`ci`/`infra`, which is a plan↔SSOT contradiction, not just a code gap.
+
+## Why it matters
+
+The whole point of the 9-tranche partition is total coverage of the plans/issues corpus with zero unaccounted docs. The
+linkage gate is the standing, per-commit enforcement of that. Right now it enforces it for 5 tranches and no-ops for 4 —
+and the 4 it no-ops for are precisely the ones that accumulate fastest (every CI incident, every orchestrator defect).
+28 uncovered docs accrued in the 4 days between the covering plans being authored (2026-07-26) and this run.
+
+## Todos
+
+- [ ] [SCRIPT] P2. Extend `check_ag_closeout_linkage.py` to cover `cross-cutting`/`ao`/`ci`/`infrastructure`: replace
+      the hard-coded `REAL_AGS` with the live `docspec` `ASSET_GROUP` enum minus `meta`, and make
+      `closeout_family_for()` resolve the filename form (`ag.replace("-", "_")`) not the raw enum value so it finds
+      `cross_cutting_consolidated_*`. Add a loud assertion (not a silent `continue`) when a tranche in the covered set
+      resolves to an EMPTY closeout family, so a future rename can never re-introduce a silent no-op. **Do NOT ship this
+      as a tightened gate in the same commit** — per `AUTONOMOUS_AGENT_RULES.md` rule 11(a) the widened check must be
+      measured across the whole corpus first and the baseline set to the measured count (expected to jump from 0 into
+      the tens), then ratcheted DOWN as docs get linked. **Done when**: the widened check runs green at a
+      measured-and-recorded baseline, and a deliberately-unlinked test doc in each of the 4 tranches makes it fail.
+- [ ] [DATA] P3. Once the widened gate has a real baseline, re-run it and reconcile its orphan list against this run's
+      measured 29 never-cited cross-cutting docs (listed in the Progress Log below) — the two should broadly agree; any
+      doc the gate still misses points at a third blind spot worth understanding before ratcheting.
+- [ ] [DOC] P3. Correct `cursor-configs/skills/ag-closeout-audit/SKILL.md`'s classification-mechanism section, which
+      currently tells the reader `check_ag_closeout_linkage.py` "remains the safety net" for tag/Sources disagreements —
+      true only for the 5 real AGs today. **[OPERATOR]** — SKILL.md edits need an operator ruling; this run could not
+      make it.
+
+## BLOCKED-OPERATOR-DECISION — the cross-cutting tranche is accumulating `ci`/`ao` content by habitual tag
+
+Of the 28 genuinely-orphaned never-cited docs this run measured, roughly 20 are, by content, `ci`- or `ao`-tranche
+material carrying a bare `asset_group: [cross-cutting]` tag — the "old muscle memory" class SKILL.md predicts for docs
+authored after the 2026-07-27 retag pass (that pass's population was docs bare-tagged `cross-cutting` **at that time**;
+everything authored since re-created the problem). Examples, all created 2026-07-27→29:
+`github_actions_billing_wall_recurrence_2026_07_29.md`, `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`
+and its day-2 sequel, `ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md`,
+`repo_ci_stuck_in_sit_tristate_2026_07_29.md` (all `ci`);
+`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
+`cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29.md`,
+`repo_blocker_resolution_signal_false_positive_2026_07_28.md`, `wip_preserve_refs_silently_unrecovered_2026_07_29.md`
+(all `ao`).
+
+This run deliberately did **not** retag them. Two reasons: (a) ~20 per-doc content judgments is an authority call, not a
+mechanical fix, and several sit genuinely on the `ci`↔`ao` boundary (the CI-escalation-worker family); (b) retagging
+mid-run moves docs into tranches whose sibling auditors already snapshotted their membership, so the docs would be
+audited by nobody this cycle. Options:
+
+- **A [WORKER REC]**: keep the retag as one scoped follow-up pass run BETWEEN scheduled `ag_closeout_auditor` cycles
+  (not concurrent with one), reusing the 2026-07-27 pass's own mechanism, and pair it with todo 1 above so the widened
+  gate then holds the line automatically. Lowest risk, fixes cause and symptom together.
+- **B**: retag opportunistically, each tranche's audit retagging what it finds. Cheaper per cycle, but guarantees a
+  window each cycle where a retagged doc is in nobody's snapshot.
+- **C**: accept `cross-cutting` as the de-facto home for fleet-wide CI/AO incidents and instead widen the
+  cross-cutting closeout's own Sources list. Rejects the 9-way partition's premise; only sensible if the operator judges
+  the `ci`/`ao` split isn't earning its keep.
+- **Other**: operator can specify a different split.
+
+## Codex SSOTs
+
+- `/codex/11-project-management/doc-frontmatter-schema.md` § 5 — the 10-value `asset_group` enum this script predates.
+- `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` — orphan/archival discipline the gate enforces.
+- `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` — the shared conflict-check protocol.
+
+## Progress Log
+
+### 2026-07-30 — filed by the scheduled `/ag-closeout-audit cross-cutting` tranche run
+
+Found while executing SKILL.md Phase 0.3's Orthogonality HARD CHECK, which prescribes "after every retag, re-run
+`check_ag_closeout_linkage.py` before moving on". Reading the script to confirm what that re-run would actually prove
+surfaced defects 1 and 2; measuring the corpus surfaced defect 3.
+
+The Orthogonality HARD CHECK itself came back **clean**: 0 docs carry `cross-cutting` plus exactly one other specific-AG
+marker (the dual-tag mistag class). The 4 docs carrying `cross-cutting` plus 2+ specific AGs are the legitimate
+multi-AG-coordination pattern SKILL.md explicitly allows. The filename fast-pass (AG-name-prefixed file, bare
+`[cross-cutting]` tag) returned 2 candidates, both correctly left alone after reading their content:
+`sports_prediction_mvp_writetime_precompute_2026_07_24.md` (content proves cross-cutting is RIGHT — a
+`MANIFEST_SCHEMA_VERSION` 9→10 bump on UTL's shared `AvailabilityRecord`, every asset_group's writer, full-fleet
+redeploy) and `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` (genuinely mixed — Phases A/D are
+DeFi-specific, Phases B/C span all 35 archetypes incl. non-DeFi VOL/MM; and its retag is ALREADY owned by
+`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md` todo 3 + deferred in
+`cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` pending its `locked_by: live-defi-rollout` release — so
+touching it here would pre-empt an existing documented decision).
+
+The 29 never-cited docs measured this run (28 with open work + 1 finalize plan that is itself a covering doc):
+`ao_slot_capacity_policy_ci_scheduled_split_2026_07_29` ·
+`bucket_iam_write_protection_per_tier_2026_06_09_finalize_2026_07_27` (the covering-doc exception) ·
+`daily_trading_analyst_llm_job_design_2026_07_29` · `issues/blrs_g3_g10_rescope_2026_07_28` ·
+`issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27` ·
+`issues/cicd_heartbeat_steals_slot_regression_immediate_dispatch_2026_07_29` ·
+`issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29` ·
+`issues/data_pipeline_failure_one_shot_done_no_agentrow_2026_07_29` ·
+`issues/data_status_rollup_ml_service_full_blob_missing_2026_07_26` ·
+`issues/deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29` ·
+`issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29` ·
+`issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29` ·
+`issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27` ·
+`issues/footystats_migration_bg_workers_killed_externally_2026_07_28` ·
+`issues/gha_fleet_wide_missed_ubuntu_latest_workflows_wave2_2026_07_28` ·
+`issues/github_actions_billing_wall_recurrence_2026_07_29` ·
+`issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29` ·
+`issues/ldr_qg_failure_watchdog_resolves_on_ldr_trunk_not_pr_head_2026_07_29` ·
+`issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28` ·
+`issues/manifest_writer_vm_launcher_audit_followups_2026_07_28` ·
+`issues/orchestrator_vm_swap_exhaustion_masked_as_cpu_2026_07_29` ·
+`issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27` ·
+`issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29` ·
+`issues/read_availability_index_slim_path_silent_empty_return_2026_07_27` ·
+`issues/repo_blocker_resolution_signal_false_positive_2026_07_28` · `issues/repo_ci_stuck_in_sit_tristate_2026_07_29` ·
+`issues/wip_preserve_refs_silently_unrecovered_2026_07_29` ·
+`issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27` ·
+`pm_own_workflows_wave2_self_hosted_runner_migration_2026_07_28`.
+
+Note on the covering side: the cross-cutting covering family (closeout + batch1/1b/2 + finalizes) is genuinely thorough
+for the corpus it was authored against — batch1 and batch2 carry detailed per-doc `## Deferred` sections with a stated
+reason for every doc they declined to extract, and batch2 even carries a "Not orphaned — checked, not assumed" section.
+The 28 orphans are almost entirely docs created AFTER those plans were written (2026-07-26), not docs those plans
+missed. This is a cadence problem — the corpus grows faster than the covering family is regenerated — which is the
+strongest argument for fixing the standing gate (todo 1) rather than authoring another batch.
