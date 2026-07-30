@@ -121,12 +121,12 @@ what's missing.
       contention from the rest of the fleet right now — a genuine manifest flush took ~9 retry attempts / ~9 min
       wall-clock to land under this session's load. Not a defect in this handler, but worth knowing before scheduling
       the full 2021→now historical pull (many more shards writing to the same contended index).
-- [ ] [DATA] P1. **RULED 2026-07-28 (operator general-theme ruling — no longer operator-gated, now AO-dispatchable)**:
-      pull the FULL DVOL historical series, 2021-03-24 → now, for both BTC and ETH, via the
-      `collect-deribit-volatility-index` handler built in the todo above. **Ruling: full history, not a shorter window —
-      go-ahead granted.** **Reasoning (operator's standing 2026-07-28 theme, applied here)**: (1) "full backfills/full
-      migrations — as long as an item isn't superseded by more recent work, do it": this plan is confirmed still active
-      and not superseded (checked 2026-07-28 — `v2_engine_venue_buildout_2026_06_15.md`,
+- [x] ✅ [DATA] P1. **DONE 2026-07-30 (slot-2, `data_engineering`).** RULED 2026-07-28 (operator general-theme ruling —
+      no longer operator-gated, now AO-dispatchable): pulled the FULL DVOL historical series, 2021-03-24 → now, for both
+      BTC and ETH, via the `collect-deribit-volatility-index` handler built in the todo above. **Ruling: full history,
+      not a shorter window — go-ahead granted.** **Reasoning (operator's standing 2026-07-28 theme, applied here)**: (1)
+      "full backfills/full migrations — as long as an item isn't superseded by more recent work, do it": this plan is
+      confirmed still active and not superseded (checked 2026-07-28 — `v2_engine_venue_buildout_2026_06_15.md`,
       `cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`, and
       `cross_cutting_satellite_ao_dispatch_batch2_2026_07_26.md` all still list this plan as the live open item for
       VOL_CARRY/VOL_ARB_RV_IV); (2) DVOL is free/credential-free (Deribit public REST, no auth) so "cost under
@@ -136,11 +136,28 @@ what's missing.
       for a defensible backtest verdict under the HARD CONTRACT above (a false `not_available` from under-coverage is
       exactly the partial/cheap outcome the theme rules against). **This resolves `BLK-011c84cb`** (the standing
       operator-decision escalation raised 2026-07-14, still open as of the 2026-07-25 Progress Log entry below).
-      **Full-completion bar for whoever dispatches this** (no partial runs): pull EVERY day 2021-03-24→now for BOTH BTC
-      and ETH, verify manifest rows show `capture_status=captured` across the COMPLETE window (spot-check the 2021-03-24
-      launch-day boundary AND the most recent day, not just a middle sample), and re-run to closure if any days land
-      `attempted_failed`/`empty` rather than leaving partial coverage. Expect the shared `availability_index.parquet`
-      write-contention already noted in the todo above (retries, not failure) — that is not a reason to shrink scope.
+      **Execution**: a same-repo-family connectivity smoke-test (small 3-day range) run inline first hit a REAL memory
+      spike (~17GB RSS, ignored a 120s `timeout` SIGTERM) — root-caused to `ManifestWriter.flush()`'s per-day full
+      read-merge-write of the shared cefi `availability_index.parquet` (~7.5M rows), the SAME class already root-caused
+      for other cefi MTDS backfills (`mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`, fixed there via
+      e2-highmem-4). Killed the runaway process (exact PID, SIGTERM) per the runaway-process HARD RULE, then built +
+      shipped a dedicated one-off VM launcher rather than running the full historical pull on the shared orchestrator
+      host: `deployment-service@42b80f65f9f3` — new `dvol-deribit-` VM prefix (registry + launcher-registry parity,
+      `test_launcher_registry.py`/`test_validate_vm_prefix_mapping.py` green) + `launch-deribit-dvol-backfill-vm.sh`
+      (e2-highmem-4/250GB pd-balanced, SPOT, `VM_TASK=deribit-dvol-backfill` routed through the generic
+      `VM_OPERATION`-driven dispatch branch in `setup-data-pipeline-vm.sh`, which was also extended to forward
+      `VM_BATCH_DATE_CONCURRENCY` — previously only the `mtds-backfill` branch read it). Full quality-gates.sh green
+      before commit (incl. the backfill-VM-disk-provisioning gate, which caught the initial 100GB disk as under the
+      250GB minimum for this workload class). **Real VM run** (`dvol-deribit-backfill`, launched 2026-07-30T14:00:09Z,
+      self-shutdown+self-deleted 2026-07-30T14:10:41Z on exit_code=0, ~10.5min wall-clock — no contention/slowdown
+      observed running unopposed on its own VM, unlike the shared-host smoke test): manifest verification (not just
+      GCS-object existence) via a direct read of the per-VM shard
+      `market-data-tick-cefi-prd-central-element-323112/_index/per_vm/dvol-deribit-backfill.parquet` shows **3910/3910
+      rows `capture_status=captured`** (0 `attempted_failed`, 0 `empty`) — 1955 distinct dates × {BTC, ETH}, date range
+      exactly `2021-03-24` → `2026-07-30`, matching the expected 1955 calendar-day count for that inclusive window
+      (`(date(2026,7,30)-date(2021,3,24)).days+1 == 1955`, verified programmatically). Both boundaries (`day=2021-03-24`
+      DVOL-launch day and `day=2026-07-30` today) independently spot-checked in raw GCS before the full-distribution
+      manifest check. **No partial runs, no gaps, no re-run needed.**
 - [ ] [SCRIPT] P1. **Gate resolved 2026-07-28 (was BLOCKED-OPERATOR-DECISION — the operator decision is now RULED, see
       the `[DATA]` todo immediately above)**: the remaining prerequisite is a REAL data dependency, not an operator gate
       — DO NOT WORK THIS TODO until the `[DATA]` todo above is actually complete and the full DVOL history pull has
@@ -227,3 +244,12 @@ what's missing.
   Conflict-check clear: `cross_cutting_satellite_ao_dispatch_batch2` and the cefi digest both name THIS doc as the live
   owner. Shared conflict-check protocol: `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
   sect.3 - CLEARED.
+
+- 2026-07-30 (slot-2, `data_engineering`): Dispatched the `[DATA] P1` full-history DVOL pull todo. An inline 3-day
+  connectivity smoke-test on the shared orchestrator host hit a real ~17GB RSS memory spike (ManifestWriter.flush()'s
+  per-day full read-merge-write of the shared cefi `availability_index.parquet`, ~7.5M rows) — killed the runaway
+  process (exact PID) and built a dedicated one-off VM launcher instead (`deployment-service@42b80f65f9f3`:
+  `dvol-deribit-` prefix + `launch-deribit-dvol-backfill-vm.sh`, e2-highmem-4/250GB SPOT). Real VM run completed clean
+  in ~10.5min (no contention running unopposed): manifest-verified 3910/3910 `capture_status=captured` rows (1955 dates
+  × {BTC,ETH}, exactly 2021-03-24→2026-07-30, 0 failures/empties). Todo flipped `[x]`. Next: the `[SCRIPT]`
+  backtest-wiring todo below is now genuinely dispatchable (its manifest prerequisite is fully satisfied).
