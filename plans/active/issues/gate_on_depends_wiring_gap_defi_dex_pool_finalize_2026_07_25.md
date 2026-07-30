@@ -329,6 +329,20 @@ can apply the hand-park (or fix root cause item 1) before a third bounce. Declin
 on the false premise that batch3's work has shipped; skipping this task rather than re-filing/re-blocking on an
 already-answered question.
 
+## 2026-07-30 recurrence note (slot 9, second bounce on cefi_track7_candle_namespace_residual)
+
+Freshly dispatched `cefi_track7_candle_namespace_residual_finalize-001` on slot 9 (`dispatch_reason: "resume"`,
+`already_in_progress: true`) — same task_id, same plan pair already covered by the "FIFTH distinct plan pair" note above
+(slot 7). Independently re-verified before declining: `cefi_track7_candle_namespace_residual_2026_07_25.md`'s single
+`[OPERATOR]` delete todo is still `- [ ]` (its own 2026-07-30 Progress Log entry re-confirms both gates unchanged), and
+its own upstream gate — candidate-7 of `cefi_consolidated_native_ao_extract_2026_07_25.md`, line 157 — is also still
+`- [ ]`. Live-checked `GET /api/backlog` confirmed a real backlog task exists for the upstream todo
+(`cefi_track7_candle_namespace_residual-001`, `status: blocked`), so this is the standard-wiring-path failure (task IDs
+exist, just never got attached to the finalize task's `prereqs.completed_tasks`), not the ambiguous-empty-upstream case.
+Nothing has changed that would let the finalize plan's todo close honestly. Declined to author any reconciliation
+content; skipped via `POST /skip-current-task` (`reason_code: GATED`) rather than filing a duplicate `/blocked`. 10th
+documented bounce off this general wiring gap.
+
 ## 2026-07-27 recurrence note (slot 8, THIRD distinct plan pair)
 
 A third, again genuinely different plan pair: dispatched `data_pipeline_check_mdps_features-036` (todo 11c, "MIGRATE
