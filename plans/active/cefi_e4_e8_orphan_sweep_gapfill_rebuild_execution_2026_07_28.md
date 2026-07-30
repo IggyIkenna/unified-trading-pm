@@ -120,6 +120,30 @@ step.
       name + run.log tail as evidence. **Phase B (the actual delete) stays `[OPERATOR]`, hard-stop #2 — unaffected by
       this retag.**
 
+      **LAUNCHED 2026-07-30T01:25:46Z (autonomous session) — RUNNING, not yet complete, checkpoint before session
+          window closes.** `canonical-migration-cefi-20260730-012546`, `asia-northeast1-c`, `e2-standard-8`, SPOT
+          (idempotent copy-only, correctly on-demand-vs-SPOT per the backfill-VMs-default-to-SPOT rule). Command:
+          `python -u -m market_tick_data_service.scripts.migrate_cefi_flat_to_v9_canonical --start-date 2019-03-30
+          --end-date 2026-07-30 --workers 64 --apply`. **STARTED<60s confirmed**: `gcloud compute instances describe`
+          returned `RUNNING` within seconds of launch. Tarballs: MTDS/UAC/UTL fresh-verified before launch; deployment-service
+          tarball was stale (`manifest=acda6ed1 but repo=c847395e`, from this same session's later mvp_mode commit) — did
+          NOT block the launch (launcher only warns, doesn't enforce) and does not affect this run's correctness, since the
+          executing migration code lives entirely in market-tick-data-service (already fresh), not deployment-service.
+          **Not yet verified to completion** — this is a full 2019-2026 (~2,700 day) corpus-wide pass across ~1.2M objects,
+          expected to run for hours, likely past this session's remaining window. **Next picker-upper / follow-up check**:
+          (1) `gcloud config set account unified-trading-sa@central-element-323112.iam.gserviceaccount.com` first (SSM/gcloud
+          identity lesson from `defi_dex_pool_symbol_fix_backfill_purge_2026_07_25.md`'s own checkpoint — apply the same
+          discipline here); (2) `gcloud compute instances describe canonical-migration-cefi-20260730-012546
+          --zone=asia-northeast1-c --project=central-element-323112` for RUNNING/gone; SPOT VM, so a "gone" result needs
+          `gcloud compute operations list --filter="targetLink~canonical-migration-cefi-20260730-012546"` to distinguish a
+          real self-delete-on-completion from a preemption before trusting either; (3) if complete, read
+          `gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-20260730-012546/run.log`'s tail
+          for a clean full-range pass with 0 unexpected errors, cite it here, and flip this checkbox; (4) if preempted, the
+          tool's own idempotent (already-copied objects skip) design means a bare relaunch of the same command safely
+          resumes — no special resume flag needed for this copy-only category (unlike the delete category's resume-log
+          contract). Phase B remains untouched, still `[OPERATOR]`, still gated on this phase's completion AND the
+          unresolved hard-stop-2 contradiction (`issues/cefi_hardstop2_carveout_codex_vs_plan_contradiction_2026_07_29.md`).
+
 ## Phase B — E4a(ii): orphan-sweep DELETE (irreversible, `[OPERATOR]`, hard-stop #2)
 
 - [ ] [OPERATOR] P0. **Operator-authorized 2026-07-29** (see ruling above), pending a human to execute the apply —
