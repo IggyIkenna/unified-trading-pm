@@ -134,6 +134,13 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       catalogue load (`Loaded N catalogue rows from instruments-store-cefi-prd-...`) has grown since the category's
       original 2026-07-19 launch (11 days of continued live capture), pushing every shard closer to the 32GB ceiling.
       Repo: deployment-service.
+- [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
+      `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
+      `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
+      `1060025368044-compute@developer.gserviceaccount.com` invoked from within a GCE VM. Check
+      `vm_zombie_watchdog.py`'s other code paths (`_reap_terminated_vms`/`should_reap()`) and any other automated
+      process running under the GCE default compute SA that could issue `compute.instances.delete` against a
+      `canonical-migration-cefi-` VM. Repo: deployment-service.
 
 ## Progress Log
 
@@ -244,3 +251,29 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
      SPOT capacity contention, not just isolated bad luck — if a shard gets preempted twice in a row shortly after a
      large same-zone SPOT batch launch, don't keep retrying SPOT; switch that instance to on-demand rather than assume
      the third attempt will differ.
+- **2026-07-30 update (slot-15, same session, ~10 min later) — a THIRD, unexplained mechanism killed shard 19
+  (`canonical-migration-cefi-content-19-relaunch20260730-130600`), plus the active identity drifted again (a DIFFERENT
+  account this time: `github-deploy`, not `github-actions-deploy` — switched back to `unified-trading-sa` again, second
+  occurrence this session)**. Investigated shard 19's death properly rather than assuming it was another preemption or
+  the identity issue:
+  - Cloud Audit Log (`protoPayload.methodName="v1.compute.instances.delete"`) shows the actor as
+    `1060025368044-compute@developer.gserviceaccount.com` (the GCE default compute SA) via `gcloud` invoked
+    `client-os/LINUX ... (Linux 6.17.0-1021-gcp)` — i.e. from WITHIN a GCE VM, not a human/agent session. Strongly
+    suggests the fleet's own `vm_zombie_watchdog.py` (deployment-service), the only automated in-fleet reaper this
+    codebase documents.
+  - **Disproved the obvious hypothesis before shipping a fix**: `vm_zombie_watchdog.py`'s `is_zombie()` only kills on
+    `hb_age > heartbeat_stale` (stale-but-present heartbeat blob) or `hb_age is None AND shard_age > shard_stale`
+    (heartbeat blob missing entirely). Checked shard 19's own `gs://.../vm-heartbeat/<vm_name>.txt` blob directly — its
+    `Update Time` was `13:32:40Z`, the delete op fired at `13:33:35Z` — the heartbeat was ~55s old at kill time, nowhere
+    near the 15-min default `heartbeat_stale` threshold, and `PREFIX_IDLE_THRESHOLDS` has no override for
+    `canonical-migration-cefi-content-` (confirmed by reading the dict — unlike `af-backfill-`/`cefi-fwd-`/etc., which
+    needed one for this exact class of false-positive per
+    `zombie_watchdog_relaunch_reaped_live_backfills_2026_06_23.md`). By the documented logic, this VM should NOT have
+    zombie-killed. **Did NOT ship a `PREFIX_IDLE_THRESHOLDS` entry** (my first instinct) — that fix targets a mechanism
+    the evidence just ruled out, and shipping it would give false confidence without addressing the real cause.
+  - **Genuinely unresolved** — either the kill came from a code path in `vm_zombie_watchdog.py` not covered by this read
+    (e.g. `_reap_terminated_vms`/`should_reap()`, though shard 19 was `RUNNING` not `STOPPED`, so that path shouldn't
+    apply either), a completely different automated process also running under the GCE default compute SA, or a
+    race/staleness in the audit-log timestamps vs. the blob's own timestamp. Relaunched shard 19 a third time
+    (`...-133500`); no recurrence observed since. Flagging as a genuine open mystery rather than a closed incident —
+    worth a dedicated follow-up if it recurs (the todo below is scoped to investigation, not a guessed fix).
