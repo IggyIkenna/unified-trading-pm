@@ -17,7 +17,7 @@
 
 <!-- AUTO-INDEX-START -->
 
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 245 plans across 10 domains. A plan tagged with
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 243 plans across 10 domains. A plan tagged with
 multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/`
 by hand._
 
@@ -543,7 +543,7 @@ by hand._
   "registry-aware honest-coverage denominator" todo — confirmed still unshipped across 4 consecutive same-day
   dispatches…
 
-### prediction (34)
+### prediction (32)
 
 - [`ag_closeout_audit_rollout_2026_07_25`](./ag_closeout_audit_rollout_2026_07_25.md) — Autonomous session (/autonomous,
   operator away, 2026-07-25) driving the /ag-closeout-audit skill across the 4 asset groups that haven't had it yet —
@@ -616,14 +616,6 @@ by hand._
 - [`prediction_phase_e_football_arb_live_2026_07_24`](./prediction_phase_e_football_arb_live_2026_07_24.md) — Phase E of
   the prediction consolidated close-out, split out verbatim (line-cap remediation, 2026-07-24) — the af_fixture_id
   identity chain (Polymarket + Kalshi soccer, ~0%→~100% team-name matching) and the 3-venue Kalshi/Polymarket/Betfair…
-- [`prediction_satellite_ao_dispatch_batch1_2026_07_25`](./prediction_satellite_ao_dispatch_batch1_2026_07_25.md) —
-  First AO-dispatch batch for prediction (prediction has never had one before, unlike sports). Extracted from the
-  2026-07-25 orphan-audit's 13 genuinely-orphaned prediction satellite docs (of 20 audited; 6 more were correctly
-  deferred to the…
-- [`prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25`](./prediction_satellite_ao_dispatch_batch1_finalize_2026_07_25.md)
-  — Gated closeout for prediction_satellite_ao_dispatch_batch1_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 7 of that plan's todos are done. Mirrors the sports/tradfi finalize-plan pattern
-  (reconcile each of…
 - [`prediction_satellite_ao_dispatch_batch2_2026_07_25`](./prediction_satellite_ao_dispatch_batch2_2026_07_25.md) —
   Second AO-dispatch batch for prediction, produced by re-invoking the `/ag-closeout-audit` skill's "batchN methodology"
   against `prediction_satellite_ao_dispatch_batch1_2026_07_25.md`'s own Deferred section (12 fully-deferred orphaned
