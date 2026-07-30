@@ -189,3 +189,27 @@ coverage asserting a DEFI `funding_oi`/`returns` run actually loads non-empty da
   own relaunch bound already far exceeded). Root-caused via full run.log read + code trace
   (`_tf_cluster_helper.py`/`funding_oi.py`) + cross-referencing 3 other same-day VM logs showing the identical failure
   shape across both feature groups and 3 different date windows.
+- 2026-07-30 (slot-2, data_pipeline_failure escalation DP-VM-002 for `features-delta-one-defi-20260730-231230`,
+  ESCALATION_ID=agt-7f3e51): the fleet monitor flagged this VM under a NEW detector (DP-VM-002 — VM drained with
+  `captured` not climbing and no honest-absence/rate-limit signal in the log), distinct from slot-4's DP-VM-001 finding,
+  but full run.log confirms it is the SAME already-diagnosed root cause, not a new failure mode: dependency-check +
+  lookback validation PASSED (22/22 instruments), manifest discovery found 22 real `oracle_prices` instruments, then
+  every single instrument×date pair logged `WARNING No upstream MDPS data ... (data_type=oracle_prices) — skipping date`
+  from the very first date onward — identical shape to this issue's own repro. This VM was launched with
+  `--feature-group returns --start-date 2023-01-01 --end-date 2026-07-22` (full multi-year history, `TIMEFRAME=15m`) and
+  terminated abruptly mid-run (log stops at 2025-11-08 with no ERROR/exit line, `gcloud compute instances list` confirms
+  it no longer exists, no `EXIT_STATUS` object written — consistent with the fleet monitor's "drained without a durable
+  exit marker" read) — but even a clean completion would have written zero real captures, since the candle-load failure
+  is deterministic across every date in the window. A sibling VM `features-delta-one-defi- 20260730-231206`
+  (`funding_oi`, `2023-05-12..2026-06-09`) launched the same minute failed the same class one step earlier
+  (`Manifest discovery: 0 captured instruments for ... perp_funding` at that specific start date →
+  `ERROR No delta-one instruments available after filtering`, clean `exit_code=1`). Both VMs were launched by slot 14,
+  which the live backlog shows `dispatched_to: 14` on `defi_satellite_ao_dispatch_batch3-014` (this issue's own D1 todo)
+  since 2026-07-30T22:28:58Z — i.e. the todo-3 `[OPERATOR]` parking recommendation below has NOT yet been executed, and
+  the redispatch-into-guaranteed-failure loop is still active (now 12+ VMs today). Did NOT attempt the
+  `_tf_cluster_helper.py` pass-through-branch fix myself — same craft-scope call as slot-4 (shared CEFI/TRADFI/DEFI/
+  PREDICTION code, a real design decision, not a blind one-shot-escalation guess) — and did NOT relaunch. Messaged slot
+  14 directly (`/api/slots/14/message`) with this finding + a stop-relaunching recommendation, since it is the
+  currently-dispatched worker and best positioned to action the park-or-hold-off decision live. Did not hand-edit
+  `backlog.yaml` myself (outside my slot's git worktree, and todo 3 below is explicitly `[OPERATOR]`-tagged) — flagging
+  here for main/operator to execute the park if slot 14 cannot.
