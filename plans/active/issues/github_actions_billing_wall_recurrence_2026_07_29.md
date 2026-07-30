@@ -37,7 +37,7 @@ related:
     /codex/15-runbooks/devops-ci-walls.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-07-30
 priority: P0
 parent_epic: infrastructure_master
 source: "cicd escalation agt-913803 (slot 12), dispatched for deployment-api ldr_qg_failure wall_type"
@@ -323,3 +323,25 @@ return to a normal (non-zero-job) run.
   above already covers the decision — avoiding the escalation-spam pattern the P3 todo flags). Not pinging the authoring
   slot (`AUTHORING_SLOT=ci-reconcile`, the known non-numeric literal from `ci_reconcile.py:546` that 400s per the
   entries above). No code or workflow change made or needed; `instruments-service` left clean on `live-defi-rollout`.
+
+- **2026-07-30T00:55-00:59Z (`/autonomous` dispatch, slot 1) — still active ~7h after onset, now spanning into the next
+  day; no self-recovery yet unlike the two prior (2026-06-11/2026-06-23) recurrences.** Independently re-confirmed via
+  two fresh LIVE dispatches (not a history read):
+  `gh workflow run quality-gates-v2.yml --repo IggyIkenna/deployment-api --ref live-defi-rollout` → run `30504133539`,
+  `startup_failure`, `jobs: []`, completed in ~3s; separately,
+  `gh workflow run main-backmerge-to-ldr.yml --repo IggyIkenna/unified-trading-pm` (PM's own drift-tick safety net) →
+  run `30504357611`, identical `startup_failure`/0-jobs signature. This directly explains the operator-visible
+  `#ci-failures` branch-health alert's `unified-api-contracts LDR→main` (151m) and `unified-trading-pm main→LDR` (128m)
+  lag lines from this same session — both are downstream of this ONE wall (quality-gates-v2 can't run to arm
+  unified-api-contracts promote PR #796's auto-merge; PM's own backmerge safety-net dispatch can't run either), not two
+  separate promotion problems. Also explains why no `PROMOTION LAG CLEARED` recovery message has posted for either pair
+  — the underlying condition genuinely has not cleared, not a bug in the recovery-bookend mechanism itself (verified
+  separately this session: `branch-health.yml`'s `lag-notify-resolved` job + `promotion_lag_monitor.py`'s per-pair
+  clear-diff, and `stale-build-watcher.yml`'s `notify-recovery` job, are both correctly implemented and will fire
+  automatically the moment their respective conditions actually clear). Not filing a fresh `/blocked` (same standing
+  `BLK-21d55fb1` condition, `[OPERATOR] P0` todo already covers the decision) — recording this only because it extends
+  the confirmed-active window past every prior sample and ties it explicitly to this session's operator-facing Slack
+  alert. Still fully operator-only: check `github.com/settings/billing` (payment method / Actions spending limit). No
+  code or workflow change made or needed by this dispatch; every repo touched this session for the SEPARATE Cloud Build
+  stale-image issue (a GCP-native, non-GHA-billing-gated mechanism — confirmed unaffected by this wall, builds succeeded
+  normally throughout) was left clean beyond its own intended fix.

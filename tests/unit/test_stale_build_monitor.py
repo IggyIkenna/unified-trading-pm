@@ -188,3 +188,75 @@ def test_ldr_main_repos_reads_real_manifest() -> None:
 
 def test_ldr_main_repos_missing_manifest_returns_empty(tmp_path: Path) -> None:
     assert SBM.ldr_main_repos(tmp_path / "does_not_exist.json") == []
+
+
+# ── active_trigger_repos ────────────────────────────────────────────────────────────────────
+# Gap found 2026-07-30 (cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md):
+# unified-trading-system-ui has a cloudbuild.yaml resolving a `:latest` image but NO active Cloud
+# Build trigger — its AR entry is a stale one-off/manual build, so it read as "182110m older than
+# main HEAD" every run. A repo with no active trigger has no continuous-build mechanism to verify.
+
+
+class _FakeProc:
+    def __init__(self, returncode: int, stdout: str) -> None:
+        self.returncode = returncode
+        self.stdout = stdout
+
+
+def test_active_trigger_repos_new_style_repository_event_config(monkeypatch: object) -> None:
+    triggers = [
+        {
+            "name": "strategy-service-build",
+            "repositoryEventConfig": {
+                "repository": "projects/p/locations/r/connections/c/repositories/strategy-service"
+            },
+        },
+        {"name": "disabled-repo-build", "disabled": True, "repositoryEventConfig": {"repository": ".../disabled-repo"}},
+    ]
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        SBM.subprocess, "run", lambda *a, **k: _FakeProc(0, __import__("json").dumps(triggers))
+    )
+    got = SBM.active_trigger_repos("test-project-1")
+    assert got == {"strategy-service"}  # disabled trigger's repo excluded
+
+
+def test_active_trigger_repos_legacy_github_name(monkeypatch: object) -> None:
+    triggers = [{"name": "old-style", "github": {"name": "instruments-service"}}]
+    monkeypatch.setattr(  # type: ignore[attr-defined]
+        SBM.subprocess, "run", lambda *a, **k: _FakeProc(0, __import__("json").dumps(triggers))
+    )
+    assert SBM.active_trigger_repos("test-project-1") == {"instruments-service"}
+
+
+def test_active_trigger_repos_none_on_query_error(monkeypatch: object) -> None:
+    monkeypatch.setattr(SBM.subprocess, "run", lambda *a, **k: _FakeProc(1, ""))  # type: ignore[attr-defined]
+    assert SBM.active_trigger_repos("test-project-1") is None
+
+
+def test_check_repo_skips_when_no_active_trigger(monkeypatch: object) -> None:
+    """The unified-trading-system-ui false-positive class: no active trigger -> skip, never a
+    finding, and never even reach the gh/AR fetches (a network-free short-circuit)."""
+
+    def _boom(*_a: object, **_k: object) -> None:
+        raise AssertionError("must not fetch cloudbuild.yaml when the repo has no active trigger")
+
+    monkeypatch.setattr(SBM, "_fetch_text", _boom)  # type: ignore[attr-defined]
+    got = SBM.check_repo(
+        "unified-trading-system-ui",
+        "test-project-1",
+        45 * 60.0,
+        dt.datetime(2026, 7, 30, tzinfo=dt.UTC),
+        {},
+        trigger_repos={"some-other-repo"},
+    )
+    assert got is None
+
+
+def test_check_repo_trigger_repos_none_does_not_short_circuit(monkeypatch: object) -> None:
+    """`trigger_repos=None` means the trigger query itself failed (fail-open) — must fall through
+    to the normal cloudbuild.yaml path, not silently skip every repo."""
+    monkeypatch.setattr(SBM, "_fetch_text", lambda *a, **k: None)  # type: ignore[attr-defined]
+    got = SBM.check_repo(
+        "any-repo", "test-project-1", 45 * 60.0, dt.datetime(2026, 7, 30, tzinfo=dt.UTC), {}, trigger_repos=None
+    )
+    assert got is None  # falls through to _fetch_text returning None -> "no cloudbuild.yaml" skip, not a crash
