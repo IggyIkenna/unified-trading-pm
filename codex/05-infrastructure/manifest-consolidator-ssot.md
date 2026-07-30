@@ -264,6 +264,31 @@ metadata-replace + mtime-bump semantics) + `::test_get_content_write_mtime_never
 > (`gcloud storage objects describe gs://<bucket>/_index/availability_index.parquet --format="value(custom_fields.consolidator_content_write_at)"`
 > — note `custom_fields`, NOT `metadata`, in current gcloud) while per-VM shards can land.
 
+> **Diagnostic caveat #2 — a STATIC `rows_out` with a nonzero, fluctuating `dedup_dropped` is NOT evidence of a silent
+> drop. It is the EXPECTED signature of an idempotent re-capture (2026-07-30).** `dedup_dropped` is not an independent
+> measurement — `consolidate()` computes it as **`rows_in - rows_out`** (`manifest_consolidator.py`, the
+> `ConsolidationReport` construction). So "`rows_out` unchanged" and "`dedup_dropped` == this cycle's shard row count"
+> are the SAME fact stated twice, never two corroborating signals. A writer re-capturing cells that already exist in the
+> canonical collides on the dedup key and UPDATES those rows in place; row COUNT is conserved by construction, and
+> `dedup_dropped` rises with the shard purely because the shard is growing. Watching the row count therefore cannot
+> distinguish "absorbing correctly" from "dropping silently".
+>
+> **The correct absorption test is content, not count**: capture the per-VM shard BEFORE a prune can delete it, then
+> assert the canonical carries the shard rows' own `attempted_at` (or `(capture_status, row_count)`) on the SAME dedup
+> key — resolving that key with the module's own `_resolve_dedup_cols()` + `_dedup_key_sql()`, never a hand-rolled key.
+> Measured live 2026-07-30 on `instruments-store-sports-prd`: four consecutive merges held `rows_out=11,789,693` while
+> `dedup_dropped` climbed 976→1,003→1,029→1,048 in lockstep with the shard, and 1,029/1,049 shard rows were verifiably
+> already in the canonical with the shard's exact `attempted_at` — zero loss. This false signal consumed four worker
+> sessions before being disproven; the actual defect was upstream, in the BACKFILL's `check_shard_freshness` smart-skip
+> (which is `source`/`data_type`-blind and matches an `expected_venues` token against the `data_type` column too, so an
+> unrelated pipeline's sentinel row marks a date "fresh" forever). Full account + the 2×2 proof:
+> `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` § "Root cause (2026-07-30)".
+>
+> **Corollary — "the writer's log says it processed the date" is not evidence either.** Both VMs blamed in that incident
+> logged **2,139 `SKIP date=… all N venues fresh` lines and exactly ONE `Processed date=`**; the investigation had read
+> the skip lines as processing. Grep for `Processed date=` explicitly and COUNT it before concluding a writer produced
+> anything for a range.
+
 > **A shard's mtime is `blob.updated`, NOT `creation_time` — and a lifecycle transition moves it (2026-07-17).** Both
 > `_list_per_vm_shards_with_mtime` and `_prune_consolidated_shards` read **`blob.updated`**. `gcloud storage ls -l`
 > prints **`creation_time`**, so the two disagree whenever anything touches an object without rewriting it — most

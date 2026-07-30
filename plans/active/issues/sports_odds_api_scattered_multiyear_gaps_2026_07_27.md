@@ -151,30 +151,34 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
       diagnosable) or accepting the gaps as permanently unexplained. Did not attempt the backfill itself — the
       credential blocker below is unrelated to and independent of this investigation. (repo: market-tick-data-service,
       deployment-service, read-only investigation, no code changed)
-- [ ] [DATA] P1. BLOCKED-OPERATOR-DECISION 2026-07-29 — credential blocker resolved (key rotated, see below) and the
-      actual backfill VM work was executed (3 launches, ~2.5h), but discovered a NEW, more fundamental blocker: the
-      consolidator for `instruments-store-sports-prd-central-element-323112` is not absorbing new manifest rows at all
-      right now (`rows_out` byte-identical across every real merge cycle for 47+ minutes of Cloud Logging evidence,
-      confirmed via `/blocked` escalation `BLK-62e1dc42`) — filed as
-      `plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (P0). This means NO amount of
-      further VM relaunches can be verified as effective via the standard census methodology until that consolidator
-      issue is root-caused and fixed — retag away from this marker back to a dispatchable one once that P0 doc resolves.
-      Concrete deliverables actually shipped this session: two real launcher bugs found + fixed (stale pre-floor
-      `START_DATE` default; `e2-standard-4` OOM on the odds backfill launcher, bumped to `e2-highmem-4` — see
-      `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s 2026-07-29 addenda for the full OOM investigation,
-      including that the machine-type bump alone was insufficient and per-day memory variance is fundamentally
-      unpredictable for this venue too). Original credential-unblock context (superseded as the active blocker, kept for
-      history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since rotated
-      `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a 5,000,000-credits/month
-      subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) — see
-      `sports_odds_api_key_deactivated_2026_07_26.md`. Backfill launcher:
+- [ ] [OPERATOR] P1. **RE-TRIAGED 2026-07-30 (slot 3) — the consolidator blocker cited below is DISPROVEN; the real
+      blocker is now known, proven, and needs a fix-approach ruling.** The consolidator absorbs correctly (static
+      `rows_out` is an in-place UPDATE of colliding dedup keys; `dedup_dropped` is merely `rows_in - rows_out`, so it
+      corroborates nothing). What actually blocks this backfill: **`check_shard_freshness` marks 572 of the 595 missing
+      days "fresh" off an unrelated `venue='ODDS_API'` sentinel row written by the MDPS odds-horizon-bucket pipeline**,
+      so the launcher SKIPS them — both 2026-07-29 VMs logged 2,139 `SKIP date=…` lines and exactly ONE
+      `Processed date=`. **Re-running `launch-mtds-sports-odds-backfill-vm.sh` unchanged will no-op again.** Pick a fix
+      approach first — options A/B/C are enumerated on the P1 todo of
+      `/plans/active/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` (§ "Root cause (2026-07-30)"
+      carries the 2×2 proof). Concrete deliverables actually shipped in the 07-29 session: two real launcher bugs
+      found + fixed (stale pre-floor `START_DATE` default; `e2-standard-4` OOM on the odds backfill launcher, bumped to
+      `e2-highmem-4` — see `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`'s 2026-07-29 addenda for the full
+      OOM investigation, including that the machine-type bump alone was insufficient and per-day memory variance is
+      fundamentally unpredictable for this venue too). Original credential-unblock context (superseded as the active
+      blocker, kept for history): the-odds-api.com key was `DEACTIVATED_KEY` through 2026-07-28; the operator has since
+      rotated `odds-api-key` (Secret Manager, project `central-element-323112`) to a new key on a
+      5,000,000-credits/month subscription, live-verified via direct curl (HTTP 200, `x-requests-remaining: 5000000`) —
+      see `sports_odds_api_key_deactivated_2026_07_26.md`. Backfill launcher:
       `deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh --start <range-start> --end <range-end>`
       (idempotent/manifest-skip by default). (repo: deployment-service)
-- [ ] [VERIFY] P2. BLOCKED-OPERATOR-DECISION 2026-07-29 — depends on the P1 backfill above, which is now blocked on the
-      SAME P0 consolidator issue (`sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`), not credentials. Once
-      that P0 doc resolves and P1's backfill genuinely lands, re-run this same census (single manifest read, filter
-      `source == "odds_api"`, `date >= 2020-06-06"`, diff against the full calendar range) to confirm 0 missing days,
-      then close this doc.
+- [ ] [VERIFY] P2. Depends on the P1 backfill above. **Census re-run 2026-07-30 (slot 3) against a snapshotted canonical
+      (11,789,693 rows): STILL 595 missing days** across `2020-06-06..2026-04-15` (1,545 of 2,140 days present) —
+      unchanged, because P1 never actually fetched anything (see the re-triage above). The consolidator is NOT the
+      reason and no longer gates this todo. Once P1's backfill genuinely lands, re-run this same census (single manifest
+      read, filter `source == "odds_api"`, `date >= 2020-06-06`, diff against the full calendar range) to confirm 0
+      missing days, then close this doc. Note for whoever runs it: the current 595 decompose into 168 contiguous ranges
+      (not the 27 previously quoted — 27 was the count of multi-day ranges only), and 23 of the 595 are NOT explained by
+      the sentinel skip, so a clean sweep needs those diagnosed separately.
 
 ## Progress Log
 
