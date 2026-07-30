@@ -403,3 +403,25 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   time after this point will NOT be relaunched by me — it gets the shard-16 treatment (P1 todo
   - leave for the fleet monitor / in-VM stall-kill, per the runbook's own guidance) instead. Did NOT touch shard 16 —
     already correctly owned/declined by slot-7, respecting their in-progress investigation.
+- **2026-07-30 update (slot-3, `data_pipeline_failure` escalation agt-ac73ec, DP-VM-003 `DP_VM_STALL`)**: dispatched by
+  the fleet monitor for `canonical-migration-cefi-content-40-relaunch20260730-132900` (25-min-stale heartbeat at
+  dispatch time). This is a THIRD independent instance of the same slow whole-VM memory-pressure freeze slot-7
+  (shard 16) and slot-15 (shard 44) already documented above — confirmed, not assumed:
+  `gcloud compute instances describe` showed `machineType=e2-standard-16`, `preemptible: false`,
+  `provisioningModel: STANDARD` (the already-fixed on-demand/bigger-machine config), ruling out both earlier-fixed
+  failure classes (SPOT preemption, `e2-standard-8` OOM/`rc=137`). `run.log` shows steady real progress (23,000/76,685
+  files, ~30%, with the tool's own recurring "possible wedged worker" self-warnings throughout — normal chatter, not the
+  failure) then goes completely silent at `14:16:36Z` (GCS object mtime), no `rc=137`/`Killed` line. PROGRESS.json
+  checkpoint frontier at time of freeze: `last_completed_date=2024-05-19, monotonic=true`. **Registry check (not
+  assumed) confirmed this shard already had 2 archived dead attempts today** before this one:
+  `...-relaunch20260730-122417` (started 12:33:54Z, reaped `vm_not_running` by 13:20:04Z, exit_code=125) and
+  `...-relaunch20260730-130600` (started 13:22:21Z, reaped `vm_not_running` by 13:30:03Z after reaching only 200/76,685
+  files post-discovery) — verified via `DeploymentsRegistry`'s GCS-backed active+archive JSON, downloaded in parallel
+  and grepped (240 objects in today's archive alone). Per `RB-INFRA-RELAUNCH`'s `≤2 relaunches/(vm-prefix,day)` bound,
+  this 3rd death exceeds budget — did **not** relaunch. **Did not manually kill the VM either**: mid-investigation
+  (between a 14:54Z check showing `RUNNING` and a 15:07Z recheck), the VM's own in-VM `STALL_PROGRESS_REGEX` stall-kill
+  fired on its own — confirmed via `gcloud compute operations list` showing a clean `delete` op (not a `preempted`
+  event) — so the existing, already- shipped self-heal mechanism handled cleanup without intervention, same outcome as
+  shard 16's self-reap (confirmed separately this session: that VM is now gone too). No code changed, no manual VM
+  action taken — investigation + issue-doc update only. Pinged the authoring fleet-monitor slot with this outcome per
+  the `data_pipeline_failure` role contract.
