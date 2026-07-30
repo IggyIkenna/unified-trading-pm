@@ -356,8 +356,16 @@ not a mechanical column-list copy.
       (the stale lock pinned 0.135.1, which broke `conftest.py`'s UTL import chain and blocked tests from even
       collecting — pre-existing drift, unrelated to this fix, fixed as a prerequisite to running QG at all). Full
       `quality-gates.sh` green (126s, 2nd run against committed HEAD for the sentinel), shipped via quickmerge --agent.
-- [ ] [SCRIPT] P2. **instruments-service** — `engine/orchestrator/process_completeness.py:468`
-      `_detect_thin_day_venues`: project to its actual column usage.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-2)** — no code change needed, already fixed. **instruments-service** —
+      `engine/orchestrator/process_completeness.py:468` (now `:474`) `_detect_thin_day_venues`: verified by direct read
+      — the call is ALREADY projected (`columns=sorted(_required)` where
+      `_required = {"asset_group", "capture_status", "venue", "date", "instrument_count"}`), shipped in a prior commit
+      (`instruments-service@5134a5f0`, "fix(sports): bound memory in daily-enum sports historical-index reads",
+      2026-07-27) as a side effect of the `sports_is_daily_enum_backfill_oom_at_32gi_ceiling_2026_07_27.md` fix — same
+      incident class as `mtds_backfill_vm_startup_oom_rc137_2026_07_14`. Confirmed the projected columns match the
+      function's own downstream usage exactly (asset_group/capture_status/date drive the CeFi-history mask; venue groups
+      the history; date/instrument_count feed the per-venue median groupby — no other column is touched anywhere in the
+      function). Not bare; nothing to fix.
 - [ ] [SCRIPT] P2. **batch-live-reconciliation-service** — `stages/stage0_manifest_reason_check.py:177`: project to its
       actual column usage.
 - [ ] [SCRIPT] P2. **deployment-service** — `cli/utils/manifest_reader.py:245,585,674`: project each to its actual
