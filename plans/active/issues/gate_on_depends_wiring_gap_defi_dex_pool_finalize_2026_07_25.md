@@ -238,6 +238,16 @@ skipping this task rather than `/blocked`-ing on an already-answered question. R
 (populate `prereqs.completed_tasks` with `prediction_satellite_ao_dispatch_batch3-00{1,2}` + `priority_override: true`)
 be applied to this task pair too if it starts bouncing across multiple slots the way the defi_dex_pool pair did.
 
+## 2026-07-30 recurrence — FOURTH distinct plan pair (cefi_track2_coverage_backfill_checkpoints)
+
+Slot 7 was dispatched `cefi_track2_coverage_backfill_checkpoints_finalize-001` (plan_ref
+`cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md`,
+`depends_on: [cefi_track2_coverage_backfill_checkpoints_2026_07_25]`, `gate_on_depends: true`) while the gating parent
+plan is 3/5 done, not 5/5 — same symptom, a 4th unrelated plan pair. Full detail + independent re-verification in
+`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s 2026-07-30 (slot-7) recurrence note. Declined the
+same way; skipped rather than re-blocked. Strengthens the case that root-cause item 1 (trace
+`_wire_gate_on_depends_prereqs` across regen ticks) is a genuine, still-unfixed general gap, not a one-off.
+
 ## 2026-07-26 recurrence note (slot 8, second bounce on the prediction pair)
 
 Slot 8 was freshly dispatched `prediction_satellite_ao_dispatch_batch3_2026_07_26_finalize-001` immediately after
