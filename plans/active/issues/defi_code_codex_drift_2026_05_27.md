@@ -153,10 +153,10 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       yet scoped — this checkbox stays `[~]` until that migration plan exists.
 
       **CLEAR for dispatch (2026-07-30, conflict-check)** — no other active doc claims this migration. **Flagging, not
-          blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
-          "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
-          reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
-          migration plan, not a hard block.
+                  blocking**: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` still carries an unretracted
+                  "intentional hybrid CEFI+DEFI" classification note for these venues that this doc itself calls out as "never
+                  reconciled" against the later 06-21 operator ruling — worth a quick operator confirmation before/while scoping the
+                  migration plan, not a hard block.
 
 - [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228
       (`fix(mev): remove banned bloxroute relays + stale .bak from     mev_events_handler`): the 2 bloxroute URLs are
