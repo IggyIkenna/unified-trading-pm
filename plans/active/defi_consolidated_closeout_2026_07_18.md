@@ -106,13 +106,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated:
-  2026-06-27 "2026-07-30" # was 2026-06-27; corrected for the merge-conflict-corrupted multi-date runaway scalar (the buried
-  # note this field carried is recovered verbatim in this doc's 2026-07-30 "cicd worker, slot 16" Progress Log entry,
-  # not duplicated here). Root cause: prek's stash/patch-replay bug,
-  # issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md — status: open, NOT resolved (this
-  # exact field was re-corrupted TWICE more during the fix's own quickmerge runs, 2026-07-30, before this value
-  # actually landed clean).
+last_updated: 2026-06-27
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
