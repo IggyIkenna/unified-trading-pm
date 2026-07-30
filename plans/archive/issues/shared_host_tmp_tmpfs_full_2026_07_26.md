@@ -6,7 +6,7 @@ summary:
   slots/agents. This both stalls any tool defaulting to `tempfile.gettempdir()` and causes a reproduced race in
   `base-service.sh`'s 25 `>/tmp/<name>_qg.log` QG-step redirects, where two slots' concurrent `quality-gates.sh` runs
   collide on the same fixed filename and produce spurious gate failures.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -19,12 +19,19 @@ priority: P1
 parent_epic: infrastructure_master
 assigned_vm: planning
 locked_by:
-resolved_by:
+resolved_by: unified-trading-pm@68309de03 (todo 2 code fix), see Progress Log for all 3 todos' resolution evidence
 source: [defi_satellite_ao_dispatch_batch1_2026_07_25.md]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-07-30** — all 3 todos done: todo 1 (`/tmp` capacity, resolved externally, confirmed 2026-07-27),
+> todo 2 (`base-service.sh` PID-collision race, `unified-trading-pm@68309de03`, verified live + regression-tested this
+> session), todo 3 (VM oversubscription, root-caused structural + governor confirmed enforced, closed 2026-07-29). The
+> standing "Recommended decision #2" prevention question (periodic automated `/tmp` cleanup policy) is NOT dropped — it
+> is tracked as a real todo in `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (`[OPS] P3`,
+> fleet-wide cleanup-cron audit). 0 open todos here.
 
 ## What I found
 
