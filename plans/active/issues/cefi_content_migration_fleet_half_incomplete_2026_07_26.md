@@ -219,3 +219,28 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   the machine-type escalation genuinely resolves the OOM, not a coincidence of timing. Also confirmed the `54817bc1`
   SPOT-checkpoint fix is actively writing (`[[VM_PROGRESS]] last_completed_date=2024-10-01 monotonic=true` observed in
   shard 41's log). Adding the tracked follow-up now that the fix is verified:
+- **2026-07-30 update (slot-15, same session, ~15 min later) — two more real problems hit during the 18-shard batch
+  upgrade, both resolved**:
+  1. **Broken active identity mid-batch**: shards 24/25/26/28 failed with `PERMISSION_DENIED (compute.instances.create)`
+     — the active `gcloud` account had drifted to `github-actions-deploy` (a different identity than this workspace's
+     standard ambient `unified-trading-sa`, likely a session/config artifact, not an IAM policy gap). Confirmed
+     `unified-trading-sa` holds `roles/compute.admin` + `roles/compute.instanceAdmin.v1`;
+     `gcloud config set account unified-trading-sa@...` fixed it immediately (the rest of the in-flight batch, e.g.
+     shard 29 onward, succeeded right after the switch with no other changes). The 4 failed shards' OLD VMs had already
+     been deleted (only `create` failed) — they had ZERO running instances until manually relaunched.
+  2. **Rolling SPOT preemption wave** — likely triggered by this session's own fleet doubling its footprint
+     (`e2-standard-8`→`e2-standard-16`× 21 VMs, roughly 2× vCPU/RAM demand in one zone within ~10 minutes). THREE
+     separate preemption waves hit different shard subsets in quick succession: {14,15,17,20,21} at ~06:18:37-43, then
+     {24,42} again + {25} at ~06:19-06:23, then {26,28,40,43,44} at a later check — confirmed via
+     `compute.instances.preempted` operations events, not OOM (these are a different failure signature from the earlier
+     `rc=137` pattern). No auto-recovery observed within ~3+ min for these custom `VM_NAME_OVERRIDE` launches (the
+     `RelaunchPreemptedVm` same-name mechanism may not cover ad-hoc-named instances, or its poll interval exceeds what
+     was practical to wait out here) — manually relaunched each wave. After the SECOND repeat-preemption on shards
+     24/42, switched the repeatedly-preempted set (24, 25, 26, 28, 40, 42, 43, 44 — 8 shards) to `ON_DEMAND=true` (the
+     launcher's own designed opt-out) to stop the rolling-preemption cycle rather than keep reactively chasing it; the
+     remaining 13 shards stayed on SPOT (stable, no repeat preemptions observed). **Final state: all 21/21 shards
+     confirmed `RUNNING` on `e2-standard-16`** (13 SPOT + 8 on-demand). **Lesson for future large e2-standard-16 SPOT
+     batches in this zone**: launching ~21 VMs of a larger machine type simultaneously can trigger genuine zone-wide
+     SPOT capacity contention, not just isolated bad luck — if a shard gets preempted twice in a row shortly after a
+     large same-zone SPOT batch launch, don't keep retrying SPOT; switch that instance to on-demand rather than assume
+     the third attempt will differ.
