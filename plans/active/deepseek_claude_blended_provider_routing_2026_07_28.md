@@ -322,6 +322,37 @@ operator's local box, unrelated to the routing code itself but touching this pla
   the orphaned tmux session self-destructed in ~4s). Not part of this plan's own scope — flagged here only because it
   shipped in the same commit as the guide fix above.
 
+**2026-07-30 — `[INFRA] P1` server_url() production-reachability guard SHIPPED, closing the todo below.**
+
+- **Root cause confirmed against current code before fixing**: `7076283`'s port-derivation fix (Step 3 above) is only a
+  best-effort mitigation — it does nothing when `ORCHESTRATOR_PORT` is _also_ left unset/default, which is exactly what
+  happened in the 2026-07-29 incident. The `spawn-liveness watchdog` (`_auth_failover.check_spawn_heartbeat_timeouts`,
+  called unconditionally every `WorkerLivenessKicker` tick) confirmed genuinely ungated by
+  `ORCHESTRATOR_AUTOSPAWN_ENABLED` — it's a third daemon, independent of both `AutoSpawnLoop` and
+  `WorkerLivenessWatchdog`, with no enable flag of its own at all. Its retry is bounded (`spawn_retry_count` vs.
+  `_SPAWN_HEARTBEAT_MAX_RETRIES=2`, resets on every fresh spawn) rather than literally infinite, but still real, billed,
+  repeated respawn churn on every affected slot.
+- **Fix shipped**: `agent-orchestrator@fcc7f24`. `config.server_url()` now raises `RuntimeError` instead of silently
+  returning the production-default URL when `config.is_standalone()` is true (no `ORCHESTRATOR_VM_ID`, or
+  `ORCHESTRATOR_STANDALONE` explicitly set) and neither `ORCHESTRATOR_SERVER_URL` nor a non-default `ORCHESTRATOR_PORT`
+  is set. `is_standalone()` moved from `routes/vms.py` into `config.py` (needed by `server_url()`; `routes/vms.py` now
+  delegates rather than forking the check).
+- **Verified the "fails loud" doesn't become "fails badly"**: walked all 5 real call sites.
+  `server.spawn_with_account_bg` kills the old tmux session before calling `server_url()` — an uncaught raise there
+  would have stranded the slot (task held, no recovery); now caught and routed through the same
+  `_recover_slot_after_failed_rotation` path its two sibling failure stages already use. `autospawn._do_spawn` has an
+  explicit "never raise, return `(False, msg)`" contract (visible in the very next lines, the boot-prompt-render step) —
+  now honored instead of silently broken. The other three call sites (a `routes/slots_ops.py` helper already inside a
+  `tmux_spawn.spawn`-failure `except RuntimeError` catch, two best-effort nudge wrappers in `routes/agents.py`, and a
+  plain route handler with no prior state mutation) needed no change — confirmed safe by inspection, not assumed.
+- **Test-isolation gap the fix surfaced, fixed in the same commit**: the suite had no autouse guard clearing
+  `ORCHESTRATOR_STANDALONE` — this exact operator's `~/.bashrc` sets it, so 8 tests that call `server_url()` unmocked
+  went from green-in-CI to red-on-this-box the moment the guard was added. New `_clear_standalone_env` autouse fixture
+  in `tests/conftest.py`, mirroring the existing `_clear_regen_env` precedent. Full suite green after the fix (2068
+  passed, 2 skipped — verified both with and without the ambient env var present).
+- Evidence: `agent-orchestrator@fcc7f24` on `live-defi-rollout`, `ahead=0`. 7 files, +185/-23. QG green (ruff,
+  basedpyright 0/0/0, pytest 2068 passed).
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -395,7 +426,7 @@ operator's local box, unrelated to the routing code itself but touching this pla
       `ORCHESTRATOR_PM_REPO_PATH` env override that does not actually exist (that whole field class was made env-free
       2026-07-18). Done when: either a documented, sanctioned "fully isolated local pilot" runbook exists (env var
       list + what remains shared + why that's safe), or the isolation gaps themselves are closed in code.
-- [ ] [INFRA] P1. Fix or guard the local-pilot production-reachability incident from 2026-07-29: a local isolated
+- [x] [INFRA] P1. ✅ Fix or guard the local-pilot production-reachability incident from 2026-07-29: a local isolated
       instance that forgets `ORCHESTRATOR_SERVER_URL` silently defaults every spawned worker's boot prompt to the
       PRODUCTION URL (`config.server_url()` docstring/default is `http://localhost:8765`, matching prod's real port),
       and the `spawn-liveness watchdog` (`worker_liveness/_auth_failover.py`) that auto-kills+respawns a silently
