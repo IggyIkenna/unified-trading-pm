@@ -83,6 +83,48 @@ source:
 > exactly — is still numerically accurate, just was written up as a much broader "zero capture ever" conclusion than the
 > data supports). Todos below have been corrected to reflect the real open question.
 
+> **UPDATE 2026-07-30 (same session, deeper investigation after the correction above) — root-caused: the 2026-07-21
+> fleet's failure was TRANSIENT, not a code bug and not the tagging-reconciliation problem the correction above
+> hypothesized.** Two independent live checks, both run in-process this session against production code (never writing
+> secrets to disk — the Databento API key was fetched from Secret Manager into an in-memory variable only):
+>
+> 1. **Raw Databento API probe** —
+>    `databento.Historical(...).timeseries.get_range(dataset='GLBX.MDP3', symbols=['ES.FUT'], stype_in='parent', schema='ohlcv-1m', start='2020-01-31', end='2020-02-01')`
+>    — the exact dataset/symbol/stype_in/schema the curated `ES.FUT` registry def
+>    (`unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py:89`) and the
+>    `tradfi-bf-cme-ohlcv-1m-es-*` fleet both use — **returned 1,997 real rows.**
+> 2. **Direct production-adapter invocation** —
+>    `DatabentoAdapter().download_batch_df(date='2020-01-31', data_types=['ohlcv_1m'], instrument_ids=['ES.FUT'], venue='CME')`,
+>    i.e. the FULL code path the fleet ran, called directly (not through a VM) — **also returned 1,997 real rows
+>    successfully, no error.**
+>
+> Both checks used the identical parameters the 2026-07-21 fleet used for this exact date, and both prove Databento has
+> the data and the adapter code correctly fetches it **today, right now, with zero changes**. This rules out: a
+> `stype_in`/schema mismatch (the "recommended next steps" §1 hypothesis below), a billing/`assert_schema_allowed` gate
+> rejection (confirmed separately: `ohlcv-1m`/`ohlcv-1s` are both allowlisted L0 schemas, only `ohlcv-1h`/`-1d` are
+> banned), and — walking back the correction above one more step — an actual `instrument_id`-vs-`underlying`
+> tagging-reconciliation bug as the primary problem for THIS instrument. The blank-`instrument_id`/`underlying=SP500`
+> rows documented in the correction above are real and still worth reconciling as their own (lower-priority, P2) data-
+> hygiene item, but they are not why the `ES.FUT`-tagged fleet itself recorded zero rows. The only conclusion consistent
+> with "code works perfectly now, exact same call, exact same parameters, exact same date" is that whatever the
+> 2026-07-21 fleet hit was **transient** — an outage/rate-limit/environment condition specific to that run window — not
+> a persistent defect.
+>
+> **Corrective action taken (not just documented): re-launched the exact same backfill scope.**
+> `deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh --only-root ES` (this is the SAME pre-existing
+> launcher the original fleet used — no new script needed, no code changed) — `--dry-run` first confirmed the same 7-VM,
+> 7-year-shard (2020-2026) scope as the original fleet, then run for real. All 7 VMs launched and confirmed `RUNNING`
+> within seconds each (STARTED<60s satisfied), all SPOT, `e2-highmem-16`:
+> `tradfi-bf-cme-ohlcv-1m-es-2020-20260730-094322`, `-2021-20260730-094342`, `-2022-20260730-094357`,
+> `-2023-20260730-094410`, `-2024-20260730-094423`, `-2025-20260730-094436`, `-2026-20260730-094450`. As of
+> `2026-07-30T09:50Z` (~6-7 min post-launch): all 7 confirmed alive via `run.log` (no crash/traceback), correctly
+> skipping the CME New Year's-day non-trading-day date, and currently in a **legitimate, by-design bounded wait** on a
+> live manifest-consolidator lock (`_wait_for_in_flight_cycle_then_reread`, observed lock age 190-300s, horizon 3600s)
+> before their first real per-date OHLCV fetch attempt — this is expected consolidator contention from the wider fleet
+> of concurrent backfills running this session, not a stall; per the workspace's async-wait discipline this is being
+> tracked on a real progress metric (manifest `row_count>0` for `venue=CME, instrument_id=ES.FUT`), not VM-lifecycle
+> alone. **Verification of actual captured rows is the one remaining open step** — see the corrected Todos below.
+
 ## What I found
 
 Ran the exact query the ruling's todo specified — a single live read of `market-data-tick-tradfi-prd`'s
@@ -156,19 +198,27 @@ root-cause fix.
 
 ## Todos
 
-- [ ] [DIAG] P1. **CORRECTED SCOPE (2026-07-30) — this is NOT "why does Databento return zero for ES," it's "why do two
-      capture paths disagree on `instrument_id` for the same real data."** Real ohlcv_1m/1s data for the SP500/ES/MES
-      family exists (28,307+111 real rows, `instrument_id` blank, `underlying` correctly populated) — see the CORRECTION
-      banner above for the exact query + overlap evidence. Diagnose: (a) which script/handler wrote the
-      blank-`instrument_id` rows (`written_at` 2026-06-21..2026-07-28, several distinct runs — NOT the 2026-07-21
-      `tradfi-bf-cme-ohlcv-1m-es-*` fleet); (b) why THAT fleet's `download_batch_df` request (curated `ES.FUT` symbol,
-      `stype_in=parent`, `dataset=GLBX.MDP3` per
-      `unified-api-contracts/unified_api_contracts/     registry/tradfi_instrument_universe.py:89`) got/recorded zero
-      rows for dates where the OTHER path clearly got real data; (c) whether
+- [ ] [DATA] P1. **CURRENT, ACTIVE TODO (2026-07-30 UPDATE — supersedes the "diagnose the tagging mismatch" framing
+      below, which is now understood to be secondary, not the primary cause).** Verify the 7 re-launched
+      `tradfi-bf-cme-ohlcv-1m-es-*` VMs (started `2026-07-30T09:43-09:45Z`, scope `--only-root ES`, same 2020-2026
+      year-shards as the original fleet) actually captured real rows once they complete/self-delete. Re-run this issue's
+      original query — live read of `market-data-tick-tradfi-prd`'s `_index/availability_index.parquet`, scoped to
+      `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m, ohlcv_1s}`, filter `written_at` to this run's date — and
+      confirm `row_count>0` / `capture_status=captured` now appears for at least a substantial share of the 2020-2026
+      window (a repeat 100% `attempted_failed`/`empty_confirmed` result would mean the transient-failure hypothesis
+      above is wrong and this needs re-opening as a genuine code-bug investigation, likely starting with the
+      `stype_in=parent`-vs-schema hypothesis in "Recommended next steps" §1 below). Cite the resulting row counts as
+      closing evidence on both this issue and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s original P0 todo
+      (which reported the original false "zero capture ever" framing). Repo: market-tick-data-service.
+- [ ] [DIAG] P2. **Secondary, lower-priority data-hygiene item (demoted from P1 — confirmed NOT the cause of the
+      original zero-capture finding, see UPDATE above).** Real ohlcv_1m/1s data for the SP500/ES/MES family already
+      exists under a BLANK `instrument_id` with `underlying` correctly populated (28,307+111 real rows; `written_at`
+      2026-06-21..2026-07-28) — see the first CORRECTION banner above for the exact query + overlap evidence. Diagnose:
+      (a) which script/handler wrote these blank-`instrument_id` rows; (b) whether
       `recover_tradfi_garbage_underlying_2026_07.py` or a sibling migration script already covers reconciling
       blank-`instrument_id`-but-real-`underlying` manifest rows into the canonical `ES.FUT` tag, or whether this is a
       genuinely new gap in that tooling's scope. Repo: market-tick-data-service.
-- [ ] [DATA] P2. Once root-caused, determine whether the SAME blank-`instrument_id`-with-real-`underlying` pattern
-      exists for the other "in flight" CME roots (CL/GC/HG/NG/NQ/SI) — if so, this is a systemic manifest-tagging gap
-      across the whole tradfi CME ohlcv surface, not ES-specific, and reconciling it (not re-backfilling from scratch)
-      is likely the fix. Repo: instruments-service.
+- [ ] [DATA] P3. Once P1 confirms the re-launched fleet captured real `ES.FUT`-tagged rows, determine whether the other
+      "in flight" CME roots (CL/GC/HG/NG/NQ/SI) show the same historical zero-capture pattern their own fleets — if so,
+      the same "just re-run it" fix likely applies there too; check before assuming any of them need a code change.
+      Repo: instruments-service.
