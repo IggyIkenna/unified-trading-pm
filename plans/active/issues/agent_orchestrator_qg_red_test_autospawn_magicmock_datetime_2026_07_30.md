@@ -96,19 +96,37 @@ small+clear gets its own issue doc).
 
 ## Todos
 
-- [ ] [ENGINEER] P1. Root-cause + fix
+- [x] ✅ [ENGINEER] P1. Root-cause + fix
       `TypeError: '>' not supported between instances of 'MagicMock' and     'datetime.datetime'` at
       `server/state_store/account_usage.py:176` (`account_is_rate_limited`) — affects
       `test_tick_fails_closed_on_gate_read_failure`, `test_repeat_spawn_failure_activity_log_throttled`,
       `test_tick_budget_allows_one_spawn_per_queued_task`,
       `test_tick_rotates_through_idle_slots_when_chronically_at_cap`,
-      `test_tick_refuses_to_spawn_a_slot_that_can_claim_nothing` (repo: agent-orchestrator).
+      `test_tick_refuses_to_spawn_a_slot_that_can_claim_nothing` (repo: agent-orchestrator). —
+      `agent-orchestrator@02d2e9f`. Root cause: `_check_and_log_critical_pool_halt` (2026-07-29 fleet-wide-halt ruling)
+      now runs unconditionally at the top of `_run_one_tick`, walking every configured Anthropic account via
+      `account_is_rate_limited`; these tests drive the tick with a bare `MagicMock()` session that never configures
+      `session.get()`, so `row.rate_limited_until` resolved to an auto-attr MagicMock, crashing the datetime comparison
+      before any tick assertion ran. Fix: patched the new bound method out
+      (`patch.object(loop, "_check_and_log_critical_pool_halt", return_value=False)`) in each affected test, matching
+      the existing style of stubbing `loop._resume_pass`/`loop._drain_escalations` — these tests assert tick
+      spawn/budget/gate behavior, not the pool-halt feature, which already has its own dedicated tests. This same crash
+      (not the signature-3 AttributeError) turned out to also be the FIRST failure in
+      `test_tick_caps_spawns_at_queue_depth` and `test_tick_respects_fleet_worker_cap` (todo below) on the current tree,
+      so the same patch was applied there too. Full `bash scripts/quality-gates.sh` now PASSES clean (1990 passed, 1
+      skipped) — fixing this one crash was sufficient to turn the whole gate green again for every worker, since the
+      other two signatures below turned out to be silently caught/logged at their call sites (`_resume_pass`'s outer
+      `try/except` in `_run_one_tick`) and never actually failed a test assertion once this crash stopped masking them.
 - [ ] [ENGINEER] P1. Root-cause + fix `sqlite3.OperationalError: no such table: escalation_queue` in the
       `test_autospawn.py` fixture path (likely a missing `create_all_tables()` call or a schema-migration gap for the
-      escalation-queue table in the test DB setup) (repo: agent-orchestrator).
+      escalation-queue table in the test DB setup) (repo: agent-orchestrator). No longer QG-blocking (see todo above —
+      it's silently caught + logged by `_drain_escalations`'s call-site `try/except`, so it doesn't fail any test), but
+      the underlying gap is still real and still open.
 - [ ] [ENGINEER] P1. Root-cause + fix `AttributeError: 'list' object has no attribute 'all'` at
       `server/autospawn.py:2478` in `_resume_pass` — affects `test_tick_caps_spawns_at_queue_depth`,
-      `test_tick_respects_fleet_worker_cap` (repo: agent-orchestrator).
+      `test_tick_respects_fleet_worker_cap` (repo: agent-orchestrator). No longer QG-blocking (see todo above — it's
+      silently caught + logged by `_resume_pass`'s call-site `try/except` in `_run_one_tick`, so it doesn't fail any
+      test), but the underlying bug is still real and still open.
 - [ ] [ENGINEER] P3. Investigate
       `tests/test_worker_liveness_watchdog.py::test_tick_null_tmux_session_falls_back_to_canonical_name` flakiness under
       real concurrent shared-host tmux traffic (passed cleanly in isolation immediately after failing in the full suite)
