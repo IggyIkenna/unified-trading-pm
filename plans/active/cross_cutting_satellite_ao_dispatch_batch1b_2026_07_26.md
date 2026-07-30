@@ -100,6 +100,47 @@ drift_direction: advance-code
       and no longer under features-service, wired to that repo's QG; every repo's `scripts/` directory has been
       classified per the script-homes canon with dead scripts deleted and relocatable scripts moved, each carrying the
       required lifecycle marker.
+
+      **Progress 2026-07-30**: item (2)'s `scripts/*/smoke_matrix.py` ×8 portion SHIPPED (the sibling stash-recovery
+      dependency was confirmed landed — `silent_wrong_answer_audit_candidates_2026_07_20.md` is `status: resolved`,
+      archived — so no sequencing conflict). All 8 domains (`delta_one`, `commodity`, `cross_instrument`, `calendar`,
+      `sports`, `multi_timeframe`, `volatility`, `onchain`) relocated to `e2e-testing/scripts/<domain>/`, their
+      `tests/<domain>/unit/test_smoke_matrix.py` counterparts moved alongside, and features-service's
+      `scripts/quality-gates.sh` PERIPHERAL_DIR block extended from sports-only to loop over all 8 domains
+      (basedpyright + ruff, matching the existing sports precedent). See `features-service`/`e2e-testing` shas cited on
+      `features_service_coverage_and_script_canon_2026_06_10.md`'s corresponding checkbox.
+      **`scripts/e2e/*` (part of item (2)) DEFERRED — NOT relocated.** Confirmed via CI-coupling audit: unlike the 8
+      `smoke_matrix.py` files (only a soft PERIPHERAL_DIR basedpyright+ruff check applies), features-service's OWN
+      `scripts/quality-gates.sh` actively EXECUTES `scripts/e2e/run_pipeline_e2e.py` as a hard-fail (`log_fail`) E2E
+      dry-run smoke gate, and features-service's CI (`quality-gates-v2.yml` `dep_repos: "unified-trading-library
+      unified-api-contracts"`) never clones `e2e-testing` as a sibling — so relocating `scripts/e2e/*` as originally
+      scoped would either break that CI hard gate outright or require downgrading it to a soft/skip-when-sibling-absent
+      check, silently disabling the E2E dry-run smoke check in real GHA CI. Operator ruling 2026-07-30 (via `/blocked`
+      BLK-49d7a15b): do NOT downgrade the gate to make the relocation convenient — tracked as its own follow-up todo
+      below (`features-service: decide + implement scripts/e2e/* relocation without weakening its CI hard-gate`). Items
+      (1) and (3) remain open.
+- [ ] [SCRIPT] P2. **features-service — decide + implement `scripts/e2e/*` relocation without weakening its CI
+      hard-gate.** `scripts/e2e/run_pipeline_e2e.py` + `resolve_lookback.py` + `run_backfill.py` +
+      `snapshot_instrument_universe.py` are script-homes-canon candidates for relocation to `e2e-testing/scripts/` (same
+      as the 8 `smoke_matrix.py` files above), but `features-service/scripts/quality-gates.sh` actively EXECUTES
+      `run_pipeline_e2e.py` as a hard-fail (`log_fail`, not `log_warn`) E2E dry-run smoke gate — a real, currently-green
+      CI check — and features-service's `quality-gates-v2.yml` (`dep_repos: "unified-trading-library
+      unified-api-contracts"`) never clones `e2e-testing` as a sibling in CI. A same-repo→sibling-repo relocation would
+      therefore either hard-break that gate (file-not-found in real CI) or require downgrading it to a soft
+      skip-when-sibling-absent check (matching the smoke_matrix.py PERIPHERAL_DIR pattern) — which would silently make
+      the E2E dry-run smoke check local-workspace-only, never running in real GHA CI again. Operator ruling 2026-07-30
+      (`/blocked` BLK-49d7a15b): downgrading the gate to make the relocation convenient is NOT acceptable — this needs a
+      genuine design decision among: (a) add `e2e-testing` as a `dep_repo` sibling in features-service's
+      `quality-gates-v2.yml` template (`unified-trading-pm/scripts/workflow-templates/`) so CI actually clones it and
+      the hard-fail gate keeps firing post-relocation — preferred if the added CI clone cost is acceptable; (b) move the
+      E2E dry-run gate itself into `e2e-testing`'s own CI/QG (inverting which repo's pipeline enforces it); (c) keep
+      `scripts/e2e/*` in features-service permanently as intentionally CI-coupled, and narrow the script-homes canon's
+      decision tree to exclude scripts a primary consumer's own QG hard-executes. Done when: one of (a)/(b)/(c) is
+      chosen and implemented, the E2E dry-run smoke check still fires as a REAL hard gate in some repo's actual GHA CI
+      (not just locally), and (if (a) or (b) chosen) `scripts/e2e/*` physically lives under
+      `e2e-testing/scripts/features/` (or equivalent) with features-service's `quality-gates.sh` updated accordingly.
+      Source: `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`,
+      `/codex/06-coding-standards/script-homes.md`.
 - [ ] [CODE] P2. **features-service — fix `odds_features_exporter.py` velocity-accel fallback NaN/math semantics
       (dead-code + a legit-`0.0`-drop bug).** `_compute_velocity_from_pivoted`'s (lines ~509-514) elif/else acceleration
       branches are unreachable dead code today: `np.nan` satisfies `isinstance(x, float)`, so the line-509 guard always

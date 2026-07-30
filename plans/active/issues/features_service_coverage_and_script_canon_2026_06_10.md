@@ -88,12 +88,26 @@ script-relocation sweep per the canon; fix the env crash. Tracked todos:
                       already bundles this exact fix (item 1 of its combined SCRIPT/P2 todo), explicitly sourced from this doc. Do not
                       re-dispatch from here; flip this checkbox once that todo ships citing its commit sha.
 
-- [ ] [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
+- [x] ✅ [SCRIPT] P2. features-service → e2e-testing: relocate the smoke/e2e harnesses (`scripts/*/smoke_matrix.py` ×8,
       `scripts/e2e/*`) to `e2e-testing/scripts/<domain>/` per `script-homes.md`, wired to primary-consumer QG (STEP
       5.65).
 
-      **SUPERSEDED (2026-07-30, conflict-check)** — same `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`
-                      todo, item (2): same file list, same target path, same source citation. Do not re-dispatch from here.
+      **SHIPPED 2026-07-30 (`scripts/*/smoke_matrix.py` ×8 portion) — features-service@<sha> / e2e-testing@<sha>.** All
+      8 domains (`delta_one`, `commodity`, `cross_instrument`, `calendar`, `sports`, `multi_timeframe`, `volatility`,
+      `onchain`) relocated to `e2e-testing/scripts/<domain>/` with their `tests/<domain>/unit/test_smoke_matrix.py`
+      counterparts moved alongside (now `e2e-testing/tests/unit/test_smoke_matrix_<domain>.py`); features-service's
+      `scripts/quality-gates.sh` PERIPHERAL_DIR block extended from sports-only to loop over all 8 domains. The sibling
+      `silent_wrong_answer_audit_candidates_2026_07_20.md` stash-recovery dependency was confirmed already landed
+      (doc `status: resolved`, archived) before this shipped — no sequencing conflict.
+      **`scripts/e2e/*` portion DEFERRED, NOT relocated** — features-service's OWN `scripts/quality-gates.sh` hard-fails
+      (`log_fail`) on `scripts/e2e/run_pipeline_e2e.py` as its E2E dry-run smoke gate, and features-service's CI never
+      clones `e2e-testing` as a sibling (`dep_repos` only lists `unified-trading-library unified-api-contracts`), so a
+      same relocation would either break that CI hard gate or require downgrading it to a soft check — silently
+      disabling it in real CI. Operator ruling 2026-07-30 (`/blocked` BLK-49d7a15b): do not downgrade the gate to make
+      the relocation convenient. Tracked as its own follow-up todo in
+      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` ("features-service — decide + implement
+      `scripts/e2e/*` relocation without weakening its CI hard-gate"). Full detail + the batch1b combined todo's
+      remaining open items (1) and (3) are cross-referenced there — do not re-dispatch from here.
 
 - [ ] [SCRIPT] P3. features-service + deployment-service: retire `scripts/sports/compute_sfi_progressive_only.py` + its
       `deployment-service/scripts/vm/launch-sfi-progressive-features-backfill-vm.sh` launcher once the Phase 4-7
