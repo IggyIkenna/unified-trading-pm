@@ -51,9 +51,9 @@ pyarrow.lib.ArrowTypeError: Unable to merge: Field venue has incompatible types:
 
 Reproduced live (2026-07-30) via
 `features_service.calendar.adapters.mtds_fred_reader.read_fred_observations("DGS10", start_date=date(2024,1,1), end_date=date(2024,1,31))`
-against the real prod bucket (`central-element-323112` project) — every day in the range that has a captured file
-(2024-01-01, -02, -03, -04, -16, -17, -18, -19, -22, -23, ...) hits the same error. Confirmed via direct
-`pd.read_parquet` on the exact
+against the real prod bucket (`{project_id}` project) — every day in the range that has a captured file (2024-01-01,
+-02, -03, -04, -16, -17, -18, -19, -22, -23, ...) hits the same error. Confirmed via direct `pd.read_parquet` on the
+exact
 `gs://.../raw_tick_data/by_date/day=2024-01-XX/pipeline_mode=batch_fred/asset_group=tradfi/venue=FRED/instrument_type=bond/data_type=yield_curve/FRED:BOND:DGS10-USD.parquet`
 object path — this is ONE file per day (not a multi-file merge across days), so the schema conflict is BETWEEN
 ROW-GROUPS WITHIN a single file: some row-groups were written with the `venue` column dictionary-encoded, others with it
