@@ -918,6 +918,15 @@ blocked AGs first so the whole-estate orphan picture is complete before back-fil
       2026-07-21" table above, this is still "Not done" (real data-correctness work; the audit parquets are already in
       GCS); pick up `estate_orphan_assessment_2026_07_21` todos 1-2. (The table above lists 7 more still-"Not done"
       items from the same deferral — this is the recommended-next one, not the only one.)
+- [ ] [DATA] P2. **Measure the historical per-venue non-canonical row count for the 8 CeFi live spot venues fixed in
+      `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`** (archived, resolved) — that issue's own
+      code-level fix (BINANCE/COINBASE/OKX/UPBIT/BITFINEX/BITGET/BYBIT/KRAKEN-SPOT now emit canonical `SPOT_PAIR` +
+      `BASE-QUOTE` ids) shipped without ever measuring the SIZE of the pre-fix non-canonical population — the census
+      that originally found this only measured the aggregate `instrument_type=spot` lowercase axis (4,923 rows across
+      ALL cefi), never the id-FORM/hyphenation dimension per venue. Run this skill's distinct-value census (G1, § 3f)
+      scoped to `asset_group=cefi`, filtered to these 8 venues, comparing `is_canonical_instrument_id()` pre-fix-shape
+      vs post-fix-shape row counts — a real, not-yet-known number needed to size any historical backfill/repair decision
+      (the fix only stops NEW rows from being wrong).
 
 ## Lessons (do not re-learn)
 

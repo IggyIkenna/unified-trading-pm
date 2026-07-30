@@ -103,25 +103,38 @@ Legacy v1–v5 parquets are read with all four columns backfilled to `""` — sa
 [tardis_shared.py](../../../market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py)
 — extracts `(quote_asset, margin_type)` per row.
 
-| Venue                    | Symbol pattern                        | quote                                              | margin      |
-| ------------------------ | ------------------------------------- | -------------------------------------------------- | ----------- |
-| DERIBIT                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                                              | `inverse`   |
-| DERIBIT                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`                                    | `linear`    |
-| BINANCE-FUTURES          | `*USDT`, `*USDC`                      | `USDT` / `USDC`                                    | `linear`    |
-| BINANCE-FUTURES          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                                              | `inverse`   |
-| BYBIT                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC`                           | `linear`    |
-| BYBIT                    | `*USD` (no T)                         | `USD`                                              | `inverse`   |
-| OKX-SWAP                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`                                    | `linear`    |
-| OKX-SWAP                 | `*-USD-SWAP`                          | `USD`                                              | `inverse`   |
-| HYPERLIQUID              | all perps                             | `USDC`                                             | `linear`    |
-| ASTER                    | all perps                             | per-symbol real quote (`USDT`, tail `USD1`/`USDC`) | `linear`    |
-| CME / CBOE               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                                              | `linear`    |
-| COINBASE-SPOT / OKX-SPOT | `BTC-USD`, `BTC-USDT`                 | quote                                              | `""` (spot) |
-| BINANCE-SPOT             | `btcusdt` (lowercase concat)          | quote                                              | `""` (spot) |
-| UPBIT                    | `KRW-BTC` (quote-first)               | `KRW`                                              | `""` (spot) |
+| Venue                                    | Symbol pattern                        | quote                                                        | margin      |
+| ---------------------------------------- | ------------------------------------- | ------------------------------------------------------------ | ----------- |
+| DERIBIT                                  | `BTC-*` / `ETH-*` (no `_` before `-`) | `USD`                                                        | `inverse`   |
+| DERIBIT                                  | `BTC_USDC-*`, `ETH_USDT-*`            | `USDC` / `USDT`                                              | `linear`    |
+| BINANCE-FUTURES                          | `*USDT`, `*USDC`                      | `USDT` / `USDC`                                              | `linear`    |
+| BINANCE-FUTURES                          | `*USD_PERP`, `*USD_{YYMMDD}`          | `USD`                                                        | `inverse`   |
+| BYBIT                                    | `*USDT`, `*USDC`, `*PERP`             | `USDT` / `USDC` / `USDC`                                     | `linear`    |
+| BYBIT                                    | `*USD` (no T)                         | `USD`                                                        | `inverse`   |
+| OKX-SWAP                                 | `*-USDT-SWAP`, `*-USDC-SWAP`          | `USDT` / `USDC`                                              | `linear`    |
+| OKX-SWAP                                 | `*-USD-SWAP`                          | `USD`                                                        | `inverse`   |
+| HYPERLIQUID                              | all perps                             | `USDC`                                                       | `linear`    |
+| ASTER                                    | all perps                             | per-symbol real quote (`USDT`, tail `USD1`/`USDC`)           | `linear`    |
+| CME / CBOE                               | `ESM26`, `VX-21JAN26-20-C`            | `USD`                                                        | `linear`    |
+| COINBASE-SPOT / OKX-SPOT                 | `BTC-USD`, `BTC-USDT`                 | quote                                                        | `""` (spot) |
+| BINANCE-SPOT                             | `btcusdt` (lowercase concat)          | quote                                                        | `""` (spot) |
+| UPBIT                                    | `KRW-BTC` (quote-first)               | `KRW`                                                        | `""` (spot) |
+| BITFINEX-SPOT / BITGET-SPOT / BYBIT-SPOT | `BTCUSD`/`BTCUSDT` (concatenated)     | quote (Bitfinex legacy `UST`/`UDC` aliased to `USDT`/`USDC`) | `""` (spot) |
+| KRAKEN-SPOT                              | `BTC/USD` (`/`-separated, v2 API)     | quote                                                        | `""` (spot) |
 
 Unknown venues or ambiguous symbols return `("", "")` — the shard falls back to the v5 path shape without the nested
 `quote=`/`margin=` segments.
+
+**Live spot connector instrument_id canonicalization (2026-07-30,
+`cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`, archived)**: all 8 live CeFi spot WS venues above
+build their canonical `instrument_id`/shard filename via `derive_spot_pair_symbol(venue, raw_symbol)` (same module) —
+the SINGLE insertion point that reaches the canonical `BASE-QUOTE` hyphenated shape `is_canonical_instrument_id()`
+requires, regardless of the venue's native wire shape: concatenated venues (Binance/Bitfinex/Bitget/Bybit) split on the
+longest matching quote suffix; Kraken swaps `/` for `-`; **Upbit's native market-code order is QUOTE-BASE and gets
+REVERSED** to `BASE-QUOTE` (`KRW-BTC` → `BTC-KRW`) — this is a DIFFERENT transform from the `quote` column above (which
+correctly reports `KRW` as the quote regardless of its position in the wire string; the id-canonicalization step
+additionally reorders the SYMBOL itself). Every live spot connector's `instrument_type` is `SPOT_PAIR` — a bare `SPOT`
+token is NEVER canonical for this asset group.
 
 ## Downstream implications
 

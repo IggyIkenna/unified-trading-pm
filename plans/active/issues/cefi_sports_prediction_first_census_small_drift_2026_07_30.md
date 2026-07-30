@@ -8,12 +8,15 @@ summary: >-
   census (G1) for cefi/tradfi/sports/prediction for the first time ever (only defi had been measured, H6 in
   reference-defi.md). tradfi's findings and sports' market-token instrument_type findings turned out byte-identical to
   two already-open 2026-07-28 issue docs — good independent confirmation, no new action there. Root-causing the
-  remaining findings (2026-07-30 follow-up pass) fixed the genuine bugs (cefi venue underscore/chain wrong-axis writer
-  bugs, a sports SMARKETS registry omission, a prediction bulk-seed-script typo), corrected a real false positive in the
-  ORIGINAL filing (3 of the "6 non-canonical sports bookmaker venues" — FOOTYSTATS/BET888SPORT/ LADBROKES — turned out
-  to be a census methodology gap, not drift), and escalated the one finding (`instrument_type=spot`) that turned out to
-  be the tip of a much larger, live, ongoing instrument-id defect across 6 CeFi spot connectors into its own
-  properly-scoped P1 doc rather than rushing a partial fix.
+  remaining findings (2026-07-30 follow-up pass) fixed the genuine cefi venue-underscore writer bug, a sports SMARKETS
+  registry omission, and a prediction bulk-seed-script typo; corrected two real false positives in the ORIGINAL filing —
+  3 of the "6 non-canonical sports bookmaker venues" (FOOTYSTATS/BET888SPORT/LADBROKES, a census methodology gap) AND
+  the cefi `chain=<VENUE>` finding itself, which was misdiagnosed as drift and briefly "fixed" into a real production
+  regression (chain=<VENUE> is the required non-blank-chain workaround for a chain-less venue, not a bug — caught +
+  reverted same day, zero real writes lost, full incident writeup in
+  `cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md`) — and escalated the one finding
+  (`instrument_type=spot`) that turned out to be the tip of a much larger, live, ongoing instrument-id defect across 6
+  CeFi spot connectors into its own properly-scoped P1 doc rather than rushing a partial fix.
 status: resolved
 nature: issue
 asset_group: [cefi, sports, prediction]
@@ -48,10 +51,10 @@ source:
   all 5 AGs"
 resolved_by:
   "unified-api-contracts@b936abad (KALSHI_PERP/POLYMARKET_PERP registry constants, SMARKETS bookmaker exception) +
-  market-tick-data-service@4d147d9a (canonical venue writes, chain wrong-axis fix, prediction typo fix, SPORTS
-  shard-count re-pin) — cefi item 2 escalated to cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md
-  (still open, P1); item 4 (stray ohlcv_* data_type) and the OKX-OPTIONS/FUTURES-chain sub-items are documented
-  HISTORICAL-ONLY/UNCLEAR residue, not fixes"
+  market-tick-data-service@4d147d9a (canonical venue writes, prediction typo fix, SPORTS shard-count re-pin — NOTE: this
+  same commit's chain='' change was WRONG and reverted same day, see item 3 above) — cefi item 2 escalated to
+  cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md (still open, P1); item 4 (stray ohlcv_* data_type)
+  and the OKX-OPTIONS/FUTURES-chain sub-items are documented HISTORICAL-ONLY/UNCLEAR residue, not fixes"
 depends_on: []
 ---
 
@@ -81,13 +84,23 @@ depends_on: []
    scoped and tracked in the new doc rather than rushed here (a partial fix touching only the manifest axis would have
    made the manifest and the object's own filename disagree, which is worse than the pre-existing state).
 3. ✅ **RESOLVED (2 of 3) — wrong-axis values in the `chain` content column.** `POLYMARKET_PERP` (3 rows) /
-   `KALSHI_PERP` (3 rows) shared the SAME root cause as item 1's chain analogue — `perp_funding_handler.py`'s
-   `_chain_map` stamped a venue-shaped string into cefi's `chain` column (cefi has no `chain=` path axis at all). The
-   identical bug for HYPERLIQUID/ASTER/LIGHTER was fixed 2026-07-08 (`onchain_perp_batch_handler.py`) but never applied
-   here since kalshi_perp/polymarket_perp were added 2026-06-21, after that fix. Fixed by removing `_chain_map` (chain
-   is now always `""`, matching the already-fixed pattern). `FUTURES` (8 rows) root cause UNCLEAR after investigation —
-   no current cefi write path found assigning this value to a chain field; left untouched rather than guess-fixed
-   (regression-risk-averse). Refines `reference-cefi.md` H7.
+   `KALSHI_PERP` (3 rows) — **RETRACTED, this was a MISDIAGNOSIS, not a bug.** The original finding (and the fix shipped
+   for it, briefly, same day) assumed `perp_funding_handler.py`'s `_chain_map` stamping `chain=<VENUE>` was the same
+   class of defect as item 1's venue-underscore bug and "fixed" it by removing `_chain_map` (chain always `""`). This
+   was WRONG: `DefiManifestRecorder` enforces a hard, deliberate A4-full invariant
+   (`_defi_manifest.py::BlankChainError`) that every DeFi-family shard — perp_funding included — carries a **non-blank**
+   `chain`; the docstring states the last caller that ever keyed a blank chain (a GMX pattern) was removed 2026-07-25
+   specifically to close this off. The `chain=""` "fix" shipped (`market-tick-data-service@4d147d9a`, 2026-07-30T14:12
+   UTC) and every `record_captured`/`record_failed` call for kalshi_perp/polymarket_perp/hyperliquid perp_funding
+   silently raised `BlankChainError`, caught by shard-level isolation, and dropped the row with only a WARNING log — no
+   manifest write at all. Caught and reverted the same day (`market-tick-data-service`, see
+   `cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md` for the full incident writeup); blast
+   radius measured as **zero real production rows lost** (the daily batch cron runs once ~01:15 UTC and did not fire
+   again inside the ~2h15m regression window). `chain=<VENUE>` for a venue with no underlying blockchain is the
+   established, load-bearing workaround for the A4-full invariant — not drift, and not something this doc should have
+   flagged for correction. `FUTURES` (8 rows) root cause remains UNCLEAR after investigation — no current cefi write
+   path found assigning this value to a chain field; left untouched (regression-risk-averse), and now doubly so given
+   the lesson above. Refines `reference-cefi.md` H7 (with a caution, not a "fixed" claim).
 4. **Still open — 5 stray candle-timeframe-shaped `data_type` values** (2 rows each) — `ohlcv_5m`/`ohlcv_1h`/`ohlcv_1d`/
    `ohlcv_15s`/`ohlcv_15m` on the raw-tick bucket, vs the legitimate `ohlcv_1m` (4,604 rows). Investigated: no current
    cefi write path can produce this (the only cefi-adjacent `ohlcv_*` code is `ccxt_adapter.py::fetch_ohlcv`, whose sole
@@ -140,17 +153,24 @@ depends_on: []
 
 ## Todos
 
-- [x] [DATA] P2. **cefi items 1 + 3 (venue underscore + chain wrong-axis)** — root-caused + fixed in
-      `market-tick-data-service` (`perp_funding_handler.py`, `_perp_funding_kalshi_polymarket.py`) + registered the
-      `KALSHI_PERP`/`POLYMARKET_PERP` constants in `unified-api-contracts/registry/__init__.py`'s public re-export.
-      `OKX-OPTIONS` and the `FUTURES` chain value investigated, left as historical/unclear respectively (see § cefi item
-      1/3 above for reasoning). Evidence: `unified-api-contracts@b936abad` + `market-tick-data-service@4d147d9a` (both
-      QG-green, both pushed, `ahead=0`). Two genuine merge conflicts hit and resolved during shipping (both from
-      concurrent sessions, not this doc's own scope): a concurrently-restored HYPERLIQUID perp_funding collector
-      touching the exact same `_chain_map` region (resolved by extending this fix's no-chain-axis principle to
-      HYPERLIQUID too, since it's cefi-classified the same way); and an unrelated pre-existing DeFi vault-share-price
-      `pipeline_mode`/`source` desync regression (`defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`, already
-      tracked, fixed upstream by another session mid-ship — pulled in, not fixed here).
+- [x] [DATA] P2. **cefi item 1 (venue underscore) fixed; item 3 (chain "wrong-axis") RETRACTED as a misdiagnosis** — the
+      venue fix root-caused + landed in `market-tick-data-service` (`perp_funding_handler.py`,
+      `_perp_funding_kalshi_polymarket.py`) + registered the `KALSHI_PERP`/`POLYMARKET_PERP` constants in
+      `unified-api-contracts/registry/__init__.py`'s public re-export. The SAME commit's `chain=""` change (item 3) was
+      WRONG — it violated `DefiManifestRecorder`'s hard non-blank-chain invariant and silently dropped every
+      kalshi_perp/polymarket_perp/hyperliquid perp_funding manifest write for ~2h15m — caught same-session, reverted
+      (`market-tick-data-service`, second commit), zero real writes lost (verified: no `written_at` in the regression
+      window). Full incident writeup + the corrected manifest re-stamp (using `chain=<VENUE>`, not `""`) in
+      `cefi_perp_funding_kalshi_polymarket_residual_and_capture_gap_2026_07_30.md`. `OKX-OPTIONS` and the `FUTURES`
+      chain value investigated, left as historical/unclear respectively (see § cefi item 1/3 above). Evidence:
+      `unified-api-contracts@b936abad` + `market-tick-data-service@4d147d9a` (venue fix + prediction typo + shard-count
+      re-pin, QG-green) + a follow-up `market-tick-data-service` commit (chain revert, QG-green), all pushed, `ahead=0`.
+      Two genuine merge conflicts hit and resolved during the FIRST commit's shipping (both from concurrent sessions,
+      not this doc's own scope): a concurrently-restored HYPERLIQUID perp_funding collector touching the exact same
+      `_chain_map` region (ironically, reverting my own change restored what that conflict resolution had correctly
+      preserved); and an unrelated pre-existing DeFi vault-share-price `pipeline_mode`/ `source` desync regression
+      (`defi_pipeline_mode_source_desync_yearn_v3_2026_07_21.md`, already tracked, fixed upstream by another session
+      mid-ship — pulled in, not fixed here).
 - [x] [DATA] P2. **cefi item 2 escalated** — see `cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md`
       (new P1 doc, the true scope + fix live there, not here).
 - [x] [DATA] P2. **cefi item 4** — investigated, confirmed HISTORICAL-ONLY (no live cefi write path), no fix needed.
