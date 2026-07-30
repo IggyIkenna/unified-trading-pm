@@ -129,6 +129,19 @@ historical one.
       `scripts/cicd/promotion_lag_monitor.py`) that alerts when `ldr-to-main-promote-fleet.yml` /
       `ldr-to-main-promote.yml` post 3+ consecutive `startup_failure` runs — this incident ran silently for ~10h before
       being noticed as a side-effect of an unrelated task; a dedicated alert would have caught it in under an hour.
+- [ ] [CI] P1. Separate but adjacent symptom found 2026-07-30 by `defi_venue_pipeline_to_live_ao_build_2026_07_30.md`'s
+      VERIFY-gate todo (8 consecutive re-checks, slot-12 through slot-3): `market-tick-data-service` promote PR #791
+      (`promote/market-tick-data-service/4849d4f6b00a`) sat with ALL required checks green (`quality-gates-v2`,
+      `image-build-gate`, `sit-gate/fleet-green`, `semver-agent/label-check`) for 10+ min without merging —
+      `gh pr view 791 --json mergeStateStatus,mergeable,mergedAt,autoMergeRequest` showed `mergeStateStatus: UNSTABLE`,
+      `mergeable: MERGEABLE`, `mergedAt: null`, **`autoMergeRequest: null`**. This dispatcher-recovery-but-never-merges
+      pattern repeated across 8 straight worker checks on successively regenerated PRs (#788→#789→#790→#791), each
+      superseded before merging. Check whether the promote-PR-creation step (likely in
+      `ldr-to-main-promote.yml`/`ldr-to-main-promote-fleet.yml` or a script it calls) actually issues a
+      `gh pr merge --auto` (or GraphQL `enablePullRequestAutoMerge`) call when it opens each PR — if that call is
+      missing, silently failing, or racing the PR-open step, no amount of the checks going green will ever cause GitHub
+      to merge it, since auto-merge must be explicitly requested per-PR. Fix: ensure the PR-creation step reliably
+      requests auto-merge (with retry/verification that the request stuck) on every regenerated promote PR.
 
 ## Evidence
 
@@ -159,3 +172,12 @@ historical one.
   (not just deployment-service) and still ongoing at time of writing (`ldr-to-main-promote.yml` still showing
   intermittent `startup_failure`, not fully recovered). Re-confirms `assigned_vm: NA` + P0 is the correct routing —
   already on the operator's radar, no new escalation needed, just corroborating evidence for whoever investigates next.
+- **2026-07-30 (slot-3, data_engineering craft)**: the fleet-dispatch-level `startup_failure` itself has now recovered
+  (5/5 consecutive successes on both `ldr-to-main-promote.yml`/`-fleet.yml` through `21:52Z`, confirmed by 8 straight
+  worker re-checks from slot-12 onward) — but a narrower, likely-related symptom persists: `market-tick-data-service`
+  promote PRs keep getting regenerated (#788→#789→#790→#791) and superseded before merging, even once fully green.
+  Root-caused PR #791 specifically: `autoMergeRequest: null` despite `mergeable: MERGEABLE` and every required check
+  passed — GitHub was never asked to auto-merge it. Filed as new todo `[CI] P1` above with the concrete mechanism to
+  check (does the PR-creation step actually call `gh pr merge --auto` / `enablePullRequestAutoMerge`). Did not attempt a
+  GH-side fix myself (out of a worker's scope per this doc's own instruction) — declined + skipped the VERIFY-gate task
+  per the established posture.
