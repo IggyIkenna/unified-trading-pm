@@ -107,21 +107,45 @@ codebase).
       `market-data-tick-tradfi-prd-…` and `market-data-tick-pred-prd-…` as `ok`. TradFi catch-up merge (execution
       `uts-prod-manifest-consolidator-market-data-tradfi-htmq6`) processed 130 shards / 6,208,190 rows_in → 5,870,199
       rows_out (337,991 deduped) in 6m30.85s, confirming a real ~20h backlog, not a false-positive staleness read.
-- [ ] [INFRA] P2. **Root-cause why the routine `unified-trading-sa` auto-pause/resume cadence for these two crons
-      stopped firing after 2026-07-29T01:05Z.** Identify the scheduled process/Cloud Function/Cloud Scheduler job that
-      performs the routine short pause→resume cycle seen in the 60-day audit log (search `deployment-service/` +
-      `agent-orchestrator/` for a maintenance-window / drain-undrain coordinator that calls
-      `scheduler_jobs.pause`/`resume` on `manifest-consolidator-market-data-*-cron` jobs). Confirm whether it failed
-      silently (needs its own alerting) or was itself paused/killed. Repo: deployment-service (watchdog source confirmed
-      at `deployment-service/deployment_service/data_pipeline_monitors/` +
-      `deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf` — the pause/resume coordinator itself was
-      NOT found in this pass, search from there).
+- [x] ✅ [INFRA] P2. **Root-caused 2026-07-30 (autonomous session) — NOT a broken automation.** The premise ("routine
+      auto-pause/resume cadence stopped firing") is wrong: there is no standing scheduled Cloud Function/coordinator
+      performing a routine pause→resume cycle at all (none found under `deployment-service/` or `agent-orchestrator/`
+      calling `scheduler_jobs.pause`/`resume` on `manifest-consolidator-market-data-*-cron` on any cadence) — every
+      pause/resume in the 60-day audit log is a ONE-OFF, agent/backfill-driven `gcloud scheduler jobs pause/resume`
+      call, and the "routine short cadence" this doc observed is just many DIFFERENT short-lived backfill plans each
+      pausing-then-quickly-resuming their own run, not one recurring job. The actual root cause for THIS specific
+      2026-07-29T01:05Z pause is documented in an already-resolved sibling issue,
+      `/plans/archive/issues/dp_watcher_003_consolidator_scheduler_paused_maintenance_window_gap_2026_07_29.md`: both
+      `uts-prod-manifest-consolidator-market-data-prediction-cron` and `…-tradfi-cron` were deliberately paused that day
+      by `/plans/active/mtds_available_at_cross_asset_backfill_2026_07_13.md`'s own tracked pause→apply→resume backfill
+      sequence — the resume half was INTENTIONALLY deferred pending that plan's apply step (still open as of this
+      writing: `mtds_available_at_cross_asset_backfill-006`/`-009`), not a failure. The ~20h "stuck" duration this doc
+      measured was simply how long that plan's apply step took to get scheduled, not evidence of a broken mechanism.
+      **Was it caught silently with no alerting?** No — it WAS correctly, loudly detected: DP-WATCHER-003
+      (`consolidator_scheduler_watcher.py`) pages CRITICAL for exactly this case by design (confirmed in the same
+      archived doc), and the `uts-prod-consolidator-liveness-watchdog` this doc's own investigation found flagging both
+      buckets DOWN was working as intended too — the gap the archived doc identified (and already fixed,
+      `deployment-service@3a1cf3a`) was that DP-WATCHER-003 had no way to tell a SANCTIONED pause from an accidental
+      one, so it paged CRITICAL even for deliberate, plan-tracked pauses — now resolved via a
+      `scheduler_maintenance.maintenance_status()` check that downgrades to INFO when a live maintenance window covers
+      the paused job. No further root-cause work needed; this todo's original "find the broken coordinator" framing
+      doesn't describe reality.
 - [ ] [INFRA] P3. **Extend `uts-prod-consolidator-liveness-watchdog` from detect-only to bounded auto-resume** — after N
       consecutive DOWN cycles (e.g. 5, ~10 min) for a bucket whose Scheduler job state is `PAUSED` (not genuinely
       mid-migration-drain), auto-`ResumeJob` it and emit an actionable alert, mirroring the auto-park/auto-recovery
-      pattern already used elsewhere (e.g. `agent-orchestrator/server/auto_park.py`). Must NOT auto-resume a
-      deliberately-paused job during a genuine drain window — needs a way to distinguish "stuck" from "intentionally
-      paused for migration" (e.g. a companion drain-marker object, or simply bounding to the routine-cadence duration
-      observed in this doc's audit-log evidence, ~1h max). Repo: deployment-service
-      (`deployment-service/deployment_service/data_pipeline_monitors/deadman_poster.py` + `meta_targets.py` are the
-      confirmed entry points for this watchdog).
+      pattern already used elsewhere (e.g. `agent-orchestrator/server/auto_park.py`). **2026-07-30 update: the "how to
+      distinguish stuck from intentionally paused" blocker this todo originally flagged is now SOLVED** — the sibling
+      DP-WATCHER-003 fix (`deployment-service@3a1cf3a`, see the P2 todo above) already wired exactly this distinction
+      via `deployment-service`'s `scheduler_maintenance.maintenance_status()` (a live, CAS-backed maintenance-window
+      primitive); this todo's own auto-resume logic could check the identical primitive before acting. **Not implemented
+      in this pass**: the watchdog's actual runtime logic is `unified_trading_library.monitors.consolidator_liveness`
+      (confirmed via `deployment-service/terraform/gcp/consolidator_liveness_scheduler.tf`'s own docstring — the Cloud
+      Run Job image is `market-tick-data-service:latest` purely because UTL ships bundled as its dependency, but the
+      watchdog CODE lives in `unified-trading-library`, NOT
+      `deployment-service`/`deployment_service/data_pipeline_monitors/` as this todo's own citation assumed —
+      `deadman_poster.py`/`meta_targets.py` are a DIFFERENT deadman-staleness monitor, not this watchdog). Implementing
+      the auto-resume behavior means editing UTL — a shared T0 dependency every service imports — to make it actively
+      mutate live production Cloud Scheduler state, which is a real, fleet-wide-blast-radius design decision (per
+      `AUTONOMOUS_AGENT_RULES.md` rule 11) outside a same-session mechanical port; also outside this dispatch's assigned
+      repo scope (market-tick-data-service / deployment-service / deployment-api only). Recommend as its own follow-up
+      AO todo targeting `unified-trading-library`, now unblocked by the maintenance-window primitive above.

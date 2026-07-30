@@ -553,6 +553,33 @@ under-count, ML training excludes the date as if the market was closed).
 explicit "zero-activity confirmed" type. Writers MUST pass `row_count=len(df)` to trigger this guard. If the instrument
 is live and data was expected, treat as Class 2 and call `record_failed` instead.
 
+### Class 4 — Catalogue-residual id-space mismatch (real captures discarded as false `SOURCE_RETURNED_ZERO`)
+
+**Description** (found 2026-07-29/30, `defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`):
+`record_catalogue_residual_empty_typed()` (`_catalogue_filter.py`) computes
+`residual = catalogue_ids - captured_ids_lower` and emits `record_empty(reason=SOURCE_RETURNED_ZERO)` per residual id —
+correct ONLY if `catalogue_ids` and `captured_ids` are drawn from the SAME id space.
+`catalogue_pool_ids_for_shard(..., instrument_type="lending")` builds `catalogue_ids` from the IS catalogue's canonical
+`VENUE-CHAIN:TYPE:SYMBOL` glued `instrument_id` column (e.g. `"compound_v3-ethereum:supply:cusdt"`, per
+instruments-service's `build_instrument_catalogue.py`). A caller whose own `captured_ids` are raw on-chain ADDRESSES
+(not the canonical glued form) will NEVER see any overlap — `residual` always evaluates to the FULL catalogue, so every
+real capture gets a false `SOURCE_RETURNED_ZERO` rejection from the honest-absence gate, routing the whole shard through
+`record_shard_failure` despite the write having already succeeded (shard-level-failure-isolation correctly prevents
+manifest corruption, but real coverage is silently lost). Confirmed hitting BOTH `lending_indices_handler.py`
+(COMPOUND_V3/MORPHO, fixed `market-tick-data-service@d36e2498`) and `risk_params_handler.py` (COMPOUND_V3/MORPHO, fixed
+`market-tick-data-service@674fdd6e`) — both keyed `captured_ids` by raw address via `market_count_map()`/
+`build_market_count_map()`. `evm_defi_collectors.py` and `_lst_rates_write.py` are NOT exposed: both key `captured_ids`
+by the shard's own WRITTEN canonical `instrument_id` column, matching the catalogue's id space by construction.
+
+**Correct fix**: before wiring `record_catalogue_residual_empty_typed()` into any handler, confirm `captured_ids` and
+the catalogue's `instrument_id` column (for the `instrument_type` being queried) are the SAME id form — canonical glued
+`VENUE-CHAIN:TYPE:SYMBOL` for non-`"pool"` instrument_types, raw lowercase address for `"pool"`. If a handler's own
+manifest grain is address-keyed (matching the correct IS-seeded `expected_unattempted` atom, per `market_count_map()`'s
+own docstring), do NOT wire catalogue-residual at all — `record_market_captures()`/the shard's own
+`record_shard_failure` on exception already reconciles correctly without it. **Any handler still carrying this call
+(check `risk_params_handler.py`'s own sibling wiring family, `lst_rates_handler.py`/`evm_defi_handler.py`, was audited
+2026-07-30 and confirmed clean) should be re-checked against this class before assuming it's safe.**
+
 ---
 
 ## Reason taxonomy (codified 2026-05-07 — operator direction)

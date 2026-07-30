@@ -90,23 +90,23 @@ watch the 429 rate before any wide wave.**
       reorder/drop. **CANARY at 2 VMs, watch 429, before any wide wave.**
 
       **DONE 2026-07-27 (slot-6).** (a)/(b)/(c) as originally scoped were ALREADY SHIPPED — `mtds@ff1b5d51`
-                              "feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload", ancestor of
-                              `origin/live-defi-rollout`. `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed
-                              (`ParallelPerSymbolRunner` fan-out in `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated
-                              `_defi_upload_executor.py` mirroring `tardis_csv_transport._get_parse_executor`). This dispatch closed the ONE
-                              real gap found: `defi_max_concurrent_fetches` was declared but never read (grep confirmed zero non-definition
-                              references), contradicting its own docstring's decoupled-from-defi_max_inflight_tasks promise. Fixed in
-                              `mtds@4cf0ea3d` — new `_defi_fetch_semaphore.py` (lazy-singleton `asyncio.Semaphore`, mirrors
-                              `_defi_upload_executor.py`'s shape) applied at the 3 fetch call sites in this todo's scope: `solana_defi_handler.py`'s
-                              `collector(session)` dispatch, and `_dex_pools_subgraph.py`'s Solana-native `fetch_*` dispatch + the shared
-                              EVM/TheGraph `_execute_subgraph_query`'s `session.post(...)` (the doc's own "structural fact" — the shared key
-                              pool is the real ceiling — held only for the request, released before the retry backoff). New
-                              `tests/unit/test_defi_fetch_semaphore.py` (4 tests) + 132 pre-existing solana_defi/dex_pools handler tests + the
-                              full `quality-gates.sh` suite (7101 items) all green. Deliberately did NOT touch
-                              `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its own separate
-                              `_execute_subgraph_query` copy, out of this todo's named scope. **CANARY at 2 VMs still required before any wide
-                              wave** — unchanged, still gated on the Auth block (§ below); this todo covers the CODE only, per the doc's own
-                              "safe to implement + unit-test without it; only their live validation is blocked."
+                                      "feat(defi): MTDS DeFi perf bundle -- concurrency knobs + async fan-out + executor-offload", ancestor of
+                                      `origin/live-defi-rollout`. `defi_max_inflight_tasks`/`defi_max_concurrent_uploads` are live-consumed
+                                      (`ParallelPerSymbolRunner` fan-out in `solana_defi_handler.py`/`dex_pools_handler.py`; dedicated
+                                      `_defi_upload_executor.py` mirroring `tardis_csv_transport._get_parse_executor`). This dispatch closed the ONE
+                                      real gap found: `defi_max_concurrent_fetches` was declared but never read (grep confirmed zero non-definition
+                                      references), contradicting its own docstring's decoupled-from-defi_max_inflight_tasks promise. Fixed in
+                                      `mtds@4cf0ea3d` — new `_defi_fetch_semaphore.py` (lazy-singleton `asyncio.Semaphore`, mirrors
+                                      `_defi_upload_executor.py`'s shape) applied at the 3 fetch call sites in this todo's scope: `solana_defi_handler.py`'s
+                                      `collector(session)` dispatch, and `_dex_pools_subgraph.py`'s Solana-native `fetch_*` dispatch + the shared
+                                      EVM/TheGraph `_execute_subgraph_query`'s `session.post(...)` (the doc's own "structural fact" — the shared key
+                                      pool is the real ceiling — held only for the request, released before the retry backoff). New
+                                      `tests/unit/test_defi_fetch_semaphore.py` (4 tests) + 132 pre-existing solana_defi/dex_pools handler tests + the
+                                      full `quality-gates.sh` suite (7101 items) all green. Deliberately did NOT touch
+                                      `evm_defi_handler.py`/`lending_indices_handler.py`/`risk_params_handler.py` — each has its own separate
+                                      `_execute_subgraph_query` copy, out of this todo's named scope. **CANARY at 2 VMs still required before any wide
+                                      wave** — unchanged, still gated on the Auth block (§ below); this todo covers the CODE only, per the doc's own
+                                      "safe to implement + unit-test without it; only their live validation is blocked."
 
 ## Descoped / do-NOT-implement-as-specced (workflow demolished these)
 
@@ -154,4 +154,5 @@ implement + unit-test without it; only their live validation is blocked.
       lending_indices captures 0 markets on every chain (shard-level failure isolation correctly converts it to
       `record_shard_failure`, not a silent gap, but real coverage loss). Filed + NOTIFIED as its own issue doc, not
       absorbed into this task's scope:
-      `plans/active/issues/defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md`.
+      `plans/archive/issues/defi_compound_v3_lending_indices_zero_capture_regression_2026_07_29.md` (RESOLVED 2026-07-30
+      — id-form mismatch root-caused + fixed in both lending_indices and risk_params_handler.py).
