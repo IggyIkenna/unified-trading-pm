@@ -51,11 +51,11 @@ for the full list.
 - `**/.github/workflows/*.yml`, `**/pyproject.toml` → path-dependency-ci.mdc
 - `**/*.py` → no-type-any-use-specific, no-empty-fallbacks, code-quality-limits
 - `**/tests/**` → test-quality-standards, test-coverage-targets
-- `unified-trading-codex/06-coding-standards/**` → coding-standards-alignment.mdc
+- `unified-trading-pm/codex/06-coding-standards/**` → coding-standards-alignment.mdc
 
 ---
 
 ## Related
 
 - **Workspace Rules:** `../.cursorrules`
-- **Codex:** `unified-trading-codex/06-coding-standards/cursor-rules-system.md`
+- **Codex:** `unified-trading-pm/codex/06-coding-standards/cursor-rules-system.md`

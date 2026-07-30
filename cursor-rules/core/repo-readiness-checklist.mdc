@@ -124,4 +124,4 @@ T5 CR5+DR4 → UIs (T6) promotion unblocked
 WHY: Tier N cannot be verified against a broken Tier N-1. Promoting a T2 repo before T1 is CR5+DR3 means
 integration tests at T2 are testing against an unreleased T1.
 
-CODEX: unified-trading-codex/06-coding-standards/README.md
+CODEX: unified-trading-pm/codex/06-coding-standards/README.md

@@ -147,4 +147,4 @@ Before 1.0.0, dependents use `>=0.x.x,<1.0.0` bounds. After 1.0.0, they use `>=1
 
 A missed circuit breaker or unvalidated PnL path discovered post-1.0.0 is a production incident, not a PR.
 
-CODEX: unified-trading-codex/06-coding-standards/README.md
+CODEX: unified-trading-pm/codex/06-coding-standards/README.md

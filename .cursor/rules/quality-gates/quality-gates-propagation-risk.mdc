@@ -27,8 +27,8 @@ Per-repo `scripts/quality-gates.sh` is a ~10-line config stub. It only sets:
 then sources the appropriate base: `source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"`
 
 Scaffold templates (used by rollout to write stubs to new repos — not gate logic):
-- `unified-trading-codex/06-coding-standards/quality-gates-service-template.sh`
-- `unified-trading-codex/06-coding-standards/quality-gates-library-template.sh`
+- `unified-trading-pm/codex/06-coding-standards/quality-gates-service-template.sh`
+- `unified-trading-pm/codex/06-coding-standards/quality-gates-library-template.sh`
 
 ## Rules
 

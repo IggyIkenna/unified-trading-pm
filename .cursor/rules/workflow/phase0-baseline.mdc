@@ -37,6 +37,6 @@ Before any hardening sprint starts, ALL repos must pass the 6 baseline checks.
 - Accept `os.environ[KEY]` as a replacement for `os.getenv()` — both are banned
 
 ## Reference
-CODEX: unified-trading-codex/06-coding-standards/pre-sprint-baseline.md
-See: `unified-trading-codex/06-coding-standards/pre-sprint-baseline.md`
+CODEX: unified-trading-pm/codex/06-coding-standards/pre-sprint-baseline.md
+See: `unified-trading-pm/codex/06-coding-standards/pre-sprint-baseline.md`
 Plan: `unified-trading-pm/plans/active/phase0_standards_enforcement.plan.md`

@@ -166,4 +166,4 @@ echo "=== All gates passed ==="
 - Ship a component without at least a render test
 
 SSOT: `unified-trading-pm/cursor-rules/ui/ui-quality-gates.mdc`
-Cross-ref: `unified-trading-codex/06-coding-standards/quality-gates.md`
+Cross-ref: `unified-trading-pm/codex/06-coding-standards/quality-gates.md`

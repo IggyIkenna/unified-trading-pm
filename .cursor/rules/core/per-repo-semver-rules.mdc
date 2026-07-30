@@ -71,4 +71,4 @@ A `feat:` for a library (new public export) may require a downstream dependency 
 A `feat:` for a service (new endpoint) is minor — callers don't need to change.
 Per-repo rules make the bump decision deterministic and verifiable.
 
-CODEX: unified-trading-codex/06-coding-standards/README.md
+CODEX: unified-trading-pm/codex/06-coding-standards/README.md

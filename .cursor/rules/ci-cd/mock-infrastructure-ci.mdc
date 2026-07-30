@@ -45,7 +45,7 @@ Opt-out: `@pytest.mark.allow_network` (emulator connections only, never live API
 
 ## Mock Fixture Decision Matrix
 
-See: `unified-trading-codex/06-coding-standards/integration-testing-layers.md`
+See: `unified-trading-pm/codex/06-coding-standards/integration-testing-layers.md`
 
 ## No Credentials in CI
 

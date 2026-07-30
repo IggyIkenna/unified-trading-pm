@@ -119,4 +119,4 @@ VITE_MOCK_API=true npx vite build
 
 ## Full Documentation
 
-`unified-trading-codex/08-workflows/local-dev.md`
+`unified-trading-pm/codex/08-workflows/local-dev.md`

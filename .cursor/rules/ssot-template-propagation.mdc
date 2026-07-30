@@ -32,4 +32,4 @@ These files in unified-trading-pm are the canonical source. All repos copy them.
    - `python3 scripts/rollout-setup-sh.py` (or equivalent)
    - Or manual: copy to each repo, commit with `chore: sync <template> from SSOT`
 3. **Test the template in PM first** before propagating
-4. Document template changes in `unified-trading-codex/06-coding-standards/`
+4. Document template changes in `unified-trading-pm/codex/06-coding-standards/`
