@@ -259,13 +259,33 @@ applied to every repo this grep surfaces, not just instruments-service.
       remedy (wiring up a real trigger was never the intent — this repo deploys differently). 6 new unit tests added
       (`active_trigger_repos` new-style/legacy/error-fail-open, `check_repo`'s skip + the `trigger_repos=None`
       fail-open-does-not-short-circuit case). Shipped via quickmerge, local `quality-gates.sh` green.
-- [ ] [SCRIPT] P2. Fleet-wide grep for the SAME latent `uv pip install` + `pip.conf`-only gap fixed in
-      `instruments-service@2941646c` (2026-07-29): any repo whose Dockerfile has `COPY pip.conf` + a subsequent
-      `uv pip     install ... --no-sources` WITHOUT a `UV_EXTRA_INDEX_URL`/`UV_INDEX` env var is silently relying on its
-      pinned base image already satisfying every dependency floor — it will build-fail with the identical "not found in
-      the package registry" message the next time ANY of its private-registry deps gets floor-bumped past what the base
-      image bundles. Fix proactively (mirror the instruments-service Dockerfile diff) rather than waiting for each repo
-      to hit it independently.
+- [x] ✅ [SCRIPT] P2. **VERIFIED 2026-07-30 (slot 8, cicd craft dispatch) — grep complete, ZERO additional repos
+      exposed; no code change needed.** Ran the fleet-wide grep across every Dockerfile in the workspace checkout (23
+      Dockerfiles across 21 repos: `agent-orchestrator`, `alerting-service`, `batch-live-reconciliation-service`,
+      `client-reporting-api`, `deployment-api` (+`Dockerfile.dashboard`), `deployment-service`, `deployment-ui`,
+      `e2e-testing`, `execution-service`, `features-service`, `fund-administration-service`, `greeks-service`,
+      `ibkr-gateway-infra` (terraform-only, no Python install), `instruments-service`, `market-data-processing-service`,
+      `market-tick-data-service`, `ml-service`, `strategy-service`, `trading-agent-service`, `unified-trading-library`
+      (+`Dockerfile.ci`), `unified-trading-system-ui`) for `COPY pip.conf` + `uv pip install ... --no-sources`
+      co-occurring without `UV_EXTRA_INDEX_URL`/`UV_INDEX`. Every repo already carrying a real exposure was fixed in the
+      "Fleet-wide rollout" todo above (`instruments-service`, `alerting-service`, `market-data-processing-service`,
+      `ml-service`, `strategy-service`, `fund-administration-service`, `trading-agent-service`, `greeks-service` — all
+      now have `UV_EXTRA_INDEX_URL` wired via the BuildKit-secret pattern). The grep surfaced exactly two additional
+      loose hits, both CONFIRMED NOT actually exposed after reading the Dockerfile + cloudbuild.yaml in full: -
+      `market-tick-data-service`: has `COPY pip.conf` + 2× `--no-sources`, but both are the vendored-local-path installs
+      (`uv pip install --no-sources -e .deps/unified-trading-library`, gated on `.deps/unified-trading-library` existing
+      from the cloudbuild `stage-workspace-deps` step) followed by `uv pip install --system -e . --no-deps` for the
+      service's own package — `--no-deps` means it never resolves UTL/UAC as dependencies from ANY index at all. Already
+      documented not-affected in the "Fleet-wide rollout" todo above; re-confirmed here. - `unified-trading-library`:
+      does NOT actually `COPY pip.conf` (only conditionally _writes_ one to `/root/.config/pip/pip.conf` when the
+      `EXTRA_PYTHON_INDEX_URL` build-arg is set — a different, self-contained mechanism, not the
+      `COPY pip.conf`-then-ignored-by-uv pattern this todo targets). Its one internal dependency
+      (`unified-api-contracts`) is satisfied via a LOCAL editable install from `/workspace/.deps/unified-api-contracts`
+      (cloned by the `clone-uac-source` cloudbuild step, confirmed run for every build not just AWS CodeBuild) BEFORE
+      the `--no-sources -e .` step that builds UTL itself — so the later step never needs registry resolution for UAC
+      either. Not exposed. No further Dockerfile changes required — this todo closes as verification, not remediation.
+      (A separate, distinct open item — the nested P3 "worth consolidating into a shared Dockerfile snippet?" sub-todo
+      under the retry-wrapper todo above — remains its own open judgment call, not part of this grep's scope.)
 
 ## Why this matters
 
