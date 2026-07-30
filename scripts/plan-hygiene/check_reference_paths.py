@@ -52,7 +52,12 @@ BASELINE_PATH = Path(__file__).resolve().parent / "reference_paths_baseline.yaml
 # nothing else before it in the path token.
 BARE_CODEX_RE = re.compile(r"(?<![\w/.-])(?:\.\./)*codex/[0-9]{2}-[a-z-]+/[A-Za-z0-9_./-]+\.md")
 
-GOOD_REF_RE = re.compile(r"/(?:plans|codex)/[A-Za-z0-9_./-]+\.md")
+# Same lookbehind class as BARE_CODEX_RE above — without it this matched the `/plans/...`
+# or `/codex/...` TAIL of an older repo-name-prefixed reference style
+# (`unified-trading-pm/plans/active/foo.md`, common in pre-2026-07-23 docs), miscounting
+# ~338 of 919 "dangling" hits as leading-slash violations when they were never a
+# leading-slash reference at all — a different, out-of-scope convention, not a broken one.
+GOOD_REF_RE = re.compile(r"(?<![\w/.-])/(?:plans|codex)/[A-Za-z0-9_./-]+\.md")
 BARE_MD_RE = re.compile(r"(?<![\w/.-])([A-Za-z0-9_-]+\.md)")
 
 

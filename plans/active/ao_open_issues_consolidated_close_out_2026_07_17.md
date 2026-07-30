@@ -48,10 +48,10 @@ related:
     issues/ao_docs_reconciliation_2026_07_15.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     ../epics/orchestrator_master.md,
-    ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
+    /plans/active/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
+    /plans/active/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
+    /plans/active/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-30 # bumped — /ag-closeout-audit ao sweep added the batch1/batch2 satellite links this plan was missing

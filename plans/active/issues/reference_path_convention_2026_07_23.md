@@ -119,6 +119,22 @@ depends_on: []
       reference fix is blocked by `check_line_caps.sh`'s no-exceptions-on-touched-files rule until it's split. **Done
       when**: split `sports_shard_enumeration_cartesian_blowup_2026_07_20.md` under 1000L (fold into the P3 line-cap
       cleanup below or its own pass), then fix the reference.
+- [x] [DOC] P3. ✅ **DONE 2026-07-30 (agt-0c097b, plan_health wall)** — root-caused most of the remaining
+      existence-check debt to a checker bug, not real dangling refs: `GOOD_REF_RE` in `check_reference_paths.py`
+      lacked the negative lookbehind its sibling `BARE_CODEX_RE` already had, so it matched the `/plans/...`/
+      `/codex/...` TAIL of an older, out-of-scope repo-name-prefixed reference style
+      (`unified-trading-pm/plans/active/foo.md`, common in pre-2026-07-23 docs) as if it were a standalone
+      leading-slash reference, then flagged it dangling because the bare `/plans/...` fragment obviously didn't
+      resolve on its own. Fixed the regex (added the same `(?<![\w/.-])` lookbehind) — `existence_count` dropped
+      919→347 (the remaining ~347 are genuine backlog, unchanged). The IDENTICAL missing-lookbehind bug existed in
+      `fix_reference_paths.py`'s `CODEX_RE`/`CODEX_RELATIVE_RE` and had actually CORRUPTED prose: a citation of the
+      archived `unified-trading-codex/09-strategy/...` MIRROR REPO NAME (not a `/codex/` path reference) got mangled
+      to `unified-trading-/codex/...` in `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md` line 783 — reverted
+      the corruption, fixed the fixer's regex too (verified idempotent + no other corpus occurrences via a
+      `--dry-run` re-check). Also cleared 4 genuine NEW format violations
+      (`ao_open_issues_consolidated_close_out_2026_07_17.md`'s 4 unlinked `related:` batch1/batch2 satellite entries)
+      via the standard `fix_reference_paths.py` auto-fixer. Net: `format_count` 168→159, `existence_count` 919→347,
+      both ratcheted down via `--update-baseline`. `pm@<commit-pending>`.
 - [ ] [DOC] P3. Same class of gap as the todo above, second instance (found 2026-07-25, slot-8):
       `plans/active/sports_satellite_ao_dispatch_batch2_2026_07_24.md` (exactly 1000 lines, at the hard cap) carries a
       body-prose reference `issues/fss_bookmaker_dispersion_dead_code_overwrites_best_odds_2026_07_25.md` that needs
