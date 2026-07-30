@@ -31,7 +31,7 @@ summary: >-
   pipeline_mode may never reflect the fix no matter how many times the reprocess is re-run, unless deployment-service's
   `BUCKET_TEMPLATES`/`_SERVICE_TO_CANONICAL_KIND` entry for `market-data-processing-service` is updated to also read (or
   union) `instruments-store-sports-prd`.
-status: open
+status: resolved
 priority: P1
 nature: notes
 asset_group: [sports, meta]
@@ -59,9 +59,9 @@ source: >-
   `instruments-store-sports-prd`.
 drift_direction: advance-code
 depends_on: []
-resolved_by:
+resolved_by: deployment-service@135e981dc4e84d3abc47b4352d5124d06e7b9867
 locked_by:
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 ---
 
 # MDPS coverage reader (deployment-service) still points at the wrong bucket post-2026-07-13 fix
@@ -126,13 +126,14 @@ last_updated: 2026-07-28
 
 ## Todos
 
-- [ ] [BACKEND] P1. Update `deployment-service/deployment_service/cli/utils/manifest_reader.py`'s
+- [x] ✅ [BACKEND] P1. Update `deployment-service/deployment_service/cli/utils/manifest_reader.py`'s
       `_SERVICE_TO_CANONICAL_KIND` (and any parallel `BUCKET_TEMPLATES` fallback) so `market-data-processing-service`'s
       coverage/data-status read includes `instruments-store-sports-prd` (union with the existing
       `market-data-tick-sports-prd` data-bucket read, not a replacement — MTDS-owned data types may still have
       legitimate legacy rows in the data bucket per the 2026-07-15 audit's § D volume table). Done when: a fresh
       `compute_coverage_for_bucket` call for `market-data-processing-service`/sports/`odds_horizon_bucket` reflects rows
-      written to `instruments-store-sports-prd` by `reprocess_sports_odds.py`. (repo: deployment-service)
+      written to `instruments-store-sports-prd` by `reprocess_sports_odds.py`. (repo: deployment-service) —
+      deployment-service@135e981dc4e84d3abc47b4352d5124d06e7b9867 + evidence below.
 
 ## Progress Log
 
@@ -140,3 +141,21 @@ last_updated: 2026-07-28
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **slot 6, backend_engineer, 2026-07-30**: Todo 1 CLOSED. The
+  `_EXTRA_BUCKET_KINDS["market-data-processing-service"]["sports"] = ["instruments-store"]` union fix was already
+  committed + pushed to `live-defi-rollout` (`deployment-service@135e981dc4e84d3abc47b4352d5124d06e7b9867`,
+  `fix(sports): union instruments-store bucket into MDPS coverage reader`) in an earlier, interrupted session on this
+  slot — code shipped but the plan checkbox was never flipped. Runtime-verified the done-when condition directly (no
+  fresh GCS walk — `resolve_all_buckets` is pure name resolution, `compute_coverage_for_bucket` reads the existing
+  per-bucket `_index/availability_index.parquet`, the same path
+  `deployment-service/api/routes/state.py::_canonical_coverage` uses in production):
+  `ManifestReader().resolve_all_buckets("market-data-processing-service", "sports")` returns
+  `["market-data-tick-sports-prd-central-element-323112", "instruments-store-sports-prd-central-element-323112"]`
+  (primary + union, confirming the fix is live); a direct `compute_coverage_for_bucket` call against the
+  `instruments-store-sports-prd` bucket for `sports`/2026-01-01..2026-06-30 returned
+  `captured=556597, empty_confirmed=670189, attempted_failed=19637, expected_unattempted_pending_fetch=369618, out_of_window=608152`
+  (ratio=0.588) — real, non-zero rows that were previously invisible to `deployment-service`'s coverage/data-status
+  endpoint. `_canonical_coverage` in `state.py` sums per-bucket counts across every bucket `resolve_all_buckets`
+  returns, so the API-facing coverage number for `market-data-processing-service`/sports now includes these rows. Item 2
+  (the operator/main routing note in this doc's § Recommended decision) is now fully resolved by this same commit — no
+  separate follow-up needed.
