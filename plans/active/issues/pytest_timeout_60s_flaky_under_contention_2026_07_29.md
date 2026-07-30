@@ -146,13 +146,58 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
       `scripts/quality-gates-base/base-library.sh:394-395` (default raised 60→150) + documented the new override in the
       file's header comment block. GH-Actions verification is the separate todo 3 (watch the next 5-10
       `quality-gates-v2` runs), not re-done here.
-- [ ] 2. [INFRA] P3. Grep `unified-trading-pm/` + every repo's `scripts/quality-gates.sh` for other hardcoded wall-clock
-      literals lacking an env-var override (pattern: `run_timeout <N>` / `--timeout=<N>` / similar) to check whether
-      this "no override, unlike its sibling knobs" gap is a one-off or a recurring authoring pattern worth a lint rule.
+- [x] ✅ 2. [INFRA] P3. **DONE 2026-07-30 (autonomous marathon session).** Grepped
+      `unified-trading-pm/scripts/quality-gates-base/*.sh` + every sibling repo's `scripts/quality-gates.sh` for
+      `run_timeout <N>` / `--timeout=<N>` literals. **Verdict: the base-library.sh `--timeout=60` was NOT a one-off** —
+      found one more instance of the exact same authoring gap (a hardcoded pytest wall-clock literal with no env
+      override), in a DIFFERENT repo's quality-gates.sh, bypassing the shared PARGS line entirely:
+      `market-data-processing-service/scripts/quality-gates.sh:120` ran
+      `pytest tests/perf/test_polars_instrument_day_memory.py --timeout=120` as its own standalone invocation for the
+      per-shard memory regression gate — hardcoded, no override knob, same class of risk under shared-host/xdist
+      contention. Fixed it the same way as todo 1: added
+      `MDPS_PERF_TEST_TIMEOUT_SECONDS="${MDPS_PERF_TEST_TIMEOUT_SECONDS:-120}"` feeding
+      `--timeout="${MDPS_PERF_TEST_TIMEOUT_SECONDS}"` — market-data-processing-service@(pending commit, see Progress
+      Log), `bash -n` syntax-verified. The many OTHER `run_timeout <N>` hits across
+      `base-library.sh`/`base-service.sh`/`base-ui.sh`/`base-codex.sh` + every repo's own `quality-gates.sh` are a
+      DIFFERENT, lower-risk class: each wraps ONE specific external-tool invocation (ruff/bandit/playwright/mdlint/
+      prettier/vulture/adapter-regression scripts) with a value hand-picked for that command's own expected runtime, not
+      an aggregate full-pytest-suite budget shared across N parallel xdist workers — the contention-under-xdist failure
+      mode this issue is about is specific to a single deadline applied across an entire suite, not a
+      per-tool-invocation wrapper. **Conclusion: recurring pattern (2 instances found, not 1), but NOT common enough
+      workspace-wide to warrant a new dedicated lint rule right now** — a manual grep-sweep found and fixed both real
+      instances; recommend re-running this same grep the next time a 3rd instance surfaces before building a lint rule
+      for a 2-repo pattern.
 - [ ] 3. [INFRA] P3. Once todo 1 ships, watch the next 5-10 GH Actions `quality-gates-v2` runs across a few repos for
       any recurrence of a `qg_red_reason=pytest` failure whose actual failing test, re-run in isolation, passes in well
       under the new budget — that would confirm the fix closes this specific flake class rather than just moving the
-      threshold.
+      threshold. **INVESTIGATED 2026-07-30 (autonomous marathon session, NOT closed — real recurrence confirmed) — see
+      Progress Log for full evidence + a correction of an earlier misread in this same pass.** First candidate (run
+      `30521493649`, instruments-service) turned out to be PR #1027's already-merged-via-independent-green-check run
+      (`merged_at=07:01:23Z`, base-service.sh's real `d4aaaf666` fix landed 07:14:18Z) — the exact "orphaned noise,
+      predates the actual full fix" pattern this doc's own 2026-07-30 entries already diagnosed twice for #1026/#1027;
+      NOT counted as post-fix evidence (self-corrected before drawing a conclusion from it). **Genuine post-fix
+      recurrence found instead**: instruments-service run `30526139426` (created `08:17:56Z`, well after BOTH
+      `cedef544b` 05:39:50Z and `d4aaaf666` 07:14:18Z) —
+      `tests/unit/test_understat_adapter_coverage.py::     TestUnderstatFetchErrorTracking::test_get_fixtures_resets_error_count`
+      hit `Failed: Timeout (>150.0s)`. Isolated local re-run: **1.42s** (fully mocked `aiohttp.ClientSession`, no real
+      I/O) — a >100x margin under the new 150s budget, matching the precedent bybit/ticker.yaml case's profile far more
+      closely than the first (discarded) candidate did. **Verdict: the fix does NOT close this flake class, it only
+      moves the threshold** — exactly the risk this todo's own text named. 0 recurrences found in unified-trading-pm (7
+      runs checked) or deployment-api (3 runs checked) in the same window; the recurrence is so far isolated to
+      instruments-service's self-hosted `github-glue-runners-instruments-service` runner, consistent with a
+      shared/contended self-hosted runner profile rather than GH-hosted runners specifically. Leaving todo 3 open (not a
+      clean "confirms the fix" close) — a further raise or a per-runner contention fix is real remaining work, out of
+      this pass's bounded scope; see the new todo 4 below for the tracked follow-up (never left as prose per the
+      workspace's own follow-up-tracking rule).
+- [ ] 4. [INFRA] P3. **NEW 2026-07-30.** instruments-service's self-hosted `github-glue-runners-instruments-service`
+      runner has now shown 2 confirmed pytest-timeout flakes on fully-mocked, sub-2s-in-isolation tests even at the
+      raised 150s budget (todo 3's finding). Investigate whether this ONE runner is systematically more contended than
+      others (shared with other repos' jobs? under-provisioned vs instruments-service's ~5000-test suite + `-n auto`
+      xdist fan-out?) and either raise `PYTEST_TIMEOUT`/`PYTEST_TIMEOUT_SECONDS` further for this runner class
+      specifically, or address the contention at its source (fewer xdist workers, more runner capacity). **Done when**:
+      a root cause is identified for why this specific runner recurs while unified-trading-pm/deployment-api do not, and
+      either a fix lands or the finding is confirmed to need operator infra input (more runner capacity) and is retagged
+      accordingly.
 
 ## Progress Log
 
@@ -221,3 +266,20 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   DIFFERENT, already-separately-tracked issue (size-gate sentinel-skip recurrence, escalation `agt-16b221`,
   `qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`) — confirmed out of scope for this wall, not touched. Slot left
   clean (both repos already on `live-defi-rollout`, zero diff vs `origin`, nothing to commit).
+- **2026-07-30 (autonomous plans-corpus-reduction marathon session)**: Todo 2 done — grep-swept every repo's
+  `scripts/quality-gates.sh` + PM's `quality-gates-base/*.sh` for hardcoded wall-clock literals lacking an env override;
+  found + fixed one more real instance (`market-data-processing-service/scripts/quality-gates.sh`'s own standalone
+  `pytest --timeout=120` for the per-shard memory regression gate, bypassing the shared PARGS line entirely) — added
+  `MDPS_PERF_TEST_TIMEOUT_SECONDS` override, same pattern as todo 1. Todo 3: re-checked ~14+2 post-fix GH Actions
+  `quality-gates-v2` runs. First flagged a candidate (run `30521493649`) as a genuine recurrence, then caught my own
+  error before committing it — that run is PR #1027's already-merged run, already correctly diagnosed as pre-actual-fix
+  orphaned noise by this doc's own preceding entries; discarded. Found a real one instead: instruments-service run
+  `30526139426` (`08:17:56Z`, after both `cedef544b` and `d4aaaf666`) —
+  `test_understat_adapter_coverage.py::test_get_fixtures_resets_error_count` hit `Failed: Timeout (>150.0s)`, isolated
+  local re-run measured 1.42s (fully mocked, no I/O) — a clean, unambiguous recurrence matching the original
+  bybit/ticker.yaml profile. **This closes the investigative half of todo 3 with a conclusive (negative) answer: the fix
+  reduces frequency/severity but does not eliminate the flake class** — filed as new todo 4, scoped to
+  instruments-service's specific self-hosted runner, which is the only one of 3 repos checked (unified-trading-pm,
+  deployment-api, instruments-service) to show a genuine post-both-fixes recurrence. No further raise applied in this
+  pass (a 3rd raise without evidence it would actually help is exactly the "just move the threshold again" outcome this
+  todo warned against — todo 4 asks for a root cause first).

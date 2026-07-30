@@ -115,7 +115,26 @@ resolved_by:
       doesn't have to self-diagnose it as a mystery repeated failure — a `push_race` repo-blocker kind that lets the
       backend own the retry-and-notify loop instead of the calling agent burning its own turns on blind retries. **Done
       when**: a worker hitting 3+ consecutive Stage-5 push failures on the same repo can declare this condition and get
-      notified when a push window opens, instead of re-invoking quickmerge manually.
+      notified when a push window opens, instead of re-invoking quickmerge manually. **PARTIAL PROGRESS 2026-07-30
+      (autonomous marathon session) — a real prerequisite bug found + fixed, full feature still open.** Investigated
+      `agent-orchestrator/server/state_store/repo_blockers.py` + `routes/repo_blockers.py` (the backend this todo would
+      reuse): `declare_repo_blocker(kind=...)` already accepts an arbitrary `kind` string (no schema/enum change needed
+      to declare a `push_race` blocker) — BUT `repo_blocker_condition_name(repo)` derived the gating prerequisite name
+      from `repo` ONLY, ignoring `kind`, so declaring ANY non-`qg_red` kind for a repo would have flipped the SAME
+      `repo-<repo>-qg-green` prerequisite that `qg_red`-gated tasks depend on — a real collision that would have
+      incorrectly held back unrelated work for a reason (a push race) that has nothing to do with the repo's actual
+      quality-gate health. Fixed this landmine (backward-compatible: `kind="qg_red"` still returns the exact original
+      string; any other kind gets its own `repo-<repo>-<kind>-green` name) —
+      `agent-orchestrator@(pending commit, see     Progress Log)`, `tests/test_repo_blockers.py` 7/7 still green. **NOT
+      done**: (1) `RepoHealthWatcher.tick_once()` only polls/resolves `kind == "qg_red"` blockers via CI-green state —
+      there is no equivalent "push window open" signal to poll for a `push_race` kind (CI-green is a real, checkable
+      repo state; a push race is a point-in-time contention event with no persistent state to observe), so genuine
+      backend auto-resolution needs a NEW polling mechanism, not a mirror of the existing one — an open design question,
+      not a mechanical extension. (2) No caller anywhere yet declares `kind="push_race"` (quickmerge.sh doesn't
+      detect+declare it; no worker.md documentation for it, unlike qg_red's documented § 4b pattern). Leaving the todo
+      open — the collision-safety fix is real, necessary groundwork (any future attempt to reuse this mechanism for a
+      non-qg_red kind needed it regardless), but the actual declare-on-3-failures wiring + resolution mechanism is
+      genuine design work, not a bounded mirror-the-pattern task.
 
 ## Progress Log
 
@@ -134,3 +153,10 @@ resolved_by:
   retrying against a very high churn window — this doc's own subject); resumed, re-verified todo 2's claim still holds
   (code unchanged), re-applied the flip. Todo 3 (the `push_race` repo-blocker condition) confirmed NOT implemented
   (corpus-wide grep, 0 hits) — genuinely still open, left as-is; this doc stays `status: open` until it lands.
+- 2026-07-30 (autonomous plans-corpus-reduction marathon session): Investigated todo 3 for bounded-ness. Found a real,
+  necessary prerequisite bug in the repo-blocker backend it would reuse (see todo 3's own updated text) and fixed it
+  (`agent-orchestrator/server/state_store/repo_blockers.py` + `routes/repo_blockers.py`, kind-parameterized condition
+  name, backward-compatible for `qg_red`). Did NOT implement the full `push_race` declare+resolve feature — the
+  resolution half needs a genuinely new polling mechanism (no "push window open" CI-state analog exists to observe,
+  unlike `qg_red`'s CI-green poll), which is design work outside this pass's bounded-effort budget. Doc stays
+  `status: open`.
