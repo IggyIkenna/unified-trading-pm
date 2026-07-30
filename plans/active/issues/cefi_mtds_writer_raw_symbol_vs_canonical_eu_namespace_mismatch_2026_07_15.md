@@ -463,15 +463,29 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       pull-in (a peer slot's `tardis_concurrency_lease.py` fix landed mid-session); the file-size ratchet forced a trim
       of the inline comment to stay under the 900-line cap for `venue_fetch.py` (908→898 lines).
 
-- [ ] [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): approve the purge now; defer the relabel.**
-      The P0 re-materialization purge script (49,720 stale eu rows, pure denominator debris) is approved to `--apply`
-      now — independent, low-risk, unaffected by the relabel's key-arity issue below. The relabel script (3,133,117
-      candidates, 82.7% resolvable via the original `(venue, raw_symbol)` 2-tuple key) is DEFERRED: a later, broader
-      redesign (`_cefi_canonical_blueprint_2026_07_17.md`, its "Script 3") found the 2-tuple key silently under-resolves
-      exactly the BYBIT/OKX/BINANCE-FUTURES majors, and forks this same relabel into a 3-tuple version — running the
-      2-tuple relabel now would mean redoing it for the majors once that ships. Retagged `[OPERATOR]` -> `[DATA]`: the
-      purge half is now a normal dispatchable `--apply` run (dry-run already verified); the relabel half stays parked
-      pending the 3-tuple blueprint, tracked there instead of re-blocking this doc.
+- [x] ✅ [DATA] P0. **Operator-ruled 2026-07-29 (interactive decision session): approve the purge now; defer the
+      relabel.** The P0 re-materialization purge script (49,720 stale eu rows, pure denominator debris) is approved to
+      `--apply` now — independent, low-risk, unaffected by the relabel's key-arity issue below. The relabel script
+      (3,133,117 candidates, 82.7% resolvable via the original `(venue, raw_symbol)` 2-tuple key) is DEFERRED: a later,
+      broader redesign (`_cefi_canonical_blueprint_2026_07_17.md`, its "Script 3") found the 2-tuple key silently
+      under-resolves exactly the BYBIT/OKX/BINANCE-FUTURES majors, and forks this same relabel into a 3-tuple version —
+      running the 2-tuple relabel now would mean redoing it for the majors once that ships. Retagged `[OPERATOR]` ->
+      `[DATA]`: the purge half is now a normal dispatchable `--apply` run (dry-run already verified); the relabel half
+      stays parked pending the 3-tuple blueprint, tracked there instead of re-blocking this doc. **Executed 2026-07-30**
+      (data_engineering session, this doc's assigned close-out pass): re-ran
+      `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` fresh — live count had
+      moved from the 2026-07-15 baseline of 49,720 to **17,927** (natural corpus evolution over the intervening 2 weeks
+      — some cells were re-seeded canonically by later enumerator runs, some relabeled), still comfortably inside the
+      script's own `STOP-ON-SURPRISE` bound `[5,000, 250,000]`, so the already-verified dry-run guard cleared it for
+      `--apply` under the same ruling (the ruling approves the mechanism/script, not one frozen row count). Ran with
+      `--apply`: snapshot written first
+      (`gs://market-data-tick-cefi-prd-central-element-323112/_index/snapshots/pre_purge_stale_shape_eu_availability_index_20260730T055545Z.parquet`),
+      17,927 stale-shape rows deleted from `_index/availability_index.parquet` (9,497,252 → 9,479,325 rows; all 5 per-vm
+      shard blobs had 0 matches, confirming this session's earlier finding that the residual debris now lives entirely
+      in the main index), then the script's own post-apply verify gate re-scanned all 5 blobs and reported
+      `GATE PASSED: 0 stale-shape expected_unattempted rows remain`. Full log preserved in this session's scratchpad
+      (`cefi_eu_purge_apply_2026_07_30.log`). This closes the ONLY remaining actionable todo in this doc — the relabel
+      half stays correctly parked pending the 3-tuple blueprint per the ruling's own text, not re-opened here.
 
 ## Progress Log
 
@@ -640,3 +654,17 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   purge `--apply` are still operator-gated sign-offs per this doc's own "OPERATOR DECISION" framing, and this fix does
   not retroactively touch the 1,776 already-on-disk non-canonical rows (only a fresh catalogue rebuild benefits). Left
   `status: open` for the operator to close once the outstanding `--apply` sign-offs are actioned.
+
+- **2026-07-30 (data_engineering, operator-ruling close-out pass)**: Executed the last remaining todo — the
+  operator-ruled 2026-07-29 purge `--apply`. Re-ran
+  `instruments-service/scripts/purge_stale_shape_cefi_expected_unattempted_2026_07_15.py` fresh against the live prd
+  cefi manifest (`market-data-tick-cefi-prd-central-element-323112`): dry-run found 17,927 stale-shape
+  `expected_unattempted` rows today (down from the 2026-07-15 baseline of 49,720 — natural corpus evolution over the
+  intervening 2 weeks), within the script's own `STOP-ON-SURPRISE` bound. Ran `--apply`: snapshot written to
+  `_index/snapshots/pre_purge_stale_shape_eu_availability_index_20260730T055545Z.parquet` before any delete, 17,927 rows
+  deleted from `_index/availability_index.parquet` (9,497,252 → 9,479,325; all 5 per-vm shard blobs had 0 matches),
+  post-apply verify gate confirmed `GATE PASSED: 0 stale-shape expected_unattempted rows remain`. This is the ONLY todo
+  this doc had left; the relabel half stays correctly deferred to `_cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple
+  redesign per the ruling's own text — not re-opened here. Leaving `status: open` (unchanged) since the relabel half of
+  this doc's original scope is still tracked, now entirely in that other doc; this doc has nothing further of its own
+  left to execute.

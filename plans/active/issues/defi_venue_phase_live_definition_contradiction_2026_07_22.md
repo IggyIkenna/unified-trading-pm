@@ -408,3 +408,24 @@ unresolved operator decision.
       stream. Full completion — no partial rollout (count-only without the underlying IS/cron/catalogue work would
       re-create the same false-"already working" premise this doc's adversarial verify caught earlier). (repos:
       unified-api-contracts, instruments-service, market-tick-data-service)
+
+## 2026-07-30 — scope assessment (operator-ruling close-out pass): NOT executed this pass, todo left open
+
+Re-checked live `unified-api-contracts` (`defi_venues.py`) — all 11 venues, including the 6 shipped
+`DEFI_VENUE_MTDS_ADAPTER_VERIFIED_NOT_YET_SCHEDULED` venues, are still `DEFI_VENUE_PHASE == "pipeline"` as of the latest
+LDR commit; nothing in this todo has shipped since the 2026-07-29 ruling.
+
+**Why this wasn't attempted in this pass**: the ruling is real and decided (no new operator input needed), but its own
+text explicitly demands "full completion — no partial rollout" across FOUR real engineering sub-steps spanning THREE
+repos: (1) a genuine new `instruments-service` reference-data adapter per venue (6 venues — ANKR/STADER/
+STAKEWISE/SWELL/MANTLE/MAKER — not just wiring an existing one), (2) confirming/fixing the production cron so it writes
+real per-day shards (this doc's own investigation found the crons for these code paths were crash-looping or never
+scheduled at all before the 2026-07-22 fix pass), (3) a 90-day historical backfill once the cron is healthy, and (4)
+instruments-catalogue registration. This is a multi-day, multi-repo build — not a bounded fix comparable to the other
+rulings closed out this session (a script `--apply`, a doc-cited re-measurement, a single test-file rewrite). Attempting
+it in one ad hoc pass risked shipping a half-built adapter set into a live DeFi capture/execution path without the depth
+of testing this workspace's own DeFi-execution rules require, which is a worse outcome than leaving the todo open and
+clearly scoped. Not treating this as newly operator-gated (no new decision is needed — the ruling stands) and not
+inventing a different disposition; flagging it here as a scope/sizing finding so the next session picking this up
+doesn't re-diagnose from scratch. Recommend this become its own dedicated multi-todo build plan (one todo per sub-step,
+`assigned_vm: planning`) rather than staying a single all-or-nothing todo inside an issue doc.
