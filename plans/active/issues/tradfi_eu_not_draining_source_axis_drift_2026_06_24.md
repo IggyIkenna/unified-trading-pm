@@ -20,14 +20,22 @@ summary:
   739,278→414,140), full-history scan-only dropped 1,711,386→**498,840** (under the 1M cap) — **the one-time
   full-history catch-up (option B) is now DONE**, applied via `--apply-write` (498,840 rows — 290,688
   expected_unattempted + 208,152 typed empty_confirmed), consolidator-merged, floor-clip re-run. See Progress Log.
-status: open
+  UPDATE (2026-07-30) — **final item CLOSED.** The last open todo (4,655 stale `barchart` manifest rows, keep-vs-purge)
+  is resolved — an operator ruling already settled this 2026-07-20 (`quarantine-with-tracking`, NOT purge — see
+  `plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`), and fresh live re-verification today
+  confirms it holds unchanged with zero real data at risk. All todos in this doc are now done — archived.
+status: resolved
 nature: process
 asset_group: [tradfi]
 stage: [meta]
 repos: [deployment-service, instruments-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [tradfi, manifest, expected-unattempted, pipeline-mode, databento, data-correctness, single-walk, backfill]
-related: [instruments_catalogue_incremental_rollup_2026_06_29]
+related:
+  [
+    instruments_catalogue_incremental_rollup_2026_06_29,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+  ]
 created: 2026-06-24
 parent_epic: tradfi_master
 priority: P2
@@ -39,15 +47,25 @@ source:
     "deployment-service/scripts/wave_launcher.py (NEEDS_WORK, L106)",
     "live VM run.log
     gs://deployment-scripts-central-element-323112/vm-logs/tradfi-bf-cme-ohlcv-1m-gc-2025-20260624-114619/run.log",
+    "live manifest re-query 2026-07-30 (venue=BARCHART filter, pyarrow.dataset filtered read, instruments-service .venv)
+    — 9,119 rows, 100% capture_status=empty_confirmed; 4,655 carry source=barchart
+    (enumerator_run_id=enum-universe-tradfi-20260507-144921); remaining 3,580 databento + 884 yahoo are current-source
+    empty_confirmed rows for the same venue",
   ]
 assigned_vm: planning
-resolved_by:
-locked_by: live-defi-rollout
+resolved_by: slot-12 (data_engineering), 2026-07-30
+locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-07-30
 ---
+
+> **🟢 RESOLVED 2026-07-30** — final open todo (4,655 stale `barchart` manifest rows) closed per the already-settled
+> 2026-07-20 operator ruling (`quarantine-with-tracking`, not purge), re-verified live and unchanged. Every todo in this
+> doc is now done; archived to `/plans/archive/issues/tradfi_eu_not_draining_source_axis_drift_2026_06_24.md`.
+> `locked_by: live-defi-rollout` was a stale branch-name artifact, not a genuine operator lock (same pattern previously
+> confirmed safe to self-service-clear on this doc's sibling closures) — cleared as part of this archival.
 
 # TradFi EU not draining — source-axis seed/capture drift (PROVEN)
 
@@ -311,11 +329,31 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
       `expected_unattempted` + 208,152 typed `empty_confirmed`) written + consolidator-merged + floor-clip reclassified
       (18,980 further rows: 8,959 mbp_10 Databento-floor + 10,021 derived ohlcv_15m). See the new 2026-07-15 Progress
       Log entry below for full evidence (shas, row counts, gate verification).**
-- [ ] [SCRIPT] P2. **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
+- [x] [SCRIPT] P2. ✅ **Stale `barchart` manifest rows (4,655) — fully-retired source, same orphan class as massive.**
       Decide keep-vs-purge: barchart was the OLD VIX-15m CSV source (now Databento VX futures); its captured rows MAY
       hold real historical VIX data. Scoped OUT of the massive purge pending operator call. Provenance: surfaced during
       the 2026-06-24 massive purge. **2026-07-14: confirmed this remains the doc's only OTHER open item besides #2 above
-      — no action taken this session (operator-gated, unchanged).**
+      — no action taken this session (operator-gated, unchanged).** **RESOLVED 2026-07-30 — unified-trading-pm
+      (doc-only, no code needed): the keep-vs-purge decision was ALREADY made by the operator on 2026-07-20**
+      (`quarantine-with-tracking`, NOT purge — `plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`
+      Progress Log, same-day `tradfi_consolidated_closeout` ruling: "barchart + ICE qualifier variants
+      quarantine-with-tracking"), confirmed with live evidence that day (9,119 `venue=BARCHART` rows, 100%
+      `empty_confirmed`). **Fresh live re-verification today (2026-07-30, direct filtered read of the live manifest via
+      instruments-service `.venv` + pyarrow.dataset, `venue=BARCHART`) confirms this is unchanged**: still 9,119 rows,
+      still 100% `capture_status=empty_confirmed` (0 `captured`, 0 `expected_unattempted`, 0 `attempted_failed`). Of
+      those, exactly **4,655 carry `source=barchart`** (this todo's named count) stamped
+      `enumerator_run_id=enum-universe-tradfi-20260507-144921` — a stale pre-databento-flip seed, same provenance
+      pattern as the resolved `massive` orphans; the remaining 3,580 `source=databento` + 884 `source=yahoo` rows are
+      current-source honest-absence checks for the same venue, unrelated to the stale seed. **Key correction to this
+      todo's own "MAY hold real historical VIX data" framing**: it does not — 0 of the 9,119 rows are `captured`, so no
+      real trading/VIX data is or was at risk. **Also confirms this is NOT actually the same live-orphan class as
+      `massive` in practice**: `massive`'s 748k rows sat in `expected_unattempted` (in the wave-launcher's `NEEDS_WORK`
+      set, so they kept getting re-dispatched, burning compute) — these barchart rows are already in the terminal
+      `empty_confirmed` state, which `NEEDS_WORK` does not include, so they cause zero wasted compute today; they are
+      simply a dead, harmless label from a retired source. **Disposition: KEEP, no purge** — per the settled operator
+      ruling, re-confirmed unchanged. No code shipped because none is warranted; closed via decide-and-document
+      authority (same closure class as this doc's #2 item above). All todos in this doc are now done — see the resolved
+      banner + archival note above.
 
 - 2026-07-15 — **Operator ruling implemented end-to-end: tradfi MVP options narrowed to the S&P 500 / ES complex ONLY,
   catalogue re-tagged, and the full 2018-2026 historical EU catch-up (option B, previously deferred) APPLIED.**
@@ -421,3 +459,49 @@ one-repo" and need operator awareness before execution. The OPS-pass STEP 4 (MTD
     floor-clip snapshot
     `gs://market-data-tick-tradfi-prd-central-element-323112/_index/snapshots/pre_es_option_mvp_narrow_floorclip_2026_07_15.parquet`;
     codex updated `/codex/02-data/mvp-scope-canonical.md` (TradFi section + config-version changelog).
+
+- 2026-07-30 — **Final open todo (barchart keep-vs-purge) CLOSED, doc RESOLVED + archived.**
+  - **Discovered the decision had already been made.** A search of the corpus found that a LATER, unrelated audit
+    (`distinct_values_noncanonical_audit_2026_07_20.md`, since archived to
+    `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`) independently re-examined the exact same
+    `BARCHART` manifest rows this todo flagged, ran a 47-agent classification + adversarial-verification workflow, and
+    reached an operator-approved verdict: **"quarantine-with-tracking"** (same-day `tradfi_consolidated_closeout`
+    Progress Log ruling, 2026-07-20: "barchart + ICE qualifier variants quarantine-with-tracking") — i.e. KEEP, do not
+    purge. That audit's own live check (2026-07-20) found `venue == 'BARCHART'` = 9,119 rows, 100%
+    `capture_status = empty_confirmed`, refuting this todo's original concern that captured rows "MAY hold real
+    historical VIX data" (there are 0 captured rows). This resolution was already cross-referenced from several other
+    active docs (`tradfi_distinct_values_net_new_clusters_2026_07_28.md`,
+    `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`'s non-canonical-values table) as "already ruled, no new
+    action" — this doc alone had not yet closed its own copy of the todo.
+  - **Fresh live re-verification (today, not relying solely on the 10-day-old audit):** direct filtered read of the live
+    tradfi manifest (`gs://market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet`) via
+    `pyarrow.dataset` + `gcsfs` from the instruments-service `.venv` (ADC auth, project `central-element-323112`),
+    projecting only `venue`/`source`/`capture_status`/`data_type`/`enumerator_run_id`/ `written_at` and filtering
+    `venue == "BARCHART"` (a single filtered read of the consolidated index, not a corpus walk). **Result, unchanged
+    from 2026-07-20:** 9,119 rows total, 100% `empty_confirmed` (0 `captured`, 0 `expected_unattempted`, 0
+    `attempted_failed`). Breakdown by `source`: **4,655 `source=barchart`** (this todo's named count, exact match),
+    3,580 `source=databento`, 884 `source=yahoo`. The 4,655 barchart-sourced rows all carry
+    `enumerator_run_id=enum-universe-tradfi-20260507-144921` (a single stale seed, written pre-databento-flip); by
+    `data_type`: trades 1,829 / ohlcv_1m 1,828 / tbbo 1,825 / ohlcv_15m 1,822 / ohlcv_24h 1,815 (roughly even 5-way
+    split, consistent with a full-universe seed rather than a targeted VIX-only capture).
+  - **Correction to the original 2026-06-24 framing:** this is NOT actually the same _live_ orphan class as `massive`
+    was. `massive`'s 748k rows sat in `expected_unattempted` — inside the wave-launcher's `NEEDS_WORK` set — so they
+    were actively re-dispatched every cycle, burning real compute. These barchart rows are already in the terminal
+    `empty_confirmed` state (not `NEEDS_WORK`), so they were never causing wasted compute; they are a dead, harmless
+    label from a retired source, not an active drain. The provenance (stale pre-flip `enumerator_run_id`) is the same
+    defect _shape_, but the operational consequence today is null.
+  - **Disposition: KEEP, no purge, no code change** — per the settled 2026-07-20 operator ruling, reconfirmed unchanged.
+    Fact recorded in codex (`/codex/02-data/tradfi-databento-sourcing-ssot.md`, Barchart section) so it survives this
+    doc's archival per the archival-discipline rule (a referrer-cited fact must live in a codex SSOT before its source
+    doc archives).
+  - **Archival:** every todo in this doc is now `[x]`. `locked_by: live-defi-rollout` cleared (a stale branch-name
+    artifact, not a genuine operator lock — same self-service-clear precedent as this doc's sibling closures this
+    session). Doc moved `plans/active/issues/` → `plans/archive/issues/` in a separate commit (never combined with the
+    checkbox-flip commit, per the M3 cross-repo-flip-verification gotcha). 8 active-plan referrers' paths fixed in the
+    same follow-up commit: `tradfi_satellite_ao_dispatch_batch4_2026_07_26.md`,
+    `tradfi_satellite_ao_dispatch_batch5_2026_07_29.md`, `tradfi_consolidated_closeout_2026_07_18.md`,
+    `tradfi_satellite_ao_dispatch_batch2_finalize_2026_07_25.md`,
+    `tradfi_manifest_content_recovery_completion_2026_07_24.md`, `tradfi_satellite_ao_dispatch_batch2_2026_07_25.md`,
+    `june_2026_vintage_audit_findings_2026_07_27.md`, `tradfi_satellite_ao_dispatch_batch1_2026_07_25.md`,
+    `ag_closeout_audit_rollout_2026_07_25.md`, `issues/tradfi_backfill_oom_remediation_2026_06_24.md` (`related:`
+    field), `issues/blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`.
