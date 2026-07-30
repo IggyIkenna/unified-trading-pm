@@ -381,8 +381,18 @@ not a mechanical column-list copy.
       `test_read_availability_index_is_column_projected` pinning the exact `columns=` call signature. Full
       `quality-gates.sh` green (36s, 2 runs — pre-commit + post-commit sentinel re-verify), shipped via quickmerge
       --agent.
-- [ ] [SCRIPT] P2. **deployment-service** — `cli/utils/manifest_reader.py:245,585,674`: project each to its actual
-      column usage (operator-invoked CLI, lower urgency than the live/hot-path findings above).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 (slot-12)** — `deployment-service@b1480a1`. **deployment-service** —
+      `cli/utils/manifest_reader.py`: projected all 5 bare `read_availability_index()` call sites in the file (not just
+      the 3 originally cited at `:245,585,674` — `is_available`/`get_manifest_status` are the same file, same bug class,
+      fixed in the same commit per the findings-triage "in your file" rule): `is_available` → `columns=["date"]` (return
+      value is never inspected, cheapest single column); `get_completion` → `columns=["date","service_name","venue"]`;
+      `get_manifest_status` → `columns=["date","venue","service_name","league_id"]` (verified by direct read that
+      `_build_league_breakdown` also needs `league_id` — easy to miss); `get_venue_detail` → `columns=["venue","date"]`;
+      `get_coverage_summary` → `columns=["date","venue","instrument_count"]`. Each column set confirmed by direct read
+      of the function body's downstream usage (per the doc's caution above). Added 5 regression tests
+      (`tests/unit/test_manifest_reader_column_projection.py`) pinning the exact `columns=` call signature per site so a
+      future edit can't silently drop back to a bare call. `quality-gates.sh` green (199s), shipped via quickmerge
+      --agent.
 - [ ] [SCRIPT] P3. **features-service** smoke scripts (cross_instrument/multi_timeframe/volatility/onchain/delta_one
       `smoke_matrix.py`), **e2e-testing** (`build_smoke/live_manifest_reader.py:98`,
       `strategy/backtest_from_wizard_config.py:192`), **unified-trading-pm**
