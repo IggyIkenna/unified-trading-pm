@@ -295,11 +295,28 @@ drift_direction: advance-code
   `_read_fixtures_entity_with_schedule_fallback`) — tracked to completion in
   `sports_legacy_fixtures_path_migration_2026_07_24.md`, not here; that plan's Phase 1 measures the exact load-bearing
   subset before any data moves.
-- [ ] [VERIFY] P0. BLOCKED-PREREQUISITES — **FINAL full-history zero-missing (R1/R2/R3), bounced 6× as of last check.**
-      Gate: 0 `expected_unattempted_pending_fetch`, 0 blank-reason, 0 un-evidenced `attempted_failed` for every (source,
-      data_type) within coverage windows, plus features ML-ready. Do NOT fetch the `api_football ×     ODDS eu=89,073`
-      slice if it resurfaces — impossible-not-fetchable denominator pollution pending a purge/retype pass, not real
-      work. (repo: instruments-service). **Done when**: the full gate above passes corpus-wide.
+- [ ] [VERIFY] P0. BLOCKED-PREREQUISITES — **FINAL full-history zero-missing (R1/R2/R3). RE-VERIFIED 2026-07-30 (slot-6,
+      7th dispatch) — still genuinely FAILS, same-corpus dependency on P2a/P2b/P2c above, not a mystery block.** No
+      fresh corpus-wide census needed to reach this verdict: P2b's own entry above (last measured 2026-07-29) already
+      cites 616 undocumented `odds_api` gap days out of 2243 since the 2020-06-06 floor, with **no backfill attempted
+      yet** (only the root-cause investigation is done) — that alone violates "0 `expected_unattempted_pending_fetch`...
+      for every (source, data_type)", so this gate cannot pass yet regardless of any other axis. P2c (features backfill)
+      and P2d (final e2e gate stamp) are both still `[ ]` and explicitly cascade off the same P2a/P2b landing first.
+      This is a genuine same-corpus todo dependency
+      (`plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`'s case (b)), not a
+      mislabeled external/operator gate — retagging to an existing `BLOCKED-CREDENTIALS`/`-OPERATOR`/etc. token would be
+      inaccurate. **Why this keeps re-dispatching**: this plan's own banner above states intent that the
+      `BLOCKED-PREREQUISITES` marker suppresses dispatch, but `server/regen_backlog_from_plan.py`'s
+      `_NON_DISPATCHABLE_RE` does not recognize the `PREREQUISITES` token (confirmed root cause, same issue doc) — a
+      structural per-todo same-plan dependency has no expressible mechanism today (`sequential: true` would
+      over-serialize this plan's many unrelated items, which the banner already correctly rejected; splitting into a
+      depends_on-gated plan needs an operator plan-destination decision; task-level `backlog.yaml` prereqs need
+      backlog-file access this worker slot does not have). Logged as a disposition entry against the tracking issue
+      doc's open audit todo rather than silently re-bouncing an 8th time. Do NOT fetch the
+      `api_football × ODDS     eu=89,073` slice if it resurfaces — impossible-not-fetchable denominator pollution
+      pending a purge/retype pass, not real work. (repo: instruments-service). **Done when**: P2a(c) (sibling
+      plan)/P2b's odds_api backfill/P2c all confirmed landed AND the full gate re-run passes corpus-wide with a fresh
+      census.
 - [ ] [DATA] P2. BLOCKED-PREREQUISITES — **Features recompute for enriched dates, gated on
       `sports_satellite_ao_dispatch_batch2_2026_07_24.md`'s INJURIES 94-league enrichment backfill landing first** (that
       plan is itself AO-dispatched and still in flight — re-check its status before dispatching this todo). After
@@ -339,3 +356,22 @@ drift_direction: advance-code
 
 `/codex/02-data/availability-manifest-and-data-status.md`, `/codex/02-data/honest-absence-downstream-handling.md`,
 `/codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md`. Plan↔codex drift is review-blocking.
+
+## Progress Log
+
+- **2026-07-30 (slot-6)** — Dispatched the FINAL full-history zero-missing gate todo (R1/R2/R3) for the 7th time.
+  Re-verified FAIL using already-cited evidence in this same plan (P2b's 616 undocumented `odds_api` gap days, no
+  backfill run yet) rather than re-running an expensive corpus-wide census — the verdict doesn't change and the real
+  blocker is P2b's actual backfill landing, not a diagnosis gap. Root-caused WHY this specific todo keeps re-dispatching
+  despite its own `BLOCKED-PREREQUISITES` tag and this plan's banner explicitly relying on that tag to suppress
+  dispatch: `server/regen_backlog_from_plan.py`'s `_NON_DISPATCHABLE_RE` does not recognize the `PREREQUISITES` token
+  (already tracked, not a new finding —
+  `plans/active/issues/blocked_prerequisites_marker_not_in_non_dispatchable_regex_2026_07_28.md`). Classified this
+  occurrence as that issue doc's case (b) (genuine same-corpus dependency on P2a/P2b/P2c above, not a mislabeled
+  external gate) — correctly tagged text-wise already, but with no expressible per-todo dependency mechanism available
+  to a worker slot (`sequential: true` would over-serialize this plan's unrelated items, which the banner already
+  rejected; a depends_on-gated split needs an operator plan-destination decision; task-level backlog prereqs need
+  server-side `backlog.yaml` access this worker doesn't have). Sharpened the todo's own text with the precise current
+  blocker + dependency chain so the 8th dispatch (if the regex bug isn't fixed first) doesn't have to re-derive this
+  diagnosis from scratch. Logged a disposition entry on the tracking issue doc's Progress Log (see that doc) rather than
+  silently re-bouncing. No code shipped — nothing to fix within this worker's reach; checkbox correctly stays open.

@@ -162,3 +162,27 @@ same-corpus dependencies). Instead:
   other ~13 — several are legitimately same-corpus todo dependencies where the structurally-correct fix is
   `sequential`/`depends_on`, not a text marker at all; that needs real per-case judgment, filed here as its own
   properly-scoped audit rather than done blind in this session.
+
+- **2026-07-30 (slot-6) — per-file disposition, `plans/active/sports_closeout_track_s2_foldin_2026_07_25.md` (one of the
+  8-occurrence file named in "What I found" above).** Dispatched as `sports_closeout_track_s2_foldin-010` (the "FINAL
+  full-history zero-missing (R1/R2/R3)" todo, line ~298) — its own text already said "bounced 6× as of last check,"
+  confirming this is the same churn class. **Classification: case (b), genuine same-corpus dependency** (on P2a/P2b/P2c
+  earlier in the same plan) — NOT a mislabeled external/operator gate, so retagging to an existing
+  `BLOCKED-CREDENTIALS`/`-OPERATOR`/etc. token would be inaccurate here (unlike the odds-api-scattered-gaps case above).
+  Confirmed the plan's own banner explicitly intended the free-text `BLOCKED-PREREQUISITES` marker to suppress dispatch
+  ("the several `BLOCKED-PREREQUISITES`/`[OPERATOR]` tags below make real cross-item and cross-plan ordering
+  non-dispatchable explicitly... so serializing the whole plan is unnecessary") — i.e. the plan author's intent matches
+  this doc's root cause exactly; the marker is doing its documented job, the regex just doesn't honor it. **Could not
+  apply a structural fix**: `sequential: true` would over-serialize this plan's many unrelated fold-in items (correctly
+  rejected by the plan's own banner); a `depends_on`-gated plan split needs an operator plan-destination decision (HARD
+  RULE — not a worker's call to make unilaterally); task-level `backlog.yaml` prereqs (the RULES.md §4 "park a task"
+  recipe) need direct file access to the orchestrator server's `data/config/backlog.yaml`, which is not present in a
+  worker's slot git clone (confirmed: `find` for `backlog.yaml` under the slot's `agent-orchestrator` checkout returns
+  nothing — it's server-runtime state, not a repo file). Net: no mechanical fix available from a worker slot for this
+  occurrence; sharpened the todo's own text with the precise current blocker instead (P2b's 616-day `odds_api` gap, no
+  backfill run yet) so the next dispatch doesn't re-derive the diagnosis, and logged this disposition here.
+  **Recommendation for whoever completes the full 13-file audit todo below**: same-corpus-dependency occurrences like
+  this one likely need either (a) a main-agent/operator pass with real `backlog.yaml` file access to apply per-task
+  `prereqs.prerequisites` tuning, or (b) a small `agent-orchestrator` enhancement letting a plan declare per-todo (not
+  just whole-plan) same-file ordering — a real design gap this doc's existing recommended-decision text doesn't yet
+  cover, worth a follow-up note when that audit todo is worked.
