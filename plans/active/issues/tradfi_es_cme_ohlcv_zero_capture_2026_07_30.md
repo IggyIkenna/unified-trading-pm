@@ -39,7 +39,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
-depends_on: []
+depends_on: [tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30]
 locked_by:
 locked_since:
 resolved_by:
@@ -154,6 +154,26 @@ source:
 > would point at either persistent fleet-wide SPOT pressure (retry later, not a bug) or a residual gap in the
 > stall-timeout fix (re-diagnose, don't just re-launch a third time blind).
 
+> **UPDATE 3 2026-07-30T11:44Z (same session) — the second re-launch is ALSO blocked, but by a NEW, DIFFERENT,
+> cross-cutting root cause: the tradfi manifest consolidator itself has been stalled for 90+ minutes.** Verified via the
+> 6 surviving VMs' own logs (all still alive, CPU ~0%, none advanced past their first trading date after 55-60+ min)
+> plus the manifest-consolidator's Cloud Run job logs: the canonical
+> `market-data-tick-tradfi-prd-central-element-323112/_index/availability_index.parquet` blob has not been successfully
+> rewritten since `2026-07-30T10:01:18Z`. Root cause: 398 genuine FRED macro/yield-curve rows (`DGS10`, `FEDFUNDS`,
+> `CPIAUCSL`, etc. — real data, not garbage; FRED history legitimately starts 1962) were written into this SAME bucket
+> between `2026-07-29T21:09Z` and `2026-07-30T09:06Z`, widening the bucket's date span to `1962-01-02..2026-07-30`
+> (23,586 days). The consolidator's calendar-span-based chunking inflates to 303 merge chunks (~8x normal) for this
+> span, and cycles now appear to exceed both the 1-min cron cadence and the 300s stale-lock TTL, so cycles get
+> interrupted and the canonical blob never gets rewritten — every fresh tradfi manifest read (this ES fleet included)
+> hits a stale blob + a near-continuously-recycling live lock and bounded-waits without ever completing. **This is NOT
+> the same root cause as the original 2026-07-21 zero-capture finding below** (the FRED rows postdate that fleet by 9
+> days) — that earlier question remains open. Full evidence + recommended fix options:
+> `plans/active/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md` (P0, NOTIFY-OPERATOR severity —
+> filed this session). **Action taken**: none of the 6 surviving VMs were killed or re-launched a third time — per that
+> new issue's recommendation, they may resume on their own once the consolidator recovers, so a blind third re-launch
+> was deliberately avoided. This todo (verify row capture) stays open, gated on the consolidator issue's resolution, not
+> on any further ES-specific action.
+
 ## What I found
 
 Ran the exact query the ruling's todo specified — a single live read of `market-data-tick-tradfi-prd`'s
@@ -232,19 +252,24 @@ root-cause fix.
       consolidator-lock horizon + 300s buffer, vs. the 1800s generic default that was killing legitimately- waiting
       VMs). 2 new regression tests, `quality-gates.sh` green. Shipped `deployment-service@c1e3dc70`. Repo:
       deployment-service.
-- [ ] [DATA] P1. **CURRENT, ACTIVE TODO — supersedes the "diagnose the tagging mismatch" framing below, which is now
-      understood to be secondary, not the primary cause.** Verify the SECOND re-launch of the 7
+- [ ] [DATA] P1. **BLOCKED — gated on `tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md` (P0), NOT a
+      re-launch or a code-fix on this issue's own scope.** Original text preserved: verify the SECOND re-launch of the 7
       `tradfi-bf-cme-ohlcv-1m-es-*` VMs (started `2026-07-30T10:41-10:43Z`, post-stall-timeout-fix, scope
       `--only-root ES`, same 2020-2026 year-shards as the original fleet) actually captured real rows once they
-      complete/self-delete. Re-run this issue's original query — live read of `market-data-tick-tradfi-prd`'s
+      complete/self-delete. **UPDATE 3 (see banner above): as of 11:44Z none of the 6 surviving VMs had advanced past
+      their first trading-day pre-flight manifest check after 55-60+ min — root-caused to a stalled tradfi manifest
+      consolidator (separate P0 issue filed), not a fetch/adapter defect.** Once that issue's todos confirm the
+      consolidator healthy again, RE-CHECK this fleet's progress first (do not blind-relaunch a third time — the
+      survivors may resume on their own) via the original query — live read of `market-data-tick-tradfi-prd`'s
       `_index/availability_index.parquet`, scoped to
       `venue=CME, instrument_id=ES.FUT, data_type in {ohlcv_1m,     ohlcv_1s}`, filter `written_at` to this run's date —
       and confirm `row_count>0` / `capture_status=captured` now appears for at least a substantial share of the
-      2020-2026 window. If this second attempt ALSO shows 0 real rows with no stall-kill/preemption signature in the
-      logs, re-open as a genuine code-bug investigation (starting with the `stype_in=parent`-vs-schema hypothesis in
-      "Recommended next steps" §1 below) — do not assume transient a third time without evidence. Cite the resulting row
-      counts as closing evidence on both this issue and `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s
-      original P0 todo (which reported the original false "zero capture ever" framing). Repo: market-tick-data-service.
+      2020-2026 window. If the fleet completes post-consolidator-fix and STILL shows 0 real rows with no
+      stall-kill/preemption signature, THEN re-open as a genuine code-bug investigation (starting with the
+      `stype_in=parent`-vs-schema hypothesis in "Recommended next steps" §1 below) — do not assume transient a third
+      time without evidence. Cite the resulting row counts as closing evidence on both this issue and
+      `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`'s original P0 todo (which reported the original false
+      "zero capture ever" framing). Repo: market-tick-data-service.
 - [ ] [DIAG] P2. **Secondary, lower-priority data-hygiene item (demoted from P1 — confirmed NOT the cause of the
       original zero-capture finding, see UPDATE above).** Real ohlcv_1m/1s data for the SP500/ES/MES family already
       exists under a BLANK `instrument_id` with `underlying` correctly populated (28,307+111 real rows; `written_at`
