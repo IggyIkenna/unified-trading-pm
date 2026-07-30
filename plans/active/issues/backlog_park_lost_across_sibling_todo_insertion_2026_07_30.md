@@ -84,13 +84,13 @@ not the dispatch-tooling gap). Suggested next steps:
 
 ## Todos
 
-- [ ] [BACKEND] P2. Trace the exact `regen_backlog_from_plan.py` code path that assigns/reuses task ids across a regen
-      cycle when a SIBLING todo (not the parked one itself) is added to/removed from the same plan doc — confirm whether
-      id-reuse/hand-tune-carry-forward is keyed on todo TEXT content-hash alone, or also on positional/ordinal
+- [x] ✅ [BACKEND] P2. Trace the exact `regen_backlog_from_plan.py` code path that assigns/reuses task ids across a
+      regen cycle when a SIBLING todo (not the parked one itself) is added to/removed from the same plan doc — confirm
+      whether id-reuse/hand-tune-carry-forward is keyed on todo TEXT content-hash alone, or also on positional/ordinal
       derivation that a sibling insertion would shift. If positional, that's the root cause; fix by keying hand-tune
       carry-forward on content-hash only (matching how the checkbox-text-edit trap was already fixed for the SAME todo,
       per this doc's `related` link). Add a regression test: park todo A in a 2-todo plan, append a new todo B, regen,
-      assert A's id/priority/prereqs survive unchanged. (repo: agent-orchestrator)
+      assert A's id/priority/prereqs survive unchanged. (repo: agent-orchestrator) — agent-orchestrator@727dab3
 - [ ] [BACKEND] P3. Consider whether the park mechanism should emit a warning/alert when a parked task's id changes
       across a regen tick (the hand-tune becoming orphaned on the OLD id) — this would make future occurrences
       self-diagnosing instead of requiring a worker to notice the priority/prereqs are missing after the fact. (repo:
@@ -107,3 +107,28 @@ not the dispatch-tooling gap). Suggested next steps:
   correctly for an in-place re-tune; the gap is specifically that the PRIOR park didn't carry forward across the
   intervening sibling-todo edit. No code shipped this entry (pure diagnosis + a live backlog hand-tune, which is the
   documented sanctioned mechanism, not a code change).
+
+- **2026-07-30T14:20Z (slot 8, backend_engineer)** — Traced todo 1. Read `regen()` / `_reconcile_task_fields()` /
+  `_prune_stale()` / `_migrate_parking_state()` in `agent-orchestrator/server/regen_backlog_from_plan.py` end to end:
+  the ADD/RECONCILE pass keys an already-derived task's identity purely on `t.brief` (the todo's exact raw checkbox-line
+  text) scoped by `t.plan_ref` (`plan_tasks_by_brief: dict[str, BacklogTask]`, built fresh every tick) — a brief match
+  reconciles the task IN PLACE (same id; `priority_override` guards `priority`; `prereqs.prerequisites` is never touched
+  by reconcile at all) and never falls through to `_make_task_id()`. The orphan/prune path's fallback
+  (`_migrate_parking_state`) is likewise content-based: same `plan_ref` + same `_todo_tag_prefix()` + `SequenceMatcher`
+  similarity ≥ `_PARKING_MIGRATION_SIMILARITY_THRESHOLD` (0.6) — no ordinal/positional input anywhere in either path.
+  **Confirmed empirically, not just by inspection**: added `test_regen_park_survives_sibling_insertion` (parks todo B of
+  a 2-todo plan, appends a new todo C after it, regens with `prune_stale=True` matching PlanRegenLoop's production
+  default, asserts B's id/priority/prereqs survive 2 ticks) — **passes on current code**. Also hand-verified a THIRD
+  variant not written into the suite (sibling inserted BEFORE the parked todo, shifting its list position) — also
+  survives, `reconciled=1` in the regen summary confirms the in-place path fired, not a fresh append. **Verdict:
+  content-hash-only already, NOT positional** — the specific "sibling insertion breaks the park" mechanism this todo
+  asked me to confirm/fix does not reproduce against today's code, so no `regen_backlog_from_plan.py` change was needed;
+  the regression test is shipped regardless to lock in the guarantee for the insertion case (previously only covered for
+  the sibling _removal_ case, by `test_regen_park_survives_sibling_completion_and_id_shift`, 2026-07-17). **Residual
+  open question** (out of this todo's scope — flagging, not fixing): since the mechanism is proven safe against sibling
+  insertion, the ORIGINAL `ao_db_lock_storm_and_stuck_shutdown_outage-005/-006→-007` incident's actual trigger remains
+  unexplained by this trace. A plausible alternative (unproven): `save_backlog`/ `load_backlog` do a full-file
+  read-modify-write with no lock — a hand-edit racing a concurrent `PlanRegenLoop` tick's own load-then-save could
+  last-writer-lose the hand-tune independent of any content/position logic. Not chased further here (would be new
+  scope); worth a follow-up only if the loss recurs. Shipped: `agent-orchestrator@727dab3` (test only; full local
+  `quality-gates.sh` green — 2037 passed, 1 skipped; ruff/basedpyright clean).
