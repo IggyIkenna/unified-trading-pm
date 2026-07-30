@@ -637,3 +637,13 @@ full 271,376-file scope) as its own dispatchable todo instead of holding this sl
 repeat the exact monitoring-hostage anti-pattern the `-006`/`-002` dispatch-deadlock entry above already flagged as an
 operator escalation. This todo's own scope (identify the mechanism + ship a fix) is complete; flipping its checkbox
 accordingly.
+
+## Progress Log (continued)
+
+- **2026-07-30T19:15Z (slot-15)**: shard 26 (`-132900`) **genuinely COMPLETED** — full
+  `SCRIPT 1 CONTENT MIGRATION SUMMARY` terminal banner, `rc=0`, all 143,281/143,281 files (115 patched, 0 errors). Ran
+  20,779s (~5.77h) — notably longer than the ~45-50min freeze window that killed most other shards under the old code,
+  though this VM was launched at `-132900` (13:29Z), before the fix landed (~18:20Z), so it can't be credited to the fix
+  — it simply didn't hit the leak's tipping point this run. Second confirmed full success this session (after shard 28).
+  Fleet at 2 shards (14, 42) once this self-delete completes. Also hit the `gcloud` identity-poisoning issue again
+  (config-flip variant), fixed the same way.
