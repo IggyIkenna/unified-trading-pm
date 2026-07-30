@@ -140,6 +140,37 @@ about the alert that reports the residue.
       promote PR actually merges — the recovery-bookend mechanism itself (`branch-health.yml`'s `lag-notify-resolved` +
       `promotion_lag_monitor.py`'s per-pair clear-diff) was independently verified this session to be correctly
       implemented, not missing.
+- [ ] [DATA] P2. **New, separate finding (not tonight's alert, not fixed by this session)**: `market-tick-data-service`
+      promote PR (currently #782, immutable-per-SHA-ref pattern means the number will keep changing as LDR moves) is
+      blocked by STEP 5.101 (empty-string-fallback-site ratchet, ratchet baseline 89, current count 93) — 4 new sites in
+      `scripts/verify_cefi_canonical_4surface_2026_07_20.py:531-532` and
+      `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py:67-68`, both owned by slot-11's active in-flight work
+      (last touch `f9222f78`, 2026-07-30T04:08:24Z). Owner (slot-11) or a future hygiene pass should either refactor the
+      4 sites' `.get(key, "")` fallback pattern or explicitly accept the ratchet bump, so the promote PR can merge.
+      Provenance is cleared and the SIT gate passes — this is the ONLY remaining blocker for MTDS's promotion.
+
+## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — outcome update)
+
+- **features-service: PROMOTED.** Its promote PR was superseded once (immutable per-SHA ref pattern: #897 closed
+  unmerged, fresh #898 opened 08:01:04Z) as LDR kept moving; #898 merged automatically at **08:16:03Z**, right after the
+  dispatched `full-workspace-sit` run reached `conclusion=success` (07:31:30Z start, ~45min runtime — genuine
+  workspace-wide integration-test duration, not a hang; queued behind one busy self-hosted runner beforehand). This
+  branch-health alert line is now fully resolved with no operator action needed.
+- **market-tick-data-service: SIT-gate cleared, blocked on a SEPARATE, genuine, NOT-mine-to-fix issue.** Its promote PR
+  was likewise superseded (#781 → fresh #782, same immutable-ref pattern) and `sit-gate/fleet-green` now shows `pass`
+  against the fresh SIT run. But its own `quality-gates-v2` / QG slice (checks) then FAILED for a real reason
+  unconnected to provenance, SIT, or the GHA billing wall: **STEP 5.101 (empty-string-fallback-site ratchet)** — 93
+  `.get(key, "")` sites found vs. baseline 89, the 4 new ones in `scripts/verify_cefi_canonical_4surface_2026_07_20.py`
+  (lines 531-532) and `scripts/verify_kamino_solend_lending_relabel_2026_07_30.py` (lines 67-68). Traced ownership: both
+  files were committed by **slot-11** (`ikennaigboaka [slot-11·planning]`, most recently
+  `f9222f78 fix(defi): dedupe verify script by dest object before re-download`, 2026-07-30T04:08:24Z) — active,
+  in-flight work by a different slot, not stale/abandoned. **Not fixed by this session**: it's a different slot's active
+  script, the fix requires either refactoring their fallback pattern or a baseline-bump judgment call that isn't mine to
+  make unilaterally, and it is unrelated to either of tonight's two Slack alerts (stale-build-watcher,
+  branch-health/promotion-lag) — both of which are otherwise fully resolved. Flagging as a genuinely new, separate,
+  small finding for slot-11 or the next PM-corpus hygiene pass: fix the empty-string-fallback sites (or explicitly
+  accept the ratchet bump) in `market-tick-data-service`'s `verify_cefi_canonical_4surface_2026_07_20.py` /
+  `verify_kamino_solend_lending_relabel_2026_07_30.py` so PR #782 (or whatever supersedes it) can merge.
 
 ## Progress Log (2026-07-30, slot 1, `/autonomous` dispatch — final update)
 
