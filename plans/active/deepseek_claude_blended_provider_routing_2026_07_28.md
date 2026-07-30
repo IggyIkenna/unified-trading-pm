@@ -451,6 +451,31 @@ documenting them accurately is the safer, correct-scoped fix).**
   `c2670ba` + `30568ec` the sentinel/CI fix). `unified-trading-pm` runbook commit alongside this plan flip. QG green
   throughout (2086 passed, unchanged from the [UI] P1 entry above — these were docs/CI-only changes).
 
+**2026-07-30 — `[INFRA] P2` e2e regen() provider test SHIPPED, closing the todo below — the LAST locally-doable todo on
+this plan. `/autonomous` dispatch from earlier this session complete: all 4 locally-doable todos done in one session
+(spend-guard, provider badge, isolation runbook, this one).**
+
+- **Found while starting this todo**: `_parse_frontmatter_provider` had ZERO test coverage anywhere in the repo — not
+  even the "unit-level" test this todo's own wording assumed already existed. Added that too rather than only the
+  end-to-end case: 7 unit tests (`claude`/`anthropic`/`claude-required`/`anthropic-required`/case-insensitivity all map
+  to `"anthropic"`; absent frontmatter, no frontmatter block at all, an unreadable path, and an unrecognized value like
+  `provider: deepseek` all map to `None` — not an error, since the default policy is already DeepSeek-first for
+  sonnet-tier work).
+- **The actual done-when**: a real `regen()` pass against a temp `plans/active/` dir with two plans (one
+  `provider: claude`, one without), reloading the WRITTEN `backlog.yaml` back into real `BacklogTask` objects via
+  `load_backlog()` and asserting `provider_override` directly by task id (`claude-001` → `"anthropic"`, `default-001` →
+  `None`) — proves the frontmatter reaches the real `BacklogTask` through the real code path, not just that the parser
+  function alone returns the right value in isolation. Mirrors the existing `test_regen_opus_plan_yields_opus_tasks`
+  end-to-end harness pattern exactly (`_make_fake_pm` / `_seed_empty_backlog` / `_patch_backlog_path` /
+  `regen(pm_path=pm)`).
+- Evidence: `agent-orchestrator@ac70068` on `live-defi-rollout`, `ahead=0`. 1 file, +85. QG green (full suite still
+  green; the new tests run within `test_regen_backlog_from_plan.py`'s own 168-test file, all passing).
+
+**Remaining on this plan — none locally doable.** `[INFRA] P0` (register the DeepSeek account on the real VM),
+`[REVIEW] P2` (one-week pilot comparison), and `[REVIEW] P1` (re-run pilot against the redesigned policy) all need real
+orchestrator-VM access, elapsed real-world time, or genuine Claude-account headroom respectively — none are buildable or
+verifiable from a dev checkout. See each todo's own "Done when" below for what unblocks it.
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -539,7 +564,7 @@ documenting them accurately is the safer, correct-scoped fix).**
       at least one real spawn attempt where the quota-adaptive nudge measurably changed the effective fraction from a
       real (not mocked) Claude headroom reading, and (c) confirmation the hard opus/fable pin held (no DeepSeek spawn
       for an opus-tier task even when staged with zero Claude headroom).
-- [ ] [INFRA] P2. End-to-end test the new `provider: claude` plan frontmatter through the REAL `regen()` function
+- [x] [INFRA] P2. ✅ End-to-end test the new `provider: claude` plan frontmatter through the REAL `regen()` function
       (`server/regen_backlog_from_plan.py`) — not just the unit-level `_parse_frontmatter_provider` test. A plan with
       `provider: claude` in its frontmatter should produce a `BacklogTask.provider_override == "anthropic"` after a real
       regen pass, and a plan without it should produce `None`. Done when: a test exercises `regen()` itself (temp plans
