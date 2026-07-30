@@ -86,11 +86,25 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
 
 ## Todos
 
-- [ ] [INFRA] P3. **Consider adding a self-pull staleness alert** — e.g. if `ao-self-pull.sh` logs "dirty (non-churn) —
-      skip" N consecutive times (say, 4 = 1 hour), page or Slack-notify rather than silently repeating forever. This
+- [x] ✅ [INFRA] P3. **Consider adding a self-pull staleness alert** — e.g. if `ao-self-pull.sh` logs "dirty (non-churn)
+      — skip" N consecutive times (say, 4 = 1 hour), page or Slack-notify rather than silently repeating forever. This
       exact failure mode (silent multi-hour staleness, only caught by chance) is worth closing structurally, not just
       patching this one instance. Cross-reference the existing dirty-gate design in
-      `ao_residuals_after_dispatch_hardening_2026_07_17.md` before building — don't duplicate.
+      `ao_residuals_after_dispatch_hardening_2026_07_17.md` before building — don't duplicate. — **BUILT 2026-07-30**:
+      cross-referenced `ao_residuals_after_dispatch_hardening_2026_07_17.md` first — its dirty-gate content is a
+      DIFFERENT, already-fixed 2026-07-12 wedge (a `tempfile.gettempdir()` root cause) plus a UI-half staleness alert
+      owned by another agent; no overlap with this ask. Confirmed the existing `_alert_wedge` (fires on every dirty-skip
+      tick) is COMMIT-COUNT gated (`AO_DRIFT_ALERT_COMMITS`, default 10) — during a quiet LDR window a dirty tree can
+      sit skipped for hours without ever crossing that threshold, exactly this incident's blind spot (time-stuck ≠
+      commit-distance-stuck). Added a genuinely new, TIME-gated condition mirroring the file's own existing
+      `_track_stale_process`/`_STALE_TICKS_STATE` pattern: `_track_dirty_tick()` + `_DIRTY_TICKS_STATE`
+      (`agent-orchestrator/scripts/ao-self-pull.sh`) increments a tick counter on every dirty-skip and fires the
+      existing `_post_wedge_slack_alert` dedup path once `AO_DIRTY_ALERT_TICKS` (default 4 = ~1h at the `*/15` cadence,
+      matching this todo's own "say, 4 = 1 hour" spec) consecutive dirty ticks are hit; the counter resets to zero the
+      moment the tree goes clean. Functionally verified end-to-end against a real scratch git repo (not just read): 4
+      consecutive dirty runs correctly climb the tick file 1→2→3→4 and the WEDGE alert fires exactly at tick 4 (not
+      before); a subsequent clean run removes the tick file. `shellcheck` clean (both pre-existing warnings on unrelated
+      lines, none introduced), `bash -n` syntax-clean. — agent-orchestrator@61b7a4f.
 
 ## Progress Log
 

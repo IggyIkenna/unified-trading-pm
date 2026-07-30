@@ -228,6 +228,23 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
       elsewhere (do not re-guess — the resource_tracker/spawn-context teardown lead in the `[BACKEND]` todo above
       becomes the next thing to check directly, e.g. via `py-spy dump` on a hung process before SIGKILL fires). (repo:
       agent-orchestrator)
+- [x] ✅ [BACKEND] P2. **Second, independent contributing-latency finding + fix, 2026-07-30** (downstream of Problem 1
+      above, NOT a duplicate of the `--reload`/`ee98ccb` finding two todos up — both are real, `ee98ccb` is the one that
+      actually explains the specific incidents named in this doc). Chased two leads before the `ee98ccb` journalctl
+      trace was available: (1) `TimeoutStopSec` deploy-drift — RULED OUT (the repo's value was raised `30→90` on
+      2026-06-02, well before this incident; live-verified via read-only SSM that the deployed unit already carries 90
+      too — no config change made). (2) A genuine, separate code smell: `server/server.py`'s `lifespan` shutdown handler
+      stopped ~19 background loops SEQUENTIALLY, and every loop's own `.stop()` blocks on `thread.join(timeout=5-10s)` —
+      under this doc's own Problem-1 DB-lock-storm/tmux-timeout contention this could genuinely slow the
+      PRE-"Application shutdown complete" portion of shutdown. **Honest scoping**: the `ee98ccb` journalctl trace two
+      todos up shows the ~15-20s hang happens AFTER "Application shutdown complete" is logged — i.e. after these
+      loop-stop() calls have already finished — so this is NOT what caused the specific incidents this doc documents.
+      Still a real, verified latency improvement on its own merits (worst case `sum(per-loop timeout)` →
+      `max(per-loop timeout)`), shipped harmlessly: `agent-orchestrator@61b7a4f` — new `_stop_loops_concurrently()`
+      helper (`ThreadPoolExecutor`, one loop's raised exception logged + doesn't block the others) + 4 regression tests
+      (`tests/test_server_shutdown.py`); `loop_supervisor.stop()` stays sequential/first per its own pre-existing
+      must-complete-before-the-rest comment. `ruff`/`basedpyright` clean; full local `quality-gates.sh` green (2006
+      passed, 2 skipped). Left in place as a genuine improvement, not reverted.
 
 ## Recurrence + memory-footprint evidence — 2026-07-27 (main agt-498659)
 

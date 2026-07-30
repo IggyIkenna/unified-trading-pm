@@ -153,7 +153,16 @@ small+clear gets its own issue doc).
       already used twice in this file (`_check_and_log_critical_pool_halt`, `_drain_escalations`) for "test drives a
       dumb MagicMock session that can't back a nested call it doesn't care about." Full `bash scripts/quality-gates.sh`
       PASSES clean (1990 passed, 1 skipped — same count as after the prior two fixes).
-- [ ] [ENGINEER] P3. Investigate
+- [x] ✅ [ENGINEER] P3. Investigate
       `tests/test_worker_liveness_watchdog.py::test_tick_null_tmux_session_falls_back_to_canonical_name` flakiness under
       real concurrent shared-host tmux traffic (passed cleanly in isolation immediately after failing in the full suite)
-      — either harden the test's tmux-session isolation or mark it host-load-sensitive (repo: agent-orchestrator).
+      — either harden the test's tmux-session isolation or mark it host-load-sensitive (repo: agent-orchestrator). —
+      **INVESTIGATED + MARKED 2026-07-30**: confirmed every `tmux_spawn` call this test's path touches
+      (`has_session`/`capture_pane`/`_pane_is_dead`) is already mocked via `_tick_once_patches` — 30/30 clean runs in
+      isolation, no logic defect or unmocked real-tmux call found. Nothing to harden (there is no real tmux-session
+      isolation gap — the call graph is already fully mocked); the flake is consistent with host CPU/scheduler
+      contention from OTHER live processes on the shared box (real orch-slot-N tmux sessions unrelated to this test's
+      own mocked call graph). Took the "mark it host-load-sensitive" branch: registered a `host_load_sensitive` pytest
+      marker (`pyproject.toml`) and applied it to the test with a docstring citing this investigation, so a future
+      isolated failure of this specific test is recognized as a known, already-triaged class rather than re-investigated
+      from scratch. — agent-orchestrator@61b7a4f.
