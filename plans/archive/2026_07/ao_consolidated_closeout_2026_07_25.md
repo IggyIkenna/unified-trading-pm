@@ -165,7 +165,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 (planning-VM relaunch doesn't reprovision the self-hosted glue-runner pool) ·
 [issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md](/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md)
 (SQLAlchemy `QueuePool` exhaustion under concurrent slot traffic) ·
-[issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
+[issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
 (unpinned JWT secret causes fleet-wide auth outage) ·
 [issues/long_lived_vm_logs_not_backed_up_2026_07_02.md](/plans/active/issues/long_lived_vm_logs_not_backed_up_2026_07_02.md)
 (long-lived planning/epic/central-brain/orchestrator-worker VM logs not backed up) ·
@@ -330,16 +330,16 @@ missing from Sources entirely).
   15 docs that are explicitly NOT dispatched. Mechanically: of the 44 members only **12** are cited anywhere inside a
   real `- [ ]`/`- [x]` covering todo; the other 32 appear solely in digest/Deferred/Progress-Log prose. **Highest-value
   now-actionable orphan**:
-  `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`'s `[DEVOPS] P1`
-  (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which the 2026-07-28
-  CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering plan. **Phase 3
-  deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator approval and no
-  operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality HARD CHECK): the
-  dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4 `cross-cutting`
-  multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were retagged to `[ao]`
-  instead, each verified by reading the doc, not by tag shape: `ao_open_issues_consolidated_close_out_2026_07_17.md`
-  (was `[meta]` — this tranche's single most-important covering plan, 9 open todos, named as covering in this very doc,
-  yet invisible to `ao`'s own membership rule),
+  `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`'s
+  `[DEVOPS] P1` (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which
+  the 2026-07-28 CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering
+  plan. **Phase 3 deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator
+  approval and no operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality
+  HARD CHECK): the dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4
+  `cross-cutting` multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were
+  retagged to `[ao]` instead, each verified by reading the doc, not by tag shape:
+  `ao_open_issues_consolidated_close_out_2026_07_17.md` (was `[meta]` — this tranche's single most-important covering
+  plan, 9 open todos, named as covering in this very doc, yet invisible to `ao`'s own membership rule),
   `issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
   `issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md`, and
   `issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (all three were bare `[cross-cutting]` with

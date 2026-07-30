@@ -156,7 +156,7 @@ other orphaned candidate considered and why it was NOT drafted.
       has sat unclaimed since its only blocker — an operator-chosen maintenance window — was removed by the 2026-07-28
       CLAUDE.md ruling. **Done when**: a token captured before the restart still validates after it, and `/api/healthz`
       reports healthy post-restart. Source:
-      `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (its
+      `/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md` (its
       remaining DEVOPS P1 item — the SCRIPT P2 loopback-fix half is already done, see batch1 todo 3). Repo:
       agent-orchestrator (live-host action).
 - [ ] [DOCS] P1. [OPERATOR] **Update two codex docs still describing the old always-pin dispatch model.**
