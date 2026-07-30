@@ -95,11 +95,11 @@ locked_since:
       here; the only remaining gap in this area was the OOM memory bump, tracked + shipped separately in
       `data_pipeline_self_healing_completion_residual_2026_07_24.md`. — deployment-service
 
-- [ ] [CODE] P0. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
+- [x] ✅ [CODE] P0. **UTL `DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` string constants** (cleanliness only — routing already
       works via the UAC rule matching the event string): 2-line add to `events/event_types.py` + `events/__init__`
-      export; edits are green-and-ready on-disk in the slot UTL clone, ship on the next clean UTL window (a peer was
-      live on manifest_writer). — unified-trading-library **unified-trading-library, unified-api-contracts,
-      unified-trading-pm**
+      export. — DONE unified-trading-library@0f851fd6 (`DP_DAILY_DIGEST`/`DP_HYGIENE_SUMMARY` added to the DP-DIGEST
+      family in `events/event_types.py` + `DATA_PIPELINE_EVENT_TYPES`, exported from `events/__init__.py`;
+      quality-gates.sh green, shipped via quickmerge)
 
 ## Phase 4 — Writer-side path + state invariants (defence-in-depth, closes residual C3/C7)
 
