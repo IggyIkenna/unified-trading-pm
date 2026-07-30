@@ -487,3 +487,27 @@ tick still won't reach the live process until the redeploy lands.
 
 Todo 2 (the P2 dispatch-time defense-in-depth re-check) is intentionally left undone — untouched per this doc's own
 scoping note above; a separate backlog task.
+
+## 2026-07-30 recurrence — NINTH distinct plan pair (cefi_satellite_ao_dispatch_batch1), mid-sequence variant
+
+Slot 5 was dispatched `cefi_satellite_ao_dispatch_batch1_finalize-004` (plan_ref
+`cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md`,
+`depends_on: [cefi_satellite_ao_dispatch_batch1_2026_07_25]`, `gate_on_depends: true`, `sequential: true`, requiring all
+33 of the parent plan's todos done before ANY finalize todo dispatches). This is the mid-sequence shape (like the
+EIGHTH/cross_cutting_batch2 recurrence, not the first-dispatch shape): the finalize plan's own todos 1-3 were genuinely
+already done by other slots (verified by reading the plan — each carries a real DONE-with-evidence citation and a
+Progress Log entry), so `sequential` chaining correctly let todo 4 (archival) through — but the underlying gate on the
+PARENT plan never held. Verified live: `cefi_satellite_ao_dispatch_batch1_2026_07_25.md` is 32/33 done — exactly ONE
+todo still `- [ ]` (line 355, "Extend BYBIT futures_chain shape-2 duplicate verification to the full audited scope,"
+source `issues/bybit_futures_chain_write_shape_2026_07_13.md`, a distinct read-only audit task unrelated to that doc's
+already-completed backfill migration). Notably, the finalize plan's OWN todo-1 Progress Log (2026-07-30, slot-9,
+`review`) already flagged this exact gap in advance ("Discrepancy 1 — the dispatcher queued this finalize todo anyway
+... the batch1 plan cannot be archived (todo 4 below) while this todo remains open") — so this is a case where the
+in-plan record correctly predicted the bounce before it happened, but the gate still didn't hold. Declining to author
+the archival (would falsely represent the parent plan as fully complete); not flipping todo 4's checkbox; skipping via
+`POST /skip-current-task` (`reason_code: GATED`) rather than filing a duplicate `/blocked` or issue doc, per this doc's
+established disposition. Cross-referencing against the root-cause note directly above (slot 3,
+`agent-orchestrator@13a5dd8`, committed the same day): this worker's checkout has that exact fix commit in local
+history, yet the live dispatch still exhibited the bug — live confirmation of that note's own caveat that the code fix
+landing on `live-defi-rollout` is not the same as the live orchestrator server process having redeployed/restarted to
+pick it up. 9th distinct plan pair, ≥13 documented bounces total.
