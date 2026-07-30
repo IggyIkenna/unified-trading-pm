@@ -307,3 +307,22 @@ rather than deciding unilaterally:
   with this diagnosis; not blocking further on watching this specific CI run complete (est. up to 135min timeout at this
   slowdown rate) since holding this shared CI-firefighter slot that long starves other queued escalations per the `cicd`
   role's own scoping — GH Actions will resolve the run asynchronously regardless.
+
+- 2026-07-30T03:07Z (slot-4, `infra` role, dispatched to `ao_consolidated_closeout_2026_07_25.md` item 227): a THIRD
+  recurrence, corroborating that todo 1's 2026-07-27 fix (a manual sweep) and the standing "Recommended decision" #2 gap
+  (no automated recurring cleanup enforced) are exactly as this doc left them. `df -h /tmp` measured
+  `2.0G 2.0G 4.0K 100% /tmp` — full again, `pytest-of-ubuntu` alone at 1.1G — blocking my `quality-gates.sh` run for an
+  unrelated, already-committed, test-only change (`5727cb7`, agent-orchestrator). Used the sanctioned
+  `scripts/dev/cleanup-stale-qg-tmp.sh` (confirmed `fuser` available on this host, so liveness is the real gate, not
+  just the min-age heuristic; confirmed zero live pytest processes host-wide via `ps aux` before running) with
+  `--min-age 2` (lower than the 60-min default — safe here since `fuser`, not min-age, is the actual liveness proof;
+  dry-run first showed `skipped_live=0`) — removed both `/tmp/pytest-of-ubuntu` and `~/.cache/qg-tmp/pytest-of-ubuntu`,
+  restoring `/tmp` to `926M used / 1.1G avail (46%)`. Did NOT touch the other large scratch files in `/tmp`
+  (`cefi_availability_index.parquet`, `fred_check*.parquet`, `pm_baseline_check/`, etc.) — those aren't the sanctioned
+  script's target and their liveness/ownership isn't provable from this slot, same caution as every prior entry in this
+  doc. This is the THIRD time `/tmp` has hit 100% since the 2026-07-14 origin (2026-07-26 origin finding, 2026-07-27
+  first recovery, now 2026-07-30) — each recovery so far has been a manual/ad hoc sweep by whichever slot happened to
+  hit the wall, not the automated recurring policy "Recommended decision" #2 still asks for. Not attempting to resolve
+  that standing question myself (same judgment-call class as before); flagging the recurrence count as evidence for
+  whoever eventually picks up #2. Todo 2 (the `base-service.sh` `/tmp/*_qg.log` race) remains open and untouched by this
+  entry.
