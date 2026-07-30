@@ -134,6 +134,36 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       catalogue load (`Loaded N catalogue rows from instruments-store-cefi-prd-...`) has grown since the category's
       original 2026-07-19 launch (11 days of continued live capture), pushing every shard closer to the 32GB ceiling.
       Repo: deployment-service.
+- [ ] [BACKEND] P1. **Shard 16 died a 3rd time TODAY, this time neither SPOT-preempted nor OOM-killed on `e2-standard-8`
+      — both causes this doc already fixed and confirmed** — genuine root-cause investigation into
+      `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s memory-growth profile is still needed. Evidence:
+      `canonical-migration-cefi-content-16-relaunch20260730-135500`
+      (`deployment_id=a4f98edf-4560-4e2f-ba38-6810d83c9b40`) confirmed via `gcloud compute instances describe` running
+      `e2-standard-16` / `preemptible: false` / `provisioningModel: STANDARD` (i.e. exactly the on-demand +
+      bigger-machine fix this doc's Progress Log already shipped for shard 16) — yet its deployment-registry
+      `host_metrics_window` shows `mem_pct` climbing 11.6%→42.7% over 9 samples (~9 min) with an ACCELERATING
+      `mem_slope` (1.2→3.46 sample-over-sample, not linear), and BOTH its `run.log` (GCS object mtime) and the
+      deployment-registry heartbeat went completely silent at the same instant (`2026-07-30T14:11:15Z`) — 23+ min stale
+      at time of writing, GCE still reports `RUNNING`. This is a genuine whole-VM freeze under memory pressure, not a
+      fast SIGKILL/OOM (which would show `rc=137` in the log, as shards 17/18/41 did on `e2-standard-8`) — the bigger
+      machine just bought more runtime before the SAME underlying growth pattern manifested, consistent with this doc's
+      own prior note ("the fix is a genuine root-cause investigation into this script's memory profile... not another
+      machine-size escalation"). Candidate mechanisms worth checking: (a) PyArrow's native memory pool retaining freed
+      buffers across `pd.read_parquet` calls inside the long-lived `ThreadPoolExecutor(max_workers=12)` loop (157K+
+      files submitted to one pool for this shard) instead of returning RSS to the OS — a well-documented PyArrow
+      behavior, not a Python-level leak `gc.collect()` would catch; (b) the shared `ResolverMaps`/catalogue object
+      (`Loaded N catalogue rows...`) held for the whole process lifetime combined with per-file `df.copy()` in
+      `patch_instrument_id_column` never being explicitly released; (c) `--workers 12` oversubscribing concurrent
+      in-flight parquet decodes for this shard's file-size distribution. Applied RB-INFRA-RELAUNCH's
+      `≤2 relaunches/(vm-prefix,day)` budget bound (DP-VM-003 escalation agt-9d9fb9, 2026-07-30T14:29Z): shard 16
+      already has 2 archived dead attempts today (`...-relaunch20260730-122417` exit_code=125/`vm_not_running`,
+      `...-relaunch20260730-130600` same) plus this 3rd stalled one — did NOT relaunch a 4th time; the in-VM
+      `STALL_PROGRESS_REGEX=progress:|files/sec` stall-kill (`launch-canonical-migration-vm.sh`'s `cefi-content-apply`
+      category, `STALL_TIMEOUT_SEC=1800`) should self-reap it independently within ~30 min of its last progress-matching
+      log line — no manual kill needed. Done when: the memory growth mechanism is identified (not just worked around by
+      machine size) and a fix (bounded worker count / periodic pool recycle / explicit pyarrow pool release / smaller
+      per-invocation date-range scope) is verified to run a full 271k-file shard (14, the largest) to the terminal
+      `SCRIPT 1 CONTENT MIGRATION SUMMARY` without a mid-run stall.
 - [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
       `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
       `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
@@ -318,3 +348,20 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   pattern; per the same 2-3-strikes discipline used for the preemption waves, will escalate to a larger machine type
   only if this recurs on `e2-standard-16`, not preemptively. Rest of the 21-shard fleet unaffected (confirmed healthy
   via full status sweep immediately after).
+- **2026-07-30 update (slot-7, `data_pipeline_failure` escalation agt-9d9fb9, DP-VM-003 `DP_VM_STALL`)**: dispatched by
+  the fleet monitor for `canonical-migration-cefi-content-16-relaunch20260730-135500` (10-min-stale heartbeat at
+  dispatch time; 23+ min stale by the time I finished investigating). Confirmed via `gcloud compute instances describe`
+  it IS running the on-demand `e2-standard-16` config the last progress-log entry shipped (`preemptible: false`,
+  `provisioningModel: STANDARD`) — so this is neither of the two previously-fixed failure modes (SPOT preemption,
+  `e2-standard-8` OOM/`rc=137`) — but corroborates the SAME theory shard 42's entry above just landed (memory grows with
+  elapsed time/volume, `e2-standard-16` raises the ceiling but does not eliminate the failure): its deployment-registry
+  entry (`a4f98edf-4560-4e2f-ba38-6810d83c9b40`) shows `host_metrics_window.mem_pct` climbing 11.6%→42.7% over its last
+  9 samples with an accelerating `mem_slope`, and both `run.log` (GCS mtime) and the registry heartbeat went silent
+  simultaneously at `2026-07-30T14:11:15Z` — a slow whole-VM freeze under memory pressure at ~15 min elapsed, not a fast
+  `rc=137` kill (a second, slower-manifesting variant of the same underlying leak, not a third distinct failure mode).
+  Per RB-INFRA-RELAUNCH's `≤2 relaunches/(vm-prefix,day)` bound, shard 16 already has 2 archived dead attempts today
+  (`-122417`, `-130600`) before this 3rd stall — did **not** relaunch a 4th time myself; filed the finding as the new P1
+  todo above instead (the runbook's own guidance for a repeated-same-shard stall: stop relaunching, root-cause it). Left
+  the stalled VM alone — its own in-VM `STALL_PROGRESS_REGEX` stall-kill should reap it independently within ~30 min of
+  its last progress-matching log line (~14:41Z), no manual kill performed. Pinged the authoring fleet-monitor with this
+  outcome. No code changed this session — investigation + issue-doc update only.
