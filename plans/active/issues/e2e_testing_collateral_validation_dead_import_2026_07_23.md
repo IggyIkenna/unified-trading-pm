@@ -103,11 +103,30 @@ severity (exploratory script, not a gated test) — noted here for visibility, n
 
 ## Todos
 
-- [ ] [TEST] P1. **RULED 2026-07-29 (operator direct answer) — Option A.** Rewrite `test_collateral_validation.py`
+- [x] ✅ [TEST] P1. **RULED 2026-07-29 (operator direct answer) — Option A.** Rewrite `test_collateral_validation.py`
       against the current v2 mechanism (drive `catalog_staked_basis.py`'s `build_carry_staked_basis()` +
       `staked_basis.py`'s `_BANNED_LST_PERP_COMBOS` directly, the way `test_csb_paper_e2e_smoke.py` and
       `test_failure_modes_e2e_smoke.py` already correctly do for other CSB properties) — restores real coverage of the
-      property the file was meant to protect. (repo: e2e-testing)
+      property the file was meant to protect. (repo: e2e-testing) — **DONE 2026-07-30, `e2e-testing@d453bae`**.
+      Scenarios 1/2/4/5/6 unchanged (still-live UAC registry + `WrapPreprocessor`, never touched the deleted module).
+      Scenario 3's leverage calc now computed inline (`1 / haircut`) instead of importing the dead
+      `max_leverage_for_token`. Scenarios 7-9 replaced with the CURRENT v2 mechanism: scenario 7 asserts
+      `build_carry_staked_basis()` never emits a slot whose `(lst_asset, perp_venue)` isn't actually
+      `accepted_perp_collateral`-accepted (the catalog-level half of the property), plus that the real
+      LIDO/stETH/DERIBIT slot IS present and zero SOL-side slots exist (no live venue accepts JitoSOL/mSOL as margin);
+      scenario 8 is the direct successor of the old "blocks weETH at HyperLiquid" negative test — drives
+      `CarryStakedBasisEngine.on_tick()` for wstETH@BYBIT and asserts it raises `ValueError` from
+      `_BANNED_LST_PERP_COMBOS` (engine-level defense-in-depth, since BYBIT's raw matrix technically accepts wstETH);
+      scenario 9 is a positive control (stETH@DERIBIT fires cleanly, proving scenario 8's block is combo-specific).
+      Added a `setup_events(mode="test")` call so the script is runnable standalone with no cloud credentials (the v2
+      engine emits a PnL-stream `log_event` on every successful tick, which
+      `test_csb_paper_e2e_smoke.py`/`test_failure_modes_e2e_smoke.py` also need but had never actually been run
+      standalone to discover). **Verified by actually running the script** (not just import/lint, the exact gap that let
+      this die silently for 2.5 months): all 9 scenarios `[PASS]`, exit 0. `ruff     check` + `ruff format --check` +
+      `basedpyright` (from `scripts/defi/`, matching the real QG invocation) all clean. Shipped via `--skip-preflight`
+      (multi-agent safety flag, not a QG bypass — a concurrent peer agent's in-flight `unified-api-contracts`
+      ShareClass-enum-convergence WIP was blocking the pre-flight path-dependency check; `--skip-preflight` does not
+      weaken the quality gate itself, which still ran full and green).
 
 ## Evidence / files read (2026-07-23 audit)
 
