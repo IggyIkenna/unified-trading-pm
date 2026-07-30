@@ -5,18 +5,19 @@ summary:
   A superseded plan's CURVE cross-chain pool-address collision fix was never carried forward by its successor, and a
   2026-07-08 Balancer @CHAIN instrument_id patch conflicts with the 2026-07-18 Option-A ruling that instrument_id must
   stay bare. Surfaced by a /plan-reconcile archival-verification sub-agent; not auto-fixed, not silently archived away.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
-repos: [instruments-service, unified-api-contracts, market-tick-data-service, unified-trading-pm]
+repos: [instruments-service, unified-api-contracts, market-tick-data-service, unified-trading-pm, features-service]
 scope: [engineer, admin]
 tags: [defi, canonical-id, pool-identity, data-correctness, cross-chain]
 related:
   [
-    plans/archive/2026_07/defi_pool_id_chain_uniqueness_2026_07_18.md,
-    plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/defi_pool_id_chain_uniqueness_2026_07_18.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /plans/archive/issues/mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md,
   ]
 created: 2026-07-21
 priority: P1
@@ -24,11 +25,18 @@ parent_epic: defi_master
 assigned_vm: planning
 locked_by:
 resolved_by:
+  "market-tick-data-service@5bf8a3c7 (Stage 2 MTDS preflight fix) + features-service (Stage 4 chain-stamping fix,
+  mtds_canonical_reader.py + 2 calculators, this session) — all 5 stages of the trace now terminal: Stage 1 PASS, Stage
+  2 FAIL→FIXED, Stage 3 confirmed moot, Stage 4 FAIL→FIXED, Stage 5 confirmed not vulnerable"
 source: [/plan-reconcile audit, 2026-07-21]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-30** — all 6 todos `[x]`, 0 open work, `status: resolved`, `resolved_by` set, unlocked. The
+> 5-stage cross-chain-collision trace (catalogue → MTDS preflight → MDPS dedup → features-service calculators →
+> manifest/data-status) is now fully terminal. Moved to `plans/archive/issues/`.
 
 # DeFi POOL cross-chain address collision — CURVE unaddressed, Balancer patch conflicts with Option-A ruling
 
@@ -181,11 +189,46 @@ no `chain` component) rather than 2 unrelated bugs.** Filed as a new P2 follow-u
       already baked into the id string itself), unlike MTDS's raw-tick side which reads the catalogue's bare
       `instrument_id` verbatim by design. No code change needed. Repos: market-tick-data-service (done),
       market-data-processing-service (confirmed non-issue, no fix required).
-- [ ] [DATA] P2. Trace Stage 4 (features-service) and Stage 5 (manifest/data-status) for the same bare-`instrument_id`
-      -only chain-collision keying gap already confirmed at Stage 2 (MTDS preflight, fixed market-tick-data-service@
-      5bf8a3c7) and Stage 3 (MDPS orchestration_scanner, split off to
-      mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md) — per the 2026-07-26 Update section
-      above these 2 stages were "left as explicit follow-up" and were never independently traced.
+- [x] ✅ [DATA] P2. **DONE 2026-07-30 — Stage 4 (features-service) was a genuine FAIL, now FIXED; Stage 5
+      (manifest/data-status) traced and confirmed NOT vulnerable.**
+
+      **Stage 4 — features-service onchain pool calculators: confirmed FAIL, root-caused, fixed.**
+                              `features_service/onchain/adapters/mtds_canonical_reader.py::read_canonical_defi_parquets` fans a shard list across
+                              MULTIPLE `chain` values per venue (`pool_invariant_drift_calculator.py` loops `_CURVE_CHAINS` + `_BALANCER_CHAINS`
+                              — the exact 1 CURVE + 5 BALANCER collision addresses this doc tracks; `concentrated_liquidity_il_realised_
+                              calculator.py` loops `_UNISWAP_V3_CHAINS`), reads each shard's parquet, then `pd.concat`s them into one `raw_data`
+                              frame — but `chain` is a hive PATH partition only, never a written parquet column, for the `dex_pool_state`/
+                              `dex_pool_swaps` schema (confirmed via `unified_api_contracts.registry._schema_spec_defi.DEFI_POOL_WINDOW_COLUMNS`
+                              — no `chain` `ColumnSpec` exists there), so the concatenated frame had ALREADY lost chain identity before either
+                              calculator's `calculate_features()` ran — those two calculators then emitted output rows keyed only on
+                              `(timestamp, pool_address)`, silently indistinguishable across the 2 chains for every collision address (e.g. the
+                              CURVE `0x004c167d…` row could be AVALANCHE or OPTIMISM data with no way to tell downstream). This is worse than a
+                              pre-flight skip risk (Stage 2/3's shape) — it's a genuine content-conflation bug in computed feature output.
+                              Root-cause fix (not a workaround): `read_canonical_defi_parquets` now stamps `part["chain"] = shard.chain` onto
+                              every row read from a shard whose parquet content lacks a `chain` column (defensive: preserves an existing
+                              `chain` column verbatim if the schema ever adds one, e.g. mirrors how `gas_fees`/`block_priority_gas_distribution_
+                              calculator.py` already carries `chain` natively). Both calculators updated to require/propagate `chain` through to
+                              their output rows (empty string, never fabricated, when a caller feeds `calculate_features()` directly without a
+                              `chain` column — e.g. existing unit tests). New regression tests: `test_mtds_canonical_reader.py` (chain-stamping
+                              when absent, chain-preservation when already present, and an explicit 2-chain-same-`pool_address`-collision test
+                              using the real CURVE address `0x004c167d27ada24305b76d80762997fa6eb8d9b2` proving the concatenated rows stay
+                              chain-distinguishable) + `test_defi_pipeline_extension_calculators.py` (both calculators, 2-chain collision →
+                              2 output rows with matching `pool_address` but distinct `chain`). `.qg_last_passed_sha` verified green (see
+                              features-service quality-gates.sh run this session). — features-service (sha recorded in the Progress Log below).
+
+                              **Stage 5 — manifest/data-status: traced, confirmed NOT vulnerable (no fix needed).** Two independent manifest
+                              surfaces checked: (1) `market_data_processing_service/app/core/canonical_writer_stamping.py` (the MDPS candle
+                              manifest row_key builder) carries an explicit, dedicated `chain=row_key.get("chain", "")` field forwarded into the
+                              manifest row — the schema is chain-aware by design, consistent with Stage 3's already-confirmed-moot finding that
+                              real MDPS candle output filenames are the FULL canonical chain-embedded id, never the bare pool address, so this
+                              surface was never exposed to the collision. (2) `features_service/onchain/app/core/feature_writer.py`'s onchain
+                              emission-policy manifest write (`_check_emission_policy`'s `row_key={"feature_group": group, "date": date}`) is
+                              keyed at the (feature_group, date) grain — no `pool_address`/`instrument_id`/`chain` dimension at all — so the
+                              manifest CELL for `pool_invariant_drift`/`concentrated_liquidity_il_realised` was never at risk of a cross-chain
+                              collision; the bug that existed (now fixed above) was entirely inside the feature CONTENT rows within that one
+                              manifest-tracked file, not the manifest addressing itself. **Conclusion: this doc's full 5-stage trace is now
+                              complete** — Stage 1 (catalogue) PASS, Stage 2 (MTDS preflight) was FAIL→FIXED, Stage 3 (MDPS dedup) confirmed
+                              moot, Stage 4 (features-service) was FAIL→FIXED, Stage 5 (manifest/data-status) confirmed not vulnerable.
 
 ## Provenance
 

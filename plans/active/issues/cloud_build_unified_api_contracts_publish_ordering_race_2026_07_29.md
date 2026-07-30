@@ -200,8 +200,11 @@ applied to every repo this grep surfaces, not just instruments-service.
       `ad0676f7`), `market-data-processing-service@afcf9840`/`afcf984` (builds `3f147ab5`+`8f669147`),
       `ml-service@cc732d8c` (builds `0e509171`+`a460751e`), `strategy-service@9c499721` (build `23bfa809`),
       `fund-administration-service@8ebba565` (build `dc5c04c2`), `trading-agent-service@ed8ff77a` (build `24de3b51`),
-      `deployment-api` (fix shipped, a THIRD distinct root cause — see Progress Log), `greeks-service` (in progress as
-      of this edit). `market-tick-data-service` — **confirmed NOT affected**: it installs
+      `deployment-api` (fix shipped, a THIRD distinct root cause — see Progress Log), `greeks-service@3f5ef660`
+      (BuildKit-secret `gar_token` pattern per the fix noted in this doc's `## Todos` header, mirroring
+      `instruments-service@4c05f2d3` — build `9a035575-8f79-4ff8-9db0-b6f48ecf3b03` SUCCESS 2026-07-30T06:05:43Z for the
+      fix commit itself, and the subsequent LDR→main promote build `a5c4b96f-1aa4-49fb-ae07-abe62b81347b` also SUCCESS).
+      `market-tick-data-service` — **confirmed NOT affected**: it installs
       `unified-trading-library`/`unified-api-contracts` from vendored local paths (`.deps/...`) BEFORE its own
       `uv pip     install --system -e . --no-deps`, so it never resolves either package from the private GAR index at
       build time — the publish-ordering/auth gap this doc tracks structurally doesn't apply (confirmed by reading the

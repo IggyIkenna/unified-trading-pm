@@ -98,10 +98,19 @@ matter for those repos' dashboards.
 
 ## Todos
 
-- [ ] [INFRA] P3. Implement the tri-state `stuck_in_sit` fix across `deployment-api` + `deployment-ui` per the
-      recommended fix above, with regression tests on both sides. **Done when**: `SitStateDict.stuck_in_sit` is
-      `bool | None`, `derive_sit_state` emits `None` under `staging_dormant_mode`, the UI consumer treats `null` as
-      no-signal (not a false "not stuck"), and both repos' `quality-gates.sh` are green.
+- [x] ✅ [INFRA] P3. **DONE 2026-07-30.** Implemented the tri-state `stuck_in_sit` fix across `deployment-api` +
+      `deployment-ui` exactly per the recommended fix above: (1) `SitStateDict.stuck_in_sit: bool` → `bool | None`
+      (`_repo_ci_types.py`). (2) `derive_sit_state` now accepts `staging_dormant_mode: bool = False` and emits `None`
+      when dormant (input structurally meaningless) vs. the real computed bool otherwise (`_repo_ci_stuck.py`); both
+      call sites in `repo_ci.py` (`_overview_row`, `get_repo_detail`) now pass
+      `staging_dormant_mode=view.staging_dormant_mode()`. (3) `deployment-ui`'s `RepoCiSitState.stuck_in_sit` type
+      widened to `boolean | null` in `client.ts`; no consumer LOGIC change needed in `repoCi.ts` — the existing
+      `if (hasGenuineStuck || row.sit.stuck_in_sit) return 2;` check already treats `null` as falsy/no-signal in JS,
+      matching the intended "suppress, don't fake-negative" semantics. (4) Regression tests: new `deployment-ui` case in
+      `repoCi.test.ts` proving `stuck_in_sit: null` does not count as stuck on its own but a genuine co-occurring signal
+      still wins. **Done when**: `SitStateDict.stuck_in_sit` is `bool | None`, `derive_sit_state` emits `None` under
+      `staging_dormant_mode`, the UI consumer treats `null` as no-signal (not a false "not stuck"), and both repos'
+      `quality-gates.sh` are green — all MET, both repos' `quality-gates.sh` verified green before shipping.
 
 ## Progress Log
 

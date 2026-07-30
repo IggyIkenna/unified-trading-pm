@@ -293,8 +293,8 @@ drift_direction: advance-code
     - **[DATA] P0.** Corpus-wide `derived_features` re-run required (clean, replaces the stopped fleet)
     - +10 more P0 (staleness audits across ~9 stale-entity consumers, backfill pilot follow-through, full-corpus dry-run
       gating), +40 P1, +14 P2, +1 P3 — see file for the complete 73-item breakdown.
-  - [`plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`](/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md)
-    — 0 open todos.
+  - [`plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`](/plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md)
+    — 0 open todos, archived 2026-07-30 (`status: resolved`).
   - [`plans/active/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md`](/plans/archive/issues/sports_derived_features_per_league_layout_unread_by_ml_loader_2026_07_14.md)
     — `status: resolved`, 2 residual:
     - **[DOC] P3.** Write the features-bucket path SSOT (codex/02-data)

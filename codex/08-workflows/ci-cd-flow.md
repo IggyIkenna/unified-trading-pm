@@ -298,6 +298,37 @@ check for "is commit X live" — full recipe tracked as a `unified-trading-pm/ag
   `#ci-failures`, so each alert (CI-fail, stuck PR, backmerge conflict) escalates to the orchestrator, which delegates
   to the owning slot / review-agent.
 
+### Named invariant: a revert landing near a promote-cycle boundary must survive the backmerge (fixed 2026-07-29)
+
+A squash-promote (`ldr-to-main-promote-fleet.yml`) freezes an immutable per-SHA ref (`promote/<repo>/<sha>`) at the
+moment it fires, opens the promote PR from that frozen content, and does not re-read LDR again before merging. If a
+commit lands on LDR, gets reverted, and the revert lands **within roughly one promote-cycle's width** of the fix, the
+promote can pin content from BEFORE the revert while the revert is already on LDR. The squash commit's own parent is the
+pre-fix `main` tip (squash discards real ancestry), so when `main-backmerge-to-ldr.yml` next merges `main` back into
+LDR, git's 3-way merge computes its base as that stale pre-fix point — from that base, the squash's re-added content
+looks like ordinary NEW content, not "something LDR deliberately removed downstream." The merge is **content-clean** (no
+conflict marker, nothing to notice) and silently re-lands the reverted block on LDR. `git log` still shows the revert
+commit as reachable; only the live file content is wrong — a check that only reads `git log` ancestry will not catch
+this, only a content diff will. Full incident + root-cause trace:
+`/plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md`.
+
+**Closed 2026-07-29** (`unified-trading-pm@d3a47773a`, rolled out fleet-wide): the squash-promote now stamps a
+`Promoted-From-LDR: <ldr_sha>` trailer on the squash commit body at all 3 squash-merge sites in
+`ldr-to-main-promote-fleet.yml`; `main-backmerge-to-ldr.yml` (both the fleet template and PM's own copy), when the
+incoming `main` commit carries that trailer, forces the 3-way merge onto that explicit SHA as the merge-base via
+`git merge-tree --write-tree --merge-base=<sha>` instead of git's stale computed one — so the merge-base is always the
+actual LDR state the promote was taken from, and a downstream revert is never invisible to it. A narrowly-scoped
+`check_no_silent_revert_loss()` defense-in-depth guard also flags (independent of the trailer) a backmerge result that
+fully discards LDR's own last commit's effect. Regression test:
+`scripts/quality-gates-base/tests/test-backmerge-silent-revert-loss-guard.sh` (reproduces the confirmed
+instruments-service graph shape with real git operations). **Scope note**: `ldr-to-main-promote.yml` (PM's own promote,
+`--merge` not `--squash`) keeps real ancestry and was never vulnerable to this bug class — not touched by the fix.
+
+**Practical implication that outlives this specific fix**: after reverting something on LDR close to a promote cycle,
+re-verify the actual file CONTENT on `live-defi-rollout` post-backmerge, not just that the revert commit is `git log`-
+reachable — ancestry-reachable and content-correct are two different facts, and this incident is the concrete case where
+they diverged.
+
 ---
 
 ## Two-Pass Workflow Model (the unit of work)

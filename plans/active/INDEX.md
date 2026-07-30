@@ -138,10 +138,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md)
-  — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
-  corresponding checkbox…
 - [`prediction_capture_incident_remediation_2026_07_06`](./prediction_capture_incident_remediation_2026_07_06.md) —
   "Actionable remediation for the 2026-07-01→07-06 prediction-universe-capture outage (diagnosis + root-cause evidence:
   issue doc prediction_universe_capture_dead_since_07_01_2026_07_06). Two workstreams: (A) harden the capture path —
@@ -272,10 +268,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md)
-  — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
-  corresponding checkbox…
 - [`lst_rate_honest_coverage_2026_07_21`](./lst_rate_honest_coverage_2026_07_21.md) — Operator-directed (2026-07-21)
   build to bring the four LST exchange-rate surfaces to HONEST COVERAGE end-to-end so the DeFi interest PnL can sit on
   real data. #1 CEX spot = a Tardis backfill (denominator already complete — adding pairs is…
@@ -322,10 +314,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md)
-  — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
-  corresponding checkbox…
 - [`instruments_tradfi_g1_g5_gate_execution_2026_07_24`](./instruments_tradfi_g1_g5_gate_execution_2026_07_24.md) —
   Split out of instruments_foundation_completeness_2026_06_24.md (2026-07-24 line-cap remediation, 4-way split,
   operator- approved). Owns tradfi's gated G1→G5 rebuild — billable-venue guard, calendar/session fail-closed, CME/ES
@@ -570,10 +558,6 @@ by hand._
   First /na-eligibility-audit interactive dry-run (tradfi tranche, 2026-07-27) classified
   honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md as mixed across 14 open items: 8 are genuinely
   operator/judgment-gated (stay NA),…
-- [`instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27`](./instruments_satellite_ao_dispatch_batch1_finalize_2026_07_27.md)
-  — Gated closeout for instruments_satellite_ao_dispatch_batch1_2026_07_27.md, per the finalize-plan-coverage gate
-  (task_template.md §4, operator ruling 2026-07-24). Once each of the 5 batch todos is done, reconciles the
-  corresponding checkbox…
 - [`mtds_available_at_cross_asset_backfill_2026_07_13`](./mtds_available_at_cross_asset_backfill_2026_07_13.md) —
   Backfill the historical available_at="" backlog on CAPTURED market-data-tick manifest rows, now that
   unified-trading-library@9c9cdc50 fixed record_captured()/record_captured_from_counts() to actually persist the value.

@@ -294,37 +294,43 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       (`deployment-service@78a0aa4`, 2026-07-21, part of the same 212,519-object `features-sports-prd` deletion cited
       above), not regenerated. Regenerating fabricated pre-floor data would have re-created fabrication-by-construction
       — the floor ruling's whole point is that this population should not exist at all. No further action needed here.
-- [x] ✅ [DATA] P0. **DONE — verified NO-OP; closed 2026-07-30 by `/na-eligibility-audit` (sports tranche) as an
-      evidence-backed stale checkbox, per the fix named in
+- [x] ✅ [DATA] P0. **DONE — verified 2026-07-30 (satellite corpus-hygiene pass; independently confirmed by a concurrent
+      `/na-eligibility-audit` sports-tranche pass the same day, same evidence, same conclusion), previously
+      false-unchecked (see
       `/plans/active/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
-      Finding 2.** The purge this todo asks for was executed and resolved as a verified no-op by
-      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (verified this pass:
-      archived, `status: complete`, both todos `[x]`): its exhaustive Tier-2 SPOT census covered the exact scope named
-      here — **2400/2400 in-scope days (Jun-Dec 2020 + 2021-2026), 26,891 objects** — and returned `total_delete=0` /
-      `total_keep=26891` / `total_unparseable=0`, i.e. **zero POST-FLOOR `derived_features` objects still carry a
-      pre-`2026-07-19` creation timestamp**, so there was nothing left to delete. The reversibility framing below stays
-      accurate and re-usable but was never load-bearing, because no delete was needed. Sibling checkbox in
-      `/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed in the same pass on
-      the same evidence. Original text follows. — overwriting alone is provably insufficient (a re-run never rewrites a
-      day it produces no output for, so a fabricated object on a zero-output day survives). Snapshot the delete list
-      FIRST (GCS soft-delete gives a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet
-      still carrying a PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already
-      handled by the wipe's own snapshot+delete. Honest absence beats an invented `competition_phase`
-      (`/codex/02-data/honest-absence-downstream-handling.md`). **⚠️ Corrected 2026-07-27 — the prior "Not
-      `[OPERATOR]`-gated ... reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative
-      example `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a cites, alongside this same todo's
-      duplicate copy in `sports_consolidated_native_ao_extract_2026_07_25.md`, which was independently corrected
-      2026-07-26).** Fixed now with an actual fresh check, not a re-assertion: this is an object-scoped delete (specific
-      `derived_features` parquet objects filtered by creation timestamp, never the bucket) against
+      finding 2).** PURGE the fabricated POST-FLOOR remainder (Jun-Dec 2020 + 2021-2026 only — 2017-2019 + pre-06-06
+      2020 are moot, already deleted by the pre-floor wipe), only after the re-run todo above is done for that same
+      post-floor scope — overwriting alone is provably insufficient (a re-run never rewrites a day it produces no output
+      for, so a fabricated object on a zero-output day survives). Snapshot the delete list FIRST (GCS soft-delete gives
+      a 7-day recovery window), then delete every POST-FLOOR `derived_features` parquet still carrying a
+      PRE-`2026-07-19` GCS creation timestamp — do NOT re-touch pre-floor dates, they're already handled by the wipe's
+      own snapshot+delete. Honest absence beats an invented `competition_phase`
+      (`/codex/02-data/honest-absence-downstream-handling.md`). Satisfied by
+      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (`status: complete`, both
+      todos `[x]`): its Todo 1 ran the exhaustive Tier-2 SPOT census (2400/2400 in-scope days scanned, Jun-Dec 2020 +
+      2021-2026, 26,891 objects) and returned `total_delete=0` / `total_keep=26891` / `total_unparseable=0`; its Todo 2
+      (the reversibility-verified purge, downgraded from `[OPERATOR]` 2026-07-27 per a fresh
+      `gcs_bucket_soft_delete_retention_seconds()` check) resolved as a verified no-op because nothing was left to
+      delete — every in-scope object already carries a `last_modified` on/after the 2026-07-19 cutoff. Sibling checkbox
+      in `/plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` closed on the same
+      evidence (now archived). The reversibility framing below stays accurate and re-usable but was never load-bearing,
+      since no delete was needed. **⚠️ Corrected 2026-07-27 — the prior "Not `[OPERATOR]`-gated ...
+      reversible-for-a-week" framing here was an UNVERIFIED assertion (the canonical negative example
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a cites, alongside this same todo's duplicate copy
+      in `sports_consolidated_native_ao_extract_2026_07_25.md`, which was independently corrected 2026-07-26).** Fixed
+      then with an actual fresh check, not a re-assertion: this is an object-scoped delete (specific `derived_features`
+      parquet objects filtered by creation timestamp, never the bucket) against
       `features-sports-prd-central-element-323112` — `gcs_bucket_soft_delete_retention_seconds(...)` returned `604800`
       (7 days) fresh-checked 2026-07-27 per §3a, so it genuinely qualifies for the reversibility carve-out (finding T,
-      `task_template.md`) this time, verified rather than assumed. Re-query fresh before running, not from this
-      citation. The snapshot-first step stays as extra safety margin, not as the load-bearing justification.
-- [ ] [DATA] P0. **Re-verify by CENSUS, not sampling, only after the PURGE todo above is done** — the terminal check is
-      "zero pre-fix-dated POST-FLOOR `derived_features` objects remain" (pre-floor is separately verified 0 by the
-      wipe's own census), decidable from object metadata alone (a GCS creation-time listing, not a content sample).
-      Sampling is what produced the retracted CLEAN claim above. **Done when**: the census returns 0 post-floor objects
-      with a pre-`2026-07-19` creation timestamp.
+      `task_template.md`) this time, verified rather than assumed.
+- [x] ✅ [DATA] P0. **DONE — same evidence + timestamp as the PURGE todo above.** Re-verify by CENSUS, not sampling,
+      only after the PURGE todo above is done — the terminal check is "zero pre-fix-dated POST-FLOOR `derived_features`
+      objects remain" (pre-floor is separately verified 0 by the wipe's own census), decidable from object metadata
+      alone (a GCS creation-time listing, not a content sample). Sampling is what produced the retracted CLEAN claim
+      above. **Done when**: the census returns 0 post-floor objects with a pre-`2026-07-19` creation timestamp. — MET:
+      the same exhaustive Tier-2 SPOT census cited above (2400/2400 days, 26,891 objects) IS this census-based
+      re-verification; it returned 0 objects with a pre-`2026-07-19` creation timestamp in the post-floor scope
+      (`total_delete=0`).
 - [x] [DIAG] P1. ✅ Root-caused + backfilled — `batch1_ao_ready` todo 5. Two stacked bugs (unrun Phase-0.6 backfill + a
       deleted legacy-bucket launcher) fixed; 2020-01-01→2026-07-24 re-run shipped (16,661 rows, was 1).
       `features-service@89a2ac9d`, `deployment-service@826ca68`, `instruments-service@47c1ffb3` (verified via

@@ -10,17 +10,25 @@ summary: >-
   the single largest year) were never in scope; (b) `--force` only overwrites days the re-run PRODUCES output for, so
   stale fabricated objects survive on days that yield nothing. Supersedes the earlier "2021-2026 CLEAN" verdict, which
   sampled only rewritten days.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
 repos: [features-service, unified-trading-pm]
 scope: [engineer]
 tags: [sports, data-correctness, features, season-context, fabrication, ml-readiness, backfill]
-related: [../sports_consolidated_closeout_2026_07_19.md, /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md]
+related:
+  [
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
+    /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md,
+  ]
 created: "2026-07-20"
 source: sports_consolidated_closeout_2026_07_19.md Track F corpus census (2026-07-20)
 resolved_by:
+  "deployment-service@78a0aa4 (2020-06 pre-floor wipe, 2026-07-21) +
+  sports_derived_features_postfloor_residue_purge_2026_07_27.md (exhaustive Tier-2 SPOT census, 2400/2400 in-scope days,
+  26,891 objects, total_delete=0), 2026-07-30"
 locked_by:
 parent_epic: sports_master
 assigned_vm: NA
@@ -30,6 +38,14 @@ assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **✅ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by` cites `deployment-service@78a0aa4` (2020-06 pre-floor
+> wipe) + `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (exhaustive Tier-2 SPOT
+> census, `total_delete=0`), sole `[DATA] P0` todo flipped `[x]`, 0 open todos, unlocked. Was false-unchecked for
+> several days despite being provably done — see the
+> `ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md` finding 2 diagnosis (originally
+> filed in `plans/active/issues/`, itself archived the same day once its own todos shipped). Moved to
+> `plans/archive/issues/`.
 
 # §Z fabricated `derived_features` is corpus-wide, and the re-run cannot self-heal it
 
@@ -118,28 +134,17 @@ Evidence: `scratchpad/corpus_walk.sh`, `scratchpad/fab_rate.py`, `scratchpad/che
 
 ## Todos
 
-- [x] ✅ [DATA] P0. **DONE — all three clauses satisfied by already-landed work; closed 2026-07-30 by
-      `/na-eligibility-audit` (sports tranche) as an evidence-backed stale checkbox, per the fix named in
-      `/plans/active/issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md`
-      Finding 2.** (1) **2017+2018** — moot, not re-run: both years are 100% pre-floor (before the 2020-06-06 sports
-      data floor) and their 26,089 fabricated objects were deleted by the pre-floor GCS wipe
-      (`deployment-service@78a0aa4`, 2026-07-21). (2) **Purge the post-floor remainder** — done by
-      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (verified this pass:
-      archived, `status: complete`, both todos `[x]`), whose exhaustive Tier-2 SPOT census scanned **2400/2400 in-scope
-      days over 26,891 objects** and returned `total_delete=0` / `total_keep=26891` / `total_unparseable=0` — every
-      in-scope object already carries a `last_modified` on/after the 2026-07-19 `c6eb1f38` fix cutoff, so there was
-      nothing fabricated left to purge. (3) **Re-verify by census, not sampling** — that same exhaustive
-      metadata-decidable census IS the census-based re-verification this clause asks for. Original text: "Remediate the
-      corpus-wide §Z fabrication — extend the re-run to 2017+2018 (never in scope), purge (not just overwrite) every
-      `derived_features` parquet still carrying a pre-fix creation timestamp, and re-verify by census, not sampling."
-
-## Progress Log
-
-- **na-eligibility-audit 2026-07-30**: KEEP-NA -> ARCHIVE-ELIGIBLE (stale item closed). Its sole `[DATA] P0` was
-  FALSE-UNCHECKED and is now `[x]` with evidence: 2017/2018 moot via the pre-floor wipe (`deployment-service@78a0aa4`),
-  post-floor purge a verified no-op, and census-based re-verification all satisfied by
-  `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (re-verified live this pass:
-  archived, `status: complete`, both todos `[x]`, `days_scanned=2400`, `total_delete=0`, `total_keep=26891`). The doc
-  now has ZERO open todos and is unlocked, so it is an archival candidate — NOT archived in this pass (cross-referenced
-  by several active docs and 8 sibling tranche workers are reading the same corpus concurrently); parked as a P3
-  follow-up on the ag-closeout-audit findings doc.
+- [x] ✅ [DATA] P0. **DONE — verified 2026-07-30 (satellite corpus-hygiene pass), previously false-unchecked (see
+      `issues/ag_closeout_audit_sports_prefilter_covering_gap_and_false_unchecked_p0_2026_07_30.md` finding 2).**
+      Remediate the corpus-wide §Z fabrication — extend the re-run to 2017+2018 (never in scope), purge (not just
+      overwrite) every `derived_features` parquet still carrying a pre-fix creation timestamp, and re-verify by census,
+      not sampling (see "Required remediation" above). All 3 clauses satisfied: (1) **2017+2018** — moot, not re-run:
+      both years are 100% pre-floor (before the 2020-06-06 sports data floor,
+      `/codex/02-data/sports-2020-06-data-floor.md`) and their 26,089 fabricated objects were deleted by the pre-floor
+      GCS wipe, `deployment-service@78a0aa4` (2026-07-21). (2) **Purge the post-floor remainder** — done by
+      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (`status: complete`, both
+      todos `[x]`): Todo 1 ran an exhaustive Tier-2 SPOT census (2400/2400 in-scope days scanned, Jun-Dec 2020 +
+      2021-2026, 26,891 objects); Todo 2 resolved as a verified no-op because that census returned `total_delete=0` —
+      every in-scope object already carries a `last_modified` on/after the 2026-07-19 cutoff. (3) **Re-verify by census
+      not sampling** — that same exhaustive census IS the census-based re-verification this clause asks for. Status left
+      `open` at frontmatter level pending the archival check below (no other open work in this doc — see next step).

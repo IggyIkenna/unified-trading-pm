@@ -24,7 +24,7 @@ repos: [agent-orchestrator, unified-trading-library, strategy-service]
 tags: [agent-orchestrator, git, wip-preserve, quarantine, data-loss-risk, session-recovery]
 related:
   [
-    /plans/active/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
+    /plans/archive/issues/ldr_main_backmerge_silently_resurrects_reverted_commit_2026_07_29.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-29

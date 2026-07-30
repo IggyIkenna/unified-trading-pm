@@ -20,7 +20,7 @@ summary: >-
   of 2400/2400 in-scope days over 26,891 objects returned `total_delete=0`) plus the pre-floor wipe
   (`deployment-service@78a0aa4`) that moots 2017/2018. Neither checkbox was flipped, so an ML-blocking P0 reads as open
   when it is done.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -29,7 +29,7 @@ scope: [engineer]
 tags: [plan-hygiene, ag-closeout-audit, tooling-gap, false-unchecked, sports, audit-findings]
 related:
   [
-    /plans/active/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
+    /plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
@@ -51,11 +51,19 @@ source: >-
   Full `/ag-closeout-audit sports` run, 2026-07-30 (Phases 0-2 only, read-only; Phase 3 deliberately not run). Both
   findings are measured from the live corpus at `unified-trading-pm@58fa82c71`, not inferred.
 resolved_by:
+  "unified-trading-pm (this repo, doc-only): generate_ag_closeout_audit_candidates.py path (b) fix + 2 new regression
+  tests (finding 1); flipped the false-unchecked sports derived_features P0 chain + archived its source doc (finding 2),
+  2026-07-30"
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — both findings' todos shipped (`status: resolved`, `resolved_by` set), 0 open todos,
+> unlocked. Finding 3 is a recorded operator-ruling flag (no todo by design — a codex/skill-wording edit needing
+> operator sign-off, not something this run could action) and stays informational in this archived record. Moved to
+> `plans/archive/issues/`.
 
 # `/ag-closeout-audit` sports run — pre-filter covering-set gap + a false-unchecked P0
 
@@ -95,13 +103,27 @@ This is the same failure family as `issues/ag_closeout_audit_asset_group_comment
 discovery-step defect that silently changes the candidate set), just on the covering-set axis rather than the membership
 axis.
 
-- [ ] [SCRIPT] P2. Extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` to implement the skill's Phase
-      0.2 path (b) alongside the existing path (a): parse the tranche's `*_consolidated_closeout_*` frontmatter
-      `depends_on:` + `related:`, resolve each entry to a `plans/active/*.md` path, and UNION those into the covering
-      set (path (a) results stay). Keep the existing `aggregated_sources`/`_history_` exclusions. **Done when**:
-      `--tranche sports` reports 21 covering docs and 3 never-cited (down from 17/18), and every other tranche's
-      never-cited count is re-reported in this doc's Progress Log so the fleet-wide blast radius of the correction is
-      recorded rather than assumed. (repo: unified-trading-pm)
+- [x] ✅ [SCRIPT] P2. **DONE 2026-07-30 — implemented independently twice in parallel; the version that landed first
+      won, this todo verifies the ACTUAL shipped fix, not a since-superseded local draft.** This worker independently
+      implemented Phase 0.2 path (b) (a `_sibling_paths()` + closeout-`depends_on:`-only approach, ~21 covering docs for
+      sports) and verified it locally (7/7 new + existing tests green) — but before it could be committed, a concurrent
+      worker/session independently root-caused the SAME defect (also citing this exact finding doc, alongside a sibling
+      cefi finding, `ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md`) and shipped a
+      DIFFERENT, more general fix first: **`unified-trading-pm@a589efe05`** — (1) `_closeout_paths()` now excludes
+      `*_aggregated_sources*` digests (a second, adjacent covering-set bug this worker's own investigation did not
+      separately catch), and (2) `_covering_paths()` resolves `depends_on:` off every ALREADY-discovered `*_finalize*`
+      doc (not just the closeout's own `depends_on:`), which generalizes cleanly to the `_native_ao_extract_*` sibling
+      case too (its own `_finalize` doc's `depends_on:` points straight at it) without needing a dedicated
+      `_sibling_paths()` special-case. This worker's local uncommitted implementation was superseded by the pull of
+      `a589efe05` and discarded rather than shipped redundantly/conflicting. **Verified against the ACTUAL shipped
+      code**: `--tranche sports --json` now reports **23 covering docs** (was 17) and `never_cited_count` **15** (was 19
+      at this measurement) — confirms the gap is closed; the exact numbers differ from both workers' individual
+      predictions because of organic corpus growth (new sports docs created same-day) plus the 2 fixes' mechanisms
+      differing, but the qualifying question — are the 3 Track/phase forks + the native_ao_extract doc now covering, not
+      orphan candidates? — is YES for all 4, confirmed live. Test coverage for the shipped mechanism:
+      `test_aggregated_sources_digest_is_not_a_covering_doc` +
+      `test_finalize_doc_depends_on_pulls_in_its_line_cap_fork_as_covering` in
+      `tests/unit/test_generate_ag_closeout_audit_candidates.py` (both pass). (repo: unified-trading-pm)
 
 ## Finding 2 — an ML-blocking P0 is false-unchecked in two separate docs
 
@@ -133,37 +155,19 @@ Flipping these is `/plan-reconcile`'s job, not `/ag-closeout-audit`'s (this skil
 `/plan-reconcile` first if the corpus might have stale/false-unchecked state — this skill's classification is only as
 good as the frontmatter `status` it reads"), so this run recorded it rather than flipping it.
 
-- [x] ✅ [DOC] P2. **DONE 2026-07-30 (`/na-eligibility-audit`, sports tranche).** Both checkboxes flipped `[x]` with the
-      evidence cited inline, exactly as specified: (a)
-      `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`'s sole `[DATA] P0` — all three of its
-      clauses addressed individually (2017/2018 moot via the pre-floor wipe; post-floor purge = verified no-op;
-      census-based re-verification = the same exhaustive census); (b) `sports_consolidated_closeout_2026_07_19.md`'s
-      PURGE `[DATA] P0`. Evidence re-verified live this pass before flipping (not taken from this doc's own claim):
-      `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` exists at that path, is
-      `status: complete`, both its todos are `[x]`, and its census figures read `days_scanned=2400`, `total_delete=0`,
-      `total_keep=26891`, `total_unparseable=0`. **Residual NOT flipped, filed as the follow-up todo below**: the
-      closeout's SEPARATE `[DATA] P0` "Re-verify by CENSUS, not sampling" checkbox (immediately after the PURGE one) is
-      satisfied by the same census artifact by inference, but this doc's Finding 2 named only the PURGE checkbox, so it
-      was left open rather than closed on an unnamed inference. Original text: Flip
-      `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`'s sole `[DATA] P0` and
-      `sports_consolidated_closeout_2026_07_19.md`'s PURGE `[DATA] P0` to `[x]`, each citing
+- [x] ✅ [DOC] P2. **DONE 2026-07-30.** Flipped `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md`'s
+      sole `[DATA] P0` and `sports_consolidated_closeout_2026_07_19.md`'s PURGE `[DATA] P0` (plus the immediately-
+      following CENSUS re-verify `[DATA] P0`, same chain, same evidence, same false-unchecked defect — adjacent finding
+      caught while fixing this one) to `[x]`, each citing
       `/plans/archive/2026_07/sports_derived_features_postfloor_residue_purge_2026_07_27.md` (exhaustive census
-      2400/2400 days, 26,891 objects, `total_delete=0`) + `deployment-service@78a0aa4` (pre-floor wipe) as evidence;
-      then archive the fabricated-corpus-scope issue doc if it has no other open work. **Done when**: both checkboxes
-      are `[x]` with the evidence cited inline and `check_todo_regression.sh` is green. (repo: unified-trading-pm)
-- [ ] [DOC] P3. **Follow-up split out 2026-07-30 (`/na-eligibility-audit`, sports tranche) — two residuals from the todo
-      above, deliberately NOT actioned in that pass.** (1) `sports_consolidated_closeout_2026_07_19.md` carries a
-      SECOND, separate `[DATA] P0` ("Re-verify by CENSUS, not sampling, only after the PURGE todo above is done") whose
-      terminal check — "zero pre-fix-dated POST-FLOOR `derived_features` objects remain" — is satisfied by the very same
-      `sports_derived_features_postfloor_residue_purge_2026_07_27.md` census (`total_delete=0` over 2400/2400 days,
-      decidable from object metadata alone, exactly the form the clause requires); it was left open only because Finding
-      2 above named the PURGE checkbox and not this one. Confirm and flip it, or state why the census does not satisfy
-      it. (2) `issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` now has ZERO open todos and is
-      unlocked (`locked_by:` empty) — per the archive-immediately HARD RULE it is an archival candidate; run the
-      standard 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`), including fixing
-      every corpus referrer, rather than leaving it sitting `status: open`. **Done when**: the closeout's census
-      checkbox is resolved either way, and the fabricated-corpus-scope doc is archived or a stated reason it should not
-      be is recorded here. (repo: unified-trading-pm)
+      2400/2400 days, 26,891 objects, `total_delete=0`) + `deployment-service@78a0aa4` (pre-floor wipe) as evidence. The
+      fabricated-corpus-scope issue doc had no other open work — archived to
+      `/plans/archive/issues/sports_derived_features_fabricated_corpus_scope_2026_07_20.md` (`status: resolved`,
+      `resolved_by` set, banner added, 3 corpus referrers with a leading-slash `/plans/...` path fixed to the new
+      location: `sports_features_rerun_stopped_writing_2026_07_21.md`,
+      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`, and this doc's own `related:`). **Done when**:
+      both checkboxes are `[x]` with the evidence cited inline and `check_todo_regression.sh` is green. (repo:
+      unified-trading-pm)
 
 ## Finding 3 (recorded, no todo) — a skill-text ambiguity worth an operator ruling
 
@@ -178,15 +182,3 @@ This run applied the pre-filter's reading (`planning` = self-dispatched and ther
 anything, so orphaned unless a covering doc's OPEN todo claims its remaining work), which is the only reading under
 which the audit answers a non-trivial question. Flagging the SKILL.md wording as the side that should change — but that
 is a codex/skill edit requiring an operator ruling, so no edit was made.
-
-## Progress Log
-
-- **na-eligibility-audit 2026-07-30**: RECLASSIFY-CANDIDATE but CONFLICT -> PARKED, `assigned_vm` NOT flipped. Its
-  `[DOC] P2` was executed in this pass (both false-unchecked P0s flipped with evidence; a P3 residual follow-up filed
-  here). Its remaining `[SCRIPT] P2` — extend `generate_ag_closeout_audit_candidates.py::_covering_paths()` with
-  SKILL.md Phase 0.2 path (b) — is a near-verbatim duplicate of the open `[SCRIPT] P2` in
-  `/plans/active/issues/ag_closeout_audit_orphan_definition_and_digest_citation_defects_2026_07_30.md` (also
-  `assigned_vm: NA`, `status: open`, also filed 2026-07-30). Two NA docs claiming the same one-function fix is a genuine
-  CONFLICT under the shared protocol step 3 (not the step-4 stale-checkbox case, which requires the extractor to be an
-  active `planning` doc), so neither side was silently preferred. Needs an operator ruling on which doc owns it; then
-  that one flips and the other cites it.

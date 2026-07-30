@@ -19,7 +19,7 @@ summary: >-
   squash-promote's source range and the backmerge's merge-base are computed independently of each other's timing.
   Re-reverted the Dockerfile a second time (`c5e8572a`) to restore the correct state; this doc tracks the PIPELINE bug,
   not the Dockerfile content itself (that's the sibling doc's scope).
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-07-30 (/ag-closeout-audit ci) -- was [cross-cutting]; content is an LDR<->main
@@ -33,6 +33,7 @@ related:
     /plans/active/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
     /plans/active/issues/ldr_to_main_promote_churn_fix_verification_2026_07_27.md,
     /plans/active/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 created: 2026-07-29
 priority: P1
@@ -46,8 +47,14 @@ estimate_class: infra
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "unified-trading-pm@d3a47773a (Promoted-From-LDR trailer + explicit merge-base + check_no_silent_revert_loss guard,
+  fleet-rolled-out 23/24), bounded fleet spot-check (2026-07-30, 3/4 clean, 1/4 explainable churn), and codex doc
+  /codex/08-workflows/ci-cd-flow.md updated with the named invariant"
 locked_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — all 4 todos `[x]` (root-cause, fix + fleet rollout, bounded fleet spot-check, codex
+> documentation). `status: resolved`, `resolved_by` set, unlocked. Moved to `plans/archive/issues/`.
 
 # LDR<->main promote/backmerge can silently resurrect a reverted commit
 
@@ -214,14 +221,35 @@ confirm-fix-shape only.
       (all copies committed + pushed). Add a regression test reproducing the confirmed instruments-service graph
       (add→revert→stale-squash→backmerge ⇒ revert must survive). Repo: unified-trading-pm (workflows), cross-repo
       impact.
-- [ ] [DATA] P2. Fleet sanity sweep: given this pattern could have silently reintroduced OTHER reverted commits
-      undetected (not just this session's), spot-check a handful of recent revert commits across the fleet
-      (`git log     --grep='^revert' --all` per repo) and confirm their reverted content is still actually absent on
-      both `main` and `live-defi-rollout` (content check, not just `git log` ancestry) — this exact "log says reverted,
-      file says not" mismatch is the failure signature to search for.
-- [ ] [SCRIPT] P3. Once the root cause + fix shape is confirmed, document the invariant in
-      `/codex/08-workflows/ci-cd-flow.md` (or wherever the promote/backmerge mechanics are the SSOT) so this class of
-      race is a known, named risk rather than something each agent has to rediscover.
+- [x] ✅ [DATA] P2. **DONE 2026-07-30 (bounded spot-check, `live-defi-rollout` HEAD each repo).** Spot-checked 4 recent
+      `revert(...)`/`Revert "..."` commits across 3 repos beyond this incident's own instruments-service commit: (1)
+      `unified-api-contracts@bd8a46e9` (`revert(alerting): drop AlertCode.DEPLOYMENT_DIGEST`) — clean,
+      `grep     DEPLOYMENT_DIGEST` on current `unified_api_contracts/canonical/crosscutting/alerting/codes.py` returns 0
+      hits, the revert held. (2) `unified-trading-library@f5eb0c86`
+      (`revert(deps): restore fastapi ceiling to <0.137.0`) — clean, current `pyproject.toml` reads
+      `fastapi>=0.137.0,<1.0.0`, a later DELIBERATE version bump superseding the revert entirely (not a resurrection of
+      the exact reverted `<0.138.0` ceiling). (3) `deployment-service@d8695e3`
+      (`revert:     relocate deployments_registry.py to unified-trading-library`) — clean, the relocation was later
+      legitimately RE-LANDED by its own explicit follow-up commit (`0676ba1`, "re-land the UTL relocation"), not a
+      silent backmerge-driven reappearance. (4) `instruments-service@32a4df34`
+      (`Revert "ci(workflow-templates): bump     create-github-app-token v1→v3"`) — **INCONCLUSIVE, not pursued further
+      (bounded scope)**: current `.github/workflows/main-backmerge-to-ldr.yml` has `@v3`, matching what this specific
+      revert removed, BUT `git log --follow -p` on that one line shows 8+ v1↔v3 oscillations across the file's history —
+      this is a template-sync file (`rollout-workflow-templates.sh` repeatedly overwrites it from the canonical source),
+      so repeated back-and-forth is expected churn from normal template iteration, not the clean single
+      add→revert→stale-squash→backmerge shape this issue's root cause describes; also predates (2026-06-15) the
+      confirmed bug window this issue traces (fix landed 2026-07-29). **Net**: 3/4 clean, 1/4 ambiguous-but-explainable
+      by legitimate churn, 0/4 a confirmed NEW instance of the silent-resurrection pattern. Not exhaustive (this was
+      explicitly scoped as "a handful," not a full-fleet census) — if a future agent wants full confidence, the
+      `check_no_silent_revert_loss()` guard now shipped in `main-backmerge-to-ldr.yml` (see todo above) is the standing,
+      ongoing defense rather than a one-off retrospective sweep.
+- [x] ✅ [SCRIPT] P3. **DONE 2026-07-30 — `/codex/08-workflows/ci-cd-flow.md`** ("Named invariant: a revert landing near
+      a promote-cycle boundary must survive the backmerge" section, added right after the "Convergence +
+      conflict-resolution model" subsection): documents the mechanism (frozen-head promote pins a past LDR SHA, squash
+      discards ancestry, backmerge's 3-way merge computes a stale base), the shipped fix (`Promoted-From-LDR:` trailer +
+      explicit merge-base + `check_no_silent_revert_loss()` guard, `unified-trading-pm@d3a47773a`), and the practical
+      takeaway (verify file CONTENT post-backmerge after a revert near a promote boundary, not just `git log` ancestry)
+      — so this race is now a named, discoverable risk rather than something each agent has to rediscover from scratch.
 
 ## Progress Log
 
