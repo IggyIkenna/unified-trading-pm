@@ -400,11 +400,11 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
   trigger (a `PREEMPTED` blob written by a systemd unit installed partway through `setup-data-pipeline-vm.sh`'s
   > 1000-line startup) only reliably fires for multi-hour production backfills — a single-shard smoke-test VM is
   > disproportionately likely to be preempted in the early-boot blind window before the unit installs, exactly the
-  > silent-miss case tracked in `/plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md`. Items 8-9
-  > already named `launch-instruments-backfill-vm.sh` and `launch-mtds-backfill-vm.sh` (which emit the
-  > `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*` VM names this note describes) as 2 of the 8
-  > launchers the native-shutdown-script fix was WRITTEN for 2026-07-30 — code done, not yet shipped (blocked on a
-  > pre-existing unrelated repo gate, see that doc) — the gap this note flags is now closed at the launcher level.
+  > silent-miss case tracked in `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` (archived
+  > 2026-07-30, all 9 todos done). Items 8-9 already named `launch-instruments-backfill-vm.sh` and
+  > `launch-mtds-backfill-vm.sh` (which emit the `instr-backfill-*-pipelinecheck-*` / `mtds-backfill-*-pipelinecheck-*`
+  > VM names this note describes) as 2 of the 8 launchers the native-shutdown-script fix landed on, shipped
+  > `deployment-service@db5d3c7` — the gap this note flags is now closed at the launcher level.
 - `- [ ] [DATA] P1-OPERATOR-REVIEW. (carried forward) Review the retire-phase candidate list (50,520 rows) before ever running --apply — unchanged from the earlier entry; still awaiting operator review, not touched this continuation.`
 
 ### 2026-07-24 — session wrap-up (operator asked to stop after shipping local + pre-compact)
@@ -479,7 +479,7 @@ its 2026-07-24 12:43 UTC launch — well before session-end); no re-launch was n
 | 3 `TestIsBundledChainShardCboeCorrection` regression tests                 | Written, verified in isolation, withheld from the shipped commit                                                                                                                 | `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` resolution                                                                                 |
 | `DEPLOYMENT_ENV` pytest race root cause                                    | Narrowed to quickmerge's cascade/pull step this session (5 dirty / 1 clean via quickmerge vs. 1 clean via direct `quality-gates.sh` back-to-back); exact mechanism still unknown | Needs someone to instrument the cascade step itself (env diff before/after `STAGE 0`), not another blind-retry session                                     |
 | Chain-bundle canonical-root→raw-Databento-symbol reverse translation (CME) | Genuinely open, blocked on an `EXCHANGE_CODE_TO_NAME` SSOT contradiction across two UAC files                                                                                    | Operator input, per `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` §4                                                                           |
-| VM fleet preemption early-boot blind window for smoke-test VMs             | Code written 2026-07-30, NOT yet shipped (deployment-service quickmerge blocked on an unrelated pre-existing gate)                                                               | `/plans/active/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9                                                                        |
+| VM fleet preemption early-boot blind window for smoke-test VMs             | FIXED + shipped 2026-07-30 (deployment-service@db5d3c7)                                                                                                                          | `/plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md` items 8-9 (resolved)                                                            |
 | Retire-phase 50,520-row `--apply`                                          | Untouched all session, correctly                                                                                                                                                 | Operator review — hard stop, never autonomous                                                                                                              |
 
 **Recommended next item**: read the CBOE VM's `run.log` first (cheapest, already in flight) before picking up anything
