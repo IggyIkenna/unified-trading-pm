@@ -31,8 +31,8 @@ parent_epic: agent_operating_framework_master
 source: "Found while live-verifying dispatch_sequential_gate_fix_2026_07_24.md's [BACKEND] P1 todo via SSM, 2026-07-29"
 resolved_by: agent-orchestrator@b5fb9fc, agent-orchestrator@61b7a4f
 locked_by:
-assigned_vm: planning
-execution_scope: orchestrator-agent
+assigned_vm: NA
+execution_scope: local-only
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
@@ -120,3 +120,9 @@ this specific VM's self-pull log; it surfaced only because an unrelated todo nee
   'READ-ONLY') as part of the sequential-gate verification — no competing change to the script. CLEAR. Set
   `assigned_role: infra`, `execution_scope: orchestrator-agent`. The todo's own instruction to cross-reference
   `ao_residuals_after_dispatch_hardening_2026_07_17.md`'s dirty-gate design before building stands.
+- **⚠️ SUPERSEDED — integrator note 2026-07-30.** The RECLASSIFY above was computed against this doc's ACTIVE state;
+  while the ao tranche was running, the doc was **resolved and archived** here by `unified-trading-pm@24fda8bfb`. Git
+  rename detection silently replayed the tranche's frontmatter flip onto this archived copy, leaving a
+  `status: resolved` doc marked `assigned_vm: planning`; the integrator **reverted the flip to `assigned_vm: NA` /
+  `execution_scope: local-only`** to match the archived state. The verdict text is kept as an audit record only — it
+  does not describe open work.

@@ -189,3 +189,5 @@ Once decided:
 - **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): ARCHIVE-worthy (0 open todos, all 3 `[x]` with commit
   evidence, nothing reopened) but BLOCKED: `locked_by: live-defi-rollout` - archival is never autonomous on a locked
   doc. Parked for `[unlock-plan]`.
+- **Integrator note 2026-07-30**: the parked ask above is RESOLVED — the doc was archived to this path independently the
+  same day, so no `[unlock-plan]` is outstanding. Recorded so the parked item is not re-actioned.
