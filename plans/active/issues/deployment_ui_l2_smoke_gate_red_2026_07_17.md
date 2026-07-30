@@ -139,12 +139,23 @@ correct-and-failing, not stale.
       git-health surface" test (the whole page it guarded is gone per
       `plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`). Verified 38/38 `cockpit.spec.ts` + 49/49
       combined with `deployments-page.spec.ts` passing. `deployment-ui@<pending sha, see commit for exact hash>`.
-- [ ] [UI] P2. **Delete `tests/smoke/fleet-git-tab.spec.ts` entirely** — all 4 of its tests guard the `/fleet` page that
-      `deployment_ui_fleet_tab_removal_2026_07_27.md` deleted; same fix class as the `cockpit.spec.ts` item above.
-      Attempted 2026-07-28 (slot-3) but the file delete (`rm`/`git rm`) was BLOCKED by this VM's
-      `block_destructive_commands.py` "recursive rm" guardrail pattern-matching a single-file delete as a tree delete —
-      needs either a VM/host where the guardrail doesn't false-positive on a plain `git rm <single-file>`, or an update
-      to that hook's pattern to distinguish a real recursive delete from a named single-file one.
+- [x] ✅ [UI] P2. **DONE 2026-07-30 (slot-7, ui_developer).** **Deleted `tests/smoke/fleet-git-tab.spec.ts` entirely** —
+      `deployment-ui@c14af3a`. The real test bodies were already stripped 2026-07-29 (leaving only a doc-comment stub
+      explaining the `/fleet` page removal); this deletes that now-pointless placeholder file. A plain
+      `git rm     tests/smoke/fleet-git-tab.spec.ts` was NOT blocked this time — re-read
+      `block_destructive_commands.py`'s regex (`\brm\b[^|;&\n]*(-[A-Za-z]*[rR]|--recursive)`): a bare `git rm <file>`
+      with no `-r`/`-R`/`--recursive` flag anywhere on the line does not match; the 2026-07-28 block was presumably a
+      different invocation shape (e.g. a flag or compound command), not an inherent false-positive on every single-file
+      `git rm`. Verification: `tsc     --noEmit` clean, `eslint src` clean, full `tests/smoke/` suite 423 passed / 1
+      failed (`venue_credentials.spec.ts:50`, already tracked in this doc's own 2026-07-30 "newly-surfaced" cluster
+      below as unrelated — a standalone re-run of that spec passed 4/4, confirming flakiness/pre-existing, not caused by
+      this change). Also found + fixed an unrelated environment bug while verifying: this slot's `deployment-ui` clone
+      had a stale npm-era `node_modules` (pre-dating the 2026-07-29 pnpm migration), which produced the exact same
+      broken 24% coverage numbers as the already-resolved
+      `plans/archive/issues/deployment_ui_vitest_coverage_gate_broadly_red_2026_07_29.md` — fixed locally via a clean
+      `pnpm install` (no code change needed, `pnpm-workspace.yaml`'s `packages:` fix was already merged); full
+      `quality-gates.sh` green post-reinstall (73.85% lines, sentinel matches `c14af3a`). Shipped via quickmerge —
+      landed on `live-defi-rollout`.
 - [ ] [UI] P2. **Fix `nav-menu-dedup.spec.ts`'s 5 stale fleet-tab-removal failures** — remove the
       `["fleet", "/fleet", "cockpit-fleet"]` row from the `CANONICAL` array; re-derive (don't guess) the "17 entries"
       count (16 canonical nav items exist today per `NavMenu.tsx`'s own `NAV_ITEMS_CANONICAL`, split into N
