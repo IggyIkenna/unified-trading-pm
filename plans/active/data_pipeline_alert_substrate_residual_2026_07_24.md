@@ -63,9 +63,18 @@ locked_since:
       `SOURCE_KEY_POOL_EXHAUSTED` (C5: TheGraph 9-key pool, Databento, etc.) → `data-pipeline-alerts`. —
       **market-tick-data-service**
 
-- [ ] [UI] P0. **Streaming events pane** in deployment-ui that tails the live VM event stream (not just the alert
+- [x] ✅ [UI] P0. **Streaming events pane** in deployment-ui that tails the live VM event stream (not just the alert
       ledger) per AG/VM. `[UI]` + `pw:L2 ✓` + regression spec required. Extend `deployment_ui_monitoring_pane`. —
-      **deployment-ui**
+      **deployment-ui@7da69bf** — extended the cockpit's existing Alerts & Logs "Live logs" pane (`AlertsLogsTab.tsx`,
+      shipped by `deployment_ui_monitoring_pane_2026_06_19.md`) rather than rebuilding: added asset-group → VM dropdowns
+      sourced from the same `GET /api/deployments/inventory` census `Deployments.tsx` already reads for its own filters
+      (client-side option-derivation, no new backend endpoint), so an operator can find + tail a VM's event stream
+      without already knowing its exact name — the pre-existing free-text box stays as a manual override for live
+      clusters not in the VM inventory. `pw:L2 ✓` — new regression
+      `tests/smoke/cockpit-alerts-logs-ag-vm-picker.spec.ts` (2 tests, AG-select populates VM options + streams;
+      switching AG resets VM selection) against the mock backend's real fixture data; full existing `cockpit.spec.ts` +
+      `deployments-page.spec.ts` suites (49 tests) reconfirmed green, no regressions. Full QG green (typecheck/lint/101
+      unit tests · 74% cov/build).
 
 ## Residual from Phase 3 (Daily per-AG completion summary + hygiene audit) + Wave 4b out-of-repo wiring
 
@@ -213,3 +222,5 @@ locked_since:
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the 3 remaining todos are bounded code/UI work
   (SOURCE_RATE_LIMITED/SOURCE_KEY_POOL_EXHAUSTED event, deployment-ui streaming-events pane, the 2-line UTL
   DP_DAILY_DIGEST string constants); batch2's overlapping claims land only on items already `[x]` here.
+- **2026-07-30 (slot-6)**: Shipped the deployment-ui streaming-events pane todo — deployment-ui@7da69bf. 1 todo remains
+  open (SOURCE_RATE_LIMITED/SOURCE_KEY_POOL_EXHAUSTED, market-tick-data-service) — plan stays active.
