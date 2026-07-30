@@ -171,6 +171,18 @@ not a caller-side workaround.
       timestamps whether any bucket's index shows a suspicious mass-drop matching this function's known call shape. Not
       urgent (no evidence of a past incident), but worth a bounded check before closing this doc.
 
+## Third risk site found 2026-07-30 (ag-closeout-audit cefi) — a doc, not a past execution
+
+`plans/active/issues/mdps_backfill_cefi_trades_gap_fill_completion_2026_07_28.md`'s sole open todo (created 2026-07-28,
+one day AFTER this doc's fix landed, but independently drafted the same unsafe recipe rather than reusing the corrected
+one) still prescribed the wholesale-replacing `rebuild_manifest_from_canonical_paths(...)` call against this exact
+co-located `market-data-tick-cefi-prd-central-element-323112` bucket. Not executed (still `[ ]`, heavy-I/O VM-gated,
+same as risk site 1 was before its catch) — corrected in place to cite `merge_manifest_from_canonical_paths` instead,
+same fix pattern as todo 1 above. This confirms the fix (todos 1-3) closed the two ORIGINAL call sites but did not
+prevent a THIRD, independently-authored doc from re-introducing the same unsafe recipe by name — todo 4's corpus grep
+should also periodically re-check `plans/active/**/*.md` prose (not just `*.py` callers) for the unsafe function name,
+since a plan/issue doc recommending it is a leading indicator that catches the mistake before it ever executes.
+
 ## Evidence
 
 - Function body read directly:
