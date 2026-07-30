@@ -1,0 +1,112 @@
+---
+doc_type: issue
+title: IBKR tradfi writes mislabeled pipeline_mode=batch_fred — no _VENUE_OVERRIDES entry
+summary:
+  IBKR-sourced tradfi bars/ticks have no venue override in UTL's `_VENUE_OVERRIDES`, so `derive_pipeline_mode_for_row`
+  falls through to `SOURCE_PRIORITY[("tradfi", data_type)]` — which resolves to `fred` for `ohlcv_1d`, mislabeling real
+  IBKR-fetched equity/FX/bond/index bars as FRED-sourced. Surfaced 2026-07-30 while widening MTDS's ungated test
+  coverage (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11).
+status: open
+nature: issue
+asset_group: [tradfi]
+stage: [meta]
+repos:
+  - unified-trading-library
+  - market-tick-data-service
+scope: [engineer, admin]
+tags:
+  - pipeline-mode
+  - tradfi
+  - data-correctness
+  - source-priority
+related:
+  - plans/active/ci_satellite_ao_dispatch_batch2_2026_07_29.md
+  - plans/active/issues/mtds_ungated_test_families_2026_07_17.md
+created: 2026-07-30
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P2
+estimate_class: refactor
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.12
+assigned_role: backend
+drift_direction: none
+source: >-
+  Discovered while executing ci_satellite_ao_dispatch_batch2_2026_07_29.md todo 11 ("Widen MTDS's ungated test
+  coverage"). `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
+  `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` both expect
+  `pipeline_mode=batch_databento` for an IBKR write and instead observe `pipeline_mode=batch_fred`.
+resolved_by:
+locked_by:
+depends_on: []
+---
+
+# IBKR tradfi writes mislabeled pipeline_mode=batch_fred
+
+## The finding (measured, 2026-07-30)
+
+`unified_trading_library/pipeline_mode_resolver.py`'s `_VENUE_OVERRIDES` table carries explicit entries for `YAHOO`,
+`EIA`, `FRED`, `ECB`, and `OFR` (the FRED/ECB/OFR entries were added 2026-07-29 per
+`gcs_path_resolution_centralization_audit_2026_07_28.md`, specifically because those are self-archiving vendors whose
+(asset_group, data_type) pair has no dedicated `SOURCE_PRIORITY` entry and would otherwise silently fall through to the
+`tradfi` asset-group fallback). **`IBKR` never got the same treatment.** `IBKRAdapter.write_canonical_shard` →
+`write_tradfi_shard` → `derive_pipeline_mode_for_row(venue="IBKR", "tradfi", data_type)` has no venue override and no
+`(IBKR, data_type)` `_VENUE_DT_OVERRIDES` entry, so it falls through to `SOURCE_PRIORITY[("tradfi", data_type)]` —
+whatever the _data-type-level_ priority source is, NOT the actual fetching vendor (IBKR).
+
+Measured live (`IBKRAdapter(...).write_canonical_shard(..., data_type="ohlcv_1d", ...)`):
+
+```
+gs://.../pipeline_mode=batch_fred/asset_group=tradfi/venue=IBKR/instrument_type=equity/
+    data_type=ohlcv_1d/IBKR:EQUITY:AAPL-USD.parquet
+```
+
+Real IBKR-fetched equity bars are stamped as FRED-sourced. This is the exact same class of bug the 2026-07-29
+FRED/ECB/OFR fix addressed — just not extended to IBKR at the time (IBKR uses `ohlcv_1d`/`yield_curve` types that
+overlap with FRED's, so `SOURCE_PRIORITY[("tradfi", "ohlcv_1d")]` resolving fred-first silently catches IBKR too).
+
+**Not yet confirmed live-firing in prod** (no GCS census run as part of this finding — same caveat the 2026-07-29 fix
+itself carried) — this is a code-path finding, not a confirmed-prod mislabel count. IBKR is currently a lower-volume
+tradfi source than FRED, so the blast radius on real objects is unknown until someone runs the manifest/GCS census for
+`venue=IBKR`.
+
+## Why this isn't a same-commit fix
+
+Unlike the FRED/ECB/OFR fix (which reused an EXISTING `PipelineMode.BATCH_FRED` / `BATCH_ECB` / `BATCH_OFR` enum
+member), **there is no `PipelineMode.BATCH_IBKR` member in `unified_api_contracts` today.** Adding one is a cross-repo
+UAC registry change (new enum member + any exhaustiveness checks/tests in UAC that iterate the enum + potentially the
+manifest schema's legal-value list) — the same "registry-data-dict" class of change this same batch's todo 5
+(`detect_breaking_change.py` registry blind spot) calls out as needing its own scoped handling, not a drive-by edit
+inside an unrelated test-widening todo.
+
+## Todos
+
+- [ ] [BACKEND] P2. **Confirm real-prod blast radius**: run a manifest/GCS census for `asset_group=tradfi venue=IBKR` —
+      count objects currently stamped `pipeline_mode=batch_fred` (or any non-`batch_databento`/`batch_ibkr` value) that
+      were actually IBKR-fetched. (repo: market-tick-data-service)
+- [ ] [BACKEND] P2. **Add `PipelineMode.BATCH_IBKR = "batch_ibkr"`** to
+      `unified_api_contracts/canonical/crosscutting/pipeline_mode.py`, following the exact pattern of the existing
+      `BATCH_FRED`/`BATCH_ECB`/`BATCH_OFR` members (incl. any exhaustiveness/coverage tests in UAC that enumerate
+      `PipelineMode` members). (repo: unified-api-contracts)
+- [ ] [BACKEND] P2. **Add `"IBKR": PipelineMode.BATCH_IBKR`** to `_VENUE_OVERRIDES` in
+      `unified_trading_library/pipeline_mode_resolver.py`, mirroring the FRED/ECB/OFR entries added 2026-07-29. (repo:
+      unified-trading-library)
+- [ ] [BACKEND] P2. **Un-xfail** `test_ibkr_equity_bars_write` and `test_partition_path_uses_category_tradfi` in
+      `market-tick-data-service/tests/market_interface/adapters/tradfi/test_tradfi_canonical_writes.py` (both currently
+      marked `xfail(strict=True)` citing this doc) once the above ship — update their expected `pipeline_mode` to
+      `batch_ibkr` and remove the marker. (repo: market-tick-data-service)
+- [ ] [BACKEND] P3. **If the census (todo 1) finds real mislabeled prod objects**: file a follow-up migration todo to
+      backfill their `pipeline_mode` in the manifest (mirroring whatever backfill approach the FRED/ECB/OFR fix used, if
+      any) — do not silently leave stale-mislabeled manifest rows uncorrected. (repo: market-tick-data-service)
+
+## Progress Log
+
+- **2026-07-30** — Found while executing `ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11 (widen MTDS's ungated
+  test coverage). Two long-ungated tests (`test_ibkr_equity_bars_write`, `test_partition_path_uses_category_tradfi`)
+  asserted `pipeline_mode=batch_databento` for IBKR writes; live re-verification showed the code actually produces
+  `batch_fred` (via the SOURCE_PRIORITY fallthrough, not the OLD contract the tests encoded either — both are wrong, in
+  different ways). Filed as its own issue rather than silently updating the test's expectation to the
+  observed-but-still-buggy `batch_fred` value, and rather than absorbing a cross-repo UAC enum addition into the
+  unrelated test-widening todo. The two affected tests are marked `xfail(strict=True)` citing this doc so the MTDS gate
+  can still widen `PYTEST_UNIT_DIR` without masking the bug as fixed.

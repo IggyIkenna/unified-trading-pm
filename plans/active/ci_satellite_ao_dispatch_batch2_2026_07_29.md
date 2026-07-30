@@ -262,19 +262,31 @@ concurrent workers do not collide on this file.
       deprecated code, no shims" — confirm dead first), all three repos' `quality-gates.sh` stay green post-delete, and
       (c)'s `SERVICES` array matches the live repo topology. Source:
       `archive/issues/ci_test_content_and_tooling_speed_findings_2026_07_28.md` (§ dead code).
-- [ ] [BACKEND] P1. **Widen MTDS's ungated test coverage — fix + widen `PYTEST_UNIT_DIR`.** One combined todo
-      (internally sequential, single source doc): (a) fix the 8 non-integration `tests/market_interface/unit/` failures
-      (`test_defi_handlers.py` ×5, `test_defi_adapters_boost_2.py` ×2, `test_barchart_and_yahoo_adapters.py` ×1 — the
-      Barchart test may simply delete per the codex's Barchart-retired citation); (b) fix the remaining 12 of the
-      original 14 `tests/market_interface/adapters/**` canonical-output/write failures (databento ×12, tradfi-writes ×1,
-      tardis-options ×1 minus the 2 already fixed — **verify each remaining failure first: check whether it encodes the
-      OLD pre-D1/D2 contract before fixing**, per the doc's own caveat); (c) once (a) and (b) are green, widen
-      `PYTEST_UNIT_DIR` to the full `market_interface` unit/adapters/clients/schema_validation/cli + `tests/cli` set
-      (rule 11a: proof in the same change); (d) decide the `tests/integration/**` story (12 modules never run anywhere)
-      — wire into a credentialled CI lane or mark credential-dependent ones explicitly. **Done when**: (a)-(c) are each
-      individually green with the widened `PYTEST_UNIT_DIR` proven in the same commit, and (d)'s decision is recorded
-      with rationale. Source: `issues/mtds_ungated_test_families_2026_07_17.md` (todos 1-4 — well cross-referenced
-      across cefi/infra/ci but never actually executed by any of them per this audit's corpus-wide citation check).
+- [x] ✅ [BACKEND] P1. **Widen MTDS's ungated test coverage — fix + widen `PYTEST_UNIT_DIR`.** —
+      `market-tick-data-service@4849d4f6`. Real failure count had DRIFTED further since this doc's 2026-07-17 baseline
+      (22 real failures) to 35 by 2026-07-30 (13 more days of ungated churn) — all 35 fixed against the CURRENT prod
+      contract, not the stale 2026-07-17 snapshot: (a) the 8+ `tests/market_interface/unit/` failures
+      (`test_defi_handlers.py` — 4 handlers' `assert_defi_catalog_fresh` preflight never mocked + a manifest-recorder
+      API rename (`record_failed` → `record_catalog_unavailable`) + a bridge-events subgraph→on-chain-log rewrite + an
+      aave-positions per-reserve schema change; `test_defi_adapters_boost_2.py` — ethena oracle_prices now
+      on-chain-samples via `BlockResolver` + current_apy reaches real DefiLlama sockets unmocked;
+      `test_barchart_and_yahoo_adapters.py` — Yahoo `fetch_instruments()` intentionally always `[]` per 2026-06-25
+      ruling, test asserted the opposite); (b) the `tests/market_interface/adapters/**` canonical-output/write failures
+      (7 databento canonical-id + 4 write-pipeline `file_symbol`-kwarg/chain-tail drift + 8 tradfi_canonical_writes
+      pipeline_mode drift [6 stale FRED/ECB/OFR-override + Massive-retired assertions fixed; 2 IBKR ones are a REAL bug
+      — IBKR has no `_VENUE_OVERRIDES` entry, xfailed + filed
+      `issues/ibkr_pipeline_mode_missing_venue_override_2026_07_30.md` rather than papered over] + 1 tardis-options
+      credential-gated test hardened against a conftest dummy-key false-positive + 1 tardis-adapter ns-vs-us timestamp
+      fixture bug); (c) widened `PYTEST_UNIT_DIR` to the full `market_interface`
+      unit/adapters/clients/schema_validation + `tests/cli` + 3 proven credential-free `tests/integration/*` files —
+      full `bash scripts/quality-gates.sh` GREEN with the widened dir (rule 11a, exit 0); (d) the remaining 9
+      `tests/integration/**` files stay OUT (all already `@pytest.mark.requires_credentials` + self-skip, real vendor
+      creds unavailable in CI — decision + rationale recorded inline in `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR`
+      comment block). Also found + fixed a look-alike (NOT the same) test-env issue in
+      `test_bucket_resolution_uses_category_tradfi` (root-caused live: this repo's own `CLOUD_PROVIDER=local` test-suite
+      default, not the tracked DEPLOYMENT_ENV race) — noted in
+      `issues/mtds_deployment_env_race_survives_single_worker_2026_07_23.md` to avoid future confusion with that
+      still-open, unrelated leak. Source: `issues/mtds_ungated_test_families_2026_07_17.md` (todos 1-4, all closed).
 - [ ] [QG] P2. **Fleet sweep: a PM quality-gate check comparing every repo's `tests/*/unit/` dirs against its
       `PYTEST_UNIT_DIR`.** So no other repo silently ends up in MTDS's pre-todo-11 situation (a whole test family never
       collected by the gate). New standalone PM script, shrinking-ratchet baseline (do not fail the gate red on existing

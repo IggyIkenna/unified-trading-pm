@@ -113,26 +113,43 @@ PYTEST_UNIT_DIR="tests/unit/ tests/market_interface/unit/test_canonical_parquet_
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Fix the 8 non-integration `tests/market_interface/unit/` failures** (`test_defi_handlers.py` ×5,
-      `test_defi_adapters_boost_2.py` ×2, `test_barchart_and_yahoo_adapters.py` ×1). The `ethena_adapter` DefiLlama
-      socket attempts mean a unit test is reaching the network — that is its own correctness bug, not just a gate gap.
-      Barchart is RETIRED per `/codex/02-data/tradfi-databento-sourcing-ssot.md`, so its test may simply delete. (repo:
+- [x] ✅ [BACKEND] P1. **Fix the 8 non-integration `tests/market_interface/unit/` failures** —
+      `market-tick-data-service@4849d4f6`. By 2026-07-30 the ungated drift had grown to 10+ failures in this family (13
+      more days since this doc's baseline): `test_defi_handlers.py` — 4 handlers' `assert_defi_catalog_fresh` preflight
+      never mocked (added) + manifest-recorder API rename `record_failed`→`record_catalog_unavailable` (4 A12a-preflight
+      tests) + a bridge-events subgraph→on-chain-log rewrite (2 tests rebuilt against
+      `_parse_across_logs`/`_parse_stargate_logs` directly) + an aave-positions per-reserve schema change (fixture
+      rebuilt); `test_defi_adapters_boost_2.py` — ethena `oracle_prices` now on-chain-samples via `BlockResolver`
+      (pre-seeded the block cache, same pattern as `test_get_block_at_timestamp_uses_cache`) + `current_apy` reached the
+      real DefiLlama socket unmocked (now mocks `_ensure_session` like the sibling `yields` test);
+      `test_barchart_and_yahoo_adapters.py` — Yahoo `fetch_instruments()` is intentionally always `[]` per the
+      2026-06-25 ruling, test asserted the opposite (fixed the assertion, not the code). (repo:
       market-tick-data-service)
-- [ ] [BACKEND] P1. **Fix the remaining 14 `tests/market_interface/adapters/**` canonical-output/write failures**
-      (databento ×12, tradfi-writes ×1, tardis-options ×1). **The 2 `test_tardis_canonical_output.py` failures are
-      DONE** (2026-07-17, `market-tick-data-service@0388e1a9` — bisected PRE-EXISTING, fixed against the prod contract,
-      file now gated). The 1 remaining "tardis" failure is
-      `test_tardis_options_adapter.py::test_tardis_options_real_fetch`, a separate file. These assert canonical
-      write/output shape — given FIX D1/D2 just changed the cefi filename + column contract, verify whether they encode
-      the OLD contract before "fixing" them. (repo: market-tick-data-service)
-- [ ] [BACKEND] P1. **Widen `PYTEST_UNIT_DIR` to
-      `tests/unit/ tests/market_interface/unit/ tests/market_interface/adapters/     tests/market_interface/clients/ tests/market_interface/schema_validation/ tests/cli/`**
-      once the two todos above are green — proving it in the same change (rule 11a). Do NOT include
-      `tests/integration/**` in the unit phase; route those via `RUN_INTEGRATION` instead. (repo:
-      market-tick-data-service)
-- [ ] [BACKEND] P2. **Decide the `tests/integration/**` story** — `RUN_INTEGRATION=false` means 12 integration modules
-      never run anywhere, including `test_canonical_parquet_reader_integration.py` (updated by FIX D3 for the new cefi
-      read contract). Either wire them into a credentialled CI lane or mark the credential-dependent ones explicitly.
+- [x] ✅ [BACKEND] P1. **Fix the remaining `tests/market_interface/adapters/**` canonical-output/write failures** —
+      `market-tick-data-service@4849d4f6`. Grew to 7 databento canonical-id (stale ES/AAPL assertions — updated to the
+      ruled `SP500-USD@LIN`/`-USD` contract, `tradfi_consolidated_closeout_2026_07_18.md` A1) + 4 write-pipeline
+      (`_get_writer` gained `file_symbol`/`quote_asset`/`margin_type` kwargs + a v6 chain-quote/margin path tail — test
+      stub now delegates to the real `_resolve_writer_file_name` instead of re-implementing path-building) + 8
+      tradfi_canonical_writes (6 stale FRED/ECB/OFR-pipeline_mode-override + Massive-retired assertions fixed; the 2
+      IBKR ones are a REAL bug — IBKR has no `_VENUE_OVERRIDES` entry so it mislabels as `batch_fred` — xfailed + filed
+      as `issues/ibkr_pipeline_mode_missing_venue_override_2026_07_30.md`, not papered over) failures by 2026-07-30. The
+      1 tardis-options failure (`test_tardis_options_real_fetch`) was a conftest dummy-`TARDIS_API_KEY` false positive
+      defeating its own skip-guard — hardened to an unconditional skip (same idiom as `TestOddsApiLiveIntegration`). A
+      NEW (not in this doc's original scope) `test_tardis_adapter_logic.py` failure surfaced too — a
+      nanosecond-vs-microsecond `local_timestamp` fixture bug, fixed. (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P1. **Widen `PYTEST_UNIT_DIR`** — `market-tick-data-service@4849d4f6`, widened to
+      `tests/unit/ tests/market_interface/unit/ tests/market_interface/adapters/ tests/market_interface/clients/ tests/market_interface/schema_validation/ tests/cli/`
+      plus 3 proven credential-free `tests/integration/*` files (see todo below). Full `bash scripts/quality-gates.sh`
+      GREEN with the widened dir in the same commit (rule 11a, exit 0, 9693 passed). (repo: market-tick-data-service)
+- [x] ✅ [BACKEND] P2. **Decide the `tests/integration/**` story** — of the 12 modules, 3 carried no
+      `requires_credentials` marker and are genuinely credential-free/network-free
+      (`test_canonical_parquet_reader_integration.py`, `test_library_contracts.py`, `test_manifest_schema_contracts.py`
+      — 74/74 passing standalone): folded directly into `PYTEST_UNIT_DIR`. The other 9 already carry
+      `@pytest.mark.requires_credentials` + a self-skip (or an unconditional skip, per `TestOddsApiLiveIntegration`'s
+      precedent) — that IS this repo's "mark credential-dependent ones explicitly" resolution; `RUN_INTEGRATION` stays
+      `false` (flipping it would run all 12 as one category with no per-file marker deselect available, reintroducing
+      the 9 credentialed ones with no real vendor keys in CI — a separate, larger "wire a credentialled CI lane" change,
+      out of scope here). Rationale recorded inline in `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR` comment block.
       (repo: market-tick-data-service)
 - [ ] [QG] P2. **Fleet sweep: assert no repo has an ungated test family** — a PM quality-gate check comparing each
       repo's `tests/*/unit/` dirs against its `PYTEST_UNIT_DIR`. MTDS was the only outlier today, but nothing prevents

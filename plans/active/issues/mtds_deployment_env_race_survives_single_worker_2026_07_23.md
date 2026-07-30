@@ -111,6 +111,28 @@ did not have time to instrument the cascade step itself (e.g. diffing `os.enviro
 completes, or checking whether the ancestor repos' own `setup.sh`/dependency-install step executes any Python in the
 same shell) — that instrumentation is the concrete next step, not another blind retry loop.
 
+## Update (2026-07-30) — a look-alike failure that is NOT this leak, root-caused and closed
+
+While widening `PYTEST_UNIT_DIR` (`ci_satellite_ao_dispatch_batch2_2026_07_29.md` todo 11), a full
+`bash scripts/quality-gates.sh --no-fix` run failed
+`tests/market_interface/adapters/tradfi/test_databento_write_pipeline.py::test_bucket_resolution_uses_category_tradfi`
+(a file that was NEVER gated before this todo) with a bucket ending `...-prd-test-account` instead of the test's
+expected `...-prd-test-project`. Initially looked like a sibling of this doc's leak on a different variable
+(`GCP_PROJECT_ID`) — but a direct repro
+(`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true GCP_PROJECT_ID=test-project AWS_ACCOUNT_ID=test-account .venv/bin/python -c '...get_tick_data_bucket(...)'`,
+i.e. the exact env this repo's own `tests/conftest.py` sets for EVERY test, no other test involved) reproduced the
+"failing" value byte-for-byte on the very first call in a brand-new process. **Root cause: not a leak at all.**
+`tests/conftest.py` sets `CLOUD_PROVIDER=local` for the whole suite, and its own comment there says exactly why: "under
+CLOUD_PROVIDER=local `_active_cloud()` resolves to aws" — so `get_market_data_bucket` always takes the AWS template
+(`${AWS_ACCOUNT_ID}` -> conftest's `test-account` default), never the GCP one. The test's own
+`bucket.endswith("-test-project")` assertion simply assumed the GCP branch, which was never actually this suite's
+default — a plain stale/wrong assertion, unrelated to any ambient-state race. Fixed by pinning
+`unified_config.cloud_provider`/`.gcp_project_id` (the live singleton attributes — `monkeypatch.setenv` doesn't reach
+them, since `unified_config` is built once at import and doesn't re-read `os.environ`) directly in the test via
+`monkeypatch.setattr`, so it explicitly forces + asserts the GCP branch rather than depending on which branch happens to
+be ambient-default. **Does not touch or explain this doc's actual DEPLOYMENT_ENV race** — left exactly as still open
+below.
+
 ## Todos
 
 - [ ] [INFRA] P2. **Instrument quickmerge's cascade/pull step** — diff `os.environ` before/after `STAGE 0: Cascade` and
