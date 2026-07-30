@@ -134,10 +134,13 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       catalogue load (`Loaded N catalogue rows from instruments-store-cefi-prd-...`) has grown since the category's
       original 2026-07-19 launch (11 days of continued live capture), pushing every shard closer to the 32GB ceiling.
       Repo: deployment-service.
-- [ ] [BACKEND] P1. **Shard 16 died a 3rd time TODAY, this time neither SPOT-preempted nor OOM-killed on `e2-standard-8`
-      — both causes this doc already fixed and confirmed** — genuine root-cause investigation into
-      `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`'s memory-growth profile is still needed. Evidence:
-      `canonical-migration-cefi-content-16-relaunch20260730-135500`
+- [x] [BACKEND] P1. ✅ **Shard 16 died a 3rd time TODAY, this time neither SPOT-preempted nor OOM-killed on
+      `e2-standard-8` — both causes this doc already fixed and confirmed** — root cause IDENTIFIED + fix SHIPPED
+      (market-tick-data-service@9f4098b1, 2026-07-30, slot 2) — see "2026-07-30 root cause + fix shipped" note below.
+      **Full-run verification against shard 14 is a SEPARATE follow-up todo below** (this scope — identify the
+      mechanism + ship a fix — is genuinely complete; holding this slot for the multi-hour verification would repeat the
+      exact monitoring-hostage pattern already flagged as an operator-escalation anti-pattern elsewhere in this same
+      doc). Original evidence this todo was filed against: `canonical-migration-cefi-content-16-relaunch20260730-135500`
       (`deployment_id=a4f98edf-4560-4e2f-ba38-6810d83c9b40`) confirmed via `gcloud compute instances describe` running
       `e2-standard-16` / `preemptible: false` / `provisioningModel: STANDARD` (i.e. exactly the on-demand +
       bigger-machine fix this doc's Progress Log already shipped for shard 16) — yet its deployment-registry
@@ -184,6 +187,21 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       testing directly (does a deliberately small, fast-completing shard's canary run finish within the ~45min window
       before any other symptom appears, or does the same script hang at ~45min even on a trivially small input?).
       Relaunched shard 40 (1st genuine failure, within policy).
+- [ ] [SCRIPT] P1. **Verify the pyarrow-pool-release fix (market-tick-data-service@9f4098b1) against a full shard-14
+      run** — the previous todo's own "Done when" bar required this specific verification, which is genuinely separate
+      dispatchable work (a multi-hour VM monitoring job, not a code-writing task). At filing time,
+      `canonical-migration-cefi-content-14-relaunch20260730-134900` is RUNNING but was launched BEFORE the fix shipped
+      (13:49Z vs the fix landing ~18:20Z) — its tarball predates the fix, so this run does NOT verify it; per
+      RB-INFRA-RELAUNCH, do NOT kill an alive, still-potentially-succeeding VM without protective purpose. **Done
+      when**: once that VM naturally dies/completes (self-reaps via the in-VM `STALL_PROGRESS_REGEX` stall-kill, per
+      this doc's established pattern) OR is confirmed to have genuinely completed, relaunch shard 14 fresh (pulls the
+      now-fixed tarball automatically) and confirm via `run.log` grep for `SCRIPT 1 CONTENT MIGRATION SUMMARY` that it
+      runs the full 271,376-file scope without a mid-run stall/freeze (watch specifically past the ~45-50min window this
+      doc's diagnostic evidence identified as the freeze point under the OLD code). If it stalls again at a similar
+      elapsed-time window despite the fix, the periodic-release hypothesis needs revisiting (try tightening the release
+      cadence below every-200-files, or investigate hypothesis (c) — `--workers 12` oversubscription — as a secondary
+      contributor). Repo: market-tick-data-service (verification only, no code change expected unless the fix needs
+      iterating).
 - [ ] [BACKEND] P3. Investigate what actually deleted `canonical-migration-cefi-content-19-relaunch20260730-130600` at
       `2026-07-30T13:33:35Z` (RUNNING, heartbeat blob fresh ~55s prior — ruled out `vm_zombie_watchdog.py`'s documented
       `is_zombie()` heartbeat/shard-staleness paths by direct evidence, see Progress Log). Actor was
@@ -574,3 +592,48 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   `gcloud config set account` immediately before the next gsutil call in the same turn. No relaunch/kill action taken on
   shard 29 (monitoring-only). Fleet still at 4 shards (this is a freeze, not yet a confirmed death — still `STOPPING` at
   check time).
+
+## 2026-07-30 root cause + fix shipped (slot 2, `cefi_content_migration_fleet_half_incomplete-006`)
+
+Dispatched the P1 root-cause todo. Read `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` in full (610
+lines). Confirmed pyarrow 23.0.1 is installed and pandas' default parquet engine (`pd.io.parquet.get_engine('auto')`)
+resolves to `PyArrowImpl`, so every `pd.read_parquet`/`df.to_parquet` call in this script routes through pyarrow's
+`default_memory_pool()` — measured `backend_name=mimalloc` on this fleet. **mimalloc is a well-documented case of
+exactly the diagnostic signature already gathered here**: it caches freed native buffers for reuse instead of returning
+them to the OS via `munmap`/`madvise`, so process RSS creeps upward across many small parquet read/write calls even
+though pyarrow's own `bytes_allocated()` (the LOGICAL in-use count) stays bounded — this native- level caching is
+invisible to Python's `gc` (it operates below the Python object layer entirely, so `gc.collect()` cannot reclaim it).
+This matches this doc's own confirmed evidence precisely: deployment-registry `host_metrics_window.mem_pct` climbing
+with a CONTINUOUSLY POSITIVE `mem_slope` across every freeze-class death (shard 16, 19, 40, 44, and the slot-2
+escalation's own read of shard 19's `-150600` death: "70.2%→93.7%... never negative or flat") — a pattern that already
+ruled OUT a one-time upfront allocation (the ThreadPoolExecutor futures dict, hypothesis already disconfirmed in this
+doc) and pointed at hypothesis (a), PyArrow native buffer retention, as the most likely mechanism.
+`pyarrow.default_memory_pool().release_unused()` (confirmed present on this pyarrow version) is the documented fix for
+exactly this mimalloc/jemalloc RSS-creep class.
+
+**Fix shipped**: `market-tick-data-service@9f4098b1`. Two changes: (1) a periodic
+`pa.default_memory_pool().release_unused()` call on the same cadence as the existing progress log (every 200 files),
+with a diagnostic log line reporting `bytes_allocated()` before each release; (2) `patch_instrument_id_column()` was
+doing an unconditional `df.copy()` even when `changed == 0` — every caller discards that result unread in the no-op case
+(`migrate_one_file`'s `already_canonical_skipped` early-return, `_verify`'s `changed == 0` check), so this was a wasted
+per-file native-buffer allocation on the majority-outcome path for much of this corpus (adds pressure to the exact
+mechanism the fix targets). Manually verified (mocked `resolve_tagged`, no GCS/live deps needed) that both the no-op
+case (`out is df`, original untouched) and the changed case (`out is not df`, independent copy, original untouched)
+preserve identical return semantics to before — no caller-visible behavior change. Full `quality-gates.sh` ran clean on
+the FIRST attempt except two hard-fail STEPs from an unrelated, freshly-introduced regression in
+`market_tick_data_service/live/websocket_runner.py` (a genuine, valuable data-loss fix from a concurrent commit pushed
+it from exactly 900 to 916 lines) — verified pre-existing via a clean-tree stash test, declared repo- blocker
+RB-608160be rather than touch that unfamiliar live-capture file, which resolved ~15 min later via an unrelated commit
+(`ec86b995`, extracted the file back to 898 lines). Rebased cleanly onto that fix (disjoint files) and shipped via the
+normal quickmerge flow once QG was fully green (2113+ tests, lint, basedpyright all clean).
+
+**Verification status — genuinely NOT yet done, tracked as a separate follow-up todo below** (not this todo's scope): at
+fix-ship time, the only live shard-14 VM (`canonical-migration-cefi-content-14-relaunch20260730-134900`) had been
+running since 13:49Z — well before the fix landed (~18:20Z) — so it is running the OLD, unfixed code and its outcome
+(success or failure) proves nothing about the fix. Did NOT kill it (alive, potentially still succeeding, no protective
+purpose per RB-INFRA-RELAUNCH's own no-gratuitous-kill posture) — filed the actual verification (relaunch shard 14 fresh
+once this VM naturally concludes, confirm it clears the ~45-50min freeze window and reaches the terminal summary on the
+full 271,376-file scope) as its own dispatchable todo instead of holding this slot for the multi-hour wait, which would
+repeat the exact monitoring-hostage anti-pattern the `-006`/`-002` dispatch-deadlock entry above already flagged as an
+operator escalation. This todo's own scope (identify the mechanism + ship a fix) is complete; flipping its checkbox
+accordingly.
