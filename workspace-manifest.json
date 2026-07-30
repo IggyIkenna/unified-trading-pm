@@ -339,7 +339,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.66.0",
       "codebase_health": {
         "warn_file_count": 16,
@@ -885,7 +885,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "warn_file_count": 46,
         "large_file_count": 0,
@@ -1220,7 +1220,7 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "warn_file_count": 34,
         "large_file_count": 27,
