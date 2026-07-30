@@ -102,21 +102,24 @@ other orphaned candidate considered and why it was NOT drafted.
       fallback, rename-followed self-archival detection). Source:
       `/plans/active/issues/ao_done_gate_no_carveout_for_red_gate_evidence_only_closure_2026_07_28.md` (3 of its 4 todos
       — the 4th, a codex-doc note, is sequenced behind these and stays with the source doc). Repo: agent-orchestrator.
-- [ ] [WORKER] P1. **Re-verify, then recover-or-mark-moot, the 4 named orphaned worker commits.** For each of
-      features-service `207afd62` + `d1c1ad8a`, unified-api-contracts `724bd9be`, agent-orchestrator `559452e`: check
-      (via `git log --grep` / content-diff against current `origin/live-defi-rollout`) whether the same functional
-      change already landed under a different SHA via independent duplicate work. This audit's own Phase-1 pass already
-      found strong evidence all 4 did — `a90256f5` (features-service, same census-manifest persist as `207afd62`),
-      `a9429cba` (features-service, same `accepted_quotes_for_venue` wiring as `d1c1ad8a`), `698b5b6f`
-      (unified-api-contracts, byte-identical commit message/date to `724bd9be`'s saved patch), `09cda29`
-      (agent-orchestrator, same `/api/backlog/{id}/reconcile-brief` feature as `559452e`) — confirm each, then flip the
-      corresponding item MOOT-SUPERSEDED citing the landed SHA. For any genuinely still-missing item instead,
-      cherry-pick the saved backstop patch (`.orch-orphan-commits-recovery/`) onto current origin tip and ship via
-      quickmerge per the doc's own stated recipe. **Done when**: all 4 items have an explicit disposition
-      (MOOT-SUPERSEDED + landed SHA, or recovered + re-shipped SHA) recorded in the source doc. Source:
-      `/plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`. Repos:
-      features-service, unified-api-contracts, agent-orchestrator (read-only verification; write only if a genuine
-      recovery is needed).
+- [x] [WORKER] P1. ✅ **MOOT — already fully resolved before this batch was drafted; re-verified 2026-07-30, no action
+      needed.** The source doc (`branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`) was already
+      `status: resolved` + ARCHIVED the same day this batch2 audit ran, by an earlier "bounded recovery sweep, infra
+      role" pass that already recorded the exact disposition this todo asks for, for all 4 items — this batch2 audit's
+      Phase-1 pass apparently re-derived the same finding independently without noticing the source doc had already
+      closed it. Independently re-verified all 4 today via `git merge-base --is-ancestor` + content-diff against current
+      `origin/live-defi-rollout` (unified-trading-system-repos/.tabs/8): (1) features-service `207afd62` — orphan
+      confirmed NOT on origin; `a90256f5` confirmed ON origin ("feat(sports): always write stable derived_features
+      residue census manifest"). (2) features-service `d1c1ad8a` — orphan confirmed NOT on origin; `a9429cba` confirmed
+      ON origin, `accepted_quotes_for_venue` symbol live at `mvp_universe_filter.py:48,64,71,97`. (3)
+      unified-api-contracts `724bd9be` — orphan confirmed NOT on origin; `698b5b6f` confirmed ON origin,
+      `git diff 724bd9be 698b5b6f --stat` is EMPTY (byte-identical). (4) agent-orchestrator `559452e` — orphan confirmed
+      NOT on origin; `09cda29` confirmed ON origin, route live at `server/routes/backlog.py:391` +
+      `tests/test_backlog_reconcile_brief.py` present. No genuine recovery needed for any of the 4 (matches the
+      already-recorded verdict); no code changes made in any of the 3 verification-only repos. Source doc's own
+      checkboxes/dispositions left untouched (already correct, doc archived) per this plan's "don't edit the source
+      doc's checkboxes" rule. Repos: features-service, unified-api-contracts, agent-orchestrator (read-only, confirmed
+      no write needed), unified-trading-pm (this flip).
 - [ ] [BACKEND] P1. **Root-cause + fix why `sequential: true` did not gate dispatch order for a queued predecessor.**
       `mtds_available_at_cross_asset_backfill_2026_07_13.md` carries `sequential: true` (added 2026-07-14 for this exact
       bug class) yet task `-006` was dispatched while its direct predecessor `-001` was still `queued`. Read
