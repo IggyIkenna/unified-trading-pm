@@ -417,6 +417,40 @@ here to finish the remaining locally-doable todos.**
   from 2076 — the 9 new backend tests; note the [DATA] P1 spend-guard entry above already added 8, so 2068→2076→2086 is
   the running total across both todos), dashboard `tsc`/vitest (165 passed) green, 2 new Playwright tests passed.
 
+**2026-07-30 — `[INFRA] P2` local-dev isolation runbook SHIPPED, closing the todo below (documentation path chosen over
+closing the AgentKeeper/ensure_review_agents always-on gaps in code — those are load-bearing design decisions, not bugs;
+documenting them accurately is the safer, correct-scoped fix).**
+
+- **New codex-runbook**: `codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md`. Verifies (against
+  `server/config.py`'s actual `Field` definitions, not assumed) exactly which pilot-isolation env vars are real
+  (`ORCHESTRATOR_DB_PATH`/`BACKLOG`/`ACCOUNTS`/`BACKENDS`/`USERS_JSON`/`CLAUDE_CONFIG_BASE`/`CORS_ORIGINS`/`VM_ID`/
+  `STANDALONE`/`SERVER_URL`/`REVIEW_SLOTS`/`AUTOSPAWN_ENABLED` — all top-level `OrchestratorConfig` fields with a real
+  `validation_alias`) and documents the 5 real gaps the 2026-07-29 incident actually hit: `STATE_DIR` hardcoded to the
+  checkout path with no env override at all (dedup-state files collide across instances sharing a checkout);
+  `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` read raw from `os.environ` at import time (a pilot inherits the operator's real
+  webhook if the launching shell has it set — can page the real ops channel); every `TuningDefaults` field including
+  `pm_repo_path` (env-free by design, 2026-07-18 ruling — several docstrings claimed a working env override, see below);
+  `AgentKeeper`/`ensure_review_agents` always running regardless of `ORCHESTRATOR_AUTOSPAWN_ENABLED` (by design, not a
+  bug, but a pilot operator needs to know); the spawn-liveness watchdog likewise always-on (the mechanism that actually
+  free-looped in the incident — `ORCHESTRATOR_SERVER_URL` closes the SPECIFIC trigger, not the watchdog's general
+  always-on nature). Ends with a concrete pre-launch checklist.
+- **Fixed while verifying the runbook's own claims**: found the `pm_repo_path` docstring bug was NOT isolated to one
+  field — the SAME stale "`ORCHESTRATOR_PM_REPO_PATH` env override" claim was live in 5 places across
+  `regen_backlog_from_plan.py` (×3, including the CLI `--pm-path` help text), `blocked_reconcile.py`, `ci_reconcile.py`,
+  and `routes/backlog.py`. All 5 corrected in the same commit (docstring-only, no behavior change) rather than left for
+  the runbook to work around by caveat.
+- **Unrelated infra blocker hit and fixed while shipping this**: a same-day `unified-trading-pm` change
+  (`fix(ci): bind ENVIRONMENT/DEPLOYMENT_ENV into the QG sentinel...`) broke quickmerge for agent-orchestrator
+  specifically — AO's `quality-gates.sh` is deliberately standalone (doesn't source the shared
+  `quality-gates-base/base-service.sh` most repos pull the new `qg-environment.sh` helper in through), so it never
+  resolved `ENVIRONMENT` or wrote it into `.qg_last_passed_sha`, while `quickmerge.sh` now requires both. This failed
+  Pass-1 sentinel verification for every AO ship, not just this one — fixed AO's `quality-gates.sh` to source the same
+  `qg-environment.sh` helper and write `ENVIRONMENT=`/`DEPLOYMENT_ENV=` lines into the sentinel matching
+  `base-service.sh`'s exact writer-side format, verified quickmerge succeeds again.
+- Evidence: `agent-orchestrator@30568ec` on `live-defi-rollout`, `ahead=0` (3 commits: `1911b3d` docstring fixes,
+  `c2670ba` + `30568ec` the sentinel/CI fix). `unified-trading-pm` runbook commit alongside this plan flip. QG green
+  throughout (2086 passed, unchanged from the [UI] P1 entry above — these were docs/CI-only changes).
+
 ## Recommended rollout sequence (2026-07-29)
 
 - **2026-07-29 — rollout sequence steps 1-5 executed, code SHIPPED**:
@@ -483,7 +517,7 @@ here to finish the remaining locally-doable todos.**
       outcomes (QG pass rate, review-flagged rework rate) against the Claude-routed baseline before raising the split.
       Done when: a dated comparison note with the actual pass/rework numbers for both is added to this plan's Progress
       Log.
-- [ ] [INFRA] P2. Document (or fix) the local-dev isolation gap found running the 2026-07-29 pilot: `AgentKeeper` /
+- [x] [INFRA] P2. ✅ Document (or fix) the local-dev isolation gap found running the 2026-07-29 pilot: `AgentKeeper` /
       `ensure_review_agents` are not gated by `ORCHESTRATOR_AUTOSPAWN_ENABLED` and read some state
       (`config.STATE_DIR`-rooted dedup/cursor files, the Slack webhook env var) that a scoped `ORCHESTRATOR_DB_PATH` /
       `ORCHESTRATOR_VM_ID` override does NOT isolate — and `TuningDefaults.pm_repo_path`'s docstring claims an
