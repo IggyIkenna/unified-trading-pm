@@ -278,6 +278,18 @@ access (likely expired for the older ranges) or VM run-log archaeology, out of s
   machine-type-bump-alone insufficient, per-day memory variance genuinely unpredictable), (3) this P0 consolidator
   finding itself, which may explain silent under-reporting fleet-wide for sports coverage, not just odds_api. Do NOT
   interpret the unflipped P1 checkbox as "no progress" — read this entry + the P0 doc before re-attempting the backfill.
+- 2026-07-30 (slot 4, data_engineering): Dispatched `sports_odds_api_scattered_multiyear_gaps-002` (this doc's
+  `[VERIFY] P2` todo, "Depends on the P1 backfill above"). P1 is still open and now root-caused in
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` as `[OPERATOR]` — needs a fix-approach ruling (options
+  A/B/C) on `check_shard_freshness`'s `ODDS_API`-sentinel collision before any re-fetch can land; that doc's own P1 has
+  already been bare-re-checked twice today (slots 9, 11) with no change. Bare check only (not repeating the full
+  read-only re-verification — nothing has changed to warrant it): `git log` on
+  `unified_trading_library/manifest_consolidator.py` shows one new commit since slot 11's check (`59ed61c9`, "tighten
+  consolidator merge chunk-count cap"), unrelated to the `check_shard_freshness` sentinel-collision fix the P1 ruling is
+  actually gated on; no commit addresses that path. P1 checkbox in
+  `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` remains `[ ]` unresolved. Skipping this task
+  (`reason_code=BLOCKED`) rather than re-running the census — a re-run now would just reproduce the already-documented
+  595-missing-day result with zero new information, since nothing has been fetched since the last census.
 
 ## Codex SSOTs
 
