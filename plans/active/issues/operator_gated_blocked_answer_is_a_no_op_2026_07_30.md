@@ -304,18 +304,36 @@ what they were approving. Fixing the question text removes the thing the guard w
       `quality-gates.sh` green (2028 backend + 165 vitest passed, tsc clean).
 
       **Also found and fixed while implementing** (not part of this todo's original scope, but load-bearing for it):
-                              this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
-                              a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
-                              `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
-                              load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
-                              authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
-                              own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
-                              deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
+                                      this todo's OWN earlier `GET /api/roles` addition (previous todo above, `agent-orchestrator@a83050b`) registered
+                                      a SECOND route at the same path as a pre-existing `GET /api/roles` in `server/routes/roles.py`, and
+                                      `include_router()` order meant the new thin one silently shadowed the real, richer one on every dashboard page
+                                      load — `RolesPanel` (rendered unconditionally, not gated to any tab) calls `r.skills.map(...)`, so every
+                                      authenticated dashboard load threw an uncaught `TypeError` and rendered blank. Live-confirmed via the operator's
+                                      own browser console (`layout.tsx:3711`, `Cannot read properties of undefined (reading 'length')`). Fixed by
+                                      deleting the duplicate route — `agent-orchestrator@40fafaa`, shipped ahead of the UI commit above.
 
 - [ ] [REVIEW] P1. End-to-end verification on the live orchestrator: answer a real `BLK-op-*` row with a reclassify and
       again with a compound free-text instruction; confirm a worker task is created, dispatched, the work executed, and
       the plan doc updated (tag stripped / role set / checkbox flipped) — cite fresh evidence, do not reuse this doc's
       measurements (repo: agent-orchestrator / unified-trading-pm).
+- [ ] [INFRA] P2. Fix a race in `get_full_todo_text()` (D5): the full-text lookup reads `_pm_repo_path()`'s checkout at
+      the exact moment a `BLK-op-*` row is first seeded, but that checkout is only kept current by `pm-pull.timer`
+      (external 5-min cron) — a freshly-created `[OPERATOR]` todo (in a plan that itself just landed) can race the seed
+      against the pull and silently fall back to the truncated single-line `brief` + boilerplate (`get_full_todo_text`'s
+      own documented fallback path — never raises, so this is invisible unless someone reads the rendered question).
+      **Measured live 2026-07-30**: all 3 currently-pending `BLK-op-*` rows
+      (`tradfi_manifest_consolidator_fred_widespan_     stall-001`,
+      `sports_manifest_consolidator_zero_growth_stall-004`, `defi_cefi_venue_chain_axis_contamination-006`) hit exactly
+      this fallback — re-running the identical match against the same file moments later (after the next pull) found the
+      exact line + all continuation lines correctly, confirming it's a timing race, not a logic bug in the
+      regex/matching itself. **Worse than "transient"**: the fallback is PERMANENT, not self-healing — `bootstrap.py`
+      only seeds a `blocked_id` once (`if session.get(BlockedRow, blocked_id) is None:`), so a row that loses this race
+      stays truncated forever; it is never re-seeded once the checkout catches up. Fix options to weigh: (a) retry
+      `get_full_todo_text()` once after a short delay / on next regen tick if the first lookup fell back, gated on the
+      row still being unanswered; (b) have the operator-gated seeding step wait for `_pm_repo_path()`'s HEAD to match
+      the task's own originating commit before seeding; (c) accept the fallback but make it distinguishable in the UI
+      (e.g. a "full text unavailable — refreshing" state) rather than silently rendering a truncated question as if it
+      were complete. Repo: agent-orchestrator.
 - [x] ✅ [DOC] P2. Once the above ship, add the codex SSOT for the operator-gated blocked-row lifecycle end-to-end under
       `codex/12-agent-workflow/` — no doc currently describes it (repo: unified-trading-pm). —
       unified-trading-pm@ed9d02582. New `/codex/12-agent-workflow/operator-gated-blocked-row-lifecycle.md`: seeding, the
