@@ -476,3 +476,24 @@ not just noting.
   (<2min-old commits verified across the window), and the fleet fully recovered to working 11-12 by ~16:41Z. Escalation
   bar (commits→0 sustained, OR task-holders getting `worker_kicked` repeatedly) was not met by either measure. Net: a
   wider-radius host-pressure burst that already self-healed, not 12 stuck workers.
+
+- **2026-07-30 ~16:44Z (cicd escalation `agt-7bcf55`, slot 3) — corroboration, `features-service` LDR-direct wall, both
+  slices affected simultaneously**: dispatched for `ldr_qg_failure` (`#0`, no PR) at `live-defi-rollout` commit
+  `6d4a9374` (a `main`→`_backmerge` merge commit). Unlike most entries above, BOTH slices failed in the same run
+  ([30547641524](https://github.com/IggyIkenna/features-service/actions/runs/30547641524), 13:35:54Z):
+  `QG slice (checks)` hit the hard 120s basedpyright timeout (`Type check FAILED/timeout`, exit=124, 13:38:51→13:40:51Z)
+  and `QG slice (tests)` independently hung mid-execution inside `test_adx_columns_present` (stack paused inside pandas
+  `Series.std()`→`nanops.nanvar`), killed by pytest-timeout's thread-based dumper after ~11min (13:43:44→13:54:52Z) — a
+  genuine in-process stall, not a subprocess-launch failure like the MEM_WRAP/D-Bus signature this doc tracks elsewhere.
+  Diagnosed the code was clean BEFORE assuming a fix was needed: `git diff` between the last-green commit (`48f77f2a`,
+  run 30543191133 @12:35:38Z) and the red commit (`6d4a9374`) is **byte-identical, zero diff** — ruling out a code
+  regression outright regardless of which slice is examined. Reproduced the specific failing test locally
+  (`test_momentum.py::TestMomentumCalculate::test_adx_columns_present`): passes clean in 6.21s, no hang. A second CI
+  attempt on the same unchanged code
+  ([30553419354](https://github.com/IggyIkenna/features-service/actions/runs/30553419354), 14:47:10Z) failed again (same
+  signature) — ruled out a one-off fluke, this was sustained contention, not a single bad sample. A third attempt
+  ([30558943290](https://github.com/IggyIkenna/features-service/actions/runs/30558943290), workflow_dispatch, 15:54:03Z,
+  same commit now at HEAD `f0fc6f2e`) came back fully green — `checks` passed in ~2min, `tests` took ~50min wall-clock
+  but `conclusion: success` — direct proof the wall was transient host contention, not a defect, once contention eased.
+  **No code or workflow change made or needed.** `GET /api/repo-blockers` → none open for `features-service`. Slot left
+  clean on `live-defi-rollout`, no branch changes.
