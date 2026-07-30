@@ -130,6 +130,86 @@ awareness given the blast radius).
       genuinely idle rather than stalled, but worth a second look once the instruments-store mechanism is understood) or
       is specific to `instruments-store-sports-prd`'s size/shape.
 
+## Addendum 2026-07-30 (slot 7, data_engineering) — new evidence, root-cause NOT yet found, P1 still blocked
+
+Dispatched the P1 todo ("once root-caused, fix + verify"). Root-cause has NOT landed (`git log` on
+`unified_trading_library/manifest_consolidator.py` shows no fix since 2026-07-24, well before this incident's
+20:47-21:47 UTC window) — the P0 `[OPERATOR]` todo above is still the blocking prerequisite. Rather than /done a task
+that can't meet its done_definition, I spent this session gathering read-only diagnostic evidence (no live-bucket
+writes, no cron pause needed) to narrow the P0 investigation:
+
+**1. The stall is not permanent-static — it self-resolved once, then re-stalled at a NEW plateau.** Cloud Logging past
+21:47:09 shows `rows_out` jumped from the reported 9,411,982 to **11,778,300** at 21:59:46 UTC (shards=3,
+rows_in=11,785,489, dedup_dropped=7189 — a genuine ~2.37M-row absorption), then stayed static at 11,778,300 across 8
+more consecutive real merges through 23:46:16 (current as of writing). No odds-gapfill VM was active after ~21:35, so
+this second "stall" is expected (no writer = no growth), NOT a second instance of the bug.
+
+**2. That 21:59:46 jump did NOT include the odds_api gapfill's target rows.** Downloaded the current canonical (single
+read, 227MB, `gs://.../availability_index.parquet`, now 11,778,300 rows matching the latest Cloud Logging report) and
+queried it directly with DuckDB:
+
+- `source='odds_api' AND date BETWEEN '2026-02-22' AND '2026-03-28'` → **0 rows**, any status. Confirms the census
+  finding is still true RIGHT NOW, even after the big absorption — the disputed range is still completely absent.
+
+**3. Dedup-key-collision-with-another-source hypothesis — TESTED, RULED OUT.** Read `manifest_consolidator.py`'s full
+merge/dedup/CAS-write path. Confirmed `source` is deliberately excluded from `_BASE_DEDUP_COLS`/`_OPTIONAL_DEDUP_COLS`
+(by design — a documented 2026-07-12 fix already makes `capture_status='captured'` outrank any non-captured row
+regardless of source, precisely to stop a later empty/failed row from a DIFFERENT source silently erasing an earlier
+real capture). Hypothesis: odds_api's new rows collide on `(date, venue, data_type, service_name)` with an
+already-`captured` row from a DIFFERENT source and lose the tie-break. Tested directly: odds_api's dedup-key shape is
+`(venue=<bookmaker>, data_type='trades'|'TRADES', service_name='market-tick-data-service'|'instruments-service'|...)`.
+Queried the canonical for ANY row (any source) at `date=2026-02-25, venue='BETONLINEAG', data_type='trades'` — **0
+rows**. There is no competing row occupying that key. This rules out the collision theory, at least for this sample —
+the rows are genuinely, simply absent, not shadowed.
+
+**4. The CAS-write retry loop and date-range chunking both read clean.** `_write_consolidated`'s 5-attempt
+`PreconditionFailed` retry re-merges against the winning generation each time and `raise`s (→ `success=False`) on
+exhaustion — but every stalled cycle logged `success=True`, so the retry loop was not silently swallowing a failure.
+`_duckdb_merge_payload`'s date-chunking explicitly buckets `TRY_CAST(date AS DATE) IS NULL` into its own chunk
+(`chunk_null_date.parquet`), so a date that fails to parse doesn't fall between all chunks and vanish. No obvious defect
+found by code reading alone.
+
+**5. NEW, likely-relevant finding: the two VMs that actually covered this range (`mtds-backfill-odds-gapfill-20260729`
+
+- `-retry1-20260729`, both `START_DATE=2020-06-06`) were BOTH killed by OOM mid-way through their FINAL chunk.** Pulled
+  `gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log` for all 4 VMs (still present, VMs themselves are
+  terminated):
+
+* Both `...-20260729` and `...-retry1-20260729` (`CHUNK_SIZE=250`) processed real per-day work up through
+  `Processed date=2026-04-15` — inside chunk 9/9 (`range=2025-11-27→2026-07-29`) — before that chunk's subprocess was
+  `Killed` (`exit=137 reason=OOM_KILLED`). This matches the original doc's claim ("2 independent VM runs each got this
+  far before their final chunk failed"). Their `PROGRESS.json` `last_completed_date` froze at `2025-11-26` (the last
+  chunk BOUNDARY completed, not the last date actually processed inside the crashed final chunk — the per-day log lines
+  prove real work continued past that checkpoint up to 2026-04-15).
+* `mtds-backfill-odds-gapfill-tail3-20260729` (the one named in the original "What I found") actually launched with
+  `START_DATE=2026-04-16` — it does **not** cover 2026-02-22..03-28 at all — and only completed ONE day
+  (`2026-04-16: 0 venues ok, 0 failed, 0 total records`) before the VM ended. It is NOT the source of any content for
+  the disputed range; the two `START_DATE=2020-06-06` runs are.
+* **So the 2026-02-22..03-28 range WAS almost certainly inside the live processing window of the two OOM-killed VMs**
+  (they got to 2026-04-15 before dying), and `ManifestWriter` flushes per-VM shards incrementally in ~500-entry batches
+  (confirmed pattern from tail3's own log: `"ManifestWriter: per-VM shard updated (500 total entries, 500 new, ...)"`),
+  so shard content for this range plausibly landed in `_index/per_vm/mtds-backfill-odds-gapfill-20260729.parquet` /
+  `-retry1-...parquet` well before either VM's final OOM kill. Those shard files are now DELETED (the original doc's own
+  `gcloud storage ls .../per_vm/` check found only `_legacy_seed.parquet` + `sports-fixtures-job.parquet` left —
+  consistent with `pruned_shards` firing repeatedly during the stall window, e.g. `pruned_shards=1` at 20:59:41 /
+  21:11:26 / 21:35:14). **Direct forensic inspection of what those shards actually contained is no longer possible** —
+  the only surviving evidence is the VMs' own `run.log` per-day/per-flush lines.
+
+**Net effect**: I can now say with fairly high confidence that (a) shard content for the disputed range likely did reach
+GCS via ≥1 of the two `START_DATE=2020-06-06` VMs' incremental flushes, (b) the consolidator's real merges during the
+stall window read a changing set of shards (varying `dedup_dropped`) and reported `success=True` with a CAS write that
+must have gone through (no retry-exhaustion failure logged), yet (c) the canonical still shows zero rows for this range
+even now. That combination — real merge, real (varying) input, reported success, but the specific new content never
+landing — is the actual mystery, and I could not pin it further via code reading alone (the dedup-key-collision theory
+is ruled out; the CAS/chunking code reads correct). Closing this out needs either: (a) a controlled live diagnostic —
+write one small synthetic per-VM shard covering an already-confirmed-missing date, trigger one manual consolidation
+cycle, and inspect the DuckDB merge's intermediate output BEFORE any prune can delete it; or (b) re-run the backfill for
+just this range with a small `CHUNK_SIZE` (avoiding the OOM class of failure entirely) and verify the shard survives one
+full consolidation cycle before the next one prunes it. Both are live-bucket diagnostic actions on the P0-tagged bucket
+— leaving the `[OPERATOR]` todo above as the correct next step rather than a unilateral live intervention.
+
+Scratch artifacts (downloaded canonical snapshot, probe script) were session-local only, not committed.
+
 ## Codex SSOTs
 
 `/codex/05-infrastructure/manifest-consolidator-ssot.md` (merge engine, UNION-ALL invariants, pause-first discipline for
