@@ -21,7 +21,13 @@ summary: >-
   agent-orchestrator-dispatched, for now.
 status: open
 nature: issue
-asset_group: [infrastructure, cefi]
+asset_group:
+  [infrastructure] # corrected 2026-07-30 (/ag-closeout-audit infra, Phase 0.3 Orthogonality HARD CHECK) -- was
+  # [infrastructure, cefi], a genuine mistag: `cefi` is the PROVENANCE of the incident (it surfaced during the cefi
+  # Script-1 campaign), not this doc's scope. All 3 documented gaps and all 4 shipped fixes are generic fleet VM
+  # monitoring/observability in deployment-api + deployment-service (`repos:` names no cefi service, parent_epic is
+  # infrastructure_master), and todo 2's `_is_backfill_vm()` fix explicitly spans the sports/tradfi/prediction/kalshi
+  # launcher family too -- the doc itself states "This is a monitoring/observability gap, not a data-correctness issue".
 stage: [data, meta]
 repos: [deployment-api, deployment-service]
 scope: [engineer]
