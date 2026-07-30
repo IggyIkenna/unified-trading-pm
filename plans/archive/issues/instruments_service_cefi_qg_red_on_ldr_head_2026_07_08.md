@@ -183,3 +183,9 @@ Once decided:
 - [x] ✅ [VERIFY] P0. Re-ran full `bash scripts/quality-gates.sh` on instruments-service — GREEN
       (`instruments-service@666bca5`, sentinel `666bca55730391d02a657b35d28443c1fa841774`), also fixing the adjacent
       stale `lighter-zksync` assertion in the same commit. `quickmerge --agent` unblocked for the whole repo again.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): ARCHIVE-worthy (0 open todos, all 3 `[x]` with commit
+  evidence, nothing reopened) but BLOCKED: `locked_by: live-defi-rollout` - archival is never autonomous on a locked
+  doc. Parked for `[unlock-plan]`.

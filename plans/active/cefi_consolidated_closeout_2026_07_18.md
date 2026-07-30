@@ -479,3 +479,6 @@ UPBIT · LIGHTER-ZKSYNC · EXTENDED-STARKNET.
   apply-of-proven-pattern) and `mdps_candle_manifest_population_disconnect_2026_07_25.md` (candle-manifest root-cause +
   fix, multi-AG tagged cefi-first). Neither is tracked in any Track above; both are now `assigned_vm: planning` and live
   in the AO backlog.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a BLOCKED-DATA Korea-equity
+  vendor ask (operator) plus 3 `[DESIGN]` archetype/hedge-venue calls that are not worker-determinable.

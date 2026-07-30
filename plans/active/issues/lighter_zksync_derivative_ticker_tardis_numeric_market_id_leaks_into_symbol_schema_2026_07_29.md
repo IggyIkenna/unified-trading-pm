@@ -250,3 +250,9 @@ walk — the exact path set is fully known) and calls `ManifestWriter.record_cap
       the launcher's `VM_TARDIS_CONSUMER=1` metadata stamp is unconditional (not gated on the buggy pre-flight check),
       so the live blast radius was narrower than a fully-blind gap, but a second concurrent LIGHTER-ZKSYNC-only launch
       would have also skipped its own pre-flight check.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the P1 manifest-recording fix is an
+  explicit (a)-or-(b) design choice touching the shared day-level `_DateRunState` accumulator every cefi venue depends
+  on; the P2 reconciliation is gated on it.

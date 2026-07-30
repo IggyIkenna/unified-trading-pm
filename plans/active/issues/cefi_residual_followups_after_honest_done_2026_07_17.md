@@ -688,3 +688,7 @@ pairs stay honest-unresolved (reported, never guessed).
       from the adjacent `DRY_RUN="${DRY_RUN:-250}"` line. **Done when**: default reads `false`, existing dry-run/force
       tests (if any target this script) still pass, `quality-gates.sh --no-fix` green. Source: this doc, slot-5
       checkbox.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries an operator-gated corpus-wide
+  (~4.5M file) content `--apply`, a features schema-shape gap the doc says needs a real decision, and a 586-row
+  blast-radius call.

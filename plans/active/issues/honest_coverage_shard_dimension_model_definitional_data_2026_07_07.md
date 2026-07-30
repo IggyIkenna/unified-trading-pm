@@ -587,3 +587,7 @@ longer has its own download button.
 - **2026-07-07** — Filed from an operator design discussion following the ASTER/CEFI audit. Verified DERIBIT,
   DERIBIT-COMBO, and PREDICTION's `market_metadata` behavior against the live production API before writing this up —
   not asserted from code reading alone. No files edited.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - re-verified after its 2026-07-30
+  edit: still carries a `[CODE]` item "deliberately deferred pending explicit go-ahead" and a `[VERIFY]` item the doc
+  marks genuinely contested + actively under concurrent investigation.

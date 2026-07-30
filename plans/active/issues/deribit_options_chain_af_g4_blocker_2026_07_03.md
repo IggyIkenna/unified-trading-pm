@@ -211,3 +211,9 @@ investigation on the exact `(asset_group, data_type)` tuple — this is the SAME
 `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` (there scoped to redundant re-diagnosis; this incident
 additionally shows the gap can lead to a worker actively UN-doing an already-shipped correction, which is a stronger
 argument for that issue's Option A). Cross-linked from there.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the one open todo is deliberately
+  left unchecked as SUPERSEDED-by-correction-banner (ruled-out, not completed); a 2026-07-29 escalation worker already
+  re-ran the banned reclass from it and had to revert. Do NOT close it as done. Real fix is gated on Track-2.

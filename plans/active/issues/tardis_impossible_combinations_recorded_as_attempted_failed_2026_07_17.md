@@ -173,3 +173,7 @@ out of the denominator. One cheap cacheable call per venue (the endpoint Tardis'
     (UAC's `EXPECTED_UPSTREAM_OUT_OF_ BOUNDS`, explicitly documented as "REGISTRY-DERIVED ONLY, never hand-stamp at a
     callsite") is a taxonomy decision this script deliberately does NOT make.
   - `--apply` was never invoked — the live manifest is untouched by this todo.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the P1 sizing/purge half is
+  explicitly operator-gated and snapshot-first; the vendor-catalog gate must coordinate with in-flight
+  `coverage_exclusions` work in UAC.

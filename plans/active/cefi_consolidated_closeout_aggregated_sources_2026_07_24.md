@@ -770,3 +770,8 @@ Orthogonality mistags found scoping the new cross-cutting AG layer — see
       docs" section catalogs dozens of genuinely open cefi todos as bold non-checkbox markers by design (e.g. Script 2
       P0 embedded-slash wire-stem fix, catalogue-dedup P0, DERIBIT combo P1 partition-move); none of that open work is
       tracked as a checkbox in this index itself.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a standing
+  discoverability-index sync with no terminal done-state; by design a human-maintained digest, not a dispatchable unit.

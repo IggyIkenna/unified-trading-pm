@@ -102,3 +102,9 @@ parallelism (fleet still does ~565 catalogue reloads total). The proper fix abov
 - [ ] [BACKEND] P2. **Implement the proper fix (range-loop in one process, or a cross-process `CeFiCatalogReader`
       cache)** — the interim per-year sharding mitigation only hides the per-day catalogue-reload waste behind
       parallelism; neither of the two proper-fix options above has been implemented.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an unresolved choice
+  between two architectures (range-loop in one process vs a cross-process catalogue cache), one of which changes the
+  shared VM startup script fleet-wide.

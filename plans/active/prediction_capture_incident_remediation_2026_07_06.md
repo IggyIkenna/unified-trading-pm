@@ -457,3 +457,7 @@ orchestrator-dispatched).
   work in this plan: Phase 6 (the CQG-bucketing write-time fix at `prediction.py:95` + its backfill-assessment
   follow-up) plus the 7 `[DESCOPED-NOT-MVP 2026-07-14]` perp-repoint items (Phases 1-4), which stay parked pending an
   operator ruling on perps prod access, not genuinely dispatchable.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - carries a DESCOPED-NOT-MVP item
+  explicitly "parked behind the access ruling", demo-credential provisioning, and research against a beta-gated
+  Polymarket perps API.

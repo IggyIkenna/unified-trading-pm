@@ -149,3 +149,11 @@ rows) is real but small and not urgent.
       for those resolved-venue populations at 0, the 7-row bare-`OKX` subset is reclassified (marked
       malformed/superseded, not backfilled), the cross-cutting doc's own COINBASE(7)/OKX(7) figure is independently
       re-verified (not assumed satisfied), and both source docs' checkboxes are flipped with the commit(s) cited.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `cefi_instruments_store_blank_data_type_residual_2026_07_29.md` (active, planning) claims the adjacent
+  blank-`data_type` remediation and `manifest_reprocessing_generic_utility_2026_07_07.md` already registers a
+  blank-data_type backfill script. Needs an operator call on which doc owns which bucket's population before dispatch.
+  Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.

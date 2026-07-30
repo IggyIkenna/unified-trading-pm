@@ -710,6 +710,10 @@ to fcd6549 (foreign tradfi-lane deployment-service WIP forced `--allow-dirty-tar
 - Grant project-level `roles/pubsub.publisher` to `1060025368044-compute@developer.gserviceaccount.com` (needs admin):
   `gcloud projects add-iam-policy-binding central-element-323112 --member="serviceAccount:1060025368044-compute@developer.gserviceaccount.com" --role="roles/pubsub.publisher"`
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the depth-retention todo surfaces an
+  architecture question about the live sink's rolling-window overwrite model (not a bounded verification), and the other
+  is a cross-repo deferred cross-dependency.
+
 ## Deferred work — migrated to:
 
 See inline `DEFERRED-CROSS-DEP` annotation within this plan (the "batch book_snapshot_5 row-proof" todo) for the

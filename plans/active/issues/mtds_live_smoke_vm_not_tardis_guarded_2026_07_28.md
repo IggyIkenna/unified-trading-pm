@@ -86,3 +86,11 @@ pattern) and burn real backfill throughput, exactly during the highest-value win
 
 No corruption confirmed this run (0 403s observed in the concurrent window) — this is a structural gap finding, not a
 live-incident report. Not escalating to the operator as a page; tracked here per the findings-closure rule.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `mtds_backfill_launcher_guard_overapplies_to_nontardis_venues_2026_07_28.md` (active, planning) is concurrently
+  editing the SAME `tardis-concurrency-guard.sh` venue-exemption logic this doc's P3 todo would tighten, and
+  `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md` already records the same launcher-gap finding. Filed as
+  BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.

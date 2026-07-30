@@ -102,3 +102,9 @@ produced-but-unconsumed to VERIFY: TRADFI `ohlcv_1s`, DEFI `book_snapshot_5/mark
 captured → should be pinned False). These are handled by the `/data-pipeline-check-mdps` + `-features` skills' canonical
 
 - orphan checks (parent plan `data_pipeline_check_mdps_features_2026_07_20.md` todos 11/13).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc's own header puts 3 S1
+  findings behind an operator keep/delete A/B/C decision (self-heal rebinding + deleting a registered live launcher),
+  and todo 8 is an explicit design adjudication.

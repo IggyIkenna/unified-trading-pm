@@ -169,3 +169,9 @@ noted here only so the two aren't conflated.
       widen `_BUCKET_KIND_MAP` to the full kind×AG matrix) instead of the hardcoded 5-entry map, so the other 42
       un-audited manifests (incl. the 64,227-row `instruments-store-cefi-prd` flagship case) get phantom-checked too
       (see "Suggested fix" above).
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the doc explicitly files it "for the
+  data-pipeline owner to scope", and the fix fans a weekly full-corpus GCS walk over ~20 more buckets (cost/runtime
+  design call).

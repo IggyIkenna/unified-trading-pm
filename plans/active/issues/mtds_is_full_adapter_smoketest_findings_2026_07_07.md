@@ -643,3 +643,7 @@ the todos already promised.
         respectively — correctly not duplicated here (per this doc's own existing cross-reference).
     12. `TardisAdapter.download_csv()` crash outside full `ServiceBootstrap` — **already assessed** in this doc as
         "likely a test-harness artifact, not verified further (out of scope)" — not reopened.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the FLUID coverage gap needs research
+  into an alternate historical read path (resolver address / storage-slot reads / subgraph) that the doc itself says is
+  not a bounded fix.

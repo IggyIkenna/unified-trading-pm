@@ -521,3 +521,9 @@ verifier (2 consecutive clean passes, confirming colon_wire's actual status alon
       LIGHTER-ZKSYNC/BYBIT-SPOT/COINBASE-FUTURES) → resume cron → verify ENABLED → loop-until-dry full-range verifier (2
       consecutive clean passes, confirming colon_wire) → `verify_cefi_canonical_4surface_2026_07_20.py` final re-proof →
       archive this plan + its parent. Session paused 2026-07-25 on operator request (host contention); not yet resumed.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo resumes a migration
+  explicitly PAUSED 2026-07-25 on operator request (host contention) and involves cron pause/resume around prod GCS
+  renames.

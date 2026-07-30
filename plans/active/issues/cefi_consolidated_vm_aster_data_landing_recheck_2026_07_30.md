@@ -72,3 +72,10 @@ Launched `mtds-live-cefi-consolidated-20260730-010147` (`asia-northeast1-c`, `e2
 - [ ] [DATA] P3. Spot-check 2-3 of the 15 pre-existing venues (e.g. HYPERLIQUID, BINANCE-FUTURES) the same way — they
       hit the identical empty-universe wait, so their data-landing should resume at the same time; confirms the fix is
       fleet-wide, not ASTER-specific relief only.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `infra_capture_and_devops_leftovers_2026_07_06.md` (active, assigned_vm:planning) already carries the near-verbatim
+  "verify `live_aster` rows land" claim, and this doc's own todo says to flip THAT plan's checkbox. Duplicate dispatch
+  risk. Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.

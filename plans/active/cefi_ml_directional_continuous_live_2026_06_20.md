@@ -180,3 +180,8 @@ live-capital gate itself is withheld). Not retagged, not unlocked.
 the window/universe work lands" — but no plan currently tracks that window/universe work as a distinct, named item;
 grepped `plans/active/` and `plans/epics/` for "window/universe sweep"/"cs/ext window" with no hit outside this plan.
 This plan's own "Model-improvement backlog" section remains the owner until a successor is authored.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - live wallet keys + kill-switch arming
+  are a PERMANENT human-only hard-stop (re-confirmed 2026-07-28), and the 2-year config-grid run is operator-scheduled.

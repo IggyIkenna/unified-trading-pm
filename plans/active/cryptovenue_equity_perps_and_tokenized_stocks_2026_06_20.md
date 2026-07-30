@@ -519,6 +519,9 @@ each leg (so a future agent doesn't re-launch a tracked/blocked one):
 Net: the expanded-universe data ingestion is **launched (Kalshi) or correctly tracked+sequenced** — nothing silently
 dropped. The CME-b tradfi close-out is the linchpin that unlocks the DBEQ 3-dataset leg.
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - dominated by `[DESIGN]`/`[RESEARCH]`
+  archetype + hedge-venue + universe-construction calls, plus a BLOCKED-DATA Korea-equity vendor ask.
+
 ## Temporary states + their canonical follow-up plans
 
 - Phase 2 (MTDS universe add) → this plan Phase 2 todo above (market-tick-data-service)

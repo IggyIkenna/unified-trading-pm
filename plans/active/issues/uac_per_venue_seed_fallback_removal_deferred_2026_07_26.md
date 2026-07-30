@@ -110,3 +110,9 @@ Three real production call sites, deduped across worktree/branch clones:
 
 No code change ships from this doc. It exists so the deferred decision has a durable, re-discoverable home instead of
 dangling inside a closed plan todo.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - records an explicit 2026-07-26
+  operator DEFERRED ruling with a 4-item revisit trigger; the open todo is the first trigger item and is gated on
+  CEFI/TRADFI G1-G5 closing.

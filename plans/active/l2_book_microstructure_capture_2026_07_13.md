@@ -415,3 +415,7 @@ MDPS-extension authorized" (todo 5) and "a fresh CeFi live manifest row lands" (
 migration completes — c.f. `/codex/02-data/honest-absence-downstream-handling.md` § "Reference incidents").
 
 Docs-only update, ships via the `docs(plans):` carve-out (no code in this commit).
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - both todos are tagged
+  BLOCKED-DATA-CORRECTNESS on the dormant CeFi live-WS capture pipeline; no worker can discharge them until that data
+  lands.

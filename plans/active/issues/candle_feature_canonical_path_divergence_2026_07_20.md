@@ -540,3 +540,7 @@ new defect), now precisely quantified for the first time as a headline number ra
 verified clean across all 4 asset groups** — 0 orphans, 0 malformed objects, every residual fully accounted for (CEFI's
 149 = todo 19, TRADFI's ~7.1M = todo 3). **This issue doc stays `status: open`** — todos 2, 3, 7, 9, 13, 15, 16, 19
 remain genuinely open content-level work, distinct from the path-migration infra lift this phase completed.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - residual todos are entangled with the
+  in-flight candle-path migration owned by `candle_canonical_path_migration_execution_2026_07_24.md` (todo 9 gated on
+  its P5 dedup phase; todo 19 includes a prod mop-up pass).

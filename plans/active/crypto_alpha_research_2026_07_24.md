@@ -584,3 +584,7 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
       calibration 2026-06-21.
 * [ ] [RESEARCH] P3. **Model basis execution as a Binance RFQ combo** (one ~0.5-5bp width for long-spot+short-perp) not
       two-leg taker — removes the 2nd-leg haircut. Repo: strategy-service. Prov: RFQ calibration 2026-06-21.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - 24 open items are almost entirely
+  `[RESEARCH]` strategy work (execution sweeps, allocator design, leg re-specs, universe construction); the archetypal
+  judgment corpus NA exists for.

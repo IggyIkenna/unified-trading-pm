@@ -710,3 +710,9 @@ Coverage is the verification lens — every number flows through `compute_honest
         launcher once the cefi consolidator is confirmed redeployed on the fixed (dd17ce23) image + re-enabled.** Repo:
         deployment-service. (Annotated, not fixed by me — it's the backfill agent's launcher + a live-recovery file;
         collision risk while the consolidator redeploy settles.)
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - G1 is an umbrella gate; the EXTENDED
+  honest-absence item is an explicit raise-vs-fallback decision; and the `MANIFEST_ALLOW_STALE_FALLBACK` revert is gated
+  on the (still-paused) cefi consolidator being healthy.

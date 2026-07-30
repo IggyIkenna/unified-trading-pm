@@ -155,3 +155,9 @@ script's own instruction: "File any genuine divergence via standard findings-tri
   `market-tick-data-service/scripts/one_offs/defi_perp_funding_derivative_ticker_parity_check_2026_07_28.py` (read-only,
   lifecycle-marked). Full report appended to the source issue doc's Progress log
   (`defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`).
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check:
+  `aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md` (active, planning) still asserts the
+  "funding rate is byte-identical to derivative_ticker's funding_rate" premise that THIS doc's measurement disproves
+  (60.7% match, worst case 10x the signal). Contradictory claims on the same ground - operator ruling needed, not a
+  silent flip. Filed as BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.

@@ -248,3 +248,8 @@ snapshot file, since it's the only surviving copy of legacy's manifest state.
   was not separately answered by the operator's response, so it is NOT closed by inference — the existing `[DATA]`
   recovery-investigation todos (additional-backup check, proper CF-11 normalization-aware comparison) remain open and
   are the correct next step before anyone concludes data is actually lost. Docs-only, no GCS/manifest action taken.
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): RECLASSIFY candidate PARKED on conflict-check: 2 of
+  its 4 todos edit `data_completion_cefi_2026_07_15.md` (active, planning, 7 open) whose own `--also-legacy` gap-fill
+  todo is the text being reconciled - same-file collision risk with a live dispatch target. Filed as
+  BLOCKED-OPERATOR-DECISION in this run's Deferred list; `assigned_vm` unchanged.

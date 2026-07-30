@@ -102,3 +102,9 @@ process consolidates/cleans up per-VM shards on completion ran before that flush
 `gs://market-data-tick-cefi-prd-central-element-323112/processed_candles/by_date/day=2025-12-25/` and `day=2026-01-09/`
 (its range's first/last dates) both have real `pipeline_mode=batch_hyperliquid` output present — the underlying data is
 safe; only the manifest's registration of it is what the reconciliation todo above will fix.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is a full-corpus GCS
+  walk requiring a VM launch, with no `[OPERATOR]` tag and no stated safe-idempotent justification; near-miss for
+  reclassification, needs the gating line added first.

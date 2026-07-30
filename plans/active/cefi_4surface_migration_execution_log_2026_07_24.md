@@ -122,6 +122,10 @@ umbrella: true
 > by the "REVISED REMAINING QUEUE" section and the final deferred-work table later in THIS file — moved verbatim,
 > nothing summarized or dropped.
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - todos are FENCED to other owners
+  (live rename fleet / DeFi removal-probe agent), the DERIBIT combo partition-MOVE needs explicit operator sign-off, and
+  the doc records an explicit operator STOP.
+
 ## PRE-COMPACT RESUMPTION CHECKPOINT — 2026-07-22 ~05:00Z (3rd checkpoint, post would_patch-ALL_DONE)
 
 > A fresh session with zero memory of this one resumes from THIS section. The would_patch fleet is DONE; the fleet agent

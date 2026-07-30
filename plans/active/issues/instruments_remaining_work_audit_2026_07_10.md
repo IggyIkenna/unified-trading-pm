@@ -906,6 +906,10 @@ the source docs if this list is used for dispatch planning.
   `instruments-service` image rebuild + redeploy is a plausible one-shot fix for two separate open P0s. Investigating
   next.
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - the sole todo is an umbrella over 6
+  distinct P0 workstreams (Turbo API, monotonicity alerting, is-daily-enum crash, 59-bug record, completion tracker,
+  tradfi v9 stage1); not a single determinable outcome.
+
 ## Orchestration state — dispatched execution workflow
 
 `wf_1e191185-1c2` (`instruments-audit-decisions-execution`) — **COMPLETE**, 8/8 agents returned. Real per-item verdict:

@@ -125,6 +125,9 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   genesis-clip fix (see the ASTER issue doc) across execution-service/unified-trading-pm/market-tick-data-service,
   worked on in parallel while waiting.
 
+- **na-eligibility-audit 2026-07-30** (tranche=cefi, autonomous): KEEP-NA, valid - Phase 2 is an explicit operator
+  "consumer-first, producer later" deferral and Phase 3 needs a design conversation on cap placement and the % ceiling.
+
 ## Phase 1 — ADV consumer (scaffold against MDPS's existing schema)
 
 - [x] [DATA] P1. Implement a reusable rolling-window ADV reader — **features-service@8608ea5d**. Module:
