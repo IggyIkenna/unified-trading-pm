@@ -557,6 +557,27 @@ if [ -f "$EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Plan commit-SHA evidence (`resolved_by:`/`<repo>@<sha>` must resolve to a REAL commit) ──
+# SSOT: plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md + plans/PLAN_FORMAT.md § 8c.
+# A code-ship claim (`<repo>@<sha>`) is explicitly OUT of scope for the Cloud Build evidence gate above (§ 8b) — its
+# evidence is "the commit + the local QG sentinel", but nothing previously verified that commit actually EXISTS. This
+# gate closes that gap: `resolved_by:` frontmatter + `- [x]` todo citations of `<repo>@<sha>`, where `<repo>` is a
+# present sibling clone, must resolve via `git cat-file -t <sha>` in that repo. Baselined ratchet (pre-existing
+# corpus drift is grandfathered; new fabricated/unresolvable citations regress the gate). Re-baseline with
+# --baseline-write only after confirming a flagged citation is genuine non-fabricated drift, not a fresh fabrication.
+PLAN_SHA_EVIDENCE_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_plan_commit_sha_evidence.py"
+if [ -f "$PLAN_SHA_EVIDENCE_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running Plan commit-SHA evidence check (resolved_by:/<repo>@<sha> citations must resolve)..."
+    if python3 "$PLAN_SHA_EVIDENCE_CHECKER" --workspace-root "$WORKSPACE_ROOT" >/dev/null; then
+        log_success "Plan commit-SHA evidence check passed (at/below baseline)"
+    else
+        echo "❌ Plan commit-SHA evidence regression — a resolved_by:/<repo>@<sha> citation does not resolve to a real" >&2
+        echo "   commit in the cited repo's local clone. See plans/PLAN_FORMAT.md § 8c." >&2
+        echo "   Re-baseline after confirming pre-existing debt: python3 ${PLAN_SHA_EVIDENCE_CHECKER} --workspace-root \$WORKSPACE_ROOT --baseline-write" >&2
+        _post_gate_fail "plan-commit-sha-evidence"
+    fi
+fi
+
 # ── Post-gates: OpenAPI drift (Group D) — DISABLED 2026-05-16 per orchestrator audit finding ──
 # The check compared full-file hashes of two structurally-different files:
 #   unified-trading-api/openapi.json (61 paths — slim FastAPI facade)

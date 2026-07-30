@@ -501,6 +501,26 @@ promote went **green / SUCCESS** — MUST cite structured evidence on the checkb
 - The persistent UAT/QA review agent (`unified-trading-pm/agents/review.md`) RUNS this verification (triggers/polls the
   build, then `describe → SUCCESS`) before allowing the checkbox flip — never trust a build-id from an agent self-report.
 
+### 8c. Plan commit-SHA evidence — `<repo>@<sha>` citations must resolve to a REAL commit (codified 2026-07-30)
+
+> **Why:** § 8b explicitly carves a code-ship claim (`<repo>@<sha>`) out of the Cloud Build gate on the theory its
+> evidence is "the commit + the local QG sentinel" — but nothing previously verified that commit actually EXISTS. A
+> `docs(plans):` flip commit cited `resolved_by: market-tick-data-service@6efb252b` for a SHA that does not exist
+> anywhere in that repo's history (not local, not on GitHub) — a fabricated completion-evidence citation. See
+> `plans/active/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md`.
+
+Any `resolved_by:` frontmatter value or `- [x]` todo citation of the form `<repo>@<sha>` — where `<repo>` is the exact
+directory name of a repo checked out as a sibling clone — is verified by running `git cat-file -t <sha>` in that repo's
+clone, not by trusting the self-report.
+
+- **Enforced by** `unified-trading-pm/scripts/quality_gates/check_plan_commit_sha_evidence.py` (PM post-gate): a
+  baselined ratchet (`scripts/quality_gates/plan_commit_sha_evidence_baseline.yaml`) — pre-existing corpus drift is
+  grandfathered, a NEW citation that doesn't resolve regresses the gate. Re-baseline with `--baseline-write` only after
+  confirming a flagged citation is genuine pre-existing drift, not a fresh fabrication.
+- Scope is deliberately narrow: only `<repo>@<sha>` where `<repo>` is an EXACT sibling-clone directory name is checked
+  (abbreviated forms like `mtds@...`/`uac@...` are ambiguous and are not matched at all — a soft-skip by construction,
+  mirroring § 8b's "can't check it from here" posture for an absent Cloud Build auth).
+
 ### 9. UI Verification Gate (HARD RULE — codified 2026-05-23)
 
 Any todo tagged `[UI]` (see Cursor-Friendly Todo Checkboxes above) MUST NOT be ticked `- [x] ✅` until **both**
