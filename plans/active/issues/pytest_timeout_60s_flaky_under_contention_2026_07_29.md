@@ -208,3 +208,16 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
   no-action-needed pattern as the doc's two prior entries. Neither #1026 nor #1027's failing runs count as POST-fix
   evidence for todo 3 (both predate `07:14:18Z`) — todo 3's clock effectively restarts from `d4aaaf666`, not
   `cedef544b`, for the service-repo fleet.
+- **2026-07-30 ~08:40Z (cicd escalation `agt-41a9d1` redispatched to slot 4, same escalation id as the entry directly
+  above)** — corroboration only, zero code action. This escalation id was redispatched (the prior run evidently didn't
+  reach `/done` before its session ended) targeting the same wall (instruments-service PR #1026, run `30519066074`).
+  Re-verified from scratch rather than trusting the existing entry blind: `d4aaaf666`/`ca548de83` both confirmed present
+  on current `origin/live-defi-rollout` via `git merge-base --is-ancestor`; `base-service.sh:810` confirmed reading
+  `PARGS="... --timeout=${PYTEST_TIMEOUT:-150} ..."` in the live tree (not just claimed in prose); PR #1026 confirmed
+  `state=MERGED`, `merged_at=2026-07-30T06:16:29Z` — 8s after the failing run even started, so the merge was gated by a
+  different, already-green check for the same head SHA, and run `30519066074`'s later failure (06:53:52Z) was orphaned
+  noise against an already-merged PR, same mechanism as #1027 above. Zero open PRs for instruments-service
+  (`gh pr list --state open` empty). One open `/api/repo-blockers` entry for instruments-service (`RB-bcd84ddc`) is a
+  DIFFERENT, already-separately-tracked issue (size-gate sentinel-skip recurrence, escalation `agt-16b221`,
+  `qg_size_gate_sentinel_skip_root_cause_2026_07_25.md`) — confirmed out of scope for this wall, not touched. Slot left
+  clean (both repos already on `live-defi-rollout`, zero diff vs `origin`, nothing to commit).
