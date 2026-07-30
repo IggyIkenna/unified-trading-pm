@@ -557,3 +557,6 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   shards. Also hit the `gcloud` identity-poisoning issue again — this time a THIRD account variant,
   `github-actions-deploy@…`, poisoning the already-active `slot15-work` config directly (not a config-flip this time).
   Fixed the same way. No action taken on shard 20 (monitoring-only).
+- **2026-07-30T17:29Z (slot-15)**: shard 15 (`-135300`) OOM-killed (`rc=137`, clean self-delete) at 212,200/514,504
+  files (41.2%, 12,755s elapsed — this shard's own largest window, 2026-03-28..2026-07-19). Fleet at 4 shards (14, 26,
+  29, 42). No action taken (monitoring-only).
