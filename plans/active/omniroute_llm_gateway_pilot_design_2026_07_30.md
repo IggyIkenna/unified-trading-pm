@@ -1,14 +1,14 @@
 ---
 doc_type: plan
-title: OmniRoute multi-provider LLM-gateway — pilot design proposal (not yet executed)
+title: OmniRoute multi-provider LLM-gateway pilot — deployment-api pipeline-UAT commentary (human execution)
 summary:
   Operator flagged omniroute.online (a self-hosted, OpenAI/Anthropic-compatible local gateway that auto-routes across
-  268 providers' free/cheap tiers) and asked whether it could cut cost on our worker fleet, given we've already tried
-  swapping Claude for DeepSeek. Found the exact seam this would plug into (`agent-orchestrator/server/accounts.py`'s
-  existing `AccountProvider = Literal["anthropic", "deepseek"]`, which already sources `ANTHROPIC_BASE_URL` for a
-  non-Anthropic account) and a much lower-stakes pilot surface (`deployment-api`'s pipeline-UAT commentary caller, a
-  direct non-worker Anthropic SDK call). This is a genuine judgment/security call, not bounded execution work — this doc
-  is a design proposal only; no infra changes have been made.
+  268 providers' free/cheap tiers) as a possible cost-routing layer, given the fleet already has a DeepSeek-swap
+  precedent (`agent-orchestrator/server/accounts.py`'s `AccountProvider`). Operator ruling 2026-07-30 waived the
+  trust-boundary objection and directed the model-tier-SSOT-conflict objection be resolved by a structural guardrail
+  rather than by staying gated — this doc records both rulings and gives the pilot itself full build-grade detail (exact
+  files/fields/tests/done-whens), while staying a LOCAL/human-executed plan (not AO-dispatched) per the operator's
+  explicit choice.
 status: active
 nature: design
 asset_group: [ao, cross-cutting]
@@ -37,113 +37,134 @@ supersedes:
 superseded_by:
 source:
   "operator ask 2026-07-30, interactive session slot 1 — https://omniroute.online/ as a possible cost-routing layer for
-  the worker fleet"
+  the worker fleet; rulings on both objections same session"
 locked_by:
 locked_since:
 context_scope:
   [
     /codex/06-coding-standards/model-tier-selection.md,
     agent-orchestrator/server/accounts.py,
+    deployment-api/deployment_api/deployment_api_config.py,
     deployment-api/deployment_api/commentary/pipeline_uat.py,
   ]
 ---
 
-# OmniRoute multi-provider LLM-gateway — pilot design proposal
+# OmniRoute multi-provider LLM-gateway pilot — deployment-api pipeline-UAT commentary
 
-## Why this doc exists, and why it's a design doc, not a build todo list
+## Why this doc exists, and why it stays LOCAL despite the build-grade detail below
 
-Operator asked whether omniroute.online — a free, self-hosted AI gateway (Node.js server, OpenAI- compatible
-`localhost:20128/v1` endpoint, 268 providers, automatic free-tier draining + cheapest- per-token routing + rate-limit
-fallback) — could help route our worker fleet to cheaper/free models, noting we'd already experimented with swapping
-DeepSeek in for Claude. This is a genuine judgment call with a real security/correctness dimension (routing model
-traffic through a third-party local process, and interacting with this workspace's Claude-specific model-tier rules) —
-per `task_template.md`'s dispatch-scope-eligibility bar, that makes it a LOCAL design doc, not an AO-eligible todo. **No
-infra has been touched. Nothing here is executed.** It exists so the decision is captured with the actual code seams
-identified, ready for an explicit go/no-go.
+Operator asked whether omniroute.online — a free, self-hosted AI gateway (Node.js server, OpenAI-compatible
+`localhost:20128/v1` endpoint, 268 providers, automatic free-tier draining + cheapest-per-token routing + rate-limit
+fallback) — could route the worker fleet to cheaper/free models, noting the fleet already has a DeepSeek-swap precedent.
+The original version of this doc flagged two objections and stayed gated on both. Same session, operator ruled on both:
 
-## What already exists that this would plug into
+1. **Trust boundary (OmniRoute proxying API keys) — WAIVED.** Operator: don't gate the pilot on this.
+2. **Model-tier SSOT conflict — NOT waived, but resolved via a structural guardrail** (§ below), so the objection is
+   addressed by construction rather than by a standing gate someone has to remember to check.
 
-`agent-orchestrator/server/accounts.py` already has exactly the mechanism this idea needs:
+Per operator direction, this is written to AO-dispatch-grade detail (every step names its exact file, field, test, and
+done-when) — but **stays `assigned_vm: NA` / `execution_scope: local-only` by explicit operator choice**: the operator
+wants this executed by a human, not auto-dispatched, while still getting the same precision an AO todo would need.
+
+## What already exists that this plugs into
+
+`agent-orchestrator/server/accounts.py` already has the mechanism the ORIGINAL ask (route the worker fleet) would have
+needed:
 
 ```python
 AccountProvider = Literal["anthropic", "deepseek"]
 ```
 
-Per its own comment: `"anthropic"` (default, every account today) authenticates via `CLAUDE_CODE_OAUTH_TOKEN` against
-Anthropic's own API; a non-anthropic account instead sources `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` pointed at "a
-third-party Anthropic-compatible endpoint (e.g. DeepSeek)" — this is the DeepSeek experiment the operator referenced.
-OmniRoute's own pitch is "drop-in compatible... without code changes... translates between OpenAI, Claude, Gemini...
-formats transparently" — so in principle a NEW `AccountDef` could point `ANTHROPIC_BASE_URL` at `localhost:20128/v1`
-(OmniRoute) instead of directly at one third-party vendor, and OmniRoute would fan out from there across its 268
-providers. **No new mechanism would be needed** — this is a config-only change to an existing, already-used seam, which
-is exactly why it deserves a careful look rather than a reflexive "sounds useful, wire it in."
+`"anthropic"` (default, every account today) authenticates via `CLAUDE_CODE_OAUTH_TOKEN`; a non-anthropic account
+sources `ANTHROPIC_BASE_URL` + `ANTHROPIC_AUTH_TOKEN` pointed at a third-party Anthropic-compatible endpoint (the
+DeepSeek precedent). This pilot deliberately does **not** touch this mechanism — see the guardrail below for why.
 
-## The two real problems with pointing the ACTUAL worker fleet at it
+## The model-tier guardrail (baked in, not just documented)
 
-1. **Model-tier SSOT conflict.** `/codex/06-coding-standards/model-tier-selection.md` and this workspace's CLAUDE.md
-   make `opus-required`/`fable-required` a QUALITATIVE judgment about Claude's own reasoning capability for a specific
-   task class (main orchestrator role, cross-repo architecture judgment, trading judgment). An opaque router that
-   silently swaps in a cheaper/free model when Anthropic's own endpoint is rate-limited or costlier would violate that
-   contract invisibly — a task correctly tiered "sonnet is enough" landing on some unrelated free-tier model is not the
-   same risk profile as it actually landing on sonnet, and nothing in the current dispatch path would know the
-   difference.
-2. **Trust boundary.** OmniRoute is a third-party open-source local process that would sit between every worker and its
-   model provider, proxying `ANTHROPIC_AUTH_TOKEN`/API keys. Routing a trading system's agent-fleet traffic through it
-   is a deliberate security decision, not something to back into via a quick account-config edit.
+**The risk, precisely:** `/codex/06-coding-standards/model-tier-selection.md` and CLAUDE.md make
+`opus-required`/`fable-required` a qualitative judgment about Claude's own reasoning capability for a specific task
+class (main orchestrator role, cross-repo architecture judgment, trading judgment). An opaque router that silently
+substitutes a cheaper/free model when Anthropic's endpoint is rate-limited or costlier would violate that contract
+invisibly — a task correctly tiered "sonnet is enough" landing on some unrelated free-tier model is not the same risk as
+it actually landing on sonnet, and nothing in the dispatch path (`server/plan_health.py`'s `smart_tier` forcing,
+`server/model_tier.py`) would know the difference.
 
-Neither of these is a reason to reject the idea outright — they're reasons this needs an explicit operator decision
-before any `AccountDef` gets a `provider` pointed at it, not reasons the code mechanism doesn't already exist.
+**The guardrail (what "baking it in" means concretely):** the pilot is structurally confined to a code path that has
+**no model-tier semantics at all** — `deployment-api`'s pipeline-UAT commentary caller is a direct `anthropic` SDK call
+from a non-worker service, never a Claude Code CLI session, never touched by `smart_tier`/`model_tier.py`. Two repos, no
+service↔service dependency (already true per CLAUDE.md's tier-and-import-architecture rule), so there is no code path
+today by which this pilot's config can reach `accounts.py`. The guardrail makes that boundary an **explicit, documented
+rule** instead of an implicit accident of current architecture, so a future change can't cross it silently:
 
-## A much lower-stakes pilot surface exists, and it isn't the worker fleet at all
+- [ ] [INFRA] P2. Add a guard comment directly above `AccountProvider = Literal["anthropic", "deepseek"]` in
+      `agent-orchestrator/server/accounts.py` stating: this Literal must never gain a value that routes through a
+      shared/opaque multi-provider gateway (OmniRoute or equivalent) without a fresh, explicit model-tier-risk review —
+      cite `/codex/06-coding-standards/model-tier-selection.md`. Done-when: comment present, references the exact codex
+      path.
+- [ ] [INFRA] P2. Add a short note to `/codex/06-coding-standards/model-tier-selection.md` cross-referencing this plan
+      and stating the same boundary from the SSOT side (an opaque multi-provider router is out of scope for any
+      `AccountProvider`-routed worker traffic; the one sanctioned pilot surface is `deployment-api` pipeline-UAT
+      commentary, tracked here). Done-when: the note exists and the plan doc is linked from it (or vice versa via
+      `context_scope`).
 
-`deployment-api/deployment_api/commentary/pipeline_uat.py` calls the Anthropic SDK directly (not via a Claude Code CLI
-worker) to generate a natural-language batch-pipeline QA summary:
+This makes "don't extend this to the worker fleet" a documented, citable rule at exactly the two places someone would
+look (the enum itself, and the model-tier SSOT) — not just a paragraph in a design doc that stops being read once the
+pilot ships.
+
+## The pilot surface: deployment-api pipeline-UAT commentary
+
+`deployment-api/deployment_api/commentary/pipeline_uat.py` calls the Anthropic SDK directly to generate a
+natural-language batch-pipeline QA summary — read-only, advisory-only by its own docstring ("This module is READ-ONLY —
+it never modifies pipeline state or triggers redeployments. All decisions remain with humans"), already fail-soft on API
+errors (`"[Commentary unavailable: ...]"`).
 
 ```python
+# deployment_api/commentary/pipeline_uat.py:237 (current)
 client = anthropic.AsyncAnthropic(api_key=config.anthropic_api_key)
 ```
 
-This is:
+### Implementation steps (human-executed; each names its exact file/field/test)
 
-- **Read-only and advisory by construction** — the module's own docstring: "This module is READ-ONLY — it never modifies
-  pipeline state or triggers redeployments. All decisions remain with humans," and its system prompt explicitly bans
-  recommending trades or infra changes autonomously. Model-tier judgment risk is near-zero — a worse commentary summary
-  is a UX annoyance, not a trading or infra-correctness risk.
-- **Already fail-soft** — a call failure already degrades to `"[Commentary unavailable: ...]"` rather than blocking the
-  pipeline.
-- **A trivial, additive, reversible code change** — `anthropic.AsyncAnthropic(api_key=..., base_url=...)` accepts an
-  optional `base_url` exactly like `ANTHROPIC_BASE_URL` does for the account mechanism above; a config-gated override
-  defaulting to unset (current behavior unchanged) costs nothing to add and nothing to roll back.
+- [ ] [BACKEND] P2. **Add the config field.** In `deployment-api/deployment_api/deployment_api_config.py`, in the
+      `# PIPELINE UAT COMMENTARY` section (currently lines 678-704, alongside
+      `pipeline_uat_commentary_enabled`/`anthropic_api_key`/`pipeline_uat_model`), add:
+      `python     pipeline_uat_llm_base_url: str | None = Field(         default=None,         validation_alias=AliasChoices("PIPELINE_UAT_LLM_BASE_URL"),         description="Optional Anthropic-compatible base URL override for pipeline UAT commentary "         "(e.g. a local OmniRoute gateway). None = call Anthropic directly (default, unchanged behavior).",     )     `
+      Done-when: field present, `basedpyright`/`ruff` clean, no other config field touched.
+- [ ] [BACKEND] P2. **Thread it into the client construction.** In
+      `deployment-api/deployment_api/commentary/pipeline_uat.py`'s `_call_anthropic` (line 237), change:
+      `python     client = anthropic.AsyncAnthropic(api_key=config.anthropic_api_key)     ` to:
+      `python     client = anthropic.AsyncAnthropic(         api_key=config.anthropic_api_key, base_url=config.pipeline_uat_llm_base_url     )     `
+      (the `anthropic` SDK's `base_url` already defaults to `None` = its own default endpoint, so this is additive — no
+      behavior change when the new config field is unset). Done-when: diff is exactly this one-line expansion, no other
+      line in `_call_anthropic` touched.
+- [ ] [BACKEND] P2. **Test both branches** in `deployment-api/tests/unit/test_pipeline_uat.py`, extending the existing
+      `patch("deployment_api.commentary.pipeline_uat.anthropic.AsyncAnthropic")` pattern (see
+      `test_run_pipeline_uat_enabled_calls_anthropic`): - a test asserting
+      `mock_client.call_args.kwargs["base_url"] is None` when `pipeline_uat_llm_base_url` is left at its default (proves
+      the default path is byte-for-byte unchanged); - a test asserting
+      `mock_client.call_args.kwargs["base_url"] == "http://localhost:20128/v1"` when the config field is set to that
+      value. Done-when: both tests pass under `bash scripts/quality-gates.sh` in `deployment-api`, and every
+      pre-existing test in `test_pipeline_uat.py` still passes unmodified (this is additive, not a rewrite of existing
+      assertions).
+- [ ] [OPERATOR] P3. **Stand up OmniRoute itself** (self-host the gateway locally/on the deployment-api host,
+      `localhost:20128/v1`) and set `PIPELINE_UAT_LLM_BASE_URL` in the relevant env for a trial window. Tagged
+      `[OPERATOR]` — this installs and runs a new persistent third-party network service, a class of decision (like a VM
+      launch) this workspace routes to the operator rather than an autonomous worker, independent of the trust-boundary
+      waiver above (the waiver says the RISK is accepted; running new infra is still an operator act).
+- [ ] [REVIEW] P3. **Run the pilot for a real window** (operator's original proposal: ~2 weeks of pipeline-UAT runs) and
+      compare cost-per-call, latency, and a spot-check that commentary quality didn't regress (system prompt's own bar:
+      "concise, plain-language, under 6 sentences unless critical" — easy to eyeball). Done-when: a reported
+      before/after on cost + a pass/fail on the quality spot-check.
 
-This is the natural place to actually test OmniRoute's real cost/reliability claims — cheaper-per- token routing on
-genuinely low-stakes text generation — without touching the fleet's own worker sessions or their model-tier guarantees
-at all.
+## Explicitly out of scope (the guardrail's own boundary)
 
-## Proposed pilot (pending operator go-ahead — NOT started)
-
-1. Stand up OmniRoute locally (self-hosted, no account needed) and point ONLY `pipeline_uat.py`'s `_call_anthropic` at
-   it via a config-gated `base_url` override (`config.pipeline_uat_llm_base_url` or similar, default unset = current
-   direct-Anthropic behavior).
-2. Run it for a real window (e.g. 2 weeks of pipeline UAT runs) and compare: cost per commentary call, latency, and —
-   since this is human-read text — a spot-check that commentary quality didn't regress (the system prompt's bar is
-   "concise, plain-language, under 6 sentences unless critical" — easy to eyeball).
-3. Report the real numbers before considering ANY extension toward the actual worker fleet (`accounts.py`'s
-   `AccountProvider`) — that extension, if ever proposed, needs its own separate operator decision given the
-   model-tier/trust-boundary concerns above; this pilot's results don't pre-approve it.
-
-## Open questions for the operator (none of these are assumed — this is why the doc stays a design doc)
-
-- Is a third-party local process proxying API traffic acceptable for `deployment-api` (non-trading, advisory-only) even
-  if it wouldn't be for the worker fleet?
-- Is the pipeline-UAT commentary pilot worth the (small) engineering cost given it's explicitly advisory/non-critical,
-  or is the cost savings here too marginal to bother with (this is a single low-volume commentary call per batch run,
-  not a high-throughput surface)?
-- If the pilot goes well, is extending toward the worker fleet (`accounts.py`) ever in scope, or is that boundary
-  intentional and permanent?
+Extending this to `agent-orchestrator/server/accounts.py`'s `AccountProvider` (i.e. routing actual Claude Code worker
+sessions through OmniRoute) is **not** part of this pilot and is not pre-approved by a good pilot result — per the
+guardrail above, that would need its own fresh model-tier-risk review, not an inference from this doc.
 
 ## Codex SSOTs
 
-- `/codex/06-coding-standards/model-tier-selection.md` — the qualitative `opus-required`/ `fable-required` contract this
-  doc's risk section is about
+- `/codex/06-coding-standards/model-tier-selection.md` — the qualitative `opus-required`/`fable-required` contract the
+  guardrail protects, and where this plan's cross-reference note lands
 - `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` — the existing multi-account /
-  `ANTHROPIC_BASE_URL` mechanism this proposal would reuse, not replace
+  `ANTHROPIC_BASE_URL` mechanism this pilot deliberately does NOT reuse (see guardrail)
