@@ -77,10 +77,10 @@ related_plans:
   - ../active/data_source_provenance_enforcement_2026_07_24.md
   - ../active/legacy_bucket_dual_write_decommission_2026_07_24.md
   - ../active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md
-last_updated:
-  2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
-  # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
-  # plan-reconcile: related:/related_plans: repointed 4 folded plans from ../active/ to ../archive/2026_07/)
+# last_updated was 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
+# dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
+# plan-reconcile: related:/related_plans: repointed 4 folded plans from ../active/ to ../archive/2026_07/
+last_updated: 2026-07-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 ---

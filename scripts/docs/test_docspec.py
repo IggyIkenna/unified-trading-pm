@@ -307,3 +307,39 @@ def test_declared_doc_type_matching_path_is_ok():
     fm = _valid_plan()
     vs = validate_frontmatter("plan", fm, REG)
     assert "doc_type" not in _fields(vs, Sev.HARD)
+
+
+def test_detect_folded_date_fields_catches_the_actual_corruption_signature():
+    # The exact reproduced signature from
+    # prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md: an unquoted bare
+    # continuation directly under `last_updated:` on an ISSUE doc — a doc_type where `last_updated`
+    # isn't even schema-modeled, so validate_frontmatter() alone never looks at it.
+    raw = (
+        "\nlast_updated:\n"
+        '  2026-06-27 "2026-07-30" # cleaned up a merge-conflict-corrupted multi-date runaway scalar\n'
+        "  # some trailing comment continuation line\n"
+        "parent_epic: defi_master\n"
+    )
+    vs = docspec.detect_folded_date_fields(raw)
+    assert "last_updated" in _fields(vs, Sev.HARD)
+
+
+def test_detect_folded_date_fields_does_not_flag_deliberate_quoted_annotation():
+    # The established, legitimate corpus convention (defi_code_codex_drift_2026_05_27.md,
+    # uac_data_type_validity_combinator_fragmentation_2026_07_07.md) — first continuation line
+    # opens with a quote, so it is NOT this bug's shape and must not be flagged.
+    raw = "\nlast_updated:\n  '2026-07-10 (was: 2026-06-27 -- verify-rerun-2 finding 50)'\nparent_epic: defi_master\n"
+    assert docspec.detect_folded_date_fields(raw) == []
+
+
+def test_detect_folded_date_fields_ignores_clean_single_line_value():
+    raw = "\nlast_updated: 2026-06-27\nparent_epic: defi_master\n"
+    assert docspec.detect_folded_date_fields(raw) == []
+
+
+def test_detect_folded_date_fields_ignores_block_list_continuation():
+    # A continuation that opens with `-` is a YAML block-sequence item, not a folded scalar — must
+    # not be misclassified even directly under a date-kind field name (contrived shape, but proves
+    # the `-`/`[`/`{` skip-list actually gates on the continuation line, not just the field name).
+    raw = "\nlast_updated:\n  - 2026-06-27\nparent_epic: defi_master\n"
+    assert docspec.detect_folded_date_fields(raw) == []

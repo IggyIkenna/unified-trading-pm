@@ -125,8 +125,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         checked += 1
         problems: list[str] = []
+        doc_text = path.read_text(encoding="utf-8")
         try:
-            fm, _ = ds.parse_frontmatter(path.read_text(encoding="utf-8"))
+            fm, _ = ds.parse_frontmatter(doc_text)
         except Exception as exc:
             bad.append((path, [f"frontmatter is not valid YAML: {exc}"]))
             continue
@@ -134,6 +135,12 @@ def main(argv: list[str] | None = None) -> int:
             bad.append((path, ["no --- frontmatter block"]))
             continue
         problems.extend(f"{v.field}: {v.message}" for v in ds.validate_frontmatter(dt, fm, reg))
+        # Raw-text check, every doc_type (not gated on whether THIS doc_type's schema even lists the
+        # field — last_updated is plan-only in PER_TYPE, so this is the only check that ever looks at
+        # one on an issue/runbook/epic doc). See detect_folded_date_fields's docstring.
+        raw_fm = ds.raw_frontmatter_text(doc_text)
+        if raw_fm is not None:
+            problems.extend(f"{v.field}: {v.message}" for v in ds.detect_folded_date_fields(raw_fm))
         # exact legacy contract: keyed on the legacy `type:` field, not the path-derived doc_type
         # (path-keying would newly fail ~15 pre-existing verdict-pack docs — widen only via worklist)
         if fm.get("type") == "audit-result" and not fm.get("instructions_ref"):

@@ -320,6 +320,21 @@ def doc_type_for_path(path: str) -> str | None:
     return None
 
 
+def raw_frontmatter_text(text: str) -> str | None:
+    """Return the RAW frontmatter lines (between the `---` markers), pre-`yaml.safe_load`.
+
+    A separate function rather than widening `parse_frontmatter`'s return tuple — that function has
+    ~15 call sites across scripts/ and changing its signature is out of scope for this fix; a caller
+    that also needs the raw text (currently only `detect_folded_date_fields`'s caller) calls both.
+    """
+    if not text.startswith("---"):
+        return None
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return None
+    return parts[1]
+
+
 def parse_frontmatter(text: str) -> tuple[dict | None, str]:
     """Return (frontmatter_dict, body). frontmatter_dict is None when there is no `---` block."""
     if not text.startswith("---"):
@@ -440,6 +455,74 @@ def validate_frontmatter(doc_type: str | None, fm: dict, reg: Registries) -> lis
             # an empty OPTIONAL field (incl. an optional assigned_vm on an issue) is fine
             continue
         out += _validate_value(spec, v, reg, doc_type)
+    return out
+
+
+# Every field name ever declared kind="date" anywhere in the schema (created/last_updated/
+# last_reviewed/date, across UNIVERSAL_CORE + every PER_TYPE list) — the raw-text fold check below
+# applies to all of them regardless of doc_type, since PER_TYPE-scoped `_validate_value` only runs
+# for a doc_type that actually lists the field (last_updated is plan-only, so an issue doc carrying
+# one is never even looked at by the loop above).
+_DATE_FIELD_NAMES: frozenset[str] = frozenset(
+    spec.name for spec in (UNIVERSAL_CORE + [s for specs in PER_TYPE.values() for s in specs]) if spec.kind == "date"
+)
+
+
+def detect_folded_date_fields(raw_fm_text: str) -> list[Violation]:
+    """Flag a date-kind field whose value was accidentally YAML-folded across multiple lines.
+
+    Operates on the RAW frontmatter lines, not the parsed dict — `validate_frontmatter`/
+    `_validate_value` only ever see the post-`yaml.safe_load()` string, which has already collapsed
+    a multi-line plain scalar into one value, losing the one signal that tells apart the two things
+    that can produce it:
+
+      - An ACCIDENTAL fold (the bug): someone writes an explanatory note directly beneath a
+        single-line field like `last_updated:`, not realizing YAML plain-scalar folding silently
+        absorbs any following indented line into the SAME value. The runaway multi-date string from
+        plans/active/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md
+        is this — and because it happened to start with something date-shaped, the (now-fixed)
+        prefix-only date check let it land silently, and because `last_updated` was only
+        schema-modeled for `doc_type: plan`, an issue doc carrying the same fold was never even
+        checked. This function closes both gaps at once by working off raw text for every doc_type.
+      - A DELIBERATE quoted multi-line annotation (already an established, legitimate pattern in
+        this corpus — plans/active/issues/defi_code_codex_drift_2026_05_27.md,
+        plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md — e.g.
+        `last_updated:\n  '2026-07-10 (was: 2026-06-27 -- ...)'`). The first continuation line opens
+        with a quote character; that is NOT this bug's signature and must not be flagged.
+
+    Only inspects continuation lines immediately under a `<date-field>:` line (the field's own line
+    may be empty or already hold a value — the bug reproduces either way, per fix_frontmatter.py's
+    `_clear_field_continuations` docstring). Ignores a continuation that opens a YAML block-sequence
+    item (`- ...`) or flow collection (`[`/`{`) — those are legitimate list continuations, not a
+    folded scalar.
+    """
+    lines = raw_fm_text.splitlines()
+    out: list[Violation] = []
+    i = 0
+    n = len(lines)
+    while i < n:
+        m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*):", lines[i])
+        i += 1
+        if not m or m.group(1) not in _DATE_FIELD_NAMES:
+            continue
+        field = m.group(1)
+        if i >= n:
+            break
+        first_cont = lines[i]
+        if not (first_cont and first_cont[0] in (" ", "\t")):
+            continue  # no continuation at all — a clean single-line value
+        stripped = first_cont.strip()
+        if stripped[:1] in ("'", '"', "-", "[", "{") or not stripped:
+            continue  # deliberate quoted/list/empty continuation — not this bug's shape
+        out.append(
+            Violation(
+                field,
+                Sev.HARD,
+                f"value spans multiple lines starting with an unquoted continuation (`{stripped[:60]}...`) "
+                "— looks like an accidental YAML fold (a note written directly under this field). "
+                "Use a single-line scalar, or quote a deliberate multi-line annotation.",
+            )
+        )
     return out
 
 

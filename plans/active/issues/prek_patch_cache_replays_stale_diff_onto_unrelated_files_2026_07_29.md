@@ -32,7 +32,7 @@ related:
     /plans/archive/issues/quickmerge_help_flag_misparsed_as_commit_message_2026_07_30.md,
   ]
 created: 2026-07-29
-last_updated: "2026-07-30" # 6th confirmed reproduction, 2nd landed-on-origin occurrence, plus the concrete 9-patch-file forensic evidence (see Progress Log)
+last_updated: "2026-07-30" # slot-4: the 2 landed-on-origin instances directly proven self-inflicted (not prek); doc_type-agnostic structural check shipped; stays open pending slot-1's binary-upgrade recommendation + the unconfirmed upstream #1889-class issue (see Progress Log)
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -118,7 +118,7 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       and auto-`git restore`s any path that is newly dirty AND outside the commit's own `--files` scope. A real, working
       mitigation for the ORIGINAL symptom (collateral damage to a file the commit never touched) — but see the explicit
       gap in the new P1 below.
-- [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
+- [x] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the corruption still recurs on IN-SCOPE files; root cause unknown.**
       Confirmed via direct reproduction: this exact field corrupted TWICE MORE on
       `defi_consolidated_closeout_2026_07_18.md`, hours after `e37b7ab47` (the real fix_frontmatter.py fix above) was
       already live in this slot's checkout — so that fix, while genuine, does not explain or prevent this recurrence.
@@ -128,11 +128,44 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
       (a) prek's stash/restore has a concurrency blind spot slot 16's single-invocation source read didn't consider —
       many slots run `prek` concurrently against the same shared `~/.cache/prek/patches/`, so even a
       per-invocation-correct mechanism could still race; or (b) a second, still-unidentified mechanism produces the same
-      symptom independently of fix_frontmatter.py. Needs a worker to actually stress-test concurrent `prek` invocations
-      against this file, not just read source serially — see the 9-patch forensic list + self-perpetuation hypothesis in
-      the Progress Log below as a starting evidence base. **UPDATE 2026-07-30 (slot-1) — see the new P1 immediately
-      below: the actually-running prek binary on this host turned out to be 5+ months stale and confirmed to predate a
-      real, matching upstream bugfix in this exact code path. Hypothesis (b) now has a concrete, named candidate.**
+      symptom independently of fix_frontmatter.py. **UPDATE 2026-07-30 (slot-1) — hypothesis (b) now has a concrete,
+      named upstream candidate (see the new P1 immediately below): this host's binary is 5+ months stale and confirmed
+      to predate a real upstream bugfix in this exact code path.** **RESOLVED 2026-07-30 (slot-4), reconciled with the
+      above rather than overwriting it — two DIFFERENT things were being conflated under one todo, and both are now
+      closed as far as a worker can close them without the operator's binary-upgrade call:** (1) Hypothesis (a) is
+      REFUTED at the source level, not by re-reading serially: fetched the actual upstream source
+      (`j178/prek`, `crates/prek/src/cli/run/keeper.rs`, via `gh api`) — the stash/restore keeper stores its patch path
+      in an in-process `Option<PathBuf>` set at write time and restores it via Rust's `Drop`, never re-deriving the path
+      by scanning `~/.cache/prek/patches/`; no cross-invocation/concurrency patch-selection bug is structurally possible
+      here, on any version — confirmed by diffing the current-master source against the exact `v0.4.8` release tag (the
+      binary actually installed on THIS host, `.tabs/4`'s worktree host — distinct from slot-1's `harsh_pc`, which runs
+      a separate, older `0.3.1` install; `gh api repos/j178/prek/compare/<fix-commit>...v0.4.8` confirms `v0.4.8` is
+      AHEAD of (already contains) the `#2142`/`#2143` fix slot-1 found — so that CONFIRMED bug does not apply to this
+      host) — only cosmetic message-text/wrapper differences, the stash/restore/rollback control flow is identical. (2)
+      The two commits that actually LANDED corrupted content on origin (`unified-trading-pm@33fcd528d`, `@36fe18966`)
+      are directly proven, by reading their literal diffs, to be self-inflicted authoring mistakes, NOT prek replaying
+      anything: an agent wrote an explanatory note directly into `last_updated:` using unquoted multi-line continuation
+      syntax (an easy, understandable mistake — it reads like a harmless comment to a human, but YAML plain-scalar
+      folding silently absorbs it into the field's value). The folded value happened to still start with a valid-looking
+      date, so it passed the (at-the-time) prefix-only date check and landed clean — no prek defect required for THESE
+      two specific occurrences, independent of which prek version was in play. (3) Both real defenses already on the
+      books (`e37b7ab47`'s continuation-stripping, the prior todo's fullmatch tightening) only ever applied to
+      `doc_type: plan` — shipped a doc_type-agnostic raw-text structural check (`docspec.detect_folded_date_fields`,
+      wired into `check_frontmatter_schema.py`) that catches an accidental unquoted fold under ANY date-kind field on
+      ANY doc_type, while correctly leaving the corpus's existing deliberate-quoted-annotation convention alone (does
+      NOT false-positive on `defi_code_codex_drift_2026_05_27.md` / `uac_data_type_validity_combinator_fragmentation_
+      2026_07_07.md`'s legitimate quoted style). Running it over the live corpus found (and this todo fixed) one more
+      previously-undetected real instance on `plans/epics/mtds_mdps_master.md` — same bug, an epic doc, never caught
+      before since epics don't schema-model `last_updated` either. Verified zero violations across the full 1833-doc
+      live corpus after the fix. **What is NOT resolved, deliberately left to the operator-gated todo below**: the
+      PRE-COMMIT-stage reproductions on THIS host (the original 2026-07-29 report + this session's own earlier "9-patch
+      forensic" reproductions) are still not conclusively explained — this host's `v0.4.8` does not have the CONFIRMED
+      `#2142` bug, but per slot-1's finding below it likely still has the UNCONFIRMED `#1889`-class latent issue
+      (`checkout_working_tree()` rolling back from the current index rather than a saved pre-hook snapshot), since that
+      diff shows it unchanged between `v0.4.8` and current master. Cannot rule that mechanism in or out without a live
+      stress-test against a real stash-conflict, which is exactly the kind of host-wide-binary-affecting probe that
+      should wait for the operator's upgrade decision rather than be done unilaterally mid-session — deferring to the
+      todo immediately below.
 - [ ] [SCRIPT] P1. **NEW (2026-07-30, slot-1) — the actually-invoked `prek` binary is `0.3.1` (2026-01-31), 5+ months
       and ~15 releases stale, and upstream has since fixed a confirmed corruption bug in the exact stash/restore code
       path this issue is about.** `which prek` → `/home/hk/.local/bin/prek` → `prek --version` reports `0.3.1`; its
@@ -306,3 +339,62 @@ timestamps, so root-causing doesn't need to re-derive the candidate set from a 1
   tracked infrastructure that every concurrently-running slot depends on; swapping it mid-session without the operator's
   awareness is a materially different kind of action than shipping a scoped code fix inside one repo, so it was left as
   an explicit recommendation (see the todo above) rather than done unilaterally. `status` stays `open`.
+
+- **2026-07-30 (slot-4) — direct forensic root-cause of the LANDED-on-origin instances + a doc_type-agnostic structural
+  defense, reconciled with slot-1's concurrent stale-binary finding rather than overwriting it.** Picked this task up
+  fresh, read the actual `j178/prek` upstream source via `gh api` (this host's installed binary is `v0.4.8`, via
+  `uv tool install` — a DIFFERENT host/install than slot-1's `harsh_pc`, which runs a separate `0.3.1`). Two findings:
+
+  1. **Hypothesis (a) refuted at the source level.** `crates/prek/src/cli/run/keeper.rs`'s `UnstagedChangesRestorer`
+     stores its patch path in an in-process `Option<PathBuf>` (set once, at the moment it writes the file) and restores
+     it via Rust's `Drop` trait when the invocation ends — it never re-derives "which patch is mine" by scanning or
+     globbing `~/.cache/prek/patches/`. A directory shared by every concurrent slot on a host cannot cause one
+     invocation to apply a DIFFERENT invocation's patch under this design, regardless of how many slots write into it
+     simultaneously. Cross-checked this isn't just true of current master: diffed current master's `keeper.rs` against
+     the exact `v0.4.8` tag (`gh api .../contents/...?ref=v0.4.8`) — only cosmetic message-text/wrapper-fn differences,
+     the stash/restore/rollback control flow is byte-identical. Also directly confirmed via
+     `gh api repos/j178/prek/compare/<2143-merge-sha>...v0.4.8` (`status: "ahead"`) that `v0.4.8` — this host's actual
+     binary — already contains slot-1's CONFIRMED `#2142`/`#2143` fix; that specific bug does not apply here. (Their
+     `0.3.1` predates it, so it's a live, real contributing factor on `harsh_pc` specifically — a genuinely different
+     host, genuinely stale, correctly flagged; nothing here contradicts that finding.)
+  2. **Hypothesis (b), for the two commits that actually landed on origin specifically, is not "a second unidentified
+     mechanism" — it's simpler and directly provable by reading the commits.** `git show unified-trading-pm@33fcd528d --
+     plans/active/defi_consolidated_closeout_2026_07_18.md` and the same for `@36fe18966` show, in both cases, a
+     human/agent writing an explanatory annotation directly into the `last_updated:` field using UNQUOTED multi-line
+     continuation syntax (e.g. `last_updated:\n  2026-06-27 "2026-07-30" # cleaned up a merge-conflict-corrupted...`).
+     Verified via `python3 -c "import yaml; yaml.safe_load(...)"` that this parses (folds) to exactly one string,
+     `'2026-06-27 "2026-07-30"'` — not a YAML error, so it sails past `check-yaml`. It happened to start with a
+     valid-looking date, so the (at-the-time) prefix-only `_validate_value` date check accepted it too, and it shipped
+     clean. This is a self-inflicted authoring pattern (an easy, sympathetic mistake — the field reads like a safe place
+     to leave a note), not prek replaying stale content; no prek defect of any kind is required to explain these two
+     specific occurrences.
+
+  **What is genuinely still open** (not claiming more than this): the PRE-COMMIT-stage reproductions on THIS host (the
+  original 2026-07-29 report, and this session's own earlier same-day "9-patch forensic" reproductions before the
+  corruption ever reached a commit) remain unexplained by (2) above, since nothing was ever staged/committed in those
+  cases. This host's `v0.4.8` lacks the confirmed `#2142` bug but, per slot-1's finding, likely still carries the
+  UNCONFIRMED `#1889`-class issue (`checkout_working_tree()` rolling back from the current index rather than a saved
+  pre-hook snapshot) — that code path is unchanged between `v0.4.8` and current master in this same diff. Did not
+  attempt to force-reproduce a live stash-conflict to settle this, since deliberately provoking one against the shared,
+  host-wide `prek` binary mid-session is the same category of risk slot-1 already declined to take unilaterally; left
+  bundled with their upgrade recommendation todo rather than duplicated.
+
+  **Shipped regardless of the remaining open question**: `docspec.detect_folded_date_fields()` (new function,
+  `scripts/docs/docspec.py`) — operates on the RAW frontmatter text (not the parsed dict, which has already lost the
+  quoted-vs-unquoted distinction by the time `_validate_value` sees it) and flags an unquoted multi-line continuation
+  under ANY field the schema anywhere declares `kind="date"` (`created`/`last_updated`/`last_reviewed`/`date`), for
+  EVERY `doc_type` — closing the gap the prior todo explicitly left open ("`last_updated` is only a validated field for
+  `doc_type: plan`... the same corruption on an issue doc's `last_updated` field would still sail through undetected").
+  Carefully distinguishes this from the corpus's existing, legitimate deliberately-quoted multi-line annotation
+  convention (first continuation line opening with a quote character) — verified this does NOT flag
+  `defi_code_codex_drift_2026_05_27.md` or `uac_data_type_validity_combinator_fragmentation_2026_07_07.md`, both of
+  which use that legitimate pattern and would have been false positives under a naive "any fold on a date field" rule.
+  Wired into `check_frontmatter_schema.py` (the actual precommit-fast-path + CI gate). Added 4 unit tests
+  (`scripts/docs/test_docspec.py`) covering: the exact corruption signature, the legitimate quoted convention (must NOT
+  flag), a clean single-line value, and a block-list continuation (must NOT misclassify a `-`-prefixed continuation as
+  a folded scalar). Ran the new check over the full live corpus and found ONE more previously-undetected real instance —
+  `plans/epics/mtds_mdps_master.md`'s `last_updated:` had the exact same unquoted-fold shape (epics don't schema-model
+  `last_updated` any more than issues did), fixed it (moved the explanatory note to a real `#`-comment line ABOVE the
+  field, set the value to a clean single-line date). Verified zero violations across the full 1833-doc live corpus
+  after the fix. `status` stays `open` pending the operator's binary-upgrade decision — this entry closes the
+  landed-on-origin mechanism and the schema-coverage gap, not the full pre-commit-stage question.
