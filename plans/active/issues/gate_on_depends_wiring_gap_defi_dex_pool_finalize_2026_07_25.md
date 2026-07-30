@@ -263,6 +263,47 @@ a delete that has not been verified, backfilled, or executed. Declining, same di
 skipping rather than re-blocking on an already-answered question. Fifth distinct plan pair confirms this is a durable,
 general dispatcher gap, not an isolated one-off — root-cause item 1 remains the correct fix.
 
+## Todos
+
+- [ ] [BACKEND] P1. **Trace + fix `_wire_gate_on_depends_prereqs`**
+      (`agent-orchestrator/server/regen_backlog_from_plan.py`) so a `gate_on_depends: true` finalize plan's tasks
+      reliably get the upstream plan's real task ids wired into `prereqs.completed_tasks` on every regen tick, not just
+      (maybe) at first-ingestion. Confirmed 9 times across ≥6 distinct plan pairs (defi_dex_pool,
+      prediction_satellite_batch3, mdps_features 11c per-todo shape, cross_cutting_satellite_batch1 dual-gate,
+      cefi_track7_candle_namespace_residual, cefi_track2_coverage_backfill — the last one bounced across at least 3
+      separate slot dispatches) that `GET /api/backlog/<finalize-task>/blockers` reports `"ready (no blockers)"` while
+      the real upstream tasks are still non-`done` in the live backlog. Repo: agent-orchestrator. **Done when**: root
+      cause identified (e.g. wiring only running once at ingestion vs. every regen tick, or a
+      `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
+      plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
+      plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
+- [ ] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
+      fix, `pick_next_task()` (or the `/blockers` endpoint) should independently verify a `gate_on_depends: true` task's
+      cited upstream plan file's own on-disk `- [ ]`/`- [x]` checkbox count before dispatching it, refusing dispatch
+      (not just relying on `prereqs.completed_tasks`) if the upstream isn't fully checked off. Repo: agent-orchestrator.
+      **Done when**: a synthetic test plan pair with an intentionally-unwired gate is confirmed to NOT dispatch its
+      finalize task, proving the check catches what `_wire_gate_on_depends_prereqs` currently misses.
+
+## 2026-07-30 recurrence — cefi_track2_coverage_backfill_checkpoints, second bounce (slot 4)
+
+Freshly `/boot`ed with `cefi_track2_coverage_backfill_checkpoints_finalize-001` already `already_in_progress: true` on
+slot 4 (`dispatch_reason: "resume"`) — same task, same plan pair already covered by the "FOURTH distinct plan pair"
+recurrence note below (slot 7). Independently re-verified before declining:
+`GET /api/backlog/cefi_track2_coverage_backfill_checkpoints_finalize-001/blockers` → `"ready (no blockers)"`;
+`GET /api/backlog` shows `cefi_track2_coverage_backfill_checkpoints-004`/`-005` both still `queued` (not `done`) — the
+gate is still genuinely 3/5, not 5/5. Live-checked the relaunched VM
+(`cefi-queue-heavy-binancefutu-x17-20260730-161443`, per
+`issues/cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`'s todo-1 relaunch):
+`gcloud compute instances describe` → `RUNNING` (still alive, not re-preempted), but nowhere near completing the
+`2020-02-01..2026-07-29` span — consistent with slot-7's `date=2020-01-09` observation, no material progress that would
+flip the gate. Nothing has changed that would let the finalize plan's todo 1/2 close honestly. This is now the **9th**
+documented bounce off this general wiring gap (across ≥6 distinct plan pairs) with the root-cause fix still
+unimplemented — added the two `- [ ]` todos above (this doc previously only carried prose recommendations, never a
+trackable checkbox, despite 8 prior recurrences all pointing at the same fix) so the fix itself is dispatchable rather
+than perpetually re-discovered. Declining to author any reconciliation content in the finalize plan or
+`cefi_consolidated_closeout_2026_07_18.md`; skipping this task (`reason_code: GATED`) rather than re-filing a duplicate
+`/blocked`.
+
 ## 2026-07-30 recurrence — FOURTH distinct plan pair (cefi_track2_coverage_backfill_checkpoints)
 
 Slot 7 was dispatched `cefi_track2_coverage_backfill_checkpoints_finalize-001` (plan_ref
