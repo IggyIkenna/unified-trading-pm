@@ -100,20 +100,15 @@ drift_direction: advance-code
       explicit date arguments processes the run day (or run-day-minus-1) rather than the old hardcoded window,
       demonstrated by one real execution's logged date range; a unit test covers the defaulting branch; `tofu plan` is
       clean if (b) was chosen; `quality-gates.sh` green in every touched repo.
-- [ ] [DOCS] P2. **Correct the codex Slack-parity contract for the umbrella-driven channel split.**
-      `/codex/05-infrastructure/deployment-observability.md` § "Slack parity + alert enrichment" (line ~267) still
-      documents deployment-lifecycle alerts as routing to `#data-pipeline-alerts` only. The real, shipped routing is an
-      umbrella-driven split — LIVE→`#uts-live-alerts`, BATCH→`#data-pipeline-alerts` — plus an emitter umbrella-stamping
-      contract. **This is a correct-codex edit only** (codex is factually stale versus already-shipped code), which is
-      the one class of codex edit the backend/plan-reconciler discipline permits without an operator ruling — so BEFORE
-      editing, verify the drift is real: confirm `alerting-service@f94b3b5` and `deployment-service@94dfcfc` both exist
-      and are reachable on `origin/live-defi-rollout`, and read the live routing code to confirm the split is what
-      actually ships. If either sha does not resolve, or the code does not match the claimed split, do NOT edit — record
-      the discrepancy in the source doc instead and leave codex alone. Repo: unified-trading-pm. Source:
-      `issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md` (line ~465). **Done when**: both shas are verified reachable
-      and the routing code read, the § "Slack parity" section states the umbrella-driven channel split + the emitter
-      umbrella-stamping contract, the source doc's `[DOCS] P2` checkbox is flipped with the commit cited — or, on a
-      failed verification, an explicit written finding replaces the edit.
+- [x] ✅ [DOCS] P2. **Correct the codex Slack-parity contract for the umbrella-driven channel split.** —
+      `unified-trading-pm@66fa926d5`. Verified both shas reachable on `origin/live-defi-rollout`
+      (`alerting-service@f94b3b5`, `deployment-service@94dfcfc`) and read the live routing code directly:
+      `alerting_service/notifiers/router.py::_is_live_umbrella()` + `_route_data_pipeline_event()` confirm the
+      umbrella-driven channel split (LIVE→`#uts-live-alerts`, else→`#data-pipeline-alerts`); `deployment-service`'s
+      `umbrella_for_vm_name()` (`deployment_classification.py`) confirmed wired into `deployment_heartbeat._emit`,
+      `exit_code_fleet_monitor`, and `heartbeat_stall_watcher`. Corrected
+      `/codex/05-infrastructure/deployment-     observability.md` § "Slack parity + alert enrichment" to state both
+      facts. Source doc's `[DOCS] P2` checkbox flipped in the same commit series (see below).
 - [ ] [SCRIPT] P2. **Delete the now-inert cefi pre-listing plumbing from MTDS.** With the pre-listing source retired,
       `catalog_list_not_yet_listed_cefi` always returns empty → `cefi_pre_listing_by_venue` is always `{}` → the
       `record_expected_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` write loop never fires. The threaded parameter and the

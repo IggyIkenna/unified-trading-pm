@@ -557,16 +557,22 @@ Synthetic `DEPLOYMENT_FAILED` routed through the real notifier mirrors with the 
 
 ### Codex SSOT to update (follow-up)
 
-- [ ] [DOCS] P2. **unified-trading-pm** — update `/codex/05-infrastructure/deployment-observability.md` § "Slack parity"
-      to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the emitter
-      umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting routing
-      split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
+- [x] ✅ [DOCS] P2. **unified-trading-pm** — update `/codex/05-infrastructure/deployment-observability.md` § "Slack
+      parity" to state the umbrella-driven channel split (LIVE→#uts-live-alerts, BATCH→#data-pipeline-alerts) + the
+      emitter umbrella-stamping contract (was: "DEPLOYMENT\_\* → #data-pipeline-alerts" only). Provenance: alerting
+      routing split shipped alerting-service@f94b3b5 + deployment-service@94dfcfc 2026-06-23.
 
-      **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
-                  this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
-                  currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
-                  doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
-                  checkboxes citing the same commit.
+      **SHIPPED 2026-07-30 (slot 8) — `unified-trading-pm@66fa926d5`.** Executed via
+          `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md`'s owning todo (per the SUPERSEDED note below,
+          which this entry preserves for history): both cited shas verified reachable on `origin/live-defi-rollout`, the
+          live routing code read directly and confirmed to match the claimed split, codex corrected. Both checkboxes
+          flipped citing the same commit, per that todo's own instruction.
+
+          **SUPERSEDED (2026-07-30, conflict-check `blank_assigned_vm_dispatch_classification_gap_2026_07_26.md`-005)** —
+                      this exact fix is already carried as its own todo (`[DOCS] P2. Correct the codex Slack-parity contract...`) in the
+                      currently-active `plans/active/cefi_satellite_ao_dispatch_batch3_2026_07_26.md` (which explicitly cites THIS
+                      doc/line as its source). Do not dispatch this copy — that plan owns execution; when it ships, flip both
+                      checkboxes citing the same commit.
 
 ## UAC capture-universe expansion — survivorship-bias-free (operator 2026-06-23)
 
@@ -948,10 +954,10 @@ absence is only the 1.27M `SOURCE_RETURNED_ZERO`.
       their source/handler.
 
       **PARTIAL-STALE (2026-07-30, conflict-check)** — the `perp_funding`=0 sub-claim for HL/ASTER is BY DESIGN, not a
-                  bug: `PerpFundingHandler` explicitly RETIRED standalone `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC
-                  2026-07-08 (funding now rides `derivative_ticker.funding_rate`, byte-identical) — see
-                  `plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Remaining
-                  scope for this todo is genuinely open: `futures_chain`/`options_chain`/`ohlcv_1m` still need diagnosis.
+                      bug: `PerpFundingHandler` explicitly RETIRED standalone `perp_funding` capture for HYPERLIQUID/ASTER/LIGHTER-ZKSYNC
+                      2026-07-08 (funding now rides `derivative_ticker.funding_rate`, byte-identical) — see
+                      `plans/active/issues/aster_perp_funding_backfill_stale_launcher_and_genesis_conflict_2026_07_28.md`. Remaining
+                      scope for this todo is genuinely open: `futures_chain`/`options_chain`/`ohlcv_1m` still need diagnosis.
 
 ## CeFi attempted_failed + expected_unattempted audit (operator 2026-06-24, post-purge index 5.02M rows)
 
