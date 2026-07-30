@@ -331,12 +331,41 @@ distinct plan pair.
       `gated_plans`/`file_to_ids` ordering race), fixed, and a regression test proves a `gate_on_depends:     true`
       plan's tasks carry the upstream ids in `prereqs.completed_tasks` immediately after a regen tick that ingests both
       plans together (the same-tick-ingestion shape, not just the already-covered empty-upstream cases).
-- [ ] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
+- [x] [BACKEND] P2. **Add a standing dispatch-time re-check** as a second line of defense: even without the root-cause
       fix, `pick_next_task()` (or the `/blockers` endpoint) should independently verify a `gate_on_depends: true` task's
       cited upstream plan file's own on-disk `- [ ]`/`- [x]` checkbox count before dispatching it, refusing dispatch
       (not just relying on `prereqs.completed_tasks`) if the upstream isn't fully checked off. Repo: agent-orchestrator.
       **Done when**: a synthetic test plan pair with an intentionally-unwired gate is confirmed to NOT dispatch its
-      finalize task, proving the check catches what `_wire_gate_on_depends_prereqs` currently misses.
+      finalize task, proving the check catches what `_wire_gate_on_depends_prereqs` currently misses. — ✅
+      agent-orchestrator@c34b560
+
+## 2026-07-30 todo 2 shipped (slot 9) — on-disk defense-in-depth check
+
+Added `gate_on_depends_unmet_upstreams_on_disk`/`gate_on_depends_holds_on_disk`
+(`agent-orchestrator/server/regen_backlog_from_plan.py`), which independently re-derive a `gate_on_depends: true` task's
+gating straight from the plan FILES on every dispatch attempt — reading the task's own plan frontmatter
+(`_parse_frontmatter_gate_on_depends`/`_parse_frontmatter_depends_on`, the SAME parsers `_wire_gate_on_depends_prereqs`
+uses) and each `depends_on` upstream's open todos (`_parse_open_todos`, matching that function's own
+never-ingested-upstream disambiguation branch), WITHOUT ever consulting `prereqs.completed_tasks` — so a still-unknown
+THIRD wiring bug can no longer let a gated finalize task dispatch. Wired into `dispatch.py`'s `_FILTERS` SSOT as a new
+`gate_on_depends_on_disk` row (FLEET scope, same as `prereqs` — an unmet on-disk gate blocks every slot identically) and
+into `explain_blocked` so `/blockers` cites the specific unmet upstream stem instead of `"ready (no blockers)"`.
+
+Deliberately reads the PM working tree directly (`_pm_repo_path()`), NOT `_resolve_plans_dir`'s LDR-snapshot indirection
+(`git fetch` + `git archive` + `tar` per call) — that snapshot is right for `regen()`'s once-per-~30-min corpus scan but
+far too costly on the dispatch hot path (`pick_next_task` runs on every boot/heartbeat/done fleet-wide); mirrors
+`get_full_todo_text_with_status`'s existing working-tree-direct pattern. An unreadable/missing plan fails OPEN (not
+blocked), consistent with `task_still_dispatchable`/`_completed_task_satisfied`'s existing conservative defaults.
+
+New regression test `tests/test_dispatch_gate_on_depends_disk_check.py` proves the exact acceptance shape: a synthetic
+downstream task with `prereqs.completed_tasks` left EMPTY (the exact unwired shape this issue doc's bounces produced)
+whose own plan file cites `depends_on: [upstream]` + `gate_on_depends: true`, with the upstream plan file still carrying
+an open `- [ ]` todo on disk — `pick_next_task` correctly returns `None`, and once the upstream is fully checked off,
+dispatches normally. Also pinned `gate_on_depends_on_disk`'s FLEET scope in `tests/test_dispatch_filter_table.py`'s
+existing classification-contract test.
+
+Full `quality-gates.sh` green (2137 passed, ruff/basedpyright clean) before shipping via `quickmerge --agent`. Todo 1
+(the root-cause fix) remains the primary defense; this todo is the backstop, not a replacement.
 
 ## 2026-07-30 recurrence — cefi_track2_coverage_backfill_checkpoints, second bounce (slot 4)
 
