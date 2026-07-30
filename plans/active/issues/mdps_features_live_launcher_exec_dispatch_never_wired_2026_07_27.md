@@ -37,7 +37,7 @@ related:
     /codex/02-data/live-data-persistence-and-event-log.md,
   ]
 created: 2026-07-27
-last_updated: 2026-07-27
+last_updated: 2026-07-30
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -51,12 +51,19 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on:
+depends_on: [uac_mdps_mvp_universe_data_type_axis_2026_07_30]
+gate_on_depends: true
+sequential: true
 source: interactive session, live-VM verification of the sibling dependency-conflict fix, 2026-07-27
 resolved_by:
 ---
 
 # launch-mdps-features-live.sh exec-dispatch was never actually wired up
+
+> **Machine-gated on `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md`** (`depends_on` +
+> `gate_on_depends: true`) — the exec-dispatch wiring todo below (and the P3 todos that follow it) will not dispatch
+> until that doc's UAC enumerator extension is done. Ruled 2026-07-30, BLK-fd70b57c: see the second `[SCRIPT]` todo
+> below for the full reasoning.
 
 ## Evidence
 
@@ -169,7 +176,18 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
       "live" for its asset_group — the ruling's "discovered from the instruments universe" phrase names a _source_ but
       not a concrete lookup (a live query against running MTDS-live VMs' own metadata? a static MVP-shard registry
       read?). Inventing one now would be a fresh design call this doc's own text already ruled out of scope ("NOT
-      attempting to improvise... risks a plausible-looking but wrong fix"), so left open rather than guessed.
+      attempting to improvise... risks a plausible-looking but wrong fix"), so left open rather than guessed. **RULED
+      2026-07-30 (BLK-fd70b57c, main-authority answer — final)**: extend UAC's `mdps_mvp_universe(asset_group)`
+      (`unified_api_contracts.canonical.crosscutting._mvp_scope_mdps`) to a `(venue, data_type)` axis and make it the
+      SSOT shard enumerator this branch calls at boot — a hand-maintained bash array (rejected: violates the "shard atom
+      identical across writer/manifest/status/gate/UI" DATA hard rule, the exact drift surface
+      `setup-cefi-live-consolidated-vm.sh`'s own `MVP_SHARDS` comment already flags) and repurposing
+      `live_stream_watcher.build_prediction_live_shards()` (rejected: wrong contract — post-hoc "what IS live"
+      staleness-alerting, not pre-launch "what SHOULD be live"; also a boot-time ordering hazard) are both ruled out on
+      standards grounds, not preference. Executed as a SPLIT per `task_template.md` §"forked-out child" convention:
+      forked the UAC extension out to `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` (its own
+      determinable, scoped contract edit) and this doc now `depends_on` + `gate_on_depends: true` that doc (see
+      frontmatter + banner above) — this todo stays open, gated, and will dispatch once that enumerator lands.
 - [ ] [SCRIPT] P3. Also fix `launch-mdps-features-live.sh`'s `VM_OPERATION=live_aggregate_and_compute` metadata value —
       it doesn't match any of MDPS's real `--operation` choices (`timer-candles`/`streaming-aggregation`/
       `build-continuous`); once the dispatch branch is designed, set the metadata this launcher passes to match whatever
@@ -188,3 +206,8 @@ in-process / sub-ms" still holds once features-service is genuinely family-shard
 - **na-eligibility-audit 2026-07-30**: RECLASSIFY NA → planning — the gating [OPERATOR] design call was FULLY RULED
   2026-07-29 (process topology option (a) + the family↔asset_group mapping, shipped `features-service@ebd43939`); all 3
   remaining [SCRIPT] todos are now unblocked bounded implementation.
+- **2026-07-30 (slot-6, BLK-fd70b57c)**: 2026-07-30's own investigation note (above) correctly flagged the
+  shard-discovery mechanism as still undecided. Escalated; operator ruled extend UAC `mdps_mvp_universe()` (option A),
+  executed as a SPLIT — forked `/plans/active/issues/uac_mdps_mvp_universe_data_type_axis_2026_07_30.md` as a
+  prerequisite and gated this doc on it (`depends_on` + `gate_on_depends: true`). The exec-dispatch wiring todo and its
+  two P3 followers stay open, now correctly machine-gated rather than falsely dispatchable.
