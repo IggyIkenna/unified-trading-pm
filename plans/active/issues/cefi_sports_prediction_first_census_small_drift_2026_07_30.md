@@ -53,8 +53,10 @@ resolved_by:
   "unified-api-contracts@b936abad (KALSHI_PERP/POLYMARKET_PERP registry constants, SMARKETS bookmaker exception) +
   market-tick-data-service@4d147d9a (canonical venue writes, prediction typo fix, SPORTS shard-count re-pin — NOTE: this
   same commit's chain='' change was WRONG and reverted same day, see item 3 above) — cefi item 2 escalated to
-  cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md (still open, P1); item 4 (stray ohlcv_* data_type)
-  and the OKX-OPTIONS/FUTURES-chain sub-items are documented HISTORICAL-ONLY/UNCLEAR residue, not fixes"
+  cefi_live_spot_connectors_noncanonical_instrument_id_2026_07_30.md (now resolved + archived:
+  market-tick-data-service@46e85d94, all 8 live spot venues fixed to SPOT_PAIR + canonical hyphenation); item 4 (stray
+  ohlcv_* data_type) and the OKX-OPTIONS/FUTURES-chain sub-items are documented HISTORICAL-ONLY/UNCLEAR residue, not
+  fixes"
 depends_on: []
 ---
 
