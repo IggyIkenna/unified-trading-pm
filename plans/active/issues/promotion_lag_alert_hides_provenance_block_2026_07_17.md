@@ -172,6 +172,16 @@ about the alert that reports the residue.
   verify at wake-up via `gh pr view 897 --repo IggyIkenna/features-service --json state,mergedAt` / same for MTDS PR
   #781.
 
+## Addendum (2026-07-30, rulings-closeout pass)
+
+Both todos above were already `[x]` before this pass touched the doc. One residual gap remained on fix #1's own bar
+("classify... test against a synthetic provenance-blocked PR" per the "Fix direction" §1 wording) — no regression test
+had ever exercised `_provenance_blocked()` against a synthetic blocked PR. Closed:
+`scripts/cicd/test_promotion_lag_monitor_provenance_blocked.py` (6 tests — no-open-PRs, fail-closed-on-lookup-failure,
+PR-without-marker, PR-with-marker [the synthetic reproducer], non-promote-titled PR skipped, non-int PR-number skipped),
+shipped `unified-trading-pm@51b93ec0a`. This doc's own status/todos are unchanged (already fully resolved); this is a
+test-coverage addendum, not a re-opening.
+
 ## Provenance
 
 Found while shipping `bucket_estate_consolidation_to_sub100_2026_07_13`'s asset-group parity sweep (operator shared the
