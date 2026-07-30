@@ -90,7 +90,7 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated: 2026-07-30
+last_updated: 2026-07-30 (duplicate-dispatch confirmation, agt-ccb54c second spawn)
 ---
 
 # CeFi `book_snapshot_5` schema-contract mismatch -- root cause + fix (2026-07-28)
@@ -311,3 +311,15 @@ against the reproduction script.
   cheap deterministic re-check (numerator essentially static, no new fresh mechanism) rather than a full re-diagnosis.
   No GCS/manifest write, no VM launch, no code change this session (PM plan-doc edit only). Pinged `dp-fleet-monitor`
   (authoring slot) with this outcome.
+- **2026-07-30 (slot-4, `data_pipeline_failure` escalation worker, task `agt-ccb54c`, second dispatch of the SAME
+  escalation_id):** Received a second `data_pipeline_failure` worker spawn for the identical escalation_id `agt-ccb54c`
+  already fully investigated and concluded by the entry directly above (byte-identical numbers: 300,671/1,063,183 =
+  28.3%, "STATIC BACKLOG"). This is a genuine duplicate dispatch of one escalation event to two slots, not a
+  re-fired/re-evaluated condition — exactly the failure mode
+  `dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md` describes. Per that doc's Option A, did the cheap
+  deterministic re-check rather than a full re-diagnosis: re-verified both fix commits
+  (`unified-api-contracts@8db188fe`, `market-tick-data-service@339ca767`) are still ancestors of
+  `origin/live-defi-rollout` in this worktree (`git merge-base --is-ancestor` = true for both). No new manifest read
+  performed — the alert numbers are identical to the just-completed investigation above, so there is nothing new to
+  measure. No code change, no GCS/manifest write, no VM launch this session (PM plan-doc edit only). Pinged
+  `dp-fleet-monitor` (authoring slot) with this outcome.
