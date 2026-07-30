@@ -132,14 +132,35 @@ service CLI subcommand"), as a permanent instruments-service CLI subcommand — 
 - [x] ✅ [CODE] P2. Implement it, generalizing `retry_transient_cefi_failures_2026_06_28.py` as the template; port its
       existing safety gates (dry-run default, snapshot-before-write, captured-count invariant checks). —
       `unified-trading-library@4b6a13cf`.
-- [ ] [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
-      `script-homes.md`'s production-verb rule.
+- [x] ✅ [CODE] P2. Wire it as an instruments-service CLI subcommand (`--operation reprocess-shards`) per
+      `script-homes.md`'s production-verb rule. — `instruments-service@e9eac282`.
 - [ ] [SCRIPT] P3. Retire the 13 one-off scripts above (was: 11 — verify-rerun-2 finding 151, 2026-07-14: title/summary
       were corrected 2026-07-12 to 13, but this todo's count was never updated) once the generic tool covers their use
       cases (or leave the already-run ones as historical record — they don't need deletion if inert, just no new ones
       going forward).
 
 ## Progress Log
+
+- **2026-07-30 (slot 7, infra)** — Dispatched `manifest_reprocessing_generic_utility-003` (the third `[CODE] P2` todo,
+  wiring the CLI). Added `--operation reprocess-shards` to `instruments-service/instruments_service/cli/main.py`,
+  following the existing `--operation=status` / `--operation=refresh-league-entity-coverage` pattern: it bypasses
+  `ServiceBootstrap`'s date-loop (a maintenance verb, not a date-fetch) and dispatches from `main_service_cli()` before
+  the daily-recon date-default logic. New `_run_reprocess_shards()` parses `--asset-group`, `--bucket` (resolves via
+  `get_write_bucket_name("instruments", asset_group)` when omitted — one of the two is required, fails loud otherwise),
+  `--venue`, `--capture-status` (default `attempted_failed`, validated against the `CaptureStatus` enum — an unknown
+  value fails loud rather than silently matching zero rows), `--error-reason-contains` (case-insensitive substring,
+  wired to `select_shards_for_reprocess`'s `error_reason_predicate`), `--date-start`/`--date-end`, `--target-status`
+  (default `expected_unattempted`, also enum-validated), `--target-error-reason`, and `--apply` (dry-run by default).
+  Calls `read_availability_index` → `select_shards_for_reprocess` → `reprocess_shards` (all three imported from
+  `unified_trading_library`'s top-level re-export) and prints one JSON object to stdout with the match/flip counts +
+  captured-count invariant values — matches the plan's own worked example:
+  `instruments-service --operation reprocess-shards --asset-group cefi --venue ASTER --capture-status attempted_failed --error-reason-contains "404" --date-start 2024-10-01 --date-end 2026-05-14 [--apply]`.
+  6 new unit tests in `tests/unit/cli/test_reprocess_shards_cli.py` covering: unknown capture-status rejection, missing
+  bucket/asset-group rejection, dry-run default with venue + error-reason-contains filtering (case-insensitive), the
+  `--apply` abort when `MANIFEST_PER_VM_SHARDS`/`VM_NAME` are unset (surfaces `reprocess_shards`'s own
+  `MissingReprocessShardIsolationError`), and bucket resolution from `--asset-group` when `--bucket` is omitted. All 27
+  tests in `tests/unit/cli/` pass; `bash scripts/quality-gates.sh` green. Shipped `instruments-service@e9eac282` via
+  quickmerge.
 
 - **2026-07-30 (slot 6, infra)** — Dispatched `manifest_reprocessing_generic_utility-002` (the second `[CODE] P2` todo).
   Implemented `reprocess_shards()`'s body in `unified_trading_library/manifest_reprocess.py`, replacing the
