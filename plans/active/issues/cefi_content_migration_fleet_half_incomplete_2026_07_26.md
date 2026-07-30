@@ -160,3 +160,16 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
   completion. A future pass/session should re-run the corpus-wide `run.log` grep once these shards have had time to
   progress, and watch for further SPOT preemptions (now checkpoint-protected via the `54817bc1` fix, but still worth
   monitoring per `/vm-preemption-billing-waste-audit`).
+- **2026-07-30 update (slot-15, same session, ~25 min later)**: spot-check found 20/21 relaunch VMs progressing normally
+  (steady `Progress:` climb, e.g. shard 14 at 10,600/335,111, shard 29 at 13,000/194,481), but shard 41
+  (`canonical-migration-cefi-content-41-relaunch20260730-122417`) had died AGAIN — this time NOT a SPOT preemption
+  (`gcloud compute operations list` shows a clean `delete` op, no `compute.instances.preempted` event; the VM stayed
+  RUNNING throughout). Its `run.log` shows the python process itself hard-killed (`rc=137`) at only 3,800/77,941 files
+  (4.9%) — the wrapper's own SIGTERM-triggered shutdown log entry comes AFTER the "Killed" line, meaning something
+  killed the worker process directly, not GCE terminating the instance. Consistent with a kernel OOM-kill on the default
+  `e2-standard-8` (8 vCPU / 32GB), NOT the same failure class as the SPOT-preemption gap this doc otherwise covers — a
+  genuinely new, third failure mode for this migration script. Relaunched shard 41 with `MACHINE_TYPE=e2-standard-16`
+  (doubles RAM to 64GB, same escalation the launcher script's own tradfi-v9 comment already documents for a prior OOM)
+  as `canonical-migration-cefi-content-41-relaunch20260730-124900`, verified `RUNNING`. If this ALSO OOMs, the fix is a
+  genuine root-cause investigation into this script's memory profile (possibly `--workers` too high for the process's
+  actual per-file memory footprint on this shard's date range), not another machine-size escalation.
