@@ -207,7 +207,7 @@ missing from Sources entirely).
       prescribe OPPOSITE directions; the 2026-07-26 `/ag-closeout-audit ao` run escalated this as the largest single
       blocker and separately found 32 of this tranche's 35 Sources orphaned (no covering plan) with only a
       `status: draft` satellite batch1 (+ finalize) drafted against 10 of them.
-- [ ] [BACKEND] P1. **Land FIRST (sequenced ahead of the hard-kill-escalation todo directly below — do not start that
+- [x] ✅ [BACKEND] P1. **Land FIRST (sequenced ahead of the hard-kill-escalation todo directly below — do not start that
       one until this todo is done; per the 2026-07-29 operator sequencing ruling above).** Make the liveness kick
       host-load-aware / require two-window confirmation, per
       `/plans/active/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md`'s own spec: before
@@ -215,7 +215,15 @@ missing from Sources entirely).
       widen `verify_window_s` adaptively when host load average / swap pressure is high, OR gate the kick on a progress
       marker (don't kick a pane whose progress advanced within the last N seconds even if the latest read is stale).
       Done when: a regression test simulating pane-read latency > `verify_window_s` while progress markers keep
-      advancing produces ZERO `worker_kicked` events. Repo: agent-orchestrator.
+      advancing produces ZERO `worker_kicked` events. Repo: agent-orchestrator. — agent-orchestrator@64b5310: added
+      `_progress_marker_shields_kick` (new `kick_progress_grace_seconds` tuning knob, default 90s) to
+      `WorkerLivenessKicker._tick_once` — a worker whose `last_ping` advanced within the grace window is never kicked
+      even when the pane read classifies frozen/idle, since the pane-classification path in
+      `server/worker_liveness/__init__.py` (not `worker_liveness_watchdog.py`) is what actually emits `worker_kicked`.
+      Regression test `test_pane_read_latency_with_advancing_progress_markers_produces_zero_kicks` simulates 4 ticks of
+      a persistently-FROZEN pane read while `last_ping` keeps advancing — asserts zero `worker_kicked`/
+      `worker_kick_failed` events and that `_kick_session` is never even called. Full local QG green (1993 passed,
+      ruff/basedpyright clean).
 - [ ] [INFRA] P2. **Land ONLY AFTER the host-load-aware two-window todo directly above is done — per the 2026-07-29
       operator sequencing ruling above; do not start this todo first.** Escalate the watchdog from soft-kick to
       hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
