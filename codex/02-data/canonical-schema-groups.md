@@ -139,9 +139,14 @@ absence is part of the contract.
 | ------------------- | ------------------------------------------------------------------------ |
 | `CanonicalOrder`    | Order state                                                              |
 | `CanonicalFill`     | Fill events                                                              |
-| `OrderState`        | PENDING_NEW, NEW, PARTIALLY_FILLED, FILLED, CANCELLED, REJECTED, EXPIRED |
+| `OrderStatus`       | PENDING, OPEN, PARTIALLY_FILLED, FILLED, CANCELLED, REJECTED, EXPIRED    |
 | `OrderTransition`   | State machine transitions                                                |
 | `VenueCapabilities` | Per-venue supported order types, TIF, data types                         |
+
+> **Naming corrected 2026-07-31:** this row read `OrderState` with members `PENDING_NEW` / `NEW`. The shipped UAC enum
+> is `OrderStatus` (`canonical/domain/execution/base.py`) with `PENDING` / `OPEN`. See
+> [`/codex/04-architecture/order-state-machine.md`](/codex/04-architecture/order-state-machine.md) for the open
+> design-vs-shipped delta (that doc's `FAIL_OUTBOUND` / `RECONCILED` states are not in UAC).
 
 ---
 

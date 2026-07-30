@@ -23,7 +23,10 @@ repos:
 scope: [engineer]
 tags: [manifest, data-correctness, mdps, features, ml, execution, honest-coverage]
 related:
-  [plans/active/writegate_honest_coverage_endtoend_2026_05_06.md, plans/active/manifest_schema_final_gate_2026_05_09.md]
+  [
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+    /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
+  ]
 created: 2026-05-11
 authoritative_for: [service-output emission policy gate, service_emission_state manifest column]
 referenced_by:
@@ -33,7 +36,7 @@ referenced_by:
     plans/epics/manifest_master.md,
   ]
 owner: ikenna
-last_reviewed: 2026-05-17
+last_reviewed: 2026-09-14
 code_refs:
 last_updated: 2026-05-11
 related_codex:
@@ -47,7 +50,7 @@ related_codex:
 > publish_with_manifest_lookup wrapper + ohlcv_1h POC); slice (c) Phase 6.1-6.9 covers the remaining 8 services
 > (multi-week rollout). v8 manifest schema columns for `service_emission_state` + `last_emission_decision_at` +
 > `expected_window_completeness_fraction` are owned by
-> [`manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) Phase 1 —
+> [`manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md) Phase 1 —
 > **shipped 2026-05-11 at UAC@`174f401`** + rename @ UAC@`76f950a`
 > (`unified_api_contracts.canonical.crosscutting.manifest_schema` declares `MANIFEST_SCHEMA_VERSION_V8 = 8` +
 > `V8_NEW_COLUMNS` + `V8_COLUMN_DEFAULTS` + `READER_FALLBACK_WINDOW_DAYS`;
@@ -56,7 +59,7 @@ related_codex:
 > `service_emission_policy.next_state(*, policy, event)` resolves `(ServiceEmissionPolicy, EmissionLifecycleEvent)` →
 > `ServiceEmissionStateEnum` for the writer hot path). The third column was originally shipped as
 > `expected_window_completeness_pct` at UAC@`174f401`; renamed to `_fraction` at UAC@`76f950a` per
-> [`plans/active/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
+> [`/plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md`](../../plans/archive/issues/expected_window_completeness_pct_range_drift_2026_05_11.md)
 > option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UTL `completeness_fraction` arg.
 
 ## TL;DR
@@ -188,12 +191,27 @@ Downstream consumers reading the v8 manifest column MUST branch on the four stat
 
 > **Reader-fallback retirement gate** (per codex audit D-4 2026-05-12): the `READER_FALLBACK_WINDOW_DAYS = 30` fallback
 > chain is deleted at the Phase 7 walk owned by
-> [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md)
+> [`/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md`](../../plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md)
 > Phase 7. Operator gating: deletion is permitted only when the `READER_FELL_BACK_TO_LEGACY_PATH` event-count threshold
 > reaches **zero across the workspace for 7 consecutive days** (per
 > [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § "Reader fallback chain"). The QG step enforcing
 > deletion is `unified-trading-pm/scripts/quality_gates/check_reader_fallback_retired.py` (lands with Phase 7).
 > Cross-references: [`pipeline-mode-partition.md`](./pipeline-mode-partition.md) § Reader fallback chain (line 104+).
+>
+> **⚠️ OVERDUE + ORPHANED (verified 2026-07-31).** The Phase-7 walk never happened, but the plan that owned it has been
+> archived, so nothing currently tracks it:
+>
+> - `READER_FALLBACK_WINDOW_DAYS: Final[int] = 30` is still declared in UAC
+>   `canonical/crosscutting/manifest_schema.py:201` and still exported from the UAC package root.
+> - UTL `manifest_writer/_read_index.py:451` still carries the live fallback branch, commented
+>   `"(READER_FALLBACK_WINDOW_DAYS = 30) expires ~2026-06-14 per Phase 7"` — that expiry passed over six weeks ago.
+> - The enforcing gate `check_reader_fallback_retired.py` was never created; there is no file matching
+>   `check_reader_fallback*` under `unified-trading-pm/scripts/`.
+> - `manifest_schema_final_gate_2026_05_09.md` now lives in `/plans/archive/2026_05/`, so its Phase 7 is not on any
+>   active plan.
+>
+> Re-open this as tracked work before treating the fallback chain as retired — today the fallback is still live in the
+> read path.
 
 ## When the policy gate is n/a — MTDS raw capture
 
@@ -296,7 +314,7 @@ with this structure (Citadel-Grade Planning Standards):
 - `/codex/02-data/availability-manifest-and-data-status.md` — the 4-state manifest layer this builds on.
 - `/codex/02-data/honest-absence-downstream-handling.md` — downstream NaN-handling tolerances per consumer class.
 - `cursor-configs/CLAUDE.md` § "Service-output emission policy" — key-rule entry pointing here.
-- `plans/active/writegate_honest_coverage_endtoend_2026_05_06.md` slices (a) + (b) + (c) — the architecture plan.
-- `plans/active/manifest_schema_final_gate_2026_05_09.md` Phase 1-2 — owns the v8 manifest schema columns
+- `/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md` slices (a) + (b) + (c) — the architecture plan.
+- `/plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md` Phase 1-2 — owns the v8 manifest schema columns
   (`service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_fraction`) which complement
   the in-band parquet-row columns this doc describes.
