@@ -132,31 +132,41 @@ confirmed still happening at the time of this update. Raised priority P2 → **P
 
 ## Todos
 
-- [ ] [BACKEND] P1. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an instance
-      of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then inside it:
-      (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess) per row,
-      plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot — `reap_dead_slot_worker_tree(...)`
-      (more subprocess work); (2) loops every `AgentRow` with a `tmux_session` set, calling `has_session(name)` again
-      per row. All of this — potentially dozens of subprocess calls — runs with the SQLite write lock held the whole
-      time, scaling with fleet size (15+ slots + several one-shot agent rows at the time of the storm). This is the
-      exact class already fixed once in `ensure_review_agents` (`ao_review_agent_spawn_db_lock_under_load_2026_07_26`,
-      agent-orchestrator@222a4be) — same repo, same session, not yet applied here. Corroborating LIVE evidence
-      (2026-07-27, separate from the original storm): 3 one-shot `cicd` agents (`agt-b3f1d1`, `agt-cf325c`,
-      `agt-def412`) sitting `ACTIVE` with `0%` context and no progress message for 1-9 minutes — `TmuxPruner`'s own
-      dead-session reaper (`GRACE_PERIOD=30s`, `tmux_prune_interval_seconds=60` default) should catch and archive a
-      genuinely-dead one-shot agent's session within ~90s (`server/tmux_pruner.py:328-357`, the
-      `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute lingering `ACTIVE` state is consistent
-      with this exact tick either failing/timing out under load or being starved by lock contention, though it could
-      also just be a slow cold-start; not independently confirmed via a live tmux-pane check in this session.
-  - [ ] [BACKEND] P1. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in a
-        read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
+- [x] ✅ [BACKEND] P1. **CONFIRMED 2026-07-27 — `TmuxPruner.prune_once()` (`server/tmux_pruner.py:190-333`) IS an
+      instance of the `ensure_review_agents` anti-pattern.** It opens ONE `session_scope()` write transaction, then
+      inside it: (1) loops every `SlotRow` with a `tmux_session` set, calling `has_session(name)` (a `tmux` subprocess)
+      per row, plus `resume_lifecycle.classify_dead_worker(...)` and — for each dead slot —
+      `reap_dead_slot_worker_tree(...)` (more subprocess work); (2) loops every `AgentRow` with a `tmux_session` set,
+      calling `has_session(name)` again per row. All of this — potentially dozens of subprocess calls — runs with the
+      SQLite write lock held the whole time, scaling with fleet size (15+ slots + several one-shot agent rows at the
+      time of the storm). This is the exact class already fixed once in `ensure_review_agents`
+      (`ao_review_agent_spawn_db_lock_under_load_2026_07_26`, agent-orchestrator@222a4be) — same repo, same session, not
+      yet applied here. Corroborating LIVE evidence (2026-07-27, separate from the original storm): 3 one-shot `cicd`
+      agents (`agt-b3f1d1`, `agt-cf325c`, `agt-def412`) sitting `ACTIVE` with `0%` context and no progress message for
+      1-9 minutes — `TmuxPruner`'s own dead-session reaper (`GRACE_PERIOD=30s`, `tmux_prune_interval_seconds=60`
+      default) should catch and archive a genuinely-dead one-shot agent's session within ~90s
+      (`server/tmux_pruner.py:328-357`, the `archive_agent(..., exit_reason="lifecycle-complete")` path) — a 9-minute
+      lingering `ACTIVE` state is consistent with this exact tick either failing/timing out under load or being starved
+      by lock contention, though it could also just be a slow cold-start; not independently confirmed via a live
+      tmux-pane check in this session.
+  - [x] ✅ [BACKEND] P1. **Fix**: restructure `prune_once()` to collect the slot/agent rows needing a liveness check in
+        a read-only pass, close that session, run all `has_session()` / `classify_dead_worker()` /
         `reap_dead_slot_worker_tree()` calls WITHOUT a session open, then open a fresh `session_scope()` only for the
         actual field writes + activity logging — mirroring the `ensure_review_agents` fix's shape. This function is
         larger and more stateful than `ensure_review_agents` was (task-release, resume classification, orphan reaping,
         context-saturation event logging all interleave with the row mutations) — read the WHOLE function first, plan
         the read/act/write split before editing, and re-run the existing `tmux_pruner` test suite plus add a regression
         asserting no `session_scope()` is open during the `has_session()` calls (patch `has_session` to assert
-        `db.in_transaction()` is False, or equivalent).
+        `db.in_transaction()` is False, or equivalent). — agent-orchestrator@b6f95a0 (2026-07-27T02:36:34+01:00, already
+        an ancestor of current LDR HEAD, pre-dates this dispatch). Verified this session (slot-9): read the shipped
+        `prune_once()` and confirmed it matches this todo's exact prescription (read-only pass → session-free
+        `has_session()`/`reap_dead_slot_worker_tree()` acts → fresh write session for mutations); the regression test
+        this todo calls for already exists
+        (`tests/test_tmux_pruner_agent_reap.py::test_prune_once_never_holds_a_session_across_has_session_or_reap`,
+        asserts `has_session()` is never called while a `session_scope()` is open) — re-ran the full
+        `test_tmux_pruner_agent_reap.py` suite fresh (`TMPDIR` routed to scratchpad around the unrelated,
+        separately-tracked `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition): 5/5 passed. No new code
+        change needed; checkbox was stale relative to already-shipped work.
 - [ ] [BACKEND] P2. **Investigate why the graceful shutdown hung for ~20s with zero log output** before systemd's
       SIGKILL. Check whether any of the orphaned processes found on the next start (`sh`, `node`, `npm exec prettier` —
       PIDs 2961831/2961834/2958093 at the time) correlate with a specific in-flight operation (a worker's own
@@ -211,3 +221,11 @@ stops), not systemd `Restart=` auto-restarts, consistent with the backend-owned 
   bounded/deterministic-outcome work, no operator gate or live judgment call found; flipped
   `assigned_vm: NA -> planning`. Conflict-check run against all active `assigned_vm: planning` docs in this doc's
   `parent_epic` + the infra tranche's consolidated-closeout digest: zero/milestone-only overlap, clear to proceed.
+- **2026-07-30 (slot-9, `backend_engineer` craft for this todo)**: dispatched the P1 `prune_once()` todo. Found the fix
+  ALREADY SHIPPED — `agent-orchestrator@b6f95a0` (2026-07-27T02:36:34+01:00, an ancestor of current LDR HEAD) implements
+  exactly the prescribed read/act/write split, and the prescribed regression test already exists
+  (`test_prune_once_never_holds_a_session_across_has_session_or_reap`). Re-ran the full
+  `tests/test_tmux_pruner_agent_reap.py` suite fresh this session: 5/5 passed (TMPDIR routed around the unrelated,
+  separately-owned `shared_host_tmp_tmpfs_full_2026_07_26` full-`/tmp` condition, not touched here). No code change
+  needed — flipping both checkboxes as stale-relative-to-shipped-work. The P2 shutdown-hang todo remains open and
+  untouched (out of this dispatch's scope).
