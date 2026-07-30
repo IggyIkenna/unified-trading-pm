@@ -23,7 +23,7 @@ summary: >-
   (unlike the fleet-git / DR-snapshot alerts, which both correctly post a ✅ close) — fixed in
   `unified-trading-pm@<pending>`. This issue tracks the DURABLE fix: pin `ORCHESTRATOR_JWT_SECRET_GCS` the same way the
   internal secret already is, so the next restart doesn't repeat this outage.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -32,7 +32,7 @@ scope: [engineer]
 tags: [agent-orchestrator, auth, jwt, orch_token, slot-host-symmetry, git-status-report, alerting, outage]
 related: [/codex/04-architecture/agent-orchestrator-alerting.md, /codex/05-infrastructure/per-tab-worktrees.md]
 created: 2026-07-24
-last_updated: 2026-07-28
+last_updated: 2026-07-30
 priority: P1
 parent_epic: orchestrator_master
 source:
@@ -44,7 +44,7 @@ execution_scope: orchestrator-agent
 estimate_class: infra
 assigned_role: infra
 drift_direction: advance-code
-resolved_by:
+resolved_by: unified-trading-pm (verified live on orchestrator VM, no new code commit required)
 locked_by:
 locked_since:
 supersedes:
@@ -134,20 +134,30 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
 
 ## Remaining work (this issue)
 
-- [ ] [DEVOPS] P1. **Pin `ORCHESTRATOR_JWT_SECRET_GCS`** for `orchestrator.service`, mirroring the existing internal
-      secret/key pattern: create a persisted secret object (e.g.
-      `gs://central-element-323112-orchestrator-creds/orchestrator/jwt-secret.txt`, a random value, NOT derived from
-      anything guessable), add `Environment=ORCHESTRATOR_JWT_SECRET_GCS=gs://...` to
-      `/etc/systemd/system/orchestrator.service` (via `sudoedit` per the unit's own header comment), then
-      `systemctl daemon-reload && systemctl restart orchestrator.service` — a deliberate restart of the shared
-      orchestrator. **Retagged 2026-07-28** (was `[OPERATOR]`, gated on an operator-chosen maintenance window): operator
-      ruling 2026-07-28 (CLAUDE.md Governance section — maintenance-window restarts/pauses of shared infra no longer
-      need operator scheduling while pre-live-trading, brief downtime is acceptable) removes that gate. Dispatch
-      directly: group with any other pending restart/pause work on `orchestrator.service` or the same VM, execute now
-      (no scheduled window needed), and verify the service comes back healthy afterward. **Done when**: a restart of
-      `orchestrator.service` no longer invalidates existing `.orch_token` files (verify: capture a token, restart the
-      service, re-use the same token, confirm it still validates) AND the service reports healthy post-restart (e.g.
-      `/api/healthz`).
+- [x] ✅ **DONE 2026-07-30 (slot-10, `infra`) — verified live on the orchestrator VM, no code/config change needed
+      (already pinned by the time this task was dispatched).** Original ask: pin `ORCHESTRATOR_JWT_SECRET_GCS` for
+      `orchestrator.service`, mirroring the existing internal secret/key pattern (create a persisted GCS secret object,
+      wire it into the unit's env, restart, verify tokens survive). **Found already done**: `.env.local` on the
+      orchestrator VM (`ip-172-31-5-118`, `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`,
+      loaded via the unit's `EnvironmentFile=-...` directive — no `sudoedit` of the systemd unit needed, this file is
+      `ubuntu`-owned) already carries BOTH a non-placeholder literal `ORCHESTRATOR_JWT_SECRET` (63 chars, code-priority
+      winner per `auth.py::_load_secret()`) AND
+      `ORCHESTRATOR_JWT_SECRET_GCS=gs://central-element-323112-orchestrator-     creds/orchestrator/jwt-secret`
+      (belt-and-suspenders fallback, mirroring the internal-secret pattern exactly — that GCS object already existed
+      too, created 2026-05-22). Neither is the known placeholder (`dev-secret-do-not-use-in-prod`). **Verification
+      (done-when satisfied via existing evidence, stronger than a single fresh restart)**: the `.orch_token` minted
+      during this issue's 2026-07-24 20:33 UTC live remediation still validates now (`HTTP 200` on `/api/backlog` with
+      that exact bearer token) — and the service has restarted **5 times** since that mint
+      (`journalctl -u orchestrator.service` since 2026-07-24T20:33Z shows 5× "Started orchestrator.service", most
+      recently 2026-07-30T01:01:36Z). `/api/healthz` reports `{"status":"ok",     "mode":"live"}` now. This is the exact
+      capture→restart→reuse→confirm-valid check the todo specified, just already exercised 5× over 6 days instead of
+      once. Root cause (dev-fallback random-per-process secret) is confirmed fixed. Did not attempt a fresh manual
+      restart: as a tmux worker spawned under `orchestrator.service` itself, the session inherits the unit's
+      `NoNewPrivileges=yes` (kernel-level, not bypassable via sudo — confirmed "no new privileges flag is set" on
+      `sudo -n -l`), and this AWS account's `ikenna-worker` IAM identity (distinct from the two AO self-service
+      identities in `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) lacks `ssm:*` and cannot
+      self-grant it (denied on `iam:GetUser`/`ListUserPolicies` against its own user) — not needed here since the fix
+      was already in place and already empirically verified.
 - [x] ✅ **DONE 2026-07-26 (slot-11, `infra`) — `unified-trading-pm@421262a`.** Point `slot-git-status-report.sh`'s
       default `ORCH_URL` at `http://localhost:8765` when running ON the orchestrator VM itself (keep the public URL
       default for any future non-central host), so the existing `_is_trusted_loopback` escape hatch actually protects
@@ -171,8 +181,19 @@ message. Fixed in `unified-trading-pm@<pending — see commit that ships this fi
   instructs 'Dispatch directly'. Root cause of a measured ~4.5h fleet-wide 17-slot outage that recurs on EVERY deploy
   (the unit runs uvicorn `--reload --reload-dir server`). Done-when is crisp and machine-checkable (capture a token,
   restart, re-use it, confirm it still validates + `/api/healthz` healthy). Cloud identities are IAM-self-service.
-  **Phase-2 conflict-check**: the only hit is `ao_consolidated_closeout_2026_07_25.md`'s Progress-Log prose naming it
-  'Highest-value now-actionable orphan … sitting unclaimed by any covering plan' — a digest observation, and that doc
-  states outright that 'being listed as a Source below is discoverability, NOT dispatch'. No competing todo exists.
-  CLEAR. Set `assigned_role: infra`, `execution_scope: orchestrator-agent`. Creates a GCS secret object and restarts a
-  service — no delete, no VM launch, so no `[OPERATOR]` delete-safety gate applies.
+
+- **slot-10 2026-07-30**: dispatched the `[DEVOPS] P1` todo. Found the pin already live on the orchestrator VM's
+  `.env.local` (both literal `ORCHESTRATOR_JWT_SECRET` and the `_GCS` fallback) — not attributable to a tracked commit,
+  so likely set directly on the box during earlier remediation and never formally closed out here. Verified rather than
+  re-did: the `.orch_token` minted 2026-07-24 20:33 UTC still validates after 5 intervening `orchestrator.service`
+  restarts (most recent 2026-07-30T01:01:36Z), and `/api/healthz` is healthy now — satisfies the todo's own done-when.
+  Could not perform a FRESH manual restart myself (tmux worker sessions inherit the unit's `NoNewPrivileges=yes`, and
+  this slot's AWS identity lacks the `ssm:*` needed for the out-of-cgroup SSM path and can't self-grant it — a genuinely
+  different identity from the two AO self-service identities, not a self-fixable gap), but wasn't needed given the
+  existing 5-restart proof. Both todos in this issue are now done with no `locked_by` — archiving per the
+  plan-completion-and-archival-discipline HARD RULE. **Phase-2 conflict-check**: the only hit is
+  `ao_consolidated_closeout_2026_07_25.md`'s Progress-Log prose naming it 'Highest-value now-actionable orphan … sitting
+  unclaimed by any covering plan' — a digest observation, and that doc states outright that 'being listed as a Source
+  below is discoverability, NOT dispatch'. No competing todo exists. CLEAR. Set `assigned_role: infra`,
+  `execution_scope: orchestrator-agent`. Creates a GCS secret object and restarts a service — no delete, no VM launch,
+  so no `[OPERATOR]` delete-safety gate applies.
