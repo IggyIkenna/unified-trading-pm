@@ -177,10 +177,10 @@ target.
 
 Cost estimation lives in:
 
-- Strategy-service: ~~`defi_enhancements.py` — `_estimate_rebalance_cost()`, `_estimate_emergency_close_cost()`~~
-  **⛔ GONE (verified 2026-07-30)** — no `defi_enhancements.py` exists in strategy-service and neither helper is
-  present anywhere in the repo. The cost-estimation hook described above is currently unimplemented; do not import
-  these symbols.
+- Strategy-service: ~~`defi_enhancements.py` — `_estimate_rebalance_cost()`, `_estimate_emergency_close_cost()`~~ **⛔
+  GONE (verified 2026-07-30)** — no `defi_enhancements.py` exists in strategy-service and neither helper is present
+  anywhere in the repo. The cost-estimation hook described above is currently unimplemented; do not import these
+  symbols.
 - Execution-service: `unwind_cost.py` — `estimate_full_unwind_cost(positions)`
 
 **`estimate_full_unwind_cost(positions)` inputs**:

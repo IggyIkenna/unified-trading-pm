@@ -126,8 +126,8 @@ adapters are therefore in the live execution path for DeFi archetypes:
 | `arbitrage_price_dispersion` | DEX spot         | All 7 venues (USDC margin)                              | USDC          |
 
 The `LST_AS_MARGIN` eligibility criterion is archetype-driven, not venue-level. Consult
-[`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/) for per-archetype margin +
-venue eligibility matrix.
+[`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/) for per-archetype
+margin + venue eligibility matrix.
 
 **Batch/live symmetry for hedge legs**: the CeFi matching engine (`L2Matcher`) simulates the hedge-leg fills in batch
 mode at the same fidelity as the long-leg DeFi AMMMatcher. The batch=live seam remains identical — only the fill source

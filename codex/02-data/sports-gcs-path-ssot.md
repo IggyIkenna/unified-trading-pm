@@ -3,7 +3,8 @@ doc_type: codex-ssot
 title: Sports GCS Path SSOT
 summary:
   Canonical GCS path resolver for sports parquet (UAC candidate_parquet_paths / SPORTS_DATA_TYPE_TO_FOLDER); three
-  layouts (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT) plus non-obvious entity= folder names — never hardcode paths (phantom-row trap).
+  layouts (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT) plus non-obvious entity= folder names — never
+  hardcode paths (phantom-row trap).
 status: current
 nature: ssot
 asset_group: [meta]
@@ -20,7 +21,10 @@ related:
   ]
 created: 2026-05-08
 authoritative_for:
-  [sports GCS parquet path resolver and entity-folder naming, sports path-layout taxonomy (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT)]
+  [
+    sports GCS parquet path resolver and entity-folder naming,
+    sports path-layout taxonomy (PER_DAY_PER_LEAGUE/PER_DAY_PER_SEASON/PER_DAY_BARE/FLAT),
+  ]
 referenced_by:
   [
     /codex/01-domain/sports-instruments.md,
@@ -188,10 +192,10 @@ The resolver writes canonical for new paths; reader fallback is hive-key-agnosti
 > versions purged, 0 errors; `describe` → 404; no-resurrection proved by a clean `tofu plan`). The
 > `market-data-tick-sports-central-element-323112` bucket was similarly **DELETED 2026-07-17T~16:50Z** (342,629
 > objects/versions purged, 0 errors; `describe` → 404). Both legacy no-env sports buckets no longer exist — do NOT write
-> new code that depends on them. Evidence: `/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md` § "FINAL STATUS"
-> (T5.4); full detail in `/plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md`. The post-phase
-> codex audit of this SSOT (confirming no reader still special-cases the legacy shape) is tracked as **T6.7**, still
-> open P1, in `/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
+> new code that depends on them. Evidence: `/plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md` § "FINAL
+> STATUS" (T5.4); full detail in `/plans/archive/2026_07/sports_legacy_bucket_cutover_history_2026_07_24.md`. The
+> post-phase codex audit of this SSOT (confirming no reader still special-cases the legacy shape) is tracked as
+> **T6.7**, still open P1, in `/plans/archive/sports_legacy_cutover_closeout_tasks_2026_07_24.md`.
 
 ## Cross-references
 

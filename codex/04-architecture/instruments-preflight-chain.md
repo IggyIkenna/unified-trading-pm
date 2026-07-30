@@ -88,9 +88,11 @@ trigger.
 
 ## Cross-references
 
-- Architecture entry-point: [`instruments-live-architecture.md`](/codex/04-architecture/instruments-live-architecture.md)
+- Architecture entry-point:
+  [`instruments-live-architecture.md`](/codex/04-architecture/instruments-live-architecture.md)
 - Honest-absence rules:
   [`/codex/02-data/honest-absence-downstream-handling.md`](/codex/02-data/honest-absence-downstream-handling.md)
-- Alerting taxonomy: [`alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) § "Instruments-live failure rules"
+- Alerting taxonomy: [`alerting-batch-live.md`](/codex/04-architecture/alerting-batch-live.md) § "Instruments-live
+  failure rules"
 - Lifecycle events: `unified_api_contracts/internal/events.py` (`INSTRUMENTS_LIVE_PREFLIGHT_FAILED` /
   `INSTRUMENTS_LIVE_UPSTREAM_STALE`)

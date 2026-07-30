@@ -48,8 +48,8 @@ code_refs:
 
 ## § 1 — Tier ladder
 
-5 tiers, ordered loosest → strictest. UAC SSOT:
-`SigningSurface` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) StrEnum.
+5 tiers, ordered loosest → strictest. UAC SSOT: `SigningSurface`
+(`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) StrEnum.
 
 | Tier | `SigningSurface`      | Cryptographic primitive           | Key custody                                | Insurance      | Latency                                       | Acceptable for                                          |
 | ---- | --------------------- | --------------------------------- | ------------------------------------------ | -------------- | --------------------------------------------- | ------------------------------------------------------- |
@@ -217,5 +217,5 @@ Post-June-1 acceptance for COPPER/FIREBLOCKS flip MUST satisfy:
 - [`credentials-matrix.md`](credentials-matrix.md) — workspace credential SSOT.
 - [`per-archetype-wallet-isolation.md`](per-archetype-wallet-isolation.md) — multi-wallet model.
 - [`secret-manager-naming.md`](secret-manager-naming.md) — naming SSOT.
-- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
-  — `SigningSurface` enum SSOT.
+- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`
+  (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) — `SigningSurface` enum SSOT.

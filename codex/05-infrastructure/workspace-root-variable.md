@@ -162,12 +162,12 @@ source .venv/bin/activate
 > `scripts/quality_gates/check_removed_symbols.py`, `scripts/cicd/reprovenance_bypass.sh` all read it), and
 > `scripts/setup-workspace-from-manifest.sh` still exists. But:
 >
-> | Cited below                                          | Reality                                                             |
-> | ---------------------------------------------------- | ------------------------------------------------------------------- |
-> | `.cursor/workspace-configs/settings.json`            | moved → `unified-trading-pm/cursor-configs/settings.json`           |
+> | Cited below                                                | Reality                                                                                                        |
+> | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+> | `.cursor/workspace-configs/settings.json`                  | moved → `unified-trading-pm/cursor-configs/settings.json`                                                      |
 > | `unified-trading-pm/scripts/check-dependency-alignment.sh` | **deleted** — nearest live equivalent `scripts/workspace/check-import-deps.py` / `aggregate-workspace-deps.py` |
-> | `.cursor/workspace-configs/check-quality-gates.sh`   | **deleted** — run each repo's own `bash scripts/quality-gates.sh`   |
-> | `unified-trading-pm/scripts/sync-workspace.sh`       | **deleted**                                                         |
+> | `.cursor/workspace-configs/check-quality-gates.sh`         | **deleted** — run each repo's own `bash scripts/quality-gates.sh`                                              |
+> | `unified-trading-pm/scripts/sync-workspace.sh`             | **deleted**                                                                                                    |
 >
 > The `unified-trading-services` / `unified-config-interface` entries in the settings example are also retired repos
 > (both folded into `unified-trading-library`).

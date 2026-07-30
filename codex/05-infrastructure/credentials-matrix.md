@@ -159,8 +159,8 @@ Per [`pod-elysium-client-onboarding.md`](/codex/14-customer-journeys/pod-elysium
 
 ## § 2 — Per-mode credential subsets
 
-SSOT YAML:
-`unified-api-contracts/config/credentials_per_mode.yaml` (`unified-api-contracts/config/credentials_per_mode.yaml`).
+SSOT YAML: `unified-api-contracts/config/credentials_per_mode.yaml`
+(`unified-api-contracts/config/credentials_per_mode.yaml`).
 
 | Mode    | Custody                                         | Venue               | Data                      | Aux           |
 | ------- | ----------------------------------------------- | ------------------- | ------------------------- | ------------- |
@@ -172,8 +172,8 @@ SSOT YAML:
 
 ## § 3 — Per-archetype credential subsets
 
-SSOT YAML:
-`unified-api-contracts/config/credentials_per_archetype.yaml` (`unified-api-contracts/config/credentials_per_archetype.yaml`).
+SSOT YAML: `unified-api-contracts/config/credentials_per_archetype.yaml`
+(`unified-api-contracts/config/credentials_per_archetype.yaml`).
 
 Cutover archetypes:
 

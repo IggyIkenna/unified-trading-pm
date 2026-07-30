@@ -159,10 +159,10 @@ Imports for `local_key`, `copper`, `ceffu`, `cloud_kms`, and `fireblocks` are de
 avoid importing `web3` / `httpx` / `google-cloud-kms` / `fireblocks-sdk-python` when not needed.
 
 **Per-wallet flippability** — each wallet row in `gs://wallet-config-{pid}/{chain_env}/wallet_provisioning.json` carries
-its own
-`WalletProvisioningConfig.signing_surface` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`),
-overriding the top-level `CustodyConfig.provider` default per-call. Operator flips the field in the JSON; deployment-UI
-Live-Cluster button reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
+its own `WalletProvisioningConfig.signing_surface`
+(`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`), overriding the top-level
+`CustodyConfig.provider` default per-call. Operator flips the field in the JSON; deployment-UI Live-Cluster button
+reloads via `ApiKeyReloader` pattern. No service restart, no recompile.
 
 ---
 
@@ -795,12 +795,11 @@ balance-pull against the correct provider per wallet. The routing table hot-relo
 
 Closed set; mirrors the existing alerting taxonomy.
 
-> **⛔ ALERT CODES NOT SHIPPED — verified 2026-07-30.** Both `CUSTODY_HEALTH_DEGRADED` and
-> `CREDENTIAL_ROTATION_OVERDUE` are **absent from the `AlertCode` enum**
-> (`unified_api_contracts/canonical/crosscutting/alerting/codes.py` — it currently has **zero** custody-, rotation- or
-> wallet-prefixed codes). The routing table below is the intended design; the emitters do not exist yet. Anyone wiring
-> custody health alerts must add the codes to the UAC closed set first. (`CUSTODY_ENDPOINT_HALT` **does** exist — but
-> it is a `RiskRuleId`, not an `AlertCode`; don't conflate the two enums.)
+> **⛔ ALERT CODES NOT SHIPPED — verified 2026-07-30.** Both `CUSTODY_HEALTH_DEGRADED` and `CREDENTIAL_ROTATION_OVERDUE`
+> are **absent from the `AlertCode` enum** (`unified_api_contracts/canonical/crosscutting/alerting/codes.py` — it
+> currently has **zero** custody-, rotation- or wallet-prefixed codes). The routing table below is the intended design;
+> the emitters do not exist yet. Anyone wiring custody health alerts must add the codes to the UAC closed set first.
+> (`CUSTODY_ENDPOINT_HALT` **does** exist — but it is a `RiskRuleId`, not an `AlertCode`; don't conflate the two enums.)
 
 | Failure                                                                                                         | Detection                                                  | Action                                                                                                                                                                                                                          |
 | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

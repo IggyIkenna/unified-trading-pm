@@ -418,14 +418,14 @@ infrastructure). These are not shared; they stay local to the service.
 The `unified-trading-services` and `unified-config-interface` repos this section used to point at **no longer exist**;
 the "MIGRATING to …" notes below are resolved. Everything cross-cutting now lives in **unified-trading-library (UTL)**:
 
-| Cross-cutting concern                                                  | Where it actually lives now                                              |
-| ---------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| **Config base class** — `UnifiedCloudConfig`                           | `unified_trading_library/config_interface/cloud_config.py`               |
-| **Validation utilities** — `SchemaDefinition`, `ColumnSchema`          | `unified_trading_library/models/schema_definition.py` (UAC mirrors the pure type at `internal/schema_definition.py`) |
-| **Validation utilities** — `validate_timestamp_date_alignment`         | `unified_trading_library/domain/timestamp_validation.py`                 |
-| **Event logging schema** — `log_event()` / lifecycle event sink types  | UTL (`LifecycleEventType`, `EventSeverity`)                              |
-| **Error response format** — error classification + retry semantics     | UAC `internal/schemas/errors.py` + `classify_venue_error()`              |
-| **Domain client interfaces**                                           | UAC `internal/domain/<service-name>/`                                    |
+| Cross-cutting concern                                                 | Where it actually lives now                                                                                          |
+| --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| **Config base class** — `UnifiedCloudConfig`                          | `unified_trading_library/config_interface/cloud_config.py`                                                           |
+| **Validation utilities** — `SchemaDefinition`, `ColumnSchema`         | `unified_trading_library/models/schema_definition.py` (UAC mirrors the pure type at `internal/schema_definition.py`) |
+| **Validation utilities** — `validate_timestamp_date_alignment`        | `unified_trading_library/domain/timestamp_validation.py`                                                             |
+| **Event logging schema** — `log_event()` / lifecycle event sink types | UTL (`LifecycleEventType`, `EventSeverity`)                                                                          |
+| **Error response format** — error classification + retry semantics    | UAC `internal/schemas/errors.py` + `classify_venue_error()`                                                          |
+| **Domain client interfaces**                                          | UAC `internal/domain/<service-name>/`                                                                                |
 
 Import the public surface (`from unified_trading_library import …`), not the deep module paths above.
 
@@ -460,8 +460,8 @@ used only within the interface (internal helpers, venue-specific intermediaries)
 - **execution-algo-library**: AlgoConfig, AlgoExecution, ParentChildOrder — pure compute, no external API, no
   cross-service contract.
 - **unified-trading-library**: LifecycleEventType, EventSeverity — event sink protocol types, T0 leaf; **also**
-  `UnifiedCloudConfig` / `BaseConfig` config protocol types, which folded in from the retired
-  `unified-config-interface` repo (see the migration table above).
+  `UnifiedCloudConfig` / `BaseConfig` config protocol types, which folded in from the retired `unified-config-interface`
+  repo (see the migration table above).
 
 ### Contract schemas (inter-service agreements)
 

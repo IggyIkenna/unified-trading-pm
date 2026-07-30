@@ -56,8 +56,7 @@ workspace integration.
 - Node.js 20+ installed (UI repos only)
 - Workspace venv at `.venv-workspace/` (workspace configs moved to `unified-trading-pm/cursor-configs/`; the old
   `.cursor/workspace-configs/setup-workspace-venv-complete.sh` no longer exists — use
-  `unified-trading-pm/scripts/workspace/setup-dev-environment.sh` if
-  missing)
+  `unified-trading-pm/scripts/workspace/setup-dev-environment.sh` if missing)
 
 ## Step 1: Create GitHub Repository
 

@@ -48,10 +48,9 @@ type: architecture
 > removal (adapters/drift_adapter.py, adapters/\_umi_pacifica.py, cli/handlers/solana_defi_drift\*.py,
 > cli/handlers/drift_v2*\*.py, live/connectors/drift_solana_ws.py, live/connectors/pacifica_solana_perp_ws.py) tracked
 > under a sibling task. GCS/manifest data purge is a separate sibling task
-> (`/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this
-> banner describing DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it
-> to justify re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in
-> full.
+> (`/plans/active/issues/solana_perp_dex_cull_drift_pacifica_2026_07_16.md`). **Everything below this banner describing
+> DRIFT-SOLANA / PACIFICA-SOLANA / the Velocity Data API is now HISTORICAL RECORD ONLY — do not use it to justify
+> re-adding these venues.** `/codex/04-architecture/drift-v2-data-sources.md` is SUPERSEDED by this banner in full.
 
 > **SSOT for Solana DeFi adapter architecture.** Created: 2026-05-13 per
 > `/plans/archive/solana_perp_dex_adapters_2026_05_13.md` Phase 6. Extended: 2026-05-13 per
@@ -86,9 +85,9 @@ was the sole entry; historical record:
 > NXDOMAIN, `dex.zeta.markets/api` returns HTML not JSON, verified 2026-07-15) and DeFiLlama TVL is
 > ~$0 (Mango V4 Perps
 > $14,405, Zeta $0 — pivoted to "Bullet Perps", also $0, FlashTrade $8.0M but host dead). See
-> `/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md`
-> for the full evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an
-> actual MTDS capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
+> `/plans/archive/issues/defi_perp_funding_canonicalisation_derivative_ticker_all_perps_2026_07_15.md` for the full
+> evidence trail. **Do not re-add these venues without a fresh viability check** (live host + real TVL + an actual MTDS
+> capture plan) — this is not a "come back to it later" gap, it's a deliberate deletion.
 >
 > **DRIFT-SOLANA — REMOVED 2026-07-16 (operator ruling).** Drift was hacked
 > ~$280M on 2026-04-01 (Lazarus-attributed),
@@ -244,9 +243,9 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 | `restaking_operator_set`       | Active operators/NCNs securing a vault                          | On-chain account reads             |
 | `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue) | API / SDK                          |
 
-> **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist
-> nowhere in code. Of this family only `restaking_rewards` is real.
-| `lst_rates`                    | Exchange rate (underlying SOL per receipt token)                | Stake pool state accounts          |
+> **Not implemented (verified 2026-07-30):** `restaking_operator_set` and `cross_chain_restaking_routes` exist nowhere
+> in code. Of this family only `restaking_rewards` is real. | `lst_rates` | Exchange rate (underlying SOL per receipt
+> token) | Stake pool state accounts |
 
 ### Jito Restaking (already shipped — Plan A)
 

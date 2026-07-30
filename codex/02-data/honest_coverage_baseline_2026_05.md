@@ -38,11 +38,12 @@ code_refs:
 > **⚠️ CORRECTION BANNER — re-review 2026-07-30.** This doc records the **v1 (May-2026) baseline design**. Two things
 > named below did NOT ship as described; read them as design intent, not as the live mechanism:
 >
-> 1. **The live coverage model is Honest Coverage v2** — [`/codex/02-data/honest-coverage-model.md`](/codex/02-data/honest-coverage-model.md)
->    (`status: current`, CK3-certified 2026-06-29): two layers (Layer-1 instrument-denominator audit GATES Layer-2
->    download coverage), two views, `empty_confirmed` excluded from the reachable denominator. Where v2 and this doc
->    disagree on a formula, **v2 wins**. v2 cites this doc as "coverage baseline ratchet (v1 numbers, May 2026)" — it
->    is retained as the dated historical baseline, not as a live gate spec.
+> 1. **The live coverage model is Honest Coverage v2** —
+>    [`/codex/02-data/honest-coverage-model.md`](/codex/02-data/honest-coverage-model.md) (`status: current`,
+>    CK3-certified 2026-06-29): two layers (Layer-1 instrument-denominator audit GATES Layer-2 download coverage), two
+>    views, `empty_confirmed` excluded from the reachable denominator. Where v2 and this doc disagree on a formula, **v2
+>    wins**. v2 cites this doc as "coverage baseline ratchet (v1 numbers, May 2026)" — it is retained as the dated
+>    historical baseline, not as a live gate spec.
 > 2. **The shipped ratchet does NOT read this doc's table.** It is `scripts/qg/honest_coverage_ratchet.py` (+ the `.sh`
 >    wrapper) — underscored, not the hyphenated `qg/honest-coverage-ratchet.sh` named below — and it compares against a
 >    **GCS coverage snapshot** at `_index/snapshots/honest_coverage/<date>.json` in the per-asset-group bucket, at the
@@ -150,8 +151,8 @@ measurement script per asset_group.
 > **Per-data_type rows are added by the measurement script.** The seed table above carries one row per asset_group as a
 > placeholder; the real table will be ~80-150 rows total covering every canonical `(asset_group, data_type)` pair as of
 > 2026-05-07. The full set of canonical data_types per asset_group is enumerated in
-> [`availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) § "Per-asset-group shard-key
-> matrix".
+> [`availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md) §
+> "Per-asset-group shard-key matrix".
 
 ## Ratchet schedule
 
@@ -225,8 +226,8 @@ _(empty as of 2026-05-07 baseline draft — first entries land when an actual ov
 ## Cross-references
 
 - **Plan(s) implementing this:**
-  [`writegate_honest_coverage_endtoend`](/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md)
-  Phase 5 — **archived**, work complete.
+  [`writegate_honest_coverage_endtoend`](/plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md) Phase
+  5 — **archived**, work complete.
 - **Live successor model:** [`honest-coverage-model`](/codex/02-data/honest-coverage-model.md) (Honest Coverage v2) —
   read this first; see the correction banner at the top.
 - **Related codex SSOTs:**

@@ -80,8 +80,9 @@ What this means for this checklist:
   per-wallet flippability post-June-1.
 - **§ B (Cloud HSM CMK provisioning)**: stays in scope for May-23. Already ✅ DONE (10 HSM-backed CMKs in
   `asia-northeast1` 2026-05-12, smoke PASSED).
-- **§ C (Fireblocks)**: deferred to June-1+. Successor plan
-  `fireblocks_copper_client_integration_2026_06_01.md` (**never authored — verified 2026-07-30**; no plan by that name exists anywhere in `plans/`, so § C has no successor plan today).
+- **§ C (Fireblocks)**: deferred to June-1+. Successor plan `fireblocks_copper_client_integration_2026_06_01.md`
+  (**never authored — verified 2026-07-30**; no plan by that name exists anywhere in `plans/`, so § C has no successor
+  plan today).
 - **§ D (CEFFU KYB)**: deferred to June-1+. The 2-4 week SLA does NOT gate May-23 anymore — KYB submission can wait
   until client-credential window is firm.
 
@@ -104,19 +105,18 @@ with them — we need best equivalent to test earlier or use our trust wallet bu
 | **2026-06-01 onwards**         | Fireblocks MPC (carry strategies + HSM-grade hedge wallets) | `FIREBLOCKS_MPC`                                       | Receive client-provided creds + flip per-wallet config (§ D below)     |
 | **2026-06-01 onwards**         | CEFFU (Binance institutional spot + perp)                   | `COPPER_MPC` _(CEFFU stub-shipped; awaiting API spec)_ | KYB completion + CEFFU API spec ingestion (§ E below)                  |
 
-**Per-wallet flippability**: each
-`WalletProvisioningConfig` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
-row carries its own `signing_surface` — flips are **config-only, no recompile, no service restart** (factory routing per
+**Per-wallet flippability**: each `WalletProvisioningConfig`
+(`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) row carries its own
+`signing_surface` — flips are **config-only, no recompile, no service restart** (factory routing per
 [`custody-providers.md`](/codex/04-architecture/custody-providers.md) § 1).
 
 ---
 
 ## § A — Copper.co (already wired — verification checklist only)
 
-**Status**: ✅ wired since 2026-05-10 at
-`execution-service/.../custody/copper.py` (`execution-service/execution_service/custody/copper.py`). HMAC-SHA256
-signing, sandbox + production endpoints configured. Pre-cutover task is **verification of operator-side Copper account
-state**, not new onboarding.
+**Status**: ✅ wired since 2026-05-10 at `execution-service/.../custody/copper.py`
+(`execution-service/execution_service/custody/copper.py`). HMAC-SHA256 signing, sandbox + production endpoints
+configured. Pre-cutover task is **verification of operator-side Copper account state**, not new onboarding.
 
 ### A.1 Pre-cutover verification (operator-runnable)
 
@@ -167,8 +167,8 @@ When client delivers Copper creds June-1:
 > **[DELTA 2026-05-22]** **Current state:** GCP Cloud HSM CMKs are DONE — 10 HSM-backed CMKs provisioned in
 > `asia-northeast1` 2026-05-12, smoke PASSED. AWS KMS CMK provisioning and wallet envelope-encryption are PENDING
 > operator-action (pre-cutover). **Planned delta:** AWS KMS + wallet-PK encryption tracked as pre-cutover operator
-> actions under `/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C. **Target architecture:** All
-> CMKs provisioned on both clouds; all trading wallet PKs envelope-encrypted at rest.
+> actions under `/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md` Phase 3.C. **Target
+> architecture:** All CMKs provisioned on both clouds; all trading wallet PKs envelope-encrypted at rest.
 
 **Status**: GCP CMKs ✅ DONE (2026-05-12, smoke PASSED). AWS KMS provisioning PENDING. Implementation path:
 `execution-service/execution_service/custody/cloud_kms.py` (NEW per Plan Phase 3.C.1).
@@ -237,15 +237,15 @@ execution:
       --region ap-northeast-1 > /tmp/wrapped.b64
 
       # Step 2: store wrapped ciphertext as-is in Secrets Manager (SecretString = base64-encoded ciphertext blob)
-                                                                      aws secretsmanager create-secret \
-                                                                        --name "defi-eth-hot-aave-v1-wrapped" \
-                                                                        --secret-string "$(cat /tmp/wrapped.b64)" \
-                                                                        --region ap-northeast-1
+                                                                              aws secretsmanager create-secret \
+                                                                                --name "defi-eth-hot-aave-v1-wrapped" \
+                                                                                --secret-string "$(cat /tmp/wrapped.b64)" \
+                                                                                --region ap-northeast-1
 
-                                                                      # Step 3: wipe temp file immediately
-                                                                      shred -u /tmp/wrapped.b64
-                                                                      ```
-                                                                      Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
+                                                                              # Step 3: wipe temp file immediately
+                                                                              shred -u /tmp/wrapped.b64
+                                                                              ```
+                                                                              Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
 
 - [ ] **B.2.6** Populate `WalletProvisioningConfig` row with AWS ARN form for `kms_key_uri`:
       `python     WalletProvisioningConfig(         wallet_id="defi-eth-hot-aave-v1",         chain="ETHEREUM",         kind=WalletKind.HOT_TRADING,         signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,         kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",         private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",         archetype_id="carry_staked_basis",     )     `
@@ -388,20 +388,20 @@ controls + post-trade kill-switch triggers — wallet-tier is the FINEST-grain s
 
 ### E.1 Per-wallet kill-switch binding (operator-runbook)
 
-- [ ] **E.1.1** For every HOT*TRADING wallet, pick a kill_switch_id from the closed set in
-      `kill_switch.py` (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/kill_switch.py`)
-      `KillSwitchId` enum. Typical: `KILL_PER_ARCHETYPE*<ARCHETYPE>`(freezes all wallets for one archetype). Per-wallet
-      finer freezes are POST-cutover (no`KILL*PER_WALLET*\*` exists yet — open follow-up).
+- [ ] **E.1.1** For every HOT*TRADING wallet, pick a kill_switch_id from the closed set in `kill_switch.py`
+      (`unified-api-contracts/unified_api_contracts/canonical/crosscutting/kill_switch.py`) `KillSwitchId` enum.
+      Typical: `KILL_PER_ARCHETYPE*<ARCHETYPE>`(freezes all wallets for one archetype). Per-wallet finer freezes are
+      POST-cutover (no`KILL*PER_WALLET*\*` exists yet — open follow-up).
 - [ ] **E.1.2** Wire wallet-tier button into deployment-UI Live-Cluster button per slot 8 cross_cutting #4 (in progress
       2026-05-12).
 - [ ] **E.1.3** Operator smoke-tests:
       `python -m execution_service.scripts.kill_switch_smoke --wallet-id=defi-eth-hot-aave-v1     --provenance=OPERATOR_MANUAL`
-      → confirm `KILL_SWITCH_ARMED` event + adapter rejects subsequent orders with `WalletKillSwitchActiveError`.
-      **⛔ Prerequisite not built (verified 2026-07-30):** neither the `kill_switch_smoke` entry-point module nor the
+      → confirm `KILL_SWITCH_ARMED` event + adapter rejects subsequent orders with `WalletKillSwitchActiveError`. **⛔
+      Prerequisite not built (verified 2026-07-30):** neither the `kill_switch_smoke` entry-point module nor the
       `WalletKillSwitchActiveError` exception exists anywhere in execution-service / unified-api-contracts /
-      unified-trading-library / strategy-service. `KILL_SWITCH_ARMED` **is** real (`execution_service/cli/run_scenario.py`
-      + integration scenarios). This step cannot be executed as written — build the smoke entry-point + the typed
-      rejection error first, or re-scope the check onto `run_scenario.py`.
+      unified-trading-library / strategy-service. `KILL_SWITCH_ARMED` **is** real
+      (`execution_service/cli/run_scenario.py` + integration scenarios). This step cannot be executed as written — build
+      the smoke entry-point + the typed rejection error first, or re-scope the check onto `run_scenario.py`.
 
 ### E.2 Per-wallet spending caps SSOT
 
@@ -455,7 +455,8 @@ Per Plan Phase 8.D.
   kill-switch arm/disarm lifecycle.
 - [`/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md`](/plans/archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md)
   — parent plan; this doc operationalizes Phases 3.A + 3.B + 3.C + 4.A.
-- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py` (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`)
-  — `WalletProvisioningConfig` + `SigningSurface` + `WalletKind` + `SpendingCaps` SSOT.
-- `unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py` (`unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py`)
-  — 27 schema-validation tests.
+- `unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`
+  (`unified-api-contracts/unified_api_contracts/internal/domain/defi/wallet_config.py`) — `WalletProvisioningConfig` +
+  `SigningSurface` + `WalletKind` + `SpendingCaps` SSOT.
+- `unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py`
+  (`unified-api-contracts/tests/internal/unit/test_wallet_provisioning_schema.py`) — 27 schema-validation tests.

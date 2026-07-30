@@ -53,9 +53,9 @@ one-liner statement of this rule.
 ## The Abstraction Layer
 
 > **⛔ REPO + CLASS NAMES CORRECTED 2026-07-30.** The `unified-cloud-interface` (UCI) repo no longer exists — the
-> cloud-agnostic layer folded into **unified-trading-library (UTL)** at
-> `unified_trading_library/cloud_interface/`. The protocol classes were also renamed: they carry **no `Cloud*` prefix**.
-> The factory functions and the `CLOUD_PROVIDER` env-var contract are unchanged and still correct.
+> cloud-agnostic layer folded into **unified-trading-library (UTL)** at `unified_trading_library/cloud_interface/`. The
+> protocol classes were also renamed: they carry **no `Cloud*` prefix**. The factory functions and the `CLOUD_PROVIDER`
+> env-var contract are unchanged and still correct.
 
 UTL's `cloud_interface` is the Tier-0 cloud-agnostic layer. It exposes factory functions that return cloud-agnostic
 abstract implementations (`unified_trading_library/cloud_interface/abstractions.py`):

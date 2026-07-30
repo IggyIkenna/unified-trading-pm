@@ -45,16 +45,16 @@ code_refs:
 
 # VCR Cassette Ownership and SSOT
 
-> **⚠️ Repo-name decoder (re-review 2026-07-30).** The ownership rule below is unchanged and still correct, but this
-> doc predates two consolidations and still uses retired interface abbreviations. Read them as:
+> **⚠️ Repo-name decoder (re-review 2026-07-30).** The ownership rule below is unchanged and still correct, but this doc
+> predates two consolidations and still uses retired interface abbreviations. Read them as:
 >
-> | Name used below                    | What it is today                                                             |
-> | ---------------------------------- | ---------------------------------------------------------------------------- |
-> | UMI                                | `market-tick-data-service` (`market_tick_data_service/market_interface/`)     |
-> | UTEI / USEI / UDEI                 | `execution-service` + `instruments-service`                                   |
+> | Name used below                          | What it is today                                                                                                                        |
+> | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+> | UMI                                      | `market-tick-data-service` (`market_tick_data_service/market_interface/`)                                                               |
+> | UTEI / USEI / UDEI                       | `execution-service` + `instruments-service`                                                                                             |
 > | UPI / `position-balance-monitor-service` | folded into `strategy-service` (`strategy_service/position/`, 2026-05-20) — see `/codex/04-architecture/runtime-deployment-topology.md` |
-> | UCI / `unified-cloud-interface`    | the cloud surface now reached via `unified-trading-library` (`get_storage_client()` / `get_secret_client()`) |
-> | UCS / `unified-trading-services`   | retired; cross-cutting types folded into `unified-trading-library`            |
+> | UCI / `unified-cloud-interface`          | the cloud surface now reached via `unified-trading-library` (`get_storage_client()` / `get_secret_client()`)                            |
+> | UCS / `unified-trading-services`         | retired; cross-cutting types folded into `unified-trading-library`                                                                      |
 >
 > "The repo that holds the API keys records the cassette; UAC holds it" is the durable rule — substitute the current
 > repo names above wherever an abbreviation appears.
@@ -88,8 +88,8 @@ path — they do not duplicate them (HTTP only; WebSocket capture requires diffe
 cassette not yet recorded. `BLACKLISTED_NO_ACCESS` = no key.
 
 > **Snapshot, not a live index (re-verified 2026-07-30).** This table is a point-in-time record; the live set is
-> whatever `unified_api_contracts/external/<venue>/mocks/` actually contains — enumerate it, don't trust this list.
-> One correction applied this pass: the **`barchart` row was removed** — Barchart is RETIRED as a TradFi source
+> whatever `unified_api_contracts/external/<venue>/mocks/` actually contains — enumerate it, don't trust this list. One
+> correction applied this pass: the **`barchart` row was removed** — Barchart is RETIRED as a TradFi source
 > (`/codex/02-data/tradfi-databento-sourcing-ssot.md`) and `unified_api_contracts/external/barchart/` no longer exists.
 
 | Venue           | Cassette File                                    | Status                                                         |
@@ -130,8 +130,8 @@ cassette not yet recorded. `BLACKLISTED_NO_ACCESS` = no key.
 | `yahoo_finance` | `yahoo_finance/mocks/splits_tsla.yaml`           | `VALIDATED`                                                    |
 
 **15 endpoints `PENDING_CASSETTE_AWAITING_AUTH`** — keys confirmed, cassettes not recorded. The recording checklist is
-[`/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md`](/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md) (archived — it
-used to be cited at the never-existing path `plans/ai/`).
+[`/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md`](/plans/archive/VCR_CREDENTIAL_RECORDING_PLAN.md) (archived — it used
+to be cited at the never-existing path `plans/ai/`).
 
 ---
 
@@ -334,7 +334,8 @@ def test_normalization_preserves_core_fields(venue):
 
 ## Circular Dependency Rules
 
-**Scope and layout SSOT:** [`/codex/02-data/contracts-scope-and-layout.md`](/codex/02-data/contracts-scope-and-layout.md). AC cannot import UIC;
+**Scope and layout SSOT:**
+[`/codex/02-data/contracts-scope-and-layout.md`](/codex/02-data/contracts-scope-and-layout.md). AC cannot import UIC;
 see that doc for dependency and layout rules.
 
 - **unified-api-contracts**: stdlib + pydantic only; no `unified-*` imports

@@ -137,13 +137,14 @@ single shard for `trades` / `book_snapshot_5`).
 
 ## 3. TRADFI — per venue × data_type matrix
 
-**OHLCV-only MVP (operator direction 2026-05-15)** — see `/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`.
-`trades` + `tbbo` (L1/L2 tick data) moved to post-cutover; only `ohlcv_1m` (cheap pre-aggregated bars) collected in MVP.
-`TRADFI_TICK_DATA_WINDOWS = []` in UAC (`unified_api_contracts/registry/market_data_categories.py`) —
-`is_in_tradfi_tick_window()` returns False for every date, suppressing every tbbo/trades fetch attempt in MTDS
-`market_tick_data_service/engine/orchestrator/sentinels.py` (the orchestrator is a PACKAGE, not the monolithic
-`orchestrator.py` this doc used to cite by line number — never re-add a line-number reference here). Historical windows preserved in `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, mirrors the
-TRADFI_TICK_DATA_WINDOWS shape) and `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape, mirrors
+**OHLCV-only MVP (operator direction 2026-05-15)** — see
+`/plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md`. `trades` + `tbbo` (L1/L2 tick data) moved to
+post-cutover; only `ohlcv_1m` (cheap pre-aggregated bars) collected in MVP. `TRADFI_TICK_DATA_WINDOWS = []` in UAC
+(`unified_api_contracts/registry/market_data_categories.py`) — `is_in_tradfi_tick_window()` returns False for every
+date, suppressing every tbbo/trades fetch attempt in MTDS `market_tick_data_service/engine/orchestrator/sentinels.py`
+(the orchestrator is a PACKAGE, not the monolithic `orchestrator.py` this doc used to cite by line number — never re-add
+a line-number reference here). Historical windows preserved in `_DEFERRED_TRADFI_TICK_DATA_WINDOWS` (list-shape, mirrors
+the TRADFI_TICK_DATA_WINDOWS shape) and `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` (dict-shape, mirrors
 VENUE_DATA_TYPE_COVERAGE_WINDOWS — preserves the CME tbbo + CME mbp_10 reference windows). Both restored by post-cutover
 plan (`tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md`).
 
@@ -298,11 +299,10 @@ for the 3-tier progression (MVP=50 → Expanded=200 → Full=10000) and observab
   via UAC `LEGACY_DEFI_VENUE_ALIASES` (`unified_api_contracts/registry/defi_venues.py`); a one-off manifest migration
   rewrote 411,620 historical rows (that script has since been deleted per the one-off script lifecycle rule —
   `/codex/06-coding-standards/script-homes.md`; the surviving canonicalisers are
-  `market_tick_data_service/scripts/canonicalize_mtds_index.py` + `rebuild_defi_manifest.py`).
-  Read-time venue fallback in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types
-  (`lending-indices → lending_indices`) still normalised at read-time via `_canonicalise_defi_data_types` — paired
-  data_type migration is the natural follow-up. Lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up
-  honestly.
+  `market_tick_data_service/scripts/canonicalize_mtds_index.py` + `rebuild_defi_manifest.py`). Read-time venue fallback
+  in deployment-api removed (commit 64d2be9). Hyphenated DEFI data_types (`lending-indices → lending_indices`) still
+  normalised at read-time via `_canonicalise_defi_data_types` — paired data_type migration is the natural follow-up.
+  Lifted DEFI coverage from 4% to ~50% with 48/63 venues lighting up honestly.
 - ✅ **DeFi CLI handler ManifestWriter wiring** (Phase 7 #2) — `_defi_manifest.DefiManifestRecorder` helper plus 11
   handler wires (dex_pools / dex_swaps / lending_indices / oracle_prices / lst_rates / liquidations / gas_fee /
   perp_funding / evm_defi / solana_defi / eigenlayer_rewards). Live DeFi captures now emit honest v5 manifest rows
