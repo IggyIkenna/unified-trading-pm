@@ -92,22 +92,16 @@ operator approval.
       exists for each sampled venue, with a fix todo filed if any venue shows real divergence. Source:
       `plans/active/issues/defi_instrument_availability_duplicate_instrument_key_rows_2026_07_26.md`
 
-- [ ] [DATA] P2. Fix the bare-`instrument_id`-only pre-flight/dedup keying gap (filed 2026-07-26 by batch1's Stage-2/3
-      audit): add `chain` to the atom/key tuple in
-      `market_tick_data_service/engine/orchestrator/__init__.py::_run_preflight_availability_check` (~L487-560;
-      currently keys the captured-skip set on `(venue, data_type) → {bare instrument_id}` with `chain` never read in the
-      function — fold `chain` into the atom string or make the key `(venue, chain, data_type) → {instrument_id}`), and
-      verify/fix the equivalent gap in `market_data_processing_service/app/core/orchestration_scanner.py`'s
-      `existing_outputs` dedup set (~L680-693, `(timeframe, instrument_id)` via `extract_instrument_id_from_blob_path`)
-      — first run the scoped `gcloud storage ls`/GCS check (which timed out in the audit pass) to confirm whether MDPS
-      output filenames already embed `chain`; if they do, that specific site may be a non-issue and only needs the cited
-      evidence, otherwise fix it. Do NOT edit the read-path (`defi_catalog_reader.py`, confirmed PASS) or the catalogue
-      (confirmed Option-A-compliant). Repos: market-tick-data-service, market-data-processing-service. Done when: both
-      sites are confirmed either chain-safe (with cited GCS/code evidence) or fixed, with a regression test for the
-      2-chain-same-address collision case using one of the 6 real collision addresses (e.g. CURVE
-      `0x004c167d27ada24305b76d80762997fa6eb8d9b2` on AVALANCHE+OPTIMISM), shipped via scoped
-      `quickmerge.sh --agent --files`. Source:
-      `plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`
+- [x] ✅ [DATA] P2. **ALREADY DONE — discovered stale/duplicate 2026-07-30 while archiving the source issue doc.** Both
+      sites this todo describes were already fixed/confirmed in the source issue doc BEFORE this todo was dispatched:
+      MTDS `_run_preflight_availability_check` chain-keying fix shipped `market-tick-data-service@5bf8a3c7` (2026-07-29,
+      with the exact CURVE-collision regression test this todo asks for); MDPS `orchestration_scanner.py`
+      `existing_outputs` dedup confirmed NON-ISSUE via a real scoped GCS read (2026-07-29, real MDPS candle output
+      filenames already embed the full chain-qualified canonical id, never the bare `pool_address`), split off + closed
+      as `plans/archive/issues/mdps_orchestration_scanner_bare_instrument_id_chain_collision_2026_07_29.md`. This
+      `batch5` todo was generated before that closure landed and never got flipped. No new work needed here — flipping
+      to avoid a future re-dispatch of already-shipped work. Source (now archived, fully closed 2026-07-30):
+      `archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`
 
 - [ ] [SERVICE] P3. Now that the staking-yields Cloud Scheduler/Cloud Run Job went live 2026-07-26 (per this doc's §6.1,
       deployment-service@bd46bf2), query the live prod corpus (`market-data-tick-defi-prd-central-element-323112`) under
@@ -267,8 +261,8 @@ dedicated standalone plan) — re-running this skill will keep re-surfacing them
 
 ### Known, already-tracked mistag (no action needed here)
 
-- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]` but is
-  fleet-wide CI/QG infra content. Already flagged by batch2/batch3 and carries an open `[DOC] P2` retag todo in
+- `archive/issues/mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` — tagged `asset_group: [defi]`
+  but is fleet-wide CI/QG infra content. Already flagged by batch2/batch3 and carries an open `[DOC] P2` retag todo in
   `defi_satellite_ao_dispatch_batch2_2026_07_26_finalize.md:73-76`. Not re-flagged as a new finding.
 
 ### Self-gated covering-plan doc (no action needed — will clear on its own)

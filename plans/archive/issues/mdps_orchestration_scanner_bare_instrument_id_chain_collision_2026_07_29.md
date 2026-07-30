@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [defi, chain-collision, dedup, mdps, orchestration-scanner, cross-chain]
 related:
   [
-    /plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md,
+    /plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md,
     /plans/active/defi_satellite_ao_dispatch_batch1_2026_07_25.md,
   ]
 created: "2026-07-29"

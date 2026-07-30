@@ -379,7 +379,7 @@ picture.
   - [`plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md`](/plans/archive/issues/defi_pool_canonical_instrument_id_policy_contradiction_2026_07_17.md)
     — 0 open todos (closed/archived/record-only) — corrected 2026-07-25 (plan-reconcile): `status: resolved`, both
     bullets `[x]`.
-  - [`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
+  - [`plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`](/plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md)
     (4 open — recounted live 2026-07-26 by `/plan-reconcile defi`; the previous "0 open todos
     (closed/archived/record-only)" entry was wrong, this doc is `status: open` with 4 live `- [ ]` todos at
     `:82`/`:84`/`:87`/`:89`)

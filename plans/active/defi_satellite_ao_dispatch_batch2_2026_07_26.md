@@ -674,10 +674,10 @@ drift_direction: advance-code
   confirmed Phase-1's evidence exactly. Of the 3 open todos, the VERIFY (P2) is dispatched by
   defi_satellite_ao_dispatch_batch1_2026_07_25.md (line ~546-549); the other two are explicitly excluded there (lines
   ~578-592) with detailed reasoning I independently re-verified against the source doc's...
-- **`plans/active/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`**: Confirmed uncovered: todo-2
-  (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the 2026-07-18 Option-A ruling — revert vs
-  ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not cited by any doc in the covering set. Only
-  todo-1 (read-only audit/verify, explicitly told to flag...
+- **`plans/archive/issues/defi_pool_chain_collision_curve_balancer_gap_2026_07_21.md`** (archived 2026-07-30, fully
+  closed): Confirmed uncovered: todo-2 (reconcile the 2026-07-08 Balancer `@CHAIN` instrument_id patch against the
+  2026-07-18 Option-A ruling — revert vs ratify) and todo-3 (fix CURVE's still-bare colliding instrument_id) are not
+  cited by any doc in the covering set. Only todo-1 (read-only audit/verify, explicitly told to flag...
 - **`plans/active/issues/defi_swaps_ohlcv_candle_data_types_axis_gap_2026_07_22.md`**: Confirmed via full read: the
   target doc's 4 open todos split as (1) VERIFY completeness_pct impact and (4) VERIFY the swaps_ohlcv_4h timeframe
   discrepancy — both explicitly covered by defi_satellite_ao_dispatch_batch1_2026_07_25.md lines 341-355

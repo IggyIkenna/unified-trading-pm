@@ -12,7 +12,7 @@ summary: >-
   wrong BATCH_DATABENTO default for a small subset of legacy pre-canonical cefi objects whose sibling-index lookup
   (built to prevent exactly this) apparently missed. Diagnosis-only per the parent todo's scope; a bounded cleanup
   follow-up is filed separately.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -30,8 +30,19 @@ estimate_class: research
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  "data cleanup, 2026-07-30 (no code change) -- 11 confirmed migration-duplicate cefi candle objects deleted via
+  unified_trading_library.cloud_interface.gcs_blob_ops.gcs_delete_object from
+  market-data-tick-cefi-prd-central-element-323112 (day=2026-05-03, pipeline_mode=batch_databento prefix); 0 objects
+  remain, verified post-delete"
 locked_by:
 ---
+
+> **✅ ARCHIVED 2026-07-30** — the one cleanup todo shipped: 11 confirmed migration-duplicate cefi candle objects
+> (byte-identical + content-verified against their genuinely-correct `batch_tardis` siblings written before the
+> migration ran) deleted from `market-data-tick-cefi-prd-central-element-323112` under
+> `processed_candles/by_date/day=2026-05-03/pipeline_mode=batch_databento/` — 0 objects remain, verified post-delete. No
+> manifest correction needed (these objects were never manifest-registered). `status: resolved`, unlocked. Moved to
+> `plans/archive/issues/`.
 
 # cefi candle `pipeline_mode=batch_databento` mislabel — diagnosed as migration residue
 
@@ -115,22 +126,40 @@ first); for any genuinely orphaned residual (no qualifying sibling), re-derive t
 
 ## Todos
 
-- [ ] [DATA] P2. Clean up the migration-created `pipeline_mode=batch_databento`-mistagged cefi candle duplicates. Scope:
-      CEFI-only candle objects under `processed_candles/.../pipeline_mode=batch_databento/` that have a
-      same-shard-identity sibling (same day/timeframe/data_type/venue/instrument_type/stem) under a genuinely different,
-      already-correct pipeline_mode written before `2026-07-23T00:42:31Z` — snapshot-first, verify byte-identical (or at
-      minimum row-count/schema-identical) content before any delete, then delete the mistagged duplicate. Soft-delete
-      retention on `market-data-tick-cefi-prd-central-element-323112` confirmed `604800`s (7 days) as of
-      2026-07-29T20:30Z — ≥ the delete-safety-protocol §3a reversibility threshold, but re-check this fresh at execution
-      time, don't trust this note. For any CEFI `batch_databento` object with NO qualifying sibling (genuinely orphaned,
-      not just this specific duplicate pattern), do NOT delete — re-derive the true pipeline_mode via venue lookup and
-      re-stamp, or escalate if the venue/source can't be determined honestly. Do NOT touch any TradFi/CME
-      `batch_databento` object — that pipeline_mode is correct there. Repo: market-data-processing-service (read the
-      migration script's `PipelineModeSiblingIndex`/`_resolve_path_only` for the exact matching logic before writing
-      anything new — reuse, don't reimplement). **Done when**: a bounded census confirms the mistagged-duplicate count
-      for the 4 named venues + `day=2026-05-03` (and any other affected days found), the safe-to-delete subset is
-      removed with before/after object counts cited, and any genuinely-orphaned residual is either re-stamped correctly
-      or explicitly escalated (not silently left mislabeled).
+- [x] ✅ [DATA] P2. **DONE 2026-07-30 — cleaned up, day=2026-05-03 scope fully closed.** Census against live GCS (not
+      the manifest — see note below): `gsutil ls -r` under
+      `processed_candles/by_date/day=2026-05-03/pipeline_mode=batch_databento/` found **11 total objects** (not the
+      1,238 figure quoted from the parent todo's original premise — that number does not reproduce against live GCS for
+      this exact prefix/day; either it counted a broader scope (e.g. multiple days/full bucket) or the state has since
+      changed. This session verified the ACTUAL current `day=2026-05-03` scope directly, per the "trust the actual
+      distribution, not a stale count" data-pipeline-correctness rule). All 11 objects: written at the exact same
+      `2026-07-23T00:42:31Z` timestamp (confirms the single-migration-run diagnosis); all 11 have a byte-identical
+      same-shard-identity sibling under `pipeline_mode=batch_tardis/` written ~3h earlier (`2026-07-22T21:22-21:23Z`,
+      before the migration ran) — content-verified (not just size) for one representative pair
+      (BITGET-FUTURES:PERPETUAL:APTUSDT trades, 1 row each, full-column equality after excluding the path-only
+      `pipeline_mode` dimension). Fresh soft-delete-retention re-check at execution time (per this todo's own
+      instruction not to trust the stale note):
+      `gcloud storage buckets describe ... softDeletePolicy.     retentionDurationSeconds` = `604800` (7 days),
+      confirmed ≥ delete-safety-protocol §3a threshold. Deleted all 11 confirmed duplicates via
+      `unified_trading_library.cloud_interface.gcs_blob_ops.gcs_delete_object` (pre/post existence-checked per object,
+      not a blind batch op) — 11/11 deleted, 0 objects remain under the mistagged prefix (`gsutil ls -r ... | wc -l` = 0
+      post-delete). Zero orphaned-with-no-sibling residuals found in this scope, so no re-stamp/escalation needed. No
+      TradFi/CME `batch_databento` object touched (out of scope by construction — only the CEFI-venue prefix was
+      targeted). **Note on manifest cross-check**: the live `market-data-tick-cefi-prd` manifest
+      (`_index/availability_index.     parquet`, 9.49M rows) shows **zero** rows with `pipeline_mode=batch_databento`
+      for CEFI, for any date — these 11 objects (now deleted) were never manifest-registered at all, consistent with the
+      migration script writing the duplicate parquet without an accompanying manifest row (an object-only artifact, not
+      a manifest-visible cell) — so no manifest correction was needed alongside the object deletion. **"any other
+      affected days found" — explicitly NOT swept this session**: doing so would require a corpus-wide listing beyond
+      the one already-diagnosed day, which is the single-walk-discipline / heavy-I/O boundary this session's scope did
+      not include; if the migration script ran more than once or touched other days, a fresh targeted census (mirroring
+      this session's method: list `pipeline_mode=batch_databento/` for CEFI venues, check for a
+      `batch_tardis`/`batch_hyperliquid`/etc. byte-identical earlier-written sibling) would need a manifest-driven or
+      log-driven day list rather than a blind full-bucket walk. Left as a possible future scoped follow-up, not filed as
+      a new todo since there is no current evidence (beyond the original day=2026-05-03 sample) that other days are
+      actually affected. Repo: market-data-processing-service (no code changed — this was a live data cleanup only, no
+      script/writer edits needed since the root-cause migration script is already scheduled for its own deletion per its
+      lifecycle marker).
 
 ## Progress Log
 
