@@ -45,7 +45,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /plans/active/ag_closeout_audit_rollout_2026_07_25.md,
-    /plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
+    /plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md,
     /plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md,
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
     /plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md,
@@ -145,7 +145,9 @@ orphaned?" resolves to "everything," because nothing in the covering set does an
       dep-manifest contention); use per-repo constraints only. **Done when**: the sweep command returns no setuptools
       version below 83.0.0 in any repo, each touched repo's QG is green with codex-compliance at 0 violations, and
       `grep -n PYSEC-2026-3447 e2e-testing/scripts/quality-gates.sh` returns nothing. Repos: instruments-service,
-      market-tick-data-service, e2e-testing. Source: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`.
+      market-tick-data-service, e2e-testing. Source:
+      `/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md` (ARCHIVED 2026-07-30 — all 3 of its
+      own todos independently re-verified + flipped).
 
 - [x] [INFRA] P1. **Fix the `scripts/setup.sh` bootstrap-uv fallback in the PM template + roll it out fleet-wide — DONE
       (slot-7, 2026-07-26): 25/25 repos now carry the astral-installer fallback, all committed+pushed. 24 were already

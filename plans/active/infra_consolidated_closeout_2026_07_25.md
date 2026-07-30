@@ -75,8 +75,8 @@ governance — ruff-lint, deprecate/delete audit) ·
 (ARCHIVED 2026-07-27, RESOLVED — CVE vs vcrpy dependency conflict + pyproject duplicate-key) ·
 [issues/cve_affected_pinned_deps_remediation_2026_06_18.md](/plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md)
 (lift CVE-driven dependency caps once blockers clear) ·
-[issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/active/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
-(fleet-wide setuptools CVE, PYSEC-2026-3447, blocking the zero-tolerance codex gate) ·
+[issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md](/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md)
+(ARCHIVED 2026-07-30, RESOLVED — fleet-wide setuptools CVE, PYSEC-2026-3447, bumped 82.0.1→83.0.0, ignore removed) ·
 [/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md](/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md) (uv
 binary drifted off its pinned version on the VM fleet) ·
 [issues/pm_scripts_typecheck_debt_2026_06_11.md](/plans/active/issues/pm_scripts_typecheck_debt_2026_06_11.md) (PM

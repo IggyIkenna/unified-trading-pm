@@ -72,8 +72,8 @@ source: >-
       one (the setuptools 3-step chain, the uv `setup.sh` fix + rollout pair, the e2e-login 3-step chain, the
       PROGRESS.json rollout folding three families, the fleet-monitor pair, the launcher-write pair) — flip ALL the
       constituent boxes, not just one per todo, and say in each flip which combined todo covered it. The 17 source docs
-      are: `issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md`,
-      `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
+      are: `/plans/archive/issues/setuptools_fleet_pysec_2026_3447_bump_2026_07_14.md` (ARCHIVED 2026-07-30 — already
+      reconciled + archived independently, skip for this one), `/plans/archive/issues/uv_pin_fleet_drift_2026_06_22.md`,
       `issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md`,
       `issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md`,
       `issues/vm_billing_waste_first_audit_and_preflight_gate_design_2026_07_24.md`,
