@@ -110,9 +110,9 @@ Widening before resolving this cliff would be strictly worse. Distribution by un
 
 Both are `doc_type: codex-ssot`, both `status: current`, both name the same topic in `authoritative_for:`:
 
-- `codex/09-strategy/architecture-v2/naming-convention.md` —
+- `/codex/09-strategy/architecture-v2/naming-convention.md` —
   `authoritative_for: [canonical strategy-id naming grammar (slot-label / fully-qualified / bare-slot)]`
-- `codex/06-coding-standards/strategy-identity-versioning.md` —
+- `/codex/06-coding-standards/strategy-identity-versioning.md` —
   `authoritative_for: [strategy identity + versioning (5-layer identity, archetype-ID rules, slot-label grammar)]`
 
 `rg -l '^authoritative_for:.*slot-label grammar' codex/` therefore returns two docs — a coin flip, which is precisely
@@ -156,12 +156,12 @@ correctness fact, not an authority call, but it lives in `codex/**` so this run 
 The run repointed 33 such refs where the target provably exists under PM's `codex/`. These 4 have **no counterpart**, so
 repointing them would have manufactured a knowingly-wrong path, and they were deliberately left alone:
 
-| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                   |
-| --------------------------------------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   |
-| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                           |
-| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                      |
-| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename |
+| Location                                                  | Dead target                                            | Successor hunt result                                                                                                                                                                    |
+| --------------------------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cursor-rules/architecture/strategy-data-access.mdc:11`   | `09-strategy/cross-cutting/config-architecture.md`     | only match is `/codex/09-strategy/_archived_pre_v2/cross-cutting/config-architecture.md` — pointing a live rule at an `_archived_pre_v2` doc is worse than a dead link                   |
+| `.cursor/rules/core/provider-api-version-manifest.mdc:16` | `02-data/provider-api-version-manifest.md`             | none anywhere                                                                                                                                                                            |
+| `.cursor/rules/misc/sync-system.mdc:14`                   | `unified-trading-codex/scripts/sync-rules-and-docs.py` | script does not exist in any repo — the whole rule may be obsolete                                                                                                                       |
+| `.cursor/rules/ui/ui-quality-gates-typescript.mdc:18`     | `06-coding-standards/quality-gates-ui-typescript.md`   | nearest is `quality-gates-ui-template.sh` (a shell template, not the doc); current UI SSOT is likely `/codex/06-coding-standards/ui-testing-layers.md` but that is not a provable rename |
 
 Each needs a human to either repoint the prose at the real current doc or delete the dead reference. **Do not
 blanket-fix the second row with a path rewrite**: it is a markdown body link currently held in
@@ -242,3 +242,34 @@ Because of (1)+(2) this run shipped under the CLAUDE.md closed carve-out (dirty-
 the commit is a strict-quickmerge carve-out file and no source file was involved. Worth noting for the skill itself:
 `quickmerge --agent` has **no doc-only bypass** of the Pass-1 QG sentinel, so a docs-only skill like this one is fully
 blocked from its documented ship path whenever any unrelated repo in the workspace is red.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid.** In scope because the doc was
+  created hours earlier the same day and carried no verdict marker. Read end-to-end; `grep -cE '^- \[ \]'` = **0**,
+  matching this verdict's item count (zero todo-level verdicts — the doc-level verdict is the whole verdict). NA is
+  correct on the merits, not by default: both headline items are authority calls no worker may settle — **P0-A** is a
+  re-stamp-vs-re-review policy choice on 144 bulk-stamped codex docs, and **P0-B** picks which of two `status: current`
+  SSOTs keeps `authoritative_for: slot-label grammar`. Both additionally require editing `codex/**`, which is
+  operator-ruling-gated in every mode, so neither could be applied here even if the call were obvious. Nothing in the
+  doc is resolved or moot → not ARCHIVE; no bounded, worker-determinable content → not RECLASSIFY.
+- **Zero-checkbox note (reported, deliberately not "fixed" here).** This doc holds real dated work — P0-A projects
+  `check_codex_doc_freshness.py` from 24 to ~168 violations on **2026-08-15**, a hard PM QG gate, i.e. a repo-wide
+  commit blocker on a known date — but expresses all of it as prose, so it is invisible to every backlog and open-todo
+  count (this audit's own inventory scores it `open_todos: 0`). Converting parked A/B/C decisions into todos is
+  authoring, not reconciliation, and is outside this skill's autonomous apply set, so it was not done. The class is
+  already owned corpus-wide by `issue_docs_zero_checkbox_sweep_2026_07_24.md`, which does not yet name this doc —
+  annotated there rather than fixed here, per the findings-triage "fits another plan → annotate, don't fix" rule.
+- **Integrator correction 2026-07-30 (na-eligibility-audit tranche integration).** The owning doc named above was
+  **ARCHIVED** to `/plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md` by `unified-trading-pm@17ba71f10`
+  while this tranche was running, so the "`status: open`, `assigned_vm: planning`" citation above is stale and the infra
+  tranche's annotation could not be landed there (a modify/delete conflict — the archival was accepted rather than
+  resurrecting an archived doc). **The annotation's substance is preserved here instead**, because the owning doc's
+  closure did not resolve it: that sweep's population was the docs referenced by the **5 asset-group** closeouts, which
+  structurally excludes the non-AG tranches (`meta`/`infrastructure`/`cross-cutting`/`ao`/`ci`). Two live zero-checkbox
+  instances sit in exactly that blind spot, both `asset_group: meta`, both created 2026-07-30: **this doc** (0
+  checkboxes, carrying the dated 2026-08-15 `check_codex_doc_freshness.py` 24→~168 hard-gate cliff above) and
+  `/plans/active/issues/plan_reconcile_autonomous_sweep_2026_07_30.md` (1 todo, but its 4 parked decisions are
+  prose-only). Autonomous-mode parking registers are a recurring source of this class. **Open follow-up for the
+  operator/next-toucher**: re-run the zero-checkbox sweep with the population widened to all 9 tranches — it currently
+  has no owning active doc.

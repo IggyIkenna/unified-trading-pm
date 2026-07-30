@@ -181,9 +181,13 @@ phases ship.
 - [ ] [REVIEW] P2. Track 1 close-out: all CVE remediations landed (aiohttp/vcrpy, setuptools PYSEC-2026-3447,
       execution-service aioresponses migration); codex-violation ratchet green; `scripts/` governance sweep complete; uv
       pin re-synced fleet-wide; PM typecheck debt cleared; UTL/UAC dedup shipped; Dockerfile pattern normalized.
-- [ ] [REVIEW] P2. Track 2 close-out: org migration verified fleet-wide (no stale `IggyIkenna` refs); terraform drift
-      reconciled + applied; VM startup scripts auto-roll to GCS; `managed-by` label convention adopted; billing-waste
-      pre-flight gate designed + shipped.
+- [ ] [REVIEW] P2. Track 2 close-out: terraform drift reconciled + applied; VM startup scripts auto-roll to GCS;
+      `managed-by` label convention adopted; billing-waste pre-flight gate designed + shipped. (The "org migration
+      verified fleet-wide / no stale `IggyIkenna` refs" clause was **DROPPED 2026-07-28** — operator ruled **STAY on
+      `IggyIkenna` Pro**, so those refs are the permanent correct state, not drift;
+      `june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED #36, applied in `unified-trading-pm@cd5c0bde1`. That
+      commit dropped the clause from this Track's body criterion above but missed this todo's restatement of it — fixed
+      here by the 2026-07-30 na-eligibility-audit.)
 - [ ] [REVIEW] P2. Track 3 close-out: each tooling doc's own open todos closed; the zero-checkbox sweep's findings
       triaged; the reference-path convention rollout complete corpus-wide.
 - [ ] [REVIEW] P2. Track 4 close-out: the 8 deployment-ui smoke failures fixed + pw:L2 regression specs added; the
@@ -271,3 +275,20 @@ phases ship.
   `/plans/archive/issues/claude_code_settings_symlink_chain_broken_2026_07_23.md`,
   `issues/deployment_ui_l2_smoke_gate_red_2026_07_17.md`. None were tracked in any Track above; all are now
   `assigned_vm: planning` and live in the AO backlog.
+- **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid — stale-item clause fixed on
+  todo 2.** This hub was the one infra-tranche doc carrying no verdict marker from the earlier same-day pass
+  (`unified-trading-pm@4c6587543`/`ddf6a8adf`/`f3b018596`), so it was in scope here. All 4 open `[REVIEW]` todos read
+  end-to-end (`grep -cE '^- \[ \]'` = 4, matches this verdict's item count). **KEEP-NA is confirmed on citation, not
+  re-derived**: the todos exist by an explicit resolved operator decision —
+  `issues/autonomous_session_operator_decisions_2026_07_25.md` entry #38, option A, `unified-trading-pm@2c61a8dc4` —
+  which added them as _verification_ roll-ups so a future tranche audit measures a real covering set instead of a
+  zero-todo digest. Independently re-checked against the bounded-outcome bar rather than accepting the doc's own "not
+  AO-eligible" gloss: each todo is an all-of-N close-out gate whose underlying work lives in its source docs (many
+  already `assigned_vm: planning`, plus `infra_satellite_ao_dispatch_batch1_2026_07_26.md`), so it can only flip once
+  those finish. Dispatching it eagerly would burn a worker re-deriving "not yet"; that gating shape belongs in a
+  `depends_on` + `gate_on_depends: true` companion, not an `NA → planning` flip. **Fix applied**: todo 2 still demanded
+  "org migration verified fleet-wide (no stale `IggyIkenna` refs)" — a criterion the operator CANCELLED on 2026-07-28
+  (§5-RESOLVED #36; `IggyIkenna` refs are now correct-by-ruling, not drift). `unified-trading-pm@cd5c0bde1` dropped that
+  clause from the Track 2 body criterion but missed the todo restating it, so the todo would have sent a reviewer
+  hunting for "stale" refs that are the intended permanent state. Clause removed with the ruling cited inline. No
+  conflict-check needed (no RECLASSIFY).

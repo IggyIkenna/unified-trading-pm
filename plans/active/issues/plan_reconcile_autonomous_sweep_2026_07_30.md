@@ -218,3 +218,24 @@ are `*_finalize_*` companions whose authoring peer plausibly still has the epic 
   not duplicated), repointed 21 corpus references, added one AG-closeout linkage edge, realigned one frontmatter-vs-body
   status contradiction, fixed 5 bare-`codex/` reference-format violations, and flipped one done-but-unchecked todo
   against a cross-repo sha verified reachable this run.
+- **na-eligibility-audit 2026-07-30** (infra tranche, incremental run): **KEEP-NA, valid — borderline, see below.** In
+  scope because the doc was created hours earlier the same day with no verdict marker. Read end-to-end;
+  `grep -cE '^- \[ \]'` = **1**, matching this verdict's item count. Doc-level NA is unambiguous: P1-A, P2-B, P2-C and
+  P2-D are all authority calls (a `codex/**` edit, an `[unlock-plan]`, a fold-policy ruling, deleting another agent's
+  working tree) — none autonomously resolvable, and P2-E is already self-resolved and recorded as history.
+- **na-eligibility-audit 2026-07-30 — RECLASSIFY candidate assessed and HELD (the one genuine judgment call this
+  tranche's incremental run produced).** The sole open todo — `[OPS] P3` fleet-host stale-tmp cron audit — was taken
+  through the full Phase-2 conflict-check (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`
+  § 3) and came back **CLEAR**: no active `assigned_vm: planning` doc claims it, the only other corpus mentions are the
+  archived source `qg_hardcoded_tmp_paths_false_failures_on_full_tmpfs_2026_07_26.md` (whose false "tracked separately"
+  prose is exactly why the deferral was migrated here) and unrelated tmpfs incident docs; the 4 active planning plans
+  under `parent_epic: plan_hygiene_master` are e2e-coverage and codex-vs-repo-docs work with zero overlap. It is also
+  genuinely bounded and carries a stated done-when, which normally satisfies the dispatch-scope bar. **Held NA anyway**,
+  on the doc's own recorded evidence: the remediation half needs host-level `crontab` write access, and this doc already
+  records the operator having to run both installers personally on `ip-172-31-5-118` because the account lacks it — an
+  OS-level permission the cloud-identity self-service rule
+  (`/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`) explicitly does not cover, so a worker cannot
+  reach "no host left unknown" unaided on at least one known host. Flipping the doc would also relabel an
+  operator-decision parking register as an AO-dispatched plan. **Recorded here rather than silently buried so the
+  operator can cheaply overrule**: if the audit half alone (report present/missing per host, flag the rest `[OPERATOR]`)
+  is considered a sufficient done-when, this todo is dispatch-ready today and the flip is a one-line frontmatter change.
