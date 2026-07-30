@@ -95,13 +95,19 @@ resolved_by:
       `agents/worker.md`). **Done when**: a fresh `--agent`-flow commit made per the now-updated ship-loop example
       already carries the trailer, so quickmerge Stage 5 finds it via `git log -1 --format=%B | grep -q '^Quickmerge:'`
       and never reaches the late-amend branch at all.
-- [ ] [INFRA] P2. **Add a bounded retry-with-rebase loop AROUND the final `git push` in Stage 5** (not around the whole
-      pipeline) — e.g. on a non-fast-forward rejection, `git pull --rebase --autostash` + retry the push up to N times
-      (N=3-5) before failing, entirely inside quickmerge.sh, without re-running Pass-1 QG (the content hasn't changed,
-      only the base commit). This turns "the caller must re-run the whole ~1-5 min pipeline per retry" into "quickmerge
-      retries its own few-second push automatically" — directly attacks the root cause (QG wall-clock >> push interval)
-      without needing QG to get faster. **Done when**: a simulated high-churn scenario (another process pushing every
-      20-30s during a quickmerge run) succeeds within one quickmerge invocation instead of requiring the caller to loop.
+- [x] ✅ [INFRA] P2. **ALREADY SHIPPED 2026-07-27, discovered + verified 2026-07-30 (slot-12, infra).** Found while
+      shipping this doc's own todo 1: `scripts/quickmerge.sh` already has exactly this — a bounded retry-with-rebase
+      loop around the final `git push` in Stage 5 (lines ~1790-1805), `_QM_PUSH_RETRIES` defaulting to 5 (overridable
+      via `QUICKMERGE_PUSH_RETRIES`), on a non-fast-forward rejection it does `git pull --rebase --autostash` and
+      retries the push (never re-running Pass-1 QG, exactly this todo's ask), and a genuine same-file conflict during
+      the retry hard-fails with a clear message rather than silently papering over it. Shipped by
+      `unified-trading-pm@0e48ffe51` (2026-07-27, slot-1/laptop, "quickmerge Stage 5 hardening") — the SAME day this
+      issue was filed, but this checkbox was never flipped, so the closeout kept reading it as open for 3 days (the
+      exact staleness trap this workspace's own audit tooling exists to catch). Directly confirmed working, not just
+      code-read: this todo's own todo-1 ship (this session) hit exactly one non-fast-forward push rejection under the
+      live high-churn conditions on `live-defi-rollout` this session, and quickmerge auto-rebased + retried + succeeded
+      within the SAME invocation, with zero manual intervention — matching this todo's own "Done when" criterion
+      verbatim. Repo: unified-trading-pm (no code changed by this todo — verification + checkbox only).
 - [ ] [INFRA] P3. **Surface push-churn as a named condition** (mirroring the existing repo-blocker mechanism in
       `unified-trading-pm/agents/worker.md` § 4b, which already exists for `qg_red` on a repo) so a worker hitting this
       doesn't have to self-diagnose it as a mystery repeated failure — a `push_race` repo-blocker kind that lets the
@@ -116,3 +122,12 @@ resolved_by:
   #1) mid-session, which measurably helped (attempts reliably reach `Stage 5 → Proceeding to push` now, vs. failing
   earlier in the pipeline before), but the residual final-push race (finding #2) persists and is this doc's actual
   scope. Continuing to retry the underlying ship in parallel; not blocking on this doc's own fix path.
+- 2026-07-30 (slot-12, `infra`): Dispatched todo 1. Shipped it (`agents/RULES.md` + `agents/worker.md` doc fix, option
+  (a)) and dogfooded the fix on its own ship: pre-stamped `Quickmerge: agent` on this session's own commit, confirmed
+  live that quickmerge Stage 5 found the trailer and skipped the late amend entirely (no "missing the Quickmerge
+  trailer; amended HEAD" message this time). While shipping, also discovered todo 2 was ALREADY shipped 3 days ago
+  (`unified-trading-pm@0e48ffe51`, 2026-07-27) but never flipped here — verified by code read AND by this same ship
+  hitting one real non-fast-forward rejection under live high churn, which quickmerge auto-rebased-and-retried without
+  any manual re-invocation. Flipped both todo 1 and todo 2 with evidence. Todo 3 (the `push_race` repo-blocker
+  condition) confirmed NOT implemented (corpus-wide grep, 0 hits) — genuinely still open, left as-is; this doc stays
+  `status: open` until it lands.
