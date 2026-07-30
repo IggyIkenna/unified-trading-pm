@@ -116,12 +116,14 @@ Every finding below is a statement about a DISAGREEMENT between a named pair (or
 
 <!-- CORRECTION 2026-07-20: the prior "Fifteen estate types plus one tool-defect type" line omitted `oracle_contradiction`
 (defined in §2.3 but never counted) and predated the three census/per-datapoint additions in §2.7. -->
+<!-- CORRECTION 2026-07-30: `bundle_atom_key_mismatch` added to §2.7 (operator request, closing the reconciliation
+skill's coverage-gap audit — data_pipeline_reconciliation_skill_2026_07_20.md Phase G) — nineteen estate types now. -->
 
-**Eighteen estate types plus two non-estate types** — the oracle-defect `oracle_contradiction` (§2.3) and the
-tool-defect `drift_axis_false_positive` (§2.6) — **twenty named types in all**. (The base was fifteen estate types;
+**Nineteen estate types plus two non-estate types** — the oracle-defect `oracle_contradiction` (§2.3) and the
+tool-defect `drift_axis_false_positive` (§2.6) — **twenty-one named types in all**. (The base was fifteen estate types;
 `non_canonical_axis_value`, `shard_atom_vocab_desync`, and `non_canonical_id` were added 2026-07-20 from
-`reconciliation-census-and-compute-tiers.md` §4.) Names are lowercase snake_case and are the literal strings a report
-emits.
+`reconciliation-census-and-compute-tiers.md` §4; `bundle_atom_key_mismatch` added 2026-07-30.) Names are lowercase
+snake_case and are the literal strings a report emits.
 
 ### 2.1 Manifest ↔ GCS (S3 ↔ S1)
 
@@ -403,11 +405,46 @@ From `market-tick-data-service/scripts/validate_manifest_coverage.py:15-23`.
   / §3.
 - **N/A carve-outs (no id-form finding)** — legitimately id-less shapes: pattern-#2 bundles (`options_chain` /
   `futures_chain`, null `instrument_id` by design), the symbol-less `ticks.parquet` fan-in, the prediction CQG
-  filename-id bundle.
+  filename-id bundle, and the **sports fixture-id filename** (routes through a domain-specific fixture-id builder, not
+  the `VENUE:ITYPE:BASE-QUOTE` grammar — same structural reason as prediction's `conditionId`, added 2026-07-30 for
+  parity: `_ID_FORM_CHECKED_ASSET_GROUPS` in `partition_paths.py`/`_partition_path_canonicality.py` was always correctly
+  scoped to `{cefi, defi}` only, but this carve-out list previously named only prediction, leaving sports's identical
+  N/A status undocumented here).
 - **Suppressed by AE-3** — a defi POOL `instrument_id ≠ canonical_instrument_id` divergence is the intentional two-id
   model, not a finding.
 - **Severity default** — **MEDIUM**, date-conditional against `canonical-cutover-register.md`.
 - **Delete-eligible** — **NO.** A wrong id is migrated / re-keyed, never deleted.
+- **🔴 Report `id_form: not_applicable (structural)` EXPLICITLY for sports + prediction — never a bare 0-violations
+  count (added 2026-07-30).** `_stem_id_form_violations()` returns `[]` immediately for any asset_group outside
+  `_ID_FORM_CHECKED_ASSET_GROUPS`, which is byte-identical at the call site to "checked, zero violations found." A
+  report that prints that as `non_canonical_id: 0` reads as clean when it was never checked — the EXACT false-clean
+  shape `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` exists to prevent (that issue was the oracle
+  silently reporting CeFi wire-named objects as structurally clean; this is the same failure mode one level up, for the
+  id-form leg on the two AGs it was deliberately never wired for). The skill's report MUST print an explicit
+  `id_form: not_applicable (structural — <reason>)` line for sports/prediction shards instead of omitting the field or
+  printing a count.
+
+#### `bundle_atom_key_mismatch`
+
+- **Definition** — for an AG whose shard grain is a multi-instrument BUNDLE (cefi/tradfi chain shards keyed on
+  `underlying=`; prediction keyed on `canonical_question_group`, manifest-only), the bundle's declared KEY (per the
+  shard-atom grain pattern in `data_pipeline_reconciliation_skill_2026_07_20.md` "Design" section — `instrument_id`
+  flat-per-contract / `underlying` bundle-per-underlying / `canonical_question_group` prediction manifest-only) does NOT
+  match what the bundle's own leaf content actually groups by — e.g. an `underlying=BTC/.../ticks.parquet` chain shard
+  whose rows' own `underlying` column disagrees with the `BTC` partition value, or a manifest CQG row whose member
+  `conditionId`s resolve to more than one `canonical_question_group` on re-derivation.
+- **Why it matters** — this is the failure class H1 in `reference-prediction.md` names by name ("DO NOT RUN THE PHANTOM
+  RECONCILER AGAINST PREDICTION — it wipes CQG bundle rows" because a tool that mis-keys a bundle AG on `instrument_id`
+  demotes/wipes the real bundle row). Before this type existed, that hazard was documented only as prose warning readers
+  not to make the mistake; it had no positive, machine-checkable verdict of its own — a bundle-keying defect that was
+  NOT the phantom-reconciler's specific mis-key had no name to be reported under.
+- **Detection** — for chain/combo shards: re-derive each leaf row's bundle key from its own structured columns and
+  compare to the path partition value (mirrors G2's builder-as-judge pattern, applied to the bundle KEY axis instead of
+  the per-instrument id). For prediction CQG: re-run the manifest's own CQG-derivation function over the bundle's member
+  `conditionId`s and confirm single-group convergence.
+- **Severity default** — **HIGH** (a wrong bundle key either silently drops rows from coverage — the phantom-reconciler
+  incident — or silently merges two distinct markets/chains under one atom).
+- **Delete-eligible** — **NO.** A mis-keyed bundle is re-keyed, never deleted.
 
 ---
 
@@ -416,14 +453,15 @@ From `market-tick-data-service/scripts/validate_manifest_coverage.py:15-23`.
 <!-- CORRECTION 2026-07-20: was "two of the sixteen ... all fourteen other" — that total omitted `oracle_contradiction`
 and predated the three 2026-07-20 additions (§2.7). Delete-eligibility is UNCHANGED: still exactly two, and all three
 new types are NOT delete-eligible. -->
+<!-- CORRECTION 2026-07-30: `bundle_atom_key_mismatch` added — count moves to twenty-one; still NOT delete-eligible. -->
 
-Exactly **two** of the twenty named types can ever justify a delete:
+Exactly **two** of the twenty-one named types can ever justify a delete:
 
 | Type                | Delete-eligible | Because                                                        |
 | ------------------- | --------------- | -------------------------------------------------------------- |
 | `legacy_duplicate`  | **YES**         | a canonical twin may hold the same content — must be PROVEN    |
 | `junk`              | **YES**         | unparseable / zero-row / no manifest row — no recoverable data |
-| all eighteen others | **NO**          | each is either real data, a missing claim, or a tool defect    |
+| all nineteen others | **NO**          | each is either real data, a missing claim, or a tool defect    |
 
 Three standing qualifiers:
 

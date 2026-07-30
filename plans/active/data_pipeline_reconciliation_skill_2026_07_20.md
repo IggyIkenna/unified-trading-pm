@@ -34,7 +34,7 @@ related:
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-25
+last_updated: 2026-07-30
 parent_epic: manifest_master
 assigned_vm: NA
 execution_scope: local-only
@@ -607,6 +607,61 @@ integration text (not applied — SKILL.md is owned by the in-flight Phase C). P
       `mdps_data_type_key` — corrected per the 2026-07-21-evening ruling) — `deployment-api@5564c52c`. The census does
       not actually depend on todo 39's oracle (it is an independent vocabulary check, not built atop
       `canonical_path_violations()`), so it did not block on 39 being unshipped.
+
+### Phase G — close 3 coverage gaps found auditing the skill against its own criteria (operator request 2026-07-30)
+
+> **Provenance**: operator asked whether the skill's existing combination actually verifies, across ALL 5 AGs and ALL
+> buckets, that every GCS object carries a UAC-recognized + manifest-recognized venue/instrument_id/pipeline_mode/
+> instrument_type/bundle-key, in human-readable (not raw-wire) form. A read-only research pass against the shipped
+> skill + `canonical_path_violations()` + `_axis_census.py` + the census codex doc found: (1) path STRUCTURE is covered
+> for all 5 AGs (the oracle, Phase C todos 16-18); (2) the venue/instrument_type/data_type vocabulary CENSUS (G1, §3f)
+> is mechanism-complete for all 5 AGs but had only ever been MEASURED for defi (H6 in `reference-defi.md`) —
+> cefi/tradfi/sports/prediction were never run; (3) the id-FORM leg (human-readable vs raw-wire symbol) is correctly
+> `{cefi, defi}`-only by design (sports/prediction route through domain-specific fixture-id/condition-id builders, not
+> the `VENUE:ITYPE:SYMBOL` grammar — confirmed by reading `_partition_path_canonicality.py`'s own doc comments, NOT a
+> gap to widen), but the taxonomy/skill docs never said so explicitly for sports (only prediction was named), so a
+> report silently prints `0` for both, indistinguishable from "checked, clean" — the same false-clean shape
+> `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` exists to prevent, one level up; (4) "bundle" (the
+> underlying-keyed / CQG-keyed multi-instrument grain) had no positive machine-checkable finding type, only prose hazard
+> warnings (`reference-prediction.md` H1). **Scope note**: this phase closes the 3 doc/taxonomy gaps + runs the census
+> (G1) for the 4 unmeasured AGs — it does NOT re-run the full four-surface `/data-pipeline-reconciliation` skill
+> end-to-end for all 5 AGs again (that already happened, Phase C todos 16-18, 2026-07-20); a fresh full re-audit is a
+> separate, much larger undertaking and is not what this phase's finding required.
+
+- [x] 43. ✅ [DATA] P1. **Document sports as an explicit ID_FORM N/A-by-design carve-out (not silence)** — widened
+      `reconciliation-finding-taxonomy.md` § 2.7 `non_canonical_id`'s N/A carve-out list to name the sports fixture-id
+      filename alongside prediction's CQG bundle (it was only ever named for prediction, leaving sports's identical
+      status undocumented); same fix mirrored in `SKILL.md` § 3g. Both now instruct the report to print an explicit
+      `id_form: not_applicable (structural)` line for sports/prediction rather than a bare 0-violations count. No code
+      change — `_ID_FORM_CHECKED_ASSET_GROUPS = {cefi, defi}` in `_partition_path_canonicality.py` was already correctly
+      scoped (verified by reading the function + its own doc comments); the gap was purely in report/doc disclosure.
+      Gate: diff shows both docs' N/A carve-out lists now name sports explicitly.
+- [x] 44. ✅ [DATA] P1. **Add `bundle_atom_key_mismatch` finding type** — new § 2.7 entry in
+      `reconciliation-finding-taxonomy.md` giving the `reference-prediction.md` H1 hazard ("phantom reconciler mis-keys
+      prediction, wipes CQG bundle rows") a positive, machine-checkable verdict of its own (previously prose-only);
+      covers both the cefi/tradfi `underlying=`-keyed chain-bundle re-derivation case and the prediction CQG
+      re-derivation case. Updated the closed-set count (twenty → twenty-one) and the delete-eligibility table (eighteen
+      → nineteen non-eligible) in the same doc. Gate: `grep -c "^#### \`" reconciliation-finding-taxonomy.md` == 21 ·
+      delete-eligibility table sums to 21.
+- [ ] [DATA] P1. **Run the distinct-value census (G1, § 3f) for cefi/tradfi/sports/prediction** — the four AGs whose
+      census had never been measured (only defi's H6 existed). In progress: calling the real, unmodified
+      `get_axis_value_census()` + `_distinct_values._canonical_set`/`_is_accepted_exception` in-process
+      (deployment-api's venv now fixed per todo 46) — an earlier hand-rolled badging replica false-flagged cefi's
+      accepted `futures_chain`/`options_chain` chain-bundle instrument_type labels as non-canonical and never badged
+      `chain`/`source`/`pipeline_mode`; corrected to reuse the real production badging + accepted-exception list instead
+      of re-deriving it. Results to be recorded per-AG below + in the matching `reference-<ag>.md` sheet, mirroring H6's
+      format. Gate: a dated measurement entry (values + counts + non-canonical flags, real vocabulary badging) for all 4
+      AGs, not just a "mechanism exists" claim.
+- [x] 46. ✅ [INFRA] P2. **Diagnosed + fixed a stale local venv, not a code bug** — `deployment_api.routes`/`.services`
+      failed to import (pinned `fastapi==0.136.3`/`starlette==1.1.0` installed, lacking `iter_route_contexts` that
+      unified-trading-library's `service_framework.fastapi_factory` imports at load time). Checked
+      `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md` first (pre-task conflict check) — this is
+      the ALREADY-TRACKED, ALREADY-SHIPPED fleet-wide fastapi bump (`deployment-api@2c1d446`, `pyproject.toml`/`uv.lock`
+      both correctly declare `fastapi>=0.137.0,<1.0.0`→resolves `0.140.7`); this checkout's `deployment-api/.venv`
+      simply hadn't been `uv sync`'d since that fix landed. Ran `uv sync` in `deployment-api/` (picked up
+      `fastapi 0.136.3→0.140.7`, `starlette 1.1.0→1.3.1`, `deployment-api`/`deployment-service`/
+      `unified-trading-library` all to current HEAD) — `get_axis_value_census` now imports + is callable in-process. No
+      new issue filed (would have duplicated the existing tracked doc). Local-venv-only change, nothing shipped.
 
 ---
 
