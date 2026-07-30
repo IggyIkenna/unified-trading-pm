@@ -13,7 +13,7 @@ summary: >-
   concurrency-critical code); **RULED 2026-07-28 (operator general theme applied): leave parked, not pursued** — see
   todo 2's own resolution text for the full reasoning. Retagged `[OPERATOR]→[REVIEW]` since this is now a closed
   decision, not an open ask.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [data]
@@ -37,12 +37,20 @@ source:
     "na_docs_validity_and_ao_eligibility_audit_2026_07_26.md classifier finding re: todo 2's operator-gate",
   ]
 assigned_vm: planning
-resolved_by:
+resolved_by: deployment-service@d49767d
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: 2026-07-30
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: deployment-service@d49767d`. Audited all 3
+> `CHUNK_SCRIPT=` chunked branches in `setup-data-pipeline-vm.sh` (the complete set); found `mtds_chunk_loop.sh` and
+> `cefi_hl_aster_loop.sh` (the doc's own named example) both reused `VM_NAME` unmodified across chunks, fixed both with
+> the same `VM_NAME="${VM_NAME}-c${CHUNK_NUM}"` scoping `instruments_chunk_loop.sh` already had; 3 new regression tests
+> extracting the real generated script text (never a hand-copied excerpt). Todo 2 (the concurrency-risk item) was
+> already independently ruled PARKED 2026-07-28 (see its own resolution text below) — not reopened here.
 
 # ManifestWriter per-VM-shard follow-ups (split from the resolved OOM incident)
 
@@ -52,7 +60,7 @@ open" follow-ups carried forward so they don't go dark in the archive.
 
 ## Open work
 
-- [ ] [DATA] P2. **Audit other launchers for the same latent risk — INCLUDING already-chunked ones.** The original
+- [x] ✅ [DATA] P2. **Audit other launchers for the same latent risk — INCLUDING already-chunked ones.** The original
       framing (single-shot dispatch only) was incomplete: the real fix's own Attempt 1 proved a launcher that's ALREADY
       routed through a chunked `setup-data-pipeline-vm.sh` branch (e.g. `cefi-hl-aster-backfill`, or any other `elif`
       branch reusing one `VM_NAME` across many chunk-loop iterations over a long enough total range) carries the SAME
@@ -61,6 +69,21 @@ open" follow-ups carried forward so they don't go dark in the archive.
       against whether that launcher is ever invoked with a range wide enough to grow the shard past the ~155-165K-row
       OOM threshold in practice. **Done when**: every such launcher is either confirmed low-risk (bounded cumulative-
       shard growth for its realistic invocation range) or given the same per-chunk `VM_NAME` suffix.
+
+      **DONE 2026-07-30 — deployment-service@d49767d.** Audited all 3 `CHUNK_SCRIPT=` chunked branches in
+                                                                  `setup-data-pipeline-vm.sh` (the complete set — `grep -n 'CHUNK_SCRIPT="'` finds exactly 3, no others exist):
+                                                                  `mtds_chunk_loop.sh` (mtds-backfill), `cefi_hl_aster_loop.sh` (cefi-hl-aster-backfill, day-by-day chunking,
+                                                                  `VM_CHUNK_DAYS` default 1 — the doc's own named example), `instruments_chunk_loop.sh` (instruments-backfill,
+                                                                  ALREADY fixed pre-existing). Found `mtds_chunk_loop.sh` and `cefi_hl_aster_loop.sh` both reused the boot-time
+                                                                  `VM_NAME` unmodified across every chunk (confirmed: `export VM_NAME="$VM_NAME_SELF"` fires once at VM boot,
+                                                                  `MANIFEST_PER_VM_SHARDS=true` keys the per-VM shard filename off it) — the SAME latent OOM exposure. Fixed both by
+                                                                  adding the identical `VM_NAME="\${VM_NAME}-c\${CHUNK_NUM}"` per-chunk scoping `instruments_chunk_loop.sh` already
+                                                                  used. Added `TestChunkedBranchesScopeVmNamePerChunk` (3 tests) to `tests/unit/test_vm_launcher_scripts.py` —
+                                                                  extracts the REAL generated heredoc bodies from the source file (never a hand-copied excerpt, so it can't drift)
+                                                                  and asserts the `VM_NAME` scoping literal precedes each chunk's `python -m {service}` invocation, including a
+                                                                  regression test confirming `instruments_chunk_loop.sh`'s pre-existing fix is still present. Full
+                                                                  `quality-gates.sh` green (2967 passed).
+
 - [x] ✅ [REVIEW] P3. **RULED 2026-07-28 — leave PARKED, do not pursue now.** Applying the operator's general theme to
       this item: the theme's affirmative "do it fully" pushes (full backfills/migrations, adaptor completion,
       cost-not-a-concern, auto-recovery-over-manual, relaxed live-probing) are all about completing DEFINITE,

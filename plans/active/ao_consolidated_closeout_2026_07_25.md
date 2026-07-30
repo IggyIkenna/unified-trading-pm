@@ -143,7 +143,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 ## Track 3 — Orchestrator VM/auth/DB infra · P1
 
 **Sources**:
-[issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md](/plans/active/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md)
+[issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md](/plans/archive/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md)
 (planning-VM relaunch doesn't reprovision the self-hosted glue-runner pool) ·
 [issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md](/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md)
 (SQLAlchemy `QueuePool` exhaustion under concurrent slot traffic) ·
@@ -287,29 +287,29 @@ missing from Sources entirely).
 - **2026-07-30** (`/ag-closeout-audit ao`, autonomous, Phases 0-2 only) — **Second full closeout-completeness audit.**
   All 44 AG-primary docs read end to end (single-threaded; the run environment again exposed no Workflow/Agent tool, so
   the skill's per-doc fan-out could not be used — same coverage caveat as the 2026-07-26 run). **Result: 37 of 44
-  orphaned** (30 `orphaned_never_touched`, 7 `orphaned_partial_coverage`), 7 covered — barely moved from the
-  2026-07-26 run's 32/35 despite batch1 landing 5 todos: batch1's shipped work closed only PARTS of 4 source docs,
-  and 15 more docs have landed in this tranche since. **The dominant structural cause is unchanged and worth stating
-  plainly: this doc is a Sources digest and says so** ("being listed as a Source below is discoverability, NOT dispatch"), so a
-  Track-1..5 Sources entry is not coverage; and `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s two `## Deferred`
-  sections hold 15 docs that are explicitly NOT dispatched. Mechanically: of the 44 members only **12** are cited
-  anywhere inside a real `- [ ]`/`- [x]` covering todo; the other 32 appear solely in digest/Deferred/Progress-Log
-  prose. **Highest-value now-actionable orphan**:
+  orphaned** (30 `orphaned_never_touched`, 7 `orphaned_partial_coverage`), 7 covered — barely moved from the 2026-07-26
+  run's 32/35 despite batch1 landing 5 todos: batch1's shipped work closed only PARTS of 4 source docs, and 15 more docs
+  have landed in this tranche since. **The dominant structural cause is unchanged and worth stating plainly: this doc is
+  a Sources digest and says so** ("being listed as a Source below is discoverability, NOT dispatch"), so a Track-1..5
+  Sources entry is not coverage; and `ao_satellite_ao_dispatch_batch1_2026_07_26.md`'s two `## Deferred` sections hold
+  15 docs that are explicitly NOT dispatched. Mechanically: of the 44 members only **12** are cited anywhere inside a
+  real `- [ ]`/`- [x]` covering todo; the other 32 appear solely in digest/Deferred/Progress-Log prose. **Highest-value
+  now-actionable orphan**:
   `/plans/active/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`'s `[DEVOPS] P1`
-  (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which the
-  2026-07-28 CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering
-  plan. **Phase 3 deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator
-  approval and no operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality
-  HARD CHECK): the dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4
-  `cross-cutting` multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were
-  retagged to `[ao]` instead, each verified by reading the doc, not by tag shape:
-  `ao_open_issues_consolidated_close_out_2026_07_17.md` (was `[meta]` — this tranche's single most-important covering
-  plan, 9 open todos, named as covering in this very doc, yet invisible to `ao`'s own membership rule),
+  (pin `ORCHESTRATOR_JWT_SECRET_GCS`) — its only blocker was an operator-chosen maintenance window, which the 2026-07-28
+  CLAUDE.md ruling removed; it is a fleet-wide ~4.5h-outage root cause sitting unclaimed by any covering plan. **Phase 3
+  deliberately NOT run** (no batch2 drafted): the skill forbids shipping a drafted pair without operator approval and no
+  operator was reachable this run. **Corpus-hygiene fixes applied this run** (Phase 0.3 Orthogonality HARD CHECK): the
+  dual-tag `<one specific AG> + cross-cutting` mistag class is **CLEAN — 0 hits corpus-wide** (the 4 `cross-cutting`
+  multi-tag docs are all the legitimate spans-all-5-AGs pattern). Four genuine content mistags were retagged to `[ao]`
+  instead, each verified by reading the doc, not by tag shape: `ao_open_issues_consolidated_close_out_2026_07_17.md`
+  (was `[meta]` — this tranche's single most-important covering plan, 9 open todos, named as covering in this very doc,
+  yet invisible to `ao`'s own membership rule),
   `issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md`,
   `issues/per_slot_ff_pull_status_report_crons_stale_fleet_wide_2026_07_27.md`, and
   `issues/wip_preserve_refs_silently_unrecovered_2026_07_29.md` (all three were bare `[cross-cutting]` with
-  `parent_epic: orchestrator_master` and per-slot/worktree content — the post-2026-07-27 muscle-memory mistag class
-  the skill predicts). Membership 40 → 44; `check_ag_closeout_linkage.py` re-run after the retag: still 0 orphans, and
+  `parent_epic: orchestrator_master` and per-slot/worktree content — the post-2026-07-27 muscle-memory mistag class the
+  skill predicts). Membership 40 → 44; `check_ag_closeout_linkage.py` re-run after the retag: still 0 orphans, and
   `check_frontmatter_schema.py` clean on all 4. **But that green is vacuous for this tranche and the audit says so** —
   the check's `REAL_AGS` tuple still covers only the 5 original AGs, so no `ao` doc is ever evaluated by it; measured
   blast radius + the separate `ci`-closeout-archived defect are annotated onto the existing owner,

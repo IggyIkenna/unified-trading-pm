@@ -14,7 +14,7 @@ summary: >-
   never register via the already-shipped `scheduler_maintenance.pause_for_maintenance()` CAS primitive either. The
   combination guarantees every deliberate backfill-driven cron pause pages CRITICAL with no suppression path until the
   cron is resumed.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -36,11 +36,18 @@ source: >-
   data_pipeline_failure escalation agt-4ec68a (dp-fleet-monitor → slot-4), CONTEXT: "CRITICAL
   DP_CONSOLIDATOR_SCHEDULER_PAUSED (DP-WATCHER-003) — manifest-consolidator scheduler
   'uts-prod-manifest-consolidator-market-data-prediction-cron' is PAUSED (not -legacy-)."
-resolved_by:
+resolved_by: deployment-service@3a1cf3a, market-tick-data-service (slot-9, 2026-07-30)
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+last_updated: 2026-07-30
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`. Both todos shipped: `consolidator_scheduler_watcher` is now
+> maintenance-window-aware (`deployment-service@3a1cf3a`, `maintenance_window_reader` param + 3 tests, QG-green); the
+> ad-hoc pause/resume call sites in `market-tick-data-service` were retrofitted to the CAS primitive (slot-9,
+> 2026-07-30, with an architecture correction noted inline above for the cross-service import constraint). No further
+> open work in this doc.
 
 # DP-WATCHER-003 maintenance-window gap
 

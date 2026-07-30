@@ -20,7 +20,7 @@ summary: >-
   accordingly. This directly bears on the operator's "spot vms should auto recover at large from where they left off
   too" ask: the answer is YES for genuine preemption, NO for stall-triggered relaunch, and this doc is the tracked
   follow-up for the NO half.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -61,8 +61,15 @@ drift_direction: none
 depends_on: []
 locked_by:
 locked_since:
-resolved_by:
+resolved_by: deployment-service@02ac568
+last_updated: 2026-07-30
 ---
+
+> **🗄️ ARCHIVED 2026-07-30** — `status: resolved`, `resolved_by: deployment-service@02ac568`
+> (`fix(dp-recovery): file OOM-investigate issue doc + checkpoint-resume for stalled VMs`). Found ALREADY SHIPPED on
+> inspection: `RelaunchStalledVm.relaunch()` carries the checkpoint-read/`START_DATE`-override step, wired through
+> `escalation.py::_recover_stalled_vm`, with 5 covering unit tests incl. the explicit no-regression-for-no-checkpoint
+> case. Done-when satisfied verbatim; no new code needed.
 
 # RelaunchStalledVm has no checkpoint/resume logic — stall-triggered relaunches replay blind
 
@@ -143,12 +150,19 @@ grep -n "DP_VM_STALL" deployment-service/deployment_service/data_pipeline_monito
 
 ## What's NOT done / follow-up needed
 
-- [ ] [HUMAN] P2. **Give `RelaunchStalledVm.relaunch()` a checkpoint-read/`START_DATE`-override step**, mirroring
-      `RelaunchPreemptedVm.relaunch()`'s existing logic (factor out a shared helper if that avoids duplication). Done
-      when: a stall-triggered relaunch of a VM with an existing `vm-logs/{vm}/PROGRESS.json` checkpoint resumes from the
-      checkpointed frontier instead of the original launch params, verified by a unit test exercising both actuators
-      against the same fixture checkpoint, with no regression to the existing budget/paging behavior for a VM with no
-      checkpoint.
+- [x] ✅ [HUMAN] P2. **DONE — already shipped, found already-complete on inspection.** `RelaunchStalledVm.relaunch()`
+      (`deployment-service/scripts/recovery/relaunch_stalled_vm.py`) already carries the checkpoint-read/`START_DATE`-
+      override step (`checkpoint`/`launch_env` params, `resume_date` derivation, `force_run_not_replayable` PAGE path),
+      wired through `escalation.py::_recover_stalled_vm` (threads
+      `details["launch_env"]`/`details["progress_checkpoint"]` to the actuator, mirroring `_recover_preempted_vm`) —
+      deployment-service@02ac568
+      (`fix(dp-recovery): file OOM-investigate issue doc + checkpoint-resume for stalled VMs`). Verified via
+      `tests/unit/test_dp_recovery_actuators.py`: `test_stalled_relaunch_resumes_from_monotonic_checkpoint`,
+      `test_stalled_relaunch_force_run_no_checkpoint_pages`,
+      `test_stalled_relaunch_non_force_no_checkpoint_replays_verbatim`,
+      `test_stalled_relaunch_no_launch_env_or_checkpoint_still_works` (the explicit no-regression-for-no-checkpoint-VMs
+      case) + `test_route_auto_recover_stalled_relaunch_resumes_from_checkpoint` (the `escalation.py` wiring test) —
+      full `quality-gates.sh` green. Done-when satisfied verbatim.
 
 ## Progress Log
 
